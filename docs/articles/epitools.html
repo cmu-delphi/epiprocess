@@ -213,7 +213,38 @@ fetch this data from the <a href="https://cmu-delphi.github.io/delphi-epidata/ap
 <div id="an-example-with-some-wrangling-required" class="section level2">
 <h2 class="hasAnchor">
 <a href="#an-example-with-some-wrangling-required" class="anchor"></a>An example with some wrangling required</h2>
-<p>todo</p>
+<p>Now we give an example with just a tiny bit of data wrangling required in order to get outside data into <code>epi_signal</code> format. We’ll examine data from the <a href="https://github.com/reconverse/outbreaks">outbreaks</a> package, on daily <em>new</em> (not <em>cumulative</em>) SARS cases in Canada in 2003.</p>
+<div class="sourceCode" id="cb18"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="kw pkg">outbreaks</span><span class="kw ns">::</span><span class="no"><a href="https://rdrr.io/pkg/outbreaks/man/sars_canada_2003.html">sars_canada_2003</a></span>)</pre></body></html></div>
+<pre><code>##         date cases_travel cases_household cases_healthcare cases_other
+## 1 2003-02-23            1               0                0           0
+## 2 2003-02-24            0               0                0           0
+## 3 2003-02-25            0               0                0           0
+## 4 2003-02-26            0               1                0           0
+## 5 2003-02-27            0               0                0           0
+## 6 2003-02-28            1               0                0           0</code></pre>
+<div class="sourceCode" id="cb20"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="kw pkg">outbreaks</span><span class="kw ns">::</span><span class="no"><a href="https://rdrr.io/pkg/outbreaks/man/sars_canada_2003.html">sars_canada_2003</a></span> <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">value</span> <span class="kw">=</span> <span class="no">cases_travel</span> + <span class="no">cases_household</span> + <span class="no">cases_healthcare</span> + <span class="no">cases_other</span>,
+         <span class="kw">geo_value</span> <span class="kw">=</span> <span class="st">"ca"</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span>(<span class="kw">time_value</span> <span class="kw">=</span> <span class="no">date</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>(<span class="kw">name</span> <span class="kw">=</span> <span class="st">"sars_canada"</span>, <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"nation"</span>)
+
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>)</pre></body></html></div>
+<pre><code>## # A tibble: 6 × 4
+##   value geo_value time_value issue     
+##   &lt;int&gt; &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;    
+## 1     1 ca        2003-02-23 2021-10-14
+## 2     0 ca        2003-02-24 2021-10-14
+## 3     0 ca        2003-02-25 2021-10-14
+## 4     1 ca        2003-02-26 2021-10-14
+## 5     0 ca        2003-02-27 2021-10-14
+## 6     1 ca        2003-02-28 2021-10-14</code></pre>
+<div class="sourceCode" id="cb22"><html><body><pre class="r"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">value</span>)) +
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html">geom_col</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">y</span> <span class="kw">=</span> <span class="no">value</span>)) +
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html">scale_y_continuous</a></span>(<span class="kw">breaks</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span>(<span class="no">x</span>$<span class="no">value</span>):<span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(<span class="no">x</span>$<span class="no">value</span>)) +
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"SARS cases in Canada"</span>)</pre></body></html></div>
+<p><img src="epitools_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
 </div>
 <div id="stacking-data-sets-into-epi_signal_long-format" class="section level2">
 <h2 class="hasAnchor">

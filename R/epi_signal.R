@@ -179,7 +179,7 @@ as.epi_signal.tibble = function(x, name, geo_type, time_type, signal_type,
   # Add issue column if we need to
   if (!("issue" %in% names(x))) {
     if (missing(issue)) x$issue = Sys.Date()
-    x$issue = issue
+    else x$issue = issue
   }
 
   # Reorder columns: issue after time_value

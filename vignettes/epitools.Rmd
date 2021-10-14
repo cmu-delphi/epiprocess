@@ -123,7 +123,29 @@ ggplot(x, aes(x = time_value, y = value, color = geo_value)) +
 
 ## An example with some wrangling required
 
-todo
+Now we give an example with just a tiny bit of data wrangling required in order 
+to get outside data into `epi_signal` format. We'll examine data from the
+[outbreaks](https://github.com/reconverse/outbreaks) package, on daily *new*
+(not *cumulative*) SARS cases in Canada in 2003.
+
+```{r}
+head(outbreaks::sars_canada_2003)
+
+x <- outbreaks::sars_canada_2003 %>%
+  mutate(value = cases_travel + cases_household + cases_healthcare + cases_other,
+         geo_value = "ca") %>%
+  rename(time_value = date) %>%
+  select(value, geo_value, time_value) %>%
+  as.epi_signal(name = "sars_canada", geo_type = "nation")
+
+head(x)
+
+ggplot(x, aes(x = time_value, y = value)) +
+  geom_col(aes(y = value)) +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  scale_y_continuous(breaks = min(x$value):max(x$value)) + 
+  labs(x = "Date", y = "SARS cases in Canada")
+```
 
 ## Stacking data sets into `epi_signal_long` format
 
