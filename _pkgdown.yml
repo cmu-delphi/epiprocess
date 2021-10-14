@@ -3,9 +3,9 @@ destination: docs/
 
 home:
   links:
-    - text: Get the `delphi.epidata` R package 
+    - text: Get the delphi.epidata R package 
       href: https://cmu-delphi.github.io/delphi-epidata-r/    
-    - text: Get the `epipred` R package 
+    - text: Get the epipred R package 
       href: https://cmu-delphi.github.io/epipred/
 
 articles:
@@ -21,7 +21,7 @@ articles:
 
 repo:
   url:
-    home: https://github.com/cmu-delphi/epitools/tree/main/epitools
-    source: https://github.com/cmu-delphi/epitools/blob/main/epitools/
+    home: https://github.com/cmu-delphi/epitools/
+    source: https://github.com/cmu-delphi/epitools/
     issue: https://github.com/cmu-delphi/epitools/issues
     user: https://github.com/
