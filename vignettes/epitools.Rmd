@@ -125,8 +125,8 @@ ggplot(x, aes(x = time_value, y = value, color = geo_value)) +
 
 Now we give an example with just a tiny bit of data wrangling required in order 
 to get outside data into `epi_signal` format. We'll examine data from the
-[outbreaks](https://github.com/reconverse/outbreaks) package, on daily *new*
-(not *cumulative*) SARS cases in Canada in 2003.
+[outbreaks](https://github.com/reconverse/outbreaks) package, on daily new
+(not cumulative) SARS cases in Canada in 2003.
 
 ```{r}
 head(outbreaks::sars_canada_2003)

@@ -17,9 +17,9 @@ Several other functions in the `epitools` package, such as `pct_change()` and
 `estimate_deriv()`, use `slide_by_geo()` as their workhorse. 
 
 Similar to the getting started guide, we'll fetch daily reported COVID-19 cases 
-for a few U.S. states (note: this means *new*, rather than *cumulative* cases) 
-using the [`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) 
-package, and then convert this to `epi_signal` format.
+for a few U.S. states (note: new, not cumulative cases) using the
+[`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) package, and 
+then convert this to `epi_signal` format.
 
 ```{r, message = FALSE}
 library(covidcast)
