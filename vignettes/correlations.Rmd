@@ -47,7 +47,7 @@ way is to "slice by time": this calculates, for each time value, the correlation
 between the signals over all geographic locations. This is obtained by setting 
 `by = "time_value"`.
 
-```{r, message = FALSE, warning = FALSE, fig.width = 7, fig.height = 4}
+```{r, message = FALSE, warning = FALSE}
 library(ggplot2)
 theme_set(theme_bw())
 
@@ -77,7 +77,7 @@ that cases on June 1st will be correlated with deaths on June 11th. (It might
 help to think of it this way: deaths on a certain day will be correlated with 
 cases with an offset of -10 days.)
 
-```{r, message = FALSE, warning = FALSE, fig.width = 7, fig.height = 4}
+```{r, message = FALSE, warning = FALSE}
 z2 <- sliced_cor(x, y, by = "time_value", dt_x = -10)
 
 z <- rbind(z1 %>% mutate(lag = 0), 
@@ -101,7 +101,7 @@ geographic location, correlation between the time series of two signals. This
 is obtained by setting `by = "geo_value"`. We'll again look at correlations
 both for observations at the same time and for 10-day lagged case rates.
 
-```{r, message = FALSE, warning = FALSE, fig.width = 7, fig.height = 4}
+```{r, message = FALSE, warning = FALSE}
 z1 <- sliced_cor(x, y, by = "geo_value")
 z2 <- sliced_cor(x, y, by = "geo_value", dt_x = -10)
 
@@ -122,7 +122,7 @@ days improves the correlations.
 Next we perform a more systematic investigation of the correlations over a broad
 range of lag values. 
 
-```{r, message = FALSE, warning = FALSE, fig.width = 7, fig.height = 4}
+```{r, message = FALSE, warning = FALSE}
 library(purrr)
 lags = 0:35
 
@@ -135,7 +135,7 @@ z %>%
   group_by(lag) %>%
   summarize(mean = Mean(value)) %>%
   ggplot(aes(x = lag, y = mean)) + geom_line() + geom_point() +
-  labs(x = "dt", y = "Mean correlation")
+  labs(x = "Lag", y = "Mean correlation")
 ```
 
 We can see that some pretty clear curvature here in the mean correlation between 

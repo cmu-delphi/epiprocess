@@ -102,7 +102,7 @@
     
     
 <p>One of the most basic tools in the <code>epitools</code> package is <code><a href="../reference/slide_by_geo.html">slide_by_geo()</a></code>, which is based on the family of functions provided by the <a href="https://cran.r-project.org/web/packages/slider/"><code>slider</code></a> package. In <code>epitools</code>, to “slide” means to apply a computation—represented as a function or formula—over a trailing window of <code>n</code> days of data, grouped by <code>geo_value</code>. Several other functions in the <code>epitools</code> package, such as <code><a href="../reference/pct_change.html">pct_change()</a></code> and <code><a href="../reference/estimate_deriv.html">estimate_deriv()</a></code>, use <code><a href="../reference/slide_by_geo.html">slide_by_geo()</a></code> as their workhorse.</p>
-<p>As in the getting started guide, we’ll fetch daily reported COVID-19 cases for a few U.S. states using the <a href="https://cmu-delphi.github.io/covidcast/covidcastR/"><code>covidcast</code></a> package, and then convert this to <code>epi_signal</code> format.</p>
+<p>Similar to the getting started guide, we’ll fetch daily reported COVID-19 cases for a few U.S. states (note: this means daily <em>new</em>, rather than <em>cumulative</em> cases) using the <a href="https://cmu-delphi.github.io/covidcast/covidcastR/"><code>covidcast</code></a> package, and hen convert this to <code>epi_signal</code> format.</p>
 <div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">covidcast</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">epitools</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">dplyr</span>)
@@ -110,7 +110,7 @@
 <span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="kw">data_source</span> <span class="kw">=</span> <span class="st">"jhu-csse"</span>,
                       <span class="kw">signal</span> <span class="kw">=</span> <span class="st">"confirmed_incidence_num"</span>,
                       <span class="kw">start_day</span> <span class="kw">=</span> <span class="st">"2020-06-01"</span>,
-                      <span class="kw">end_day</span> <span class="kw">=</span> <span class="st">"2020-12-31"</span>,
+                      <span class="kw">end_day</span> <span class="kw">=</span> <span class="st">"2021-05-31"</span>,
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>,
                       <span class="kw">geo_values</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"ca"</span>, <span class="st">"fl"</span>, <span class="st">"ny"</span>, <span class="st">"tx"</span>))  <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>(<span class="kw">name</span> <span class="kw">=</span> <span class="st">"covid19_cases"</span>) <span class="kw">%&gt;%</span>

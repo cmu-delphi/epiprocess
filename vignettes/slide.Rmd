@@ -16,10 +16,11 @@ or formula---over a trailing window of `n` days of data, grouped by `geo_value`.
 Several other functions in the `epitools` package, such as `pct_change()` and 
 `estimate_deriv()`, use `slide_by_geo()` as their workhorse. 
 
-As in the getting started guide, we'll fetch daily reported COVID-19 cases for
-a few U.S. states using the
+Similar to the getting started guide, we'll fetch daily reported COVID-19 cases 
+for a few U.S. states (note: this means daily *new*, rather than *cumulative* 
+cases) using the 
 [`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) package, and 
-then convert this to `epi_signal` format.
+hen convert this to `epi_signal` format.
 
 ```{r, message = FALSE}
 library(covidcast)
@@ -29,7 +30,7 @@ library(dplyr)
 x <- covidcast_signal(data_source = "jhu-csse", 
                       signal = "confirmed_incidence_num",
                       start_day = "2020-06-01", 
-                      end_day = "2020-12-31",
+                      end_day = "2021-05-31",
                       geo_type = "state", 
                       geo_values = c("ca", "fl", "ny", "tx"))  %>%
   as.epi_signal(name = "covid19_cases") %>%

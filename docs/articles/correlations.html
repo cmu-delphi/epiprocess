@@ -138,7 +138,7 @@
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">z1</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">value</span>)) + <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>() +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Correlation"</span>)</pre></body></html></div>
-<p><img src="correlations_files/figure-html/unnamed-chunk-2-1.png" width="672"></p>
+<p><img src="correlations_files/figure-html/unnamed-chunk-2-1.png" width="700"></p>
 <p>The above plot addresses the question: “on any given day, are case and death rates linearly associated, across the U.S. states?”. We might be interested in broadening this question, instead asking: “on any given day, do higher case rates tend to associate with higher death rates?”, removing the dependence on a linear relationship. The latter can be addressed using Spearman correlation, accomplished by setting <code>method = "spearman"</code> in the call to <code><a href="../reference/sliced_cor.html">sliced_cor()</a></code>. Spearman correlation is highly robust and invariant to monotone transformations.</p>
 </div>
 <div id="lagged-correlations" class="section level2">
@@ -156,7 +156,7 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">color</span> <span class="kw">=</span> <span class="no">lag</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Correlation"</span>, <span class="kw">col</span> <span class="kw">=</span> <span class="st">"Lag"</span>)</pre></body></html></div>
-<p><img src="correlations_files/figure-html/unnamed-chunk-3-1.png" width="672"></p>
+<p><img src="correlations_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
 <p>We can see that, generally, lagging the case rates back by 10 days improves the correlations, confirming case rates are better correlated with death rates 10 days from now.</p>
 </div>
 <div id="correlations-sliced-by-state" class="section level2">
@@ -173,7 +173,7 @@
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">z</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="no">value</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density.html">geom_density</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">fill</span> <span class="kw">=</span> <span class="no">lag</span>, <span class="kw">col</span> <span class="kw">=</span> <span class="no">lag</span>), <span class="kw">alpha</span> <span class="kw">=</span> <span class="fl">0.5</span>) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Correlation"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Density"</span>, <span class="kw">fill</span> <span class="kw">=</span> <span class="st">"Lag"</span>, <span class="kw">col</span> <span class="kw">=</span> <span class="st">"Lag"</span>)</pre></body></html></div>
-<p><img src="correlations_files/figure-html/unnamed-chunk-4-1.png" width="672"></p>
+<p><img src="correlations_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
 <p>We can again see that, generally speaking, lagging the case rates back by 10 days improves the correlations.</p>
 </div>
 <div id="more-systematic-lag-analysis" class="section level2">
@@ -192,8 +192,8 @@
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">lag</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span>(<span class="kw">mean</span> <span class="kw">=</span> <span class="fu"><a href="../reference/Min.html">Mean</a></span>(<span class="no">value</span>)) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">lag</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">mean</span>)) + <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>() + <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span>() +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"dt"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Mean correlation"</span>)</pre></body></html></div>
-<p><img src="correlations_files/figure-html/unnamed-chunk-5-1.png" width="672"></p>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Lag"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Mean correlation"</span>)</pre></body></html></div>
+<p><img src="correlations_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
 <p>We can see that some pretty clear curvature here in the mean correlation between case and death rates (where the correlations come from slicing by location) as a function of lag. The maximum occurs at a lag of somewhere around 17 days.</p>
 </div>
   </div>
