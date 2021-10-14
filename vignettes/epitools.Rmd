@@ -1,0 +1,132 @@
+---
+title: Get started with `epitools`
+description: An introductory tutorial with examples.
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Get started with epitools}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This package provides tools for basic signal processing tasks in epidemiology,
+which includes computing percentage changes in signals, estimating derivatives,
+and computing correlations.
+
+## Installing
+
+This package is not on CRAN yet, so it can be installed using the
+[`devtools`](https://cran.r-project.org/package=devtools) package:
+
+```{r, eval = FALSE}
+devtools::install_github("cmu-delphi/epitools", ref = "main")	
+```
+
+Building the vignettes, such as this getting started guide, takes a significant
+amount of time. They are not included in the package by default. If you want to
+include vignettes, then use this modified command:
+
+```{r, eval = FALSE}
+devtools::install_github("cmu-delphi/epitools", ref = "main",
+                         build_vignettes = TRUE, dependencies = TRUE)
+```
+
+## Getting data into `epi_signal` format
+
+We'll start by showing how to get data into `epi_signal` format, which is just a
+tibble (data frame) with a bit of special structure, and is the format assumed 
+by all of the functions in the `epitools` package. An `epi_signal` object has 
+(at least) the following columns:  
+
+* `value`: the value of the signal;
+* `geo_value`: the associated geographic value;
+* `time_value`: the associated time value;
+* `issue`: the time value at which the given signal value was issued. 
+
+A data frame or tibble can be converted into an object of class `epi_signal`,
+using `as.epi_signal()`, provided that it has (at least) the first 3 columns 
+in the above list (if an `issue` column is not present, then today's date is 
+used for the issue dates). To learn more about the `epi_signal` format, you can
+read the documentation for `as.epi_signal()`.
+
+As an example, we'll look at daily reported COVID-19 cases for 4 states (CA,
+FL, NY, and TX) in the U.S., over a period from mid to late 2020, using the 
+[`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) package to  
+fetch this data from the [COVIDcast
+API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/). 
+
+```{r, message = FALSE}
+library(covidcast)
+
+case_data <- covidcast_signal(data_source = "jhu-csse", 
+                              signal = "confirmed_incidence_num",
+                              start_day = "2020-06-01", 
+                              end_day = "2020-12-31",
+                              geo_type = "state", 
+                              geo_values = c("ca", "fl", "ny", "tx"))
+
+class(case_data)
+colnames(case_data)
+```
+
+As we can see, a data frame returned `covidcast::covidcast_signal()` has the 
+columns listed above that are required of an `epi_signal` object (along with 
+many others). A call to `as.epi_signal()`, with further specification of a few 
+relevant pieces of metadata:  
+
+* `name`: a name for the current signal; 
+* `geo_type`: the geographic resolution; 
+* `time_type`: the time resolution;
+
+then brings such a data frame into `epi_signal` format.
+
+```{r, message = FALSE}
+library(epitools)
+library(dplyr)
+
+x <- as.epi_signal(case_data, 
+                   name = "covid19_cases",
+                   geo_type = "state",
+                   time_type = "day") %>%
+  select(value, geo_value, time_value, issue)
+
+class(x)
+summary(x)
+head(x)
+attributes(x)$metadata
+```
+
+As far as the metadata goes, while a signal name must be specified in a call to 
+`as.epi_signal()`, the `geo_type` and `time_type` arguments can omitted and, in
+this case, `as.epi_signal()` will try to guess them from the data.
+
+```{r}
+# Convert this into epi_signal format, but this time let as.epi_signal() guess 
+# the geo and time types from the data
+x <- as.epi_signal(case_data, name = "covid19_cases") %>%
+  select(value, geo_value, time_value, issue)
+
+attributes(x)$metadata
+```
+
+Data in `epi_signal` format is pretty easy to work with downstream; in the other
+vignettes, we'll walk through some basic signal processing tasks using functions 
+provided in the `epitools` package; of course, we can also write custom code for
+for other downstream uses, like plotting, which is pretty easy to do `ggplot2`.
+
+```{r, message = FALSE, warning = FALSE, fig.width = 7, fig.height = 4}
+library(ggplot2)
+theme_set(theme_bw())
+
+ggplot(x, aes(x = time_value, y = value, color = geo_value)) + 
+  geom_line() +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Reported COVID-19 cases", color = "State")
+```
+
+## An example with some wrangling required
+
+todo
+
+## Stacking data sets into `epi_signal_long` format
+
+todo

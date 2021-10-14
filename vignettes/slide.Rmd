@@ -1,0 +1,94 @@
+---
+title: 1. Slide a computation over signal values
+description: Slide a computation signal values over time.
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{1. Slide a computation over signal values}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+One of the most basic tools in the `epitools` package is `slide_by_geo()`,
+which is based on the family of functions provided by the 
+[`slider`](https://cran.r-project.org/web/packages/slider/) package. In
+`epitools`, to "slide" means to apply a computation---represented as a function 
+or formula---over a trailing window of `n` days of data, grouped by `geo_value`. 
+Several other functions in the `epitools` package, such as `pct_change()` and 
+`estimate_deriv()`, use `slide_by_geo()` as their workhorse. 
+
+As in the getting started guide, we'll fetch daily reported COVID-19 cases for
+a few U.S. states using the
+[`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) package, and 
+then convert this to `epi_signal` format.
+
+```{r, message = FALSE}
+library(covidcast)
+library(epitools)
+library(dplyr)
+
+x <- covidcast_signal(data_source = "jhu-csse", 
+                      signal = "confirmed_incidence_num",
+                      start_day = "2020-06-01", 
+                      end_day = "2020-12-31",
+                      geo_type = "state", 
+                      geo_values = c("ca", "fl", "ny", "tx"))  %>%
+  as.epi_signal(name = "covid19_cases") %>%
+  select(value, geo_value, time_value, issue)
+```
+
+## Slide with a formula
+
+We first demonstrate how to apply a 7-day trailing average to the daily counts
+in order to smooth the signal, by using a formula in the `slide_fun` argument of
+`slide_by_geo()`.
+
+```{r}
+slide_by_geo(x, slide_fun = ~ Mean(.x$value), n = 7) %>%
+  head(10)
+```
+
+The formula specified via `slide_fun` has access to all columns present in the
+original `epi_signal` data frame, and must refer to them with the prefix `.x$`. 
+Here the function `Mean()` is a simple wrapper around `mean()` that omits `NA` 
+values by default (provided by the `epitools` package). 
+
+Notice that `slide_by_geo()` returns a data frame with a new column appended 
+that contains the results (from sliding the formula), named `slide_value` by 
+default. We can instead specify a name up front using the `col_name` argument: 
+
+```{r}
+slide_by_geo(x, slide_fun = ~ Mean(.x$value), n = 7, col_name = "7dav") %>%
+  head(10)
+```
+
+As a simple sanity check, we visualize the 7-day trailing averages computed on
+top of the original counts:
+
+```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
+library(ggplot2)
+theme_set(theme_bw())
+
+slide_by_geo(x, slide_fun = ~ Mean(.x$value), n = 7, col_name = "7dav") %>%
+  ggplot(aes(x = time_value)) +
+  geom_col(aes(y = value, fill = geo_value), alpha = 0.5) +
+  geom_line(aes(y = `7dav`, col = geo_value), show.legend = FALSE) +
+  facet_wrap(~ geo_value, scales = "free_y") +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Reported COVID-19 cases", fill = "State")
+```
+
+## Slide with a function 
+
+We can also pass a function for the `slide_fun` argument in `slide_by_geo()`. In 
+this case, the passed function must have the following argument structure: `x`, 
+a data frame the same column names as the original data frame; followed by any
+number of named additional arguments; and ending with `...`, to capture general 
+additional arguments. Recreating the last example of a 7-day trailing average: 
+
+```{r}
+slide_by_geo(x, slide_fun = function(x, ...) Mean(x$value), n = 7,
+             col_name = "7dav") %>%
+  head(10)
+```
+
+As a more complicated example, todo

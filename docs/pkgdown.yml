@@ -1,0 +1,12 @@
+pandoc: 2.10.1
+pkgdown: 1.5.1
+pkgdown_sha: ~
+articles:
+  correlations: correlations.html
+  derivatives: derivatives.html
+  epitools: epitools.html
+  pct-change: pct-change.html
+  sensorization: sensorization.html
+  slide: slide.html
+last_built: 2021-10-14T03:14Z
+

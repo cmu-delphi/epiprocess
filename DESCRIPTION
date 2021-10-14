@@ -1,0 +1,27 @@
+Package: epitools
+Type: Package
+Title: Tools for Basic Signal Processing in Epidemiology
+Version: 1.0.0
+Authors@R:
+	c(
+    person(given = "Ryan",
+           family = "Tibshirani",
+           role = c("aut", "cre"),
+           email = "ryantibs@cmu.edu"))
+Description: This package contains tools for basic signal processing tasks in
+    epidemiology, which includes computing percentage changes in signals,
+    estimating derivatives, and computing correlations.  
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Imports: 
+    dplyr,
+    genlasso,
+    magrittr,
+    rlang,
+    slider,
+    tibble,
+    tidyselect,
+    tidyr

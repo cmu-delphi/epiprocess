@@ -1,0 +1,93 @@
+---
+title: 2. Compute percentage change over time
+description: Compute percentage change of signal values over time.
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{2. Compute percentage change over time}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+A basic way of assessing growth in a signal is to look at its percentage change
+over two neighboring time windows. We investigate this in the current vignette,
+using the `pct_change()` function in the `epitools` package. As before, we'll 
+look at state-level daily reported COVID-19 cases.
+
+```{r, message = FALSE}
+library(covidcast)
+library(epitools)
+library(dplyr)
+
+x <- covidcast_signal(data_source = "jhu-csse", 
+                      signal = "confirmed_incidence_num",
+                      start_day = "2020-06-01", 
+                      end_day = "2020-12-31",
+                      geo_type = "state", 
+                      geo_values = "fl")  %>%
+  as.epi_signal(name = "covid19_cases") %>%
+  select(value, geo_value, time_value, issue)
+```
+
+## Percentage change
+
+The `pct_change()` function operates on a `epi_signal` data frame, and takes an 
+argument `n`, indicating the size of the local window (in days) to use in order
+to compute the percentage change. For example, if `n = 10`, then (for each 
+`geo_value`) the percentage change on November 10 is calculated as 
+100 * (B - A) / A, where A is the sum of the values between November 6 and 
+November 10, and A is the sum of the values between November 1 and November 5. 
+The default is `n = 14`, giving the percentage change between adjacent weeks.
+
+```{r}
+pct_change(x, n = 14) %>%
+  head(21)
+```
+
+We can see that a column `pct_change` column has been appended to the output 
+data frame, which contains the percentage change values estimates. Next we plot 
+these values alongside the signal itself. 
+
+```{r, message = FALSE, warning = FALSE, fig.width = 8, fig.height = 4}
+library(ggplot2)
+library(gridExtra)
+theme_set(theme_bw())
+
+p1 <- x %>% 
+  ggplot(aes(x = time_value, y = value)) + geom_line() + 
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Reported COVID-19 cases")
+
+p2 <- x %>% 
+  pct_change(n = 14) %>%
+  ggplot(aes(x = time_value, y = pct_change)) + geom_line() + 
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Weekly percentage change") 
+
+grid.arrange(p1, p2, nrow = 1)
+```
+
+## Smoothing via 7-day averaging
+
+The percentage change in the last figure appears pretty volatile in some parts, 
+which is not too surprising, looking at how wiggly the signal is itself. With a
+suitable call to `slide_to_geo()`, we can either pre-smooth or post-smooth using
+a 7-day trailing average. The differences here (between these two approaches) do 
+not end up being very noticeable at all.
+
+```{r, message = FALSE, warning = FALSE, fig.width = 8, fig.height = 4}
+p1 <- x %>% 
+  slide_by_geo(slide_fun = ~ Mean(.x$value), n = 7, col_name = "value") %>%
+  pct_change(n = 14) %>%
+  ggplot(aes(x = time_value, y = pct_change)) + geom_line() + 
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Weekly percentage change, pre-smoothed")
+
+p2 <- x %>% 
+  pct_change(n = 14) %>%
+  slide_by_geo(slide_fun = ~ Mean(.x$pct_change), n = 7) %>%
+  ggplot(aes(x = time_value, y = slide_value)) + geom_line() + 
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Weekly percentage change, post-smoothed") 
+
+grid.arrange(p1, p2, nrow = 1)
+```

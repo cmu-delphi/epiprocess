@@ -1,0 +1,27 @@
+# Deploy to central docs directory that's on GitHub Pages
+destination: docs/
+
+home:
+  links:
+    - text: Get the `delphi.epidata` R package 
+      href: https://cmu-delphi.github.io/delphi-epidata-r/    
+    - text: Get the `epipred` R package 
+      href: https://cmu-delphi.github.io/epipred/
+
+articles:
+  - title: Using the package
+    desc: Basic usage and examples.
+    navbar: ~
+    contents:
+      - epitools
+      - slide
+      - pct-change
+      - derivatives
+      - correlations
+
+repo:
+  url:
+    home: https://github.com/cmu-delphi/epitools/tree/main/epitools
+    source: https://github.com/cmu-delphi/epitools/blob/main/epitools/
+    issue: https://github.com/cmu-delphi/epitools/issues
+    user: https://github.com/
