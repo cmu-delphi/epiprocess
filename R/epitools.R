@@ -1,4 +1,4 @@
-#' epitools: Tools for Basic Signal Processing in Epidemiology
+#' epitools: Tools for basic signal processing in epidemiology
 #'
 #' The `epitools` package provides contains tools for basic signal processing
 #' tasks in epidemiology, which includes computing percentage changes in

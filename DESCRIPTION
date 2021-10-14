@@ -1,6 +1,6 @@
 Package: epitools
 Type: Package
-Title: Tools for Basic Signal Processing in Epidemiology
+Title: Tools for basic signal processing in epidemiology
 Version: 1.0.0
 Authors@R:
 	c(

@@ -111,7 +111,7 @@ z <- rbind(z1 %>% mutate(lag = 0),
 
 ggplot(z, aes(value)) +
   geom_density(aes(fill = lag, col = lag), alpha = 0.5) +
-  labs(x = "Correlation", y = "Density", col = "Lag") 
+  labs(x = "Correlation", y = "Density", fill = "Lag", col = "Lag") 
 ```
 
 We can again see that, generally speaking, lagging the case rates back by 10 
