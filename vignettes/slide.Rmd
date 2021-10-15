@@ -91,4 +91,106 @@ slide_by_geo(x, slide_fun = function(x, ...) Mean(x$value), n = 7,
   head(10)
 ```
 
-As a more complicated example, todo
+As a more complicated example, we recreate two "local" forecasters. Simple 
+versions of these can be built using the [`{tsibble}` package](https://tsibble.tidyverts.org), but here we also generate prediction 
+intervals in addition to the point forecasts. The first is a simple "baseline"
+forecaster which propagates a flat line forward, and uses the residuals to
+create quantiles. The result will be a data frame with one column containing
+the desired quantiles, and the other containing the predicted values at those
+quantiles.
+
+```{r}
+local_baseline <- function(
+  x, ahead = 1, min_train_window = 25,
+  quantiles = c(0.025, 0.100, 0.250, 0.500, 0.750, 0.900, 0.975),
+  symmetrize = TRUE) 
+{
+  ahead <- round(ahead) # how many units of time ahead do we predict
+  if (length(x) < min_train_window) # return NA forecasts if insufficient data
+    return(data.frame(value = NA, quantile = c(NA, quantiles)))
+  stopifnot(ahead > 0)
+  s <- ifelse(symmetrize, -1, NA) # should the PIs be symmetric?
+  point <- tail(x, 1) # the point forecast is the most recent value
+  resids <- x - lag(x, ahead)
+  resids <- c(resids, s * resids)
+  q <- c(0, quantile(resids, probs = quantiles, na.rm = TRUE))
+  data.frame(value = q + point, quantile = c(NA, quantiles))
+}
+
+baseline_fcasts <- sx %>% 
+  slide_by_geo(slide_fun = ~ local_baseline(.x$value), 
+               n = 100, col_type = "list", col_name = "value") %>%
+  rename(forecast_date = time_value) %>%
+  mutate(target_date = forecast_date + 1) %>% # forecast 1 day ahead
+  select(-issue)
+
+head(baseline_fcasts, 10)
+```
+
+Note the `col_type = "list"` argument is required here. To convert to a "long"
+`tibble`, we can unnest the result.
+
+```{r}
+baseline_fcasts %>% rename(actual = value) %>% unnest(forecasts) %>% tail(20)
+```
+
+We can do a more complicated "local autoregressive" forecast by using trailing 
+windows. Here, by default, we use 0-, 1-, and 2- week lags to forecast 1 day
+ahead.
+
+```{r}
+local_ar <- function(
+  x, lags = c(0, 7, 14), ahead = 1, min_train_window = 100,
+  quantiles = c(0.025, 0.100, 0.250, 0.500, 0.750, 0.900, 0.975),
+  symmetrize = TRUE) 
+{
+  ahead <- round(ahead)
+  if (length(x) < min_train_window)  # return NA forecasts if insufficient data
+    return(data.frame(value = NA, quantile = c(NA, quantiles)))
+  stopifnot(all(lags > -1), ahead > 0, max(lags) + ahead < length(x))
+  lags <- sort(lags)
+  s <- ifelse(symmetrize, -1, NA)
+  ma <- ahead + 1
+  ml <- max(lags) + 1
+  mat <- embed(x, ml + ma - 1)
+  y <- mat[, ma - ahead]
+  X <- mat[, lags + ma]
+  fit <- lm(y ~ X)
+  newx <- rev(tail(x, n = ml))[lags + 1]
+  point <- drop(c(1, newx) %*% coef(fit))
+  resids <- c(residuals(fit), s * residuals(fit))
+  q <- c(0, quantile(resids, probs = quantiles, na.rm = TRUE))
+  data.frame(value = q + point, quantile = c(NA, quantiles), row.names = NULL)
+}
+
+ar_fcasts <- x %>% 
+  slide_by_geo(slide_fun = ~ local_ar(.x$value), 
+               n = 100, col_type = "list", col_name = "value") %>%
+  rename(forecast_date = time_value) %>%
+  mutate(target_date = forecast_date + 1) %>%
+  select(-issue)
+
+ar_fcasts %>% unnest(value) %>% tail(20)
+```
+
+If we want to make forecasts using weekly data, we can apply `slide_by_geo()`
+twice: first to create weekly sums, then to do the forecast.
+
+```{r}
+weekly_baseline_fcast <- x %>% 
+  # sums but with imputed NAs
+  slide_by_geo( ~ Mean(.x$value) * 7, n = 7, col_name = "value") %>% 
+  slide_by_geo(x, slide_fun = ~ local_baseline(.x$value), 
+               n = 100, col_name = "value", col_type = "list") %>%
+  rename(forecast_date = time_value) %>%
+  mutate(target_date = forecast_date + 1) %>%
+  select(-issue) %>%
+  unnest(value)
+
+tail(weekly_baseline_fcast, 20)
+```
+
+Note that with both of these forecasting tasks, we are unfairly using "finalized"
+data, the data that is currently available to us. This may not be the same as 
+the data that would have been available at the `forecast_date`. See 
+`?covidcast::covidcast_signal()` for some discuss on "Issue dates and revisions".
