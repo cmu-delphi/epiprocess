@@ -141,7 +141,7 @@ local_ar <- function(x, lags = c(0, 7, 14), ahead = 1, min_train_window = 100,
                      quantile_levels = c(0.100, 0.900), symmetrize = TRUE) {
   ahead <- round(ahead)
   if (length(x) < min_train_window)  # return NA forecasts if insufficient data
-    return(data.frame(value = NA, quantile = c(NA, quantiles)))
+    return(data.frame(value = NA, quantile = c(NA, quantile_levels)))
   stopifnot(all(lags > -1), ahead > 0, max(lags) + ahead < length(x))
   lags <- sort(lags)
   s <- ifelse(symmetrize, -1, NA)
@@ -154,8 +154,10 @@ local_ar <- function(x, lags = c(0, 7, 14), ahead = 1, min_train_window = 100,
   newx <- rev(tail(x, n = ml))[lags + 1]
   point <- drop(c(1, newx) %*% coef(fit))
   resids <- c(residuals(fit), s * residuals(fit))
-  q <- c(0, quantile(resids, probs = quantiles, na.rm = TRUE))
-  data.frame(value = q + point, quantile = c(NA, quantiles), row.names = NULL)
+  q <- c(0, quantile(resids, probs = quantile_levels, na.rm = TRUE))
+  data.frame(value = q + point, 
+             quantile = c(NA, quantile_levels), 
+             row.names = NULL)
 }
 
 ar_fcasts <- x %>% 
