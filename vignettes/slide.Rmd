@@ -101,10 +101,11 @@ quantiles.
 
 ```{r}
 local_baseline <- function(x, ahead = 1, min_train_window = 25,
-                           quantile_levels = c(0.100, 0.900), 
+                           quantile_levels = c(0.1, 0.9), 
                            symmetrize = TRUE) {
   ahead <- round(ahead) # how many units of time ahead do we predict
-  if (length(x) < min_train_window) # return NA forecasts if insufficient data
+  if (length(x) < min_train_window + ahead) 
+    # return NA forecasts if insufficient data
     return(data.frame(value = NA, quantile = c(NA, quantile_levels)))
   stopifnot(ahead > 0)
   s <- ifelse(symmetrize, -1, NA) # should the PIs be symmetric?
@@ -137,10 +138,11 @@ windows. Here, by default, we use 0-, 1-, and 2- week lags to forecast 1 day
 ahead.
 
 ```{r}
-local_ar <- function(x, lags = c(0, 7, 14), ahead = 1, min_train_window = 100, 
-                     quantile_levels = c(0.100, 0.900), symmetrize = TRUE) {
+local_ar <- function(x, lags = c(0, 7, 14), ahead = 1, min_train_window = 56, 
+                     quantile_levels = c(0.1, 0.9), symmetrize = TRUE) {
   ahead <- round(ahead)
-  if (length(x) < min_train_window)  # return NA forecasts if insufficient data
+  if (length(x) < min_train_window + ahead + max(lags))  
+    # return NA forecasts if insufficient data
     return(data.frame(value = NA, quantile = c(NA, quantile_levels)))
   stopifnot(all(lags > -1), ahead > 0, max(lags) + ahead < length(x))
   lags <- sort(lags)
@@ -171,23 +173,58 @@ ar_fcasts %>% unnest(value) %>% tail(20)
 ```
 
 If we want to make forecasts using weekly data, we can apply `slide_by_geo()`
-twice: first to create weekly sums, then to do the forecast.
+twice: first to create weekly sums, then to do the forecast. We wrap this
+in a function to use a few times.
 
 ```{r}
-weekly_baseline_fcast <- x %>% 
-  # sums but with imputed NAs
-  slide_by_geo( ~ Mean(.x$value) * 7, n = 7, col_name = "value") %>% 
-  slide_by_geo(x, slide_fun = ~ local_baseline(.x$value), 
-               n = 100, col_name = "value", col_type = "list") %>%
-  rename(forecast_date = time_value) %>%
-  mutate(target_date = forecast_date + 1) %>%
-  select(-issue) %>%
-  unnest(value)
+n_week_ar <- function(ahead = 7) {
+  x %>% 
+    # sums but with imputed NAs
+    slide_by_geo( ~ Mean(.x$value) * 7, n = 7, col_name = "value") %>% 
+    slide_by_geo(x, slide_fun = ~ local_ar(.x$value, ahead = ahead), 
+                 n = 100, col_name = "value", col_type = "list") %>%
+    rename(forecast_date = time_value) %>%
+    mutate(target_date = forecast_date + ahead) %>%
+    select(-issue) %>%
+    unnest(value)
+}
 
-tail(weekly_baseline_fcast, 20)
+one_week_ar <- n_week_ar()
+tail(one_week_ar, 20)
 ```
 
 Note that with both of these forecasting tasks, we are unfairly using "finalized"
 data, the data that is currently available to us. This may not be the same as 
 the data that would have been available at the `forecast_date`. See 
 `?covidcast::covidcast_signal()` for some discuss on "Issue dates and revisions".
+
+Finally, we can visualize the forecasts with a little bit of data wrangling.
+Here, we also create 2 and 3 week ahead forecasts, and plot the results for
+a few forecast dates.
+
+```{r}
+multi_week_forecasts <- bind_rows(one_week_ar, n_week_ar(14), n_week_ar(21))
+dates_to_show <- seq(as.Date("2021-02-01"), by = "month", length = 4)
+fcast_fan <- multi_week_forecasts %>%
+  filter(forecast_date %in% dates_to_show) %>%
+  group_by(forecast_date, target_date, geo_value) %>%
+  mutate(quantile = case_when(
+    is.na(quantile) ~ "point", 
+    quantile < .5 ~ "lo", 
+    TRUE ~ "hi")) %>%
+  pivot_wider(names_from = quantile, values_from = value)
+weekly_totals <- x %>% 
+  slide_by_geo( ~ Mean(.x$value) * 7, n = 7, col_name = "value")
+ggplot(fcast_fan, aes(x = target_date)) +
+  geom_ribbon(aes(ymin = lo, ymax = hi, group = forecast_date),
+              fill = "cornflowerblue", alpha = .75) +
+  geom_line(aes(y = point, group = forecast_date), color = "orange") +
+  geom_point(aes(y = point, group = forecast_date), color = "orange") +
+  facet_wrap(~geo_value) +
+  geom_line(data = weekly_totals, aes(time_value, value)) +
+  coord_cartesian(xlim = as.Date(c("2021-01-01", "2021-06-01"))) +
+  ylab("Weekly cases") +
+  xlab("Date") +
+  scale_y_continuous(labels = scales::label_number_si()) +
+  theme_bw()
+```
