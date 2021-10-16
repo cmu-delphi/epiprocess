@@ -116,7 +116,7 @@ local_baseline <- function(x, ahead = 1, min_train_window = 25,
   data.frame(value = q + point, quantile = c(NA, quantile_levels))
 }
 
-baseline_fcasts <- sx %>% 
+baseline_fcasts <- x %>% 
   slide_by_geo(slide_fun = ~ local_baseline(.x$value), 
                n = 100, col_type = "list", col_name = "value") %>%
   rename(forecast_date = time_value) %>%
@@ -130,7 +130,8 @@ Note the `col_type = "list"` argument is required here. To convert to a "long"
 `tibble`, we can unnest the result.
 
 ```{r}
-baseline_fcasts %>% rename(actual = value) %>% unnest(forecasts) %>% tail(20)
+library(tidyr)
+baseline_fcasts %>% unnest(value) %>% tail(20)
 ```
 
 We can do a more complicated "local autoregressive" forecast by using trailing 
@@ -202,7 +203,7 @@ Finally, we can visualize the forecasts with a little bit of data wrangling.
 Here, we also create 2 and 3 week ahead forecasts, and plot the results for
 a few forecast dates.
 
-```{r}
+```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
 multi_week_forecasts <- bind_rows(one_week_ar, n_week_ar(14), n_week_ar(21))
 dates_to_show <- seq(as.Date("2021-02-01"), by = "month", length = 4)
 fcast_fan <- multi_week_forecasts %>%
@@ -223,8 +224,7 @@ ggplot(fcast_fan, aes(x = target_date)) +
   facet_wrap(~geo_value) +
   geom_line(data = weekly_totals, aes(time_value, value)) +
   coord_cartesian(xlim = as.Date(c("2021-01-01", "2021-06-01"))) +
-  ylab("Weekly cases") +
+  ylab("Weekly COVID-19 cases") +
   xlab("Date") +
-  scale_y_continuous(labels = scales::label_number_si()) +
-  theme_bw()
+  scale_y_continuous(labels = scales::label_number_si()) 
 ```

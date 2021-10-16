@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Convert data frame to <code>epi_signal</code> format — as.epi_signal • epitools</title>
+<title>Convert data frame to epi_signal format — as.epi_signal • epitools</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,7 @@
 
 
 
-<meta property="og:title" content="Convert data frame to <code>epi_signal</code> format — as.epi_signal" />
+<meta property="og:title" content="Convert data frame to epi_signal format — as.epi_signal" />
 <meta property="og:description" content="Converts a data frame or tibble into a format consistent with the
 epi_signal class (ensuring that it has a certain minimal set of columns,
 and that it has certain metadata stored in its attributes)." />
@@ -145,36 +145,36 @@ and that it has certain metadata stored in its attributes)." />
 and that it has certain metadata stored in its attributes).</p>
     </div>
 
-    <pre class="usage"><span class='fu'>as.epi_signal</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+    <pre class="usage"><span class='fu'>as.epi_signal</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span><span class='op'>)</span>
 
 <span class='co'># S3 method for epi_signal</span>
-<span class='fu'>as.epi_signal</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+<span class='fu'>as.epi_signal</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span><span class='op'>)</span>
 
 <span class='co'># S3 method for tibble</span>
-<span class='fu'>as.epi_signal</span>(
-  <span class='no'>x</span>,
-  <span class='no'>name</span>,
-  <span class='no'>geo_type</span>,
-  <span class='no'>time_type</span>,
-  <span class='no'>signal_type</span>,
-  <span class='no'>signal_unit</span>,
-  <span class='no'>issue</span>,
-  <span class='kw'>metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
-  <span class='no'>...</span>
-)
+<span class='fu'>as.epi_signal</span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  <span class='va'>name</span>,
+  <span class='va'>geo_type</span>,
+  <span class='va'>time_type</span>,
+  <span class='va'>signal_type</span>,
+  <span class='va'>signal_unit</span>,
+  <span class='va'>issue</span>,
+  metadata <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span>
 
 <span class='co'># S3 method for data.frame</span>
-<span class='fu'>as.epi_signal</span>(
-  <span class='no'>x</span>,
-  <span class='no'>name</span>,
-  <span class='no'>geo_type</span>,
-  <span class='no'>time_type</span>,
-  <span class='no'>signal_type</span>,
-  <span class='no'>signal_unit</span>,
-  <span class='no'>issue</span>,
-  <span class='kw'>metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
-  <span class='no'>...</span>
-)</pre>
+<span class='fu'>as.epi_signal</span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  <span class='va'>name</span>,
+  <span class='va'>geo_type</span>,
+  <span class='va'>time_type</span>,
+  <span class='va'>signal_type</span>,
+  <span class='va'>signal_unit</span>,
+  <span class='va'>issue</span>,
+  metadata <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -313,7 +313,7 @@ be the start date of the epiweek (MMWR week) that the data represents.</p></li>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>
