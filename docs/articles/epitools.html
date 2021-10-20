@@ -127,8 +127,7 @@
 <code>issue</code>: the time value at which the given signal value was issued.</li>
 </ul>
 <p>A data frame or tibble can be converted into an object of class <code>epi_signal</code>, using <code><a href="../reference/as.epi_signal.html">as.epi_signal()</a></code>, provided that it has (at least) the first 3 columns in the above list (if an <code>issue</code> column is not present, then today’s date is used for the issue dates). To learn more about the <code>epi_signal</code> format, you can read the documentation for <code><a href="../reference/as.epi_signal.html">as.epi_signal()</a></code>.</p>
-<p>As an example, we’ll look at daily cumulative COVID-19 cases for 4 states (CA, FL, NY, and TX) in the U.S., over a year from mid 2020 to mid 2021, using the <a href="https://cmu-delphi.github.io/covidcast/covidcastR/"><code>covidcast</code></a> package to<br>
-fetch this data from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/">COVIDcast API</a>.</p>
+<p>As an example, we’ll look at daily cumulative COVID-19 cases for 4 states (CA, FL, NY, and TX) in the U.S., over a year from mid 2020 to mid 2021, using the <a href="https://cmu-delphi.github.io/covidcast/covidcastR/"><code>covidcast</code></a> package to fetch this data from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/">COVIDcast API</a>.</p>
 <div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">covidcast</span>)
 
 <span class="no">case_data</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="kw">data_source</span> <span class="kw">=</span> <span class="st">"jhu-csse"</span>,
@@ -233,12 +232,12 @@ fetch this data from the <a href="https://cmu-delphi.github.io/delphi-epidata/ap
 <pre><code>## # A tibble: 6 × 4
 ##   value geo_value time_value issue     
 ##   &lt;int&gt; &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;    
-## 1     1 ca        2003-02-23 2021-10-14
-## 2     0 ca        2003-02-24 2021-10-14
-## 3     0 ca        2003-02-25 2021-10-14
-## 4     1 ca        2003-02-26 2021-10-14
-## 5     0 ca        2003-02-27 2021-10-14
-## 6     1 ca        2003-02-28 2021-10-14</code></pre>
+## 1     1 ca        2003-02-23 2021-10-19
+## 2     0 ca        2003-02-24 2021-10-19
+## 3     0 ca        2003-02-25 2021-10-19
+## 4     1 ca        2003-02-26 2021-10-19
+## 5     0 ca        2003-02-27 2021-10-19
+## 6     1 ca        2003-02-28 2021-10-19</code></pre>
 <div class="sourceCode" id="cb22"><html><body><pre class="r"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">value</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html">geom_col</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">y</span> <span class="kw">=</span> <span class="no">value</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +

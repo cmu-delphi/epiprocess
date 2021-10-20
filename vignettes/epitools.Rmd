@@ -50,8 +50,8 @@ read the documentation for `as.epi_signal()`.
 
 As an example, we'll look at daily cumulative COVID-19 cases for 4 states (CA,
 FL, NY, and TX) in the U.S., over a year from mid 2020 to mid 2021, using the 
-[`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) package to  
-fetch this data from the [COVIDcast
+[`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) 
+package to fetch this data from the [COVIDcast
 API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/). 
 
 ```{r, message = FALSE}

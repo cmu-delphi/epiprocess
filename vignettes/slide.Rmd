@@ -43,8 +43,8 @@ in order to smooth the signal, by using a formula in the `slide_fun` argument of
 `slide_by_geo()`.
 
 ```{r}
-slide_by_geo(x, slide_fun = ~ Mean(.x$value), n = 7) %>%
-  head(10)
+x <- slide_by_geo(x, slide_fun = ~ Mean(.x$value), n = 7)
+head(x, 10)
 ```
 
 The formula specified via `slide_fun` has access to all columns present in the
@@ -57,8 +57,8 @@ that contains the results (from sliding the formula), named `slide_value` by
 default. We can instead specify a name up front using the `col_name` argument: 
 
 ```{r}
-slide_by_geo(x, slide_fun = ~ Mean(.x$value), n = 7, col_name = "7dav") %>%
-  head(10)
+x <- slide_by_geo(x, slide_fun = ~ Mean(.x$value), n = 7, col_name = "7dav")
+head(x, 10)
 ```
 
 As a simple sanity check, we visualize the 7-day trailing averages computed on
@@ -68,8 +68,7 @@ top of the original counts:
 library(ggplot2)
 theme_set(theme_bw())
 
-slide_by_geo(x, slide_fun = ~ Mean(.x$value), n = 7, col_name = "7dav") %>%
-  ggplot(aes(x = time_value)) +
+ggplot(x, aes(x = time_value)) +
   geom_col(aes(y = value, fill = geo_value), alpha = 0.5) +
   geom_line(aes(y = `7dav`, col = geo_value), show.legend = FALSE) +
   facet_wrap(~ geo_value, scales = "free_y") +
@@ -86,9 +85,155 @@ number of named additional arguments; and ending with `...`, to capture general
 additional arguments. Recreating the last example of a 7-day trailing average: 
 
 ```{r}
-slide_by_geo(x, slide_fun = function(x, ...) Mean(x$value), n = 7,
-             col_name = "7dav") %>%
-  head(10)
+x <- slide_by_geo(x, slide_fun = function(x, ...) Mean(x$value), n = 7, 
+                  col_name = "7dav") 
+head(x, 10)
 ```
 
-As a more complicated example, todo
+## Building and running a local forecaster
+
+As a more complicated example, we create a forecaster based on a local (in time)
+autoregression or AR model. AR models can be fit in numerous ways (using base R 
+functions and various packages), but here we define it "by hand" both because it
+provides a more advanced example of sliding a function over an `epi_signal` 
+object, and because it allows us to be a bit more flexible in defining a 
+*probabilistic* forecaster: one that outputs not just a point prediction, but 
+a notion of uncertainty around this. In particular, our forecaster will 
+output a point prediction along with a 80\% uncertainty band, represented by
+a predictive quantiles at the 10\% and 90\% levels (lower and upper endpoints of
+the uncertainty band). 
+
+The function defined below, `local_ar()`, is our local AR forecaster. The `lags`
+argument indicates which lags to use in the model, and `ahead` indicates how far
+ahead in the future to make forecasts (both are encoded in terms of the units of
+the `time_value` column; so, days, in the working `epi_signal` being considered 
+in this vignette). The implementation here uses `dplyr::lag()`, `dplyr::lead()`, 
+and `purrr:map()` to fit the AR model with tidy code.
+
+```{r}
+local_ar <- function(v, lags = c(0, 7, 14), ahead = 7, min_train_window = 10, 
+                     quantile_levels = c(0.1, 0.9), symmetrize = TRUE) {   
+  # Return NA if insufficient training data
+  if (length(v) < min_train_window + max(lags) + ahead) {
+    return(data.frame(value = NA, level = c(NA, quantile_levels)))
+  }
+  
+  # Perform other simple checks
+  stopifnot(all(lags >= 0), ahead > 0, max(lags) + ahead < length(v))
+  
+  # Go and fit the AR model
+  y <- dplyr::lead(v, n = ahead)
+  x <- do.call(cbind, purrr::map(lags, ~ dplyr::lag(v, n = .x)))
+  fit <- lm(y ~ x, na.action = na.omit)
+
+  # Make a prediction
+  newx <- tail(x, 1)
+  point <- drop(c(1, newx) %*% coef(fit))
+  
+  # Compute a band and return
+  r <- residuals(fit)
+  s <- ifelse(symmetrize, -1, NA) # Should the residuals be symmetrized?
+  q <- c(0, quantile(c(r, s * r), probs = quantile_levels, na.rm = TRUE))
+  return(data.frame(value = q + point, level = c(NA, quantile_levels))) 
+}
+```
+
+Now we go ahead and slide this local forecaster over the working `epi_signal` of 
+COVID-19 cases. Note that we actually model the `7dav` column, to operate on the 
+scale of smoothed COVID-19 cases. (This is clearly equivalent, up to a constant, 
+to modeling weekly sums of COVID-19 cases.)
+
+```{r}
+forecasts <- x %>% 
+  slide_by_geo(slide_fun = ~ local_ar(.x$`7dav`), n = 63, 
+               col_type = "list", col_name = "value") %>%
+  rename(forecast_date = time_value) %>%
+  mutate(target_date = forecast_date + 7) %>%
+  select(-issue, -`7dav`)
+
+tail(forecasts, 3)
+```
+
+We cab see that the `value` column is a list column (as we specified in the call
+to `slide_to_geo()`, which is needed since `local_ar()` returns a data frame),
+and we can use `tidyr::unnest()` to unnest it.
+
+```{r}
+forecasts <- tidyr::unnest(forecasts, value)
+tail(forecasts, 10)
+```
+
+The `level` column specifies the quantile level corresponding to the `value` 
+column. Here `NA` means that the associated `value` entry is the point forecast
+and `0.1` and `0.9` mean that the associated `value` entries are the estimated
+quantiles at the 0.1 and 0.9 probability levels. 
+
+To finish off, we plot the forecasts at various times (spaced out by a month)
+over the last year, at multiple horizons (7, 14, and 28 days ahead). To do so, 
+we encapsulate the process of generating forecasts into a simple function, so
+that we can call it a few times.
+
+```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
+k_week_ahead <- function(x, ahead = 7) {
+  # Ensure each forecast task has 42 effective days of training data
+  arg_list = as.list(args(local_ar))
+  n = 42 + max(eval(arg_list$lags)) + ahead 
+  return(x %>% 
+           slide_by_geo(slide_fun = ~ local_ar(.x$`7dav`, ahead = ahead), 
+                        n = n, col_type = "list", col_name = "value") %>%
+           dplyr::rename(forecast_date = time_value) %>%
+           mutate(target_date = forecast_date + ahead) %>%
+           select(-issue, -`7dav`) %>%
+           tidyr::unnest(value))
+}
+
+# First generate the forecasts, and bind them together
+forecasts <- bind_rows(k_week_ahead(x, ahead = 7),
+                       k_week_ahead(x, ahead = 14),
+                       k_week_ahead(x, ahead = 28))
+
+# Now plot some of them, spaced apart by 2 months
+dates <- seq(as.Date("2020-08-01"), as.Date("2021-06-01"), by = "2 months")
+
+bands <- forecasts %>%
+  filter(forecast_date %in% dates) %>%
+  group_by(forecast_date, target_date, geo_value) %>%
+  mutate(level = case_when(
+    is.na(level) ~ "point", 
+    level < .5 ~ "lo", 
+    TRUE ~ "hi")) %>%
+  tidyr::pivot_wider(names_from = level, values_from = value)
+
+p <- ggplot(bands, aes(x = target_date, y = point, group = forecast_date)) +
+  geom_ribbon(aes(ymin = lo, ymax = hi), fill = "orchid", alpha = 0.5) +
+  geom_line() + geom_point(size = 0.5) + 
+  geom_vline(aes(xintercept = forecast_date), linetype = 2, alpha = 0.5) +
+  facet_wrap(vars(geo_value), scales = "free_y") +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Reported COVID-19 cases")
+  
+gginnards::append_layers(
+  p, geom_line(data = x, aes(x = time_value, y = `7dav`), 
+               inherit.aes = FALSE, color = "gray50"), pos = "bottom")
+```
+
+Two points are worth making. First, the AR forecaster here is not very good. At 
+various points in time, we can see that its forecasts are both pretty volatile 
+(its point predictions are all over the place) and overconfident (its bands are 
+too narrow). This is only meant as a simple demo and slightly more sophisticated
+AR models can go a long way. For example, the overconfidence in this example is
+due to the fact that the bands are based on quantiles of training residuals, and
+when the AR model fits well to the training set, these can clearly be too small.
+
+Second, the AR forecaster here is using using finalized data, meaning, it uses
+the signal values (reported COVID-19 cases) corresponding to the latest issue
+dates available, for both training models and making predictions. However, this
+is not reflective of the provisional nature of the data that it must cope with 
+in a true forecast task. Training and making predictions on finalized data can 
+lead to an overly optimismic sense of accuracy; see, for example, [McDonald et 
+al. (2021)](https://www.medrxiv.org/content/10.1101/2021.06.22.21259346), and
+references therein.
+
+Note that both of these issues (building more AR models, and properly handling 
+provisional data in training models and making predictions) are addressed in the 
+[`epipred`](https://cmu-delphi.github.io/epipred/) package.
