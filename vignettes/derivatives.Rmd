@@ -51,7 +51,6 @@ seem to roughly but reasonably mark times of upswing in the underlying signal.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 4}
 library(ggplot2)
-library(gridExtra)
 theme_set(theme_bw())
 threshold = 0.25
 
@@ -68,7 +67,7 @@ p2 <- ggplot(x, aes(x = time_value, y = deriv)) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Derivative (linear regression)") 
 
-grid.arrange(p1, p2, nrow = 1)
+gridExtra::grid.arrange(p1, p2, nrow = 1)
 ```
 
 ## Estimating derivatives via smoothing spline
@@ -105,7 +104,7 @@ p2 <- ggplot(x, aes(x = time_value)) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Derivative (smoothing spline)") 
 
-grid.arrange(p1, p2, nrow = 1)
+gridExtra::grid.arrange(p1, p2, nrow = 1)
 ```
 
 The estimated derivates---in purple for the smoothing spline with 8 degrees of
@@ -146,7 +145,7 @@ p2 <- ggplot(x, aes(x = time_value)) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Derivative (smoothing spline)") 
 
-grid.arrange(p1, p2, nrow = 1)
+gridExtra::grid.arrange(p1, p2, nrow = 1)
 ```
 
 The estimated derivates now appear a bit smoother than the last ones, from the 
