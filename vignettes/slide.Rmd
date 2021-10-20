@@ -1,6 +1,6 @@
 ---
 title: 1. Slide a computation over signal values
-description: Slide a computation signal values over time.
+description: Slide a computation over signal values over time.
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{1. Slide a computation over signal values}
@@ -69,11 +69,11 @@ library(ggplot2)
 theme_set(theme_bw())
 
 ggplot(x, aes(x = time_value)) +
-  geom_col(aes(y = value, fill = geo_value), alpha = 0.5) +
+  geom_col(aes(y = value, fill = geo_value), alpha = 0.5, show.legend = FALSE) +
   geom_line(aes(y = `7dav`, col = geo_value), show.legend = FALSE) +
   facet_wrap(~ geo_value, scales = "free_y") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
-  labs(x = "Date", y = "Reported COVID-19 cases", fill = "State")
+  labs(x = "Date", y = "Reported COVID-19 cases")
 ```
 
 ## Slide with a function 
@@ -99,23 +99,22 @@ provides a more advanced example of sliding a function over an `epi_signal`
 object, and because it allows us to be a bit more flexible in defining a 
 *probabilistic* forecaster: one that outputs not just a point prediction, but 
 a notion of uncertainty around this. In particular, our forecaster will 
-output a point prediction along with a 80\% uncertainty band, represented by
-a predictive quantiles at the 10\% and 90\% levels (lower and upper endpoints of
+output a point prediction along with an 90\% uncertainty band, represented by
+a predictive quantiles at the 5\% and 95\% levels (lower and upper endpoints of
 the uncertainty band). 
 
-The function defined below, `local_ar()`, is our local AR forecaster. The `lags`
-argument indicates which lags to use in the model, and `ahead` indicates how far
-ahead in the future to make forecasts (both are encoded in terms of the units of
-the `time_value` column; so, days, in the working `epi_signal` being considered 
-in this vignette). The implementation here uses `dplyr::lag()`, `dplyr::lead()`, 
-and `purrr:map()` to fit the AR model with tidy code.
+The function defined below, `prob_ar()`, is our probabilistic AR forecaster. The 
+`lags`argument indicates which lags to use in the model, and `ahead` indicates 
+how far ahead in the future to make forecasts (both are encoded in terms of the
+units of the `time_value` column; so, days, in the working `epi_signal` being 
+considered in this vignette).
 
 ```{r}
-local_ar <- function(v, lags = c(0, 7, 14), ahead = 7, min_train_window = 10, 
-                     quantile_levels = c(0.1, 0.9), symmetrize = TRUE) {   
+prob_ar <- function(v, lags = c(0, 7, 14), ahead = 7, min_train_window = 20, 
+                    lower_level = 0.05, upper_level = 0.95, symmetrize = TRUE) {   
   # Return NA if insufficient training data
   if (length(v) < min_train_window + max(lags) + ahead) {
-    return(data.frame(value = NA, level = c(NA, quantile_levels)))
+    return(data.frame(point = NA, lower = NA, upper = NA))
   }
   
   # Perform other simple checks
@@ -133,97 +132,85 @@ local_ar <- function(v, lags = c(0, 7, 14), ahead = 7, min_train_window = 10,
   # Compute a band and return
   r <- residuals(fit)
   s <- ifelse(symmetrize, -1, NA) # Should the residuals be symmetrized?
-  q <- c(0, quantile(c(r, s * r), probs = quantile_levels, na.rm = TRUE))
-  return(data.frame(value = q + point, level = c(NA, quantile_levels))) 
+  q <- quantile(c(r, s * r), probs = c(lower_level, upper_level), na.rm = TRUE)
+  return(data.frame(point = point, lower = point + q[1], upper = point + q[2]))
 }
 ```
 
-Now we go ahead and slide this local forecaster over the working `epi_signal` of 
+Now we go ahead and slide this AR forecaster over the working `epi_signal` of 
 COVID-19 cases. Note that we actually model the `7dav` column, to operate on the 
 scale of smoothed COVID-19 cases. (This is clearly equivalent, up to a constant, 
 to modeling weekly sums of COVID-19 cases.)
 
 ```{r}
-forecasts <- x %>% 
-  slide_by_geo(slide_fun = ~ local_ar(.x$`7dav`), n = 63, 
-               col_type = "list", col_name = "value") %>%
-  rename(forecast_date = time_value) %>%
-  mutate(target_date = forecast_date + 7) %>%
-  select(-issue, -`7dav`)
+z <- x %>% 
+  slide_by_geo(slide_fun = ~ prob_ar(.x$`7dav`), n = 100, 
+               col_type = "list", col_name = "forecast") %>%
+  mutate(target_date = time_value + 7) %>%
+  select(-value, -slide_value, -issue)
 
-tail(forecasts, 3)
+tail(z, 3)
 ```
 
-We cab see that the `value` column is a list column (as we specified in the call
-to `slide_to_geo()`, which is needed since `local_ar()` returns a data frame),
+We can see that the `forecast` column is a list column (as specified in the call
+to `slide_to_geo()`, which was needed since `prob_ar()` returns a data frame),
 and we can use `tidyr::unnest()` to unnest it.
 
 ```{r}
-forecasts <- tidyr::unnest(forecasts, value)
-tail(forecasts, 10)
+z <- tidyr::unnest(z, forecast)
+tail(z, 10)
 ```
 
-The `level` column specifies the quantile level corresponding to the `value` 
-column. Here `NA` means that the associated `value` entry is the point forecast
-and `0.1` and `0.9` mean that the associated `value` entries are the estimated
-quantiles at the 0.1 and 0.9 probability levels. 
+Now we get three columns `point`, `lower`, and `upper` corresponding to the 
+point forecast, and the lower and upper endpoints of the 95\% prediction band, 
+respectively.
 
-To finish off, we plot the forecasts at various times (spaced out by a month)
+To finish off, we plot the forecasts at some times (spaced out by a few months)
 over the last year, at multiple horizons (7, 14, and 28 days ahead). To do so, 
 we encapsulate the process of generating forecasts into a simple function, so
 that we can call it a few times.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
 k_week_ahead <- function(x, ahead = 7) {
-  # Ensure each forecast task has 42 effective days of training data
-  arg_list = as.list(args(local_ar))
-  n = 42 + max(eval(arg_list$lags)) + ahead 
-  return(x %>% 
-           slide_by_geo(slide_fun = ~ local_ar(.x$`7dav`, ahead = ahead), 
-                        n = n, col_type = "list", col_name = "value") %>%
-           dplyr::rename(forecast_date = time_value) %>%
-           mutate(target_date = forecast_date + ahead) %>%
-           select(-issue, -`7dav`) %>%
-           tidyr::unnest(value))
+  x %>% 
+    slide_by_geo(slide_fun = ~ prob_ar(.x$`7dav`, ahead = ahead), 
+                 n = 100, col_type = "list", col_name = "forecast") %>%
+    mutate(target_date = time_value + ahead) %>%
+    select(-value, -slide_value, -issue) %>%
+    tidyr::unnest(forecast)
 }
 
 # First generate the forecasts, and bind them together
-forecasts <- bind_rows(k_week_ahead(x, ahead = 7),
-                       k_week_ahead(x, ahead = 14),
-                       k_week_ahead(x, ahead = 28))
+z <- bind_rows(k_week_ahead(x, ahead = 7),
+               k_week_ahead(x, ahead = 14),
+               k_week_ahead(x, ahead = 28))
 
 # Now plot some of them, spaced apart by 2 months
-dates <- seq(as.Date("2020-08-01"), as.Date("2021-06-01"), by = "2 months")
+z_to_show <- z %>%
+  filter(time_value %in% 
+           seq(as.Date("2020-08-01"), as.Date("2021-06-01"), by = "2 months"))
 
-bands <- forecasts %>%
-  filter(forecast_date %in% dates) %>%
-  group_by(forecast_date, target_date, geo_value) %>%
-  mutate(level = case_when(
-    is.na(level) ~ "point", 
-    level < .5 ~ "lo", 
-    TRUE ~ "hi")) %>%
-  tidyr::pivot_wider(names_from = level, values_from = value)
-
-p <- ggplot(bands, aes(x = target_date, y = point, group = forecast_date)) +
-  geom_ribbon(aes(ymin = lo, ymax = hi), fill = "orchid", alpha = 0.5) +
+p <- ggplot(z_to_show, aes(x = target_date, y = point, group = time_value)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "orchid", alpha = 0.5) +
   geom_line() + geom_point(size = 0.5) + 
-  geom_vline(aes(xintercept = forecast_date), linetype = 2, alpha = 0.5) +
+  geom_vline(aes(xintercept = time_value), linetype = 2, alpha = 0.5) +
   facet_wrap(vars(geo_value), scales = "free_y") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Reported COVID-19 cases")
   
 gginnards::append_layers(
-  p, geom_line(data = x, aes(x = time_value, y = `7dav`), 
+  p, geom_line(data = z, aes(x = time_value, y = `7dav`), 
                inherit.aes = FALSE, color = "gray50"), pos = "bottom")
 ```
 
-Two points are worth making. First, the AR forecaster here is not very good. At 
-various points in time, we can see that its forecasts are both pretty volatile 
-(its point predictions are all over the place) and overconfident (its bands are 
-too narrow). This is only meant as a simple demo and slightly more sophisticated
-AR models can go a long way. For example, the overconfidence in this example is
-due to the fact that the bands are based on quantiles of training residuals, and
-when the AR model fits well to the training set, these can clearly be too small.
+Two points are worth making. First, the AR model's performance here is pretty
+mixed. At various points in time, we can see that its forecasts are volatile
+(its point predictions are all over the place), or overconfident (its bands are
+too narrow), or both at the same time. This is only meant as a simple demo and
+slightly more sophisticated AR models can go a long way. For example, the 
+overconfidence in this example is due to the fact that the bands are based on 
+quantiles of training residuals, and when the AR model fits well to the training
+set, these can clearly be too small in magnitude.
 
 Second, the AR forecaster here is using using finalized data, meaning, it uses
 the signal values (reported COVID-19 cases) corresponding to the latest issue
@@ -234,6 +221,6 @@ lead to an overly optimismic sense of accuracy; see, for example, [McDonald et
 al. (2021)](https://www.medrxiv.org/content/10.1101/2021.06.22.21259346), and
 references therein.
 
-Note that both of these issues (building more AR models, and properly handling 
+Note that both of these issues (building better AR models, and properly handling 
 provisional data in training models and making predictions) are addressed in the 
 [`epipred`](https://cmu-delphi.github.io/epipred/) package.
