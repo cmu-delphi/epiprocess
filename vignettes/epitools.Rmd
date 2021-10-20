@@ -147,6 +147,6 @@ ggplot(x, aes(x = time_value, y = value)) +
   labs(x = "Date", y = "SARS cases in Canada")
 ```
 
-## Stacking data sets into `epi_signal_long` format
+## Stacking data sets into "long" format
 
 todo
