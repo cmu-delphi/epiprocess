@@ -102,80 +102,77 @@
     
     
 <p>As a more sophisticated example, here we show how to <em>sensorize</em> the doctor visits signal. The sensor values are defined by the predicted values from a local (in time) regression of past case rates (response) on past doctor visits (covariate).</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># Regression for doctor visits sensorization</span>
-<span class="va">dv_regression</span> <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">m</span> <span class="op">=</span> <span class="fl">3</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span>
-  <span class="va">n</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>
-  <span class="kw">if</span> <span class="op">(</span><span class="va">n</span> <span class="op">&lt;=</span> <span class="va">m</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="cn">NA</span><span class="op">)</span> <span class="co"># Take care of trivial case</span>
-  
-  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html">tryCatch</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/warning.html">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/message.html">suppressMessages</a></span><span class="op">(</span><span class="op">{</span>
+<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="co"># Regression for doctor visits sensorization</span>
+<span class="no">dv_regression</span> <span class="kw">=</span> <span class="kw">function</span>(<span class="no">x</span>, <span class="no">m</span> <span class="kw">=</span> <span class="fl">3</span>, <span class="no">...</span>) {
+  <span class="no">n</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span>(<span class="no">x</span>)
+  <span class="kw">if</span> (<span class="no">n</span> <span class="kw">&lt;=</span> <span class="no">m</span>+<span class="fl">1</span>) <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fl">NA</span>) <span class="co"># Take care of trivial case</span>
+
+  <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/conditions.html">tryCatch</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/warning.html">suppressWarnings</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/message.html">suppressMessages</a></span>({
     <span class="co"># Fit a regression, leaving out the last m days of data</span>
-    <span class="va">lm_obj</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">value.y</span> <span class="op">~</span> <span class="va">value.x</span>, data <span class="op">=</span> <span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="op">(</span><span class="va">n</span><span class="op">-</span><span class="va">m</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span>
-    
+    <span class="no">lm_obj</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(<span class="no">value.y</span> ~ <span class="no">value.x</span>, <span class="kw">data</span> <span class="kw">=</span> <span class="no">x</span>[<span class="fl">1</span>:(<span class="no">n</span>-<span class="no">m</span>+<span class="fl">1</span>), ])
+
     <span class="co"># Form prediction for the last day of data, and return</span>
-    <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">lm_obj</span>, newdata <span class="op">=</span> <span class="va">x</span><span class="op">[</span><span class="va">n</span>, <span class="op">]</span><span class="op">)</span>
-  <span class="op">}</span><span class="op">)</span><span class="op">)</span>,
-  error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="cn">NA</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
-<span class="op">}</span>
+    <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span>(<span class="no">lm_obj</span>, <span class="kw">newdata</span> <span class="kw">=</span> <span class="no">x</span>[<span class="no">n</span>, ])
+  })),
+  <span class="kw">error</span> <span class="kw">=</span> <span class="kw">function</span>(<span class="no">e</span>) <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fl">NA</span>)))
+}
 
 <span class="co"># Fetch doctor visits signal and join it to case rates</span>
-<span class="va">joined</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/message.html">suppressMessages</a></span><span class="op">(</span>
-  <span class="fu"><a href="https://cmu-delphi.github.io/covidcast/covidcastR/reference/covidcast_signal.html">covidcast_signal</a></span><span class="op">(</span>data_source <span class="op">=</span> <span class="st">"doctor-visits"</span>, 
-                   signal <span class="op">=</span> <span class="st">"smoothed_adj_cli"</span>, 
-                   start_day <span class="op">=</span> <span class="va">start_day</span>, end_day <span class="op">=</span> <span class="va">end_day</span>, 
-                   geo_type <span class="op">=</span> <span class="st">"state"</span>, geo_values <span class="op">=</span> <span class="va">geo_values</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html">full_join</a></span><span class="op">(</span><span class="va">signals</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span>, by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"geo_value"</span>, <span class="st">"time_value"</span><span class="op">)</span><span class="op">)</span>
- 
+<span class="no">joined</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/message.html">suppressMessages</a></span>(
+  <span class="fu">covidcast_signal</span>(<span class="kw">data_source</span> <span class="kw">=</span> <span class="st">"doctor-visits"</span>,
+                   <span class="kw">signal</span> <span class="kw">=</span> <span class="st">"smoothed_adj_cli"</span>,
+                   <span class="kw">start_day</span> <span class="kw">=</span> <span class="no">start_day</span>, <span class="kw">end_day</span> <span class="kw">=</span> <span class="no">end_day</span>,
+                   <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>, <span class="kw">geo_values</span> <span class="kw">=</span> <span class="no">geo_values</span>)) <span class="kw">%&gt;%</span>
+  <span class="fu">full_join</span>(<span class="no">signals</span><span class="kw">[[</span><span class="fl">2</span>]], <span class="kw">by</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"geo_value"</span>, <span class="st">"time_value"</span>))
+
 <span class="co"># Perform sensorization for each state; use the last n = 56 days (8 weeks) of </span>
 <span class="co"># data, minus the last m = 3 days, for the regression</span>
-<span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span><span class="op">(</span><span class="va">joined</span>, slide_fun <span class="op">=</span> <span class="va">dv_regression</span>, n <span class="op">=</span> <span class="fl">56</span>, m <span class="op">=</span> <span class="fl">3</span>, 
-             col_name <span class="op">=</span> <span class="st">"sensor"</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">value.x</span>, <span class="va">value.y</span>, <span class="va">sensor</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html">arrange</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></code></pre></div>
+<span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span>(<span class="no">joined</span>, <span class="kw">slide_fun</span> <span class="kw">=</span> <span class="no">dv_regression</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">56</span>, <span class="kw">m</span> <span class="kw">=</span> <span class="fl">3</span>,
+             <span class="kw">col_name</span> <span class="kw">=</span> <span class="st">"sensor"</span>) <span class="kw">%&gt;%</span>
+  <span class="fu">select</span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">value.x</span>, <span class="no">value.y</span>, <span class="no">sensor</span>) <span class="kw">%&gt;%</span>
+  <span class="fu">arrange</span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fl">10</span>)</pre></body></html></div>
 <p>Above, the first 4 elements are <code>NA</code> because of insufficient training data (we need at least 2 training samples for simple linear regression, and we omit the last 3 days of data).</p>
 <div id="returning-complex-objects" class="section level2">
 <h2 class="hasAnchor">
 <a href="#returning-complex-objects" class="anchor"></a>Returning complex objects</h2>
 <p>As a final example, we show how to use <code><a href="../reference/slide_by_geo.html">slide_by_geo()</a></code> to output more complex objects. We amend the last example so that <code>dv_regression()</code> returns both the predicted value (sensor) and the fitted linear model object. In order to use this with <code><a href="../reference/slide_by_geo.html">slide_by_geo()</a></code>, we need to set the <code>col_type</code> argument to be “list”:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">dv_regression</span> <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">m</span> <span class="op">=</span> <span class="fl">3</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span>
-  <span class="va">n</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>
-  <span class="kw">if</span> <span class="op">(</span><span class="va">n</span> <span class="op">&lt;=</span> <span class="va">m</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lm_obj <span class="op">=</span> <span class="cn">NA</span>, sensor <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span><span class="op">)</span> <span class="co"># Trivial case</span>
-  
-  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html">tryCatch</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/warning.html">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/message.html">suppressMessages</a></span><span class="op">(</span><span class="op">{</span>
+<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">dv_regression</span> <span class="kw">=</span> <span class="kw">function</span>(<span class="no">x</span>, <span class="no">m</span> <span class="kw">=</span> <span class="fl">3</span>, <span class="no">...</span>) {
+  <span class="no">n</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span>(<span class="no">x</span>)
+  <span class="kw">if</span> (<span class="no">n</span> <span class="kw">&lt;=</span> <span class="no">m</span>+<span class="fl">1</span>) <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">lm_obj</span> <span class="kw">=</span> <span class="fl">NA</span>, <span class="kw">sensor</span> <span class="kw">=</span> <span class="fl">NA</span>)) <span class="co"># Trivial case</span>
+
+  <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/conditions.html">tryCatch</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/warning.html">suppressWarnings</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/message.html">suppressMessages</a></span>({
     <span class="co"># Fit a regression, leaving out the last days of data</span>
-    <span class="va">n</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>
-    <span class="va">lm_obj</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">value.y</span> <span class="op">~</span> <span class="va">value.x</span>, data <span class="op">=</span> <span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="op">(</span><span class="va">n</span><span class="op">-</span><span class="va">m</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span>
-    
+    <span class="no">n</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span>(<span class="no">x</span>)
+    <span class="no">lm_obj</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(<span class="no">value.y</span> ~ <span class="no">value.x</span>, <span class="kw">data</span> <span class="kw">=</span> <span class="no">x</span>[<span class="fl">1</span>:(<span class="no">n</span>-<span class="no">m</span>+<span class="fl">1</span>), ])
+
     <span class="co"># Form prediction for the last day of data</span>
-    <span class="va">sensor</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">lm_obj</span>, newdata <span class="op">=</span> <span class="va">x</span><span class="op">[</span><span class="va">n</span>, <span class="op">]</span><span class="op">)</span>
-    
+    <span class="no">sensor</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span>(<span class="no">lm_obj</span>, <span class="kw">newdata</span> <span class="kw">=</span> <span class="no">x</span>[<span class="no">n</span>, ])
+
     <span class="co"># Return the fitted lm object and prediction</span>
-    <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lm_obj <span class="op">=</span> <span class="va">lm_obj</span>, sensor <span class="op">=</span> <span class="va">sensor</span><span class="op">)</span>
-  <span class="op">}</span><span class="op">)</span><span class="op">)</span>,
-  error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lm_obj <span class="op">=</span> <span class="cn">NA</span>, sensor <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
-<span class="op">}</span>
+    <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">lm_obj</span> <span class="kw">=</span> <span class="no">lm_obj</span>, <span class="kw">sensor</span> <span class="kw">=</span> <span class="no">sensor</span>)
+  })),
+  <span class="kw">error</span> <span class="kw">=</span> <span class="kw">function</span>(<span class="no">e</span>) <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">lm_obj</span> <span class="kw">=</span> <span class="fl">NA</span>, <span class="kw">sensor</span> <span class="kw">=</span> <span class="fl">NA</span>))))
+}
 
-<span class="va">joined</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span><span class="op">(</span><span class="va">joined</span>, slide_fun <span class="op">=</span> <span class="va">dv_regression</span>, n <span class="op">=</span> <span class="fl">56</span>, m <span class="op">=</span> <span class="fl">3</span>, 
-                       col_name <span class="op">=</span> <span class="st">"sensor_obj"</span>, col_type <span class="op">=</span> <span class="st">"list"</span><span class="op">)</span>
+<span class="no">joined</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span>(<span class="no">joined</span>, <span class="kw">slide_fun</span> <span class="kw">=</span> <span class="no">dv_regression</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">56</span>, <span class="kw">m</span> <span class="kw">=</span> <span class="fl">3</span>,
+                       <span class="kw">col_name</span> <span class="kw">=</span> <span class="st">"sensor_obj"</span>, <span class="kw">col_type</span> <span class="kw">=</span> <span class="st">"list"</span>)
 
-<span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">joined</span><span class="op">$</span><span class="va">sensor_obj</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">joined</span><span class="op">$</span><span class="va">sensor_obj</span><span class="op">[[</span><span class="fl">5</span><span class="op">]</span><span class="op">]</span><span class="op">)</span> <span class="co"># The first 4 are lists filled with NAs</span>
-<span class="va">joined</span><span class="op">$</span><span class="va">sensor_obj</span><span class="op">[[</span><span class="fl">5</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">lm_obj</span>
-<span class="va">joined</span><span class="op">$</span><span class="va">sensor_obj</span><span class="op">[[</span><span class="fl">5</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">sensor</span></code></pre></div>
+<span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span>(<span class="no">joined</span>$<span class="no">sensor_obj</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span>(<span class="no">joined</span>$<span class="no">sensor_obj</span><span class="kw">[[</span><span class="fl">5</span>]]) <span class="co"># The first 4 are lists filled with NAs</span>
+<span class="no">joined</span>$<span class="no">sensor_obj</span><span class="kw">[[</span><span class="fl">5</span>]]$<span class="no">lm_obj</span>
+<span class="no">joined</span>$<span class="no">sensor_obj</span><span class="kw">[[</span><span class="fl">5</span>]]$<span class="no">sensor</span></pre></body></html></div>
 <p>This allows for post-inspection of the sensor models, which may be helpful for diagnostic purposes. Note the way in which we structure the return argument in <code>dv_regression()</code> in its failure cases: it is always a list with the same named arguments. This helps keep the post-inspection code just a bit more simple (it is already a hairy enough, to protect against extracting coefficients from <code>NA</code> objects).</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">joined</span> <span class="op">%&gt;%</span> 
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rowwise.html">rowwise</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>sensor <span class="op">=</span> <span class="va">sensor_obj</span><span class="op">$</span><span class="va">sensor</span>, 
-         intercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Logic.html">isTRUE</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">sensor_obj</span><span class="op">$</span><span class="va">lm_obj</span><span class="op">)</span><span class="op">)</span>, <span class="cn">NA</span>,
-                            <span class="fu"><a href="https://rdrr.io/r/stats/coef.html">coef</a></span><span class="op">(</span><span class="va">sensor_obj</span><span class="op">$</span><span class="va">lm_obj</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>,
-         slope <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Logic.html">isTRUE</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">sensor_obj</span><span class="op">$</span><span class="va">lm_obj</span><span class="op">)</span><span class="op">)</span>, <span class="cn">NA</span>, 
-                        <span class="fu"><a href="https://rdrr.io/r/stats/coef.html">coef</a></span><span class="op">(</span><span class="va">sensor_obj</span><span class="op">$</span><span class="va">lm_obj</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">sensor</span>, <span class="va">intercept</span>, <span class="va">slope</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html">arrange</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">joined</span> <span class="kw">%&gt;%</span>
+  <span class="fu">rowwise</span>() <span class="kw">%&gt;%</span>
+  <span class="fu">mutate</span>(<span class="kw">sensor</span> <span class="kw">=</span> <span class="no">sensor_obj</span>$<span class="no">sensor</span>,
+         <span class="kw">intercept</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/Logic.html">isTRUE</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span>(<span class="no">sensor_obj</span>$<span class="no">lm_obj</span>)), <span class="fl">NA</span>,
+                            <span class="fu"><a href="https://rdrr.io/r/stats/coef.html">coef</a></span>(<span class="no">sensor_obj</span>$<span class="no">lm_obj</span>)[<span class="fl">1</span>]),
+         <span class="kw">slope</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/Logic.html">isTRUE</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span>(<span class="no">sensor_obj</span>$<span class="no">lm_obj</span>)), <span class="fl">NA</span>,
+                        <span class="fu"><a href="https://rdrr.io/r/stats/coef.html">coef</a></span>(<span class="no">sensor_obj</span>$<span class="no">lm_obj</span>)[<span class="fl">2</span>])) <span class="kw">%&gt;%</span>
+  <span class="fu">select</span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">sensor</span>, <span class="no">intercept</span>, <span class="no">slope</span>) <span class="kw">%&gt;%</span>
+  <span class="fu">arrange</span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fl">20</span>)</pre></body></html></div>
 </div>
   </div>
 
@@ -194,7 +191,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
 
       </footer>
