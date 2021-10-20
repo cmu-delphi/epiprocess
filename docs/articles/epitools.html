@@ -232,12 +232,12 @@
 <pre><code>## # A tibble: 6 × 4
 ##   value geo_value time_value issue     
 ##   &lt;int&gt; &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;    
-## 1     1 ca        2003-02-23 2021-10-19
-## 2     0 ca        2003-02-24 2021-10-19
-## 3     0 ca        2003-02-25 2021-10-19
-## 4     1 ca        2003-02-26 2021-10-19
-## 5     0 ca        2003-02-27 2021-10-19
-## 6     1 ca        2003-02-28 2021-10-19</code></pre>
+## 1     1 ca        2003-02-23 2021-10-20
+## 2     0 ca        2003-02-24 2021-10-20
+## 3     0 ca        2003-02-25 2021-10-20
+## 4     1 ca        2003-02-26 2021-10-20
+## 5     0 ca        2003-02-27 2021-10-20
+## 6     1 ca        2003-02-28 2021-10-20</code></pre>
 <div class="sourceCode" id="cb22"><html><body><pre class="r"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">value</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html">geom_col</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">y</span> <span class="kw">=</span> <span class="no">value</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +
@@ -245,9 +245,9 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"SARS cases in Canada"</span>)</pre></body></html></div>
 <p><img src="epitools_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
 </div>
-<div id="stacking-data-sets-into-epi_signal_long-format" class="section level2">
+<div id="stacking-data-sets-into-long-format" class="section level2">
 <h2 class="hasAnchor">
-<a href="#stacking-data-sets-into-epi_signal_long-format" class="anchor"></a>Stacking data sets into <code>epi_signal_long</code> format</h2>
+<a href="#stacking-data-sets-into-long-format" class="anchor"></a>Stacking data sets into “long” format</h2>
 <p>todo</p>
 </div>
   </div>
