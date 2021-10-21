@@ -6,16 +6,18 @@
 #'
 #' @details An `epi_signal` object is simply a tibble, with (at least) the
 #'   following columns (with data types written in tibble notation):    
-#' * `value` <dbl>: the value of the signal
+#' * `value` <dbl> or <list>: the value of the signal
 #' * `geo_value` <int> or <str>: the associated geographic value  
 #' * `time_value` <date>: the associated time value 
-#' * `issue` <date>: the time value at which the given signal value was issued 
 #'
 #' An `epi_signal` object also has a tibble `metadata` stored in its attributes,  
 #' with (at least) the following columns:
 #' * `name` <str>: the name of the signal
 #' * `geo_type` <str>: the geographic resolution
 #' * `time_type` <str>: the temporal resolution
+#' * `issue` <date>: the time value at which the given data set was issued (this
+#'   represents the maximum of issue dates of individual signal values in the
+#'   data set) 
 #' * `signal_type` <str>: the type of the signal value (optional)
 #' * `signal_unit` <str>: the units associated with the signal value (optional) 
 #'
@@ -51,13 +53,12 @@
 #' @param geo_type The geographic resolution. If missing, then it will be
 #'   guessed from the geo values present.  
 #' @param time_type The temporal resolution. If missing, then it will be guessed
-#'   from the time values present. 
+#'   from the time values present.
+#' @param issue Issue date to use for this data. If missing, then today's date
+#'   will be used. 
 #' @param signal_type The type of the signal value. 
 #' @param signal_unit The units of the signal value. 
-#' @param issue Issue date to use for this data, if not present in `x`. If no
-#'   issue date is present in `x` and `issue` is missing, then today's date will
-#'   be used. 
-#' @param metadata List or tibble of additional metadata to attach to the
+#' @param metadata List or tibble of *additional* metadata to attach to the
 #'   `epi_signal` object. All objects will have `geo_type`, `time_type`,
 #'   `signal_type` (optional), and `signal_unit` (optional) entries included in
 #'   their metadata, derived from the above arguments; any entries in the passed
@@ -78,13 +79,13 @@ as.epi_signal.epi_signal = function(x, ...) {
 
 #' @method as.epi_signal tibble
 #' @describeIn as.epi_signal The input tibble `x` must contain the columns
-#'   `value`, `geo_value`, and `time_value`. If an `issue` column is present in
-#'   `x`, it will be used as the issue date for each observation; if not, the
-#'   `issue` argument will be used. Other columns will be preserved as-is.
+#'   `value`, `geo_value`, and `time_value`. All other columns will be preserved
+#'   as-is. 
 #' @importFrom rlang .data abort
 #' @export
-as.epi_signal.tibble = function(x, name, geo_type, time_type, signal_type,
-                                signal_unit, issue, metadata = list(), ...) { 
+as.epi_signal.tibble = function(x, name, geo_type, time_type, issue,
+                                signal_type, signal_unit, metadata = list(),
+                                ...) {  
   if (!("value" %in% names(x))) {
     abort(paste(
       "`x` must contain a `value` column",
@@ -111,7 +112,11 @@ as.epi_signal.tibble = function(x, name, geo_type, time_type, signal_type,
       "`name` must be specified.",
       class = "epi_coerce_name")
   }
-  
+
+  # If issue is missing, thne use today's date
+  if (missing(issue)) issue = Sys.Date()
+
+  # If geo type is missing ,then try to guess it
   if (missing(geo_type)) {
     if (is.character(x$geo_value)) {
       # Convert geo values to lowercase
@@ -143,6 +148,7 @@ as.epi_signal.tibble = function(x, name, geo_type, time_type, signal_type,
     else geo_type = "unknown" # TODO should we use NA? Or some other flag?
   }
 
+  # If time type is missing, then try to guess it
   if (missing(time_type)) {
     # Convert time values to Date format
     x$time_value = as.Date(x$time_value)
@@ -156,6 +162,7 @@ as.epi_signal.tibble = function(x, name, geo_type, time_type, signal_type,
 
   # Define metadata fields
   metadata$name = name
+  metadata$issue = issue
   metadata$geo_type = geo_type
   metadata$time_type = time_type
   if (!missing(signal_type)) metadata$signal_type = signal_type
@@ -167,34 +174,19 @@ as.epi_signal.tibble = function(x, name, geo_type, time_type, signal_type,
   class(x) = c("epi_signal", class(x))
   attributes(x)$metadata = metadata
   
-  # Reorder columns: value, geo_value, time_value,
+  # Reorder columns: value, geo_value, time_value
   x = dplyr::relocate(x,
                       .data$value,
                       .data$geo_value,
                       .data$time_value)
-
-  # If no rows, then quit
-  if (nrow(x) == 0) return(x)
-
-  # Add issue column if we need to
-  if (!("issue" %in% names(x))) {
-    if (missing(issue)) x$issue = Sys.Date()
-    else x$issue = issue
-  }
-
-  # Reorder columns: issue after time_value
-  x = dplyr::relocate(x, 
-                      .data$issue,
-                      .after = .data$time_value)
 
   return(x)
 }
 
 #' @method as.epi_signal data.frame
 #' @describeIn as.epi_signal The input data frame `x` must contain the columns
-#'   `value`, `geo_value`, and `time_value`. If an `issue` column is present in
-#'   `x`, it will be used as the issue date for each observation; if not, the
-#'   `issue` argument will be used. Other columns will be preserved as-is.
+#'   `value`, `geo_value`, and `time_value`. All other columns will be preserved 
+#'   as-is. 
 #' @export
 as.epi_signal.data.frame = as.epi_signal.tibble
 

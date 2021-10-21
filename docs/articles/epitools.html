@@ -122,11 +122,9 @@
 <li>
 <code>geo_value</code>: the associated geographic value;</li>
 <li>
-<code>time_value</code>: the associated time value;</li>
-<li>
-<code>issue</code>: the time value at which the given signal value was issued.</li>
+<code>time_value</code>: the associated time value.</li>
 </ul>
-<p>A data frame or tibble can be converted into an object of class <code>epi_signal</code>, using <code><a href="../reference/as.epi_signal.html">as.epi_signal()</a></code>, provided that it has (at least) the first 3 columns in the above list (if an <code>issue</code> column is not present, then today’s date is used for the issue dates). To learn more about the <code>epi_signal</code> format, you can read the documentation for <code><a href="../reference/as.epi_signal.html">as.epi_signal()</a></code>.</p>
+<p>A data frame or tibble can be converted into an object of class <code>epi_signal</code>, using <code><a href="../reference/as.epi_signal.html">as.epi_signal()</a></code>, provided that it has the columns described above. To learn more about the <code>epi_signal</code> format, you can read the documentation for <code><a href="../reference/as.epi_signal.html">as.epi_signal()</a></code>.</p>
 <p>As an example, we’ll look at daily cumulative COVID-19 cases for 4 states (CA, FL, NY, and TX) in the U.S., over a year from mid 2020 to mid 2021, using the <a href="https://cmu-delphi.github.io/covidcast/covidcastR/"><code>covidcast</code></a> package to fetch this data from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/">COVIDcast API</a>.</p>
 <div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">covidcast</span>)
 
@@ -149,6 +147,8 @@
 <li>
 <code>name</code>: a name for the current signal;</li>
 <li>
+<code>issue</code>: the time value at which the given data set was issued (this represents the maximum of issue dates of individual signal values in the data set);</li>
+<li>
 <code>geo_type</code>: the geographic resolution;</li>
 <li>
 <code>time_type</code>: the time resolution;</li>
@@ -159,14 +159,15 @@
 
 <span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>(<span class="no">case_data</span>,
                    <span class="kw">name</span> <span class="kw">=</span> <span class="st">"covid19_cases"</span>,
+                   <span class="kw">issue</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(<span class="no">case_data</span>$<span class="no">issue</span>),
                    <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>,
                    <span class="kw">time_type</span> <span class="kw">=</span> <span class="st">"day"</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">issue</span>)
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span>(<span class="no">x</span>)</pre></body></html></div>
 <pre><code>## [1] "epi_signal" "tbl_df"     "tbl"        "data.frame"</code></pre>
 <div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span>(<span class="no">x</span>)</pre></body></html></div>
-<pre><code>## An `epi_signal` data frame with 1460 rows and 4 columns.
+<pre><code>## An `epi_signal` data frame with 1460 rows and 3 columns.
 ## 
 ## name      : covid19_cases
 ## geo_type  : state
@@ -176,29 +177,29 @@
 ## last time value                            : 2021-05-31
 ## median number of geo values per time value : 4</code></pre>
 <div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>)</pre></body></html></div>
-<pre><code>## # A tibble: 6 × 4
-##    value geo_value time_value issue     
-##    &lt;dbl&gt; &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;    
-## 1 116160 ca        2020-06-01 2021-09-27
-## 2  56830 fl        2020-06-01 2020-10-14
-## 3 374818 ny        2020-06-01 2020-12-30
-## 4  65732 tx        2020-06-01 2021-01-08
-## 5 118532 ca        2020-06-02 2021-09-27
-## 6  57447 fl        2020-06-02 2020-10-14</code></pre>
+<pre><code>## # A tibble: 6 × 3
+##    value geo_value time_value
+##    &lt;dbl&gt; &lt;chr&gt;     &lt;date&gt;    
+## 1 116160 ca        2020-06-01
+## 2  56830 fl        2020-06-01
+## 3 374818 ny        2020-06-01
+## 4  65732 tx        2020-06-01
+## 5 118532 ca        2020-06-02
+## 6  57447 fl        2020-06-02</code></pre>
 <div class="sourceCode" id="cb13"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/attributes.html">attributes</a></span>(<span class="no">x</span>)$<span class="no">metadata</span></pre></body></html></div>
-<pre><code>## # A tibble: 1 × 3
-##   name          geo_type time_type
-##   &lt;chr&gt;         &lt;chr&gt;    &lt;chr&gt;    
-## 1 covid19_cases state    day</code></pre>
-<p>As far as the metadata goes, while a signal name must be specified in a call to <code><a href="../reference/as.epi_signal.html">as.epi_signal()</a></code>, the <code>geo_type</code> and <code>time_type</code> arguments can omitted and, in this case, <code><a href="../reference/as.epi_signal.html">as.epi_signal()</a></code> will try to guess them from the data.</p>
+<pre><code>## # A tibble: 1 × 4
+##   name          issue      geo_type time_type
+##   &lt;chr&gt;         &lt;date&gt;     &lt;chr&gt;    &lt;chr&gt;    
+## 1 covid19_cases 2021-09-27 state    day</code></pre>
+<p>As far as the metadata goes, while a signal name must be specified in a call to <code><a href="../reference/as.epi_signal.html">as.epi_signal()</a></code>, the others can be omitted. If <code>issue</code> is missing, then today’s date will be used as an issue date. If the <code>geo_type</code> or <code>time_type</code> are missing, then, <code><a href="../reference/as.epi_signal.html">as.epi_signal()</a></code> will try to guess them from the data.</p>
 <div class="sourceCode" id="cb15"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>(<span class="no">case_data</span>, <span class="kw">name</span> <span class="kw">=</span> <span class="st">"covid19_cases"</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">issue</span>)
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/base/attributes.html">attributes</a></span>(<span class="no">x</span>)$<span class="no">metadata</span></pre></body></html></div>
-<pre><code>## # A tibble: 1 × 3
-##   name          geo_type time_type
-##   &lt;chr&gt;         &lt;chr&gt;    &lt;chr&gt;    
-## 1 covid19_cases state    day</code></pre>
+<pre><code>## # A tibble: 1 × 4
+##   name          issue      geo_type time_type
+##   &lt;chr&gt;         &lt;date&gt;     &lt;chr&gt;    &lt;chr&gt;    
+## 1 covid19_cases 2021-10-20 state    day</code></pre>
 <p>Data in <code>epi_signal</code> format is pretty easy to work with downstream; in the other vignettes, we’ll walk through some basic signal processing tasks using functions provided in the <code>epitools</code> package; of course, we can also write custom code for for other downstream uses, like plotting, which is pretty easy to do <code>ggplot2</code>.</p>
 <div class="sourceCode" id="cb17"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
@@ -229,15 +230,15 @@
   <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>(<span class="kw">name</span> <span class="kw">=</span> <span class="st">"sars_canada"</span>, <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"nation"</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>)</pre></body></html></div>
-<pre><code>## # A tibble: 6 × 4
-##   value geo_value time_value issue     
-##   &lt;int&gt; &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;    
-## 1     1 ca        2003-02-23 2021-10-20
-## 2     0 ca        2003-02-24 2021-10-20
-## 3     0 ca        2003-02-25 2021-10-20
-## 4     1 ca        2003-02-26 2021-10-20
-## 5     0 ca        2003-02-27 2021-10-20
-## 6     1 ca        2003-02-28 2021-10-20</code></pre>
+<pre><code>## # A tibble: 6 × 3
+##   value geo_value time_value
+##   &lt;int&gt; &lt;chr&gt;     &lt;date&gt;    
+## 1     1 ca        2003-02-23
+## 2     0 ca        2003-02-24
+## 3     0 ca        2003-02-25
+## 4     1 ca        2003-02-26
+## 5     0 ca        2003-02-27
+## 6     1 ca        2003-02-28</code></pre>
 <div class="sourceCode" id="cb22"><html><body><pre class="r"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">value</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html">geom_col</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">y</span> <span class="kw">=</span> <span class="no">value</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +

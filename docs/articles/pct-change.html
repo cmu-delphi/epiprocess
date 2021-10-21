@@ -113,37 +113,37 @@
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>,
                       <span class="kw">geo_values</span> <span class="kw">=</span> <span class="st">"fl"</span>)  <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>(<span class="kw">name</span> <span class="kw">=</span> <span class="st">"covid19_cases"</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">issue</span>)</pre></body></html></div>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>)</pre></body></html></div>
 <div id="percentage-change" class="section level2">
 <h2 class="hasAnchor">
 <a href="#percentage-change" class="anchor"></a>Percentage change</h2>
 <p>The <code><a href="../reference/pct_change.html">pct_change()</a></code> function operates on a <code>epi_signal</code> data frame, and takes an argument <code>n</code>, indicating the size of the local window (in days) to use in order to compute the percentage change. For example, if <code>n = 10</code>, then (for each <code>geo_value</code>) the percentage change on November 10 is calculated as 100 * (B - A) / A, where A is the sum of the values between November 6 and November 10, and A is the sum of the values between November 1 and November 5. The default is <code>n = 14</code>, giving the percentage change between adjacent weeks.</p>
 <div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/pct_change.html">pct_change</a></span>(<span class="no">x</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>)
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>, <span class="fl">21</span>) <span class="kw">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span>(<span class="kw">n</span> <span class="kw">=</span> <span class="fl">Inf</span>)</pre></body></html></div>
-<pre><code>## # A tibble: 21 × 5
-##    value geo_value time_value issue      pct_change
-##    &lt;dbl&gt; &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;          &lt;dbl&gt;
-##  1   667 fl        2020-06-01 2020-10-14       NA  
-##  2   617 fl        2020-06-02 2020-10-14       NA  
-##  3  1317 fl        2020-06-03 2020-10-14       NA  
-##  4  1419 fl        2020-06-04 2020-10-14       NA  
-##  5  1305 fl        2020-06-05 2020-10-14       NA  
-##  6  1270 fl        2020-06-06 2020-10-14       NA  
-##  7  1180 fl        2020-06-07 2020-10-14       NA  
-##  8   966 fl        2020-06-08 2020-10-14       NA  
-##  9  1096 fl        2020-06-09 2020-10-14       NA  
-## 10  1371 fl        2020-06-10 2020-10-14       NA  
-## 11  1698 fl        2020-06-11 2020-10-14       NA  
-## 12  1902 fl        2020-06-12 2020-10-14       NA  
-## 13  2581 fl        2020-06-13 2020-10-14       NA  
-## 14  2016 fl        2020-06-14 2020-10-14       49.6
-## 15  1758 fl        2020-06-15 2020-10-14       53.9
-## 16  2783 fl        2020-06-16 2020-10-14       65.0
-## 17  2610 fl        2020-06-17 2020-10-14       78.3
-## 18  3207 fl        2020-06-18 2020-10-14       89.7
-## 19  3822 fl        2020-06-19 2020-10-14       98.0
-## 20  4049 fl        2020-06-20 2020-10-14       87.6
-## 21  3494 fl        2020-06-21 2020-10-14       86.8</code></pre>
+<pre><code>## # A tibble: 21 × 4
+##    value geo_value time_value pct_change
+##    &lt;dbl&gt; &lt;chr&gt;     &lt;date&gt;          &lt;dbl&gt;
+##  1   667 fl        2020-06-01       NA  
+##  2   617 fl        2020-06-02       NA  
+##  3  1317 fl        2020-06-03       NA  
+##  4  1419 fl        2020-06-04       NA  
+##  5  1305 fl        2020-06-05       NA  
+##  6  1270 fl        2020-06-06       NA  
+##  7  1180 fl        2020-06-07       NA  
+##  8   966 fl        2020-06-08       NA  
+##  9  1096 fl        2020-06-09       NA  
+## 10  1371 fl        2020-06-10       NA  
+## 11  1698 fl        2020-06-11       NA  
+## 12  1902 fl        2020-06-12       NA  
+## 13  2581 fl        2020-06-13       NA  
+## 14  2016 fl        2020-06-14       49.6
+## 15  1758 fl        2020-06-15       53.9
+## 16  2783 fl        2020-06-16       65.0
+## 17  2610 fl        2020-06-17       78.3
+## 18  3207 fl        2020-06-18       89.7
+## 19  3822 fl        2020-06-19       98.0
+## 20  4049 fl        2020-06-20       87.6
+## 21  3494 fl        2020-06-21       86.8</code></pre>
 <p>We can see that a column <code>pct_change</code> column has been appended to the output data frame, which contains the percentage change values estimates. Next we plot these values alongside the signal itself. We highlight the periods in time for which the percentage change is above 10% (in red) and below -10% (in blue).</p>
 <div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())

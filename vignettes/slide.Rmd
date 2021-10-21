@@ -33,7 +33,7 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       geo_type = "state", 
                       geo_values = c("ca", "fl", "ny", "tx"))  %>%
   as.epi_signal(name = "covid19_cases") %>%
-  select(value, geo_value, time_value, issue)
+  select(value, geo_value, time_value)
 ```
 
 ## Slide with a formula
@@ -147,7 +147,7 @@ z <- x %>%
   slide_by_geo(slide_fun = ~ prob_ar(.x$`7dav`), n = 100, 
                col_type = "list", col_name = "forecast") %>%
   mutate(target_date = time_value + 7) %>%
-  select(-value, -slide_value, -issue)
+  select(-value, -slide_value)
 
 tail(z, 3)
 ```
@@ -176,7 +176,7 @@ k_week_ahead <- function(x, ahead = 7) {
     slide_by_geo(slide_fun = ~ prob_ar(.x$`7dav`, ahead = ahead), 
                  n = 100, col_type = "list", col_name = "forecast") %>%
     mutate(target_date = time_value + ahead) %>%
-    select(-value, -slide_value, -issue) %>%
+    select(-value, -slide_value) %>%
     tidyr::unnest(forecast)
 }
 
@@ -221,6 +221,5 @@ lead to an overly optimismic sense of accuracy; see, for example, [McDonald et
 al. (2021)](https://www.medrxiv.org/content/10.1101/2021.06.22.21259346), and
 references therein.
 
-Note that both of these issues (building better AR models, and properly handling 
-provisional data in training models and making predictions) are addressed in the 
-[`epipred`](https://cmu-delphi.github.io/epipred/) package.
+todo: refer to other functionality in the current package or in the
+[`epipred`](https://cmu-delphi.github.io/epipred/) package?

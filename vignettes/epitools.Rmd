@@ -39,14 +39,12 @@ by all of the functions in the `epitools` package. An `epi_signal` object has
 
 * `value`: the value of the signal;
 * `geo_value`: the associated geographic value;
-* `time_value`: the associated time value;
-* `issue`: the time value at which the given signal value was issued. 
+* `time_value`: the associated time value.
 
 A data frame or tibble can be converted into an object of class `epi_signal`,
-using `as.epi_signal()`, provided that it has (at least) the first 3 columns 
-in the above list (if an `issue` column is not present, then today's date is 
-used for the issue dates). To learn more about the `epi_signal` format, you can
-read the documentation for `as.epi_signal()`.
+using `as.epi_signal()`, provided that it has the columns described above. To 
+learn more about the `epi_signal` format, you can read the documentation for 
+`as.epi_signal()`.
 
 As an example, we'll look at daily cumulative COVID-19 cases for 4 states (CA,
 FL, NY, and TX) in the U.S., over a year from mid 2020 to mid 2021, using the 
@@ -74,6 +72,9 @@ many others). A call to `as.epi_signal()`, with further specification of a few
 relevant pieces of metadata:  
 
 * `name`: a name for the current signal; 
+* `issue`: the time value at which the given data set was issued (this 
+  represents the maximum of issue dates of individual signal values in the 
+  data set);
 * `geo_type`: the geographic resolution; 
 * `time_type`: the time resolution;
 
@@ -85,9 +86,10 @@ library(dplyr)
 
 x <- as.epi_signal(case_data, 
                    name = "covid19_cases",
+                   issue = max(case_data$issue),
                    geo_type = "state",
                    time_type = "day") %>%
-  select(value, geo_value, time_value, issue)
+  select(value, geo_value, time_value)
 
 class(x)
 summary(x)
@@ -96,12 +98,13 @@ attributes(x)$metadata
 ```
 
 As far as the metadata goes, while a signal name must be specified in a call to 
-`as.epi_signal()`, the `geo_type` and `time_type` arguments can omitted and, in
-this case, `as.epi_signal()` will try to guess them from the data.
+`as.epi_signal()`, the others can be omitted. If `issue` is missing, then 
+today's date will be used as an issue date. If the `geo_type` or `time_type` 
+are missing, then, `as.epi_signal()` will try to guess them from the data.
 
 ```{r}
 x <- as.epi_signal(case_data, name = "covid19_cases") %>%
-  select(value, geo_value, time_value, issue)
+  select(value, geo_value, time_value)
 
 attributes(x)$metadata
 ```

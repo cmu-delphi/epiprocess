@@ -1,9 +1,7 @@
 #' Compute correlations between two `epi_signal` data frames
 #'
 #' Computes correlations between two `epi_signal` data frames, allowing for
-#' slicing by geo location, or by time. (When multiple issue dates are present,
-#' only the latest issue from each data frame is used for correlations.) See the
-#' [correlations
+#' slicing by geo location, or by time. See the [correlations
 #' vignette](https://cmu-delphi.github.io/epitools/articles/correlations.html)
 #' for examples.
 #'
@@ -40,10 +38,6 @@ sliced_cor = function(x, y, dt_x = 0, dt_y = 0,
   if (!inherits(y, "epi_signal")) {
     abort("`y` be of class `epi_signal`.")
   }
-
-  # Get the latest issue per value
-  x = latest_issue(x)
-  y = latest_issue(y)
 
   # Which way to slice? Which method?
   by = match.arg(by)

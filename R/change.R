@@ -1,8 +1,7 @@
 #' Compute percentage change of values in `epi_signal` data frame
 #' 
 #' Computes the percentage change of the values in a `epi_signal` data frame,
-#' per geographic location. (When multiple issue dates are present, only the
-#' latest issue is considered.)  See the [percentage change
+#' per geographic location. See the [percentage change
 #' vignette](https://cmu-delphi.github.io/epitools/articles/pct-change.html) for 
 #' examples.   
 #'

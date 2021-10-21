@@ -1,8 +1,7 @@
 #' Estimate derivatives of values in an `epi_signal` data frame
 #' 
 #' Estimates derivatives of the values in an `epi_signal` data frame, using a
-#' local (in time) linear regression or a smoothing spline. (When multiple issue
-#' dates are present, only the latest issue is considered.) See the [estimating
+#' local (in time) linear regression or a smoothing spline. See the [estimating 
 #' derivatives
 #' vignette](https://cmu-delphi.github.io/epitools/articles/derivatives.html) 
 #' for examples.  

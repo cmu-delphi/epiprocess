@@ -115,7 +115,7 @@
                       <span class="kw">end_day</span> <span class="kw">=</span> <span class="no">end_day</span>,
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>)  <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>(<span class="kw">name</span> <span class="kw">=</span> <span class="st">"covid19_cases"</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">issue</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span>(<span class="kw">slide_fun</span> <span class="kw">=</span> ~ <span class="fu"><a href="../reference/Min.html">Mean</a></span>(<span class="no">.x</span>$<span class="no">value</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>, <span class="kw">col_name</span> <span class="kw">=</span> <span class="st">"value"</span>)
 
 <span class="no">y</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="kw">data_source</span> <span class="kw">=</span> <span class="st">"jhu-csse"</span>,
@@ -124,7 +124,7 @@
                       <span class="kw">end_day</span> <span class="kw">=</span> <span class="no">end_day</span>,
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>)  <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>(<span class="kw">name</span> <span class="kw">=</span> <span class="st">"covid19_deaths"</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">issue</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span>(<span class="kw">slide_fun</span> <span class="kw">=</span> ~ <span class="fu"><a href="../reference/Min.html">Mean</a></span>(<span class="no">.x</span>$<span class="no">value</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>, <span class="kw">col_name</span> <span class="kw">=</span> <span class="st">"value"</span>)</pre></body></html></div>
 <div id="correlations-sliced-by-time" class="section level2">
 <h2 class="hasAnchor">

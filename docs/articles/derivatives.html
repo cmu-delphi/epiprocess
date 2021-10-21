@@ -113,7 +113,7 @@
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>,
                       <span class="kw">geo_values</span> <span class="kw">=</span> <span class="st">"fl"</span>)  <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>(<span class="kw">name</span> <span class="kw">=</span> <span class="st">"covid19_cases"</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">issue</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span>(<span class="kw">slide_fun</span> <span class="kw">=</span> ~ <span class="fu"><a href="../reference/Min.html">Mean</a></span>(<span class="no">.x</span>$<span class="no">value</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>, <span class="kw">col_name</span> <span class="kw">=</span> <span class="st">"value"</span>)</pre></body></html></div>
 <div id="estimating-derivatives-via-linear-regression" class="section level2">
 <h2 class="hasAnchor">
@@ -121,19 +121,19 @@
 <p>The function for estimating derivatives is called <code><a href="../reference/estimate_deriv.html">estimate_deriv()</a></code>, and (aside from an <code>epi_signal</code> object) takes two primary arguments: <code>method</code>, indicating the method to use for derivative estimation; and <code>n</code> indicating the trailing sample size (number of days) to use in training the given method. Here we use <code>method = "lin"</code>, the default, which estimates the derivative using the slope from a simple linear regression, and <code>n = 14</code>, also the default.</p>
 <div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(<span class="no">x</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"lin"</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>)
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>, <span class="fl">10</span>)</pre></body></html></div>
-<pre><code>## # A tibble: 10 × 5
-##    value geo_value time_value issue       deriv
-##    &lt;dbl&gt; &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;      &lt;dbl&gt;
-##  1  3.11 fl        2020-06-01 2020-10-30 NA    
-##  2  2.99 fl        2020-06-02 2020-10-30 -0.116
-##  3  4.04 fl        2020-06-03 2020-10-30  0.466
-##  4  4.68 fl        2020-06-04 2020-10-30  0.577
-##  5  4.96 fl        2020-06-05 2020-10-30  0.540
-##  6  5.12 fl        2020-06-06 2020-10-30  0.475
-##  7  5.17 fl        2020-06-07 2020-10-30  0.406
-##  8  5.37 fl        2020-06-08 2020-10-30  0.361
-##  9  5.69 fl        2020-06-09 2020-10-30  0.336
-## 10  5.72 fl        2020-06-10 2020-10-30  0.308</code></pre>
+<pre><code>## # A tibble: 10 × 4
+##    value geo_value time_value  deriv
+##    &lt;dbl&gt; &lt;chr&gt;     &lt;date&gt;      &lt;dbl&gt;
+##  1  3.11 fl        2020-06-01 NA    
+##  2  2.99 fl        2020-06-02 -0.116
+##  3  4.04 fl        2020-06-03  0.466
+##  4  4.68 fl        2020-06-04  0.577
+##  5  4.96 fl        2020-06-05  0.540
+##  6  5.12 fl        2020-06-06  0.475
+##  7  5.17 fl        2020-06-07  0.406
+##  8  5.37 fl        2020-06-08  0.361
+##  9  5.69 fl        2020-06-09  0.336
+## 10  5.72 fl        2020-06-10  0.308</code></pre>
 <p>We can see that a column <code>deriv</code> has been added to the output data frame, which contains the derivative estimates. Below we visualize these estimates in tandem with the signal itself. The purple ticks on the x-axis mark time points at which the derivative estimate exceeds a threshold (arbitrarily chosen) of 0.25. These seem to roughly but reasonably mark times of upswing in the underlying signal.</p>
 <div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())

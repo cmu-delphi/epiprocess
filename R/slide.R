@@ -2,8 +2,7 @@
 #' location    
 #'
 #' Slides a given function over the values in an `epi_signal` data frame,
-#' grouped by geo location. (When multiple issue dates are present, only the
-#' latest issue is considered.) See the [slide
+#' grouped by geo location. See the [slide
 #' vignette](https://cmu-delphi.github.io/epitools/articles/slide.html)   
 #' for examples.    
 #'
@@ -40,9 +39,6 @@ slide_by_geo = function(x, slide_fun, n = 14, col_name = "slide_value",
   if (!inherits(x, "epi_signal")) {
     abort("`x` be of class `epi_signal`.")
   }
-
-  # Get the latest issue per value
-  x = latest_issue(x) 
 
   # Which slide_index function?
   col_type = match.arg(col_type)

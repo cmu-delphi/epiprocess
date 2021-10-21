@@ -25,7 +25,7 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       geo_type = "state", 
                       geo_values = "fl")  %>%
   as.epi_signal(name = "covid19_cases") %>%
-  select(value, geo_value, time_value, issue)
+  select(value, geo_value, time_value)
 ```
 
 ## Percentage change

@@ -27,7 +27,7 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       end_day = end_day,
                       geo_type = "state")  %>%
   as.epi_signal(name = "covid19_cases") %>%
-  select(value, geo_value, time_value, issue) %>%
+  select(value, geo_value, time_value) %>%
   slide_by_geo(slide_fun = ~ Mean(.x$value), n = 7, col_name = "value") 
 
 y <- covidcast_signal(data_source = "jhu-csse", 
@@ -36,7 +36,7 @@ y <- covidcast_signal(data_source = "jhu-csse",
                       end_day = end_day,
                       geo_type = "state")  %>%
   as.epi_signal(name = "covid19_deaths") %>%
-  select(value, geo_value, time_value, issue) %>%
+  select(value, geo_value, time_value) %>%
   slide_by_geo(slide_fun = ~ Mean(.x$value), n = 7, col_name = "value") 
 ```
 
