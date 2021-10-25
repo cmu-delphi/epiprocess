@@ -2,30 +2,41 @@
 % Please edit documentation in R/change.R
 \name{pct_change}
 \alias{pct_change}
-\title{Compute percentage change of values in \code{epi_signal} data frame}
+\title{Compute percentage change of variables in an \code{epi_signal} object, grouped by
+geo value}
 \usage{
-pct_change(x, n = 14, col_name = "pct_change")
+pct_change(x, var, n = 14, new_var_name = "pct_change", time_step)
 }
 \arguments{
-\item{x}{The \code{epi_signal} data frame under consideration.}
+\item{x}{The \code{epi_signal} object under consideration.}
 
-\item{n}{Size of the local window (in days) to use (bumped up to the nearest
-even integer, if needed). For example, if \code{n = 10}, then to compute the
-percentage change on November 10, we use 100 * (B - A) / A, where A is the
-sum of the values between November 6 and November 10, and A is the sum of
-the values between November 1 and November 5. Default is 14.}
+\item{var}{The variable in \code{x} whose percentage change values are to be
+computed.}
 
-\item{col_name}{String indicating the name of the new column that will
-contain the percentage change values. Default is "pct_change"; note that we
-can set \code{col_name = "value"} to overwrite the existing "value" column.}
+\item{n}{Number of time steps to use in the trailing window. For example, if
+\code{n = 10}, and one time step is one day, then the percentage change value
+computed on November 10 is 100 * (B - A) / A, where A is the sum of the
+variable in between November 6 and 10, and A is the sum in between November
+1 and 5. Default is 14.}
+
+\item{new_var_name}{String indicating the name of the new variable that will
+contain the derivative values. Default is "slide_value"; note that setting
+\code{new_var_name} equal to an existing column name will overwrite this column.}
+
+\item{time_step}{Optional function used to define the meaning of one time
+step, which if specified, overrides the default choice based on the
+metadata. Read the documentation for \code{\link[=slide_by_geo]{slide_by_geo()}} for more details.}
 }
 \value{
-A data frame given by appending a new column to \code{x} named according
-to the \code{col_name} argument, containing the percentage change values.
+An \code{epi_signal} object given by appending a new column to \code{x}, named
+according to the \code{new_var_name} argument, containing the percentage change
+values.
 }
 \description{
-Computes the percentage change of the values in a \code{epi_signal} data frame,
-per geographic location. (When multiple issue dates are present, only the
-latest issue is considered.)  See the \href{https://cmu-delphi.github.io/epitools/articles/pct-change.html}{percentage change vignette} for
+Computes the percentage change of the variable in an \code{epi_signal} object,
+grouped by geo value. See the \href{https://cmu-delphi.github.io/epitools/articles/pct-change.html}{percentage change vignette} for
 examples.
+}
+\seealso{
+\code{\link[=slide_by_geo]{slide_by_geo()}}
 }

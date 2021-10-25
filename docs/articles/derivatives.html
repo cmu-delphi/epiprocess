@@ -112,34 +112,36 @@
                       <span class="kw">end_day</span> <span class="kw">=</span> <span class="st">"2021-05-31"</span>,
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>,
                       <span class="kw">geo_values</span> <span class="kw">=</span> <span class="st">"fl"</span>)  <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>(<span class="kw">name</span> <span class="kw">=</span> <span class="st">"covid19_cases"</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span>(<span class="kw">slide_fun</span> <span class="kw">=</span> ~ <span class="fu"><a href="../reference/Min.html">Mean</a></span>(<span class="no">.x</span>$<span class="no">value</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>, <span class="kw">col_name</span> <span class="kw">=</span> <span class="st">"value"</span>)</pre></body></html></div>
+  <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>() <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span>(<span class="kw">case_rates</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">case_rates</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span>(<span class="kw">slide_fun</span> <span class="kw">=</span> ~ <span class="fu"><a href="../reference/Min.html">Mean</a></span>(<span class="no">.x</span>$<span class="no">case_rates</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>,
+               <span class="kw">new_var_name</span> <span class="kw">=</span> <span class="st">"case_rates"</span>)</pre></body></html></div>
 <div id="estimating-derivatives-via-linear-regression" class="section level2">
 <h2 class="hasAnchor">
 <a href="#estimating-derivatives-via-linear-regression" class="anchor"></a>Estimating derivatives via linear regression</h2>
-<p>The function for estimating derivatives is called <code><a href="../reference/estimate_deriv.html">estimate_deriv()</a></code>, and (aside from an <code>epi_signal</code> object) takes two primary arguments: <code>method</code>, indicating the method to use for derivative estimation; and <code>n</code> indicating the trailing sample size (number of days) to use in training the given method. Here we use <code>method = "lin"</code>, the default, which estimates the derivative using the slope from a simple linear regression, and <code>n = 14</code>, also the default.</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(<span class="no">x</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"lin"</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>)
+<p>The <code><a href="../reference/estimate_deriv.html">estimate_deriv()</a></code> function operates on a <code>epi_signal</code> object, and aside from this, takes three main arguments: <code>var</code>, the variable whose derivatives are to be estimated; <code>method</code>, the name of the method to use for derivative estimation; and <code>n</code>, the length of the local window (here, in days) to use in training the given method. Here we use <code>method = "lin"</code>, the default, which estimates the derivative using the slope from a simple linear regression, and <code>n = 14</code>, also the default.</p>
+<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"lin"</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>)
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>, <span class="fl">10</span>)</pre></body></html></div>
 <pre><code>## # A tibble: 10 × 4
-##    value geo_value time_value  deriv
-##    &lt;dbl&gt; &lt;chr&gt;     &lt;date&gt;      &lt;dbl&gt;
-##  1  3.11 fl        2020-06-01 NA    
-##  2  2.99 fl        2020-06-02 -0.116
-##  3  4.04 fl        2020-06-03  0.466
-##  4  4.68 fl        2020-06-04  0.577
-##  5  4.96 fl        2020-06-05  0.540
-##  6  5.12 fl        2020-06-06  0.475
-##  7  5.17 fl        2020-06-07  0.406
-##  8  5.37 fl        2020-06-08  0.361
-##  9  5.69 fl        2020-06-09  0.336
-## 10  5.72 fl        2020-06-10  0.308</code></pre>
-<p>We can see that a column <code>deriv</code> has been added to the output data frame, which contains the derivative estimates. Below we visualize these estimates in tandem with the signal itself. The purple ticks on the x-axis mark time points at which the derivative estimate exceeds a threshold (arbitrarily chosen) of 0.25. These seem to roughly but reasonably mark times of upswing in the underlying signal.</p>
+##    geo_value time_value case_rates  deriv
+##    &lt;chr&gt;     &lt;date&gt;          &lt;dbl&gt;  &lt;dbl&gt;
+##  1 fl        2020-06-01       3.07 NA    
+##  2 fl        2020-06-02       2.95 -0.115
+##  3 fl        2020-06-03       3.99  0.460
+##  4 fl        2020-06-04       4.62  0.570
+##  5 fl        2020-06-05       4.90  0.533
+##  6 fl        2020-06-06       5.06  0.469
+##  7 fl        2020-06-07       5.11  0.402
+##  8 fl        2020-06-08       5.31  0.356
+##  9 fl        2020-06-09       5.62  0.332
+## 10 fl        2020-06-10       5.66  0.304</code></pre>
+<p>We can see that a column <code>deriv</code> has been added to the returned object, which contains the derivative estimates. Below we visualize these estimates in tandem with the signal itself. The purple ticks on the x-axis mark time points at which the derivative estimate exceeds a threshold (arbitrarily chosen) of 0.25. These seem to roughly but reasonably mark times of upswing in the underlying signal.</p>
 <div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
 <span class="no">threshold</span> <span class="kw">=</span> <span class="fl">0.25</span>
 
-<span class="no">p1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">value</span>)) +
+<span class="no">p1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">case_rates</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>() +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_rug.html">geom_rug</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">x</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">deriv</span> <span class="kw">&gt;=</span> <span class="no">threshold</span>), <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>),
            <span class="kw">sides</span> <span class="kw">=</span> <span class="st">"b"</span>, <span class="kw">color</span> <span class="kw">=</span> <span class="fl">6</span>, <span class="kw">alpha</span> <span class="kw">=</span> <span class="fl">0.5</span>) +
@@ -158,15 +160,17 @@
 <div id="estimating-derivatives-via-smoothing-spline" class="section level2">
 <h2 class="hasAnchor">
 <a href="#estimating-derivatives-via-smoothing-spline" class="anchor"></a>Estimating derivatives via smoothing spline</h2>
-<p>Now we consider <code>method = "ss"</code>, which uses a smoothing spline for the estimate of the derivative. That is, at each time point, we fit a natural cubic spline to the data from the trailing <code>n</code> days, and return the derivative of the underlying fitted spline at the current time as the estimate. Here we set <code>n = 28</code>, a bit higher sample size, and fit the spline in two ways: first, using a fixed degrees of freedom of 8; and second, using cross-validation to choose the amount of regularization (tuning parameter). This is accomplished by passing additional arguments to <code><a href="../reference/estimate_deriv.html">estimate_deriv()</a></code>, which are in turn passed on to the underlying function it uses to fit smoothing splines, <code><a href="https://rdrr.io/r/stats/smooth.spline.html">stats::smooth.spline()</a></code>. Note that we also set a custom name for the output column with the estimated derivatives, via the <code>col_name</code> argument.</p>
-<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(<span class="no">x</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"ss"</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">28</span>, <span class="kw">col_name</span> <span class="kw">=</span> <span class="st">"deriv_ss1"</span>, <span class="kw">df</span> <span class="kw">=</span> <span class="fl">8</span>)
-<span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(<span class="no">x</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"ss"</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">28</span>, <span class="kw">col_name</span> <span class="kw">=</span> <span class="st">"deriv_ss2"</span>, <span class="kw">cv</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
+<p>Now we consider <code>method = "ss"</code>, which uses a smoothing spline for the estimate of the derivative. That is, at each time point, we fit a natural cubic spline to the data from the trailing <code>n</code> time points, and return the derivative of the fitted spline at the current time as the estimate. Here we set <code>n = 28</code>, a bit higher sample size, and fit the spline in two ways: first, using a fixed degrees of freedom of 8; and second, using cross-validation to choose the amount of regularization (tuning parameter). This is accomplished by passing additional arguments to <code><a href="../reference/estimate_deriv.html">estimate_deriv()</a></code>, which are in turn passed on to the underlying function it uses to fit smoothing splines, <code><a href="https://rdrr.io/r/stats/smooth.spline.html">stats::smooth.spline()</a></code>. Note that we also set a custom name for the output column with the estimated derivatives, via the <code>new_var_name</code> argument.</p>
+<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"ss"</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">28</span>,
+                    <span class="kw">new_var_name</span> <span class="kw">=</span> <span class="st">"deriv_ss1"</span>, <span class="kw">df</span> <span class="kw">=</span> <span class="fl">8</span>)
+<span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"ss"</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">28</span>,
+                    <span class="kw">new_var_name</span> <span class="kw">=</span> <span class="st">"deriv_ss2"</span>, <span class="kw">cv</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
 
-<span class="no">p1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">value</span>)) +
+<span class="no">p1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">case_rates</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>() +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_rug.html">geom_rug</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">x</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">deriv_ss1</span> <span class="kw">&gt;=</span> <span class="no">threshold</span>), <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>),
            <span class="kw">sides</span> <span class="kw">=</span> <span class="st">"b"</span>, <span class="kw">color</span> <span class="kw">=</span> <span class="fl">6</span>, <span class="kw">alpha</span> <span class="kw">=</span> <span class="fl">0.5</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_rug.html">geom_rug</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">x</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">deriv_ss1</span> <span class="kw">&gt;=</span> <span class="no">threshold</span>), <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>),
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_rug.html">geom_rug</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">x</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">deriv_ss2</span> <span class="kw">&gt;=</span> <span class="no">threshold</span>), <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>),
            <span class="kw">sides</span> <span class="kw">=</span> <span class="st">"t"</span>, <span class="kw">color</span> <span class="kw">=</span> <span class="fl">3</span>, <span class="kw">alpha</span> <span class="kw">=</span> <span class="fl">0.5</span>) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Reported COVID-19 cases (per 100,000 people)"</span>)
@@ -185,15 +189,17 @@
 <div id="estimating-derivatives-via-trend-filtering" class="section level2">
 <h2 class="hasAnchor">
 <a href="#estimating-derivatives-via-trend-filtering" class="anchor"></a>Estimating derivatives via trend filtering</h2>
-<p>Lastly we consider <code>method = tf"</code>, which uses trend filtering for estimating the derivative. That is, at each time point, we fit a discrete spline of quadratic order to the data from the trailing <code>n</code> days, and return the discrete derivative of the underlying fitted spline at the current time as the estimate. As before, we fit the spline in two ways: first, using a fixed degrees of freedom of 8; and second, using cross-validation to choose the amount of regularization. Note: the computation here takes a while (it’s based on computing a full solution path for the trend filtering problem, via the <code><a href="https://rdrr.io/pkg/genlasso/man/trendfilter.html">genlasso::trendfilter()</a></code> function), in the latter case.</p>
-<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(<span class="no">x</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"tf"</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">28</span>, <span class="kw">col_name</span> <span class="kw">=</span> <span class="st">"deriv_tf1"</span>, <span class="kw">df</span> <span class="kw">=</span> <span class="fl">8</span>)
-<span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(<span class="no">x</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"tf"</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">28</span>, <span class="kw">col_name</span> <span class="kw">=</span> <span class="st">"deriv_tf2"</span>, <span class="kw">cv</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
+<p>Lastly we consider <code>method = tf"</code>, which uses trend filtering for estimating the derivative. That is, at each time point, we fit a discrete spline of quadratic order to the data from the trailing <code>n</code> time points, and return the discrete derivative of the fitted spline at the current time as the estimate. As before, we fit the spline in two ways: first, using a fixed degrees of freedom of 8; and second, using cross-validation to choose the amount of regularization. Caution: the computation here takes a while (it’s based on computing a full solution path for the trend filtering problem, via the <code><a href="https://rdrr.io/pkg/genlasso/man/trendfilter.html">genlasso::trendfilter()</a></code> function), in the latter case.</p>
+<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"tf"</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">28</span>,
+                    <span class="kw">new_var_name</span> <span class="kw">=</span> <span class="st">"deriv_tf1"</span>, <span class="kw">df</span> <span class="kw">=</span> <span class="fl">8</span>)
+<span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"tf"</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">28</span>,
+                    <span class="kw">new_var_name</span> <span class="kw">=</span> <span class="st">"deriv_tf2"</span>, <span class="kw">cv</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
 
-<span class="no">p1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">value</span>)) +
+<span class="no">p1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">case_rates</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>() +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_rug.html">geom_rug</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">x</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">deriv_tf1</span> <span class="kw">&gt;=</span> <span class="no">threshold</span>), <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>),
            <span class="kw">sides</span> <span class="kw">=</span> <span class="st">"b"</span>, <span class="kw">color</span> <span class="kw">=</span> <span class="fl">6</span>, <span class="kw">alpha</span> <span class="kw">=</span> <span class="fl">0.5</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_rug.html">geom_rug</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">x</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">deriv_tf1</span> <span class="kw">&gt;=</span> <span class="no">threshold</span>), <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>),
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_rug.html">geom_rug</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">x</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">deriv_tf2</span> <span class="kw">&gt;=</span> <span class="no">threshold</span>), <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>),
            <span class="kw">sides</span> <span class="kw">=</span> <span class="st">"t"</span>, <span class="kw">color</span> <span class="kw">=</span> <span class="fl">3</span>, <span class="kw">alpha</span> <span class="kw">=</span> <span class="fl">0.5</span>) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Reported COVID-19 cases (per 100,000 people)"</span>)
@@ -207,46 +213,46 @@
 
 <span class="kw pkg">gridExtra</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html">grid.arrange</a></span>(<span class="no">p1</span>, <span class="no">p2</span>, <span class="kw">nrow</span> <span class="kw">=</span> <span class="fl">1</span>)</pre></body></html></div>
 <p><img src="derivatives_files/figure-html/unnamed-chunk-5-1.png" width="864"></p>
-<p>The estimated derivates now appear a bit smoother than the last ones, from the smoothing spline methods. Again, using cross-validation offers a noticeable improvement in adapting to to the time-varying level of smoothness, and also does not appear to be suffering from the same volatility as in the smoothing spline case.</p>
+<p>The estimated derivates now appear a bit smoother than the last ones, from the smoothing spline methods. Again, using cross-validation (in green) offers a noticeable improvement in adapting to to the time-varying level of smoothness, and also does not appear to be suffering from the same volatility we saw in the smoothing spline case.</p>
 </div>
 <div id="post-hoc-inspection" class="section level2">
 <h2 class="hasAnchor">
-<a href="#post-hoc-inspection" class="anchor"></a>Post-hoc inspection</h2>
+<a href="#post-hoc-inspection" class="anchor"></a>Post hoc inspection</h2>
 <p>In the call to <code><a href="../reference/estimate_deriv.html">estimate_deriv()</a></code>, we can set <code>keep_obj = TRUE</code> to keep around a second column with the fitted model objects. For example, here, we can look at the p-values associated with the estimated slopes from <code><a href="https://rdrr.io/r/stats/lsfit.html">lsfit()</a></code>.</p>
-<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(<span class="no">x</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"lin"</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>, <span class="kw">keep_obj</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
+<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"lin"</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>, <span class="kw">keep_obj</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span>(<span class="no">x</span>$<span class="no">deriv_obj</span>)</pre></body></html></div>
 <pre><code>## [1] "list"</code></pre>
 <div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/stats/ls.print.html">ls.print</a></span>(<span class="no">x</span>$<span class="no">deriv_obj</span><span class="kw">[[</span><span class="fl">7</span>]])</pre></body></html></div>
-<pre><code>## Residual Standard Error=0.3456
+<pre><code>## Residual Standard Error=0.3416
 ## R-Square=0.8856
 ## F-statistic (df=1, 5)=38.6943
 ## p-value=0.0016
 ## 
 ##             Estimate   Std.Err t-value Pr(&gt;|t|)
-## Intercept -7478.7870 1202.9753 -6.2169   0.0016
-## X             0.4063    0.0653  6.2205   0.0016</code></pre>
+## Intercept -7390.8395 1188.8288 -6.2169   0.0016
+## X             0.4015    0.0646  6.2205   0.0016</code></pre>
 <div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="no">x</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rowwise.html">rowwise</a></span>() <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">p_value</span> <span class="kw">=</span> <span class="fu">quiet</span>(
     <span class="fu"><a href="https://rdrr.io/r/base/conditions.html">tryCatch</a></span>(<span class="fu"><a href="https://rdrr.io/r/stats/ls.print.html">ls.print</a></span>(<span class="no">deriv_obj</span>)$<span class="no">coef.table</span><span class="kw">[[</span><span class="fl">1</span>]][<span class="fl">2</span>,<span class="st">"Pr(&gt;|t|)"</span>],
              <span class="kw">error</span> <span class="kw">=</span> <span class="kw">function</span>(<span class="no">e</span>) <span class="fl">NA</span>))) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">deriv</span>, <span class="no">p_value</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">case_rates</span>, <span class="no">deriv</span>, <span class="no">p_value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fl">10</span>)</pre></body></html></div>
 <pre><code>## # A tibble: 10 × 5
 ## # Rowwise: 
-##    value geo_value time_value  deriv     p_value
-##    &lt;dbl&gt; &lt;chr&gt;     &lt;date&gt;      &lt;dbl&gt;       &lt;dbl&gt;
-##  1  3.11 fl        2020-06-01 NA      NA        
-##  2  2.99 fl        2020-06-02 -0.116 NaN        
-##  3  4.04 fl        2020-06-03  0.466   0.398    
-##  4  4.68 fl        2020-06-04  0.577   0.0717   
-##  5  4.96 fl        2020-06-05  0.540   0.0114   
-##  6  5.12 fl        2020-06-06  0.475   0.00298  
-##  7  5.17 fl        2020-06-07  0.406   0.00157  
-##  8  5.37 fl        2020-06-08  0.361   0.000626 
-##  9  5.69 fl        2020-06-09  0.336   0.000142 
-## 10  5.72 fl        2020-06-10  0.308   0.0000539</code></pre>
+##    geo_value time_value case_rates  deriv     p_value
+##    &lt;chr&gt;     &lt;date&gt;          &lt;dbl&gt;  &lt;dbl&gt;       &lt;dbl&gt;
+##  1 fl        2020-06-01       3.07 NA      NA        
+##  2 fl        2020-06-02       2.95 -0.115 NaN        
+##  3 fl        2020-06-03       3.99  0.460   0.398    
+##  4 fl        2020-06-04       4.62  0.570   0.0717   
+##  5 fl        2020-06-05       4.90  0.533   0.0114   
+##  6 fl        2020-06-06       5.06  0.469   0.00298  
+##  7 fl        2020-06-07       5.11  0.402   0.00157  
+##  8 fl        2020-06-08       5.31  0.356   0.000626 
+##  9 fl        2020-06-09       5.62  0.332   0.000142 
+## 10 fl        2020-06-10       5.66  0.304   0.0000539</code></pre>
 </div>
   </div>
 

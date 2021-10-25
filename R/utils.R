@@ -61,14 +61,13 @@ latest_issue = function(x) {
     abort("`x` of class `epi_signal`.")
   }
 
-  # Save the attributes, such as metadata, since dplyr drops them
-  attrs = attributes(x)
-  attrs = attrs[!(names(attrs) %in% c("row.names", "names"))]
+  # Save the metadata, since dplyr drops it
+  metadata = attributes(x)$metadata
 
   x = x %>%
     dplyr::arrange(x, dplyr::desc(.data$issue)) %>%
     dplyr::distinct(.data$geo_value, .data$time_value, .keep_all = TRUE)
 
-  attributes(x) = c(attributes(x), attrs)
+  attributes(x)$metadata = metadata
   return(x)
 }

@@ -5,35 +5,15 @@
 \alias{as.epi_signal.epi_signal}
 \alias{as.epi_signal.tibble}
 \alias{as.epi_signal.data.frame}
-\title{Convert data frame to \code{epi_signal} format}
+\title{Convert data to \code{epi_signal} format}
 \usage{
 as.epi_signal(x, ...)
 
 \method{as.epi_signal}{epi_signal}(x, ...)
 
-\method{as.epi_signal}{tibble}(
-  x,
-  name,
-  geo_type,
-  time_type,
-  signal_type,
-  signal_unit,
-  issue,
-  metadata = list(),
-  ...
-)
+\method{as.epi_signal}{tibble}(x, geo_type, time_type, issue, additional_metadata = list(), ...)
 
-\method{as.epi_signal}{data.frame}(
-  x,
-  name,
-  geo_type,
-  time_type,
-  signal_type,
-  signal_unit,
-  issue,
-  metadata = list(),
-  ...
-)
+\method{as.epi_signal}{data.frame}(x, geo_type, time_type, issue, additional_metadata = list(), ...)
 }
 \arguments{
 \item{x}{Object to be converted. See Methods section below for details on
@@ -41,103 +21,121 @@ formatting of each input type.}
 
 \item{...}{Additional arguments passed to methods.}
 
-\item{name}{The name to use for this signal.}
+\item{geo_type}{The type for the geo values. If missing, then the function
+will attempt to infer it from the geo values present; if this fails, then
+it will be set to "custom".}
 
-\item{geo_type}{The geographic resolution. If missing, then it will be
-guessed from the geo values present.}
+\item{time_type}{The type for the time values. If missing, then the function
+will attempt to infer it from the time values present; if this fails, then
+it will be set to "custom".}
 
-\item{time_type}{The temporal resolution. If missing, then it will be guessed
-from the time values present.}
+\item{issue}{Issue to use for this data. If missing, then the function will
+attempt to infer it from the passed object \code{x}; if this fails, then the
+current day-time will be used.}
 
-\item{signal_type}{The type of the signal value.}
-
-\item{signal_unit}{The units of the signal value.}
-
-\item{issue}{Issue date to use for this data, if not present in \code{x}. If no
-issue date is present in \code{x} and \code{issue} is missing, then today's date will
-be used.}
-
-\item{metadata}{List or tibble of additional metadata to attach to the
-\code{epi_signal} object. All objects will have \code{geo_type}, \code{time_type},
-\code{signal_type} (optional), and \code{signal_unit} (optional) entries included in
-their metadata, derived from the above arguments; any entries in the passed
-argument will be preserved in the metadata as well.}
+\item{additional_metadata}{List of additional metadata to attach to the
+\code{epi_signal} object. All objects will have \code{time_type}, \code{geo_type}, and
+\code{issue} fields; named entries from the passed list or will be included as
+well.}
 }
 \value{
 An \code{epi_signal} object.
 }
 \description{
 Converts a data frame or tibble into a format consistent with the
-\code{epi_signal} class (ensuring that it has a certain minimal set of columns,
-and that it has certain metadata stored in its attributes).
+\code{epi_signal} class, ensuring that it has a certain minimal set of columns,
+and that it has certain minimal metadata.
 }
 \details{
-An \code{epi_signal} object is simply a tibble, with (at least) the
-following columns (with data types written in tibble notation):
+An \code{epi_signal} object is a tibble with (at least) the following
+columns:
 \itemize{
-\item \code{value} <dbl>: the value of the signal
-\item \code{geo_value} <int> or <str>: the associated geographic value
-\item \code{time_value} <date>: the associated time value
-\item \code{issue} <date>: the time value at which the given signal value was issued
+\item \code{geo_value}: the geographic value associated with each measurement.
+\item \code{time_value}: the time value associated with each measurement.
 }
 
-An \code{epi_signal} object also has a tibble \code{metadata} stored in its attributes,
-with (at least) the following columns:
+Other columns can be considered as measured variables, which we also broadly
+refer to as signal variables. An \code{epi_signal} object also has metadata with
+(at least) the following fields:
 \itemize{
-\item \code{name} <str>: the name of the signal
-\item \code{geo_type} <str>: the geographic resolution
-\item \code{time_type} <str>: the temporal resolution
-\item \code{signal_type} <str>: the type of the signal value (optional)
-\item \code{signal_unit} <str>: the units associated with the signal value (optional)
+\item \code{geo_type}: the type for the geo values.
+\item \code{time_type}: the type for the time values.
+\item \code{issue}: the time value at which the given data set was issued.
 }
 
-More information on geo types, time types, and signal types, is given
-below.
+The first two fields above, \code{geo_type} and \code{time_type}, can usually be
+inferred from the \code{geo_value} and \code{time_value} columns, respectively. The
+last field above, \code{issue}, is the most unique to the \code{epi_signal} format.
+In a typical case, this represents the maximum of the issues of individual
+signal values measured in the data set; hence we would also say that the
+data set is comprised of all signal values observed "as of" the given issue
+in the metadata.
+
+Metadata for an \code{epi_signal} object \code{x} can be accessed (and altered) via
+\code{attributes(x)$metadata}. More information on geo types, time types, and
+issues is given below.
 }
 \section{Methods (by class)}{
 \itemize{
 \item \code{epi_signal}: Simply returns the \code{epi_signal} object unchanged.
 
 \item \code{tibble}: The input tibble \code{x} must contain the columns
-\code{value}, \code{geo_value}, and \code{time_value}. If an \code{issue} column is present in
-\code{x}, it will be used as the issue date for each observation; if not, the
-\code{issue} argument will be used. Other columns will be preserved as-is.
+\code{geo_value} and \code{time_value}. All other columns will be preserved as is,
+and treated as measured variables. If \code{issue} is missing, then the function
+will look for \code{issue} as a column of \code{x}, or as a field in its metadata
+(stored in its attributes), to infer the issue; if this fails, then the
+current day-time will be used.
 
 \item \code{data.frame}: The input data frame \code{x} must contain the columns
-\code{value}, \code{geo_value}, and \code{time_value}. If an \code{issue} column is present in
-\code{x}, it will be used as the issue date for each observation; if not, the
-\code{issue} argument will be used. Other columns will be preserved as-is.
+\code{geo_value} and \code{time_value}. All other columns will be preserved as is,
+and treated as measured variables. If \code{issue} is missing, then the function
+will look for \code{issue} as a column of \code{x}, or as a field in its metadata
+(stored in its attributes), to infer the issue; if this fails, then the
+current day-time will be used.
 }}
 
 \section{Geo types}{
 
-The allowable geo types, and their coding (allowable range for geo values),
-are as follows.
+The following geo types are supported in an \code{epi_signal}. Their geo coding
+(specification of geo values for each geo type) is also described below.
 \itemize{
-\item \code{county}: U.S. counties; coded by 5-digit FIPS codes.
-\item \code{hrr}: U.S. hospital referral regions (designed to represent regional
-health care markets); there are 306 HRRs in the U.S; coded by number
-(nonconsecutive, between 1 and 457).
-\item \code{state}: U.S. states; coded by 2-digit postal abbreviation (lowercase);
+\item \code{"county"}: each observation corresponds to a U.S. county; coded by 5-digit
+FIPS code.
+\item \code{"hrr"}: each observation corresponds to a U.S. hospital referral region
+(designed to represent regional healthcare markets); there are 306 HRRs in
+the U.S; coded by number (nonconsecutive, between 1 and 457).
+\item \code{"state"}: each observation corresponds to a U.S. state; coded by 2-digit
+postal abbreviation (lowercase);
 note that Puerto Rico is "pr" and Washington D.C. is "dc".
-\item \code{hhs}: U.S. HHS regions; coded by number (between 1 and 10).
-\item \code{nation}: country; coded by ISO 3166-1 alpha-2 country codes (lowercase).
+\item \code{"hhs"}: each observation corresponds to a U.S. HHS region; coded by number
+(consecutive, between 1 and 10).
+\item \code{"nation"}: each observation corresponds to a country; coded by ISO 31661-
+alpha-2 country codes (lowercase).
 }
+
+The above geo types come with aggregation utilities in the package; see
+\code{aggregate_by_geo()}. An unrecognizable geo type is labeled as "custom".
 }
 
 \section{Time types}{
 
-The allowable time types are as follows. In each case, their coding
-(allowable range for time values) is an object of class \code{Date}, or string
-in the format "YYYY-MM-DD".
+The following time types are supported in an \code{epi_signal}. Their time coding
+(specification of time values for each time type) is also described below.
 \itemize{
-\item "day": each observation covers one day.
-\item "week": each observation covers one week, and the time value is assumed to
-be the start date of the epiweek (MMWR week) that the data represents.
-}
+\item \code{"day-time"}: each observation corresponds to a time on a given day (measured
+to the second); coded as a \code{POSIXct} object, as in \code{as.POSIXct("2020-06-09 18:45:40")}.
+\item \code{"day"}: each observation corresponds to a day; coded as a \code{Date} object,
+as in \code{as.Date("2020-06-09")}.
+\item \code{"week"}: each observation corresponds to an epiweek (the U.S. CDC
+definition of an epidemiological week, which is aligned to start on a
+Sunday); coded as a \code{Date} object, representing the start date of the
+epiweek.
 }
 
-\section{Signal types}{
+An unrecognisable time type is labeled as "custom".
+}
+
+\section{Issues}{
 
 todo
 }

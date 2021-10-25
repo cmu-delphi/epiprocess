@@ -2,50 +2,69 @@
 % Please edit documentation in R/slide.R
 \name{slide_by_geo}
 \alias{slide_by_geo}
-\title{Slide a function over values in an \code{epi_signal} data frame, grouped by geo
-location}
+\title{Slide a function over variables in an \code{epi_signal} object, grouped by geo
+value}
 \usage{
 slide_by_geo(
   x,
   slide_fun,
   n = 14,
-  col_name = "slide_value",
-  col_type = c("dbl", "int", "lgl", "chr", "list"),
+  new_var_name = "slide_value",
+  new_var_type = c("dbl", "int", "lgl", "chr", "list"),
+  time_step,
   ...
 )
 }
 \arguments{
-\item{x}{The \code{epi_signal} data frame under consideration.}
+\item{x}{The \code{epi_signal} object under consideration.}
 
-\item{slide_fun}{Function or formula to slide over the values in \code{x}, grouped
-by \code{geo_value}. To "slide" means to apply the function or formula over a
-trailing window of \code{n} days of data. If a function, \code{slide_fun} must take
-\code{x}, a data frame the same column names as the original data frame;
-followed by any number of named additional arguments; and ending with
-\code{...}, to capture general additional arguments. If a formula, \code{slide_fun}
-can operate directly on \code{.x$value}, \code{.x$time_value}, etc., as in \code{~ mean(.x$value)} to compute a trailing mean over the last \code{n} days of data.}
+\item{slide_fun}{Function or formula to slide over variables in \code{x}, grouped
+by \code{geo_value}. To "slide" means to apply a function or formula over a
+trailing window of \code{n} time steps (where one time step is typically one day
+or one week; see details for more explanation). If a function, \code{slide_fun}
+must take \code{x}, a data frame with the same column names as the original
+object; followed by any number of named arguments; and ending with
+\code{...}. If a formula, \code{slide_fun} can operate directly on columns accessed
+via \code{.x$var}, as in \code{~ mean(.x$var)} to compute a trailing mean of a column
+\code{var} over the last \code{n} time steps.}
 
-\item{n}{Size of the local window (in days) to use. For example, if \code{n = 5},
-then to estimate the derivative on November 5, we train the given method on
-data in between November 1 and November 5. Default is 14.}
+\item{n}{Number of time steps to use in the trailing window. For example, if
+\code{n = 5}, and one time step is one day, then to produce a value on November
+5, we apply the given function or formula to data in between November 1 and
+5.  Default is 14.}
 
-\item{col_name}{String indicating the name of the new column that will
+\item{new_var_name}{String indicating the name of the new variable that will
 contain the derivative values. Default is "slide_value"; note that setting
-\code{col_name = "value"} will overwrite the existing "value" column.}
+\code{new_var_name} equal to an existing column name will overwrite this column.}
 
-\item{col_type}{One of "dbl", "int", "lgl", "chr", or "list", indicating the
-data type (as tibble abbreviation) for the new column. Default is "dbl".}
+\item{new_var_type}{One of "dbl", "int", "lgl", "chr", or "list", indicating
+the data type (tibble abbreviation) for the new variable. Default is "dbl".}
+
+\item{time_step}{Optional function used to define the meaning of one time
+step, which if specified, overrides the default choice based on the
+metadata. This function must take a positive integer and return an object
+of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this would
+only be meaningful if \code{time_value} is of class \code{POSIXct}, that is, if
+\code{time_type} if "day-time").}
 
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{slide_fun}.}
 }
 \value{
-A data frame given by appending a new column to \code{x} named according
-to the \code{col_name} argument, containing the function values.
+An \code{epi_signal} object given by appending a new column to \code{x}, named
+according to the \code{new_var_name} argument, containing the slide values.
 }
 \description{
-Slides a given function over the values in an \code{epi_signal} data frame,
-grouped by geo location. (When multiple issue dates are present, only the
-latest issue is considered.) See the \href{https://cmu-delphi.github.io/epitools/articles/slide.html}{slide vignette}
-for examples.
+Slides a given function over the variables in an \code{epi_signal} object, grouped
+by geo value. See the \href{https://cmu-delphi.github.io/epitools/articles/slide.html}{slide vignette} for
+examples.
+}
+\details{
+To "slide" means to apply a function or formula over a trailing
+window of \code{n} time steps, where the unit (the meaning of one time step) is
+determined by the \code{time_type} field in the metadata: it is one day if
+\code{time_type} is either "day-time" or "day", and it is one week if
+\code{time_type} is "week". The time step can also be set explicitly using the
+\code{time_step} argument (which would override the default choice based on the
+metadata).
 }

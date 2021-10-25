@@ -1,70 +1,92 @@
-#' Convert data frame to `epi_signal` format
+#' Convert data to `epi_signal` format
 #'
 #' Converts a data frame or tibble into a format consistent with the
-#' `epi_signal` class (ensuring that it has a certain minimal set of columns, 
-#' and that it has certain metadata stored in its attributes).
-#'
-#' @details An `epi_signal` object is simply a tibble, with (at least) the
-#'   following columns (with data types written in tibble notation):    
-#' * `value` <dbl> or <list>: the value of the signal
-#' * `geo_value` <int> or <str>: the associated geographic value  
-#' * `time_value` <date>: the associated time value 
-#'
-#' An `epi_signal` object also has a tibble `metadata` stored in its attributes,  
-#' with (at least) the following columns:
-#' * `name` <str>: the name of the signal
-#' * `geo_type` <str>: the geographic resolution
-#' * `time_type` <str>: the temporal resolution
-#' * `issue` <date>: the time value at which the given data set was issued (this
-#'   represents the maximum of issue dates of individual signal values in the
-#'   data set) 
-#' * `signal_type` <str>: the type of the signal value (optional)
-#' * `signal_unit` <str>: the units associated with the signal value (optional) 
-#'
-#' More information on geo types, time types, and signal types, is given
-#' below. 
-#' 
-#' @section Geo types:
-#' The allowable geo types, and their coding (allowable range for geo values), 
-#'   are as follows.
-#' * `county`: U.S. counties; coded by 5-digit FIPS codes.  
-#' * `hrr`: U.S. hospital referral regions (designed to represent regional
-#'   health care markets); there are 306 HRRs in the U.S; coded by number
-#'   (nonconsecutive, between 1 and 457). 
-#' * `state`: U.S. states; coded by 2-digit postal abbreviation (lowercase);
-#'   note that Puerto Rico is "pr" and Washington D.C. is "dc".  
-#' * `hhs`: U.S. HHS regions; coded by number (between 1 and 10).
-#' * `nation`: country; coded by ISO 3166-1 alpha-2 country codes (lowercase). 
-#'
-#' @section Time types:
-#' The allowable time types are as follows. In each case, their coding
-#'   (allowable range for time values) is an object of class `Date`, or string
-#'   in the format "YYYY-MM-DD".
-#' * "day": each observation covers one day.
-#' * "week": each observation covers one week, and the time value is assumed to 
-#'   be the start date of the epiweek (MMWR week) that the data represents.
-#'
-#' @section Signal types:
-#' todo
+#' `epi_signal` class, ensuring that it has a certain minimal set of columns, 
+#' and that it has certain minimal metadata.
 #'
 #' @param x Object to be converted. See Methods section below for details on
 #'   formatting of each input type.
-#' @param name The name to use for this signal.
-#' @param geo_type The geographic resolution. If missing, then it will be
-#'   guessed from the geo values present.  
-#' @param time_type The temporal resolution. If missing, then it will be guessed
-#'   from the time values present.
-#' @param issue Issue date to use for this data. If missing, then today's date
-#'   will be used. 
-#' @param signal_type The type of the signal value. 
-#' @param signal_unit The units of the signal value. 
-#' @param metadata List or tibble of *additional* metadata to attach to the
-#'   `epi_signal` object. All objects will have `geo_type`, `time_type`,
-#'   `signal_type` (optional), and `signal_unit` (optional) entries included in
-#'   their metadata, derived from the above arguments; any entries in the passed
-#'   argument will be preserved in the metadata as well.
+#' @param geo_type The type for the geo values. If missing, then the function
+#'   will attempt to infer it from the geo values present; if this fails, then
+#'   it will be set to "custom".  
+#' @param time_type The type for the time values. If missing, then the function
+#'   will attempt to infer it from the time values present; if this fails, then
+#'   it will be set to "custom". 
+#' @param issue Issue to use for this data. If missing, then the function will
+#'   attempt to infer it from the passed object `x`; if this fails, then the
+#'   current day-time will be used. 
+#' @param additional_metadata List of additional metadata to attach to the
+#'   `epi_signal` object. All objects will have `time_type`, `geo_type`, and
+#'   `issue` fields; named entries from the passed list or will be included as
+#'   well.
 #' @param ... Additional arguments passed to methods.
 #' @return An `epi_signal` object.
+#'
+#' @details An `epi_signal` object is a tibble with (at least) the following
+#'   columns:  
+#' 
+#' * `geo_value`: the geographic value associated with each measurement.
+#' * `time_value`: the time value associated with each measurement.
+#'
+#' Other columns can be considered as measured variables, which we also broadly
+#'   refer to as signal variables. An `epi_signal` object also has metadata with
+#'   (at least) the following fields: 
+#' 
+#' * `geo_type`: the type for the geo values.
+#' * `time_type`: the type for the time values.
+#' * `issue`: the time value at which the given data set was issued.
+#'
+#' The first two fields above, `geo_type` and `time_type`, can usually be
+#'   inferred from the `geo_value` and `time_value` columns, respectively. The
+#'   last field above, `issue`, is the most unique to the `epi_signal` format.
+#'   In a typical case, this represents the maximum of the issues of individual
+#'   signal values measured in the data set; hence we would also say that the
+#'   data set is comprised of all signal values observed "as of" the given issue
+#'   in the metadata.
+#'
+#' Metadata for an `epi_signal` object `x` can be accessed (and altered) via
+#'   `attributes(x)$metadata`. More information on geo types, time types, and
+#'   issues is given below.   
+#'
+#' @section Geo types:
+#' The following geo types are supported in an `epi_signal`. Their geo coding 
+#'   (specification of geo values for each geo type) is also described below.      
+#' 
+#' * `"county"`: each observation corresponds to a U.S. county; coded by 5-digit
+#'   FIPS code. 
+#' * `"hrr"`: each observation corresponds to a U.S. hospital referral region
+#'   (designed to represent regional healthcare markets); there are 306 HRRs in
+#'   the U.S; coded by number (nonconsecutive, between 1 and 457).
+#' * `"state"`: each observation corresponds to a U.S. state; coded by 2-digit
+#'   postal abbreviation (lowercase);
+#'   note that Puerto Rico is "pr" and Washington D.C. is "dc".  
+#' * `"hhs"`: each observation corresponds to a U.S. HHS region; coded by number
+#'   (consecutive, between 1 and 10).
+#' * `"nation"`: each observation corresponds to a country; coded by ISO 31661-
+#'   alpha-2 country codes (lowercase).
+#'
+#' The above geo types come with aggregation utilities in the package; see
+#'   `aggregate_by_geo()`. An unrecognizable geo type is labeled as "custom". 
+#' 
+#' @section Time types:
+#' The following time types are supported in an `epi_signal`. Their time coding 
+#'   (specification of time values for each time type) is also described below.
+#' 
+#' * `"day-time"`: each observation corresponds to a time on a given day (measured
+#'   to the second); coded as a `POSIXct` object, as in `as.POSIXct("2020-06-09
+#'   18:45:40")`.  
+#' * `"day"`: each observation corresponds to a day; coded as a `Date` object,
+#'   as in `as.Date("2020-06-09")`.
+#' * `"week"`: each observation corresponds to an epiweek (the U.S. CDC
+#'   definition of an epidemiological week, which is aligned to start on a
+#'   Sunday); coded as a `Date` object, representing the start date of the
+#'   epiweek.
+#'
+#' An unrecognisable time type is labeled as "custom".
+#' 
+#' @section Issues: 
+#' todo
+#' 
 #' @export
 as.epi_signal = function(x, ...) {
   UseMethod("as.epi_signal")
@@ -79,44 +101,24 @@ as.epi_signal.epi_signal = function(x, ...) {
 
 #' @method as.epi_signal tibble
 #' @describeIn as.epi_signal The input tibble `x` must contain the columns
-#'   `value`, `geo_value`, and `time_value`. All other columns will be preserved
-#'   as-is. 
+#'   `geo_value` and `time_value`. All other columns will be preserved as is,
+#'   and treated as measured variables. If `issue` is missing, then the function
+#'   will look for `issue` as a column of `x`, or as a field in its metadata
+#'   (stored in its attributes), to infer the issue; if this fails, then the
+#'   current day-time will be used. 
 #' @importFrom rlang .data abort
 #' @export
-as.epi_signal.tibble = function(x, name, geo_type, time_type, issue,
-                                signal_type, signal_unit, metadata = list(),
-                                ...) {  
-  if (!("value" %in% names(x))) {
-    abort(paste(
-      "`x` must contain a `value` column",
-      "containing the signal value of each observation."
-    ), class = "epi_coerce_value")
-  }
-
+as.epi_signal.tibble = function(x, geo_type, time_type, issue,
+                                additional_metadata = list(), ...) {
+  # Check that we have geo_value and time_value columns
   if (!("geo_value" %in% names(x))) {
-    abort(paste(
-      "`x` must contain a `geo_value` column",
-      "containing the geo location of each observation." 
-    ), class = "epi_coerce_geo_value")
+    abort("`x` must contain a `geo_value` column.")
   }
-
   if (!("time_value" %in% names(x))) {
-    abort(paste(
-      "`x` must contain a `time_value` column",
-      "containing the time value of each observation." 
-    ), class = "epi_coerce_time_value")
+    abort("`x` must contain a `time_value` column.")
   }
 
-  if (missing(name)) {
-    abort(
-      "`name` must be specified.",
-      class = "epi_coerce_name")
-  }
-
-  # If issue is missing, thne use today's date
-  if (missing(issue)) issue = Sys.Date()
-
-  # If geo type is missing ,then try to guess it
+  # If geo type is missing, then try to guess it
   if (missing(geo_type)) {
     if (is.character(x$geo_value)) {
       # Convert geo values to lowercase
@@ -145,48 +147,74 @@ as.epi_signal.tibble = function(x, name, geo_type, time_type, issue,
     }
 
     # If we got here then we failed
-    else geo_type = "unknown" # TODO should we use NA? Or some other flag?
+    else geo_type = "custom" 
   }
 
   # If time type is missing, then try to guess it
   if (missing(time_type)) {
-    # Convert time values to Date format
-    x$time_value = as.Date(x$time_value)
+    # Convert character time values to Date or POSIXct
+    if (is.character(x$time_value)) {
+      if (nchar(x$time_value[1]) <= "10") {
+        new_time_value = tryCatch({ as.Date(x$time_value) },
+                                  error = function(e) NULL)
+      }
+      else {
+        new_time_value = tryCatch({ as.POSIXct(x$time_value) },
+                                  error = function(e) NULL)
+      }
+      if (!is.null(new_time_value)) x$time_value = new_time_value
+    }
+    
+    # Now, if a POSIXct class, then use "day-time"
+    if (inherits(x$time_value, "POSIXct")) time_type = "day-time"
 
-    # If all time values are 7 days apart, then use "week"
-    if (all(diff(sort(x$time_value, decreasing=TRUE)) == 7)) time_type = "week"
+    # Else, if a Date class, then use "week" or "day" depending on gaps 
+    else if (inherits(x$time_value, "Date")) {
+      time_type = ifelse(all(diff(sort(x$time_value)) == -7), "week", "day")
+    }
 
-    # Otherwise just use "day"
-    else time_type = "day"
+    # If we got here then we failed
+    else time_type = "custom" 
+  }
+
+  # If issue is missing, then try to guess it
+  if (missing(issue)) {
+    # First check for a column, and take the maximum of issues
+    if ("issue" %in% names(x)) issue = max(x$issue)
+
+    # Next, check the metadata
+    else if ("issue" %in% names(attributes(x$metadata))) {
+      issue = attributes(x)$metadata$issue
+    }
+
+    # If we got here then we failed 
+    else issue = Sys.time() # Use the current day-time
   }
 
   # Define metadata fields
-  metadata$name = name
-  metadata$issue = issue
+  metadata = list()
   metadata$geo_type = geo_type
   metadata$time_type = time_type
-  if (!missing(signal_type)) metadata$signal_type = signal_type
-  if (!missing(signal_unit)) metadata$signal_unit = signal_unit
-  metadata = tibble::as_tibble(metadata)
+  metadata$issue = issue
+  metadata = c(metadata, additional_metadata)
  
   # Convert to a tibble, apply epi_signal class, attach metadata
   x = tibble::as_tibble(x)
   class(x) = c("epi_signal", class(x))
   attributes(x)$metadata = metadata
   
-  # Reorder columns: value, geo_value, time_value
-  x = dplyr::relocate(x,
-                      .data$value,
-                      .data$geo_value,
-                      .data$time_value)
-
+  # Reorder columns (geo_value, time_value) and return
+  x = dplyr::relocate(x, .data$geo_value, .data$time_value)
   return(x)
 }
 
 #' @method as.epi_signal data.frame
-#' @describeIn as.epi_signal The input data frame `x` must contain the columns
-#'   `value`, `geo_value`, and `time_value`. All other columns will be preserved 
-#'   as-is. 
+#' @describeIn as.epi_signal The input data frame `x` must contain the columns 
+#'   `geo_value` and `time_value`. All other columns will be preserved as is,
+#'   and treated as measured variables. If `issue` is missing, then the function
+#'   will look for `issue` as a column of `x`, or as a field in its metadata
+#'   (stored in its attributes), to infer the issue; if this fails, then the
+#'   current day-time will be used. 
 #' @export
 as.epi_signal.data.frame = as.epi_signal.tibble
 
@@ -203,19 +231,11 @@ as.epi_signal.data.frame = as.epi_signal.tibble
 #' @method print epi_signal
 #' @export
 print.epi_signal = function(x, ...) {
-  cat(sprintf("An `epi_signal` data frame with %i rows and %i columns.\n\n",
+  cat(sprintf("An `epi_signal` object with %i rows and %i columns.\n\n",
               nrow(x), ncol(x)))
-  cat(sprintf("%-10s: %s\n", "name", attributes(x)$metadata$name))
   cat(sprintf("%-10s: %s\n", "geo_type", attributes(x)$metadata$geo_type))
   cat(sprintf("%-10s: %s\n", "time_type", attributes(x)$metadata$time_type))
-  if (suppressWarnings(!is.null(attributes(x)$metadata$signal_type))) {
-    cat(sprintf("%-10s: %s\n", "signal_type",
-                attributes(x)$metadata$signal_type))
-  }
-  if (suppressWarnings(!is.null(attributes(x)$metadata$signal_unit))) {
-    cat(sprintf("%-10s: %s\n", "signal_unit",
-                attributes(x)$metadata$signal_unit))
-  }
+  cat(sprintf("%-10s: %s\n", "issue", attributes(x)$metadata$issue))
   cat("\n")
   NextMethod("print")
 }
@@ -230,7 +250,7 @@ head.epi_signal = function(x, ...) {
 #' Summarize `epi_signal` object
 #'
 #' Prints a variety of summary statistics about the underlying data, such as the
-#' date range included and geographic coverage, for an `epi_signal` object.
+#' time range included and geographic coverage, for an `epi_signal` object.
 #'
 #' @param object The `epi_signal` object.
 #' @param ... Additional arguments, for compatibility with `summary()`.
@@ -241,19 +261,11 @@ head.epi_signal = function(x, ...) {
 #' @importFrom stats median
 #' @export
 summary.epi_signal = function(object, ...) {
-  cat(sprintf("An `epi_signal` data frame with %i rows and %i columns.\n\n",
+  cat(sprintf("An `epi_signal` object with %i rows and %i columns.\n\n",
               nrow(x), ncol(x)))
-  cat(sprintf("%-10s: %s\n", "name", attributes(x)$metadata$name))
   cat(sprintf("%-10s: %s\n", "geo_type", attributes(x)$metadata$geo_type))
-  cat(sprintf("%-10s: %s\n", "time_type", attributes(x)$metadata$time_type)) 
-  if (suppressWarnings(!is.null(attributes(x)$metadata$signal_type))) {
-    cat(sprintf("%-10s: %s\n", "signal_type",
-                attributes(x)$metadata$signal_type))
-  }
-  if (suppressWarnings(!is.null(attributes(x)$metadata$signal_unit))) {
-    cat(sprintf("%-10s: %s\n", "signal_unit",
-                attributes(x)$metadata$signal_unit))
-  }
+  cat(sprintf("%-10s: %s\n", "time_type", attributes(x)$metadata$time_type))
+  cat(sprintf("%-10s: %s\n", "issue", attributes(x)$metadata$issue))
   cat("\n")
   cat(sprintf("%-43s: %s\n", "first time value", min(object$time_value)))
   cat(sprintf("%-43s: %s\n", "last time value", max(object$time_value)))

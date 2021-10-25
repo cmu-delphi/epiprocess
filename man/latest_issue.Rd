@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{latest_issue}
 \alias{latest_issue}
-\title{Fetch the latest or earliest issue for each observation}
+\title{Fetch the latest or for each observation}
 \usage{
 latest_issue(x)
 }
@@ -12,14 +12,14 @@ returned from \code{covidcast_signal()} or the "long" format of
 \code{aggregate_signals()}.}
 }
 \value{
-A data frame in the same form, but with only the earliest or latest
-issue of every observation. Note that these functions sort the data frame
-as part of their filtering, so the output data frame rows may be in a
-different order.
+A data frame in the same form, but with only the latest issue of
+every observation. Note that these functions sort the data frame as part of
+their filtering, so the output data frame rows may be in a different
+order.
 }
 \description{
 The data returned from \code{covidcast_signal()} or \code{covidcast_signals()} can, if
 called with the \code{issues} argument, contain multiple issues for a single
 observation in a single location. These functions filter the data frame to
-contain only the earliest issue or only the latest issue.
+contain only the latest issue.
 }

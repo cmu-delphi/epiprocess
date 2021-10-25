@@ -1,6 +1,6 @@
 ---
 title: 4. Compute correlations between signals
-description: Compute correlations over space and time between signals.
+description: Compute correlations between signals over space and time.
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{4. Compute correlations between signals}
@@ -25,35 +25,44 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       signal = "confirmed_incidence_prop",
                       start_day = start_day, 
                       end_day = end_day,
-                      geo_type = "state")  %>%
-  as.epi_signal(name = "covid19_cases") %>%
-  select(value, geo_value, time_value) %>%
-  slide_by_geo(slide_fun = ~ Mean(.x$value), n = 7, col_name = "value") 
+                      geo_type = "state") %>%
+  as.epi_signal() %>%
+  rename(case_rates = value) %>%
+  select(geo_value, time_value, case_rates) %>%
+  slide_by_geo(slide_fun = ~ Mean(.x$case_rates), n = 7, 
+               new_var_name = "case_rates") 
 
 y <- covidcast_signal(data_source = "jhu-csse", 
                       signal = "deaths_incidence_prop",
                       start_day = start_day, 
                       end_day = end_day,
-                      geo_type = "state")  %>%
-  as.epi_signal(name = "covid19_deaths") %>%
-  select(value, geo_value, time_value) %>%
-  slide_by_geo(slide_fun = ~ Mean(.x$value), n = 7, col_name = "value") 
+                      geo_type = "state") %>%
+  as.epi_signal() %>%
+  rename(death_rates = value) %>%
+  select(geo_value, time_value, death_rates) %>%
+  slide_by_geo(slide_fun = ~ Mean(.x$death_rates), n = 7, 
+               new_var_name = "death_rates") 
+  
+x <- full_join(x, y, by = c("geo_value", "time_value"))
 ```
 
 ## Correlations sliced by time
 
-The `sliced_cor()` function offers two ways to calculate correlations. The first 
-way is to "slice by time": this calculates, for each time value, the correlation 
-between the signals over all geographic locations. This is obtained by setting 
-`by = "time_value"`.
+The `slided_cor()` function operates on an `epi_signal` object, and it requires
+further specification of the variables to correlate, in its next two arguments 
+(`var1` and `var2`). In general, there are two ways to calculate correlations. 
+The first way is to "slice by time": this calculates, for each time value, the
+correlation between the signals over all geographic locations. This is obtained 
+by setting `by = time_value`. 
 
 ```{r, message = FALSE, warning = FALSE}
 library(ggplot2)
 theme_set(theme_bw())
 
-z1 <- sliced_cor(x, y, by = "time_value")
+devtools::load_all("~/Dropbox/delphi/epitools")
+z1 <- sliced_cor(x, case_rates, death_rates, by = time_value)
 
-ggplot(z1, aes(x = time_value, y = value)) + 
+ggplot(z1, aes(x = time_value, y = cor)) + 
   geom_line() +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Correlation")
@@ -70,22 +79,21 @@ Spearman correlation is highly robust and invariant to monotone transformations.
 ## Lagged correlations
 
 We might also be interested in how case rates associate with death rates in the
-*future*. Using the `dt_x` parameter in `sliced_cor()`, we can lag case rates
-back any number of days we want, before calculating correlations.
-
-Below, we set `dt_x = -10`. This means that `x` will be lagged by 10 days, so
-that cases on June 1st will be correlated with deaths on June 11th. (It might 
-help to think of it this way: deaths on a certain day will be correlated with 
-cases with an offset of -10 days.)
+*future*. Using the `dt1` parameter in `sliced_cor()`, we can lag case rates
+back any number of days we want, before calculating correlations. Below, we set 
+`dt1 = -10`. This means that `var1 = case_rates` will be lagged by 10 days, so
+that case rates on June 1st will be correlated with death rates on June 11th. 
+(It might also help to think of it this way: death rates on a certain day will 
+be correlated with case rates at an offset of -10 days.)
 
 ```{r, message = FALSE, warning = FALSE}
-z2 <- sliced_cor(x, y, by = "time_value", dt_x = -10)
+z2 <- sliced_cor(x, case_rates, death_rates, by = time_value, dt1 = -10)
 
 z <- rbind(z1 %>% mutate(lag = 0), 
            z2 %>% mutate(lag = 10)) %>%
   mutate(lag = as.factor(lag))
 
-ggplot(z, aes(x = time_value, y = value)) +
+ggplot(z, aes(x = time_value, y = cor)) +
   geom_line(aes(color = lag)) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Correlation", col = "Lag") 
@@ -99,18 +107,18 @@ days from now.
 
 The second option we have is to "slice by location": this calculates, for each
 geographic location, correlation between the time series of two signals. This
-is obtained by setting `by = "geo_value"`. We'll again look at correlations
+is obtained by setting `by = geo_value`. We'll again look at correlations
 both for observations at the same time and for 10-day lagged case rates.
 
 ```{r, message = FALSE, warning = FALSE}
-z1 <- sliced_cor(x, y, by = "geo_value")
-z2 <- sliced_cor(x, y, by = "geo_value", dt_x = -10)
+z1 <- sliced_cor(x, case_rates, death_rates, by = geo_value)
+z2 <- sliced_cor(x, case_rates, death_rates, by = geo_value, dt1 = -10)
 
 z <- rbind(z1 %>% mutate(lag = 0), 
            z2 %>% mutate(lag = 10)) %>%
   mutate(lag = as.factor(lag))
 
-ggplot(z, aes(value)) +
+ggplot(z, aes(cor)) +
   geom_density(aes(fill = lag, col = lag), alpha = 0.5) +
   labs(x = "Correlation", y = "Density", fill = "Lag", col = "Lag") 
 ```
@@ -128,13 +136,13 @@ library(purrr)
 lags = 0:35
 
 z <- map_dfr(lags, function(lag) {
-  sliced_cor(x, y, dt_x = -lag, by = "geo_value") %>% 
+  sliced_cor(x, case_rates, death_rates, by = geo_value, dt1 = -lag) %>% 
     mutate(lag = lag) 
   })
 
 z %>%
   group_by(lag) %>%
-  summarize(mean = Mean(value)) %>%
+  summarize(mean = Mean(cor)) %>%
   ggplot(aes(x = lag, y = mean)) + 
   geom_line() + geom_point() +
   labs(x = "Lag", y = "Mean correlation")

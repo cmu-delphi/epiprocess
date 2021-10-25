@@ -112,46 +112,47 @@
                       <span class="kw">end_day</span> <span class="kw">=</span> <span class="st">"2021-05-31"</span>,
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>,
                       <span class="kw">geo_values</span> <span class="kw">=</span> <span class="st">"fl"</span>)  <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>(<span class="kw">name</span> <span class="kw">=</span> <span class="st">"covid19_cases"</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">value</span>, <span class="no">geo_value</span>, <span class="no">time_value</span>)</pre></body></html></div>
+  <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>() <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span>(<span class="kw">cases</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">cases</span>)</pre></body></html></div>
 <div id="percentage-change" class="section level2">
 <h2 class="hasAnchor">
 <a href="#percentage-change" class="anchor"></a>Percentage change</h2>
-<p>The <code><a href="../reference/pct_change.html">pct_change()</a></code> function operates on a <code>epi_signal</code> data frame, and takes an argument <code>n</code>, indicating the size of the local window (in days) to use in order to compute the percentage change. For example, if <code>n = 10</code>, then (for each <code>geo_value</code>) the percentage change on November 10 is calculated as 100 * (B - A) / A, where A is the sum of the values between November 6 and November 10, and A is the sum of the values between November 1 and November 5. The default is <code>n = 14</code>, giving the percentage change between adjacent weeks.</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/pct_change.html">pct_change</a></span>(<span class="no">x</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>)
+<p>The <code><a href="../reference/pct_change.html">pct_change()</a></code> function operates on a <code>epi_signal</code> object, and aside from this, takes two main arguments: <code>var</code>, the variable whose percentage change values are to be computed; and <code>n</code>, the length of the local window (here, in days) to use to compute the percentage change values. For example, if <code>n = 10</code>, then the percentage change on November 10 is computed as 100 * (B - A) / A, where A is the sum of the signal in between November 6 and 10, and A is the sum in between November 1 and 5. The default is <code>n = 14</code> (here, corresponding to the percentage change between adjacent weeks).</p>
+<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/pct_change.html">pct_change</a></span>(<span class="no">x</span>, <span class="no">cases</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>)
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>, <span class="fl">21</span>) <span class="kw">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span>(<span class="kw">n</span> <span class="kw">=</span> <span class="fl">Inf</span>)</pre></body></html></div>
 <pre><code>## # A tibble: 21 × 4
-##    value geo_value time_value pct_change
-##    &lt;dbl&gt; &lt;chr&gt;     &lt;date&gt;          &lt;dbl&gt;
-##  1   667 fl        2020-06-01       NA  
-##  2   617 fl        2020-06-02       NA  
-##  3  1317 fl        2020-06-03       NA  
-##  4  1419 fl        2020-06-04       NA  
-##  5  1305 fl        2020-06-05       NA  
-##  6  1270 fl        2020-06-06       NA  
-##  7  1180 fl        2020-06-07       NA  
-##  8   966 fl        2020-06-08       NA  
-##  9  1096 fl        2020-06-09       NA  
-## 10  1371 fl        2020-06-10       NA  
-## 11  1698 fl        2020-06-11       NA  
-## 12  1902 fl        2020-06-12       NA  
-## 13  2581 fl        2020-06-13       NA  
-## 14  2016 fl        2020-06-14       49.6
-## 15  1758 fl        2020-06-15       53.9
-## 16  2783 fl        2020-06-16       65.0
-## 17  2610 fl        2020-06-17       78.3
-## 18  3207 fl        2020-06-18       89.7
-## 19  3822 fl        2020-06-19       98.0
-## 20  4049 fl        2020-06-20       87.6
-## 21  3494 fl        2020-06-21       86.8</code></pre>
-<p>We can see that a column <code>pct_change</code> column has been appended to the output data frame, which contains the percentage change values estimates. Next we plot these values alongside the signal itself. We highlight the periods in time for which the percentage change is above 10% (in red) and below -10% (in blue).</p>
+##    geo_value time_value cases pct_change
+##    &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
+##  1 fl        2020-06-01   667       NA  
+##  2 fl        2020-06-02   617       NA  
+##  3 fl        2020-06-03  1317       NA  
+##  4 fl        2020-06-04  1419       NA  
+##  5 fl        2020-06-05  1305       NA  
+##  6 fl        2020-06-06  1270       NA  
+##  7 fl        2020-06-07  1180       NA  
+##  8 fl        2020-06-08   966       NA  
+##  9 fl        2020-06-09  1096       NA  
+## 10 fl        2020-06-10  1371       NA  
+## 11 fl        2020-06-11  1698       NA  
+## 12 fl        2020-06-12  1902       NA  
+## 13 fl        2020-06-13  2581       NA  
+## 14 fl        2020-06-14  2016       49.6
+## 15 fl        2020-06-15  1758       53.9
+## 16 fl        2020-06-16  2783       65.0
+## 17 fl        2020-06-17  2610       78.3
+## 18 fl        2020-06-18  3207       89.7
+## 19 fl        2020-06-19  3822       98.0
+## 20 fl        2020-06-20  4049       87.6
+## 21 fl        2020-06-21  3494       86.8</code></pre>
+<p>We can see that a column <code>pct_change</code> column has been appended in the returned object, which contains the percentage change values estimates. Next we plot these values alongside the signal itself. We highlight the periods in time for which the percentage change is above 10% (in red) and below -10% (in blue).</p>
 <div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
 
 <span class="no">threshold_upper</span> <span class="kw">=</span> <span class="fl">10</span>
 <span class="no">threshold_lower</span> <span class="kw">=</span> -<span class="fl">10</span>
 
-<span class="no">p1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">value</span>)) +
+<span class="no">p1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">cases</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html">geom_tile</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">x</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">pct_change</span> <span class="kw">&gt;=</span> <span class="no">threshold_upper</span>),
             <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="fl">0</span>, <span class="kw">width</span> <span class="kw">=</span> <span class="fl">7</span>, <span class="kw">height</span> <span class="kw">=</span> <span class="fl">Inf</span>),
             <span class="kw">fill</span> <span class="kw">=</span> <span class="fl">2</span>, <span class="kw">alpha</span> <span class="kw">=</span> <span class="fl">0.1</span>) +
@@ -175,12 +176,13 @@
 <div id="smoothing-via-7-day-averaging" class="section level2">
 <h2 class="hasAnchor">
 <a href="#smoothing-via-7-day-averaging" class="anchor"></a>Smoothing via 7-day averaging</h2>
-<p>The percentage change in the last figure appears pretty volatile in some parts, which is not too surprising, looking at how wiggly the signal is itself. With a suitable call to <code>slide_to_geo()</code>, we can either pre-smooth or post-smooth using a 7-day trailing average. The differences here (between these two approaches) do not end up being very noticeable at all (which is not unexpected, due to the way in which percentage change is defined—already in terms of a sum over a 7-day period). Thus we just show results for one of these approaches, pre-smoothing.</p>
+<p>The percentage change in the last figure appears pretty volatile in some parts, which is not too surprising, looking at how wiggly the signal is itself. With a suitable call to <code>slide_to_geo()</code>, we can either pre-smooth or post-smooth using a 7-day trailing average. The differences here (between these two approaches) do not end up being very noticeable at all (which is not unexpected, due to the way in which percentage change is defined; it is already defined using a sum over a 7-day period). We just show results for one of these approaches, pre-smoothing.</p>
 <div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span>(<span class="kw">slide_fun</span> <span class="kw">=</span> ~ <span class="fu"><a href="../reference/Min.html">Mean</a></span>(<span class="no">.x</span>$<span class="no">value</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>, <span class="kw">col_name</span> <span class="kw">=</span> <span class="st">"value"</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/pct_change.html">pct_change</a></span>(<span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>)
+  <span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span>(<span class="kw">slide_fun</span> <span class="kw">=</span> ~ <span class="fu"><a href="../reference/Min.html">Mean</a></span>(<span class="no">.x</span>$<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>,
+               <span class="kw">new_var_name</span> <span class="kw">=</span> <span class="st">"cases_7dav"</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/pct_change.html">pct_change</a></span>(<span class="st">"cases_7dav"</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>)
 
-<span class="no">p1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">value</span>)) +
+<span class="no">p1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">cases_7dav</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html">geom_tile</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">x</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">pct_change</span> <span class="kw">&gt;=</span> <span class="no">threshold_upper</span>),
             <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="fl">0</span>, <span class="kw">width</span> <span class="kw">=</span> <span class="fl">7</span>, <span class="kw">height</span> <span class="kw">=</span> <span class="fl">Inf</span>),
             <span class="kw">fill</span> <span class="kw">=</span> <span class="fl">2</span>, <span class="kw">alpha</span> <span class="kw">=</span> <span class="fl">0.1</span>) +

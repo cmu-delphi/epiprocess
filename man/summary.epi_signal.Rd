@@ -17,5 +17,5 @@ No return value; called only to print summary statistics.
 }
 \description{
 Prints a variety of summary statistics about the underlying data, such as the
-date range included and geographic coverage, for an \code{epi_signal} object.
+time range included and geographic coverage, for an \code{epi_signal} object.
 }

@@ -1,42 +1,50 @@
-#' Estimate derivatives of values in an `epi_signal` data frame
+#' Estimate derivatives of variables in an `epi_signal` object, grouped by geo
+#' value 
 #' 
-#' Estimates derivatives of the values in an `epi_signal` data frame, using a
-#' local (in time) linear regression or a smoothing spline. See the [estimating 
-#' derivatives
+#' Estimates derivatives of the variables in an `epi_signal` object, using a
+#' local (in time) linear regression or a smoothing spline, grouped by geo
+#' value. See the [estimating derivatives
 #' vignette](https://cmu-delphi.github.io/epitools/articles/derivatives.html) 
 #' for examples.  
 #'
-#' @param x The `epi_signal` data frame under consideration. 
+#' @param x The `epi_signal` object under consideration.
+#' @param var The variable in `x` whose derivatives are to be estimated.
 #' @param method One of "lin", "ss", or "tf" indicating the method to use for
 #'   the derivative calculation. To estimate the derivative at any time point,
-#'   we run the given method on the last `n` days of data, and use the
+#'   we run the given method on the last `n` time points of data, and use the 
 #'   corresponding predicted derivative (that is, the derivative of the
 #'   underlying estimated function, linear or spline) at the current time
-#'   point. Default is "lin". See details below.
-#' @param n Size of the local window (in days) to use. For example, if `n = 5`,
-#'   then to estimate the derivative on November 5, we train the given method on
-#'   data in between November 1 and November 5. Default is 14.
-#' @param col_name String indicating the name of the new column that will
-#'   contain the derivative values. Default is "deriv"; note that setting
-#'   `col_name = "value"` will overwrite the existing "value" column.
+#'   point. Default is "lin". See details for more explanation.
+#' @param n Number of time steps to use in the trailing window. For example, if 
+#'   `n = 10`, and one time step is one day, then to estimate the derivative on
+#'   November 10, we train the given method on data in between November 1 and
+#'   10. Default is 14.  
+#' @param new_var_name String indicating the name of the new variable that will
+#'   contain the derivative values. Default is "slide_value"; note that setting
+#'   `new_var_name` equal to an existing column name will overwrite this column.
 #' @param keep_obj Should the fitted object (from linear regression, smoothing 
 #'   spline, or trend filtering) be kept as a separate column? If `TRUE`, then
-#'   this column name is given by  appending "_obj" to `col_name`. Default is
-#'   `FALSE`.  
+#'   this column name is given by  appending "_obj" to `new_var_name`. Default
+#'   is `FALSE`.
 #' @param deriv Order of derivative to estimate. Only orders 1 or 2 are allowed,
 #'   with the default being 1. (In some cases, a second-order derivative will
-#'   return a trivial result: for example: when `method = "lin"`, this will
-#'   always be zero.) 
+#'   return a trivial result: for example: when `method` is "lin", this will 
+#'   always be zero.)
+#' @param time_step Optional function used to define the meaning of one time
+#'   step, which if specified, overrides the default choice based on the
+#'   metadata. Read the documentation for [slide_by_geo()] for more details.
 #' @param ... Additional arguments to pass to the function that estimates
 #'   derivatives. See details below.    
+#' @return A `epi_signal` object given by appending a new column to `x`, named
+#'   according to the `new_var_name` argument, containing the derivative values.
 #'
 #' @details Derivatives are estimated using:
 #'
 #' \itemize{
-#' \item Linear regression, when `method = "lin"`, via `stats::lsfit()`. 
-#' \item Cubic smoothing spline, when `method = "ss"`, via
-#'   `stats::smooth.spline()`.
-#' \item Polynomial trend filtering, when `method = "tf"`, via
+#' \item Linear regression, when `method` is "lin", via `stats::lsfit()`.  
+#' \item Cubic smoothing spline, when `method` is "ss", via
+#'   `stats::smooth.spline()`. 
+#' \item Polynomial trend filtering, when `method` is "tf", via
 #'   `genlasso::trendfilter()`.
 #' }
 #'
@@ -50,10 +58,10 @@
 #'   additional arguments in `...` are directly passed to the underlying 
 #'   estimation function (`stats::lsfit()` and `stats::smooth.spline()`).   
 #'
-#' The third case (trend filtering) works a little differently. Here, a custom 
+#' The third case (trend filtering) works a little differently: here, a custom 
 #'   set of arguments is allowed (and are internally distributed as appropriate
-#'   to `genlasso::trendfilter()`, `genlasso::cv.trendfilter()`, and
-#'   `genlasso::coef.genlasso()`): 
+#'   to the functions `genlasso::trendfilter()`, `genlasso::cv.trendfilter()`,
+#'   and `genlasso::coef.genlasso()`): 
 #'
 #' \describe{
 #' \item{`ord`}{Order of piecewise polynomial for the trend filtering fit,
@@ -71,15 +79,18 @@
 #'   TRUE`.} 
 #' }
 #' 
-#' @return A data frame given by appending a new column to `x` named according
-#'   to the `col_name` argument, containing the estimated derivative values. 
-#'
+#' @seealso [slide_by_geo()]
 #' @importFrom dplyr rowwise
+#' @importFrom rlang abort enquo
 #' @export
-estimate_deriv = function(x, method = c("lin", "ss", "tf"), n = 14,
-                          col_name = "deriv", keep_obj = FALSE, deriv = 1,
-                          ...) {  
-  # Define the slider function
+estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14, 
+                          new_var_name = "deriv", keep_obj = FALSE, deriv = 1, 
+                          ...) {
+  # Check that we have a variable to do computations on
+  if (missing(var)) abort("`var` must be specified.")
+  var = enquo(var)
+  
+  # Check the method, define the slider function
   method = match.arg(method)
   slide_fun = switch(method,
                      "lin" = linear_reg_deriv,
@@ -92,33 +103,33 @@ estimate_deriv = function(x, method = c("lin", "ss", "tf"), n = 14,
   }
 
   # Slide the derivative function
-  x = slide_by_geo(x, slide_fun, n, col_name = "temp", col_type = "list",
-                   keep_obj = keep_obj, deriv = deriv, ...)
+  x = slide_by_geo(x, slide_fun, n, new_var_name = "tmp", new_var_type = "list",
+                   keep_obj = keep_obj, deriv = deriv, var = var, ...)
 
   # Save the class and attributes, since dplyr drops them
   cls = class(x)
-  attrs = attributes(x)
-  attrs = attrs[!(names(attrs) %in% c("row.names", "names"))]
+  metadata = attributes(x)$metadata
   
   # Grab the derivative result
-  x = x %>% rowwise() %>% mutate(!!col_name := temp$result)
+  x = x %>% rowwise() %>% mutate(!!new_var_name := tmp$result)
 
   # Grab the derivative object, if we're asked to
   if (keep_obj) {
     x = x %>% rowwise() %>%
-      mutate(!!paste0(col_name, "_obj") := list(temp$object))
+      mutate(!!paste0(new_var_name, "_obj") := list(tmp$object))
   }
   
-  # Delete the temp column
-  x = select(x, -temp)
+  # Delete the tmp column
+  x = select(x, -tmp)
 
   # Attach the class and metadata and return
   class(x) = cls
-  attributes(x) = c(attributes(x), attrs)
+  attributes(x)$metadata = metadata
   return(x)
 }
 
 #' Compute derivatives function via linear regression
+#' @importFrom dplyr select
 #' @importFrom stats lsfit coef
 #' @importFrom tidyr drop_na
 #' @noRd
@@ -128,13 +139,15 @@ linear_reg_deriv = function(x, ...) {
 
   # If derivative order is 2, then return trivial result
   if (params$deriv == 2) return(list(object = NULL, result = 0))
-  
+
   keep_obj = params$keep_obj
+  var = params$var
   params$keep_obj = NULL
   params$deriv = NULL
-  x = x %>% select(time_value, value) %>% drop_na()
-  params$x = as.numeric(x$time_value)
-  params$y = x$value
+  params$var = NULL
+  x = x %>% select(time_value, !!var) %>% drop_na()
+  params$x = as.numeric(unlist(x[,1]))
+  params$y = as.numeric(unlist(x[,2]))
   
   return(tryCatch(suppressWarnings(suppressMessages({
     object = do.call(lsfit, params)
@@ -146,7 +159,9 @@ linear_reg_deriv = function(x, ...) {
 }
 
 #' Compute derivatives function via smoothing spline
+#' @importFrom dplyr select
 #' @importFrom stats smooth.spline predict
+#' @importFrom tidyr drop_na
 #' @noRd
 smooth_spline_deriv = function(x, ...) {
   params = list(...)
@@ -154,11 +169,13 @@ smooth_spline_deriv = function(x, ...) {
 
   keep_obj = params$keep_obj
   deriv = params$deriv
+  var = params$var
   params$keep_obj = NULL
   params$deriv = NULL
-  x = x %>% select(time_value, value) %>% drop_na()
-  params$x = as.numeric(x$time_value)
-  params$y = x$value
+  params$var = NULL
+  x = x %>% select(time_value, !!var) %>% drop_na()
+  params$x = as.numeric(unlist(x[,1]))
+  params$y = as.numeric(unlist(x[,2]))
   
   return(tryCatch(suppressWarnings(suppressMessages({
     object = do.call(smooth.spline, params)
@@ -170,7 +187,9 @@ smooth_spline_deriv = function(x, ...) {
 }
 
 #' Compute derivatives function via trend filtering
+#' @importFrom dplyr select
 #' @importFrom genlasso trendfilter cv.trendfilter coef.genlasso
+#' @importFrom tidyr drop_na
 #' @noRd
 trend_filter_deriv = function(data, ...) {
   params = list(...)
@@ -178,8 +197,10 @@ trend_filter_deriv = function(data, ...) {
   
   keep_obj = params$keep_obj
   deriv = params$deriv
+  var = params$var
   params$keep_obj = NULL
   params$deriv = NULL
+  params$var = NULL
   
   cv = params$cv
   ord = params$ord
@@ -192,10 +213,10 @@ trend_filter_deriv = function(data, ...) {
   if (is.null(maxsteps)) maxsteps = 100
   if (is.null(k)) k = 5
   if (is.null(df)) df = ifelse(cv, "1se", 8)
-  
-  data = data %>% select(time_value, value) %>% drop_na()
-  x = as.numeric(data$time_value)
-  y = data$value
+
+  data = data %>% select(time_value, !!var) %>% drop_na()
+  x = as.numeric(unlist(data[,1]))
+  y = as.numeric(unlist(data[,2]))
 
   return(tryCatch(suppressWarnings(suppressMessages({
     object = trendfilter(y = y, pos = x, ord = ord, max = maxsteps)

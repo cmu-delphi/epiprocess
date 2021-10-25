@@ -2,46 +2,47 @@
 % Please edit documentation in R/cor.R
 \name{sliced_cor}
 \alias{sliced_cor}
-\title{Compute correlations between two \code{epi_signal} data frames}
+\title{Compute correlations between variables in an \code{epi_signal} object}
 \usage{
 sliced_cor(
   x,
-  y,
-  dt_x = 0,
-  dt_y = 0,
-  by = c("geo_value", "time_value"),
+  var1,
+  var2,
+  dt1 = 0,
+  dt2 = 0,
+  by = geo_value,
   use = "na.or.complete",
   method = c("pearson", "kendall", "spearman")
 )
 }
 \arguments{
-\item{x, y}{The \code{epi_signal} data frames to correlate.}
+\item{x}{The \code{epi_signal} object under consideration.}
 
-\item{dt_x, dt_y}{Time shifts to consider for \code{x} and \code{y}, respectively,
+\item{var1, var2}{The variables in \code{x} to correlate.}
+
+\item{dt1, dt2}{Time shifts to consider for the two variables, respectively,
 before computing correlations. Negative shifts translate into in a lag
 value and positive shifts into a lead value; for example, if \code{dt = -1},
 then the new value on June 2 is the original value on June 1; if \code{dt = 1},
 then the new value on June 2 is the original value on June 3; if \code{dt = 0},
-then the values are left as is. Default is 0 for both \code{dt_x} and \code{dt_y}.}
+then the values are left as is. Default is 0 for both \code{dt1} and \code{dt2}.}
 
-\item{by}{If "geo_value", then correlations are computed for each geo
-location, over all time. Each correlation is measured between two time
-series at the same location. If "time_value", then correlations are
-computed for each time, over all geo locations. Each correlation is
-measured between all locations at one time. Default is "geo_value".}
+\item{by}{If \code{geo_value}, then correlations are computed for each geo value,
+over all time (each correlation is measured between two time series at the
+same location). If \code{time_value}, then correlations are computed for each
+time, over all geo values (each correlation is measured between two
+vectors at one time). Default is \code{geo_value}.}
 
 \item{use, method}{Arguments to pass to \code{cor()}, with "na.or.complete" the
 default for \code{use} (different than \code{cor()}) and "pearson" the default for
 \code{method} (same as \code{cor()}).}
 }
 \value{
-A data frame with first column \code{value}, which gives the correlation,
-and second column \code{geo_value} or \code{time_value} (depending on \code{by}).
+An tibble with first column \code{geo_value} or \code{time_value} (depending on
+\code{by}), and second column \code{cor}, which gives the correlation.
 }
 \description{
-Computes correlations between two \code{epi_signal} data frames, allowing for
-slicing by geo location, or by time. (When multiple issue dates are present,
-only the latest issue from each data frame is used for correlations.) See the
-\href{https://cmu-delphi.github.io/epitools/articles/correlations.html}{correlations vignette}
+Computes correlations between variables in an \code{epi_signal} object, allowing
+for slicing by geo location, or by time. See the \href{https://cmu-delphi.github.io/epitools/articles/correlations.html}{correlations vignette}
 for examples.
 }

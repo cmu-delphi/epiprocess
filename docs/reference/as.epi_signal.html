@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Convert data frame to <code>epi_signal</code> format — as.epi_signal • epitools</title>
+<title>Convert data to <code>epi_signal</code> format — as.epi_signal • epitools</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,10 @@
 
 
 
-<meta property="og:title" content="Convert data frame to <code>epi_signal</code> format — as.epi_signal" />
+<meta property="og:title" content="Convert data to <code>epi_signal</code> format — as.epi_signal" />
 <meta property="og:description" content="Converts a data frame or tibble into a format consistent with the
-epi_signal class (ensuring that it has a certain minimal set of columns,
-and that it has certain metadata stored in its attributes)." />
+epi_signal class, ensuring that it has a certain minimal set of columns,
+and that it has certain minimal metadata." />
 
 
 
@@ -134,15 +134,15 @@ and that it has certain metadata stored in its attributes)." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Convert data frame to <code>epi_signal</code> format</h1>
+    <h1>Convert data to <code>epi_signal</code> format</h1>
     <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/R/epi_signal.R'><code>R/epi_signal.R</code></a></small>
     <div class="hidden name"><code>as.epi_signal.Rd</code></div>
     </div>
 
     <div class="ref-description">
     <p>Converts a data frame or tibble into a format consistent with the
-<code>epi_signal</code> class (ensuring that it has a certain minimal set of columns,
-and that it has certain metadata stored in its attributes).</p>
+<code>epi_signal</code> class, ensuring that it has a certain minimal set of columns,
+and that it has certain minimal metadata.</p>
     </div>
 
     <pre class="usage"><span class='fu'>as.epi_signal</span>(<span class='no'>x</span>, <span class='no'>...</span>)
@@ -151,30 +151,10 @@ and that it has certain metadata stored in its attributes).</p>
 <span class='fu'>as.epi_signal</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
 <span class='co'># S3 method for tibble</span>
-<span class='fu'>as.epi_signal</span>(
-  <span class='no'>x</span>,
-  <span class='no'>name</span>,
-  <span class='no'>geo_type</span>,
-  <span class='no'>time_type</span>,
-  <span class='no'>signal_type</span>,
-  <span class='no'>signal_unit</span>,
-  <span class='no'>issue</span>,
-  <span class='kw'>metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
-  <span class='no'>...</span>
-)
+<span class='fu'>as.epi_signal</span>(<span class='no'>x</span>, <span class='no'>geo_type</span>, <span class='no'>time_type</span>, <span class='no'>issue</span>, <span class='kw'>additional_metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)
 
 <span class='co'># S3 method for data.frame</span>
-<span class='fu'>as.epi_signal</span>(
-  <span class='no'>x</span>,
-  <span class='no'>name</span>,
-  <span class='no'>geo_type</span>,
-  <span class='no'>time_type</span>,
-  <span class='no'>signal_type</span>,
-  <span class='no'>signal_unit</span>,
-  <span class='no'>issue</span>,
-  <span class='kw'>metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
-  <span class='no'>...</span>
-)</pre>
+<span class='fu'>as.epi_signal</span>(<span class='no'>x</span>, <span class='no'>geo_type</span>, <span class='no'>time_type</span>, <span class='no'>issue</span>, <span class='kw'>additional_metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -189,40 +169,29 @@ formatting of each input type.</p></td>
       <td><p>Additional arguments passed to methods.</p></td>
     </tr>
     <tr>
-      <th>name</th>
-      <td><p>The name to use for this signal.</p></td>
-    </tr>
-    <tr>
       <th>geo_type</th>
-      <td><p>The geographic resolution. If missing, then it will be
-guessed from the geo values present.</p></td>
+      <td><p>The type for the geo values. If missing, then the function
+will attempt to infer it from the geo values present; if this fails, then
+it will be set to "custom".</p></td>
     </tr>
     <tr>
       <th>time_type</th>
-      <td><p>The temporal resolution. If missing, then it will be guessed
-from the time values present.</p></td>
-    </tr>
-    <tr>
-      <th>signal_type</th>
-      <td><p>The type of the signal value.</p></td>
-    </tr>
-    <tr>
-      <th>signal_unit</th>
-      <td><p>The units of the signal value.</p></td>
+      <td><p>The type for the time values. If missing, then the function
+will attempt to infer it from the time values present; if this fails, then
+it will be set to "custom".</p></td>
     </tr>
     <tr>
       <th>issue</th>
-      <td><p>Issue date to use for this data, if not present in <code>x</code>. If no
-issue date is present in <code>x</code> and <code>issue</code> is missing, then today's date will
-be used.</p></td>
+      <td><p>Issue to use for this data. If missing, then the function will
+attempt to infer it from the passed object <code>x</code>; if this fails, then the
+current day-time will be used.</p></td>
     </tr>
     <tr>
-      <th>metadata</th>
-      <td><p>List or tibble of additional metadata to attach to the
-<code>epi_signal</code> object. All objects will have <code>geo_type</code>, <code>time_type</code>,
-<code>signal_type</code> (optional), and <code>signal_unit</code> (optional) entries included in
-their metadata, derived from the above arguments; any entries in the passed
-argument will be preserved in the metadata as well.</p></td>
+      <th>additional_metadata</th>
+      <td><p>List of additional metadata to attach to the
+<code>epi_signal</code> object. All objects will have <code>time_type</code>, <code>geo_type</code>, and
+<code>issue</code> fields; named entries from the passed list or will be included as
+well.</p></td>
     </tr>
     </table>
 
@@ -231,68 +200,88 @@ argument will be preserved in the metadata as well.</p></td>
     <p>An <code>epi_signal</code> object.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>An <code>epi_signal</code> object is simply a tibble, with (at least) the
-following columns (with data types written in tibble notation):</p><ul>
-<li><p><code>value</code> &lt;dbl&gt;: the value of the signal</p></li>
-<li><p><code>geo_value</code> &lt;int&gt; or &lt;str&gt;: the associated geographic value</p></li>
-<li><p><code>time_value</code> &lt;date&gt;: the associated time value</p></li>
-<li><p><code>issue</code> &lt;date&gt;: the time value at which the given signal value was issued</p></li>
+    <p>An <code>epi_signal</code> object is a tibble with (at least) the following
+columns:</p><ul>
+<li><p><code>geo_value</code>: the geographic value associated with each measurement.</p></li>
+<li><p><code>time_value</code>: the time value associated with each measurement.</p></li>
 </ul>
 
-<p>An <code>epi_signal</code> object also has a tibble <code>metadata</code> stored in its attributes,
-with (at least) the following columns:</p><ul>
-<li><p><code>name</code> &lt;str&gt;: the name of the signal</p></li>
-<li><p><code>geo_type</code> &lt;str&gt;: the geographic resolution</p></li>
-<li><p><code>time_type</code> &lt;str&gt;: the temporal resolution</p></li>
-<li><p><code>signal_type</code> &lt;str&gt;: the type of the signal value (optional)</p></li>
-<li><p><code>signal_unit</code> &lt;str&gt;: the units associated with the signal value (optional)</p></li>
+<p>Other columns can be considered as measured variables, which we also broadly
+refer to as signal variables. An <code>epi_signal</code> object also has metadata with
+(at least) the following fields:</p><ul>
+<li><p><code>geo_type</code>: the type for the geo values.</p></li>
+<li><p><code>time_type</code>: the type for the time values.</p></li>
+<li><p><code>issue</code>: the time value at which the given data set was issued.</p></li>
 </ul>
 
-<p>More information on geo types, time types, and signal types, is given
-below.</p>
+<p>The first two fields above, <code>geo_type</code> and <code>time_type</code>, can usually be
+inferred from the <code>geo_value</code> and <code>time_value</code> columns, respectively. The
+last field above, <code>issue</code>, is the most unique to the <code>epi_signal</code> format.
+In a typical case, this represents the maximum of the issues of individual
+signal values measured in the data set; hence we would also say that the
+data set is comprised of all signal values observed "as of" the given issue
+in the metadata.</p>
+<p>Metadata for an <code>epi_signal</code> object <code>x</code> can be accessed (and altered) via
+<code>attributes(x)$metadata</code>. More information on geo types, time types, and
+issues is given below.</p>
     <h2 class="hasAnchor" id="methods-by-class-"><a class="anchor" href="#methods-by-class-"></a>Methods (by class)</h2>
 
     
 <ul>
 <li><p><code>epi_signal</code>: Simply returns the <code>epi_signal</code> object unchanged.</p></li>
 <li><p><code>tibble</code>: The input tibble <code>x</code> must contain the columns
-<code>value</code>, <code>geo_value</code>, and <code>time_value</code>. If an <code>issue</code> column is present in
-<code>x</code>, it will be used as the issue date for each observation; if not, the
-<code>issue</code> argument will be used. Other columns will be preserved as-is.</p></li>
+<code>geo_value</code> and <code>time_value</code>. All other columns will be preserved as is,
+and treated as measured variables. If <code>issue</code> is missing, then the function
+will look for <code>issue</code> as a column of <code>x</code>, or as a field in its metadata
+(stored in its attributes), to infer the issue; if this fails, then the
+current day-time will be used.</p></li>
 <li><p><code>data.frame</code>: The input data frame <code>x</code> must contain the columns
-<code>value</code>, <code>geo_value</code>, and <code>time_value</code>. If an <code>issue</code> column is present in
-<code>x</code>, it will be used as the issue date for each observation; if not, the
-<code>issue</code> argument will be used. Other columns will be preserved as-is.</p></li>
+<code>geo_value</code> and <code>time_value</code>. All other columns will be preserved as is,
+and treated as measured variables. If <code>issue</code> is missing, then the function
+will look for <code>issue</code> as a column of <code>x</code>, or as a field in its metadata
+(stored in its attributes), to infer the issue; if this fails, then the
+current day-time will be used.</p></li>
 </ul>
     <h2 class="hasAnchor" id="geo-types"><a class="anchor" href="#geo-types"></a>Geo types</h2>
 
     
 
-<p>The allowable geo types, and their coding (allowable range for geo values),
-are as follows.</p><ul>
-<li><p><code>county</code>: U.S. counties; coded by 5-digit FIPS codes.</p></li>
-<li><p><code>hrr</code>: U.S. hospital referral regions (designed to represent regional
-health care markets); there are 306 HRRs in the U.S; coded by number
-(nonconsecutive, between 1 and 457).</p></li>
-<li><p><code>state</code>: U.S. states; coded by 2-digit postal abbreviation (lowercase);
+<p>The following geo types are supported in an <code>epi_signal</code>. Their geo coding
+(specification of geo values for each geo type) is also described below.</p><ul>
+<li><p><code>"county"</code>: each observation corresponds to a U.S. county; coded by 5-digit
+FIPS code.</p></li>
+<li><p><code>"hrr"</code>: each observation corresponds to a U.S. hospital referral region
+(designed to represent regional healthcare markets); there are 306 HRRs in
+the U.S; coded by number (nonconsecutive, between 1 and 457).</p></li>
+<li><p><code>"state"</code>: each observation corresponds to a U.S. state; coded by 2-digit
+postal abbreviation (lowercase);
 note that Puerto Rico is "pr" and Washington D.C. is "dc".</p></li>
-<li><p><code>hhs</code>: U.S. HHS regions; coded by number (between 1 and 10).</p></li>
-<li><p><code>nation</code>: country; coded by ISO 3166-1 alpha-2 country codes (lowercase).</p></li>
+<li><p><code>"hhs"</code>: each observation corresponds to a U.S. HHS region; coded by number
+(consecutive, between 1 and 10).</p></li>
+<li><p><code>"nation"</code>: each observation corresponds to a country; coded by ISO 31661-
+alpha-2 country codes (lowercase).</p></li>
 </ul>
 
+<p>The above geo types come with aggregation utilities in the package; see
+<code>aggregate_by_geo()</code>. An unrecognizable geo type is labeled as "custom".</p>
     <h2 class="hasAnchor" id="time-types"><a class="anchor" href="#time-types"></a>Time types</h2>
 
     
 
-<p>The allowable time types are as follows. In each case, their coding
-(allowable range for time values) is an object of class <code>Date</code>, or string
-in the format "YYYY-MM-DD".</p><ul>
-<li><p>"day": each observation covers one day.</p></li>
-<li><p>"week": each observation covers one week, and the time value is assumed to
-be the start date of the epiweek (MMWR week) that the data represents.</p></li>
+<p>The following time types are supported in an <code>epi_signal</code>. Their time coding
+(specification of time values for each time type) is also described below.</p><ul>
+<li><p><code>"day-time"</code>: each observation corresponds to a time on a given day (measured
+to the second); coded as a <code>POSIXct</code> object, as in <code><a href='https://rdrr.io/r/base/as.POSIXlt.html'>as.POSIXct("2020-06-09 18:45:40")</a></code>.</p></li>
+<li><p><code>"day"</code>: each observation corresponds to a day; coded as a <code>Date</code> object,
+as in <code><a href='https://rdrr.io/r/base/as.Date.html'>as.Date("2020-06-09")</a></code>.</p></li>
+<li><p><code>"week"</code>: each observation corresponds to an epiweek (the U.S. CDC
+definition of an epidemiological week, which is aligned to start on a
+Sunday); coded as a <code>Date</code> object, representing the start date of the
+epiweek.</p></li>
 </ul>
 
-    <h2 class="hasAnchor" id="signal-types"><a class="anchor" href="#signal-types"></a>Signal types</h2>
+<p>An unrecognisable time type is labeled as "custom".</p>
+    <h2 class="hasAnchor" id="issues"><a class="anchor" href="#issues"></a>Issues</h2>
 
     
 

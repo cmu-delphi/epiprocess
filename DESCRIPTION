@@ -11,9 +11,9 @@ Authors@R:
            family = "Tibshirani",
            role = c("aut", "cre"),
            email = "ryantibs@cmu.edu"))
-Description: This package contains tools for basic signal processing tasks in
-    epidemiology, which includes computing percentage changes in signals,
-    estimating derivatives, and computing correlations.  
+Description: This package introduces a common data structure for epidemiological
+    data sets measured over space and time, and offers associated utilities to
+		perform basic signal processing tasks.  
 License: MIT
 Encoding: UTF-8
 LazyData: true
