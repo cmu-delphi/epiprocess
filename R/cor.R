@@ -1,7 +1,7 @@
 #' Compute correlations between variables in an `epi_signal` object
 #'
 #' Computes correlations between variables in an `epi_signal` object, allowing
-#' for slicing by geo location, or by time. See the [correlations
+#' for grouping by geo value, time value, other variables. See the [correlations 
 #' vignette](https://cmu-delphi.github.io/epitools/articles/correlations.html)
 #' for examples.
 #'
@@ -13,25 +13,28 @@
 #'   then the new value on June 2 is the original value on June 1; if `dt = 1`,
 #'   then the new value on June 2 is the original value on June 3; if `dt = 0`,
 #'   then the values are left as is. Default is 0 for both `dt1` and `dt2`.
-#' @param by If `geo_value`, then correlations are computed for each geo value,
-#'   over all time (each correlation is measured between two time series at the
-#'   same location). If `time_value`, then correlations are computed for each
-#'   time, over all geo values (each correlation is measured between two
-#'   vectors at one time). Default is `geo_value`.
+#' @param by The variable or variables to group by, before computing
+#'   correlations. If `geo_value`, the default, then correlations are computed
+#'   for each geo value, over all time; if `time_value`, then correlations are
+#'   computed for each time, over all geo values. This can alternatively be any
+#'   specified using number of columns of `x`; for example, we can use `by =
+#'   c(geo_value, age_group)`, if `x` has a column `age_group` containing the
+#'   age group associated with the measurements, to compute correlations for
+#'   each pair of geo value and age group.
 #' @param use,method Arguments to pass to `cor()`, with "na.or.complete" the
 #'   default for `use` (different than `cor()`) and "pearson" the default for
 #'   `method` (same as `cor()`).
 #'
-#' @return An tibble with first column `geo_value` or `time_value` (depending on
-#'   `by`), and second column `cor`, which gives the correlation.
+#' @return An tibble with the grouping columns first (`geo_value`, `time_value`,
+#'   or possibly others), and then a column `cor`, which gives the correlation.   
 #'
 #' @importFrom dplyr arrange group_by mutate summarize ungroup 
 #' @importFrom stats cor
 #' @importFrom rlang .data enquo
 #' @export
-sliced_cor = function(x, var1, var2, dt1 = 0, dt2 = 0,
-                      by = geo_value, use = "na.or.complete",
-                      method = c("pearson", "kendall", "spearman")) {
+grouped_cor = function(x, var1, var2, dt1 = 0, dt2 = 0,
+                       by = geo_value, use = "na.or.complete",
+                       method = c("pearson", "kendall", "spearman")) {
   # Check we have an `epi_signal` object
   if (!inherits(x, "epi_signal")) abort("`x` be of class `epi_signal`.")
 
@@ -41,22 +44,9 @@ sliced_cor = function(x, var1, var2, dt1 = 0, dt2 = 0,
   var1 = enquo(var1)
   var2 = enquo(var2)
   
-  # Which way to slice? Which method?
+  # Which grouping? Which method?
   by = enquo(by)
   method = match.arg(method)
-
-  ## # Join the two data frames together by pairs of geo_value and time_value
-  ## z = dplyr::full_join(x, y, by = c("geo_value", "time_value"))
-
-  ## # Make sure that we have a complete record of dates for each geo_value
-  ## z_all = dplyr::group_by(z, .data$geo_value) %>%
-  ##   dplyr::summarize(time_value = seq.Date(
-  ##                      as.Date(min(.data$time_value)),
-  ##                      as.Date(max(.data$time_value)),
-  ##                      by = "day")) %>%
-  ##   dplyr::ungroup()
-  
-  ## z = dplyr::full_join(z, z_all, by = c("geo_value", "time_value"))
 
   # Perform time shifts, then compute appropriate correlations and return
   return(x %>%

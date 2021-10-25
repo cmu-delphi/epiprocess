@@ -46,21 +46,24 @@ y <- covidcast_signal(data_source = "jhu-csse",
 x <- full_join(x, y, by = c("geo_value", "time_value"))
 ```
 
-## Correlations sliced by time
+## Correlations grouped by time
 
-The `slided_cor()` function operates on an `epi_signal` object, and it requires
+The `grouped_cor()` function operates on an `epi_signal` object, and it requires
 further specification of the variables to correlate, in its next two arguments 
-(`var1` and `var2`). In general, there are two ways to calculate correlations. 
-The first way is to "slice by time": this calculates, for each time value, the
-correlation between the signals over all geographic locations. This is obtained 
-by setting `by = time_value`. 
+(`var1` and `var2`). 
+
+In general, we can specify any grouping variable (or combination of variables) 
+in a call to `grouped_by()`, via the `by` argument. This potentially leads to
+many ways to compute correlations. There are always at least two ways to compute
+correlations in an `epi_signal`: grouping by time value, and by geo value. The 
+former is obtained by setting `by = time_value`. 
 
 ```{r, message = FALSE, warning = FALSE}
 library(ggplot2)
 theme_set(theme_bw())
 
 devtools::load_all("~/Dropbox/delphi/epitools")
-z1 <- sliced_cor(x, case_rates, death_rates, by = time_value)
+z1 <- grouped_cor(x, case_rates, death_rates, by = time_value)
 
 ggplot(z1, aes(x = time_value, y = cor)) + 
   geom_line() +
@@ -73,13 +76,13 @@ rates linearly associated, across the U.S. states?". We might be interested in
 broadening this question, instead asking: "on any given day, do higher case
 rates tend to associate with higher death rates?", removing the dependence on a
 linear relationship. The latter can be addressed using Spearman correlation,
-accomplished by setting `method = "spearman"` in the call to `sliced_cor()`.
+accomplished by setting `method = "spearman"` in the call to `grouped_cor()`.
 Spearman correlation is highly robust and invariant to monotone transformations.
 
 ## Lagged correlations
 
 We might also be interested in how case rates associate with death rates in the
-*future*. Using the `dt1` parameter in `sliced_cor()`, we can lag case rates
+*future*. Using the `dt1` parameter in `grouped_cor()`, we can lag case rates
 back any number of days we want, before calculating correlations. Below, we set 
 `dt1 = -10`. This means that `var1 = case_rates` will be lagged by 10 days, so
 that case rates on June 1st will be correlated with death rates on June 11th. 
@@ -87,7 +90,7 @@ that case rates on June 1st will be correlated with death rates on June 11th.
 be correlated with case rates at an offset of -10 days.)
 
 ```{r, message = FALSE, warning = FALSE}
-z2 <- sliced_cor(x, case_rates, death_rates, by = time_value, dt1 = -10)
+z2 <- grouped_cor(x, case_rates, death_rates, by = time_value, dt1 = -10)
 
 z <- rbind(z1 %>% mutate(lag = 0), 
            z2 %>% mutate(lag = 10)) %>%
@@ -103,16 +106,15 @@ We can see that, generally, lagging the case rates back by 10 days improves the
 correlations, confirming case rates are better correlated with death rates 10
 days from now.
 
-## Correlations sliced by state
+## Correlations grouped by state
 
-The second option we have is to "slice by location": this calculates, for each
-geographic location, correlation between the time series of two signals. This
-is obtained by setting `by = geo_value`. We'll again look at correlations
-both for observations at the same time and for 10-day lagged case rates.
+The second option we have is to group by geo value, obtained by setting `by = 
+geo_value`. We'll again look at correlations both for 0- and 10-day lagged case 
+rates.
 
 ```{r, message = FALSE, warning = FALSE}
-z1 <- sliced_cor(x, case_rates, death_rates, by = geo_value)
-z2 <- sliced_cor(x, case_rates, death_rates, by = geo_value, dt1 = -10)
+z1 <- grouped_cor(x, case_rates, death_rates, by = geo_value)
+z2 <- grouped_cor(x, case_rates, death_rates, by = geo_value, dt1 = -10)
 
 z <- rbind(z1 %>% mutate(lag = 0), 
            z2 %>% mutate(lag = 10)) %>%
@@ -136,7 +138,7 @@ library(purrr)
 lags = 0:35
 
 z <- map_dfr(lags, function(lag) {
-  sliced_cor(x, case_rates, death_rates, by = geo_value, dt1 = -lag) %>% 
+  grouped_cor(x, case_rates, death_rates, by = geo_value, dt1 = -lag) %>% 
     mutate(lag = lag) 
   })
 
@@ -149,5 +151,5 @@ z %>%
 ```
 
 We can see that some pretty clear curvature here in the mean correlation between 
-case and death rates (where the correlations come from slicing by location) as
+case and death rates (where the correlations come from grouping by geo value) as
 a function of lag. The maximum occurs at a lag of somewhere around 17 days.
