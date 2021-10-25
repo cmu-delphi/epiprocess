@@ -28,7 +28,7 @@ x <- covidcast_signal(data_source = "jhu-csse",
   rename(case_rates = value) %>%
   select(geo_value, time_value, case_rates) %>%
   slide_by_geo(slide_fun = ~ Mean(.x$case_rates), n = 7, 
-               new_var_name = "case_rates") 
+               new_col_name = "case_rates") 
 ```
 
 ## Estimating derivatives via linear regression
@@ -83,15 +83,13 @@ higher sample size, and fit the spline in two ways: first, using a fixed degrees
 of freedom of 8; and second, using cross-validation to choose the amount of 
 regularization (tuning parameter). This is accomplished by passing  additional 
 arguments to `estimate_deriv()`, which are in turn passed on to the underlying 
-function it uses to fit smoothing splines, `stats::smooth.spline()`. Note that 
-we also set a custom name for the output column with the estimated derivatives, 
-via the `new_var_name` argument.
+function it uses to fit smoothing splines, `stats::smooth.spline()`. 
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 8, fig.height = 4}
 x <- estimate_deriv(x, case_rates, method = "ss", n = 28, 
-                    new_var_name = "deriv_ss1", df = 8)    
+                    new_col_name = "deriv_ss1", df = 8)    
 x <- estimate_deriv(x, case_rates, method = "ss", n = 28, 
-                    new_var_name = "deriv_ss2", cv = TRUE)
+                    new_col_name = "deriv_ss2", cv = TRUE)
 
 p1 <- ggplot(x, aes(x = time_value, y = case_rates)) +
   geom_line() + 
@@ -132,9 +130,9 @@ the latter case.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 4}
 x <- estimate_deriv(x, case_rates, method = "tf", n = 28, 
-                    new_var_name = "deriv_tf1", df = 8) 
+                    new_col_name = "deriv_tf1", df = 8) 
 x <- estimate_deriv(x, case_rates, method = "tf", n = 28, 
-                    new_var_name = "deriv_tf2", cv = TRUE)
+                    new_col_name = "deriv_tf2", cv = TRUE)
 
 p1 <- ggplot(x, aes(x = time_value, y = case_rates)) +
   geom_line() + 

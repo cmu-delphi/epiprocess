@@ -9,8 +9,8 @@ slide_by_geo(
   x,
   slide_fun,
   n = 14,
-  new_var_name = "slide_value",
-  new_var_type = c("dbl", "int", "lgl", "chr", "list"),
+  new_col_name = "slide_value",
+  new_col_type = c("dbl", "int", "lgl", "chr", "list"),
   time_step,
   ...
 )
@@ -33,12 +33,12 @@ via \code{.x$var}, as in \code{~ mean(.x$var)} to compute a trailing mean of a c
 5, we apply the given function or formula to data in between November 1 and
 5.  Default is 14.}
 
-\item{new_var_name}{String indicating the name of the new variable that will
+\item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
-\code{new_var_name} equal to an existing column name will overwrite this column.}
+\code{new_col_name} equal to an existing column name will overwrite this column.}
 
-\item{new_var_type}{One of "dbl", "int", "lgl", "chr", or "list", indicating
-the data type (tibble abbreviation) for the new variable. Default is "dbl".}
+\item{new_col_type}{One of "dbl", "int", "lgl", "chr", or "list", indicating
+the data type (tibble abbreviation) for the new column. Default is "dbl".}
 
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
@@ -52,7 +52,7 @@ via \code{slide_fun}.}
 }
 \value{
 An \code{epi_signal} object given by appending a new column to \code{x}, named
-according to the \code{new_var_name} argument, containing the slide values.
+according to the \code{new_col_name} argument, containing the slide values.
 }
 \description{
 Slides a given function over the variables in an \code{epi_signal} object, grouped

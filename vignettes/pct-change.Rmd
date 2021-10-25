@@ -91,7 +91,7 @@ in which percentage change is defined; it is already defined using a sum over a
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 4}
 x <- x %>%
   slide_by_geo(slide_fun = ~ Mean(.x$cases), n = 7, 
-               new_var_name = "cases_7dav") %>%
+               new_col_name = "cases_7dav") %>%
   pct_change("cases_7dav", n = 14)
 
 p1 <- ggplot(x, aes(x = time_value, y = cases_7dav)) + 

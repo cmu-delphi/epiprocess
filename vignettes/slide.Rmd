@@ -61,12 +61,12 @@ Here he function `Mean()` is just a simple wrapper around `mean()` that omits
 The function `slide_by_geo()` returns an `epi_signal` object with a new column 
 appended that contains the results (from sliding), named `slide_value` as the 
 default. We can of course change this post hoc, or we can instead specify a new 
-name up front using the `new_var_name` argument: 
+name up front using the `new_col_name` argument: 
 
 ```{r}
 x <- select(x, -slide_value)
 x <- slide_by_geo(x, slide_fun = ~ Mean(.x$cases), n = 7, 
-                  new_var_name = "cases_7dav")
+                  new_col_name = "cases_7dav")
 head(x, 10)
 ```
 
@@ -95,7 +95,7 @@ a 7-day trailing average:
 
 ```{r}
 x <- slide_by_geo(x, slide_fun = function(x, ...) Mean(x$cases), n = 7, 
-                  new_var_name = "cases_7dav") 
+                  new_col_name = "cases_7dav") 
 head(x, 10)
 ```
 
@@ -154,7 +154,7 @@ constant, to modeling weekly sums of COVID-19 cases.)
 ```{r}
 z <- x %>% 
   slide_by_geo(slide_fun = ~ prob_ar(.x$cases_7dav), n = 100, 
-               new_var_name = "forecast", new_var_type = "list") %>%
+               new_col_name = "forecast", new_col_type = "list") %>%
   mutate(target_date = time_value + 7) 
 
 tail(z, 3)
@@ -182,7 +182,7 @@ that we can call it a few times.
 k_week_ahead <- function(x, ahead = 7) {
   x %>% 
     slide_by_geo(slide_fun = ~ prob_ar(.x$cases_7dav, ahead = ahead), n = 100,
-                 new_var_name = "forecast", new_var_type = "list") %>%
+                 new_col_name = "forecast", new_col_type = "list") %>%
     mutate(target_date = time_value + ahead) %>%
     tidyr::unnest(forecast)
 }

@@ -10,7 +10,7 @@ estimate_deriv(
   var,
   method = c("lin", "ss", "tf"),
   n = 14,
-  new_var_name = "deriv",
+  new_col_name = "deriv",
   keep_obj = FALSE,
   deriv = 1,
   ...
@@ -33,13 +33,13 @@ point. Default is "lin". See details for more explanation.}
 November 10, we train the given method on data in between November 1 and
 10. Default is 14.}
 
-\item{new_var_name}{String indicating the name of the new variable that will
+\item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
-\code{new_var_name} equal to an existing column name will overwrite this column.}
+\code{new_col_name} equal to an existing column name will overwrite this column.}
 
 \item{keep_obj}{Should the fitted object (from linear regression, smoothing
 spline, or trend filtering) be kept as a separate column? If \code{TRUE}, then
-this column name is given by  appending "_obj" to \code{new_var_name}. Default
+this column name is given by  appending "_obj" to \code{new_col_name}. Default
 is \code{FALSE}.}
 
 \item{deriv}{Order of derivative to estimate. Only orders 1 or 2 are allowed,
@@ -56,7 +56,7 @@ metadata. Read the documentation for \code{\link[=slide_by_geo]{slide_by_geo()}}
 }
 \value{
 A \code{epi_signal} object given by appending a new column to \code{x}, named
-according to the \code{new_var_name} argument, containing the derivative values.
+according to the \code{new_col_name} argument, containing the derivative values.
 }
 \description{
 Estimates derivatives of the variables in an \code{epi_signal} object, using a

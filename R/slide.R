@@ -28,11 +28,11 @@
 #'   `n = 5`, and one time step is one day, then to produce a value on November
 #'   5, we apply the given function or formula to data in between November 1 and
 #'   5.  Default is 14.
-#' @param new_var_name String indicating the name of the new variable that will
+#' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
-#'   `new_var_name` equal to an existing column name will overwrite this column.  
-#' @param new_var_type One of "dbl", "int", "lgl", "chr", or "list", indicating 
-#'   the data type (tibble abbreviation) for the new variable. Default is "dbl".   
+#'   `new_col_name` equal to an existing column name will overwrite this column.  
+#' @param new_col_type One of "dbl", "int", "lgl", "chr", or "list", indicating 
+#'   the data type (tibble abbreviation) for the new column. Default is "dbl".   
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
 #'   metadata. This function must take a positive integer and return an object
@@ -43,21 +43,21 @@
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `slide_fun`.  
 #' @return An `epi_signal` object given by appending a new column to `x`, named 
-#'   according to the `new_var_name` argument, containing the slide values. 
+#'   according to the `new_col_name` argument, containing the slide values. 
 #'
 #' @importFrom dplyr arrange group_by group_modify mutate relocate ungroup
 #' @importFrom lubridate days weeks
 #' @importFrom rlang .data abort
 #' @export
-slide_by_geo = function(x, slide_fun, n = 14, new_var_name = "slide_value",
-                        new_var_type = c("dbl", "int", "lgl", "chr", "list"),
+slide_by_geo = function(x, slide_fun, n = 14, new_col_name = "slide_value",
+                        new_col_type = c("dbl", "int", "lgl", "chr", "list"),
                         time_step, ...) { 
   # Check we have an `epi_signal` object
   if (!inherits(x, "epi_signal")) abort("`x` be of class `epi_signal`.")
 
   # Which slide_index function?
-  new_var_type = match.arg(new_var_type)
-  slide_index_zzz = switch(new_var_type,
+  new_col_type = match.arg(new_col_type)
+  slide_index_zzz = switch(new_col_type,
                            "dbl" = slider::slide_index_dbl,
                            "int" = slider::slide_index_int,
                            "lgl" = slider::slide_index_lgl,
@@ -70,12 +70,12 @@ slide_by_geo = function(x, slide_fun, n = 14, new_var_name = "slide_value",
   else before_fun = days # Use days for time_type = "day" or "day-time"
 
   # Slide over a single geo value
-  slide_one_geo = function(.data_group, slide_fun, n, new_var_name, ...) { 
+  slide_one_geo = function(.data_group, slide_fun, n, new_col_name, ...) { 
     slide_values = slide_index_zzz(.x = .data_group,
                                    .i = .data_group$time_value,
                                    .f = slide_fun, ..., 
                                    .before = before_fun(n-1))
-    return(mutate(.data_group, !!new_var_name := slide_values))
+    return(mutate(.data_group, !!new_col_name := slide_values))
   }
 
   # Save the class and attributes, since dplyr drops them
@@ -87,7 +87,7 @@ slide_by_geo = function(x, slide_fun, n = 14, new_var_name = "slide_value",
     group_by(geo_value) %>%
     arrange(time_value) %>%
     group_modify(slide_one_geo, slide_fun = slide_fun,
-                 n = n, new_var_name = new_var_name, ...) %>%
+                 n = n, new_col_name = new_col_name, ...) %>%
     ungroup() %>%
     relocate(.data$geo_value, .data$time_value)
   

@@ -148,7 +148,7 @@ grouped by geo value. See the <a href='https://cmu-delphi.github.io/epitools/art
 examples.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>pct_change</span>(<span class='no'>x</span>, <span class='no'>var</span>, <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>14</span>, <span class='kw'>new_var_name</span> <span class='kw'>=</span> <span class='st'>"pct_change"</span>, <span class='no'>time_step</span>)</pre>
+    <pre class="usage"><span class='fu'>pct_change</span>(<span class='no'>x</span>, <span class='no'>var</span>, <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>14</span>, <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"pct_change"</span>, <span class='no'>time_step</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -171,10 +171,10 @@ variable in between November 6 and 10, and A is the sum in between November
 1 and 5. Default is 14.</p></td>
     </tr>
     <tr>
-      <th>new_var_name</th>
-      <td><p>String indicating the name of the new variable that will
+      <th>new_col_name</th>
+      <td><p>String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
-<code>new_var_name</code> equal to an existing column name will overwrite this column.</p></td>
+<code>new_col_name</code> equal to an existing column name will overwrite this column.</p></td>
     </tr>
     <tr>
       <th>time_step</th>
@@ -187,7 +187,7 @@ metadata. Read the documentation for <code><a href='slide_by_geo.html'>slide_by_
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>An <code>epi_signal</code> object given by appending a new column to <code>x</code>, named
-according to the <code>new_var_name</code> argument, containing the percentage change
+according to the <code>new_col_name</code> argument, containing the percentage change
 values.</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 

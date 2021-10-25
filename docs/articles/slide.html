@@ -137,10 +137,10 @@
 ##  9 ca        2020-06-09  2700       2684.
 ## 10 ca        2020-06-10  3208       2826.</code></pre>
 <p>The formula specified via <code>slide_fun</code> has access to all columns present in the original <code>epi_signal</code> object (and must refer to them with the prefix <code>.x$</code>). Here he function <code><a href="../reference/Min.html">Mean()</a></code> is just a simple wrapper around <code><a href="https://rdrr.io/r/base/mean.html">mean()</a></code> that omits <code>NA</code> values by default (provided by the <code>epitools</code> package).</p>
-<p>The function <code><a href="../reference/slide_by_geo.html">slide_by_geo()</a></code> returns an <code>epi_signal</code> object with a new column appended that contains the results (from sliding), named <code>slide_value</code> as the default. We can of course change this post hoc, or we can instead specify a new name up front using the <code>new_var_name</code> argument:</p>
+<p>The function <code><a href="../reference/slide_by_geo.html">slide_by_geo()</a></code> returns an <code>epi_signal</code> object with a new column appended that contains the results (from sliding), named <code>slide_value</code> as the default. We can of course change this post hoc, or we can instead specify a new name up front using the <code>new_col_name</code> argument:</p>
 <div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">x</span>, -<span class="no">slide_value</span>)
 <span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span>(<span class="no">x</span>, <span class="kw">slide_fun</span> <span class="kw">=</span> ~ <span class="fu"><a href="../reference/Min.html">Mean</a></span>(<span class="no">.x</span>$<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>,
-                  <span class="kw">new_var_name</span> <span class="kw">=</span> <span class="st">"cases_7dav"</span>)
+                  <span class="kw">new_col_name</span> <span class="kw">=</span> <span class="st">"cases_7dav"</span>)
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>, <span class="fl">10</span>)</pre></body></html></div>
 <pre><code>## # A tibble: 10 × 4
 ##    geo_value time_value cases cases_7dav
@@ -172,7 +172,7 @@
 <a href="#slide-with-a-function" class="anchor"></a>Slide with a function</h2>
 <p>We can also pass a function for the <code>slide_fun</code> argument in <code><a href="../reference/slide_by_geo.html">slide_by_geo()</a></code>. In this case, the passed function must have the following argument structure: <code>x</code>, a data frame with the same column names as the original object; followed by any number of named arguments; and ending with <code>...</code>. Recreating the last example of a 7-day trailing average:</p>
 <div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span>(<span class="no">x</span>, <span class="kw">slide_fun</span> <span class="kw">=</span> <span class="kw">function</span>(<span class="no">x</span>, <span class="no">...</span>) <span class="fu"><a href="../reference/Min.html">Mean</a></span>(<span class="no">x</span>$<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>,
-                  <span class="kw">new_var_name</span> <span class="kw">=</span> <span class="st">"cases_7dav"</span>)
+                  <span class="kw">new_col_name</span> <span class="kw">=</span> <span class="st">"cases_7dav"</span>)
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>, <span class="fl">10</span>)</pre></body></html></div>
 <pre><code>## # A tibble: 10 × 4
 ##    geo_value time_value cases cases_7dav
@@ -221,7 +221,7 @@
 <p>Now we go ahead and slide this AR forecaster over the working <code>epi_signal</code> of COVID-19 cases. Note that we actually model the <code>cases_7dav</code> column, to operate on the scale of smoothed COVID-19 cases. (This is clearly equivalent, up to a constant, to modeling weekly sums of COVID-19 cases.)</p>
 <div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="no">z</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span>(<span class="kw">slide_fun</span> <span class="kw">=</span> ~ <span class="fu">prob_ar</span>(<span class="no">.x</span>$<span class="no">cases_7dav</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">100</span>,
-               <span class="kw">new_var_name</span> <span class="kw">=</span> <span class="st">"forecast"</span>, <span class="kw">new_var_type</span> <span class="kw">=</span> <span class="st">"list"</span>) <span class="kw">%&gt;%</span>
+               <span class="kw">new_col_name</span> <span class="kw">=</span> <span class="st">"forecast"</span>, <span class="kw">new_col_type</span> <span class="kw">=</span> <span class="st">"list"</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">target_date</span> <span class="kw">=</span> <span class="no">time_value</span> + <span class="fl">7</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">tail</a></span>(<span class="no">z</span>, <span class="fl">3</span>)</pre></body></html></div>
@@ -258,7 +258,7 @@
 <div class="sourceCode" id="cb14"><html><body><pre class="r"><span class="no">k_week_ahead</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">x</span>, <span class="no">ahead</span> <span class="kw">=</span> <span class="fl">7</span>) {
   <span class="no">x</span> <span class="kw">%&gt;%</span>
     <span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span>(<span class="kw">slide_fun</span> <span class="kw">=</span> ~ <span class="fu">prob_ar</span>(<span class="no">.x</span>$<span class="no">cases_7dav</span>, <span class="kw">ahead</span> <span class="kw">=</span> <span class="no">ahead</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">100</span>,
-                 <span class="kw">new_var_name</span> <span class="kw">=</span> <span class="st">"forecast"</span>, <span class="kw">new_var_type</span> <span class="kw">=</span> <span class="st">"list"</span>) <span class="kw">%&gt;%</span>
+                 <span class="kw">new_col_name</span> <span class="kw">=</span> <span class="st">"forecast"</span>, <span class="kw">new_col_type</span> <span class="kw">=</span> <span class="st">"list"</span>) <span class="kw">%&gt;%</span>
     <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">target_date</span> <span class="kw">=</span> <span class="no">time_value</span> + <span class="no">ahead</span>) <span class="kw">%&gt;%</span>
     <span class="kw pkg">tidyr</span><span class="kw ns">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/nest.html">unnest</a></span>(<span class="no">forecast</span>)
 }

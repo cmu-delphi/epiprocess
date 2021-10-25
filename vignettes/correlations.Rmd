@@ -30,7 +30,7 @@ x <- covidcast_signal(data_source = "jhu-csse",
   rename(case_rates = value) %>%
   select(geo_value, time_value, case_rates) %>%
   slide_by_geo(slide_fun = ~ Mean(.x$case_rates), n = 7, 
-               new_var_name = "case_rates") 
+               new_col_name = "case_rates") 
 
 y <- covidcast_signal(data_source = "jhu-csse", 
                       signal = "deaths_incidence_prop",
@@ -41,7 +41,7 @@ y <- covidcast_signal(data_source = "jhu-csse",
   rename(death_rates = value) %>%
   select(geo_value, time_value, death_rates) %>%
   slide_by_geo(slide_fun = ~ Mean(.x$death_rates), n = 7, 
-               new_var_name = "death_rates") 
+               new_col_name = "death_rates") 
   
 x <- full_join(x, y, by = c("geo_value", "time_value"))
 ```

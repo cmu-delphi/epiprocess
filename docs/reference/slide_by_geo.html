@@ -152,8 +152,8 @@ examples.</p>
   <span class='no'>x</span>,
   <span class='no'>slide_fun</span>,
   <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>14</span>,
-  <span class='kw'>new_var_name</span> <span class='kw'>=</span> <span class='st'>"slide_value"</span>,
-  <span class='kw'>new_var_type</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"dbl"</span>, <span class='st'>"int"</span>, <span class='st'>"lgl"</span>, <span class='st'>"chr"</span>, <span class='st'>"list"</span>),
+  <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"slide_value"</span>,
+  <span class='kw'>new_col_type</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"dbl"</span>, <span class='st'>"int"</span>, <span class='st'>"lgl"</span>, <span class='st'>"chr"</span>, <span class='st'>"list"</span>),
   <span class='no'>time_step</span>,
   <span class='no'>...</span>
 )</pre>
@@ -185,15 +185,15 @@ via <code>.x$var</code>, as in <code>~ mean(.x$var)</code> to compute a trailing
 5.  Default is 14.</p></td>
     </tr>
     <tr>
-      <th>new_var_name</th>
-      <td><p>String indicating the name of the new variable that will
+      <th>new_col_name</th>
+      <td><p>String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
-<code>new_var_name</code> equal to an existing column name will overwrite this column.</p></td>
+<code>new_col_name</code> equal to an existing column name will overwrite this column.</p></td>
     </tr>
     <tr>
-      <th>new_var_type</th>
+      <th>new_col_type</th>
       <td><p>One of "dbl", "int", "lgl", "chr", or "list", indicating
-the data type (tibble abbreviation) for the new variable. Default is "dbl".</p></td>
+the data type (tibble abbreviation) for the new column. Default is "dbl".</p></td>
     </tr>
     <tr>
       <th>time_step</th>
@@ -214,7 +214,7 @@ via <code>slide_fun</code>.</p></td>
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>An <code>epi_signal</code> object given by appending a new column to <code>x</code>, named
-according to the <code>new_var_name</code> argument, containing the slide values.</p>
+according to the <code>new_col_name</code> argument, containing the slide values.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>To "slide" means to apply a function or formula over a trailing

@@ -14,20 +14,20 @@
 #'   computed on November 10 is 100 * (B - A) / A, where A is the sum of the
 #'   variable in between November 6 and 10, and A is the sum in between November
 #'   1 and 5. Default is 14.
-#' @param new_var_name String indicating the name of the new variable that will
+#' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
-#'   `new_var_name` equal to an existing column name will overwrite this column.  
+#'   `new_col_name` equal to an existing column name will overwrite this column.  
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
 #'   metadata. Read the documentation for [slide_by_geo()] for more details.
 #' @return An `epi_signal` object given by appending a new column to `x`, named 
-#'   according to the `new_var_name` argument, containing the percentage change
+#'   according to the `new_col_name` argument, containing the percentage change
 #'   values.  
 #'
 #' @seealso [slide_by_geo()]
 #' @importFrom rlang abort enquo
 #' @export
-pct_change = function(x, var, n = 14, new_var_name = "pct_change", time_step) {
+pct_change = function(x, var, n = 14, new_col_name = "pct_change", time_step) {
   # Check that we have a variable to do computations on
   if (missing(var)) abort("`var` must be specified.")
   var = enquo(var)
@@ -36,7 +36,7 @@ pct_change = function(x, var, n = 14, new_var_name = "pct_change", time_step) {
   if (n %% 2 == 1) n = n + 1
 
   # Slide the percentage change function and return
-  return(slide_by_geo(x, pct_change_fun, n, new_var_name, var = var, N = n))
+  return(slide_by_geo(x, pct_change_fun, n, new_col_name, var = var, N = n))
 }
 
 #' Compute percentage change function

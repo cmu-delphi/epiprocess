@@ -19,12 +19,12 @@
 #'   `n = 10`, and one time step is one day, then to estimate the derivative on
 #'   November 10, we train the given method on data in between November 1 and
 #'   10. Default is 14.  
-#' @param new_var_name String indicating the name of the new variable that will
+#' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
-#'   `new_var_name` equal to an existing column name will overwrite this column.
+#'   `new_col_name` equal to an existing column name will overwrite this column.
 #' @param keep_obj Should the fitted object (from linear regression, smoothing 
 #'   spline, or trend filtering) be kept as a separate column? If `TRUE`, then
-#'   this column name is given by  appending "_obj" to `new_var_name`. Default
+#'   this column name is given by  appending "_obj" to `new_col_name`. Default
 #'   is `FALSE`.
 #' @param deriv Order of derivative to estimate. Only orders 1 or 2 are allowed,
 #'   with the default being 1. (In some cases, a second-order derivative will
@@ -36,7 +36,7 @@
 #' @param ... Additional arguments to pass to the function that estimates
 #'   derivatives. See details below.    
 #' @return A `epi_signal` object given by appending a new column to `x`, named
-#'   according to the `new_var_name` argument, containing the derivative values.
+#'   according to the `new_col_name` argument, containing the derivative values.
 #'
 #' @details Derivatives are estimated using:
 #'
@@ -84,7 +84,7 @@
 #' @importFrom rlang abort enquo
 #' @export
 estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14, 
-                          new_var_name = "deriv", keep_obj = FALSE, deriv = 1, 
+                          new_col_name = "deriv", keep_obj = FALSE, deriv = 1, 
                           ...) {
   # Check that we have a variable to do computations on
   if (missing(var)) abort("`var` must be specified.")
@@ -103,7 +103,7 @@ estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
   }
 
   # Slide the derivative function
-  x = slide_by_geo(x, slide_fun, n, new_var_name = "tmp", new_var_type = "list",
+  x = slide_by_geo(x, slide_fun, n, new_col_name = "tmp", new_col_type = "list",
                    keep_obj = keep_obj, deriv = deriv, var = var, ...)
 
   # Save the class and attributes, since dplyr drops them
@@ -111,12 +111,12 @@ estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
   metadata = attributes(x)$metadata
   
   # Grab the derivative result
-  x = x %>% rowwise() %>% mutate(!!new_var_name := tmp$result)
+  x = x %>% rowwise() %>% mutate(!!new_col_name := tmp$result)
 
   # Grab the derivative object, if we're asked to
   if (keep_obj) {
     x = x %>% rowwise() %>%
-      mutate(!!paste0(new_var_name, "_obj") := list(tmp$object))
+      mutate(!!paste0(new_col_name, "_obj") := list(tmp$object))
   }
   
   # Delete the tmp column

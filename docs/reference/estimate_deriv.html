@@ -155,7 +155,7 @@ for examples.</p>
   <span class='no'>var</span>,
   <span class='kw'>method</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"lin"</span>, <span class='st'>"ss"</span>, <span class='st'>"tf"</span>),
   <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>14</span>,
-  <span class='kw'>new_var_name</span> <span class='kw'>=</span> <span class='st'>"deriv"</span>,
+  <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"deriv"</span>,
   <span class='kw'>keep_obj</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>deriv</span> <span class='kw'>=</span> <span class='fl'>1</span>,
   <span class='no'>...</span>
@@ -189,16 +189,16 @@ November 10, we train the given method on data in between November 1 and
 10. Default is 14.</p></td>
     </tr>
     <tr>
-      <th>new_var_name</th>
-      <td><p>String indicating the name of the new variable that will
+      <th>new_col_name</th>
+      <td><p>String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
-<code>new_var_name</code> equal to an existing column name will overwrite this column.</p></td>
+<code>new_col_name</code> equal to an existing column name will overwrite this column.</p></td>
     </tr>
     <tr>
       <th>keep_obj</th>
       <td><p>Should the fitted object (from linear regression, smoothing
 spline, or trend filtering) be kept as a separate column? If <code>TRUE</code>, then
-this column name is given by  appending "_obj" to <code>new_var_name</code>. Default
+this column name is given by  appending "_obj" to <code>new_col_name</code>. Default
 is <code>FALSE</code>.</p></td>
     </tr>
     <tr>
@@ -224,7 +224,7 @@ metadata. Read the documentation for <code><a href='slide_by_geo.html'>slide_by_
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>A <code>epi_signal</code> object given by appending a new column to <code>x</code>, named
-according to the <code>new_var_name</code> argument, containing the derivative values.</p>
+according to the <code>new_col_name</code> argument, containing the derivative values.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>Derivatives are estimated using:</p>

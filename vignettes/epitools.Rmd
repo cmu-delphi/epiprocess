@@ -148,8 +148,8 @@ x <- x %>%
   pivot_longer(starts_with("cases"), names_to = "type") %>%
   mutate(type = substring(type, 7))
 
-yrange = range(x %>% group_by(time_value) %>% 
-                 summarize(value = sum(value)) %>% pull(value))
+yrange <- range(x %>% group_by(time_value) %>% 
+                  summarize(value = sum(value)) %>% pull(value))
 
 ggplot(x, aes(x = time_value, y = value)) +
   geom_col(aes(y = value, fill = type)) +

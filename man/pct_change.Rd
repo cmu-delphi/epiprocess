@@ -5,7 +5,7 @@
 \title{Compute percentage change of variables in an \code{epi_signal} object, grouped by
 geo value}
 \usage{
-pct_change(x, var, n = 14, new_var_name = "pct_change", time_step)
+pct_change(x, var, n = 14, new_col_name = "pct_change", time_step)
 }
 \arguments{
 \item{x}{The \code{epi_signal} object under consideration.}
@@ -19,9 +19,9 @@ computed on November 10 is 100 * (B - A) / A, where A is the sum of the
 variable in between November 6 and 10, and A is the sum in between November
 1 and 5. Default is 14.}
 
-\item{new_var_name}{String indicating the name of the new variable that will
+\item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
-\code{new_var_name} equal to an existing column name will overwrite this column.}
+\code{new_col_name} equal to an existing column name will overwrite this column.}
 
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
@@ -29,7 +29,7 @@ metadata. Read the documentation for \code{\link[=slide_by_geo]{slide_by_geo()}}
 }
 \value{
 An \code{epi_signal} object given by appending a new column to \code{x}, named
-according to the \code{new_var_name} argument, containing the percentage change
+according to the \code{new_col_name} argument, containing the percentage change
 values.
 }
 \description{
