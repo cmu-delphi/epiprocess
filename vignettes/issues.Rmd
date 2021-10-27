@@ -1,0 +1,43 @@
+---
+title: 6. Work with issue dates and archive objects
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{6. Work with issue dates and archive objects}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+*todo*
+
+Basic stuff:
+
+- introduce `epi_archive` object. comes with a main function `as_of()`, works
+  something like this: 
+    * if `z` is an `epi_archive` object, then we can use: 
+    ```
+    x <- as_of(z, issue = "2020-06-15")
+    ```
+    * here the object `x` will be an `epi_tibble` object
+    * the function `as_of()` by default returns the latest observation (defined
+    by unique combo of `geo_value` and `time_value` columns being equal) whose
+    issue doesn't surpass the specified one 
+    * there should be some functionality for specifying what uniquely defines an
+    observation (e.g., more than just those two columns, could be an `age_group`
+    column as well; basically, as way of specifying non-signal columns)
+    * there should also be some functionality for getting all observations (not
+    just the latest) whose issue doesn't surpass the specified one
+    
+Slide stuff:
+
+- critically, the function `epi_slide()` can apply to an `epi_archive` object!
+- this allows us to do honest forecaster training. basically, replaces `epival`
+(we shouldn't need a separate package ...)  
+- so `epi_slide()` checks what object it's being given
+  * if an `epi_tibble`, it works as it does currently
+  * if an `epi_archive`, then for each working time value, it uses `as_of()` to
+  only return the data you would have had at that time (and whose time value is
+  withing `n` trailing time steps of the specified one)
+- demo this in the vignette with the hand-built AR forecaster. the `epipred`
+package can and still should be built, to contain more fancy forecasters, and
+potentially also scoring roles. but the functionality for *running* these will
+all already be built into `epitools`, just as a generalization of `epi_slide()`

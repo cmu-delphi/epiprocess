@@ -17,11 +17,13 @@ articles:
       - slide
       - pct-change
       - derivatives
-      - correlations
+      - correlation
+      - aggregation
+      - issues
 
 repo:
   url:
-    home: https://github.com/cmu-delphi/epitools/
-    source: https://github.com/cmu-delphi/epitools/
+    home: https://github.com/cmu-delphi/epitools/tree/main/
+    source: https://github.com/cmu-delphi/epitools/blob/main/
     issue: https://github.com/cmu-delphi/epitools/issues
     user: https://github.com/

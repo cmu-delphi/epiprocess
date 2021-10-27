@@ -12,7 +12,7 @@
 #'   `n = 10`, and one time step is one day, then the percentage change value 
 #'   computed on November 10 is 100 * (B - A) / A, where A is the sum of the
 #'   variable in between November 6 and 10, and A is the sum in between November
-#'   1 and 5. Default is 14.
+#'   1 and 5. Note that `n` must be even; default is 14.
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.  
@@ -31,8 +31,8 @@ pct_change = function(x, var, n = 14, new_col_name = "pct_change", time_step) {
   if (missing(var)) abort("`var` must be specified.")
   var = enquo(var)
     
-  # Check if n is odd and if so bump it up by one
-  if (n %% 2 == 1) n = n + 1
+  # Check that n is even
+  if (n %% 2 == 1) abort("`n` must be even.")
 
   # Slide the percentage change function and return
   return(epi_slide(x, pct_change_fun, n, new_col_name, var = var, N = n))

@@ -80,18 +80,17 @@ epi_slide = function(x, slide_fun, n = 14, new_col_name = "slide_value",
     return(mutate(.data_group, !!new_col_name := slide_values))
   }
 
-  # Save the class and metadata
-  cls = class(x)
-  met = attributes(x)$metadata 
+  # Save the metadata (dplyr drops it)
+  metadata = attributes(x)$metadata 
   
-  # Slide per group (in case `x` is grouped) 
+  # Slide per group (in case x is grouped) 
   x = x %>%  
     group_modify(slide_one_grp, slide_fun = slide_fun,
                  n = n, new_col_name = new_col_name, ...) %>%
     relocate(.data$geo_value, .data$time_value)
 
   # Attach the class and metadata and return
-  class(x) = cls
-  attributes(x)$metadata = met
+  class(x) = c("epi_tibble", class(x))
+  attributes(x)$metadata = metadata
   return(x)
 }

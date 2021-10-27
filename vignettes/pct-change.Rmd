@@ -1,6 +1,5 @@
 ---
 title: 2. Compute percentage change over time
-description: Compute percentage change of signal values over time.
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{2. Compute percentage change over time}

@@ -113,8 +113,9 @@ note that Puerto Rico is "pr" and Washington D.C. is "dc".
 alpha-2 country codes (lowercase).
 }
 
-The above geo types come with aggregation utilities in the package; see
-\code{aggregate_by_geo()}. An unrecognizable geo type is labeled as "custom".
+The above geo types come with aggregation utilities in the package, \emph{todo:
+refer to relevant functionality, vignette, and so on}. An unrecognizable
+geo type is labeled as "custom".
 }
 
 \section{Time types}{

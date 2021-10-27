@@ -1,6 +1,5 @@
 ---
 title: 1. Slide a computation over signal values
-description: Slide a computation over signal values over time.
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{1. Slide a computation over signal values}
@@ -237,4 +236,5 @@ lead to an overly optimismic sense of accuracy; see, for example, [McDonald et
 al. (2021)](https://www.medrxiv.org/content/10.1101/2021.06.22.21259346), and
 references therein.
 
-todo: refer to other functionality in the current package or in `epipred` ...
+*todo; refer to relevant functionality, vignette on issues and archive objects, 
+`epipred`, and so on*

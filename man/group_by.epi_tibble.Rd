@@ -2,11 +2,13 @@
 % Please edit documentation in R/epi_tibble.R
 \name{group_by.epi_tibble}
 \alias{group_by.epi_tibble}
-\title{Group \code{epi_tibble} object}
+\alias{ungroup.epi_tibble}
+\title{Group or ungroup \code{epi_tibble} object}
 \usage{
 \method{group_by}{epi_tibble}(x, ...)
+
+\method{ungroup}{epi_tibble}(x, ...)
 }
 \description{
-Groups an \code{epi_tibble} object by one or more variables, preserving class and
-attributes.
+Groups or ungroups an \code{epi_tibble}, preserving class and attributes.
 }

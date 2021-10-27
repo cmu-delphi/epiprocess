@@ -1,6 +1,5 @@
 ---
 title: 3. Estimate derivatives of signals
-description: Estimate derivatives of signal values, using various methodologies.
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{3. Estimate derivatives of signals}

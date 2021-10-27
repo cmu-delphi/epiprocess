@@ -16,7 +16,7 @@ computed.}
 \code{n = 10}, and one time step is one day, then the percentage change value
 computed on November 10 is 100 * (B - A) / A, where A is the sum of the
 variable in between November 6 and 10, and A is the sum in between November
-1 and 5. Default is 14.}
+1 and 5. Note that \code{n} must be even; default is 14.}
 
 \item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting

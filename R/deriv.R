@@ -105,8 +105,7 @@ estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
   x = epi_slide(x, slide_fun, n, new_col_name = "tmp", new_col_type = "list",
                    keep_obj = keep_obj, deriv = deriv, var = var, ...)
 
-  # Save the class and attributes, since dplyr drops them
-  cls = class(x)
+  # Save the metadata (dplyr drops it)
   metadata = attributes(x)$metadata
   
   # Grab the derivative result
@@ -118,11 +117,11 @@ estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
       mutate(!!paste0(new_col_name, "_obj") := list(tmp$object))
   }
   
-  # Delete the tmp column
-  x = select(x, -tmp)
+  # Delete the tmp column and ungroup
+  x = select(x, -tmp) %>% ungroup()
 
   # Attach the class and metadata and return
-  class(x) = cls
+  class(x) = c("epi_tibble", class(x))
   attributes(x)$metadata = metadata
   return(x)
 }

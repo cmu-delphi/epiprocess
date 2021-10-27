@@ -1,9 +1,8 @@
 ---
-title: 4. Compute correlations between signals
-description: Compute correlations between signals over space and time.
+title: 4. Correlate signals over space and time
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{4. Compute correlations between signals}
+  %\VignetteIndexEntry{4. Correlate signals over space and time}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -26,26 +25,26 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       start_day = start_day, 
                       end_day = end_day,
                       geo_type = "state") %>%
-  as.epi_tibble() %>%
   rename(case_rates = value) %>%
-  select(geo_value, time_value, case_rates) %>%
-  group_by(geo_value) %>%
-  epi_slide(slide_fun = ~ Mean(.x$case_rates), n = 7, 
-            new_col_name = "case_rates") 
+  select(geo_value, time_value, case_rates) 
 
 y <- covidcast_signal(data_source = "jhu-csse", 
                       signal = "deaths_incidence_prop",
                       start_day = start_day, 
                       end_day = end_day,
                       geo_type = "state") %>%
-  as.epi_tibble() %>%
   rename(death_rates = value) %>%
-  select(geo_value, time_value, death_rates) %>%
+  select(geo_value, time_value, death_rates) 
+
+x <- x %>%
+  full_join(y, by = c("geo_value", "time_value")) %>%
+  as.epi_tibble() %>%
   group_by(geo_value) %>%
+  epi_slide(slide_fun = ~ Mean(.x$case_rates), n = 7, 
+            new_col_name = "case_rates") %>%
   epi_slide(slide_fun = ~ Mean(.x$death_rates), n = 7, 
-            new_col_name = "death_rates") 
-  
-x <- full_join(x, y, by = c("geo_value", "time_value"))
+            new_col_name = "death_rates") %>%
+  ungroup()
 ```
 
 ## Correlations grouped by time
@@ -64,7 +63,6 @@ former is obtained by setting `by = time_value`.
 library(ggplot2)
 theme_set(theme_bw())
 
-devtools::load_all("~/Dropbox/delphi/epitools")
 z1 <- grouped_cor(x, case_rates, death_rates, by = time_value)
 
 ggplot(z1, aes(x = time_value, y = cor)) + 

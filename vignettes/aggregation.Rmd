@@ -1,0 +1,22 @@
+---
+title: 5. Aggregate signals over space and time
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{5. Aggregate signals over space and time}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+*todo*
+
+Time stuff:
+
+- cast to `tsibble`, with index = `time_value` and key = `geo_value`
+- walk through an example with gaps, show the special gaps functions
+- do some time aggregation after gap filling?
+- do some time coarsening? days to weeks, or weeks to months?
+
+Geo stuff:
+
+- similar? but without the `tsibble` utilities, we would need to implement some 
+  of this on our own and demo it in the vignette

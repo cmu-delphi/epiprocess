@@ -65,8 +65,9 @@
 #' * `"nation"`: each observation corresponds to a country; coded by ISO 31661-
 #'   alpha-2 country codes (lowercase).
 #'
-#' The above geo types come with aggregation utilities in the package; see
-#'   `aggregate_by_geo()`. An unrecognizable geo type is labeled as "custom". 
+#' The above geo types come with aggregation utilities in the package, *todo:
+#'   refer to relevant functionality, vignette, and so on*. An unrecognizable 
+#'   geo type is labeled as "custom".  
 #' 
 #' @section Time types:
 #' The following time types are supported in an `epi_tibble`. Their time coding 
@@ -273,10 +274,9 @@ summary.epi_tibble = function(object, ...) {
                          dplyr::summarize(median(.data$num)))))
 }
 
-#' Group `epi_tibble` object
+#' Group or ungroup `epi_tibble` object
 #'
-#' Groups an `epi_tibble` object by one or more variables, preserving class and
-#' attributes. 
+#' Groups or ungroups an `epi_tibble`, preserving class and attributes.  
 #'
 #' @method group_by epi_tibble
 #' @importFrom dplyr group_by
@@ -289,51 +289,11 @@ group_by.epi_tibble = function(x, ...) {
   return(x)
 }
 
-#' Join two `epi_tibble` objects
-#'
-#' Joins two `epi_tibble` object by one or more variables, preserving class and
-#' attributes. 
-#'
-#' @method inner_join epi_tibble
-#' @importFrom dplyr inner_join
+#' @method ungroup epi_tibble
+#' @rdname group_by.epi_tibble
+#' @importFrom dplyr ungroup
 #' @export
-inner_join.epi_tibble = function(x, ...) {
-  metadata = attributes(x)$metadata
-  x = NextMethod()
-  class(x) = c("epi_tibble", class(x))
-  attributes(x)$metadata = metadata
-  return(x)
-}
-
-#' @method left_join epi_tibble
-#' @rdname inner_join.epi_tibble
-#' @importFrom dplyr left_join
-#' @export
-left_join.epi_tibble = function(x, ...) {
-  metadata = attributes(x)$metadata
-  x = NextMethod()
-  class(x) = c("epi_tibble", class(x))
-  attributes(x)$metadata = metadata
-  return(x)
-}
-
-#' @method right_join epi_tibble
-#' @rdname inner_join.epi_tibble
-#' @importFrom dplyr right_join
-#' @export
-right_join.epi_tibble = function(x, ...) {
-  metadata = attributes(x)$metadata
-  x = NextMethod()
-  class(x) = c("epi_tibble", class(x))
-  attributes(x)$metadata = metadata
-  return(x)
-}
-
-#' @method full_join epi_tibble
-#' @rdname inner_join.epi_tibble
-#' @importFrom dplyr full_join
-#' @export
-full_join.epi_tibble = function(x, ...) {
+ungroup.epi_tibble = function(x, ...) {
   metadata = attributes(x)$metadata
   x = NextMethod()
   class(x) = c("epi_tibble", class(x))

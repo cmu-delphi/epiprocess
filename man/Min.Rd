@@ -6,7 +6,7 @@
 \alias{Sum}
 \alias{Mean}
 \alias{Median}
-\title{Apply computations with \code{NA} values removed}
+\title{Computations with \code{NA} values removed}
 \usage{
 Min(x)
 
@@ -19,6 +19,6 @@ Mean(x)
 Median(x)
 }
 \description{
-These are just wrapper functions for common computations with \code{NA} values
-removed by default.
+These are just wrapper functions for common computational utilities with \code{NA}
+values removed by default.
 }

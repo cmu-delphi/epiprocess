@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script><meta property="og:title" content="1. Slide a computation over signal values">
-<meta property="og:description" content="Slide a computation over signal values over time.">
+<meta property="og:description" content="epitools">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -66,14 +66,20 @@
       <a href="../articles/derivatives.html">3. Estimate derivatives of signals</a>
     </li>
     <li>
-      <a href="../articles/correlations.html">4. Compute correlations between signals</a>
+      <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
+    </li>
+    <li>
+      <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
+    </li>
+    <li>
+      <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
     </li>
   </ul>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/cmu-delphi/epitools/">
+  <a href="https://github.com/cmu-delphi/epitools/tree/main/">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -94,7 +100,7 @@
       <h1 data-toc-skip>1. Slide a computation over signal values</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epitools/vignettes/slide.Rmd"><code>vignettes/slide.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epitools/blob/main/vignettes/slide.Rmd"><code>vignettes/slide.Rmd</code></a></small>
       <div class="hidden name"><code>slide.Rmd</code></div>
 
     </div>
@@ -291,7 +297,7 @@
 <p><img src="slide_files/figure-html/unnamed-chunk-9-1.png" width="864"></p>
 <p>Two points are worth making. First, the AR model’s performance here is pretty mixed. At various points in time, we can see that its forecasts are volatile (its point predictions are all over the place), or overconfident (its bands are too narrow), or both at the same time. This is only meant as a simple demo and slightly more sophisticated AR models can go a long way. For example, the overconfidence in this example is due to the fact that the bands are based on quantiles of training residuals, and when the AR model fits well to the training set, these can clearly be too small in magnitude.</p>
 <p>Second, the AR forecaster here is using using finalized data, meaning, it uses the signal values (reported COVID-19 cases) corresponding to the latest issue dates available, for both training models and making predictions. However, this is not reflective of the provisional nature of the data that it must cope with in a true forecast task. Training and making predictions on finalized data can lead to an overly optimismic sense of accuracy; see, for example, <a href="https://www.medrxiv.org/content/10.1101/2021.06.22.21259346">McDonald et al. (2021)</a>, and references therein.</p>
-<p>todo: refer to other functionality in the current package or in <code>epipred</code> …</p>
+<p><em>todo; refer to relevant functionality, vignette on issues and archive objects, <code>epipred</code>, and so on</em></p>
 </div>
   </div>
 

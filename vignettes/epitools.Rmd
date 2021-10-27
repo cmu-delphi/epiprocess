@@ -1,6 +1,5 @@
 ---
 title: Get started with `epitools`
-description: An introductory tutorial with examples.
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Get started with epitools}

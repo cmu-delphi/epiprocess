@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Group <code>epi_tibble</code> object — group_by.epi_tibble • epitools</title>
+<title>Group or ungroup <code>epi_tibble</code> object — group_by.epi_tibble • epitools</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,8 @@
 
 
 
-<meta property="og:title" content="Group <code>epi_tibble</code> object — group_by.epi_tibble" />
-<meta property="og:description" content="Groups an epi_tibble object by one or more variables, preserving class and
-attributes." />
+<meta property="og:title" content="Group or ungroup <code>epi_tibble</code> object — group_by.epi_tibble" />
+<meta property="og:description" content="Groups or ungroups an epi_tibble, preserving class and attributes." />
 
 
 
@@ -108,14 +107,20 @@ attributes." />
       <a href="../articles/derivatives.html">3. Estimate derivatives of signals</a>
     </li>
     <li>
-      <a href="../articles/correlations.html">4. Compute correlations between signals</a>
+      <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
+    </li>
+    <li>
+      <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
+    </li>
+    <li>
+      <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
     </li>
   </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/cmu-delphi/epitools/">
+  <a href="https://github.com/cmu-delphi/epitools/tree/main/">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -133,18 +138,20 @@ attributes." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Group <code>epi_tibble</code> object</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/R/epi_tibble.R'><code>R/epi_tibble.R</code></a></small>
+    <h1>Group or ungroup <code>epi_tibble</code> object</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/blob/main/R/epi_tibble.R'><code>R/epi_tibble.R</code></a></small>
     <div class="hidden name"><code>group_by.epi_tibble.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Groups an <code>epi_tibble</code> object by one or more variables, preserving class and
-attributes.</p>
+    <p>Groups or ungroups an <code>epi_tibble</code>, preserving class and attributes.</p>
     </div>
 
     <pre class="usage"><span class='co'># S3 method for epi_tibble</span>
-<span class='fu'>group_by</span>(<span class='no'>x</span>, <span class='no'>...</span>)</pre>
+<span class='fu'>group_by</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_tibble</span>
+<span class='fu'>ungroup</span>(<span class='no'>x</span>, <span class='no'>...</span>)</pre>
 
 
 

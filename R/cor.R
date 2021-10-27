@@ -28,7 +28,7 @@
 #' @return An tibble with the grouping columns first (`geo_value`, `time_value`,
 #'   or possibly others), and then a column `cor`, which gives the correlation.  
 #' 
-#' @importFrom dplyr arrange mutate summarize ungroup 
+#' @importFrom dplyr arrange mutate summarize  
 #' @importFrom stats cor
 #' @importFrom rlang .data enquo
 #' @export

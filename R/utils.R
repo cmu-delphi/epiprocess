@@ -1,7 +1,7 @@
-#' Apply computations with `NA` values removed
+#' Computations with `NA` values removed
 #'
-#' These are just wrapper functions for common computations with `NA` values
-#' removed by default. 
+#' These are just wrapper functions for common computational utilities with `NA`
+#' values removed by default. 
 #' 
 #' @export
 Min = function(x) min(x, na.rm = TRUE)
