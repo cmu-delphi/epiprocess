@@ -1,12 +1,11 @@
-#' Compute percentage change of variables in an `epi_signal` object, grouped by
-#' geo value
+#' Compute percentage change of a variable in an `epi_tibble` object
 #' 
-#' Computes the percentage change of the variable in an `epi_signal` object,
-#' grouped by geo value. See the [percentage change
-#' vignette](https://cmu-delphi.github.io/epitools/articles/pct-change.html) for 
+#' Computes the percentage change of a variable in an `epi_tibble` object. See
+#' the [percentage change
+#' vignette](https://cmu-delphi.github.io/epitools/articles/pct-change.html) for  
 #' examples.   
 #'
-#' @param x The `epi_signal` object under consideration.
+#' @param x The `epi_tibble` object.
 #' @param var The variable in `x` whose percentage change values are to be
 #'   computed.    
 #' @param n Number of time steps to use in the trailing window. For example, if 
@@ -19,12 +18,12 @@
 #'   `new_col_name` equal to an existing column name will overwrite this column.  
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
-#'   metadata. Read the documentation for [slide_by_geo()] for more details.
-#' @return An `epi_signal` object given by appending a new column to `x`, named 
+#'   metadata. Read the documentation for [epi_slide()] for more details.
+#' @return An `epi_tibble` object given by appending a new column to `x`, named 
 #'   according to the `new_col_name` argument, containing the percentage change
 #'   values.  
 #'
-#' @seealso [slide_by_geo()]
+#' @seealso [epi_slide()]
 #' @importFrom rlang abort enquo
 #' @export
 pct_change = function(x, var, n = 14, new_col_name = "pct_change", time_step) {
@@ -36,7 +35,7 @@ pct_change = function(x, var, n = 14, new_col_name = "pct_change", time_step) {
   if (n %% 2 == 1) n = n + 1
 
   # Slide the percentage change function and return
-  return(slide_by_geo(x, pct_change_fun, n, new_col_name, var = var, N = n))
+  return(epi_slide(x, pct_change_fun, n, new_col_name, var = var, N = n))
 }
 
 #' Compute percentage change function

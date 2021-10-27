@@ -127,7 +127,7 @@
 
 <span class="co"># Perform sensorization for each state; use the last n = 56 days (8 weeks) of </span>
 <span class="co"># data, minus the last m = 3 days, for the regression</span>
-<span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span>(<span class="no">joined</span>, <span class="kw">slide_fun</span> <span class="kw">=</span> <span class="no">dv_regression</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">56</span>, <span class="kw">m</span> <span class="kw">=</span> <span class="fl">3</span>,
+<span class="fu">slide_by_geo</span>(<span class="no">joined</span>, <span class="kw">slide_fun</span> <span class="kw">=</span> <span class="no">dv_regression</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">56</span>, <span class="kw">m</span> <span class="kw">=</span> <span class="fl">3</span>,
              <span class="kw">col_name</span> <span class="kw">=</span> <span class="st">"sensor"</span>) <span class="kw">%&gt;%</span>
   <span class="fu">select</span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">value.x</span>, <span class="no">value.y</span>, <span class="no">sensor</span>) <span class="kw">%&gt;%</span>
   <span class="fu">arrange</span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
@@ -136,7 +136,7 @@
 <div id="returning-complex-objects" class="section level2">
 <h2 class="hasAnchor">
 <a href="#returning-complex-objects" class="anchor"></a>Returning complex objects</h2>
-<p>As a final example, we show how to use <code><a href="../reference/slide_by_geo.html">slide_by_geo()</a></code> to output more complex objects. We amend the last example so that <code>dv_regression()</code> returns both the predicted value (sensor) and the fitted linear model object. In order to use this with <code><a href="../reference/slide_by_geo.html">slide_by_geo()</a></code>, we need to set the <code>col_type</code> argument to be “list”:</p>
+<p>As a final example, we show how to use <code>slide_by_geo()</code> to output more complex objects. We amend the last example so that <code>dv_regression()</code> returns both the predicted value (sensor) and the fitted linear model object. In order to use this with <code>slide_by_geo()</code>, we need to set the <code>col_type</code> argument to be “list”:</p>
 <div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">dv_regression</span> <span class="kw">=</span> <span class="kw">function</span>(<span class="no">x</span>, <span class="no">m</span> <span class="kw">=</span> <span class="fl">3</span>, <span class="no">...</span>) {
   <span class="no">n</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span>(<span class="no">x</span>)
   <span class="kw">if</span> (<span class="no">n</span> <span class="kw">&lt;=</span> <span class="no">m</span>+<span class="fl">1</span>) <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">lm_obj</span> <span class="kw">=</span> <span class="fl">NA</span>, <span class="kw">sensor</span> <span class="kw">=</span> <span class="fl">NA</span>)) <span class="co"># Trivial case</span>
@@ -155,7 +155,7 @@
   <span class="kw">error</span> <span class="kw">=</span> <span class="kw">function</span>(<span class="no">e</span>) <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">lm_obj</span> <span class="kw">=</span> <span class="fl">NA</span>, <span class="kw">sensor</span> <span class="kw">=</span> <span class="fl">NA</span>))))
 }
 
-<span class="no">joined</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/slide_by_geo.html">slide_by_geo</a></span>(<span class="no">joined</span>, <span class="kw">slide_fun</span> <span class="kw">=</span> <span class="no">dv_regression</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">56</span>, <span class="kw">m</span> <span class="kw">=</span> <span class="fl">3</span>,
+<span class="no">joined</span> <span class="kw">&lt;-</span> <span class="fu">slide_by_geo</span>(<span class="no">joined</span>, <span class="kw">slide_fun</span> <span class="kw">=</span> <span class="no">dv_regression</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">56</span>, <span class="kw">m</span> <span class="kw">=</span> <span class="fl">3</span>,
                        <span class="kw">col_name</span> <span class="kw">=</span> <span class="st">"sensor_obj"</span>, <span class="kw">col_type</span> <span class="kw">=</span> <span class="st">"list"</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span>(<span class="no">joined</span>$<span class="no">sensor_obj</span>)

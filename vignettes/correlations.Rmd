@@ -26,36 +26,38 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       start_day = start_day, 
                       end_day = end_day,
                       geo_type = "state") %>%
-  as.epi_signal() %>%
+  as.epi_tibble() %>%
   rename(case_rates = value) %>%
   select(geo_value, time_value, case_rates) %>%
-  slide_by_geo(slide_fun = ~ Mean(.x$case_rates), n = 7, 
-               new_col_name = "case_rates") 
+  group_by(geo_value) %>%
+  epi_slide(slide_fun = ~ Mean(.x$case_rates), n = 7, 
+            new_col_name = "case_rates") 
 
 y <- covidcast_signal(data_source = "jhu-csse", 
                       signal = "deaths_incidence_prop",
                       start_day = start_day, 
                       end_day = end_day,
                       geo_type = "state") %>%
-  as.epi_signal() %>%
+  as.epi_tibble() %>%
   rename(death_rates = value) %>%
   select(geo_value, time_value, death_rates) %>%
-  slide_by_geo(slide_fun = ~ Mean(.x$death_rates), n = 7, 
-               new_col_name = "death_rates") 
+  group_by(geo_value) %>%
+  epi_slide(slide_fun = ~ Mean(.x$death_rates), n = 7, 
+            new_col_name = "death_rates") 
   
 x <- full_join(x, y, by = c("geo_value", "time_value"))
 ```
 
 ## Correlations grouped by time
 
-The `grouped_cor()` function operates on an `epi_signal` object, and it requires
+The `grouped_cor()` function operates on an `epi_tibble` object, and it requires
 further specification of the variables to correlate, in its next two arguments 
 (`var1` and `var2`). 
 
 In general, we can specify any grouping variable (or combination of variables) 
 in a call to `grouped_by()`, via the `by` argument. This potentially leads to
 many ways to compute correlations. There are always at least two ways to compute
-correlations in an `epi_signal`: grouping by time value, and by geo value. The 
+correlations in an `epi_tibble`: grouping by time value, and by geo value. The 
 former is obtained by setting `by = time_value`. 
 
 ```{r, message = FALSE, warning = FALSE}

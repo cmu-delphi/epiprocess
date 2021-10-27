@@ -2,8 +2,7 @@
 % Please edit documentation in R/deriv.R
 \name{estimate_deriv}
 \alias{estimate_deriv}
-\title{Estimate derivatives of variables in an \code{epi_signal} object, grouped by geo
-value}
+\title{Estimate derivatives of variables in an \code{epi_tibble} object}
 \usage{
 estimate_deriv(
   x,
@@ -17,7 +16,7 @@ estimate_deriv(
 )
 }
 \arguments{
-\item{x}{The \code{epi_signal} object under consideration.}
+\item{x}{The \code{epi_tibble} object under consideration.}
 
 \item{var}{The variable in \code{x} whose derivatives are to be estimated.}
 
@@ -52,16 +51,15 @@ derivatives. See details below.}
 
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
-metadata. Read the documentation for \code{\link[=slide_by_geo]{slide_by_geo()}} for more details.}
+metadata. Read the documentation for \code{\link[=epi_slide]{epi_slide()}} for more details.}
 }
 \value{
-A \code{epi_signal} object given by appending a new column to \code{x}, named
+A \code{epi_tibble} object given by appending a new column to \code{x}, named
 according to the \code{new_col_name} argument, containing the derivative values.
 }
 \description{
-Estimates derivatives of the variables in an \code{epi_signal} object, using a
-local (in time) linear regression or a smoothing spline, grouped by geo
-value. See the \href{https://cmu-delphi.github.io/epitools/articles/derivatives.html}{estimating derivatives vignette}
+Estimates derivatives of the variables in an \code{epi_tibble} object, using a
+local (in time) linear regression or a smoothing spline. See the \href{https://cmu-delphi.github.io/epitools/articles/derivatives.html}{estimating derivatives vignette}
 for examples.
 }
 \details{
@@ -106,5 +104,5 @@ rule, respectively). Default is 8 when \code{cv = FALSE}, and "1se" when \code{c
 }
 }
 \seealso{
-\code{\link[=slide_by_geo]{slide_by_geo()}}
+\code{\link[=epi_slide]{epi_slide()}}
 }

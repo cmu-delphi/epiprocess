@@ -30,22 +30,22 @@ devtools::install_github("cmu-delphi/epitools", ref = "main",
                          build_vignettes = TRUE, dependencies = TRUE)
 ```
 
-## Getting data into `epi_signal` format
+## Getting data into `epi_tibble` format
 
-We'll start by showing how to get data into `epi_signal` format, which is just a
-tibble (data frame) with a bit of special structure, and is the format assumed 
-by all of the functions in the `epitools` package. An `epi_signal` object has 
-(at least) the following columns:  
+We'll start by showing how to get data into `epi_tibble` format, which is just a
+tibble with a bit of special structure, and is the format assumed by all of the
+functions in the `epitools` package. An `epi_tibble` object has (at least) the
+following columns:   
 
 * `geo_value`: the geographic value associated with each measurement.
 * `time_value`: the time value associated with each measurement.
 
 Other columns can be considered as measured variables, which we also broadly
-refer to as signal variables. To learn more about the `epi_signal` format, you 
-can read the documentation for `as.epi_signal()`.
+refer to as signal variables. To learn more about the `epi_tibble` format, you 
+can read the documentation for `as.epi_tibble()`.
 
 A data frame or tibble that has `geo_value` and `time_value` columns can be 
-converted into an `epi_signal` object, using the function `as.epi_signal()`. As 
+converted into an `epi_tibble` object, using the function `as.epi_tibble()`. As 
 an example, we'll look at daily cumulative COVID-19 cases for 4 states (CA, FL, 
 NY, and TX) in the U.S., over a year spanning mid 2020 to mid 2021, using the
 [`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) 
@@ -67,15 +67,15 @@ colnames(case_data)
 ```
 
 As we can see, a data frame returned `covidcast::covidcast_signal()` has the 
-columns required for an `epi_signal` object (along with many others). A call to
-`as.epi_signal()`, with further specification of some relevant metadata, brings 
-the data frame into `epi_signal` format.
+columns required for an `epi_tibble` object (along with many others). A call to
+`as.epi_tibble()`, with further specification of some relevant metadata, brings 
+the data frame into `epi_tibble` format.
 
 ```{r, message = FALSE}
 library(epitools)
 library(dplyr)
 
-x <- as.epi_signal(case_data, 
+x <- as.epi_tibble(case_data, 
                    geo_type = "state",
                    time_type = "day",
                    issue = max(case_data$issue)) %>%
@@ -90,7 +90,7 @@ attributes(x)$metadata
 
 ## Some info about required metadata
 
-In general, an `epi_signal` object must have following fields in its metadata:
+In general, an `epi_tibble` object must have following fields in its metadata:
  
 * `geo_type`: the type for the geo values.
 * `time_type`: the type for the time values.
@@ -102,20 +102,20 @@ the data set is comprised of all signal values observed "as of" the given issue
 in the metadata.
 
 If any of the `geo_type`, `time_type`, and `issue` arguments are missing in a 
-call to `as.epi_signal()`, then this function will try to infer them from the 
-passed object (The documentation for `as.epi_signal()` gives more details.) 
+call to `as.epi_tibble()`, then this function will try to infer them from the 
+passed object (The documentation for `as.epi_tibble()` gives more details.) 
 
 ```{r}
-x <- as.epi_signal(case_data) %>%
+x <- as.epi_tibble(case_data) %>%
   rename("cases_cum" = value) %>%
   select(geo_value, time_value, cases_cum)
 
 attributes(x)$metadata
 ```
 
-## Working with `epi_signal` objects downstream
+## Working with `epi_tibble` objects downstream
 
-Data in `epi_signal` format should be easy to work with downstream; in the other
+Data in `epi_tibble` format should be easy to work with downstream; in the other
 vignettes, we'll walk through some basic signal processing tasks using functions 
 provided in the `epitools` package; of course, we can also write custom code for
 for other downstream uses, like plotting, which is pretty easy to do `ggplot2`.
@@ -139,7 +139,7 @@ x <- outbreaks::sars_canada_2003 %>%
   mutate(geo_value = "ca") %>%
   rename(time_value = date) %>%
   select(geo_value, time_value, starts_with("cases")) %>%
-  as.epi_signal(geo_type = "nation")
+  as.epi_tibble(geo_type = "nation")
 
 head(x)
 

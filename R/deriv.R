@@ -1,13 +1,12 @@
-#' Estimate derivatives of variables in an `epi_signal` object, grouped by geo
-#' value 
+#' Estimate derivatives of variables in an `epi_tibble` object
 #' 
-#' Estimates derivatives of the variables in an `epi_signal` object, using a
-#' local (in time) linear regression or a smoothing spline, grouped by geo
-#' value. See the [estimating derivatives
-#' vignette](https://cmu-delphi.github.io/epitools/articles/derivatives.html) 
+#' Estimates derivatives of the variables in an `epi_tibble` object, using a
+#' local (in time) linear regression or a smoothing spline. See the [estimating
+#' derivatives
+#' vignette](https://cmu-delphi.github.io/epitools/articles/derivatives.html)   
 #' for examples.  
 #'
-#' @param x The `epi_signal` object under consideration.
+#' @param x The `epi_tibble` object under consideration.
 #' @param var The variable in `x` whose derivatives are to be estimated.
 #' @param method One of "lin", "ss", or "tf" indicating the method to use for
 #'   the derivative calculation. To estimate the derivative at any time point,
@@ -32,10 +31,10 @@
 #'   always be zero.)
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
-#'   metadata. Read the documentation for [slide_by_geo()] for more details.
+#'   metadata. Read the documentation for [epi_slide()] for more details.
 #' @param ... Additional arguments to pass to the function that estimates
 #'   derivatives. See details below.    
-#' @return A `epi_signal` object given by appending a new column to `x`, named
+#' @return A `epi_tibble` object given by appending a new column to `x`, named
 #'   according to the `new_col_name` argument, containing the derivative values.
 #'
 #' @details Derivatives are estimated using:
@@ -79,7 +78,7 @@
 #'   TRUE`.} 
 #' }
 #' 
-#' @seealso [slide_by_geo()]
+#' @seealso [epi_slide()]
 #' @importFrom dplyr rowwise
 #' @importFrom rlang abort enquo
 #' @export
@@ -103,7 +102,7 @@ estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
   }
 
   # Slide the derivative function
-  x = slide_by_geo(x, slide_fun, n, new_col_name = "tmp", new_col_type = "list",
+  x = epi_slide(x, slide_fun, n, new_col_name = "tmp", new_col_type = "list",
                    keep_obj = keep_obj, deriv = deriv, var = var, ...)
 
   # Save the class and attributes, since dplyr drops them

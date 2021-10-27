@@ -24,14 +24,14 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       end_day = "2021-05-31",
                       geo_type = "state", 
                       geo_values = "fl")  %>%
-  as.epi_signal() %>%
+  as.epi_tibble() %>%
   rename(cases = value) %>%
   select(geo_value, time_value, cases)
 ```
 
 ## Percentage change
 
-The `pct_change()` function operates on a `epi_signal` object, and aside from 
+The `pct_change()` function operates on a `epi_tibble` object, and aside from 
 this, takes two main arguments: `var`, the variable whose percentage change 
 values are to be computed; and `n`, the length of the local window (here, in 
 days) to use to compute the percentage change values. For example, if `n = 10`,
@@ -82,16 +82,16 @@ gridExtra::grid.arrange(p1, p2, nrow = 1)
 
 The percentage change in the last figure appears pretty volatile in some parts, 
 which is not too surprising, looking at how wiggly the signal is itself. With a
-suitable call to `slide_to_geo()`, we can either pre-smooth or post-smooth using
-a 7-day trailing average. The differences here (between these two approaches) do 
+suitable call to `epi_slide()`, we can either pre-smooth or post-smooth using a
+7-day trailing average. The differences here (between these two approaches) do 
 not end up being very noticeable at all (which is not unexpected, due to the way
 in which percentage change is defined; it is already defined using a sum over a 
 7-day period). We just show results for one of these approaches, pre-smoothing.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 4}
 x <- x %>%
-  slide_by_geo(slide_fun = ~ Mean(.x$cases), n = 7, 
-               new_col_name = "cases_7dav") %>%
+  epi_slide(slide_fun = ~ Mean(.x$cases), n = 7, 
+            new_col_name = "cases_7dav") %>%
   pct_change("cases_7dav", n = 14)
 
 p1 <- ggplot(x, aes(x = time_value, y = cases_7dav)) + 

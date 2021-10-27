@@ -112,18 +112,18 @@
 <div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="kw pkg">devtools</span><span class="kw ns">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span>(<span class="st">"cmu-delphi/epitools"</span>, <span class="kw">ref</span> <span class="kw">=</span> <span class="st">"main"</span>,
                          <span class="kw">build_vignettes</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">dependencies</span> <span class="kw">=</span> <span class="fl">TRUE</span>)</pre></body></html></div>
 </div>
-<div id="getting-data-into-epi_signal-format" class="section level2">
+<div id="getting-data-into-epi_tibble-format" class="section level2">
 <h2 class="hasAnchor">
-<a href="#getting-data-into-epi_signal-format" class="anchor"></a>Getting data into <code>epi_signal</code> format</h2>
-<p>We’ll start by showing how to get data into <code>epi_signal</code> format, which is just a tibble (data frame) with a bit of special structure, and is the format assumed by all of the functions in the <code>epitools</code> package. An <code>epi_signal</code> object has (at least) the following columns:</p>
+<a href="#getting-data-into-epi_tibble-format" class="anchor"></a>Getting data into <code>epi_tibble</code> format</h2>
+<p>We’ll start by showing how to get data into <code>epi_tibble</code> format, which is just a tibble with a bit of special structure, and is the format assumed by all of the functions in the <code>epitools</code> package. An <code>epi_tibble</code> object has (at least) the following columns:</p>
 <ul>
 <li>
 <code>geo_value</code>: the geographic value associated with each measurement.</li>
 <li>
 <code>time_value</code>: the time value associated with each measurement.</li>
 </ul>
-<p>Other columns can be considered as measured variables, which we also broadly refer to as signal variables. To learn more about the <code>epi_signal</code> format, you can read the documentation for <code><a href="../reference/as.epi_signal.html">as.epi_signal()</a></code>.</p>
-<p>A data frame or tibble that has <code>geo_value</code> and <code>time_value</code> columns can be converted into an <code>epi_signal</code> object, using the function <code><a href="../reference/as.epi_signal.html">as.epi_signal()</a></code>. As an example, we’ll look at daily cumulative COVID-19 cases for 4 states (CA, FL, NY, and TX) in the U.S., over a year spanning mid 2020 to mid 2021, using the <a href="https://cmu-delphi.github.io/covidcast/covidcastR/"><code>covidcast</code></a> package to fetch this data from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/">COVIDcast API</a>.</p>
+<p>Other columns can be considered as measured variables, which we also broadly refer to as signal variables. To learn more about the <code>epi_tibble</code> format, you can read the documentation for <code><a href="../reference/as.epi_tibble.html">as.epi_tibble()</a></code>.</p>
+<p>A data frame or tibble that has <code>geo_value</code> and <code>time_value</code> columns can be converted into an <code>epi_tibble</code> object, using the function <code><a href="../reference/as.epi_tibble.html">as.epi_tibble()</a></code>. As an example, we’ll look at daily cumulative COVID-19 cases for 4 states (CA, FL, NY, and TX) in the U.S., over a year spanning mid 2020 to mid 2021, using the <a href="https://cmu-delphi.github.io/covidcast/covidcastR/"><code>covidcast</code></a> package to fetch this data from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/">COVIDcast API</a>.</p>
 <div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">covidcast</span>)
 
 <span class="no">case_data</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="kw">data_source</span> <span class="kw">=</span> <span class="st">"jhu-csse"</span>,
@@ -140,11 +140,11 @@
 ##  [4] "time_value"          "issue"               "lag"                
 ##  [7] "missing_value"       "missing_stderr"      "missing_sample_size"
 ## [10] "value"               "stderr"              "sample_size"</code></pre>
-<p>As we can see, a data frame returned <code><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast::covidcast_signal()</a></code> has the columns required for an <code>epi_signal</code> object (along with many others). A call to <code><a href="../reference/as.epi_signal.html">as.epi_signal()</a></code>, with further specification of some relevant metadata, brings the data frame into <code>epi_signal</code> format.</p>
+<p>As we can see, a data frame returned <code><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast::covidcast_signal()</a></code> has the columns required for an <code>epi_tibble</code> object (along with many others). A call to <code><a href="../reference/as.epi_tibble.html">as.epi_tibble()</a></code>, with further specification of some relevant metadata, brings the data frame into <code>epi_tibble</code> format.</p>
 <div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">epitools</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">dplyr</span>)
 
-<span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>(<span class="no">case_data</span>,
+<span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/as.epi_tibble.html">as.epi_tibble</a></span>(<span class="no">case_data</span>,
                    <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>,
                    <span class="kw">time_type</span> <span class="kw">=</span> <span class="st">"day"</span>,
                    <span class="kw">issue</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(<span class="no">case_data</span>$<span class="no">issue</span>)) <span class="kw">%&gt;%</span>
@@ -152,17 +152,17 @@
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">cases_cum</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span>(<span class="no">x</span>)</pre></body></html></div>
-<pre><code>## [1] "epi_signal" "tbl_df"     "tbl"        "data.frame"</code></pre>
+<pre><code>## [1] "epi_tibble" "tbl_df"     "tbl"        "data.frame"</code></pre>
 <div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span>(<span class="no">x</span>)</pre></body></html></div>
-<pre><code>## An `epi_signal` object with 1460 rows and 3 columns.
+<pre><code>## An `epi_tibble` object, with metadata:
+## * geo_type  = state
+## * time_type = day
+## * issue     = 2021-09-27
 ## 
-## geo_type  : state
-## time_type : day
-## issue     : 2021-09-27
-## 
-## first time value                           : 2020-06-01
-## last time value                            : 2021-05-31
-## median number of geo values per time value : 4</code></pre>
+## Summary of space-time coverge:
+## * earliest time value              = 2020-06-01
+## * latest time value                = 2021-05-31
+## * median geo values per time value = 4</code></pre>
 <div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>)</pre></body></html></div>
 <pre><code>## # A tibble: 6 × 3
 ##   geo_value time_value cases_cum
@@ -186,7 +186,7 @@
 <div id="some-info-about-required-metadata" class="section level2">
 <h2 class="hasAnchor">
 <a href="#some-info-about-required-metadata" class="anchor"></a>Some info about required metadata</h2>
-<p>In general, an <code>epi_signal</code> object must have following fields in its metadata:</p>
+<p>In general, an <code>epi_tibble</code> object must have following fields in its metadata:</p>
 <ul>
 <li>
 <code>geo_type</code>: the type for the geo values.</li>
@@ -196,8 +196,8 @@
 <code>issue</code>: the time value at which the given data set was issued.</li>
 </ul>
 <p>In a typical case, the <code>issue</code> field represents the maximum of the issues of individual signal values measured in the data set; hence we would also say that the data set is comprised of all signal values observed “as of” the given issue in the metadata.</p>
-<p>If any of the <code>geo_type</code>, <code>time_type</code>, and <code>issue</code> arguments are missing in a call to <code><a href="../reference/as.epi_signal.html">as.epi_signal()</a></code>, then this function will try to infer them from the passed object (The documentation for <code><a href="../reference/as.epi_signal.html">as.epi_signal()</a></code> gives more details.)</p>
-<div class="sourceCode" id="cb15"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>(<span class="no">case_data</span>) <span class="kw">%&gt;%</span>
+<p>If any of the <code>geo_type</code>, <code>time_type</code>, and <code>issue</code> arguments are missing in a call to <code><a href="../reference/as.epi_tibble.html">as.epi_tibble()</a></code>, then this function will try to infer them from the passed object (The documentation for <code><a href="../reference/as.epi_tibble.html">as.epi_tibble()</a></code> gives more details.)</p>
+<div class="sourceCode" id="cb15"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/as.epi_tibble.html">as.epi_tibble</a></span>(<span class="no">case_data</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span>(<span class="st">"cases_cum"</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">cases_cum</span>)
 
@@ -211,10 +211,10 @@
 ## $issue
 ## [1] "2021-09-27"</code></pre>
 </div>
-<div id="working-with-epi_signal-objects-downstream" class="section level2">
+<div id="working-with-epi_tibble-objects-downstream" class="section level2">
 <h2 class="hasAnchor">
-<a href="#working-with-epi_signal-objects-downstream" class="anchor"></a>Working with <code>epi_signal</code> objects downstream</h2>
-<p>Data in <code>epi_signal</code> format should be easy to work with downstream; in the other vignettes, we’ll walk through some basic signal processing tasks using functions provided in the <code>epitools</code> package; of course, we can also write custom code for for other downstream uses, like plotting, which is pretty easy to do <code>ggplot2</code>.</p>
+<a href="#working-with-epi_tibble-objects-downstream" class="anchor"></a>Working with <code>epi_tibble</code> objects downstream</h2>
+<p>Data in <code>epi_tibble</code> format should be easy to work with downstream; in the other vignettes, we’ll walk through some basic signal processing tasks using functions provided in the <code>epitools</code> package; of course, we can also write custom code for for other downstream uses, like plotting, which is pretty easy to do <code>ggplot2</code>.</p>
 <div class="sourceCode" id="cb17"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
 
@@ -228,7 +228,7 @@
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">geo_value</span> <span class="kw">=</span> <span class="st">"ca"</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span>(<span class="kw">time_value</span> <span class="kw">=</span> <span class="no">date</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="fu"><a href="https://dplyr.tidyverse.org/reference/reexports.html">starts_with</a></span>(<span class="st">"cases"</span>)) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/as.epi_signal.html">as.epi_signal</a></span>(<span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"nation"</span>)
+  <span class="fu"><a href="../reference/as.epi_tibble.html">as.epi_tibble</a></span>(<span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"nation"</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>)</pre></body></html></div>
 <pre><code>## # A tibble: 6 × 6

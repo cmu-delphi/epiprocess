@@ -2,13 +2,12 @@
 % Please edit documentation in R/change.R
 \name{pct_change}
 \alias{pct_change}
-\title{Compute percentage change of variables in an \code{epi_signal} object, grouped by
-geo value}
+\title{Compute percentage change of a variable in an \code{epi_tibble} object}
 \usage{
 pct_change(x, var, n = 14, new_col_name = "pct_change", time_step)
 }
 \arguments{
-\item{x}{The \code{epi_signal} object under consideration.}
+\item{x}{The \code{epi_tibble} object.}
 
 \item{var}{The variable in \code{x} whose percentage change values are to be
 computed.}
@@ -25,18 +24,18 @@ contain the derivative values. Default is "slide_value"; note that setting
 
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
-metadata. Read the documentation for \code{\link[=slide_by_geo]{slide_by_geo()}} for more details.}
+metadata. Read the documentation for \code{\link[=epi_slide]{epi_slide()}} for more details.}
 }
 \value{
-An \code{epi_signal} object given by appending a new column to \code{x}, named
+An \code{epi_tibble} object given by appending a new column to \code{x}, named
 according to the \code{new_col_name} argument, containing the percentage change
 values.
 }
 \description{
-Computes the percentage change of the variable in an \code{epi_signal} object,
-grouped by geo value. See the \href{https://cmu-delphi.github.io/epitools/articles/pct-change.html}{percentage change vignette} for
+Computes the percentage change of a variable in an \code{epi_tibble} object. See
+the \href{https://cmu-delphi.github.io/epitools/articles/pct-change.html}{percentage change vignette} for
 examples.
 }
 \seealso{
-\code{\link[=slide_by_geo]{slide_by_geo()}}
+\code{\link[=epi_slide]{epi_slide()}}
 }

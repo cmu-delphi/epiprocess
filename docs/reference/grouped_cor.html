@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Compute correlations between variables in an <code>epi_signal</code> object — grouped_cor • epitools</title>
+<title>Compute correlations between variables in an <code>epi_tibble</code> object — grouped_cor • epitools</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Compute correlations between variables in an <code>epi_signal</code> object — grouped_cor" />
-<meta property="og:description" content="Computes correlations between variables in an epi_signal object, allowing
+<meta property="og:title" content="Compute correlations between variables in an <code>epi_tibble</code> object — grouped_cor" />
+<meta property="og:description" content="Computes correlations between variables in an epi_tibble object, allowing
 for grouping by geo value, time value, other variables. See the correlations vignette
 for examples." />
 
@@ -134,13 +134,13 @@ for examples." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Compute correlations between variables in an <code>epi_signal</code> object</h1>
+    <h1>Compute correlations between variables in an <code>epi_tibble</code> object</h1>
     <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/R/cor.R'><code>R/cor.R</code></a></small>
     <div class="hidden name"><code>grouped_cor.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Computes correlations between variables in an <code>epi_signal</code> object, allowing
+    <p>Computes correlations between variables in an <code>epi_tibble</code> object, allowing
 for grouping by geo value, time value, other variables. See the <a href='https://cmu-delphi.github.io/epitools/articles/correlations.html'>correlations vignette</a>
 for examples.</p>
     </div>
@@ -161,7 +161,7 @@ for examples.</p>
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>The <code>epi_signal</code> object under consideration.</p></td>
+      <td><p>The <code>epi_tibble</code> object.</p></td>
     </tr>
     <tr>
       <th>var1, var2</th>
@@ -178,13 +178,13 @@ then the values are left as is. Default is 0 for both <code>dt1</code> and <code
     </tr>
     <tr>
       <th>by</th>
-      <td><p>The variable or variables to group by, before computing
-correlations. If <code>geo_value</code>, the default, then correlations are computed
-for each geo value, over all time; if <code>time_value</code>, then correlations are
-computed for each time, over all geo values. This can alternatively be any
-specified using number of columns of <code>x</code>; for example, we can use <code>by = c(geo_value, age_group)</code>, if <code>x</code> has a column <code>age_group</code> containing the
-age group associated with the measurements, to compute correlations for
-each pair of geo value and age group.</p></td>
+      <td><p>The variable(s) to group by, for the correlation computation. If
+<code>geo_value</code>, the default, then correlations are computed for each geo
+value, over all time; if <code>time_value</code>, then correlations are computed for
+each time, over all geo values. A grouping can also be any specified using
+number of columns of <code>x</code>; for example, we can use <code>by = c(geo_value, age_group)</code>, assuming <code>x</code> has a column <code>age_group</code>, in order to compute
+correlations for each pair of geo value and age group. To omit a grouping
+entirely, use <code>by = NULL</code>.</p></td>
     </tr>
     <tr>
       <th>use, method</th>

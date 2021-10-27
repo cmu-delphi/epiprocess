@@ -6,8 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Estimate derivatives of variables in an <code>epi_signal</code> object, grouped by geo
-value — estimate_deriv • epitools</title>
+<title>Estimate derivatives of variables in an <code>epi_tibble</code> object — estimate_deriv • epitools</title>
 
 
 <!-- jquery -->
@@ -40,11 +39,9 @@ value — estimate_deriv • epitools</title>
 
 
 
-<meta property="og:title" content="Estimate derivatives of variables in an <code>epi_signal</code> object, grouped by geo
-value — estimate_deriv" />
-<meta property="og:description" content="Estimates derivatives of the variables in an epi_signal object, using a
-local (in time) linear regression or a smoothing spline, grouped by geo
-value. See the estimating derivatives vignette
+<meta property="og:title" content="Estimate derivatives of variables in an <code>epi_tibble</code> object — estimate_deriv" />
+<meta property="og:description" content="Estimates derivatives of the variables in an epi_tibble object, using a
+local (in time) linear regression or a smoothing spline. See the estimating derivatives vignette
 for examples." />
 
 
@@ -137,16 +134,14 @@ for examples." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Estimate derivatives of variables in an <code>epi_signal</code> object, grouped by geo
-value</h1>
+    <h1>Estimate derivatives of variables in an <code>epi_tibble</code> object</h1>
     <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/R/deriv.R'><code>R/deriv.R</code></a></small>
     <div class="hidden name"><code>estimate_deriv.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Estimates derivatives of the variables in an <code>epi_signal</code> object, using a
-local (in time) linear regression or a smoothing spline, grouped by geo
-value. See the <a href='https://cmu-delphi.github.io/epitools/articles/derivatives.html'>estimating derivatives vignette</a>
+    <p>Estimates derivatives of the variables in an <code>epi_tibble</code> object, using a
+local (in time) linear regression or a smoothing spline. See the <a href='https://cmu-delphi.github.io/epitools/articles/derivatives.html'>estimating derivatives vignette</a>
 for examples.</p>
     </div>
 
@@ -166,7 +161,7 @@ for examples.</p>
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>The <code>epi_signal</code> object under consideration.</p></td>
+      <td><p>The <code>epi_tibble</code> object under consideration.</p></td>
     </tr>
     <tr>
       <th>var</th>
@@ -217,13 +212,13 @@ derivatives. See details below.</p></td>
       <th>time_step</th>
       <td><p>Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
-metadata. Read the documentation for <code><a href='slide_by_geo.html'>slide_by_geo()</a></code> for more details.</p></td>
+metadata. Read the documentation for <code><a href='epi_slide.html'>epi_slide()</a></code> for more details.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A <code>epi_signal</code> object given by appending a new column to <code>x</code>, named
+    <p>A <code>epi_tibble</code> object given by appending a new column to <code>x</code>, named
 according to the <code>new_col_name</code> argument, containing the derivative values.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
@@ -266,7 +261,7 @@ rule, respectively). Default is 8 when <code>cv = FALSE</code>, and "1se" when <
 
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='slide_by_geo.html'>slide_by_geo()</a></code></p></div>
+    <div class='dont-index'><p><code><a href='epi_slide.html'>epi_slide()</a></code></p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
