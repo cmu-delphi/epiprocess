@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Fetch the latest or earliest issue for each observation — latest_issue • epitools</title>
+<title>Fetch the latest or for each observation — latest_issue • epitools</title>
 
 
 <!-- jquery -->
@@ -39,11 +39,11 @@
 
 
 
-<meta property="og:title" content="Fetch the latest or earliest issue for each observation — latest_issue" />
+<meta property="og:title" content="Fetch the latest or for each observation — latest_issue" />
 <meta property="og:description" content="The data returned from covidcast_signal() or covidcast_signals() can, if
 called with the issues argument, contain multiple issues for a single
 observation in a single location. These functions filter the data frame to
-contain only the earliest issue or only the latest issue." />
+contain only the latest issue." />
 
 
 
@@ -135,7 +135,7 @@ contain only the earliest issue or only the latest issue." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Fetch the latest or earliest issue for each observation</h1>
+    <h1>Fetch the latest or for each observation</h1>
     <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/R/utils.R'><code>R/utils.R</code></a></small>
     <div class="hidden name"><code>latest_issue.Rd</code></div>
     </div>
@@ -144,7 +144,7 @@ contain only the earliest issue or only the latest issue." />
     <p>The data returned from <code>covidcast_signal()</code> or <code>covidcast_signals()</code> can, if
 called with the <code>issues</code> argument, contain multiple issues for a single
 observation in a single location. These functions filter the data frame to
-contain only the earliest issue or only the latest issue.</p>
+contain only the latest issue.</p>
     </div>
 
     <pre class="usage"><span class='fu'>latest_issue</span>(<span class='no'>x</span>)</pre>
@@ -162,10 +162,10 @@ returned from <code>covidcast_signal()</code> or the "long" format of
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A data frame in the same form, but with only the earliest or latest
-issue of every observation. Note that these functions sort the data frame
-as part of their filtering, so the output data frame rows may be in a
-different order.</p>
+    <p>A data frame in the same form, but with only the latest issue of
+every observation. Note that these functions sort the data frame as part of
+their filtering, so the output data frame rows may be in a different
+order.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

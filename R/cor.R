@@ -1,83 +1,75 @@
-#' Compute correlations between two `epi_signal` data frames
+#' Compute lagged correlations between variables in an `epi_tibble` object
 #'
-#' Computes correlations between two `epi_signal` data frames, allowing for
-#' slicing by geo location, or by time. (When multiple issue dates are present,
-#' only the latest issue from each data frame is used for correlations.) See the
-#' [correlations
+#' Computes lagged correlations between variables in an `epi_tibble` object,
+#' allowing for grouping by geo value, time value, or any other variables. See
+#' the [correlations 
 #' vignette](https://cmu-delphi.github.io/epitools/articles/correlations.html)
 #' for examples.
 #'
-#' @param x,y The `epi_signal` data frames to correlate.
-#' @param dt_x,dt_y Time shifts to consider for `x` and `y`, respectively,
+#' @param x The `epi_tibble` object.
+#' @param var1,var2 The variables in `x` to correlate. 
+#' @param dt1,dt2 Time shifts to consider for the two variables, respectively, 
 #'   before computing correlations. Negative shifts translate into in a lag
 #'   value and positive shifts into a lead value; for example, if `dt = -1`,
 #'   then the new value on June 2 is the original value on June 1; if `dt = 1`,
 #'   then the new value on June 2 is the original value on June 3; if `dt = 0`,
-#'   then the values are left as is. Default is 0 for both `dt_x` and `dt_y`.
-#' @param by If "geo_value", then correlations are computed for each geo
-#'   location, over all time. Each correlation is measured between two time
-#'   series at the same location. If "time_value", then correlations are
-#'   computed for each time, over all geo locations. Each correlation is
-#'   measured between all locations at one time. Default is "geo_value".
+#'   then the values are left as is. Default is 0 for both `dt1` and `dt2`. Note
+#'   that the time shifts are always performed *per geo value*; see details. 
+#' @param by The variable(s) to group by, for the correlation computation. If
+#'   `geo_value`, the default, then correlations are computed for each geo
+#'   value, over all time; if `time_value`, then correlations are computed for
+#'   each time, over all geo values. A grouping can also be any specified using
+#'   number of columns of `x`; for example, we can use `by = c(geo_value,
+#'   age_group)`, assuming `x` has a column `age_group`, in order to compute
+#'   correlations for each pair of geo value and age group. To omit a grouping
+#'   entirely, use `by = NULL`. Note that the grouping here is always applied
+#'   *after* the time shifts; see details. 
 #' @param use,method Arguments to pass to `cor()`, with "na.or.complete" the
 #'   default for `use` (different than `cor()`) and "pearson" the default for
 #'   `method` (same as `cor()`).
 #'
-#' @return A data frame with first column `value`, which gives the correlation,
-#'   and second column `geo_value` or `time_value` (depending on `by`).
+#' @return An tibble with the grouping columns first (`geo_value`, `time_value`,
+#'   or possibly others), and then a column `cor`, which gives the correlation.  
 #'
+#' @details Time shifts are always performed first, grouped by geo value (this
+#'   way they amount to shifting each individual time series). After this, the
+#'   geo grouping is removed, and the grouping specified in the `by` argument is
+#'   applied. Then, correlations are computed. 
+#' 
+#' @importFrom dplyr arrange mutate summarize  
 #' @importFrom stats cor
-#' @importFrom rlang .data
+#' @importFrom rlang .data enquo
 #' @export
-sliced_cor = function(x, y, dt_x = 0, dt_y = 0,
-                      by = c("geo_value", "time_value"),
-                      use = "na.or.complete",
+cor_lagged = function(x, var1, var2, dt1 = 0, dt2 = 0,
+                      by = geo_value, use = "na.or.complete",
                       method = c("pearson", "kendall", "spearman")) {
-  # Check we have `epi_signal` objects
-  if (!inherits(x, "epi_signal")) {
-    abort("`x` be of class `epi_signal`.")
-  }
-  if (!inherits(y, "epi_signal")) {
-    abort("`y` be of class `epi_signal`.")
-  }
+  # Check we have an `epi_tibble` object
+  if (!inherits(x, "epi_tibble")) abort("`x` be of class `epi_tibble`.")
 
-  # Get the latest issue per value
-  x = latest_issue(x)
-  y = latest_issue(y)
-
-  # Which way to slice? Which method?
-  by = match.arg(by)
+  # Check that we have variables to do computations on
+  if (missing(var1)) abort("`var1` must be specified.")
+  if (missing(var2)) abort("`var2` must be specified.")
+  var1 = enquo(var1)
+  var2 = enquo(var2)
+  
+  # What is the grouping? Which method?
+  by = enquo(by)
   method = match.arg(method)
 
-  # Join the two data frames together by pairs of geo_value and time_value
-  z = dplyr::full_join(x, y, by = c("geo_value", "time_value"))
-
-  # Make sure that we have a complete record of dates for each geo_value (fill
-  # with NAs as necessary)
-  z_all = dplyr::group_by(z, .data$geo_value) %>%
-    dplyr::summarize(time_value = seq.Date(
-                       as.Date(min(.data$time_value)),
-                       as.Date(max(.data$time_value)),
-                       by = "day")) %>%
-    dplyr::ungroup()
-  
-  z = dplyr::full_join(z, z_all, by = c("geo_value", "time_value"))
-
   # Perform time shifts, then compute appropriate correlations and return
-  return(dplyr::group_by(z, .data$geo_value) %>%
-         dplyr::arrange(.data$time_value) %>%
-         dplyr::mutate(value.x = shift(.data$value.x, n = dt_x),
-                       value.y = shift(.data$value.y, n = dt_y)) %>%
-         dplyr::ungroup() %>%
-         dplyr::group_by(dplyr::across(dplyr::all_of(by))) %>%
-         dplyr::summarize(value = cor(x = .data$value.x,
-                                      y = .data$value.y,
-                                      use = use, method = method)) %>%
-         dplyr::relocate(.data$value))
+  return(x %>%
+         group_by(.data$geo_value) %>%
+         arrange(.data$time_value) %>%
+         mutate(var1 = shift(!!var1, n = dt1),
+                var2 = shift(!!var2, n = dt2)) %>%
+         ungroup() %>%
+         group_by(!!by) %>%
+         summarize(cor = cor(x = .data$var1, y = .data$var2,
+                             use = use, method = method)))
 }
 
 # Function to perform time shifts, lag or lead
-shift = function(value, n) {
-  if (n < 0) return(dplyr::lag(value, -n))
-  else return(dplyr::lead(value, n))
+shift = function(var, n) {
+  if (n < 0) return(dplyr::lag(var, -n))
+  else return(dplyr::lead(var, n))
 }

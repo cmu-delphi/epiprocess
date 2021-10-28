@@ -2,67 +2,79 @@
 % Please edit documentation in R/deriv.R
 \name{estimate_deriv}
 \alias{estimate_deriv}
-\title{Estimate derivatives of values in an \code{epi_signal} data frame}
+\title{Estimate derivatives of variables in an \code{epi_tibble} object}
 \usage{
 estimate_deriv(
   x,
+  var,
   method = c("lin", "ss", "tf"),
   n = 14,
-  col_name = "deriv",
+  new_col_name = "deriv",
   keep_obj = FALSE,
   deriv = 1,
+  time_step,
+  na_rm = TRUE,
   ...
 )
 }
 \arguments{
-\item{x}{The \code{epi_signal} data frame under consideration.}
+\item{x}{The \code{epi_tibble} object under consideration.}
+
+\item{var}{The variable in \code{x} whose derivatives are to be estimated.}
 
 \item{method}{One of "lin", "ss", or "tf" indicating the method to use for
 the derivative calculation. To estimate the derivative at any time point,
-we run the given method on the last \code{n} days of data, and use the
+we run the given method on the last \code{n} time points of data, and use the
 corresponding predicted derivative (that is, the derivative of the
 underlying estimated function, linear or spline) at the current time
-point. Default is "lin". See details below.}
+point. Default is "lin". See details for more explanation.}
 
-\item{n}{Size of the local window (in days) to use. For example, if \code{n = 5},
-then to estimate the derivative on November 5, we train the given method on
-data in between November 1 and November 5. Default is 14.}
+\item{n}{Number of time steps to use in the trailing window. For example, if
+\code{n = 10}, and one time step is one day, then to estimate the derivative on
+November 10, we train the given method on data in between November 1 and
+10. Default is 14.}
 
-\item{col_name}{String indicating the name of the new column that will
-contain the derivative values. Default is "deriv"; note that setting
-\code{col_name = "value"} will overwrite the existing "value" column.}
+\item{new_col_name}{String indicating the name of the new column that will
+contain the derivative values. Default is "slide_value"; note that setting
+\code{new_col_name} equal to an existing column name will overwrite this column.}
 
 \item{keep_obj}{Should the fitted object (from linear regression, smoothing
 spline, or trend filtering) be kept as a separate column? If \code{TRUE}, then
-this column name is given by  appending "_obj" to \code{col_name}. Default is
-\code{FALSE}.}
+this column name is given by  appending "_obj" to \code{new_col_name}. Default
+is \code{FALSE}.}
 
 \item{deriv}{Order of derivative to estimate. Only orders 1 or 2 are allowed,
 with the default being 1. (In some cases, a second-order derivative will
-return a trivial result: for example: when \code{method = "lin"}, this will
+return a trivial result: for example: when \code{method} is "lin", this will
 always be zero.)}
+
+\item{time_step}{Optional function used to define the meaning of one time
+step, which if specified, overrides the default choice based on the
+metadata. Read the documentation for \code{\link[=epi_slide]{epi_slide()}} for more details.}
+
+\item{na_rm}{Should missing values be removed before the computation? Default
+is \code{TRUE}.}
 
 \item{...}{Additional arguments to pass to the function that estimates
 derivatives. See details below.}
 }
 \value{
-A data frame given by appending a new column to \code{x} named according
-to the \code{col_name} argument, containing the estimated derivative values.
+A \code{epi_tibble} object given by appending a new column to \code{x}, named
+according to the \code{new_col_name} argument, containing the derivative values.
 }
 \description{
-Estimates derivatives of the values in an \code{epi_signal} data frame, using a
-local (in time) linear regression or a smoothing spline. (When multiple issue
-dates are present, only the latest issue is considered.) See the \href{https://cmu-delphi.github.io/epitools/articles/derivatives.html}{estimating derivatives vignette}
+Estimates derivatives of the variables in an \code{epi_tibble} object, using a
+local (in time) linear regression or a smoothing spline. See the \href{https://cmu-delphi.github.io/epitools/articles/derivatives.html}{estimating derivatives vignette}
 for examples.
 }
 \details{
 Derivatives are estimated using:
 
 \itemize{
-\item Linear regression, when \code{method = "lin"}, via \code{stats::lsfit()}.
-\item Cubic smoothing spline, when \code{method = "ss"}, via
+\item Linear regression, when \code{method} is "lin", via \code{stats::lsfit()}.
+\item Cubic smoothing spline, when \code{method} is "ss", via
 \code{stats::smooth.spline()}.
-\item Polynomial trend filtering, when \code{method = "tf"}, via
+\item Polynomial trend filtering, when \code{method} is "tf", via
 \code{genlasso::trendfilter()}.
 }
 
@@ -76,10 +88,10 @@ In the first and second cases (linear regression and smoothing spline), the
 additional arguments in \code{...} are directly passed to the underlying
 estimation function (\code{stats::lsfit()} and \code{stats::smooth.spline()}).
 
-The third case (trend filtering) works a little differently. Here, a custom
+The third case (trend filtering) works a little differently: here, a custom
 set of arguments is allowed (and are internally distributed as appropriate
-to \code{genlasso::trendfilter()}, \code{genlasso::cv.trendfilter()}, and
-\code{genlasso::coef.genlasso()}):
+to the functions \code{genlasso::trendfilter()}, \code{genlasso::cv.trendfilter()},
+and \code{genlasso::coef.genlasso()}):
 
 \describe{
 \item{\code{ord}}{Order of piecewise polynomial for the trend filtering fit,
@@ -95,4 +107,7 @@ fit. If \code{cv = FALSE}, then \code{df} must be an integer; if \code{cv = TRUE
 based on the cross-validation error curve (minimum or 1-standard-error
 rule, respectively). Default is 8 when \code{cv = FALSE}, and "1se" when \code{cv = TRUE}.}
 }
+}
+\seealso{
+\code{\link[=epi_slide]{epi_slide()}}
 }

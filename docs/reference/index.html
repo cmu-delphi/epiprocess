@@ -103,17 +103,23 @@
       <a href="../articles/pct-change.html">2. Compute percentage change over time</a>
     </li>
     <li>
-      <a href="../articles/derivatives.html">3. Estimate derivatives of signals</a>
+      <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
     </li>
     <li>
-      <a href="../articles/correlations.html">4. Compute correlations between signals</a>
+      <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
+    </li>
+    <li>
+      <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
+    </li>
+    <li>
+      <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
     </li>
   </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/cmu-delphi/epitools/">
+  <a href="https://github.com/cmu-delphi/epitools/tree/main/">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -159,13 +165,25 @@
         <td>
           <p><code><a href="Min.html">Min()</a></code> <code><a href="Min.html">Max()</a></code> <code><a href="Min.html">Sum()</a></code> <code><a href="Min.html">Mean()</a></code> <code><a href="Min.html">Median()</a></code> </p>
         </td>
-        <td><p>Wrappers to functions that remove <code>NA</code> values by default</p></td>
+        <td><p>Computations with <code>NA</code> values removed</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="as.epi_signal.html">as.epi_signal()</a></code> </p>
+          <p><code><a href="as.epi_tibble.html">as.epi_tibble()</a></code> </p>
         </td>
-        <td><p>Convert data frame to <code>epi_signal</code> format</p></td>
+        <td><p>Convert data to <code>epi_tibble</code> format</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="cor_lagged.html">cor_lagged()</a></code> </p>
+        </td>
+        <td><p>Compute lagged correlations between variables in an <code>epi_tibble</code> object</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="epi_slide.html">epi_slide()</a></code> </p>
+        </td>
+        <td><p>Slide a function over variables in an <code>epi_tibble</code> object</p></td>
       </tr><tr>
         
         <td>
@@ -177,44 +195,31 @@
         <td>
           <p><code><a href="estimate_deriv.html">estimate_deriv()</a></code> </p>
         </td>
-        <td><p>Estimate derivatives of values in an <code>epi_signal</code> data frame</p></td>
+        <td><p>Estimate derivatives of variables in an <code>epi_tibble</code> object</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="latest_issue.html">latest_issue()</a></code> </p>
+          <p><code><a href="group_by.epi_tibble.html">group_by(<i>&lt;epi_tibble&gt;</i>)</a></code> <code><a href="group_by.epi_tibble.html">ungroup(<i>&lt;epi_tibble&gt;</i>)</a></code> </p>
         </td>
-        <td><p>Fetch the latest or earliest issue for each observation</p></td>
+        <td><p>Group or ungroup <code>epi_tibble</code> object</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="pct_change.html">pct_change()</a></code> </p>
         </td>
-        <td><p>Compute percentage change of values in <code>epi_signal</code> data frame</p></td>
+        <td><p>Compute percentage change of a variable in an <code>epi_tibble</code> object</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="print.epi_signal.html">print(<i>&lt;epi_signal&gt;</i>)</a></code> </p>
+          <p><code><a href="print.epi_tibble.html">print(<i>&lt;epi_tibble&gt;</i>)</a></code> </p>
         </td>
-        <td><p>Print <code>epi_signal</code> object</p></td>
+        <td><p>Print <code>epi_tibble</code> object</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="sliced_cor.html">sliced_cor()</a></code> </p>
+          <p><code><a href="summary.epi_tibble.html">summary(<i>&lt;epi_tibble&gt;</i>)</a></code> </p>
         </td>
-        <td><p>Compute correlations between two <code>epi_signal</code> data frames</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="slide_by_geo.html">slide_by_geo()</a></code> </p>
-        </td>
-        <td><p>Slide a function over values in an <code>epi_signal</code> data frame, grouped by geo
-location</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="summary.epi_signal.html">summary(<i>&lt;epi_signal&gt;</i>)</a></code> </p>
-        </td>
-        <td><p>Summarize <code>epi_signal</code> object</p></td>
+        <td><p>Summarize <code>epi_tibble</code> object</p></td>
       </tr>
     </tbody>
     </table>

@@ -2,11 +2,12 @@ pandoc: 2.10.1
 pkgdown: 1.5.1
 pkgdown_sha: ~
 articles:
-  correlations: correlations.html
-  derivatives: derivatives.html
+  aggregation: aggregation.html
+  correlation: correlation.html
+  derivative: derivative.html
   epitools: epitools.html
+  issues: issues.html
   pct-change: pct-change.html
-  sensorization: sensorization.html
   slide: slide.html
-last_built: 2021-10-20T14:37Z
+last_built: 2021-10-28T14:51Z
 
