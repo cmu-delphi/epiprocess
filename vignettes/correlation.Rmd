@@ -7,10 +7,15 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-The `epitools` package provides some simple functionality for computing the 
-correlations between two signals, over space or time. In this vignette, we'll
-examine state-level COVID-19 case and death rates, smoothed using a 7-day
-trailing average.
+The `epitools` package provides some simple functionality for computing lagged
+correlations between two signals, over space or time, via `cor_lagged()`. This
+function is really just a convenience wrapper over some basic commands: it first
+performs any specified time shifts, grouped by geo value (this way, it shifts
+each of the individual time series); then, it removes the geo grouping and
+applies the grouping that is specified; finally, it computes correlations.
+
+In this vignette, we'll examine correlations between state-level COVID-19 case
+and death rates, smoothed using a 7-day trailing average. 
 
 ```{r, message = FALSE}
 library(covidcast)
@@ -49,21 +54,21 @@ x <- x %>%
 
 ## Correlations grouped by time
 
-The `grouped_cor()` function operates on an `epi_tibble` object, and it requires
-further specification of the variables to correlate, in its next two arguments 
-(`var1` and `var2`). 
+The `cor_lagged()` function operates on an `epi_tibble` object, and it requires
+further specification of the variables to correlate, in its next two arguments
+(`var1` and `var2`).
 
-In general, we can specify any grouping variable (or combination of variables) 
-in a call to `grouped_by()`, via the `by` argument. This potentially leads to
+In general, we can specify any grouping variable (or combination of variables)
+in a call to `cor_lagged()`, via the `by` argument. This potentially leads to
 many ways to compute correlations. There are always at least two ways to compute
-correlations in an `epi_tibble`: grouping by time value, and by geo value. The 
-former is obtained by setting `by = time_value`. 
+correlations in an `epi_tibble`: grouping by time value, and by geo value. The
+former is obtained by setting `by = time_value`.
 
 ```{r, message = FALSE, warning = FALSE}
 library(ggplot2)
 theme_set(theme_bw())
 
-z1 <- grouped_cor(x, case_rates, death_rates, by = time_value)
+z1 <- cor_lagged(x, case_rates, death_rates, by = time_value)
 
 ggplot(z1, aes(x = time_value, y = cor)) + 
   geom_line() +
@@ -76,21 +81,21 @@ rates linearly associated, across the U.S. states?". We might be interested in
 broadening this question, instead asking: "on any given day, do higher case
 rates tend to associate with higher death rates?", removing the dependence on a
 linear relationship. The latter can be addressed using Spearman correlation,
-accomplished by setting `method = "spearman"` in the call to `grouped_cor()`.
+accomplished by setting `method = "spearman"` in the call to `cor_lagged()`.
 Spearman correlation is highly robust and invariant to monotone transformations.
 
 ## Lagged correlations
 
 We might also be interested in how case rates associate with death rates in the
-*future*. Using the `dt1` parameter in `grouped_cor()`, we can lag case rates
-back any number of days we want, before calculating correlations. Below, we set 
+*future*. Using the `dt1` parameter in `cor_lagged()`, we can lag case rates
+back any number of days we want, before calculating correlations. Below, we set
 `dt1 = -10`. This means that `var1 = case_rates` will be lagged by 10 days, so
-that case rates on June 1st will be correlated with death rates on June 11th. 
-(It might also help to think of it this way: death rates on a certain day will 
+that case rates on June 1st will be correlated with death rates on June 11th.
+(It might also help to think of it this way: death rates on a certain day will
 be correlated with case rates at an offset of -10 days.)
 
 ```{r, message = FALSE, warning = FALSE}
-z2 <- grouped_cor(x, case_rates, death_rates, by = time_value, dt1 = -10)
+z2 <- cor_lagged(x, case_rates, death_rates, by = time_value, dt1 = -10)
 
 z <- rbind(z1 %>% mutate(lag = 0), 
            z2 %>% mutate(lag = 10)) %>%
@@ -109,12 +114,12 @@ days from now.
 ## Correlations grouped by state
 
 The second option we have is to group by geo value, obtained by setting `by = 
-geo_value`. We'll again look at correlations both for 0- and 10-day lagged case 
+geo_value`. We'll again look at correlations both for 0- and 10-day lagged case  
 rates.
 
 ```{r, message = FALSE, warning = FALSE}
-z1 <- grouped_cor(x, case_rates, death_rates, by = geo_value)
-z2 <- grouped_cor(x, case_rates, death_rates, by = geo_value, dt1 = -10)
+z1 <- cor_lagged(x, case_rates, death_rates, by = geo_value)
+z2 <- cor_lagged(x, case_rates, death_rates, by = geo_value, dt1 = -10)
 
 z <- rbind(z1 %>% mutate(lag = 0), 
            z2 %>% mutate(lag = 10)) %>%
@@ -130,7 +135,7 @@ days improves the correlations.
 
 ## More systematic lag analysis
 
-Next we perform a more systematic investigation of the correlations over a broad
+Next we perform a more systematic investigation of the correlations over a broad 
 range of lag values. 
 
 ```{r, message = FALSE, warning = FALSE}
@@ -138,7 +143,7 @@ library(purrr)
 lags = 0:35
 
 z <- map_dfr(lags, function(lag) {
-  grouped_cor(x, case_rates, death_rates, by = geo_value, dt1 = -lag) %>% 
+  cor_lagged(x, case_rates, death_rates, by = geo_value, dt1 = -lag) %>% 
     mutate(lag = lag) 
   })
 

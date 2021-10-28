@@ -47,8 +47,7 @@ Converts a data frame or tibble into a format that is consistent with the
 and that it has certain minimal metadata.
 }
 \details{
-An \code{epi_tibble} object is a tibble with (at least) the following
-columns:
+An \code{epi_tibble} is a tibble with (at least) the following columns:
 \itemize{
 \item \code{geo_value}: the geographic value associated with each measurement.
 \item \code{time_value}: the time value associated with each measurement.

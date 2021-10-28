@@ -4,7 +4,14 @@
 \alias{pct_change}
 \title{Compute percentage change of a variable in an \code{epi_tibble} object}
 \usage{
-pct_change(x, var, n = 14, new_col_name = "pct_change", time_step)
+pct_change(
+  x,
+  var,
+  n = 14,
+  new_col_name = "pct_change",
+  time_step,
+  na_rm = TRUE
+)
 }
 \arguments{
 \item{x}{The \code{epi_tibble} object.}
@@ -25,6 +32,9 @@ contain the derivative values. Default is "slide_value"; note that setting
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
 metadata. Read the documentation for \code{\link[=epi_slide]{epi_slide()}} for more details.}
+
+\item{na_rm}{Should missing values be removed before the computation? Default
+is \code{TRUE}.}
 }
 \value{
 An \code{epi_tibble} object given by appending a new column to \code{x}, named

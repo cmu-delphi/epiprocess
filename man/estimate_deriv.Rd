@@ -12,6 +12,8 @@ estimate_deriv(
   new_col_name = "deriv",
   keep_obj = FALSE,
   deriv = 1,
+  time_step,
+  na_rm = TRUE,
   ...
 )
 }
@@ -46,12 +48,15 @@ with the default being 1. (In some cases, a second-order derivative will
 return a trivial result: for example: when \code{method} is "lin", this will
 always be zero.)}
 
-\item{...}{Additional arguments to pass to the function that estimates
-derivatives. See details below.}
-
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
 metadata. Read the documentation for \code{\link[=epi_slide]{epi_slide()}} for more details.}
+
+\item{na_rm}{Should missing values be removed before the computation? Default
+is \code{TRUE}.}
+
+\item{...}{Additional arguments to pass to the function that estimates
+derivatives. See details below.}
 }
 \value{
 A \code{epi_tibble} object given by appending a new column to \code{x}, named

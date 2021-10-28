@@ -106,7 +106,7 @@ for examples." />
       <a href="../articles/pct-change.html">2. Compute percentage change over time</a>
     </li>
     <li>
-      <a href="../articles/derivatives.html">3. Estimate derivatives of signals</a>
+      <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
     </li>
     <li>
       <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
@@ -159,6 +159,8 @@ for examples.</p>
   <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"deriv"</span>,
   <span class='kw'>keep_obj</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>deriv</span> <span class='kw'>=</span> <span class='fl'>1</span>,
+  <span class='no'>time_step</span>,
+  <span class='kw'>na_rm</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='no'>...</span>
 )</pre>
 
@@ -210,15 +212,20 @@ return a trivial result: for example: when <code>method</code> is "lin", this wi
 always be zero.)</p></td>
     </tr>
     <tr>
-      <th>...</th>
-      <td><p>Additional arguments to pass to the function that estimates
-derivatives. See details below.</p></td>
-    </tr>
-    <tr>
       <th>time_step</th>
       <td><p>Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
 metadata. Read the documentation for <code><a href='epi_slide.html'>epi_slide()</a></code> for more details.</p></td>
+    </tr>
+    <tr>
+      <th>na_rm</th>
+      <td><p>Should missing values be removed before the computation? Default
+is <code>TRUE</code>.</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Additional arguments to pass to the function that estimates
+derivatives. See details below.</p></td>
     </tr>
     </table>
 

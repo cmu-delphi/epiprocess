@@ -63,7 +63,7 @@
       <a href="../articles/pct-change.html">2. Compute percentage change over time</a>
     </li>
     <li>
-      <a href="../articles/derivatives.html">3. Estimate derivatives of signals</a>
+      <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
     </li>
     <li>
       <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
@@ -94,14 +94,14 @@
 
       
 
-      </header><script src="derivatives_files/header-attrs-2.10/header-attrs.js"></script><div class="row">
+      </header><script src="derivative_files/header-attrs-2.10/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>3. Estimate derivatives of signals</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epitools/blob/main/vignettes/derivatives.Rmd"><code>vignettes/derivatives.Rmd</code></a></small>
-      <div class="hidden name"><code>derivatives.Rmd</code></div>
+      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epitools/blob/main/vignettes/derivative.Rmd"><code>vignettes/derivative.Rmd</code></a></small>
+      <div class="hidden name"><code>derivative.Rmd</code></div>
 
     </div>
 
@@ -161,7 +161,7 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Derivative (linear regression)"</span>)
 
 <span class="kw pkg">gridExtra</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html">grid.arrange</a></span>(<span class="no">p1</span>, <span class="no">p2</span>, <span class="kw">nrow</span> <span class="kw">=</span> <span class="fl">1</span>)</pre></body></html></div>
-<p><img src="derivatives_files/figure-html/unnamed-chunk-3-1.png" width="864"></p>
+<p><img src="derivative_files/figure-html/unnamed-chunk-3-1.png" width="864"></p>
 </div>
 <div id="estimating-derivatives-via-smoothing-spline" class="section level2">
 <h2 class="hasAnchor">
@@ -189,7 +189,7 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Derivative (smoothing spline)"</span>)
 
 <span class="kw pkg">gridExtra</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html">grid.arrange</a></span>(<span class="no">p1</span>, <span class="no">p2</span>, <span class="kw">nrow</span> <span class="kw">=</span> <span class="fl">1</span>)</pre></body></html></div>
-<p><img src="derivatives_files/figure-html/unnamed-chunk-4-1.png" width="768"></p>
+<p><img src="derivative_files/figure-html/unnamed-chunk-4-1.png" width="768"></p>
 <p>The estimated derivates—in purple for the smoothing spline with 8 degrees of freedom of 8, and in green for the one tuned by cross-validation—appear less smooth than those above, from linear regression. Using cross-validation offers more adaptivity to the time-varying level of smoothness, but this can sometimes result in erratic derivative estimates (big green spikes in the right plot).</p>
 </div>
 <div id="estimating-derivatives-via-trend-filtering" class="section level2">
@@ -218,7 +218,7 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Derivative (smoothing spline)"</span>)
 
 <span class="kw pkg">gridExtra</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html">grid.arrange</a></span>(<span class="no">p1</span>, <span class="no">p2</span>, <span class="kw">nrow</span> <span class="kw">=</span> <span class="fl">1</span>)</pre></body></html></div>
-<p><img src="derivatives_files/figure-html/unnamed-chunk-5-1.png" width="864"></p>
+<p><img src="derivative_files/figure-html/unnamed-chunk-5-1.png" width="864"></p>
 <p>The estimated derivates now appear a bit smoother than the last ones, from the smoothing spline methods. Again, using cross-validation (in green) offers a noticeable improvement in adapting to to the time-varying level of smoothness, and also does not appear to be suffering from the same volatility we saw in the smoothing spline case.</p>
 </div>
 <div id="post-hoc-inspection" class="section level2">

@@ -32,6 +32,8 @@
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
 #'   metadata. Read the documentation for [epi_slide()] for more details.
+#' @param na_rm Should missing values be removed before the computation? Default
+#'   is `TRUE`. 
 #' @param ... Additional arguments to pass to the function that estimates
 #'   derivatives. See details below.    
 #' @return A `epi_tibble` object given by appending a new column to `x`, named
@@ -83,8 +85,8 @@
 #' @importFrom rlang abort enquo
 #' @export
 estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14, 
-                          new_col_name = "deriv", keep_obj = FALSE, deriv = 1, 
-                          ...) {
+                          new_col_name = "deriv", keep_obj = FALSE, deriv = 1,
+                          time_step, na_rm = TRUE, ...) {
   # Check that we have a variable to do computations on
   if (missing(var)) abort("`var` must be specified.")
   var = enquo(var)
@@ -103,7 +105,8 @@ estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
 
   # Slide the derivative function
   x = epi_slide(x, slide_fun, n, new_col_name = "tmp", new_col_type = "list",
-                   keep_obj = keep_obj, deriv = deriv, var = var, ...)
+                time_step = time_step, keep_obj = keep_obj, deriv = deriv,
+                var = var, na_rm = na_rm, ...)  
 
   # Save the metadata (dplyr drops it)
   metadata = attributes(x)$metadata
@@ -140,10 +143,15 @@ linear_reg_deriv = function(x, ...) {
 
   keep_obj = params$keep_obj
   var = params$var
+  na_rm = params$na_rm
+  
   params$keep_obj = NULL
   params$deriv = NULL
   params$var = NULL
-  x = x %>% select(time_value, !!var) %>% drop_na()
+  params$na_rm = NULL
+
+  x = x %>% select(time_value, !!var)
+  if (na_rm) x = x %>% drop_na()
   params$x = as.numeric(unlist(x[,1]))
   params$y = as.numeric(unlist(x[,2]))
   
@@ -165,13 +173,18 @@ smooth_spline_deriv = function(x, ...) {
   params = list(...)
   params[[1]] = NULL # dplyr::group_modify() includes the group here
 
-  keep_obj = params$keep_obj
+  keep_obj = params$keep_obj  
   deriv = params$deriv
   var = params$var
+  na_rm = params$na_rm
+  
   params$keep_obj = NULL
   params$deriv = NULL
   params$var = NULL
-  x = x %>% select(time_value, !!var) %>% drop_na()
+  params$na_rm = NULL
+  
+  x = x %>% select(time_value, !!var)
+  if (na_rm) x = x %>% drop_na()
   params$x = as.numeric(unlist(x[,1]))
   params$y = as.numeric(unlist(x[,2]))
   
@@ -196,9 +209,12 @@ trend_filter_deriv = function(data, ...) {
   keep_obj = params$keep_obj
   deriv = params$deriv
   var = params$var
+  na_rm = params$na_rm
+  
   params$keep_obj = NULL
   params$deriv = NULL
   params$var = NULL
+  params$na_rm = NULL
   
   cv = params$cv
   ord = params$ord
@@ -212,7 +228,8 @@ trend_filter_deriv = function(data, ...) {
   if (is.null(k)) k = 5
   if (is.null(df)) df = ifelse(cv, "1se", 8)
 
-  data = data %>% select(time_value, !!var) %>% drop_na()
+  data = data %>% select(time_value, !!var)
+  if (na_rm) data = data %>% drop_na()
   x = as.numeric(unlist(data[,1]))
   y = as.numeric(unlist(data[,2]))
 

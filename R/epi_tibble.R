@@ -22,8 +22,7 @@
 #' @param ... Additional arguments passed to methods.
 #' @return An `epi_tibble` object.
 #'
-#' @details An `epi_tibble` object is a tibble with (at least) the following
-#'   columns:  
+#' @details An `epi_tibble` is a tibble with (at least) the following columns:  
 #' 
 #' * `geo_value`: the geographic value associated with each measurement.
 #' * `time_value`: the time value associated with each measurement.

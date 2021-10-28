@@ -19,6 +19,8 @@
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
 #'   metadata. Read the documentation for [epi_slide()] for more details.
+#' @param na_rm Should missing values be removed before the computation? Default
+#'   is `TRUE`. 
 #' @return An `epi_tibble` object given by appending a new column to `x`, named 
 #'   according to the `new_col_name` argument, containing the percentage change
 #'   values.  
@@ -26,7 +28,8 @@
 #' @seealso [epi_slide()]
 #' @importFrom rlang abort enquo
 #' @export
-pct_change = function(x, var, n = 14, new_col_name = "pct_change", time_step) {
+pct_change = function(x, var, n = 14, new_col_name = "pct_change", time_step,
+                      na_rm = TRUE) { 
   # Check that we have a variable to do computations on
   if (missing(var)) abort("`var` must be specified.")
   var = enquo(var)
@@ -35,7 +38,8 @@ pct_change = function(x, var, n = 14, new_col_name = "pct_change", time_step) {
   if (n %% 2 == 1) abort("`n` must be even.")
 
   # Slide the percentage change function and return
-  return(epi_slide(x, pct_change_fun, n, new_col_name, var = var, N = n))
+  return(epi_slide(x, pct_change_fun, n, new_col_name = new_col_name,
+                   time_step = time_step, var = var, N = n, na_rm = na_rm))
 }
 
 #' Compute percentage change function
@@ -44,10 +48,12 @@ pct_change_fun = function(x, ...) {
   params = list(...)
   var = params$var
   N = params$N
+  na_rm = params$na_rm
+  
   if (nrow(x) != N) return(NA)
   v = x %>% pull(!!var)
 
-  a = Sum(v[1:(N/2)])
-  b = Sum(v[(N/2+1):N])
+  a = sum(v[1:(N/2)], na.rm = na_rm)
+  b = sum(v[(N/2+1):N], na.rm = na_rm)
   return(100 * (b - a) / a)
 }

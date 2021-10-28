@@ -106,7 +106,7 @@ examples." />
       <a href="../articles/pct-change.html">2. Compute percentage change over time</a>
     </li>
     <li>
-      <a href="../articles/derivatives.html">3. Estimate derivatives of signals</a>
+      <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
     </li>
     <li>
       <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
@@ -151,7 +151,14 @@ the <a href='https://cmu-delphi.github.io/epitools/articles/pct-change.html'>per
 examples.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>pct_change</span>(<span class='no'>x</span>, <span class='no'>var</span>, <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>14</span>, <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"pct_change"</span>, <span class='no'>time_step</span>)</pre>
+    <pre class="usage"><span class='fu'>pct_change</span>(
+  <span class='no'>x</span>,
+  <span class='no'>var</span>,
+  <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>14</span>,
+  <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"pct_change"</span>,
+  <span class='no'>time_step</span>,
+  <span class='kw'>na_rm</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -184,6 +191,11 @@ contain the derivative values. Default is "slide_value"; note that setting
       <td><p>Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
 metadata. Read the documentation for <code><a href='epi_slide.html'>epi_slide()</a></code> for more details.</p></td>
+    </tr>
+    <tr>
+      <th>na_rm</th>
+      <td><p>Should missing values be removed before the computation? Default
+is <code>TRUE</code>.</p></td>
     </tr>
     </table>
 

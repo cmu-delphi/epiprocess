@@ -4,10 +4,10 @@ pkgdown_sha: ~
 articles:
   aggregation: aggregation.html
   correlation: correlation.html
-  derivatives: derivatives.html
+  derivative: derivative.html
   epitools: epitools.html
   issues: issues.html
   pct-change: pct-change.html
   slide: slide.html
-last_built: 2021-10-27T02:30Z
+last_built: 2021-10-28T14:51Z
 
