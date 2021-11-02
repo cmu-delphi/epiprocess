@@ -28,7 +28,7 @@ theme_set(theme_bw())
 
 We'll work with the following data with daily incident case counts of COVID-19 in Florida and New Jersey:
 
-```{r}
+```{r fig.width=7, fig.height=7}
 x <- covidcast_signal(data_source = "jhu-csse",
                       signal = "confirmed_incidence_num",
                       start_day = "2020-06-01",
@@ -43,7 +43,7 @@ head(x)
 ggplot() +
   geom_line(data = x, mapping = aes(x = time_value, y = cases)) +
   geom_hline(yintercept = 0) +
-  facet_wrap(vars(geo_value))
+  facet_wrap(vars(geo_value), scales = "free_y", ncol = 1)
 ```
 
 There are multiple outliers in these data that a modeler may want to detect and
@@ -139,19 +139,21 @@ x %>% unnest(outlier_info)
 With these results in hand, we can visualize them using the convenience function
 `plot_outliers`:
 
-```{r}
+```{r fig.width=7, fig.height=7}
 plot_outliers(x = x,
               var = cases,
               outliers_col = outlier_info,
               include_bands = TRUE,
-              combined_only = FALSE)
+              combined_only = FALSE,
+              facet_ncol = 1,
+              facet_scales = "free_y")
 ```
 
 It's a little hard to see what's going on with the results from all the methods
 overlaid on top of each other. We can help by making plots for one `geo_value`
 at a time and facetting by the `detection_method`:
 
-```{r}
+```{r fig.width=7, fig.height=7}
 plot_outliers(x = x %>% filter(geo_value == "fl"),
               var = cases,
               outliers_col = outlier_info,
@@ -161,7 +163,7 @@ plot_outliers(x = x %>% filter(geo_value == "fl"),
               facet_vars = vars(detection_method))
 ```
 
-```{r}
+```{r fig.width=7, fig.height=7}
 plot_outliers(x = x %>% filter(geo_value == "nj"),
               var = cases,
               outliers_col = outlier_info,
@@ -173,7 +175,7 @@ plot_outliers(x = x %>% filter(geo_value == "nj"),
 
 Or we could just plot the combined results and suppress the bands:
 
-```{r}
+```{r fig.width=7, fig.height=7}
 plot_outliers(x = x,
               var = cases,
               outliers_col = outlier_info,
