@@ -27,4 +27,13 @@ Imports:
     slider,
     tibble,
     tidyselect,
-    tidyr
+    tidyr,
+    lubridate,
+    R6,
+    data.table,
+    pipeR,
+    assertthat
+Suggests:
+    delphi.epidata
+Remotes:
+    github:cmu-delphi/delphi-epidata-r
