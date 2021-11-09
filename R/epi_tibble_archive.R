@@ -97,9 +97,9 @@
 #' }
 #'
 #' @importFrom assertthat assert_that
-#' @importFrom rlang is_scalar_character is_named is_character is_scalar_atomic !!
+#' @importFrom rlang is_scalar_character is_named is_character is_scalar_atomic !! warn
 #' @importFrom tibble as_tibble
-#' @importFrom dplyr rename
+#' @importFrom dplyr rename filter
 #' @importFrom data.table as.data.table
 #' @importFrom pipeR %>>%
 #' @export
@@ -166,13 +166,12 @@ epi_tibble_archive =
                     ## user's indication and use `private$max.issue` and let
                     ## them deal with potential strange cases with replicas
                     ## being out of date)
-                    warn('Getting epi_tibble as of the latest issue with
-                         recorded change data; it is possible that we have a preliminary version of this issue, the upstream source has updated it, and we have not seen those updates yet due to them not being published yet, or potentially due to latency in synchronization of upstream database replicas.  Thus, the epi_tibble snapshot that we produce here might not be reproducible at later times when we use an archive with fresher data.')
+                    warn('Getting epi_tibble as of the latest issue with recorded change data; it is possible that we have a preliminary version of this issue, the upstream source has updated it, and we have not seen those updates yet due to them not being published yet, or potentially due to latency in synchronization of upstream database replicas.  Thus, the epi_tibble snapshot that we produce here might not be reproducible at later times when we use an archive with fresher data.')
                   }
                   ## -- end of input validation --
                   private[["update.DT"]] %>>%
                     ## {.[, .SD[.[[private[["issue.colname"]]]] <= ..issue]]} %>>%
-                    dplyr::filter(.[[private[["issue.colname"]]]] <= .env[["issue"]]) %>>%
+                    filter(.[[private[["issue.colname"]]]] <= .env[["issue"]]) %>>%
                     unique(by=c(private[["geo.colname"]], private[["time.colname"]], private[["other.key.colnames"]]), fromLast=TRUE) %>>%
                     as_tibble() %>>%
                     select(-!!private[["issue.colname"]]) %>>%
@@ -183,8 +182,55 @@ epi_tibble_archive =
                       ) %>>%
                     as.epi_tibble(issue = issue,
                                   additional_metadata = list(other.key.colnames = private[["other.key.colnames"]])) %>>%
-                    {.}
+                    return()
+                },
+                #' @description
+                #' Return the name settings in a list
+                naming_info = function() {
+                  list(
+                    issue.colname = private[["issue.colname"]],
+                    geo.colname = private[["geo.colname"]],
+                    time.colname = private[["time.colname"]],
+                    other.key.colnames = private[["other.key.colnames"]]
+                  )
+                },
+                #' @description
+                #' Return the max issue value recorded by this archive (whether it had updates or not)
+                max_issue = function() {
+                  private[["max.issue"]]
+                },
+                #' @description
+                #' Return the issue values for which updates are
+                #' recorded in this archive (that is, whether they had updates in
+                #' the data frame used to form this archive, regardless of whether
+                #' those "updates" actually added or revised any data)
+                issues_with_updates = function() {
+                  return (unique(private[["update.DT"]][[private[["issue.colname"]]]]))
+                },
+                #' @description
+                #'
+                #' Return the recorded update data up through the given issue
+                #' value, inside a \code{data.table} object which is fine to
+                #' modify without copying.
+                #'
+                #' @param issue the max issue value that should appear in the result
+                update_DT_as_of = function(issue) {
+                  assert_that(is_scalar_atomic(issue) && identical(class(issue), class(private[["max.issue"]])))
+                  assert_that(issue <= private[["max.issue"]])
+                  if (issue == max(private[["update.DT"]][[private[["issue.colname"]]]])) {
+                    ## (really, this should be the last issue with an actual
+                    ## addition or revision; it's the same as what's checked
+                    ## here only if we didn't include redundant "updates" in
+                    ## this max issue; alternatively, we should follow the
+                    ## user's indication and use `private$max.issue` and let
+                    ## them deal with potential strange cases with replicas
+                    ## being out of date)
+                    warn('Getting epi_tibble as of the latest issue with recorded change data; it is possible that we have a preliminary version of this issue, the upstream source has updated it, and we have not seen those updates yet due to them not being published yet, or potentially due to latency in synchronization of upstream database replicas.  Thus, the epi_tibble snapshot that we produce here might not be reproducible at later times when we use an archive with fresher data.')
+                  }
+                  private[["update.DT"]] %>>%
+                    ## {.[, .SD[.[[private[["issue.colname"]]]] <= ..issue]]} %>>%
+                    filter(.[[private[["issue.colname"]]]] <= .env[["issue"]]) %>>%
+                    return()
                 }
               )
               )
-

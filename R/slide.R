@@ -1,3 +1,7 @@
+#' @source epi_tibble.R
+#' @source epi_tibble_archive.R
+NULL
+
 #' Slide a function over variables in an `epi_tibble` object
 #'
 #' Slides a given function over the variables in an `epi_tibble` object. See the
@@ -54,9 +58,13 @@
 epi_slide = function(x, slide_fun, n = 14, new_col_name = "slide_value", 
                      new_col_type = c("dbl", "int", "lgl", "chr", "list"),
                      time_step, ...) { 
-  # Check we have an `epi_tibble` object
-  if (!inherits(x, "epi_tibble")) abort("`x` be of class `epi_tibble`.")
+  UseMethod("epi_slide")
+}
 
+#' @export
+epi_slide.epi_tibble = function(x, slide_fun, n = 14, new_col_name = "slide_value",
+                                new_col_type = c("dbl", "int", "lgl", "chr", "list"),
+                                time_step, ...) {
   # Which slide_index function?
   new_col_type = match.arg(new_col_type)
   slide_index_zzz = switch(new_col_type,
@@ -93,4 +101,59 @@ epi_slide = function(x, slide_fun, n = 14, new_col_name = "slide_value",
   class(x) = c("epi_tibble", class(x))
   attributes(x)$metadata = metadata
   return(x)
+}
+
+#' @importFrom rlang !!! !! :=
+#' @importFrom pipeR %>>%
+#' @export
+epi_slide.epi_tibble_archive = function(x, slide_fun, n = 14, new_col_name = "slide_value",
+                                        new_col_type = c("dbl", "int", "lgl", "chr", "list"),
+                                        time_step,
+                                        issue_step,
+                                        issue_to_max_time_value = identity,
+                                        issue_range = range(x$issues_with_updates(), x$max_issue()),
+                                        ...) {
+  ## TODO test this.
+
+  ## Which map function?
+  new_col_type = match.arg(new_col_type)
+  map_zzz = switch(new_col_type,
+                           "dbl" = purrr::map_dbl,
+                           "int" = purrr::map_int,
+                           "lgl" = purrr::map_lgl,
+                           "chr" = purrr::map_chr,
+                           "list" = purrr::map)
+
+  ## It'd be natural to write
+  ## ```
+  ## seq(issue_range[[1L]], issue_range[[2L]], issue_step(1))
+  ## ```
+  ## but this produces an error, as do `seq` approaches directly on `Period` objects.
+  n.issues = diff(issue_range)
+  issues = issue_range[[1L]] + issue_step(0:as.integer(lubridate::as.period(diff(issue_range))/issue_step(1L)))
+
+  ## XXX use x$naming_info()$issue.colname?
+
+  ## TODO detect skipped empty data, e.g., when trying to produce results
+  ## expecting 0 initial report latency; warn, error, or produce results
+
+  tibble::tibble(issue := issues) %>>%
+    tibble::add_column(
+              results.for.issue = . %>>%
+                dplyr::pull(issue) %>>%
+                purrr::map(function(issue) {
+                  max_time_value = issue_to_max_time_value(issue)
+                  min_time_value = max_time_value - time_step(n-1L)
+                  x$epi_tibble_as_of(issue) %>>%
+                    ## XXX we may want to `complete` the `time_value`s here
+                    dplyr::filter(min_time_value <= time_value & time_value <= max_time_value) %>>%
+                    dplyr::group_by(geo_value, !!!x$naming_info()$other.key.colnames) %>>%
+                    dplyr::group_nest(.key="data") %>>%
+                    ## tibble::add_column doesn't seem to work here for some reason
+                    dplyr::mutate(!!new_col_name := map_zzz(.data[["data"]], slide_fun)) %>>%
+                    tidyr::unnest(data)
+                })
+            ) %>>%
+    tidyr::unnest(results.for.issue) %>>%
+    dplyr::group_by(issue, geo_value, !!!x$naming_info()$other.key.colnames)
 }

@@ -103,6 +103,10 @@ if (FALSE) {
 \itemize{
 \item \href{#method-new}{\code{epi_tibble_archive$new()}}
 \item \href{#method-epi_tibble_as_of}{\code{epi_tibble_archive$epi_tibble_as_of()}}
+\item \href{#method-naming_info}{\code{epi_tibble_archive$naming_info()}}
+\item \href{#method-max_issue}{\code{epi_tibble_archive$max_issue()}}
+\item \href{#method-issues_with_updates}{\code{epi_tibble_archive$issues_with_updates()}}
+\item \href{#method-update_DT_as_of}{\code{epi_tibble_archive$update_DT_as_of()}}
 \item \href{#method-clone}{\code{epi_tibble_archive$clone()}}
 }
 }
@@ -161,6 +165,58 @@ Get the \code{epi_tibble} as of some issue time
 }
 \subsection{Returns}{
 an \code{epi_tibble} with data as of the specified issue time, \code{issue} recorded in the metadata, the geo column renamed to \code{geo_value} and time column to \code{time_value}, and the other key colnames recorded in the metadata
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-naming_info"></a>}}
+\if{latex}{\out{\hypertarget{method-naming_info}{}}}
+\subsection{Method \code{naming_info()}}{
+Return the name settings in a list
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_tibble_archive$naming_info()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-max_issue"></a>}}
+\if{latex}{\out{\hypertarget{method-max_issue}{}}}
+\subsection{Method \code{max_issue()}}{
+Return the max issue value recorded by this archive (whether it had updates or not)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_tibble_archive$max_issue()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-issues_with_updates"></a>}}
+\if{latex}{\out{\hypertarget{method-issues_with_updates}{}}}
+\subsection{Method \code{issues_with_updates()}}{
+Return the issue values for which updates are
+recorded in this archive (that is, whether they had updates in
+the data frame used to form this archive, regardless of whether
+those "updates" actually added or revised any data)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_tibble_archive$issues_with_updates()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-update_DT_as_of"></a>}}
+\if{latex}{\out{\hypertarget{method-update_DT_as_of}{}}}
+\subsection{Method \code{update_DT_as_of()}}{
+Return the recorded update data up through the given issue
+value, inside a \code{data.table} object which is fine to
+modify without copying.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_tibble_archive$update_DT_as_of(issue)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{issue}}{the max issue value that should appear in the result}
+}
+\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
