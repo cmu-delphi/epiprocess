@@ -22,6 +22,7 @@ RoxygenNote: 7.1.1
 Imports: 
     dplyr,
     genlasso,
+    lubridate,
     magrittr,
     rlang,
     slider,
