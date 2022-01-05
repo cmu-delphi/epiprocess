@@ -4,7 +4,7 @@
 #' [slide vignette](https://cmu-delphi.github.io/epitools/articles/slide.html)
 #' for examples.
 #'
-#' @details To "slide" means to apply a function or formula over a trailing
+#' @details To "slide" means to apply a function or formula over a
 #'   window of `n` time steps, where the unit (the meaning of one time step) is
 #'   determined by the `time_type` field in the metadata: the unit is one day if 
 #'   `time_type` is either "day-time" or "day", and the unit is one week if
@@ -12,25 +12,30 @@
 #'   `time_step` argument (which if specified would override the default choice
 #'   based on the metadata).
 #'
-#' @param x The `epi_tibble` object under consideration. 
+#' @param x The `epi_tibble` object under consideration.
 #' @param slide_fun Function or formula to slide over variables in `x`. To
-#'   "slide" means to apply a function or formula over a trailing window of `n`
+#'   "slide" means to apply a function or formula over a sliding window of `n`
 #'   time steps (where one time step is typically one day or one week; see
 #'   details for more explanation). If a function, `slide_fun` must take `x`, a
 #'   data frame with the same column names as the original object; followed by
 #'   any number of named arguments; and ending with `...`. If a formula,
 #'   `slide_fun` can operate directly on columns accessed via `.x$var`, as in `~
-#'   mean(.x$var)` to compute a trailing mean of a column `var` over the last
+#'   mean(.x$var)` to compute a mean of a column `var` over a sliding window of
 #'   `n` time steps.
-#' @param n Number of time steps to use in the trailing window. For example, if 
+#' @param n Number of time steps to use in the window. For example, if
 #'   `n = 5`, and one time step is one day, then to produce a value on November
 #'   5, we apply the given function or formula to data in between November 1 and
 #'   5.  Default is 14.
+#' @param align A string specifying the alignment of the sliding window relative
+#'   to the reference time point; either "trailing" or "centered". The default
+#'   is "trailing". If a "centered" alignment is specified and `n` is even,
+#'   one more observation will be used before the reference time than after the
+#'   reference time.
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
-#'   `new_col_name` equal to an existing column name will overwrite this column.  
-#' @param new_col_type One of "dbl", "int", "lgl", "chr", or "list", indicating 
-#'   the data type (tibble abbreviation) for the new column. Default is "dbl".   
+#'   `new_col_name` equal to an existing column name will overwrite this column.
+#' @param new_col_type One of "dbl", "int", "lgl", "chr", or "list", indicating
+#'   the data type (tibble abbreviation) for the new column. Default is "dbl".
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
 #'   metadata. This function must take a positive integer and return an object
@@ -51,7 +56,8 @@
 #' @importFrom lubridate days weeks
 #' @importFrom rlang .data abort enquo
 #' @export
-epi_slide = function(x, slide_fun, n = 14, new_col_name = "slide_value", 
+epi_slide = function(x, slide_fun, n = 14, align = c("trailing", "centered"),
+                     new_col_name = "slide_value",
                      new_col_type = c("dbl", "int", "lgl", "chr", "list"),
                      time_step, ...) { 
   # Check we have an `epi_tibble` object
@@ -71,12 +77,23 @@ epi_slide = function(x, slide_fun, n = 14, new_col_name = "slide_value",
   else if (attributes(x)$metadata$time_type == "week") before_fun = weeks
   else before_fun = days # Use days for time_type = "day" or "day-time"
 
+  # Validate align and get number of time steps before/after for the window
+  align = match.arg(align)
+  if (align == "trailing") {
+    before_num = before_fun(n - 1)
+    after_num = 0
+  } else {
+    before_num = before_fun(ceiling((n - 1) / 2))
+    after_num = before_fun(floor((n - 1) / 2))
+  }
+
   # Slide over a single group
   slide_one_grp = function(.data_group, slide_fun, n, new_col_name, ...) { 
     slide_values = slide_index_zzz(.x = .data_group,
                                    .i = .data_group$time_value,
                                    .f = slide_fun, ..., 
-                                   .before = before_fun(n-1))
+                                   .before = before_num,
+                                   .after = after_num)
     return(mutate(.data_group, !!new_col_name := slide_values))
   }
 

@@ -8,6 +8,7 @@ epi_slide(
   x,
   slide_fun,
   n = 14,
+  align = c("trailing", "centered"),
   new_col_name = "slide_value",
   new_col_type = c("dbl", "int", "lgl", "chr", "list"),
   time_step,
@@ -18,18 +19,24 @@ epi_slide(
 \item{x}{The \code{epi_tibble} object under consideration.}
 
 \item{slide_fun}{Function or formula to slide over variables in \code{x}. To
-"slide" means to apply a function or formula over a trailing window of \code{n}
+"slide" means to apply a function or formula over a sliding window of \code{n}
 time steps (where one time step is typically one day or one week; see
 details for more explanation). If a function, \code{slide_fun} must take \code{x}, a
 data frame with the same column names as the original object; followed by
 any number of named arguments; and ending with \code{...}. If a formula,
-\code{slide_fun} can operate directly on columns accessed via \code{.x$var}, as in \code{~ mean(.x$var)} to compute a trailing mean of a column \code{var} over the last
+\code{slide_fun} can operate directly on columns accessed via \code{.x$var}, as in \code{~ mean(.x$var)} to compute a mean of a column \code{var} over a sliding window of
 \code{n} time steps.}
 
-\item{n}{Number of time steps to use in the trailing window. For example, if
+\item{n}{Number of time steps to use in the window. For example, if
 \code{n = 5}, and one time step is one day, then to produce a value on November
 5, we apply the given function or formula to data in between November 1 and
 5.  Default is 14.}
+
+\item{align}{A string specifying the alignment of the sliding window relative
+to the reference time point; either "trailing" or "centered". The default
+is "trailing". If a "centered" alignment is specified and \code{n} is even,
+one more observation will be used before the reference time than after the
+reference time.}
 
 \item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
@@ -58,7 +65,7 @@ Slides a given function over the variables in an \code{epi_tibble} object. See t
 for examples.
 }
 \details{
-To "slide" means to apply a function or formula over a trailing
+To "slide" means to apply a function or formula over a
 window of \code{n} time steps, where the unit (the meaning of one time step) is
 determined by the \code{time_type} field in the metadata: the unit is one day if
 \code{time_type} is either "day-time" or "day", and the unit is one week if

@@ -1,0 +1,191 @@
+---
+title: 7. Detect and correct outliers in signals
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{7. Detect and correct outliers in signals}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This vignette describes functionality for detecting and correcting outliers in
+signals using the `detect_outliers()` and `correct_outliers()` functions.
+These functions are designed to be modular and extendable, so that you can
+provide your own outlier detection and correction functions and use them with
+`epi_tibble` objects.
+
+We'll use these packages in this vignette:
+
+```{r, message = FALSE}
+library(covidcast)
+library(epitools)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+theme_set(theme_bw())
+```
+
+## Example data
+
+We'll work with the following data with daily incident case counts of COVID-19 in Florida and New Jersey:
+
+```{r fig.width=7, fig.height=7}
+x <- covidcast_signal(data_source = "jhu-csse",
+                      signal = "confirmed_incidence_num",
+                      start_day = "2020-06-01",
+                      end_day = "2021-05-31",
+                      geo_type = "state",
+                      geo_values = c("fl", "nj"),
+                      as_of = "2021-10-28") %>%
+  select(geo_value, time_value, cases = value) %>%
+  as.epi_tibble()
+
+head(x)
+ggplot() +
+  geom_line(data = x, mapping = aes(x = time_value, y = cases)) +
+  geom_hline(yintercept = 0) +
+  facet_wrap(vars(geo_value), scales = "free_y", ncol = 1)
+```
+
+There are multiple outliers in these data that a modeler may want to detect and
+correct. We'll discuss those two tasks in turn.
+
+## Outlier detection
+
+The `detect_outliers` function allows you to run multiple outlier detection
+procedures and combine the results from those methods. Here, we will
+obtain outlier detection results from each of three methods:
+
+1. A rolling median, using the function `detect_outliers_rolling_median`.
+  That function calculates a rolling median using a default window size
+  of 21 time points centered at the time point under consideration. It
+  then calculates residuals as the difference between the observed value
+  and the rolling median, and calculates a rolling inter-quartile range (IQR)
+  of those residuals. Lower and upper outlier detection thresholds are set at
+  the median plus or minus the `detection_multiplier` (set to 2.5 here)
+  times the IQR.
+2. Detection based on an STL (Seasonality and Trend via LOESS) decomposition of
+  the signal, using `detect_outliers_stl`. As with the rolling median approach,
+  thresholds are set to a fitted value from the STL decomposition (the sum of
+  the trend and seasonality components) plus or minus a `detection_multiplier`
+  times a rolling IQR of the residuals.
+3. Detection based on an STL decomposition of the data, but lumping the
+  seasonality term into the residual. This amounts to smoothing the data using
+  LOESS. The thresholds are computed as before.
+
+The outlier detection methods are specified using a `tibble` naming the method,
+specifying any input arguments to those methods (only the non-default values
+need to be supplied), and an abbreviated name for the method that is used in
+tracking the results:
+
+```{r}
+detection_methods = bind_rows(
+  tibble(
+    method = c("rolling_median"),
+    method_args = list(list(detect_negatives = TRUE,
+                            detection_multiplier = 2.5)),
+    method_abbr = c("median")
+  ),
+  tibble(
+    method = c("stl"),
+    method_args = list(list(detect_negatives = TRUE,
+                            detection_multiplier = 2.5)),
+    method_abbr = c("stl_seasonal")
+  ),
+  tibble(
+    method = c("stl"),
+    method_args = list(list(detect_negatives = TRUE,
+                            detection_multiplier = 2.5,
+                            include_seasonality = FALSE)),
+    method_abbr = c("stl_nonseasonal")
+  )
+)
+
+detection_methods
+```
+
+```{r}
+detection_methods$method_args[[3]]
+```
+
+Additionally, we will form a combined threshold, calculated as the median of the
+thresholds from the above three methods at each time point. Note that using
+this combined median threshold is equivalent to using a majority vote across
+the three base methods to determine whether an observation is an outlier.
+
+The following code groups by the `geo_value` and then calls `detect_outliers`:
+```{r}
+x = x %>%
+  # group_by(geo_value) to do outlier detection separately for each geo_value
+  dplyr::group_by(geo_value) %>%
+  detect_outliers(
+    var = cases,
+    methods = detection_methods,
+    combine_method = "median",
+    new_col_name = "outlier_info")
+```
+
+The original `epi_tibble`, `x`, has now been updated to include a new column
+called `outlier_info` with information about the detection thresholds and
+possible replacement values from each method:
+
+```{r}
+x
+```
+
+```{r}
+x %>% unnest(outlier_info)
+```
+
+With these results in hand, we can visualize them using the convenience function
+`plot_outliers`:
+
+```{r fig.width=7, fig.height=7}
+plot_outliers(x = x,
+              var = cases,
+              outliers_col = outlier_info,
+              include_bands = TRUE,
+              combined_only = FALSE,
+              facet_ncol = 1,
+              facet_scales = "free_y")
+```
+
+It's a little hard to see what's going on with the results from all the methods
+overlaid on top of each other. We can help by making plots for one `geo_value`
+at a time and facetting by the `detection_method`:
+
+```{r fig.width=7, fig.height=7}
+plot_outliers(x = x %>% filter(geo_value == "fl"),
+              var = cases,
+              outliers_col = outlier_info,
+              include_bands = TRUE,
+              combined_only = FALSE,
+              facet_ncol = 1,
+              facet_vars = vars(detection_method))
+```
+
+```{r fig.width=7, fig.height=7}
+plot_outliers(x = x %>% filter(geo_value == "nj"),
+              var = cases,
+              outliers_col = outlier_info,
+              include_bands = TRUE,
+              combined_only = FALSE,
+              facet_ncol = 1,
+              facet_vars = vars(detection_method))
+```
+
+Or we could just plot the combined results and suppress the bands:
+
+```{r fig.width=7, fig.height=7}
+plot_outliers(x = x,
+              var = cases,
+              outliers_col = outlier_info,
+              include_bands = FALSE,
+              combined_only = TRUE,
+              facet_ncol = 1,
+              facet_scales = "free_y")
+```
+
+
+## Outlier correction
+
+TODO: fill this in.
