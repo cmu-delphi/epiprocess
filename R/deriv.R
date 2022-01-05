@@ -14,10 +14,15 @@
 #'   corresponding predicted derivative (that is, the derivative of the
 #'   underlying estimated function, linear or spline) at the current time
 #'   point. Default is "lin". See details for more explanation.
-#' @param n Number of time steps to use in the trailing window. For example, if 
-#'   `n = 10`, and one time step is one day, then to estimate the derivative on
-#'   November 10, we train the given method on data in between November 1 and
-#'   10. Default is 14.  
+#' @param n Number of time steps to use in the running window. For example, if
+#'   `n = 10`, one time step is one day, and the alignment is "trailing", then
+#'   to estimate the derivative on November 10, we train the given method on
+#'   data in between November 1 and 10. Default is 14. 
+#' @param align String specifying the alignment of the sliding window relative
+#'   to the reference time point; either "trailing" or "centered". The default
+#'   is "trailing". If the alignment is "centered" and `n` is even, then one
+#'   more observation will be used before the reference time than after the
+#'   reference time. 
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
@@ -84,7 +89,8 @@
 #' @importFrom dplyr rowwise
 #' @importFrom rlang abort enquo
 #' @export
-estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14, 
+estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
+                          align = c("trailing", "centered"),
                           new_col_name = "deriv", keep_obj = FALSE, deriv = 1,
                           time_step, na_rm = TRUE, ...) {
   # Check that we have a variable to do computations on
@@ -104,9 +110,10 @@ estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
   }
 
   # Slide the derivative function
-  x = epi_slide(x, slide_fun, n, new_col_name = "tmp", new_col_type = "list",
-                time_step = time_step, keep_obj = keep_obj, deriv = deriv,
-                var = var, na_rm = na_rm, ...)  
+  x = epi_slide(x, slide_fun, n, align, new_col_name = "tmp",
+                new_col_type = "list", time_step = time_step,
+                keep_obj = keep_obj, deriv = deriv, var = var,
+                na_rm = na_rm, ...) 
 
   # Save the metadata (dplyr drops it)
   metadata = attributes(x)$metadata

@@ -22,10 +22,10 @@
 #'   `slide_fun` can operate directly on columns accessed via `.x$var`, as in `~
 #'   mean(.x$var)` to compute a mean of a column `var` over a sliding window of
 #'   `n` time steps.
-#' @param n Number of time steps to use in the window. For example, if `n = 5`,
-#'   one time step is one day, and the alignment is "trailing", then to produce
-#'   a value on November 5, we apply the given function or formula to data in
-#'   between November 1 and 5. Default is 14.
+#' @param n Number of time steps to use in the running window. For example, if
+#'   `n = 5`, one time step is one day, and the alignment is "trailing", then to
+#'   produce a value on November 5, we apply the given function or formula to
+#'   data in between November 1 and 5. Default is 14.
 #' @param align String specifying the alignment of the sliding window relative
 #'   to the reference time point; either "trailing" or "centered". The default
 #'   is "trailing". If the alignment is "centered" and `n` is even, then one
