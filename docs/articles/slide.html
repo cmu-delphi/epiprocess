@@ -107,8 +107,8 @@
 
     
     
-<p>One of the most central tools in the <code>epitools</code> package is <code><a href="../reference/epi_slide.html">epi_slide()</a></code>, which is based on the family of functions provided by the <a href="https://cran.r-project.org/web/packages/slider/"><code>slider</code></a> package. In <code>epitools</code>, to “slide” means to apply a computation—represented as a function or formula—over a trailing window of <code>n</code> time steps. Several other functions in the <code>epitools</code> package, such as <code><a href="../reference/pct_change.html">pct_change()</a></code> and <code><a href="../reference/estimate_deriv.html">estimate_deriv()</a></code>, use <code><a href="../reference/epi_slide.html">epi_slide()</a></code> as their workhorse. Suitable groupings can always be achieved by a preliminary call to <code><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by()</a></code>.</p>
-<p>By default, the meaning of one time step is inferred from the <code>time_type</code> of the <code>epi_tibble</code> object under consideration. If <code>time_type</code> is “day”, then one time step is one day. The time step can also be specified manually in the call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code>; you can read the documentation for more details.</p>
+<p>One of the most central tools in the <code>epitools</code> package is <code><a href="../reference/epi_slide.html">epi_slide()</a></code>, which is based on the family of functions provided by the <a href="https://cran.r-project.org/web/packages/slider/"><code>slider</code></a> package. In <code>epitools</code>, to “slide” means to apply a computation—represented as a function or formula—over a running window of <code>n</code> time steps. Several other functions in the <code>epitools</code> package, such as <code><a href="../reference/pct_change.html">pct_change()</a></code> and <code><a href="../reference/estimate_deriv.html">estimate_deriv()</a></code>, use <code><a href="../reference/epi_slide.html">epi_slide()</a></code> as their workhorse. Suitable groupings can always be achieved by a preliminary call to <code><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by()</a></code>.</p>
+<p>By default, the meaning of one time step is inferred from the <code>time_type</code> of the <code>epi_tibble</code> object under consideration. If <code>time_type</code> is “day”, then one time step is one day. The time step can also be specified manually in the call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code>; you can read the cocumentation for more details. Furthermore, the alignment of the running window used in <code><a href="../reference/epi_slide.html">epi_slide()</a></code> can either be “trailing” or “centered”; the default is “trailing”, and is what we use in this and most other vignettes, without specifying otherwise.</p>
 <p>Similar to the getting started guide, we’ll fetch daily reported COVID-19 cases for 4 U.S. states (note: new, not cumulative cases) using the <a href="https://cmu-delphi.github.io/covidcast/covidcastR/"><code>covidcast</code></a> package, and then convert this to <code>epi_tibble</code> format.</p>
 <div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">covidcast</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">epitools</span>)
@@ -134,16 +134,16 @@
 <pre><code>## # A tibble: 10 × 4
 ##    geo_value time_value cases slide_value
 ##    &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;       &lt;dbl&gt;
-##  1 ca        2020-06-01  2360       2360 
-##  2 ca        2020-06-02  2372       2366 
-##  3 ca        2020-06-03  2214       2315.
-##  4 ca        2020-06-04  3011       2489.
-##  5 ca        2020-06-05  3025       2596.
-##  6 ca        2020-06-06  3046       2671.
-##  7 ca        2020-06-07  2404       2633.
-##  8 ca        2020-06-08  2385       2637.
-##  9 ca        2020-06-09  2700       2684.
-## 10 ca        2020-06-10  3208       2826.</code></pre>
+##  1 ca        2020-06-01  2782       2782 
+##  2 ca        2020-06-02  2482       2632 
+##  3 ca        2020-06-03  2133       2466.
+##  4 ca        2020-06-04  2820       2554.
+##  5 ca        2020-06-05  3570       2757.
+##  6 ca        2020-06-06  2855       2774.
+##  7 ca        2020-06-07  2022       2666.
+##  8 ca        2020-06-08  3201       2726.
+##  9 ca        2020-06-09  2825       2775.
+## 10 ca        2020-06-10  3074       2910.</code></pre>
 <p>The formula specified via <code>slide_fun</code> has access to all columns present in the original <code>epi_tibble</code> object (and must refer to them with the prefix <code>.x$</code>). Here he function <code><a href="../reference/Min.html">Mean()</a></code> is just a simple wrapper around <code><a href="https://rdrr.io/r/base/mean.html">mean()</a></code> that omits <code>NA</code> values by default (provided by the <code>epitools</code> package).</p>
 <p>The function <code><a href="../reference/epi_slide.html">epi_slide()</a></code> returns an <code>epi_tibble</code> object with a new column appended that contains the results (from sliding), named <code>slide_value</code> as the default. We can of course change this post hoc, or we can instead specify a new name up front using the <code>new_col_name</code> argument:</p>
 <div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
@@ -154,16 +154,16 @@
 <pre><code>## # A tibble: 10 × 4
 ##    geo_value time_value cases cases_7dav
 ##    &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
-##  1 ca        2020-06-01  2360      2360 
-##  2 ca        2020-06-02  2372      2366 
-##  3 ca        2020-06-03  2214      2315.
-##  4 ca        2020-06-04  3011      2489.
-##  5 ca        2020-06-05  3025      2596.
-##  6 ca        2020-06-06  3046      2671.
-##  7 ca        2020-06-07  2404      2633.
-##  8 ca        2020-06-08  2385      2637.
-##  9 ca        2020-06-09  2700      2684.
-## 10 ca        2020-06-10  3208      2826.</code></pre>
+##  1 ca        2020-06-01  2782      2782 
+##  2 ca        2020-06-02  2482      2632 
+##  3 ca        2020-06-03  2133      2466.
+##  4 ca        2020-06-04  2820      2554.
+##  5 ca        2020-06-05  3570      2757.
+##  6 ca        2020-06-06  2855      2774.
+##  7 ca        2020-06-07  2022      2666.
+##  8 ca        2020-06-08  3201      2726.
+##  9 ca        2020-06-09  2825      2775.
+## 10 ca        2020-06-10  3074      2910.</code></pre>
 <p>As a simple sanity check, we visualize the 7-day trailing averages computed on top of the original counts:</p>
 <div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
@@ -189,16 +189,16 @@
 <pre><code>## # A tibble: 10 × 4
 ##    geo_value time_value cases cases_7dav
 ##    &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
-##  1 ca        2020-06-01  2360      2360 
-##  2 ca        2020-06-02  2372      2366 
-##  3 ca        2020-06-03  2214      2315.
-##  4 ca        2020-06-04  3011      2489.
-##  5 ca        2020-06-05  3025      2596.
-##  6 ca        2020-06-06  3046      2671.
-##  7 ca        2020-06-07  2404      2633.
-##  8 ca        2020-06-08  2385      2637.
-##  9 ca        2020-06-09  2700      2684.
-## 10 ca        2020-06-10  3208      2826.</code></pre>
+##  1 ca        2020-06-01  2782      2782 
+##  2 ca        2020-06-02  2482      2632 
+##  3 ca        2020-06-03  2133      2466.
+##  4 ca        2020-06-04  2820      2554.
+##  5 ca        2020-06-05  3570      2757.
+##  6 ca        2020-06-06  2855      2774.
+##  7 ca        2020-06-07  2022      2666.
+##  8 ca        2020-06-08  3201      2726.
+##  9 ca        2020-06-09  2825      2775.
+## 10 ca        2020-06-10  3074      2910.</code></pre>
 </div>
 <div id="building-and-running-a-local-forecaster" class="section level2">
 <h2 class="hasAnchor">
@@ -312,7 +312,7 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Ryan Tibshirani.</p>
+  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

@@ -8,6 +8,7 @@ pct_change(
   x,
   var,
   n = 14,
+  align = c("trailing", "centered"),
   new_col_name = "pct_change",
   time_step,
   na_rm = TRUE
@@ -19,11 +20,18 @@ pct_change(
 \item{var}{The variable in \code{x} whose percentage change values are to be
 computed.}
 
-\item{n}{Number of time steps to use in the trailing window. For example, if
-\code{n = 10}, and one time step is one day, then the percentage change value
-computed on November 10 is 100 * (B - A) / A, where A is the sum of the
-variable in between November 6 and 10, and A is the sum in between November
-1 and 5. Note that \code{n} must be even; default is 14.}
+\item{n}{Number of time steps to use in the running window. For example, if
+\code{n = 10}, one time step is one day, and the alignment is "trailing", then
+the percentage change value computed on November 10 is 100 * (B - A) / A,
+where A is the sum of the variable in between November 6 and 10, and A is
+the sum in between November 1 and 5. Note that \code{n} must be even; default is
+14.}
+
+\item{align}{String specifying the alignment of the sliding window relative
+to the reference time point; either "trailing" or "centered". The default
+is "trailing". If the alignment is "centered" and \code{n} is even, then one
+more observation will be used before the reference time than after the
+reference time.}
 
 \item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting

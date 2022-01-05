@@ -155,6 +155,7 @@ examples.</p>
   <span class='no'>x</span>,
   <span class='no'>var</span>,
   <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>14</span>,
+  <span class='kw'>align</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"trailing"</span>, <span class='st'>"centered"</span>),
   <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"pct_change"</span>,
   <span class='no'>time_step</span>,
   <span class='kw'>na_rm</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
@@ -174,11 +175,20 @@ computed.</p></td>
     </tr>
     <tr>
       <th>n</th>
-      <td><p>Number of time steps to use in the trailing window. For example, if
-<code>n = 10</code>, and one time step is one day, then the percentage change value
-computed on November 10 is 100 * (B - A) / A, where A is the sum of the
-variable in between November 6 and 10, and A is the sum in between November
-1 and 5. Note that <code>n</code> must be even; default is 14.</p></td>
+      <td><p>Number of time steps to use in the running window. For example, if
+<code>n = 10</code>, one time step is one day, and the alignment is "trailing", then
+the percentage change value computed on November 10 is 100 * (B - A) / A,
+where A is the sum of the variable in between November 6 and 10, and A is
+the sum in between November 1 and 5. Note that <code>n</code> must be even; default is
+14.</p></td>
+    </tr>
+    <tr>
+      <th>align</th>
+      <td><p>String specifying the alignment of the sliding window relative
+to the reference time point; either "trailing" or "centered". The default
+is "trailing". If the alignment is "centered" and <code>n</code> is even, then one
+more observation will be used before the reference time than after the
+reference time.</p></td>
     </tr>
     <tr>
       <th>new_col_name</th>
@@ -219,7 +229,7 @@ values.</p>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Ryan Tibshirani.</p>
+  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

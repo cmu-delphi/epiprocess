@@ -155,6 +155,7 @@ for examples.</p>
   <span class='no'>x</span>,
   <span class='no'>slide_fun</span>,
   <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>14</span>,
+  <span class='kw'>align</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"trailing"</span>, <span class='st'>"centered"</span>),
   <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"slide_value"</span>,
   <span class='kw'>new_col_type</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"dbl"</span>, <span class='st'>"int"</span>, <span class='st'>"lgl"</span>, <span class='st'>"chr"</span>, <span class='st'>"list"</span>),
   <span class='no'>time_step</span>,
@@ -171,20 +172,28 @@ for examples.</p>
     <tr>
       <th>slide_fun</th>
       <td><p>Function or formula to slide over variables in <code>x</code>. To
-"slide" means to apply a function or formula over a trailing window of <code>n</code>
+"slide" means to apply a function or formula over a running window of <code>n</code>
 time steps (where one time step is typically one day or one week; see
 details for more explanation). If a function, <code>slide_fun</code> must take <code>x</code>, a
 data frame with the same column names as the original object; followed by
 any number of named arguments; and ending with <code>...</code>. If a formula,
-<code>slide_fun</code> can operate directly on columns accessed via <code>.x$var</code>, as in <code>~ mean(.x$var)</code> to compute a trailing mean of a column <code>var</code> over the last
+<code>slide_fun</code> can operate directly on columns accessed via <code>.x$var</code>, as in <code>~ mean(.x$var)</code> to compute a mean of a column <code>var</code> over a sliding window of
 <code>n</code> time steps.</p></td>
     </tr>
     <tr>
       <th>n</th>
-      <td><p>Number of time steps to use in the trailing window. For example, if
-<code>n = 5</code>, and one time step is one day, then to produce a value on November
-5, we apply the given function or formula to data in between November 1 and
-5.  Default is 14.</p></td>
+      <td><p>Number of time steps to use in the running window. For example, if
+<code>n = 5</code>, one time step is one day, and the alignment is "trailing", then to
+produce a value on November 5, we apply the given function or formula to
+data in between November 1 and 5. Default is 14.</p></td>
+    </tr>
+    <tr>
+      <th>align</th>
+      <td><p>String specifying the alignment of the sliding window relative
+to the reference time point; either "trailing" or "centered". The default
+is "trailing". If the alignment is "centered" and <code>n</code> is even, then one
+more observation will be used before the reference time than after the
+reference time.</p></td>
     </tr>
     <tr>
       <th>new_col_name</th>
@@ -219,7 +228,7 @@ via <code>slide_fun</code>.</p></td>
 according to the <code>new_col_name</code> argument, containing the slide values.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>To "slide" means to apply a function or formula over a trailing
+    <p>To "slide" means to apply a function or formula over a running
 window of <code>n</code> time steps, where the unit (the meaning of one time step) is
 determined by the <code>time_type</code> field in the metadata: the unit is one day if
 <code>time_type</code> is either "day-time" or "day", and the unit is one week if
@@ -241,7 +250,7 @@ call to <code>epi_slide()</code>.</p>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Ryan Tibshirani.</p>
+  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

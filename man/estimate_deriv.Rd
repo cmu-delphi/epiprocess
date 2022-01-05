@@ -9,6 +9,7 @@ estimate_deriv(
   var,
   method = c("lin", "ss", "tf"),
   n = 14,
+  align = c("trailing", "centered"),
   new_col_name = "deriv",
   keep_obj = FALSE,
   deriv = 1,
@@ -29,10 +30,16 @@ corresponding predicted derivative (that is, the derivative of the
 underlying estimated function, linear or spline) at the current time
 point. Default is "lin". See details for more explanation.}
 
-\item{n}{Number of time steps to use in the trailing window. For example, if
-\code{n = 10}, and one time step is one day, then to estimate the derivative on
-November 10, we train the given method on data in between November 1 and
-10. Default is 14.}
+\item{n}{Number of time steps to use in the running window. For example, if
+\code{n = 10}, one time step is one day, and the alignment is "trailing", then
+to estimate the derivative on November 10, we train the given method on
+data in between November 1 and 10. Default is 14.}
+
+\item{align}{String specifying the alignment of the sliding window relative
+to the reference time point; either "trailing" or "centered". The default
+is "trailing". If the alignment is "centered" and \code{n} is even, then one
+more observation will be used before the reference time than after the
+reference time.}
 
 \item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
