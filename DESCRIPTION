@@ -3,29 +3,32 @@ Type: Package
 Title: Tools for basic signal processing in epidemiology
 Version: 1.0.0
 Authors@R:
-	c(
-	person(given = "Daniel",
-           family = "McDonald",
-           role = "ctb"),
-    person(given = "Ryan",
-           family = "Tibshirani",
-           role = c("aut", "cre"),
-           email = "ryantibs@cmu.edu"))
+  c(
+  person(given = "Daniel",
+         family = "McDonald",
+         role = "ctb"),
+  person(given = "Evan",
+         family = "Ray",
+         role = "aut"),
+  person(given = "Ryan",
+         family = "Tibshirani",
+         role = c("aut", "cre"),
+         email = "ryantibs@cmu.edu"))
 Description: This package introduces a common data structure for epidemiological
-    data sets measured over space and time, and offers associated utilities to
-		perform basic signal processing tasks.  
+  data sets measured over space and time, and offers associated utilities to
+	perform basic signal processing tasks.    
 License: MIT
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Imports: 
-    dplyr,
-    genlasso,
-    lubridate,
-    magrittr,
-    rlang,
-    slider,
-    tibble,
-    tidyselect,
-    tidyr
+  dplyr,
+  genlasso,
+  lubridate,
+  magrittr,
+  rlang,
+  slider,
+  tibble,
+  tidyselect,
+  tidyr

@@ -4,9 +4,9 @@
 #' [slide vignette](https://cmu-delphi.github.io/epitools/articles/slide.html)
 #' for examples.
 #'
-#' @details To "slide" means to apply a function or formula over a
+#' @details To "slide" means to apply a function or formula over a running
 #'   window of `n` time steps, where the unit (the meaning of one time step) is
-#'   determined by the `time_type` field in the metadata: the unit is one day if 
+#'   determined by the `time_type` field in the metadata: the unit is one day if
 #'   `time_type` is either "day-time" or "day", and the unit is one week if
 #'   `time_type` is "week". The time step can also be set explicitly using the
 #'   `time_step` argument (which if specified would override the default choice
@@ -14,7 +14,7 @@
 #'
 #' @param x The `epi_tibble` object under consideration.
 #' @param slide_fun Function or formula to slide over variables in `x`. To
-#'   "slide" means to apply a function or formula over a sliding window of `n`
+#'   "slide" means to apply a function or formula over a running window of `n`
 #'   time steps (where one time step is typically one day or one week; see
 #'   details for more explanation). If a function, `slide_fun` must take `x`, a
 #'   data frame with the same column names as the original object; followed by
@@ -22,15 +22,15 @@
 #'   `slide_fun` can operate directly on columns accessed via `.x$var`, as in `~
 #'   mean(.x$var)` to compute a mean of a column `var` over a sliding window of
 #'   `n` time steps.
-#' @param n Number of time steps to use in the window. For example, if
-#'   `n = 5`, and one time step is one day, then to produce a value on November
-#'   5, we apply the given function or formula to data in between November 1 and
-#'   5.  Default is 14.
-#' @param align A string specifying the alignment of the sliding window relative
+#' @param n Number of time steps to use in the window. For example, if `n = 5`,
+#'   one time step is one day, and the alignment is "trailing", then to produce
+#'   a value on November 5, we apply the given function or formula to data in
+#'   between November 1 and 5. Default is 14.
+#' @param align String specifying the alignment of the sliding window relative
 #'   to the reference time point; either "trailing" or "centered". The default
-#'   is "trailing". If a "centered" alignment is specified and `n` is even,
-#'   one more observation will be used before the reference time than after the
-#'   reference time.
+#'   is "trailing". If the alignment is "centered" and `n` is even, then one
+#'   more observation will be used before the reference time than after the
+#'   reference time. 
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
@@ -77,7 +77,7 @@ epi_slide = function(x, slide_fun, n = 14, align = c("trailing", "centered"),
   else if (attributes(x)$metadata$time_type == "week") before_fun = weeks
   else before_fun = days # Use days for time_type = "day" or "day-time"
 
-  # Validate align and get number of time steps before/after for the window
+  # Validate align and get number of time steps before/after 
   align = match.arg(align)
   if (align == "trailing") {
     before_num = before_fun(n - 1)
