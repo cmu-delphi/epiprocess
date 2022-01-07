@@ -31,7 +31,10 @@
 #' @return The input `epi_tibble` `x` augmented with outlier detection
 #'   thresholds and replacement values from all detection methods.
 #'
-#' @importFrom dplyr group_modify
+#' @importFrom dplyr group_modify mutate select 
+#' @importFrom purrr map pmap_dfc
+#' @importFrom tidyselect ends_with all_of
+#' @importFrom tibble as_tibble
 #' @importFrom rlang abort enquo
 #' @export
 detect_outliers = function(x, var,
@@ -66,12 +69,6 @@ detect_outliers = function(x, var,
   return(x)
 }
 
-#' Run all outlier detection methods for one group
-#' @importFrom dplyr select mutate
-#' @importFrom purrr map pmap_dfc
-#' @importFrom tidyselect ends_with all_of
-#' @importFrom tibble as_tibble
-#' @importFrom rlang abort 
 detect_outliers_one_grp = function(.data_group,
                                    var,
                                    methods,
@@ -88,8 +85,8 @@ detect_outliers_one_grp = function(.data_group,
 
       # Call the method
       method_results = do.call(method,
-                        args = c(list("x" = .data_group, "var" = var),
-                                  method_args))
+                               args = c(list("x" = .data_group, "var" = var),
+                                        method_args))
 
       # Validate the output
       if (!is.data.frame(method_results) ||
@@ -134,7 +131,6 @@ detect_outliers_one_grp = function(.data_group,
   return(.data_group %>%
            mutate(!!new_col_name := new_col_values))
 }
-
 
 #' Detect outliers based on a distance from the rolling median specified in
 #' terms of multiples of the rolling IQR.
