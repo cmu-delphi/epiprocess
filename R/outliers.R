@@ -2,7 +2,7 @@
 #'
 #' Applies one or more outlier detection algorithms to variables in an
 #' `epi_tibble`, and optionally aggregates the results to create consensus
-#' results.
+#' results. 
 #'
 #' @param x The `epi_tibble` object under consideration.
 #' @param var The variable in `x` on which to run outlier detection.
@@ -13,7 +13,9 @@
 #' * `method_args` <lst>: A named list of arguments that will be passed to the
 #'   detection method.
 #' * `method_abbr` <chr>: An abbreviation to use in naming output columns with
-#'   results from this method
+#'   results from this method.
+#' Each outlier detection method must return a data frame with columns `lower`,
+#'   `upper`, and `replacement`.
 #' @param combine_method String, either "median", "mean", or "none", specifying
 #'   how to combine results from different outlier detection methods for the
 #'   thresholds determining whether a particular observation is classified as an
@@ -51,22 +53,12 @@ detect_outliers = function(x, var,
   metadata = attributes(x)$metadata
 
   # Do outlier detection for each group in x
-  # Need to pass .keep = TRUE in case grouping variables include geo_value,
-  # since downstream methods may call epitools functions expecting that
-  # column to be present.
-  # However, group_modify requires that the result not include grouping
-  # variables; we extract the names of those variables and pass them to
-  # detect_outliers_one_grp so that that function can drop them.
-  # Is there a better way around this?
-  grouping_vars = group_vars(x)
   x = x %>%
     group_modify(detect_outliers_one_grp,
                  var = var,
                  methods = methods,
                  combine_method = combine_method,
-                 new_col_name = new_col_name,
-                 grouping_vars = grouping_vars,
-                 .keep = TRUE)
+                 new_col_name = new_col_name)
 
   # Attach the class and metadata and return
   class(x) = c("epi_tibble", class(x))
@@ -74,37 +66,19 @@ detect_outliers = function(x, var,
   return(x)
 }
 
-
-
-#' Function to call all specified outlier detection methods for one group,
-#' assemble results as columns of a tibble.
-#'
-#' This function is not intended to be called by package users.
-#'
-#' @param .data_group epi_tibble for one group. should represent one combination
-#'   of key factors determining a reporting unit, e.g., one geo_type or one
-#'   combination of geo_type and age group
-#' @param grouping_vars variables that defined groups in the original input to
-#'   detect_outliers. These will be dropped from the return value for this
-#'   function
-#' @inheritParams detect_outliers
-#'
+#' Run all outlier detection methods for one group
 #' @importFrom dplyr select mutate
 #' @importFrom purrr map pmap_dfc
 #' @importFrom tidyselect ends_with all_of
 #' @importFrom tibble as_tibble
-#' @importFrom rlang abort enquo
+#' @importFrom rlang abort 
 detect_outliers_one_grp = function(.data_group,
                                    var,
                                    methods,
                                    combine_method,
                                    new_col_name,
-                                   grouping_vars,
                                    ...) {
-  # var = enquo(var)
-
-  # Call all individual outlier detection methods,
-  # assemble results as columns in a tibble.
+  # Run all outlier detection methods
   results = pmap_dfc(
     methods,
     function(method, method_args, method_abbr) {
@@ -112,21 +86,23 @@ detect_outliers_one_grp = function(.data_group,
         method = paste0("detect_outliers_", method)
       }
 
-      # call the method
+      # Call the method
       method_results = do.call(method,
                         args = c(list("x" = .data_group, "var" = var),
                                   method_args))
 
-      # validate that the method returned a data frame with expected columns
+      # Validate the output
       if (!is.data.frame(method_results) ||
-          !all(c("lower", "upper", "replacement") %in% colnames(method_results))) {
-        stop("Outlier detection methods must return a data frame with columns 'lower', 'upper', and 'replacement'")
+          !all(c("lower", "upper", "replacement") %in%
+               colnames(method_results))) {
+        abort(paste("Outlier detection methods must return a data frame with",
+                    "columns `lower`, `upper`, and `replacement`."))
       }
 
-      # update column names with model abbreviation
-      colnames(method_results) <- paste(method_abbr,
-                                        colnames(method_results),
-                                        sep = "_")
+      # Update column names with model abbreviation
+      colnames(method_results) = paste(method_abbr,
+                                       colnames(method_results),
+                                       sep = "_")
 
       return(method_results)
     }
@@ -142,26 +118,22 @@ detect_outliers_one_grp = function(.data_group,
 
     for (target in c("lower", "upper", "replacement")) {
       results[[paste0("combined_", target)]] = apply(
-        results %>%
-          select(ends_with(target)),
+        results %>% select(ends_with(target)),
         1,
         combine_fun
       )
     }
   }
 
-  # Assemble outlier information as a list of rows
+  # Assemble outlier information as columns, return
   new_col_values = map(
     seq_len(nrow(results)),
     function(i) return(results[i, ])
   )
 
-  # return
   return(.data_group %>%
-           select(-all_of(grouping_vars)) %>%
            mutate(!!new_col_name := new_col_values))
 }
-
 
 
 #' Detect outliers based on a distance from the rolling median specified in
