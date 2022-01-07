@@ -100,9 +100,9 @@ estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
   # Check the method, define the slider function
   method = match.arg(method)
   slide_fun = switch(method,
-                     "lin" = linear_reg_deriv,
-                     "ss" = smooth_spline_deriv,
-                     "tf" = trend_filter_deriv)
+                     "lin" = estimate_deriv_lin,
+                     "ss" = estimate_deriv_ss,
+                     "tf" = estimate_deriv_tf)
   
   # Check the derivative order
   if (!(deriv == 1 || deriv == 2)) {
@@ -141,7 +141,7 @@ estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
 #' @importFrom stats lsfit coef
 #' @importFrom tidyr drop_na
 #' @noRd
-linear_reg_deriv = function(x, ...) {
+estimate_deriv_lin = function(x, ...) { 
   params = list(...)
   params[[1]] = NULL # dplyr::group_modify() includes the group here
 
@@ -176,7 +176,7 @@ linear_reg_deriv = function(x, ...) {
 #' @importFrom stats smooth.spline predict
 #' @importFrom tidyr drop_na
 #' @noRd
-smooth_spline_deriv = function(x, ...) {
+estimate_deriv_ss = function(x, ...) {
   params = list(...)
   params[[1]] = NULL # dplyr::group_modify() includes the group here
 
@@ -209,7 +209,7 @@ smooth_spline_deriv = function(x, ...) {
 #' @importFrom genlasso trendfilter cv.trendfilter coef.genlasso
 #' @importFrom tidyr drop_na
 #' @noRd
-trend_filter_deriv = function(data, ...) {
+estimate_deriv_tf = function(data, ...) {
   params = list(...)
   params[[1]] = NULL # dplyr::group_modify() includes the group here
   
