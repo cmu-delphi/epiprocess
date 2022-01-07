@@ -5,7 +5,7 @@
 #' results.
 #'
 #' @param x The `epi_tibble` object under consideration.
-#' @param var The variable in `x` in which to look for outliers.
+#' @param var The variable in `x` on which to run outlier detection.
 #' @param methods A tibble specifying methods to use for outlier
 #'   detection. Contains the following columns:
 #' * `method` <str>: The name of the detection method or a function for
@@ -14,12 +14,12 @@
 #'   detection method.
 #' * `method_abbr` <chr>: An abbreviation to use in naming output columns with
 #'   results from this method
-#' @param combine_method A string, either "median", "mean", or "none",
-#'   specifying how to combine results from different outlier detection methods
-#'   for the thresholds determining whether a particular observation is
-#'   classified as an outlier, as well as a replacement value for any outliers.
-#'   If "none", no summarized results are calculated. Note that if the number of
-#'   `detection_methods` is odd, "median" is equivalent to a majority vote for
+#' @param combine_method String, either "median", "mean", or "none", specifying
+#'   how to combine results from different outlier detection methods for the
+#'   thresholds determining whether a particular observation is classified as an
+#'   outlier, as well as a replacement value for any outliers.  If "none", no
+#'   summarized results are calculated. Note that if the number of `methods`
+#'   (number of rows) is odd, then "median" is equivalent to a majority vote for
 #'   purposes of determining whether a given observation is an outlier.
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the results of outlier detection. Default is "outliers"; note that

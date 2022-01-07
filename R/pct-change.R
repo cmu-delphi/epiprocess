@@ -5,7 +5,7 @@
 #' vignette](https://cmu-delphi.github.io/epitools/articles/pct-change.html) for  
 #' examples.   
 #'
-#' @param x The `epi_tibble` object.
+#' @param x The `epi_tibble` object under consideration.
 #' @param var The variable in `x` whose percentage change values are to be
 #'   computed.    
 #' @param n Number of time steps to use in the running window. For example, if

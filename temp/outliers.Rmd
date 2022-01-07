@@ -51,11 +51,11 @@ correct. We'll discuss those two tasks in turn.
 
 ## Outlier detection
 
-The `detect_outliers` function allows you to run multiple outlier detection
+The `detect_outliers()` function allows you to run multiple outlier detection 
 procedures and combine the results from those methods. Here, we will
 obtain outlier detection results from each of three methods:
 
-1. A rolling median, using the function `detect_outliers_rolling_median`.
+1. A rolling median, using the function `detect_outliers_rolling_median()`.
   That function calculates a rolling median using a default window size
   of 21 time points centered at the time point under consideration. It
   then calculates residuals as the difference between the observed value
@@ -64,7 +64,7 @@ obtain outlier detection results from each of three methods:
   the median plus or minus the `detection_multiplier` (set to 2.5 here)
   times the IQR.
 2. Detection based on an STL (Seasonality and Trend via LOESS) decomposition of
-  the signal, using `detect_outliers_stl`. As with the rolling median approach,
+  the signal, using `detect_outliers_stl()`. As with the rolling median approach,
   thresholds are set to a fitted value from the STL decomposition (the sum of
   the trend and seasonality components) plus or minus a `detection_multiplier`
   times a rolling IQR of the residuals.

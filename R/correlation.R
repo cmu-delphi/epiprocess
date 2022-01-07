@@ -6,7 +6,7 @@
 #' vignette](https://cmu-delphi.github.io/epitools/articles/correlations.html)
 #' for examples.
 #'
-#' @param x The `epi_tibble` object.
+#' @param x The `epi_tibble` object under consideration.
 #' @param var1,var2 The variables in `x` to correlate. 
 #' @param dt1,dt2 Time shifts to consider for the two variables, respectively, 
 #'   before computing correlations. Negative shifts translate into in a lag
