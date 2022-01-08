@@ -103,9 +103,6 @@ examples." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct-change.html">2. Compute percentage change over time</a>
-    </li>
-    <li>
       <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
     </li>
     <li>
@@ -144,7 +141,7 @@ examples." />
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Compute percentage change of a variable in an <code>epi_tibble</code> object</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/blob/main/R/pct-change.R'><code>R/pct-change.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/blob/main/R/pct_change.R'><code>R/pct_change.R</code></a></small>
     <div class="hidden name"><code>pct_change.Rd</code></div>
     </div>
 
@@ -210,7 +207,7 @@ Default is <code>FALSE</code>, which allows for computation on partial windows.<
     <tr>
       <th>new_col_name</th>
       <td><p>String indicating the name of the new column that will
-contain the derivative values. Default is "slide_value"; note that setting
+contain the derivative values. Default is "pct_change"; note that setting
 <code>new_col_name</code> equal to an existing column name will overwrite this column.</p></td>
     </tr>
     <tr>

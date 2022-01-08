@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Fetch the latest or for each observation — latest_issue • epitools</title>
+<title>Detect outliers based on an STL decomposition — detect_outliers_stl • epitools</title>
 
 
 <!-- jquery -->
@@ -39,11 +39,8 @@
 
 
 
-<meta property="og:title" content="Fetch the latest or for each observation — latest_issue" />
-<meta property="og:description" content="The data returned from covidcast_signal() or covidcast_signals() can, if
-called with the issues argument, contain multiple issues for a single
-observation in a single location. These functions filter the data frame to
-contain only the latest issue." />
+<meta property="og:title" content="Detect outliers based on an STL decomposition — detect_outliers_stl" />
+<meta property="og:description" content="Detects outliers based on a seasonal-trend decomposition using LOESS (STL)." />
 
 
 
@@ -104,20 +101,26 @@ contain only the latest issue." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct-change.html">2. Compute percentage change over time</a>
+      <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
     </li>
     <li>
-      <a href="../articles/derivatives.html">3. Estimate derivatives of signals</a>
+      <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/correlations.html">4. Compute correlations between signals</a>
+      <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
+    </li>
+    <li>
+      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
+    </li>
+    <li>
+      <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
     </li>
   </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/cmu-delphi/epitools/">
+  <a href="https://github.com/cmu-delphi/epitools/tree/main/">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -135,37 +138,77 @@ contain only the latest issue." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Fetch the latest or for each observation</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/R/utils.R'><code>R/utils.R</code></a></small>
-    <div class="hidden name"><code>latest_issue.Rd</code></div>
+    <h1>Detect outliers based on an STL decomposition</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/blob/main/R/outliers.R'><code>R/outliers.R</code></a></small>
+    <div class="hidden name"><code>detect_outliers_stl.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>The data returned from <code>covidcast_signal()</code> or <code>covidcast_signals()</code> can, if
-called with the <code>issues</code> argument, contain multiple issues for a single
-observation in a single location. These functions filter the data frame to
-contain only the latest issue.</p>
+    <p>Detects outliers based on a seasonal-trend decomposition using LOESS (STL).</p>
     </div>
 
-    <pre class="usage"><span class='fu'>latest_issue</span>(<span class='no'>x</span>)</pre>
+    <pre class="usage"><span class='fu'>detect_outliers_stl</span>(
+  <span class='no'>x</span>,
+  <span class='no'>var</span>,
+  <span class='kw'>n_trend</span> <span class='kw'>=</span> <span class='fl'>21</span>,
+  <span class='kw'>n_seasonal</span> <span class='kw'>=</span> <span class='fl'>21</span>,
+  <span class='kw'>n_threshold</span> <span class='kw'>=</span> <span class='fl'>21</span>,
+  <span class='kw'>seasonal_period</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>log_transform</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>detect_negatives</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>detection_multiplier</span> <span class='kw'>=</span> <span class='fl'>2</span>,
+  <span class='kw'>min_radius</span> <span class='kw'>=</span> <span class='fl'>0</span>,
+  <span class='kw'>replacement_multiplier</span> <span class='kw'>=</span> <span class='fl'>0</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>df</th>
-      <td><p>A <code>covidcast_signal</code> or <code>covidcast_signal_long</code> data frame, such as
-returned from <code>covidcast_signal()</code> or the "long" format of
-<code>aggregate_signals()</code>.</p></td>
+      <th>x</th>
+      <td><p>The <code>epi_tibble</code> object under consideration.</p></td>
+    </tr>
+    <tr>
+      <th>var</th>
+      <td><p>The variable in <code>x</code> on which to run outlier detection.</p></td>
+    </tr>
+    <tr>
+      <th>n_trend</th>
+      <td><p>Number of time steps to use in the rolling window for trend.
+Default is 21.</p></td>
+    </tr>
+    <tr>
+      <th>n_seasonal</th>
+      <td><p>Number of time steps to use in the rolling window for
+seasonality. Default is 21.</p></td>
+    </tr>
+    <tr>
+      <th>n_threshold</th>
+      <td><p>Number of time steps to use in rolling window for the IQR
+outlier thresholds.</p></td>
+    </tr>
+    <tr>
+      <th>seasonal_period</th>
+      <td><p>Integer specifying period of seasonality. For example,
+for daily data, a period 7 means weekly seasonality. The default is <code>NULL</code>,
+meaning that no seasonal term will be included in the STL decomposition.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A data frame in the same form, but with only the latest issue of
-every observation. Note that these functions sort the data frame as part of
-their filtering, so the output data frame rows may be in a different
-order.</p>
+    <p>A tibble with the same number of rows as <code>x</code>, and columns <code>lower</code>,
+<code>upper</code>, and <code>replacement</code>.</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>The STL decomposition is computed using the <code>feasts</code> package. Once
+computed, the outlier detection method is analogous to the rolling median
+method in <code><a href='detect_outliers_rm.html'>detect_outliers_rm()</a></code>, except with the fitted values and
+residuals from the STL decomposition taking the place of the rolling median
+and residuals to the rolling median, respectively.</p>
+<p>The last set of arguments, <code>log_transform</code> through <code>replacement_multiplier</code>,
+are exactly as in <code><a href='detect_outliers_rm.html'>detect_outliers_rm()</a></code>; refer to its help file for their
+description.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -178,7 +221,7 @@ order.</p>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Ryan Tibshirani.</p>
+  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

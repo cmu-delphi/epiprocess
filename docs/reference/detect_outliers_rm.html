@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Join two <code>epi_tibble</code> objects — inner_join.epi_tibble • epitools</title>
+<title>Detect outliers based on a rolling median — detect_outliers_rm • epitools</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,9 @@
 
 
 
-<meta property="og:title" content="Join two <code>epi_tibble</code> objects — inner_join.epi_tibble" />
-<meta property="og:description" content="Joins two epi_tibble object by one or more variables, preserving class and
-attributes." />
+<meta property="og:title" content="Detect outliers based on a rolling median — detect_outliers_rm" />
+<meta property="og:description" content="Detects outliers based on a distance from the rolling median specified in
+terms of multiples of the rolling interquartile range (IQR)." />
 
 
 
@@ -102,16 +102,16 @@ attributes." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct-change.html">2. Compute percentage change over time</a>
-    </li>
-    <li>
-      <a href="../articles/derivatives.html">3. Estimate derivatives of signals</a>
+      <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
     </li>
     <li>
       <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
     </li>
     <li>
       <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
+    </li>
+    <li>
+      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
     <li>
       <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
@@ -139,29 +139,78 @@ attributes." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Join two <code>epi_tibble</code> objects</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/blob/main/R/epi_tibble.R'><code>R/epi_tibble.R</code></a></small>
-    <div class="hidden name"><code>inner_join.epi_tibble.Rd</code></div>
+    <h1>Detect outliers based on a rolling median</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/blob/main/R/outliers.R'><code>R/outliers.R</code></a></small>
+    <div class="hidden name"><code>detect_outliers_rm.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Joins two <code>epi_tibble</code> object by one or more variables, preserving class and
-attributes.</p>
+    <p>Detects outliers based on a distance from the rolling median specified in
+terms of multiples of the rolling interquartile range (IQR).</p>
     </div>
 
-    <pre class="usage"><span class='co'># S3 method for epi_tibble</span>
-<span class='fu'>inner_join</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+    <pre class="usage"><span class='fu'>detect_outliers_rm</span>(
+  <span class='no'>x</span>,
+  <span class='no'>var</span>,
+  <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>21</span>,
+  <span class='kw'>log_transform</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>detect_negatives</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>detection_multiplier</span> <span class='kw'>=</span> <span class='fl'>2</span>,
+  <span class='kw'>min_radius</span> <span class='kw'>=</span> <span class='fl'>0</span>,
+  <span class='kw'>replacement_multiplier</span> <span class='kw'>=</span> <span class='fl'>0</span>
+)</pre>
 
-<span class='co'># S3 method for epi_tibble</span>
-<span class='fu'>left_join</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>x</th>
+      <td><p>The <code>epi_tibble</code> object under consideration.</p></td>
+    </tr>
+    <tr>
+      <th>var</th>
+      <td><p>The variable in <code>x</code> on which to run outlier detection.</p></td>
+    </tr>
+    <tr>
+      <th>n</th>
+      <td><p>Number of time steps to use in the rolling window. Default is 21.</p></td>
+    </tr>
+    <tr>
+      <th>log_transform</th>
+      <td><p>Should a log transform be applied before running outlier
+detection? Default is <code>FALSE</code>. If <code>TRUE</code>, and zeros are present, then the
+log transform will be padded by 1.</p></td>
+    </tr>
+    <tr>
+      <th>detect_negatives</th>
+      <td><p>Should negative values automatically count as
+outliers? Default is <code>FALSE</code>.</p></td>
+    </tr>
+    <tr>
+      <th>detection_multiplier</th>
+      <td><p>Value determining how far the outlier detection
+thresholds are from the rolling median, which are calculated as (rolling
+median) +/- (detection multiplier) * (rolling IQR). Default is 2.</p></td>
+    </tr>
+    <tr>
+      <th>min_radius</th>
+      <td><p>Minimum distance between rolling median and threshold, on
+transformed scale. Default is 0.</p></td>
+    </tr>
+    <tr>
+      <th>replacement_multiplier</th>
+      <td><p>Value determining how far the replacement
+values are from the rolling median. The replacement is the original value
+if it is within the detection thresholds, or otherwise it is rounded to the
+nearest (rolling median) +/- (replacement multiplier) * (rolling IQR).
+Default is 0.</p></td>
+    </tr>
+    </table>
 
-<span class='co'># S3 method for epi_tibble</span>
-<span class='fu'>right_join</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-<span class='co'># S3 method for epi_tibble</span>
-<span class='fu'>full_join</span>(<span class='no'>x</span>, <span class='no'>...</span>)</pre>
-
-
+    <p>A tibble with the same number of rows as <code>x</code>, and columns <code>lower</code>,
+<code>upper</code>, and <code>replacement</code>.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -174,7 +223,7 @@ attributes.</p>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Ryan Tibshirani.</p>
+  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">
