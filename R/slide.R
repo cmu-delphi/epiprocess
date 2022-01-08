@@ -1,6 +1,6 @@
 #' Slide a function over variables in an `epi_tibble` object
 #'
-#' Slides a given function over the variables in an `epi_tibble` object. See the
+#' Slides a given function over variables in an `epi_tibble` object. See the
 #' [slide vignette](https://cmu-delphi.github.io/epitools/articles/slide.html)
 #' for examples.
 #'
@@ -57,7 +57,7 @@
 #'   fashion (for example, per geo value), we can use `group_by()` before the
 #'   call to `epi_slide()`.
 #' 
-#' @importFrom dplyr arrange group_modify mutate relocate 
+#' @importFrom dplyr arrange group_modify mutate  
 #' @importFrom lubridate days weeks
 #' @importFrom rlang .data abort enquo
 #' @export
@@ -70,12 +70,12 @@ epi_slide = function(x, slide_fun, n = 14, align = c("right", "center", "left"),
 
   # Which slide_index function?
   new_col_type = match.arg(new_col_type)
-  slide_index_zzz = switch(new_col_type,
-                           "dbl" = slider::slide_index_dbl,
-                           "int" = slider::slide_index_int,
-                           "lgl" = slider::slide_index_lgl,
-                           "chr" = slider::slide_index_chr,
-                           "list" = slider::slide_index)
+  index_fun = switch(new_col_type,
+                     "dbl" = slider::slide_index_dbl,
+                     "int" = slider::slide_index_int,
+                     "lgl" = slider::slide_index_lgl,
+                     "chr" = slider::slide_index_chr,
+                     "list" = slider::slide_index)
 
   # What is one time step?
   if (!missing(time_step)) before_fun = time_step
@@ -113,12 +113,13 @@ epi_slide = function(x, slide_fun, n = 14, align = c("right", "center", "left"),
   
   # Slide per group (in case x is grouped) 
   x = x %>%  
-    group_modify(slide_one_grp,
+    group_modify(epi_slide_one_grp,
+                 index_fun = index_fun,
                  slide_fun = slide_fun,
                  before_num = before_num,
                  after_num = after_num,
-                 new_col_name = new_col_name, ...) %>%
-    relocate(.data$geo_value, .data$time_value)
+                 new_col_name = new_col_name,
+                 ...)
 
   # Attach the class and metadata and return
   class(x) = c("epi_tibble", class(x))
@@ -127,12 +128,12 @@ epi_slide = function(x, slide_fun, n = 14, align = c("right", "center", "left"),
 }
 
 # Slide over a single group
-slide_one_grp = function(.data_group, slide_fun, before_num, after_num,
-                         new_col_name, ...) {  
-  slide_values = slide_index_zzz(.x = .data_group,
-                                 .i = .data_group$time_value,
-                                 .f = slide_fun, ..., 
-                                 .before = before_num,
-                                 .after = after_num)
+epi_slide_one_grp = function(.data_group, index_fun, slide_fun, before_num, 
+                             after_num, new_col_name, ...) {  
+  slide_values = index_fun(.x = .data_group,
+                           .i = .data_group$time_value,
+                           .f = slide_fun, ..., 
+                           .before = before_num,
+                           .after = after_num)
   return(mutate(.data_group, !!new_col_name := slide_values))
 }

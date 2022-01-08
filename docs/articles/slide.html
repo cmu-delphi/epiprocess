@@ -72,6 +72,9 @@
       <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
     </li>
     <li>
+      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
+    </li>
+    <li>
       <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
     </li>
   </ul>
@@ -109,7 +112,7 @@
     
 <p>One of the most central tools in the <code>epitools</code> package is <code><a href="../reference/epi_slide.html">epi_slide()</a></code>, which is based on the family of functions provided by the <a href="https://cran.r-project.org/web/packages/slider/"><code>slider</code></a> package. In <code>epitools</code>, to “slide” means to apply a computation—represented as a function or formula—over a running window of <code>n</code> time steps. Several other functions in the <code>epitools</code> package, such as <code><a href="../reference/pct_change.html">pct_change()</a></code> and <code><a href="../reference/estimate_deriv.html">estimate_deriv()</a></code>, use <code><a href="../reference/epi_slide.html">epi_slide()</a></code> as their workhorse. Suitable groupings can always be achieved by a preliminary call to <code><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by()</a></code>.</p>
 <p>By default, the meaning of one time step is inferred from the <code>time_type</code> of the <code>epi_tibble</code> object under consideration. If <code>time_type</code> is “day”, then one time step is one day. The time step can also be specified manually in the call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code>; you can read the cocumentation for more details. Furthermore, the alignment of the running window used in <code><a href="../reference/epi_slide.html">epi_slide()</a></code> can either be “trailing” or “centered”; the default is “trailing”, and is what we use in this and most other vignettes, without specifying otherwise.</p>
-<p>Similar to the getting started guide, we’ll fetch daily reported COVID-19 cases for 4 U.S. states (note: new, not cumulative cases) using the <a href="https://cmu-delphi.github.io/covidcast/covidcastR/"><code>covidcast</code></a> package, and then convert this to <code>epi_tibble</code> format.</p>
+<p>Similar to the getting started guide, we’ll fetch daily reported COVID-19 cases for four U.S. states (note: new, not cumulative cases) using the <a href="https://cmu-delphi.github.io/covidcast/covidcastR/"><code>covidcast</code></a> package, and then convert this to <code>epi_tibble</code> format.</p>
 <div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">covidcast</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">epitools</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">dplyr</span>)

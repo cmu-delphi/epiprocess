@@ -1,8 +1,8 @@
-#' Estimate derivatives of variables in an `epi_tibble` object
+#' Estimate derivatives of a variable in an `epi_tibble` object
 #' 
-#' Estimates derivatives of the variables in an `epi_tibble` object, using a
-#' local (in time) linear regression or a smoothing spline. See the [estimating
-#' derivatives
+#' Estimates derivatives of a variable in an `epi_tibble` object, using a local
+#' (in time) linear regression or alternative smoother. See the [estimating
+#' derivatives  
 #' vignette](https://cmu-delphi.github.io/epitools/articles/derivatives.html)   
 #' for examples.  
 #'

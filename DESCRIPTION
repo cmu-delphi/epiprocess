@@ -33,4 +33,5 @@ Imports:
   slider,
   tibble,
   tidyselect,
-  tidyr
+  tidyr,
+  tsibble

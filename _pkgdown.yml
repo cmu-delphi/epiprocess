@@ -19,6 +19,7 @@ articles:
       - derivative
       - correlation
       - aggregation
+      - outliers
       - issues
 
 repo:

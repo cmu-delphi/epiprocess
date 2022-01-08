@@ -115,6 +115,9 @@ examples." />
       <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
     </li>
     <li>
+      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
+    </li>
+    <li>
       <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
     </li>
   </ul>
@@ -141,7 +144,7 @@ examples." />
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Compute percentage change of a variable in an <code>epi_tibble</code> object</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/blob/main/R/change.R'><code>R/change.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/blob/main/R/pct-change.R'><code>R/pct-change.R</code></a></small>
     <div class="hidden name"><code>pct_change.Rd</code></div>
     </div>
 
@@ -155,7 +158,8 @@ examples.</p>
   <span class='no'>x</span>,
   <span class='no'>var</span>,
   <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>14</span>,
-  <span class='kw'>align</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"trailing"</span>, <span class='st'>"centered"</span>),
+  <span class='kw'>align</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"right"</span>, <span class='st'>"center"</span>, <span class='st'>"left"</span>),
+  <span class='no'>before</span>,
   <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"pct_change"</span>,
   <span class='no'>time_step</span>,
   <span class='kw'>na_rm</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
@@ -166,7 +170,7 @@ examples.</p>
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>The <code>epi_tibble</code> object.</p></td>
+      <td><p>The <code>epi_tibble</code> object under consideration.</p></td>
     </tr>
     <tr>
       <th>var</th>
@@ -176,19 +180,26 @@ computed.</p></td>
     <tr>
       <th>n</th>
       <td><p>Number of time steps to use in the running window. For example, if
-<code>n = 10</code>, one time step is one day, and the alignment is "trailing", then
-the percentage change value computed on November 10 is 100 * (B - A) / A,
-where A is the sum of the variable in between November 6 and 10, and A is
-the sum in between November 1 and 5. Note that <code>n</code> must be even; default is
-14.</p></td>
+<code>n = 10</code>, one time step is one day, and the alignment is "right", then the
+percentage change value computed on November 10 is 100 * (B - A) / A, where
+A is the sum of the variable in between November 6 and 10, and A is the sum
+in between November 1 and 5. Note that <code>n</code> must be even; default is 14.</p></td>
     </tr>
     <tr>
       <th>align</th>
-      <td><p>String specifying the alignment of the sliding window relative
-to the reference time point; either "trailing" or "centered". The default
-is "trailing". If the alignment is "centered" and <code>n</code> is even, then one
-more observation will be used before the reference time than after the
-reference time.</p></td>
+      <td><p>One of "right", "center", or "left", indicating the alignment of
+the sliding window relative to the reference time point. If the alignment
+is "center" and <code>n</code> is even, then one more time point will be used before
+the reference time point than after. Default is "right".</p></td>
+    </tr>
+    <tr>
+      <th>before</th>
+      <td><p>Optional integer, in the range to 0 to <code>n-1</code> (inclusive),
+specifying the number of time points to use in the sliding window strictly
+before the reference time point. For example, setting <code>before = n-1</code> would
+be the same as setting <code>align = "right"</code>. The current argument allows for
+more flexible specification of alignment than the <code>align</code> parameter, and if
+specified, then it overrides <code>align</code>.</p></td>
     </tr>
     <tr>
       <th>new_col_name</th>

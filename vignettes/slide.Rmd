@@ -25,7 +25,7 @@ or "centered"; the default is "trailing", and is what we use in this and most
 other vignettes, without specifying otherwise.
 
 Similar to the getting started guide, we'll fetch daily reported COVID-19 cases 
-for 4 U.S. states (note: new, not cumulative cases) using the
+for four U.S. states (note: new, not cumulative cases) using the
 [`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) package, and 
 then convert this to `epi_tibble` format.
 

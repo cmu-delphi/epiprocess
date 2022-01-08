@@ -44,7 +44,7 @@ cor_lagged = function(x, var1, var2, dt1 = 0, dt2 = 0,
                       by = geo_value, use = "na.or.complete",
                       method = c("pearson", "kendall", "spearman")) {
   # Check we have an `epi_tibble` object
-  if (!inherits(x, "epi_tibble")) abort("`x` be of class `epi_tibble`.")
+  if (!inherits(x, "epi_tibble")) abort("`x` must be of class `epi_tibble`.")
 
   # Check that we have variables to do computations on
   if (missing(var1)) abort("`var1` must be specified.")
