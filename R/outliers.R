@@ -71,7 +71,7 @@ detect_outliers = function(x, var,
   # Save the metadata (dplyr drops it)
   metadata = attributes(x)$metadata
 
-  # Do outlier detection for each group in x
+  # Outlier detection per group (in case x is grouped) 
   x = x %>%
     group_modify(detect_outliers_one_grp,
                  var = var,
@@ -80,11 +80,12 @@ detect_outliers = function(x, var,
                  new_col_name = new_col_name)
 
   # Attach the class and metadata and return
-  class(x) = c("epi_tibble", class(x))
+class(x) = c("epi_tibble", class(x))
   attributes(x)$metadata = metadata
   return(x)
 }
 
+# Outlier detection over a single group
 detect_outliers_one_grp = function(.data_group,
                                    var,
                                    methods,
@@ -146,8 +147,7 @@ detect_outliers_one_grp = function(.data_group,
     function(i) return(results[i, ])
   )
 
-  return(.data_group %>%
-         mutate(!!new_col_name := new_col_values))
+  return(.data_group %>% mutate(!!new_col_name := new_col_values))
 }
 
 #' Detect outliers based on a rolling median
@@ -208,14 +208,14 @@ detect_outliers_rm = function(x, var,
   # Calculate lower and upper thresholds and replacement value
   outliers <- x %>%
     epi_slide(slide_fun = function(x, var, ...) x %>% pull(!!var) %>% median(),
-              n = n, align = "centered",
+              n = n, align = "center",
               new_col_name = "fitted",
               var = var) %>%
     mutate(resid = !!var - fitted) %>%
-    roll_iqr(n,
+    roll_iqr(var, n,
              detection_multiplier = detection_multiplier,
              min_radius = min_radius,
-             replacement_multipler = replacement_multipler,
+             replacement_multiplier = replacement_multiplier,
              min_lower = min_lower)
 
   # Undo log transformation if necessary
@@ -234,8 +234,7 @@ detect_outliers_rolling_median = detect_outliers_rm
 
 #' Detect outliers based on an STL decomposition 
 #'
-#' Detects outliers based on a seasonality and trend decomposition using loess
-#' (STL). 
+#' Detects outliers based on a seasonal-trend decomposition using LOESS (STL).  
 #'
 #' @details The STL decomposition is computed using the `feasts` package. Once
 #'   computed, the outlier detection method is analogous to the rolling median
@@ -263,6 +262,8 @@ detect_outliers_rolling_median = detect_outliers_rm
 #'   `upper`, and `replacement`. 
 #'
 #' @importFrom dplyr case_when mutate pull select transmute
+#' @importFrom fabletools model
+#' @importFrom feasts STL
 #' @export
 detect_outliers_stl = function(x, var,
                                n_trend = 21,
@@ -295,7 +296,7 @@ detect_outliers_stl = function(x, var,
     season(period = seasonal_period, window = n_seasonal)
 
   stl_components = x_tsibble %>%
-    fabletools::model(feasts::STL(stl_formula, robust = TRUE)) %>%
+    model(STL(stl_formula, robust = TRUE)) %>%
     generics::components() %>%
     tibble::as_tibble() %>%
     transmute(
@@ -330,10 +331,10 @@ detect_outliers_stl = function(x, var,
     mutate(
       fitted = stl_components$fitted,
       resid = stl_components$resid) %>%
-    roll_iqr(n_threshold,
+    roll_iqr(var, n_threshold,
              detection_multiplier = detection_multiplier,
              min_radius = min_radius,
-             replacement_multipler = replacement_multipler,
+             replacement_multiplier = replacement_multiplier,
              min_lower = min_lower)
  
   # Undo log transformation if necessary
@@ -350,9 +351,9 @@ detect_outliers_stl = function(x, var,
 # Common function for rolling IQR, using fitted and resid variables
 
 roll_iqr = function(x, var, n, detection_multiplier, min_radius,
-                    replacement_multipler, min_lower) {
-  epi_slide(slide_fun = function(x, var, ...) x %>% pull(resid) %>% IQR(),
-            n = n, align = "centered", new_col_name = "roll_iqr") %>%
+                    replacement_multiplier, min_lower) { 
+  epi_slide(x, slide_fun = function(x, ...) x %>% pull(resid) %>% IQR(), 
+            n = n, align = "center", new_col_name = "roll_iqr") %>%
     mutate(
       lower = pmax(min_lower,
                    fitted - pmax(min_radius, detection_multiplier * roll_iqr)),
