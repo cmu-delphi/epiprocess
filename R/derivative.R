@@ -15,14 +15,19 @@
 #'   underlying estimated function, linear or spline) at the current time
 #'   point. Default is "lin". See details for more explanation.
 #' @param n Number of time steps to use in the running window. For example, if
-#'   `n = 10`, one time step is one day, and the alignment is "trailing", then
-#'   to estimate the derivative on November 10, we train the given method on
-#'   data in between November 1 and 10. Default is 14. 
-#' @param align String specifying the alignment of the sliding window relative
-#'   to the reference time point; either "trailing" or "centered". The default
-#'   is "trailing". If the alignment is "centered" and `n` is even, then one
-#'   more observation will be used before the reference time than after the
-#'   reference time. 
+#'   `n = 10`, one time step is one day, and the alignment is "right", then to
+#'   estimate the derivative on November 10, we train the given method on data
+#'   in between November 1 and 10. Default is 14.  
+#' @param align One of "right", "center", or "left", indicating the alignment of
+#'   the sliding window relative to the reference time point. If the alignment
+#'   is "center" and `n` is even, then one more time point will be used before
+#'   the reference time point than after. Default is "right".
+#' @param before Optional integer, in the range to 0 to `n-1` (inclusive),
+#'   specifying the number of time points to use in the sliding window strictly
+#'   before the reference time point. For example, setting `before = n-1` would
+#'   be the same as setting `align = "right"`. The current argument allows for
+#'   more flexible specification of alignment than the `align` parameter, and if
+#'   specified, then it overrides `align`.
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
@@ -41,7 +46,7 @@
 #'   is `TRUE`. 
 #' @param ... Additional arguments to pass to the function that estimates
 #'   derivatives. See details below.    
-#' @return A `epi_tibble` object given by appending a new column to `x`, named
+#' @return An `epi_tibble` object given by appending a new column to `x`, named
 #'   according to the `new_col_name` argument, containing the derivative values.
 #'
 #' @details Derivatives are estimated using:
@@ -90,7 +95,7 @@
 #' @importFrom rlang abort enquo
 #' @export
 estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
-                          align = c("trailing", "centered"),
+                          align = c("right", "center", "left"), before, 
                           new_col_name = "deriv", keep_obj = FALSE, deriv = 1,
                           time_step, na_rm = TRUE, ...) {
   # Check that we have a variable to do computations on
@@ -109,26 +114,26 @@ estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
     stop("`deriv` must be either 1 or 2.")
   }
 
-  # Slide the derivative function
-  x = epi_slide(x, slide_fun, n, align, new_col_name = "tmp",
-                new_col_type = "list", time_step = time_step,
-                keep_obj = keep_obj, deriv = deriv, var = var,
-                na_rm = na_rm, ...) 
+  # Slide the derivative function into a temporary column
+  x = epi_slide(x, slide_fun, n, align = align, before = before,
+                new_col_name = "temp", new_col_type = "list",
+                time_step = time_step, keep_obj = keep_obj,
+                deriv = deriv, var = var, na_rm = na_rm, ...) 
 
   # Save the metadata (dplyr drops it)
   metadata = attributes(x)$metadata
   
   # Grab the derivative result
-  x = x %>% rowwise() %>% mutate(!!new_col_name := tmp$result)
+  x = x %>% rowwise() %>% mutate(!!new_col_name := temp$result)
 
   # Grab the derivative object, if we're asked to
   if (keep_obj) {
     x = x %>% rowwise() %>%
-      mutate(!!paste0(new_col_name, "_obj") := list(tmp$object))
+      mutate(!!paste0(new_col_name, "_obj") := list(temp$object))
   }
   
-  # Delete the tmp column and ungroup
-  x = select(x, -tmp) %>% ungroup()
+  # Delete the temp column and ungroup
+  x = select(x, -temp) %>% ungroup()
 
   # Attach the class and metadata and return
   class(x) = c("epi_tibble", class(x))

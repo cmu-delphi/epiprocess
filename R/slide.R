@@ -23,14 +23,19 @@
 #'   mean(.x$var)` to compute a mean of a column `var` over a sliding window of
 #'   `n` time steps.
 #' @param n Number of time steps to use in the running window. For example, if
-#'   `n = 5`, one time step is one day, and the alignment is "trailing", then to
+#'   `n = 5`, one time step is one day, and the alignment is "right", then to 
 #'   produce a value on November 5, we apply the given function or formula to
-#'   data in between November 1 and 5. Default is 14.
-#' @param align String specifying the alignment of the sliding window relative
-#'   to the reference time point; either "trailing" or "centered". The default
-#'   is "trailing". If the alignment is "centered" and `n` is even, then one
-#'   more observation will be used before the reference time than after the
-#'   reference time. 
+#'   data in between November 1 and 5. Default is 14. 
+#' @param align One of "right", "center", or "left", indicating the alignment of
+#'   the sliding window relative to the reference time point. If the alignment
+#'   is "center" and `n` is even, then one more time point will be used before
+#'   the reference time point than after. Default is "right".
+#' @param before Optional integer, in the range to 0 to `n-1` (inclusive),
+#'   specifying the number of time points to use in the sliding window strictly
+#'   before the reference time point. For example, setting `before = n-1` would
+#'   be the same as setting `align = "right"`. The current argument allows for
+#'   more flexible specification of alignment than the `align` parameter, and if
+#'   specified, then it overrides `align`.
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
@@ -56,12 +61,12 @@
 #' @importFrom lubridate days weeks
 #' @importFrom rlang .data abort enquo
 #' @export
-epi_slide = function(x, slide_fun, n = 14, align = c("trailing", "centered"),
-                     new_col_name = "slide_value",
+epi_slide = function(x, slide_fun, n = 14, align = c("right", "center", "left"),
+                     before, new_col_name = "slide_value",
                      new_col_type = c("dbl", "int", "lgl", "chr", "list"),
                      time_step, ...) { 
   # Check we have an `epi_tibble` object
-  if (!inherits(x, "epi_tibble")) abort("`x` be of class `epi_tibble`.")
+  if (!inherits(x, "epi_tibble")) abort("`x` must be of class `epi_tibble`.")
 
   # Which slide_index function?
   new_col_type = match.arg(new_col_type)
@@ -77,24 +82,30 @@ epi_slide = function(x, slide_fun, n = 14, align = c("trailing", "centered"),
   else if (attributes(x)$metadata$time_type == "week") before_fun = weeks
   else before_fun = days # Use days for time_type = "day" or "day-time"
 
-  # Validate align and get number of time steps before/after 
-  align = match.arg(align)
-  if (align == "trailing") {
-    before_num = before_fun(n - 1)
-    after_num = 0
-  } else {
-    before_num = before_fun(ceiling((n - 1) / 2))
-    after_num = before_fun(floor((n - 1) / 2))
+  # If before is missing, then use align to set up alignment
+  if (missing(before)) {
+    align = match.arg(align)
+    if (align == "right") {
+      before_num = before_fun(n-1)
+      after_num = 0
+    }
+    else if (align == "center") {
+      before_num = before_fun(ceiling((n-1)/2))
+      after_num = before_fun(floor((n-1)/2))
+    }
+    else {
+      before_num = 0
+      after_num = before_fun(n-1)
+    }
   }
+  
+  # Otherwise set up alignment based on passed before value
+  else {
+    if (before < 0 || before > n-1)
+      abort("`before` must be in between 0 and n-1`.")
 
-  # Slide over a single group
-  slide_one_grp = function(.data_group, slide_fun, n, new_col_name, ...) { 
-    slide_values = slide_index_zzz(.x = .data_group,
-                                   .i = .data_group$time_value,
-                                   .f = slide_fun, ..., 
-                                   .before = before_num,
-                                   .after = after_num)
-    return(mutate(.data_group, !!new_col_name := slide_values))
+    before_num = before_fun(before)
+    after_num = before_fun(n-1-before)
   }
 
   # Save the metadata (dplyr drops it)
@@ -102,12 +113,26 @@ epi_slide = function(x, slide_fun, n = 14, align = c("trailing", "centered"),
   
   # Slide per group (in case x is grouped) 
   x = x %>%  
-    group_modify(slide_one_grp, slide_fun = slide_fun,
-                 n = n, new_col_name = new_col_name, ...) %>%
+    group_modify(slide_one_grp,
+                 slide_fun = slide_fun,
+                 before_num = before_num,
+                 after_num = after_num,
+                 new_col_name = new_col_name, ...) %>%
     relocate(.data$geo_value, .data$time_value)
 
   # Attach the class and metadata and return
   class(x) = c("epi_tibble", class(x))
   attributes(x)$metadata = metadata
   return(x)
+}
+
+# Slide over a single group
+slide_one_grp = function(.data_group, slide_fun, before_num, after_num,
+                         new_col_name, ...) {  
+  slide_values = slide_index_zzz(.x = .data_group,
+                                 .i = .data_group$time_value,
+                                 .f = slide_fun, ..., 
+                                 .before = before_num,
+                                 .after = after_num)
+  return(mutate(.data_group, !!new_col_name := slide_values))
 }
