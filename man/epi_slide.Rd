@@ -10,6 +10,7 @@ epi_slide(
   n = 14,
   align = c("right", "center", "left"),
   before,
+  complete = FALSE,
   new_col_name = "slide_value",
   new_col_type = c("dbl", "int", "lgl", "chr", "list"),
   time_step,
@@ -44,6 +45,9 @@ before the reference time point. For example, setting \code{before = n-1} would
 be the same as setting \code{align = "right"}. The current argument allows for
 more flexible specification of alignment than the \code{align} parameter, and if
 specified, then it overrides \code{align}.}
+
+\item{complete}{Should the slide function be run over complete windows only?
+Default is \code{FALSE}, which allows for computation on partial windows.}
 
 \item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting

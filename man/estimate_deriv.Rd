@@ -11,6 +11,7 @@ estimate_deriv(
   n = 14,
   align = c("right", "center", "left"),
   before,
+  complete = FALSE,
   new_col_name = "deriv",
   keep_obj = FALSE,
   deriv = 1,
@@ -48,9 +49,13 @@ be the same as setting \code{align = "right"}. The current argument allows for
 more flexible specification of alignment than the \code{align} parameter, and if
 specified, then it overrides \code{align}.}
 
+\item{complete}{Should the computation be run over complete windows only?
+Default is \code{FALSE}, which allows for computation on partial windows.}
+
 \item{new_col_name}{String indicating the name of the new column that will
-contain the derivative values. Default is "slide_value"; note that setting
-\code{new_col_name} equal to an existing column name will overwrite this column.}
+contain the derivative values. Default is "deriv"; note that setting
+\code{new_col_name} equal to an existing column name will overwrite this
+column.}
 
 \item{keep_obj}{Should the fitted object (from linear regression, smoothing
 spline, or trend filtering) be kept as a separate column? If \code{TRUE}, then

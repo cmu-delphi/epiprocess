@@ -26,7 +26,7 @@
 #' @param complete Should the computation be run over complete windows only?
 #'   Default is `FALSE`, which allows for computation on partial windows.  
 #' @param new_col_name String indicating the name of the new column that will
-#'   contain the derivative values. Default is "slide_value"; note that setting
+#'   contain the derivative values. Default is "pct_change"; note that setting  
 #'   `new_col_name` equal to an existing column name will overwrite this column.  
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
@@ -41,7 +41,7 @@
 #' @importFrom rlang abort enquo
 #' @export
 pct_change = function(x, var, n = 14, align = c("right", "center", "left"),
-                      before, complete = FALSE, new_col_name = "pct_change",
+                      before, complete = FALSE, new_col_name = "pct_change", 
                       time_step, na_rm = TRUE) { 
   # Check that we have a variable to do computations on
   if (missing(var)) abort("`var` must be specified.")

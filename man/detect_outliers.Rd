@@ -7,9 +7,9 @@
 detect_outliers(
   x,
   var,
-  methods = tibble(method = "rm", method_args = list(list()), method_abbr = "rm"),
+  methods = tibble(method = "rm", args = list(list()), abbr = "rm"),
   combiner = c("median", "mean", "none"),
-  new_col_name = "outliers"
+  new_col_name = "outlier_info"
 )
 }
 \arguments{
@@ -22,10 +22,10 @@ detection, with one row per method, and the following columns:
 \itemize{
 \item \code{method} <str>: Either "rm" or "stl", or a custom function for outlier
 detection; see details for further explanation.
-\item \code{method_args} <lst>: Named list of arguments that will be passed to the
+\item \code{args} <lst>: Named list of arguments that will be passed to the
 detection method.
-\item \code{method_abbr} <chr>: Abbreviation to use in naming output columns with
-results from this method.
+\item \code{abbr} <chr>: Abbreviation to use in naming output columns with results
+from this method.
 }}
 
 \item{combiner}{String, one of "median", "mean", or "none", specifying how to
@@ -37,9 +37,9 @@ summarized results are calculated. Note that if the number of \code{methods}
 purposes of determining whether a given observation is an outlier.}
 
 \item{new_col_name}{String indicating the name of the new column that will
-contain the results of outlier detection. Default is "outliers"; note that
-setting \code{new_col_name} equal to an existing column name will overwrite this
-column.}
+contain the results of outlier detection. Default is "outlier_info"; note
+that setting \code{new_col_name} equal to an existing column name will overwrite
+this column.}
 }
 \value{
 An \code{epi_tibble} object given by appending a new column to \code{x}, named

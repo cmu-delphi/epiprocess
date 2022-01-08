@@ -31,8 +31,9 @@
 #' @param complete Should the computation be run over complete windows only?
 #'   Default is `FALSE`, which allows for computation on partial windows.  
 #' @param new_col_name String indicating the name of the new column that will
-#'   contain the derivative values. Default is "slide_value"; note that setting
-#'   `new_col_name` equal to an existing column name will overwrite this column.
+#'   contain the derivative values. Default is "deriv"; note that setting
+#'   `new_col_name` equal to an existing column name will overwrite this
+#'   column. 
 #' @param keep_obj Should the fitted object (from linear regression, smoothing 
 #'   spline, or trend filtering) be kept as a separate column? If `TRUE`, then
 #'   this column name is given by  appending "_obj" to `new_col_name`. Default

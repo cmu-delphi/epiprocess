@@ -25,10 +25,10 @@
 #'   detection, with one row per method, and the following columns: 
 #'   * `method` <str>: Either "rm" or "stl", or a custom function for outlier
 #'   detection; see details for further explanation.   
-#'   * `method_args` <lst>: Named list of arguments that will be passed to the
-#'   detection method.
-#'   * `method_abbr` <chr>: Abbreviation to use in naming output columns with
-#'   results from this method.
+#'   * `args` <lst>: Named list of arguments that will be passed to the
+#'   detection method. 
+#'   * `abbr` <chr>: Abbreviation to use in naming output columns with results
+#'   from this method. 
 #' @param combiner String, one of "median", "mean", or "none", specifying how to
 #'   combine results from different outlier detection methods for the thresholds
 #'   determining whether a particular observation is classified as an outlier,
@@ -37,9 +37,9 @@
 #'   (number of rows) is odd, then "median" is equivalent to a majority vote for
 #'   purposes of determining whether a given observation is an outlier.
 #' @param new_col_name String indicating the name of the new column that will
-#'   contain the results of outlier detection. Default is "outliers"; note that
-#'   setting `new_col_name` equal to an existing column name will overwrite this
-#'   column.
+#'   contain the results of outlier detection. Default is "outlier_info"; note
+#'   that setting `new_col_name` equal to an existing column name will overwrite
+#'   this column.
 #'
 #' @return An `epi_tibble` object given by appending a new column to `x`, named 
 #'   according to the `new_col_name` argument, containing the outlier detection
@@ -53,11 +53,10 @@
 detect_outliers = function(x, var,
                            methods = tibble(
                              method = "rm",
-                             method_args = list(list()),
-                             method_abbr = "rm"
-                           ),
+                             args = list(list()),
+                             abbr = "rm"),
                            combiner = c("median", "mean", "none"),
-                           new_col_name = "outliers") {
+                           new_col_name = "outlier_info") {
   # Check we have an `epi_tibble` object
   if (!inherits(x, "epi_tibble")) abort("`x` must be of class `epi_tibble`.")
   
@@ -95,31 +94,26 @@ detect_outliers_one_grp = function(.data_group,
   # Run all outlier detection methods
   results = pmap_dfc(
     methods,
-    function(method, method_args, method_abbr) {
+    function(method, args, abbr) {
       if (is.character(method)) {
         method = paste0("detect_outliers_", method)
       }
-
+      
       # Call the method
-      method_results = do.call(method,
-                               args = c(list("x" = .data_group,
-                                             "var" = var),
-                                        method_args))
+      results = do.call(method,
+                        args = c(list("x" = .data_group, "var" = var), args))
 
       # Validate the output
-      if (!is.data.frame(method_results) ||
+      if (!is.data.frame(results) ||
           !all(c("lower", "upper", "replacement") %in%
-               colnames(method_results))) {
+               colnames(results))) {
         abort(paste("Outlier detection method must return a data frame with",
                     "columns `lower`, `upper`, and `replacement`."))
       }
 
       # Update column names with model abbreviation
-      colnames(method_results) = paste(method_abbr,
-                                       colnames(method_results),
-                                       sep = "_")
-
-      return(method_results)
+      colnames(results) = paste(abbr, colnames(results), sep = "_")
+      return(results)
     }
   )
 
@@ -369,108 +363,4 @@ roll_iqr = function(x, var, n, detection_multiplier, min_radius,
     # Drop any extra classes; just keep tibble
     unclass() %>%
     tibble::as_tibble()
-}
-
-#' Plot outlier detection bands and/or points identified as outliers
-#' 
-#' @param x An `epi_tibble` object including results for outlier detection as
-#'   returned by `detect_outliers`
-#' @param var The variable in `x` in which to look for outliers.
-#' @param outliers_col_name The variable in `x` with outlier detection results.
-#'   This is the value used as the `new_col_name` argument to `detect_outliers`.
-#' @param include_bands Boolean; if `TRUE`, outlier detection thresholds are
-#'   shown
-#' @param include_points Boolean; if `TRUE`, outliers are highlighted with
-#'   points
-#' @param combined_only Boolean; if `TRUE`, only the combined results across
-#'   all detection methods are displayed
-#' @param facet_vars character vector of variables to facet by.
-#'   Default is `"geo_type"`. If `NULL`, no facetting is done.
-#' @param facet_nrow, facet_ncol Integer number of rows and columns for
-#'   facetting.
-#' @param plot Boolean; if `TRUE`, the plot is printed.
-#'
-#' @return invisibly, a `ggplot` object
-#'
-#' @importFrom dplyr filter vars pull
-#' @importFrom tidyr unnest pivot_longer
-#' @importFrom ggplot2 ggplot aes geom_line geom_point geom_ribbon facet_wrap
-#' @importFrom rlang enquo abort
-#'
-#' @export
-plot_outliers = function(x, var,
-                         outliers_col = outliers,
-                         include_bands = FALSE,
-                         include_points = TRUE,
-                         combined_only = TRUE,
-                         facet_vars = vars(geo_value),
-                         facet_nrow = NULL,
-                         facet_ncol = NULL,
-                         facet_scales = "fixed",
-                         plot = TRUE) {
-  # Check that we have a variable to do computations on
-  if (missing(var)) abort("`var` must be specified.")
-  var = enquo(var)
-  outliers_col = enquo(outliers_col)
-
-  # convert outlier detection results to long format for easy ggplot-ing
-  outliers_long = x %>%
-    unnest(!!outliers_col) %>%
-    pivot_longer(
-      cols = x %>% pull(!!outliers_col) %>% `[[`(1) %>% colnames(),
-      names_to = c("detection_method", ".value"),
-      names_pattern = "(.+)_(.+)"
-    )
-
-  # if requested, filter to only combined method
-  if (combined_only) {
-    outliers_long = outliers_long %>%
-      filter(detection_method == "combined")
-  }
-
-  # start of plot with observed data
-  p <- ggplot() +
-    geom_line(mapping = aes(x = time_value, y = !!var), data = x)
-
-  # if requested, add bands
-  if (include_bands) {
-    p <- p +
-      geom_ribbon(
-        data = outliers_long,
-        mapping = aes(x = time_value,
-                      ymin = lower, ymax = upper,
-                      color = detection_method),
-        fill = NA
-      )
-  }
-
-  # if requested, add points
-  if (include_points) {
-    outliers_detected <- outliers_long %>%
-      filter((!!var < lower) | (!!var > upper))
-    p <- p +
-      geom_point(
-        data = outliers_detected,
-        mapping = aes(x = time_value,
-                      y = !!var,
-                      color = detection_method,
-                      shape = detection_method)
-      )
-  }
-
-  # if requested, add facetting
-  if (!is.null(facet_vars)) {
-    p <- p +
-      facet_wrap(facet_vars,
-                 nrow = facet_nrow, ncol = facet_ncol,
-                 scales = facet_scales)
-  }
-
-  # if requested, print the plot
-  if (plot) {
-    print(p)
-  }
-
-  # return the plot, invisibly
-  return(invisible(p))
 }

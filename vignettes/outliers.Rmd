@@ -13,7 +13,7 @@ designed to be modular and extendable, so that you can provide your own outlier
 detection and correction functions and use them with `epi_tibble` objects. We'll 
 work state-level daily reported COVID-19 case counts in Florida and New Jersey.
 
-```{r, message = FALSE, fig.width = 9, fig.height = 4}
+```{r, message = FALSE, fig.width = 8, fig.height = 7}
 library(covidcast)
 library(epitools)
 library(dplyr)
@@ -31,10 +31,10 @@ x <- covidcast_signal(data_source = "jhu-csse",
   select(geo_value, time_value, cases = value) %>%
   as.epi_tibble()
 
-ggplot() +
-  geom_line(data = x, mapping = aes(x = time_value, y = cases)) +
-  geom_hline(yintercept = 0, linetype = 2) +
-  facet_wrap(vars(geo_value), scales = "free_y", nrow = 1) +
+ggplot(x, aes(x = time_value, y = cases)) +
+  geom_line() +
+  geom_hline(yintercept = 0, linetype = 3) +
+  facet_wrap(vars(geo_value), scales = "free_y", ncol = 1) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Reported COVID-19 counts")
 ```
@@ -67,26 +67,19 @@ and `detect_outliers_stl()`, respectively.
 
 ```{r}
 detection_methods = bind_rows(
-  tibble(
-    method = "rm",
-    method_args = list(list(detect_negatives = TRUE,
-                            detection_multiplier = 2.5)),
-    method_abbr = "rm"
-  ),
-  tibble(
-    method = "stl",
-    method_args = list(list(detect_negatives = TRUE,
-                            detection_multiplier = 2.5)),
-    method_abbr = "stl_seasonal"
-  ),
-  tibble(
-    method = "stl",
-    method_args = list(list(detect_negatives = TRUE,
-                            detection_multiplier = 2.5,
-                            seasonal_period = NULL)),
-    method_abbr = "stl_nonseasonal",
-  )
-)
+  tibble(method = "rm",
+         args = list(list(detect_negatives = TRUE,
+                          detection_multiplier = 2.5)),
+         abbr = "rm"),
+  tibble(method = "stl",
+         args = list(list(detect_negatives = TRUE,
+                          detection_multiplier = 2.5)),
+         abbr = "stl_seasonal"),
+  tibble(method = "stl",
+         args = list(list(detect_negatives = TRUE,
+                          detection_multiplier = 2.5,
+                          seasonal_period = NULL)),
+         abbr = "stl_nonseasonal"))
 
 detection_methods
 ```
@@ -97,77 +90,116 @@ Note that using this combined median threshold is equivalent to using a majority
 vote across the base methods to determine whether a value is an outlier.
 
 ```{r}
-x = x %>%
+x <- x %>%
   group_by(geo_value) %>%
   detect_outliers(
     var = cases,
     methods = detection_methods,
     combiner = "median",
-    new_col_name = "outlier_info")
+    new_col_name = "outlier_info") 
 ```
 
-The original `epi_tibble`, `x`, has now been updated to include a new column
-called `outlier_info` with information about the detection thresholds and
-possible replacement values from each method:
+We can see that `x` has now been updated to include a new column `outlier_info` 
+with information about the detection thresholds and possible replacement values 
+from each method.
 
 ```{r}
-x
+head(x)
+head(x %>% unnest(outlier_info))
 ```
 
-```{r}
-x %>% unnest(outlier_info)
+To visualize the results, we first define a convenience function for plotting.
+
+```{r fig.width = 9, fig.height = 7}
+# Plot outlier detection bands and/or points identified as outliers
+plot_outliers = function(x, var, outliers_col = outlier_info, 
+                         bands = FALSE, points = TRUE, combined_only = TRUE, 
+                         facet_vars = vars(geo_value), nrow = NULL, ncol = NULL, 
+                         scales = "fixed") {
+  var <- rlang::enquo(var)
+  outliers_col <- rlang::enquo(outliers_col)
+  
+  # Convert outlier detection results to long format 
+  x_long <- x %>%
+    unnest(!!outliers_col) %>%
+    pivot_longer(
+      cols = x %>% pull(!!outliers_col) %>% `[[`(1) %>% colnames(),
+      names_to = c("method", ".value"),
+      names_pattern = "(.+)_(.+)")
+
+  # If requested, filter to only combined method
+  if (combined_only) {
+    x_long <- x_long %>% filter(method == "combined")
+  }
+
+  # Start of plot with observed data
+  p <- ggplot() +
+    geom_line(data = x, mapping = aes(x = time_value, y = !!var))
+
+  # If requested, add bands
+  if (bands) {
+    p <- p + geom_ribbon(data = x_long, 
+                         aes(x = time_value, ymin = lower, ymax = upper, 
+                             color = method), fill = NA)
+  }
+
+  # If requested, add points
+  if (points) {
+    x_detected <- x_long %>% filter((!!var < lower) | (!!var > upper))
+    p <- p + geom_point(data = x_detected, 
+                        aes(x = time_value, y = !!var, color = method, 
+                            shape = method))
+  }
+
+  # If requested, add faceting
+  if (!is.null(facet_vars)) {
+    p <- p + facet_wrap(facet_vars, nrow = nrow, ncol = ncol, scales = scales)
+  }
+
+  p
+}
 ```
 
-With these results in hand, we can visualize them using the convenience function
-`plot_outliers`:
+Now we produce plots for each state at a time, faceting by the detection method.
 
-```{r fig.width=7, fig.height=7}
-plot_outliers(x = x,
-              var = cases,
-              outliers_col = outlier_info,
-              include_bands = TRUE,
-              combined_only = FALSE,
-              facet_ncol = 1,
-              facet_scales = "free_y")
+```{r fig.width = 9, fig.height = 14}
+plot_outliers(x %>% filter(geo_value == "fl"), cases, 
+              bands = TRUE, combined_only = FALSE,
+              facet_vars = vars(method), scales = "free_y", ncol = 1) +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Reported COVID-19 counts")
+
+plot_outliers(x %>% filter(geo_value == "nj"), cases, 
+              bands = TRUE, combined_only = FALSE,
+              facet_vars = vars(method), scales = "free_y", ncol = 1) +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Reported COVID-19 counts")
 ```
-
-It's a little hard to see what's going on with the results from all the methods
-overlaid on top of each other. We can help by making plots for one `geo_value`
-at a time and facetting by the `detection_method`:
-
-```{r fig.width=7, fig.height=7}
-plot_outliers(x = x %>% filter(geo_value == "fl"),
-              var = cases,
-              outliers_col = outlier_info,
-              include_bands = TRUE,
-              combined_only = FALSE,
-              facet_ncol = 1,
-              facet_vars = vars(detection_method))
-```
-
-```{r fig.width=7, fig.height=7}
-plot_outliers(x = x %>% filter(geo_value == "nj"),
-              var = cases,
-              outliers_col = outlier_info,
-              include_bands = TRUE,
-              combined_only = FALSE,
-              facet_ncol = 1,
-              facet_vars = vars(detection_method))
-```
-
-Or we could just plot the combined results and suppress the bands:
-
-```{r fig.width=7, fig.height=7}
-plot_outliers(x = x,
-              var = cases,
-              outliers_col = outlier_info,
-              include_bands = FALSE,
-              combined_only = TRUE,
-              facet_ncol = 1,
-              facet_scales = "free_y")
-```
-
 
 ## Outlier correction
 
-TODO: fill this in.
+Finally, in order to correct outliers, we can use the posited replacement values
+returned by each outlier detection method. Below we use the replacement value
+from the combined method, which is defined by the median of replacement values 
+from the base methods at each time point.
+
+```{r fig.width = 8, fig.height = 7}
+y <- x %>% 
+  unnest(outlier_info) %>%
+  mutate(cases_corrected = combined_replacement) %>%
+  select(geo_value, time_value, cases, cases_corrected) 
+
+y %>% filter(cases != cases_corrected)
+
+ggplot(y, aes(x = time_value)) +
+  geom_line(aes(y = cases), linetype = 2) +
+  geom_line(aes(y = cases_corrected), col = "red") +
+  geom_hline(yintercept = 0, linetype = 3) +
+  facet_wrap(vars(geo_value), scales = "free_y", ncol = 1) +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Reported COVID-19 counts")
+```
+
+Lastly, we note that it can sometimes be helpful to iterate outlier detection
+and correction; that is, detect outliers, correct with replacement values, then
+rerun outlier detection, correct again with replacement values, and so on.

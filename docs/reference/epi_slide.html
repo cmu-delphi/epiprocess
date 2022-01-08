@@ -160,6 +160,7 @@ for examples.</p>
   <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>14</span>,
   <span class='kw'>align</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"right"</span>, <span class='st'>"center"</span>, <span class='st'>"left"</span>),
   <span class='no'>before</span>,
+  <span class='kw'>complete</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"slide_value"</span>,
   <span class='kw'>new_col_type</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"dbl"</span>, <span class='st'>"int"</span>, <span class='st'>"lgl"</span>, <span class='st'>"chr"</span>, <span class='st'>"list"</span>),
   <span class='no'>time_step</span>,
@@ -206,6 +207,11 @@ before the reference time point. For example, setting <code>before = n-1</code> 
 be the same as setting <code>align = "right"</code>. The current argument allows for
 more flexible specification of alignment than the <code>align</code> parameter, and if
 specified, then it overrides <code>align</code>.</p></td>
+    </tr>
+    <tr>
+      <th>complete</th>
+      <td><p>Should the slide function be run over complete windows only?
+Default is <code>FALSE</code>, which allows for computation on partial windows.</p></td>
     </tr>
     <tr>
       <th>new_col_name</th>
