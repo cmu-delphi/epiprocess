@@ -36,6 +36,8 @@
 #'   be the same as setting `align = "right"`. The current argument allows for
 #'   more flexible specification of alignment than the `align` parameter, and if
 #'   specified, then it overrides `align`.
+#' @param complete Should the slide function be run over complete windows only?
+#'   Default is `FALSE`, which allows for computation on partial windows.  
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
@@ -62,7 +64,7 @@
 #' @importFrom rlang .data abort enquo
 #' @export
 epi_slide = function(x, slide_fun, n = 14, align = c("right", "center", "left"),
-                     before, new_col_name = "slide_value",
+                     before, complete = FALSE, new_col_name = "slide_value",
                      new_col_type = c("dbl", "int", "lgl", "chr", "list"),
                      time_step, ...) { 
   # Check we have an `epi_tibble` object
@@ -118,6 +120,7 @@ epi_slide = function(x, slide_fun, n = 14, align = c("right", "center", "left"),
                  slide_fun = slide_fun,
                  before_num = before_num,
                  after_num = after_num,
+                 complete = complete, 
                  new_col_name = new_col_name,
                  ...)
 
@@ -129,11 +132,12 @@ epi_slide = function(x, slide_fun, n = 14, align = c("right", "center", "left"),
 
 # Slide over a single group
 epi_slide_one_grp = function(.data_group, index_fun, slide_fun, before_num, 
-                             after_num, new_col_name, ...) {  
+                             after_num, complete, new_col_name, ...) {  
   slide_values = index_fun(.x = .data_group,
                            .i = .data_group$time_value,
                            .f = slide_fun, ..., 
                            .before = before_num,
-                           .after = after_num)
+                           .after = after_num,
+                           .complete = complete)
   return(mutate(.data_group, !!new_col_name := slide_values))
 }

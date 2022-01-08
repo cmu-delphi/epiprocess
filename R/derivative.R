@@ -28,6 +28,8 @@
 #'   be the same as setting `align = "right"`. The current argument allows for
 #'   more flexible specification of alignment than the `align` parameter, and if
 #'   specified, then it overrides `align`.
+#' @param complete Should the computation be run over complete windows only?
+#'   Default is `FALSE`, which allows for computation on partial windows.  
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
@@ -95,9 +97,10 @@
 #' @importFrom rlang abort enquo
 #' @export
 estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
-                          align = c("right", "center", "left"), before, 
-                          new_col_name = "deriv", keep_obj = FALSE, deriv = 1,
-                          time_step, na_rm = TRUE, ...) {
+                          align = c("right", "center", "left"), before,
+                          complete = FALSE, new_col_name = "deriv",
+                          keep_obj = FALSE, deriv = 1, time_step, na_rm = TRUE,
+                          ...) {
   # Check that we have a variable to do computations on
   if (missing(var)) abort("`var` must be specified.")
   var = enquo(var)
@@ -116,9 +119,10 @@ estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
 
   # Slide the derivative function into a temporary column
   x = epi_slide(x, slide_fun, n, align = align, before = before,
-                new_col_name = "temp", new_col_type = "list",
-                time_step = time_step, keep_obj = keep_obj,
-                deriv = deriv, var = var, na_rm = na_rm, ...) 
+                complete = complete, new_col_name = "temp",
+                new_col_type = "list", time_step = time_step,
+                keep_obj = keep_obj, deriv = deriv, var = var,
+                na_rm = na_rm, ...) 
 
   # Save the metadata (dplyr drops it)
   metadata = attributes(x)$metadata
