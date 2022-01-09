@@ -8,6 +8,9 @@ epi_slide(
   x,
   slide_fun,
   n = 14,
+  align = c("right", "center", "left"),
+  before,
+  complete = FALSE,
   new_col_name = "slide_value",
   new_col_type = c("dbl", "int", "lgl", "chr", "list"),
   time_step,
@@ -18,18 +21,33 @@ epi_slide(
 \item{x}{The \code{epi_tibble} object under consideration.}
 
 \item{slide_fun}{Function or formula to slide over variables in \code{x}. To
-"slide" means to apply a function or formula over a trailing window of \code{n}
+"slide" means to apply a function or formula over a running window of \code{n}
 time steps (where one time step is typically one day or one week; see
 details for more explanation). If a function, \code{slide_fun} must take \code{x}, a
 data frame with the same column names as the original object; followed by
 any number of named arguments; and ending with \code{...}. If a formula,
-\code{slide_fun} can operate directly on columns accessed via \code{.x$var}, as in \code{~ mean(.x$var)} to compute a trailing mean of a column \code{var} over the last
+\code{slide_fun} can operate directly on columns accessed via \code{.x$var}, as in \code{~ mean(.x$var)} to compute a mean of a column \code{var} over a sliding window of
 \code{n} time steps.}
 
-\item{n}{Number of time steps to use in the trailing window. For example, if
-\code{n = 5}, and one time step is one day, then to produce a value on November
-5, we apply the given function or formula to data in between November 1 and
-5.  Default is 14.}
+\item{n}{Number of time steps to use in the running window. For example, if
+\code{n = 5}, one time step is one day, and the alignment is "right", then to
+produce a value on November 5, we apply the given function or formula to
+data in between November 1 and 5. Default is 14.}
+
+\item{align}{One of "right", "center", or "left", indicating the alignment of
+the sliding window relative to the reference time point. If the alignment
+is "center" and \code{n} is even, then one more time point will be used before
+the reference time point than after. Default is "right".}
+
+\item{before}{Optional integer, in the range to 0 to \code{n-1} (inclusive),
+specifying the number of time points to use in the sliding window strictly
+before the reference time point. For example, setting \code{before = n-1} would
+be the same as setting \code{align = "right"}. The current argument allows for
+more flexible specification of alignment than the \code{align} parameter, and if
+specified, then it overrides \code{align}.}
+
+\item{complete}{Should the slide function be run over complete windows only?
+Default is \code{FALSE}, which allows for computation on partial windows.}
 
 \item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
@@ -53,12 +71,12 @@ An \code{epi_tibble} object given by appending a new column to \code{x}, named
 according to the \code{new_col_name} argument, containing the slide values.
 }
 \description{
-Slides a given function over the variables in an \code{epi_tibble} object. See the
+Slides a given function over variables in an \code{epi_tibble} object. See the
 \href{https://cmu-delphi.github.io/epitools/articles/slide.html}{slide vignette}
 for examples.
 }
 \details{
-To "slide" means to apply a function or formula over a trailing
+To "slide" means to apply a function or formula over a running
 window of \code{n} time steps, where the unit (the meaning of one time step) is
 determined by the \code{time_type} field in the metadata: the unit is one day if
 \code{time_type} is either "day-time" or "day", and the unit is one week if

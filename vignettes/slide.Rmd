@@ -11,18 +11,21 @@ One of the most central tools in the `epitools` package is `epi_slide()`, which
 is based on the family of functions provided by the 
 [`slider`](https://cran.r-project.org/web/packages/slider/) package. In
 `epitools`, to "slide" means to apply a computation---represented as a function 
-or formula---over a trailing window of `n` time steps. Several other functions
+or formula---over a running window of `n` time steps. Several other functions
 in the `epitools` package, such as `pct_change()` and `estimate_deriv()`, use
 `epi_slide()` as their workhorse. Suitable groupings can always be achieved by 
 a preliminary call to `group_by()`.
 
-By default, the meaning of one time step is inferred from the `time_type` of the 
-`epi_tibble` object under consideration. If `time_type` is "day", then one time 
+By default, the meaning of one time step is inferred from the `time_type` of the
+`epi_tibble` object under consideration. If `time_type` is "day", then one time
 step is one day. The time step can also be specified manually in the call to
-`epi_slide()`; you can read the documentation for more details.
+`epi_slide()`; you can read the cocumentation for more details. Furthermore, the
+alignment of the running window used in `epi_slide()` can either be "trailing" 
+or "centered"; the default is "trailing", and is what we use in this and most
+other vignettes, without specifying otherwise.
 
 Similar to the getting started guide, we'll fetch daily reported COVID-19 cases 
-for 4 U.S. states (note: new, not cumulative cases) using the
+for four U.S. states (note: new, not cumulative cases) using the
 [`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) package, and 
 then convert this to `epi_tibble` format.
 

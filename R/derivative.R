@@ -1,8 +1,8 @@
-#' Estimate derivatives of variables in an `epi_tibble` object
+#' Estimate derivatives of a variable in an `epi_tibble` object
 #' 
-#' Estimates derivatives of the variables in an `epi_tibble` object, using a
-#' local (in time) linear regression or a smoothing spline. See the [estimating
-#' derivatives
+#' Estimates derivatives of a variable in an `epi_tibble` object, using a local
+#' (in time) linear regression or alternative smoother. See the [estimating
+#' derivatives  
 #' vignette](https://cmu-delphi.github.io/epitools/articles/derivatives.html)   
 #' for examples.  
 #'
@@ -14,13 +14,26 @@
 #'   corresponding predicted derivative (that is, the derivative of the
 #'   underlying estimated function, linear or spline) at the current time
 #'   point. Default is "lin". See details for more explanation.
-#' @param n Number of time steps to use in the trailing window. For example, if 
-#'   `n = 10`, and one time step is one day, then to estimate the derivative on
-#'   November 10, we train the given method on data in between November 1 and
-#'   10. Default is 14.  
+#' @param n Number of time steps to use in the running window. For example, if
+#'   `n = 10`, one time step is one day, and the alignment is "right", then to
+#'   estimate the derivative on November 10, we train the given method on data
+#'   in between November 1 and 10. Default is 14.  
+#' @param align One of "right", "center", or "left", indicating the alignment of
+#'   the sliding window relative to the reference time point. If the alignment
+#'   is "center" and `n` is even, then one more time point will be used before
+#'   the reference time point than after. Default is "right".
+#' @param before Optional integer, in the range to 0 to `n-1` (inclusive),
+#'   specifying the number of time points to use in the sliding window strictly
+#'   before the reference time point. For example, setting `before = n-1` would
+#'   be the same as setting `align = "right"`. The current argument allows for
+#'   more flexible specification of alignment than the `align` parameter, and if
+#'   specified, then it overrides `align`.
+#' @param complete Should the computation be run over complete windows only?
+#'   Default is `FALSE`, which allows for computation on partial windows.  
 #' @param new_col_name String indicating the name of the new column that will
-#'   contain the derivative values. Default is "slide_value"; note that setting
-#'   `new_col_name` equal to an existing column name will overwrite this column.
+#'   contain the derivative values. Default is "deriv"; note that setting
+#'   `new_col_name` equal to an existing column name will overwrite this
+#'   column. 
 #' @param keep_obj Should the fitted object (from linear regression, smoothing 
 #'   spline, or trend filtering) be kept as a separate column? If `TRUE`, then
 #'   this column name is given by  appending "_obj" to `new_col_name`. Default
@@ -36,7 +49,7 @@
 #'   is `TRUE`. 
 #' @param ... Additional arguments to pass to the function that estimates
 #'   derivatives. See details below.    
-#' @return A `epi_tibble` object given by appending a new column to `x`, named
+#' @return An `epi_tibble` object given by appending a new column to `x`, named
 #'   according to the `new_col_name` argument, containing the derivative values.
 #'
 #' @details Derivatives are estimated using:
@@ -84,9 +97,11 @@
 #' @importFrom dplyr rowwise
 #' @importFrom rlang abort enquo
 #' @export
-estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14, 
-                          new_col_name = "deriv", keep_obj = FALSE, deriv = 1,
-                          time_step, na_rm = TRUE, ...) {
+estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
+                          align = c("right", "center", "left"), before,
+                          complete = FALSE, new_col_name = "deriv",
+                          keep_obj = FALSE, deriv = 1, time_step, na_rm = TRUE,
+                          ...) {
   # Check that we have a variable to do computations on
   if (missing(var)) abort("`var` must be specified.")
   var = enquo(var)
@@ -94,34 +109,36 @@ estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
   # Check the method, define the slider function
   method = match.arg(method)
   slide_fun = switch(method,
-                     "lin" = linear_reg_deriv,
-                     "ss" = smooth_spline_deriv,
-                     "tf" = trend_filter_deriv)
+                     "lin" = estimate_deriv_lin,
+                     "ss" = estimate_deriv_ss,
+                     "tf" = estimate_deriv_tf)
   
   # Check the derivative order
   if (!(deriv == 1 || deriv == 2)) {
     stop("`deriv` must be either 1 or 2.")
   }
 
-  # Slide the derivative function
-  x = epi_slide(x, slide_fun, n, new_col_name = "tmp", new_col_type = "list",
-                time_step = time_step, keep_obj = keep_obj, deriv = deriv,
-                var = var, na_rm = na_rm, ...)  
+  # Slide the derivative function into a temporary column
+  x = epi_slide(x, slide_fun, n, align = align, before = before,
+                complete = complete, new_col_name = "temp",
+                new_col_type = "list", time_step = time_step,
+                keep_obj = keep_obj, deriv = deriv, var = var,
+                na_rm = na_rm, ...) 
 
   # Save the metadata (dplyr drops it)
   metadata = attributes(x)$metadata
   
   # Grab the derivative result
-  x = x %>% rowwise() %>% mutate(!!new_col_name := tmp$result)
+  x = x %>% rowwise() %>% mutate(!!new_col_name := temp$result)
 
   # Grab the derivative object, if we're asked to
   if (keep_obj) {
     x = x %>% rowwise() %>%
-      mutate(!!paste0(new_col_name, "_obj") := list(tmp$object))
+      mutate(!!paste0(new_col_name, "_obj") := list(temp$object))
   }
   
-  # Delete the tmp column and ungroup
-  x = select(x, -tmp) %>% ungroup()
+  # Delete the temp column and ungroup
+  x = select(x, -temp) %>% ungroup()
 
   # Attach the class and metadata and return
   class(x) = c("epi_tibble", class(x))
@@ -134,7 +151,7 @@ estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
 #' @importFrom stats lsfit coef
 #' @importFrom tidyr drop_na
 #' @noRd
-linear_reg_deriv = function(x, ...) {
+estimate_deriv_lin = function(x, ...) { 
   params = list(...)
   params[[1]] = NULL # dplyr::group_modify() includes the group here
 
@@ -169,7 +186,7 @@ linear_reg_deriv = function(x, ...) {
 #' @importFrom stats smooth.spline predict
 #' @importFrom tidyr drop_na
 #' @noRd
-smooth_spline_deriv = function(x, ...) {
+estimate_deriv_ss = function(x, ...) {
   params = list(...)
   params[[1]] = NULL # dplyr::group_modify() includes the group here
 
@@ -202,7 +219,7 @@ smooth_spline_deriv = function(x, ...) {
 #' @importFrom genlasso trendfilter cv.trendfilter coef.genlasso
 #' @importFrom tidyr drop_na
 #' @noRd
-trend_filter_deriv = function(data, ...) {
+estimate_deriv_tf = function(data, ...) {
   params = list(...)
   params[[1]] = NULL # dplyr::group_modify() includes the group here
   

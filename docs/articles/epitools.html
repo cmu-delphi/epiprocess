@@ -60,9 +60,6 @@
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct-change.html">2. Compute percentage change over time</a>
-    </li>
-    <li>
       <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
     </li>
     <li>
@@ -70,6 +67,9 @@
     </li>
     <li>
       <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
+    </li>
+    <li>
+      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
     <li>
       <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
@@ -113,9 +113,9 @@
 <h2 class="hasAnchor">
 <a href="#installing" class="anchor"></a>Installing</h2>
 <p>This package is not on CRAN yet, so it can be installed using the <a href="https://cran.r-project.org/package=devtools"><code>devtools</code></a> package:</p>
-<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="kw pkg">devtools</span><span class="kw ns">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span>(<span class="st">"cmu-delphi/epitools"</span>, <span class="kw">ref</span> <span class="kw">=</span> <span class="st">"main"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="kw pkg">devtools</span><span class="kw ns">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/remote-reexports.html">install_github</a></span>(<span class="st">"cmu-delphi/epitools"</span>, <span class="kw">ref</span> <span class="kw">=</span> <span class="st">"main"</span>)</pre></body></html></div>
 <p>Building the vignettes, such as this getting started guide, takes a significant amount of time. They are not included in the package by default. If you want to include vignettes, then use this modified command:</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="kw pkg">devtools</span><span class="kw ns">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span>(<span class="st">"cmu-delphi/epitools"</span>, <span class="kw">ref</span> <span class="kw">=</span> <span class="st">"main"</span>,
+<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="kw pkg">devtools</span><span class="kw ns">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/remote-reexports.html">install_github</a></span>(<span class="st">"cmu-delphi/epitools"</span>, <span class="kw">ref</span> <span class="kw">=</span> <span class="st">"main"</span>,
                          <span class="kw">build_vignettes</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">dependencies</span> <span class="kw">=</span> <span class="fl">TRUE</span>)</pre></body></html></div>
 </div>
 <div id="getting-data-into-epi_tibble-format" class="section level2">
@@ -143,9 +143,10 @@
 <pre><code>## [1] "covidcast_signal" "data.frame"</code></pre>
 <div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span>(<span class="no">case_data</span>)</pre></body></html></div>
 <pre><code>##  [1] "data_source"         "signal"              "geo_value"          
-##  [4] "time_value"          "issue"               "lag"                
-##  [7] "missing_value"       "missing_stderr"      "missing_sample_size"
-## [10] "value"               "stderr"              "sample_size"</code></pre>
+##  [4] "time_value"          "source"              "geo_type"           
+##  [7] "time_type"           "issue"               "lag"                
+## [10] "missing_value"       "missing_stderr"      "missing_sample_size"
+## [13] "value"               "stderr"              "sample_size"</code></pre>
 <p>As we can see, a data frame returned <code><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast::covidcast_signal()</a></code> has the columns required for an <code>epi_tibble</code> object (along with many others). A call to <code><a href="../reference/as.epi_tibble.html">as.epi_tibble()</a></code>, with further specification of some relevant metadata, brings the data frame into <code>epi_tibble</code> format.</p>
 <div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">epitools</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">dplyr</span>)
@@ -163,7 +164,7 @@
 <pre><code>## An `epi_tibble` object, with metadata:
 ## * geo_type  = state
 ## * time_type = day
-## * issue     = 2021-09-27
+## * issue     = 2022-01-04
 ## 
 ## Summary of space-time coverge:
 ## * earliest time value              = 2020-06-01
@@ -173,11 +174,11 @@
 <pre><code>## # A tibble: 6 × 3
 ##   geo_value time_value cases_cum
 ##   &lt;chr&gt;     &lt;date&gt;         &lt;dbl&gt;
-## 1 ca        2020-06-01    116160
+## 1 ca        2020-06-01    116245
 ## 2 fl        2020-06-01     56830
-## 3 ny        2020-06-01    374818
-## 4 tx        2020-06-01     65732
-## 5 ca        2020-06-02    118532
+## 3 ny        2020-06-01    371711
+## 4 tx        2020-06-01     65593
+## 5 ca        2020-06-02    118665
 ## 6 fl        2020-06-02     57447</code></pre>
 <div class="sourceCode" id="cb13"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/attributes.html">attributes</a></span>(<span class="no">x</span>)$<span class="no">metadata</span></pre></body></html></div>
 <pre><code>## $geo_type
@@ -187,7 +188,7 @@
 ## [1] "day"
 ## 
 ## $issue
-## [1] "2021-09-27"</code></pre>
+## [1] "2022-01-04"</code></pre>
 </div>
 <div id="some-info-about-required-metadata" class="section level2">
 <h2 class="hasAnchor">
@@ -215,7 +216,7 @@
 ## [1] "day"
 ## 
 ## $issue
-## [1] "2021-09-27"</code></pre>
+## [1] "2022-01-04"</code></pre>
 </div>
 <div id="working-with-epi_tibble-objects-downstream" class="section level2">
 <h2 class="hasAnchor">
@@ -274,7 +275,7 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Ryan Tibshirani.</p>
+  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

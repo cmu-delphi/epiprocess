@@ -104,9 +104,6 @@ for examples." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct-change.html">2. Compute percentage change over time</a>
-    </li>
-    <li>
       <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
     </li>
     <li>
@@ -114,6 +111,9 @@ for examples." />
     </li>
     <li>
       <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
+    </li>
+    <li>
+      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
     <li>
       <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
@@ -142,7 +142,7 @@ for examples." />
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Compute lagged correlations between variables in an <code>epi_tibble</code> object</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/blob/main/R/cor.R'><code>R/cor.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/blob/main/R/correlation.R'><code>R/correlation.R</code></a></small>
     <div class="hidden name"><code>cor_lagged.Rd</code></div>
     </div>
 
@@ -169,7 +169,7 @@ for examples.</p>
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>The <code>epi_tibble</code> object.</p></td>
+      <td><p>The <code>epi_tibble</code> object under consideration.</p></td>
     </tr>
     <tr>
       <th>var1, var2</th>
@@ -226,7 +226,7 @@ applied. Then, correlations are computed.</p>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Ryan Tibshirani.</p>
+  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

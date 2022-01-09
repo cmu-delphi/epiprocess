@@ -60,9 +60,6 @@
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct-change.html">2. Compute percentage change over time</a>
-    </li>
-    <li>
       <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
     </li>
     <li>
@@ -70,6 +67,9 @@
     </li>
     <li>
       <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
+    </li>
+    <li>
+      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
     <li>
       <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
@@ -107,7 +107,7 @@
 
     
     
-<p>The <code>epitools</code> package provides some simple functionality for computing lagged correlations between two signals, over space or time, via <code><a href="https://rdrr.io/pkg/epitools/man/cor_lagged.html">cor_lagged()</a></code>. This function is really just a convenience wrapper over some basic commands: it first performs any specified time shifts, grouped by geo value (this way, it shifts each of the individual time series); then, it removes the geo grouping and applies the grouping that is specified; finally, it computes correlations.</p>
+<p>The <code>epitools</code> package provides some simple functionality for computing lagged correlations between two signals, over space or time, via <code><a href="../reference/cor_lagged.html">cor_lagged()</a></code>. This function is really just a convenience wrapper over some basic commands: it first performs any specified time shifts, grouped by geo value (this way, it shifts each of the individual time series); then, it removes the geo grouping and applies the grouping that is specified; finally, it computes correlations.</p>
 <p>In this vignette, we’ll examine correlations between state-level COVID-19 case and death rates, smoothed using a 7-day trailing average.</p>
 <div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">covidcast</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">epitools</span>)
@@ -144,25 +144,25 @@
 <div id="correlations-grouped-by-time" class="section level2">
 <h2 class="hasAnchor">
 <a href="#correlations-grouped-by-time" class="anchor"></a>Correlations grouped by time</h2>
-<p>The <code><a href="https://rdrr.io/pkg/epitools/man/cor_lagged.html">cor_lagged()</a></code> function operates on an <code>epi_tibble</code> object, and it requires further specification of the variables to correlate, in its next two arguments (<code>var1</code> and <code>var2</code>).</p>
-<p>In general, we can specify any grouping variable (or combination of variables) in a call to <code><a href="https://rdrr.io/pkg/epitools/man/cor_lagged.html">cor_lagged()</a></code>, via the <code>by</code> argument. This potentially leads to many ways to compute correlations. There are always at least two ways to compute correlations in an <code>epi_tibble</code>: grouping by time value, and by geo value. The former is obtained by setting <code>by = time_value</code>.</p>
+<p>The <code><a href="../reference/cor_lagged.html">cor_lagged()</a></code> function operates on an <code>epi_tibble</code> object, and it requires further specification of the variables to correlate, in its next two arguments (<code>var1</code> and <code>var2</code>).</p>
+<p>In general, we can specify any grouping variable (or combination of variables) in a call to <code><a href="../reference/cor_lagged.html">cor_lagged()</a></code>, via the <code>by</code> argument. This potentially leads to many ways to compute correlations. There are always at least two ways to compute correlations in an <code>epi_tibble</code>: grouping by time value, and by geo value. The former is obtained by setting <code>by = time_value</code>.</p>
 <div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
 
-<span class="no">z1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/epitools/man/cor_lagged.html">cor_lagged</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="no">death_rates</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="no">time_value</span>)
+<span class="no">z1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/cor_lagged.html">cor_lagged</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="no">death_rates</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="no">time_value</span>)
 
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">z1</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">cor</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>() +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Correlation"</span>)</pre></body></html></div>
 <p><img src="correlation_files/figure-html/unnamed-chunk-2-1.png" width="700"></p>
-<p>The above plot addresses the question: “on any given day, are case and death rates linearly associated, across the U.S. states?”. We might be interested in broadening this question, instead asking: “on any given day, do higher case rates tend to associate with higher death rates?”, removing the dependence on a linear relationship. The latter can be addressed using Spearman correlation, accomplished by setting <code>method = "spearman"</code> in the call to <code><a href="https://rdrr.io/pkg/epitools/man/cor_lagged.html">cor_lagged()</a></code>. Spearman correlation is highly robust and invariant to monotone transformations.</p>
+<p>The above plot addresses the question: “on any given day, are case and death rates linearly associated, across the U.S. states?”. We might be interested in broadening this question, instead asking: “on any given day, do higher case rates tend to associate with higher death rates?”, removing the dependence on a linear relationship. The latter can be addressed using Spearman correlation, accomplished by setting <code>method = "spearman"</code> in the call to <code><a href="../reference/cor_lagged.html">cor_lagged()</a></code>. Spearman correlation is highly robust and invariant to monotone transformations.</p>
 </div>
 <div id="lagged-correlations" class="section level2">
 <h2 class="hasAnchor">
 <a href="#lagged-correlations" class="anchor"></a>Lagged correlations</h2>
-<p>We might also be interested in how case rates associate with death rates in the <em>future</em>. Using the <code>dt1</code> parameter in <code><a href="https://rdrr.io/pkg/epitools/man/cor_lagged.html">cor_lagged()</a></code>, we can lag case rates back any number of days we want, before calculating correlations. Below, we set <code>dt1 = -10</code>. This means that <code>var1 = case_rates</code> will be lagged by 10 days, so that case rates on June 1st will be correlated with death rates on June 11th. (It might also help to think of it this way: death rates on a certain day will be correlated with case rates at an offset of -10 days.)</p>
-<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">z2</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/epitools/man/cor_lagged.html">cor_lagged</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="no">death_rates</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">dt1</span> <span class="kw">=</span> -<span class="fl">10</span>)
+<p>We might also be interested in how case rates associate with death rates in the <em>future</em>. Using the <code>dt1</code> parameter in <code><a href="../reference/cor_lagged.html">cor_lagged()</a></code>, we can lag case rates back any number of days we want, before calculating correlations. Below, we set <code>dt1 = -10</code>. This means that <code>var1 = case_rates</code> will be lagged by 10 days, so that case rates on June 1st will be correlated with death rates on June 11th. (It might also help to think of it this way: death rates on a certain day will be correlated with case rates at an offset of -10 days.)</p>
+<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">z2</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/cor_lagged.html">cor_lagged</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="no">death_rates</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">dt1</span> <span class="kw">=</span> -<span class="fl">10</span>)
 
 <span class="no">z</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">rbind</a></span>(<span class="no">z1</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">lag</span> <span class="kw">=</span> <span class="fl">0</span>),
            <span class="no">z2</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">lag</span> <span class="kw">=</span> <span class="fl">10</span>)) <span class="kw">%&gt;%</span>
@@ -180,8 +180,8 @@
 <a href="#correlations-grouped-by-state" class="anchor"></a>Correlations grouped by state</h2>
 <p>The second option we have is to group by geo value, obtained by setting <code>by =  geo_value</code>. We’ll again look at correlations both for 0- and 10-day lagged case<br>
 rates.</p>
-<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">z1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/epitools/man/cor_lagged.html">cor_lagged</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="no">death_rates</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="no">geo_value</span>)
-<span class="no">z2</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/epitools/man/cor_lagged.html">cor_lagged</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="no">death_rates</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="no">geo_value</span>, <span class="kw">dt1</span> <span class="kw">=</span> -<span class="fl">10</span>)
+<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">z1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/cor_lagged.html">cor_lagged</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="no">death_rates</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="no">geo_value</span>)
+<span class="no">z2</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/cor_lagged.html">cor_lagged</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="no">death_rates</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="no">geo_value</span>, <span class="kw">dt1</span> <span class="kw">=</span> -<span class="fl">10</span>)
 
 <span class="no">z</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">rbind</a></span>(<span class="no">z1</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">lag</span> <span class="kw">=</span> <span class="fl">0</span>),
            <span class="no">z2</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">lag</span> <span class="kw">=</span> <span class="fl">10</span>)) <span class="kw">%&gt;%</span>
@@ -201,7 +201,7 @@ rates.</p>
 <span class="no">lags</span> <span class="kw">=</span> <span class="fl">0</span>:<span class="fl">35</span>
 
 <span class="no">z</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html">map_dfr</a></span>(<span class="no">lags</span>, <span class="kw">function</span>(<span class="no">lag</span>) {
-  <span class="fu"><a href="https://rdrr.io/pkg/epitools/man/cor_lagged.html">cor_lagged</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="no">death_rates</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="no">geo_value</span>, <span class="kw">dt1</span> <span class="kw">=</span> -<span class="no">lag</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/cor_lagged.html">cor_lagged</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="no">death_rates</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="no">geo_value</span>, <span class="kw">dt1</span> <span class="kw">=</span> -<span class="no">lag</span>) <span class="kw">%&gt;%</span>
     <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">lag</span> <span class="kw">=</span> <span class="no">lag</span>)
   })
 
@@ -227,7 +227,7 @@ rates.</p>
 
 
       <footer><div class="copyright">
-  <p>Developed by Ryan Tibshirani.</p>
+  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">
