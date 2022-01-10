@@ -1,12 +1,12 @@
-#' Estimate derivatives of a variable in an `epi_tibble` object
+#' Estimate derivatives of a variable in an `epi_df` object
 #' 
-#' Estimates derivatives of a variable in an `epi_tibble` object, using a local
-#' (in time) linear regression or alternative smoother. See the [estimating
-#' derivatives  
-#' vignette](https://cmu-delphi.github.io/epitools/articles/derivatives.html)   
-#' for examples.  
+#' Estimates derivatives of a variable in an `epi_df` object, using a local (in
+#' time) linear regression or alternative smoothing method. See the [estimating
+#' derivatives
+#' vignette](https://cmu-delphi.github.io/epitools/articles/derivatives.html)
+#' for examples.
 #'
-#' @param x The `epi_tibble` object under consideration.
+#' @param x The `epi_df` object under consideration.
 #' @param var The variable in `x` whose derivatives are to be estimated.
 #' @param method One of "lin", "ss", or "tf" indicating the method to use for
 #'   the derivative calculation. To estimate the derivative at any time point,
@@ -49,7 +49,7 @@
 #'   is `TRUE`. 
 #' @param ... Additional arguments to pass to the function that estimates
 #'   derivatives. See details below.    
-#' @return An `epi_tibble` object given by appending a new column to `x`, named
+#' @return An `epi_df` object given by appending a new column to `x`, named
 #'   according to the `new_col_name` argument, containing the derivative values.
 #'
 #' @details Derivatives are estimated using:
@@ -141,7 +141,7 @@ estimate_deriv = function(x, var, method = c("lin", "ss", "tf"), n = 14,
   x = select(x, -temp) %>% ungroup()
 
   # Attach the class and metadata and return
-  class(x) = c("epi_tibble", class(x))
+  class(x) = c("epi_df", class(x))
   attributes(x)$metadata = metadata
   return(x)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/derivative.R
 \name{estimate_deriv}
 \alias{estimate_deriv}
-\title{Estimate derivatives of a variable in an \code{epi_tibble} object}
+\title{Estimate derivatives of a variable in an \code{epi_df} object}
 \usage{
 estimate_deriv(
   x,
@@ -21,7 +21,7 @@ estimate_deriv(
 )
 }
 \arguments{
-\item{x}{The \code{epi_tibble} object under consideration.}
+\item{x}{The \code{epi_df} object under consideration.}
 
 \item{var}{The variable in \code{x} whose derivatives are to be estimated.}
 
@@ -78,12 +78,12 @@ is \code{TRUE}.}
 derivatives. See details below.}
 }
 \value{
-An \code{epi_tibble} object given by appending a new column to \code{x}, named
+An \code{epi_df} object given by appending a new column to \code{x}, named
 according to the \code{new_col_name} argument, containing the derivative values.
 }
 \description{
-Estimates derivatives of a variable in an \code{epi_tibble} object, using a local
-(in time) linear regression or alternative smoother. See the \href{https://cmu-delphi.github.io/epitools/articles/derivatives.html}{estimating derivatives vignette}
+Estimates derivatives of a variable in an \code{epi_df} object, using a local (in
+time) linear regression or alternative smoothing method. See the \href{https://cmu-delphi.github.io/epitools/articles/derivatives.html}{estimating derivatives vignette}
 for examples.
 }
 \details{

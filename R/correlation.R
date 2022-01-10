@@ -1,12 +1,12 @@
-#' Compute lagged correlations between variables in an `epi_tibble` object
+#' Compute lagged correlations between variables in an `epi_df` object
 #'
-#' Computes lagged correlations between variables in an `epi_tibble` object,
+#' Computes lagged correlations between variables in an `epi_df` object,
 #' allowing for grouping by geo value, time value, or any other variables. See
-#' the [correlations 
+#' the [correlations
 #' vignette](https://cmu-delphi.github.io/epitools/articles/correlations.html)
 #' for examples.
 #'
-#' @param x The `epi_tibble` object under consideration.
+#' @param x The `epi_df` object under consideration.
 #' @param var1,var2 The variables in `x` to correlate. 
 #' @param dt1,dt2 Time shifts to consider for the two variables, respectively, 
 #'   before computing correlations. Negative shifts translate into in a lag
@@ -43,8 +43,8 @@
 cor_lagged = function(x, var1, var2, dt1 = 0, dt2 = 0,
                       by = geo_value, use = "na.or.complete",
                       method = c("pearson", "kendall", "spearman")) {
-  # Check we have an `epi_tibble` object
-  if (!inherits(x, "epi_tibble")) abort("`x` must be of class `epi_tibble`.")
+  # Check we have an `epi_df` object
+  if (!inherits(x, "epi_df")) abort("`x` must be of class `epi_df`.")
 
   # Check that we have variables to do computations on
   if (missing(var1)) abort("`var1` must be specified.")

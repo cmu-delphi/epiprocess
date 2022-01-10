@@ -2,7 +2,7 @@
 % Please edit documentation in R/outliers.R
 \name{detect_outliers}
 \alias{detect_outliers}
-\title{Detect outliers in a variable in an \code{epi_tibble} object}
+\title{Detect outliers in a variable in an \code{epi_df} object}
 \usage{
 detect_outliers(
   x,
@@ -13,7 +13,7 @@ detect_outliers(
 )
 }
 \arguments{
-\item{x}{The \code{epi_tibble} object under consideration.}
+\item{x}{The \code{epi_df} object under consideration.}
 
 \item{var}{The variable in \code{x} on which to run outlier detection.}
 
@@ -42,14 +42,13 @@ that setting \code{new_col_name} equal to an existing column name will overwrite
 this column.}
 }
 \value{
-An \code{epi_tibble} object given by appending a new column to \code{x}, named
+An \code{epi_df} object given by appending a new column to \code{x}, named
 according to the \code{new_col_name} argument, containing the outlier detection
 thresholds and replacement values from all detection methods.
 }
 \description{
-Applies one or more outlier detection methods to a variable in an
-\code{epi_tibble} object, and optionally aggregates the results to create
-consensus results.
+Applies one or more outlier detection methods to a variable in an \code{epi_df}
+object, and optionally aggregates the results to create consensus results.
 }
 \details{
 Each outlier detection method, one per row of the passed \code{methods}

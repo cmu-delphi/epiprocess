@@ -2,7 +2,7 @@
 % Please edit documentation in R/pct_change.R
 \name{pct_change}
 \alias{pct_change}
-\title{Compute percentage change of a variable in an \code{epi_tibble} object}
+\title{Compute percentage change of a variable in an \code{epi_df} object}
 \usage{
 pct_change(
   x,
@@ -17,7 +17,7 @@ pct_change(
 )
 }
 \arguments{
-\item{x}{The \code{epi_tibble} object under consideration.}
+\item{x}{The \code{epi_df} object under consideration.}
 
 \item{var}{The variable in \code{x} whose percentage change values are to be
 computed.}
@@ -55,13 +55,13 @@ metadata. Read the documentation for \code{\link[=epi_slide]{epi_slide()}} for m
 is \code{TRUE}.}
 }
 \value{
-An \code{epi_tibble} object given by appending a new column to \code{x}, named
+An \code{epi_df} object given by appending a new column to \code{x}, named
 according to the \code{new_col_name} argument, containing the percentage change
 values.
 }
 \description{
-Computes the percentage change of a variable in an \code{epi_tibble} object. See
-the \href{https://cmu-delphi.github.io/epitools/articles/pct-change.html}{percentage change vignette} for
+Computes the percentage change of a variable in an \code{epi_df} object. See the
+\href{https://cmu-delphi.github.io/epitools/articles/pct-change.html}{percentage change vignette} for
 examples.
 }
 \seealso{

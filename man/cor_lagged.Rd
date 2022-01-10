@@ -2,7 +2,7 @@
 % Please edit documentation in R/correlation.R
 \name{cor_lagged}
 \alias{cor_lagged}
-\title{Compute lagged correlations between variables in an \code{epi_tibble} object}
+\title{Compute lagged correlations between variables in an \code{epi_df} object}
 \usage{
 cor_lagged(
   x,
@@ -16,7 +16,7 @@ cor_lagged(
 )
 }
 \arguments{
-\item{x}{The \code{epi_tibble} object under consideration.}
+\item{x}{The \code{epi_df} object under consideration.}
 
 \item{var1, var2}{The variables in \code{x} to correlate.}
 
@@ -46,7 +46,7 @@ An tibble with the grouping columns first (\code{geo_value}, \code{time_value},
 or possibly others), and then a column \code{cor}, which gives the correlation.
 }
 \description{
-Computes lagged correlations between variables in an \code{epi_tibble} object,
+Computes lagged correlations between variables in an \code{epi_df} object,
 allowing for grouping by geo value, time value, or any other variables. See
 the \href{https://cmu-delphi.github.io/epitools/articles/correlations.html}{correlations vignette}
 for examples.
