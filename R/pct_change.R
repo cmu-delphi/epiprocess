@@ -2,8 +2,8 @@
 #' 
 #' Computes the percentage change of a variable in an `epi_df` object. See the
 #' [percentage change
-#' vignette](https://cmu-delphi.github.io/epitools/articles/pct_change.html) for
-#' examples.
+#' vignette](https://cmu-delphi.github.io/epiprocess/articles/pct_change.html)
+#' for examples.
 #'
 #' @param x The `epi_df` object under consideration.
 #' @param var The variable in `x` whose percentage change values are to be

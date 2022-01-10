@@ -71,7 +71,7 @@ An \code{epi_df} object given by appending a new column to \code{x}, named
 according to the \code{new_col_name} argument, containing the slide values.
 }
 \description{
-Slides a given function over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epitools/articles/slide.html}{slide vignette} for
+Slides a given function over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
 examples.
 }
 \details{

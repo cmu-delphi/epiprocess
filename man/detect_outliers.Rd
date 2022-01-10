@@ -49,7 +49,7 @@ thresholds and replacement values from all detection methods.
 \description{
 Applies one or more outlier detection methods to a variable in an \code{epi_df}
 object, and optionally aggregates the results to create consensus results.
-See the \href{https://cmu-delphi.github.io/epitools/articles/outliers.html}{outliers vignette} for
+See the \href{https://cmu-delphi.github.io/epiprocess/articles/outliers.html}{outliers vignette} for
 examples.
 }
 \details{

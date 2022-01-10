@@ -83,8 +83,8 @@ according to the \code{new_col_name} argument, containing the derivative values.
 }
 \description{
 Estimates derivatives of a variable in an \code{epi_df} object, using a local (in
-time) linear regression or alternative smoothing method. See the \href{https://cmu-delphi.github.io/epitools/articles/derivative.html}{estimating derivatives vignette} for
-examples.
+time) linear regression or alternative smoothing method. See the \href{https://cmu-delphi.github.io/epiprocess/articles/derivative.html}{estimating derivatives vignette}
+for examples.
 }
 \details{
 Derivatives are estimated using:
