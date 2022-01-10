@@ -1,8 +1,8 @@
 ---
-title: Get started with `epitools`
+title: Get started with `epiprocess`
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Get started with epitools}
+  %\VignetteIndexEntry{Get started with epiprocess}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -17,7 +17,7 @@ This package is not on CRAN yet, so it can be installed using the
 [`devtools`](https://cran.r-project.org/package=devtools) package:
 
 ```{r, eval = FALSE}
-devtools::install_github("cmu-delphi/epitools", ref = "main")	
+devtools::install_github("cmu-delphi/epiprocess", ref = "main")	
 ```
 
 Building the vignettes, such as this getting started guide, takes a significant
@@ -25,7 +25,7 @@ amount of time. They are not included in the package by default. If you want to
 include vignettes, then use this modified command:
 
 ```{r, eval = FALSE}
-devtools::install_github("cmu-delphi/epitools", ref = "main",
+devtools::install_github("cmu-delphi/epiprocess", ref = "main",
                          build_vignettes = TRUE, dependencies = TRUE)
 ```
 
@@ -33,8 +33,8 @@ devtools::install_github("cmu-delphi/epitools", ref = "main",
 
 We'll start by showing how to get data into `epi_df` format, which is just a
 tibble with a bit of special structure, and is the format assumed by all of the
-functions in the `epitools` package. An `epi_df` object has (at least) the
-following columns: 
+functions in the `epiprocess` package. An `epi_df` object has (at least) the
+following columns:
 
 * `geo_value`: the geographic value associated with each measurement.
 * `time_value`: the time value associated with each measurement.
@@ -71,7 +71,7 @@ columns required for an `epi_df` object (along with many others). A call to
 data frame into `epi_df` format.
 
 ```{r, message = FALSE}
-library(epitools)
+library(epiprocess)
 library(dplyr)
 
 x <- as.epi_df(case_data, 
@@ -116,8 +116,8 @@ attributes(x)$metadata
 
 Data in `epi_df` format should be easy to work with downstream; in the other
 vignettes, we'll walk through some basic signal processing tasks using functions
-provided in the `epitools` package; of course, we can also write custom code for
-for other downstream uses, like plotting, which is pretty easy to do `ggplot2`.
+provided in the `epiprocess` package; of course, we can also write custom code
+for other downstream uses, like plotting, which is pretty easy to do `ggplot2`. 
 
 ```{r, message = FALSE, warning = FALSE}
 library(ggplot2)

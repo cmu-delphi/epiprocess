@@ -13,7 +13,7 @@ articles:
     desc: Basic usage and examples.
     navbar: ~
     contents:
-      - epitools
+      - epiprocess
       - slide
       - pct-change
       - derivative

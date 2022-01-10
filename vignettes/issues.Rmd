@@ -40,4 +40,4 @@ Slide stuff:
 - demo this in the vignette with the hand-built AR forecaster. the `epipred`
 package can and still should be built, to contain more fancy forecasters, and
 potentially also scoring roles. but the functionality for *running* these will
-all already be built into `epitools`, just as a generalization of `epi_slide()`
+be already built into `epiprocess`, just as a generalization of `epi_slide()`

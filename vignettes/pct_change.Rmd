@@ -9,12 +9,12 @@ vignette: >
 
 A basic way of assessing growth in a signal is to look at its percentage change
 over two neighboring time windows. We investigate this in the current vignette,
-using the `pct_change()` function in the `epitools` package. As before, we'll 
+using the `pct_change()` function in the `epiprocess` package. As before, we'll 
 look at state-level daily reported COVID-19 cases.
 
 ```{r, message = FALSE}
 library(covidcast)
-library(epitools)
+library(epiprocess)
 library(dplyr)
 
 x <- covidcast_signal(data_source = "jhu-csse", 

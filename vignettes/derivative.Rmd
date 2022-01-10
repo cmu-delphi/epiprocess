@@ -14,7 +14,7 @@ per 100,000 people), smoothed using a 7-day trailing average.
 
 ```{r, message = FALSE}
 library(covidcast)
-library(epitools)
+library(epiprocess)
 library(dplyr)
 
 x <- covidcast_signal(data_source = "jhu-csse", 

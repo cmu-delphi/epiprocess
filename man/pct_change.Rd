@@ -61,7 +61,7 @@ values.
 }
 \description{
 Computes the percentage change of a variable in an \code{epi_df} object. See the
-\href{https://cmu-delphi.github.io/epitools/articles/pct-change.html}{percentage change vignette} for
+\href{https://cmu-delphi.github.io/epitools/articles/pct_change.html}{percentage change vignette} for
 examples.
 }
 \seealso{
