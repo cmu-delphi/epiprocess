@@ -43,7 +43,7 @@ y <- covidcast_signal(data_source = "jhu-csse",
 
 x <- x %>%
   full_join(y, by = c("geo_value", "time_value")) %>%
-  as.epi_tibble() %>%
+  as.epi_df() %>%
   group_by(geo_value) %>%
   epi_slide(slide_fun = ~ Mean(.x$case_rates), n = 7, 
             new_col_name = "case_rates") %>%
@@ -54,14 +54,14 @@ x <- x %>%
 
 ## Correlations grouped by time
 
-The `cor_lagged()` function operates on an `epi_tibble` object, and it requires
+The `cor_lagged()` function operates on an `epi_df` object, and it requires
 further specification of the variables to correlate, in its next two arguments
 (`var1` and `var2`).
 
 In general, we can specify any grouping variable (or combination of variables)
 in a call to `cor_lagged()`, via the `by` argument. This potentially leads to
 many ways to compute correlations. There are always at least two ways to compute
-correlations in an `epi_tibble`: grouping by time value, and by geo value. The
+correlations in an `epi_df`: grouping by time value, and by geo value. The
 former is obtained by setting `by = time_value`.
 
 ```{r, message = FALSE, warning = FALSE}

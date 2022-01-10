@@ -23,7 +23,7 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       end_day = "2021-05-31",
                       geo_type = "state", 
                       geo_values = "fl")  %>%
-  as.epi_tibble() %>%
+  as.epi_df() %>%
   rename(case_rates = value) %>%
   select(geo_value, time_value, case_rates) %>%
   epi_slide(slide_fun = ~ Mean(.x$case_rates), n = 7, 
@@ -32,13 +32,13 @@ x <- covidcast_signal(data_source = "jhu-csse",
 
 ## Estimating derivatives via linear regression
 
-The `estimate_deriv()` function operates on a `epi_tibble` object, and aside 
-from this, takes three main arguments: `var`, the variable whose derivatives are
-to be estimated; `method`, the name of the method to use for derivative 
-estimation; and `n`, the length of the local window (here, in days) to use in 
-training the given method. Here we use `method = "lin"`, the default, which 
-estimates the derivative using the slope from a simple linear regression, and 
-`n = 14`, also the default. 
+The `estimate_deriv()` function operates on a `epi_df` object, and aside from
+this, takes three main arguments: `var`, the variable whose derivatives are to
+be estimated; `method`, the name of the method to use for derivative estimation;
+and `n`, the length of the local window (here, in days) to use in training the
+given method. Here we use `method = "lin"`, the default, which estimates the
+derivative using the slope from a simple linear regression, and `n = 14`, also
+the default.
 
 ```{r}
 x <- estimate_deriv(x, case_rates, method = "lin", n = 14) 
