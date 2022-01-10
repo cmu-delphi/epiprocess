@@ -2,7 +2,7 @@
 % Please edit documentation in R/slide.R
 \name{epi_slide}
 \alias{epi_slide}
-\title{Slide a function over variables in an \code{epi_tibble} object}
+\title{Slide a function over variables in an \code{epi_df} object}
 \usage{
 epi_slide(
   x,
@@ -18,7 +18,7 @@ epi_slide(
 )
 }
 \arguments{
-\item{x}{The \code{epi_tibble} object under consideration.}
+\item{x}{The \code{epi_df} object under consideration.}
 
 \item{slide_fun}{Function or formula to slide over variables in \code{x}. To
 "slide" means to apply a function or formula over a running window of \code{n}
@@ -67,13 +67,12 @@ only be meaningful if \code{time_value} is of class \code{POSIXct}, that is, if
 via \code{slide_fun}.}
 }
 \value{
-An \code{epi_tibble} object given by appending a new column to \code{x}, named
+An \code{epi_df} object given by appending a new column to \code{x}, named
 according to the \code{new_col_name} argument, containing the slide values.
 }
 \description{
-Slides a given function over variables in an \code{epi_tibble} object. See the
-\href{https://cmu-delphi.github.io/epitools/articles/slide.html}{slide vignette}
-for examples.
+Slides a given function over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epitools/articles/slide.html}{slide vignette} for
+examples.
 }
 \details{
 To "slide" means to apply a function or formula over a running

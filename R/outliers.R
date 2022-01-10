@@ -1,8 +1,10 @@
-#' Detect outliers in a variable in an `epi_tibble` object
+#' Detect outliers in a variable in an `epi_df` object
 #'
-#' Applies one or more outlier detection methods to a variable in an
-#' `epi_tibble` object, and optionally aggregates the results to create
-#' consensus results.
+#' Applies one or more outlier detection methods to a variable in an `epi_df`
+#' object, and optionally aggregates the results to create consensus results.
+#' See the [outliers
+#' vignette](https://cmu-delphi.github.io/epitools/articles/outliers.html) for
+#' examples.
 #'
 #' @details Each outlier detection method, one per row of the passed `methods`
 #'   tibble, is a function that must take as its first two arguments `x` and
@@ -19,7 +21,7 @@
 #'   "stl", shorthand for `detect_outliers_stl()`, which detects outliers via an
 #'   STL decomposition.
 #' 
-#' @param x The `epi_tibble` object under consideration.
+#' @param x The `epi_df` object under consideration.
 #' @param var The variable in `x` on which to run outlier detection.
 #' @param methods A tibble specifying the method(s) to use for outlier
 #'   detection, with one row per method, and the following columns: 
@@ -41,9 +43,9 @@
 #'   that setting `new_col_name` equal to an existing column name will overwrite
 #'   this column.
 #'
-#' @return An `epi_tibble` object given by appending a new column to `x`, named 
+#' @return An `epi_df` object given by appending a new column to `x`, named
 #'   according to the `new_col_name` argument, containing the outlier detection
-#'   thresholds and replacement values from all detection methods. 
+#'   thresholds and replacement values from all detection methods.
 #'
 #' @importFrom dplyr group_modify mutate select 
 #' @importFrom purrr map pmap_dfc
@@ -57,8 +59,8 @@ detect_outliers = function(x, var,
                              abbr = "rm"),
                            combiner = c("median", "mean", "none"),
                            new_col_name = "outlier_info") {
-  # Check we have an `epi_tibble` object
-  if (!inherits(x, "epi_tibble")) abort("`x` must be of class `epi_tibble`.")
+  # Check we have an `epi_df` object
+  if (!inherits(x, "epi_df")) abort("`x` must be of class `epi_df`.")
   
   # Check that we have a variable to do computations on
   if (missing(var)) abort("`var` must be specified.")
@@ -79,7 +81,7 @@ detect_outliers = function(x, var,
                  new_col_name = new_col_name)
 
   # Attach the class and metadata and return
-class(x) = c("epi_tibble", class(x))
+class(x) = c("epi_df", class(x))
   attributes(x)$metadata = metadata
   return(x)
 }
@@ -149,7 +151,7 @@ detect_outliers_one_grp = function(.data_group,
 #' Detects outliers based on a distance from the rolling median specified in
 #' terms of multiples of the rolling interquartile range (IQR).
 #'
-#' @param x The `epi_tibble` object under consideration.
+#' @param x The `epi_df` object under consideration.
 #' @param var The variable in `x` on which to run outlier detection.
 #' @param n Number of time steps to use in the rolling window. Default is 21. 
 #' @param log_transform Should a log transform be applied before running outlier
@@ -240,7 +242,7 @@ detect_outliers_rolling_median = detect_outliers_rm
 #'   are exactly as in `detect_outliers_rm()`; refer to its help file for their
 #'   description.
 #'
-#' @param x The `epi_tibble` object under consideration.
+#' @param x The `epi_df` object under consideration.
 #' @param var The variable in `x` on which to run outlier detection.
 #' @param n_trend Number of time steps to use in the rolling window for trend.
 #'   Default is 21.

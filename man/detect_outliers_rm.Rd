@@ -16,7 +16,7 @@ detect_outliers_rm(
 )
 }
 \arguments{
-\item{x}{The \code{epi_tibble} object under consideration.}
+\item{x}{The \code{epi_df} object under consideration.}
 
 \item{var}{The variable in \code{x} on which to run outlier detection.}
 

@@ -7,31 +7,31 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-One of the most central tools in the `epitools` package is `epi_slide()`, which
-is based on the family of functions provided by the 
+One of the most central tools in the `epiprocess` package is `epi_slide()`,
+which is based on the family of functions provided by the
 [`slider`](https://cran.r-project.org/web/packages/slider/) package. In
-`epitools`, to "slide" means to apply a computation---represented as a function 
-or formula---over a running window of `n` time steps. Several other functions
-in the `epitools` package, such as `pct_change()` and `estimate_deriv()`, use
-`epi_slide()` as their workhorse. Suitable groupings can always be achieved by 
-a preliminary call to `group_by()`.
+`epiprocess`, to "slide" means to apply a computation---represented as a
+function or formula---over a running window of `n` time steps. Several other
+functions in the `epiprocess` package, such as `pct_change()` and
+`estimate_deriv()`, use `epi_slide()` as their workhorse. Suitable groupings can
+always be achieved by a preliminary call to `group_by()`.
 
 By default, the meaning of one time step is inferred from the `time_type` of the
-`epi_tibble` object under consideration. If `time_type` is "day", then one time
-step is one day. The time step can also be specified manually in the call to
+`epi_df` object under consideration. If `time_type` is "day", then one time step
+is one day. The time step can also be specified manually in the call to
 `epi_slide()`; you can read the cocumentation for more details. Furthermore, the
-alignment of the running window used in `epi_slide()` can either be "trailing" 
+alignment of the running window used in `epi_slide()` can either be "trailing"
 or "centered"; the default is "trailing", and is what we use in this and most
 other vignettes, without specifying otherwise.
 
-Similar to the getting started guide, we'll fetch daily reported COVID-19 cases 
+Similar to the getting started guide, we'll fetch daily reported COVID-19 cases
 for four U.S. states (note: new, not cumulative cases) using the
-[`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) package, and 
-then convert this to `epi_tibble` format.
+[`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) package, and
+then convert this to `epi_df` format.
 
 ```{r, message = FALSE}
 library(covidcast)
-library(epitools)
+library(epiprocess)
 library(dplyr)
 
 x <- covidcast_signal(data_source = "jhu-csse", 
@@ -40,7 +40,7 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       end_day = "2021-05-31",
                       geo_type = "state", 
                       geo_values = c("ca", "fl", "ny", "tx"))  %>%
-  as.epi_tibble() %>%
+  as.epi_df() %>%
   rename(cases = value) %>%
   select(geo_value, time_value, cases)
 ```
@@ -59,14 +59,14 @@ x %>%
 ```
 
 The formula specified via `slide_fun` has access to all columns present in the
-original `epi_tibble` object (and must refer to them with the prefix `.x$`). 
-Here he function `Mean()` is just a simple wrapper around `mean()` that omits 
-`NA` values by default (provided by the `epitools` package). 
+original `epi_df` object (and must refer to them with the prefix `.x$`). Here
+he function `Mean()` is just a simple wrapper around `mean()` that omits `NA`
+values by default (provided by the `epiprocess` package).
 
-The function `epi_slide()` returns an `epi_tibble` object with a new column 
-appended that contains the results (from sliding), named `slide_value` as the 
-default. We can of course change this post hoc, or we can instead specify a new 
-name up front using the `new_col_name` argument: 
+The function `epi_slide()` returns an `epi_df` object with a new column appended
+that contains the results (from sliding), named `slide_value` as the default. We
+can of course change this post hoc, or we can instead specify a new name up
+front using the `new_col_name` argument:
 
 ```{r}
 x <- x %>% 
@@ -111,20 +111,20 @@ head(x, 10)
 ## Building and running a local forecaster
 
 As a more complicated example, we create a forecaster based on a local (in time)
-autoregression or AR model. AR models can be fit in numerous ways (using base R 
+autoregression or AR model. AR models can be fit in numerous ways (using base R
 functions and various packages), but here we define it "by hand" both because it
-provides a more advanced example of sliding a function over an `epi_tibble` 
-object, and because it allows us to be a bit more flexible in defining a 
-*probabilistic* forecaster: one that outputs not just a point prediction, but 
-a notion of uncertainty around this. In particular, our forecaster will 
-output a point prediction along with an 90\% uncertainty band, represented by
-a predictive quantiles at the 5\% and 95\% levels (lower and upper endpoints of
-the uncertainty band). 
+provides a more advanced example of sliding a function over an `epi_df` object,
+and because it allows us to be a bit more flexible in defining a *probabilistic*
+forecaster: one that outputs not just a point prediction, but a notion of
+uncertainty around this. In particular, our forecaster will output a point
+prediction along with an 90\% uncertainty band, represented by a predictive
+quantiles at the 5\% and 95\% levels (lower and upper endpoints of the
+uncertainty band).
 
-The function defined below, `prob_ar()`, is our probabilistic AR forecaster. The 
-`lags`argument indicates which lags to use in the model, and `ahead` indicates 
+The function defined below, `prob_ar()`, is our probabilistic AR forecaster. The
+`lags`argument indicates which lags to use in the model, and `ahead` indicates
 how far ahead in the future to make forecasts (both are encoded in terms of the
-units of the `time_value` column; so, days, in the working `epi_tibble` being 
+units of the `time_value` column; so, days, in the working `epi_df` being
 considered in this vignette).
 
 ```{r}
@@ -155,9 +155,9 @@ prob_ar <- function(v, lags = c(0, 7, 14), ahead = 7, min_train_window = 20,
 }
 ```
 
-Now we go ahead and slide this AR forecaster over the working `epi_tibble` of 
-COVID-19 cases. Note that we actually model the `cases_7dav` column, to operate 
-on the scale of smoothed COVID-19 cases. (This is clearly equivalent, up to a 
+Now we go ahead and slide this AR forecaster over the working `epi_df` of
+COVID-19 cases. Note that we actually model the `cases_7dav` column, to operate
+on the scale of smoothed COVID-19 cases. (This is clearly equivalent, up to a
 constant, to modeling weekly sums of COVID-19 cases.)
 
 ```{r}

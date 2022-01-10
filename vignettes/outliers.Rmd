@@ -8,14 +8,14 @@ vignette: >
 ---
 
 This vignette describes functionality for detecting and correcting outliers in
-signals `detect_outliers()` and `correct_outliers()`. These functions are 
+signals `detect_outliers()` and `correct_outliers()`. These functions are
 designed to be modular and extendable, so that you can provide your own outlier
-detection and correction functions and use them with `epi_tibble` objects. We'll 
+detection and correction functions and use them with `epi_df` objects. We'll
 work state-level daily reported COVID-19 case counts in Florida and New Jersey.
 
 ```{r, message = FALSE, fig.width = 8, fig.height = 7}
 library(covidcast)
-library(epitools)
+library(epiprocess)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
@@ -29,7 +29,7 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       geo_values = c("fl", "nj"),
                       as_of = "2021-10-28") %>%
   select(geo_value, time_value, cases = value) %>%
-  as.epi_tibble()
+  as.epi_df()
 
 ggplot(x, aes(x = time_value, y = cases)) +
   geom_line() +
@@ -128,20 +128,17 @@ plot_outliers = function(x, var, outliers_col = outlier_info,
       names_pattern = "(.+)_(.+)")
 
   # If requested, filter to only combined method
-  if (combined_only) {
-    x_long <- x_long %>% filter(method == "combined")
-  }
-
+  if (combined_only) x_long <- x_long %>% filter(method == "combined")
+  
   # Start of plot with observed data
   p <- ggplot() +
     geom_line(data = x, mapping = aes(x = time_value, y = !!var))
 
   # If requested, add bands
-  if (bands) {
+  if (bands) 
     p <- p + geom_ribbon(data = x_long, 
                          aes(x = time_value, ymin = lower, ymax = upper, 
                              color = method), fill = NA)
-  }
 
   # If requested, add points
   if (points) {
@@ -152,9 +149,8 @@ plot_outliers = function(x, var, outliers_col = outlier_info,
   }
 
   # If requested, add faceting
-  if (!is.null(facet_vars)) {
+  if (!is.null(facet_vars)) 
     p <- p + facet_wrap(facet_vars, nrow = nrow, ncol = ncol, scales = scales)
-  }
 
   p
 }

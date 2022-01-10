@@ -9,12 +9,12 @@ vignette: >
 
 A basic way of assessing growth in a signal is to look at its percentage change
 over two neighboring time windows. We investigate this in the current vignette,
-using the `pct_change()` function in the `epitools` package. As before, we'll 
+using the `pct_change()` function in the `epiprocess` package. As before, we'll 
 look at state-level daily reported COVID-19 cases.
 
 ```{r, message = FALSE}
 library(covidcast)
-library(epitools)
+library(epiprocess)
 library(dplyr)
 
 x <- covidcast_signal(data_source = "jhu-csse", 
@@ -23,21 +23,21 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       end_day = "2021-05-31",
                       geo_type = "state", 
                       geo_values = "fl")  %>%
-  as.epi_tibble() %>%
+  as.epi_df() %>%
   rename(cases = value) %>%
   select(geo_value, time_value, cases)
 ```
 
 ## Percentage change
 
-The `pct_change()` function operates on a `epi_tibble` object, and aside from 
-this, takes two main arguments: `var`, the variable whose percentage change 
-values are to be computed; and `n`, the length of the local window (here, in 
-days) to use to compute the percentage change values. For example, if `n = 10`,
-then the percentage change on November 10 is computed as 100 * (B - A) / A, 
-where A is the sum of the signal in between November 6 and 10, and A is the sum 
-in between November 1 and 5. The default is `n = 14` (here, corresponding to the
-percentage change between adjacent weeks).
+The `pct_change()` function operates on a `epi_df` object, and aside from this,
+takes two main arguments: `var`, the variable whose percentage change values are
+to be computed; and `n`, the length of the local window (here, in days) to use
+to compute the percentage change values. For example, if `n = 10`, then the
+percentage change on November 10 is computed as 100 * (B - A) / A, where A is
+the sum of the signal in between November 6 and 10, and A is the sum in between
+November 1 and 5. The default is `n = 14` (here, corresponding to the percentage
+change between adjacent weeks).
 
 ```{r}
 x <- pct_change(x, cases, n = 14)

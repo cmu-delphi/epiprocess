@@ -1,4 +1,4 @@
-Package: epitools
+Package: epiprocess
 Type: Package
 Title: Tools for basic signal processing in epidemiology
 Version: 1.0.0

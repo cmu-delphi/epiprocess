@@ -1,8 +1,8 @@
-#' Convert data to `epi_tibble` format
+#' Convert data to `epi_df` format
 #'
 #' Converts a data frame or tibble into a format that is consistent with the 
-#' `epi_tibble` class, ensuring that it has a certain minimal set of columns,
-#' and that it has certain minimal metadata.
+#' `epi_df` class, ensuring that it has a certain minimal set of columns, and
+#' that it has certain minimal metadata.  
 #'
 #' @param x The object to be converted. See the methods section below for
 #'   details on formatting of each input type.
@@ -16,20 +16,19 @@
 #'   attempt to infer it from the passed object `x`; if this fails, then the
 #'   current day-time will be used. 
 #' @param additional_metadata List of additional metadata to attach to the
-#'   `epi_tibble` object. All objects will have `time_type`, `geo_type`, and
-#'   `issue` fields; named entries from the passed list or will be included as
-#'   well.
+#'   `epi_df` object. All objects will have `time_type`, `geo_type`, and `issue`
+#'   fields; named entries from the passed list or will be included as well.
 #' @param ... Additional arguments passed to methods.
-#' @return An `epi_tibble` object.
+#' @return An `epi_df` object.
 #'
-#' @details An `epi_tibble` is a tibble with (at least) the following columns:  
+#' @details An `epi_df` is a tibble with (at least) the following columns:  
 #' 
 #' * `geo_value`: the geographic value associated with each measurement.
 #' * `time_value`: the time value associated with each measurement.
 #'
 #' Other columns can be considered as measured variables, which we also broadly
-#'   refer to as signal variables. An `epi_tibble` object also has metadata with
-#'   (at least) the following fields: 
+#'   refer to as signal variables. An `epi_df` object also has metadata with (at
+#'   least) the following fields:
 #' 
 #' * `geo_type`: the type for the geo values.
 #' * `time_type`: the type for the time values.
@@ -37,19 +36,19 @@
 #'
 #' The first two fields above, `geo_type` and `time_type`, can usually be
 #'   inferred from the `geo_value` and `time_value` columns, respectively. The
-#'   last field above, `issue`, is the most unique to the `epi_tibble` format.
-#'   In a typical case, this represents the maximum of the issues of individual
+#'   last field above, `issue`, is the most unique to the `epi_df` format.  In a
+#'   typical case, this represents the maximum of the issues of individual
 #'   signal values measured in the data set; hence we would also say that the
 #'   data set is comprised of all signal values observed "as of" the given issue
 #'   in the metadata.
 #'
-#' Metadata for an `epi_tibble` object `x` can be accessed (and altered) via
+#' Metadata for an `epi_df` object `x` can be accessed (and altered) via
 #'   `attributes(x)$metadata`. More information on geo types, time types, and
 #'   issues is given below.   
 #'
 #' @section Geo types:
-#' The following geo types are supported in an `epi_tibble`. Their geo coding 
-#'   (specification of geo values for each geo type) is also described below.      
+#' The following geo types are supported in an `epi_df`. Their geo coding
+#'   (specification of geo values for each geo type) is also described below.
 #' 
 #' * `"county"`: each observation corresponds to a U.S. county; coded by 5-digit
 #'   FIPS code. 
@@ -69,7 +68,7 @@
 #'   geo type is labeled as "custom".  
 #' 
 #' @section Time types:
-#' The following time types are supported in an `epi_tibble`. Their time coding 
+#' The following time types are supported in an `epi_df`. Their time coding
 #'   (specification of time values for each time type) is also described below.
 #' 
 #' * `"day-time"`: each observation corresponds to a time on a given day (measured
@@ -88,19 +87,19 @@
 #' todo
 #' 
 #' @export
-as.epi_tibble = function(x, ...) {
-  UseMethod("as.epi_tibble")
+as.epi_df = function(x, ...) {
+  UseMethod("as.epi_df")
 }
 
-#' @method as.epi_tibble epi_tibble
-#' @describeIn as.epi_tibble Simply returns the `epi_tibble` object unchanged.
+#' @method as.epi_df epi_df
+#' @describeIn as.epi_df Simply returns the `epi_df` object unchanged.
 #' @export
-as.epi_tibble.epi_tibble = function(x, ...) {
+as.epi_df.epi_df = function(x, ...) {
   return(x)
 }
 
-#' @method as.epi_tibble tibble
-#' @describeIn as.epi_tibble The input tibble `x` must contain the columns
+#' @method as.epi_df tibble
+#' @describeIn as.epi_df The input tibble `x` must contain the columns
 #'   `geo_value` and `time_value`. All other columns will be preserved as is,
 #'   and treated as measured variables. If `issue` is missing, then the function
 #'   will look for `issue` as a column of `x`, or as a field in its metadata
@@ -108,8 +107,8 @@ as.epi_tibble.epi_tibble = function(x, ...) {
 #'   current day-time will be used. 
 #' @importFrom rlang .data abort
 #' @export
-as.epi_tibble.tibble = function(x, geo_type, time_type, issue,
-                                additional_metadata = list(), ...) {
+as.epi_df.tibble = function(x, geo_type, time_type, issue,
+                            additional_metadata = list(), ...) {
   # Check that we have geo_value and time_value columns
   if (!("geo_value" %in% names(x))) {
     abort("`x` must contain a `geo_value` column.")
@@ -198,9 +197,9 @@ as.epi_tibble.tibble = function(x, geo_type, time_type, issue,
   metadata$issue = issue
   metadata = c(metadata, additional_metadata)
  
-  # Convert to a tibble, apply epi_tibble class, attach metadata
+  # Convert to a tibble, apply epi_df class, attach metadata
   if (!inherits(x, "tibble")) x = tibble::as_tibble(x)
-  class(x) = c("epi_tibble", class(x))
+  class(x) = c("epi_df", class(x))
   attributes(x)$metadata = metadata
   
   # Reorder columns (geo_value, time_value, ...) and return
@@ -208,30 +207,30 @@ as.epi_tibble.tibble = function(x, geo_type, time_type, issue,
   return(x)
 }
 
-#' @method as.epi_tibble data.frame
-#' @describeIn as.epi_tibble The input data frame `x` must contain the columns 
+#' @method as.epi_df data.frame
+#' @describeIn as.epi_df The input data frame `x` must contain the columns
 #'   `geo_value` and `time_value`. All other columns will be preserved as is,
 #'   and treated as measured variables. If `issue` is missing, then the function
 #'   will look for `issue` as a column of `x`, or as a field in its metadata
 #'   (stored in its attributes), to infer the issue; if this fails, then the
-#'   current day-time will be used. 
+#'   current day-time will be used.
 #' @export
-as.epi_tibble.data.frame = as.epi_tibble.tibble
+as.epi_df.data.frame = as.epi_df.tibble
 
-#' Print `epi_tibble` object
+#' Print `epi_df` object
 #'
-#' Prints a brief summary of the `epi_tibble` object, then prints the underlying
-#' tibble. 
+#' Prints a brief summary of the `epi_df` object, then prints the underlying
+#' tibble.
 #'
-#' @param x The `epi_tibble` object.
+#' @param x The `epi_df` object.
 #' @param ... Additional arguments passed to `print.tibble()` to print the
 #'   data.
-#' @return The `epi_tibble` object, unchanged.
+#' @return The `epi_df` object, unchanged.
 #'
-#' @method print epi_tibble
+#' @method print epi_df
 #' @export
-print.epi_tibble = function(x, ...) {
-  cat("An `epi_tibble` object, with metadata:\n")
+print.epi_df = function(x, ...) {
+  cat("An `epi_df` object, with metadata:\n")
   cat(sprintf("* %-10s= %s\n", "geo_type", attributes(x)$metadata$geo_type))
   cat(sprintf("* %-10s= %s\n", "time_type", attributes(x)$metadata$time_type))
   cat(sprintf("* %-10s= %s\n", "issue", attributes(x)$metadata$issue))
@@ -239,28 +238,28 @@ print.epi_tibble = function(x, ...) {
   NextMethod()
 }
 
-#' @method head epi_tibble
+#' @method head epi_df
 #' @importFrom utils head
 #' @export
-head.epi_tibble = function(x, ...) {
+head.epi_df = function(x, ...) {
   head(tibble::as_tibble(x), ...)
 }
 
-#' Summarize `epi_tibble` object
+#' Summarize `epi_df` object
 #'
-#' Prints a variety of summary statistics about the `epi_tibble` object, such as
+#' Prints a variety of summary statistics about the `epi_df` object, such as
 #' the time range included and geographic coverage.
 #'
-#' @param object The `epi_tibble` object.
+#' @param object The `epi_df` object.
 #' @param ... Additional arguments, for compatibility with `summary()`.
 #'   Currently unused.
 #' @return No return value; called only to print summary statistics.
 #'
-#' @method summary epi_tibble
+#' @method summary epi_df
 #' @importFrom stats median
 #' @export
-summary.epi_tibble = function(object, ...) {
-  cat("An `epi_tibble` object, with metadata:\n")
+summary.epi_df = function(object, ...) {
+  cat("An `epi_df` object, with metadata:\n")
   cat(sprintf("* %-10s= %s\n", "geo_type", attributes(x)$metadata$geo_type))
   cat(sprintf("* %-10s= %s\n", "time_type", attributes(x)$metadata$time_type))
   cat(sprintf("* %-10s= %s\n", "issue", attributes(x)$metadata$issue))
@@ -273,29 +272,29 @@ summary.epi_tibble = function(object, ...) {
                          dplyr::summarize(median(.data$num)))))
 }
 
-#' Group or ungroup `epi_tibble` object
+#' Group or ungroup `epi_df` object
 #'
-#' Groups or ungroups an `epi_tibble`, preserving class and attributes.  
+#' Groups or ungroups an `epi_df`, preserving class and attributes.  
 #'
-#' @method group_by epi_tibble
+#' @method group_by epi_df
 #' @importFrom dplyr group_by
 #' @export
-group_by.epi_tibble = function(x, ...) {
+group_by.epi_df = function(x, ...) {
   metadata = attributes(x)$metadata
   x = NextMethod()
-  class(x) = c("epi_tibble", class(x))
+  class(x) = c("epi_df", class(x))
   attributes(x)$metadata = metadata
   return(x)
 }
 
-#' @method ungroup epi_tibble
-#' @rdname group_by.epi_tibble
+#' @method ungroup epi_df
+#' @rdname group_by.epi_df
 #' @importFrom dplyr ungroup
 #' @export
-ungroup.epi_tibble = function(x, ...) {
+ungroup.epi_df = function(x, ...) {
   metadata = attributes(x)$metadata
   x = NextMethod()
-  class(x) = c("epi_tibble", class(x))
+  class(x) = c("epi_df", class(x))
   attributes(x)$metadata = metadata
   return(x)
 }

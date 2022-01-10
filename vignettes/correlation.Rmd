@@ -7,8 +7,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-The `epitools` package provides some simple functionality for computing lagged
-correlations between two signals, over space or time, via `cor_lagged()`. This
+The `epiprocess` package provides some simple functionality for computing lagged 
+correlations between two signals, over space or time, via `epi_cor()`. This
 function is really just a convenience wrapper over some basic commands: it first
 performs any specified time shifts, grouped by geo value (this way, it shifts
 each of the individual time series); then, it removes the geo grouping and
@@ -19,7 +19,7 @@ and death rates, smoothed using a 7-day trailing average.
 
 ```{r, message = FALSE}
 library(covidcast)
-library(epitools)
+library(epiprocess)
 library(dplyr)
 
 start_day <- "2020-03-01"
@@ -43,7 +43,7 @@ y <- covidcast_signal(data_source = "jhu-csse",
 
 x <- x %>%
   full_join(y, by = c("geo_value", "time_value")) %>%
-  as.epi_tibble() %>%
+  as.epi_df() %>%
   group_by(geo_value) %>%
   epi_slide(slide_fun = ~ Mean(.x$case_rates), n = 7, 
             new_col_name = "case_rates") %>%
@@ -54,21 +54,21 @@ x <- x %>%
 
 ## Correlations grouped by time
 
-The `cor_lagged()` function operates on an `epi_tibble` object, and it requires
-further specification of the variables to correlate, in its next two arguments
-(`var1` and `var2`).
+The `epi_cor()` function operates on an `epi_df` object, and it requires further
+specification of the variables to correlate, in its next two arguments (`var1`
+and `var2`).
 
 In general, we can specify any grouping variable (or combination of variables)
-in a call to `cor_lagged()`, via the `by` argument. This potentially leads to
-many ways to compute correlations. There are always at least two ways to compute
-correlations in an `epi_tibble`: grouping by time value, and by geo value. The
+in a call to `epi_cor()`, via the `by` argument. This potentially leads to many
+ways to compute correlations. There are always at least two ways to compute
+correlations in an `epi_df`: grouping by time value, and by geo value. The
 former is obtained by setting `by = time_value`.
 
 ```{r, message = FALSE, warning = FALSE}
 library(ggplot2)
 theme_set(theme_bw())
 
-z1 <- cor_lagged(x, case_rates, death_rates, by = time_value)
+z1 <- epi_cor(x, case_rates, death_rates, by = time_value)
 
 ggplot(z1, aes(x = time_value, y = cor)) + 
   geom_line() +
@@ -81,21 +81,21 @@ rates linearly associated, across the U.S. states?". We might be interested in
 broadening this question, instead asking: "on any given day, do higher case
 rates tend to associate with higher death rates?", removing the dependence on a
 linear relationship. The latter can be addressed using Spearman correlation,
-accomplished by setting `method = "spearman"` in the call to `cor_lagged()`.
+accomplished by setting `method = "spearman"` in the call to `epi_cor()`.
 Spearman correlation is highly robust and invariant to monotone transformations.
 
 ## Lagged correlations
 
 We might also be interested in how case rates associate with death rates in the
-*future*. Using the `dt1` parameter in `cor_lagged()`, we can lag case rates
-back any number of days we want, before calculating correlations. Below, we set
-`dt1 = -10`. This means that `var1 = case_rates` will be lagged by 10 days, so
-that case rates on June 1st will be correlated with death rates on June 11th.
-(It might also help to think of it this way: death rates on a certain day will
-be correlated with case rates at an offset of -10 days.)
+*future*. Using the `dt1` parameter in `epi_cor()`, we can lag case rates back
+any number of days we want, before calculating correlations. Below, we set `dt1
+= -10`. This means that `var1 = case_rates` will be lagged by 10 days, so that
+case rates on June 1st will be correlated with death rates on June 11th.  (It
+might also help to think of it this way: death rates on a certain day will be
+correlated with case rates at an offset of -10 days.)
 
 ```{r, message = FALSE, warning = FALSE}
-z2 <- cor_lagged(x, case_rates, death_rates, by = time_value, dt1 = -10)
+z2 <- epi_cor(x, case_rates, death_rates, by = time_value, dt1 = -10)
 
 z <- rbind(z1 %>% mutate(lag = 0), 
            z2 %>% mutate(lag = 10)) %>%
@@ -118,8 +118,8 @@ geo_value`. We'll again look at correlations both for 0- and 10-day lagged case
 rates.
 
 ```{r, message = FALSE, warning = FALSE}
-z1 <- cor_lagged(x, case_rates, death_rates, by = geo_value)
-z2 <- cor_lagged(x, case_rates, death_rates, by = geo_value, dt1 = -10)
+z1 <- epi_cor(x, case_rates, death_rates, by = geo_value)
+z2 <- epi_cor(x, case_rates, death_rates, by = geo_value, dt1 = -10)
 
 z <- rbind(z1 %>% mutate(lag = 0), 
            z2 %>% mutate(lag = 10)) %>%
@@ -143,7 +143,7 @@ library(purrr)
 lags = 0:35
 
 z <- map_dfr(lags, function(lag) {
-  cor_lagged(x, case_rates, death_rates, by = geo_value, dt1 = -lag) %>% 
+  epi_cor(x, case_rates, death_rates, by = geo_value, dt1 = -lag) %>% 
     mutate(lag = lag) 
   })
 

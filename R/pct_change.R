@@ -1,11 +1,11 @@
-#' Compute percentage change of a variable in an `epi_tibble` object
+#' Compute percentage change of a variable in an `epi_df` object
 #' 
-#' Computes the percentage change of a variable in an `epi_tibble` object. See
-#' the [percentage change
-#' vignette](https://cmu-delphi.github.io/epitools/articles/pct-change.html) for  
-#' examples.   
+#' Computes the percentage change of a variable in an `epi_df` object. See the
+#' [percentage change
+#' vignette](https://cmu-delphi.github.io/epitools/articles/pct_change.html) for
+#' examples.
 #'
-#' @param x The `epi_tibble` object under consideration.
+#' @param x The `epi_df` object under consideration.
 #' @param var The variable in `x` whose percentage change values are to be
 #'   computed.    
 #' @param n Number of time steps to use in the running window. For example, if
@@ -33,7 +33,7 @@
 #'   metadata. Read the documentation for [epi_slide()] for more details.
 #' @param na_rm Should missing values be removed before the computation? Default
 #'   is `TRUE`. 
-#' @return An `epi_tibble` object given by appending a new column to `x`, named 
+#' @return An `epi_df` object given by appending a new column to `x`, named 
 #'   according to the `new_col_name` argument, containing the percentage change
 #'   values.  
 #'

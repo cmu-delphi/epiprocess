@@ -1,8 +1,8 @@
-#' Slide a function over variables in an `epi_tibble` object
+#' Slide a function over variables in an `epi_df` object
 #'
-#' Slides a given function over variables in an `epi_tibble` object. See the
-#' [slide vignette](https://cmu-delphi.github.io/epitools/articles/slide.html)
-#' for examples.
+#' Slides a given function over variables in an `epi_df` object. See the [slide 
+#' vignette](https://cmu-delphi.github.io/epitools/articles/slide.html) for
+#' examples.
 #'
 #' @details To "slide" means to apply a function or formula over a running
 #'   window of `n` time steps, where the unit (the meaning of one time step) is
@@ -12,7 +12,7 @@
 #'   `time_step` argument (which if specified would override the default choice
 #'   based on the metadata).
 #'
-#' @param x The `epi_tibble` object under consideration.
+#' @param x The `epi_df` object under consideration.
 #' @param slide_fun Function or formula to slide over variables in `x`. To
 #'   "slide" means to apply a function or formula over a running window of `n`
 #'   time steps (where one time step is typically one day or one week; see
@@ -52,7 +52,7 @@
 #'   `time_type` is "day-time").
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `slide_fun`.  
-#' @return An `epi_tibble` object given by appending a new column to `x`, named 
+#' @return An `epi_df` object given by appending a new column to `x`, named 
 #'   according to the `new_col_name` argument, containing the slide values. 
 #'
 #' @details In order to slide a function or formula in a suitable grouped
@@ -67,8 +67,8 @@ epi_slide = function(x, slide_fun, n = 14, align = c("right", "center", "left"),
                      before, complete = FALSE, new_col_name = "slide_value",
                      new_col_type = c("dbl", "int", "lgl", "chr", "list"),
                      time_step, ...) { 
-  # Check we have an `epi_tibble` object
-  if (!inherits(x, "epi_tibble")) abort("`x` must be of class `epi_tibble`.")
+  # Check we have an `epi_df` object
+  if (!inherits(x, "epi_df")) abort("`x` must be of class `epi_df`.")
 
   # Which slide_index function?
   new_col_type = match.arg(new_col_type)
@@ -125,7 +125,7 @@ epi_slide = function(x, slide_fun, n = 14, align = c("right", "center", "left"),
                  ...)
 
   # Attach the class and metadata and return
-  class(x) = c("epi_tibble", class(x))
+  class(x) = c("epi_df", class(x))
   attributes(x)$metadata = metadata
   return(x)
 }
