@@ -3,8 +3,8 @@
 #' Estimates derivatives of a variable in an `epi_df` object, using a local (in
 #' time) linear regression or alternative smoothing method. See the [estimating
 #' derivatives
-#' vignette](https://cmu-delphi.github.io/epitools/articles/derivatives.html)
-#' for examples.
+#' vignette](https://cmu-delphi.github.io/epitools/articles/derivative.html) for
+#' examples.
 #'
 #' @param x The `epi_df` object under consideration.
 #' @param var The variable in `x` whose derivatives are to be estimated.
