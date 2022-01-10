@@ -3,7 +3,7 @@
 #' Applies one or more outlier detection methods to a variable in an `epi_df`
 #' object, and optionally aggregates the results to create consensus results.
 #' See the [outliers
-#' vignette](https://cmu-delphi.github.io/epitools/articles/outliers.html) for
+#' vignette](https://cmu-delphi.github.io/epiprocess/articles/outliers.html) for
 #' examples.
 #'
 #' @details Each outlier detection method, one per row of the passed `methods`

@@ -2,11 +2,11 @@
 destination: docs/
 
 home:
-  links:
-    - text: Get the delphi.epidata R package 
-      href: https://cmu-delphi.github.io/delphi-epidata-r/    
-    - text: Get the epipred R package 
-      href: https://cmu-delphi.github.io/epipred/
+  links:    
+    - text: Get the epipredict R package 
+      href: https://cmu-delphi.github.io/epiprocess/
+    - text: Get the covidcast R package 
+      href: https://cmu-delphi.github.io/covidcast/covidcastR/
 
 articles:
   - title: Using the package
@@ -24,7 +24,7 @@ articles:
 
 repo:
   url:
-    home: https://github.com/cmu-delphi/epitools/tree/main/
-    source: https://github.com/cmu-delphi/epitools/blob/main/
-    issue: https://github.com/cmu-delphi/epitools/issues
+    home: https://github.com/cmu-delphi/epiprocess/tree/main/
+    source: https://github.com/cmu-delphi/epiprocess/blob/main/
+    issue: https://github.com/cmu-delphi/epiprocess/issues
     user: https://github.com/
