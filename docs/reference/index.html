@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Function reference • epitools</title>
+<title>Function reference • epiprocess</title>
 
 
 <!-- jquery -->
@@ -70,7 +70,7 @@
         <span class="icon-bar"></span>
       </button>
       <span class="navbar-brand">
-        <a class="navbar-link" href="../index.html">epitools</a>
+        <a class="navbar-link" href="../index.html">epiprocess</a>
         <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
@@ -84,7 +84,7 @@
   </a>
 </li>
 <li>
-  <a href="../articles/epitools.html">Get started</a>
+  <a href="../articles/epiprocess.html">Get started</a>
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
@@ -100,6 +100,9 @@
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
+      <a href="../articles/pct_change.html">2. Compute percentage change over time</a>
+    </li>
+    <li>
       <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
     </li>
     <li>
@@ -112,7 +115,7 @@
       <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
     <li>
-      <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
+      <a href="../articles/issues.html">7. Work with issue dates and archive objects</a>
     </li>
   </ul>
 </li>
@@ -169,21 +172,15 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="as.epi_tibble.html">as.epi_tibble()</a></code> </p>
+          <p><code><a href="as.epi_df.html">as.epi_df()</a></code> </p>
         </td>
-        <td><p>Convert data to <code>epi_tibble</code> format</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="cor_lagged.html">cor_lagged()</a></code> </p>
-        </td>
-        <td><p>Compute lagged correlations between variables in an <code>epi_tibble</code> object</p></td>
+        <td><p>Convert data to <code>epi_df</code> format</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="detect_outliers.html">detect_outliers()</a></code> </p>
         </td>
-        <td><p>Detect outliers in a variable in an <code>epi_tibble</code> object</p></td>
+        <td><p>Detect outliers in a variable in an <code>epi_df</code> object</p></td>
       </tr><tr>
         
         <td>
@@ -199,45 +196,51 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="epi_slide.html">epi_slide()</a></code> </p>
+          <p><code><a href="epi_cor.html">epi_cor()</a></code> </p>
         </td>
-        <td><p>Slide a function over variables in an <code>epi_tibble</code> object</p></td>
+        <td><p>Compute lagged correlations between variables in an <code>epi_df</code> object</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="epitools.html">epitools</a></code> </p>
+          <p><code><a href="epi_slide.html">epi_slide()</a></code> </p>
         </td>
-        <td><p>epitools: Tools for basic signal processing in epidemiology</p></td>
+        <td><p>Slide a function over variables in an <code>epi_df</code> object</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="epiprocess.html">epiprocess</a></code> </p>
+        </td>
+        <td><p>epiprocess: Tools for basic signal processing in epidemiology</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="estimate_deriv.html">estimate_deriv()</a></code> </p>
         </td>
-        <td><p>Estimate derivatives of a variable in an <code>epi_tibble</code> object</p></td>
+        <td><p>Estimate derivatives of a variable in an <code>epi_df</code> object</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="group_by.epi_tibble.html">group_by(<i>&lt;epi_tibble&gt;</i>)</a></code> <code><a href="group_by.epi_tibble.html">ungroup(<i>&lt;epi_tibble&gt;</i>)</a></code> </p>
+          <p><code><a href="group_by.epi_df.html">group_by(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="group_by.epi_df.html">ungroup(<i>&lt;epi_df&gt;</i>)</a></code> </p>
         </td>
-        <td><p>Group or ungroup <code>epi_tibble</code> object</p></td>
+        <td><p>Group or ungroup <code>epi_df</code> object</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="pct_change.html">pct_change()</a></code> </p>
         </td>
-        <td><p>Compute percentage change of a variable in an <code>epi_tibble</code> object</p></td>
+        <td><p>Compute percentage change of a variable in an <code>epi_df</code> object</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="print.epi_tibble.html">print(<i>&lt;epi_tibble&gt;</i>)</a></code> </p>
+          <p><code><a href="print.epi_df.html">print(<i>&lt;epi_df&gt;</i>)</a></code> </p>
         </td>
-        <td><p>Print <code>epi_tibble</code> object</p></td>
+        <td><p>Print <code>epi_df</code> object</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="summary.epi_tibble.html">summary(<i>&lt;epi_tibble&gt;</i>)</a></code> </p>
+          <p><code><a href="summary.epi_df.html">summary(<i>&lt;epi_df&gt;</i>)</a></code> </p>
         </td>
-        <td><p>Summarize <code>epi_tibble</code> object</p></td>
+        <td><p>Summarize <code>epi_df</code> object</p></td>
       </tr>
     </tbody>
     </table>

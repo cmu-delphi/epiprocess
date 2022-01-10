@@ -2,7 +2,7 @@
 title: 7. Work with issue dates and archive objects
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{6. Work with issue dates and archive objects}
+  %\VignetteIndexEntry{7. Work with issue dates and archive objects}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

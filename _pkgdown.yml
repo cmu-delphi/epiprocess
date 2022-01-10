@@ -15,7 +15,7 @@ articles:
     contents:
       - epiprocess
       - slide
-      - pct-change
+      - pct_change
       - derivative
       - correlation
       - aggregation
