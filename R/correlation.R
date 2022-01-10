@@ -40,9 +40,9 @@
 #' @importFrom stats cor
 #' @importFrom rlang .data enquo
 #' @export
-cor_lagged = function(x, var1, var2, dt1 = 0, dt2 = 0,
-                      by = geo_value, use = "na.or.complete",
-                      method = c("pearson", "kendall", "spearman")) {
+epi_cor = function(x, var1, var2, dt1 = 0, dt2 = 0, by = geo_value,
+                   use = "na.or.complete",
+                   method = c("pearson", "kendall", "spearman")) {
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) abort("`x` must be of class `epi_df`.")
 
