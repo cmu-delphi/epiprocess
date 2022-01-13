@@ -6,28 +6,32 @@
 \usage{
 epi_slide(
   x,
-  slide_fun,
+  f,
+  ...,
   n = 14,
   align = c("right", "center", "left"),
   before,
   complete = FALSE,
   new_col_name = "slide_value",
   new_col_type = c("dbl", "int", "lgl", "chr", "list"),
-  time_step,
-  ...
+  time_step
 )
 }
 \arguments{
 \item{x}{The \code{epi_df} object under consideration.}
 
-\item{slide_fun}{Function or formula to slide over variables in \code{x}. To
-"slide" means to apply a function or formula over a running window of \code{n}
-time steps (where one time step is typically one day or one week; see
-details for more explanation). If a function, \code{slide_fun} must take \code{x}, a
-data frame with the same column names as the original object; followed by
-any number of named arguments; and ending with \code{...}. If a formula,
-\code{slide_fun} can operate directly on columns accessed via \code{.x$var}, as in \code{~ mean(.x$var)} to compute a mean of a column \code{var} over a sliding window of
-\code{n} time steps.}
+\item{f}{Function or formula to slide over variables in \code{x}. To "slide" means
+to apply a function or formula over a running window of \code{n} time steps
+(where one time step is typically one day or one week; see details for more
+explanation). If a function, \code{f} must take \code{x}, a data frame with the same
+column names as the original object; followed by any number of named
+arguments; and ending with \code{...}. If a formula, \code{f} can operate directly on
+columns accessed via \code{.x$var}, as in \code{~ mean(.x$var)} to compute a mean of
+a column \code{var} over a sliding window of \code{n} time steps.}
+
+\item{...}{Additional arguments to pass to the function or formula specified
+via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
+interpreted as an expression for tidy evaluation. See details.}
 
 \item{n}{Number of time steps to use in the running window. For example, if
 \code{n = 5}, one time step is one day, and the alignment is "right", then to
@@ -39,12 +43,12 @@ the sliding window relative to the reference time point. If the alignment
 is "center" and \code{n} is even, then one more time point will be used before
 the reference time point than after. Default is "right".}
 
-\item{before}{Optional integer, in the range to 0 to \code{n-1} (inclusive),
-specifying the number of time points to use in the sliding window strictly
-before the reference time point. For example, setting \code{before = n-1} would
-be the same as setting \code{align = "right"}. The current argument allows for
-more flexible specification of alignment than the \code{align} parameter, and if
-specified, then it overrides \code{align}.}
+\item{before}{Positive integer less than \code{n}, specifying the number of time
+points to use in the sliding window strictly before the reference time
+point. For example, setting \code{before = n-1} would be the same as setting
+\code{align = "right"}. The current argument allows for more flexible
+specification of alignment than the \code{align} parameter, and if specified,
+overrides \code{align}.}
 
 \item{complete}{Should the slide function be run over complete windows only?
 Default is \code{FALSE}, which allows for computation on partial windows.}
@@ -62,9 +66,6 @@ metadata. This function must take a positive integer and return an object
 of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this would
 only be meaningful if \code{time_value} is of class \code{POSIXct}, that is, if
 \code{time_type} is "day-time").}
-
-\item{...}{Additional arguments to pass to the function or formula specified
-via \code{slide_fun}.}
 }
 \value{
 An \code{epi_df} object given by appending a new column to \code{x}, named
@@ -82,6 +83,19 @@ determined by the \code{time_type} field in the metadata: the unit is one day if
 \code{time_type} is "week". The time step can also be set explicitly using the
 \code{time_step} argument (which if specified would override the default choice
 based on the metadata).
+
+If \code{f} is missing, then an expression for tidy evaluation can be specified,
+for example, as in:\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
+}
+
+which would be equivalent to:\preformatted{epi_slide(x, f = function(x, ...) mean(x$cases), n = 7,
+          new_col_name = "cases_7dav")
+}
+
+Thus, to be clear, when the computation is specified via an expression for
+tidy evaluation (first example, above), then the name for the new column is
+inferred from the given expression and overrides any name passed explicitly
+through the \code{new_col_name} argument.
 
 In order to slide a function or formula in a suitable grouped
 fashion (for example, per geo value), we can use \code{group_by()} before the

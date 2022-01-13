@@ -20,12 +20,12 @@ detect_outliers(
 \item{methods}{A tibble specifying the method(s) to use for outlier
 detection, with one row per method, and the following columns:
 \itemize{
-\item \code{method} <str>: Either "rm" or "stl", or a custom function for outlier
+\item \code{method}: Either "rm" or "stl", or a custom function for outlier
 detection; see details for further explanation.
-\item \code{args} <lst>: Named list of arguments that will be passed to the
-detection method.
-\item \code{abbr} <chr>: Abbreviation to use in naming output columns with results
-from this method.
+\item \code{args}: Named list of arguments that will be passed to the detection
+method.
+\item \code{abbr}: Abbreviation to use in naming output columns with results from
+this method.
 }}
 
 \item{combiner}{String, one of "median", "mean", or "none", specifying how to

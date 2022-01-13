@@ -2,68 +2,24 @@
 % Please edit documentation in R/pct_change.R
 \name{pct_change}
 \alias{pct_change}
-\title{Compute percentage change of a variable in an \code{epi_df} object}
+\title{Compute percentage change}
 \usage{
-pct_change(
-  x,
-  var,
-  n = 14,
-  align = c("right", "center", "left"),
-  before,
-  complete = FALSE,
-  new_col_name = "pct_change",
-  time_step,
-  na_rm = TRUE
-)
+pct_change(var, na_rm = FALSE)
 }
 \arguments{
-\item{x}{The \code{epi_df} object under consideration.}
-
-\item{var}{The variable in \code{x} whose percentage change values are to be
-computed.}
-
-\item{n}{Number of time steps to use in the running window. For example, if
-\code{n = 10}, one time step is one day, and the alignment is "right", then the
-percentage change value computed on November 10 is 100 * (B - A) / A, where
-A is the sum of the variable in between November 6 and 10, and A is the sum
-in between November 1 and 5. Note that \code{n} must be even; default is 14.}
-
-\item{align}{One of "right", "center", or "left", indicating the alignment of
-the sliding window relative to the reference time point. If the alignment
-is "center" and \code{n} is even, then one more time point will be used before
-the reference time point than after. Default is "right".}
-
-\item{before}{Optional integer, in the range to 0 to \code{n-1} (inclusive),
-specifying the number of time points to use in the sliding window strictly
-before the reference time point. For example, setting \code{before = n-1} would
-be the same as setting \code{align = "right"}. The current argument allows for
-more flexible specification of alignment than the \code{align} parameter, and if
-specified, then it overrides \code{align}.}
-
-\item{complete}{Should the computation be run over complete windows only?
-Default is \code{FALSE}, which allows for computation on partial windows.}
-
-\item{new_col_name}{String indicating the name of the new column that will
-contain the derivative values. Default is "pct_change"; note that setting
-\code{new_col_name} equal to an existing column name will overwrite this column.}
-
-\item{time_step}{Optional function used to define the meaning of one time
-step, which if specified, overrides the default choice based on the
-metadata. Read the documentation for \code{\link[=epi_slide]{epi_slide()}} for more details.}
+\item{var}{The variable whose percentage change value is to be computed. If
+the length of \code{var} is odd, then the first value is ignored for the sake of
+the computation.}
 
 \item{na_rm}{Should missing values be removed before the computation? Default
-is \code{TRUE}.}
-}
-\value{
-An \code{epi_df} object given by appending a new column to \code{x}, named
-according to the \code{new_col_name} argument, containing the percentage change
-values.
+is \code{FALSE}.}
 }
 \description{
-Computes the percentage change of a variable in an \code{epi_df} object. See the
-\href{https://cmu-delphi.github.io/epiprocess/articles/pct_change.html}{percentage change vignette}
+Computes the percentage change over a sequence of values, defined as 100 * (B
+\itemize{
+\item A) / A, where A is the sum of the first half of the values and B is the sum
+of the second half. This is a convenience function to be used inside of a
+call to \code{epi_slide()}, see the \href{https://cmu-delphi.github.io/epiprocess/articles/pct_change.html}{percentage change vignette}
 for examples.
 }
-\seealso{
-\code{\link[=epi_slide]{epi_slide()}}
 }

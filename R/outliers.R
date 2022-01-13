@@ -25,12 +25,12 @@
 #' @param var The variable in `x` on which to run outlier detection.
 #' @param methods A tibble specifying the method(s) to use for outlier
 #'   detection, with one row per method, and the following columns: 
-#'   * `method` <str>: Either "rm" or "stl", or a custom function for outlier
-#'   detection; see details for further explanation.   
-#'   * `args` <lst>: Named list of arguments that will be passed to the
-#'   detection method. 
-#'   * `abbr` <chr>: Abbreviation to use in naming output columns with results
-#'   from this method. 
+#'   * `method`: Either "rm" or "stl", or a custom function for outlier
+#'   detection; see details for further explanation.    
+#'   * `args`: Named list of arguments that will be passed to the detection
+#'   method.  
+#'   * `abbr`: Abbreviation to use in naming output columns with results from
+#'   this method.  
 #' @param combiner String, one of "median", "mean", or "none", specifying how to
 #'   combine results from different outlier detection methods for the thresholds
 #'   determining whether a particular observation is classified as an outlier,
@@ -203,10 +203,7 @@ detect_outliers_rm = function(x, var,
 
   # Calculate lower and upper thresholds and replacement value
   outliers <- x %>%
-    epi_slide(slide_fun = function(x, var, ...) x %>% pull(!!var) %>% median(),
-              n = n, align = "center",
-              new_col_name = "fitted",
-              var = var) %>%
+    epi_slide(fitted = median(!!var), n = n, align = "center") %>%
     mutate(resid = !!var - fitted) %>%
     roll_iqr(var, n,
              detection_multiplier = detection_multiplier,
@@ -224,9 +221,6 @@ detect_outliers_rm = function(x, var,
   # Return
   return(outliers)
 }
-
-# So that nobody's code breaks if they were using method = "rolling_median"
-detect_outliers_rolling_median = detect_outliers_rm
 
 #' Detect outliers based on an STL decomposition 
 #'
@@ -345,11 +339,9 @@ detect_outliers_stl = function(x, var,
 }
 
 # Common function for rolling IQR, using fitted and resid variables
-
 roll_iqr = function(x, var, n, detection_multiplier, min_radius,
                     replacement_multiplier, min_lower) { 
-  epi_slide(x, slide_fun = function(x, ...) x %>% pull(resid) %>% IQR(), 
-            n = n, align = "center", new_col_name = "roll_iqr") %>%
+  epi_slide(x, roll_iqr = IQR(resid), n = n, align = "center") %>%
     mutate(
       lower = pmax(min_lower,
                    fitted - pmax(min_radius, detection_multiplier * roll_iqr)),

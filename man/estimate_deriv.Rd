@@ -2,92 +2,51 @@
 % Please edit documentation in R/derivative.R
 \name{estimate_deriv}
 \alias{estimate_deriv}
-\title{Estimate derivatives of a variable in an \code{epi_df} object}
+\title{Estimate derivative}
 \usage{
 estimate_deriv(
-  x,
   var,
   method = c("lin", "ss", "tf"),
-  n = 14,
-  align = c("right", "center", "left"),
-  before,
-  complete = FALSE,
-  new_col_name = "deriv",
-  keep_obj = FALSE,
   deriv = 1,
-  time_step,
-  na_rm = TRUE,
+  na_rm = FALSE,
+  keep_obj = FALSE,
   ...
 )
 }
 \arguments{
-\item{x}{The \code{epi_df} object under consideration.}
-
-\item{var}{The variable in \code{x} whose derivatives are to be estimated.}
+\item{var}{The variable whose derivative is to be estimated.}
 
 \item{method}{One of "lin", "ss", or "tf" indicating the method to use for
-the derivative calculation. To estimate the derivative at any time point,
-we run the given method on the last \code{n} time points of data, and use the
-corresponding predicted derivative (that is, the derivative of the
-underlying estimated function, linear or spline) at the current time
-point. Default is "lin". See details for more explanation.}
+the derivative calculation. We run the given method using \code{var} as the
+response variable, assuming an equally-spaced sequence of design points,
+and return the corresponding estimated derivative (that is, the derivative
+of the underlying estimated function, linear or spline) at the end of the
+sequence. Default is "lin". See details for more explanation.}
 
-\item{n}{Number of time steps to use in the running window. For example, if
-\code{n = 10}, one time step is one day, and the alignment is "right", then to
-estimate the derivative on November 10, we train the given method on data
-in between November 1 and 10. Default is 14.}
-
-\item{align}{One of "right", "center", or "left", indicating the alignment of
-the sliding window relative to the reference time point. If the alignment
-is "center" and \code{n} is even, then one more time point will be used before
-the reference time point than after. Default is "right".}
-
-\item{before}{Optional integer, in the range to 0 to \code{n-1} (inclusive),
-specifying the number of time points to use in the sliding window strictly
-before the reference time point. For example, setting \code{before = n-1} would
-be the same as setting \code{align = "right"}. The current argument allows for
-more flexible specification of alignment than the \code{align} parameter, and if
-specified, then it overrides \code{align}.}
-
-\item{complete}{Should the computation be run over complete windows only?
-Default is \code{FALSE}, which allows for computation on partial windows.}
-
-\item{new_col_name}{String indicating the name of the new column that will
-contain the derivative values. Default is "deriv"; note that setting
-\code{new_col_name} equal to an existing column name will overwrite this
-column.}
-
-\item{keep_obj}{Should the fitted object (from linear regression, smoothing
-spline, or trend filtering) be kept as a separate column? If \code{TRUE}, then
-this column name is given by  appending "_obj" to \code{new_col_name}. Default
-is \code{FALSE}.}
-
-\item{deriv}{Order of derivative to estimate. Only orders 1 or 2 are allowed,
-with the default being 1. (In some cases, a second-order derivative will
-return a trivial result: for example: when \code{method} is "lin", this will
-always be zero.)}
-
-\item{time_step}{Optional function used to define the meaning of one time
-step, which if specified, overrides the default choice based on the
-metadata. Read the documentation for \code{\link[=epi_slide]{epi_slide()}} for more details.}
+\item{deriv}{Order of derivative to estimate. Only orders 1 or 2 are
+supported, with the default being 1. (In some cases, a second-order
+derivative will return a trivial result; for example: when \code{method} is
+"lin", this will always be zero.)}
 
 \item{na_rm}{Should missing values be removed before the computation? Default
-is \code{TRUE}.}
+is \code{FALSE}.}
 
-\item{...}{Additional arguments to pass to the function that estimates
-derivatives. See details below.}
-}
-\value{
-An \code{epi_df} object given by appending a new column to \code{x}, named
-according to the \code{new_col_name} argument, containing the derivative values.
+\item{keep_obj}{Should the fitted object (from linear regression, smoothing
+spline, or trend filtering) be returned, along with the estimated
+derivative, in a list? This is typically to perform some kind of post hoc
+inspection. Default is \code{FALSE}.}
+
+\item{...}{Additional arguments to pass to the method used to estimate the
+derivative. See details below.}
 }
 \description{
-Estimates derivatives of a variable in an \code{epi_df} object, using a local (in
-time) linear regression or alternative smoothing method. See the \href{https://cmu-delphi.github.io/epiprocess/articles/derivative.html}{estimating derivatives vignette}
+Estimates the derivative at the end of a sequence of values, using linear
+regression, a smoothing spline, or trend filtering. This is a convenience
+function to be used inside of a call to \code{epi_slide()}, see the \href{https://cmu-delphi.github.io/epiprocess/articles/derivative.html}{estimating derivatives vignette}
 for examples.
 }
 \details{
-Derivatives are estimated using:
+The derivative is estimated using:
 
 \itemize{
 \item Linear regression, when \code{method} is "lin", via \code{stats::lsfit()}.
@@ -98,10 +57,10 @@ Derivatives are estimated using:
 }
 
 The second and third cases base the derivative calculation on a nonparametric
-fit and should typically be used with a larger window \code{n}. The third case
-(trend filtering) is more locally adaptive than the second (smoothing
-spline) and can work better when there are sharp changes in the smoothness
-of the underlying values.
+fit and should typically be used with a larger window \code{n} in a parent call
+to \code{epi_slide()}. The third case (trend filtering) is more locally adaptive
+than the second (smoothing spline) and can work better when there are sharp
+changes in the smoothness of the underlying values.
 
 In the first and second cases (linear regression and smoothing spline), the
 additional arguments in \code{...} are directly passed to the underlying
@@ -126,7 +85,4 @@ fit. If \code{cv = FALSE}, then \code{df} must be an integer; if \code{cv = TRUE
 based on the cross-validation error curve (minimum or 1-standard-error
 rule, respectively). Default is 8 when \code{cv = FALSE}, and "1se" when \code{cv = TRUE}.}
 }
-}
-\seealso{
-\code{\link[=epi_slide]{epi_slide()}}
 }
