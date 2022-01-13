@@ -46,7 +46,7 @@ x <- epi_slide(x, pct_change = pct_change(cases), n = 14, complete = TRUE)
 head(x, 21) %>% print(n = Inf)
 ```
 
-Thus to be clear, the `pct_change` value computed on (for example) November 14  
+Thus to be clear, the `pct_change` value computed on (for example) November 14 
 is the percentage change between the total cases from November 1 to 7, and the
 total from November 8 to November 14. The argument `complete = TRUE` in the call
 to `epi_slide()` specifies that a complete window of `n = 14` time points must
@@ -120,3 +120,7 @@ p2 <- ggplot(x, aes(x = time_value, y = pct_change)) +
 
 gridExtra::grid.arrange(p1, p2, nrow = 1)
 ```
+
+## Building and running a local classifier
+
+TODO

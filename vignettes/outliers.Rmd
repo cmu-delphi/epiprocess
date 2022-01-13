@@ -8,10 +8,11 @@ vignette: >
 ---
 
 This vignette describes functionality for detecting and correcting outliers in
-signals `detect_outliers()` and `correct_outliers()`. These functions are
-designed to be modular and extendable, so that you can provide your own outlier
-detection and correction functions and use them with `epi_df` objects. We'll
-work state-level daily reported COVID-19 case counts in Florida and New Jersey.
+signals in the `epi_detect_outlr()` function provided in the `epiprocess`
+package. This is designed to be modular and extendable, so that you can provide
+your own outlier detection and correction functions and use them with `epi_df`
+objects. We'll work state-level daily reported COVID-19 case counts in Florida
+and New Jersey.
 
 ```{r, message = FALSE, fig.width = 8, fig.height = 7}
 library(covidcast)
@@ -44,26 +45,26 @@ correct. We'll discuss those two tasks in turn.
 
 ## Outlier detection
 
-The `detect_outliers()` function allows us to run multiple outlier detection 
-methods, and then (optionally) combine the results from those methods. Here, 
+The `epi_detect_outlr()` function allows us to run multiple outlier detection
+methods, and then (optionally) combine the results from those methods. Here,
 we'll investigate outlier detection results from each of following methods.
 
-1. Detection based on a rolling median, using `detect_outliers_rm()`, which 
+1. Detection based on a rolling median, using `epi_detect_outlr_rm()`, which 
   computes a rolling median on with a default window size of 21 time points 
   centered at the time point under consideration, and then computes thresholds 
   based on a multiplier times a rolling IQR computed on the residuals. 
 2. Detection based on a seasonal-trend decomposition using LOESS (STL), using
-  `detect_outliers_stl()`, which is similar to the rolling median method but 
+  `epi_detect_outlr_stl()`, which is similar to the rolling median method but 
   replaces the rolling median with fitted values from STL. 
 3. Detection based on an STL decomposition, but without seasonality term, which
   amounts to smoothing using LOESS.
 
-The outlier detection methods are specified using a `tibble` that is passed to 
-`detect_outliers()`, with one row per method, and whose columms specify the
-outlier detection function, any input arguments (only nondefault values need to 
+The outlier detection methods are specified using a `tibble` that is passed to
+`epi_detect_outlr()`, with one row per method, and whose columms specify the
+outlier detection function, any input arguments (only nondefault values need to
 be supplied), and an abbreviated name for the method used in tracking results.
-Abbreviations "rm" and "stl" can be used for functions `detect_outliers_rm()` 
-and `detect_outliers_stl()`, respectively.
+Abbreviations "rm" and "stl" can be used for the built-in detection functions 
+`epi_detect_outlr_rm()` and `epi_detect_outlr_stl()`, respectively.
 
 ```{r}
 detection_methods = bind_rows(
@@ -85,14 +86,14 @@ detection_methods
 ```
 
 Additionally, we'll form combined lower and upper thresholds, calculated as the
-median of the lower and upper thresholds from the methods at each time point. 
+median of the lower and upper thresholds from the methods at each time point.
 Note that using this combined median threshold is equivalent to using a majority
 vote across the base methods to determine whether a value is an outlier.
 
 ```{r}
 x <- x %>%
   group_by(geo_value) %>%
-  detect_outliers(
+  epi_detect_outlr(
     var = cases,
     methods = detection_methods,
     combiner = "median",
@@ -152,7 +153,7 @@ plot_outliers = function(x, var, outliers_col = outlier_info,
   if (!is.null(facet_vars)) 
     p <- p + facet_wrap(facet_vars, nrow = nrow, ncol = ncol, scales = scales)
 
-  p
+  return(p)
 }
 ```
 
@@ -196,6 +197,5 @@ ggplot(y, aes(x = time_value)) +
   labs(x = "Date", y = "Reported COVID-19 counts")
 ```
 
-Lastly, we note that it can sometimes be helpful to iterate outlier detection
-and correction; that is, detect outliers, correct with replacement values, then
-rerun outlier detection, correct again with replacement values, and so on.
+More advanced correction functionality will be coming at some point in the 
+future. 

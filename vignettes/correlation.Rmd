@@ -45,10 +45,8 @@ x <- x %>%
   full_join(y, by = c("geo_value", "time_value")) %>%
   as.epi_df() %>%
   group_by(geo_value) %>%
-  epi_slide(slide_fun = ~ Mean(.x$case_rates), n = 7, 
-            new_col_name = "case_rates") %>%
-  epi_slide(slide_fun = ~ Mean(.x$death_rates), n = 7, 
-            new_col_name = "death_rates") %>%
+  epi_slide(case_rates = mean(case_rates), n = 7) %>%
+  epi_slide(death_rates = mean(death_rates), n = 7) %>%
   ungroup()
 ```
 
