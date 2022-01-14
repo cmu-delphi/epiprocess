@@ -12,16 +12,33 @@
 #'   `time_step` argument (which if specified would override the default choice
 #'   based on the metadata).
 #'
+#' If `f` is missing, then an expression for tidy evaluation can be specified,
+#'   for example, as in: 
+#'   ```
+#'   epi_slide(x, cases_7dav = mean(cases), n = 7)
+#'   ```
+#'   which would be equivalent to:
+#'   ```
+#'   epi_slide(x, f = function(x, ...) mean(x$cases), n = 7,
+#'             new_col_name = "cases_7dav")
+#'   ```
+#'   Thus, to be clear, when the computation is specified via an expression for
+#'   tidy evaluation (first example, above), then the name for the new column is 
+#'   inferred from the given expression and overrides any name passed explicitly 
+#'   through the `new_col_name` argument.
+#'
 #' @param x The `epi_df` object under consideration.
-#' @param slide_fun Function or formula to slide over variables in `x`. To
-#'   "slide" means to apply a function or formula over a running window of `n`
-#'   time steps (where one time step is typically one day or one week; see
-#'   details for more explanation). If a function, `slide_fun` must take `x`, a
-#'   data frame with the same column names as the original object; followed by
-#'   any number of named arguments; and ending with `...`. If a formula,
-#'   `slide_fun` can operate directly on columns accessed via `.x$var`, as in `~
-#'   mean(.x$var)` to compute a mean of a column `var` over a sliding window of
-#'   `n` time steps.
+#' @param f Function or formula to slide over variables in `x`. To "slide" means
+#'   to apply a function or formula over a running window of `n` time steps
+#'   (where one time step is typically one day or one week; see details for more
+#'   explanation). If a function, `f` must take `x`, a data frame with the same
+#'   column names as the original object; followed by any number of named
+#'   arguments; and ending with `...`. If a formula, `f` can operate directly on
+#'   columns accessed via `.x$var`, as in `~ mean(.x$var)` to compute a mean of
+#'   a column `var` over a sliding window of `n` time steps.
+#' @param ... Additional arguments to pass to the function or formula specified
+#'   via `f`. Alternatively, if `f` is missing, then the current argument is
+#'   interpreted as an expression for tidy evaluation. See details.  
 #' @param n Number of time steps to use in the running window. For example, if
 #'   `n = 5`, one time step is one day, and the alignment is "right", then to 
 #'   produce a value on November 5, we apply the given function or formula to
@@ -30,12 +47,12 @@
 #'   the sliding window relative to the reference time point. If the alignment
 #'   is "center" and `n` is even, then one more time point will be used before
 #'   the reference time point than after. Default is "right".
-#' @param before Optional integer, in the range to 0 to `n-1` (inclusive),
-#'   specifying the number of time points to use in the sliding window strictly
-#'   before the reference time point. For example, setting `before = n-1` would
-#'   be the same as setting `align = "right"`. The current argument allows for
-#'   more flexible specification of alignment than the `align` parameter, and if
-#'   specified, then it overrides `align`.
+#' @param before Positive integer less than `n`, specifying the number of time
+#'   points to use in the sliding window strictly before the reference time
+#'   point. For example, setting `before = n-1` would be the same as setting
+#'   `align = "right"`. The current argument allows for more flexible
+#'   specification of alignment than the `align` parameter, and if specified,
+#'   overrides `align`.
 #' @param complete Should the slide function be run over complete windows only?
 #'   Default is `FALSE`, which allows for computation on partial windows.  
 #' @param new_col_name String indicating the name of the new column that will
@@ -50,8 +67,6 @@
 #'   lubridate::hours` in order to set the time step to be one hour (this would
 #'   only be meaningful if `time_value` is of class `POSIXct`, that is, if
 #'   `time_type` is "day-time").
-#' @param ... Additional arguments to pass to the function or formula specified
-#'   via `slide_fun`.  
 #' @return An `epi_df` object given by appending a new column to `x`, named 
 #'   according to the `new_col_name` argument, containing the slide values. 
 #'
@@ -59,14 +74,14 @@
 #'   fashion (for example, per geo value), we can use `group_by()` before the
 #'   call to `epi_slide()`.
 #' 
-#' @importFrom dplyr arrange group_modify mutate  
+#' @importFrom dplyr arrange group_modify mutate pull summarize 
 #' @importFrom lubridate days weeks
-#' @importFrom rlang .data abort enquo
+#' @importFrom rlang .data abort enquo enquos
 #' @export
-epi_slide = function(x, slide_fun, n = 14, align = c("right", "center", "left"),
-                     before, complete = FALSE, new_col_name = "slide_value",
+epi_slide = function(x, f, ..., n = 14, align = c("right", "center", "left"),
+                     before, complete = FALSE, new_col_name = "slide_value", 
                      new_col_type = c("dbl", "int", "lgl", "chr", "list"),
-                     time_step, ...) { 
+                     time_step) { 
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) abort("`x` must be of class `epi_df`.")
 
@@ -109,21 +124,45 @@ epi_slide = function(x, slide_fun, n = 14, align = c("right", "center", "left"),
     before_num = before_fun(before)
     after_num = before_fun(n-1-before)
   }
-
-  # Save the metadata (dplyr drops it)
-  metadata = attributes(x)$metadata 
   
-  # Slide per group (in case x is grouped) 
-  x = x %>%  
-    group_modify(epi_slide_one_grp,
-                 index_fun = index_fun,
-                 slide_fun = slide_fun,
-                 before_num = before_num,
-                 after_num = after_num,
-                 complete = complete, 
-                 new_col_name = new_col_name,
-                 ...)
+  # Save the metadata (dplyr drops it)
+  metadata = attributes(x)$metadata
 
+  # If f is not missing, then just go ahead, slide by group
+  if (!missing(f)) {
+    x = x %>%  
+      group_modify(epi_slide_one_grp,
+                   index_fun = index_fun,
+                   f = f, ...,
+                   before_num = before_num,
+                   after_num = after_num,
+                   complete = complete,
+                   new_col_name = new_col_name)
+  }
+  
+  # Else interpret ... as an expression for tidy evaluation
+  else {
+    quos = enquos(...)
+    if (length(quos) == 0)
+      abort("If `f` is missing then a computation must be specified via `...`.") 
+    if (length(quos) > 1)
+      abort(paste("If `f` is missing then only a single computation can be",
+                  "specified via `...`."))
+    
+    quo = quos[[1]]
+    f = function(x, quo, ...) rlang::eval_tidy(quo, x)
+    new_col_name = names(rlang::quos_auto_name(quos))
+    
+    x = x %>%  
+      group_modify(epi_slide_one_grp,
+                   index_fun = index_fun,
+                   f = f, quo = quo,
+                   before_num = before_num,
+                   after_num = after_num,
+                   complete = complete,
+                   new_col_name = new_col_name)
+  }
+  
   # Attach the class and metadata and return
   class(x) = c("epi_df", class(x))
   attributes(x)$metadata = metadata
@@ -131,11 +170,11 @@ epi_slide = function(x, slide_fun, n = 14, align = c("right", "center", "left"),
 }
 
 # Slide over a single group
-epi_slide_one_grp = function(.data_group, index_fun, slide_fun, before_num, 
-                             after_num, complete, new_col_name, ...) {  
+epi_slide_one_grp = function(.data_group, index_fun, f, ..., before_num,
+                             after_num, complete, new_col_name) {
   slide_values = index_fun(.x = .data_group,
                            .i = .data_group$time_value,
-                           .f = slide_fun, ..., 
+                           .f = f, ..., 
                            .before = before_num,
                            .after = after_num,
                            .complete = complete)

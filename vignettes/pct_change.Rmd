@@ -9,8 +9,9 @@ vignette: >
 
 A basic way of assessing growth in a signal is to look at its percentage change
 over two neighboring time windows. We investigate this in the current vignette,
-using the `pct_change()` function in the `epiprocess` package. As before, we'll 
-look at state-level daily reported COVID-19 cases.
+using the `pct_change()` convenience function from the `epiprocess` package,
+inside of a call to `epi_slide()`. As before, we'll look at state-level daily
+reported COVID-19 cases.
 
 ```{r, message = FALSE}
 library(covidcast)
@@ -30,24 +31,31 @@ x <- covidcast_signal(data_source = "jhu-csse",
 
 ## Percentage change
 
-The `pct_change()` function operates on a `epi_df` object, and aside from this,
-takes two main arguments: `var`, the variable whose percentage change values are
-to be computed; and `n`, the length of the local window (here, in days) to use
-to compute the percentage change values. For example, if `n = 10`, then the
-percentage change on November 10 is computed as 100 * (B - A) / A, where A is
-the sum of the signal in between November 6 and 10, and A is the sum in between
-November 1 and 5. The default is `n = 14` (here, corresponding to the percentage
-change between adjacent weeks).
+The `pct_change()` function is a simple convenience function that takes a single
+argument `var`, the variable whose percentage change is to be computed. If `var`
+has length N, which is assumed to be even, and A and B denote the sum of the
+first N/2 and last N/2 values in `var`, respectively, then `pct_change(var)`
+returns 100 * (B - A) / A. (If the length of `var` is odd, then its first value
+is ignored, for the sake of the computation.)
+
+Used in call to `epi_slide()`, we can fluidly compute percentage change values 
+in a variable over time: 
 
 ```{r}
-x <- pct_change(x, cases, n = 14)
+x <- epi_slide(x, pct_change = pct_change(cases), n = 14, complete = TRUE)
 head(x, 21) %>% print(n = Inf)
 ```
 
-We can see that a column `pct_change` column has been appended in the returned
-object, which contains the percentage change values estimates. Next we plot 
-these values alongside the signal itself. We highlight the periods in time for 
-which the percentage change is above 10% (in red) and below -10% (in blue).
+Thus to be clear, the `pct_change` value computed on (for example) November 14 
+is the percentage change between the total cases from November 1 to 7, and the
+total from November 8 to November 14. The argument `complete = TRUE` in the call
+to `epi_slide()` specifies that a complete window of `n = 14` time points must
+be available for the computation, which is why values in the `pct_change` column
+are `NA` from November 1 to 13.
+
+Next we plot these values alongside the signal itself. We highlight the periods
+in time for which the percentage change is above 10% (in red) and below -10% (in
+blue).
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 4}
 library(ggplot2)
@@ -89,9 +97,8 @@ in which percentage change is defined; it is already defined using a sum over a
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 4}
 x <- x %>%
-  epi_slide(slide_fun = ~ Mean(.x$cases), n = 7, 
-            new_col_name = "cases_7dav") %>%
-  pct_change("cases_7dav", n = 14)
+  epi_slide(cases_7dav = mean(cases), n = 7) %>%
+  epi_slide(pct_change = pct_change(cases_7dav), n = 14, complete = TRUE)
 
 p1 <- ggplot(x, aes(x = time_value, y = cases_7dav)) + 
   geom_tile(data = x %>% filter(pct_change >= threshold_upper),
@@ -113,3 +120,7 @@ p2 <- ggplot(x, aes(x = time_value, y = pct_change)) +
 
 gridExtra::grid.arrange(p1, p2, nrow = 1)
 ```
+
+## Building and running a local classifier
+
+TODO

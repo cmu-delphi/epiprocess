@@ -17,20 +17,20 @@
 #'
 #'  For convenience, the outlier detection method can be specified (in the
 #'   `method` column of `methods`) by a string "rm", shorthand for
-#'   `detect_outliers_rm()`, which detects outliers via a rolling median; or by
-#'   "stl", shorthand for `detect_outliers_stl()`, which detects outliers via an
-#'   STL decomposition.
+#'   `epi_detect_outlr_rm()`, which detects outliers via a rolling median; or by
+#'   "stl", shorthand for `epi_detect_outlr_stl()`, which detects outliers via
+#'   an STL decomposition.
 #' 
 #' @param x The `epi_df` object under consideration.
 #' @param var The variable in `x` on which to run outlier detection.
 #' @param methods A tibble specifying the method(s) to use for outlier
 #'   detection, with one row per method, and the following columns: 
-#'   * `method` <str>: Either "rm" or "stl", or a custom function for outlier
-#'   detection; see details for further explanation.   
-#'   * `args` <lst>: Named list of arguments that will be passed to the
-#'   detection method. 
-#'   * `abbr` <chr>: Abbreviation to use in naming output columns with results
-#'   from this method. 
+#'   * `method`: Either "rm" or "stl", or a custom function for outlier
+#'   detection; see details for further explanation.    
+#'   * `args`: Named list of arguments that will be passed to the detection
+#'   method.  
+#'   * `abbr`: Abbreviation to use in naming output columns with results from
+#'   this method.  
 #' @param combiner String, one of "median", "mean", or "none", specifying how to
 #'   combine results from different outlier detection methods for the thresholds
 #'   determining whether a particular observation is classified as an outlier,
@@ -52,13 +52,11 @@
 #' @importFrom tidyselect ends_with all_of
 #' @importFrom rlang abort enquo
 #' @export
-detect_outliers = function(x, var,
-                           methods = tibble(
-                             method = "rm",
-                             args = list(list()),
-                             abbr = "rm"),
-                           combiner = c("median", "mean", "none"),
-                           new_col_name = "outlier_info") {
+epi_detect_outlr = function(x, var,
+                            methods = tibble(
+                              method = "rm", args = list(list()), abbr = "rm"),
+                            combiner = c("median", "mean", "none"),
+                            new_col_name = "outlier_info") {
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) abort("`x` must be of class `epi_df`.")
   
@@ -74,31 +72,27 @@ detect_outliers = function(x, var,
 
   # Outlier detection per group (in case x is grouped) 
   x = x %>%
-    group_modify(detect_outliers_one_grp,
+    group_modify(epi_detect_outlr_one_grp,
                  var = var,
                  methods = methods,
                  combiner = combiner,
                  new_col_name = new_col_name)
 
   # Attach the class and metadata and return
-class(x) = c("epi_df", class(x))
+  class(x) = c("epi_df", class(x))
   attributes(x)$metadata = metadata
   return(x)
 }
 
 # Outlier detection over a single group
-detect_outliers_one_grp = function(.data_group,
-                                   var,
-                                   methods,
-                                   combiner,
-                                   new_col_name,
-                                   ...) {
+epi_detect_outlr_one_grp = function(.data_group, var, methods, combiner,
+                                    new_col_name, ...) {
   # Run all outlier detection methods
   results = pmap_dfc(
     methods,
     function(method, args, abbr) {
       if (is.character(method)) {
-        method = paste0("detect_outliers_", method)
+        method = paste0("epi_detect_outlr_", method)
       }
       
       # Call the method
@@ -175,13 +169,12 @@ detect_outliers_one_grp = function(.data_group,
 #'
 #' @importFrom dplyr mutate pull select
 #' @export
-detect_outliers_rm = function(x, var,
-                              n = 21,
-                              log_transform = FALSE,
-                              detect_negatives = FALSE,
-                              detection_multiplier = 2,
-                              min_radius = 0,
-                              replacement_multiplier = 0) {
+epi_detect_outlr_rm = function(x, var, n = 21,
+                               log_transform = FALSE,
+                               detect_negatives = FALSE,
+                               detection_multiplier = 2,
+                               min_radius = 0,
+                               replacement_multiplier = 0) {
   # Transform if requested
   if (log_transform) {
     # Replace all negative values with 0
@@ -202,11 +195,8 @@ detect_outliers_rm = function(x, var,
   }
 
   # Calculate lower and upper thresholds and replacement value
-  outliers <- x %>%
-    epi_slide(slide_fun = function(x, var, ...) x %>% pull(!!var) %>% median(),
-              n = n, align = "center",
-              new_col_name = "fitted",
-              var = var) %>%
+  x = x %>%
+    epi_slide(fitted = median(!!var), n = n, align = "center") %>%
     mutate(resid = !!var - fitted) %>%
     roll_iqr(var, n,
              detection_multiplier = detection_multiplier,
@@ -216,17 +206,14 @@ detect_outliers_rm = function(x, var,
 
   # Undo log transformation if necessary
   if (log_transform) {
-    outliers$lower <- exp(outliers$lower) - offset
-    outliers$upper <- exp(outliers$upper) - offset
-    outliers$replacement <- exp(outliers$replacement) - offset
+    x$lower = exp(x$lower) - offset
+    x$upper = exp(x$upper) - offset
+    x$replacement = exp(x$replacement) - offset
   }
 
   # Return
-  return(outliers)
+  return(x)
 }
-
-# So that nobody's code breaks if they were using method = "rolling_median"
-detect_outliers_rolling_median = detect_outliers_rm
 
 #' Detect outliers based on an STL decomposition 
 #'
@@ -234,12 +221,12 @@ detect_outliers_rolling_median = detect_outliers_rm
 #'
 #' @details The STL decomposition is computed using the `feasts` package. Once
 #'   computed, the outlier detection method is analogous to the rolling median
-#'   method in `detect_outliers_rm()`, except with the fitted values and
+#'   method in `epi_detect_outlr_rm()`, except with the fitted values and
 #'   residuals from the STL decomposition taking the place of the rolling median
 #'   and residuals to the rolling median, respectively.
 #'
 #' The last set of arguments, `log_transform` through `replacement_multiplier`,
-#'   are exactly as in `detect_outliers_rm()`; refer to its help file for their
+#'   are exactly as in `epi_detect_outlr_rm()`; refer to its help file for their
 #'   description.
 #'
 #' @param x The `epi_df` object under consideration.
@@ -261,7 +248,7 @@ detect_outliers_rolling_median = detect_outliers_rm
 #' @importFrom fabletools model
 #' @importFrom feasts STL
 #' @export
-detect_outliers_stl = function(x, var,
+epi_detect_outlr_stl = function(x, var,
                                n_trend = 21,
                                n_seasonal = 21,
                                n_threshold = 21,
@@ -272,7 +259,7 @@ detect_outliers_stl = function(x, var,
                                min_radius = 0,
                                replacement_multiplier = 0) {
   # Make x into a tsibble for use with fable
-  x_tsibble <- x %>%
+  x_tsibble = x %>%
     select(time_value, y = !!var) %>%
     tsibble::as_tsibble(index = time_value)
 
@@ -323,7 +310,7 @@ detect_outliers_stl = function(x, var,
   }
   
   # Calculate lower and upper thresholds and replacement value  
-  outliers <- x %>%
+  x = x %>%
     mutate(
       fitted = stl_components$fitted,
       resid = stl_components$resid) %>%
@@ -332,24 +319,22 @@ detect_outliers_stl = function(x, var,
              min_radius = min_radius,
              replacement_multiplier = replacement_multiplier,
              min_lower = min_lower)
- 
+
   # Undo log transformation if necessary
   if (log_transform) {
-    outliers$lower <- exp(outliers$lower) - offset
-    outliers$upper <- exp(outliers$upper) - offset
-    outliers$replacement <- exp(outliers$replacement) - offset
+    x$lower = exp(x$lower) - offset
+    x$upper = exp(x$upper) - offset
+    x$replacement = exp(x$replacement) - offset
   }
 
   # Return
-  return(outliers)
+  return(x)
 }
 
 # Common function for rolling IQR, using fitted and resid variables
-
 roll_iqr = function(x, var, n, detection_multiplier, min_radius,
                     replacement_multiplier, min_lower) { 
-  epi_slide(x, slide_fun = function(x, ...) x %>% pull(resid) %>% IQR(), 
-            n = n, align = "center", new_col_name = "roll_iqr") %>%
+  epi_slide(x, roll_iqr = IQR(resid), n = n, align = "center") %>%
     mutate(
       lower = pmax(min_lower,
                    fitted - pmax(min_radius, detection_multiplier * roll_iqr)),
@@ -358,11 +343,8 @@ roll_iqr = function(x, var, n, detection_multiplier, min_radius,
       (!!var < lower) ~ fitted - replacement_multiplier * roll_iqr,
       (!!var > upper) ~ fitted + replacement_multiplier * roll_iqr,
       TRUE ~ !!var
-      )
-    ) %>%
-    # Keep just the columns we want
+      )) %>%
     select(lower, upper, replacement) %>%
-    # Drop any extra classes; just keep tibble
     unclass() %>%
     tibble::as_tibble()
 }

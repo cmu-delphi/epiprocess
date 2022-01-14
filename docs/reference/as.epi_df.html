@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Convert data to <code>epi_tibble</code> format — as.epi_tibble • epitools</title>
+<title>Convert data to <code>epi_df</code> format — as.epi_df • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,10 @@
 
 
 
-<meta property="og:title" content="Convert data to <code>epi_tibble</code> format — as.epi_tibble" />
+<meta property="og:title" content="Convert data to <code>epi_df</code> format — as.epi_df" />
 <meta property="og:description" content="Converts a data frame or tibble into a format that is consistent with the
-epi_tibble class, ensuring that it has a certain minimal set of columns,
-and that it has certain minimal metadata." />
+epi_df class, ensuring that it has a certain minimal set of columns, and
+that it has certain minimal metadata." />
 
 
 
@@ -73,7 +73,7 @@ and that it has certain minimal metadata." />
         <span class="icon-bar"></span>
       </button>
       <span class="navbar-brand">
-        <a class="navbar-link" href="../index.html">epitools</a>
+        <a class="navbar-link" href="../index.html">epiprocess</a>
         <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
@@ -87,7 +87,7 @@ and that it has certain minimal metadata." />
   </a>
 </li>
 <li>
-  <a href="../articles/epitools.html">Get started</a>
+  <a href="../articles/epiprocess.html">Get started</a>
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
@@ -103,6 +103,9 @@ and that it has certain minimal metadata." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
+      <a href="../articles/pct_change.html">2. Compute percentage change over time</a>
+    </li>
+    <li>
       <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
     </li>
     <li>
@@ -115,14 +118,14 @@ and that it has certain minimal metadata." />
       <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
     <li>
-      <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
+      <a href="../articles/issues.html">7. Work with issue dates and archive objects</a>
     </li>
   </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/cmu-delphi/epitools/tree/main/">
+  <a href="https://github.com/cmu-delphi/epiprocess/tree/main/">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -140,27 +143,27 @@ and that it has certain minimal metadata." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Convert data to <code>epi_tibble</code> format</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/blob/main/R/epi_tibble.R'><code>R/epi_tibble.R</code></a></small>
-    <div class="hidden name"><code>as.epi_tibble.Rd</code></div>
+    <h1>Convert data to <code>epi_df</code> format</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/epi_df.R'><code>R/epi_df.R</code></a></small>
+    <div class="hidden name"><code>as.epi_df.Rd</code></div>
     </div>
 
     <div class="ref-description">
     <p>Converts a data frame or tibble into a format that is consistent with the
-<code>epi_tibble</code> class, ensuring that it has a certain minimal set of columns,
-and that it has certain minimal metadata.</p>
+<code>epi_df</code> class, ensuring that it has a certain minimal set of columns, and
+that it has certain minimal metadata.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>as.epi_tibble</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+    <pre class="usage"><span class='fu'>as.epi_df</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
-<span class='co'># S3 method for epi_tibble</span>
-<span class='fu'>as.epi_tibble</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>as.epi_df</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
 <span class='co'># S3 method for tibble</span>
-<span class='fu'>as.epi_tibble</span>(<span class='no'>x</span>, <span class='no'>geo_type</span>, <span class='no'>time_type</span>, <span class='no'>issue</span>, <span class='kw'>additional_metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)
+<span class='fu'>as.epi_df</span>(<span class='no'>x</span>, <span class='no'>geo_type</span>, <span class='no'>time_type</span>, <span class='no'>issue</span>, <span class='kw'>additional_metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)
 
 <span class='co'># S3 method for data.frame</span>
-<span class='fu'>as.epi_tibble</span>(<span class='no'>x</span>, <span class='no'>geo_type</span>, <span class='no'>time_type</span>, <span class='no'>issue</span>, <span class='kw'>additional_metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)</pre>
+<span class='fu'>as.epi_df</span>(<span class='no'>x</span>, <span class='no'>geo_type</span>, <span class='no'>time_type</span>, <span class='no'>issue</span>, <span class='kw'>additional_metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -195,25 +198,24 @@ current day-time will be used.</p></td>
     <tr>
       <th>additional_metadata</th>
       <td><p>List of additional metadata to attach to the
-<code>epi_tibble</code> object. All objects will have <code>time_type</code>, <code>geo_type</code>, and
-<code>issue</code> fields; named entries from the passed list or will be included as
-well.</p></td>
+<code>epi_df</code> object. All objects will have <code>time_type</code>, <code>geo_type</code>, and <code>issue</code>
+fields; named entries from the passed list or will be included as well.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An <code>epi_tibble</code> object.</p>
+    <p>An <code>epi_df</code> object.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>An <code>epi_tibble</code> is a tibble with (at least) the following columns:</p><ul>
+    <p>An <code>epi_df</code> is a tibble with (at least) the following columns:</p><ul>
 <li><p><code>geo_value</code>: the geographic value associated with each measurement.</p></li>
 <li><p><code>time_value</code>: the time value associated with each measurement.</p></li>
 </ul>
 
 <p>Other columns can be considered as measured variables, which we also broadly
-refer to as signal variables. An <code>epi_tibble</code> object also has metadata with
-(at least) the following fields:</p><ul>
+refer to as signal variables. An <code>epi_df</code> object also has metadata with (at
+least) the following fields:</p><ul>
 <li><p><code>geo_type</code>: the type for the geo values.</p></li>
 <li><p><code>time_type</code>: the type for the time values.</p></li>
 <li><p><code>issue</code>: the time value at which the given data set was issued.</p></li>
@@ -221,19 +223,19 @@ refer to as signal variables. An <code>epi_tibble</code> object also has metadat
 
 <p>The first two fields above, <code>geo_type</code> and <code>time_type</code>, can usually be
 inferred from the <code>geo_value</code> and <code>time_value</code> columns, respectively. The
-last field above, <code>issue</code>, is the most unique to the <code>epi_tibble</code> format.
-In a typical case, this represents the maximum of the issues of individual
+last field above, <code>issue</code>, is the most unique to the <code>epi_df</code> format.  In a
+typical case, this represents the maximum of the issues of individual
 signal values measured in the data set; hence we would also say that the
 data set is comprised of all signal values observed "as of" the given issue
 in the metadata.</p>
-<p>Metadata for an <code>epi_tibble</code> object <code>x</code> can be accessed (and altered) via
+<p>Metadata for an <code>epi_df</code> object <code>x</code> can be accessed (and altered) via
 <code>attributes(x)$metadata</code>. More information on geo types, time types, and
 issues is given below.</p>
     <h2 class="hasAnchor" id="methods-by-class-"><a class="anchor" href="#methods-by-class-"></a>Methods (by class)</h2>
 
     
 <ul>
-<li><p><code>epi_tibble</code>: Simply returns the <code>epi_tibble</code> object unchanged.</p></li>
+<li><p><code>epi_df</code>: Simply returns the <code>epi_df</code> object unchanged.</p></li>
 <li><p><code>tibble</code>: The input tibble <code>x</code> must contain the columns
 <code>geo_value</code> and <code>time_value</code>. All other columns will be preserved as is,
 and treated as measured variables. If <code>issue</code> is missing, then the function
@@ -251,7 +253,7 @@ current day-time will be used.</p></li>
 
     
 
-<p>The following geo types are supported in an <code>epi_tibble</code>. Their geo coding
+<p>The following geo types are supported in an <code>epi_df</code>. Their geo coding
 (specification of geo values for each geo type) is also described below.</p><ul>
 <li><p><code>"county"</code>: each observation corresponds to a U.S. county; coded by 5-digit
 FIPS code.</p></li>
@@ -274,7 +276,7 @@ geo type is labeled as "custom".</p>
 
     
 
-<p>The following time types are supported in an <code>epi_tibble</code>. Their time coding
+<p>The following time types are supported in an <code>epi_df</code>. Their time coding
 (specification of time values for each time type) is also described below.</p><ul>
 <li><p><code>"day-time"</code>: each observation corresponds to a time on a given day (measured
 to the second); coded as a <code>POSIXct</code> object, as in <code><a href='https://rdrr.io/r/base/as.POSIXlt.html'>as.POSIXct("2020-06-09 18:45:40")</a></code>.</p></li>

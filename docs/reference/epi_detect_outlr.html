@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Detect outliers based on an STL decomposition — detect_outliers_stl • epiprocess</title>
+<title>Detect outliers in a variable in an <code>epi_df</code> object — epi_detect_outlr • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,11 @@
 
 
 
-<meta property="og:title" content="Detect outliers based on an STL decomposition — detect_outliers_stl" />
-<meta property="og:description" content="Detects outliers based on a seasonal-trend decomposition using LOESS (STL)." />
+<meta property="og:title" content="Detect outliers in a variable in an <code>epi_df</code> object — epi_detect_outlr" />
+<meta property="og:description" content="Applies one or more outlier detection methods to a variable in an epi_df
+object, and optionally aggregates the results to create consensus results.
+See the outliers vignette for
+examples." />
 
 
 
@@ -141,27 +144,24 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Detect outliers based on an STL decomposition</h1>
+    <h1>Detect outliers in a variable in an <code>epi_df</code> object</h1>
     <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/outliers.R'><code>R/outliers.R</code></a></small>
-    <div class="hidden name"><code>detect_outliers_stl.Rd</code></div>
+    <div class="hidden name"><code>epi_detect_outlr.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Detects outliers based on a seasonal-trend decomposition using LOESS (STL).</p>
+    <p>Applies one or more outlier detection methods to a variable in an <code>epi_df</code>
+object, and optionally aggregates the results to create consensus results.
+See the <a href='https://cmu-delphi.github.io/epiprocess/articles/outliers.html'>outliers vignette</a> for
+examples.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>detect_outliers_stl</span>(
+    <pre class="usage"><span class='fu'>epi_detect_outlr</span>(
   <span class='no'>x</span>,
   <span class='no'>var</span>,
-  <span class='kw'>n_trend</span> <span class='kw'>=</span> <span class='fl'>21</span>,
-  <span class='kw'>n_seasonal</span> <span class='kw'>=</span> <span class='fl'>21</span>,
-  <span class='kw'>n_threshold</span> <span class='kw'>=</span> <span class='fl'>21</span>,
-  <span class='kw'>seasonal_period</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>log_transform</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>detect_negatives</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>detection_multiplier</span> <span class='kw'>=</span> <span class='fl'>2</span>,
-  <span class='kw'>min_radius</span> <span class='kw'>=</span> <span class='fl'>0</span>,
-  <span class='kw'>replacement_multiplier</span> <span class='kw'>=</span> <span class='fl'>0</span>
+  <span class='kw'>methods</span> <span class='kw'>=</span> <span class='fu'>tibble</span>(<span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"rm"</span>, <span class='kw'>args</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>()), <span class='kw'>abbr</span> <span class='kw'>=</span> <span class='st'>"rm"</span>),
+  <span class='kw'>combiner</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"median"</span>, <span class='st'>"mean"</span>, <span class='st'>"none"</span>),
+  <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"outlier_info"</span>
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -176,42 +176,56 @@
       <td><p>The variable in <code>x</code> on which to run outlier detection.</p></td>
     </tr>
     <tr>
-      <th>n_trend</th>
-      <td><p>Number of time steps to use in the rolling window for trend.
-Default is 21.</p></td>
+      <th>methods</th>
+      <td><p>A tibble specifying the method(s) to use for outlier
+detection, with one row per method, and the following columns:</p><ul>
+<li><p><code>method</code>: Either "rm" or "stl", or a custom function for outlier
+detection; see details for further explanation.</p></li>
+<li><p><code>args</code>: Named list of arguments that will be passed to the detection
+method.</p></li>
+<li><p><code>abbr</code>: Abbreviation to use in naming output columns with results from
+this method.</p></li>
+</ul></td>
     </tr>
     <tr>
-      <th>n_seasonal</th>
-      <td><p>Number of time steps to use in the rolling window for
-seasonality. Default is 21.</p></td>
+      <th>combiner</th>
+      <td><p>String, one of "median", "mean", or "none", specifying how to
+combine results from different outlier detection methods for the thresholds
+determining whether a particular observation is classified as an outlier,
+as well as a replacement value for any outliers.  If "none", then no
+summarized results are calculated. Note that if the number of <code>methods</code>
+(number of rows) is odd, then "median" is equivalent to a majority vote for
+purposes of determining whether a given observation is an outlier.</p></td>
     </tr>
     <tr>
-      <th>n_threshold</th>
-      <td><p>Number of time steps to use in rolling window for the IQR
-outlier thresholds.</p></td>
-    </tr>
-    <tr>
-      <th>seasonal_period</th>
-      <td><p>Integer specifying period of seasonality. For example,
-for daily data, a period 7 means weekly seasonality. The default is <code>NULL</code>,
-meaning that no seasonal term will be included in the STL decomposition.</p></td>
+      <th>new_col_name</th>
+      <td><p>String indicating the name of the new column that will
+contain the results of outlier detection. Default is "outlier_info"; note
+that setting <code>new_col_name</code> equal to an existing column name will overwrite
+this column.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A tibble with the same number of rows as <code>x</code>, and columns <code>lower</code>,
-<code>upper</code>, and <code>replacement</code>.</p>
+    <p>An <code>epi_df</code> object given by appending a new column to <code>x</code>, named
+according to the <code>new_col_name</code> argument, containing the outlier detection
+thresholds and replacement values from all detection methods.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>The STL decomposition is computed using the <code>feasts</code> package. Once
-computed, the outlier detection method is analogous to the rolling median
-method in <code><a href='detect_outliers_rm.html'>detect_outliers_rm()</a></code>, except with the fitted values and
-residuals from the STL decomposition taking the place of the rolling median
-and residuals to the rolling median, respectively.</p>
-<p>The last set of arguments, <code>log_transform</code> through <code>replacement_multiplier</code>,
-are exactly as in <code><a href='detect_outliers_rm.html'>detect_outliers_rm()</a></code>; refer to its help file for their
-description.</p>
+    <p>Each outlier detection method, one per row of the passed <code>methods</code>
+tibble, is a function that must take as its first two arguments <code>x</code> and
+<code>var</code>, indicating a data frame and a given variable on which to run outlier
+detection, and then any number of additional arguments. The function must
+return a tibble with the same number of rows as <code>x</code>, and with columns
+<code>lower</code>, <code>upper</code>, and <code>replacement</code>, representing lower and upper bounds
+for what would be considered an outlier, and a posited replacement value,
+respectively.</p>
+<p>For convenience, the outlier detection method can be specified (in the
+<code>method</code> column of <code>methods</code>) by a string "rm", shorthand for
+<code><a href='epi_detect_outlr_rm.html'>epi_detect_outlr_rm()</a></code>, which detects outliers via a rolling median; or by
+"stl", shorthand for <code><a href='epi_detect_outlr_stl.html'>epi_detect_outlr_stl()</a></code>, which detects outliers via
+an STL decomposition.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

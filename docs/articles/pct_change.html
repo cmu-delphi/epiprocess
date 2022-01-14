@@ -110,7 +110,7 @@
 
     
     
-<p>A basic way of assessing growth in a signal is to look at its percentage change over two neighboring time windows. We investigate this in the current vignette, using the <code><a href="../reference/pct_change.html">pct_change()</a></code> function in the <code>epiprocess</code> package. As before, we’ll look at state-level daily reported COVID-19 cases.</p>
+<p>A basic way of assessing growth in a signal is to look at its percentage change over two neighboring time windows. We investigate this in the current vignette, using the <code><a href="../reference/pct_change.html">pct_change()</a></code> convenience function from the <code>epiprocess</code> package, inside of a call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code>. As before, we’ll look at state-level daily reported COVID-19 cases.</p>
 <div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">covidcast</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">epiprocess</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">dplyr</span>)
@@ -127,8 +127,9 @@
 <div id="percentage-change" class="section level2">
 <h2 class="hasAnchor">
 <a href="#percentage-change" class="anchor"></a>Percentage change</h2>
-<p>The <code><a href="../reference/pct_change.html">pct_change()</a></code> function operates on a <code>epi_df</code> object, and aside from this, takes two main arguments: <code>var</code>, the variable whose percentage change values are to be computed; and <code>n</code>, the length of the local window (here, in days) to use to compute the percentage change values. For example, if <code>n = 10</code>, then the percentage change on November 10 is computed as 100 * (B - A) / A, where A is the sum of the signal in between November 6 and 10, and A is the sum in between November 1 and 5. The default is <code>n = 14</code> (here, corresponding to the percentage change between adjacent weeks).</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/pct_change.html">pct_change</a></span>(<span class="no">x</span>, <span class="no">cases</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>)
+<p>The <code><a href="../reference/pct_change.html">pct_change()</a></code> function is a simple convenience function that takes a single argument <code>var</code>, the variable whose percentage change is to be computed. If <code>var</code> has length N, which is assumed to be even, and A and B denote the sum of the first N/2 and last N/2 values in <code>var</code>, respectively, then <code><a href="../reference/pct_change.html">pct_change(var)</a></code> returns 100 * (B - A) / A. (If the length of <code>var</code> is odd, then its first value is ignored, for the sake of the computation.)</p>
+<p>Used in call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code>, we can fluidly compute percentage change values in a variable over time:</p>
+<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="no">x</span>, <span class="kw">pct_change</span> <span class="kw">=</span> <span class="fu"><a href="../reference/pct_change.html">pct_change</a></span>(<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>, <span class="kw">complete</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>, <span class="fl">21</span>) <span class="kw">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span>(<span class="kw">n</span> <span class="kw">=</span> <span class="fl">Inf</span>)</pre></body></html></div>
 <pre><code>## # A tibble: 21 × 4
 ##    geo_value time_value cases pct_change
@@ -154,7 +155,8 @@
 ## 19 fl        2020-06-19  3822       98.0
 ## 20 fl        2020-06-20  4049       87.6
 ## 21 fl        2020-06-21  3494       86.8</code></pre>
-<p>We can see that a column <code>pct_change</code> column has been appended in the returned object, which contains the percentage change values estimates. Next we plot these values alongside the signal itself. We highlight the periods in time for which the percentage change is above 10% (in red) and below -10% (in blue).</p>
+<p>Thus to be clear, the <code>pct_change</code> value computed on (for example) November 14 is the percentage change between the total cases from November 1 to 7, and the total from November 8 to November 14. The argument <code>complete = TRUE</code> in the call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code> specifies that a complete window of <code>n = 14</code> time points must be available for the computation, which is why values in the <code>pct_change</code> column are <code>NA</code> from November 1 to 13.</p>
+<p>Next we plot these values alongside the signal itself. We highlight the periods in time for which the percentage change is above 10% (in red) and below -10% (in blue).</p>
 <div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
 
@@ -187,9 +189,8 @@
 <a href="#smoothing-via-7-day-averaging" class="anchor"></a>Smoothing via 7-day averaging</h2>
 <p>The percentage change in the last figure appears pretty volatile in some parts, which is not too surprising, looking at how wiggly the signal is itself. With a suitable call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code>, we can either pre-smooth or post-smooth using a 7-day trailing average. The differences here (between these two approaches) do not end up being very noticeable at all (which is not unexpected, due to the way in which percentage change is defined; it is already defined using a sum over a 7-day period). We just show results for one of these approaches, pre-smoothing.</p>
 <div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">slide_fun</span> <span class="kw">=</span> ~ <span class="fu"><a href="../reference/Min.html">Mean</a></span>(<span class="no">.x</span>$<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>,
-            <span class="kw">new_col_name</span> <span class="kw">=</span> <span class="st">"cases_7dav"</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/pct_change.html">pct_change</a></span>(<span class="st">"cases_7dav"</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>)
+  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">cases_7dav</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">pct_change</span> <span class="kw">=</span> <span class="fu"><a href="../reference/pct_change.html">pct_change</a></span>(<span class="no">cases_7dav</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>, <span class="kw">complete</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
 
 <span class="no">p1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">cases_7dav</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html">geom_tile</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">x</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">pct_change</span> <span class="kw">&gt;=</span> <span class="no">threshold_upper</span>),
@@ -211,6 +212,11 @@
 
 <span class="kw pkg">gridExtra</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html">grid.arrange</a></span>(<span class="no">p1</span>, <span class="no">p2</span>, <span class="kw">nrow</span> <span class="kw">=</span> <span class="fl">1</span>)</pre></body></html></div>
 <p><img src="pct_change_files/figure-html/unnamed-chunk-4-1.png" width="864"></p>
+</div>
+<div id="building-and-running-a-local-classifier" class="section level2">
+<h2 class="hasAnchor">
+<a href="#building-and-running-a-local-classifier" class="anchor"></a>Building and running a local classifier</h2>
+<p>TODO</p>
 </div>
   </div>
 

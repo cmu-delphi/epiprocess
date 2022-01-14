@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Print <code>epi_tibble</code> object — print.epi_tibble • epitools</title>
+<title>Print <code>epi_df</code> object — print.epi_df • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Print <code>epi_tibble</code> object — print.epi_tibble" />
-<meta property="og:description" content="Prints a brief summary of the epi_tibble object, then prints the underlying
+<meta property="og:title" content="Print <code>epi_df</code> object — print.epi_df" />
+<meta property="og:description" content="Prints a brief summary of the epi_df object, then prints the underlying
 tibble." />
 
 
@@ -72,7 +72,7 @@ tibble." />
         <span class="icon-bar"></span>
       </button>
       <span class="navbar-brand">
-        <a class="navbar-link" href="../index.html">epitools</a>
+        <a class="navbar-link" href="../index.html">epiprocess</a>
         <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
@@ -86,7 +86,7 @@ tibble." />
   </a>
 </li>
 <li>
-  <a href="../articles/epitools.html">Get started</a>
+  <a href="../articles/epiprocess.html">Get started</a>
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
@@ -102,6 +102,9 @@ tibble." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
+      <a href="../articles/pct_change.html">2. Compute percentage change over time</a>
+    </li>
+    <li>
       <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
     </li>
     <li>
@@ -114,14 +117,14 @@ tibble." />
       <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
     <li>
-      <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
+      <a href="../articles/issues.html">7. Work with issue dates and archive objects</a>
     </li>
   </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/cmu-delphi/epitools/tree/main/">
+  <a href="https://github.com/cmu-delphi/epiprocess/tree/main/">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -139,17 +142,17 @@ tibble." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Print <code>epi_tibble</code> object</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/blob/main/R/epi_tibble.R'><code>R/epi_tibble.R</code></a></small>
-    <div class="hidden name"><code>print.epi_tibble.Rd</code></div>
+    <h1>Print <code>epi_df</code> object</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/epi_df.R'><code>R/epi_df.R</code></a></small>
+    <div class="hidden name"><code>print.epi_df.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Prints a brief summary of the <code>epi_tibble</code> object, then prints the underlying
+    <p>Prints a brief summary of the <code>epi_df</code> object, then prints the underlying
 tibble.</p>
     </div>
 
-    <pre class="usage"><span class='co'># S3 method for epi_tibble</span>
+    <pre class="usage"><span class='co'># S3 method for epi_df</span>
 <span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='no'>x</span>, <span class='no'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -157,7 +160,7 @@ tibble.</p>
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>The <code>epi_tibble</code> object.</p></td>
+      <td><p>The <code>epi_df</code> object.</p></td>
     </tr>
     <tr>
       <th>...</th>
@@ -168,7 +171,7 @@ data.</p></td>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>The <code>epi_tibble</code> object, unchanged.</p>
+    <p>The <code>epi_df</code> object, unchanged.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

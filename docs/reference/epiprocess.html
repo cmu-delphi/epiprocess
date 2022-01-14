@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Compute percentage change — pct_change • epiprocess</title>
+<title>epiprocess: Tools for basic signal processing in epidemiology — epiprocess • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,14 +39,10 @@
 
 
 
-<meta property="og:title" content="Compute percentage change — pct_change" />
-<meta property="og:description" content="Computes the percentage change over a sequence of values, defined as 100 * (B
-A) / A, where A is the sum of the first half of the values and B is the sum
-of the second half. This is a convenience function to be used inside of a
-call to epi_slide(), see the percentage change vignette
-for examples.
-
-" />
+<meta property="og:title" content="epiprocess: Tools for basic signal processing in epidemiology — epiprocess" />
+<meta property="og:description" content="This package introduces a common data structure for epidemiological data sets
+measured over space and time, and offers associated utilities to perform
+basic signal processing tasks." />
 
 
 
@@ -147,38 +143,18 @@ for examples.
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Compute percentage change</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/pct_change.R'><code>R/pct_change.R</code></a></small>
-    <div class="hidden name"><code>pct_change.Rd</code></div>
+    <h1>epiprocess: Tools for basic signal processing in epidemiology</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/epiprocess.R'><code>R/epiprocess.R</code></a></small>
+    <div class="hidden name"><code>epiprocess.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Computes the percentage change over a sequence of values, defined as 100 * (B</p><ul>
-<li><p>A) / A, where A is the sum of the first half of the values and B is the sum
-of the second half. This is a convenience function to be used inside of a
-call to <code><a href='epi_slide.html'>epi_slide()</a></code>, see the <a href='https://cmu-delphi.github.io/epiprocess/articles/pct_change.html'>percentage change vignette</a>
-for examples.</p></li>
-</ul>
-
+    <p>This package introduces a common data structure for epidemiological data sets
+measured over space and time, and offers associated utilities to perform
+basic signal processing tasks.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>pct_change</span>(<span class='no'>var</span>, <span class='kw'>na_rm</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
 
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>var</th>
-      <td><p>The variable whose percentage change value is to be computed. If
-the length of <code>var</code> is odd, then the first value is ignored for the sake of
-the computation.</p></td>
-    </tr>
-    <tr>
-      <th>na_rm</th>
-      <td><p>Should missing values be removed before the computation? Default
-is <code>FALSE</code>.</p></td>
-    </tr>
-    </table>
 
 
   </div>

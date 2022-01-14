@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Detect outliers in a variable in an <code>epi_df</code> object — detect_outliers • epiprocess</title>
+<title>Group or ungroup <code>epi_df</code> object — group_by.epi_df • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,11 +39,8 @@
 
 
 
-<meta property="og:title" content="Detect outliers in a variable in an <code>epi_df</code> object — detect_outliers" />
-<meta property="og:description" content="Applies one or more outlier detection methods to a variable in an epi_df
-object, and optionally aggregates the results to create consensus results.
-See the outliers vignette for
-examples." />
+<meta property="og:title" content="Group or ungroup <code>epi_df</code> object — group_by.epi_df" />
+<meta property="og:description" content="Groups or ungroups an epi_df, preserving class and attributes." />
 
 
 
@@ -144,88 +141,22 @@ examples." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Detect outliers in a variable in an <code>epi_df</code> object</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/outliers.R'><code>R/outliers.R</code></a></small>
-    <div class="hidden name"><code>detect_outliers.Rd</code></div>
+    <h1>Group or ungroup <code>epi_df</code> object</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/epi_df.R'><code>R/epi_df.R</code></a></small>
+    <div class="hidden name"><code>group_by.epi_df.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Applies one or more outlier detection methods to a variable in an <code>epi_df</code>
-object, and optionally aggregates the results to create consensus results.
-See the <a href='https://cmu-delphi.github.io/epiprocess/articles/outliers.html'>outliers vignette</a> for
-examples.</p>
+    <p>Groups or ungroups an <code>epi_df</code>, preserving class and attributes.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>detect_outliers</span>(
-  <span class='no'>x</span>,
-  <span class='no'>var</span>,
-  <span class='kw'>methods</span> <span class='kw'>=</span> <span class='fu'>tibble</span>(<span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"rm"</span>, <span class='kw'>args</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>()), <span class='kw'>abbr</span> <span class='kw'>=</span> <span class='st'>"rm"</span>),
-  <span class='kw'>combiner</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"median"</span>, <span class='st'>"mean"</span>, <span class='st'>"none"</span>),
-  <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"outlier_info"</span>
-)</pre>
+    <pre class="usage"><span class='co'># S3 method for epi_df</span>
+<span class='fu'>group_by</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>x</th>
-      <td><p>The <code>epi_df</code> object under consideration.</p></td>
-    </tr>
-    <tr>
-      <th>var</th>
-      <td><p>The variable in <code>x</code> on which to run outlier detection.</p></td>
-    </tr>
-    <tr>
-      <th>methods</th>
-      <td><p>A tibble specifying the method(s) to use for outlier
-detection, with one row per method, and the following columns:</p><ul>
-<li><p><code>method</code> &lt;str&gt;: Either "rm" or "stl", or a custom function for outlier
-detection; see details for further explanation.</p></li>
-<li><p><code>args</code> &lt;lst&gt;: Named list of arguments that will be passed to the
-detection method.</p></li>
-<li><p><code>abbr</code> &lt;chr&gt;: Abbreviation to use in naming output columns with results
-from this method.</p></li>
-</ul></td>
-    </tr>
-    <tr>
-      <th>combiner</th>
-      <td><p>String, one of "median", "mean", or "none", specifying how to
-combine results from different outlier detection methods for the thresholds
-determining whether a particular observation is classified as an outlier,
-as well as a replacement value for any outliers.  If "none", then no
-summarized results are calculated. Note that if the number of <code>methods</code>
-(number of rows) is odd, then "median" is equivalent to a majority vote for
-purposes of determining whether a given observation is an outlier.</p></td>
-    </tr>
-    <tr>
-      <th>new_col_name</th>
-      <td><p>String indicating the name of the new column that will
-contain the results of outlier detection. Default is "outlier_info"; note
-that setting <code>new_col_name</code> equal to an existing column name will overwrite
-this column.</p></td>
-    </tr>
-    </table>
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>ungroup</span>(<span class='no'>x</span>, <span class='no'>...</span>)</pre>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An <code>epi_df</code> object given by appending a new column to <code>x</code>, named
-according to the <code>new_col_name</code> argument, containing the outlier detection
-thresholds and replacement values from all detection methods.</p>
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>Each outlier detection method, one per row of the passed <code>methods</code>
-tibble, is a function that must take as its first two arguments <code>x</code> and
-<code>var</code>, indicating a data frame and a given variable on which to run outlier
-detection, and then any number of additional arguments. The function must
-return a tibble with the same number of rows as <code>x</code>, and with columns
-<code>lower</code>, <code>upper</code>, and <code>replacement</code>, representing lower and upper bounds
-for what would be considered an outlier, and a posited replacement value,
-respectively.</p>
-<p>For convenience, the outlier detection method can be specified (in the
-<code>method</code> column of <code>methods</code>) by a string "rm", shorthand for
-<code><a href='detect_outliers_rm.html'>detect_outliers_rm()</a></code>, which detects outliers via a rolling median; or by
-"stl", shorthand for <code><a href='detect_outliers_stl.html'>detect_outliers_stl()</a></code>, which detects outliers via an
-STL decomposition.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

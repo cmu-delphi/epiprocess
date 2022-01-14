@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Detect outliers based on a rolling median — detect_outliers_rm • epiprocess</title>
+<title>Summarize <code>epi_df</code> object — summary.epi_df • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,9 @@
 
 
 
-<meta property="og:title" content="Detect outliers based on a rolling median — detect_outliers_rm" />
-<meta property="og:description" content="Detects outliers based on a distance from the rolling median specified in
-terms of multiples of the rolling interquartile range (IQR)." />
+<meta property="og:title" content="Summarize <code>epi_df</code> object — summary.epi_df" />
+<meta property="og:description" content="Prints a variety of summary statistics about the epi_df object, such as
+the time range included and geographic coverage." />
 
 
 
@@ -142,78 +142,36 @@ terms of multiples of the rolling interquartile range (IQR)." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Detect outliers based on a rolling median</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/outliers.R'><code>R/outliers.R</code></a></small>
-    <div class="hidden name"><code>detect_outliers_rm.Rd</code></div>
+    <h1>Summarize <code>epi_df</code> object</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/epi_df.R'><code>R/epi_df.R</code></a></small>
+    <div class="hidden name"><code>summary.epi_df.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Detects outliers based on a distance from the rolling median specified in
-terms of multiples of the rolling interquartile range (IQR).</p>
+    <p>Prints a variety of summary statistics about the <code>epi_df</code> object, such as
+the time range included and geographic coverage.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>detect_outliers_rm</span>(
-  <span class='no'>x</span>,
-  <span class='no'>var</span>,
-  <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>21</span>,
-  <span class='kw'>log_transform</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>detect_negatives</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>detection_multiplier</span> <span class='kw'>=</span> <span class='fl'>2</span>,
-  <span class='kw'>min_radius</span> <span class='kw'>=</span> <span class='fl'>0</span>,
-  <span class='kw'>replacement_multiplier</span> <span class='kw'>=</span> <span class='fl'>0</span>
-)</pre>
+    <pre class="usage"><span class='co'># S3 method for epi_df</span>
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>object</span>, <span class='no'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>x</th>
-      <td><p>The <code>epi_df</code> object under consideration.</p></td>
+      <th>object</th>
+      <td><p>The <code>epi_df</code> object.</p></td>
     </tr>
     <tr>
-      <th>var</th>
-      <td><p>The variable in <code>x</code> on which to run outlier detection.</p></td>
-    </tr>
-    <tr>
-      <th>n</th>
-      <td><p>Number of time steps to use in the rolling window. Default is 21.</p></td>
-    </tr>
-    <tr>
-      <th>log_transform</th>
-      <td><p>Should a log transform be applied before running outlier
-detection? Default is <code>FALSE</code>. If <code>TRUE</code>, and zeros are present, then the
-log transform will be padded by 1.</p></td>
-    </tr>
-    <tr>
-      <th>detect_negatives</th>
-      <td><p>Should negative values automatically count as
-outliers? Default is <code>FALSE</code>.</p></td>
-    </tr>
-    <tr>
-      <th>detection_multiplier</th>
-      <td><p>Value determining how far the outlier detection
-thresholds are from the rolling median, which are calculated as (rolling
-median) +/- (detection multiplier) * (rolling IQR). Default is 2.</p></td>
-    </tr>
-    <tr>
-      <th>min_radius</th>
-      <td><p>Minimum distance between rolling median and threshold, on
-transformed scale. Default is 0.</p></td>
-    </tr>
-    <tr>
-      <th>replacement_multiplier</th>
-      <td><p>Value determining how far the replacement
-values are from the rolling median. The replacement is the original value
-if it is within the detection thresholds, or otherwise it is rounded to the
-nearest (rolling median) +/- (replacement multiplier) * (rolling IQR).
-Default is 0.</p></td>
+      <th>...</th>
+      <td><p>Additional arguments, for compatibility with <code><a href='https://rdrr.io/r/base/summary.html'>summary()</a></code>.
+Currently unused.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A tibble with the same number of rows as <code>x</code>, and columns <code>lower</code>,
-<code>upper</code>, and <code>replacement</code>.</p>
+    <p>No return value; called only to print summary statistics.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
