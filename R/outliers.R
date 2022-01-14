@@ -320,16 +320,6 @@ epi_detect_outlr_stl = function(x, var,
              replacement_multiplier = replacement_multiplier,
              min_lower = min_lower)
 
- # Calculate lower and upper thresholds and replacement value
-  x = x %>%
-    epi_slide(fitted = median(!!var), n = n, align = "center") %>%
-    mutate(resid = !!var - fitted) %>%
-    roll_iqr(var, n,
-             detection_multiplier = detection_multiplier,
-             min_radius = min_radius,
-             replacement_multiplier = replacement_multiplier,
-             min_lower = min_lower)
-
   # Undo log transformation if necessary
   if (log_transform) {
     x$lower = exp(x$lower) - offset

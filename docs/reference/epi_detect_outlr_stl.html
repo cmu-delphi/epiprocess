@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Function reference • epiprocess</title>
+<title>Detect outliers based on an STL decomposition — epi_detect_outlr_stl • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,8 @@
 
 
 
-<meta property="og:title" content="Function reference" />
+<meta property="og:title" content="Detect outliers based on an STL decomposition — epi_detect_outlr_stl" />
+<meta property="og:description" content="Detects outliers based on a seasonal-trend decomposition using LOESS (STL)." />
 
 
 
@@ -58,7 +59,7 @@
   </head>
 
   <body data-spy="scroll" data-target="#toc">
-    <div class="container template-reference-index">
+    <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -138,114 +139,81 @@
       </header>
 
 <div class="row">
-  <div class="contents col-md-9">
+  <div class="col-md-9 contents">
     <div class="page-header">
-      <h1>Reference</h1>
+    <h1>Detect outliers based on an STL decomposition</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/outliers.R'><code>R/outliers.R</code></a></small>
+    <div class="hidden name"><code>epi_detect_outlr_stl.Rd</code></div>
     </div>
 
-    <table class="ref-index">
+    <div class="ref-description">
+    <p>Detects outliers based on a seasonal-trend decomposition using LOESS (STL).</p>
+    </div>
 
-    <colgroup>
-      
-      <col class="alias" />
-      <col class="title" />
-    </colgroup>
+    <pre class="usage"><span class='fu'>epi_detect_outlr_stl</span>(
+  <span class='no'>x</span>,
+  <span class='no'>var</span>,
+  <span class='kw'>n_trend</span> <span class='kw'>=</span> <span class='fl'>21</span>,
+  <span class='kw'>n_seasonal</span> <span class='kw'>=</span> <span class='fl'>21</span>,
+  <span class='kw'>n_threshold</span> <span class='kw'>=</span> <span class='fl'>21</span>,
+  <span class='kw'>seasonal_period</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>log_transform</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>detect_negatives</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>detection_multiplier</span> <span class='kw'>=</span> <span class='fl'>2</span>,
+  <span class='kw'>min_radius</span> <span class='kw'>=</span> <span class='fl'>0</span>,
+  <span class='kw'>replacement_multiplier</span> <span class='kw'>=</span> <span class='fl'>0</span>
+)</pre>
 
-    <tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-all-functions" class="hasAnchor"><a href="#section-all-functions" class="anchor"></a>All functions</h2>
-          <p class="section-desc"></p>
-        </th>
-      </tr>
-      
-      
-    </tbody><tbody>
-      
-      
-      <tr>
-        
-        <td>
-          <p><code><a href="Min.html">Min()</a></code> <code><a href="Min.html">Max()</a></code> <code><a href="Min.html">Sum()</a></code> <code><a href="Min.html">Mean()</a></code> <code><a href="Min.html">Median()</a></code> </p>
-        </td>
-        <td><p>Computations with <code>NA</code> values removed</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="as.epi_df.html">as.epi_df()</a></code> </p>
-        </td>
-        <td><p>Convert data to <code>epi_df</code> format</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="epi_cor.html">epi_cor()</a></code> </p>
-        </td>
-        <td><p>Compute lagged correlations between variables in an <code>epi_df</code> object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="epi_detect_outlr.html">epi_detect_outlr()</a></code> </p>
-        </td>
-        <td><p>Detect outliers in a variable in an <code>epi_df</code> object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="epi_detect_outlr_rm.html">epi_detect_outlr_rm()</a></code> </p>
-        </td>
-        <td><p>Detect outliers based on a rolling median</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="epi_detect_outlr_stl.html">epi_detect_outlr_stl()</a></code> </p>
-        </td>
-        <td><p>Detect outliers based on an STL decomposition</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="epi_slide.html">epi_slide()</a></code> </p>
-        </td>
-        <td><p>Slide a function over variables in an <code>epi_df</code> object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="epiprocess.html">epiprocess</a></code> </p>
-        </td>
-        <td><p>epiprocess: Tools for basic signal processing in epidemiology</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="estimate_deriv.html">estimate_deriv()</a></code> </p>
-        </td>
-        <td><p>Estimate derivative</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="group_by.epi_df.html">group_by(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="group_by.epi_df.html">ungroup(<i>&lt;epi_df&gt;</i>)</a></code> </p>
-        </td>
-        <td><p>Group or ungroup <code>epi_df</code> object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="pct_change.html">pct_change()</a></code> </p>
-        </td>
-        <td><p>Compute percentage change</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="print.epi_df.html">print(<i>&lt;epi_df&gt;</i>)</a></code> </p>
-        </td>
-        <td><p>Print <code>epi_df</code> object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="summary.epi_df.html">summary(<i>&lt;epi_df&gt;</i>)</a></code> </p>
-        </td>
-        <td><p>Summarize <code>epi_df</code> object</p></td>
-      </tr>
-    </tbody>
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>x</th>
+      <td><p>The <code>epi_df</code> object under consideration.</p></td>
+    </tr>
+    <tr>
+      <th>var</th>
+      <td><p>The variable in <code>x</code> on which to run outlier detection.</p></td>
+    </tr>
+    <tr>
+      <th>n_trend</th>
+      <td><p>Number of time steps to use in the rolling window for trend.
+Default is 21.</p></td>
+    </tr>
+    <tr>
+      <th>n_seasonal</th>
+      <td><p>Number of time steps to use in the rolling window for
+seasonality. Default is 21.</p></td>
+    </tr>
+    <tr>
+      <th>n_threshold</th>
+      <td><p>Number of time steps to use in rolling window for the IQR
+outlier thresholds.</p></td>
+    </tr>
+    <tr>
+      <th>seasonal_period</th>
+      <td><p>Integer specifying period of seasonality. For example,
+for daily data, a period 7 means weekly seasonality. The default is <code>NULL</code>,
+meaning that no seasonal term will be included in the STL decomposition.</p></td>
+    </tr>
     </table>
-  </div>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>A tibble with the same number of rows as <code>x</code>, and columns <code>lower</code>,
+<code>upper</code>, and <code>replacement</code>.</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>The STL decomposition is computed using the <code>feasts</code> package. Once
+computed, the outlier detection method is analogous to the rolling median
+method in <code><a href='epi_detect_outlr_rm.html'>epi_detect_outlr_rm()</a></code>, except with the fitted values and
+residuals from the STL decomposition taking the place of the rolling median
+and residuals to the rolling median, respectively.</p>
+<p>The last set of arguments, <code>log_transform</code> through <code>replacement_multiplier</code>,
+are exactly as in <code><a href='epi_detect_outlr_rm.html'>epi_detect_outlr_rm()</a></code>; refer to its help file for their
+description.</p>
+
+  </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
       <h2 data-toc-skip>Contents</h2>

@@ -155,8 +155,7 @@
 ## 19 fl        2020-06-19  3822       98.0
 ## 20 fl        2020-06-20  4049       87.6
 ## 21 fl        2020-06-21  3494       86.8</code></pre>
-<p>Thus to be clear, the <code>pct_change</code> value computed on (for example) November 14<br>
-is the percentage change between the total cases from November 1 to 7, and the total from November 8 to November 14. The argument <code>complete = TRUE</code> in the call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code> specifies that a complete window of <code>n = 14</code> time points must be available for the computation, which is why values in the <code>pct_change</code> column are <code>NA</code> from November 1 to 13.</p>
+<p>Thus to be clear, the <code>pct_change</code> value computed on (for example) November 14 is the percentage change between the total cases from November 1 to 7, and the total from November 8 to November 14. The argument <code>complete = TRUE</code> in the call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code> specifies that a complete window of <code>n = 14</code> time points must be available for the computation, which is why values in the <code>pct_change</code> column are <code>NA</code> from November 1 to 13.</p>
 <p>Next we plot these values alongside the signal itself. We highlight the periods in time for which the percentage change is above 10% (in red) and below -10% (in blue).</p>
 <div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
@@ -213,6 +212,11 @@ is the percentage change between the total cases from November 1 to 7, and the t
 
 <span class="kw pkg">gridExtra</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html">grid.arrange</a></span>(<span class="no">p1</span>, <span class="no">p2</span>, <span class="kw">nrow</span> <span class="kw">=</span> <span class="fl">1</span>)</pre></body></html></div>
 <p><img src="pct_change_files/figure-html/unnamed-chunk-4-1.png" width="864"></p>
+</div>
+<div id="building-and-running-a-local-classifier" class="section level2">
+<h2 class="hasAnchor">
+<a href="#building-and-running-a-local-classifier" class="anchor"></a>Building and running a local classifier</h2>
+<p>TODO</p>
 </div>
   </div>
 
