@@ -6,17 +6,17 @@
 ## use `data.table::` everywhere and not importing things.
 .datatable.aware = TRUE
 
-#' Archive (data version history) for an \code{epi_tibble}
+#' Archive (data version history) for an `epi_df` object
 #'
-#' Contains version history for an \code{epi_tibble}, and enables fast querying
-#' of snapshots of the \code{epi_tibble} as of certain "issues" (versions).
+#' Contains version history for an `epi_df` object, and enables fast querying
+#' of snapshots of the `epi_df` object as of certain "issues" (versions).
 #' Version history can be input as a data frame combining full snapshots of the
-#' `epi_tibble` as of several issue times, or using only the newly added or
+#' `epi_df` as of several issue times, or using only the newly added or
 #' revised rows for each issue, or using some combination of these two
 #' (including "updates" for things that didn't actually change).
 #' Last-observation-carried-forward (LOCF) is used to data in between recorded
 #' updates. Currently, deletions must be represented as revising a row to a
-#' special state (e.g., making the entries \code{NA} or including a special
+#' special state (e.g., making the entries `NA` or including a special
 #' column that flags the data as removed and performing post-processing), and
 #' the archive is unaware of what this state is.
 #'
@@ -46,21 +46,21 @@
 #'
 #' ## update.df actually contains update data through issue 2021-01-11, but the
 #' ## data set was not reported to change from 2021-01-10 to 2021-01-11
-#' epi.tibble.archive = epi_tibble_archive$new(update.df, max.issue=as.Date("2021-01-11"))
+#' epi.tibble.archive = epi_df_archive$new(update.df, max.issue=as.Date("2021-01-11"))
 #'
 #' ## The snapshot as of issue 2021-01-03 just looks like the updates in issue
 #' ## 2021-01-03, because all past measurements were updated in this issue (we
 #' ## don't need to do any LOCF to obtain the snapshot).
-#' epi.tibble.archive$epi_tibble_as_of(as.Date("2021-01-03"))
+#' epi.tibble.archive$epi_df_as_of(as.Date("2021-01-03"))
 #'
 #' ## The snapshot as of issue 2021-01-05 uses LOCF on the first two geo-time
 #' ## combinations. Note that there is no entry for `time_value` 2021-01-05, as the
 #' ## initial version of this data was not available until issue 2021-01-06.
-#' epi.tibble.archive$epi_tibble_as_of(as.Date("2021-01-05"))
+#' epi.tibble.archive$epi_df_as_of(as.Date("2021-01-05"))
 #'
 #' ## The snapshot as of issue 2021-01-06 does include the measurement for
 #' ## `time_value` 2021-01-05.
-#' epi.tibble.archive$epi_tibble_as_of(as.Date("2021-01-06"))
+#' epi.tibble.archive$epi_df_as_of(as.Date("2021-01-06"))
 #'
 #' ## (Don't automatically run this example as it involves network access and querying the API)
 #' if (FALSE) {
@@ -85,14 +85,14 @@
 #'                               as_of = 20201028) %>%
 #'     delphi.epidata::fetch_tbl()
 #'
-#'   epi.tibble.archive.2 = epi_tibble_archive$new(update.df.2)
+#'   epi.tibble.archive.2 = epi_df_archive$new(update.df.2)
 #'   all.equal(
-#'     as_tibble(epi.tibble.archive.2$epi_tibble_as_of(as.Date("2020-10-14"))),
-#'     as_tibble(as.epi_tibble(snapshot.df.2a)),
+#'     as_tibble(epi.tibble.archive.2$epi_df_as_of(as.Date("2020-10-14"))),
+#'     as_tibble(as.epi_df(snapshot.df.2a)),
 #'     check.attributes = FALSE)
 #'   all.equal(
-#'     as_tibble(epi.tibble.archive.2$epi_tibble_as_of(as.Date("2020-10-28"))),
-#'     as_tibble(as.epi_tibble(snapshot.df.2b)),
+#'     as_tibble(epi.tibble.archive.2$epi_df_as_of(as.Date("2020-10-28"))),
+#'     as_tibble(as.epi_df(snapshot.df.2b)),
 #'     check.attributes = FALSE)
 #' }
 #'
@@ -103,8 +103,8 @@
 #' @importFrom data.table as.data.table
 #' @importFrom pipeR %>>%
 #' @export
-epi_tibble_archive =
-  R6::R6Class("epi_tibble_archive",
+epi_df_archive =
+  R6::R6Class("epi_df_archive",
               private = list(
                 update.DT = NULL,
                 max.issue = NULL,
@@ -115,14 +115,14 @@ epi_tibble_archive =
               ),
               public = list(
                 #' @description
-                #' Create a new \code{epi_tibble_archive} with the given update data.
+                #' Create a new \code{epi_df_archive} with the given update data.
                 #' @param update.df the update data
                 #' @param issue.colname name of the column with the issue time of the corresponding updates; operations such as \code{sort}, \code{<=}, and \code{max} must make sense on this column, with earlier issues "less than" later issues
-                #' @param geo.colname the name of the column that will become \code{geo_value} in the \code{epi_tibble}
-                #' @param time.colname the name of the column that will become \code{time_value} in the \code{epi_tibble}
+                #' @param geo.colname the name of the column that will become \code{geo_value} in the \code{epi_df}
+                #' @param time.colname the name of the column that will become \code{time_value} in the \code{epi_df}
                 #' @param other.key.colnames the names of any other columns that would be used to index a single measurement in this data set, such as the age group the measurement corresponds to (if the data set includes an age group breakdown); there should only be a single row per issue-geo-time-other-key-cols combination.
                 #' @param max.issue the latest issue for which update data was available; defaults to the maximum issue time in the \code{update.df}, but if there were no additions or revisions in subsequent issues, it could be later.  However, due to details regarding database replica syncing times in upstream APIs, using the default might be safer than whatever we think the max issue should be.
-                #' @return an \code{epi_tibble_archive} object
+                #' @return an \code{epi_df_archive} object
                 initialize = function(update.df,
                                       issue.colname = "issue",
                                       geo.colname = "geo_value",
@@ -152,10 +152,10 @@ epi_tibble_archive =
                   private[["other.key.colnames"]] <- other.key.colnames
                 },
                 #' @description
-                #' Get the \code{epi_tibble} as of some issue time
+                #' Get the \code{epi_df} as of some issue time
                 #' @param issue the desired as-of issue time
-                #' @return an \code{epi_tibble} with data as of the specified issue time, \code{issue} recorded in the metadata, the geo column renamed to \code{geo_value} and time column to \code{time_value}, and the other key colnames recorded in the metadata
-                epi_tibble_as_of = function(issue) {
+                #' @return an \code{epi_df} with data as of the specified issue time, \code{issue} recorded in the metadata, the geo column renamed to \code{geo_value} and time column to \code{time_value}, and the other key colnames recorded in the metadata
+                epi_df_as_of = function(issue) {
                   assert_that(is_scalar_atomic(issue) && identical(class(issue), class(private[["max.issue"]])))
                   assert_that(issue <= private[["max.issue"]])
                   if (issue == max(private[["update.DT"]][[private[["issue.colname"]]]])) {
@@ -166,7 +166,7 @@ epi_tibble_archive =
                     ## user's indication and use `private$max.issue` and let
                     ## them deal with potential strange cases with replicas
                     ## being out of date)
-                    warn('Getting epi_tibble as of the latest issue with recorded change data; it is possible that we have a preliminary version of this issue, the upstream source has updated it, and we have not seen those updates yet due to them not being published yet, or potentially due to latency in synchronization of upstream database replicas.  Thus, the epi_tibble snapshot that we produce here might not be reproducible at later times when we use an archive with fresher data.')
+                    warn('Getting epi_df as of the latest issue with recorded change data; it is possible that we have a preliminary version of this issue, the upstream source has updated it, and we have not seen those updates yet due to them not being published yet, or potentially due to latency in synchronization of upstream database replicas.  Thus, the epi_df snapshot that we produce here might not be reproducible at later times when we use an archive with fresher data.')
                   }
                   ## -- end of input validation --
                   private[["update.DT"]] %>>%
@@ -180,7 +180,7 @@ epi_tibble_archive =
                       geo_value = !!private[["geo.colname"]],
                       time_value = !!private[["time.colname"]],
                       ) %>>%
-                    as.epi_tibble(issue = issue,
+                    as.epi_df(issue = issue,
                                   additional_metadata = list(other.key.colnames = private[["other.key.colnames"]])) %>>%
                     return()
                 },
@@ -225,7 +225,7 @@ epi_tibble_archive =
                     ## user's indication and use `private$max.issue` and let
                     ## them deal with potential strange cases with replicas
                     ## being out of date)
-                    warn('Getting epi_tibble as of the latest issue with recorded change data; it is possible that we have a preliminary version of this issue, the upstream source has updated it, and we have not seen those updates yet due to them not being published yet, or potentially due to latency in synchronization of upstream database replicas.  Thus, the epi_tibble snapshot that we produce here might not be reproducible at later times when we use an archive with fresher data.')
+                    warn('Getting epi_df as of the latest issue with recorded change data; it is possible that we have a preliminary version of this issue, the upstream source has updated it, and we have not seen those updates yet due to them not being published yet, or potentially due to latency in synchronization of upstream database replicas.  Thus, the epi_df snapshot that we produce here might not be reproducible at later times when we use an archive with fresher data.')
                   }
                   private[["update.DT"]] %>>%
                     ## {.[, .SD[.[[private[["issue.colname"]]]] <= ..issue]]} %>>%
