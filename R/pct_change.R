@@ -1,7 +1,7 @@
 #' Compute percentage change 
 #' 
 #' Computes the percentage change over a sequence of values, defined as 100 * (B
-#' - A) / A, where A is the sum of the first half of the values and B is the sum
+#' / A - 1), where A is the sum of the first half of the values and B is the sum
 #' of the second half. This is a convenience function to be used inside of a
 #' call to `epi_slide()`, see the [percentage change
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/pct_change.html)
