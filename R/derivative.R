@@ -7,7 +7,7 @@
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/derivative.html)
 #' for examples.
 #'
-#' @param var The variable whose derivative is to be estimated. 
+#' @param var The variable whose derivative is to be estimated.
 #' @param method One of "lin", "ss", or "tf" indicating the method to use for
 #'   the derivative calculation. We run the given method using `var` as the
 #'   response variable, assuming an equally-spaced sequence of design points,

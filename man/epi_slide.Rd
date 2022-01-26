@@ -40,8 +40,8 @@ data in between November 1 and 5. Default is 14.}
 
 \item{align}{One of "right", "center", or "left", indicating the alignment of
 the sliding window relative to the reference time point. If the alignment
-is "center" and \code{n} is even, then one more time point will be used before
-the reference time point than after. Default is "right".}
+is "center" and \code{n} is even, then one more time point will be used after
+the reference time point than before. Default is "right".}
 
 \item{before}{Positive integer less than \code{n}, specifying the number of time
 points to use in the sliding window strictly before the reference time
