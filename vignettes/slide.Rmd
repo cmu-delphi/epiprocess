@@ -18,8 +18,8 @@ By default, the meaning of one time step is inferred from the `time_type` of the
 `epi_df` object under consideration. If `time_type` is "day", then one time step
 is one day. The time step can also be specified manually in the call to
 `epi_slide()`; you can read the cocumentation for more details. Furthermore, the
-alignment of the running window used in `epi_slide()` can either be "trailing"
-or "centered"; the default is "trailing", and is what we use in this and most
+alignment of the running window used in `epi_slide()` can either be "right", 
+"center", or "left"; the default is "right", and is what we use in this and most
 other vignettes, without specifying otherwise.
 
 Similar to the getting started guide, we'll fetch daily reported COVID-19 cases
