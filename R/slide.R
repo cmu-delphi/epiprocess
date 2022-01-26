@@ -45,8 +45,8 @@
 #'   data in between November 1 and 5. Default is 14. 
 #' @param align One of "right", "center", or "left", indicating the alignment of
 #'   the sliding window relative to the reference time point. If the alignment
-#'   is "center" and `n` is even, then one more time point will be used before
-#'   the reference time point than after. Default is "right".
+#'   is "center" and `n` is even, then one more time point will be used after
+#'   the reference time point than before. Default is "right".
 #' @param before Positive integer less than `n`, specifying the number of time
 #'   points to use in the sliding window strictly before the reference time
 #'   point. For example, setting `before = n-1` would be the same as setting
@@ -107,8 +107,8 @@ epi_slide = function(x, f, ..., n = 14, align = c("right", "center", "left"),
       after_num = 0
     }
     else if (align == "center") {
-      before_num = before_fun(ceiling((n-1)/2))
-      after_num = before_fun(floor((n-1)/2))
+      before_num = before_fun(floor((n-1)/2))
+      after_num = before_fun(ceiling((n-1)/2))
     }
     else {
       before_num = 0
