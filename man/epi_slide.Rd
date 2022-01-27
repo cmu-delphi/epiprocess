@@ -2,7 +2,7 @@
 % Please edit documentation in R/slide.R
 \name{epi_slide}
 \alias{epi_slide}
-\title{Slide a function over variables in an \code{epi_df} or \code{epi_archive} object}
+\title{Slide a function over variables in an \code{epi_df} object}
 \usage{
 epi_slide(
   x,
@@ -72,9 +72,8 @@ An \code{epi_df} object given by appending a new column to \code{x}, named
 according to the \code{new_col_name} argument, containing the slide values.
 }
 \description{
-Slides a given function over variables in an \code{epi_df} or \code{epi_archive}
-object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} and
-\href{https://cmu-delphi.github.io/epiprocess/articles/issues.html}{issues vignette} for
+Slides a given function over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
+examples. Also applies to an \code{epi_archive} object; see the \href{https://cmu-delphi.github.io/epiprocess/articles/issues.html}{issues vignette} for
 examples.
 }
 \details{

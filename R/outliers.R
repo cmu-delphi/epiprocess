@@ -50,7 +50,7 @@
 #' @importFrom dplyr group_modify mutate select 
 #' @importFrom purrr map pmap_dfc
 #' @importFrom tidyselect ends_with all_of
-#' @importFrom rlang abort enquo
+#' @importFrom rlang !! abort enquo
 #' @export
 epi_detect_outlr = function(x, var,
                             methods = tibble(
@@ -168,6 +168,7 @@ epi_detect_outlr_one_grp = function(.data_group, var, methods, combiner,
 #'   `upper`, and `replacement`. 
 #'
 #' @importFrom dplyr mutate pull select
+#' @importFrom rlang !!
 #' @export
 epi_detect_outlr_rm = function(x, var, n = 21,
                                log_transform = FALSE,
@@ -247,6 +248,7 @@ epi_detect_outlr_rm = function(x, var, n = 21,
 #' @importFrom dplyr case_when mutate pull select transmute
 #' @importFrom fabletools model
 #' @importFrom feasts STL
+#' @importFrom rlang !!
 #' @export
 epi_detect_outlr_stl = function(x, var,
                                n_trend = 21,

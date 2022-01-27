@@ -90,7 +90,7 @@ epi_slide = function(x, f, ..., n = 14, align = c("right", "center", "left"),
 #' @method epi_slide epi_df
 #' @importFrom dplyr arrange group_modify mutate pull summarize 
 #' @importFrom lubridate days weeks
-#' @importFrom rlang .data abort enquo enquos
+#' @importFrom rlang abort enquo enquos
 #' @export
 epi_slide.epi_df = function(x, f, ..., n = 14,
                             align = c("right", "center", "left"), 
@@ -195,7 +195,7 @@ epi_slide_one_grp = function(.data_group, index_fun, f, ..., before_num,
   return(mutate(.data_group, !!new_col_name := slide_values))
 }
 
-#' @importFrom rlang !!! !! :=
+#' @importFrom rlang .data !! !!! :=
 #' @importFrom pipeR %>>%
 #' @export
 epi_slide.epi_archive = function(x, f, ..., n = 14,

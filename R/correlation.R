@@ -38,7 +38,7 @@
 #' 
 #' @importFrom dplyr arrange mutate summarize  
 #' @importFrom stats cor
-#' @importFrom rlang .data enquo
+#' @importFrom rlang .data !! enquo
 #' @export
 epi_cor = function(x, var1, var2, dt1 = 0, dt2 = 0, by = geo_value,
                    use = "na.or.complete",

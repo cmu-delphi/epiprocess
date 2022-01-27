@@ -256,6 +256,7 @@ head.epi_df = function(x, ...) {
 #' @return No return value; called only to print summary statistics.
 #'
 #' @method summary epi_df
+#' @importFrom rlang .data
 #' @importFrom stats median
 #' @export
 summary.epi_df = function(object, ...) {

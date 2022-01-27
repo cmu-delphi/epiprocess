@@ -9,94 +9,18 @@ Archive (data version history) for an \code{epi_df} object
 Archive (data version history) for an \code{epi_df} object
 }
 \details{
-Contains version history for an \code{epi_df} object, and enables fast querying
-of snapshots of the \code{epi_df} object as of certain "issues" (versions).
-Version history can be input as a data frame combining full snapshots of the
-\code{epi_df} as of several issue times, or using only the newly added or
-revised rows for each issue, or using some combination of these two
-(including "updates" for things that didn't actually change).
-Last-observation-carried-forward (LOCF) is used to data in between recorded
-updates. Currently, deletions must be represented as revising a row to a
-special state (e.g., making the entries \code{NA} or including a special
-column that flags the data as removed and performing post-processing), and
-the archive is unaware of what this state is.
-}
-\examples{
-
-update.df =
-  tibble::tribble(
-    ~geo_value, ~time_value, ~issue, ~value,
-    ## update history of geo1 for reference time 2021-01-01:
-    ##   (1 day of latency in initial report)
-    "geo1", as.Date("2021-01-01"), as.Date("2021-01-02"), 5.0,
-    ##   (revised upward)
-    "geo1", as.Date("2021-01-01"), as.Date("2021-01-03"), 9.0,
-    ##   (revised upward)
-    "geo1", as.Date("2021-01-01"), as.Date("2021-01-10"), 9.2,
-    ## update history of geo1 for reference time 2021-01-02:
-    ##   (1 day of latency in initial report)
-    "geo1", as.Date("2021-01-02"), as.Date("2021-01-03"), 8.0,
-    ##   (redundant "update" row; we will already be using LOCF to fill in)
-    "geo1", as.Date("2021-01-02"), as.Date("2021-01-04"), 8.0,
-    ##   (replaced with NA)
-    "geo1", as.Date("2021-01-02"), as.Date("2021-01-10"), NA_real_,
-    ## update history of geo1 for reference time 2021-01-05 (suppose data set skips the 3rd and 4th)
-    ##   (1 day of latency in initial report)
-    "geo1", as.Date("2021-01-05"), as.Date("2021-01-06"), 13.0,
-  )
-
-## update.df actually contains update data through issue 2021-01-11, but the
-## data set was not reported to change from 2021-01-10 to 2021-01-11
-epi.tibble.archive = epi_archive$new(update.df, max.issue=as.Date("2021-01-11"))
-
-## The snapshot as of issue 2021-01-03 just looks like the updates in issue
-## 2021-01-03, because all past measurements were updated in this issue (we
-## don't need to do any LOCF to obtain the snapshot).
-epi.tibble.archive$epi_df_as_of(as.Date("2021-01-03"))
-
-## The snapshot as of issue 2021-01-05 uses LOCF on the first two geo-time
-## combinations. Note that there is no entry for `time_value` 2021-01-05, as the
-## initial version of this data was not available until issue 2021-01-06.
-epi.tibble.archive$epi_df_as_of(as.Date("2021-01-05"))
-
-## The snapshot as of issue 2021-01-06 does include the measurement for
-## `time_value` 2021-01-05.
-epi.tibble.archive$epi_df_as_of(as.Date("2021-01-06"))
-
-## (Don't automatically run this example as it involves network access and querying the API)
-if (FALSE) {
-  library(dplyr)
-  ## (delphi.epidata package is on GitHub in cmu-delphi/delphi-epidata-r)
-  update.df.2 =
-    delphi.epidata::covidcast("jhu-csse", "confirmed_incidence_num",
-                              "day", "state",
-                              delphi.epidata::epirange(12340101,34560101), c("ak","al"),
-                              issues = delphi.epidata::epirange(12340101,34560101)) \%>\%
-    delphi.epidata::fetch_tbl()
-  snapshot.df.2a =
-    delphi.epidata::covidcast("jhu-csse", "confirmed_incidence_num",
-                              "day", "state",
-                              delphi.epidata::epirange(12340101,34560101), c("ak","al"),
-                              as_of = 20201014) \%>\%
-    delphi.epidata::fetch_tbl()
-  snapshot.df.2b =
-    delphi.epidata::covidcast("jhu-csse", "confirmed_incidence_num",
-                              "day", "state",
-                              delphi.epidata::epirange(12340101,34560101), c("ak","al"),
-                              as_of = 20201028) \%>\%
-    delphi.epidata::fetch_tbl()
-
-  epi.tibble.archive.2 = epi_archive$new(update.df.2)
-  all.equal(
-    as_tibble(epi.tibble.archive.2$epi_df_as_of(as.Date("2020-10-14"))),
-    as_tibble(as.epi_df(snapshot.df.2a)),
-    check.attributes = FALSE)
-  all.equal(
-    as_tibble(epi.tibble.archive.2$epi_df_as_of(as.Date("2020-10-28"))),
-    as_tibble(as.epi_df(snapshot.df.2b)),
-    check.attributes = FALSE)
-}
-
+Contains version history for an \code{epi_df} object, and enables fast querying of
+snapshots of the \code{epi_df} object as of certain "issues" (versions).  Version
+history can be input as a data frame combining full snapshots of the \code{epi_df}
+as of several issue times, or using only the newly added or revised rows for
+each issue, or using some combination of these two (including "updates" for
+things that didn't actually change). Last-observation-carried-forward (LOCF)
+is used to data in between recorded updates. Currently, deletions must be
+represented as revising a row to a special state (e.g., making the entries
+\code{NA} or including a special column that flags the data as removed and
+performing post-processing), and the archive is unaware of what this state
+is. See the \href{https://cmu-delphi.github.io/epiprocess/articles/issues.html}{issues vignette} for
+examples.
 }
 \section{Methods}{
 \subsection{Public methods}{
