@@ -46,7 +46,7 @@
 #'
 #' ## update.df actually contains update data through issue 2021-01-11, but the
 #' ## data set was not reported to change from 2021-01-10 to 2021-01-11
-#' epi.tibble.archive = epi_df_archive$new(update.df, max.issue=as.Date("2021-01-11"))
+#' epi.tibble.archive = epi_archive$new(update.df, max.issue=as.Date("2021-01-11"))
 #'
 #' ## The snapshot as of issue 2021-01-03 just looks like the updates in issue
 #' ## 2021-01-03, because all past measurements were updated in this issue (we
@@ -85,7 +85,7 @@
 #'                               as_of = 20201028) %>%
 #'     delphi.epidata::fetch_tbl()
 #'
-#'   epi.tibble.archive.2 = epi_df_archive$new(update.df.2)
+#'   epi.tibble.archive.2 = epi_archive$new(update.df.2)
 #'   all.equal(
 #'     as_tibble(epi.tibble.archive.2$epi_df_as_of(as.Date("2020-10-14"))),
 #'     as_tibble(as.epi_df(snapshot.df.2a)),
@@ -103,8 +103,8 @@
 #' @importFrom data.table as.data.table
 #' @importFrom pipeR %>>%
 #' @export
-epi_df_archive =
-  R6::R6Class("epi_df_archive",
+epi_archive =
+  R6::R6Class("epi_archive",
               private = list(
                 update.DT = NULL,
                 max.issue = NULL,
@@ -115,14 +115,14 @@ epi_df_archive =
               ),
               public = list(
                 #' @description
-                #' Create a new \code{epi_df_archive} with the given update data.
+                #' Create a new \code{epi_archive} with the given update data.
                 #' @param update.df the update data
                 #' @param issue.colname name of the column with the issue time of the corresponding updates; operations such as \code{sort}, \code{<=}, and \code{max} must make sense on this column, with earlier issues "less than" later issues
                 #' @param geo.colname the name of the column that will become \code{geo_value} in the \code{epi_df}
                 #' @param time.colname the name of the column that will become \code{time_value} in the \code{epi_df}
                 #' @param other.key.colnames the names of any other columns that would be used to index a single measurement in this data set, such as the age group the measurement corresponds to (if the data set includes an age group breakdown); there should only be a single row per issue-geo-time-other-key-cols combination.
                 #' @param max.issue the latest issue for which update data was available; defaults to the maximum issue time in the \code{update.df}, but if there were no additions or revisions in subsequent issues, it could be later.  However, due to details regarding database replica syncing times in upstream APIs, using the default might be safer than whatever we think the max issue should be.
-                #' @return an \code{epi_df_archive} object
+                #' @return an \code{epi_archive} object
                 initialize = function(update.df,
                                       issue.colname = "issue",
                                       geo.colname = "geo_value",

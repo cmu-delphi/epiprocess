@@ -1,11 +1,9 @@
-##' @source epi_df.R
-##' @source epi_df.R
-#NULL
-
 #' Slide a function over variables in an `epi_df` object
 #'
-#' Slides a given function over variables in an `epi_df` object. See the [slide 
+#' Slides a given function over variables in an `epi_df` object. See the [slide
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
+#' examples. Also applies to an `epi_archive` object; see the [issues
+#' vignette](https://cmu-delphi.github.io/epiprocess/articles/issues.html) for
 #' examples.
 #'
 #' @details To "slide" means to apply a function or formula over a running
@@ -15,6 +13,9 @@
 #'   `time_type` is "week". The time step can also be set explicitly using the
 #'   `time_step` argument (which if specified would override the default choice
 #'   based on the metadata).
+#'
+#' The critical difference between sliding over an `epi_df` versus `epi_archive` 
+#'   object is that, with the latter, TODO
 #'
 #' If `f` is missing, then an expression for tidy evaluation can be specified,
 #'   for example, as in: 
@@ -31,7 +32,7 @@
 #'   inferred from the given expression and overrides any name passed explicitly 
 #'   through the `new_col_name` argument.
 #'
-#' @param x The `epi_df` object under consideration.
+#' @param x The `epi_df` or `epi_archive` object under consideration.
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
 #'   to apply a function or formula over a running window of `n` time steps
 #'   (where one time step is typically one day or one week; see details for more
@@ -78,22 +79,26 @@
 #'   fashion (for example, per geo value), we can use `group_by()` before the
 #'   call to `epi_slide()`.
 #' 
-#' @importFrom dplyr arrange group_modify mutate pull summarize 
-#' @importFrom lubridate days weeks
-#' @importFrom rlang .data abort enquo enquos
 #' @export
 epi_slide = function(x, f, ..., n = 14, align = c("right", "center", "left"),
                      before, complete = FALSE, new_col_name = "slide_value", 
                      new_col_type = c("dbl", "int", "lgl", "chr", "list"),
-                     time_step, ...) { 
+                     time_step) { 
   UseMethod("epi_slide")
 }
 
+#' @method epi_slide epi_df
+#' @importFrom dplyr arrange group_modify mutate pull summarize 
+#' @importFrom lubridate days weeks
+#' @importFrom rlang .data abort enquo enquos
 #' @export
-epi_slide.epi_df = function(x, f, ..., n = 14, align = c("right", "center", "left"),
-                     before, complete = FALSE, new_col_name = "slide_value", 
-                     new_col_type = c("dbl", "int", "lgl", "chr", "list"),
-                     time_step, ...) { 
+epi_slide.epi_df = function(x, f, ..., n = 14,
+                            align = c("right", "center", "left"), 
+                            before, complete = FALSE,
+                            new_col_name = "slide_value", 
+                            new_col_type = c("dbl", "int", "lgl", "chr",
+                                             "list"), 
+                            time_step) { 
   # Which slide_index function?
   new_col_type = match.arg(new_col_type)
   index_fun = switch(new_col_type,
@@ -193,13 +198,17 @@ epi_slide_one_grp = function(.data_group, index_fun, f, ..., before_num,
 #' @importFrom rlang !!! !! :=
 #' @importFrom pipeR %>>%
 #' @export
-epi_slide.epi_df_archive = function(x, slide_fun, n = 14, new_col_name = "slide_value",
-                                        new_col_type = c("dbl", "int", "lgl", "chr", "list"),
-                                        time_step,
-                                        issue_step,
-                                        issue_to_max_time_value = identity,
-                                        issue_range = range(x$issues_with_updates(), x$max_issue()),
-                                        ...) {
+epi_slide.epi_archive = function(x, f, ..., n = 14,
+                                 align = c("right", "center", "left"), 
+                                 before, complete = FALSE,
+                                 new_col_name = "slide_value", 
+                                 new_col_type = c("dbl", "int", "lgl", "chr",
+                                                  "list"), 
+                                 time_step,
+                                 issue_step,
+                                 issue_to_max_time_value = identity,
+                                 issue_range = range(x$issues_with_updates(),
+                                                     x$max_issue())) {
   ## TODO test this.
 
   ## Which map function?

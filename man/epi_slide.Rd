@@ -2,7 +2,7 @@
 % Please edit documentation in R/slide.R
 \name{epi_slide}
 \alias{epi_slide}
-\title{Slide a function over variables in an \code{epi_df} object}
+\title{Slide a function over variables in an \code{epi_df} or \code{epi_archive} object}
 \usage{
 epi_slide(
   x,
@@ -18,7 +18,7 @@ epi_slide(
 )
 }
 \arguments{
-\item{x}{The \code{epi_df} object under consideration.}
+\item{x}{The \code{epi_df} or \code{epi_archive} object under consideration.}
 
 \item{f}{Function or formula to slide over variables in \code{x}. To "slide" means
 to apply a function or formula over a running window of \code{n} time steps
@@ -72,7 +72,9 @@ An \code{epi_df} object given by appending a new column to \code{x}, named
 according to the \code{new_col_name} argument, containing the slide values.
 }
 \description{
-Slides a given function over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
+Slides a given function over variables in an \code{epi_df} or \code{epi_archive}
+object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} and
+\href{https://cmu-delphi.github.io/epiprocess/articles/issues.html}{issues vignette} for
 examples.
 }
 \details{
@@ -83,6 +85,9 @@ determined by the \code{time_type} field in the metadata: the unit is one day if
 \code{time_type} is "week". The time step can also be set explicitly using the
 \code{time_step} argument (which if specified would override the default choice
 based on the metadata).
+
+The critical difference between sliding over an \code{epi_df} versus \code{epi_archive}
+object is that, with the latter, TODO
 
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
 for example, as in:\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
