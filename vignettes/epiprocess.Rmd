@@ -1,0 +1,158 @@
+---
+title: Get started with `epiprocess`
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Get started with epiprocess}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This package introduces a common data structure for epidemiological data sets
+measured over space and time, and offers associated utilities to perform basic
+signal processing tasks. 
+
+## Installing
+
+This package is not on CRAN yet, so it can be installed using the
+[`devtools`](https://cran.r-project.org/package=devtools) package:
+
+```{r, eval = FALSE}
+devtools::install_github("cmu-delphi/epiprocess", ref = "main")	
+```
+
+Building the vignettes, such as this getting started guide, takes a significant
+amount of time. They are not included in the package by default. If you want to
+include vignettes, then use this modified command:
+
+```{r, eval = FALSE}
+devtools::install_github("cmu-delphi/epiprocess", ref = "main",
+                         build_vignettes = TRUE, dependencies = TRUE)
+```
+
+## Getting data into `epi_df` format
+
+We'll start by showing how to get data into `epi_df` format, which is just a
+tibble with a bit of special structure, and is the format assumed by all of the
+functions in the `epiprocess` package. An `epi_df` object has (at least) the
+following columns:
+
+* `geo_value`: the geographic value associated with each measurement.
+* `time_value`: the time value associated with each measurement.
+
+Other columns can be considered as measured variables, which we also broadly
+refer to as signal variables. To learn more about the `epi_df` format, you can
+read the documentation for `as.epi_df()`.
+
+A data frame or tibble that has `geo_value` and `time_value` columns can be
+converted into an `epi_df` object, using the function `as.epi_df()`. As an
+example, we'll look at daily cumulative COVID-19 cases for 4 states (CA, FL, NY,
+and TX) in the U.S., over a year spanning mid 2020 to mid 2021, using the
+[`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) package to
+fetch this data from the [COVIDcast
+API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/).
+
+```{r, message = FALSE}
+library(covidcast)
+
+case_data <- covidcast_signal(data_source = "jhu-csse", 
+                              signal = "confirmed_cumulative_num",
+                              start_day = "2020-06-01", 
+                              end_day = "2021-5-31",
+                              geo_type = "state", 
+                              geo_values = c("ca", "fl", "ny", "tx"))
+
+class(case_data)
+colnames(case_data)
+```
+
+As we can see, a data frame returned `covidcast::covidcast_signal()` has the
+columns required for an `epi_df` object (along with many others). A call to
+`as.epi_df()`, with further specification of some relevant metadata, brings the
+data frame into `epi_df` format.
+
+```{r, message = FALSE}
+library(epiprocess)
+library(dplyr)
+
+x <- as.epi_df(case_data, 
+               geo_type = "state",
+               time_type = "day",
+               issue = max(case_data$issue)) %>%
+  rename("cases_cum" = value) %>%
+  select(geo_value, time_value, cases_cum)
+
+class(x)
+summary(x)
+head(x)
+attributes(x)$metadata
+```
+
+## Some info about required metadata
+
+In general, an `epi_df` object must have following fields in its metadata:
+ 
+* `geo_type`: the type for the geo values.
+* `time_type`: the type for the time values.
+* `issue`: the time value at which the given data set was issued. 
+
+In a typical case, the `issue` field represents the maximum of the issues of 
+individual signal values measured in the data set; hence we would also say that 
+the data set is comprised of all signal values observed "as of" the given issue
+in the metadata.
+
+If any of the `geo_type`, `time_type`, and `issue` arguments are missing in a
+call to `as.epi_df()`, then this function will try to infer them from the passed
+object (The documentation for `as.epi_df()` gives more details.)
+
+```{r}
+x <- as.epi_df(case_data) %>%
+  rename("cases_cum" = value) %>%
+  select(geo_value, time_value, cases_cum)
+
+attributes(x)$metadata
+```
+
+## Working with `epi_df` objects downstream
+
+Data in `epi_df` format should be easy to work with downstream; in the other
+vignettes, we'll walk through some basic signal processing tasks using functions
+provided in the `epiprocess` package; of course, we can also write custom code
+for other downstream uses, like plotting, which is pretty easy to do `ggplot2`. 
+
+```{r, message = FALSE, warning = FALSE}
+library(ggplot2)
+theme_set(theme_bw())
+
+ggplot(x, aes(x = time_value, y = cases_cum, color = geo_value)) + 
+  geom_line() +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Cumulative COVID-19 cases", color = "State")
+```
+
+As a last example, we'll look at data on daily new (not cumulative) SARS cases 
+in Canada in 2003, from the [outbreaks](https://github.com/reconverse/outbreaks)
+package.
+
+```{r}
+x <- outbreaks::sars_canada_2003 %>%
+  mutate(geo_value = "ca") %>%
+  rename(time_value = date) %>%
+  select(geo_value, time_value, starts_with("cases")) %>%
+  as.epi_df(geo_type = "nation")
+
+head(x)
+
+library(tidyr)
+x <- x %>% 
+  pivot_longer(starts_with("cases"), names_to = "type") %>%
+  mutate(type = substring(type, 7))
+
+yrange <- range(x %>% group_by(time_value) %>% 
+                  summarize(value = sum(value)) %>% pull(value))
+
+ggplot(x, aes(x = time_value, y = value)) +
+  geom_col(aes(y = value, fill = type)) +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  scale_y_continuous(breaks = yrange[1]:yrange[2]) +
+  labs(x = "Date", y = "SARS cases in Canada", fill = "Type")
+```

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Estimate derivatives of variables in an <code>epi_tibble</code> object — estimate_deriv • epitools</title>
+<title>Estimate derivative — estimate_deriv • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,10 @@
 
 
 
-<meta property="og:title" content="Estimate derivatives of variables in an <code>epi_tibble</code> object — estimate_deriv" />
-<meta property="og:description" content="Estimates derivatives of the variables in an epi_tibble object, using a
-local (in time) linear regression or a smoothing spline. See the estimating derivatives vignette
+<meta property="og:title" content="Estimate derivative — estimate_deriv" />
+<meta property="og:description" content="Estimates the derivative at the end of a sequence of values, using linear
+regression, a smoothing spline, or trend filtering. This is a convenience
+function to be used inside of a call to epi_slide(), see the estimating derivatives vignette
 for examples." />
 
 
@@ -73,7 +74,7 @@ for examples." />
         <span class="icon-bar"></span>
       </button>
       <span class="navbar-brand">
-        <a class="navbar-link" href="../index.html">epitools</a>
+        <a class="navbar-link" href="../index.html">epiprocess</a>
         <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
@@ -87,7 +88,7 @@ for examples." />
   </a>
 </li>
 <li>
-  <a href="../articles/epitools.html">Get started</a>
+  <a href="../articles/epiprocess.html">Get started</a>
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
@@ -103,7 +104,7 @@ for examples." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct-change.html">2. Compute percentage change over time</a>
+      <a href="../articles/pct_change.html">2. Compute percentage change over time</a>
     </li>
     <li>
       <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
@@ -115,14 +116,17 @@ for examples." />
       <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
+      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
+    </li>
+    <li>
+      <a href="../articles/issues.html">7. Work with issue dates and archive objects</a>
     </li>
   </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/cmu-delphi/epitools/tree/main/">
+  <a href="https://github.com/cmu-delphi/epiprocess/tree/main/">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -140,27 +144,24 @@ for examples." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Estimate derivatives of variables in an <code>epi_tibble</code> object</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/blob/main/R/deriv.R'><code>R/deriv.R</code></a></small>
+    <h1>Estimate derivative</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/derivative.R'><code>R/derivative.R</code></a></small>
     <div class="hidden name"><code>estimate_deriv.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Estimates derivatives of the variables in an <code>epi_tibble</code> object, using a
-local (in time) linear regression or a smoothing spline. See the <a href='https://cmu-delphi.github.io/epitools/articles/derivatives.html'>estimating derivatives vignette</a>
+    <p>Estimates the derivative at the end of a sequence of values, using linear
+regression, a smoothing spline, or trend filtering. This is a convenience
+function to be used inside of a call to <code><a href='epi_slide.html'>epi_slide()</a></code>, see the <a href='https://cmu-delphi.github.io/epiprocess/articles/derivative.html'>estimating derivatives vignette</a>
 for examples.</p>
     </div>
 
     <pre class="usage"><span class='fu'>estimate_deriv</span>(
-  <span class='no'>x</span>,
   <span class='no'>var</span>,
   <span class='kw'>method</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"lin"</span>, <span class='st'>"ss"</span>, <span class='st'>"tf"</span>),
-  <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>14</span>,
-  <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"deriv"</span>,
-  <span class='kw'>keep_obj</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>deriv</span> <span class='kw'>=</span> <span class='fl'>1</span>,
-  <span class='no'>time_step</span>,
-  <span class='kw'>na_rm</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>na_rm</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>keep_obj</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='no'>...</span>
 )</pre>
 
@@ -168,74 +169,47 @@ for examples.</p>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>x</th>
-      <td><p>The <code>epi_tibble</code> object under consideration.</p></td>
-    </tr>
-    <tr>
       <th>var</th>
-      <td><p>The variable in <code>x</code> whose derivatives are to be estimated.</p></td>
+      <td><p>The variable whose derivative is to be estimated.</p></td>
     </tr>
     <tr>
       <th>method</th>
       <td><p>One of "lin", "ss", or "tf" indicating the method to use for
-the derivative calculation. To estimate the derivative at any time point,
-we run the given method on the last <code>n</code> time points of data, and use the
-corresponding predicted derivative (that is, the derivative of the
-underlying estimated function, linear or spline) at the current time
-point. Default is "lin". See details for more explanation.</p></td>
-    </tr>
-    <tr>
-      <th>n</th>
-      <td><p>Number of time steps to use in the trailing window. For example, if
-<code>n = 10</code>, and one time step is one day, then to estimate the derivative on
-November 10, we train the given method on data in between November 1 and
-10. Default is 14.</p></td>
-    </tr>
-    <tr>
-      <th>new_col_name</th>
-      <td><p>String indicating the name of the new column that will
-contain the derivative values. Default is "slide_value"; note that setting
-<code>new_col_name</code> equal to an existing column name will overwrite this column.</p></td>
-    </tr>
-    <tr>
-      <th>keep_obj</th>
-      <td><p>Should the fitted object (from linear regression, smoothing
-spline, or trend filtering) be kept as a separate column? If <code>TRUE</code>, then
-this column name is given by  appending "_obj" to <code>new_col_name</code>. Default
-is <code>FALSE</code>.</p></td>
+the derivative calculation. We run the given method using <code>var</code> as the
+response variable, assuming an equally-spaced sequence of design points,
+and return the corresponding estimated derivative (that is, the derivative
+of the underlying estimated function, linear or spline) at the end of the
+sequence. Default is "lin". See details for more explanation.</p></td>
     </tr>
     <tr>
       <th>deriv</th>
-      <td><p>Order of derivative to estimate. Only orders 1 or 2 are allowed,
-with the default being 1. (In some cases, a second-order derivative will
-return a trivial result: for example: when <code>method</code> is "lin", this will
-always be zero.)</p></td>
-    </tr>
-    <tr>
-      <th>time_step</th>
-      <td><p>Optional function used to define the meaning of one time
-step, which if specified, overrides the default choice based on the
-metadata. Read the documentation for <code><a href='epi_slide.html'>epi_slide()</a></code> for more details.</p></td>
+      <td><p>Order of derivative to estimate. Only orders 1 or 2 are
+supported, with the default being 1. (In some cases, a second-order
+derivative will return a trivial result; for example: when <code>method</code> is
+"lin", this will always be zero.)</p></td>
     </tr>
     <tr>
       <th>na_rm</th>
       <td><p>Should missing values be removed before the computation? Default
-is <code>TRUE</code>.</p></td>
+is <code>FALSE</code>.</p></td>
+    </tr>
+    <tr>
+      <th>keep_obj</th>
+      <td><p>Should the fitted object (from linear regression, smoothing
+spline, or trend filtering) be returned, along with the estimated
+derivative, in a list? This is typically to perform some kind of post hoc
+inspection. Default is <code>FALSE</code>.</p></td>
     </tr>
     <tr>
       <th>...</th>
-      <td><p>Additional arguments to pass to the function that estimates
-derivatives. See details below.</p></td>
+      <td><p>Additional arguments to pass to the method used to estimate the
+derivative. See details below.</p></td>
     </tr>
     </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
-
-    <p>A <code>epi_tibble</code> object given by appending a new column to <code>x</code>, named
-according to the <code>new_col_name</code> argument, containing the derivative values.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Derivatives are estimated using:</p>
+    <p>The derivative is estimated using:</p>
 <ul>
 <li><p>Linear regression, when <code>method</code> is "lin", via <code><a href='https://rdrr.io/r/stats/lsfit.html'>stats::lsfit()</a></code>.</p></li>
 <li><p>Cubic smoothing spline, when <code>method</code> is "ss", via
@@ -245,10 +219,10 @@ according to the <code>new_col_name</code> argument, containing the derivative v
 </ul>
 
 <p>The second and third cases base the derivative calculation on a nonparametric
-fit and should typically be used with a larger window <code>n</code>. The third case
-(trend filtering) is more locally adaptive than the second (smoothing
-spline) and can work better when there are sharp changes in the smoothness
-of the underlying values.</p>
+fit and should typically be used with a larger window <code>n</code> in a parent call
+to <code><a href='epi_slide.html'>epi_slide()</a></code>. The third case (trend filtering) is more locally adaptive
+than the second (smoothing spline) and can work better when there are sharp
+changes in the smoothness of the underlying values.</p>
 <p>In the first and second cases (linear regression and smoothing spline), the
 additional arguments in <code>...</code> are directly passed to the underlying
 estimation function (<code><a href='https://rdrr.io/r/stats/lsfit.html'>stats::lsfit()</a></code> and <code><a href='https://rdrr.io/r/stats/smooth.spline.html'>stats::smooth.spline()</a></code>).</p>
@@ -272,9 +246,6 @@ rule, respectively). Default is 8 when <code>cv = FALSE</code>, and "1se" when <
 
 </dl>
 
-    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
-
-    <div class='dont-index'><p><code><a href='epi_slide.html'>epi_slide()</a></code></p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -287,7 +258,7 @@ rule, respectively). Default is 8 when <code>cv = FALSE</code>, and "1se" when <
 
       <footer>
       <div class="copyright">
-  <p>Developed by Ryan Tibshirani.</p>
+  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

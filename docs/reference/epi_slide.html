@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Slide a function over variables in an <code>epi_tibble</code> object — epi_slide • epitools</title>
+<title>Slide a function over variables in an <code>epi_df</code> object — epi_slide • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,9 @@
 
 
 
-<meta property="og:title" content="Slide a function over variables in an <code>epi_tibble</code> object — epi_slide" />
-<meta property="og:description" content="Slides a given function over the variables in an epi_tibble object. See the
-slide vignette
-for examples." />
+<meta property="og:title" content="Slide a function over variables in an <code>epi_df</code> object — epi_slide" />
+<meta property="og:description" content="Slides a given function over variables in an epi_df object. See the slide vignette for
+examples." />
 
 
 
@@ -73,7 +72,7 @@ for examples." />
         <span class="icon-bar"></span>
       </button>
       <span class="navbar-brand">
-        <a class="navbar-link" href="../index.html">epitools</a>
+        <a class="navbar-link" href="../index.html">epiprocess</a>
         <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
@@ -87,7 +86,7 @@ for examples." />
   </a>
 </li>
 <li>
-  <a href="../articles/epitools.html">Get started</a>
+  <a href="../articles/epiprocess.html">Get started</a>
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
@@ -103,7 +102,7 @@ for examples." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct-change.html">2. Compute percentage change over time</a>
+      <a href="../articles/pct_change.html">2. Compute percentage change over time</a>
     </li>
     <li>
       <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
@@ -115,14 +114,17 @@ for examples." />
       <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
+      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
+    </li>
+    <li>
+      <a href="../articles/issues.html">7. Work with issue dates and archive objects</a>
     </li>
   </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/cmu-delphi/epitools/tree/main/">
+  <a href="https://github.com/cmu-delphi/epiprocess/tree/main/">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -140,25 +142,27 @@ for examples." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Slide a function over variables in an <code>epi_tibble</code> object</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/blob/main/R/slide.R'><code>R/slide.R</code></a></small>
+    <h1>Slide a function over variables in an <code>epi_df</code> object</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/slide.R'><code>R/slide.R</code></a></small>
     <div class="hidden name"><code>epi_slide.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Slides a given function over the variables in an <code>epi_tibble</code> object. See the
-<a href='https://cmu-delphi.github.io/epitools/articles/slide.html'>slide vignette</a>
-for examples.</p>
+    <p>Slides a given function over variables in an <code>epi_df</code> object. See the <a href='https://cmu-delphi.github.io/epiprocess/articles/slide.html'>slide vignette</a> for
+examples.</p>
     </div>
 
     <pre class="usage"><span class='fu'>epi_slide</span>(
   <span class='no'>x</span>,
-  <span class='no'>slide_fun</span>,
+  <span class='no'>f</span>,
+  <span class='no'>...</span>,
   <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>14</span>,
+  <span class='kw'>align</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"right"</span>, <span class='st'>"center"</span>, <span class='st'>"left"</span>),
+  <span class='no'>before</span>,
+  <span class='kw'>complete</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"slide_value"</span>,
   <span class='kw'>new_col_type</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"dbl"</span>, <span class='st'>"int"</span>, <span class='st'>"lgl"</span>, <span class='st'>"chr"</span>, <span class='st'>"list"</span>),
-  <span class='no'>time_step</span>,
-  <span class='no'>...</span>
+  <span class='no'>time_step</span>
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -166,25 +170,52 @@ for examples.</p>
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>The <code>epi_tibble</code> object under consideration.</p></td>
+      <td><p>The <code>epi_df</code> object under consideration.</p></td>
     </tr>
     <tr>
-      <th>slide_fun</th>
-      <td><p>Function or formula to slide over variables in <code>x</code>. To
-"slide" means to apply a function or formula over a trailing window of <code>n</code>
-time steps (where one time step is typically one day or one week; see
-details for more explanation). If a function, <code>slide_fun</code> must take <code>x</code>, a
-data frame with the same column names as the original object; followed by
-any number of named arguments; and ending with <code>...</code>. If a formula,
-<code>slide_fun</code> can operate directly on columns accessed via <code>.x$var</code>, as in <code>~ mean(.x$var)</code> to compute a trailing mean of a column <code>var</code> over the last
-<code>n</code> time steps.</p></td>
+      <th>f</th>
+      <td><p>Function or formula to slide over variables in <code>x</code>. To "slide" means
+to apply a function or formula over a running window of <code>n</code> time steps
+(where one time step is typically one day or one week; see details for more
+explanation). If a function, <code>f</code> must take <code>x</code>, a data frame with the same
+column names as the original object; followed by any number of named
+arguments; and ending with <code>...</code>. If a formula, <code>f</code> can operate directly on
+columns accessed via <code>.x$var</code>, as in <code>~ mean(.x$var)</code> to compute a mean of
+a column <code>var</code> over a sliding window of <code>n</code> time steps.</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Additional arguments to pass to the function or formula specified
+via <code>f</code>. Alternatively, if <code>f</code> is missing, then the current argument is
+interpreted as an expression for tidy evaluation. See details.</p></td>
     </tr>
     <tr>
       <th>n</th>
-      <td><p>Number of time steps to use in the trailing window. For example, if
-<code>n = 5</code>, and one time step is one day, then to produce a value on November
-5, we apply the given function or formula to data in between November 1 and
-5.  Default is 14.</p></td>
+      <td><p>Number of time steps to use in the running window. For example, if
+<code>n = 5</code>, one time step is one day, and the alignment is "right", then to
+produce a value on November 5, we apply the given function or formula to
+data in between November 1 and 5. Default is 14.</p></td>
+    </tr>
+    <tr>
+      <th>align</th>
+      <td><p>One of "right", "center", or "left", indicating the alignment of
+the sliding window relative to the reference time point. If the alignment
+is "center" and <code>n</code> is even, then one more time point will be used after
+the reference time point than before. Default is "right".</p></td>
+    </tr>
+    <tr>
+      <th>before</th>
+      <td><p>Positive integer less than <code>n</code>, specifying the number of time
+points to use in the sliding window strictly before the reference time
+point. For example, setting <code>before = n-1</code> would be the same as setting
+<code>align = "right"</code>. The current argument allows for more flexible
+specification of alignment than the <code>align</code> parameter, and if specified,
+overrides <code>align</code>.</p></td>
+    </tr>
+    <tr>
+      <th>complete</th>
+      <td><p>Should the slide function be run over complete windows only?
+Default is <code>FALSE</code>, which allows for computation on partial windows.</p></td>
     </tr>
     <tr>
       <th>new_col_name</th>
@@ -206,26 +237,31 @@ of class <code><a href='https://lubridate.tidyverse.org/reference/period.html'>l
 only be meaningful if <code>time_value</code> is of class <code>POSIXct</code>, that is, if
 <code>time_type</code> is "day-time").</p></td>
     </tr>
-    <tr>
-      <th>...</th>
-      <td><p>Additional arguments to pass to the function or formula specified
-via <code>slide_fun</code>.</p></td>
-    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An <code>epi_tibble</code> object given by appending a new column to <code>x</code>, named
+    <p>An <code>epi_df</code> object given by appending a new column to <code>x</code>, named
 according to the <code>new_col_name</code> argument, containing the slide values.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>To "slide" means to apply a function or formula over a trailing
+    <p>To "slide" means to apply a function or formula over a running
 window of <code>n</code> time steps, where the unit (the meaning of one time step) is
 determined by the <code>time_type</code> field in the metadata: the unit is one day if
 <code>time_type</code> is either "day-time" or "day", and the unit is one week if
 <code>time_type</code> is "week". The time step can also be set explicitly using the
 <code>time_step</code> argument (which if specified would override the default choice
 based on the metadata).</p>
+<p>If <code>f</code> is missing, then an expression for tidy evaluation can be specified,
+for example, as in:</p><pre><span class='fu'>epi_slide</span>(<span class='no'>x</span>, <span class='kw'>cases_7dav</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>(<span class='no'>cases</span>), <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>7</span>)</pre>
+
+<p>which would be equivalent to:</p><pre><span class='fu'>epi_slide</span>(<span class='no'>x</span>, <span class='kw'>f</span> <span class='kw'>=</span> <span class='kw'>function</span>(<span class='no'>x</span>, <span class='no'>...</span>) <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>(<span class='no'>x</span>$<span class='no'>cases</span>), <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>7</span>,
+          <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"cases_7dav"</span>)</pre>
+
+<p>Thus, to be clear, when the computation is specified via an expression for
+tidy evaluation (first example, above), then the name for the new column is
+inferred from the given expression and overrides any name passed explicitly
+through the <code>new_col_name</code> argument.</p>
 <p>In order to slide a function or formula in a suitable grouped
 fashion (for example, per geo value), we can use <code>group_by()</code> before the
 call to <code>epi_slide()</code>.</p>
@@ -241,7 +277,7 @@ call to <code>epi_slide()</code>.</p>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Ryan Tibshirani.</p>
+  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

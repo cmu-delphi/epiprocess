@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Compute percentage change of a variable in an <code>epi_tibble</code> object — pct_change • epitools</title>
+<title>Compute percentage change — pct_change • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,12 @@
 
 
 
-<meta property="og:title" content="Compute percentage change of a variable in an <code>epi_tibble</code> object — pct_change" />
-<meta property="og:description" content="Computes the percentage change of a variable in an epi_tibble object. See
-the percentage change vignette for
-examples." />
+<meta property="og:title" content="Compute percentage change — pct_change" />
+<meta property="og:description" content="Computes the percentage change over a sequence of values, defined as 100 * (B
+/ A - 1), where A is the sum of the first half of the values and B is the sum
+of the second half. This is a convenience function to be used inside of a
+call to epi_slide(), see the percentage change vignette
+for examples." />
 
 
 
@@ -73,7 +75,7 @@ examples." />
         <span class="icon-bar"></span>
       </button>
       <span class="navbar-brand">
-        <a class="navbar-link" href="../index.html">epitools</a>
+        <a class="navbar-link" href="../index.html">epiprocess</a>
         <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
@@ -87,7 +89,7 @@ examples." />
   </a>
 </li>
 <li>
-  <a href="../articles/epitools.html">Get started</a>
+  <a href="../articles/epiprocess.html">Get started</a>
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
@@ -103,7 +105,7 @@ examples." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct-change.html">2. Compute percentage change over time</a>
+      <a href="../articles/pct_change.html">2. Compute percentage change over time</a>
     </li>
     <li>
       <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
@@ -115,14 +117,17 @@ examples." />
       <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/issues.html">6. Work with issue dates and archive objects</a>
+      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
+    </li>
+    <li>
+      <a href="../articles/issues.html">7. Work with issue dates and archive objects</a>
     </li>
   </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/cmu-delphi/epitools/tree/main/">
+  <a href="https://github.com/cmu-delphi/epiprocess/tree/main/">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -140,73 +145,37 @@ examples." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Compute percentage change of a variable in an <code>epi_tibble</code> object</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epitools/blob/main/R/change.R'><code>R/change.R</code></a></small>
+    <h1>Compute percentage change</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/pct_change.R'><code>R/pct_change.R</code></a></small>
     <div class="hidden name"><code>pct_change.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Computes the percentage change of a variable in an <code>epi_tibble</code> object. See
-the <a href='https://cmu-delphi.github.io/epitools/articles/pct-change.html'>percentage change vignette</a> for
-examples.</p>
+    <p>Computes the percentage change over a sequence of values, defined as 100 * (B
+/ A - 1), where A is the sum of the first half of the values and B is the sum
+of the second half. This is a convenience function to be used inside of a
+call to <code><a href='epi_slide.html'>epi_slide()</a></code>, see the <a href='https://cmu-delphi.github.io/epiprocess/articles/pct_change.html'>percentage change vignette</a>
+for examples.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>pct_change</span>(
-  <span class='no'>x</span>,
-  <span class='no'>var</span>,
-  <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>14</span>,
-  <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"pct_change"</span>,
-  <span class='no'>time_step</span>,
-  <span class='kw'>na_rm</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
-)</pre>
+    <pre class="usage"><span class='fu'>pct_change</span>(<span class='no'>var</span>, <span class='kw'>na_rm</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>x</th>
-      <td><p>The <code>epi_tibble</code> object.</p></td>
-    </tr>
-    <tr>
       <th>var</th>
-      <td><p>The variable in <code>x</code> whose percentage change values are to be
-computed.</p></td>
-    </tr>
-    <tr>
-      <th>n</th>
-      <td><p>Number of time steps to use in the trailing window. For example, if
-<code>n = 10</code>, and one time step is one day, then the percentage change value
-computed on November 10 is 100 * (B - A) / A, where A is the sum of the
-variable in between November 6 and 10, and A is the sum in between November
-1 and 5. Note that <code>n</code> must be even; default is 14.</p></td>
-    </tr>
-    <tr>
-      <th>new_col_name</th>
-      <td><p>String indicating the name of the new column that will
-contain the derivative values. Default is "slide_value"; note that setting
-<code>new_col_name</code> equal to an existing column name will overwrite this column.</p></td>
-    </tr>
-    <tr>
-      <th>time_step</th>
-      <td><p>Optional function used to define the meaning of one time
-step, which if specified, overrides the default choice based on the
-metadata. Read the documentation for <code><a href='epi_slide.html'>epi_slide()</a></code> for more details.</p></td>
+      <td><p>The variable whose percentage change value is to be computed. If
+the length of <code>var</code> is odd, then the first value is ignored for the sake of
+the computation.</p></td>
     </tr>
     <tr>
       <th>na_rm</th>
       <td><p>Should missing values be removed before the computation? Default
-is <code>TRUE</code>.</p></td>
+is <code>FALSE</code>.</p></td>
     </tr>
     </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
-
-    <p>An <code>epi_tibble</code> object given by appending a new column to <code>x</code>, named
-according to the <code>new_col_name</code> argument, containing the percentage change
-values.</p>
-    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
-
-    <div class='dont-index'><p><code><a href='epi_slide.html'>epi_slide()</a></code></p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -219,7 +188,7 @@ values.</p>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Ryan Tibshirani.</p>
+  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

@@ -5,9 +5,10 @@ articles:
   aggregation: aggregation.html
   correlation: correlation.html
   derivative: derivative.html
-  epitools: epitools.html
+  epiprocess: epiprocess.html
   issues: issues.html
-  pct-change: pct-change.html
+  outliers: outliers.html
+  pct_change: pct_change.html
   slide: slide.html
-last_built: 2021-10-28T14:51Z
+last_built: 2022-01-26T18:46Z
 
