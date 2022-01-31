@@ -41,6 +41,7 @@
 
 <meta property="og:title" content="Slide a function over variables in an <code>epi_df</code> object — epi_slide" />
 <meta property="og:description" content="Slides a given function over variables in an epi_df object. See the slide vignette for
+examples. Also applies to an epi_archive object; see the data versioning vignette for
 examples." />
 
 
@@ -116,9 +117,6 @@ examples." />
     <li>
       <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
-    <li>
-      <a href="../articles/issues.html">7. Work with issue dates and archive objects</a>
-    </li>
   </ul>
 </li>
       </ul>
@@ -149,6 +147,7 @@ examples." />
 
     <div class="ref-description">
     <p>Slides a given function over variables in an <code>epi_df</code> object. See the <a href='https://cmu-delphi.github.io/epiprocess/articles/slide.html'>slide vignette</a> for
+examples. Also applies to an <code>epi_archive</code> object; see the <a href='https://cmu-delphi.github.io/epiprocess/articles/archive.html'>data versioning vignette</a> for
 examples.</p>
     </div>
 
@@ -170,7 +169,7 @@ examples.</p>
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>The <code>epi_df</code> object under consideration.</p></td>
+      <td><p>The <code>epi_df</code> or <code>epi_archive</code> object under consideration.</p></td>
     </tr>
     <tr>
       <th>f</th>
@@ -252,6 +251,8 @@ determined by the <code>time_type</code> field in the metadata: the unit is one 
 <code>time_type</code> is "week". The time step can also be set explicitly using the
 <code>time_step</code> argument (which if specified would override the default choice
 based on the metadata).</p>
+<p>The critical difference between sliding over an <code>epi_df</code> versus <code>epi_archive</code>
+object is that, with the latter, TODO</p>
 <p>If <code>f</code> is missing, then an expression for tidy evaluation can be specified,
 for example, as in:</p><pre><span class='fu'>epi_slide</span>(<span class='no'>x</span>, <span class='kw'>cases_7dav</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>(<span class='no'>cases</span>), <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>7</span>)</pre>
 
@@ -277,7 +278,7 @@ call to <code>epi_slide()</code>.</p>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

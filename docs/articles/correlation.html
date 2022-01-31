@@ -74,9 +74,6 @@
     <li>
       <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
-    <li>
-      <a href="../articles/issues.html">7. Work with issue dates and archive objects</a>
-    </li>
   </ul>
 </li>
       </ul>
@@ -137,7 +134,7 @@
 
 <span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html">full_join</a></span>(<span class="no">y</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"geo_value"</span>, <span class="st">"time_value"</span>)) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/as.epi_df.html">as.epi_df</a></span>() <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>() <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">case_rates</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">case_rates</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">death_rates</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">death_rates</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>) <span class="kw">%&gt;%</span>
@@ -228,7 +225,7 @@ rates.</p>
 
 
       <footer><div class="copyright">
-  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

@@ -74,9 +74,6 @@
     <li>
       <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
-    <li>
-      <a href="../articles/issues.html">7. Work with issue dates and archive objects</a>
-    </li>
   </ul>
 </li>
       </ul>
@@ -123,7 +120,7 @@
                       <span class="kw">end_day</span> <span class="kw">=</span> <span class="st">"2021-05-31"</span>,
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>,
                       <span class="kw">geo_values</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"ca"</span>, <span class="st">"fl"</span>, <span class="st">"ny"</span>, <span class="st">"tx"</span>))  <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/as.epi_df.html">as.epi_df</a></span>() <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>() <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span>(<span class="kw">cases</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">cases</span>)</pre></body></html></div>
 <div id="slide-with-a-formula" class="section level2">
@@ -137,16 +134,16 @@
 <pre><code>## # A tibble: 10 × 4
 ##    geo_value time_value cases slide_value
 ##    &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;       &lt;dbl&gt;
-##  1 ca        2020-06-01  2435       2435 
-##  2 ca        2020-06-02  2482       2458.
-##  3 ca        2020-06-03  2133       2350 
-##  4 ca        2020-06-04  3030       2520 
-##  5 ca        2020-06-05  3127       2641.
-##  6 ca        2020-06-06  2855       2677 
-##  7 ca        2020-06-07  2022       2583.
-##  8 ca        2020-06-08  2255       2558.
+##  1 ca        2020-06-01  2438       2438 
+##  2 ca        2020-06-02  2421       2430.
+##  3 ca        2020-06-03  2133       2331.
+##  4 ca        2020-06-04  3030       2506.
+##  5 ca        2020-06-05  3128       2630 
+##  6 ca        2020-06-06  2855       2668.
+##  7 ca        2020-06-07  2022       2575.
+##  8 ca        2020-06-08  2256       2549.
 ##  9 ca        2020-06-09  2812       2605.
-## 10 ca        2020-06-10  3099       2743.</code></pre>
+## 10 ca        2020-06-10  3100       2743.</code></pre>
 <p>The formula specified via <code>f</code> has access to all columns present in the original <code>epi_df</code> object (and must refer to them with the prefix <code>.x$</code>). As we can see, the function <code><a href="../reference/epi_slide.html">epi_slide()</a></code> returns an <code>epi_df</code> object with a new column appended that contains the results (from sliding), named <code>slide_value</code> as the default. We can of course change this post hoc, or we can instead specify a new name up front using the <code>new_col_name</code> argument:</p>
 <div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
@@ -156,16 +153,16 @@
 <pre><code>## # A tibble: 10 × 4
 ##    geo_value time_value cases cases_7dav
 ##    &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
-##  1 ca        2020-06-01  2435      2435 
-##  2 ca        2020-06-02  2482      2458.
-##  3 ca        2020-06-03  2133      2350 
-##  4 ca        2020-06-04  3030      2520 
-##  5 ca        2020-06-05  3127      2641.
-##  6 ca        2020-06-06  2855      2677 
-##  7 ca        2020-06-07  2022      2583.
-##  8 ca        2020-06-08  2255      2558.
+##  1 ca        2020-06-01  2438      2438 
+##  2 ca        2020-06-02  2421      2430.
+##  3 ca        2020-06-03  2133      2331.
+##  4 ca        2020-06-04  3030      2506.
+##  5 ca        2020-06-05  3128      2630 
+##  6 ca        2020-06-06  2855      2668.
+##  7 ca        2020-06-07  2022      2575.
+##  8 ca        2020-06-08  2256      2549.
 ##  9 ca        2020-06-09  2812      2605.
-## 10 ca        2020-06-10  3099      2743.</code></pre>
+## 10 ca        2020-06-10  3100      2743.</code></pre>
 <p>As a simple sanity check, we visualize the 7-day trailing averages computed on top of the original counts:</p>
 <div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
@@ -191,16 +188,16 @@
 <pre><code>## # A tibble: 10 × 4
 ##    geo_value time_value cases cases_7dav
 ##    &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
-##  1 ca        2020-06-01  2435      2435 
-##  2 ca        2020-06-02  2482      2458.
-##  3 ca        2020-06-03  2133      2350 
-##  4 ca        2020-06-04  3030      2520 
-##  5 ca        2020-06-05  3127      2641.
-##  6 ca        2020-06-06  2855      2677 
-##  7 ca        2020-06-07  2022      2583.
-##  8 ca        2020-06-08  2255      2558.
+##  1 ca        2020-06-01  2438      2438 
+##  2 ca        2020-06-02  2421      2430.
+##  3 ca        2020-06-03  2133      2331.
+##  4 ca        2020-06-04  3030      2506.
+##  5 ca        2020-06-05  3128      2630 
+##  6 ca        2020-06-06  2855      2668.
+##  7 ca        2020-06-07  2022      2575.
+##  8 ca        2020-06-08  2256      2549.
 ##  9 ca        2020-06-09  2812      2605.
-## 10 ca        2020-06-10  3099      2743.</code></pre>
+## 10 ca        2020-06-10  3100      2743.</code></pre>
 </div>
 <div id="slide-the-tidy-way" class="section level2">
 <h2 class="hasAnchor">
@@ -214,20 +211,20 @@
 <pre><code>## # A tibble: 10 × 4
 ##    geo_value time_value cases cases_7dav
 ##    &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
-##  1 ca        2020-06-01  2435      2435 
-##  2 ca        2020-06-02  2482      2458.
-##  3 ca        2020-06-03  2133      2350 
-##  4 ca        2020-06-04  3030      2520 
-##  5 ca        2020-06-05  3127      2641.
-##  6 ca        2020-06-06  2855      2677 
-##  7 ca        2020-06-07  2022      2583.
-##  8 ca        2020-06-08  2255      2558.
+##  1 ca        2020-06-01  2438      2438 
+##  2 ca        2020-06-02  2421      2430.
+##  3 ca        2020-06-03  2133      2331.
+##  4 ca        2020-06-04  3030      2506.
+##  5 ca        2020-06-05  3128      2630 
+##  6 ca        2020-06-06  2855      2668.
+##  7 ca        2020-06-07  2022      2575.
+##  8 ca        2020-06-08  2256      2549.
 ##  9 ca        2020-06-09  2812      2605.
-## 10 ca        2020-06-10  3099      2743.</code></pre>
+## 10 ca        2020-06-10  3100      2743.</code></pre>
 </div>
-<div id="building-and-running-a-local-forecaster" class="section level2">
+<div id="running-a-local-forecaster" class="section level2">
 <h2 class="hasAnchor">
-<a href="#building-and-running-a-local-forecaster" class="anchor"></a>Building and running a local forecaster</h2>
+<a href="#running-a-local-forecaster" class="anchor"></a>Running a local forecaster</h2>
 <p>As a more complicated example, we create a forecaster based on a local (in time) autoregression or AR model. AR models can be fit in numerous ways (using base R functions and various packages), but here we define it “by hand” both because it provides a more advanced example of sliding a function over an <code>epi_df</code> object, and because it allows us to be a bit more flexible in defining a <em>probabilistic</em> forecaster: one that outputs not just a point prediction, but a notion of uncertainty around this. In particular, our forecaster will output a point prediction along with an 90% uncertainty band, represented by a predictive quantiles at the 5% and 95% levels (lower and upper endpoints of the uncertainty band).</p>
 <p>The function defined below, <code>prob_ar()</code>, is our probabilistic AR forecaster. The <code>lags</code>argument indicates which lags to use in the model, and <code>ahead</code> indicates how far ahead in the future to make forecasts (both are encoded in terms of the units of the <code>time_value</code> column; so, days, in the working <code>epi_df</code> being considered in this vignette).</p>
 <div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="no">prob_ar</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">v</span>, <span class="no">lags</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>, <span class="fl">7</span>, <span class="fl">14</span>), <span class="no">ahead</span> <span class="kw">=</span> <span class="fl">7</span>, <span class="no">min_train_window</span> <span class="kw">=</span> <span class="fl">20</span>,
@@ -336,7 +333,7 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

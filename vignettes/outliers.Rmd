@@ -30,7 +30,7 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       geo_values = c("fl", "nj"),
                       as_of = "2021-10-28") %>%
   select(geo_value, time_value, cases = value) %>%
-  as.epi_df()
+  as_epi_df()
 
 ggplot(x, aes(x = time_value, y = cases)) +
   geom_line() +

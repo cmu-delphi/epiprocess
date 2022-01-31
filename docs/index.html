@@ -76,9 +76,6 @@
     <li>
       <a href="articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
-    <li>
-      <a href="articles/issues.html">7. Work with issue dates and archive objects</a>
-    </li>
   </ul>
 </li>
       </ul>
@@ -105,7 +102,7 @@
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#epiprocess" class="anchor"></a>epiprocess</h1></div>
 <p>This package introduces a common data structure for epidemiological data sets measured over space and time, and offers associated utilities to perform basic signal processing tasks.</p>
-<p>The main data structure in the <code>epiprocess</code> package is called <code>epi_df</code>, which is simply a tibble with a couple of required columns, <code>geo_value</code> and <code>time_value</code>. It can have any other number of columns, which are considered measured variables. (An <code>epi_df</code> object also has some special metadata.) The function <code><a href="reference/as.epi_df.html">as.epi_df()</a></code>can be used to convert a data frame or tibble into <code>epi_df</code> format.</p>
+<p>The main data structure in the <code>epiprocess</code> package is called <code>epi_df</code>, which is simply a tibble with a couple of required columns, <code>geo_value</code> and <code>time_value</code>. It can have any other number of columns, which are considered measured variables. (An <code>epi_df</code> object also has some special metadata.) The function <code>as.epi_df()</code>can be used to convert a data frame or tibble into <code>epi_df</code> format.</p>
 <p>The functions that operate on <code>epi_df</code> objects in the <code>epiprocess</code> package all begin with <code>epi</code>, namely:</p>
 <ul>
 <li><p><code><a href="reference/epi_slide.html">epi_slide()</a></code>, for iteratively applying a custom computation to a variable in an <code>epi_df</code> object over sliding windows in time;</p></li>
@@ -138,6 +135,7 @@
 <div class="developers">
 <h2>Developers</h2>
 <ul class="list-unstyled">
+<li>Logan Brooks <br><small class="roles"> Author </small>  </li>
 <li>Evan Ray <br><small class="roles"> Author </small>  </li>
 <li>Ryan Tibshirani <br><small class="roles"> Author, maintainer </small>  </li>
 <li><a href="authors.html">All authors...</a></li>
@@ -149,7 +147,7 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

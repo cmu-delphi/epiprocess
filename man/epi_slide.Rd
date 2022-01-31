@@ -73,7 +73,7 @@ according to the \code{new_col_name} argument, containing the slide values.
 }
 \description{
 Slides a given function over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
-examples. Also applies to an \code{epi_archive} object; see the \href{https://cmu-delphi.github.io/epiprocess/articles/issues.html}{issues vignette} for
+examples. Also applies to an \code{epi_archive} object; see the \href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{data versioning vignette} for
 examples.
 }
 \details{

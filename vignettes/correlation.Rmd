@@ -43,7 +43,7 @@ y <- covidcast_signal(data_source = "jhu-csse",
 
 x <- x %>%
   full_join(y, by = c("geo_value", "time_value")) %>%
-  as.epi_df() %>%
+  as_epi_df() %>%
   group_by(geo_value) %>%
   epi_slide(case_rates = mean(case_rates), n = 7) %>%
   epi_slide(death_rates = mean(death_rates), n = 7) %>%

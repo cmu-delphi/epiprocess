@@ -108,11 +108,11 @@ if (FALSE) {
   epi.tibble.archive.2 = epi_archive$new(update.df.2)
   all.equal(
     as_tibble(epi.tibble.archive.2$epi_df_as_of(as.Date("2020-10-14"))),
-    as_tibble(as.epi_df(snapshot.df.2a)),
+    as_tibble(as_epi_df(snapshot.df.2a)),
     check.attributes = FALSE)
   all.equal(
     as_tibble(epi.tibble.archive.2$epi_df_as_of(as.Date("2020-10-28"))),
-    as_tibble(as.epi_df(snapshot.df.2b)),
+    as_tibble(as_epi_df(snapshot.df.2b)),
     check.attributes = FALSE)
 }
 ```

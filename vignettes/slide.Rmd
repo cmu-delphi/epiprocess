@@ -38,7 +38,7 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       end_day = "2021-05-31",
                       geo_type = "state", 
                       geo_values = c("ca", "fl", "ny", "tx"))  %>%
-  as.epi_df() %>%
+  as_epi_df() %>%
   rename(cases = value) %>%
   select(geo_value, time_value, cases)
 ```
@@ -120,7 +120,7 @@ x <- x %>%
 head(x, 10)
 ```
 
-## Building and running a local forecaster
+## Running a local forecaster
 
 As a more complicated example, we create a forecaster based on a local (in time)
 autoregression or AR model. AR models can be fit in numerous ways (using base R

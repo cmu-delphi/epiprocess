@@ -1,25 +1,27 @@
-#' Convert data to `epi_df` format
+#' Create `epi_df` object
 #'
-#' Converts a data frame or tibble into a format that is consistent with the 
-#' `epi_df` class, ensuring that it has a certain minimal set of columns, and
-#' that it has certain minimal metadata.  
+#' Creates an `epi_df` object from given `geo_value` and `time_value` variables,
+#' and any additional number of variables.
 #'
-#' @param x The object to be converted. See the methods section below for
-#'   details on formatting of each input type.
-#' @param geo_type The type for the geo values. If missing, then the function
-#'   will attempt to infer it from the geo values present; if this fails, then
-#'   it will be set to "custom".  
-#' @param time_type The type for the time values. If missing, then the function
-#'   will attempt to infer it from the time values present; if this fails, then
-#'   it will be set to "custom". 
-#' @param issue Issue to use for this data. If missing, then the function will
-#'   attempt to infer it from the passed object `x`; if this fails, then the
-#'   current day-time will be used. 
+#' @param geo_value Geographic values associated with the measurements.
+#' @param time_value Time values associated with the measurements.
+#' @param ... Additional arguments of the form `value` or `name = value`, which
+#'   specify any number of additional columns for the `epi_df` object.
+#' @param geo_type Type for the geo values. If missing, then the function will
+#'   attempt to infer it from the geo values present; if this fails, then it
+#'   will be set to "custom".
+#' @param time_type Type for the time values. If missing, then the function will
+#'   attempt to infer it from the time values present; if this fails, then it
+#'   will be set to "custom".
+#' @param as_of Time value representing the time at which the given data were
+#'   available. For example, if `as_of` were January 31, 2022, then the `epi_df`
+#'   object that is created would represent the most up-to-date version of the
+#'   data available as of January 31, 2022. If the `as_of` argument is missing,
+#'   then the current day-time will be used.
 #' @param additional_metadata List of additional metadata to attach to the
-#'   `epi_df` object. All objects will have `time_type`, `geo_type`, and `issue`
-#'   fields; named entries from the passed list or will be included as well.
-#' @param ... Additional arguments passed to methods.
-#' @return An `epi_df` object.
+#'   `epi_df` object. The metadata will have `time_type`, `geo_type`, and
+#'   `as_of` fields; named entries from the passed list or will be included as
+#'   well.
 #'
 #' @details An `epi_df` is a tibble with (at least) the following columns:  
 #' 
@@ -32,19 +34,25 @@
 #' 
 #' * `geo_type`: the type for the geo values.
 #' * `time_type`: the type for the time values.
-#' * `issue`: the time value at which the given data set was issued.
-#'
-#' The first two fields above, `geo_type` and `time_type`, can usually be
-#'   inferred from the `geo_value` and `time_value` columns, respectively. The
-#'   last field above, `issue`, is the most unique to the `epi_df` format.  In a
-#'   typical case, this represents the maximum of the issues of individual
-#'   signal values measured in the data set; hence we would also say that the
-#'   data set is comprised of all signal values observed "as of" the given issue
-#'   in the metadata.
+#' * `as_of`: the time value at which the given data were available.
 #'
 #' Metadata for an `epi_df` object `x` can be accessed (and altered) via
-#'   `attributes(x)$metadata`. More information on geo types, time types, and
-#'   issues is given below.   
+#'   `attributes(x)$metadata`. The first two fields in the above list,
+#'   `geo_type` and `time_type`, can usually be inferred from the `geo_value`
+#'   and `time_value` columns, respectively. More information on their coding is
+#'   given below. 
+#'
+#' The last field in the above list, `as_of`, is one of the most unique aspects
+#'   of an `epi_df` object. In brief, we can think of an `epi_df` object as a
+#'   single snapshot of a data set that contains the most up-to-date values of
+#'   some signals of interest, as of the time specified in the `as_of` field.  A
+#'   companion object is the `epi_archive` object, which contains the full
+#'   version history of a given data set. Revisions are common in many types of
+#'   epidemiological data streams, and paying attention to data revisions can be
+#'   important for all sorts of downstream data analysis and modeling tasks. See
+#'   the `epi_archive()` help file for more details on how data versioning works
+#'   in the `epiprocess` package (including how to create `epi_df` objects, as
+#'   data snapshots, from an `epi_archive` object).
 #'
 #' @section Geo types:
 #' The following geo types are supported in an `epi_df`. Their geo coding
@@ -64,50 +72,81 @@
 #'   alpha-2 country codes (lowercase).
 #'
 #' The above geo types come with aggregation utilities in the package, *todo:
-#'   refer to relevant functionality, vignette, and so on*. An unrecognizable 
-#'   geo type is labeled as "custom".  
+#'   refer to relevant functionality, vignette, and so on*. An unrecognizable
+#'   geo type is labeled as "custom".
 #' 
 #' @section Time types:
 #' The following time types are supported in an `epi_df`. Their time coding
 #'   (specification of time values for each time type) is also described below.
 #' 
-#' * `"day-time"`: each observation corresponds to a time on a given day (measured
-#'   to the second); coded as a `POSIXct` object, as in `as.POSIXct("2020-06-09
-#'   18:45:40")`.  
+#' * `"day-time"`: each observation corresponds to a time on a given day
+#'   (measured to the second); coded as a `POSIXct` object, as in
+#'   `as.POSIXct("2022-01-31 18:45:40")`.
 #' * `"day"`: each observation corresponds to a day; coded as a `Date` object,
-#'   as in `as.Date("2020-06-09")`.
+#'   as in `as.Date("2022-01-31")`.
 #' * `"week"`: each observation corresponds to a week; the alignment can be
 #'   arbitrary (as to whether a week starts on a Monday, Tuesday, etc.; the
 #'   U.S. CDC definition of an epidemiological week starts on a Sunday); coded
-#'   as a `Date` object, representing the start date of week. 
+#'   as a `Date` object, representing the start date of week.
 #'
-#' An unrecognisable time type is labeled as "custom".
-#' 
-#' @section Issues: 
-#' todo
-#' 
+#' An unrecognizable time type is labeled as "custom". *todo: refer to vignette
+#'   for time aggregation examples*
+#'
 #' @export
-as.epi_df = function(x, ...) {
-  UseMethod("as.epi_df")
+epi_df = function(geo_value, time_value, ..., geo_type, time_type, as_of,
+                  additional_metadata = list()) {
+  x = tibble::tibble(geo_value = geo_value, time_value = time_value, ...)
+  return(as_epi_df(x, geo_type, time_type, as_of, additional_metadata))
 }
 
-#' @method as.epi_df epi_df
-#' @describeIn as.epi_df Simply returns the `epi_df` object unchanged.
+#' Convert data to `epi_df` format
+#'
+#' Converts a data frame or tibble into a format that is consistent with the 
+#' `epi_df` class, ensuring that it has a certain minimal set of columns, and
+#' that it has certain minimal metadata.  
+#'
+#' @param geo_type Type for the geo values. If missing, then the function will
+#'   attempt to infer it from the geo values present; if this fails, then it
+#'   will be set to "custom".
+#' @param time_type Type for the time values. If missing, then the function will
+#'   attempt to infer it from the time values present; if this fails, then it
+#'   will be set to "custom".
+#' @param as_of Time value representing the time at which the given data were
+#'   available. For example, if `as_of` were January 31, 2022, then the `epi_df`
+#'   object that is created would represent the most up-to-date version of the
+#'   data available as of January 31, 2022. If the `as_of` argument is missing,
+#'   then the function will attempt to infer it from the passed object `x`; if
+#'   this fails, then the current day-time will be used.
+#' @param additional_metadata List of additional metadata to attach to the
+#'   `epi_df` object. The metadata will have `time_type`, `geo_type`, and
+#'   `as_of` fields; named entries from the passed list or will be included as
+#'   well.
+#' @param ... Additional arguments passed to methods.
+#' @return An `epi_df` object.
+#' 
 #' @export
-as.epi_df.epi_df = function(x, ...) {
+as_epi_df = function(x, ...) {
+  UseMethod("as_epi_df")
+}
+
+#' @method as_epi_df epi_df
+#' @describeIn as_epi_df Simply returns the `epi_df` object unchanged.
+#' @export
+as_epi_df.epi_df = function(x, ...) {
   return(x)
 }
 
-#' @method as.epi_df tibble
-#' @describeIn as.epi_df The input tibble `x` must contain the columns
+#' @method as_epi_df tibble
+#' @describeIn as_epi_df The input tibble `x` must contain the columns
 #'   `geo_value` and `time_value`. All other columns will be preserved as is,
-#'   and treated as measured variables. If `issue` is missing, then the function
-#'   will look for `issue` as a column of `x`, or as a field in its metadata
-#'   (stored in its attributes), to infer the issue; if this fails, then the
-#'   current day-time will be used. 
+#'   and treated as measured variables. If `as_of` is missing, then the function
+#'   will try to guess it from an `as_of`, `issue`, or `version` column of `x`
+#'   (if any of these are present), or from as an `as_of` field in its metadata
+#'   (stored in its attributes); if this fails, then the current day-time will
+#'   be used. 
 #' @importFrom rlang .data abort
 #' @export
-as.epi_df.tibble = function(x, geo_type, time_type, issue,
+as_epi_df.tibble = function(x, geo_type, time_type, as_of,
                             additional_metadata = list(), ...) {
   # Check that we have geo_value and time_value columns
   if (!("geo_value" %in% names(x))) {
@@ -176,25 +215,27 @@ as.epi_df.tibble = function(x, geo_type, time_type, issue,
     else time_type = "custom" 
   }
 
-  # If issue is missing, then try to guess it
-  if (missing(issue)) {
-    # First check for a column, and take the maximum of issues
-    if ("issue" %in% names(x)) issue = max(x$issue)
-
-    # Next, check the metadata
-    else if ("issue" %in% names(attributes(x$metadata))) {
-      issue = attributes(x)$metadata$issue
+  # If as_of is missing, then try to guess it
+  if (missing(as_of)) {
+    # First check the metadata for an as_of field
+    if ("as_of" %in% names(attributes(x$metadata))) {
+      as_of = attributes(x)$metadata$as_of
     }
+    
+    # Next check for as_of, issue, or version columns
+    else if ("as_of" %in% names(x)) as_of = max(x$as_of)
+    else if ("issue" %in% names(x)) as_of = max(x$issue)
+    else if ("version" %in% names(x)) as_of = max(x$version)
 
     # If we got here then we failed 
-    else issue = Sys.time() # Use the current day-time
+    else as_of = Sys.time() # Use the current day-time
   }
 
   # Define metadata fields
   metadata = list()
   metadata$geo_type = geo_type
   metadata$time_type = time_type
-  metadata$issue = issue
+  metadata$as_of = as_of
   metadata = c(metadata, additional_metadata)
  
   # Convert to a tibble, apply epi_df class, attach metadata
@@ -207,15 +248,16 @@ as.epi_df.tibble = function(x, geo_type, time_type, issue,
   return(x)
 }
 
-#' @method as.epi_df data.frame
-#' @describeIn as.epi_df The input data frame `x` must contain the columns
+#' @method as_epi_df data.frame
+#' @describeIn as_epi_df The input data frame `x` must contain the columns
 #'   `geo_value` and `time_value`. All other columns will be preserved as is,
-#'   and treated as measured variables. If `issue` is missing, then the function
-#'   will look for `issue` as a column of `x`, or as a field in its metadata
-#'   (stored in its attributes), to infer the issue; if this fails, then the
-#'   current day-time will be used.
+#'   and treated as measured variables. If `as_of` is missing, then the function
+#'   will try to guess it from an `as_of`, `issue`, or `version` column of `x`
+#'   (if any of these are present), or from as an `as_of` field in its metadata
+#'   (stored in its attributes); if this fails, then the current day-time will
+#'   be used. 
 #' @export
-as.epi_df.data.frame = as.epi_df.tibble
+as_epi_df.data.frame = as_epi_df.tibble
 
 #' Print `epi_df` object
 #'
@@ -233,7 +275,7 @@ print.epi_df = function(x, ...) {
   cat("An `epi_df` object, with metadata:\n")
   cat(sprintf("* %-10s= %s\n", "geo_type", attributes(x)$metadata$geo_type))
   cat(sprintf("* %-10s= %s\n", "time_type", attributes(x)$metadata$time_type))
-  cat(sprintf("* %-10s= %s\n", "issue", attributes(x)$metadata$issue))
+  cat(sprintf("* %-10s= %s\n", "as_of", attributes(x)$metadata$as_of))
   cat("\n")
   NextMethod()
 }
@@ -263,7 +305,7 @@ summary.epi_df = function(object, ...) {
   cat("An `epi_df` object, with metadata:\n")
   cat(sprintf("* %-10s= %s\n", "geo_type", attributes(x)$metadata$geo_type))
   cat(sprintf("* %-10s= %s\n", "time_type", attributes(x)$metadata$time_type))
-  cat(sprintf("* %-10s= %s\n", "issue", attributes(x)$metadata$issue))
+  cat(sprintf("* %-10s= %s\n", "as_of", attributes(x)$metadata$as_of))
   cat("\nSummary of space-time coverge:\n")
   cat(sprintf("* %-33s= %s\n", "earliest time value", min(object$time_value)))
   cat(sprintf("* %-33s= %s\n", "latest time value", max(object$time_value)))

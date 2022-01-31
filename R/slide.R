@@ -2,8 +2,8 @@
 #'
 #' Slides a given function over variables in an `epi_df` object. See the [slide
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
-#' examples. Also applies to an `epi_archive` object; see the [issues
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/issues.html) for
+#' examples. Also applies to an `epi_archive` object; see the [data versioning
+#' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 #' examples.
 #'
 #' @details To "slide" means to apply a function or formula over a running

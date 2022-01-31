@@ -1,33 +1,35 @@
-## We use special features of data.table's `[`. The data.table package has a
-## compatibility feature that disables some/all of these features if it thinks
-## we might expect `data.frame`-compatible behavior instead. We can signal that
-## we want the special behavior via `.datatable.aware = TRUE` or by importing
-## any `data.table` package member. Do both to prevent surprises if we decide to
-## use `data.table::` everywhere and not importing things.
+# We use special features of data.table's `[`. The data.table package has a
+# compatibility feature that disables some/all of these features if it thinks we
+# might expect `data.frame`-compatible behavior instead. We can signal that we
+# want the special behavior via `.datatable.aware = TRUE` or by importing any
+# `data.table` package member. Do both to prevent surprises if we decide to use
+# `data.table::` everywhere and not importing things.
 .datatable.aware = TRUE
 
 #' Archive (data version history) for an `epi_df` object
 #'
 #' Contains version history for an `epi_df` object, and enables fast querying of
-#' snapshots of the `epi_df` object as of certain "issues" (versions).  Version
-#' history can be input as a data frame combining full snapshots of the `epi_df`
-#' as of several issue times, or using only the newly added or revised rows for
-#' each issue, or using some combination of these two (including "updates" for
-#' things that didn't actually change). Last-observation-carried-forward (LOCF)
-#' is used to data in between recorded updates. Currently, deletions must be
-#' represented as revising a row to a special state (e.g., making the entries
-#' `NA` or including a special column that flags the data as removed and
-#' performing post-processing), and the archive is unaware of what this state
-#' is. See the [issues
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/issues.html) for  
-#' examples.
+#' snapshots of the `epi_df` object as of certain "issues" (versions). See the
+#' [data versioning 
+#' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
+#' examples. 
+#'
+#' @details Version history can be input as a data frame combining full
+#'   snapshots of the `epi_df` as of several issue times, or using only the
+#'   newly added or revised rows for each issue, or using some combination of
+#'   these two (including "updates" for things that didn't actually
+#'   change). Last-observation-carried-forward (LOCF) is used to data in between
+#'   recorded updates. Currently, deletions must be represented as revising a
+#'   row to a special state (e.g., making the entries `NA` or including a
+#'   special column that flags the data as removed and performing
+#'   post-processing), and the archive is unaware of what this state is.
 #'
 #' @importFrom assertthat assert_that
-#' @importFrom rlang is_scalar_character is_named is_character is_scalar_atomic !! warn
-#' @importFrom tibble as_tibble
-#' @importFrom dplyr rename filter
 #' @importFrom data.table as.data.table
+#' @importFrom dplyr filter rename 
 #' @importFrom pipeR %>>%
+#' @importFrom rlang !! is_named is_character is_scalar_atomic is_scalar_character warn
+#' @importFrom tibble as_tibble
 #' @export
 epi_archive =
   R6::R6Class("epi_archive",
@@ -40,9 +42,9 @@ epi_archive =
                 other.key.colnames = NULL
               ),
               public = list(
-                #' @description
-                #' Create a new \code{epi_archive} with the given update data.
-                #' @param update.df the update data
+#' @description
+#' Create a new \code{epi_archive} with the given update data
+#' @param update.df the update data
                 #' @param issue.colname name of the column with the issue time of the corresponding updates; operations such as \code{sort}, \code{<=}, and \code{max} must make sense on this column, with earlier issues "less than" later issues
                 #' @param geo.colname the name of the column that will become \code{geo_value} in the \code{epi_df}
                 #' @param time.colname the name of the column that will become \code{time_value} in the \code{epi_df}
@@ -106,7 +108,7 @@ epi_archive =
                       geo_value = !!private[["geo.colname"]],
                       time_value = !!private[["time.colname"]],
                       ) %>>%
-                    as.epi_df(issue = issue,
+                    as_epi_df(issue = issue,
                                   additional_metadata = list(other.key.colnames = private[["other.key.colnames"]])) %>>%
                     return()
                 },

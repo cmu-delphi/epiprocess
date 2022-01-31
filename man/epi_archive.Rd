@@ -10,17 +10,19 @@ Archive (data version history) for an \code{epi_df} object
 }
 \details{
 Contains version history for an \code{epi_df} object, and enables fast querying of
-snapshots of the \code{epi_df} object as of certain "issues" (versions).  Version
-history can be input as a data frame combining full snapshots of the \code{epi_df}
-as of several issue times, or using only the newly added or revised rows for
-each issue, or using some combination of these two (including "updates" for
-things that didn't actually change). Last-observation-carried-forward (LOCF)
-is used to data in between recorded updates. Currently, deletions must be
-represented as revising a row to a special state (e.g., making the entries
-\code{NA} or including a special column that flags the data as removed and
-performing post-processing), and the archive is unaware of what this state
-is. See the \href{https://cmu-delphi.github.io/epiprocess/articles/issues.html}{issues vignette} for
+snapshots of the \code{epi_df} object as of certain "issues" (versions). See the
+\href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{data versioning vignette} for
 examples.
+
+Version history can be input as a data frame combining full
+snapshots of the \code{epi_df} as of several issue times, or using only the
+newly added or revised rows for each issue, or using some combination of
+these two (including "updates" for things that didn't actually
+change). Last-observation-carried-forward (LOCF) is used to data in between
+recorded updates. Currently, deletions must be represented as revising a
+row to a special state (e.g., making the entries \code{NA} or including a
+special column that flags the data as removed and performing
+post-processing), and the archive is unaware of what this state is.
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -38,7 +40,7 @@ examples.
 \if{html}{\out{<a id="method-new"></a>}}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
-Create a new \code{epi_archive} with the given update data.
+Create a new \code{epi_archive} with the given update data
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$new(
   update.df,
