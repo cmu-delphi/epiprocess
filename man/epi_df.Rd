@@ -2,57 +2,18 @@
 % Please edit documentation in R/epi_df.R
 \name{epi_df}
 \alias{epi_df}
-\title{Create an \code{epi_df} object}
-\usage{
-epi_df(
-  geo_value,
-  time_value,
-  ...,
-  geo_type,
-  time_type,
-  as_of,
-  additional_metadata = list()
-)
-}
-\arguments{
-\item{geo_value}{Geographic values associated with the measurements.}
-
-\item{time_value}{Time values associated with the measurements.}
-
-\item{...}{Additional arguments of the form \code{value} or \code{name = value}, which
-specify any number of additional columns for the \code{epi_df} object.}
-
-\item{geo_type}{Type for the geo values. If missing, then the function will
-attempt to infer it from the geo values present; if this fails, then it
-will be set to "custom".}
-
-\item{time_type}{Type for the time values. If missing, then the function will
-attempt to infer it from the time values present; if this fails, then it
-will be set to "custom".}
-
-\item{as_of}{Time value representing the time at which the given data were
-available. For example, if \code{as_of} is January 31, 2022, then the \code{epi_df}
-object that is created would represent the most up-to-date version of the
-data available as of January 31, 2022. If the \code{as_of} argument is missing,
-then the current day-time will be used.}
-
-\item{additional_metadata}{List of additional metadata to attach to the
-\code{epi_df} object. The metadata will have \code{time_type}, \code{geo_type}, and
-\code{as_of} fields; named entries from the passed list or will be included as
-well.}
-}
-\value{
-An \code{epi_df} object.
-}
+\title{\code{epi_df} object}
 \description{
-Creates an \code{epi_df} object from given \code{geo_value} and \code{time_value} variables,
-as well as any additional number of variables.
+An \code{epi_df} is a tibble with certain minimal column structure
+and metadata. It can be seen as a snapshot of a data set that contains the
+most up-to-date values of some signal variables of interest, as of a given
+time.
 }
 \details{
 An \code{epi_df} is a tibble with (at least) the following columns:
 \itemize{
-\item \code{geo_value}: the geographic value associated with each measurement.
-\item \code{time_value}: the time value associated with each measurement.
+\item \code{geo_value}: the geographic value associated with each row of measurements.
+\item \code{time_value}: the time value associated with each row of measurements.
 }
 
 Other columns can be considered as measured variables, which we also refer to
@@ -73,16 +34,17 @@ given below.
 The last field in the above list, \code{as_of}, is one of the most unique aspects
 of an \code{epi_df} object. In brief, we can think of an \code{epi_df} object as a
 single snapshot of a data set that contains the most up-to-date values of
-some signals of interest, as of the time specified in the \code{as_of} field.  A
-companion object is the \code{epi_archive} object, which contains the full
+the signals variables, as of the time specified in the \code{as_of} field.
+
+A companion object is the \code{epi_archive} object, which contains the full
 version history of a given data set. Revisions are common in many types of
 epidemiological data streams, and paying attention to data revisions can be
 important for all sorts of downstream data analysis and modeling tasks. See
-the \code{epi_archive()} help file for more details on how data versioning works
-in the \code{epiprocess} package (including how to create \code{epi_df} objects, as
-data snapshots, from an \code{epi_archive} object).
+the documentation for \code{epi_archive()} for more details on how data
+versioning works in the \code{epiprocess} package (including how to generate
+\code{epi_df} objects, as data snapshots, from an \code{epi_archive} object).
 }
-\section{Geo types}{
+\section{Geo Types}{
 
 The following geo types are supported in an \code{epi_df}. Their geo coding
 (specification of geo values for each geo type) is also described below.
@@ -106,7 +68,7 @@ refer to relevant functionality, vignette, and so on}. An unrecognizable
 geo type is labeled as "custom".
 }
 
-\section{Time types}{
+\section{Time Types}{
 
 The following time types are supported in an \code{epi_df}. Their time coding
 (specification of time values for each time type) is also described below.
@@ -126,3 +88,6 @@ An unrecognizable time type is labeled as "custom". \emph{todo: refer to vignett
 for time aggregation examples}
 }
 
+\seealso{
+\code{\link[=as_epi_df]{as_epi_df()}} for converting to \code{epi_df} format
+}

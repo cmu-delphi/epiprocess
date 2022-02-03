@@ -2,7 +2,7 @@
 % Please edit documentation in R/epi_archive.R
 \name{as_epi_archive}
 \alias{as_epi_archive}
-\title{Convert to \code{epi_archive} object}
+\title{Convert to \code{epi_archive} format}
 \usage{
 as_epi_archive(
   x,
@@ -13,9 +13,34 @@ as_epi_archive(
   additional_metadata = list()
 )
 }
+\arguments{
+\item{x}{A data frame, data table, or tibble, with columns \code{geo_value},
+\code{time_value}, \code{version}, and then any additional number of columns.}
+
+\item{geo_type}{Type for the geo values. If missing, then the function will
+attempt to infer it from the geo values present; if this fails, then it
+will be set to "custom".}
+
+\item{time_type}{Type for the time values. If missing, then the function will
+attempt to infer it from the time values present; if this fails, then it
+will be set to "custom".}
+
+\item{max_version}{Maximum version in the data archive. If missing, then the
+function will set it equal to the maximum of the \code{version} column in \code{x}.}
+
+\item{other_keys}{Character vector specifying the names of variables in \code{x}
+that should be considered key variables (in the language of \code{data.table})
+apart from "geo_value", "time_value", and "version".}
+
+\item{additional_metadata}{List of additional metadata to attach to the
+\code{epi_archive} object. The metadata will have \code{geo_type} and \code{time_type}
+fields; named entries from the passed list or will be included as well.}
+}
+\value{
+An \code{epi_archive} object.
+}
 \description{
-Converts a data frame, tibble, or data table into an \code{epi_archive} object,
-allowing for fast querying of data snapshots into \code{epi_df} format as of
-certain versions. See the \href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{data versioning vignette} for
+Converts a data frame, data table, or tibble into an \code{epi_archive}
+object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{data versioning vignette} for
 examples.
 }

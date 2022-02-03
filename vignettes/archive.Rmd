@@ -1,8 +1,8 @@
 ---
-title: 7. Work with issue dates and archive objects
+title: 7. Work with data archives and produce snapshots 
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{7. Work with issue dates and archive objects}
+  %\VignetteIndexEntry{7. Work with data archives and produce snapshots}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -43,9 +43,9 @@ potentially also scoring roles. but the functionality for *running* these will
 be already built into `epiprocess`, just as a generalization of `epi_slide()`
 
 ```{r eval = FALSE}
-update.df =
+df =
   tibble::tribble(
-    ~geo_value, ~time_value, ~issue, ~value,
+    ~geo_value, ~time_value, ~version, ~value,
     ## update history of geo1 for reference time 2021-01-01:
     ##   (1 day of latency in initial report)
     "geo1", as.Date("2021-01-01"), as.Date("2021-01-02"), 5.0,
@@ -64,6 +64,14 @@ update.df =
     ##   (1 day of latency in initial report)
     "geo1", as.Date("2021-01-05"), as.Date("2021-01-06"), 13.0,
   )
+
+arch1 = epi_archive$new(df)
+arch2 = as_epi_archive(df)
+arch3 = new_epi_archive(df$geo_value, df$time_value, df$version, value = df$value)
+```
+
+
+```{r}
 
 ## update.df actually contains update data through issue 2021-01-11, but the
 ## data set was not reported to change from 2021-01-10 to 2021-01-11

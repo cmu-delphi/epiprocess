@@ -2,66 +2,173 @@
 % Please edit documentation in R/epi_archive.R
 \name{epi_archive}
 \alias{epi_archive}
-\title{Create an \code{epi_archive} object}
-\usage{
-epi_archive(
-  geo_value,
-  time_value,
-  version,
-  ...,
+\title{\code{epi_archive} object}
+\description{
+An \code{epi_archive} is an R6 class which contains a data table
+along with several relevant pieces of metadata. The data table can be seen
+as the full archive (version history) for some signal variables of
+interest.
+}
+\details{
+An \code{epi_archive} is an R6 class which contains a data table \code{DT}, of
+class \code{data.table} from the \code{data.table} package, with (at least) the
+following columns:
+\itemize{
+\item \code{geo_value}: the geographic value associated with each row of measurements.
+\item \code{time_value}: the time value associated with each row of measurements.
+\item \code{version}: the time value specifying the version for each row of
+measurements. For example, if in a given row the \code{version} is January 15,
+2022 and \code{time_value} is January 14, 2022, then this row contains the
+measurements of the data for January 14, 2022 that were available one day
+later.
+}
+
+The data table \code{DT} has key variables \code{geo_value}, \code{time_value}, \code{version},
+as well as any other specified in the metadata (described below). There can
+only be a single row per unique combination of key variables, and thus the
+key variables are critical for figuring out how to generate a snapshot of
+data from the archive, as of a given version.
+
+In general, last-observation-carried-forward (LOCF) is used to data in
+between recorded versions. Currently, deletions must be represented as
+revising a row to a special state (e.g., making the entries \code{NA} or
+including a special column that flags the data as removed and performing
+some kind of post-processing), and the archive is unaware of what this
+state is.
+
+A word of caution: R6 objects, unlike most other objects in R, obey reference
+semantics. A primary consequence of this is that objects are not copied
+when modified. You can read more about this in Hadley Wickham's \href{https://adv-r.hadley.nz/r6.html#r6-semantics}{Advanced R} book.
+}
+\section{Metadata}{
+
+The following pieces of metadata are included as fields in an \code{epi_archive}
+object:
+\itemize{
+\item \code{geo_type}: the type for the geo values.
+\item \code{time_type}: the type for the time values.
+\item \code{max_version}: the max version in the data archive.
+\item \code{other_keys}: the names of the other key variables (apart from "geo_value",
+"time_value", and "version") in the data archive.
+\item \code{additional_metadata}: list of additional metadata for the data archive.
+}
+
+Unlike an \code{epi_df} object, metadata for an \code{epi_archive} object \code{x} can be
+accessed (and altered) directly via \code{x$geo_type}.
+}
+
+\section{Generating Snapshots}{
+
+An \code{epi_archive} object can be used to generate a snapshot of the data in
+\code{epi_df} format, which represents the most up-to-date values of the signal
+variables, as of the specified version. This is accomplished by calling the
+\code{as_of()} method for an \code{epi_archive} object \code{x}, for example:\preformatted{x$as_of(as.Date("2022-01-15"))
+}
+
+to generate a snapshot as of January 15, 2022. More details on the
+\code{as_of()} method are documented below.
+}
+
+\seealso{
+\code{\link[=as_epi_archive]{as_epi_archive()}} for converting to \code{epi_archive} format
+}
+\section{Methods}{
+\subsection{Public methods}{
+\itemize{
+\item \href{#method-new}{\code{epi_archive$new()}}
+\item \href{#method-as_of}{\code{epi_archive$as_of()}}
+\item \href{#method-clone}{\code{epi_archive$clone()}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
+\subsection{Method \code{new()}}{
+Creates a new \code{epi_archive} object.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$new(
+  x,
   geo_type,
   time_type,
   max_version,
   other_keys,
-  additional_metadata = list()
-)
+  additional_metadata
+)}\if{html}{\out{</div>}}
 }
-\arguments{
-\item{geo_value}{Geographic values associated with the measurements.}
 
-\item{time_value}{Time values associated with the measurements.}
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{x}}{A data frame, data table, or tibble, with columns \code{geo_value},
+\code{time_value}, \code{version}, and then any additional number of columns.}
 
-\item{version}{Time values specifying the versions of the measurements. For
-example, if in a given row the \code{version} is January 15, 2022 and
-\code{time_value} is January 14, 2022, then this row contains the measurements
-of the data for January 14, 2022 that were available one day later.}
-
-\item{...}{Additional arguments of the form \code{value} or \code{name = value}, which
-specify any number of additional columns for the \code{epi_archive} object.}
-
-\item{geo_type}{Type for the geo values. If missing, then the function will
+\item{\code{geo_type}}{Type for the geo values. If missing, then the function will
 attempt to infer it from the geo values present; if this fails, then it
 will be set to "custom".}
 
-\item{time_type}{Type for the time values. If missing, then the function will
+\item{\code{time_type}}{Type for the time values. If missing, then the function will
 attempt to infer it from the time values present; if this fails, then it
 will be set to "custom".}
 
-\item{other_keys}{Character vector specifying the names of variables that
-should be considered key variables (in the language of \code{data.table}) apart
-from "geo_value", "time_value", and "version". There can only be a single
-row per unique combination of key variables, and thus the key variables are
-critical for figuring out how to generate snapshots of data form the
-archive, as of certain versions.}
+\item{\code{max_version}}{Maximum version in the data archive. If missing, then the
+function will set it equal to the maximum of the \code{version} column in \code{x}.}
 
-\item{additional_metadata}{List of additional metadata to attach to the
-\code{epi_archive} object. The metadata will have \code{time_type} and \code{geo_type}
+\item{\code{other_keys}}{Character vector specifying the names of variables in \code{x}
+that should be considered key variables (in the language of \code{data.table})
+apart from "geo_value", "time_value", and "version".}
+
+\item{\code{additional_metadata}}{List of additional metadata to attach to the
+\code{epi_archive} object. The metadata will have \code{geo_type} and \code{time_type}
 fields; named entries from the passed list or will be included as well.}
 }
-\value{
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
 An \code{epi_archive} object.
 }
-\description{
-Creates an \code{epi_archive} object from given \code{geo_value}, \code{time_value}, and
-\code{version} variables, as well as any additional number of variables.
 }
-\details{
-Last-observation-carried-forward (LOCF) is used to data in between
-recorded versions. Currently, deletions must be represented as revising a
-row to a special state (e.g., making the entries \code{NA} or including a
-special column that flags the data as removed and performing some kind of
-post-processing), and the archive is unaware of what this state is.
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-as_of"></a>}}
+\if{latex}{\out{\hypertarget{method-as_of}{}}}
+\subsection{Method \code{as_of()}}{
+Generates a snapshot in \code{epi_df} format as of a given version.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$as_of(max_version, min_time_value)}\if{html}{\out{</div>}}
+}
 
-TODO some details on the structure of the R6 object and the fact that it
-obeys reference semantics??
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{max_version}}{Time value specifying the max version to permit in the
+snapshot. That is, the snapshot will comprise the unique rows that
+represent the most up-to-date signal values, as of the specified
+\code{max_version}, whose time values are at least \code{min_time_value}.}
+
+\item{\code{min_time_value}}{Time value specifying the min time value to permit in
+the snapshot. Default is \code{NULL}, which means that there is no minimum
+considered.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An \code{epi_df} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
+\subsection{Method \code{clone()}}{
+The objects of this class are cloneable with this method.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$clone(deep = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{deep}}{Whether to make a deep clone.}
+}
+\if{html}{\out{</div>}}
+}
+}
 }

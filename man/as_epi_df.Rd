@@ -5,7 +5,7 @@
 \alias{as_epi_df.epi_df}
 \alias{as_epi_df.tbl_df}
 \alias{as_epi_df.data.frame}
-\title{Convert to \code{epi_df} object}
+\title{Convert to \code{epi_df} format}
 \usage{
 as_epi_df(x, ...)
 
@@ -30,11 +30,10 @@ will be set to "custom".}
 available. For example, if \code{as_of} is January 31, 2022, then the \code{epi_df}
 object that is created would represent the most up-to-date version of the
 data available as of January 31, 2022. If the \code{as_of} argument is missing,
-then the function will attempt to infer it from the passed object \code{x}; if
-this fails, then the current day-time will be used.}
+then the current day-time will be used.}
 
 \item{additional_metadata}{List of additional metadata to attach to the
-\code{epi_df} object. The metadata will have \code{time_type}, \code{geo_type}, and
+\code{epi_df} object. The metadata will have \code{geo_type}, \code{time_type}, and
 \code{as_of} fields; named entries from the passed list or will be included as
 well.}
 }
@@ -42,9 +41,7 @@ well.}
 An \code{epi_df} object.
 }
 \description{
-Converts a data frame or tibble into an \code{epi_df} object, ensuring that it has
-a certain minimal set of columns, and certain minimal metadata. See the
-\href{https://cmu-delphi.github.io/epiprocess/articles/epiprocess.html}{getting started guide} for
+Converts a data frame or tibble into an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/epiprocess.html}{getting started guide} for
 examples.
 }
 \section{Methods (by class)}{

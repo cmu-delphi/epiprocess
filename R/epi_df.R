@@ -1,33 +1,14 @@
-#' Create an `epi_df` object
+#' @title `epi_df` object
 #'
-#' Creates an `epi_df` object from given `geo_value` and `time_value` variables,
-#' as well as any additional number of variables. 
-#'
-#' @param geo_value Geographic values associated with the measurements.
-#' @param time_value Time values associated with the measurements.
-#' @param ... Additional arguments of the form `value` or `name = value`, which
-#'   specify any number of additional columns for the `epi_df` object.
-#' @param geo_type Type for the geo values. If missing, then the function will
-#'   attempt to infer it from the geo values present; if this fails, then it
-#'   will be set to "custom".
-#' @param time_type Type for the time values. If missing, then the function will
-#'   attempt to infer it from the time values present; if this fails, then it
-#'   will be set to "custom".
-#' @param as_of Time value representing the time at which the given data were
-#'   available. For example, if `as_of` is January 31, 2022, then the `epi_df`
-#'   object that is created would represent the most up-to-date version of the
-#'   data available as of January 31, 2022. If the `as_of` argument is missing,
-#'   then the current day-time will be used.
-#' @param additional_metadata List of additional metadata to attach to the
-#'   `epi_df` object. The metadata will have `time_type`, `geo_type`, and
-#'   `as_of` fields; named entries from the passed list or will be included as
-#'   well.
-#' @return An `epi_df` object.
-#'
+#' @description An `epi_df` is a tibble with certain minimal column structure
+#'   and metadata. It can be seen as a snapshot of a data set that contains the
+#'   most up-to-date values of some signal variables of interest, as of a given
+#'   time.
+#' 
 #' @details An `epi_df` is a tibble with (at least) the following columns:  
 #' 
-#' * `geo_value`: the geographic value associated with each measurement.
-#' * `time_value`: the time value associated with each measurement.
+#' * `geo_value`: the geographic value associated with each row of measurements.
+#' * `time_value`: the time value associated with each row of measurements.
 #'
 #' Other columns can be considered as measured variables, which we also refer to
 #'   as signal variables. An `epi_df` object also has metadata with (at least)
@@ -41,21 +22,22 @@
 #'   `attributes(x)$metadata`. The first two fields in the above list,
 #'   `geo_type` and `time_type`, can usually be inferred from the `geo_value`
 #'   and `time_value` columns, respectively. More information on their coding is
-#'   given below. 
+#'   given below.
 #'
 #' The last field in the above list, `as_of`, is one of the most unique aspects
 #'   of an `epi_df` object. In brief, we can think of an `epi_df` object as a
 #'   single snapshot of a data set that contains the most up-to-date values of
-#'   some signals of interest, as of the time specified in the `as_of` field.  A
-#'   companion object is the `epi_archive` object, which contains the full
+#'   the signals variables, as of the time specified in the `as_of` field.
+#'
+#' A companion object is the `epi_archive` object, which contains the full
 #'   version history of a given data set. Revisions are common in many types of
 #'   epidemiological data streams, and paying attention to data revisions can be
 #'   important for all sorts of downstream data analysis and modeling tasks. See
-#'   the `epi_archive()` help file for more details on how data versioning works
-#'   in the `epiprocess` package (including how to create `epi_df` objects, as
-#'   data snapshots, from an `epi_archive` object).
+#'   the documentation for `epi_archive()` for more details on how data
+#'   versioning works in the `epiprocess` package (including how to generate
+#'   `epi_df` objects, as data snapshots, from an `epi_archive` object).
 #'
-#' @section Geo types:
+#' @section Geo Types:
 #' The following geo types are supported in an `epi_df`. Their geo coding
 #'   (specification of geo values for each geo type) is also described below.
 #' 
@@ -76,7 +58,7 @@
 #'   refer to relevant functionality, vignette, and so on*. An unrecognizable
 #'   geo type is labeled as "custom".
 #' 
-#' @section Time types:
+#' @section Time Types:
 #' The following time types are supported in an `epi_df`. Their time coding
 #'   (specification of time values for each time type) is also described below.
 #' 
@@ -93,18 +75,14 @@
 #' An unrecognizable time type is labeled as "custom". *todo: refer to vignette
 #'   for time aggregation examples*
 #'
-#' @export
-epi_df = function(geo_value, time_value, ..., geo_type, time_type, as_of,
-                  additional_metadata = list()) {
-  x = tibble::tibble(geo_value, time_value, ...)
-  return(as_epi_df(x, geo_type, time_type, as_of, additional_metadata))
-}
+#' @seealso [as_epi_df()] for converting to `epi_df` format
+#' @name epi_df
+NULL
 
-#' Convert to `epi_df` object
+#' Convert to `epi_df` format
 #'
-#' Converts a data frame or tibble into an `epi_df` object, ensuring that it has
-#' a certain minimal set of columns, and certain minimal metadata. See the
-#' [getting started
+#' Converts a data frame or tibble into an `epi_df` object. See the [getting
+#' started
 #' guide](https://cmu-delphi.github.io/epiprocess/articles/epiprocess.html) for
 #' examples.
 #'
@@ -118,10 +96,9 @@ epi_df = function(geo_value, time_value, ..., geo_type, time_type, as_of,
 #'   available. For example, if `as_of` is January 31, 2022, then the `epi_df`
 #'   object that is created would represent the most up-to-date version of the
 #'   data available as of January 31, 2022. If the `as_of` argument is missing,
-#'   then the function will attempt to infer it from the passed object `x`; if
-#'   this fails, then the current day-time will be used.
+#'   then the current day-time will be used.
 #' @param additional_metadata List of additional metadata to attach to the
-#'   `epi_df` object. The metadata will have `time_type`, `geo_type`, and
+#'   `epi_df` object. The metadata will have `geo_type`, `time_type`, and
 #'   `as_of` fields; named entries from the passed list or will be included as
 #'   well.
 #' @param ... Additional arguments passed to methods.

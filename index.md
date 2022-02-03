@@ -3,16 +3,16 @@
 This package introduces a common data structure for epidemiological data sets
 measured over space and time, and offers associated utilities to perform basic
 signal processing tasks. See the getting started guide and vignettes for
-examples. 
+examples.
 
 ## epi_df: snapshot of a data set
 
 The first main data structure in the `epiprocess` package is called `epi_df`,
 which is simply a tibble with a couple of required columns, `geo_value` and
 `time_value`. It can have any other number of columns, which can be seen as
-measured variables. We can use `epi_df()` to create an `epi_df` object directly 
-(see also the help file for `epi_df()` for more details on the `epi_df` format);
-or use `as_epi_df()` to convert a data frame or tibble into an `epi_df` object. 
+measured variables, also called signal variables. In brief, an `epi_df` object
+represents a snapshot of a data set that contains the most up-to-date values of
+the signals variables, as of a given time.
 
 The functions that operate on `epi_df` objects in the `epiprocess` package all
 begin with `epi`, namely: 
