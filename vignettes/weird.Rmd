@@ -1,0 +1,27 @@
+---
+title: "Weird"
+output: html_document
+---
+
+```{r}
+library(epiprocess)
+library(dplyr)
+library(tsibble)
+
+z_tibble = tibble(geo_value = 1:4, time_value = 2011:2014, signal = 0)
+z_tsibble = as_tsibble(z_tibble, index = "time_value", key = "geo_value")
+
+class(as_epi_df(z_tibble))
+class(as_epi_df(z_tsibble))
+
+head(as_epi_df(z_tibble))
+head(as_epi_df(z_tsibble))
+
+# relocate only breaks epi_df label for the tsibble
+class(relocate(as_epi_df(z_tibble), time_value))
+class(relocate(as_epi_df(z_tsibble), time_value))
+
+# select only breaks epi_df label for the tsibble
+class(select(as_epi_df(z_tibble), time_value))
+class(select(as_epi_df(z_tsibble), time_value))
+```
