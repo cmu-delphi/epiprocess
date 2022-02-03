@@ -6,159 +6,202 @@
 # `data.table::` everywhere and not importing things.
 .datatable.aware = TRUE
 
-#' Archive (data version history) for an `epi_df` object
+#' @importFrom data.table as.data.table 
+#' @importFrom dplyr filter select
+#' @importFrom rlang .data abort warn
+#' @noRd
+epi_archive =
+  R6::R6Class(
+        "epi_archive",
+        #####
+        list(
+          dt = NULL,
+          key_vars = NULL,
+          geo_type = NULL,
+          time_type = NULL,
+          max_version = NULL,
+          additional_metdata = NULL,
+          initialize = function(x,
+                                key_vars = c("geo_value",
+                                             "time_value",
+                                             "version"),
+                                geo_type,
+                                time_type,
+                                max_version,
+                                additional_metadata = list()) {
+            # Check that we have a data frame
+            if (!is.data.frame(x)) {
+              abort("`x` must be a data frame.")
+            }
+                  
+            # Check that we have geo_value, time_value, version columns
+            if (!("geo_value" %in% names(x))) {
+              abort("`x` must contain a `geo_value` column.")
+            }
+            if (!("time_value" %in% names(x))) {
+              abort("`x` must contain a `time_value` column.")
+            }
+            if (!("version" %in% names(x))) {
+              abort("`x` must contain a `version` column.")
+            }
+              
+            # Check a couple things on key variables
+            if (!all(key_vars %in% names(x))) {
+              abort("`key_vars` must be contained in column names of `x`.")
+            }
+            if (!(all(c("geo_value", "time_value", "version") %in% key_vars))) {
+              warn(paste("`key_vars` must contain \"geo_value\", \"time_value\", and \"version\"; these will be added to `key_vars` internally."))
+              key_vars = c("geo_value", "time_value", "version", key_vars)
+            }
+          
+            # If geo type is missing, then try to guess it
+            if (missing(geo_type)) {
+              geo_type = guess_geo_type(x$geo_value)
+            }
+
+            # If time type is missing, then try to guess it
+            if (missing(time_type)) {
+              time_type = guess_time_type(x$time_value)
+            }
+
+            # Check several things on max version
+            if (missing(max_version)) {
+              max_version = max(x$version)
+            }
+            if (!identical(class(max_version), class(x$version))) {
+              abort("`max_version` and `x$version` must have same class.")
+            }
+            if (length(max_version) != 1) {
+              abort("`max_version` cannot be a vector.")
+            }
+            if (max_version < max(x$version)) {
+              abort("`max_version` must be at least `max(x$version)`.")
+            }
+            
+            # Create the data table
+            key_vars = unique(key_vars)
+            dt = as.data.table(x, key = key_vars)
+            
+            # If x was an un-keyed data table, then we need to do this
+            if (data.table::key(dt) != key_vars) {
+              data.table::setkey(dt, key_vars)
+            }
+
+            # Instantiate all self variables
+            self$dt = dt
+            self$key_vars = key_vars
+            self$geo_type = geo_type
+            self$time_type = time_type
+            self$max_version = max_version
+            self$additional_metadata = additional_metadata
+          },
+          #####
+          as_of = function(version, n = Inf, as_epi_df = TRUE) {
+            # Check a few things on version
+            if (!identical(class(version), class(self$dt$version))) {
+              abort("`version` and `dt$version` must have same class.")
+            }
+            if (length(version) != 1) {
+              abort("`version` cannot be a vector.")
+            }
+            if (version > self$max_version) {
+              abort("`version` must be at most `max_version`.")
+            }
+            if (version == self$max_version) {
+              warn("Getting data as of the latest version possible. For a variety of reasons, it is possible that we only have a preliminary picture of this version (e.g., the upstream source has updated it but we have not seen it due to latency in synchronization). Thus, the `epi_df` snapshot that we produce here might not be reproducible at a later time (e.g., when we the archive has caught up in terms of synchronization).")
+            }
+
+            x = self$dt %>%
+              filter(data.table::between(.data$time_value,
+                                         version - n, version)) %>% 
+              filter(.data$version <= version) 
+
+            # If no epi_df, then just return x
+            if (!as_epi_df) return(x)
+
+            # Else form and return the epi_df
+            else {
+              return(
+                x %>% 
+                unique(by = self$key_vars, fromLast = TRUE) %>%
+                select(-.data$version) %>%             
+                tsibble::as_tsibble(
+                           index = "time_value",
+                           key = setdiff(key_vars,
+                                         c("time_value", "version"))) %>%
+                as_epi_df(geo_type = self$geo_type,
+                          time_type = self$time_type,
+                          as_of = version,
+                          additional_metadata = self$additional_metadata)
+              )
+            }
+          },
+          #####
+          versions_with_updates = function() {
+            return(unique(self$dt$version))
+          }
+        )
+      )
+
+#' Create an `epi_archive` object
 #'
-#' Contains version history for an `epi_df` object, and enables fast querying of
-#' snapshots of the `epi_df` object as of certain "issues" (versions). See the
-#' [data versioning 
+#' Creates an `epi_archive` object from given `geo_value`, `time_value`, and
+#' `version` variables, as well as any additional number of variables.
+#'
+#' @param geo_value Geographic values associated with the measurements.
+#' @param time_value Time values associated with the measurements.
+#' @param version Time values specifying the versions of the measurements. For
+#'   example, if in a given row the `version` is January 15, 2022 and
+#'   `time_value` is January 14, 2022, then this row contains the measurements
+#'   of the data for January 14, 2022 that were available one day later.
+#' @param ... Additional arguments of the form `value` or `name = value`, which
+#'   specify any number of additional columns for the `epi_archive` object.
+#' @param key_vars Character vector specifying the names of variables that
+#'   should be considered key variables, in the language of
+#'   `data.table`. Default is `c("geo_value", "time_value", "version")`. Apart
+#'   from the key variables, all other variables in the `epi_archive` object are
+#'   considered to be measured variables, which we also refer to as signal
+#'   variables. There can only be a single row per unique combination of key
+#'   variables.
+#' @param geo_type Type for the geo values. If missing, then the function will
+#'   attempt to infer it from the geo values present; if this fails, then it
+#'   will be set to "custom".
+#' @param time_type Type for the time values. If missing, then the function will
+#'   attempt to infer it from the time values present; if this fails, then it
+#'   will be set to "custom".
+#' @param additional_metadata List of additional metadata to attach to the
+#'   `epi_archive` object. The metadata will have `time_type` and `geo_type`
+#'   fields; named entries from the passed list or will be included as well.
+#' @return An `epi_archive` object.
+#'
+#' @details Last-observation-carried-forward (LOCF) is used to data in between 
+#'   recorded versions. Currently, deletions must be represented as revising a
+#'   row to a special state (e.g., making the entries `NA` or including a
+#'   special column that flags the data as removed and performing some kind of 
+#'   post-processing), and the archive is unaware of what this state is.
+#'
+#' TODO some details on the structure of the R6 object and the fact that it
+#'   obeys reference semantics?? 
+#'
+#' @export
+epi_archive = function(geo_value, time_value, version, ..., key_vars, geo_type,
+                       time_type, max_version, additional_metadata = list()) {
+  x = data.table::data.table(geo_value, time_value, version, ...)
+  return(epi_archive$initialize(x, key_vars, geo_type, time_type, max_version,
+                                additional_metadata)) 
+}
+
+#' Convert data to `epi_archive` format
+#'
+#' Converts a data frame, tibble, or data table into a format consistent with
+#' the `epi_archive` class, allowing for fast querying of data snapshots in
+#' `epi_df` format as of certain versions. See the [data versioning
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 #' examples. 
 #'
-#' @details Version history can be input as a data frame combining full
-#'   snapshots of the `epi_df` as of several issue times, or using only the
-#'   newly added or revised rows for each issue, or using some combination of
-#'   these two (including "updates" for things that didn't actually
-#'   change). Last-observation-carried-forward (LOCF) is used to data in between
-#'   recorded updates. Currently, deletions must be represented as revising a
-#'   row to a special state (e.g., making the entries `NA` or including a
-#'   special column that flags the data as removed and performing
-#'   post-processing), and the archive is unaware of what this state is.
-#'
-#' @importFrom assertthat assert_that
-#' @importFrom data.table as.data.table
-#' @importFrom dplyr filter rename 
-#' @importFrom pipeR %>>%
-#' @importFrom rlang !! is_named is_character is_scalar_atomic is_scalar_character warn
-#' @importFrom tibble as_tibble
 #' @export
-epi_archive =
-  R6::R6Class("epi_archive",
-              private = list(
-                update.DT = NULL,
-                max.issue = NULL,
-                issue.colname = NULL,
-                geo.colname = NULL,
-                time.colname = NULL,
-                other.key.colnames = NULL
-              ),
-              public = list(
-#' @description
-#' Create a new \code{epi_archive} with the given update data
-#' @param update.df the update data
-                #' @param issue.colname name of the column with the issue time of the corresponding updates; operations such as \code{sort}, \code{<=}, and \code{max} must make sense on this column, with earlier issues "less than" later issues
-                #' @param geo.colname the name of the column that will become \code{geo_value} in the \code{epi_df}
-                #' @param time.colname the name of the column that will become \code{time_value} in the \code{epi_df}
-                #' @param other.key.colnames the names of any other columns that would be used to index a single measurement in this data set, such as the age group the measurement corresponds to (if the data set includes an age group breakdown); there should only be a single row per issue-geo-time-other-key-cols combination.
-                #' @param max.issue the latest issue for which update data was available; defaults to the maximum issue time in the \code{update.df}, but if there were no additions or revisions in subsequent issues, it could be later.  However, due to details regarding database replica syncing times in upstream APIs, using the default might be safer than whatever we think the max issue should be.
-                #' @return an \code{epi_archive} object
-                initialize = function(update.df,
-                                      issue.colname = "issue",
-                                      geo.colname = "geo_value",
-                                      time.colname = "time_value",
-                                      other.key.colnames = character(0L),
-                                      max.issue = max(update.df[[issue.colname]])) {
-                  assert_that (is.data.frame(update.df))
-                  assert_that (is_scalar_character(issue.colname) && !is_named(issue.colname))
-                  assert_that (is_scalar_character(geo.colname) && !is_named(geo.colname))
-                  assert_that (is_scalar_character(time.colname) && !is_named(time.colname))
-                  assert_that (is_character(other.key.colnames) && !is_named(other.key.colnames))
-                  assert_that (issue.colname %in% names(update.df))
-                  assert_that (geo.colname %in% names(update.df))
-                  assert_that (time.colname %in% names(update.df))
-                  assert_that (all(other.key.colnames %in% names(update.df)))
-                  assert_that (identical(class(update.df[[issue.colname]]), class(max.issue)))
-                  assert_that(length(unique(c(issue.colname, geo.colname, time.colname, other.key.colnames))) ==
-                              3L + length(other.key.colnames))
-                  assert_that(max.issue >= max(update.df[[issue.colname]]))
-                  ## -- end of input validation --
-                  update.DT = as.data.table(update.df, key=c(geo.colname, time.colname, other.key.colnames, issue.colname))
-                  private[["update.DT"]] <- update.DT
-                  private[["max.issue"]] <- max.issue
-                  private[["issue.colname"]] <- issue.colname
-                  private[["geo.colname"]] <- geo.colname
-                  private[["time.colname"]] <- time.colname
-                  private[["other.key.colnames"]] <- other.key.colnames
-                },
-                #' @description
-                #' Get the \code{epi_df} as of some issue time
-                #' @param issue the desired as-of issue time
-                #' @return an \code{epi_df} with data as of the specified issue time, \code{issue} recorded in the metadata, the geo column renamed to \code{geo_value} and time column to \code{time_value}, and the other key colnames recorded in the metadata
-                epi_df_as_of = function(issue) {
-                  assert_that(is_scalar_atomic(issue) && identical(class(issue), class(private[["max.issue"]])))
-                  assert_that(issue <= private[["max.issue"]])
-                  if (issue == max(private[["update.DT"]][[private[["issue.colname"]]]])) {
-                    ## (really, this should be the last issue with an actual
-                    ## addition or revision; it's the same as what's checked
-                    ## here only if we didn't include redundant "updates" in
-                    ## this max issue; alternatively, we should follow the
-                    ## user's indication and use `private$max.issue` and let
-                    ## them deal with potential strange cases with replicas
-                    ## being out of date)
-                    warn('Getting epi_df as of the latest issue with recorded change data; it is possible that we have a preliminary version of this issue, the upstream source has updated it, and we have not seen those updates yet due to them not being published yet, or potentially due to latency in synchronization of upstream database replicas.  Thus, the epi_df snapshot that we produce here might not be reproducible at later times when we use an archive with fresher data.')
-                  }
-                  ## -- end of input validation --
-                  private[["update.DT"]] %>>%
-                    ## {.[, .SD[.[[private[["issue.colname"]]]] <= ..issue]]} %>>%
-                    filter(.[[private[["issue.colname"]]]] <= .env[["issue"]]) %>>%
-                    unique(by=c(private[["geo.colname"]], private[["time.colname"]], private[["other.key.colnames"]]), fromLast=TRUE) %>>%
-                    as_tibble() %>>%
-                    select(-!!private[["issue.colname"]]) %>>%
-                    ## rename(issue_with_last_update = !!private[["issue.colname"]]) %>>%
-                    rename(
-                      geo_value = !!private[["geo.colname"]],
-                      time_value = !!private[["time.colname"]],
-                      ) %>>%
-                    as_epi_df(issue = issue,
-                                  additional_metadata = list(other.key.colnames = private[["other.key.colnames"]])) %>>%
-                    return()
-                },
-                #' @description
-                #' Return the name settings in a list
-                naming_info = function() {
-                  list(
-                    issue.colname = private[["issue.colname"]],
-                    geo.colname = private[["geo.colname"]],
-                    time.colname = private[["time.colname"]],
-                    other.key.colnames = private[["other.key.colnames"]]
-                  )
-                },
-                #' @description
-                #' Return the max issue value recorded by this archive (whether it had updates or not)
-                max_issue = function() {
-                  private[["max.issue"]]
-                },
-                #' @description
-                #' Return the issue values for which updates are
-                #' recorded in this archive (that is, whether they had updates in
-                #' the data frame used to form this archive, regardless of whether
-                #' those "updates" actually added or revised any data)
-                issues_with_updates = function() {
-                  return (unique(private[["update.DT"]][[private[["issue.colname"]]]]))
-                },
-                #' @description
-                #'
-                #' Return the recorded update data up through the given issue
-                #' value, inside a \code{data.table} object which is fine to
-                #' modify without copying.
-                #'
-                #' @param issue the max issue value that should appear in the result
-                update_DT_as_of = function(issue) {
-                  assert_that(is_scalar_atomic(issue) && identical(class(issue), class(private[["max.issue"]])))
-                  assert_that(issue <= private[["max.issue"]])
-                  if (issue == max(private[["update.DT"]][[private[["issue.colname"]]]])) {
-                    ## (really, this should be the last issue with an actual
-                    ## addition or revision; it's the same as what's checked
-                    ## here only if we didn't include redundant "updates" in
-                    ## this max issue; alternatively, we should follow the
-                    ## user's indication and use `private$max.issue` and let
-                    ## them deal with potential strange cases with replicas
-                    ## being out of date)
-                    warn('Getting epi_df as of the latest issue with recorded change data; it is possible that we have a preliminary version of this issue, the upstream source has updated it, and we have not seen those updates yet due to them not being published yet, or potentially due to latency in synchronization of upstream database replicas.  Thus, the epi_df snapshot that we produce here might not be reproducible at later times when we use an archive with fresher data.')
-                  }
-                  private[["update.DT"]] %>>%
-                    ## {.[, .SD[.[[private[["issue.colname"]]]] <= ..issue]]} %>>%
-                    filter(.[[private[["issue.colname"]]]] <= .env[["issue"]]) %>>%
-                    return()
-                }
-              )
-              )
+as_epi_archive = function(x, key_vars, geo_type, time_type, max_version,
+                          additional_metadata = list()) {
+  return(epi_archive$initialize(x, key_vars, geo_type, time_type, max_version,
+                                additional_metadata)) 
+}

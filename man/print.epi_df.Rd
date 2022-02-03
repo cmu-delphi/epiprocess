@@ -9,11 +9,7 @@
 \arguments{
 \item{x}{The \code{epi_df} object.}
 
-\item{...}{Additional arguments passed to \code{print.tibble()} to print the
-data.}
-}
-\value{
-The \code{epi_df} object, unchanged.
+\item{...}{Additional arguments passed to methods.}
 }
 \description{
 Prints a brief summary of the \code{epi_df} object, then prints the underlying

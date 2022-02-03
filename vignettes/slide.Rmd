@@ -17,7 +17,7 @@ groupings can always be achieved by a preliminary call to `group_by()`.
 By default, the meaning of one time step is inferred from the `time_type` of the
 `epi_df` object under consideration. If `time_type` is "day", then one time step
 is one day. The time step can also be specified manually in the call to
-`epi_slide()`; you can read the cocumentation for more details. Furthermore, the
+`epi_slide()`; you can read the documentation for more details. Furthermore, the
 alignment of the running window used in `epi_slide()` can either be "right", 
 "center", or "left"; the default is "right", and is what we use in this and most
 other vignettes, without specifying otherwise.
@@ -46,19 +46,19 @@ x <- covidcast_signal(data_source = "jhu-csse",
 ## Slide with a formula
 
 We first demonstrate how to apply a 7-day trailing average to the daily cases in
-order to smooth the signal, by passing in a formula for the `f` argument of
+order to smooth the signal, by passing in a formula for the first argument of
 `epi_slide()`. To do this computation per state, we first call `group_by()`.
 
 ```{r}
 x %>% 
   group_by(geo_value) %>% 
-  epi_slide(f = ~ mean(.x$cases), n = 7) %>%
+  epi_slide(~ mean(.x$cases), n = 7) %>%
   head(10)
 ```
 
-The formula specified via `f` has access to all columns present in the original
-`epi_df` object (and must refer to them with the prefix `.x$`). As we can see,
-the function `epi_slide()` returns an `epi_df` object with a new column appended
+The formula specified has access to all columns present in the original `epi_df`
+object (and must refer to them with the prefix `.x$`). As we can see, the
+function `epi_slide()` returns an `epi_df` object with a new column appended
 that contains the results (from sliding), named `slide_value` as the default. We
 can of course change this post hoc, or we can instead specify a new name up
 front using the `new_col_name` argument:
@@ -66,7 +66,7 @@ front using the `new_col_name` argument:
 ```{r}
 x <- x %>% 
   group_by(geo_value) %>% 
-  epi_slide(f = ~ mean(.x$cases), n = 7, new_col_name = "cases_7dav")
+  epi_slide(~ mean(.x$cases), n = 7, new_col_name = "cases_7dav")
 
 head(x, 10)
 ```
@@ -88,16 +88,16 @@ ggplot(x, aes(x = time_value)) +
 
 ## Slide with a function 
 
-We can also pass a function for the `f` argument in `epi_slide()`. In this case,
-the passed function must have the following argument structure: `x`, a data
-frame with the same column names as the original object; followed by any number
-of named arguments; and ending with `...` to capture additional arguments.
-Recreating the last example of a 7-day trailing average:
+We can also pass a function for the first argument in `epi_slide()`. In this
+case, the passed function must have the following argument structure: `x`, a
+data frame with the same column names as the original object; followed by any
+number of named arguments; and ending with `...` to capture additional
+arguments.  Recreating the last example of a 7-day trailing average:
 
 ```{r}
 x <- x %>% 
   group_by(geo_value) %>% 
-  epi_slide(f = function(x, ...) mean(x$cases), n = 7,
+  epi_slide(function(x, ...) mean(x$cases), n = 7,
             new_col_name = "cases_7dav")
 
 head(x, 10)
@@ -106,11 +106,11 @@ head(x, 10)
 ## Slide the tidy way
 
 Perhaps the most convenient way to setup a computation in `epi_slide()` is to
-omit `f` entirely and pass in an expression for tidy evaluation. In this case,
-we can simply define the name of the new column directly as part of the
-expression, setting it equal to a computation in which we can access any columns
-of `x` by name, just as we would in a call to `dplyr::summarize()`, or any of
-the `dplyr` verbs. For example: 
+pass in an expression for tidy evaluation. In this case, we can simply define
+the name of the new column directly as part of the expression, setting it equal
+to a computation in which we can access any columns of `x` by name, just as we
+would in a call to `dplyr::summarize()`, or any of the `dplyr` verbs. For
+example:
 
 ```{r}
 x <- x %>% 

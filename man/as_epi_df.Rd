@@ -3,7 +3,7 @@
 \name{as_epi_df}
 \alias{as_epi_df}
 \alias{as_epi_df.epi_df}
-\alias{as_epi_df.tibble}
+\alias{as_epi_df.tbl_df}
 \alias{as_epi_df.data.frame}
 \title{Convert data to \code{epi_df} format}
 \usage{
@@ -11,7 +11,7 @@ as_epi_df(x, ...)
 
 \method{as_epi_df}{epi_df}(x, ...)
 
-\method{as_epi_df}{tibble}(x, geo_type, time_type, as_of, additional_metadata = list(), ...)
+\method{as_epi_df}{tbl_df}(x, geo_type, time_type, as_of, additional_metadata = list(), ...)
 
 \method{as_epi_df}{data.frame}(x, geo_type, time_type, as_of, additional_metadata = list(), ...)
 }
@@ -27,7 +27,7 @@ attempt to infer it from the time values present; if this fails, then it
 will be set to "custom".}
 
 \item{as_of}{Time value representing the time at which the given data were
-available. For example, if \code{as_of} were January 31, 2022, then the \code{epi_df}
+available. For example, if \code{as_of} is January 31, 2022, then the \code{epi_df}
 object that is created would represent the most up-to-date version of the
 data available as of January 31, 2022. If the \code{as_of} argument is missing,
 then the function will attempt to infer it from the passed object \code{x}; if
@@ -44,13 +44,14 @@ An \code{epi_df} object.
 \description{
 Converts a data frame or tibble into a format that is consistent with the
 \code{epi_df} class, ensuring that it has a certain minimal set of columns, and
-that it has certain minimal metadata.
+that it has certain minimal metadata. See the \href{https://cmu-delphi.github.io/epiprocess/articles/epiprocess.html}{getting started guide} for
+examples.
 }
 \section{Methods (by class)}{
 \itemize{
 \item \code{epi_df}: Simply returns the \code{epi_df} object unchanged.
 
-\item \code{tibble}: The input tibble \code{x} must contain the columns
+\item \code{tbl_df}: The input tibble \code{x} must contain the columns
 \code{geo_value} and \code{time_value}. All other columns will be preserved as is,
 and treated as measured variables. If \code{as_of} is missing, then the function
 will try to guess it from an \code{as_of}, \code{issue}, or \code{version} column of \code{x}
@@ -58,12 +59,6 @@ will try to guess it from an \code{as_of}, \code{issue}, or \code{version} colum
 (stored in its attributes); if this fails, then the current day-time will
 be used.
 
-\item \code{data.frame}: The input data frame \code{x} must contain the columns
-\code{geo_value} and \code{time_value}. All other columns will be preserved as is,
-and treated as measured variables. If \code{as_of} is missing, then the function
-will try to guess it from an \code{as_of}, \code{issue}, or \code{version} column of \code{x}
-(if any of these are present), or from as an \code{as_of} field in its metadata
-(stored in its attributes); if this fails, then the current day-time will
-be used.
+\item \code{data.frame}: Works analogously to \code{as_epi_df.tbl_df()}.
 }}
 

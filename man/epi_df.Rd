@@ -2,7 +2,7 @@
 % Please edit documentation in R/epi_df.R
 \name{epi_df}
 \alias{epi_df}
-\title{Create \code{epi_df} object}
+\title{Create an \code{epi_df} object}
 \usage{
 epi_df(
   geo_value,
@@ -31,7 +31,7 @@ attempt to infer it from the time values present; if this fails, then it
 will be set to "custom".}
 
 \item{as_of}{Time value representing the time at which the given data were
-available. For example, if \code{as_of} were January 31, 2022, then the \code{epi_df}
+available. For example, if \code{as_of} is January 31, 2022, then the \code{epi_df}
 object that is created would represent the most up-to-date version of the
 data available as of January 31, 2022. If the \code{as_of} argument is missing,
 then the current day-time will be used.}
@@ -41,9 +41,12 @@ then the current day-time will be used.}
 \code{as_of} fields; named entries from the passed list or will be included as
 well.}
 }
+\value{
+An \code{epi_df} object.
+}
 \description{
 Creates an \code{epi_df} object from given \code{geo_value} and \code{time_value} variables,
-and any additional number of variables.
+as well as any additional number of variables.
 }
 \details{
 An \code{epi_df} is a tibble with (at least) the following columns:
@@ -52,9 +55,9 @@ An \code{epi_df} is a tibble with (at least) the following columns:
 \item \code{time_value}: the time value associated with each measurement.
 }
 
-Other columns can be considered as measured variables, which we also broadly
-refer to as signal variables. An \code{epi_df} object also has metadata with (at
-least) the following fields:
+Other columns can be considered as measured variables, which we also refer to
+as signal variables. An \code{epi_df} object also has metadata with (at least)
+the following fields:
 \itemize{
 \item \code{geo_type}: the type for the geo values.
 \item \code{time_type}: the type for the time values.

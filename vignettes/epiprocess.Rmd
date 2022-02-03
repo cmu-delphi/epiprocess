@@ -98,7 +98,7 @@ In general, an `epi_df` object must have following fields in its metadata:
 The last field here, `as_of`, is one of the most unique aspects of an `epi_df`
 object. In brief, we can think of an `epi_df` object as a single snapshot of a
 data set that contains the most up-to-date values of some signals of interest,
-as of the time specified `as_of`. For example, if `as_of` were January 31, 2022,
+as of the time specified `as_of`. For example, if `as_of` is January 31, 2022,
 then the `epi_df` object has the most up-to-date version of the data available
 as of January 31, 2022. The `epiprocess` package also provides a companion data
 structure called `epi_archive`, which stores the full version history of a given
@@ -123,7 +123,7 @@ attributes(x)$metadata
 
 Data in `epi_df` format should be easy to work with downstream; in the other
 vignettes, we'll walk through some basic signal processing tasks using functions
-provided in the `epiprocess` package; of course, we can also write custom code
+provided in the `epiprocess` package. Of course, we can also write custom code
 for other downstream uses, like plotting, which is pretty easy to do `ggplot2`. 
 
 ```{r, message = FALSE, warning = FALSE}

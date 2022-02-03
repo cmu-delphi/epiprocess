@@ -2,164 +2,67 @@
 % Please edit documentation in R/epi_archive.R
 \name{epi_archive}
 \alias{epi_archive}
-\title{Archive (data version history) for an \code{epi_df} object}
-\description{
-Archive (data version history) for an \code{epi_df} object
+\title{Create an \code{epi_archive} object}
+\usage{
+epi_archive(
+  geo_value,
+  time_value,
+  version,
+  ...,
+  key_vars,
+  geo_type,
+  time_type,
+  max_version,
+  additional_metadata = list()
+)
+}
+\arguments{
+\item{geo_value}{Geographic values associated with the measurements.}
 
-Archive (data version history) for an \code{epi_df} object
+\item{time_value}{Time values associated with the measurements.}
+
+\item{version}{Time values specifying the versions of the measurements. For
+example, if in a given row the \code{version} is January 15, 2022 and
+\code{time_value} is January 14, 2022, then this row contains the measurements
+of the data for January 14, 2022 that were available one day later.}
+
+\item{...}{Additional arguments of the form \code{value} or \code{name = value}, which
+specify any number of additional columns for the \code{epi_archive} object.}
+
+\item{key_vars}{Character vector specifying the names of variables that
+should be considered key variables, in the language of
+\code{data.table}. Default is \code{c("geo_value", "time_value", "version")}. Apart
+from the key variables, all other variables in the \code{epi_archive} object are
+considered to be measured variables, which we also refer to as signal
+variables. There can only be a single row per unique combination of key
+variables.}
+
+\item{geo_type}{Type for the geo values. If missing, then the function will
+attempt to infer it from the geo values present; if this fails, then it
+will be set to "custom".}
+
+\item{time_type}{Type for the time values. If missing, then the function will
+attempt to infer it from the time values present; if this fails, then it
+will be set to "custom".}
+
+\item{additional_metadata}{List of additional metadata to attach to the
+\code{epi_archive} object. The metadata will have \code{time_type} and \code{geo_type}
+fields; named entries from the passed list or will be included as well.}
+}
+\value{
+An \code{epi_archive} object.
+}
+\description{
+Creates an \code{epi_archive} object from given \code{geo_value}, \code{time_value}, and
+\code{version} variables, as well as any additional number of variables.
 }
 \details{
-Contains version history for an \code{epi_df} object, and enables fast querying of
-snapshots of the \code{epi_df} object as of certain "issues" (versions). See the
-\href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{data versioning vignette} for
-examples.
-
-Version history can be input as a data frame combining full
-snapshots of the \code{epi_df} as of several issue times, or using only the
-newly added or revised rows for each issue, or using some combination of
-these two (including "updates" for things that didn't actually
-change). Last-observation-carried-forward (LOCF) is used to data in between
-recorded updates. Currently, deletions must be represented as revising a
+Last-observation-carried-forward (LOCF) is used to data in between
+recorded versions. Currently, deletions must be represented as revising a
 row to a special state (e.g., making the entries \code{NA} or including a
-special column that flags the data as removed and performing
+special column that flags the data as removed and performing some kind of
 post-processing), and the archive is unaware of what this state is.
-}
-\section{Methods}{
-\subsection{Public methods}{
-\itemize{
-\item \href{#method-new}{\code{epi_archive$new()}}
-\item \href{#method-epi_df_as_of}{\code{epi_archive$epi_df_as_of()}}
-\item \href{#method-naming_info}{\code{epi_archive$naming_info()}}
-\item \href{#method-max_issue}{\code{epi_archive$max_issue()}}
-\item \href{#method-issues_with_updates}{\code{epi_archive$issues_with_updates()}}
-\item \href{#method-update_DT_as_of}{\code{epi_archive$update_DT_as_of()}}
-\item \href{#method-clone}{\code{epi_archive$clone()}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
-\subsection{Method \code{new()}}{
-Create a new \code{epi_archive} with the given update data
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$new(
-  update.df,
-  issue.colname = "issue",
-  geo.colname = "geo_value",
-  time.colname = "time_value",
-  other.key.colnames = character(0L),
-  max.issue = max(update.df[[issue.colname]])
-)}\if{html}{\out{</div>}}
-}
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{update.df}}{the update data}
-
-\item{\code{issue.colname}}{name of the column with the issue time of the corresponding updates; operations such as \code{sort}, \code{<=}, and \code{max} must make sense on this column, with earlier issues "less than" later issues}
-
-\item{\code{geo.colname}}{the name of the column that will become \code{geo_value} in the \code{epi_df}}
-
-\item{\code{time.colname}}{the name of the column that will become \code{time_value} in the \code{epi_df}}
-
-\item{\code{other.key.colnames}}{the names of any other columns that would be used to index a single measurement in this data set, such as the age group the measurement corresponds to (if the data set includes an age group breakdown); there should only be a single row per issue-geo-time-other-key-cols combination.}
-
-\item{\code{max.issue}}{the latest issue for which update data was available; defaults to the maximum issue time in the \code{update.df}, but if there were no additions or revisions in subsequent issues, it could be later.  However, due to details regarding database replica syncing times in upstream APIs, using the default might be safer than whatever we think the max issue should be.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-an \code{epi_archive} object
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_df_as_of"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_df_as_of}{}}}
-\subsection{Method \code{epi_df_as_of()}}{
-Get the \code{epi_df} as of some issue time
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$epi_df_as_of(issue)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{issue}}{the desired as-of issue time}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-an \code{epi_df} with data as of the specified issue time, \code{issue} recorded in the metadata, the geo column renamed to \code{geo_value} and time column to \code{time_value}, and the other key colnames recorded in the metadata
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-naming_info"></a>}}
-\if{latex}{\out{\hypertarget{method-naming_info}{}}}
-\subsection{Method \code{naming_info()}}{
-Return the name settings in a list
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$naming_info()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-max_issue"></a>}}
-\if{latex}{\out{\hypertarget{method-max_issue}{}}}
-\subsection{Method \code{max_issue()}}{
-Return the max issue value recorded by this archive (whether it had updates or not)
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$max_issue()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-issues_with_updates"></a>}}
-\if{latex}{\out{\hypertarget{method-issues_with_updates}{}}}
-\subsection{Method \code{issues_with_updates()}}{
-Return the issue values for which updates are
-recorded in this archive (that is, whether they had updates in
-the data frame used to form this archive, regardless of whether
-those "updates" actually added or revised any data)
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$issues_with_updates()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_DT_as_of"></a>}}
-\if{latex}{\out{\hypertarget{method-update_DT_as_of}{}}}
-\subsection{Method \code{update_DT_as_of()}}{
-Return the recorded update data up through the given issue
-value, inside a \code{data.table} object which is fine to
-modify without copying.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$update_DT_as_of(issue)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{issue}}{the max issue value that should appear in the result}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
+TODO some details on the structure of the R6 object and the fact that it
+obeys reference semantics??
 }

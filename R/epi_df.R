@@ -1,7 +1,7 @@
-#' Create `epi_df` object
+#' Create an `epi_df` object
 #'
 #' Creates an `epi_df` object from given `geo_value` and `time_value` variables,
-#' and any additional number of variables.
+#' as well as any additional number of variables. 
 #'
 #' @param geo_value Geographic values associated with the measurements.
 #' @param time_value Time values associated with the measurements.
@@ -14,7 +14,7 @@
 #'   attempt to infer it from the time values present; if this fails, then it
 #'   will be set to "custom".
 #' @param as_of Time value representing the time at which the given data were
-#'   available. For example, if `as_of` were January 31, 2022, then the `epi_df`
+#'   available. For example, if `as_of` is January 31, 2022, then the `epi_df`
 #'   object that is created would represent the most up-to-date version of the
 #'   data available as of January 31, 2022. If the `as_of` argument is missing,
 #'   then the current day-time will be used.
@@ -22,15 +22,16 @@
 #'   `epi_df` object. The metadata will have `time_type`, `geo_type`, and
 #'   `as_of` fields; named entries from the passed list or will be included as
 #'   well.
+#' @return An `epi_df` object.
 #'
 #' @details An `epi_df` is a tibble with (at least) the following columns:  
 #' 
 #' * `geo_value`: the geographic value associated with each measurement.
 #' * `time_value`: the time value associated with each measurement.
 #'
-#' Other columns can be considered as measured variables, which we also broadly
-#'   refer to as signal variables. An `epi_df` object also has metadata with (at
-#'   least) the following fields:
+#' Other columns can be considered as measured variables, which we also refer to
+#'   as signal variables. An `epi_df` object also has metadata with (at least)
+#'   the following fields: 
 #' 
 #' * `geo_type`: the type for the geo values.
 #' * `time_type`: the type for the time values.
@@ -95,7 +96,7 @@
 #' @export
 epi_df = function(geo_value, time_value, ..., geo_type, time_type, as_of,
                   additional_metadata = list()) {
-  x = tibble::tibble(geo_value = geo_value, time_value = time_value, ...)
+  x = tibble::tibble(geo_value, time_value, ...)
   return(as_epi_df(x, geo_type, time_type, as_of, additional_metadata))
 }
 
@@ -103,7 +104,9 @@ epi_df = function(geo_value, time_value, ..., geo_type, time_type, as_of,
 #'
 #' Converts a data frame or tibble into a format that is consistent with the 
 #' `epi_df` class, ensuring that it has a certain minimal set of columns, and
-#' that it has certain minimal metadata.  
+#' that it has certain minimal metadata. See the [getting started
+#' guide](https://cmu-delphi.github.io/epiprocess/articles/epiprocess.html) for
+#' examples. 
 #'
 #' @param geo_type Type for the geo values. If missing, then the function will
 #'   attempt to infer it from the geo values present; if this fails, then it
@@ -112,7 +115,7 @@ epi_df = function(geo_value, time_value, ..., geo_type, time_type, as_of,
 #'   attempt to infer it from the time values present; if this fails, then it
 #'   will be set to "custom".
 #' @param as_of Time value representing the time at which the given data were
-#'   available. For example, if `as_of` were January 31, 2022, then the `epi_df`
+#'   available. For example, if `as_of` is January 31, 2022, then the `epi_df`
 #'   object that is created would represent the most up-to-date version of the
 #'   data available as of January 31, 2022. If the `as_of` argument is missing,
 #'   then the function will attempt to infer it from the passed object `x`; if
@@ -136,17 +139,17 @@ as_epi_df.epi_df = function(x, ...) {
   return(x)
 }
 
-#' @method as_epi_df tibble
+#' @method as_epi_df tbl_df
 #' @describeIn as_epi_df The input tibble `x` must contain the columns
 #'   `geo_value` and `time_value`. All other columns will be preserved as is,
 #'   and treated as measured variables. If `as_of` is missing, then the function
 #'   will try to guess it from an `as_of`, `issue`, or `version` column of `x`
 #'   (if any of these are present), or from as an `as_of` field in its metadata
 #'   (stored in its attributes); if this fails, then the current day-time will
-#'   be used. 
+#'   be used.
 #' @importFrom rlang .data abort
 #' @export
-as_epi_df.tibble = function(x, geo_type, time_type, as_of,
+as_epi_df.tbl_df = function(x, geo_type, time_type, as_of,
                             additional_metadata = list(), ...) {
   # Check that we have geo_value and time_value columns
   if (!("geo_value" %in% names(x))) {
@@ -158,67 +161,19 @@ as_epi_df.tibble = function(x, geo_type, time_type, as_of,
 
   # If geo type is missing, then try to guess it
   if (missing(geo_type)) {
-    if (is.character(x$geo_value)) {
-      # Convert geo values to lowercase
-      x$geo_value = tolower(x$geo_value)
-      
-      # If all geo values are state abbreviations, then use "state" 
-      state_values = c(tolower(state.abb), "as", "dc", "gu", "mp", "pr", "vi")
-      if (all(x$geo_value %in% state_values)) geo_type = "state"
-
-      # Else if all geo values are 2 letters, then use "nation"
-      else if (all(grepl("[a-z]{2}", x$geo_value))) geo_type = "nation"
-
-      # Else if all geo values are 5 numbers, then use "county"
-      else if (all(grepl("[0-9]{5}", x$geo_value))) geo_type = "county"
-    }
-
-    else if (is.numeric(x$geo_value)) {
-      # Convert geo values to integers
-      x$geo_value = as.integer(x$geo_value)
-
-      # If the max geo value is at most 10, then use "hhs"
-      if (max(x$geo_value) <= 10) geo_type = "hhs"
-      
-      # Else if the max geo value is at most 457, then use "hrr"
-      if (max(x$geo_value) <= 457) geo_type = "hrr"
-    }
-
-    # If we got here then we failed
-    else geo_type = "custom" 
+    geo_type = guess_geo_type(x$geo_value)
   }
 
   # If time type is missing, then try to guess it
   if (missing(time_type)) {
-    # Convert character time values to Date or POSIXct
-    if (is.character(x$time_value)) {
-      if (nchar(x$time_value[1]) <= "10") {
-        new_time_value = tryCatch({ as.Date(x$time_value) },
-                                  error = function(e) NULL)
-      }
-      else {
-        new_time_value = tryCatch({ as.POSIXct(x$time_value) },
-                                  error = function(e) NULL)
-      }
-      if (!is.null(new_time_value)) x$time_value = new_time_value
-    }
-    
-    # Now, if a POSIXct class, then use "day-time"
-    if (inherits(x$time_value, "POSIXct")) time_type = "day-time"
-
-    # Else, if a Date class, then use "week" or "day" depending on gaps 
-    else if (inherits(x$time_value, "Date")) {
-      time_type = ifelse(all(diff(sort(x$time_value)) == -7), "week", "day")
-    }
-
-    # If we got here then we failed
-    else time_type = "custom" 
+    time_type = guess_time_type(x$time_value)
   }
 
   # If as_of is missing, then try to guess it
   if (missing(as_of)) {
     # First check the metadata for an as_of field
-    if ("as_of" %in% names(attributes(x$metadata))) {
+    if ("metadata" %in% names(attributes(x)) &&
+        "as_of" %in% names(attributes(x$metadata))) {
       as_of = attributes(x)$metadata$as_of
     }
     
@@ -238,26 +193,23 @@ as_epi_df.tibble = function(x, geo_type, time_type, as_of,
   metadata$as_of = as_of
   metadata = c(metadata, additional_metadata)
  
-  # Convert to a tibble, apply epi_df class, attach metadata
-  if (!inherits(x, "tibble")) x = tibble::as_tibble(x)
+  # Reorder columns (geo_value, time_value, ...) 
+  x = dplyr::relocate(x, .data$geo_value, .data$time_value)
+  
+  # Apply epi_df class, attach metadata, and return
   class(x) = c("epi_df", class(x))
   attributes(x)$metadata = metadata
-  
-  # Reorder columns (geo_value, time_value, ...) and return
-  x = dplyr::relocate(x, .data$geo_value, .data$time_value)
   return(x)
 }
 
 #' @method as_epi_df data.frame
-#' @describeIn as_epi_df The input data frame `x` must contain the columns
-#'   `geo_value` and `time_value`. All other columns will be preserved as is,
-#'   and treated as measured variables. If `as_of` is missing, then the function
-#'   will try to guess it from an `as_of`, `issue`, or `version` column of `x`
-#'   (if any of these are present), or from as an `as_of` field in its metadata
-#'   (stored in its attributes); if this fails, then the current day-time will
-#'   be used. 
+#' @describeIn as_epi_df Works analogously to `as_epi_df.tbl_df()`.
 #' @export
-as_epi_df.data.frame = as_epi_df.tibble
+as_epi_df.data.frame = function(x, geo_type, time_type, as_of,
+                                additional_metadata = list(), ...) {
+  return(as_epi_df.tbl_df(tibble::as_tibble(x), geo_type, time_type, as_of,
+                          additional_metadata, ...))
+}
 
 #' Print `epi_df` object
 #'
@@ -265,9 +217,7 @@ as_epi_df.data.frame = as_epi_df.tibble
 #' tibble.
 #'
 #' @param x The `epi_df` object.
-#' @param ... Additional arguments passed to `print.tibble()` to print the
-#'   data.
-#' @return The `epi_df` object, unchanged.
+#' @param ... Additional arguments passed to methods.
 #'
 #' @method print epi_df
 #' @export
@@ -284,7 +234,8 @@ print.epi_df = function(x, ...) {
 #' @importFrom utils head
 #' @export
 head.epi_df = function(x, ...) {
-  head(tibble::as_tibble(x), ...)
+	class(x) = base::setdiff(class(x), "epi_df")
+  return(head(x))
 }
 
 #' Summarize `epi_df` object
@@ -295,7 +246,6 @@ head.epi_df = function(x, ...) {
 #' @param object The `epi_df` object.
 #' @param ... Additional arguments, for compatibility with `summary()`.
 #'   Currently unused.
-#' @return No return value; called only to print summary statistics.
 #'
 #' @method summary epi_df
 #' @importFrom rlang .data
@@ -306,7 +256,7 @@ summary.epi_df = function(object, ...) {
   cat(sprintf("* %-10s= %s\n", "geo_type", attributes(x)$metadata$geo_type))
   cat(sprintf("* %-10s= %s\n", "time_type", attributes(x)$metadata$time_type))
   cat(sprintf("* %-10s= %s\n", "as_of", attributes(x)$metadata$as_of))
-  cat("\nSummary of space-time coverge:\n")
+  cat("\nSummary of space-time coverage:\n")
   cat(sprintf("* %-33s= %s\n", "earliest time value", min(object$time_value)))
   cat(sprintf("* %-33s= %s\n", "latest time value", max(object$time_value)))
   cat(sprintf("* %-33s= %i\n", "median geo values per time value",
