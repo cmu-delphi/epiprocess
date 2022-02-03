@@ -6,7 +6,7 @@
 # `data.table::` everywhere and not importing things.
 .datatable.aware = TRUE
 
-#' @importFrom data.table as.data.table 
+#' @importFrom data.table as.data.table key setkey
 #' @importFrom dplyr filter select
 #' @importFrom rlang .data abort warn
 #' @noRd
@@ -51,7 +51,6 @@ epi_archive =
             }
             if (!(all(c("geo_value", "time_value", "version") %in% key_vars))) {
               warn(paste("`key_vars` must contain \"geo_value\", \"time_value\", and \"version\"; these will be added to `key_vars` internally."))
-              key_vars = c("geo_value", "time_value", "version", key_vars)
             }
           
             # If geo type is missing, then try to guess it
@@ -78,14 +77,15 @@ epi_archive =
               abort("`max_version` must be at least `max(x$version)`.")
             }
             
-            # Create the data table
-            key_vars = unique(key_vars)
-            dt = as.data.table(x, key = key_vars)
+            # Key variables: geo_value and time_value first, version last
+            key_vars = unique(c("geo_value", "time_value"), key_vars)
+            key_vars = unique(c(key_vars, "version"), fromLast = TRUE)
             
-            # If x was an un-keyed data table, then we need to do this
-            if (data.table::key(dt) != key_vars) {
-              data.table::setkey(dt, key_vars)
-            }
+            # Create the data table; if x was an un-keyed data.table itself,
+            # then the call to as.data.table() will fail to set keys, so we
+            # need to check this, then do it manually if needed
+            dt = as.data.table(x, key = key_vars)
+            if (key(dt) != key_vars) setkey(dt, key_vars)
 
             # Instantiate all self variables
             self$dt = dt
@@ -123,12 +123,14 @@ epi_archive =
             else {
               return(
                 x %>% 
-                unique(by = self$key_vars, fromLast = TRUE) %>%
+                unique(by = setdiff(self$key_vars, "version"),
+                       fromLast = TRUE) %>%
                 select(-.data$version) %>%             
                 tsibble::as_tsibble(
                            index = "time_value",
-                           key = setdiff(key_vars,
-                                         c("time_value", "version"))) %>%
+                           key = setdiff(self$key_vars,
+                                         c("time_value", "version")),
+                           validate = FALSE) %>%
                 as_epi_df(geo_type = self$geo_type,
                           time_type = self$time_type,
                           as_of = version,
