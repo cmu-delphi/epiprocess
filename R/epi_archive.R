@@ -180,10 +180,10 @@ epi_archive =
 #'   represent the most up-to-date signal values, as of the specified
 #'   `max_version`, whose time values are at least `min_time_value`.
 #' @param min_time_value Time value specifying the min time value to permit in
-#'   the snapshot. Default is `NULL`, which means that there is no minimum
-#'   considered.
+#'   the snapshot. Default is `-Inf`, which effectively means that there is no
+#'   minimum considered.
 #' @return An `epi_df` object.
-          as_of = function(max_version, min_time_value) {
+          as_of = function(max_version, min_time_value = -Inf) {
             # Check a few things on max_version
             if (!identical(class(max_version), class(self$DT$version))) {
               abort("`max_version` and `DT$version` must have same class.")
@@ -200,7 +200,9 @@ epi_archive =
 
             return(
               self$DT %>%
-              filter(data.table::between(min_time_value, max_version)) %>% 
+              filter(data.table::between(time_value,
+                                         min_time_value,
+                                         max_version)) %>%
               filter(.data$version <= version) %>% 
               unique(by = c("geo_value", "time_value", self$other_keys),
                      fromLast = TRUE) %>%

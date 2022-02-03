@@ -133,7 +133,7 @@ An \code{epi_archive} object.
 \subsection{Method \code{as_of()}}{
 Generates a snapshot in \code{epi_df} format as of a given version.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$as_of(max_version, min_time_value)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$as_of(max_version, min_time_value = -Inf)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -145,8 +145,8 @@ represent the most up-to-date signal values, as of the specified
 \code{max_version}, whose time values are at least \code{min_time_value}.}
 
 \item{\code{min_time_value}}{Time value specifying the min time value to permit in
-the snapshot. Default is \code{NULL}, which means that there is no minimum
-considered.}
+the snapshot. Default is \code{-Inf}, which effectively means that there is no
+minimum considered.}
 }
 \if{html}{\out{</div>}}
 }

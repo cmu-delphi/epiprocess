@@ -67,7 +67,7 @@ df =
 
 arch1 = epi_archive$new(df)
 arch2 = as_epi_archive(df)
-arch3 = new_epi_archive(df$geo_value, df$time_value, df$version, value = df$value)
+arch2$as_of(max_version = as.Date("2021-01-05"))
 ```
 
 
