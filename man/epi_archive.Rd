@@ -36,7 +36,7 @@ including a special column that flags the data as removed and performing
 some kind of post-processing), and the archive is unaware of what this
 state is.
 
-A word of caution: R6 objects, unlike most other objects in R, obey reference
+A word of caution: R6 objects, unlike most other objects in R, have reference
 semantics. A primary consequence of this is that objects are not copied
 when modified. You can read more about this in Hadley Wickham's \href{https://adv-r.hadley.nz/r6.html#r6-semantics}{Advanced R} book.
 }

@@ -74,6 +74,9 @@
     <li>
       <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
+    <li>
+      <a href="../articles/archive.html">7. Work with data archives and produce snapshots</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -122,41 +125,27 @@
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span>(<span class="kw">cases</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">cases</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">cases</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>)</pre></body></html></div>
+<pre><code>## Warning: Unknown or uninitialised column: `metadata`.</code></pre>
 <div id="percentage-change" class="section level2">
 <h2 class="hasAnchor">
 <a href="#percentage-change" class="anchor"></a>Percentage change</h2>
 <p>The <code><a href="../reference/pct_change.html">pct_change()</a></code> function is a simple convenience function that takes a single argument <code>var</code>, the variable whose percentage change is to be computed. If <code>var</code> has length N, which is assumed to be even, and A and B denote the sum of the first N/2 and last N/2 values in <code>var</code>, respectively, then <code><a href="../reference/pct_change.html">pct_change(var)</a></code> returns 100 * (B / A - 1). (If the length of <code>var</code> is odd, then its first value is ignored, for the sake of the computation.)</p>
 <p>Used in call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code>, we can fluidly compute percentage change values in a variable over time:</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="no">x</span>, <span class="kw">pct_change</span> <span class="kw">=</span> <span class="fu"><a href="../reference/pct_change.html">pct_change</a></span>(<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>, <span class="kw">align</span> <span class="kw">=</span> <span class="st">"center"</span>,
+<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="no">x</span>, <span class="kw">pct_change</span> <span class="kw">=</span> <span class="fu"><a href="../reference/pct_change.html">pct_change</a></span>(<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>, <span class="kw">align</span> <span class="kw">=</span> <span class="st">"center"</span>,
                <span class="kw">complete</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>, <span class="fl">21</span>) <span class="kw">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span>(<span class="kw">n</span> <span class="kw">=</span> <span class="fl">Inf</span>)</pre></body></html></div>
-<pre><code>## # A tibble: 21 × 4
-##    geo_value time_value cases pct_change
-##    &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
-##  1 fl        2020-06-01  667        NA  
-##  2 fl        2020-06-02  642        NA  
-##  3 fl        2020-06-03  867        NA  
-##  4 fl        2020-06-04 1005        NA  
-##  5 fl        2020-06-05 1065        NA  
-##  6 fl        2020-06-06 1099.       NA  
-##  7 fl        2020-06-07 1111.       46.1
-##  8 fl        2020-06-08 1153.       44.8
-##  9 fl        2020-06-09 1222.       44.2
-## 10 fl        2020-06-10 1230.       49.8
-## 11 fl        2020-06-11 1269.       58.9
-## 12 fl        2020-06-12 1355.       69.2
-## 13 fl        2020-06-13 1542        75.9
-## 14 fl        2020-06-14 1661.       81.0
-## 15 fl        2020-06-15 1775.       84.7
-## 16 fl        2020-06-16 2016.       83.4
-## 17 fl        2020-06-17 2193.       81.7
-## 18 fl        2020-06-18 2408.       78.1
-## 19 fl        2020-06-19 2682.       76.0
-## 20 fl        2020-06-20 2892.       77.7
-## 21 fl        2020-06-21 3103.       81.1</code></pre>
+<pre><code>## # A tibble: 6 × 4
+##   geo_value time_value cases pct_change
+##   &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
+## 1 fl        2020-06-01  667          NA
+## 2 fl        2020-06-02  642          NA
+## 3 fl        2020-06-03  867          NA
+## 4 fl        2020-06-04 1005          NA
+## 5 fl        2020-06-05 1065          NA
+## 6 fl        2020-06-06 1099.         NA</code></pre>
 <p>Note the use of <code>align = "center"</code>, which centers the running window around the reference time point (as opposed to the default, <code>align = "right"</code>). Thus to be clear, the <code>pct_change</code> value computed on (for example) June 7 is the percentage change between the sum of cases from June 1 to 7, and the sum from June 8 to June 14. This can be seen as an estimate of the weekly <em>growth rate</em> on June 7. Furthermore, the argument <code>complete = TRUE</code> in the call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code> specifies that a complete window of <code>n = 14</code> time points must be available for the computation, which is why the the percentage change values for the first 6 time points (from June 1 to June 6) are <code>NA</code>.</p>
 <p>Next we plot these values alongside the signal itself. We highlight the periods in time for which the percentage change is above 10% (in red) and below -10% (in blue).</p>
-<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
+<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
 
 <span class="no">threshold_upper</span> <span class="kw">=</span> <span class="fl">10</span>

@@ -67,12 +67,10 @@ df =
 
 arch1 = epi_archive$new(df)
 arch2 = as_epi_archive(df)
-arch2$as_of(max_version = as.Date("2021-01-05"))
+x = arch2$as_of(max_version = as.Date("2021-01-05"))
 ```
 
-
-```{r}
-
+```{r eval = FALSE}
 ## update.df actually contains update data through issue 2021-01-11, but the
 ## data set was not reported to change from 2021-01-10 to 2021-01-11
 epi.tibble.archive = epi_archive$new(update.df, max.issue=as.Date("2021-01-11"))

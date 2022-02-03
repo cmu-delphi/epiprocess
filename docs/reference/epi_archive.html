@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Archive (data version history) for an <code>epi_df</code> object — epi_archive • epiprocess</title>
+<title><code>epi_archive</code> object — epi_archive • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,11 @@
 
 
 
-<meta property="og:title" content="Archive (data version history) for an <code>epi_df</code> object — epi_archive" />
-<meta property="og:description" content="Archive (data version history) for an epi_df object
-Archive (data version history) for an epi_df object" />
+<meta property="og:title" content="<code>epi_archive</code> object — epi_archive" />
+<meta property="og:description" content="An epi_archive is an R6 class which contains a data table
+along with several relevant pieces of metadata. The data table can be seen
+as the full archive (version history) for some signal variables of
+interest." />
 
 
 
@@ -116,6 +118,9 @@ Archive (data version history) for an epi_df object" />
     <li>
       <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
+    <li>
+      <a href="../articles/archive.html">7. Work with data archives and produce snapshots</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -139,33 +144,78 @@ Archive (data version history) for an epi_df object" />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Archive (data version history) for an <code>epi_df</code> object</h1>
+    <h1><code>epi_archive</code> object</h1>
     <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/epi_archive.R'><code>R/epi_archive.R</code></a></small>
     <div class="hidden name"><code>epi_archive.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Archive (data version history) for an <code>epi_df</code> object</p>
-<p>Archive (data version history) for an <code>epi_df</code> object</p>
+    <p>An <code>epi_archive</code> is an R6 class which contains a data table
+along with several relevant pieces of metadata. The data table can be seen
+as the full archive (version history) for some signal variables of
+interest.</p>
     </div>
 
 
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Contains version history for an <code>epi_df</code> object, and enables fast querying of
-snapshots of the <code>epi_df</code> object as of certain "issues" (versions). See the
-<a href='https://cmu-delphi.github.io/epiprocess/articles/archive.html'>data versioning vignette</a> for
-examples.</p>
-<p>Version history can be input as a data frame combining full
-snapshots of the <code>epi_df</code> as of several issue times, or using only the
-newly added or revised rows for each issue, or using some combination of
-these two (including "updates" for things that didn't actually
-change). Last-observation-carried-forward (LOCF) is used to data in between
-recorded updates. Currently, deletions must be represented as revising a
-row to a special state (e.g., making the entries <code>NA</code> or including a
-special column that flags the data as removed and performing
-post-processing), and the archive is unaware of what this state is.</p>
+    <p>An <code>epi_archive</code> is an R6 class which contains a data table <code>DT</code>, of
+class <code>data.table</code> from the <code>data.table</code> package, with (at least) the
+following columns:</p><ul>
+<li><p><code>geo_value</code>: the geographic value associated with each row of measurements.</p></li>
+<li><p><code>time_value</code>: the time value associated with each row of measurements.</p></li>
+<li><p><code>version</code>: the time value specifying the version for each row of
+measurements. For example, if in a given row the <code>version</code> is January 15,
+2022 and <code>time_value</code> is January 14, 2022, then this row contains the
+measurements of the data for January 14, 2022 that were available one day
+later.</p></li>
+</ul>
+
+<p>The data table <code>DT</code> has key variables <code>geo_value</code>, <code>time_value</code>, <code>version</code>,
+as well as any other specified in the metadata (described below). There can
+only be a single row per unique combination of key variables, and thus the
+key variables are critical for figuring out how to generate a snapshot of
+data from the archive, as of a given version.</p>
+<p>In general, last-observation-carried-forward (LOCF) is used to data in
+between recorded versions. Currently, deletions must be represented as
+revising a row to a special state (e.g., making the entries <code>NA</code> or
+including a special column that flags the data as removed and performing
+some kind of post-processing), and the archive is unaware of what this
+state is.</p>
+<p>A word of caution: R6 objects, unlike most other objects in R, have reference
+semantics. A primary consequence of this is that objects are not copied
+when modified. You can read more about this in Hadley Wickham's <a href='https://adv-r.hadley.nz/r6.html#r6-semantics'>Advanced R</a> book.</p>
+    <h2 class="hasAnchor" id="metadata"><a class="anchor" href="#metadata"></a>Metadata</h2>
+
+    
+
+<p>The following pieces of metadata are included as fields in an <code>epi_archive</code>
+object:</p><ul>
+<li><p><code>geo_type</code>: the type for the geo values.</p></li>
+<li><p><code>time_type</code>: the type for the time values.</p></li>
+<li><p><code>max_version</code>: the max version in the data archive.</p></li>
+<li><p><code>other_keys</code>: the names of the other key variables (apart from "geo_value",
+"time_value", and "version") in the data archive.</p></li>
+<li><p><code>additional_metadata</code>: list of additional metadata for the data archive.</p></li>
+</ul>
+
+<p>Unlike an <code>epi_df</code> object, metadata for an <code>epi_archive</code> object <code>x</code> can be
+accessed (and altered) directly via <code>x$geo_type</code>.</p>
+    <h2 class="hasAnchor" id="generating-snapshots"><a class="anchor" href="#generating-snapshots"></a>Generating Snapshots</h2>
+
+    
+
+<p>An <code>epi_archive</code> object can be used to generate a snapshot of the data in
+<code>epi_df</code> format, which represents the most up-to-date values of the signal
+variables, as of the specified version. This is accomplished by calling the
+<code>as_of()</code> method for an <code>epi_archive</code> object <code>x</code>, for example:</p><pre><span class='no'>x</span>$<span class='fu'>as_of</span>(<span class='fu'><a href='https://rdrr.io/r/base/as.Date.html'>as.Date</a></span>(<span class='st'>"2022-01-15"</span>))</pre>
+
+<p>to generate a snapshot as of January 15, 2022. More details on the
+<code>as_of()</code> method are documented below.</p>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p><code><a href='as_epi_archive.html'>as_epi_archive()</a></code> for converting to <code>epi_archive</code> format</p></div>
     <h2 class="hasAnchor" id="methods"><a class="anchor" href="#methods"></a>Methods</h2>
 
     
@@ -173,84 +223,67 @@ post-processing), and the archive is unaware of what this state is.</p>
 
 <ul>
 <li><p><a href='#method-new'><code>epi_archive$new()</code></a></p></li>
-<li><p><a href='#method-epi_df_as_of'><code>epi_archive$epi_df_as_of()</code></a></p></li>
-<li><p><a href='#method-naming_info'><code>epi_archive$naming_info()</code></a></p></li>
-<li><p><a href='#method-max_issue'><code>epi_archive$max_issue()</code></a></p></li>
-<li><p><a href='#method-issues_with_updates'><code>epi_archive$issues_with_updates()</code></a></p></li>
-<li><p><a href='#method-update_DT_as_of'><code>epi_archive$update_DT_as_of()</code></a></p></li>
+<li><p><a href='#method-as_of'><code>epi_archive$as_of()</code></a></p></li>
 <li><p><a href='#method-clone'><code>epi_archive$clone()</code></a></p></li>
 </ul>
 <p><hr>
 <a id="method-new"></a></p><h3>Method <code>new()</code></h3>
-<p>Create a new <code>epi_archive</code> with the given update data</p><h3>Usage</h3>
+<p>Creates a new <code>epi_archive</code> object.</p><h3>Usage</h3>
 <p><div class="r"></p><pre><span class='no'>epi_archive</span>$<span class='fu'>new</span>(
-  <span class='no'>update.df</span>,
-  <span class='kw'>issue.colname</span> <span class='kw'>=</span> <span class='st'>"issue"</span>,
-  <span class='kw'>geo.colname</span> <span class='kw'>=</span> <span class='st'>"geo_value"</span>,
-  <span class='kw'>time.colname</span> <span class='kw'>=</span> <span class='st'>"time_value"</span>,
-  <span class='kw'>other.key.colnames</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0L</span>),
-  <span class='kw'>max.issue</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Extremes.html'>max</a></span>(<span class='no'>update.df</span><span class='kw'>[[</span><span class='no'>issue.colname</span>]])
+  <span class='no'>x</span>,
+  <span class='no'>geo_type</span>,
+  <span class='no'>time_type</span>,
+  <span class='no'>max_version</span>,
+  <span class='no'>other_keys</span>,
+  <span class='no'>additional_metadata</span>
 )</pre><p></div></p>
 
 <h3>Arguments</h3>
 <p><div class="arguments"></p><dl'>
-<dt><code>update.df</code></dt><dd><p>the update data</p></dd>
+<dt><code>x</code></dt><dd><p>A data frame, data table, or tibble, with columns <code>geo_value</code>,
+<code>time_value</code>, <code>version</code>, and then any additional number of columns.</p></dd>
 
-<dt><code>issue.colname</code></dt><dd><p>name of the column with the issue time of the corresponding updates; operations such as <code>sort</code>, <code>&lt;=</code>, and <code>max</code> must make sense on this column, with earlier issues "less than" later issues</p></dd>
+<dt><code>geo_type</code></dt><dd><p>Type for the geo values. If missing, then the function will
+attempt to infer it from the geo values present; if this fails, then it
+will be set to "custom".</p></dd>
 
-<dt><code>geo.colname</code></dt><dd><p>the name of the column that will become <code>geo_value</code> in the <code>epi_df</code></p></dd>
+<dt><code>time_type</code></dt><dd><p>Type for the time values. If missing, then the function will
+attempt to infer it from the time values present; if this fails, then it
+will be set to "custom".</p></dd>
 
-<dt><code>time.colname</code></dt><dd><p>the name of the column that will become <code>time_value</code> in the <code>epi_df</code></p></dd>
+<dt><code>max_version</code></dt><dd><p>Maximum version in the data archive. If missing, then the
+function will set it equal to the maximum of the <code>version</code> column in <code>x</code>.</p></dd>
 
-<dt><code>other.key.colnames</code></dt><dd><p>the names of any other columns that would be used to index a single measurement in this data set, such as the age group the measurement corresponds to (if the data set includes an age group breakdown); there should only be a single row per issue-geo-time-other-key-cols combination.</p></dd>
+<dt><code>other_keys</code></dt><dd><p>Character vector specifying the names of variables in <code>x</code>
+that should be considered key variables (in the language of <code>data.table</code>)
+apart from "geo_value", "time_value", and "version".</p></dd>
 
-<dt><code>max.issue</code></dt><dd><p>the latest issue for which update data was available; defaults to the maximum issue time in the <code>update.df</code>, but if there were no additions or revisions in subsequent issues, it could be later.  However, due to details regarding database replica syncing times in upstream APIs, using the default might be safer than whatever we think the max issue should be.</p></dd>
-
-</dl><p></div></p>
-<h3>Returns</h3>
-<p>an <code>epi_archive</code> object</p>
-<p><hr>
-<a id="method-epi_df_as_of"></a></p><h3>Method <code>epi_df_as_of()</code></h3>
-<p>Get the <code>epi_df</code> as of some issue time</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>epi_archive</span>$<span class='fu'>epi_df_as_of</span>(<span class='no'>issue</span>)</pre><p></div></p>
-
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>issue</code></dt><dd><p>the desired as-of issue time</p></dd>
+<dt><code>additional_metadata</code></dt><dd><p>List of additional metadata to attach to the
+<code>epi_archive</code> object. The metadata will have <code>geo_type</code> and <code>time_type</code>
+fields; named entries from the passed list or will be included as well.</p></dd>
 
 </dl><p></div></p>
 <h3>Returns</h3>
-<p>an <code>epi_df</code> with data as of the specified issue time, <code>issue</code> recorded in the metadata, the geo column renamed to <code>geo_value</code> and time column to <code>time_value</code>, and the other key colnames recorded in the metadata</p>
+<p>An <code>epi_archive</code> object.</p>
 <p><hr>
-<a id="method-naming_info"></a></p><h3>Method <code>naming_info()</code></h3>
-<p>Return the name settings in a list</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>epi_archive</span>$<span class='fu'>naming_info</span>()</pre><p></div></p>
-
-<p><hr>
-<a id="method-max_issue"></a></p><h3>Method <code>max_issue()</code></h3>
-<p>Return the max issue value recorded by this archive (whether it had updates or not)</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>epi_archive</span>$<span class='fu'>max_issue</span>()</pre><p></div></p>
-
-<p><hr>
-<a id="method-issues_with_updates"></a></p><h3>Method <code>issues_with_updates()</code></h3>
-<p>Return the issue values for which updates are
-recorded in this archive (that is, whether they had updates in
-the data frame used to form this archive, regardless of whether
-those "updates" actually added or revised any data)</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>epi_archive</span>$<span class='fu'>issues_with_updates</span>()</pre><p></div></p>
-
-<p><hr>
-<a id="method-update_DT_as_of"></a></p><h3>Method <code>update_DT_as_of()</code></h3>
-<p>Return the recorded update data up through the given issue
-value, inside a <code>data.table</code> object which is fine to
-modify without copying.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>epi_archive</span>$<span class='fu'>update_DT_as_of</span>(<span class='no'>issue</span>)</pre><p></div></p>
+<a id="method-as_of"></a></p><h3>Method <code>as_of()</code></h3>
+<p>Generates a snapshot in <code>epi_df</code> format as of a given version.</p><h3>Usage</h3>
+<p><div class="r"></p><pre><span class='no'>epi_archive</span>$<span class='fu'>as_of</span>(<span class='no'>max_version</span>, <span class='kw'>min_time_value</span> <span class='kw'>=</span> -<span class='fl'>Inf</span>)</pre><p></div></p>
 
 <h3>Arguments</h3>
 <p><div class="arguments"></p><dl'>
-<dt><code>issue</code></dt><dd><p>the max issue value that should appear in the result</p></dd>
+<dt><code>max_version</code></dt><dd><p>Time value specifying the max version to permit in the
+snapshot. That is, the snapshot will comprise the unique rows that
+represent the most up-to-date signal values, as of the specified
+<code>max_version</code>, whose time values are at least <code>min_time_value</code>.</p></dd>
+
+<dt><code>min_time_value</code></dt><dd><p>Time value specifying the min time value to permit in
+the snapshot. Default is <code>-Inf</code>, which effectively means that there is no
+minimum considered.</p></dd>
 
 </dl><p></div></p>
+<h3>Returns</h3>
+<p>An <code>epi_df</code> object.</p>
 <p><hr>
 <a id="method-clone"></a></p><h3>Method <code>clone()</code></h3>
 <p>The objects of this class are cloneable with this method.</p><h3>Usage</h3>

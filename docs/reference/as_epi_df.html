@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Convert data to <code>epi_df</code> format — as_epi_df • epiprocess</title>
+<title>Convert to <code>epi_df</code> format — as_epi_df • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,9 @@
 
 
 
-<meta property="og:title" content="Convert data to <code>epi_df</code> format — as_epi_df" />
-<meta property="og:description" content="Converts a data frame or tibble into a format that is consistent with the
-epi_df class, ensuring that it has a certain minimal set of columns, and
-that it has certain minimal metadata." />
+<meta property="og:title" content="Convert to <code>epi_df</code> format — as_epi_df" />
+<meta property="og:description" content="Converts a data frame or tibble into an epi_df object. See the getting started guide for
+examples." />
 
 
 
@@ -117,6 +116,9 @@ that it has certain minimal metadata." />
     <li>
       <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
+    <li>
+      <a href="../articles/archive.html">7. Work with data archives and produce snapshots</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -140,15 +142,14 @@ that it has certain minimal metadata." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Convert data to <code>epi_df</code> format</h1>
+    <h1>Convert to <code>epi_df</code> format</h1>
     <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/epi_df.R'><code>R/epi_df.R</code></a></small>
     <div class="hidden name"><code>as_epi_df.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Converts a data frame or tibble into a format that is consistent with the
-<code>epi_df</code> class, ensuring that it has a certain minimal set of columns, and
-that it has certain minimal metadata.</p>
+    <p>Converts a data frame or tibble into an <code>epi_df</code> object. See the <a href='https://cmu-delphi.github.io/epiprocess/articles/epiprocess.html'>getting started guide</a> for
+examples.</p>
     </div>
 
     <pre class="usage"><span class='fu'>as_epi_df</span>(<span class='no'>x</span>, <span class='no'>...</span>)
@@ -156,7 +157,7 @@ that it has certain minimal metadata.</p>
 <span class='co'># S3 method for epi_df</span>
 <span class='fu'>as_epi_df</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
-<span class='co'># S3 method for tibble</span>
+<span class='co'># S3 method for tbl_df</span>
 <span class='fu'>as_epi_df</span>(<span class='no'>x</span>, <span class='no'>geo_type</span>, <span class='no'>time_type</span>, <span class='no'>as_of</span>, <span class='kw'>additional_metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)
 
 <span class='co'># S3 method for data.frame</span>
@@ -184,16 +185,15 @@ will be set to "custom".</p></td>
     <tr>
       <th>as_of</th>
       <td><p>Time value representing the time at which the given data were
-available. For example, if <code>as_of</code> were January 31, 2022, then the <code>epi_df</code>
+available. For example, if <code>as_of</code> is January 31, 2022, then the <code>epi_df</code>
 object that is created would represent the most up-to-date version of the
 data available as of January 31, 2022. If the <code>as_of</code> argument is missing,
-then the function will attempt to infer it from the passed object <code>x</code>; if
-this fails, then the current day-time will be used.</p></td>
+then the current day-time will be used.</p></td>
     </tr>
     <tr>
       <th>additional_metadata</th>
       <td><p>List of additional metadata to attach to the
-<code>epi_df</code> object. The metadata will have <code>time_type</code>, <code>geo_type</code>, and
+<code>epi_df</code> object. The metadata will have <code>geo_type</code>, <code>time_type</code>, and
 <code>as_of</code> fields; named entries from the passed list or will be included as
 well.</p></td>
     </tr>
@@ -207,20 +207,14 @@ well.</p></td>
     
 <ul>
 <li><p><code>epi_df</code>: Simply returns the <code>epi_df</code> object unchanged.</p></li>
-<li><p><code>tibble</code>: The input tibble <code>x</code> must contain the columns
+<li><p><code>tbl_df</code>: The input tibble <code>x</code> must contain the columns
 <code>geo_value</code> and <code>time_value</code>. All other columns will be preserved as is,
 and treated as measured variables. If <code>as_of</code> is missing, then the function
 will try to guess it from an <code>as_of</code>, <code>issue</code>, or <code>version</code> column of <code>x</code>
 (if any of these are present), or from as an <code>as_of</code> field in its metadata
 (stored in its attributes); if this fails, then the current day-time will
 be used.</p></li>
-<li><p><code>data.frame</code>: The input data frame <code>x</code> must contain the columns
-<code>geo_value</code> and <code>time_value</code>. All other columns will be preserved as is,
-and treated as measured variables. If <code>as_of</code> is missing, then the function
-will try to guess it from an <code>as_of</code>, <code>issue</code>, or <code>version</code> column of <code>x</code>
-(if any of these are present), or from as an <code>as_of</code> field in its metadata
-(stored in its attributes); if this fails, then the current day-time will
-be used.</p></li>
+<li><p><code>data.frame</code>: Works analogously to <code>as_epi_df.tbl_df()</code>.</p></li>
 </ul>
 
   </div>

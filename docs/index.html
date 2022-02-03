@@ -76,6 +76,9 @@
     <li>
       <a href="articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
+    <li>
+      <a href="articles/archive.html">7. Work with data archives and produce snapshots</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -101,16 +104,28 @@
 <div id="epiprocess" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#epiprocess" class="anchor"></a>epiprocess</h1></div>
-<p>This package introduces a common data structure for epidemiological data sets measured over space and time, and offers associated utilities to perform basic signal processing tasks.</p>
-<p>The main data structure in the <code>epiprocess</code> package is called <code>epi_df</code>, which is simply a tibble with a couple of required columns, <code>geo_value</code> and <code>time_value</code>. It can have any other number of columns, which are considered measured variables. (An <code>epi_df</code> object also has some special metadata.) The function <code>as.epi_df()</code>can be used to convert a data frame or tibble into <code>epi_df</code> format.</p>
-<p>The functions that operate on <code>epi_df</code> objects in the <code>epiprocess</code> package all begin with <code>epi</code>, namely:</p>
+<p>This package introduces a common data structure for epidemiological data sets measured over space and time, and offers associated utilities to perform basic signal processing tasks. See the getting started guide and vignettes for examples.</p>
+<div id="epi_df-snapshot-of-a-data-set" class="section level2">
+<h2 class="hasAnchor">
+<a href="#epi_df-snapshot-of-a-data-set" class="anchor"></a>epi_df: snapshot of a data set</h2>
+<p>The first main data structure in the <code>epiprocess</code> package is called <a href="reference/epi_df.html"><code>epi_df</code></a>. This is simply a tibble with a couple of required columns, <code>geo_value</code> and <code>time_value</code>. It can have any other number of columns, which can be seen as measured variables, which we also call signal variables. In brief, an <code>epi_df</code> object represents a snapshot of a data set that contains the most up-to-date values of the signals variables, as of a given time.</p>
+<p>The functions in the <code>epiprocess</code> package that operate on <code>epi_df</code> objects all begin with <code>epi</code>, namely:</p>
 <ul>
 <li><p><code><a href="reference/epi_slide.html">epi_slide()</a></code>, for iteratively applying a custom computation to a variable in an <code>epi_df</code> object over sliding windows in time;</p></li>
 <li><p><code><a href="reference/epi_cor.html">epi_cor()</a></code>, for computing lagged correlations between variables in an <code>epi_df</code> object, (allowing for grouping by geo value, time value, or any other variables);</p></li>
 <li><p><code><a href="reference/epi_detect_outlr.html">epi_detect_outlr()</a></code>, for detecting and correcting outliers in a variable in an <code>epi_df</code> object, using either built-in or custom methodologies.</p></li>
 </ul>
 <p>Other notable functions include <code><a href="reference/pct_change.html">pct_change()</a></code>and <code><a href="reference/estimate_deriv.html">estimate_deriv()</a></code>, which, when used within a call to <code><a href="reference/epi_slide.html">epi_slide()</a></code>, allow for fluid computation of percentage change values or estimation of derivatives over time.</p>
-<p>See the getting started guide and vignettes for examples.</p>
+</div>
+<div id="epi_archive-full-version-history-of-a-data-set" class="section level2">
+<h2 class="hasAnchor">
+<a href="#epi_archive-full-version-history-of-a-data-set" class="anchor"></a>epi_archive: full version history of a data set</h2>
+<p>The second main data structure in the package is called <a href="reference/epi_archive.html"><code>epi_archive</code></a>. This is a special class wrapped around a data table that stores the archive (version history) of some signal variables of interest.</p>
+<p>Critically, an <code>epi_archive</code> object can be used to generate a snapshot of the associated data set in <code>epi_df</code> format, which represents the most up-to-date values of the signal variables, as of the specified version. This is accomplished by calling the <code>as_of()</code> method for an <code>epi_archive</code> object <code>x</code>, for example:</p>
+<pre><code>x$as_of(as.Date("2022-01-15"))</code></pre>
+<p>to generate an <code>epi_df</code> object containing a data snapshot as of January 15, 2022.</p>
+<p>Notably, <code><a href="reference/epi_slide.html">epi_slide()</a></code> can also be applied directly to an <code>epi_archive</code> object, in a way that is similar to how it works for an <code>epi_df</code> object, but with one key difference: for the computation at any given time value <code>t</code>, it acts on data in a sliding window of <code>t</code>, but <strong>only the data that would have been available as of <code>t</code></strong>.</p>
+</div>
 </div>
   </div>
 

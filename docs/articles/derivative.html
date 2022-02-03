@@ -74,6 +74,9 @@
     <li>
       <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
+    <li>
+      <a href="../articles/archive.html">7. Work with data archives and produce snapshots</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -122,28 +125,25 @@
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span>(<span class="kw">case_rates</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">case_rates</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">case_rates</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">case_rates</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>)</pre></body></html></div>
+<pre><code>## Warning: Unknown or uninitialised column: `metadata`.</code></pre>
 <div id="estimating-derivatives-via-linear-regression" class="section level2">
 <h2 class="hasAnchor">
 <a href="#estimating-derivatives-via-linear-regression" class="anchor"></a>Estimating derivatives via linear regression</h2>
 <p>The <code><a href="../reference/estimate_deriv.html">estimate_deriv()</a></code> function takes two main arguments: <code>var</code> the variable whose derivative is to be computed; and <code>method</code>, the name of the method to use for derivative estimation. Each method is a smoother (linear or spline) that fits a model with <code>var</code> as the response variable, assuming an equally-spaced sequence of design points, and it returns the corresponding estimated derivative (that is, the derivative of the underlying estimated function, linear or spline) at the end of the sequence.</p>
 <p>Below we use <code>method = "lin"</code>, the default, which estimates the derivative using the slope from a simple linear regression. Used within in a call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code>, we can then easily estimate the derivative of a variable in an <code>epi_df</code> object over time:</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="no">x</span>, <span class="kw">deriv</span> <span class="kw">=</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(<span class="no">case_rates</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"lin"</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>)
+<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="no">x</span>, <span class="kw">deriv</span> <span class="kw">=</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(<span class="no">case_rates</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"lin"</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>)
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>, <span class="fl">10</span>)</pre></body></html></div>
-<pre><code>## # A tibble: 10 × 4
-##    geo_value time_value case_rates  deriv
-##    &lt;chr&gt;     &lt;date&gt;          &lt;dbl&gt;  &lt;dbl&gt;
-##  1 fl        2020-06-01       3.11 NA    
-##  2 fl        2020-06-02       2.99 -0.116
-##  3 fl        2020-06-03       4.04  0.466
-##  4 fl        2020-06-04       4.68  0.577
-##  5 fl        2020-06-05       4.96  0.540
-##  6 fl        2020-06-06       5.12  0.475
-##  7 fl        2020-06-07       5.17  0.406
-##  8 fl        2020-06-08       5.37  0.361
-##  9 fl        2020-06-09       5.69  0.336
-## 10 fl        2020-06-10       5.72  0.308</code></pre>
+<pre><code>## # A tibble: 6 × 4
+##   geo_value time_value case_rates  deriv
+##   &lt;chr&gt;     &lt;date&gt;          &lt;dbl&gt;  &lt;dbl&gt;
+## 1 fl        2020-06-01       3.11 NA    
+## 2 fl        2020-06-02       2.99 -0.116
+## 3 fl        2020-06-03       4.04  0.466
+## 4 fl        2020-06-04       4.68  0.577
+## 5 fl        2020-06-05       4.96  0.540
+## 6 fl        2020-06-06       5.12  0.475</code></pre>
 <p>Below we visualize these derivative estimates in tandem with the signal itself. The purple ticks on the x-axis mark time points at which the derivative estimate exceeds a threshold (arbitrarily chosen) of 0.25. These seem to roughly but reasonably mark times of upswing in the underlying signal.</p>
-<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
+<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
 <span class="no">threshold</span> <span class="kw">=</span> <span class="fl">0.25</span>
 
@@ -167,7 +167,7 @@
 <h2 class="hasAnchor">
 <a href="#estimating-derivatives-via-smoothing-spline" class="anchor"></a>Estimating derivatives via smoothing spline</h2>
 <p>Now we consider <code>method = "ss"</code>, which uses a smoothing spline for the estimate of the derivative. To be clear, this fits a natural cubic spline to the given data, and it returns the derivative of the fitted spline at the end of the sequence (most recent time value). Below we set <code>n = 28</code> in the call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code>, a bit higher sample size than before, and fit the spline in two ways: first, using a fixed degrees of freedom of 8; and second, using cross-validation to choose the amount of regularization (tuning parameter). This is accomplished by passing additional arguments to <code><a href="../reference/estimate_deriv.html">estimate_deriv()</a></code>, which are in turn passed on to the underlying function it uses to fit smoothing splines, <code><a href="https://rdrr.io/r/stats/smooth.spline.html">stats::smooth.spline()</a></code>.</p>
-<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
+<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">deriv_ss1</span> <span class="kw">=</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(
     <span class="no">case_rates</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"ss"</span>, <span class="kw">df</span> <span class="kw">=</span> <span class="fl">8</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">28</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">deriv_ss2</span> <span class="kw">=</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(
@@ -197,7 +197,7 @@
 <h2 class="hasAnchor">
 <a href="#estimating-derivatives-via-trend-filtering" class="anchor"></a>Estimating derivatives via trend filtering</h2>
 <p>Lastly we consider <code>method = tf"</code>, which uses trend filtering for estimating the derivative. This fits a discrete spline of quadratic order to the given data, and returns the discrete derivative of the fitted spline at the end of the sequence. As with the smoothing spline case, we fit the discrete spline here in two ways: first, using a fixed degrees of freedom of 8; and second, using cross-validation to choose the amount of regularization. Caution: the computation here takes a while (it’s based on computing a full solution path for the trend filtering problem, via the <code><a href="https://rdrr.io/pkg/genlasso/man/trendfilter.html">genlasso::trendfilter()</a></code> function), in the latter case.</p>
-<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
+<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">deriv_tf1</span> <span class="kw">=</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(
     <span class="no">case_rates</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"tf"</span>, <span class="kw">df</span> <span class="kw">=</span> <span class="fl">8</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">28</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">deriv_tf2</span> <span class="kw">=</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(
@@ -227,15 +227,15 @@
 <h2 class="hasAnchor">
 <a href="#post-hoc-inspection" class="anchor"></a>Post hoc inspection</h2>
 <p>In the call to <code><a href="../reference/estimate_deriv.html">estimate_deriv()</a></code>, we can set <code>keep_obj = TRUE</code> in order to retain the fitted model objects from each of the derivative estimation tasks carried out in an <code><a href="../reference/epi_slide.html">epi_slide()</a></code> call. For example, below, we show how this can be used to examine the p-values associated with the estimated slopes from <code><a href="https://rdrr.io/r/stats/lsfit.html">lsfit()</a></code>, when <code>method = "lin"</code>.</p>
-<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="no">x</span>, <span class="kw">deriv_info</span> <span class="kw">=</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(
+<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="no">x</span>, <span class="kw">deriv_info</span> <span class="kw">=</span> <span class="fu"><a href="../reference/estimate_deriv.html">estimate_deriv</a></span>(
   <span class="no">case_rates</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"lin"</span>, <span class="kw">keep_obj</span> <span class="kw">=</span> <span class="fl">TRUE</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>,
   <span class="kw">new_col_type</span> <span class="kw">=</span> <span class="st">"list"</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span>(<span class="no">x</span>$<span class="no">deriv_info</span>)</pre></body></html></div>
 <pre><code>## [1] "list"</code></pre>
-<div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span>(<span class="no">x</span>$<span class="no">deriv_info</span><span class="kw">[[</span><span class="fl">7</span>]])</pre></body></html></div>
+<div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span>(<span class="no">x</span>$<span class="no">deriv_info</span><span class="kw">[[</span><span class="fl">7</span>]])</pre></body></html></div>
 <pre><code>## [1] "deriv"  "object"</code></pre>
-<div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/stats/ls.print.html">ls.print</a></span>(<span class="no">x</span>$<span class="no">deriv_info</span><span class="kw">[[</span><span class="fl">7</span>]]$<span class="no">object</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb12"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/stats/ls.print.html">ls.print</a></span>(<span class="no">x</span>$<span class="no">deriv_info</span><span class="kw">[[</span><span class="fl">7</span>]]$<span class="no">object</span>)</pre></body></html></div>
 <pre><code>## Residual Standard Error=0.3456
 ## R-Square=0.8856
 ## F-statistic (df=1, 5)=38.6943
@@ -244,7 +244,7 @@
 ##           Estimate Std.Err t-value Pr(&gt;|t|)
 ## Intercept   2.6688  0.2921  9.1362   0.0003
 ## X           0.4063  0.0653  6.2205   0.0016</code></pre>
-<div class="sourceCode" id="cb13"><html><body><pre class="r"><span class="no">x</span> <span class="kw">%&gt;%</span>
+<div class="sourceCode" id="cb14"><html><body><pre class="r"><span class="no">x</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rowwise.html">rowwise</a></span>() <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">p_value</span> <span class="kw">=</span> <span class="fu">quiet</span>(
     <span class="fu"><a href="https://rdrr.io/r/base/conditions.html">tryCatch</a></span>(<span class="fu"><a href="https://rdrr.io/r/stats/ls.print.html">ls.print</a></span>(<span class="no">deriv_info</span>$<span class="no">object</span>)$<span class="no">coef.table</span><span class="kw">[[</span><span class="fl">1</span>]][<span class="fl">2</span>,<span class="st">"Pr(&gt;|t|)"</span>],

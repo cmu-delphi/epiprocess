@@ -20,7 +20,7 @@ articles:
       - correlation
       - aggregation
       - outliers
-      - issues
+      - archive
 
 repo:
   url:

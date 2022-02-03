@@ -263,6 +263,7 @@ epi_detect_outlr_stl = function(x, var,
   # Make x into a tsibble for use with fable
   x_tsibble = x %>%
     select(time_value, y = !!var) %>%
+    tibble::as_tibble() %>% 
     tsibble::as_tsibble(index = time_value)
 
  # Transform if requested

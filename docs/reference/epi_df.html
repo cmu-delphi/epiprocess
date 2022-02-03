@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create <code>epi_df</code> object — epi_df • epiprocess</title>
+<title><code>epi_df</code> object — epi_df • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,11 @@
 
 
 
-<meta property="og:title" content="Create <code>epi_df</code> object — epi_df" />
-<meta property="og:description" content="Creates an epi_df object from given geo_value and time_value variables,
-and any additional number of variables." />
+<meta property="og:title" content="<code>epi_df</code> object — epi_df" />
+<meta property="og:description" content="An epi_df is a tibble with certain minimal column structure
+and metadata. It can be seen as a snapshot of a data set that contains the
+most up-to-date values of some signal variables of interest, as of a given
+time." />
 
 
 
@@ -116,6 +118,9 @@ and any additional number of variables." />
     <li>
       <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
     </li>
+    <li>
+      <a href="../articles/archive.html">7. Work with data archives and produce snapshots</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -139,81 +144,30 @@ and any additional number of variables." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Create <code>epi_df</code> object</h1>
+    <h1><code>epi_df</code> object</h1>
     <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/epi_df.R'><code>R/epi_df.R</code></a></small>
     <div class="hidden name"><code>epi_df.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Creates an <code>epi_df</code> object from given <code>geo_value</code> and <code>time_value</code> variables,
-and any additional number of variables.</p>
+    <p>An <code>epi_df</code> is a tibble with certain minimal column structure
+and metadata. It can be seen as a snapshot of a data set that contains the
+most up-to-date values of some signal variables of interest, as of a given
+time.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>epi_df</span>(
-  <span class='no'>geo_value</span>,
-  <span class='no'>time_value</span>,
-  <span class='no'>...</span>,
-  <span class='no'>geo_type</span>,
-  <span class='no'>time_type</span>,
-  <span class='no'>as_of</span>,
-  <span class='kw'>additional_metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>()
-)</pre>
 
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>geo_value</th>
-      <td><p>Geographic values associated with the measurements.</p></td>
-    </tr>
-    <tr>
-      <th>time_value</th>
-      <td><p>Time values associated with the measurements.</p></td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td><p>Additional arguments of the form <code>value</code> or <code>name = value</code>, which
-specify any number of additional columns for the <code>epi_df</code> object.</p></td>
-    </tr>
-    <tr>
-      <th>geo_type</th>
-      <td><p>Type for the geo values. If missing, then the function will
-attempt to infer it from the geo values present; if this fails, then it
-will be set to "custom".</p></td>
-    </tr>
-    <tr>
-      <th>time_type</th>
-      <td><p>Type for the time values. If missing, then the function will
-attempt to infer it from the time values present; if this fails, then it
-will be set to "custom".</p></td>
-    </tr>
-    <tr>
-      <th>as_of</th>
-      <td><p>Time value representing the time at which the given data were
-available. For example, if <code>as_of</code> were January 31, 2022, then the <code>epi_df</code>
-object that is created would represent the most up-to-date version of the
-data available as of January 31, 2022. If the <code>as_of</code> argument is missing,
-then the current day-time will be used.</p></td>
-    </tr>
-    <tr>
-      <th>additional_metadata</th>
-      <td><p>List of additional metadata to attach to the
-<code>epi_df</code> object. The metadata will have <code>time_type</code>, <code>geo_type</code>, and
-<code>as_of</code> fields; named entries from the passed list or will be included as
-well.</p></td>
-    </tr>
-    </table>
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>An <code>epi_df</code> is a tibble with (at least) the following columns:</p><ul>
-<li><p><code>geo_value</code>: the geographic value associated with each measurement.</p></li>
-<li><p><code>time_value</code>: the time value associated with each measurement.</p></li>
+<li><p><code>geo_value</code>: the geographic value associated with each row of measurements.</p></li>
+<li><p><code>time_value</code>: the time value associated with each row of measurements.</p></li>
 </ul>
 
-<p>Other columns can be considered as measured variables, which we also broadly
-refer to as signal variables. An <code>epi_df</code> object also has metadata with (at
-least) the following fields:</p><ul>
+<p>Other columns can be considered as measured variables, which we also refer to
+as signal variables. An <code>epi_df</code> object also has metadata with (at least)
+the following fields:</p><ul>
 <li><p><code>geo_type</code>: the type for the geo values.</p></li>
 <li><p><code>time_type</code>: the type for the time values.</p></li>
 <li><p><code>as_of</code>: the time value at which the given data were available.</p></li>
@@ -227,15 +181,15 @@ given below.</p>
 <p>The last field in the above list, <code>as_of</code>, is one of the most unique aspects
 of an <code>epi_df</code> object. In brief, we can think of an <code>epi_df</code> object as a
 single snapshot of a data set that contains the most up-to-date values of
-some signals of interest, as of the time specified in the <code>as_of</code> field.  A
-companion object is the <code>epi_archive</code> object, which contains the full
+the signals variables, as of the time specified in the <code>as_of</code> field.</p>
+<p>A companion object is the <code>epi_archive</code> object, which contains the full
 version history of a given data set. Revisions are common in many types of
 epidemiological data streams, and paying attention to data revisions can be
 important for all sorts of downstream data analysis and modeling tasks. See
-the <code><a href='epi_archive.html'>epi_archive()</a></code> help file for more details on how data versioning works
-in the <code>epiprocess</code> package (including how to create <code>epi_df</code> objects, as
-data snapshots, from an <code>epi_archive</code> object).</p>
-    <h2 class="hasAnchor" id="geo-types"><a class="anchor" href="#geo-types"></a>Geo types</h2>
+the documentation for <code><a href='epi_archive.html'>epi_archive()</a></code> for more details on how data
+versioning works in the <code>epiprocess</code> package (including how to generate
+<code>epi_df</code> objects, as data snapshots, from an <code>epi_archive</code> object).</p>
+    <h2 class="hasAnchor" id="geo-types"><a class="anchor" href="#geo-types"></a>Geo Types</h2>
 
     
 
@@ -258,7 +212,7 @@ alpha-2 country codes (lowercase).</p></li>
 <p>The above geo types come with aggregation utilities in the package, <em>todo:
 refer to relevant functionality, vignette, and so on</em>. An unrecognizable
 geo type is labeled as "custom".</p>
-    <h2 class="hasAnchor" id="time-types"><a class="anchor" href="#time-types"></a>Time types</h2>
+    <h2 class="hasAnchor" id="time-types"><a class="anchor" href="#time-types"></a>Time Types</h2>
 
     
 
@@ -277,6 +231,9 @@ as a <code>Date</code> object, representing the start date of week.</p></li>
 
 <p>An unrecognizable time type is labeled as "custom". <em>todo: refer to vignette
 for time aggregation examples</em></p>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p><code><a href='as_epi_df.html'>as_epi_df()</a></code> for converting to <code>epi_df</code> format</p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
