@@ -100,13 +100,13 @@ epi_df = function(geo_value, time_value, ..., geo_type, time_type, as_of,
   return(as_epi_df(x, geo_type, time_type, as_of, additional_metadata))
 }
 
-#' Convert data to `epi_df` format
+#' Convert to `epi_df` object
 #'
-#' Converts a data frame or tibble into a format that is consistent with the 
-#' `epi_df` class, ensuring that it has a certain minimal set of columns, and
-#' that it has certain minimal metadata. See the [getting started
+#' Converts a data frame or tibble into an `epi_df` object, ensuring that it has
+#' a certain minimal set of columns, and certain minimal metadata. See the
+#' [getting started
 #' guide](https://cmu-delphi.github.io/epiprocess/articles/epiprocess.html) for
-#' examples. 
+#' examples.
 #'
 #' @param geo_type Type for the geo values. If missing, then the function will
 #'   attempt to infer it from the geo values present; if this fails, then it
@@ -234,8 +234,7 @@ print.epi_df = function(x, ...) {
 #' @importFrom utils head
 #' @export
 head.epi_df = function(x, ...) {
-	class(x) = base::setdiff(class(x), "epi_df")
-  return(head(x))
+  head(tibble::as_tibble(x))
 }
 
 #' Summarize `epi_df` object
@@ -267,7 +266,7 @@ summary.epi_df = function(object, ...) {
 
 #' Group or ungroup `epi_df` object
 #'
-#' Groups or ungroups an `epi_df`, preserving class and attributes.  
+#' Groups or ungroups an `epi_df` object, preserving class and attributes.  
 #'
 #' @method group_by epi_df
 #' @importFrom dplyr group_by
@@ -290,4 +289,17 @@ ungroup.epi_df = function(x, ...) {
   class(x) = c("epi_df", class(x))
   attributes(x)$metadata = metadata
   return(x)
+}
+
+#' Convert to tsibble object
+#' 
+#' Converts an `epi_df` object into a tsibble, where the index is taken to be 
+#' `time_value`, and the key variables taken to be `geo_value` along with any
+#' others in the `other_keys` field of the metadata, or else explicitly set. 
+#' 
+#' @method as_tsibble epi_df
+#' @export
+as_tsibble.epi_df = function(x, key, ...) {
+  if (missing(key)) key = c("geo_value", attributes(x)$metadata$other_keys)
+  as_tsibble(tibble::as_tibble(x), key, index = "time_value", ...)
 }

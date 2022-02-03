@@ -9,10 +9,10 @@ epi_archive(
   time_value,
   version,
   ...,
-  key_vars,
   geo_type,
   time_type,
   max_version,
+  other_keys,
   additional_metadata = list()
 )
 }
@@ -29,14 +29,6 @@ of the data for January 14, 2022 that were available one day later.}
 \item{...}{Additional arguments of the form \code{value} or \code{name = value}, which
 specify any number of additional columns for the \code{epi_archive} object.}
 
-\item{key_vars}{Character vector specifying the names of variables that
-should be considered key variables, in the language of
-\code{data.table}. Default is \code{c("geo_value", "time_value", "version")}. Apart
-from the key variables, all other variables in the \code{epi_archive} object are
-considered to be measured variables, which we also refer to as signal
-variables. There can only be a single row per unique combination of key
-variables.}
-
 \item{geo_type}{Type for the geo values. If missing, then the function will
 attempt to infer it from the geo values present; if this fails, then it
 will be set to "custom".}
@@ -44,6 +36,13 @@ will be set to "custom".}
 \item{time_type}{Type for the time values. If missing, then the function will
 attempt to infer it from the time values present; if this fails, then it
 will be set to "custom".}
+
+\item{other_keys}{Character vector specifying the names of variables that
+should be considered key variables (in the language of \code{data.table}) apart
+from "geo_value", "time_value", and "version". There can only be a single
+row per unique combination of key variables, and thus the key variables are
+critical for figuring out how to generate snapshots of data form the
+archive, as of certain versions.}
 
 \item{additional_metadata}{List of additional metadata to attach to the
 \code{epi_archive} object. The metadata will have \code{time_type} and \code{geo_type}

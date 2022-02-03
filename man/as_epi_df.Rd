@@ -5,7 +5,7 @@
 \alias{as_epi_df.epi_df}
 \alias{as_epi_df.tbl_df}
 \alias{as_epi_df.data.frame}
-\title{Convert data to \code{epi_df} format}
+\title{Convert to \code{epi_df} object}
 \usage{
 as_epi_df(x, ...)
 
@@ -42,9 +42,9 @@ well.}
 An \code{epi_df} object.
 }
 \description{
-Converts a data frame or tibble into a format that is consistent with the
-\code{epi_df} class, ensuring that it has a certain minimal set of columns, and
-that it has certain minimal metadata. See the \href{https://cmu-delphi.github.io/epiprocess/articles/epiprocess.html}{getting started guide} for
+Converts a data frame or tibble into an \code{epi_df} object, ensuring that it has
+a certain minimal set of columns, and certain minimal metadata. See the
+\href{https://cmu-delphi.github.io/epiprocess/articles/epiprocess.html}{getting started guide} for
 examples.
 }
 \section{Methods (by class)}{

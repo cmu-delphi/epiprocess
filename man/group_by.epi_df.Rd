@@ -10,5 +10,5 @@
 \method{ungroup}{epi_df}(x, ...)
 }
 \description{
-Groups or ungroups an \code{epi_df}, preserving class and attributes.
+Groups or ungroups an \code{epi_df} object, preserving class and attributes.
 }

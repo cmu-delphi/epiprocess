@@ -3,6 +3,7 @@
 S3method(as_epi_df,data.frame)
 S3method(as_epi_df,epi_df)
 S3method(as_epi_df,tbl_df)
+S3method(as_tsibble,epi_df)
 S3method(epi_slide,epi_archive)
 S3method(epi_slide,epi_df)
 S3method(group_by,epi_df)

@@ -2,20 +2,20 @@
 % Please edit documentation in R/epi_archive.R
 \name{as_epi_archive}
 \alias{as_epi_archive}
-\title{Convert data to \code{epi_archive} format}
+\title{Convert to \code{epi_archive} object}
 \usage{
 as_epi_archive(
   x,
-  key_vars,
   geo_type,
   time_type,
   max_version,
+  other_keys,
   additional_metadata = list()
 )
 }
 \description{
-Converts a data frame, tibble, or data table into a format consistent with
-the \code{epi_archive} class, allowing for fast querying of data snapshots in
-\code{epi_df} format as of certain versions. See the \href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{data versioning vignette} for
+Converts a data frame, tibble, or data table into an \code{epi_archive} object,
+allowing for fast querying of data snapshots into \code{epi_df} format as of
+certain versions. See the \href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{data versioning vignette} for
 examples.
 }
