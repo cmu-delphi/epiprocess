@@ -19,6 +19,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -31,18 +33,12 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">epiprocess</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-<li>
-  <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
 <li>
   <a href="../articles/epiprocess.html">Get started</a>
 </li>
@@ -82,7 +78,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/cmu-delphi/epiprocess/tree/main/">
+  <a href="https://github.com/cmu-delphi/epiprocess/tree/main/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -97,19 +93,65 @@
 
       
 
-      </header><script src="aggregation_files/header-attrs-2.10/header-attrs.js"></script><div class="row">
+      </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>5. Aggregate signals over space and time</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/main/vignettes/aggregation.Rmd"><code>vignettes/aggregation.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/main/vignettes/aggregation.Rmd" class="external-link"><code>vignettes/aggregation.Rmd</code></a></small>
       <div class="hidden name"><code>aggregation.Rmd</code></div>
 
     </div>
 
     
     
+<p>The <code>epiprocess</code> package provides additional functionality for users to aggregate signals over time and space. For time, <code>epiprocess</code> leverages the existing <code>tsibble</code> object for manipulating time series data using <code>tidyverse</code> tools. Here, we provide functionality to convert the the standard <code>epi_df</code> data container into a <code>tsibble</code>, and demonstrate some useful functionality. For more details on the <code>tsibble</code> package, please refer to the <a href="https://tsibble.tidyverts.org/index.html" class="external-link">package documentation</a>.</p>
+<p>First, let’s load some data using the <code>covidcast</code> package. Here we’re loading confirmed new incidence of cases from June 1st, 2020 to May 31st, 2021 for California and New York (sourced from JHU).</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/covidcast/covidcastR/" class="external-link">covidcast</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">epiprocess</span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tsibble.tidyverts.org" class="external-link">tsibble</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span>
+<span class="va">case_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://cmu-delphi.github.io/covidcast/covidcastR/reference/covidcast_signal.html" class="external-link">covidcast_signal</a></span><span class="op">(</span>data_source <span class="op">=</span> <span class="st">"jhu-csse"</span>, signal <span class="op">=</span> <span class="st">"confirmed_incidence_num"</span>, 
+                              start_day <span class="op">=</span> <span class="st">"2020-06-01"</span>, end_day <span class="op">=</span> <span class="st">"2021-05-31"</span>, geo_type <span class="op">=</span> <span class="st">"state"</span>,
+                              as_of <span class="op">=</span> <span class="st">"2022-02-04"</span>,
+                              geo_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ca"</span>, <span class="st">"ny"</span><span class="op">)</span><span class="op">)</span>
+
+<span class="va">case_epidf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as.epi_df.html">as.epi_df</a></span><span class="op">(</span><span class="va">case_data</span>, geo_type <span class="op">=</span> <span class="st">"state"</span>, 
+                        time_type <span class="op">=</span> <span class="st">"day"</span>, issue <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">case_data</span><span class="op">$</span><span class="va">issue</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> 
+    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span><span class="st">"new_cases"</span> <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> 
+    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">new_cases</span><span class="op">)</span></code></pre></div>
+<div class="section level2">
+<h2 id="casting-epi_df-into-tsibble">Casting <code>epi_df</code> into <code>tsibble</code><a class="anchor" aria-label="anchor" href="#casting-epi_df-into-tsibble"></a>
+</h2>
+<p>A <code>tsibble</code> is comprised of two components: a <strong>key</strong> that identifies the unit of observation, and an <strong>index</strong> that identifies the time component. Each observation should be uniquely identified by <strong>key</strong> and <strong>index</strong>. If we take a look at our <code>epi_df</code> object, we can expect <code>geo_value</code> as the unit of observation, and <code>time_value</code> as the column that specifies time (in proper datetime formats). All <code>epi_df</code> objects should have a <code>geo_value</code> and a <code>time_value</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">case_epidf</span><span class="op">)</span></code></pre></div>
+<pre><code><span class="co">## <span style="color: #949494;"># A tibble: 6 × 3</span></span>
+<span class="co">##   geo_value time_value new_cases</span>
+<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01      <span style="text-decoration: underline;">2</span>438</span>
+<span class="co">## <span style="color: #BCBCBC;">2</span> ny        2020-06-01      <span style="text-decoration: underline;">1</span>136</span>
+<span class="co">## <span style="color: #BCBCBC;">3</span> ca        2020-06-02      <span style="text-decoration: underline;">2</span>421</span>
+<span class="co">## <span style="color: #BCBCBC;">4</span> ny        2020-06-02      <span style="text-decoration: underline;">1</span>069</span>
+<span class="co">## <span style="color: #BCBCBC;">5</span> ca        2020-06-03      <span style="text-decoration: underline;">2</span>219</span>
+<span class="co">## <span style="color: #BCBCBC;">6</span> ny        2020-06-03       789</span></code></pre>
+<p><code>epi_process</code> provides a convenient S3 method to coerce <code>epi_df</code> objects into <code>tsibble</code>. As stated above, by default this method will use <code>geo_value</code> as <strong>key</strong> and <code>time_value</code> as <strong>index</strong>. There is an additional <code>key</code> argument that users can use to specify keys that are not just <code>geo_value</code>.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">case_tsibble</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span><span class="va">case_epidf</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">case_tsibble</span><span class="op">)</span></code></pre></div>
+<pre><code><span class="co">## <span style="color: #949494;"># A tsibble: 6 x 3 [1D]</span></span>
+<span class="co">## <span style="color: #949494;"># Key:       geo_value [1]</span></span>
+<span class="co">##   geo_value time_value new_cases</span>
+<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01      <span style="text-decoration: underline;">2</span>438</span>
+<span class="co">## <span style="color: #BCBCBC;">2</span> ca        2020-06-02      <span style="text-decoration: underline;">2</span>421</span>
+<span class="co">## <span style="color: #BCBCBC;">3</span> ca        2020-06-03      <span style="text-decoration: underline;">2</span>219</span>
+<span class="co">## <span style="color: #BCBCBC;">4</span> ca        2020-06-04      <span style="text-decoration: underline;">3</span>030</span>
+<span class="co">## <span style="color: #BCBCBC;">5</span> ca        2020-06-05      <span style="text-decoration: underline;">3</span>128</span>
+<span class="co">## <span style="color: #BCBCBC;">6</span> ca        2020-06-06      <span style="text-decoration: underline;">2</span>806</span></code></pre>
+<p>One of the major advantages of the <code>tsibble</code></p>
 <p><em>todo</em></p>
 <p>Time stuff:</p>
 <ul>
@@ -124,21 +166,26 @@
 <li>similar? but without the <code>tsibble</code> utilities, we would need to implement some of this on our own and demo it in the vignette</li>
 </ul>
 </div>
+  </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
 
-      </div>
+        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
+    </nav>
+</div>
 
 </div>
 
 
 
       <footer><div class="copyright">
-  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
+  <p></p>
+<p>Developed by Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
       </footer>
@@ -146,6 +193,8 @@
 
   
 
+
+  
 
   </body>
 </html>

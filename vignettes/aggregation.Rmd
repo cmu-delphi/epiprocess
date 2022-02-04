@@ -7,11 +7,54 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+The `epiprocess` package provides additional functionality for users to aggregate
+signals over time and space. For time, `epiprocess` leverages the existing `tsibble` object
+for manipulating time series data using `tidyverse` tools. Here, we provide functionality to convert 
+the the standard `epi_df` data container into a `tsibble`, and demonstrate some useful functionality. 
+For more details on the `tsibble` package, please refer to the [package documentation](https://tsibble.tidyverts.org/index.html).  
+
+First, let's load some data using the `covidcast` package. Here we're loading confirmed new incidence of
+cases from June 1st, 2020 to May 31st, 2021 for California and New York (sourced from JHU).   
+
+```{r, message = FALSE}
+library(covidcast)
+library(epiprocess)
+library(tsibble)
+library(dplyr)
+case_data <- covidcast_signal(data_source = "jhu-csse", signal = "confirmed_incidence_num", 
+                              start_day = "2020-06-01", end_day = "2021-05-31", geo_type = "state",
+                              as_of = "2022-02-04",
+                              geo_values = c("ca", "ny"))
+
+case_epidf <- as.epi_df(case_data, geo_type = "state", 
+                        time_type = "day", issue = max(case_data$issue)) %>% 
+    rename("new_cases" = value) %>% 
+    select(geo_value, time_value, new_cases)
+```
+## Casting `epi_df` into `tsibble`  
+
+A `tsibble` is comprised of two components: a **key** that identifies the unit of observation, and an **index** that identifies the time component. Each observation should be uniquely identified by **key** and **index**. If we take a look at our `epi_df` object, we can expect `geo_value` as the unit of observation, and `time_value` as the column that specifies time (in proper datetime formats). All `epi_df` objects should have a `geo_value` and a `time_value`.   
+
+```{r, message = FALSE}
+head(case_epidf)
+```
+
+`epi_process` provides a convenient S3 method to coerce `epi_df` objects into `tsibble`. This method will always use `time_value` as **index**. For **key**, the default is the union of `geo_values` and other variables specified in the `other_keys` metadata field of an `epi_df`. However, here is an additional `key` argument in the conversion function that allow us to specific more explicitly which variables to use as keys. 
+
+```{r, message = FALSE}
+case_tsibble <- as_tsibble(case_epidf)
+head(case_tsibble)
+```
+
+## Gap-filling  
+One of the major advantages of the `tsibble` 
+
+## Time aggregation  
+
+
 *todo*
 
 Time stuff:
-
-- cast to `tsibble`, with index = `time_value` and key = `geo_value`
 - walk through an example with gaps, show the special gaps functions
 - do some time aggregation after gap filling?
 - do some time coarsening? days to weeks, or weeks to months?
