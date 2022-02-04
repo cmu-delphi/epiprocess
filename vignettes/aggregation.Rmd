@@ -14,12 +14,13 @@ signals over time and space.
 
 For time, `epiprocess` leverages the existing `tsibble` object for manipulating time series data using `tidyverse` tools. In this vignette, we provide functionality to convert the the standard `epi_df` data container into a `tsibble`, and demonstrate some useful functionality. For more details on the `tsibble` package, please refer to the [package documentation](https://tsibble.tidyverts.org/index.html).  
 
-First, let's load some data using the `covidcast`. Here we're loading confirmed new incidence of
+First, let's load some data using `covidcast`. Here we're using confirmed new incidence of
 cases from January 1st, 2020 to May 31st, 2021 for counties in Vermont and New Hampshire (sourced from JHU).   
 
 ```{r, message = FALSE}
 library(covidcast)
 library(epiprocess)
+library(ggplot2)
 library(tsibble)
 library(dplyr)
 data("county_census")
@@ -52,49 +53,84 @@ case_epidf <- as.epi_df(case_data, geo_type = "county",
 A `tsibble` is comprised of two components: a **key** that identifies the unit of observation, and an **index** that identifies the time component. Each observation should be uniquely identified by **key** and **index**. If we take a look at our `epi_df` object, we can expect `geo_value` as the unit of observation, and `time_value` as the column that specifies time (in proper datetime formats). All `epi_df` objects should have a `geo_value` and a `time_value`.   
 
 ```{r, message = FALSE}
-head(case_epidf)
+case_epidf
 ```
 
-`epi_process` provides a convenient S3 method to coerce `epi_df` objects into `tsibble`. This method will always use `time_value` as **index**. For **key**, the default is the union of `geo_values` and other variables specified in the `other_keys` metadata field of an `epi_df`. However, here is an additional `key` argument in the conversion function that allow us to specific more explicitly which variables to use as keys. For this data set here, we also want to key by state name as well as county name.  
+`epiprocess` provides a convenient S3 method to coerce `epi_df` objects into `tsibble`. This method will always use `time_value` as **index**. For **key**, the default is the union of `geo_value` and other variables specified in the `other_keys` metadata field of an `epi_df`. However, here is an additional `key` argument in the conversion function that allow us to specify more explicitly which variables to use as keys. For example in this data set, we might also want to key by state name as well as county name.  
 
+The simplest approach is to let `as_tsibble.epi_df()` automatically use `geo_value` and `time_value`
 ```{r, message = FALSE}
-case_tsibble <- as_tsibble(case_epidf)
-head(case_tsibble)
+head(as_tsibble(case_epidf))
+```
+
+You can use the `key` argument to re-key by a different column or keying by multiple columns.  
+```{r, message = FALSE}
 # if use the key argument to key by state name
-head(as_tsibble(case_epidf, key = c("geo_value", "STNAME", "CTYNAME")))
+head(case_tsibble <- as_tsibble(case_epidf, key = c("CTYNAME")))
+
+# can key by multiple columns 
+head(as_tsibble(case_epidf, key = c("CTYNAME", "geo_value", "STNAME")))
+```
+
+However, similar to SQL keys, if the keys do not uniquely identify each row, then `tsibble` return 
+errors  
+```{r, message = FALSE, error = TRUE}
+# returns error if index only by state name since each observation is no longer
+# unique as there are multiple numbers associated with each state per day
+head(as_tsibble(case_epidf, key = "STNAME"))
 ```
 
 ### Gap-filling  
  
-One of the major advantages of the `tsibble` is the ability to handle **implicit gaps** in the data. In other words, `tsibble` can infer what time scale we're interested in (e.g. daily data), and detect apparent gaps (e.g. when values are reported on 2021-01-01 and 2021-01-03 but not 2021-01-02). Then, we can use certain functions to make these missing entries explicit, which allows further downstream processing like imputation or for understanding patterns of missing data. For our example, let's randomly remove certain dates from the data set. 
+One of the major advantages of the `tsibble` is the ability to handle **implicit gaps** in the data. In other words, `tsibble` can infer what time scale we're interested in (e.g. daily data), and detect apparent gaps (e.g. when values are reported on 2021-01-01 and 2021-01-03 but not 2021-01-02). We can subsequently use certain functions to make these missing entries explicit, which allows further downstream processing like imputation or missing data exploration. For our example, let's randomly remove certain dates from the data set to create gaps. 
 
 ```{r, message = FALSE}
 set.seed(1020)
 remove_index <- sample(seq_len(nrow(case_tsibble)), size = 100, replace = FALSE)
-# since we're keying by geo_value, remove extra information about names 
-case_tsibble <- case_tsibble %>% select(geo_value, time_value, new_cases) %>% 
+# since we're keying by CTYNAME, remove extra information 
+case_tsibble <- case_tsibble %>% select(CTYNAME, time_value, new_cases) %>% 
                                 slice(-remove_index)
 head(case_tsibble)
 ```
+
 Let's use a functions from the `tsibble` package to handle this implicit missingness:  
 
-1. `has_gaps` shows whether or not gaps exists broken down by each **key**.  
+#### `tsibble::has_gaps` shows whether or not gaps exists broken down by each **key**.    
+
 ```{r, message = FALSE}
 head(has_gaps(case_tsibble))
 ```
 
-2. `scan_gaps` gives detailed reports per identified gaps.    
+#### `tsibble::scan_gaps` gives detailed reports per identified gaps.    
+
 ```{r, message=FALSE}
 head(scan_gaps(case_tsibble))
 ```
 
-3. `count_gaps` gives summary statistics by aggregating gaps within similar time periods  
+#### `tsibble::count_gaps` gives summary statistics by aggregating gaps within similar time periods    
 ```{r, message=FALSE}
-head(count_gaps(case_tsibble))
+head(counts <- count_gaps(case_tsibble))
+```
+We can also plot the missingness pattern using summary statistics from `tsibble::count_gaps`. 
+
+```{r, message = FALSE}
+ggplot(counts %>% filter(CTYNAME %in% unique(.$CTYNAME)[1:5]), 
+       aes(x = CTYNAME, color = CTYNAME)) +
+    geom_linerange(aes(ymin = .from, ymax = .to)) + 
+    geom_point(aes(y = .from))+
+    geom_point(aes(y = .to)) + 
+    labs(x = "County", y = "Date") + 
+    theme_minimal() + 
+    coord_flip() + 
+    theme(legend.position = "none")
 ```
 
-4. `fill_gaps` fill in these gaps with explicit values. By default, all gaps are made explicit and specified as `NA`. However, the function allows us to specify various ways to add assign different values to gaps instead of the default `NA`. Additional usage can be found in the function [documentation page](https://tsibble.tidyverts.org/reference/fill_gaps.html).  
+#### `tsibble::fill_gaps` fill in these gaps with explicit values. 
+
+By default, all gaps are made explicit and specified as `NA`. However, the function also allows us to assign different values to gaps instead of the default. Additional usage can be found in the function [documentation page](https://tsibble.tidyverts.org/reference/fill_gaps.html).  
+
 ```{r, message = FALSE}
+# obtain missing date to see where missingness occurs
 missing_date <- scan_gaps(case_tsibble) %>% slice(1) %>% pull(time_value)
 # turning implicit gaps into explicit gaps with NA
 fill_gaps(case_tsibble) %>% filter(time_value >= missing_date - 1) %>% head()
@@ -110,12 +146,40 @@ gapfilled <- case_tsibble %>% group_by_key() %>% fill_gaps() %>%
 gapfilled %>% filter(time_value >= missing_date - 1) %>% head()
 ```
 
-
-An important consideration when utilizing these functions is the argument `.full`. By default, the `_gaps` family of functions detects gaps by `key`, which means that gaps are only detected within individual periods defined by `key`. The argument `.full` here which specifies whether gaps are detected (or filled) across the period defined by the entire data set. For example, if we have daily case counts for two states, State A with contiguous data from January to June, and state B with continguous data from February to June. If `.full = FALSE`, then there would be no gaps. If `.full = TRUE`, then there would be a gap in state B since state B is missing January from the overal time period defined by the entire data set. 
+An important consideration when utilizing these functions is the argument `.full`. By default, the `_gaps` family of functions detects gaps by `key`, which means that gaps are only detected within individual periods defined by `key`. The argument `.full` here specifies the usage of the period defined by the entire data set instead for gap detection/fill. For example, assume we have daily case counts state A with complete data from January to June, and state B with complete data from February to June. If `.full = FALSE`, then there would be no gaps since both states have complete data within their associated time periods. If `.full = TRUE`, then there would be a gap in state B since state B is missing January. 
 
 ### Aggregate to different time-scales 
 
+We can then aggregate to different time-scales using functions `tsibble::index_by()` and `dplyr::summarise()` functions. `index_by` essentially changes the **index** component by applying a 
+transformation function on time (such as those from the `lubridate` package) to extract higher order
+time scales (e.g. weeks from days, months from weeks).  
 
+```{r, message=FALSE}
+cases_gapfilled_week <- gapfilled %>% group_by_key() %>% index_by(week = ~yearweek(.))  %>% 
+    summarise(new_cases = sum(new_cases, na.rm = TRUE)) 
+head(cases_gapfilled_week)
+ggplot(cases_gapfilled_week, aes(x = week, y = new_cases, col = CTYNAME)) + 
+    geom_line() +
+    theme_minimal() + 
+    labs(x = "Week by Year", y = "New confirmed cases", col = "County", 
+         title = "New confirmed cases by county per week") + 
+    theme(legend.position = "none")
+
+```
+
+We can continue to aggregate it by month with our existing weekly data conveniently:    
+
+```{r}
+cases_gapfilled_month <- cases_gapfilled_week %>% group_by_key() %>% 
+    index_by(month = ~yearmonth(.)) %>% summarise(new_cases = sum(new_cases, na.rm = TRUE))
+head(cases_gapfilled_month)
+ggplot(cases_gapfilled_month, aes(x = month, y = new_cases, col = CTYNAME)) + 
+    geom_line() +
+    theme_minimal() + 
+    labs(x = "Month by Year", y = "New confirmed cases", col = "County", 
+         title = "New confirmed cases by county per month") + 
+    theme(legend.position = "none")
+```
 
 ## Geographic aggregation  
 Geo stuff:
