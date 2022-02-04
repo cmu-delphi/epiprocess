@@ -298,3 +298,17 @@ ungroup.epi_df = function(x, ...) {
   attributes(x)$metadata = metadata
   return(x)
 }
+
+#' Convert to tsibble object
+#' 
+#' Converts an `epi_df` object into a tsibble, where the index is taken to be 
+#' `time_value`, and the key variables taken to be `geo_value` along with any
+#' others in the `other_keys` field of the metadata, or else explicitly set. 
+#'
+#' @importFrom tsibble as_tsibble
+#' @method as_tsibble epi_df
+#' @export
+as_tsibble.epi_df = function(x, key, ...) {
+  if (missing(key)) key = c("geo_value", attributes(x)$metadata$other_keys)
+  as_tsibble(tibble::as_tibble(x), key, index = "time_value", ...)
+}
