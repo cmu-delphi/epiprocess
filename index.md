@@ -28,9 +28,7 @@ begin with `epi`, namely:
 - `epi_detect_outlr()`, for detecting and correcting outliers in a variable in
   an `epi_df` object, using either built-in or custom methodologies. 
 
-Other notable functions include `pct_change()`and `estimate_deriv()`, which,
-when used within a call to `epi_slide()`, allow for fluid computation of
-percentage change values or estimation of derivatives over time.
+Other notable functions include todo
 
 ## epi_archive: full version history of a data set
 
@@ -39,19 +37,19 @@ The second main data structure in the package is called
 around a data table that stores the archive (version history) of some signal
 variables of interest. 
 
-Critically, an `epi_archive` object can be used to generate a snapshot of the
-associated data set in `epi_df` format, which represents the most up-to-date
-values of the signal variables, as of the specified version. This is
-accomplished by calling the  `as_of()` method for an `epi_archive` object `x`,
-for example: 
+An `epi_archive` object can be used to generate a snapshot of the associated
+data set in `epi_df` format, which represents the most up-to-date values of the
+signal variables, as of the specified version. This is accomplished by calling
+the `as_of()` method for an `epi_archive` object `x`, for example:
 ```
 x$as_of(as.Date("2022-01-15"))
 ```
 to generate an `epi_df` object containing a data snapshot as of January
 15, 2022.
 
-Notably, `epi_slide()` can also be applied directly to an `epi_archive` object,
-in a way that is similar to how it works for an `epi_df` object, but with one
-key difference: for the computation at any given time value `t`, it acts on data
-in a sliding window of `t`, but **only the data that would have been available 
-as of `t`**. 
+Importantly, sliding computations can also be done over a data archive. This is
+accomplished by calling the `slide()` method for an `epi_archive` object.  This
+works similarly to the way `epi_slide()` works for an `epi_df` object, but with
+one key difference: for an `epi_archive` object, the sliding computation at any
+given reference time point t is performed on the **data that would have been
+available as of t**.

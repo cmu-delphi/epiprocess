@@ -110,3 +110,23 @@ guess_time_type = function(time_value) {
   # If we got here then we failed
   return("custom")
 }
+
+##########
+
+# Create an auto-named list
+enlist = function(...) {
+  x = list(...)
+  n = as.character(sys.call())[-1]
+  if (!is.null(n0 <- names(x))) {
+    n[n0 != ""] = n0[n0 != ""]
+  }
+  names(x) = n
+  return(x) 
+}
+
+# Variable assignment from a list. NOT USED. Something is broken, this doesn't 
+# seem to work completely as expected: the variables it define don't propogate
+# down to child environments  
+list2var = function(x) {
+  list2env(x, envir = parent.frame())
+}

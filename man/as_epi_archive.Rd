@@ -41,6 +41,10 @@ An \code{epi_archive} object.
 }
 \description{
 Converts a data frame, data table, or tibble into an \code{epi_archive}
-object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{data versioning vignette} for
+object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{archive vignette} for
 examples.
+}
+\seealso{
+\code{\link{epi_archive}} for more details on the \code{epi_archive}
+format
 }

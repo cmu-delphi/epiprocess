@@ -24,9 +24,8 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       end_day = "2021-05-31",
                       geo_type = "state", 
                       geo_values = "fl")  %>%
+  select(geo_value, time_value, case_rates = value) %>%
   as_epi_df() %>%
-  rename(case_rates = value) %>%
-  select(geo_value, time_value, case_rates) %>%
   epi_slide(case_rates = mean(case_rates), n = 7)
 ```
 
@@ -176,7 +175,7 @@ be used to examine the p-values associated with the estimated slopes from
 ```{r}
 x <- epi_slide(x, deriv_info = estimate_deriv(
   case_rates, method = "lin", keep_obj = TRUE), n = 14,
-  new_col_type = "list")
+  as_list_col = TRUE)
 
 class(x$deriv_info)
 names(x$deriv_info[[7]])

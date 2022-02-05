@@ -33,9 +33,10 @@
 #'   version history of a given data set. Revisions are common in many types of
 #'   epidemiological data streams, and paying attention to data revisions can be
 #'   important for all sorts of downstream data analysis and modeling tasks. See
-#'   the documentation for `epi_archive()` for more details on how data
-#'   versioning works in the `epiprocess` package (including how to generate
-#'   `epi_df` objects, as data snapshots, from an `epi_archive` object).
+#'   the documentation for [`epi_archive`][epi_archive] for more details on how
+#'   data versioning works in the `epiprocess` package (including how to
+#'   generate `epi_df` objects, as data snapshots, from an `epi_archive`
+#'   object).
 #'
 #' @section Geo Types:
 #' The following geo types are supported in an `epi_df`. Their geo coding
@@ -104,6 +105,7 @@ NULL
 #' @param ... Additional arguments passed to methods.
 #' @return An `epi_df` object.
 #' 
+#' @seealso [`epi_df`][epi_df] for more details on the `epi_df` format 
 #' @export
 as_epi_df = function(x, ...) {
   UseMethod("as_epi_df")
@@ -150,7 +152,7 @@ as_epi_df.tbl_df = function(x, geo_type, time_type, as_of,
   if (missing(as_of)) {
     # First check the metadata for an as_of field
     if ("metadata" %in% names(attributes(x)) &&
-        "as_of" %in% names(attributes(x$metadata))) {
+        "as_of" %in% names(attributes(x)$metadata)) {
       as_of = attributes(x)$metadata$as_of
     }
     
@@ -184,8 +186,8 @@ as_epi_df.tbl_df = function(x, geo_type, time_type, as_of,
 #' @export
 as_epi_df.data.frame = function(x, geo_type, time_type, as_of,
                                 additional_metadata = list(), ...) {
-  return(as_epi_df.tbl_df(tibble::as_tibble(x), geo_type, time_type, as_of,
-                          additional_metadata, ...))
+  as_epi_df.tbl_df(tibble::as_tibble(x), geo_type, time_type, as_of,
+                   additional_metadata, ...)
 }
 
 #' Print `epi_df` object
@@ -241,33 +243,6 @@ summary.epi_df = function(object, ...) {
                          dplyr::summarize(median(.data$num)))))
 }
 
-#' Group or ungroup `epi_df` object
-#'
-#' Groups or ungroups an `epi_df` object, preserving class and attributes.  
-#'
-#' @method group_by epi_df
-#' @importFrom dplyr group_by
-#' @export
-group_by.epi_df = function(x, ...) {
-  metadata = attributes(x)$metadata
-  x = NextMethod()
-  class(x) = c("epi_df", class(x))
-  attributes(x)$metadata = metadata
-  return(x)
-}
-
-#' @method ungroup epi_df
-#' @rdname group_by.epi_df
-#' @importFrom dplyr ungroup
-#' @export
-ungroup.epi_df = function(x, ...) {
-  metadata = attributes(x)$metadata
-  x = NextMethod()
-  class(x) = c("epi_df", class(x))
-  attributes(x)$metadata = metadata
-  return(x)
-}
-
 #' Convert to tsibble object
 #' 
 #' Converts an `epi_df` object into a tsibble, where the index is taken to be 
@@ -279,5 +254,5 @@ ungroup.epi_df = function(x, ...) {
 #' @export
 as_tsibble.epi_df = function(x, key, ...) {
   if (missing(key)) key = c("geo_value", attributes(x)$metadata$other_keys)
-  as_tsibble(tibble::as_tibble(x), key, index = "time_value", ...)
+  return(as_tsibble(tibble::as_tibble(x), key, index = "time_value", ...))
 }

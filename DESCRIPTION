@@ -26,7 +26,6 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Imports: 
-  assertthat,
   data.table,
   dplyr,
   fabletools,
@@ -34,7 +33,7 @@ Imports:
   genlasso,
   lubridate,
   magrittr,
-  pipeR,
+  purrr,
   R6,
   rlang,
   slider,

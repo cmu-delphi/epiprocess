@@ -16,7 +16,6 @@ articles:
       - epiprocess
       - slide
       - pct_change
-      - derivative
       - correlation
       - aggregation
       - outliers

@@ -40,9 +40,10 @@ A companion object is the \code{epi_archive} object, which contains the full
 version history of a given data set. Revisions are common in many types of
 epidemiological data streams, and paying attention to data revisions can be
 important for all sorts of downstream data analysis and modeling tasks. See
-the documentation for \code{epi_archive()} for more details on how data
-versioning works in the \code{epiprocess} package (including how to generate
-\code{epi_df} objects, as data snapshots, from an \code{epi_archive} object).
+the documentation for \code{\link{epi_archive}} for more details on how
+data versioning works in the \code{epiprocess} package (including how to
+generate \code{epi_df} objects, as data snapshots, from an \code{epi_archive}
+object).
 }
 \section{Geo Types}{
 

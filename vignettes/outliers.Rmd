@@ -11,8 +11,8 @@ This vignette describes functionality for detecting and correcting outliers in
 signals in the `epi_detect_outlr()` function provided in the `epiprocess`
 package. This is designed to be modular and extendable, so that you can provide
 your own outlier detection and correction functions and use them with `epi_df`
-objects. We'll work state-level daily reported COVID-19 case counts in Florida
-and New Jersey.
+objects. We'll work with state-level daily reported COVID-19 case counts from 
+Florida and New Jersey.
 
 ```{r, message = FALSE, fig.width = 8, fig.height = 7}
 library(covidcast)

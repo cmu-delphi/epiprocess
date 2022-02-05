@@ -27,7 +27,7 @@ The data table \code{DT} has key variables \code{geo_value}, \code{time_value}, 
 as well as any other specified in the metadata (described below). There can
 only be a single row per unique combination of key variables, and thus the
 key variables are critical for figuring out how to generate a snapshot of
-data from the archive, as of a given version.
+data from the archive, as of a given version (also described below).
 
 In general, last-observation-carried-forward (LOCF) is used to data in
 between recorded versions. Currently, deletions must be represented as
@@ -54,7 +54,7 @@ object:
 }
 
 Unlike an \code{epi_df} object, metadata for an \code{epi_archive} object \code{x} can be
-accessed (and altered) directly via \code{x$geo_type}.
+accessed (and altered) directly, as in \code{x$geo_type} or \code{x$time_type}, etc.
 }
 
 \section{Generating Snapshots}{
@@ -69,6 +69,18 @@ to generate a snapshot as of January 15, 2022. More details on the
 \code{as_of()} method are documented below.
 }
 
+\section{Sliding Computations}{
+
+We can run a sliding computation over an \code{epi_archive} object, much like
+\code{epi_slide()} does for an \code{epi_df} object. This is accomplished by calling
+the \code{slide()} method for an \code{epi_archive} object, which works similarly to
+the way \code{epi_slide()} works for an \code{epi_df} object, but with one key
+difference: it is version-aware. That is, for an \code{epi_archive} object, the
+sliding computation at any given reference time point t is performed on
+\strong{data that would have been available as of t}. More details on \code{slide()}
+are documented below.
+}
+
 \seealso{
 \code{\link[=as_epi_archive]{as_epi_archive()}} for converting to \code{epi_archive} format
 }
@@ -76,7 +88,9 @@ to generate a snapshot as of January 15, 2022. More details on the
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-new}{\code{epi_archive$new()}}
+\item \href{#method-print}{\code{epi_archive$print()}}
 \item \href{#method-as_of}{\code{epi_archive$as_of()}}
+\item \href{#method-slide}{\code{epi_archive$slide()}}
 \item \href{#method-clone}{\code{epi_archive$clone()}}
 }
 }
@@ -128,6 +142,15 @@ An \code{epi_archive} object.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-print"></a>}}
+\if{latex}{\out{\hypertarget{method-print}{}}}
+\subsection{Method \code{print()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$print()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-as_of"></a>}}
 \if{latex}{\out{\hypertarget{method-as_of}{}}}
 \subsection{Method \code{as_of()}}{
@@ -152,6 +175,73 @@ minimum considered.}
 }
 \subsection{Returns}{
 An \code{epi_df} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-slide"></a>}}
+\if{latex}{\out{\hypertarget{method-slide}{}}}
+\subsection{Method \code{slide()}}{
+Slides a given function over variables in an \code{epi_archive}
+object. Windows are \emph{always right-aligned}, unlike \code{epi_slide()}. The other
+arguments are as in \code{epi_slide()}, and its documentation gives more details
+on their useage. See also the \href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{archive vignette}
+for examples.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$slide(
+  f,
+  ...,
+  n = 14,
+  complete = FALSE,
+  new_col_name = "slide_value",
+  time_step,
+  by
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{f}}{Function or formula to slide over variables in \code{x}. To "slide" means
+to apply a function or formula over a running window of \code{n} time steps
+(where one time step is typically one day or one week). If a function, \code{f}
+must take \code{x}, a data frame with the same column names as the original
+object; followed by any number of named arguments; and ending with
+\code{...}. If a formula, \code{f} can operate directly on columns accessed via
+\code{.x$var}, as in \code{~ mean(.x$var)} to compute a mean of a column \code{var} over a
+sliding window of \code{n} time steps.}
+
+\item{\code{...}}{Additional arguments to pass to the function or formula specified
+via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
+interpreted as an expression for tidy evaluation.}
+
+\item{\code{n}}{Number of time steps to use in the running window. For example, if
+\code{n = 5}, one time step is one day, and the alignment is "right", then to
+produce a value on November 5, we apply the given function or formula to
+data in between November 1 and 5. Default is 14.}
+
+\item{\code{complete}}{Should the slide function be run over complete windows only?
+Default is \code{FALSE}, which allows for computation on partial windows.}
+
+\item{\code{new_col_name}}{String indicating the name of the new column that will
+contain the derivative values. Default is "slide_value"; note that setting
+\code{new_col_name} equal to an existing column name will overwrite this column.}
+
+\item{\code{time_step}}{Optional function used to define the meaning of one time
+step, which if specified, overrides the default choice based on the
+metadata. This function must take a positive integer and return an object
+of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this would
+only be meaningful if \code{time_value} is of class \code{POSIXct}, that is, if
+\code{time_type} is "day-time").}
+
+\item{\code{by}}{The variable(s) to group by before slide computation. If missing,
+then \code{geo_value} and the variable names in the \code{other_keys} field of the
+\code{epi_archive} object will be used for grouping.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A tibble with the grouping variables, \code{time_value}, and a new column
+named according to the \code{new_col_name} argument, with the slide values.
 }
 }
 \if{html}{\out{<hr>}}

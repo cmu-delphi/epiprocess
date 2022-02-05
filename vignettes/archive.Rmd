@@ -1,124 +1,231 @@
 ---
-title: 7. Work with data archives and produce snapshots 
+title: 7. Work with archive objects and data revisions
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{7. Work with data archives and produce snapshots}
+  %\VignetteIndexEntry{7. Work with archive objects and data revisions}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-*todo*
+In addition to the `epi_df` data structure, which we have been working with all
+along in these vignettes, the `epiprocess` package has a companion structure
+called `epi_archive`. In comparison to an `epi_df` object, which can be seen as
+storing a single snapshot of a data set with the most up-to-date signal values
+as of some given time, an `epi_archive` object stores the full version history
+of a data set. Many signals of interest for epidemiological tracking are subject
+to revision (some more than others), and paying attention to data revisions can
+be important for all sorts of downstream data analysis and modeling tasks.
 
-Basic stuff:
+This vignette walks through working with `epi_archive` objects and demonstrates
+some of their key functionality. We'll work with a signal on the percentage of
+doctor's visits with CLI (COVID-like illness) computed from medical insurance
+claims, available through the [COVIDcast
+API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/). This
+signal is subject to very heavy and regular revision; you can read more about it
+on its [API documentation
+page](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
 
-- introduce `epi_archive` object. comes with a main function `as_of()`, works
-  something like this: 
-    * if `z` is an `epi_archive` object, then we can use: 
-    ```
-    x <- as_of(z, issue = "2020-06-15")
-    ```
-    * here the object `x` will be an `epi_df` object
-    * the function `as_of()` by default returns the latest observation (defined
-    by unique combo of `geo_value` and `time_value` columns being equal) whose
-    issue doesn't surpass the specified one 
-    * there should be some functionality for specifying what uniquely defines an
-    observation (e.g., more than just those two columns, could be an `age_group`
-    column as well; basically, as way of specifying non-signal columns)
-    * there should also be some functionality for getting all observations (not
-    just the latest) whose issue doesn't surpass the specified one
-    
-Slide stuff:
+```{r, message = FALSE}
+library(covidcast)
+library(epiprocess)
+library(data.table)
+library(dplyr)
 
-- critically, the function `epi_slide()` can apply to an `epi_archive` object!
-- this allows us to do honest forecaster training. basically, replaces `epival`
-(we shouldn't need a separate package ...)  
-- so `epi_slide()` checks what object it's being given
-  * if an `epi_df`, it works as it does currently
-  * if an `epi_archive`, then for each working time value, it uses `as_of()` to
-  only return the data you would have had at that time (and whose time value is
-  withing `n` trailing time steps of the specified one)
-- demo this in the vignette with the hand-built AR forecaster. the `epi_predict` 
-package can and still should be built, to contain more fancy forecasters, and
-potentially also scoring roles. but the functionality for *running* these will
-be already built into `epiprocess`, just as a generalization of `epi_slide()`
+dv <- covidcast_signal(data_source = "doctor-visits", 
+                       signal = "smoothed_adj_cli",
+                       start_day = "2020-06-01", 
+                       end_day = "2021-12-15",
+                       issues = c("2020-06-01", "2021-12-01"),
+                       geo_type = "state", 
+                       geo_values = c("ca", "fl"))
 
-```{r eval = FALSE}
-df =
-  tibble::tribble(
-    ~geo_value, ~time_value, ~version, ~value,
-    ## update history of geo1 for reference time 2021-01-01:
-    ##   (1 day of latency in initial report)
-    "geo1", as.Date("2021-01-01"), as.Date("2021-01-02"), 5.0,
-    ##   (revised upward)
-    "geo1", as.Date("2021-01-01"), as.Date("2021-01-03"), 9.0,
-    ##   (revised upward)
-    "geo1", as.Date("2021-01-01"), as.Date("2021-01-10"), 9.2,
-    ## update history of geo1 for reference time 2021-01-02:
-    ##   (1 day of latency in initial report)
-    "geo1", as.Date("2021-01-02"), as.Date("2021-01-03"), 8.0,
-    ##   (redundant "update" row; we will already be using LOCF to fill in)
-    "geo1", as.Date("2021-01-02"), as.Date("2021-01-04"), 8.0,
-    ##   (replaced with NA)
-    "geo1", as.Date("2021-01-02"), as.Date("2021-01-10"), NA_real_,
-    ## update history of geo1 for reference time 2021-01-05 (suppose data set skips the 3rd and 4th)
-    ##   (1 day of latency in initial report)
-    "geo1", as.Date("2021-01-05"), as.Date("2021-01-06"), 13.0,
-  )
-
-arch1 = epi_archive$new(df)
-arch2 = as_epi_archive(df)
-x = arch2$as_of(max_version = as.Date("2021-01-05"))
+colnames(dv)
 ```
 
+## Getting data into `epi_archive` format
+
+An `epi_archive` object can be constructed from a data frame, data table, or
+tibble, provided that it has (at least) the following columns:
+
+* `geo_value`: the geographic value associated with each row of measurements.
+* `time_value`: the time value associated with each row of measurements.
+* `version`: the time value specifying the version for each row of measurements.
+  For example, if in a given row the `version` is January 15, 2022 and
+  `time_value` is January 14, 2022, then this row contains the measurements of
+  the data for January 14, 2022 that were available one day later.
+
+As we can see from the above, the data frame returned by
+`covidcast::covidcast_signal()` has the columns required for the `epi_archive`
+format, with `issue` playing the role of `version`. We can now use
+`as_epi_archive()` to bring it into `epi_archive` format.
+
+```{r}
+x <- dv %>%
+  select(geo_value, time_value, version = issue, percent_cli = value) %>%
+  as_epi_archive()
+
+class(x)
+print(x)
+```
+
+An `epi_archive` is special kind of class called an R6 class. Its primary field
+is a data table `DT`, which is of class `data.table` (from the `data.table`
+package), and has columns `geo_value`, `time_value`, `version`, as well as any
+number of additional columns.
+
+```{r}
+class(x$DT)
+head(x$DT)
+```
+
+The variables `geo_value`, `time_value`, `version` serve as *key variables* for
+the data table, as well as any other specified in the metadata (described
+below). There can only be a single row per unique combination of key variables,
+and therefore the key variables are critical for figuring out how to generate a
+snapshot of data from the archive, as of a given version (also described below).
+   
+```{r}
+key(x$DT)
+```
+ 
+In general, last-observation-carried-forward (LOCF) is used to data in between
+recorded versions.  **A word of caution:** R6 objects, unlike most other objects
+in R, have reference semantics. An important consequence of this is that objects
+are not copied when modified.
+   
+```{r}
+original_value <- x$DT$percent_cli[1]
+y <- x # This DOES NOT make a copy of x
+y$DT$percent_cli[1] = 0
+head(y$DT)
+head(x$DT) 
+x$DT$percent_cli[1] <- original_value
+```   
+   
+To make a copy, we can use the `clone()` method for an R6 class, as in `y <-
+x$clone()`. You can read more about reference semantics in Hadley Wickham's
+[Advanced R](https://adv-r.hadley.nz/r6.html#r6-semantics) book.
+ 
+## Some details on metadata
+
+The following pieces of metadata are included as fields in an `epi_archive`
+object: 
+
+* `geo_type`: the type for the geo values.
+* `time_type`: the type for the time values.
+* `max_version`: the max version in the data archive.
+* `other_keys`: the names of the other key variables (apart from "geo_value",
+  "time_value", and "version") in the data archive.
+* `additional_metadata`: list of additional metadata for the data archive.
+
+Unlike an `epi_df` object, metadata for an `epi_archive` object `x` can be
+accessed (and altered) directly, as in `x$geo_type` or `x$time_type`, etc. 
+Like `as_epi_df()`, the function `as_epi_archive()` attempts to guess fields
+in the metadata when an `epi_archive` object is instantiated, if they are not
+explicitly specified in the function call (as it did in the case above).
+
+## Producing snapshots in `epi_df` form
+
+A key method of an `epi_archive` class is `as_of()`, which generates a snapshot
+of the archive in `epi_df` format. This represents the most up-to-date values of
+the signal variables as of a given version.
+
+```{r}
+y <- x$as_of(max_version = as.Date("2021-06-01"))
+class(y)
+head(y)
+max(y$time_value)
+attributes(y)$metadata$as_of
+```
+
+We can see that the max time value in the `epi_df` object `y` that has been
+generated from the archive is May 29, 2021, even though the specified version
+date was June 1, 2021. From this we can infer that the doctor's visits signal
+was 2 days latent on June 1. Also, we can see that the metadata in the `epi_df`
+object has the version date recorded in the `as_of` field.
+
+Using the `max_version` field of the `epi_archive` object itself generates a
+snapshot of the latest values of signal variables in the entire archive. The
+`as_of()` function issues a warning in this case (since updates to the current
+version may still come in at a later point in time, due to various reasons).
+
+```{r}
+z <- x$as_of(max_version = x$max_version)
+```
+
+Below, we pull several snapshots from the archive, spaced one month apart. We
+overlay the corresponding signal curves as colored lines, with the version dates
+marked by dotted vertical lines, and draw the "finalized" curve in black, from
+the latest snapshot `z` that the archive can provide.
+
+```{r fig.width = 8, fig.height = 7}
+library(purrr)
+library(ggplot2)
+
+versions = seq(as.Date("2020-06-01"), x$max_version - 1, by = "1 month")
+snapshots <- map_dfr(versions, function(v) { 
+  x$as_of(max_version = v) %>% mutate(version = v)
+}) %>%
+  bind_rows(z %>% mutate(version = x$max_version)) %>%
+  mutate(final = version == x$max_version)
+
+p <- ggplot(snapshots %>% filter(!final),
+            aes(x = time_value, y = percent_cli)) +  
+  geom_line(aes(color = factor(version))) + 
+  geom_vline(aes(color = factor(version), xintercept = version), lty = 2) +
+  facet_wrap(~ geo_value, scales = "free_y", ncol = 1) +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "% of doctor's visits with CLI") + 
+  theme(legend.position = "none")
+
+gginnards::append_layers(
+  p, geom_line(data = snapshots %>% filter(final),
+               aes(x = time_value, y = percent_cli), 
+               inherit.aes = FALSE, color = "black"), pos = "top")
+```
+
+We can see some interesting and highly nontrivial revision behavior: at some
+points in time the provisional data snapshots grossly underestimate the
+finalized curve (look in particular at Florida close to the end of 2021), and at
+others they overestimate it (both states towards the beginning of 2021), though
+not quite as dramatically. Modeling the revision process, which is often called
+*backfill* is an important statistical problem in it of itself.
+
+*todo: refer to some project/code? perhaps we should think about writing a
+ function in `epiprocess` or even a separate package?*
+
+# Sliding version-aware computations
+    
+Next we demonstrate another key method of `epi_archive`, which is the `slide()`
+method. It works just like `epi_slide()` does for an `epi_df` object, but with
+one key difference: it performs version-aware computations. That is, for the 
+computation at any given reference time point t, it uses only **data that would 
+have been available as of t**. 
+
+To demonstrate this, we're going to ...
+
 ```{r eval = FALSE}
-## update.df actually contains update data through issue 2021-01-11, but the
-## data set was not reported to change from 2021-01-10 to 2021-01-11
-epi.tibble.archive = epi_archive$new(update.df, max.issue=as.Date("2021-01-11"))
+cases <- covidcast_signal(data_source = "jhu-csse", 
+                        signal = "confirmed_7dav_incidence_prop",
+                        start_day = "2020-06-01", 
+                        end_day = "2021-12-01",
+                        issues = c("2020-06-01", "2021-12-01"),
+                        geo_type = "state",
+                        geo_values = c("ca", "fl")) %>%
+  select(geo_value, time_value, version = issue, case_rates = value) #%>%
 
-## The snapshot as of issue 2021-01-03 just looks like the updates in issue
-## 2021-01-03, because all past measurements were updated in this issue (we
-## don't need to do any LOCF to obtain the snapshot).
-epi.tibble.archive$epi_df_as_of(as.Date("2021-01-03"))
+# Do a full join at the data.table level---should make a function out of this
+x$DT <- x$DT %>% 
+  merge(cases, all = TRUE) %>% 
+  #table.express::group_by(geo_value, version) %>%
+  setnafill(type = "locf", # Fill according to LOCF
+            cols = c("percent_cli", "case_rates"))
 
-## The snapshot as of issue 2021-01-05 uses LOCF on the first two geo-time
-## combinations. Note that there is no entry for `time_value` 2021-01-05, as the
-## initial version of this data was not available until issue 2021-01-06.
-epi.tibble.archive$epi_df_as_of(as.Date("2021-01-05"))
-
-## The snapshot as of issue 2021-01-06 does include the measurement for
-## `time_value` 2021-01-05.
-epi.tibble.archive$epi_df_as_of(as.Date("2021-01-06"))
-
-## (Don't automatically run this example as it involves network access and querying the API)
-if (FALSE) {
-  library(dplyr)
-  ## (delphi.epidata package is on GitHub in cmu-delphi/delphi-epidata-r)
-  update.df.2 =
-    delphi.epidata::covidcast("jhu-csse", "confirmed_incidence_num",
-                              "day", "state",
-                              delphi.epidata::epirange(12340101,34560101), c("ak","al"),
-                              issues = delphi.epidata::epirange(12340101,34560101)) %>%
-    delphi.epidata::fetch_tbl()
-  snapshot.df.2a =
-    delphi.epidata::covidcast("jhu-csse", "confirmed_incidence_num",
-                              "day", "state",
-                              delphi.epidata::epirange(12340101,34560101), c("ak","al"),
-                              as_of = 20201014) %>%
-    delphi.epidata::fetch_tbl()
-  snapshot.df.2b =
-    delphi.epidata::covidcast("jhu-csse", "confirmed_incidence_num",
-                              "day", "state",
-                              delphi.epidata::epirange(12340101,34560101), c("ak","al"),
-                              as_of = 20201028) %>%
-    delphi.epidata::fetch_tbl()
-  epi.tibble.archive.2 = epi_archive$new(update.df.2)
-  all.equal(
-    as_tibble(epi.tibble.archive.2$epi_df_as_of(as.Date("2020-10-14"))),
-    as_tibble(as_epi_df(snapshot.df.2a)),
-    check.attributes = FALSE)
-  all.equal(
-    as_tibble(epi.tibble.archive.2$epi_df_as_of(as.Date("2020-10-28"))),
-    as_tibble(as_epi_df(snapshot.df.2b)),
-    check.attributes = FALSE)
-}
+x$as_of(x$max_version) %>% 
+  ggplot(aes(x = time_value)) +
+  geom_line(aes(y = percent_cli), col = "red") + 
+  geom_line(aes(y = case_rates / 1000), col = "blue") +
+  facet_wrap(~ geo_value, scales = "free_y", ncol = 1) +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "")
 ```

@@ -59,3 +59,6 @@ be used.
 \item \code{data.frame}: Works analogously to \code{as_epi_df.tbl_df()}.
 }}
 
+\seealso{
+\code{\link{epi_df}} for more details on the \code{epi_df} format
+}

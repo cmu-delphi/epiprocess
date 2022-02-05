@@ -47,7 +47,7 @@
 #'   according to the `new_col_name` argument, containing the outlier detection
 #'   thresholds and replacement values from all detection methods.
 #'
-#' @importFrom dplyr group_modify mutate select 
+#' @importFrom dplyr mutate select 
 #' @importFrom purrr map pmap_dfc
 #' @importFrom tidyselect ends_with all_of
 #' @importFrom rlang !! abort enquo
@@ -67,21 +67,15 @@ epi_detect_outlr = function(x, var,
   # Validate combiner
   combiner = match.arg(combiner)
 
-  # Save the metadata (dplyr drops it)
-  metadata = attributes(x)$metadata
-
   # Outlier detection per group (in case x is grouped) 
-  x = x %>%
+  return(
+    x %>%
     group_modify(epi_detect_outlr_one_grp,
                  var = var,
                  methods = methods,
                  combiner = combiner,
                  new_col_name = new_col_name)
-
-  # Attach the class and metadata and return
-  class(x) = c("epi_df", class(x))
-  attributes(x)$metadata = metadata
-  return(x)
+  )
 }
 
 # Outlier detection over a single group

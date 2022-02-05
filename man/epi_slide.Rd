@@ -13,12 +13,12 @@ epi_slide(
   before,
   complete = FALSE,
   new_col_name = "slide_value",
-  new_col_type = c("dbl", "int", "lgl", "chr", "list"),
+  as_list_col = FALSE,
   time_step
 )
 }
 \arguments{
-\item{x}{The \code{epi_df} or \code{epi_archive} object under consideration.}
+\item{x}{The \code{epi_df} object under consideration.}
 
 \item{f}{Function or formula to slide over variables in \code{x}. To "slide" means
 to apply a function or formula over a running window of \code{n} time steps
@@ -46,7 +46,7 @@ the reference time point than before. Default is "right".}
 \item{before}{Positive integer less than \code{n}, specifying the number of time
 points to use in the sliding window strictly before the reference time
 point. For example, setting \code{before = n-1} would be the same as setting
-\code{align = "right"}. The current argument allows for more flexible
+\code{align = "right"}. The \code{before} argument allows for more flexible
 specification of alignment than the \code{align} parameter, and if specified,
 overrides \code{align}.}
 
@@ -57,8 +57,8 @@ Default is \code{FALSE}, which allows for computation on partial windows.}
 contain the derivative values. Default is "slide_value"; note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
 
-\item{new_col_type}{One of "dbl", "int", "lgl", "chr", or "list", indicating
-the data type (tibble abbreviation) for the new column. Default is "dbl".}
+\item{as_list_col}{Should the new column be stored as a list column? Default
+is \code{FALSE}.}
 
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
@@ -73,7 +73,6 @@ according to the \code{new_col_name} argument, containing the slide values.
 }
 \description{
 Slides a given function over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
-examples. Also applies to an \code{epi_archive} object; see the \href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{data versioning vignette} for
 examples.
 }
 \details{
@@ -84,9 +83,6 @@ determined by the \code{time_type} field in the metadata: the unit is one day if
 \code{time_type} is "week". The time step can also be set explicitly using the
 \code{time_step} argument (which if specified would override the default choice
 based on the metadata).
-
-The critical difference between sliding over an \code{epi_df} versus \code{epi_archive}
-object is that, with the latter, TODO
 
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
 for example, as in:\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
@@ -100,8 +96,4 @@ Thus, to be clear, when the computation is specified via an expression for
 tidy evaluation (first example, above), then the name for the new column is
 inferred from the given expression and overrides any name passed explicitly
 through the \code{new_col_name} argument.
-
-In order to slide a function or formula in a suitable grouped
-fashion (for example, per geo value), we can use \code{group_by()} before the
-call to \code{epi_slide()}.
 }
