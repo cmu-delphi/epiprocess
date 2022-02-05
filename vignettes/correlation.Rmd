@@ -10,8 +10,8 @@ vignette: >
 The `epiprocess` package provides some simple functionality for computing lagged
 correlations between two signals, over space or time (or other variables), via
 `epi_cor()`. This function is really just a convenience wrapper over some basic
-commands: it first performs any specified time shifts, and then computes 
-correlations, grouped in a specified way.
+commands: it first performs specified time shifts, then computes correlations, 
+grouped in a specified way.
 
 In this vignette, we'll examine correlations between state-level COVID-19 case
 and death rates, smoothed using a 7-day trailing average. 
