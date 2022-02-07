@@ -104,22 +104,16 @@ for examples." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct_change.html">2. Compute percentage change over time</a>
+      <a href="../articles/pct_change.html">2. Estimate growth rates in signals</a>
     </li>
     <li>
-      <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
+      <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
+      <a href="../articles/aggregation.html">4. Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
-    </li>
-    <li>
-      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
-    </li>
-    <li>
-      <a href="../articles/archive.html">7. Work with data archives and produce snapshots</a>
+      <a href="../articles/outliers.html">5. Detect and correct outliers in signals</a>
     </li>
   </ul>
 </li>
@@ -162,7 +156,8 @@ for examples.</p>
   <span class='no'>var2</span>,
   <span class='kw'>dt1</span> <span class='kw'>=</span> <span class='fl'>0</span>,
   <span class='kw'>dt2</span> <span class='kw'>=</span> <span class='fl'>0</span>,
-  <span class='kw'>by</span> <span class='kw'>=</span> <span class='no'>geo_value</span>,
+  <span class='kw'>shift_by</span> <span class='kw'>=</span> <span class='no'>geo_value</span>,
+  <span class='kw'>cor_by</span> <span class='kw'>=</span> <span class='no'>geo_value</span>,
   <span class='kw'>use</span> <span class='kw'>=</span> <span class='st'>"na.or.complete"</span>,
   <span class='kw'>method</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"pearson"</span>, <span class='st'>"kendall"</span>, <span class='st'>"spearman"</span>)
 )</pre>
@@ -185,19 +180,26 @@ before computing correlations. Negative shifts translate into in a lag
 value and positive shifts into a lead value; for example, if <code>dt = -1</code>,
 then the new value on June 2 is the original value on June 1; if <code>dt = 1</code>,
 then the new value on June 2 is the original value on June 3; if <code>dt = 0</code>,
-then the values are left as is. Default is 0 for both <code>dt1</code> and <code>dt2</code>. Note
-that the time shifts are always performed <em>per geo value</em>; see details.</p></td>
+then the values are left as is. Default is 0 for both <code>dt1</code> and <code>dt2</code>.</p></td>
     </tr>
     <tr>
-      <th>by</th>
-      <td><p>The variable(s) to group by, for the correlation computation. If
-<code>geo_value</code>, the default, then correlations are computed for each geo
-value, over all time; if <code>time_value</code>, then correlations are computed for
-each time, over all geo values. A grouping can also be any specified using
-number of columns of <code>x</code>; for example, we can use <code>by = c(geo_value, age_group)</code>, assuming <code>x</code> has a column <code>age_group</code>, in order to compute
-correlations for each pair of geo value and age group. To omit a grouping
-entirely, use <code>by = NULL</code>. Note that the grouping here is always applied
-<em>after</em> the time shifts; see details.</p></td>
+      <th>shift_by</th>
+      <td><p>The variables(s) to group by, for the time shifts. The
+default is <code>geo_value</code>. However, we could also use, for example, <code>shift_by = c(geo_value, age_group)</code>, assuming <code>x</code> has a column <code>age_group</code>, to
+perform time shifts per geo value and age group. To omit a grouping
+entirely, use <code>cor_by = NULL</code>. Note that the grouping here is always undone
+<em>before</em> the correlation computations.</p></td>
+    </tr>
+    <tr>
+      <th>cor_by</th>
+      <td><p>The variable(s) to group by, for the correlation
+computations. If <code>geo_value</code>, the default, then correlations are computed
+for each geo value, over all time; if <code>time_value</code>, then correlations are
+computed for each time, over all geo values. A grouping can also be any
+specified using number of columns of <code>x</code>; for example, we can use <code>cor_by = c(geo_value, age_group)</code>, assuming <code>x</code> has a column <code>age_group</code>, in order
+to compute correlations for each pair of geo value and age group. To omit a
+grouping entirely, use <code>cor_by = NULL</code>. Note that the grouping here is
+always done <em>after</em> the time shifts.</p></td>
     </tr>
     <tr>
       <th>use, method</th>
@@ -211,12 +213,6 @@ default for <code>use</code> (different than <code><a href='https://rdrr.io/r/st
 
     <p>An tibble with the grouping columns first (<code>geo_value</code>, <code>time_value</code>,
 or possibly others), and then a column <code>cor</code>, which gives the correlation.</p>
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>Time shifts are always performed first, grouped by geo value (this
-way they amount to shifting each individual time series). After this, the
-geo grouping is removed, and the grouping specified in the <code>by</code> argument is
-applied. Then, correlations are computed.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

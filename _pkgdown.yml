@@ -19,7 +19,6 @@ articles:
       - correlation
       - aggregation
       - outliers
-      - archive
 
 repo:
   url:

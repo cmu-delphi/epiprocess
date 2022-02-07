@@ -1,8 +1,8 @@
 ---
-title: 4. Correlate signals over space and time
+title: 3. Correlate signals over space and time
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{4. Correlate signals over space and time}
+  %\VignetteIndexEntry{3. Correlate signals over space and time}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

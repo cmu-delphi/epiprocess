@@ -62,22 +62,16 @@
       <a href="articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="articles/pct_change.html">2. Compute percentage change over time</a>
+      <a href="articles/pct_change.html">2. Estimate growth rates in signals</a>
     </li>
     <li>
-      <a href="articles/derivative.html">3. Estimate derivatives of signals</a>
+      <a href="articles/correlation.html">3. Correlate signals over space and time</a>
     </li>
     <li>
-      <a href="articles/correlation.html">4. Correlate signals over space and time</a>
+      <a href="articles/aggregation.html">4. Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="articles/aggregation.html">5. Aggregate signals over space and time</a>
-    </li>
-    <li>
-      <a href="articles/outliers.html">6. Detect and correct outliers in signals</a>
-    </li>
-    <li>
-      <a href="articles/archive.html">7. Work with data archives and produce snapshots</a>
+      <a href="articles/outliers.html">5. Detect and correct outliers in signals</a>
     </li>
   </ul>
 </li>
@@ -115,16 +109,16 @@
 <li><p><code><a href="reference/epi_cor.html">epi_cor()</a></code>, for computing lagged correlations between variables in an <code>epi_df</code> object, (allowing for grouping by geo value, time value, or any other variables);</p></li>
 <li><p><code><a href="reference/epi_detect_outlr.html">epi_detect_outlr()</a></code>, for detecting and correcting outliers in a variable in an <code>epi_df</code> object, using either built-in or custom methodologies.</p></li>
 </ul>
-<p>Other notable functions include <code><a href="reference/pct_change.html">pct_change()</a></code>and <code><a href="reference/estimate_deriv.html">estimate_deriv()</a></code>, which, when used within a call to <code><a href="reference/epi_slide.html">epi_slide()</a></code>, allow for fluid computation of percentage change values or estimation of derivatives over time.</p>
+<p>Other notable functions include todo</p>
 </div>
 <div id="epi_archive-full-version-history-of-a-data-set" class="section level2">
 <h2 class="hasAnchor">
 <a href="#epi_archive-full-version-history-of-a-data-set" class="anchor"></a>epi_archive: full version history of a data set</h2>
 <p>The second main data structure in the package is called <a href="reference/epi_archive.html"><code>epi_archive</code></a>. This is a special class wrapped around a data table that stores the archive (version history) of some signal variables of interest.</p>
-<p>Critically, an <code>epi_archive</code> object can be used to generate a snapshot of the associated data set in <code>epi_df</code> format, which represents the most up-to-date values of the signal variables, as of the specified version. This is accomplished by calling the <code>as_of()</code> method for an <code>epi_archive</code> object <code>x</code>, for example:</p>
+<p>An <code>epi_archive</code> object can be used to generate a snapshot of the associated data set in <code>epi_df</code> format, which represents the most up-to-date values of the signal variables, as of the specified version. This is accomplished by calling the <code>as_of()</code> method for an <code>epi_archive</code> object <code>x</code>, for example:</p>
 <pre><code>x$as_of(as.Date("2022-01-15"))</code></pre>
 <p>to generate an <code>epi_df</code> object containing a data snapshot as of January 15, 2022.</p>
-<p>Notably, <code><a href="reference/epi_slide.html">epi_slide()</a></code> can also be applied directly to an <code>epi_archive</code> object, in a way that is similar to how it works for an <code>epi_df</code> object, but with one key difference: for the computation at any given time value <code>t</code>, it acts on data in a sliding window of <code>t</code>, but <strong>only the data that would have been available as of <code>t</code></strong>.</p>
+<p>Importantly, sliding computations can also be done over a data archive. This is accomplished by calling the <code>slide()</code> method for an <code>epi_archive</code> object. This works similarly to the way <code><a href="reference/epi_slide.html">epi_slide()</a></code> works for an <code>epi_df</code> object, but with one key difference: for an <code>epi_archive</code> object, the sliding computation at any given reference time point t is performed on the <strong>data that would have been available as of t</strong>.</p>
 </div>
 </div>
   </div>

@@ -41,7 +41,6 @@
 
 <meta property="og:title" content="Slide a function over variables in an <code>epi_df</code> object — epi_slide" />
 <meta property="og:description" content="Slides a given function over variables in an epi_df object. See the slide vignette for
-examples. Also applies to an epi_archive object; see the data versioning vignette for
 examples." />
 
 
@@ -103,22 +102,16 @@ examples." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct_change.html">2. Compute percentage change over time</a>
+      <a href="../articles/pct_change.html">2. Estimate growth rates in signals</a>
     </li>
     <li>
-      <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
+      <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
+      <a href="../articles/aggregation.html">4. Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
-    </li>
-    <li>
-      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
-    </li>
-    <li>
-      <a href="../articles/archive.html">7. Work with data archives and produce snapshots</a>
+      <a href="../articles/outliers.html">5. Detect and correct outliers in signals</a>
     </li>
   </ul>
 </li>
@@ -150,7 +143,6 @@ examples." />
 
     <div class="ref-description">
     <p>Slides a given function over variables in an <code>epi_df</code> object. See the <a href='https://cmu-delphi.github.io/epiprocess/articles/slide.html'>slide vignette</a> for
-examples. Also applies to an <code>epi_archive</code> object; see the <a href='https://cmu-delphi.github.io/epiprocess/articles/archive.html'>data versioning vignette</a> for
 examples.</p>
     </div>
 
@@ -163,7 +155,7 @@ examples.</p>
   <span class='no'>before</span>,
   <span class='kw'>complete</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"slide_value"</span>,
-  <span class='kw'>new_col_type</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"dbl"</span>, <span class='st'>"int"</span>, <span class='st'>"lgl"</span>, <span class='st'>"chr"</span>, <span class='st'>"list"</span>),
+  <span class='kw'>as_list_col</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='no'>time_step</span>
 )</pre>
 
@@ -172,7 +164,7 @@ examples.</p>
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>The <code>epi_df</code> or <code>epi_archive</code> object under consideration.</p></td>
+      <td><p>The <code>epi_df</code> object under consideration.</p></td>
     </tr>
     <tr>
       <th>f</th>
@@ -210,7 +202,7 @@ the reference time point than before. Default is "right".</p></td>
       <td><p>Positive integer less than <code>n</code>, specifying the number of time
 points to use in the sliding window strictly before the reference time
 point. For example, setting <code>before = n-1</code> would be the same as setting
-<code>align = "right"</code>. The current argument allows for more flexible
+<code>align = "right"</code>. The <code>before</code> argument allows for more flexible
 specification of alignment than the <code>align</code> parameter, and if specified,
 overrides <code>align</code>.</p></td>
     </tr>
@@ -226,9 +218,9 @@ contain the derivative values. Default is "slide_value"; note that setting
 <code>new_col_name</code> equal to an existing column name will overwrite this column.</p></td>
     </tr>
     <tr>
-      <th>new_col_type</th>
-      <td><p>One of "dbl", "int", "lgl", "chr", or "list", indicating
-the data type (tibble abbreviation) for the new column. Default is "dbl".</p></td>
+      <th>as_list_col</th>
+      <td><p>Should the new column be stored as a list column? Default
+is <code>FALSE</code>.</p></td>
     </tr>
     <tr>
       <th>time_step</th>
@@ -254,8 +246,6 @@ determined by the <code>time_type</code> field in the metadata: the unit is one 
 <code>time_type</code> is "week". The time step can also be set explicitly using the
 <code>time_step</code> argument (which if specified would override the default choice
 based on the metadata).</p>
-<p>The critical difference between sliding over an <code>epi_df</code> versus <code>epi_archive</code>
-object is that, with the latter, TODO</p>
 <p>If <code>f</code> is missing, then an expression for tidy evaluation can be specified,
 for example, as in:</p><pre><span class='fu'>epi_slide</span>(<span class='no'>x</span>, <span class='kw'>cases_7dav</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>(<span class='no'>cases</span>), <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>7</span>)</pre>
 
@@ -266,9 +256,6 @@ for example, as in:</p><pre><span class='fu'>epi_slide</span>(<span class='no'>x
 tidy evaluation (first example, above), then the name for the new column is
 inferred from the given expression and overrides any name passed explicitly
 through the <code>new_col_name</code> argument.</p>
-<p>In order to slide a function or formula in a suitable grouped
-fashion (for example, per geo value), we can use <code>group_by()</code> before the
-call to <code>epi_slide()</code>.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

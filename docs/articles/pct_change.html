@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2. Compute percentage change over time • epiprocess</title>
+<title>2. Estimate growth rates in signals • epiprocess</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="2. Compute percentage change over time">
+<script src="../pkgdown.js"></script><meta property="og:title" content="2. Estimate growth rates in signals">
 <meta property="og:description" content="epiprocess">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -60,22 +60,16 @@
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct_change.html">2. Compute percentage change over time</a>
+      <a href="../articles/pct_change.html">2. Estimate growth rates in signals</a>
     </li>
     <li>
-      <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
+      <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
+      <a href="../articles/aggregation.html">4. Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
-    </li>
-    <li>
-      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
-    </li>
-    <li>
-      <a href="../articles/archive.html">7. Work with data archives and produce snapshots</a>
+      <a href="../articles/outliers.html">5. Detect and correct outliers in signals</a>
     </li>
   </ul>
 </li>
@@ -100,7 +94,7 @@
       </header><script src="pct_change_files/header-attrs-2.10/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>2. Compute percentage change over time</h1>
+      <h1 data-toc-skip>2. Estimate growth rates in signals</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/main/vignettes/pct_change.Rmd"><code>vignettes/pct_change.Rmd</code></a></small>
@@ -125,27 +119,26 @@
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span>(<span class="kw">cases</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">cases</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">cases</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>)</pre></body></html></div>
-<pre><code>## Warning: Unknown or uninitialised column: `metadata`.</code></pre>
 <div id="percentage-change" class="section level2">
 <h2 class="hasAnchor">
 <a href="#percentage-change" class="anchor"></a>Percentage change</h2>
 <p>The <code><a href="../reference/pct_change.html">pct_change()</a></code> function is a simple convenience function that takes a single argument <code>var</code>, the variable whose percentage change is to be computed. If <code>var</code> has length N, which is assumed to be even, and A and B denote the sum of the first N/2 and last N/2 values in <code>var</code>, respectively, then <code><a href="../reference/pct_change.html">pct_change(var)</a></code> returns 100 * (B / A - 1). (If the length of <code>var</code> is odd, then its first value is ignored, for the sake of the computation.)</p>
 <p>Used in call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code>, we can fluidly compute percentage change values in a variable over time:</p>
-<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="no">x</span>, <span class="kw">pct_change</span> <span class="kw">=</span> <span class="fu"><a href="../reference/pct_change.html">pct_change</a></span>(<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>, <span class="kw">align</span> <span class="kw">=</span> <span class="st">"center"</span>,
+<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="no">x</span>, <span class="kw">pct_change</span> <span class="kw">=</span> <span class="fu"><a href="../reference/pct_change.html">pct_change</a></span>(<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">14</span>, <span class="kw">align</span> <span class="kw">=</span> <span class="st">"center"</span>,
                <span class="kw">complete</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>, <span class="fl">21</span>) <span class="kw">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span>(<span class="kw">n</span> <span class="kw">=</span> <span class="fl">Inf</span>)</pre></body></html></div>
 <pre><code>## # A tibble: 6 × 4
 ##   geo_value time_value cases pct_change
 ##   &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
-## 1 fl        2020-06-01  667          NA
-## 2 fl        2020-06-02  642          NA
-## 3 fl        2020-06-03  867          NA
-## 4 fl        2020-06-04 1005          NA
-## 5 fl        2020-06-05 1065          NA
-## 6 fl        2020-06-06 1099.         NA</code></pre>
+## 1 fl        2020-06-07 1111.       46.1
+## 2 fl        2020-06-08 1153.       44.8
+## 3 fl        2020-06-09 1222.       44.2
+## 4 fl        2020-06-10 1230.       49.8
+## 5 fl        2020-06-11 1269.       58.9
+## 6 fl        2020-06-12 1355.       69.2</code></pre>
 <p>Note the use of <code>align = "center"</code>, which centers the running window around the reference time point (as opposed to the default, <code>align = "right"</code>). Thus to be clear, the <code>pct_change</code> value computed on (for example) June 7 is the percentage change between the sum of cases from June 1 to 7, and the sum from June 8 to June 14. This can be seen as an estimate of the weekly <em>growth rate</em> on June 7. Furthermore, the argument <code>complete = TRUE</code> in the call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code> specifies that a complete window of <code>n = 14</code> time points must be available for the computation, which is why the the percentage change values for the first 6 time points (from June 1 to June 6) are <code>NA</code>.</p>
 <p>Next we plot these values alongside the signal itself. We highlight the periods in time for which the percentage change is above 10% (in red) and below -10% (in blue).</p>
-<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
+<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
 
 <span class="no">threshold_upper</span> <span class="kw">=</span> <span class="fl">10</span>

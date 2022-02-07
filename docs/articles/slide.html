@@ -60,22 +60,16 @@
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct_change.html">2. Compute percentage change over time</a>
+      <a href="../articles/pct_change.html">2. Estimate growth rates in signals</a>
     </li>
     <li>
-      <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
+      <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
+      <a href="../articles/aggregation.html">4. Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
-    </li>
-    <li>
-      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
-    </li>
-    <li>
-      <a href="../articles/archive.html">7. Work with data archives and produce snapshots</a>
+      <a href="../articles/outliers.html">5. Detect and correct outliers in signals</a>
     </li>
   </ul>
 </li>
@@ -120,32 +114,30 @@
 <span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="kw">data_source</span> <span class="kw">=</span> <span class="st">"jhu-csse"</span>,
                       <span class="kw">signal</span> <span class="kw">=</span> <span class="st">"confirmed_incidence_num"</span>,
                       <span class="kw">start_day</span> <span class="kw">=</span> <span class="st">"2020-06-01"</span>,
-                      <span class="kw">end_day</span> <span class="kw">=</span> <span class="st">"2021-05-31"</span>,
+                      <span class="kw">end_day</span> <span class="kw">=</span> <span class="st">"2021-12-31"</span>,
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>,
-                      <span class="kw">geo_values</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"ca"</span>, <span class="st">"fl"</span>, <span class="st">"ny"</span>, <span class="st">"tx"</span>))  <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>() <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span>(<span class="kw">cases</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">cases</span>)</pre></body></html></div>
-<pre><code>## Warning: Unknown or uninitialised column: `metadata`.</code></pre>
+                      <span class="kw">geo_values</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"ca"</span>, <span class="st">"fl"</span>, <span class="st">"ny"</span>, <span class="st">"tx"</span>)) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="kw">cases</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>()</pre></body></html></div>
 <div id="slide-with-a-formula" class="section level2">
 <h2 class="hasAnchor">
 <a href="#slide-with-a-formula" class="anchor"></a>Slide with a formula</h2>
 <p>We first demonstrate how to apply a 7-day trailing average to the daily cases in order to smooth the signal, by passing in a formula for the first argument of <code><a href="../reference/epi_slide.html">epi_slide()</a></code>. To do this computation per state, we first call <code><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by()</a></code>.</p>
-<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">x</span> <span class="kw">%&gt;%</span>
+<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">x</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(~ <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">.x</span>$<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fl">10</span>)</pre></body></html></div>
 <pre><code>## # A tibble: 6 × 4
 ##   geo_value time_value cases slide_value
 ##   &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;       &lt;dbl&gt;
-## 1 ca        2020-06-01  2438       2438 
-## 2 ca        2020-06-02  2421       2430.
-## 3 ca        2020-06-03  2133       2331.
-## 4 ca        2020-06-04  3030       2506.
-## 5 ca        2020-06-05  3128       2630 
-## 6 ca        2020-06-06  2855       2668.</code></pre>
+## 1 ca        2020-06-01  2436       2436 
+## 2 ca        2020-06-02  2421       2428.
+## 3 ca        2020-06-03  2133       2330 
+## 4 ca        2020-06-04  3030       2505 
+## 5 ca        2020-06-05  3128       2630.
+## 6 ca        2020-06-06  2855       2667.</code></pre>
 <p>The formula specified has access to all columns present in the original <code>epi_df</code> object (and must refer to them with the prefix <code>.x$</code>). As we can see, the function <code><a href="../reference/epi_slide.html">epi_slide()</a></code> returns an <code>epi_df</code> object with a new column appended that contains the results (from sliding), named <code>slide_value</code> as the default. We can of course change this post hoc, or we can instead specify a new name up front using the <code>new_col_name</code> argument:</p>
-<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
+<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(~ <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">.x</span>$<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>, <span class="kw">new_col_name</span> <span class="kw">=</span> <span class="st">"cases_7dav"</span>)
 
@@ -153,14 +145,14 @@
 <pre><code>## # A tibble: 6 × 4
 ##   geo_value time_value cases cases_7dav
 ##   &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
-## 1 ca        2020-06-01  2438      2438 
-## 2 ca        2020-06-02  2421      2430.
-## 3 ca        2020-06-03  2133      2331.
-## 4 ca        2020-06-04  3030      2506.
-## 5 ca        2020-06-05  3128      2630 
-## 6 ca        2020-06-06  2855      2668.</code></pre>
+## 1 ca        2020-06-01  2436      2436 
+## 2 ca        2020-06-02  2421      2428.
+## 3 ca        2020-06-03  2133      2330 
+## 4 ca        2020-06-04  3030      2505 
+## 5 ca        2020-06-05  3128      2630.
+## 6 ca        2020-06-06  2855      2667.</code></pre>
 <p>As a simple sanity check, we visualize the 7-day trailing averages computed on top of the original counts:</p>
-<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
+<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
 
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>)) +
@@ -170,12 +162,13 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Reported COVID-19 cases"</span>)</pre></body></html></div>
 <p><img src="slide_files/figure-html/unnamed-chunk-4-1.png" width="864"></p>
+<p>As we can see from the top right panel, it looks like Texas moved to weekly reporting of COVID-19 cases in summer of 2021.</p>
 </div>
 <div id="slide-with-a-function" class="section level2">
 <h2 class="hasAnchor">
 <a href="#slide-with-a-function" class="anchor"></a>Slide with a function</h2>
 <p>We can also pass a function for the first argument in <code><a href="../reference/epi_slide.html">epi_slide()</a></code>. In this case, the passed function must have the following argument structure: <code>x</code>, a data frame with the same column names as the original object; followed by any number of named arguments; and ending with <code>...</code> to capture additional arguments. Recreating the last example of a 7-day trailing average:</p>
-<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
+<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">function</span>(<span class="no">x</span>, <span class="no">...</span>) <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">x</span>$<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>,
             <span class="kw">new_col_name</span> <span class="kw">=</span> <span class="st">"cases_7dav"</span>)
@@ -184,18 +177,18 @@
 <pre><code>## # A tibble: 6 × 4
 ##   geo_value time_value cases cases_7dav
 ##   &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
-## 1 ca        2020-06-01  2438      2438 
-## 2 ca        2020-06-02  2421      2430.
-## 3 ca        2020-06-03  2133      2331.
-## 4 ca        2020-06-04  3030      2506.
-## 5 ca        2020-06-05  3128      2630 
-## 6 ca        2020-06-06  2855      2668.</code></pre>
+## 1 ca        2020-06-01  2436      2436 
+## 2 ca        2020-06-02  2421      2428.
+## 3 ca        2020-06-03  2133      2330 
+## 4 ca        2020-06-04  3030      2505 
+## 5 ca        2020-06-05  3128      2630.
+## 6 ca        2020-06-06  2855      2667.</code></pre>
 </div>
 <div id="slide-the-tidy-way" class="section level2">
 <h2 class="hasAnchor">
 <a href="#slide-the-tidy-way" class="anchor"></a>Slide the tidy way</h2>
 <p>Perhaps the most convenient way to setup a computation in <code><a href="../reference/epi_slide.html">epi_slide()</a></code> is to pass in an expression for tidy evaluation. In this case, we can simply define the name of the new column directly as part of the expression, setting it equal to a computation in which we can access any columns of <code>x</code> by name, just as we would in a call to <code><a href="https://dplyr.tidyverse.org/reference/summarise.html">dplyr::summarize()</a></code>, or any of the <code>dplyr</code> verbs. For example:</p>
-<div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
+<div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">cases_7dav</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>)
 
@@ -203,20 +196,21 @@
 <pre><code>## # A tibble: 6 × 4
 ##   geo_value time_value cases cases_7dav
 ##   &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
-## 1 ca        2020-06-01  2438      2438 
-## 2 ca        2020-06-02  2421      2430.
-## 3 ca        2020-06-03  2133      2331.
-## 4 ca        2020-06-04  3030      2506.
-## 5 ca        2020-06-05  3128      2630 
-## 6 ca        2020-06-06  2855      2668.</code></pre>
+## 1 ca        2020-06-01  2436      2436 
+## 2 ca        2020-06-02  2421      2428.
+## 3 ca        2020-06-03  2133      2330 
+## 4 ca        2020-06-04  3030      2505 
+## 5 ca        2020-06-05  3128      2630.
+## 6 ca        2020-06-06  2855      2667.</code></pre>
 </div>
 <div id="running-a-local-forecaster" class="section level2">
 <h2 class="hasAnchor">
 <a href="#running-a-local-forecaster" class="anchor"></a>Running a local forecaster</h2>
-<p>As a more complicated example, we create a forecaster based on a local (in time) autoregression or AR model. AR models can be fit in numerous ways (using base R functions and various packages), but here we define it “by hand” both because it provides a more advanced example of sliding a function over an <code>epi_df</code> object, and because it allows us to be a bit more flexible in defining a <em>probabilistic</em> forecaster: one that outputs not just a point prediction, but a notion of uncertainty around this. In particular, our forecaster will output a point prediction along with an 90% uncertainty band, represented by a predictive quantiles at the 5% and 95% levels (lower and upper endpoints of the uncertainty band).</p>
+<p>As a more complex example, we create a forecaster based on a local (in time) autoregression or AR model. AR models can be fit in numerous ways (using base R functions and various packages), but here we define it “by hand” both because it provides a more advanced example of sliding a function over an <code>epi_df</code> object, and because it allows us to be a bit more flexible in defining a <em>probabilistic</em> forecaster: one that outputs not just a point prediction, but a notion of uncertainty around this. In particular, our forecaster will output a point prediction along with an 90% uncertainty band, represented by a predictive quantiles at the 5% and 95% levels (lower and upper endpoints of the uncertainty band).</p>
 <p>The function defined below, <code>prob_ar()</code>, is our probabilistic AR forecaster. The <code>lags</code>argument indicates which lags to use in the model, and <code>ahead</code> indicates how far ahead in the future to make forecasts (both are encoded in terms of the units of the <code>time_value</code> column; so, days, in the working <code>epi_df</code> being considered in this vignette).</p>
-<div class="sourceCode" id="cb12"><html><body><pre class="r"><span class="no">prob_ar</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">v</span>, <span class="no">lags</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>, <span class="fl">7</span>, <span class="fl">14</span>), <span class="no">ahead</span> <span class="kw">=</span> <span class="fl">7</span>, <span class="no">min_train_window</span> <span class="kw">=</span> <span class="fl">20</span>,
-                    <span class="no">lower_level</span> <span class="kw">=</span> <span class="fl">0.05</span>, <span class="no">upper_level</span> <span class="kw">=</span> <span class="fl">0.95</span>, <span class="no">symmetrize</span> <span class="kw">=</span> <span class="fl">TRUE</span>) {
+<div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="no">prob_ar</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">v</span>, <span class="no">lags</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>, <span class="fl">7</span>, <span class="fl">14</span>), <span class="no">ahead</span> <span class="kw">=</span> <span class="fl">7</span>, <span class="no">min_train_window</span> <span class="kw">=</span> <span class="fl">20</span>,
+                    <span class="no">lower_level</span> <span class="kw">=</span> <span class="fl">0.05</span>, <span class="no">upper_level</span> <span class="kw">=</span> <span class="fl">0.95</span>, <span class="no">symmetrize</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
+                    <span class="no">nonneg</span> <span class="kw">=</span> <span class="fl">TRUE</span>) {
   <span class="co"># Return NA if insufficient training data</span>
   <span class="kw">if</span> (<span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span>(<span class="no">v</span>) <span class="kw">&lt;</span> <span class="no">min_train_window</span> + <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(<span class="no">lags</span>) + <span class="no">ahead</span>) {
     <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">point</span> <span class="kw">=</span> <span class="fl">NA</span>, <span class="kw">lower</span> <span class="kw">=</span> <span class="fl">NA</span>, <span class="kw">upper</span> <span class="kw">=</span> <span class="fl">NA</span>))
@@ -234,16 +228,25 @@
   <span class="no">newx</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html">tail</a></span>(<span class="no">x</span>, <span class="fl">1</span>)
   <span class="no">point</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/drop.html">drop</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">1</span>, <span class="no">newx</span>) <span class="kw">%*%</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html">coef</a></span>(<span class="no">fit</span>))
 
-  <span class="co"># Compute a band and return</span>
+  <span class="co"># Compute a band </span>
   <span class="no">r</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/residuals.html">residuals</a></span>(<span class="no">fit</span>)
   <span class="no">s</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span>(<span class="no">symmetrize</span>, -<span class="fl">1</span>, <span class="fl">NA</span>) <span class="co"># Should the residuals be symmetrized?</span>
   <span class="no">q</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html">quantile</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="no">r</span>, <span class="no">s</span> * <span class="no">r</span>), <span class="kw">probs</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="no">lower_level</span>, <span class="no">upper_level</span>), <span class="kw">na.rm</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
-  <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">point</span> <span class="kw">=</span> <span class="no">point</span>, <span class="kw">lower</span> <span class="kw">=</span> <span class="no">point</span> + <span class="no">q</span>[<span class="fl">1</span>], <span class="kw">upper</span> <span class="kw">=</span> <span class="no">point</span> + <span class="no">q</span>[<span class="fl">2</span>]))
+  <span class="no">lower</span> <span class="kw">&lt;-</span> <span class="no">point</span> + <span class="no">q</span>[<span class="fl">1</span>]
+  <span class="no">upper</span> <span class="kw">&lt;-</span> <span class="no">point</span> + <span class="no">q</span>[<span class="fl">2</span>]
+
+  <span class="co"># Clip at zero if we need to, then return</span>
+  <span class="kw">if</span> (<span class="no">nonneg</span>) {
+    <span class="no">point</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(<span class="no">point</span>, <span class="fl">0</span>)
+    <span class="no">lower</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(<span class="no">lower</span>, <span class="fl">0</span>)
+    <span class="no">upper</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(<span class="no">upper</span>, <span class="fl">0</span>)
+  }
+  <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">point</span> <span class="kw">=</span> <span class="no">point</span>, <span class="kw">lower</span> <span class="kw">=</span> <span class="no">lower</span>, <span class="kw">upper</span> <span class="kw">=</span> <span class="no">upper</span>))
 }</pre></body></html></div>
 <p>Now we go ahead and slide this AR forecaster over the working <code>epi_df</code> of COVID-19 cases. Note that we actually model the <code>cases_7dav</code> column, to operate on the scale of smoothed COVID-19 cases. (This is clearly equivalent, up to a constant, to modeling weekly sums of COVID-19 cases.)</p>
-<div class="sourceCode" id="cb13"><html><body><pre class="r"><span class="no">z</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
+<div class="sourceCode" id="cb12"><html><body><pre class="r"><span class="no">z</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">forecast</span> <span class="kw">=</span> <span class="fu">prob_ar</span>(<span class="no">cases_7dav</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">100</span>, <span class="kw">new_col_type</span> <span class="kw">=</span> <span class="st">"list"</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">forecast</span> <span class="kw">=</span> <span class="fu">prob_ar</span>(<span class="no">cases_7dav</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">120</span>, <span class="kw">as_list_col</span> <span class="kw">=</span> <span class="fl">TRUE</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">target_date</span> <span class="kw">=</span> <span class="no">time_value</span> + <span class="fl">7</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">tail</a></span>(<span class="no">z</span>, <span class="fl">3</span>)</pre></body></html></div>
@@ -251,33 +254,33 @@
 ## # Groups:   geo_value [1]
 ##   geo_value time_value cases cases_7dav forecast     target_date
 ##   &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt; &lt;list&gt;       &lt;date&gt;     
-## 1 tx        2021-05-29  1081      1715. &lt;df [1 × 3]&gt; 2021-06-05 
-## 2 tx        2021-05-30   384      1660. &lt;df [1 × 3]&gt; 2021-06-06 
-## 3 tx        2021-05-31   144      1582. &lt;df [1 × 3]&gt; 2021-06-07</code></pre>
+## 1 tx        2021-12-29 14286     14365. &lt;df [1 × 3]&gt; 2022-01-05 
+## 2 tx        2021-12-30 15600     14811. &lt;df [1 × 3]&gt; 2022-01-06 
+## 3 tx        2021-12-31 15762     15096. &lt;df [1 × 3]&gt; 2022-01-07</code></pre>
 <p>We can see that the <code>forecast</code> column is a list column (as specified in the call to <code>slide_to_geo()</code>, which was needed since <code>prob_ar()</code> returns a data frame), and we can use <code><a href="https://tidyr.tidyverse.org/reference/nest.html">tidyr::unnest()</a></code> to unnest it.</p>
-<div class="sourceCode" id="cb15"><html><body><pre class="r"><span class="no">z</span> <span class="kw">&lt;-</span> <span class="kw pkg">tidyr</span><span class="kw ns">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/nest.html">unnest</a></span>(<span class="no">z</span>, <span class="no">forecast</span>)
+<div class="sourceCode" id="cb14"><html><body><pre class="r"><span class="no">z</span> <span class="kw">&lt;-</span> <span class="kw pkg">tidyr</span><span class="kw ns">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/nest.html">unnest</a></span>(<span class="no">z</span>, <span class="no">forecast</span>)
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">tail</a></span>(<span class="no">z</span>, <span class="fl">10</span>)</pre></body></html></div>
 <pre><code>## # A tibble: 10 × 8
 ## # Groups:   geo_value [1]
-##    geo_value time_value cases cases_7dav point lower upper target_date
-##    &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;date&gt;     
-##  1 tx        2021-05-22  1353      1725  2045. 1434. 2655. 2021-05-29 
-##  2 tx        2021-05-23   768      1742. 2052. 1457. 2647. 2021-05-30 
-##  3 tx        2021-05-24   687      1769. 2037. 1458. 2617. 2021-05-31 
-##  4 tx        2021-05-25  3964      1752. 2016. 1435. 2597. 2021-06-01 
-##  5 tx        2021-05-26  2181      1776. 2024. 1469. 2579. 2021-06-02 
-##  6 tx        2021-05-27  1289      1688. 1982. 1418. 2546. 2021-06-03 
-##  7 tx        2021-05-28  2032      1753. 1972. 1404. 2539. 2021-06-04 
-##  8 tx        2021-05-29  1081      1715. 1890. 1323. 2457. 2021-06-05 
-##  9 tx        2021-05-30   384      1660. 1796. 1235. 2356. 2021-06-06 
-## 10 tx        2021-05-31   144      1582. 1709. 1127. 2292. 2021-06-07</code></pre>
+##    geo_value time_value cases cases_7dav  point  lower  upper target_date
+##    &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;date&gt;     
+##  1 tx        2021-12-22 10121      8330.  6856.  5186.  8525. 2021-12-29 
+##  2 tx        2021-12-23 12476      9293.  7339.  5800.  8877. 2021-12-30 
+##  3 tx        2021-12-24 13771     10405.  7801.  6173.  9429. 2021-12-31 
+##  4 tx        2021-12-25 15336     11444.  9045.  7453. 10638. 2022-01-01 
+##  5 tx        2021-12-26 12559     12177. 10466.  8849. 12083. 2022-01-02 
+##  6 tx        2021-12-27 17331     13137  12124. 10466. 13783. 2022-01-03 
+##  7 tx        2021-12-28 14795     13770. 13671. 11683. 15660. 2022-01-04 
+##  8 tx        2021-12-29 14286     14365. 16074. 13833. 18314. 2022-01-05 
+##  9 tx        2021-12-30 15600     14811. 18576. 15793. 21358. 2022-01-06 
+## 10 tx        2021-12-31 15762     15096. 20191. 17278. 23104. 2022-01-07</code></pre>
 <p>Now we get three columns <code>point</code>, <code>lower</code>, and <code>upper</code> corresponding to the point forecast, and the lower and upper endpoints of the 95% prediction band, respectively.</p>
-<p>To finish off, we plot the forecasts at some times (spaced out by a few months) over the last year, at multiple horizons (7, 14, and 28 days ahead). To do so, we encapsulate the process of generating forecasts into a simple function, so that we can call it a few times.</p>
-<div class="sourceCode" id="cb17"><html><body><pre class="r"><span class="no">k_week_ahead</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">x</span>, <span class="no">ahead</span> <span class="kw">=</span> <span class="fl">7</span>) {
+<p>To finish off, we plot the forecasts at some times (spaced out by a few months) over the last year, at multiple horizons (7, 14, 21, and 28 days ahead). To do so, we encapsulate the process of generating forecasts into a simple function, so that we can call it a few times.</p>
+<div class="sourceCode" id="cb16"><html><body><pre class="r"><span class="no">k_week_ahead</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">x</span>, <span class="no">ahead</span> <span class="kw">=</span> <span class="fl">7</span>) {
   <span class="no">x</span> <span class="kw">%&gt;%</span>
     <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
-    <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">forecast</span> <span class="kw">=</span> <span class="fu">prob_ar</span>(<span class="no">cases_7dav</span>, <span class="kw">ahead</span> <span class="kw">=</span> <span class="no">ahead</span>),
-              <span class="kw">n</span> <span class="kw">=</span> <span class="fl">100</span>, <span class="kw">new_col_type</span> <span class="kw">=</span> <span class="st">"list"</span>) <span class="kw">%&gt;%</span>
+    <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">forecast</span> <span class="kw">=</span> <span class="fu">prob_ar</span>(<span class="no">cases_7dav</span>, <span class="kw">ahead</span> <span class="kw">=</span> <span class="no">ahead</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">120</span>,
+              <span class="kw">as_list_col</span> <span class="kw">=</span> <span class="fl">TRUE</span>) <span class="kw">%&gt;%</span>
     <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">target_date</span> <span class="kw">=</span> <span class="no">time_value</span> + <span class="no">ahead</span>) <span class="kw">%&gt;%</span>
     <span class="kw pkg">tidyr</span><span class="kw ns">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/nest.html">unnest</a></span>(<span class="no">forecast</span>)
 }
@@ -285,12 +288,13 @@
 <span class="co"># First generate the forecasts, and bind them together</span>
 <span class="no">z</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind.html">bind_rows</a></span>(<span class="fu">k_week_ahead</span>(<span class="no">x</span>, <span class="kw">ahead</span> <span class="kw">=</span> <span class="fl">7</span>),
                <span class="fu">k_week_ahead</span>(<span class="no">x</span>, <span class="kw">ahead</span> <span class="kw">=</span> <span class="fl">14</span>),
+               <span class="fu">k_week_ahead</span>(<span class="no">x</span>, <span class="kw">ahead</span> <span class="kw">=</span> <span class="fl">21</span>),
                <span class="fu">k_week_ahead</span>(<span class="no">x</span>, <span class="kw">ahead</span> <span class="kw">=</span> <span class="fl">28</span>))
 
 <span class="co"># Now plot some of them, spaced apart by 2 months</span>
 <span class="no">z_to_show</span> <span class="kw">&lt;-</span> <span class="no">z</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">time_value</span> <span class="kw">%in%</span>
-           <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span>(<span class="st">"2020-08-01"</span>), <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span>(<span class="st">"2021-06-01"</span>), <span class="kw">by</span> <span class="kw">=</span> <span class="st">"2 months"</span>))
+           <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span>(<span class="st">"2020-08-01"</span>), <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span>(<span class="st">"2021-12-31"</span>), <span class="kw">by</span> <span class="kw">=</span> <span class="st">"2 months"</span>))
 
 <span class="no">p</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">z_to_show</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">target_date</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">point</span>, <span class="kw">group</span> <span class="kw">=</span> <span class="no">time_value</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html">geom_ribbon</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">ymin</span> <span class="kw">=</span> <span class="no">lower</span>, <span class="kw">ymax</span> <span class="kw">=</span> <span class="no">upper</span>), <span class="kw">fill</span> <span class="kw">=</span> <span class="st">"orchid"</span>, <span class="kw">alpha</span> <span class="kw">=</span> <span class="fl">0.5</span>) +
@@ -304,9 +308,8 @@
   <span class="no">p</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">z</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">cases_7dav</span>),
                <span class="kw">inherit.aes</span> <span class="kw">=</span> <span class="fl">FALSE</span>, <span class="kw">color</span> <span class="kw">=</span> <span class="st">"gray50"</span>), <span class="kw">pos</span> <span class="kw">=</span> <span class="st">"bottom"</span>)</pre></body></html></div>
 <p><img src="slide_files/figure-html/unnamed-chunk-10-1.png" width="864"></p>
-<p>Two points are worth making. First, the AR model’s performance here is pretty mixed. At various points in time, we can see that its forecasts are volatile (its point predictions are all over the place), or overconfident (its bands are too narrow), or both at the same time. This is only meant as a simple demo and slightly more sophisticated AR models can go a long way. For example, the overconfidence in this example is due to the fact that the bands are based on quantiles of training residuals, and when the AR model fits well to the training set, these can clearly be too small in magnitude.</p>
-<p>Second, the AR forecaster here is using using finalized data, meaning, it uses the signal values (reported COVID-19 cases) corresponding to the latest issue dates available, for both training models and making predictions. However, this is not reflective of the provisional nature of the data that it must cope with in a true forecast task. Training and making predictions on finalized data can lead to an overly optimismic sense of accuracy; see, for example, <a href="https://www.medrxiv.org/content/10.1101/2021.06.22.21259346">McDonald et al. (2021)</a>, and references therein.</p>
-<p><em>todo; refer to relevant functionality, vignette on issues and archive objects, <code>epipred</code>, and so on</em></p>
+<p>Two points are worth making. First, the AR model’s performance here is pretty mixed. At various points in time, we can see that its forecasts are volatile (its point predictions are all over the place), or overconfident (its bands are too narrow), or both at the same time. This is only meant as a simple demo and not entirely unexpected given the way the AR model is set up. For example, the overconfidence in this example is due to the fact that the bands are based on quantiles of training residuals, so if the AR model fits well to the training set, then these can clearly be too small in magnitude. The <a href="https://cmu-delphi.github.io/epipredict/"><code>epipredict</code></a> package, which is a companion package to <code>epiprocess</code>, offers a suite of predictive modeling tools that can improve on some of the shortcomings of the above simple AR model.</p>
+<p>Second, the AR forecaster here is using finalized data, meaning, it uses the latest versions of signal values (reported COVID-19 cases) available, for both training models and making predictions historically. However, this is not reflective of the provisional nature of the data that it must cope with in a true forecast task. Training and making predictions on finalized data can lead to an overly optimistic sense of accuracy; see, for example, <a href="https://www.pnas.org/content/118/51/e2111453118/">McDonald et al. (2021)</a>, and references therein. Fortunately, the <code>epiprocess</code> package provides a data structure called <code>epi_archive</code> that can be used to store all data revisions, and furthermore, an <code>epi_archive</code> object knows how to slide computations in the correct <strong>version-aware</strong> sense (for the computation at each reference time t, it uses only data that would have been available as of t). See the <a href="https://cmu-delphi.github.io/epiprocess/articles/archive.html">archive vignette</a> for more details.</p>
 </div>
   </div>
 

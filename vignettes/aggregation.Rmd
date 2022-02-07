@@ -1,8 +1,8 @@
 ---
-title: 5. Aggregate signals over space and time
+title: 4. Aggregate signals over space and time
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{5. Aggregate signals over space and time}
+  %\VignetteIndexEntry{4. Aggregate signals over space and time}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

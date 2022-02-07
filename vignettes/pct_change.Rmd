@@ -1,8 +1,8 @@
 ---
-title: 2. Compute percentage change over time
+title: 2. Estimate growth rates in signals
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{2. Compute percentage change over time}
+  %\VignetteIndexEntry{2. Estimate growth rates in signals}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
