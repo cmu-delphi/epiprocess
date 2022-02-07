@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Computations with <code>NA</code> values removed — Min • epiprocess</title>
+<title>dplyr verbs — arrange.epi_df • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,8 @@
 
 
 
-<meta property="og:title" content="Computations with <code>NA</code> values removed — Min" />
-<meta property="og:description" content="These are just wrapper functions for common computational utilities with NA
-values removed by default." />
+<meta property="og:title" content="dplyr verbs — arrange.epi_df" />
+<meta property="og:description" content="dplyr verbs for epi_df objexts, preserving class and attributes." />
 
 
 
@@ -136,25 +135,32 @@ values removed by default." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Computations with <code>NA</code> values removed</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/utils.R'><code>R/utils.R</code></a></small>
-    <div class="hidden name"><code>Min.Rd</code></div>
+    <h1>dplyr verbs</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/epi_verbs.R'><code>R/epi_verbs.R</code></a></small>
+    <div class="hidden name"><code>arrange.epi_df.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>These are just wrapper functions for common computational utilities with <code>NA</code>
-values removed by default.</p>
+    <p>dplyr verbs for <code>epi_df</code> objexts, preserving class and attributes.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>Min</span>(<span class='no'>x</span>)
+    <pre class="usage"><span class='co'># S3 method for epi_df</span>
+<span class='fu'>arrange</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
-<span class='fu'>Max</span>(<span class='no'>x</span>)
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>group_by</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
-<span class='fu'>Sum</span>(<span class='no'>x</span>)
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>group_modify</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
-<span class='fu'>Mean</span>(<span class='no'>x</span>)
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>mutate</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
-<span class='fu'>Median</span>(<span class='no'>x</span>)</pre>
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>ungroup</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>unnest</span>(<span class='no'>x</span>, <span class='no'>...</span>)</pre>
 
 
 

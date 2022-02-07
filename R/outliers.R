@@ -47,10 +47,10 @@
 #'   according to the `new_col_name` argument, containing the outlier detection
 #'   thresholds and replacement values from all detection methods.
 #'
-#' @importFrom dplyr group_modify mutate select 
+#' @importFrom dplyr mutate select 
 #' @importFrom purrr map pmap_dfc
 #' @importFrom tidyselect ends_with all_of
-#' @importFrom rlang abort enquo
+#' @importFrom rlang !! abort enquo
 #' @export
 epi_detect_outlr = function(x, var,
                             methods = tibble(
@@ -67,21 +67,15 @@ epi_detect_outlr = function(x, var,
   # Validate combiner
   combiner = match.arg(combiner)
 
-  # Save the metadata (dplyr drops it)
-  metadata = attributes(x)$metadata
-
   # Outlier detection per group (in case x is grouped) 
-  x = x %>%
+  return(
+    x %>%
     group_modify(epi_detect_outlr_one_grp,
                  var = var,
                  methods = methods,
                  combiner = combiner,
                  new_col_name = new_col_name)
-
-  # Attach the class and metadata and return
-  class(x) = c("epi_df", class(x))
-  attributes(x)$metadata = metadata
-  return(x)
+  )
 }
 
 # Outlier detection over a single group
@@ -168,6 +162,7 @@ epi_detect_outlr_one_grp = function(.data_group, var, methods, combiner,
 #'   `upper`, and `replacement`. 
 #'
 #' @importFrom dplyr mutate pull select
+#' @importFrom rlang !!
 #' @export
 epi_detect_outlr_rm = function(x, var, n = 21,
                                log_transform = FALSE,
@@ -247,6 +242,7 @@ epi_detect_outlr_rm = function(x, var, n = 21,
 #' @importFrom dplyr case_when mutate pull select transmute
 #' @importFrom fabletools model
 #' @importFrom feasts STL
+#' @importFrom rlang !!
 #' @export
 epi_detect_outlr_stl = function(x, var,
                                n_trend = 21,
@@ -261,6 +257,7 @@ epi_detect_outlr_stl = function(x, var,
   # Make x into a tsibble for use with fable
   x_tsibble = x %>%
     select(time_value, y = !!var) %>%
+    tibble::as_tibble() %>% 
     tsibble::as_tsibble(index = time_value)
 
  # Transform if requested

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Computations with <code>NA</code> values removed — Min • epiprocess</title>
+<title>Convert to <code>epi_archive</code> format — as_epi_archive • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,10 @@
 
 
 
-<meta property="og:title" content="Computations with <code>NA</code> values removed — Min" />
-<meta property="og:description" content="These are just wrapper functions for common computational utilities with NA
-values removed by default." />
+<meta property="og:title" content="Convert to <code>epi_archive</code> format — as_epi_archive" />
+<meta property="og:description" content="Converts a data frame, data table, or tibble into an epi_archive
+object. See the archive vignette for
+examples." />
 
 
 
@@ -102,16 +103,19 @@ values removed by default." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct_change.html">2. Estimate growth rates in signals</a>
+      <a href="../articles/pct_change.html">2. Compute percentage change over time</a>
     </li>
     <li>
-      <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
+      <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/aggregation.html">4. Aggregate signals over space and time</a>
+      <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/outliers.html">5. Detect and correct outliers in signals</a>
+      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
+    </li>
+    <li>
+      <a href="../articles/archive.html">7. Work with archive objects and data revisions</a>
     </li>
   </ul>
 </li>
@@ -136,27 +140,72 @@ values removed by default." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Computations with <code>NA</code> values removed</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/utils.R'><code>R/utils.R</code></a></small>
-    <div class="hidden name"><code>Min.Rd</code></div>
+    <h1>Convert to <code>epi_archive</code> format</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/epi_archive.R'><code>R/epi_archive.R</code></a></small>
+    <div class="hidden name"><code>as_epi_archive.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>These are just wrapper functions for common computational utilities with <code>NA</code>
-values removed by default.</p>
+    <p>Converts a data frame, data table, or tibble into an <code>epi_archive</code>
+object. See the <a href='https://cmu-delphi.github.io/epiprocess/articles/archive.html'>archive vignette</a> for
+examples.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>Min</span>(<span class='no'>x</span>)
+    <pre class="usage"><span class='fu'>as_epi_archive</span>(
+  <span class='no'>x</span>,
+  <span class='no'>geo_type</span>,
+  <span class='no'>time_type</span>,
+  <span class='no'>max_version</span>,
+  <span class='no'>other_keys</span>,
+  <span class='kw'>additional_metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>()
+)</pre>
 
-<span class='fu'>Max</span>(<span class='no'>x</span>)
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>x</th>
+      <td><p>A data frame, data table, or tibble, with columns <code>geo_value</code>,
+<code>time_value</code>, <code>version</code>, and then any additional number of columns.</p></td>
+    </tr>
+    <tr>
+      <th>geo_type</th>
+      <td><p>Type for the geo values. If missing, then the function will
+attempt to infer it from the geo values present; if this fails, then it
+will be set to "custom".</p></td>
+    </tr>
+    <tr>
+      <th>time_type</th>
+      <td><p>Type for the time values. If missing, then the function will
+attempt to infer it from the time values present; if this fails, then it
+will be set to "custom".</p></td>
+    </tr>
+    <tr>
+      <th>max_version</th>
+      <td><p>Maximum version in the data archive. If missing, then the
+function will set it equal to the maximum of the <code>version</code> column in <code>x</code>.</p></td>
+    </tr>
+    <tr>
+      <th>other_keys</th>
+      <td><p>Character vector specifying the names of variables in <code>x</code>
+that should be considered key variables (in the language of <code>data.table</code>)
+apart from "geo_value", "time_value", and "version".</p></td>
+    </tr>
+    <tr>
+      <th>additional_metadata</th>
+      <td><p>List of additional metadata to attach to the
+<code>epi_archive</code> object. The metadata will have <code>geo_type</code> and <code>time_type</code>
+fields; named entries from the passed list or will be included as well.</p></td>
+    </tr>
+    </table>
 
-<span class='fu'>Sum</span>(<span class='no'>x</span>)
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-<span class='fu'>Mean</span>(<span class='no'>x</span>)
+    <p>An <code>epi_archive</code> object.</p>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-<span class='fu'>Median</span>(<span class='no'>x</span>)</pre>
-
-
+    <div class='dont-index'><p><code><a href='epi_archive.html'>epi_archive</a></code> for more details on the <code>epi_archive</code>
+format</p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

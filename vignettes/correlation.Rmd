@@ -1,18 +1,17 @@
 ---
-title: 4. Correlate signals over space and time
+title: 3. Correlate signals over space and time
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{4. Correlate signals over space and time}
+  %\VignetteIndexEntry{3. Correlate signals over space and time}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-The `epiprocess` package provides some simple functionality for computing lagged 
-correlations between two signals, over space or time, via `epi_cor()`. This
-function is really just a convenience wrapper over some basic commands: it first
-performs any specified time shifts, grouped by geo value (this way, it shifts
-each of the individual time series); then, it removes the geo grouping and
-applies the grouping that is specified; finally, it computes correlations.
+The `epiprocess` package provides some simple functionality for computing lagged
+correlations between two signals, over space or time (or other variables), via
+`epi_cor()`. This function is really just a convenience wrapper over some basic
+commands: it first performs specified time shifts, then computes correlations, 
+grouped in a specified way.
 
 In this vignette, we'll examine correlations between state-level COVID-19 case
 and death rates, smoothed using a 7-day trailing average. 
@@ -23,27 +22,25 @@ library(epiprocess)
 library(dplyr)
 
 start_day <- "2020-03-01"
-end_day <- "2021-10-11"
+end_day <- "2021-12-31"
 
 x <- covidcast_signal(data_source = "jhu-csse", 
                       signal = "confirmed_incidence_prop",
                       start_day = start_day, 
                       end_day = end_day,
                       geo_type = "state") %>%
-  rename(case_rates = value) %>%
-  select(geo_value, time_value, case_rates) 
+  select(geo_value, time_value, case_rates = value) 
 
 y <- covidcast_signal(data_source = "jhu-csse", 
                       signal = "deaths_incidence_prop",
                       start_day = start_day, 
                       end_day = end_day,
                       geo_type = "state") %>%
-  rename(death_rates = value) %>%
-  select(geo_value, time_value, death_rates) 
+  select(geo_value, time_value, death_rates = value) 
 
 x <- x %>%
   full_join(y, by = c("geo_value", "time_value")) %>%
-  as.epi_df() %>%
+  as_epi_df() %>%
   group_by(geo_value) %>%
   epi_slide(case_rates = mean(case_rates), n = 7) %>%
   epi_slide(death_rates = mean(death_rates), n = 7) %>%
@@ -57,16 +54,16 @@ specification of the variables to correlate, in its next two arguments (`var1`
 and `var2`).
 
 In general, we can specify any grouping variable (or combination of variables)
-in a call to `epi_cor()`, via the `by` argument. This potentially leads to many
-ways to compute correlations. There are always at least two ways to compute
-correlations in an `epi_df`: grouping by time value, and by geo value. The
-former is obtained by setting `by = time_value`.
+for the correlation computations in a call to `epi_cor()`, via the `cor_by`
+argument. This potentially leads to many ways to compute correlations. There are
+always at least two ways to compute correlations in an `epi_df`: grouping by
+time value, and by geo value. The former is obtained via `cor_by = time_value`.
 
 ```{r, message = FALSE, warning = FALSE}
 library(ggplot2)
 theme_set(theme_bw())
 
-z1 <- epi_cor(x, case_rates, death_rates, by = time_value)
+z1 <- epi_cor(x, case_rates, death_rates, cor_by = time_value)
 
 ggplot(z1, aes(x = time_value, y = cor)) + 
   geom_line() +
@@ -93,7 +90,7 @@ might also help to think of it this way: death rates on a certain day will be
 correlated with case rates at an offset of -10 days.)
 
 ```{r, message = FALSE, warning = FALSE}
-z2 <- epi_cor(x, case_rates, death_rates, by = time_value, dt1 = -10)
+z2 <- epi_cor(x, case_rates, death_rates, cor_by = time_value, dt1 = -10)
 
 z <- rbind(z1 %>% mutate(lag = 0), 
            z2 %>% mutate(lag = 10)) %>%
@@ -105,19 +102,24 @@ ggplot(z, aes(x = time_value, y = cor)) +
   labs(x = "Date", y = "Correlation", col = "Lag") 
 ```
 
+Note that `epi_cor()` takes an argument `shift_by` that determines the grouping
+to use for the time shifts. The default is `geo_value`, which makes sense in our
+problem at hand (but in another setting, we may want to group by, say, geo value 
+and age before time shifting).
+
 We can see that, generally, lagging the case rates back by 10 days improves the
 correlations, confirming case rates are better correlated with death rates 10
 days from now.
 
 ## Correlations grouped by state
 
-The second option we have is to group by geo value, obtained by setting `by = 
-geo_value`. We'll again look at correlations both for 0- and 10-day lagged case  
-rates.
+The second option we have is to group by geo value, obtained by setting `cor_by
+= geo_value`. We'll again look at correlations for both 0- and 10-day lagged 
+case rates.
 
 ```{r, message = FALSE, warning = FALSE}
-z1 <- epi_cor(x, case_rates, death_rates, by = geo_value)
-z2 <- epi_cor(x, case_rates, death_rates, by = geo_value, dt1 = -10)
+z1 <- epi_cor(x, case_rates, death_rates, cor_by = geo_value)
+z2 <- epi_cor(x, case_rates, death_rates, cor_by = geo_value, dt1 = -10)
 
 z <- rbind(z1 %>% mutate(lag = 0), 
            z2 %>% mutate(lag = 10)) %>%
@@ -141,7 +143,7 @@ library(purrr)
 lags = 0:35
 
 z <- map_dfr(lags, function(lag) {
-  epi_cor(x, case_rates, death_rates, by = geo_value, dt1 = -lag) %>% 
+  epi_cor(x, case_rates, death_rates, cor_by = geo_value, dt1 = -lag) %>% 
     mutate(lag = lag) 
   })
 

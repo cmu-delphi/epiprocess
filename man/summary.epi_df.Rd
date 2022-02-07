@@ -12,9 +12,6 @@
 \item{...}{Additional arguments, for compatibility with \code{summary()}.
 Currently unused.}
 }
-\value{
-No return value; called only to print summary statistics.
-}
 \description{
 Prints a variety of summary statistics about the \code{epi_df} object, such as
 the time range included and geographic coverage.

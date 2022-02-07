@@ -60,22 +60,16 @@
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct_change.html">2. Compute percentage change over time</a>
+      <a href="../articles/pct_change.html">2. Estimate growth rates in signals</a>
     </li>
     <li>
-      <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
+      <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
+      <a href="../articles/aggregation.html">4. Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
-    </li>
-    <li>
-      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
-    </li>
-    <li>
-      <a href="../articles/issues.html">7. Work with issue dates and archive objects</a>
+      <a href="../articles/outliers.html">5. Detect and correct outliers in signals</a>
     </li>
   </ul>
 </li>
@@ -127,75 +121,71 @@
 <p>We’ll start by showing how to get data into <code>epi_df</code> format, which is just a tibble with a bit of special structure, and is the format assumed by all of the functions in the <code>epiprocess</code> package. An <code>epi_df</code> object has (at least) the following columns:</p>
 <ul>
 <li>
-<code>geo_value</code>: the geographic value associated with each measurement.</li>
+<code>geo_value</code>: the geographic value associated with each row of measurements.</li>
 <li>
-<code>time_value</code>: the time value associated with each measurement.</li>
+<code>time_value</code>: the time value associated with each row of measurements.</li>
 </ul>
-<p>Other columns can be considered as measured variables, which we also broadly refer to as signal variables. To learn more about the <code>epi_df</code> format, you can read the documentation for <code><a href="../reference/as.epi_df.html">as.epi_df()</a></code>.</p>
-<p>A data frame or tibble that has <code>geo_value</code> and <code>time_value</code> columns can be converted into an <code>epi_df</code> object, using the function <code><a href="../reference/as.epi_df.html">as.epi_df()</a></code>. As an example, we’ll look at daily cumulative COVID-19 cases for 4 states (CA, FL, NY, and TX) in the U.S., over a year spanning mid 2020 to mid 2021, using the <a href="https://cmu-delphi.github.io/covidcast/covidcastR/"><code>covidcast</code></a> package to fetch this data from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/">COVIDcast API</a>.</p>
+<p>It can have any number of other columns which can serve as measured variables, which we also broadly refer to as signal variables. The documentation for <a href="reference/epi_df.html"><code>epi_df</code></a> gives more details about this data format.</p>
+<p>A data frame or tibble that has <code>geo_value</code> and <code>time_value</code> columns can be converted into an <code>epi_df</code> object, using the function <code><a href="../reference/as_epi_df.html">as_epi_df()</a></code>. As an example, we’ll work with daily cumulative COVID-19 cases for 4 states (CA, FL, NY, and TX) in the U.S., over time span from mid 2020 to early 2022, and we’ll use the <a href="https://cmu-delphi.github.io/covidcast/covidcastR/"><code>covidcast</code></a> package to fetch this data from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/">COVIDcast API</a>.</p>
 <div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">covidcast</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">epiprocess</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">dplyr</span>)
 
-<span class="no">case_data</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="kw">data_source</span> <span class="kw">=</span> <span class="st">"jhu-csse"</span>,
-                              <span class="kw">signal</span> <span class="kw">=</span> <span class="st">"confirmed_cumulative_num"</span>,
-                              <span class="kw">start_day</span> <span class="kw">=</span> <span class="st">"2020-06-01"</span>,
-                              <span class="kw">end_day</span> <span class="kw">=</span> <span class="st">"2021-5-31"</span>,
-                              <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>,
-                              <span class="kw">geo_values</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"ca"</span>, <span class="st">"fl"</span>, <span class="st">"ny"</span>, <span class="st">"tx"</span>))
+<span class="no">cases</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="kw">data_source</span> <span class="kw">=</span> <span class="st">"jhu-csse"</span>,
+                          <span class="kw">signal</span> <span class="kw">=</span> <span class="st">"confirmed_cumulative_num"</span>,
+                          <span class="kw">start_day</span> <span class="kw">=</span> <span class="st">"2020-06-01"</span>,
+                          <span class="kw">end_day</span> <span class="kw">=</span> <span class="st">"2022-01-31"</span>,
+                          <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>,
+                          <span class="kw">geo_values</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"ca"</span>, <span class="st">"fl"</span>, <span class="st">"ny"</span>, <span class="st">"tx"</span>))
 
-<span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span>(<span class="no">case_data</span>)</pre></body></html></div>
-<pre><code>## [1] "covidcast_signal" "data.frame"</code></pre>
-<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span>(<span class="no">case_data</span>)</pre></body></html></div>
+<span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span>(<span class="no">cases</span>)</pre></body></html></div>
 <pre><code>##  [1] "data_source"         "signal"              "geo_value"          
 ##  [4] "time_value"          "source"              "geo_type"           
 ##  [7] "time_type"           "issue"               "lag"                
 ## [10] "missing_value"       "missing_stderr"      "missing_sample_size"
 ## [13] "value"               "stderr"              "sample_size"</code></pre>
-<p>As we can see, a data frame returned <code><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast::covidcast_signal()</a></code> has the columns required for an <code>epi_df</code> object (along with many others). A call to <code><a href="../reference/as.epi_df.html">as.epi_df()</a></code>, with further specification of some relevant metadata, brings the data frame into <code>epi_df</code> format.</p>
-<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">epiprocess</span>)
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">dplyr</span>)
-
-<span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/as.epi_df.html">as.epi_df</a></span>(<span class="no">case_data</span>,
+<p>As we can see, a data frame returned by <code><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast::covidcast_signal()</a></code> has the columns required for an <code>epi_df</code> object (along with many others). We can use <code><a href="../reference/as_epi_df.html">as_epi_df()</a></code>, with specification of some relevant metadata, to bring the data frame into <code>epi_df</code> format.</p>
+<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>(<span class="no">cases</span>,
                <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>,
                <span class="kw">time_type</span> <span class="kw">=</span> <span class="st">"day"</span>,
-               <span class="kw">issue</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(<span class="no">case_data</span>$<span class="no">issue</span>)) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span>(<span class="st">"cases_cum"</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">cases_cum</span>)
+               <span class="kw">as_of</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(<span class="no">cases</span>$<span class="no">issue</span>)) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="kw">cases_cum</span> <span class="kw">=</span> <span class="no">value</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span>(<span class="no">x</span>)</pre></body></html></div>
 <pre><code>## [1] "epi_df"     "tbl_df"     "tbl"        "data.frame"</code></pre>
-<div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span>(<span class="no">x</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span>(<span class="no">x</span>)</pre></body></html></div>
 <pre><code>## An `epi_df` object, with metadata:
 ## * geo_type  = state
 ## * time_type = day
-## * issue     = 2022-01-22
+## * as_of     = 2022-02-05
 ## 
-## Summary of space-time coverge:
+## Summary of space-time coverage:
 ## * earliest time value              = 2020-06-01
-## * latest time value                = 2021-05-31
+## * latest time value                = 2022-01-31
 ## * median geo values per time value = 4</code></pre>
-<div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>)</pre></body></html></div>
 <pre><code>## # A tibble: 6 × 3
 ##   geo_value time_value cases_cum
 ##   &lt;chr&gt;     &lt;date&gt;         &lt;dbl&gt;
-## 1 ca        2020-06-01    116261
+## 1 ca        2020-06-01    116294
 ## 2 fl        2020-06-01     56830
 ## 3 ny        2020-06-01    371711
 ## 4 tx        2020-06-01     54302
-## 5 ca        2020-06-02    118681
+## 5 ca        2020-06-02    118715
 ## 6 fl        2020-06-02     57447</code></pre>
-<div class="sourceCode" id="cb13"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/attributes.html">attributes</a></span>(<span class="no">x</span>)$<span class="no">metadata</span></pre></body></html></div>
+<div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/attributes.html">attributes</a></span>(<span class="no">x</span>)$<span class="no">metadata</span></pre></body></html></div>
 <pre><code>## $geo_type
 ## [1] "state"
 ## 
 ## $time_type
 ## [1] "day"
 ## 
-## $issue
-## [1] "2022-01-22"</code></pre>
+## $as_of
+## [1] "2022-02-05"</code></pre>
 </div>
-<div id="some-info-about-required-metadata" class="section level2">
+<div id="some-details-on-metadata" class="section level2">
 <h2 class="hasAnchor">
-<a href="#some-info-about-required-metadata" class="anchor"></a>Some info about required metadata</h2>
+<a href="#some-details-on-metadata" class="anchor"></a>Some details on metadata</h2>
 <p>In general, an <code>epi_df</code> object must have following fields in its metadata:</p>
 <ul>
 <li>
@@ -203,13 +193,12 @@
 <li>
 <code>time_type</code>: the type for the time values.</li>
 <li>
-<code>issue</code>: the time value at which the given data set was issued.</li>
+<code>as_of</code>: the time value at which the given data were available.</li>
 </ul>
-<p>In a typical case, the <code>issue</code> field represents the maximum of the issues of individual signal values measured in the data set; hence we would also say that the data set is comprised of all signal values observed “as of” the given issue in the metadata.</p>
-<p>If any of the <code>geo_type</code>, <code>time_type</code>, and <code>issue</code> arguments are missing in a call to <code><a href="../reference/as.epi_df.html">as.epi_df()</a></code>, then this function will try to infer them from the passed object (The documentation for <code><a href="../reference/as.epi_df.html">as.epi_df()</a></code> gives more details.)</p>
-<div class="sourceCode" id="cb15"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/as.epi_df.html">as.epi_df</a></span>(<span class="no">case_data</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span>(<span class="st">"cases_cum"</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">cases_cum</span>)
+<p>The last field here, <code>as_of</code>, is one of the most unique aspects of an <code>epi_df</code> object. In brief, we can think of an <code>epi_df</code> object as a single snapshot of a data set that contains the most up-to-date values of some signals of interest, as of the time specified <code>as_of</code>. For example, if <code>as_of</code> is January 31, 2022, then the <code>epi_df</code> object has the most up-to-date version of the data available as of January 31, 2022. The <code>epiprocess</code> package also provides a companion data structure called <code>epi_archive</code>, which stores the full version history of a given data set. See the <a href="https://cmu-delphi.github.io/epiprocess/articles/archive.html">archive vignette</a> for more.</p>
+<p>If either of the <code>geo_type</code> or <code>time_type</code> arguments are missing in a call to <code><a href="../reference/as_epi_df.html">as_epi_df()</a></code>, then this function will try to infer them from the passed object. Same with the <code>as_of</code> argument, though this is often harder to infer. See the documentation for <code><a href="../reference/as_epi_df.html">as_epi_df()</a></code> more details.</p>
+<div class="sourceCode" id="cb13"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>(<span class="no">cases</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="kw">cases_cum</span> <span class="kw">=</span> <span class="no">value</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/base/attributes.html">attributes</a></span>(<span class="no">x</span>)$<span class="no">metadata</span></pre></body></html></div>
 <pre><code>## $geo_type
@@ -218,14 +207,14 @@
 ## $time_type
 ## [1] "day"
 ## 
-## $issue
-## [1] "2022-01-22"</code></pre>
+## $as_of
+## [1] "2022-02-05"</code></pre>
 </div>
 <div id="working-with-epi_df-objects-downstream" class="section level2">
 <h2 class="hasAnchor">
 <a href="#working-with-epi_df-objects-downstream" class="anchor"></a>Working with <code>epi_df</code> objects downstream</h2>
-<p>Data in <code>epi_df</code> format should be easy to work with downstream; in the other vignettes, we’ll walk through some basic signal processing tasks using functions provided in the <code>epiprocess</code> package; of course, we can also write custom code for other downstream uses, like plotting, which is pretty easy to do <code>ggplot2</code>.</p>
-<div class="sourceCode" id="cb17"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
+<p>Data in <code>epi_df</code> format should be easy to work with downstream, since it is a very standard tabular data format; in the other vignettes, we’ll walk through some basic signal processing tasks using functions provided in the <code>epiprocess</code> package. Of course, we can also write custom code for other downstream uses, like plotting, which is pretty easy to do <code>ggplot2</code>.</p>
+<div class="sourceCode" id="cb15"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
 
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">cases_cum</span>, <span class="kw">color</span> <span class="kw">=</span> <span class="no">geo_value</span>)) +
@@ -233,12 +222,11 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Cumulative COVID-19 cases"</span>, <span class="kw">color</span> <span class="kw">=</span> <span class="st">"State"</span>)</pre></body></html></div>
 <p><img src="epiprocess_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
-<p>As a last example, we’ll look at data on daily new (not cumulative) SARS cases in Canada in 2003, from the <a href="https://github.com/reconverse/outbreaks">outbreaks</a> package.</p>
-<div class="sourceCode" id="cb18"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="kw pkg">outbreaks</span><span class="kw ns">::</span><span class="no"><a href="https://rdrr.io/pkg/outbreaks/man/sars_canada_2003.html">sars_canada_2003</a></span> <span class="kw">%&gt;%</span>
+<p>As last example, we’ll look at a few more data sets just to show how we might get them into <code>epi_df</code> format. Data on daily new (not cumulative) SARS cases in Canada in 2003, from the <a href="https://github.com/reconverse/outbreaks">outbreaks</a> package:</p>
+<div class="sourceCode" id="cb16"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="kw pkg">outbreaks</span><span class="kw ns">::</span><span class="no"><a href="https://rdrr.io/pkg/outbreaks/man/sars_canada_2003.html">sars_canada_2003</a></span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">geo_value</span> <span class="kw">=</span> <span class="st">"ca"</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span>(<span class="kw">time_value</span> <span class="kw">=</span> <span class="no">date</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="fu"><a href="https://dplyr.tidyverse.org/reference/reexports.html">starts_with</a></span>(<span class="st">"cases"</span>)) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/as.epi_df.html">as.epi_df</a></span>(<span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"nation"</span>)
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="kw">time_value</span> <span class="kw">=</span> <span class="no">date</span>, <span class="fu"><a href="https://dplyr.tidyverse.org/reference/reexports.html">starts_with</a></span>(<span class="st">"cases"</span>)) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>(<span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"nation"</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>)</pre></body></html></div>
 <pre><code>## # A tibble: 6 × 6
@@ -250,7 +238,7 @@
 ## 4 ca        2003-02-26            0               1                0           0
 ## 5 ca        2003-02-27            0               0                0           0
 ## 6 ca        2003-02-28            1               0                0           0</code></pre>
-<div class="sourceCode" id="cb20"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">tidyr</span>)
+<div class="sourceCode" id="cb18"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">tidyr</span>)
 <span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html">pivot_longer</a></span>(<span class="fu"><a href="https://tidyr.tidyverse.org/reference/reexports.html">starts_with</a></span>(<span class="st">"cases"</span>), <span class="kw">names_to</span> <span class="kw">=</span> <span class="st">"type"</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">type</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/substr.html">substring</a></span>(<span class="no">type</span>, <span class="fl">7</span>))
@@ -264,6 +252,7 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html">scale_y_continuous</a></span>(<span class="kw">breaks</span> <span class="kw">=</span> <span class="no">yrange</span>[<span class="fl">1</span>]:<span class="no">yrange</span>[<span class="fl">2</span>]) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"SARS cases in Canada"</span>, <span class="kw">fill</span> <span class="kw">=</span> <span class="st">"Type"</span>)</pre></body></html></div>
 <p><img src="epiprocess_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
+<p><em>todo: include another example here</em></p>
 </div>
   </div>
 
@@ -278,7 +267,7 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Evan Ray, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

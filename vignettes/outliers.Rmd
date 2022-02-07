@@ -1,8 +1,8 @@
 ---
-title: 6. Detect and correct outliers in signals
+title: 5. Detect and correct outliers in signals
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{6. Detect and correct outliers in signals}
+  %\VignetteIndexEntry{5. Detect and correct outliers in signals}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -11,8 +11,8 @@ This vignette describes functionality for detecting and correcting outliers in
 signals in the `epi_detect_outlr()` function provided in the `epiprocess`
 package. This is designed to be modular and extendable, so that you can provide
 your own outlier detection and correction functions and use them with `epi_df`
-objects. We'll work state-level daily reported COVID-19 case counts in Florida
-and New Jersey.
+objects. We'll work with state-level daily reported COVID-19 case counts from 
+Florida and New Jersey.
 
 ```{r, message = FALSE, fig.width = 8, fig.height = 7}
 library(covidcast)
@@ -30,7 +30,7 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       geo_values = c("fl", "nj"),
                       as_of = "2021-10-28") %>%
   select(geo_value, time_value, cases = value) %>%
-  as.epi_df()
+  as_epi_df()
 
 ggplot(x, aes(x = time_value, y = cases)) +
   geom_line() +

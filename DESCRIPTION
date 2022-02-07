@@ -4,6 +4,9 @@ Title: Tools for basic signal processing in epidemiology
 Version: 1.0.0
 Authors@R:
   c(
+  person(given = "Logan",
+         family = "Brooks",
+         role = "aut"),
   person(given = "Daniel",
          family = "McDonald",
          role = "ctb"),
@@ -23,15 +26,22 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Imports: 
+  data.table,
   dplyr,
   fabletools,
   feasts,
   genlasso,
   lubridate,
   magrittr,
+  purrr,
+  R6,
   rlang,
   slider,
   tibble,
   tidyselect,
   tidyr,
   tsibble
+Suggests:
+    delphi.epidata
+Remotes:
+    github:cmu-delphi/delphi-epidata-r
