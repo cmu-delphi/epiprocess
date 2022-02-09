@@ -18,12 +18,11 @@ By default, the meaning of one time step is inferred from the `time_type` of the
 `epi_df` object under consideration. If `time_type` is "day", then one time step
 is one day. The time step can also be specified manually in the call to
 `epi_slide()`; you can read the documentation for more details. Furthermore, the
-alignment of the running window used in `epi_slide()` can either be "right",
-"center", or "left"; the default is "right", and is what we use in this and most
-other vignettes, without specifying otherwise.
+alignment of the running window used in `epi_slide()` can be "right", "center", 
+or "left"; the default is "right", and is what we use in this vignette.
 
-Similar to the getting started guide, we'll fetch daily reported COVID-19 cases
-for four U.S. states (note: new, not cumulative cases) using the
+As in getting started guide, we'll fetch daily reported COVID-19 cases from CA,
+FL, NY, and TX (note: here we're using new, not cumulative cases) using the
 [`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) package, and
 then convert this to `epi_df` format.
 
@@ -259,15 +258,15 @@ that can improve on some of the shortcomings of the above simple AR model.
 
 Second, the AR forecaster here is using finalized data, meaning, it uses the
 latest versions of signal values (reported COVID-19 cases) available, for both
-training models and making predictions historically. However, this 
-is not reflective of the provisional nature of the data that it must cope with
-in a true forecast task. Training and making predictions on finalized data can
-lead to an overly optimistic sense of accuracy; see, for example, [McDonald et
-al. (2021)](https://www.pnas.org/content/118/51/e2111453118/), and references
+training models and making predictions historically. However, this is not
+reflective of the provisional nature of the data that it must cope with in a
+true forecast task. Training and making predictions on finalized data can lead
+to an overly optimistic sense of accuracy; see, for example, [McDonald et al.
+(2021)](https://www.pnas.org/content/118/51/e2111453118/), and references
 therein. Fortunately, the `epiprocess` package provides a data structure called
 `epi_archive` that can be used to store all data revisions, and furthermore, an
 `epi_archive` object knows how to slide computations in the correct
-**version-aware** sense (for the computation at each reference time t, it uses
-only data that would have been available as of t). See the [archive
+**version-aware** sense (for the computation at each reference time $t$, it uses
+only data that would have been available as of $t$). See the [archive
 vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 more details.

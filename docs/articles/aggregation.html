@@ -19,8 +19,6 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
-    
-
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -33,12 +31,18 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">epiprocess</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
+<li>
+  <a href="../index.html">
+    <span class="fas fa-home fa-lg"></span>
+     
+  </a>
+</li>
 <li>
   <a href="../articles/epiprocess.html">Get started</a>
 </li>
@@ -72,7 +76,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/cmu-delphi/epiprocess/tree/main/" class="external-link">
+  <a href="https://github.com/cmu-delphi/epiprocess/tree/main/">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -87,306 +91,259 @@
 
       
 
-      </header><div class="row">
+      </header><script src="aggregation_files/header-attrs-2.10/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>4. Aggregate signals over space and time</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/main/vignettes/aggregation.Rmd" class="external-link"><code>vignettes/aggregation.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/main/vignettes/aggregation.Rmd"><code>vignettes/aggregation.Rmd</code></a></small>
       <div class="hidden name"><code>aggregation.Rmd</code></div>
 
     </div>
 
     
     
-<p>The <code>epiprocess</code> package provides additional functionality for users to aggregate signals over time and space.</p>
-<div class="section level2">
-<h2 id="time-aggregation">Time aggregation<a class="anchor" aria-label="anchor" href="#time-aggregation"></a>
-</h2>
-<p>For time, <code>epiprocess</code> leverages the existing <code>tsibble</code> object for manipulating time series data using <code>tidyverse</code> tools. In this vignette, we provide functionality to convert the the standard <code>epi_df</code> data container into a <code>tsibble</code>, and demonstrate some useful functionality. For more details on the <code>tsibble</code> package, please refer to the <a href="https://tsibble.tidyverts.org/index.html" class="external-link">package documentation</a>.</p>
-<p>First, let’s load some data using the <code>covidcast</code>. Here we’re loading confirmed new incidence of cases from January 1st, 2020 to May 31st, 2021 for counties in Vermont and New Hampshire (sourced from JHU).</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/covidcast/covidcastR/" class="external-link">covidcast</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">epiprocess</span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tsibble.tidyverts.org" class="external-link">tsibble</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"county_census"</span><span class="op">)</span>
+<p>Aggregation, both time-wise and geo-wise, are common tasks when working with epidemiological data sets. To demonstrate how to carry out these kinds of tasks with <code>epi_df</code> objects, we’ll work with county-level reported COVID-19 cases in MA and VT.</p>
+<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">covidcast</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">epiprocess</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">dplyr</span>)
 
-<span class="co"># get county level metadata from the covidcast package </span>
-<span class="va">subset_county</span> <span class="op">&lt;-</span> <span class="va">county_census</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">STNAME</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Vermont"</span>, <span class="st">"New Hampshire"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> 
-                                    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>geo_value <span class="op">=</span> <span class="va">FIPS</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
-                                    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">STNAME</span> <span class="op">!=</span> <span class="va">CTYNAME</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> 
-                                    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">STNAME</span>, <span class="va">CTYNAME</span>, <span class="va">geo_value</span><span class="op">)</span>
-<span class="co"># pull fips out as geo_values  </span>
-<span class="va">fips</span> <span class="op">&lt;-</span> <span class="va">subset_county</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html" class="external-link">pull</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>
+<span class="co"># Use covidcast::county_census to get the county and state names</span>
+<span class="no">y</span> <span class="kw">&lt;-</span> <span class="kw pkg">covidcast</span><span class="kw ns">::</span><span class="no"><a href="https://rdrr.io/pkg/covidcast/man/county_census.html">county_census</a></span> <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">STNAME</span> <span class="kw">%in%</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"Massachusetts"</span>, <span class="st">"Vermont"</span>), <span class="no">STNAME</span> <span class="kw">!=</span> <span class="no">CTYNAME</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="kw">geo_value</span> <span class="kw">=</span> <span class="no">FIPS</span>, <span class="kw">county_name</span> <span class="kw">=</span> <span class="no">CTYNAME</span>, <span class="kw">state_name</span> <span class="kw">=</span> <span class="no">STNAME</span>)
 
-<span class="co"># pull signal using covidcast package  </span>
-<span class="va">case_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://cmu-delphi.github.io/covidcast/covidcastR/reference/covidcast_signal.html" class="external-link">covidcast_signal</a></span><span class="op">(</span>data_source <span class="op">=</span> <span class="st">"jhu-csse"</span>, signal <span class="op">=</span> <span class="st">"confirmed_incidence_num"</span>, 
-                              start_day <span class="op">=</span> <span class="st">"2021-01-01"</span>, end_day <span class="op">=</span> <span class="st">"2021-05-31"</span>, geo_type <span class="op">=</span> <span class="st">"county"</span>,
-                              as_of <span class="op">=</span> <span class="st">"2022-02-04"</span>,
-                              geo_values <span class="op">=</span> <span class="va">fips</span><span class="op">)</span>
+<span class="co"># Fetch only counties from VT and NH, then append names columns as well</span>
+<span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="kw">data_source</span> <span class="kw">=</span> <span class="st">"jhu-csse"</span>,
+                      <span class="kw">signal</span> <span class="kw">=</span> <span class="st">"confirmed_incidence_num"</span>,
+                      <span class="kw">start_day</span> <span class="kw">=</span> <span class="st">"2020-06-01"</span>,
+                      <span class="kw">end_day</span> <span class="kw">=</span> <span class="st">"2021-12-31"</span>,
+                      <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"county"</span>,
+                      <span class="kw">geo_values</span> <span class="kw">=</span> <span class="no">y</span>$<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="kw">cases</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html">full_join</a></span>(<span class="no">y</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="st">"geo_value"</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>()</pre></body></html></div>
+<div id="converting-to-tsibble-format" class="section level2">
+<h2 class="hasAnchor">
+<a href="#converting-to-tsibble-format" class="anchor"></a>Converting to <code>tsibble</code> format</h2>
+<p>For manipulating and wrangling time series data, the <a href="https://tsibble.tidyverts.org/index.html"><code>tsibble</code></a> already provides a whole bunch of useful tools. A <code>tsibble</code> is basically a tibble (data frame) but with two specially-marked columns: an <em>index</em> column representing the time variable (defining an order from past to present), and a <em>key</em> column identifying a unique observational unit for each time point. In fact, the key in a <code>tsibble</code> can be made up of any number of columns, not just a single one.</p>
+<p>In an <code>epi_df</code> object, the index variable is <code>time_value</code>, and the key variable is typically <code>geo_value</code> (though this need not always be the case: for example, if we have an age group variable as another column, then this could serve as a second key variable). The <code>epiprocess</code> package thus provides an implementation of <code><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html">as_tsibble()</a></code> for <code>epi_df</code> objects, which sets these variables according to these defaults.</p>
+<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">tsibble</span>)
 
-<span class="co"># convert to epi_df format, joining up with the county metadata to attach county names and state. </span>
-<span class="va">case_epidf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as.epi_df.html">as.epi_df</a></span><span class="op">(</span><span class="va">case_data</span>, geo_type <span class="op">=</span> <span class="st">"county"</span>, 
-                        time_type <span class="op">=</span> <span class="st">"day"</span>, issue <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">case_data</span><span class="op">$</span><span class="va">issue</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> 
-    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span><span class="st">"new_cases"</span> <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> 
-    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">new_cases</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> 
-    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">subset_county</span>, by <span class="op">=</span> <span class="st">"geo_value"</span><span class="op">)</span></code></pre></div>
-<div class="section level3">
-<h3 id="casting-epi_df-into-tsibble">Casting <code>epi_df</code> into <code>tsibble</code><a class="anchor" aria-label="anchor" href="#casting-epi_df-into-tsibble"></a>
-</h3>
-<p>A <code>tsibble</code> is comprised of two components: a <strong>key</strong> that identifies the unit of observation, and an <strong>index</strong> that identifies the time component. Each observation should be uniquely identified by <strong>key</strong> and <strong>index</strong>. If we take a look at our <code>epi_df</code> object, we can expect <code>geo_value</code> as the unit of observation, and <code>time_value</code> as the column that specifies time (in proper datetime formats). All <code>epi_df</code> objects should have a <code>geo_value</code> and a <code>time_value</code>.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">case_epidf</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tibble: 6 × 5</span></span>
-<span class="co">##   geo_value time_value new_cases STNAME        CTYNAME            </span>
-<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              </span>
-<span class="co">## <span style="color: #BCBCBC;">1</span> 33001     2021-01-01         0 New Hampshire Belknap County     </span>
-<span class="co">## <span style="color: #BCBCBC;">2</span> 33003     2021-01-01         0 New Hampshire Carroll County     </span>
-<span class="co">## <span style="color: #BCBCBC;">3</span> 33005     2021-01-01         0 New Hampshire Cheshire County    </span>
-<span class="co">## <span style="color: #BCBCBC;">4</span> 33007     2021-01-01         0 New Hampshire Coos County        </span>
-<span class="co">## <span style="color: #BCBCBC;">5</span> 33009     2021-01-01         0 New Hampshire Grafton County     </span>
-<span class="co">## <span style="color: #BCBCBC;">6</span> 33011     2021-01-01         0 New Hampshire Hillsborough County</span></code></pre>
-<p><code>epi_process</code> provides a convenient S3 method to coerce <code>epi_df</code> objects into <code>tsibble</code>. This method will always use <code>time_value</code> as <strong>index</strong>. For <strong>key</strong>, the default is the union of <code>geo_value</code> and other variables specified in the <code>other_keys</code> metadata field of an <code>epi_df</code>. However, here is an additional <code>key</code> argument in the conversion function that allow us to specific more explicitly which variables to use as keys. For this data set here, we also want to key by state name as well as county name.</p>
-<p>The simplest approach is to let <code><a href="../reference/as_tsibble.epi_df.html">as_tsibble.epi_df()</a></code> automatically use <code>geo_value</code> and <code>time_value</code></p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span><span class="va">case_epidf</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tsibble: 6 x 5 [1D]</span></span>
-<span class="co">## <span style="color: #949494;"># Key:       geo_value [1]</span></span>
-<span class="co">##   geo_value time_value new_cases STNAME        CTYNAME       </span>
-<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span>
-<span class="co">## <span style="color: #BCBCBC;">1</span> 33001     2021-01-01         0 New Hampshire Belknap County</span>
-<span class="co">## <span style="color: #BCBCBC;">2</span> 33001     2021-01-02        47 New Hampshire Belknap County</span>
-<span class="co">## <span style="color: #BCBCBC;">3</span> 33001     2021-01-03        63 New Hampshire Belknap County</span>
-<span class="co">## <span style="color: #BCBCBC;">4</span> 33001     2021-01-04        25 New Hampshire Belknap County</span>
-<span class="co">## <span style="color: #BCBCBC;">5</span> 33001     2021-01-05        16 New Hampshire Belknap County</span>
-<span class="co">## <span style="color: #BCBCBC;">6</span> 33001     2021-01-06        35 New Hampshire Belknap County</span></code></pre>
-<p>You can use the <code>key</code> argument to specify re-keying or keying by multiple columns.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># if use the key argument to key by state name</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">case_tsibble</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span><span class="va">case_epidf</span>, key <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CTYNAME"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tsibble: 6 x 5 [1D]</span></span>
-<span class="co">## <span style="color: #949494;"># Key:       CTYNAME [1]</span></span>
-<span class="co">##   geo_value time_value new_cases STNAME  CTYNAME       </span>
-<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span>
-<span class="co">## <span style="color: #BCBCBC;">1</span> 50001     2021-01-01         0 Vermont Addison County</span>
-<span class="co">## <span style="color: #BCBCBC;">2</span> 50001     2021-01-02        27 Vermont Addison County</span>
-<span class="co">## <span style="color: #BCBCBC;">3</span> 50001     2021-01-03        12 Vermont Addison County</span>
-<span class="co">## <span style="color: #BCBCBC;">4</span> 50001     2021-01-04        12 Vermont Addison County</span>
-<span class="co">## <span style="color: #BCBCBC;">5</span> 50001     2021-01-05        10 Vermont Addison County</span>
-<span class="co">## <span style="color: #BCBCBC;">6</span> 50001     2021-01-06         8 Vermont Addison County</span></code></pre>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># can key by multiple columns </span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span><span class="va">case_epidf</span>, key <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CTYNAME"</span>, <span class="st">"geo_value"</span>, <span class="st">"STNAME"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tsibble: 6 x 5 [1D]</span></span>
-<span class="co">## <span style="color: #949494;"># Key:       geo_value, STNAME, CTYNAME [1]</span></span>
-<span class="co">##   geo_value time_value new_cases STNAME  CTYNAME       </span>
-<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span>
-<span class="co">## <span style="color: #BCBCBC;">1</span> 50001     2021-01-01         0 Vermont Addison County</span>
-<span class="co">## <span style="color: #BCBCBC;">2</span> 50001     2021-01-02        27 Vermont Addison County</span>
-<span class="co">## <span style="color: #BCBCBC;">3</span> 50001     2021-01-03        12 Vermont Addison County</span>
-<span class="co">## <span style="color: #BCBCBC;">4</span> 50001     2021-01-04        12 Vermont Addison County</span>
-<span class="co">## <span style="color: #BCBCBC;">5</span> 50001     2021-01-05        10 Vermont Addison County</span>
-<span class="co">## <span style="color: #BCBCBC;">6</span> 50001     2021-01-06         8 Vermont Addison County</span></code></pre>
-<p>However, similar to SQL keys, if the keys do not uniquely identify each row, then <code>tsibble</code> returns errors</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># returns error if index only by state name since each observation is no longer</span>
-<span class="co"># unique as there are multiple numbers associated with each state per day</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span><span class="va">case_epidf</span>, key <span class="op">=</span> <span class="st">"STNAME"</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## Error: A valid tsibble must have distinct rows identified by key and index.</span>
-<span class="co">## <span style="color: #0000BB;">ℹ</span> Please use `duplicates()` to check the duplicated rows.</span></code></pre>
+<span class="no">xt</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html">as_tsibble</a></span>(<span class="no">x</span>)
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">xt</span>)</pre></body></html></div>
+<pre><code>## # A tsibble: 6 x 5 [1D]
+## # Key:       geo_value [1]
+##   geo_value time_value cases county_name       state_name   
+##   &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt; &lt;chr&gt;             &lt;chr&gt;        
+## 1 25001     2020-06-01     4 Barnstable County Massachusetts
+## 2 25001     2020-06-02     6 Barnstable County Massachusetts
+## 3 25001     2020-06-03     5 Barnstable County Massachusetts
+## 4 25001     2020-06-04     8 Barnstable County Massachusetts
+## 5 25001     2020-06-05     3 Barnstable County Massachusetts
+## 6 25001     2020-06-06     4 Barnstable County Massachusetts</code></pre>
+<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="fu"><a href="https://tsibble.tidyverts.org/reference/key.html">key</a></span>(<span class="no">xt</span>)</pre></body></html></div>
+<pre><code>## [[1]]
+## geo_value</code></pre>
+<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="fu"><a href="https://tsibble.tidyverts.org/reference/index-rd.html">index</a></span>(<span class="no">xt</span>)</pre></body></html></div>
+<pre><code>## time_value</code></pre>
+<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="fu"><a href="https://tsibble.tidyverts.org/reference/regular.html">interval</a></span>(<span class="no">xt</span>)</pre></body></html></div>
+<pre><code>## &lt;interval[1]&gt;
+## [1] 1D</code></pre>
+<p>We can also set the key variable(s) directly in a call to <code><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html">as_tsibble()</a></code>. Similar to SQL keys, if the key does not uniquely identify each time point (that is, the key and index together do not not uniquely identify each row), then <code><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html">as_tsibble()</a></code> throws an error:</p>
+<div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html">as_tsibble</a></span>(<span class="no">x</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="st">"county_name"</span>))</pre></body></html></div>
+<pre><code>## Error: A valid tsibble must have distinct rows identified by key and index.
+## ℹ Please use `duplicates()` to check the duplicated rows.</code></pre>
+<p>As we can see, there are duplicate county names between MA and VT, which caused the error.</p>
+<div class="sourceCode" id="cb12"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu"><a href="https://tsibble.tidyverts.org/reference/duplicates.html">duplicates</a></span>(<span class="no">x</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="st">"county_name"</span>))</pre></body></html></div>
+<pre><code>## # A tibble: 6 × 5
+##   geo_value time_value cases county_name     state_name   
+##   &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt; &lt;chr&gt;           &lt;chr&gt;        
+## 1 25009     2020-06-01    63 Essex County    Massachusetts
+## 2 25011     2020-06-01     0 Franklin County Massachusetts
+## 3 50009     2020-06-01     0 Essex County    Vermont      
+## 4 50011     2020-06-01     0 Franklin County Vermont      
+## 5 25009     2020-06-02    74 Essex County    Massachusetts
+## 6 25011     2020-06-02     0 Franklin County Massachusetts</code></pre>
+<p>Keying by both county name and state name, however, does work:</p>
+<div class="sourceCode" id="cb14"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html">as_tsibble</a></span>(<span class="no">x</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"county_name"</span>, <span class="st">"state_name"</span>)))</pre></body></html></div>
+<pre><code>## # A tsibble: 6 x 5 [1D]
+## # Key:       county_name, state_name [1]
+##   geo_value time_value cases county_name    state_name
+##   &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt; &lt;chr&gt;          &lt;chr&gt;     
+## 1 50001     2020-06-01     0 Addison County Vermont   
+## 2 50001     2020-06-02     0 Addison County Vermont   
+## 3 50001     2020-06-03     0 Addison County Vermont   
+## 4 50001     2020-06-04     0 Addison County Vermont   
+## 5 50001     2020-06-05     0 Addison County Vermont   
+## 6 50001     2020-06-06     1 Addison County Vermont</code></pre>
 </div>
-<div class="section level3">
-<h3 id="gap-filling">Gap-filling<a class="anchor" aria-label="anchor" href="#gap-filling"></a>
-</h3>
-<p>One of the major advantages of the <code>tsibble</code> is the ability to handle <strong>implicit gaps</strong> in the data. In other words, <code>tsibble</code> can infer what time scale we’re interested in (e.g. daily data), and detect apparent gaps (e.g. when values are reported on 2021-01-01 and 2021-01-03 but not 2021-01-02). Then, we can use certain functions to make these missing entries explicit, which allows further downstream processing like imputation or for understanding patterns of missing data. For our example, let’s randomly remove certain dates from the data set.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1020</span><span class="op">)</span>
-<span class="va">remove_index</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">case_tsibble</span><span class="op">)</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">100</span>, replace <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>
-<span class="co"># since we're keying by geo_value, remove extra information about names </span>
-<span class="va">case_tsibble</span> <span class="op">&lt;-</span> <span class="va">case_tsibble</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">CTYNAME</span>, <span class="va">time_value</span>, <span class="va">new_cases</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> 
-                                <span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice</a></span><span class="op">(</span><span class="op">-</span><span class="va">remove_index</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">case_tsibble</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tsibble: 6 x 3 [1D]</span></span>
-<span class="co">## <span style="color: #949494;"># Key:       CTYNAME [1]</span></span>
-<span class="co">##   CTYNAME        time_value new_cases</span>
-<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="co">## <span style="color: #BCBCBC;">1</span> Addison County 2021-01-01         0</span>
-<span class="co">## <span style="color: #BCBCBC;">2</span> Addison County 2021-01-02        27</span>
-<span class="co">## <span style="color: #BCBCBC;">3</span> Addison County 2021-01-03        12</span>
-<span class="co">## <span style="color: #BCBCBC;">4</span> Addison County 2021-01-04        12</span>
-<span class="co">## <span style="color: #BCBCBC;">5</span> Addison County 2021-01-05        10</span>
-<span class="co">## <span style="color: #BCBCBC;">6</span> Addison County 2021-01-06         8</span></code></pre>
-<p>Let’s use a functions from the <code>tsibble</code> package to handle this implicit missingness:</p>
-<div class="section level4">
-<h4 id="tsibblehas_gaps-shows-whether-or-not-gaps-exists-broken-down-by-each-key-">
-<code>tsibble::has_gaps</code> shows whether or not gaps exists broken down by each <strong>key</strong>.<a class="anchor" aria-label="anchor" href="#tsibblehas_gaps-shows-whether-or-not-gaps-exists-broken-down-by-each-key-"></a>
-</h4>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/has_gaps.html" class="external-link">has_gaps</a></span><span class="op">(</span><span class="va">case_tsibble</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tibble: 6 × 2</span></span>
-<span class="co">##   CTYNAME           .gaps</span>
-<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span></span>
-<span class="co">## <span style="color: #BCBCBC;">1</span> Addison County    TRUE </span>
-<span class="co">## <span style="color: #BCBCBC;">2</span> Belknap County    TRUE </span>
-<span class="co">## <span style="color: #BCBCBC;">3</span> Bennington County TRUE </span>
-<span class="co">## <span style="color: #BCBCBC;">4</span> Caledonia County  TRUE </span>
-<span class="co">## <span style="color: #BCBCBC;">5</span> Carroll County    TRUE </span>
-<span class="co">## <span style="color: #BCBCBC;">6</span> Cheshire County   TRUE</span></code></pre>
+<div id="detecting-and-filling-time-gaps" class="section level2">
+<h2 class="hasAnchor">
+<a href="#detecting-and-filling-time-gaps" class="anchor"></a>Detecting and filling time gaps</h2>
+<p>One of the major advantages of the <code>tsibble</code> package is its ability to handle <em>implicit gaps</em> in time series data. In other words, it can infer what time scale we’re interested in (say, daily data), and detect apparent gaps (say, when values are reported on January 1 and 3 but not January 2). We can subsequently use functionality to make these missing entries explicit, which will generally help avoid bugs in further downstream data processing tasks.</p>
+<p>Let’s first remove certain dates from our data set to create gaps:</p>
+<div class="sourceCode" id="cb16"><html><body><pre class="r"><span class="co"># First make geo value more readable for tables, plots, etc.</span>
+<span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
+    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">geo_value</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span>(
+      <span class="fu"><a href="https://rdrr.io/r/base/substr.html">substr</a></span>(<span class="no">county_name</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/nchar.html">nchar</a></span>(<span class="no">county_name</span>) - <span class="fl">7</span>),
+      <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/name_to_abbr.html">name_to_abbr</a></span>(<span class="no">state_name</span>), <span class="kw">sep</span> <span class="kw">=</span> <span class="st">", "</span>)) <span class="kw">%&gt;%</span>
+    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">cases</span>)
+
+<span class="no">xt</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html">as_tsibble</a></span>(<span class="no">x</span>) <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">cases</span> <span class="kw">&gt;=</span> <span class="fl">5</span>)</pre></body></html></div>
+<p>The functions <code><a href="https://tsibble.tidyverts.org/reference/has_gaps.html">has_gaps()</a></code>, <code><a href="https://tsibble.tidyverts.org/reference/scan_gaps.html">scan_gaps()</a></code>, <code><a href="https://tsibble.tidyverts.org/reference/count_gaps.html">count_gaps()</a></code> in the <code>tsibble</code> package each provide useful summaries, in slightly different formats.</p>
+<div class="sourceCode" id="cb17"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu"><a href="https://tsibble.tidyverts.org/reference/has_gaps.html">has_gaps</a></span>(<span class="no">xt</span>))</pre></body></html></div>
+<pre><code>## # A tibble: 6 × 2
+##   geo_value      .gaps
+##   &lt;chr&gt;          &lt;lgl&gt;
+## 1 Addison, VT    TRUE 
+## 2 Barnstable, MA TRUE 
+## 3 Bennington, VT TRUE 
+## 4 Berkshire, MA  TRUE 
+## 5 Bristol, MA    TRUE 
+## 6 Caledonia, VT  TRUE</code></pre>
+<div class="sourceCode" id="cb19"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu"><a href="https://tsibble.tidyverts.org/reference/scan_gaps.html">scan_gaps</a></span>(<span class="no">xt</span>))</pre></body></html></div>
+<pre><code>## # A tsibble: 6 x 2 [1D]
+## # Key:       geo_value [1]
+##   geo_value   time_value
+##   &lt;chr&gt;       &lt;date&gt;    
+## 1 Addison, VT 2020-10-06
+## 2 Addison, VT 2020-10-07
+## 3 Addison, VT 2020-10-08
+## 4 Addison, VT 2020-10-09
+## 5 Addison, VT 2020-10-10
+## 6 Addison, VT 2020-10-11</code></pre>
+<div class="sourceCode" id="cb21"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu"><a href="https://tsibble.tidyverts.org/reference/count_gaps.html">count_gaps</a></span>(<span class="no">xt</span>))</pre></body></html></div>
+<pre><code>## # A tibble: 6 × 4
+##   geo_value   .from      .to           .n
+##   &lt;chr&gt;       &lt;date&gt;     &lt;date&gt;     &lt;int&gt;
+## 1 Addison, VT 2020-10-06 2020-11-11    37
+## 2 Addison, VT 2020-11-14 2020-11-26    13
+## 3 Addison, VT 2020-11-28 2020-12-02     5
+## 4 Addison, VT 2020-12-06 2020-12-25    20
+## 5 Addison, VT 2020-12-27 2020-12-28     2
+## 6 Addison, VT 2020-12-30 2020-12-30     1</code></pre>
+<p>We can also visualize the patterns of missingness:</p>
+<div class="sourceCode" id="cb23"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
+<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
+
+<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="fu"><a href="https://tsibble.tidyverts.org/reference/count_gaps.html">count_gaps</a></span>(<span class="no">xt</span>),
+       <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/reorder.factor.html">reorder</a></span>(<span class="no">geo_value</span>, <span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html">desc</a></span>(<span class="no">geo_value</span>)),
+           <span class="kw">color</span> <span class="kw">=</span> <span class="no">geo_value</span>)) +
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_linerange.html">geom_linerange</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">ymin</span> <span class="kw">=</span> <span class="no">.from</span>, <span class="kw">ymax</span> <span class="kw">=</span> <span class="no">.to</span>)) +
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">y</span> <span class="kw">=</span> <span class="no">.from</span>))+
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">y</span> <span class="kw">=</span> <span class="no">.to</span>)) +
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_flip.html">coord_flip</a></span>() +
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"County"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Date"</span>) +
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span>(<span class="kw">legend.position</span> <span class="kw">=</span> <span class="st">"none"</span>)</pre></body></html></div>
+<p><img src="aggregation_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
+<p>Using the <code><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html">fill_gaps()</a></code> function from <code>tsibble</code>, we can replace all gaps by an explicit value. The default is <code>NA</code>, but in the current case, where missingness is not at random but rather represents a small value that was censored (only a hypothetical with COVID-19 reports, but certainly a real phenomenon that occurs in other signals), it is better to replace it by zero, which is what we do here. (Other approaches, such as LOCF: last-observation-carried-forward, could be accomplished by first filling with <code>NA</code> values and then following up with a second call to <code><a href="https://tidyr.tidyverse.org/reference/fill.html">tidyr::fill()</a></code>.)</p>
+<div class="sourceCode" id="cb24"><html><body><pre class="r"><span class="fu"><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html">fill_gaps</a></span>(<span class="no">xt</span>, <span class="kw">cases</span> <span class="kw">=</span> <span class="fl">0</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html">arrange</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>()</pre></body></html></div>
+<pre><code>## # A tsibble: 6 x 3 [1D]
+## # Key:       geo_value [1]
+##   geo_value   time_value cases
+##   &lt;chr&gt;       &lt;date&gt;     &lt;dbl&gt;
+## 1 Addison, VT 2020-10-05    26
+## 2 Addison, VT 2020-10-06     0
+## 3 Addison, VT 2020-10-07     0
+## 4 Addison, VT 2020-10-08     0
+## 5 Addison, VT 2020-10-09     0
+## 6 Addison, VT 2020-10-10     0</code></pre>
+<p>Note that the time series for Addison, VT only starts on October 5, 2020, even though the original (uncensored) data set itself was drawn from a period that went back to June 6, 2020. By setting <code>.full = TRUE</code>, we can at zero-fill over the entire span of the observed (censored) data.</p>
+<div class="sourceCode" id="cb26"><html><body><pre class="r"><span class="no">xt_filled</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html">fill_gaps</a></span>(<span class="no">xt</span>, <span class="kw">cases</span> <span class="kw">=</span> <span class="fl">0</span>, <span class="kw">.full</span> <span class="kw">=</span> <span class="fl">TRUE</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html">arrange</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>)
+
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">xt_filled</span>)</pre></body></html></div>
+<pre><code>## # A tsibble: 6 x 3 [1D]
+## # Key:       geo_value [1]
+##   geo_value   time_value cases
+##   &lt;chr&gt;       &lt;date&gt;     &lt;dbl&gt;
+## 1 Addison, VT 2020-06-01     0
+## 2 Addison, VT 2020-06-02     0
+## 3 Addison, VT 2020-06-03     0
+## 4 Addison, VT 2020-06-04     0
+## 5 Addison, VT 2020-06-05     0
+## 6 Addison, VT 2020-06-06     0</code></pre>
+<p>Explicit imputation for missingness (zero-filling in our case) can be important for protecting against bugs in all sorts of downstream tasks. For example, even something as simple as a 7-day trailing average is complicated by missingness. The function <code><a href="../reference/epi_slide.html">epi_slide()</a></code> looks for all rows within a window of 7 days anchored on the right at the reference time point (when <code>n = 7</code>, and <code>align = "right"</code>). But when some days in a given week are missing because they were censored because they had small case counts, taking an average of the observed case counts can be misleading and is unintentionally biased upwards. Meanwhile, running <code><a href="../reference/epi_slide.html">epi_slide()</a></code> on the zero-filled data brings these trailing averages (appropriately) downwards, as we can see inspecting Plymouth, MA around July 1, 2021.</p>
+<div class="sourceCode" id="cb28"><html><body><pre class="r"><span class="no">xt</span> <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>() <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">cases_7dav</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">geo_value</span> <span class="kw">==</span> <span class="st">"Plymouth, MA"</span>,
+         <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">abs</a></span>(<span class="no">time_value</span> - <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span>(<span class="st">"2021-07-01"</span>)) <span class="kw">&lt;=</span> <span class="fl">3</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span>(<span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>)</pre></body></html></div>
+<pre><code>## # A tibble: 3 × 4
+## # Groups:   geo_value [1]
+##   geo_value    time_value cases cases_7dav
+##   &lt;chr&gt;        &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
+## 1 Plymouth, MA 2021-06-30     7       6.5 
+## 2 Plymouth, MA 2021-07-01     6       6.5 
+## 3 Plymouth, MA 2021-07-02     6       6.33</code></pre>
+<div class="sourceCode" id="cb30"><html><body><pre class="r"><span class="no">xt_filled</span> <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>() <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">cases_7dav</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">geo_value</span> <span class="kw">==</span> <span class="st">"Plymouth, MA"</span>,
+         <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">abs</a></span>(<span class="no">time_value</span> - <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span>(<span class="st">"2021-07-01"</span>)) <span class="kw">&lt;=</span> <span class="fl">3</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span>(<span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>)</pre></body></html></div>
+<pre><code>## # A tibble: 7 × 4
+## # Groups:   geo_value [1]
+##   geo_value    time_value cases cases_7dav
+##   &lt;chr&gt;        &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
+## 1 Plymouth, MA 2021-06-28     0      0.857
+## 2 Plymouth, MA 2021-06-29     0      0.857
+## 3 Plymouth, MA 2021-06-30     7      1.86 
+## 4 Plymouth, MA 2021-07-01     6      1.86 
+## 5 Plymouth, MA 2021-07-02     6      2.71 
+## 6 Plymouth, MA 2021-07-03     0      2.71 
+## 7 Plymouth, MA 2021-07-04     0      2.71</code></pre>
 </div>
-<div class="section level4">
-<h4 id="tsibblescan_gaps-gives-detailed-reports-per-identified-gaps-">
-<code>tsibble::scan_gaps</code> gives detailed reports per identified gaps.<a class="anchor" aria-label="anchor" href="#tsibblescan_gaps-gives-detailed-reports-per-identified-gaps-"></a>
-</h4>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/scan_gaps.html" class="external-link">scan_gaps</a></span><span class="op">(</span><span class="va">case_tsibble</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tsibble: 6 x 2 [1D]</span></span>
-<span class="co">## <span style="color: #949494;"># Key:       CTYNAME [2]</span></span>
-<span class="co">##   CTYNAME        time_value</span>
-<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>    </span>
-<span class="co">## <span style="color: #BCBCBC;">1</span> Addison County 2021-03-11</span>
-<span class="co">## <span style="color: #BCBCBC;">2</span> Addison County 2021-03-21</span>
-<span class="co">## <span style="color: #BCBCBC;">3</span> Addison County 2021-05-10</span>
-<span class="co">## <span style="color: #BCBCBC;">4</span> Belknap County 2021-03-14</span>
-<span class="co">## <span style="color: #BCBCBC;">5</span> Belknap County 2021-04-07</span>
-<span class="co">## <span style="color: #BCBCBC;">6</span> Belknap County 2021-05-18</span></code></pre>
+<div id="aggregate-to-different-time-scales" class="section level2">
+<h2 class="hasAnchor">
+<a href="#aggregate-to-different-time-scales" class="anchor"></a>Aggregate to different time scales</h2>
+<p>Continuing on with useful <code>tsibble</code> functionality, we can aggregate to different time scales using functions like <code><a href="https://tsibble.tidyverts.org/reference/index-by.html">index_by()</a></code> from <code>tsibble</code> and then aggregate using the usual <code>dplyr</code> verbs like <code><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize()</a></code>. The <code><a href="https://tsibble.tidyverts.org/reference/index-by.html">index_by()</a></code> function modifies the index variable in the given object by applying a suitable time transformation to extract a coarser time scale (say, moving from days to weeks, or weeks to months, and so on).</p>
+<p><em>todo: we should implement a <code>yearepiweek()</code> function in <code>epiprocess</code>, modeled after <code><a href="https://tsibble.tidyverts.org/reference/year-week.html">yearweek()</a></code> from <code>tsibble</code>, but for epiweeks. once done, describe that here and replace <code><a href="https://tsibble.tidyverts.org/reference/year-week.html">yearweek()</a></code> in the example below</em></p>
+<div class="sourceCode" id="cb32"><html><body><pre class="r"><span class="co"># Aggregate to weekly</span>
+<span class="no">xt_filled_week</span> <span class="kw">&lt;-</span> <span class="no">xt_filled</span> <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://tsibble.tidyverts.org/reference/index-by.html">index_by</a></span>(<span class="kw">week</span> <span class="kw">=</span> ~ <span class="fu"><a href="https://tsibble.tidyverts.org/reference/year-week.html">yearweek</a></span>(<span class="no">.</span>)) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span>(<span class="kw">cases</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="no">cases</span>, <span class="kw">na.rm</span> <span class="kw">=</span> <span class="fl">TRUE</span>))
+
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">xt_filled_week</span>)</pre></body></html></div>
+<pre><code>## # A tsibble: 6 x 3 [1W]
+## # Key:       geo_value [1]
+##   geo_value       week cases
+##   &lt;chr&gt;         &lt;week&gt; &lt;dbl&gt;
+## 1 Addison, VT 2020 W23     0
+## 2 Addison, VT 2020 W24     0
+## 3 Addison, VT 2020 W25     0
+## 4 Addison, VT 2020 W26     0
+## 5 Addison, VT 2020 W27     0
+## 6 Addison, VT 2020 W28     0</code></pre>
+<div class="sourceCode" id="cb34"><html><body><pre class="r"><span class="co"># Aggregate to monthly</span>
+<span class="no">xt_filled_month</span> <span class="kw">&lt;-</span> <span class="no">xt_filled_week</span> <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://tsibble.tidyverts.org/reference/index-by.html">index_by</a></span>(<span class="kw">month</span> <span class="kw">=</span> ~ <span class="fu"><a href="https://tsibble.tidyverts.org/reference/year-month.html">yearmonth</a></span>(<span class="no">.</span>)) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span>(<span class="kw">cases</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="no">cases</span>, <span class="kw">na.rm</span> <span class="kw">=</span> <span class="fl">TRUE</span>))
+
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">xt_filled_month</span>)</pre></body></html></div>
+<pre><code>## # A tsibble: 6 x 3 [1M]
+## # Key:       geo_value [1]
+##   geo_value      month cases
+##   &lt;chr&gt;          &lt;mth&gt; &lt;dbl&gt;
+## 1 Addison, VT 2020 Jun     0
+## 2 Addison, VT 2020 Jul     0
+## 3 Addison, VT 2020 Aug     0
+## 4 Addison, VT 2020 Sep     0
+## 5 Addison, VT 2020 Oct    26
+## 6 Addison, VT 2020 Nov    43</code></pre>
 </div>
-<div class="section level4">
-<h4 id="tsibblecount_gaps-gives-summary-statistics-by-aggregating-gaps-within-similar-time-periods">
-<code>tsibble::count_gaps</code> gives summary statistics by aggregating gaps within similar time periods<a class="anchor" aria-label="anchor" href="#tsibblecount_gaps-gives-summary-statistics-by-aggregating-gaps-within-similar-time-periods"></a>
-</h4>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/count_gaps.html" class="external-link">count_gaps</a></span><span class="op">(</span><span class="va">case_tsibble</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tibble: 6 × 4</span></span>
-<span class="co">##   CTYNAME        .from      .to           .n</span>
-<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="co">## <span style="color: #BCBCBC;">1</span> Addison County 2021-03-11 2021-03-11     1</span>
-<span class="co">## <span style="color: #BCBCBC;">2</span> Addison County 2021-03-21 2021-03-21     1</span>
-<span class="co">## <span style="color: #BCBCBC;">3</span> Addison County 2021-05-10 2021-05-10     1</span>
-<span class="co">## <span style="color: #BCBCBC;">4</span> Belknap County 2021-03-14 2021-03-14     1</span>
-<span class="co">## <span style="color: #BCBCBC;">5</span> Belknap County 2021-04-07 2021-04-07     1</span>
-<span class="co">## <span style="color: #BCBCBC;">6</span> Belknap County 2021-05-18 2021-05-18     1</span></code></pre>
-<p>We can also plot the missingness pattern using summary statistics from <code><a href="https://tsibble.tidyverts.org/reference/count_gaps.html" class="external-link">tsibble::count_gaps</a></code>.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">counts</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">CTYNAME</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">.</span><span class="op">$</span><span class="va">CTYNAME</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span><span class="op">)</span>, 
-       <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">CTYNAME</span>, color <span class="op">=</span> <span class="va">CTYNAME</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_linerange.html" class="external-link">geom_linerange</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">.from</span>, ymax <span class="op">=</span> <span class="va">.to</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> 
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">.from</span><span class="op">)</span><span class="op">)</span><span class="op">+</span>
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">.to</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> 
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"County"</span>, y <span class="op">=</span> <span class="st">"Date"</span><span class="op">)</span> <span class="op">+</span> 
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_flip.html" class="external-link">coord_flip</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></code></pre></div>
-<p><img src="aggregation_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
-</div>
-<div class="section level4">
-<h4 id="tsibblefill_gaps-fill-in-these-gaps-with-explicit-values-">
-<code>tsibble::fill_gaps</code> fill in these gaps with explicit values.<a class="anchor" aria-label="anchor" href="#tsibblefill_gaps-fill-in-these-gaps-with-explicit-values-"></a>
-</h4>
-<p>By default, all gaps are made explicit and specified as <code>NA</code>. However, the function allows us to specify various ways to add assign different values to gaps instead of the default <code>NA</code>. Additional usage can be found in the function <a href="https://tsibble.tidyverts.org/reference/fill_gaps.html" class="external-link">documentation page</a>.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">missing_date</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/scan_gaps.html" class="external-link">scan_gaps</a></span><span class="op">(</span><span class="va">case_tsibble</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html" class="external-link">pull</a></span><span class="op">(</span><span class="va">time_value</span><span class="op">)</span>
-<span class="co"># turning implicit gaps into explicit gaps with NA</span>
-<span class="fu"><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html" class="external-link">fill_gaps</a></span><span class="op">(</span><span class="va">case_tsibble</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">time_value</span> <span class="op">&gt;=</span> <span class="va">missing_date</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tsibble: 6 x 3 [1D]</span></span>
-<span class="co">## <span style="color: #949494;"># Key:       CTYNAME [1]</span></span>
-<span class="co">##   CTYNAME        time_value new_cases</span>
-<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="co">## <span style="color: #BCBCBC;">1</span> Addison County 2021-03-10         6</span>
-<span class="co">## <span style="color: #BCBCBC;">2</span> Addison County 2021-03-11        <span style="color: #BB0000;">NA</span></span>
-<span class="co">## <span style="color: #BCBCBC;">3</span> Addison County 2021-03-12         6</span>
-<span class="co">## <span style="color: #BCBCBC;">4</span> Addison County 2021-03-13         6</span>
-<span class="co">## <span style="color: #BCBCBC;">5</span> Addison County 2021-03-14        15</span>
-<span class="co">## <span style="color: #BCBCBC;">6</span> Addison County 2021-03-15         6</span></code></pre>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># filling gaps with 0 instead of NA </span>
-<span class="fu"><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html" class="external-link">fill_gaps</a></span><span class="op">(</span><span class="va">case_tsibble</span>, new_cases <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">time_value</span> <span class="op">&gt;=</span> <span class="va">missing_date</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tsibble: 6 x 3 [1D]</span></span>
-<span class="co">## <span style="color: #949494;"># Key:       CTYNAME [1]</span></span>
-<span class="co">##   CTYNAME        time_value new_cases</span>
-<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="co">## <span style="color: #BCBCBC;">1</span> Addison County 2021-03-10         6</span>
-<span class="co">## <span style="color: #BCBCBC;">2</span> Addison County 2021-03-11         0</span>
-<span class="co">## <span style="color: #BCBCBC;">3</span> Addison County 2021-03-12         6</span>
-<span class="co">## <span style="color: #BCBCBC;">4</span> Addison County 2021-03-13         6</span>
-<span class="co">## <span style="color: #BCBCBC;">5</span> Addison County 2021-03-14        15</span>
-<span class="co">## <span style="color: #BCBCBC;">6</span> Addison County 2021-03-15         6</span></code></pre>
-<p>If we want to impute using other approaches such as last observation carry forward (LOCF), we can leverage existing functions like <code><a href="https://tidyr.tidyverse.org/reference/fill.html" class="external-link">tidyr::fill</a></code> with our explicit <code>NA</code> gaps.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span>
-<span class="va">gapfilled</span> <span class="op">&lt;-</span> <span class="va">case_tsibble</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/group_by_key.html" class="external-link">group_by_key</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html" class="external-link">fill_gaps</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> 
-    <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/fill.html" class="external-link">fill</a></span><span class="op">(</span><span class="va">new_cases</span>, .direction <span class="op">=</span> <span class="st">"down"</span><span class="op">)</span> 
-<span class="va">gapfilled</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">time_value</span> <span class="op">&gt;=</span> <span class="va">missing_date</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tsibble: 6 x 3 [1D]</span></span>
-<span class="co">## <span style="color: #949494;"># Key:       CTYNAME [1]</span></span>
-<span class="co">## <span style="color: #949494;"># Groups:    CTYNAME [1]</span></span>
-<span class="co">##   CTYNAME        time_value new_cases</span>
-<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="co">## <span style="color: #BCBCBC;">1</span> Addison County 2021-03-10         6</span>
-<span class="co">## <span style="color: #BCBCBC;">2</span> Addison County 2021-03-11         6</span>
-<span class="co">## <span style="color: #BCBCBC;">3</span> Addison County 2021-03-12         6</span>
-<span class="co">## <span style="color: #BCBCBC;">4</span> Addison County 2021-03-13         6</span>
-<span class="co">## <span style="color: #BCBCBC;">5</span> Addison County 2021-03-14        15</span>
-<span class="co">## <span style="color: #BCBCBC;">6</span> Addison County 2021-03-15         6</span></code></pre>
-<p>An important consideration when utilizing these functions is the argument <code>.full</code>. By default, the <code>_gaps</code> family of functions detects gaps by <code>key</code>, which means that gaps are only detected within individual periods defined by <code>key</code>. The argument <code>.full</code> here which specifies whether gaps are detected (or filled) across the period defined by the entire data set. For example, if we have daily case counts for two states, State A with contiguous data from January to June, and state B with continguous data from February to June. If <code>.full = FALSE</code>, then there would be no gaps. If <code>.full = TRUE</code>, then there would be a gap in state B since state B is missing January from the overal time period defined by the entire data set.</p>
-</div>
-</div>
-<div class="section level3">
-<h3 id="aggregate-to-different-time-scales">Aggregate to different time-scales<a class="anchor" aria-label="anchor" href="#aggregate-to-different-time-scales"></a>
-</h3>
-<p>We can then aggregate to different time-scales using functions <code><a href="https://tsibble.tidyverts.org/reference/index-by.html" class="external-link">tsibble::index_by()</a></code> and <code>tsibble::summarise()</code> functions. <code>index_by</code> essentially changes the <strong>index</strong> component by applying a transformation function (such as those from the <code>lubridate</code> package) to extract higher order time scales (e.g. weeks from days, months from weeks).</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">cases_gapfilled_week</span> <span class="op">&lt;-</span> <span class="va">gapfilled</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/group_by_key.html" class="external-link">group_by_key</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/index-by.html" class="external-link">index_by</a></span><span class="op">(</span>week <span class="op">=</span> <span class="op">~</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/year-week.html" class="external-link">yearweek</a></span><span class="op">(</span><span class="va">.</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> 
-    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>new_cases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">new_cases</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> 
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">cases_gapfilled_week</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tsibble: 6 x 3 [1W]</span></span>
-<span class="co">## <span style="color: #949494;"># Key:       CTYNAME [1]</span></span>
-<span class="co">##   CTYNAME            week new_cases</span>
-<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;week&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="co">## <span style="color: #BCBCBC;">1</span> Addison County 2020 W53        39</span>
-<span class="co">## <span style="color: #BCBCBC;">2</span> Addison County 2021 W01       138</span>
-<span class="co">## <span style="color: #BCBCBC;">3</span> Addison County 2021 W02        69</span>
-<span class="co">## <span style="color: #BCBCBC;">4</span> Addison County 2021 W03        43</span>
-<span class="co">## <span style="color: #BCBCBC;">5</span> Addison County 2021 W04        34</span>
-<span class="co">## <span style="color: #BCBCBC;">6</span> Addison County 2021 W05        39</span></code></pre>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">cases_gapfilled_week</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">week</span>, y <span class="op">=</span> <span class="va">new_cases</span>, col <span class="op">=</span> <span class="va">CTYNAME</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> 
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Week by Year"</span>, y <span class="op">=</span> <span class="st">"New confirmed cases"</span>, col <span class="op">=</span> <span class="st">"County"</span>, 
-         title <span class="op">=</span> <span class="st">"New confirmed cases by county per week"</span><span class="op">)</span> <span class="op">+</span> 
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></code></pre></div>
-<p><img src="aggregation_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
-<p>We can continue to aggregate it by month with our existing weekly data conveniently:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">cases_gapfilled_month</span> <span class="op">&lt;-</span> <span class="va">cases_gapfilled_week</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/group_by_key.html" class="external-link">group_by_key</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> 
-    <span class="fu"><a href="https://tsibble.tidyverts.org/reference/index-by.html" class="external-link">index_by</a></span><span class="op">(</span>month <span class="op">=</span> <span class="op">~</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/year-month.html" class="external-link">yearmonth</a></span><span class="op">(</span><span class="va">.</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>new_cases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">new_cases</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">cases_gapfilled_month</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tsibble: 6 x 3 [1M]</span></span>
-<span class="co">## <span style="color: #949494;"># Key:       CTYNAME [1]</span></span>
-<span class="co">##   CTYNAME           month new_cases</span>
-<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;mth&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="co">## <span style="color: #BCBCBC;">1</span> Addison County 2020 Dec        39</span>
-<span class="co">## <span style="color: #BCBCBC;">2</span> Addison County 2021 Jan       284</span>
-<span class="co">## <span style="color: #BCBCBC;">3</span> Addison County 2021 Feb       159</span>
-<span class="co">## <span style="color: #BCBCBC;">4</span> Addison County 2021 Mar       184</span>
-<span class="co">## <span style="color: #BCBCBC;">5</span> Addison County 2021 Apr        93</span>
-<span class="co">## <span style="color: #BCBCBC;">6</span> Addison County 2021 May        36</span></code></pre>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">cases_gapfilled_month</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">month</span>, y <span class="op">=</span> <span class="va">new_cases</span>, col <span class="op">=</span> <span class="va">CTYNAME</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> 
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Month by Year"</span>, y <span class="op">=</span> <span class="st">"New confirmed cases"</span>, col <span class="op">=</span> <span class="st">"County"</span>, 
-         title <span class="op">=</span> <span class="st">"New confirmed cases by county per month"</span><span class="op">)</span> <span class="op">+</span> 
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></code></pre></div>
-<p><img src="aggregation_files/figure-html/unnamed-chunk-14-1.png" width="700"></p>
-</div>
-</div>
-<div class="section level2">
-<h2 id="geographic-aggregation">Geographic aggregation<a class="anchor" aria-label="anchor" href="#geographic-aggregation"></a>
-</h2>
+<div id="geographic-aggregation" class="section level2">
+<h2 class="hasAnchor">
+<a href="#geographic-aggregation" class="anchor"></a>Geographic aggregation</h2>
 <p>Geo stuff:</p>
 <ul>
 <li>similar? but without the <code>tsibble</code> utilities, we would need to implement some of this on our own and demo it in the vignette</li>
@@ -405,17 +362,11 @@
 
 
       <footer><div class="copyright">
-<<<<<<< HEAD
   <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
-=======
-  <p></p>
-<p>Developed by Evan Ray, Ryan Tibshirani.</p>
->>>>>>> 692f5b28d07a953bf3ef54cb7b7a2772b4972f3e
 </div>
 
 <div class="pkgdown">
-  <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
 
       </footer>
@@ -423,8 +374,6 @@
 
   
 
-
-  
 
   </body>
 </html>

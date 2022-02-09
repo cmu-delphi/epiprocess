@@ -23,10 +23,9 @@ x <- covidcast_signal(data_source = "jhu-csse",
                       start_day = "2020-06-01", 
                       end_day = "2021-05-31",
                       geo_type = "state", 
-                      geo_values = "fl")  %>%
+                      geo_values = "pa")  %>%
   as_epi_df() %>%
-  rename(cases = value) %>%
-  select(geo_value, time_value, cases) %>% 
+  select(geo_value, time_value, cases = value) %>% 
   epi_slide(cases = mean(cases), n = 7)
 ```
 

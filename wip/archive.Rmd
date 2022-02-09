@@ -230,3 +230,10 @@ x$as_of(x$max_version) %>%
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "")
 ```
+
+[about training on finalized versus honest data...]
+
+This makes a bigger deal for some signals than others; for reported
+COVID-19 cases, data revisions are most often made in the form of big spikes or
+drops; for other signals (like those based on medical insurance claims), the 
+revision process can be more regular and incremental. 
