@@ -304,18 +304,18 @@
 <div id="aggregate-to-different-time-scales" class="section level2">
 <h2 class="hasAnchor">
 <a href="#aggregate-to-different-time-scales" class="anchor"></a>Aggregate to different time scales</h2>
-<p>Continuing on with useful <code>tsibble</code> functionality, we can aggregate to different time scales using functions like <code><a href="https://tsibble.tidyverts.org/reference/index-by.html">index_by()</a></code> from <code>tsibble</code> and then aggregate using the usual <code>dplyr</code> verbs like <code><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize()</a></code>. The <code><a href="https://tsibble.tidyverts.org/reference/index-by.html">index_by()</a></code> function modifies the index variable in the given object by applying a suitable time transformation to extract a coarser time scale (say, moving from days to weeks, or weeks to months, and so on).</p>
-<p><em>todo: we should implement a <code>yearepiweek()</code> function in <code>epiprocess</code>, modeled after <code><a href="https://tsibble.tidyverts.org/reference/year-week.html">yearweek()</a></code> from <code>tsibble</code>, but for epiweeks. once done, describe that here and replace <code><a href="https://tsibble.tidyverts.org/reference/year-week.html">yearweek()</a></code> in the example below</em></p>
+<p>Continuing on with useful <code>tsibble</code> functionality, we can aggregate to different time scales using <code><a href="https://tsibble.tidyverts.org/reference/index-by.html">index_by()</a></code> from <code>tsibble</code>, which modifies the index variable in the given object by applying a suitable time-coarsening transformation (say, moving from days to weeks, or weeks to months, and so on). The most common use case would be to follow up with a call to a <code>dplyr</code> verb like <code><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize()</a></code> in order to perform some kind of aggregation of our measured variables over the new index variable.</p>
+<p>Below, we use the functions <code><a href="https://tsibble.tidyverts.org/reference/year-week.html">yearweek()</a></code> and <code><a href="https://tsibble.tidyverts.org/reference/year-month.html">yearmonth()</a></code> that are provided in the <code>tsibble</code> package in order to aggregate to weekly and monthly resolutions. In the former call, we set <code>week_start = 7</code> to coincide with the CDC definition of an epiweek (epidemiological week).</p>
 <div class="sourceCode" id="cb32"><html><body><pre class="r"><span class="co"># Aggregate to weekly</span>
 <span class="no">xt_filled_week</span> <span class="kw">&lt;-</span> <span class="no">xt_filled</span> <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://tsibble.tidyverts.org/reference/index-by.html">index_by</a></span>(<span class="kw">week</span> <span class="kw">=</span> ~ <span class="fu"><a href="https://tsibble.tidyverts.org/reference/year-week.html">yearweek</a></span>(<span class="no">.</span>)) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://tsibble.tidyverts.org/reference/index-by.html">index_by</a></span>(<span class="kw">epiweek</span> <span class="kw">=</span> ~ <span class="fu"><a href="https://tsibble.tidyverts.org/reference/year-week.html">yearweek</a></span>(<span class="no">.</span>, <span class="kw">week_start</span> <span class="kw">=</span> <span class="fl">7</span>)) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span>(<span class="kw">cases</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="no">cases</span>, <span class="kw">na.rm</span> <span class="kw">=</span> <span class="fl">TRUE</span>))
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">xt_filled_week</span>)</pre></body></html></div>
 <pre><code>## # A tsibble: 6 x 3 [1W]
 ## # Key:       geo_value [1]
-##   geo_value       week cases
+##   geo_value    epiweek cases
 ##   &lt;chr&gt;         &lt;week&gt; &lt;dbl&gt;
 ## 1 Addison, VT 2020 W23     0
 ## 2 Addison, VT 2020 W24     0
@@ -334,12 +334,12 @@
 ## # Key:       geo_value [1]
 ##   geo_value      month cases
 ##   &lt;chr&gt;          &lt;mth&gt; &lt;dbl&gt;
-## 1 Addison, VT 2020 Jun     0
-## 2 Addison, VT 2020 Jul     0
-## 3 Addison, VT 2020 Aug     0
-## 4 Addison, VT 2020 Sep     0
-## 5 Addison, VT 2020 Oct    26
-## 6 Addison, VT 2020 Nov    43</code></pre>
+## 1 Addison, VT 2020 May     0
+## 2 Addison, VT 2020 Jun     0
+## 3 Addison, VT 2020 Jul     0
+## 4 Addison, VT 2020 Aug     0
+## 5 Addison, VT 2020 Sep     0
+## 6 Addison, VT 2020 Oct    26</code></pre>
 </div>
 <div id="geographic-aggregation" class="section level2">
 <h2 class="hasAnchor">

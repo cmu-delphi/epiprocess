@@ -191,20 +191,22 @@ xt_filled %>%
 ## Aggregate to different time scales 
 
 Continuing on with useful `tsibble` functionality, we can aggregate to different
-time scales using functions like `index_by()` from `tsibble` and then aggregate
-using the usual `dplyr` verbs like `summarize()`. The `index_by()` function
-modifies the index variable in the given object by applying a suitable time
-transformation to extract a coarser time scale (say, moving from days to weeks,
-or weeks to months, and so on).
+time scales using `index_by()` from `tsibble`, which modifies the index variable 
+in the given object by applying a suitable time-coarsening transformation (say,
+moving from days to weeks, or weeks to months, and so on). The most common use 
+case would be to follow up with a call to a `dplyr` verb like `summarize()` in 
+order to perform some kind of aggregation of our measured variables over the new
+index variable.
 
-*todo: we should implement a `yearepiweek()` function in `epiprocess`, modeled
-after `yearweek()` from `tsibble`, but for epiweeks. once done, describe that
-here and replace `yearweek()` in the example below*
+Below, we use the functions `yearweek()` and `yearmonth()` that are provided in 
+the `tsibble` package in order to aggregate to weekly and monthly resolutions. 
+In the former call, we set `week_start = 7` to coincide with the CDC definition 
+of an epiweek (epidemiological week).
 
 ```{r}
 # Aggregate to weekly
 xt_filled_week <- xt_filled %>%
-  index_by(week = ~ yearweek(.)) %>%
+  index_by(epiweek = ~ yearweek(., week_start = 7)) %>%
   group_by(geo_value) %>% 
   summarize(cases = sum(cases, na.rm = TRUE))
 
