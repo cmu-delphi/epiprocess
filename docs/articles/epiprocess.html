@@ -109,7 +109,7 @@
 <div id="installing" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installing" class="anchor"></a>Installing</h2>
-<p>This package is not on CRAN yet, so it can be installed using the <a href="https://cran.r-project.org/package=devtools"><code>devtools</code></a> package:</p>
+<p>This package is not on CRAN yet, so it can be installed using the <a href="https://devtools.r-lib.org"><code>devtools</code></a> package:</p>
 <div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="kw pkg">devtools</span><span class="kw ns">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/remote-reexports.html">install_github</a></span>(<span class="st">"cmu-delphi/epiprocess"</span>, <span class="kw">ref</span> <span class="kw">=</span> <span class="st">"main"</span>)</pre></body></html></div>
 <p>Building the vignettes, such as this getting started guide, takes a significant amount of time. They are not included in the package by default. If you want to include vignettes, then use this modified command:</p>
 <div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="kw pkg">devtools</span><span class="kw ns">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/remote-reexports.html">install_github</a></span>(<span class="st">"cmu-delphi/epiprocess"</span>, <span class="kw">ref</span> <span class="kw">=</span> <span class="st">"main"</span>,
@@ -126,7 +126,7 @@
 <code>time_value</code>: the time value associated with each row of measurements.</li>
 </ul>
 <p>It can have any number of other columns which can serve as measured variables, which we also broadly refer to as signal variables. The documentation for <a href="reference/epi_df.html"><code>epi_df</code></a> gives more details about this data format.</p>
-<p>A data frame or tibble that has <code>geo_value</code> and <code>time_value</code> columns can be converted into an <code>epi_df</code> object, using the function <code><a href="../reference/as_epi_df.html">as_epi_df()</a></code>. As an example, we’ll work with daily cumulative COVID-19 cases for 4 states (CA, FL, NY, and TX) in the U.S., over time span from mid 2020 to early 2022, and we’ll use the <a href="https://cmu-delphi.github.io/covidcast/covidcastR/"><code>covidcast</code></a> package to fetch this data from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/">COVIDcast API</a>.</p>
+<p>A data frame or tibble that has <code>geo_value</code> and <code>time_value</code> columns can be converted into an <code>epi_df</code> object, using the function <code><a href="../reference/as_epi_df.html">as_epi_df()</a></code>. As an example, we’ll work with daily cumulative COVID-19 cases from four U.S. states: CA, FL, NY, and TX, over time span from mid 2020 to early 2022, and we’ll use the <a href="https://cmu-delphi.github.io/covidcast/covidcastR/"><code>covidcast</code></a> package to fetch this data from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/">COVIDcast API</a>.</p>
 <div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">covidcast</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">epiprocess</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">dplyr</span>)

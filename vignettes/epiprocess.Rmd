@@ -14,7 +14,7 @@ signal processing tasks.
 ## Installing
 
 This package is not on CRAN yet, so it can be installed using the
-[`devtools`](https://cran.r-project.org/package=devtools) package:
+[`devtools`](https://devtools.r-lib.org) package:
 
 ```{r, eval = FALSE}
 devtools::install_github("cmu-delphi/epiprocess", ref = "main")	
@@ -45,10 +45,10 @@ which we also broadly refer to as signal variables. The documentation for
 
 A data frame or tibble that has `geo_value` and `time_value` columns can be
 converted into an `epi_df` object, using the function `as_epi_df()`. As an
-example, we'll work with daily cumulative COVID-19 cases for 4 states (CA, FL,
-NY, and TX) in the U.S., over time span from mid 2020 to early 2022, and we'll
-use the [`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/)
-package to fetch this data from the [COVIDcast
+example, we'll work with daily cumulative COVID-19 cases from four U.S. states:
+CA, FL, NY, and TX, over time span from mid 2020 to early 2022, and we'll use
+the [`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) package to
+fetch this data from the [COVIDcast
 API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/).
 
 ```{r, message = FALSE}

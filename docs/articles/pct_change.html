@@ -114,10 +114,9 @@
                       <span class="kw">start_day</span> <span class="kw">=</span> <span class="st">"2020-06-01"</span>,
                       <span class="kw">end_day</span> <span class="kw">=</span> <span class="st">"2021-05-31"</span>,
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>,
-                      <span class="kw">geo_values</span> <span class="kw">=</span> <span class="st">"fl"</span>)  <span class="kw">%&gt;%</span>
+                      <span class="kw">geo_values</span> <span class="kw">=</span> <span class="st">"pa"</span>)  <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>() <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span>(<span class="kw">cases</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">cases</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="kw">cases</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">cases</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">cases</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>)</pre></body></html></div>
 <div id="percentage-change" class="section level2">
 <h2 class="hasAnchor">
@@ -130,12 +129,12 @@
 <pre><code>## # A tibble: 6 × 4
 ##   geo_value time_value cases pct_change
 ##   &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
-## 1 fl        2020-06-07 1111.       46.1
-## 2 fl        2020-06-08 1153.       44.8
-## 3 fl        2020-06-09 1222.       44.2
-## 4 fl        2020-06-10 1230.       49.8
-## 5 fl        2020-06-11 1269.       58.9
-## 6 fl        2020-06-12 1355.       69.2</code></pre>
+## 1 pa        2020-06-07  522.       2.38
+## 2 pa        2020-06-08  517.      -3.07
+## 3 pa        2020-06-09  511.      -6.43
+## 4 pa        2020-06-10  494.      -8.41
+## 5 pa        2020-06-11  495.     -10.5 
+## 6 pa        2020-06-12  518.     -14.4</code></pre>
 <p>Note the use of <code>align = "center"</code>, which centers the running window around the reference time point (as opposed to the default, <code>align = "right"</code>). Thus to be clear, the <code>pct_change</code> value computed on (for example) June 7 is the percentage change between the sum of cases from June 1 to 7, and the sum from June 8 to June 14. This can be seen as an estimate of the weekly <em>growth rate</em> on June 7. Furthermore, the argument <code>complete = TRUE</code> in the call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code> specifies that a complete window of <code>n = 14</code> time points must be available for the computation, which is why the the percentage change values for the first 6 time points (from June 1 to June 6) are <code>NA</code>.</p>
 <p>Next we plot these values alongside the signal itself. We highlight the periods in time for which the percentage change is above 10% (in red) and below -10% (in blue).</p>
 <div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
