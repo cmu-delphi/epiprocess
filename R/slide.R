@@ -59,7 +59,9 @@
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
 #' @param as_list_col Should the new column be stored as a list column? Default
-#'   is `FALSE`.
+#'   is `FALSE`, in which case a list object returned by `f` would be unnested 
+#'   (using `tidyr::unnest()`), and the names of the resulting columns are given
+#'   by prepending `new_col_name` to the names of the list elements. 
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
 #'   metadata. This function must take a positive integer and return an object
@@ -166,6 +168,6 @@ epi_slide = function(x, f, ..., n = 14, align = c("right", "center", "left"),
   }
 
   # Unnest if we need to, and return
-  if (!as_list_col) x = tidyr::unnest(x, !!new_col_name)
+  if (!as_list_col) x = tidyr::unnest(x, !!new_col_name, names_sep = "_")
   return(x)
 }

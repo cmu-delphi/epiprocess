@@ -184,26 +184,15 @@ on the scale of smoothed COVID-19 cases. (This is clearly equivalent, up to a
 constant, to modeling weekly sums of COVID-19 cases.)
 
 ```{r}
-z <- x %>% 
+x %>% 
   group_by(geo_value) %>%
-  epi_slide(forecast = prob_ar(cases_7dav), n = 120, as_list_col = TRUE) %>%
-  mutate(target_date = time_value + 7) 
-
-tail(z, 3)
+  epi_slide(fc = prob_ar(cases_7dav), n = 120) %>%
+  tail(10)
 ```
 
-We can see that the `forecast` column is a list column (as specified in the call
-to `slide_to_geo()`, which was needed since `prob_ar()` returns a data frame),
-and we can use `tidyr::unnest()` to unnest it.
-
-```{r}
-z <- tidyr::unnest(z, forecast)
-tail(z, 10)
-```
-
-Now we get three columns `point`, `lower`, and `upper` corresponding to the
-point forecast, and the lower and upper endpoints of the 95\% prediction band,
-respectively.
+Now we get three columns `fc_point`, `fc_lower`, and `fc_upper` that correspond
+to the point forecast, and the lower and upper endpoints of the 95\% prediction 
+band, respectively.
 
 To finish off, we plot the forecasts at some times (spaced out by a few months)
 over the last year, at multiple horizons (7, 14, 21, and 28 days ahead). To do 
@@ -214,10 +203,8 @@ so that we can call it a few times.
 k_week_ahead <- function(x, ahead = 7) {
   x %>% 
     group_by(geo_value) %>%
-    epi_slide(forecast = prob_ar(cases_7dav, ahead = ahead), n = 120,
-              as_list_col = TRUE) %>%
-    mutate(target_date = time_value + ahead) %>%
-    tidyr::unnest(forecast)
+    epi_slide(fc = prob_ar(cases_7dav, ahead = ahead), n = 120) %>%
+    mutate(target_date = time_value + ahead) 
 }
 
 # First generate the forecasts, and bind them together
@@ -231,9 +218,10 @@ z_to_show <- z %>%
   filter(time_value %in% 
            seq(as.Date("2020-08-01"), as.Date("2021-12-31"), by = "2 months"))
 
-p <- ggplot(z_to_show, aes(x = target_date, y = point, group = time_value)) +
-  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "orchid", alpha = 0.5) +
-  geom_line() + geom_point(size = 0.5) + 
+p <- ggplot(z_to_show, aes(x = target_date, group = time_value)) +
+  geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), 
+              fill = "orchid", alpha = 0.75) +
+  geom_line(aes(y = fc_point)) + geom_point(aes(y = fc_point), size = 0.5) + 
   geom_vline(aes(xintercept = time_value), linetype = 2, alpha = 0.5) +
   facet_wrap(vars(geo_value), scales = "free_y") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +

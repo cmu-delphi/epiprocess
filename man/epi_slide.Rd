@@ -58,7 +58,9 @@ contain the derivative values. Default is "slide_value"; note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
 
 \item{as_list_col}{Should the new column be stored as a list column? Default
-is \code{FALSE}.}
+is \code{FALSE}, in which case a list object returned by \code{f} would be unnested
+(using \code{tidyr::unnest()}), and the names of the resulting columns are given
+by prepending \code{new_col_name} to the names of the list elements.}
 
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
