@@ -55,7 +55,11 @@
 #' * `additional_metadata`: list of additional metadata for the data archive.
 #'
 #' Unlike an `epi_df` object, metadata for an `epi_archive` object `x` can be
-#'   accessed (and altered) directly, as in `x$geo_type` or `x$time_type`, etc. 
+#'   accessed (and altered) directly, as in `x$geo_type` or `x$time_type`,
+#'   etc. Like an `epi_df` object, the `geo_type` and `time_type` fields in the
+#'   metadata of an `epi_archive` object are not currently used by any
+#'   downstream functions in the `epiprocess` package, and serve only as useful
+#'   bits of information to convey about the data set at hand.
 #'
 #' @section Generating Snapshots:
 #' An `epi_archive` object can be used to generate a snapshot of the data in

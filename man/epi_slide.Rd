@@ -35,8 +35,8 @@ interpreted as an expression for tidy evaluation. See details.}
 
 \item{n}{Number of time steps to use in the running window. For example, if
 \code{n = 5}, one time step is one day, and the alignment is "right", then to
-produce a value on November 5, we apply the given function or formula to
-data in between November 1 and 5. Default is 14.}
+produce a value on January 7, we apply the given function or formula to
+data in between January 1 and 7. Default is 14.}
 
 \item{align}{One of "right", "center", or "left", indicating the alignment of
 the sliding window relative to the reference time point. If the alignment
@@ -80,11 +80,12 @@ examples.
 \details{
 To "slide" means to apply a function or formula over a running
 window of \code{n} time steps, where the unit (the meaning of one time step) is
-determined by the \code{time_type} field in the metadata: the unit is one day if
-\code{time_type} is either "day-time" or "day", and the unit is one week if
-\code{time_type} is "week". The time step can also be set explicitly using the
-\code{time_step} argument (which if specified would override the default choice
-based on the metadata).
+inherently defined by the way the \code{time_value} column treats addition and
+subtraction; for example, if the time values are coded as \code{Date} objects,
+then one time step is one day, since \code{as.Date("2022-01-30") + 1} equals
+\code{as.Date("2020-01-31")}. Alternatively, the time step can also be set
+explicitly using the \code{time_step} argument (which if specified would
+override the default choice based on \code{time_value} column).
 
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
 for example, as in:\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)

@@ -107,6 +107,18 @@ guess_time_type = function(time_value) {
     return(ifelse(all(diff(sort(time_value)) == -7), "week", "day"))
   }
 
+  # Else, check whether it's one of the tsibble classes
+  else if (inherits(time_value, "yearweek")) return("yearweek")
+  else if (inherits(time_value, "yearmonth")) return("yearmonth")
+  else if (inherits(time_value, "yearquarter")) return("yearquarter")
+
+  # Else, if it's an integer that's at least 1582, then use "year"
+  if (is.numeric(time_value) &&
+      all(time_value == as.integer(time_value)) &&
+      all(time_value >= 1582)) {
+    return("year")
+  }
+      
   # If we got here then we failed
   return("custom")
 }
