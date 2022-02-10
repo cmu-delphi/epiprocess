@@ -6,12 +6,12 @@
 #'
 #' @details To "slide" means to apply a function or formula over a running
 #'   window of `n` time steps, where the unit (the meaning of one time step) is
-#'   inherently defined by the way the `time_value` column treats addition and
+#'   implicitly defined by the way the `time_value` column treats addition and
 #'   subtraction; for example, if the time values are coded as `Date` objects,
 #'   then one time step is one day, since `as.Date("2022-01-30") + 1` equals
-#'   `as.Date("2020-01-31")`. Alternatively, the time step can also be set
-#'   explicitly using the `time_step` argument (which if specified would
-#'   override the default choice based on `time_value` column).
+#'   `as.Date("2020-01-31")`. Alternatively, the time step can be set explicitly
+#'   using the `time_step` argument (which if specified would override the
+#'   default choice based on `time_value` column).
 #'
 #' If `f` is missing, then an expression for tidy evaluation can be specified,
 #'   for example, as in: 
@@ -65,11 +65,10 @@
 #'   by prepending `new_col_name` to the names of the list elements. 
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
-#'   metadata. This function must take a positive integer and return an object
-#'   of class `lubridate::period`. For example, we can use `time_step =
-#'   lubridate::hours` in order to set the time step to be one hour (this would
-#'   only be meaningful if `time_value` is of class `POSIXct`, that is, if
-#'   `time_type` is "day-time").
+#'   `time_value` column. This function must take a positive integer and return
+#'   an object of class `lubridate::period`. For example, we can use `time_step
+#'   = lubridate::hours` in order to set the time step to be one hour (this
+#'   would only be meaningful if `time_value` is of class `POSIXct`).
 #' @return An `epi_df` object given by appending a new column to `x`, named 
 #'   according to the `new_col_name` argument, containing the slide values. 
 #' 
@@ -83,25 +82,20 @@ epi_slide = function(x, f, ..., n = 14, align = c("right", "center", "left"),
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) abort("`x` must be of class `epi_df`.")
   
-  # What is one time step?
-  if (!missing(time_step)) before_fun = time_step
-  else if (attributes(x)$metadata$time_type == "week") before_fun = weeks
-  else before_fun = days # Use days for time_type = "day" or "day-time"
-  
   # If before is missing, then use align to set up alignment
   if (missing(before)) {
     align = match.arg(align)
     if (align == "right") {
-      before_num = before_fun(n-1)
+      before_num = n-1
       after_num = 0
     }
     else if (align == "center") {
-      before_num = before_fun(floor((n-1)/2))
-      after_num = before_fun(ceiling((n-1)/2))
+      before_num = floor((n-1)/2)
+      after_num = ceiling((n-1)/2)
     }
     else {
       before_num = 0
-      after_num = before_fun(n-1)
+      after_num = n-1
     }
   }
   
@@ -111,8 +105,14 @@ epi_slide = function(x, f, ..., n = 14, align = c("right", "center", "left"),
       abort("`before` must be in between 0 and n-1`.")
     }
 
-    before_num = before_fun(before)
-    after_num = before_fun(n-1-before)
+    before_num = before
+    after_num = n-1-before
+  }
+
+  # If a custom time step is specified, then redefine units 
+  if (!missing(time_step)) {
+    before_num = time_step(before_num)
+    after_num = time_step(after_num)
   }
 
   # Convenience function for sliding over just one group

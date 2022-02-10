@@ -14,12 +14,15 @@ which is based on the family of functions provided by the
 function or formula---over a running window of `n` time steps. Suitable
 groupings can always be achieved by a preliminary call to `group_by()`.
 
-By default, the meaning of one time step is inferred from the `time_type` of the
-`epi_df` object under consideration. If `time_type` is "day", then one time step
-is one day. The time step can also be specified manually in the call to
-`epi_slide()`; you can read the documentation for more details. Furthermore, the
-alignment of the running window used in `epi_slide()` can be "right", "center", 
-or "left"; the default is "right", and is what we use in this vignette.
+By default, the meaning of one time step is inferred from the `time_value`
+column of the `epi_df` object under consideration, based on the way this column
+understands addition and subtraction. For example, if the time values are coded
+as `Date` objects, then one time step is one day, since `as.Date("2022-01-30") +
+1` equals `as.Date("2020-01-31")`. Alternatively, the time step can be specified
+manually in the call to `epi_slide()`; you can read the documentation for more
+details. Furthermore, the alignment of the running window used in `epi_slide()`
+can be "right", "center", or "left"; the default is "right", and is what we use
+in this vignette.
 
 As in getting started guide, we'll fetch daily reported COVID-19 cases from CA,
 FL, NY, and TX (note: here we're using new, not cumulative cases) using the

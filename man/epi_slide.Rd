@@ -64,10 +64,9 @@ by prepending \code{new_col_name} to the names of the list elements.}
 
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
-metadata. This function must take a positive integer and return an object
-of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this would
-only be meaningful if \code{time_value} is of class \code{POSIXct}, that is, if
-\code{time_type} is "day-time").}
+\code{time_value} column. This function must take a positive integer and return
+an object of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this
+would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 }
 \value{
 An \code{epi_df} object given by appending a new column to \code{x}, named
@@ -80,12 +79,12 @@ examples.
 \details{
 To "slide" means to apply a function or formula over a running
 window of \code{n} time steps, where the unit (the meaning of one time step) is
-inherently defined by the way the \code{time_value} column treats addition and
+implicitly defined by the way the \code{time_value} column treats addition and
 subtraction; for example, if the time values are coded as \code{Date} objects,
 then one time step is one day, since \code{as.Date("2022-01-30") + 1} equals
-\code{as.Date("2020-01-31")}. Alternatively, the time step can also be set
-explicitly using the \code{time_step} argument (which if specified would
-override the default choice based on \code{time_value} column).
+\code{as.Date("2020-01-31")}. Alternatively, the time step can be set explicitly
+using the \code{time_step} argument (which if specified would override the
+default choice based on \code{time_value} column).
 
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
 for example, as in:\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)

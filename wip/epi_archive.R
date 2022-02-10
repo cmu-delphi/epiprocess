@@ -254,7 +254,10 @@ epi_archive =
 #' @description Slides a given function over variables in an `epi_archive`
 #'   object. Windows are *always right-aligned*, unlike `epi_slide()`. The other
 #'   arguments are as in `epi_slide()`, and its documentation gives more details
-#'   on their useage. See also the [archive
+#'   on their useage. The exception is the `by` argument, which used to specify
+#'   the grouping upfront (whereas in an `epi_df`, this would be accomplished by
+#'   a call to `dplyr::group_by()` that precedes a call to `epi_df()`). See the
+#'   [archive
 #'   vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html)
 #'   for examples.
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
@@ -277,13 +280,16 @@ epi_archive =
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
+#' @param as_list_col Should the new column be stored as a list column? Default
+#'   is `FALSE`, in which case a list object returned by `f` would be unnested 
+#'   (using `tidyr::unnest()`), and the names of the resulting columns are given
+#'   by prepending `new_col_name` to the names of the list elements. 
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
-#'   metadata. This function must take a positive integer and return an object
-#'   of class `lubridate::period`. For example, we can use `time_step =
-#'   lubridate::hours` in order to set the time step to be one hour (this would
-#'   only be meaningful if `time_value` is of class `POSIXct`, that is, if
-#'   `time_type` is "day-time").
+#'   `time_value` column. This function must take a positive integer and return
+#'   an object of class `lubridate::period`. For example, we can use `time_step
+#'   = lubridate::hours` in order to set the time step to be one hour (this
+#'   would only be meaningful if `time_value` is of class `POSIXct`).
 #' @param by The variable(s) to group by before slide computation. If missing,
 #'   then `geo_value` and the variable names in the `other_keys` field of the
 #'   `epi_archive` object will be used for grouping.
@@ -293,12 +299,11 @@ epi_archive =
 #' @importFrom lubridate days weeks
 #' @importFrom rlang !! enquo enquos 
           slide = function(f, ..., n = 14, complete = FALSE,
-                           new_col_name = "slide_value", time_step, by) {
-            # What is one time step?
-            if (!missing(time_step)) before_fun = time_step
-            else if (self$time_type == "week") before_fun = weeks
-            else before_fun = days # For time_type = "day" or "day-time"
-            before_num = before_fun(n-1)
+                           new_col_name = "slide_value", as_list_col = FALSE,
+                           time_step, by) { 
+            # If a custom time step is specified, then redefine units 
+            before_num = n-1
+            if (!missing(time_step)) before_num = time_step(n-1)
             
             # What to group by? If missing, set according to internal keys
             if (missing(by)) by = c("geo_value", other_keys)
@@ -322,20 +327,18 @@ epi_archive =
             
             # If f is not missing, then just go ahead, slide by group
             if (!missing(f)) {
-              return(
-                purrr::map_dfr(self$DT$time_value, function(t) {
-                  self$as_of(t, min_time_value = t - before_num) %>%
-                    tibble::as_tsibble() %>% 
-                    group_by(!!by) %>%
-                    group_modify(comp_one_grp,
-                                 f = f,
-                                 ...,
-                                 complete = complete,
-                                 min_time_value = t - before_num,
-                                 new_col_name = new_col_name) %>%
-                    select(!!by, time_value, !!new_col_name)
-                })
-              )
+              x = purrr::map_dfr(self$DT$time_value, function(t) {
+                self$as_of(t, min_time_value = t - before_num) %>%
+                  tibble::as_tsibble() %>% 
+                  group_by(!!by) %>%
+                  group_modify(comp_one_grp,
+                               f = f,
+                               ...,
+                               complete = complete,
+                               min_time_value = t - before_num,
+                               new_col_name = new_col_name) %>%
+                  select(!!by, time_value, !!new_col_name)
+              })
             }
 
             # Else interpret ... as an expression for tidy evaluation
@@ -352,21 +355,25 @@ epi_archive =
               f = function(x, quo, ...) rlang::eval_tidy(quo, x)
               new_col_name = names(rlang::quos_auto_name(quos))
 
-              return(
-                purrr::map(self$DT$time_value, function(t) {
-                  self$as_of(t, min_time_value = t - before_num) %>%
-                    tibble::as_tsibble() %>% 
-                    group_by(!!by) %>%
-                    group_modify(comp_one_grp,
-                                 f = f,
-                                 quo = quo,
-                                 complete = complete,
-                                 min_time_value = t - before_num,
-                                 new_col_name = new_col_name) %>%
-                    select(!!by, time_value, !!new_col_name)
-                })
-              )
+              x = purrr::map(self$DT$time_value, function(t) {
+                self$as_of(t, min_time_value = t - before_num) %>%
+                  tibble::as_tsibble() %>% 
+                  group_by(!!by) %>%
+                  group_modify(comp_one_grp,
+                               f = f,
+                               quo = quo,
+                               complete = complete,
+                               min_time_value = t - before_num,
+                               new_col_name = new_col_name) %>%
+                  select(!!by, time_value, !!new_col_name)
+              })
             }
+            
+            # Unnest if we need to, and return
+            if (!as_list_col && is.list(pull(x, !!new_col_name))) {
+              x = tidyr::unnest(x, !!new_col_name, names_sep = "_")
+            }
+            return(x)
           }
         )
       )
