@@ -197,6 +197,23 @@ as_epi_df.data.frame = function(x, geo_type, time_type, as_of,
                    additional_metadata, ...)
 }
 
+#' @method as_epi_df tbl_ts
+#' @describeIn as_epi_df Works analogously to `as_epi_df.tbl_df()`, except that
+#'   the `tbl_ts` class is dropped, and any key variables (other than
+#'   "geo_value") are added to the metadata of the returned object, under the
+#'   `other_keys` field.
+#' @export
+as_epi_df.tbl_ts = function(x, geo_type, time_type, as_of,
+                            additional_metadata = list(), ...) {
+  tsibble_other_keys = setdiff(tsibble::key_vars(x), "geo_value")
+  if (length(tsibble_other_keys) != 0) {
+    additional_metadata$other_keys = unique(
+      c(additional_metadata$other_keys, tsibble_other_keys))
+  }
+  as_epi_df.tbl_df(tibble::as_tibble(x), geo_type, time_type, as_of,
+                   additional_metadata, ...)
+}
+
 #' Print `epi_df` object
 #'
 #' Prints a brief summary of the `epi_df` object, then prints the underlying
