@@ -23,8 +23,8 @@ y <- covidcast::county_census %>%
   select(geo_value = FIPS, county_name = CTYNAME, state_name = STNAME)
 
 # Fetch only counties from VT and NH, then append names columns as well
-x <- covidcast_signal(data_source = "jhu-csse", 
-                      signal = "confirmed_incidence_num",
+x <- covidcast_signal("jhu-csse", 
+                      "confirmed_incidence_num",
                       start_day = "2020-06-01", 
                       end_day = "2021-12-31",
                       geo_type = "county", 
@@ -102,7 +102,7 @@ x <- x %>%
       name_to_abbr(state_name), sep = ", ")) %>% 
     select(geo_value, time_value, cases)
 
-xt <- as_tsibble(x) %>% filter(cases >= 5) 
+xt <- as_tsibble(x) %>% filter(cases >= 3) 
 ```
 
 The functions `has_gaps()`, `scan_gaps()`, `count_gaps()` in the `tsibble`
@@ -146,7 +146,7 @@ fill_gaps(xt, cases = 0) %>%
   head()
 ```
 
-Note that the time series for Addison, VT only starts on October 5, 2020, even
+Note that the time series for Addison, VT only starts on August 27, 2020, even
 though the original (uncensored) data set itself was drawn from a period that
 went back to June 6, 2020. By setting `.full = TRUE`, we can at zero-fill over
 the entire span of the observed (censored) data.
@@ -162,7 +162,7 @@ Explicit imputation for missingness (zero-filling in our case) can be important
 for protecting against bugs in all sorts of downstream tasks. For example, even
 something as simple as a 7-day trailing average is complicated by missingness.
 The function `epi_slide()` looks for all rows within a window of 7 days anchored
-on the right at the reference time point (when `n = 7`, and `align = "right"`).
+on the right at the reference time point (when `n = 7` and `align = "right"`).
 But when some days in a given week are missing because they were censored
 because they had small case counts, taking an average of the observed case
 counts can be misleading and is unintentionally biased upwards. Meanwhile,

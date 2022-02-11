@@ -76,7 +76,7 @@ x <- as_epi_df(cases,
                geo_type = "state",
                time_type = "day",
                as_of = max(cases$issue)) %>%
-  select(geo_value, time_value, cases_cum = value)
+  select(geo_value, time_value, total_cases = value)
 
 class(x)
 summary(x)
@@ -114,7 +114,7 @@ as easy. See the documentation for `as_epi_df()` more details.
 
 ```{r}
 x <- as_epi_df(cases) %>%
-  select(geo_value, time_value, cases_cum = value)
+  select(geo_value, time_value, total_cases = value)
 
 attributes(x)$metadata
 ```
@@ -131,7 +131,7 @@ like plotting, which is pretty easy to do `ggplot2`.
 library(ggplot2)
 theme_set(theme_bw())
 
-ggplot(x, aes(x = time_value, y = cases_cum, color = geo_value)) + 
+ggplot(x, aes(x = time_value, y = total_cases, color = geo_value)) + 
   geom_line() +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Cumulative COVID-19 cases", color = "State")

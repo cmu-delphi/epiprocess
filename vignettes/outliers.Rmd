@@ -22,8 +22,8 @@ library(tidyr)
 library(ggplot2)
 theme_set(theme_bw())
 
-x <- covidcast_signal(data_source = "jhu-csse",
-                      signal = "confirmed_incidence_num",
+x <- covidcast_signal("jhu-csse",
+                      "confirmed_incidence_num",
                       start_day = "2020-06-01",
                       end_day = "2021-05-31",
                       geo_type = "state",

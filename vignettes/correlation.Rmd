@@ -24,15 +24,15 @@ library(dplyr)
 start_day <- "2020-03-01"
 end_day <- "2021-12-31"
 
-x <- covidcast_signal(data_source = "jhu-csse", 
-                      signal = "confirmed_incidence_prop",
+x <- covidcast_signal("jhu-csse", 
+                      "confirmed_7dav_incidence_prop",
                       start_day = start_day, 
                       end_day = end_day,
                       geo_type = "state") %>%
   select(geo_value, time_value, case_rates = value) 
 
-y <- covidcast_signal(data_source = "jhu-csse", 
-                      signal = "deaths_incidence_prop",
+y <- covidcast_signal("jhu-csse", 
+                      "deaths_7dav_incidence_prop",
                       start_day = start_day, 
                       end_day = end_day,
                       geo_type = "state") %>%
@@ -40,11 +40,7 @@ y <- covidcast_signal(data_source = "jhu-csse",
 
 x <- x %>%
   full_join(y, by = c("geo_value", "time_value")) %>%
-  as_epi_df() %>%
-  group_by(geo_value) %>%
-  epi_slide(case_rates = mean(case_rates), n = 7) %>%
-  epi_slide(death_rates = mean(death_rates), n = 7) %>%
-  ungroup()
+  as_epi_df() 
 ```
 
 ## Correlations grouped by time
