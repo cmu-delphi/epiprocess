@@ -3,8 +3,10 @@ title: Get started with `epiprocess`
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Get started with epiprocess}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
 ---
 
 This package introduces a common data structure for epidemiological data sets
@@ -161,4 +163,32 @@ ggplot(x, aes(x = time_value, y = value)) +
   labs(x = "Date", y = "SARS cases in Canada", fill = "Type")
 ```
 
-*todo: include another example here*
+Also from the [outbreaks](https://github.com/reconverse/outbreaks) package, we use the function `as_epi_df` on confirmed cases of ebola in Sierra Leone in 2014.
+
+```{r,message=FALSE}
+x = outbreaks::ebola_sierraleone_2014 %>%
+  mutate(
+    cases=ifelse(status=='confirmed',1,0),
+    province = case_when(
+      district %in% c('Kailahun','Kenema','Kono') ~ "Eastern",
+      district %in% c('Bombali','Kambia','Koinadugu',
+                      'Port Loko','Tonkolili') ~ 'Northern',
+      district %in% c('Bo','Bonthe','Moyamba','Pujehun') ~ 'Sourthern',
+      district %in% c('Western Rural','Western Urban') ~ 'Western')) %>% 
+  select(geo_value=province,
+         time_value = date_of_onset,
+         cases) %>% filter(cases==1) %>%
+  group_by(geo_value,time_value) %>% 
+  summarise(cases=sum(cases)) %>%
+  as_epi_df(geo_type='province')
+
+ggplot(x, aes(x = time_value, y = cases,fill=geo_value)) + 
+  geom_col() + facet_grid(geo_value~.)+
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Confirmed cases of ebola")+
+  guides(fill=guide_legend(title="Province"))
+```
+
+
+
+
