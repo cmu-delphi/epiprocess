@@ -5,21 +5,6 @@
 #' See the [outliers
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/outliers.html) for
 #' examples.
-#'
-#' @details Each outlier detection method, one per row of the passed `methods`
-#'   tibble, is a function that must take as its first two arguments `x` and
-#'   `var`, indicating a data frame and a given variable on which to run outlier
-#'   detection, and then any number of additional arguments. The function must
-#'   return a tibble with the same number of rows as `x`, and with columns
-#'   `lower`, `upper`, and `replacement`, representing lower and upper bounds
-#'   for what would be considered an outlier, and a posited replacement value,
-#'   respectively.
-#'
-#'  For convenience, the outlier detection method can be specified (in the
-#'   `method` column of `methods`) by a string "rm", shorthand for
-#'   `epi_detect_outlr_rm()`, which detects outliers via a rolling median; or by
-#'   "stl", shorthand for `epi_detect_outlr_stl()`, which detects outliers via
-#'   an STL decomposition.
 #' 
 #' @param x The `epi_df` object under consideration.
 #' @param var The variable in `x` on which to run outlier detection.
@@ -42,12 +27,25 @@
 #'   contain the results of outlier detection. Default is "outlier_info"; note
 #'   that setting `new_col_name` equal to an existing column name will overwrite
 #'   this column.
-#'
 #' @return An `epi_df` object given by appending a new column to `x`, named
 #'   according to the `new_col_name` argument, containing the outlier detection
 #'   thresholds and replacement values from all detection methods.
 #'
-#' @importFrom dplyr mutate select 
+#' @details Each outlier detection method, one per row of the passed `methods`
+#'   tibble, is a function that must take as its first two arguments `x` and
+#'   `var`, indicating a data frame and a given variable on which to run outlier
+#'   detection, and then any number of additional arguments. The function must
+#'   return a tibble with the same number of rows as `x`, and with columns
+#'   `lower`, `upper`, and `replacement`, representing lower and upper bounds
+#'   for what would be considered an outlier, and a posited replacement value,
+#'   respectively.
+#'
+#'  For convenience, the outlier detection method can be specified (in the
+#'   `method` column of `methods`) by a string "rm", shorthand for
+#'   `epi_detect_outlr_rm()`, which detects outliers via a rolling median; or by
+#'   "stl", shorthand for `epi_detect_outlr_stl()`, which detects outliers via
+#'   an STL decomposition.
+#' 
 #' @importFrom purrr map pmap_dfc
 #' @importFrom tidyselect ends_with all_of
 #' @importFrom rlang !! abort enquo
@@ -97,8 +95,7 @@ epi_detect_outlr_one_grp = function(.data_group, var, methods, combiner,
       if (!is.data.frame(results) ||
           !all(c("lower", "upper", "replacement") %in%
                colnames(results))) {
-        abort(paste("Outlier detection method must return a data frame with",
-                    "columns `lower`, `upper`, and `replacement`."))
+        abort("Outlier detection method must return a data frame with columns `lower`, `upper`, and `replacement`.")
       }
 
       # Update column names with model abbreviation
@@ -109,18 +106,13 @@ epi_detect_outlr_one_grp = function(.data_group, var, methods, combiner,
 
   # Combine information about detected outliers
   if (combiner != "none") {
-    if (combiner == "mean") {
-      combine_fun = base::mean
-    } else if (combiner == "median") {
-      combine_fun = stats::median
-    }
-
+    if (combiner == "mean") combine_fun = base::mean
+    else if (combiner == "median") combine_fun = stats::median
+   
     for (target in c("lower", "upper", "replacement")) {
       results[[paste0("combined_", target)]] = apply(
         results %>%
-        select(ends_with(target)),
-        1,
-        combine_fun
+        dplyr::select(ends_with(target)), 1, combine_fun
       )
     }
   }
@@ -157,11 +149,9 @@ epi_detect_outlr_one_grp = function(.data_group, var, methods, combiner,
 #'   if it is within the detection thresholds, or otherwise it is rounded to the
 #'   nearest (rolling median) +/- (replacement multiplier) * (rolling IQR).
 #'   Default is 0.
-#'
 #' @return A tibble with the same number of rows as `x`, and columns `lower`,
-#'   `upper`, and `replacement`. 
+#'   `upper`, and `replacement`.
 #'
-#' @importFrom dplyr mutate pull select
 #' @importFrom rlang !!
 #' @export
 epi_detect_outlr_rm = function(x, var, n = 21,
@@ -173,26 +163,23 @@ epi_detect_outlr_rm = function(x, var, n = 21,
   # Transform if requested
   if (log_transform) {
     # Replace all negative values with 0
-    x = x %>% mutate(!!var := pmax(0, !!var))
+    x = x %>% dplyr::mutate(!!var := pmax(0, !!var))
 
     # Offset is 1 if any zero values in var, 0 otherwise
-    offset = as.integer(any(x %>% pull(!!var) == 0))
+    offset = as.integer(any(x %>% dplyr::pull(!!var) == 0))
 
     # Transform var
-    x = x %>% mutate(!!var := log(!!var + offset))
+    x = x %>% dplyr::mutate(!!var := log(!!var + offset))
   }
 
   # Detect negatives if requested
-  if (detect_negatives && !log_transform) {
-    min_lower = 0
-  } else {
-    min_lower = -Inf
-  }
+  if (detect_negatives && !log_transform) min_lower = 0
+  else min_lower = -Inf
 
   # Calculate lower and upper thresholds and replacement value
   x = x %>%
     epi_slide(fitted = median(!!var), n = n, align = "center") %>%
-    mutate(resid = !!var - fitted) %>%
+    dplyr::mutate(resid = !!var - fitted) %>%
     roll_iqr(var, n,
              detection_multiplier = detection_multiplier,
              min_radius = min_radius,
@@ -214,16 +201,6 @@ epi_detect_outlr_rm = function(x, var, n = 21,
 #'
 #' Detects outliers based on a seasonal-trend decomposition using LOESS (STL).  
 #'
-#' @details The STL decomposition is computed using the `feasts` package. Once
-#'   computed, the outlier detection method is analogous to the rolling median
-#'   method in `epi_detect_outlr_rm()`, except with the fitted values and
-#'   residuals from the STL decomposition taking the place of the rolling median
-#'   and residuals to the rolling median, respectively.
-#'
-#' The last set of arguments, `log_transform` through `replacement_multiplier`,
-#'   are exactly as in `epi_detect_outlr_rm()`; refer to its help file for their
-#'   description.
-#'
 #' @param x The `epi_df` object under consideration.
 #' @param var The variable in `x` on which to run outlier detection.
 #' @param n_trend Number of time steps to use in the rolling window for trend.
@@ -235,11 +212,19 @@ epi_detect_outlr_rm = function(x, var, n = 21,
 #' @param seasonal_period Integer specifying period of seasonality. For example,
 #'   for daily data, a period 7 means weekly seasonality. The default is `NULL`,
 #'   meaning that no seasonal term will be included in the STL decomposition.
-#' 
 #' @return A tibble with the same number of rows as `x`, and columns `lower`,
 #'   `upper`, and `replacement`. 
 #'
-#' @importFrom dplyr case_when mutate pull select transmute
+#' @details The STL decomposition is computed using the `feasts` package. Once
+#'   computed, the outlier detection method is analogous to the rolling median
+#'   method in `epi_detect_outlr_rm()`, except with the fitted values and
+#'   residuals from the STL decomposition taking the place of the rolling median
+#'   and residuals to the rolling median, respectively.
+#'
+#' The last set of arguments, `log_transform` through `replacement_multiplier`,
+#'   are exactly as in `epi_detect_outlr_rm()`; refer to its help file for their
+#'   description.
+#' 
 #' @importFrom fabletools model
 #' @importFrom feasts STL
 #' @importFrom rlang !!
@@ -256,20 +241,20 @@ epi_detect_outlr_stl = function(x, var,
                                replacement_multiplier = 0) {
   # Make x into a tsibble for use with fable
   x_tsibble = x %>%
-    select(time_value, y = !!var) %>%
+    dplyr::select(time_value, y = !!var) %>%
     tibble::as_tibble() %>% 
     tsibble::as_tsibble(index = time_value)
 
- # Transform if requested
+  # Transform if requested
   if (log_transform) {
     # Replace all negative values with 0
-    x_tsibble = x_tsibble %>% mutate(y := pmax(0, y))
+    x_tsibble = x_tsibble %>% dplyr::mutate(y := pmax(0, y))
 
     # Offset is 1 if any zero values in var, 0 otherwise
-    offset = as.integer(any(x_tsibble %>% pull(y) == 0))
+    offset = as.integer(any(x_tsibble %>% dplyr::pull(y) == 0))
 
     # Transform var
-    x_tsibble = x_tsibble %>% mutate(y := log(y + offset))
+    x_tsibble = x_tsibble %>% dplyr::mutate(y := log(y + offset))
   }
   
   stl_formula = y ~ trend(window = n_trend) +
@@ -279,7 +264,7 @@ epi_detect_outlr_stl = function(x, var,
     model(STL(stl_formula, robust = TRUE)) %>%
     generics::components() %>%
     tibble::as_tibble() %>%
-    transmute(
+    dplyr::transmute(
       trend = trend,
       seasonal = season_week,
       resid = remainder
@@ -288,27 +273,24 @@ epi_detect_outlr_stl = function(x, var,
   # Allocate the seasonal term from STL to either fitted or resid 
   if (!is.null(seasonal_period)) {
     stl_components = stl_components %>%
-      mutate(
+      dplyr::mutate(
         fitted = trend + seasonal
       )
   } else {
     stl_components = stl_components %>%
-      mutate(
+      dplyr::mutate(
         fitted = trend,
         resid = seasonal + resid
       )
   }
 
   # Detect negatives if requested
-  if (detect_negatives && !log_transform) {
-    min_lower = 0
-  } else {
-    min_lower = -Inf
-  }
+  if (detect_negatives && !log_transform) min_lower = 0
+  else min_lower = -Inf
   
   # Calculate lower and upper thresholds and replacement value  
   x = x %>%
-    mutate(
+    dplyr::mutate(
       fitted = stl_components$fitted,
       resid = stl_components$resid) %>%
     roll_iqr(var, n_threshold,
@@ -332,7 +314,7 @@ epi_detect_outlr_stl = function(x, var,
 roll_iqr = function(x, var, n, detection_multiplier, min_radius,
                     replacement_multiplier, min_lower) { 
   epi_slide(x, roll_iqr = IQR(resid), n = n, align = "center") %>%
-    mutate(
+    dplyr::mutate(
       lower = pmax(min_lower,
                    fitted - pmax(min_radius, detection_multiplier * roll_iqr)),
       upper = fitted + pmax(min_radius, detection_multiplier * roll_iqr),
@@ -341,7 +323,7 @@ roll_iqr = function(x, var, n, detection_multiplier, min_radius,
       (!!var > upper) ~ fitted + replacement_multiplier * roll_iqr,
       TRUE ~ !!var
       )) %>%
-    select(lower, upper, replacement) %>%
+    dplyr::select(lower, upper, replacement) %>%
     unclass() %>%
     tibble::as_tibble()
 }

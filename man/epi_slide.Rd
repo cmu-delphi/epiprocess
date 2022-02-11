@@ -34,7 +34,7 @@ via \code{f}. Alternatively, if \code{f} is missing, then the current argument i
 interpreted as an expression for tidy evaluation. See details.}
 
 \item{n}{Number of time steps to use in the running window. For example, if
-\code{n = 5}, one time step is one day, and the alignment is "right", then to
+\code{n = 7}, one time step is one day, and the alignment is "right", then to
 produce a value on January 7, we apply the given function or formula to
 data in between January 1 and 7. Default is 14.}
 

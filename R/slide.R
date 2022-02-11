@@ -4,30 +4,6 @@
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
 #' examples.
 #'
-#' @details To "slide" means to apply a function or formula over a running
-#'   window of `n` time steps, where the unit (the meaning of one time step) is
-#'   implicitly defined by the way the `time_value` column treats addition and
-#'   subtraction; for example, if the time values are coded as `Date` objects,
-#'   then one time step is one day, since `as.Date("2022-01-30") + 1` equals
-#'   `as.Date("2020-01-31")`. Alternatively, the time step can be set explicitly
-#'   using the `time_step` argument (which if specified would override the
-#'   default choice based on `time_value` column).
-#'
-#' If `f` is missing, then an expression for tidy evaluation can be specified,
-#'   for example, as in: 
-#'   ```
-#'   epi_slide(x, cases_7dav = mean(cases), n = 7)
-#'   ```
-#'   which would be equivalent to:
-#'   ```
-#'   epi_slide(x, f = function(x, ...) mean(x$cases), n = 7,
-#'             new_col_name = "cases_7dav")
-#'   ```
-#'   Thus, to be clear, when the computation is specified via an expression for
-#'   tidy evaluation (first example, above), then the name for the new column is 
-#'   inferred from the given expression and overrides any name passed explicitly 
-#'   through the `new_col_name` argument.
-#'
 #' @param x The `epi_df` object under consideration.
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
 #'   to apply a function or formula over a running window of `n` time steps
@@ -41,7 +17,7 @@
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation. See details.  
 #' @param n Number of time steps to use in the running window. For example, if
-#'   `n = 5`, one time step is one day, and the alignment is "right", then to 
+#'   `n = 7`, one time step is one day, and the alignment is "right", then to 
 #'   produce a value on January 7, we apply the given function or formula to
 #'   data in between January 1 and 7. Default is 14. 
 #' @param align One of "right", "center", or "left", indicating the alignment of
@@ -72,7 +48,30 @@
 #' @return An `epi_df` object given by appending a new column to `x`, named 
 #'   according to the `new_col_name` argument, containing the slide values. 
 #' 
-#' @importFrom dplyr mutate pull summarize 
+#' @details To "slide" means to apply a function or formula over a running
+#'   window of `n` time steps, where the unit (the meaning of one time step) is
+#'   implicitly defined by the way the `time_value` column treats addition and
+#'   subtraction; for example, if the time values are coded as `Date` objects,
+#'   then one time step is one day, since `as.Date("2022-01-30") + 1` equals
+#'   `as.Date("2020-01-31")`. Alternatively, the time step can be set explicitly
+#'   using the `time_step` argument (which if specified would override the
+#'   default choice based on `time_value` column).
+#'
+#' If `f` is missing, then an expression for tidy evaluation can be specified,
+#'   for example, as in: 
+#'   ```
+#'   epi_slide(x, cases_7dav = mean(cases), n = 7)
+#'   ```
+#'   which would be equivalent to:
+#'   ```
+#'   epi_slide(x, f = function(x, ...) mean(x$cases), n = 7,
+#'             new_col_name = "cases_7dav")
+#'   ```
+#'   Thus, to be clear, when the computation is specified via an expression for
+#'   tidy evaluation (first example, above), then the name for the new column is 
+#'   inferred from the given expression and overrides any name passed explicitly 
+#'   through the `new_col_name` argument.
+#' 
 #' @importFrom lubridate days weeks
 #' @importFrom rlang !! abort enquo enquos 
 #' @export
@@ -128,6 +127,7 @@ epi_slide = function(x, f, ..., n = 14, align = c("right", "center", "left"),
                                        .before = before_num,
                                        .after = after_num,
                                        .complete = complete)
+
     return(mutate(.data_group, !!new_col_name := slide_values))
   }
 
