@@ -1,45 +1,37 @@
-#' Computations with `NA` values removed
-#'
-#' These are just wrapper functions for common computational utilities with `NA`
-#' values removed by default.
-#' 
 #' @export
+#' @noRd
 Min = function(x) min(x, na.rm = TRUE)
 
-#' @rdname Min
 #' @export
+#' @noRd
 Max = function(x) max(x, na.rm = TRUE)
 
-#' @rdname Min
 #' @export
+#' @noRd
 Sum = function(x) sum(x, na.rm = TRUE)
 
-#' @rdname Min
 #' @export
+#' @noRd
 Mean = function(x) mean(x, na.rm = TRUE)
 
-#' @rdname Min
 #' @export
+#' @noRd
 Median = function(x) median(x, na.rm = TRUE)
 
 ##########
 
-#' Start, middle, and end extrators
-#'
-#' These are just convenience functions for extracting the start, middle, and
-#' end of a sequence.
-#' 
 #' @export
+#' @noRd
 Start = function(x) x[1]
 
-#' @rdname Start
 #' @export
-Middle = function(x, floor = TRUE) {
+#' @noRd
+Middle = function(x, floor = FALSE) {
   ifelse(floor, x[floor(length(x)/2)], x[ceiling(length(x)/2)])
 }
 
-#' @rdname Start
 #' @export
+#' @noRd
 End = function(x) x[length(x)]
 
 ##########
