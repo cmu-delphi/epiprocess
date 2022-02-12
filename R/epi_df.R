@@ -233,13 +233,6 @@ print.epi_df = function(x, ...) {
   NextMethod()
 }
 
-#' @method head epi_df
-#' @importFrom utils head
-#' @export
-head.epi_df = function(x, ...) {
-  head(tibble::as_tibble(x))
-}
-
 #' Summarize `epi_df` object
 #'
 #' Prints a variety of summary statistics about the `epi_df` object, such as
