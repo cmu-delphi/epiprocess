@@ -113,10 +113,10 @@ To visualize the results, we first define a convenience function for plotting.
 
 ```{r fig.width = 9, fig.height = 7}
 # Plot outlier detection bands and/or points identified as outliers
-plot_outliers = function(x, var, outliers_col = outlier_info, 
-                         bands = FALSE, points = TRUE, combined_only = TRUE, 
-                         facet_vars = vars(geo_value), nrow = NULL, ncol = NULL, 
-                         scales = "fixed") {
+plot_outlr = function(x, var, outliers_col = outlier_info, 
+                      bands = FALSE, points = TRUE, combined_only = TRUE, 
+                      facet_vars = vars(geo_value), nrow = NULL, ncol = NULL, 
+                      scales = "fixed") {
   var <- rlang::enquo(var)
   outliers_col <- rlang::enquo(outliers_col)
   
@@ -160,15 +160,15 @@ plot_outliers = function(x, var, outliers_col = outlier_info,
 Now we produce plots for each state at a time, faceting by the detection method.
 
 ```{r fig.width = 9, fig.height = 14}
-plot_outliers(x %>% filter(geo_value == "fl"), cases, 
-              bands = TRUE, combined_only = FALSE,
-              facet_vars = vars(method), scales = "free_y", ncol = 1) +
+plot_outlr(x %>% filter(geo_value == "fl"), cases, 
+           bands = TRUE, combined_only = FALSE,
+           facet_vars = vars(method), scales = "free_y", ncol = 1) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Reported COVID-19 counts")
 
-plot_outliers(x %>% filter(geo_value == "nj"), cases, 
-              bands = TRUE, combined_only = FALSE,
-              facet_vars = vars(method), scales = "free_y", ncol = 1) +
+plot_outlr(x %>% filter(geo_value == "nj"), cases, 
+           bands = TRUE, combined_only = FALSE,
+           facet_vars = vars(method), scales = "free_y", ncol = 1) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Reported COVID-19 counts")
 ```
@@ -190,7 +190,7 @@ y %>% filter(cases != cases_corrected)
 
 ggplot(y, aes(x = time_value)) +
   geom_line(aes(y = cases), linetype = 2) +
-  geom_line(aes(y = cases_corrected), col = "red") +
+  geom_line(aes(y = cases_corrected), col = 2) +
   geom_hline(yintercept = 0, linetype = 3) +
   facet_wrap(vars(geo_value), scales = "free_y", ncol = 1) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +

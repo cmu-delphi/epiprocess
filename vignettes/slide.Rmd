@@ -36,11 +36,12 @@ library(dplyr)
 
 x <- covidcast_signal(data_source = "jhu-csse", 
                       signal = "confirmed_incidence_num",
-                      start_day = "2020-06-01", 
+                      start_day = "2020-03-01", 
                       end_day = "2021-12-31",
                       geo_type = "state", 
                       geo_values = c("ca", "fl", "ny", "tx")) %>%
   select(geo_value, time_value, cases = value) %>%
+  arrange(geo_value, time_value) %>%
   as_epi_df() 
 ```
 
@@ -71,24 +72,6 @@ x <- x %>%
 
 head(x, 10)
 ```
-
-As a simple sanity check, we visualize the 7-day trailing averages computed on
-top of the original counts:
-
-```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
-library(ggplot2)
-theme_set(theme_bw())
-
-ggplot(x, aes(x = time_value)) +
-  geom_col(aes(y = cases, fill = geo_value), alpha = 0.5, show.legend = FALSE) +
-  geom_line(aes(y = cases_7dav, col = geo_value), show.legend = FALSE) +
-  facet_wrap(~ geo_value, scales = "free_y") +
-  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
-  labs(x = "Date", y = "Reported COVID-19 cases")
-```
-
-As we can see from the top right panel, it looks like Texas moved to weekly
-reporting of COVID-19 cases in summer of 2021.
 
 ## Slide with a function 
 
@@ -123,6 +106,24 @@ x <- x %>%
 
 head(x, 10)
 ```
+
+As a simple sanity check, we visualize the 7-day trailing averages computed on
+top of the original counts:
+
+```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
+library(ggplot2)
+theme_set(theme_bw())
+
+ggplot(x, aes(x = time_value)) +
+  geom_col(aes(y = cases, fill = geo_value), alpha = 0.5, show.legend = FALSE) +
+  geom_line(aes(y = cases_7dav, col = geo_value), show.legend = FALSE) +
+  facet_wrap(~ geo_value, scales = "free_y") +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Reported COVID-19 cases")
+```
+
+As we can see from the top right panel, it looks like Texas moved to weekly
+reporting of COVID-19 cases in summer of 2021.
 
 ## Running a local forecaster
 
@@ -181,10 +182,10 @@ prob_ar <- function(v, lags = c(0, 7, 14), ahead = 7, min_train_window = 20,
 }
 ```
 
-Now we go ahead and slide this AR forecaster over the working `epi_df` of
-COVID-19 cases. Note that we actually model the `cases_7dav` column, to operate
-on the scale of smoothed COVID-19 cases. (This is clearly equivalent, up to a
-constant, to modeling weekly sums of COVID-19 cases.)
+We go ahead and slide this AR forecaster over the working `epi_df` of COVID-19 
+cases. Note that we actually model the `cases_7dav` column, to operate on the 
+scale of smoothed COVID-19 cases. This is clearly equivalent, up to a constant,
+to modeling weekly sums of COVID-19 cases.
 
 ```{r}
 x %>% 
@@ -195,10 +196,12 @@ x %>%
 
 Now we get three columns `fc_point`, `fc_lower`, and `fc_upper` that correspond
 to the point forecast, and the lower and upper endpoints of the 95\% prediction 
-band, respectively.
+band, respectively. (If instead we had set `as_list_col = TRUE` in the call to 
+`epi_slide()`, then we would have gotten a list column `fc`, where each element
+is a data frame with named components `point`, `lower`, and `upper`.)
 
 To finish off, we plot the forecasts at some times (spaced out by a few months)
-over the last year, at multiple horizons (7, 14, 21, and 28 days ahead). To do 
+over the last year, at multiple horizons: 7, 14, 21, and 28 days ahead. To do 
 so, we encapsulate the process of generating forecasts into a simple function, 
 so that we can call it a few times.
 
@@ -219,11 +222,10 @@ z <- bind_rows(k_week_ahead(x, ahead = 7),
 # Now plot some of them, spaced apart by 2 months
 z_to_show <- z %>%
   filter(time_value %in% 
-           seq(as.Date("2020-08-01"), as.Date("2021-12-31"), by = "2 months"))
+           seq(as.Date("2020-06-01"), as.Date("2021-12-31"), by = "2 months"))
 
 p <- ggplot(z_to_show, aes(x = target_date, group = time_value)) +
-  geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), 
-              fill = "orchid", alpha = 0.75) +
+  geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), fill = 6, alpha = 0.4) +
   geom_line(aes(y = fc_point)) + geom_point(aes(y = fc_point), size = 0.5) + 
   geom_vline(aes(xintercept = time_value), linetype = 2, alpha = 0.5) +
   facet_wrap(vars(geo_value), scales = "free_y") +
@@ -236,7 +238,7 @@ gginnards::append_layers(
 ```
 
 Two points are worth making. First, the AR model's performance here is pretty
-mixed. At various points in time, we can see that its forecasts are volatile
+spotty. At various points in time, we can see that its forecasts are volatile
 (its point predictions are all over the place), or overconfident (its bands are
 too narrow), or both at the same time. This is only meant as a simple demo and
 not entirely unexpected given the way the AR model is set up. For example, the

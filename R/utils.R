@@ -20,19 +20,12 @@ Median = function(x) median(x, na.rm = TRUE)
 
 ##########
 
-#' @export
-#' @noRd
 Start = function(x) x[1]
-
-#' @export
-#' @noRd
-Middle = function(x, floor = FALSE) {
-  ifelse(floor, x[floor(length(x)/2)], x[ceiling(length(x)/2)])
-}
-
-#' @export
-#' @noRd
 End = function(x) x[length(x)]
+MiddleL = function(x, floor = TRUE) x[floor(length(x)/2)]
+MiddleR = function(x, floor = TRUE) x[ceiling(length(x)/2)]
+ExtendL = function(x) c(Start(x), x)
+ExtendR = function(x) c(x, End(x))
 
 ##########
 

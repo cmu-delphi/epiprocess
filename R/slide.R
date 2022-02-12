@@ -17,13 +17,13 @@
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation. See details.  
 #' @param n Number of time steps to use in the running window. For example, if
-#'   `n = 7`, one time step is one day, and the alignment is "right", then to 
-#'   produce a value on January 7, we apply the given function or formula to
-#'   data in between January 1 and 7. Default is 14. 
+#'   `n = 7`, one time step is one day, and the alignment is "right", then to
+#'   produce a value on January 7 we apply the given function or formula to data
+#'   in between January 1 and 7. Default is 7.
 #' @param align One of "right", "center", or "left", indicating the alignment of
 #'   the sliding window relative to the reference time point. If the alignment
 #'   is "center" and `n` is even, then one more time point will be used after
-#'   the reference time point than before. Default is "right". 
+#'   the reference time point than before. Default is "right".
 #' @param before Positive integer less than `n`, specifying the number of time
 #'   points to use in the sliding window strictly before the reference time
 #'   point. For example, setting `before = n-1` would be the same as setting
@@ -52,8 +52,8 @@
 #'   window of `n` time steps, where the unit (the meaning of one time step) is
 #'   implicitly defined by the way the `time_value` column treats addition and
 #'   subtraction; for example, if the time values are coded as `Date` objects,
-#'   then one time step is one day, since `as.Date("2022-01-30") + 1` equals
-#'   `as.Date("2020-01-31")`. Alternatively, the time step can be set explicitly
+#'   then one time step is one day, since `as.Date("2022-01-01") + 1` equals
+#'   `as.Date("2022-01-02")`. Alternatively, the time step can be set explicitly
 #'   using the `time_step` argument (which if specified would override the
 #'   default choice based on `time_value` column).
 #'
@@ -75,7 +75,7 @@
 #' @importFrom lubridate days weeks
 #' @importFrom rlang !! abort enquo enquos 
 #' @export
-epi_slide = function(x, f, ..., n = 14, align = c("right", "center", "left"),
+epi_slide = function(x, f, ..., n = 7, align = c("right", "center", "left"),
                      before, complete = FALSE, new_col_name = "slide_value", 
                      as_list_col = FALSE, time_step) {
   # Check we have an `epi_df` object

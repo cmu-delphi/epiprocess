@@ -8,7 +8,7 @@ epi_slide(
   x,
   f,
   ...,
-  n = 14,
+  n = 7,
   align = c("right", "center", "left"),
   before,
   complete = FALSE,
@@ -35,8 +35,8 @@ interpreted as an expression for tidy evaluation. See details.}
 
 \item{n}{Number of time steps to use in the running window. For example, if
 \code{n = 7}, one time step is one day, and the alignment is "right", then to
-produce a value on January 7, we apply the given function or formula to
-data in between January 1 and 7. Default is 14.}
+produce a value on January 7 we apply the given function or formula to data
+in between January 1 and 7. Default is 7.}
 
 \item{align}{One of "right", "center", or "left", indicating the alignment of
 the sliding window relative to the reference time point. If the alignment
@@ -81,8 +81,8 @@ To "slide" means to apply a function or formula over a running
 window of \code{n} time steps, where the unit (the meaning of one time step) is
 implicitly defined by the way the \code{time_value} column treats addition and
 subtraction; for example, if the time values are coded as \code{Date} objects,
-then one time step is one day, since \code{as.Date("2022-01-30") + 1} equals
-\code{as.Date("2020-01-31")}. Alternatively, the time step can be set explicitly
+then one time step is one day, since \code{as.Date("2022-01-01") + 1} equals
+\code{as.Date("2022-01-02")}. Alternatively, the time step can be set explicitly
 using the \code{time_step} argument (which if specified would override the
 default choice based on \code{time_value} column).
 

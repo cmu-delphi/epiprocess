@@ -106,8 +106,8 @@ epi_detect_outlr_one_grp = function(.data_group, var, methods, combiner,
 
   # Combine information about detected outliers
   if (combiner != "none") {
-    if (combiner == "mean") combine_fun = base::mean
-    else if (combiner == "median") combine_fun = stats::median
+    if (combiner == "mean") combine_fun = mean
+    else if (combiner == "median") combine_fun = median
    
     for (target in c("lower", "upper", "replacement")) {
       results[[paste0("combined_", target)]] = apply(
