@@ -64,7 +64,7 @@
 #'   ```
 #'   which would be equivalent to:
 #'   ```
-#'   epi_slide(x, f = function(x, ...) mean(x$cases), n = 7,
+#'   epi_slide(x, function(x, ...) mean(x$cases), n = 7,
 #'             new_col_name = "cases_7dav")
 #'   ```
 #'   Thus, to be clear, when the computation is specified via an expression for

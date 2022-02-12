@@ -5,8 +5,8 @@ articles:
   aggregation: aggregation.html
   correlation: correlation.html
   epiprocess: epiprocess.html
+  growth_rate: growth_rate.html
   outliers: outliers.html
-  pct_change: pct_change.html
   slide: slide.html
-last_built: 2022-02-09T18:58Z
+last_built: 2022-02-12T22:12Z
 

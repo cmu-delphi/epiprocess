@@ -10,11 +10,10 @@ vignette: >
 The `epiprocess` package provides some simple functionality for computing lagged
 correlations between two signals, over space or time (or other variables), via
 `epi_cor()`. This function is really just a convenience wrapper over some basic
-commands: it first performs specified time shifts, then computes correlations, 
-grouped in a specified way.
-
-In this vignette, we'll examine correlations between state-level COVID-19 case
-and death rates, smoothed using a 7-day trailing average. 
+commands: it first performs specified time shifts, then computes correlations,
+grouped in a specified way. In this vignette, we'll examine correlations between
+state-level COVID-19 case and death rates, smoothed using 7-day trailing
+averages.
 
 ```{r, message = FALSE}
 library(covidcast)
@@ -100,8 +99,8 @@ ggplot(z, aes(x = time_value, y = cor)) +
 
 Note that `epi_cor()` takes an argument `shift_by` that determines the grouping
 to use for the time shifts. The default is `geo_value`, which makes sense in our
-problem at hand (but in another setting, we may want to group by, say, geo value 
-and age before time shifting).
+problem at hand (but in another setting, we may want to group by geo value and
+another variable---say, age---before time shifting).
 
 We can see that, generally, lagging the case rates back by 10 days improves the
 correlations, confirming case rates are better correlated with death rates 10

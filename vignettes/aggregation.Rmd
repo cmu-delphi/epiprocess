@@ -8,9 +8,9 @@ vignette: >
 ---
 
 Aggregation, both time-wise and geo-wise, are common tasks when working with
-epidemiological data sets. To demonstrate how to carry out these kinds of tasks
-with `epi_df` objects, we'll work with county-level reported COVID-19 cases in
-MA and VT.
+epidemiological data sets. This vignette demonstrates how to carry out these
+kinds of tasks with `epi_df` objects. We'll work with county-level reported 
+COVID-19 cases in MA and VT.
 
 ```{r, message = FALSE}
 library(covidcast)
@@ -70,8 +70,8 @@ is, the key and index together do not not uniquely identify each row), then
 head(as_tsibble(x, key = "county_name"))
 ```
 
-As we can see, there are duplicate county names between MA and VT, which caused
-the error.
+As we can see, there are duplicate county names between Massachusetts and
+Vermont, which caused the error.
 
 ```{r, message = FALSE}
 head(duplicates(x, key = "county_name"))

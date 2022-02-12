@@ -90,7 +90,7 @@ If \code{f} is missing, then an expression for tidy evaluation can be specified,
 for example, as in:\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
 }
 
-which would be equivalent to:\preformatted{epi_slide(x, f = function(x, ...) mean(x$cases), n = 7,
+which would be equivalent to:\preformatted{epi_slide(x, function(x, ...) mean(x$cases), n = 7,
           new_col_name = "cases_7dav")
 }
 

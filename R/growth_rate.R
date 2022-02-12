@@ -11,14 +11,14 @@
 #' @param y Signal values.
 #' @param x0 Points at which we should estimate the growth rate. Must be a
 #'   subset of `x` (no extrapolation allowed). Default is `x`. 
-#' @param method Either "rel_change", "lin_reg", "smooth_spline", or
+#' @param method Either "rel_change", "linear_reg", "smooth_spline", or
 #'   "trend_filter", indicating the method to use for the growth rate
 #'   calculation. The first two are local methods: they are run in a sliding
 #'   fashion over the sequence (in order to estimate derivatives and hence
 #'   growth rates); the latter two are global methods: they are run once over
 #'   the entire sequence. See details for more explanation.
 #' @param h Bandwidth for the sliding window, when `method` is "rel_change" or
-#'   "lin_reg". See details for more explanation. 
+#'   "linear_reg". See details for more explanation. 
 #' @param log_scale Should growth rates be estimated using the parametrization
 #'   on the log scale? See details for an explanation. Default is `FALSE`.
 #' @param dup_rm Should we check and remove duplicates in `x` (and corresponding
@@ -29,13 +29,13 @@
 #'   derivative. 
 #' @return Vector of growth rate estimates at the specified points `x0`.
 #'
-#' @details The growth rate of a function $f$ defined over a continuously-valued
-#'   parameter $t$ is defined as $f'(t)/f(t)$, where $f'(t)$ is the derivative
-#'   of $f$ at $t$. To estimate the growth rate of a signal in discrete-time
-#'   (which can be thought of as evaluations or discretizations of an underlying
-#'   function in continuous-time), we can therefore estimate the derivative and
-#'   divide by the signal value itself (or possibly a smoothed version of the 
-#'   signal value).
+#' @details The growth rate of a function f defined over a continuously-valued
+#'   parameter t is defined as f'(t) / f(t), where f'(t) is the derivative of f
+#'   at t. To estimate the growth rate of a signal in discrete-time (which can
+#'   be thought of as evaluations or discretizations of an underlying function
+#'   in continuous-time), we can therefore estimate the derivative and divide by
+#'   the signal value itself (or possibly a smoothed version of the signal
+#'   value).
 #'
 #' The following methods are available for estimating the growth rate: 
 #' 
@@ -43,7 +43,7 @@
 #'   second half of a sliding window of bandwidth h centered at the reference
 #'   point `x0`, and A the average over the first half. This can be seen as
 #'   using a first-difference approximation to the derivative.
-#' * "lin_reg": uses the slope from linear regression of `y` on `x` over a
+#' * "linear_reg": uses the slope from a linear regression of `y` on `x` over a
 #'   sliding window centered at the reference point `x0`, divided by the fitted
 #'   value from this linear regression at `x0`.
 #' * "smooth_spline": uses the estimated derivative at `x0` from a smoothing
@@ -55,16 +55,16 @@
 #'   spline at `x0`.
 #' 
 #' @section Log Scale:
-#'  An alternative view for the growth rate of a function $f$ in general is
-#'   given by defining $g(t) = \log(f(t))$, and then observing that $g'(t) =
-#'   f'(t)/f(t)$. Therefore, any method that estimates the derivative can be
-#'   simply applied to the log of the signal of interest, and in this light,
-#'   each method above ("rel_change", "lin_reg", "smooth_spline", and
+#'  An alternative view for the growth rate of a function f in general is given
+#'   by defining g(t) = log(f(t)), and then observing that g'(t) = f'(t) /
+#'   f(t). Therefore, any method that estimates the derivative can be simply
+#'   applied to the log of the signal of interest, and in this light, each
+#'   method above ("rel_change", "linear_reg", "smooth_spline", and
 #'   "trend_filter") has a log scale analog, which can be used by setting
 #'   `log_scale = TRUE`.
 #'
 #' @section Sliding Windows:
-#' For the local methods, "rel_change" and "lin_reg", we use a sliding window
+#' For the local methods, "rel_change" and "linear_reg", we use a sliding window
 #'   centered at the reference point of bandiwidth `h`. In other words, the
 #'   sliding window consists of all points in `x` whose distance to the
 #'   reference point is at most `h`. Note that the unit for this distance is
@@ -74,14 +74,13 @@
 #'   behavior of `epi_slide()` with `n = 2 * h` and `align = "center"`).
 #' 
 #' @section Additional Arguments:
-#' For the global methods, "smooth_spline" and "trend_filter", the additional
-#'   arguments in `...` are passed to the underlying estimation function,
-#'   `stats::smooth.spline()` and `genlasso::trendfilter()`, respectively. For
-#'   the smoothing spline case, these additional arguments are passed
-#'   directly. The trend filtering case works a bit differently: here, a custom
-#'   set of arguments is allowed (and are internally distributed as appropriate
-#'   to the functions `genlasso::trendfilter()`, `genlasso::cv.trendfilter()`,
-#'   and `genlasso::coef.genlasso()`):
+#' For the global methods, "smooth_spline" and "trend_filter", additional
+#'   arguments can be specified via `...` for the underlying estimation
+#'   function. For the smoothing spline case, these additional arguments are
+#'   passed directly to `stats::smooth.spline()` (and the defaults are exactly
+#'   as in this function). The trend filtering case works a bit differently:
+#'   here, a custom set of arguments is allowed (which are distributed
+#'   internally to `genlasso::trendfilter()` and `genlasso::cv.trendfilter()`):
 #'
 #' * `ord`: order of piecewise polynomial for the trend filtering fit. Default
 #'   is 2.
@@ -101,7 +100,7 @@
 #' @importFrom rlang abort 
 #' @export
 growth_rate = function(x = seq_along(y), y, x0 = x,
-                       method = c("rel_change", "lin_reg", "smooth_spline",
+                       method = c("rel_change", "linear_reg", "smooth_spline",
                                   "trend_filter"), h = 7, log_scale = FALSE,
                        dup_rm = FALSE, na_rm = FALSE, ...) { 
   # Check x, y, x0
@@ -138,7 +137,7 @@ growth_rate = function(x = seq_along(y), y, x0 = x,
   i0 = x %in% x0
 
   # Local methods
-  if (method == "rel_change" || method == "lin_reg") {    
+  if (method == "rel_change" || method == "linear_reg") {    
     g = purrr::map_dbl(x, function(x_ref, x, y, h, method, log_scale) {
       # Form the local window
       ii = (x > x_ref - h) & (x <= x_ref + h)
@@ -179,18 +178,19 @@ growth_rate = function(x = seq_along(y), y, x0 = x,
     # Convert to numerics
     x = as.numeric(x)
     x0 = as.numeric(x0)
-
-    # Collect params
+    
+    # Collect parameters
     params = list(...)
-    params$x = x
-    params$y = y
 
     # Smoothing spline
     if (method == "smooth_spline") {
+      params$x = x
+      params$y = y
       obj = do.call(stats::smooth.spline, params)
       f0 = stats::predict(obj, x = x0)$y
-      if (log_scale) return(f0)
-      else return(stats::predict(obj, x = x0, deriv = 1)$y / f0)
+      d0 = stats::predict(obj, x = x0, deriv = 1)$y
+      if (log_scale) return(d0)
+      else return(d0 / f0)
     }
 
     # Trend filtering
@@ -225,8 +225,9 @@ growth_rate = function(x = seq_along(y), y, x0 = x,
 
       # Estimate growth rate and return
       f = genlasso::coef.genlasso(obj, df = df)$beta
-      if (log_scale) return(f[i0])
-      else return((ExtendR(diff(f) / diff(x)) / f)[i0])
+      d = ExtendR(diff(f) / diff(x))
+      if (log_scale) return(d[i0])
+      else return((d / f)[i0])
     }
   }
 }

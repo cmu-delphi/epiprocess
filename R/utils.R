@@ -20,15 +20,6 @@ Median = function(x) median(x, na.rm = TRUE)
 
 ##########
 
-Start = function(x) x[1]
-End = function(x) x[length(x)]
-MiddleL = function(x, floor = TRUE) x[floor(length(x)/2)]
-MiddleR = function(x, floor = TRUE) x[ceiling(length(x)/2)]
-ExtendL = function(x) c(Start(x), x)
-ExtendR = function(x) c(x, End(x))
-
-##########
-
 #' @export
 #' @noRd
 quiet = function(x) { 
@@ -36,6 +27,15 @@ quiet = function(x) {
   on.exit(sink()) 
   invisible(force(x)) 
 }
+
+##########
+
+Start = function(x) x[1]
+End = function(x) x[length(x)]
+MiddleL = function(x) x[floor(length(x)/2)]
+MiddleR = function(x) x[ceiling(length(x)/2)]
+ExtendL = function(x) c(Start(x), x)
+ExtendR = function(x) c(x, End(x))
 
 ##########
 

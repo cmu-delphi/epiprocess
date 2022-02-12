@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Detect outliers in a variable in an <code>epi_df</code> object — epi_detect_outlr • epiprocess</title>
+<title>Detect outliers — detect_outlr • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,10 @@
 
 
 
-<meta property="og:title" content="Detect outliers in a variable in an <code>epi_df</code> object — epi_detect_outlr" />
-<meta property="og:description" content="Applies one or more outlier detection methods to a variable in an epi_df
-object, and optionally aggregates the results to create consensus results.
-See the outliers vignette for
+<meta property="og:title" content="Detect outliers — detect_outlr" />
+<meta property="og:description" content="Applies one or more outlier detection methods to a given signal variable, and
+optionally aggregates the outputs to create a consensus result. See the
+outliers vignette for
 examples." />
 
 
@@ -104,7 +104,7 @@ examples." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct_change.html">2. Estimate growth rates in signals</a>
+      <a href="../articles/growth_rate.html">2. Estimate growth rates in signals</a>
     </li>
     <li>
       <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
@@ -138,24 +138,23 @@ examples." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Detect outliers in a variable in an <code>epi_df</code> object</h1>
+    <h1>Detect outliers</h1>
     <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/outliers.R'><code>R/outliers.R</code></a></small>
-    <div class="hidden name"><code>epi_detect_outlr.Rd</code></div>
+    <div class="hidden name"><code>detect_outlr.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Applies one or more outlier detection methods to a variable in an <code>epi_df</code>
-object, and optionally aggregates the results to create consensus results.
-See the <a href='https://cmu-delphi.github.io/epiprocess/articles/outliers.html'>outliers vignette</a> for
+    <p>Applies one or more outlier detection methods to a given signal variable, and
+optionally aggregates the outputs to create a consensus result. See the
+<a href='https://cmu-delphi.github.io/epiprocess/articles/outliers.html'>outliers vignette</a> for
 examples.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>epi_detect_outlr</span>(
-  <span class='no'>x</span>,
-  <span class='no'>var</span>,
+    <pre class="usage"><span class='fu'>detect_outlr</span>(
+  <span class='kw'>x</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq_along</a></span>(<span class='no'>y</span>),
+  <span class='no'>y</span>,
   <span class='kw'>methods</span> <span class='kw'>=</span> <span class='fu'>tibble</span>(<span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"rm"</span>, <span class='kw'>args</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>()), <span class='kw'>abbr</span> <span class='kw'>=</span> <span class='st'>"rm"</span>),
-  <span class='kw'>combiner</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"median"</span>, <span class='st'>"mean"</span>, <span class='st'>"none"</span>),
-  <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"outlier_info"</span>
+  <span class='kw'>combiner</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"median"</span>, <span class='st'>"mean"</span>, <span class='st'>"none"</span>)
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -163,11 +162,13 @@ examples.</p>
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>The <code>epi_df</code> object under consideration.</p></td>
+      <td><p>Design points corresponding to the signal values <code>y</code>. Default is
+<code><a href='https://rdrr.io/r/base/seq.html'>seq_along(y)</a></code> (that is, equally-spaced points from 1 to the length of
+<code>y</code>).</p></td>
     </tr>
     <tr>
-      <th>var</th>
-      <td><p>The variable in <code>x</code> on which to run outlier detection.</p></td>
+      <th>y</th>
+      <td><p>Signal values.</p></td>
     </tr>
     <tr>
       <th>methods</th>
@@ -191,35 +192,27 @@ summarized results are calculated. Note that if the number of <code>methods</cod
 (number of rows) is odd, then "median" is equivalent to a majority vote for
 purposes of determining whether a given observation is an outlier.</p></td>
     </tr>
-    <tr>
-      <th>new_col_name</th>
-      <td><p>String indicating the name of the new column that will
-contain the results of outlier detection. Default is "outlier_info"; note
-that setting <code>new_col_name</code> equal to an existing column name will overwrite
-this column.</p></td>
-    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An <code>epi_df</code> object given by appending a new column to <code>x</code>, named
-according to the <code>new_col_name</code> argument, containing the outlier detection
-thresholds and replacement values from all detection methods.</p>
+    <p>An tibble with number of rows equal to <code><a href='https://rdrr.io/r/base/length.html'>length(y)</a></code> and columns giving
+the outlier detection thresholds and replacement values from each detection
+method.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>Each outlier detection method, one per row of the passed <code>methods</code>
 tibble, is a function that must take as its first two arguments <code>x</code> and
-<code>var</code>, indicating a data frame and a given variable on which to run outlier
-detection, and then any number of additional arguments. The function must
-return a tibble with the same number of rows as <code>x</code>, and with columns
+<code>y</code>, and then any number of additional arguments. The function must return
+a tibble with the number of rows equal to <code><a href='https://rdrr.io/r/base/length.html'>length(y)</a></code>, and with columns
 <code>lower</code>, <code>upper</code>, and <code>replacement</code>, representing lower and upper bounds
 for what would be considered an outlier, and a posited replacement value,
 respectively.</p>
 <p>For convenience, the outlier detection method can be specified (in the
 <code>method</code> column of <code>methods</code>) by a string "rm", shorthand for
-<code><a href='epi_detect_outlr_rm.html'>epi_detect_outlr_rm()</a></code>, which detects outliers via a rolling median; or by
-"stl", shorthand for <code><a href='epi_detect_outlr_stl.html'>epi_detect_outlr_stl()</a></code>, which detects outliers via
-an STL decomposition.</p>
+<code>detect_outlr_rm()</code>, which detects outliers via a rolling median; or by
+"stl", shorthand for <code>detect_outlr_stl()</code>, which detects outliers via an
+STL decomposition.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

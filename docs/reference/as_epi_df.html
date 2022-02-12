@@ -102,7 +102,7 @@ examples." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct_change.html">2. Estimate growth rates in signals</a>
+      <a href="../articles/growth_rate.html">2. Estimate growth rates in signals</a>
     </li>
     <li>
       <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
@@ -155,6 +155,9 @@ examples.</p>
 <span class='fu'>as_epi_df</span>(<span class='no'>x</span>, <span class='no'>geo_type</span>, <span class='no'>time_type</span>, <span class='no'>as_of</span>, <span class='kw'>additional_metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)
 
 <span class='co'># S3 method for data.frame</span>
+<span class='fu'>as_epi_df</span>(<span class='no'>x</span>, <span class='no'>geo_type</span>, <span class='no'>time_type</span>, <span class='no'>as_of</span>, <span class='kw'>additional_metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)
+
+<span class='co'># S3 method for tbl_ts</span>
 <span class='fu'>as_epi_df</span>(<span class='no'>x</span>, <span class='no'>geo_type</span>, <span class='no'>time_type</span>, <span class='no'>as_of</span>, <span class='kw'>additional_metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -209,6 +212,10 @@ will try to guess it from an <code>as_of</code>, <code>issue</code>, or <code>ve
 (stored in its attributes); if this fails, then the current day-time will
 be used.</p></li>
 <li><p><code>data.frame</code>: Works analogously to <code>as_epi_df.tbl_df()</code>.</p></li>
+<li><p><code>tbl_ts</code>: Works analogously to <code>as_epi_df.tbl_df()</code>, except that
+the <code>tbl_ts</code> class is dropped, and any key variables (other than
+"geo_value") are added to the metadata of the returned object, under the
+<code>other_keys</code> field.</p></li>
 </ul>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 

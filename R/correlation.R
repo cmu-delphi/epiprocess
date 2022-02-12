@@ -1,8 +1,8 @@
-#' Compute lagged correlations between variables in an `epi_df` object
+#' Compute correlations between variables in an `epi_df` object
 #'
-#' Computes lagged correlations between variables in an `epi_df` object,
-#' allowing for grouping by geo value, time value, or any other variables. See
-#' the [correlation
+#' Computes correlations between variables in an `epi_df` object, allowing for
+#' grouping by geo value, time value, or any other variables. See the
+#' [correlation
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/correlation.html)
 #' for examples.
 #'

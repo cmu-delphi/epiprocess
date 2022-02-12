@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Compute percentage change — pct_change • epiprocess</title>
+<title>Detect outliers based on an STL decomposition — detect_outlr_stl • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,12 +39,8 @@
 
 
 
-<meta property="og:title" content="Compute percentage change — pct_change" />
-<meta property="og:description" content="Computes the percentage change over a sequence of values, defined as 100 * (B
-/ A - 1), where A is the sum of the first half of the values and B is the sum
-of the second half. This is a convenience function to be used inside of a
-call to epi_slide(), see the percentage change vignette
-for examples." />
+<meta property="og:title" content="Detect outliers based on an STL decomposition — detect_outlr_stl" />
+<meta property="og:description" content="Detects outliers based on a seasonal-trend decomposition using LOESS (STL)." />
 
 
 
@@ -105,7 +101,7 @@ for examples." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct_change.html">2. Estimate growth rates in signals</a>
+      <a href="../articles/growth_rate.html">2. Estimate growth rates in signals</a>
     </li>
     <li>
       <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
@@ -139,37 +135,79 @@ for examples." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Compute percentage change</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/pct_change.R'><code>R/pct_change.R</code></a></small>
-    <div class="hidden name"><code>pct_change.Rd</code></div>
+    <h1>Detect outliers based on an STL decomposition</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/outliers.R'><code>R/outliers.R</code></a></small>
+    <div class="hidden name"><code>detect_outlr_stl.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Computes the percentage change over a sequence of values, defined as 100 * (B
-/ A - 1), where A is the sum of the first half of the values and B is the sum
-of the second half. This is a convenience function to be used inside of a
-call to <code><a href='epi_slide.html'>epi_slide()</a></code>, see the <a href='https://cmu-delphi.github.io/epiprocess/articles/pct_change.html'>percentage change vignette</a>
-for examples.</p>
+    <p>Detects outliers based on a seasonal-trend decomposition using LOESS (STL).</p>
     </div>
 
-    <pre class="usage"><span class='fu'>pct_change</span>(<span class='no'>var</span>, <span class='kw'>na_rm</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+    <pre class="usage"><span class='fu'>detect_outlr_stl</span>(
+  <span class='kw'>x</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq_along</a></span>(<span class='no'>y</span>),
+  <span class='no'>y</span>,
+  <span class='kw'>n_trend</span> <span class='kw'>=</span> <span class='fl'>21</span>,
+  <span class='kw'>n_seasonal</span> <span class='kw'>=</span> <span class='fl'>21</span>,
+  <span class='kw'>n_threshold</span> <span class='kw'>=</span> <span class='fl'>21</span>,
+  <span class='kw'>seasonal_period</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>log_transform</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>detect_negatives</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>detection_multiplier</span> <span class='kw'>=</span> <span class='fl'>2</span>,
+  <span class='kw'>min_radius</span> <span class='kw'>=</span> <span class='fl'>0</span>,
+  <span class='kw'>replacement_multiplier</span> <span class='kw'>=</span> <span class='fl'>0</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>var</th>
-      <td><p>The variable whose percentage change value is to be computed. If
-the length of <code>var</code> is odd, then the first value is ignored for the sake of
-the computation.</p></td>
+      <th>x</th>
+      <td><p>Design points corresponding to the signal values <code>y</code>. Default is
+<code><a href='https://rdrr.io/r/base/seq.html'>seq_along(y)</a></code> (that is, equally-spaced points from 1 to the length of
+<code>y</code>).</p></td>
     </tr>
     <tr>
-      <th>na_rm</th>
-      <td><p>Should missing values be removed before the computation? Default
-is <code>FALSE</code>.</p></td>
+      <th>y</th>
+      <td><p>Signal values.</p></td>
+    </tr>
+    <tr>
+      <th>n_trend</th>
+      <td><p>Number of time steps to use in the rolling window for trend.
+Default is 21.</p></td>
+    </tr>
+    <tr>
+      <th>n_seasonal</th>
+      <td><p>Number of time steps to use in the rolling window for
+seasonality. Default is 21.</p></td>
+    </tr>
+    <tr>
+      <th>n_threshold</th>
+      <td><p>Number of time steps to use in rolling window for the IQR
+outlier thresholds.</p></td>
+    </tr>
+    <tr>
+      <th>seasonal_period</th>
+      <td><p>Integer specifying period of seasonality. For example,
+for daily data, a period 7 means weekly seasonality. The default is <code>NULL</code>,
+meaning that no seasonal term will be included in the STL decomposition.</p></td>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>A tibble with number of rows equal to <code><a href='https://rdrr.io/r/base/length.html'>length(y)</a></code>, and columns
+<code>lower</code>, <code>upper</code>, and <code>replacement</code>.</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>The STL decomposition is computed using the <code>feasts</code> package. Once
+computed, the outlier detection method is analogous to the rolling median
+method in <code>detect_outlr_rm()</code>, except with the fitted values and residuals
+from the STL decomposition taking the place of the rolling median and
+residuals to the rolling median, respectively.</p>
+<p>The last set of arguments, <code>log_transform</code> through <code>replacement_multiplier</code>,
+are exactly as in <code>detect_outlr_rm()</code>; refer to its help file for their
+description.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

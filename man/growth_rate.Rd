@@ -8,7 +8,7 @@ growth_rate(
   x = seq_along(y),
   y,
   x0 = x,
-  method = c("rel_change", "lin_reg", "smooth_spline", "trend_filter"),
+  method = c("rel_change", "linear_reg", "smooth_spline", "trend_filter"),
   h = 7,
   log_scale = FALSE,
   dup_rm = FALSE,
@@ -26,7 +26,7 @@ growth_rate(
 \item{x0}{Points at which we should estimate the growth rate. Must be a
 subset of \code{x} (no extrapolation allowed). Default is \code{x}.}
 
-\item{method}{Either "rel_change", "lin_reg", "smooth_spline", or
+\item{method}{Either "rel_change", "linear_reg", "smooth_spline", or
 "trend_filter", indicating the method to use for the growth rate
 calculation. The first two are local methods: they are run in a sliding
 fashion over the sequence (in order to estimate derivatives and hence
@@ -34,7 +34,7 @@ growth rates); the latter two are global methods: they are run once over
 the entire sequence. See details for more explanation.}
 
 \item{h}{Bandwidth for the sliding window, when \code{method} is "rel_change" or
-"lin_reg". See details for more explanation.}
+"linear_reg". See details for more explanation.}
 
 \item{log_scale}{Should growth rates be estimated using the parametrization
 on the log scale? See details for an explanation. Default is \code{FALSE}.}
@@ -57,13 +57,13 @@ sequence. Several methodologies are available; see the \href{https://cmu-delphi.
 for examples.
 }
 \details{
-The growth rate of a function $f$ defined over a continuously-valued
-parameter $t$ is defined as $f'(t)/f(t)$, where $f'(t)$ is the derivative
-of $f$ at $t$. To estimate the growth rate of a signal in discrete-time
-(which can be thought of as evaluations or discretizations of an underlying
-function in continuous-time), we can therefore estimate the derivative and
-divide by the signal value itself (or possibly a smoothed version of the
-signal value).
+The growth rate of a function f defined over a continuously-valued
+parameter t is defined as f'(t) / f(t), where f'(t) is the derivative of f
+at t. To estimate the growth rate of a signal in discrete-time (which can
+be thought of as evaluations or discretizations of an underlying function
+in continuous-time), we can therefore estimate the derivative and divide by
+the signal value itself (or possibly a smoothed version of the signal
+value).
 
 The following methods are available for estimating the growth rate:
 \itemize{
@@ -71,7 +71,7 @@ The following methods are available for estimating the growth rate:
 second half of a sliding window of bandwidth h centered at the reference
 point \code{x0}, and A the average over the first half. This can be seen as
 using a first-difference approximation to the derivative.
-\item "lin_reg": uses the slope from linear regression of \code{y} on \code{x} over a
+\item "linear_reg": uses the slope from a linear regression of \code{y} on \code{x} over a
 sliding window centered at the reference point \code{x0}, divided by the fitted
 value from this linear regression at \code{x0}.
 \item "smooth_spline": uses the estimated derivative at \code{x0} from a smoothing
@@ -85,18 +85,18 @@ spline at \code{x0}.
 }
 \section{Log Scale}{
 
-An alternative view for the growth rate of a function $f$ in general is
-given by defining $g(t) = \log(f(t))$, and then observing that $g'(t) =
-f'(t)/f(t)$. Therefore, any method that estimates the derivative can be
-simply applied to the log of the signal of interest, and in this light,
-each method above ("rel_change", "lin_reg", "smooth_spline", and
+An alternative view for the growth rate of a function f in general is given
+by defining g(t) = log(f(t)), and then observing that g'(t) = f'(t) /
+f(t). Therefore, any method that estimates the derivative can be simply
+applied to the log of the signal of interest, and in this light, each
+method above ("rel_change", "linear_reg", "smooth_spline", and
 "trend_filter") has a log scale analog, which can be used by setting
 \code{log_scale = TRUE}.
 }
 
 \section{Sliding Windows}{
 
-For the local methods, "rel_change" and "lin_reg", we use a sliding window
+For the local methods, "rel_change" and "linear_reg", we use a sliding window
 centered at the reference point of bandiwidth \code{h}. In other words, the
 sliding window consists of all points in \code{x} whose distance to the
 reference point is at most \code{h}. Note that the unit for this distance is
@@ -108,14 +108,13 @@ behavior of \code{epi_slide()} with \code{n = 2 * h} and \code{align = "center"}
 
 \section{Additional Arguments}{
 
-For the global methods, "smooth_spline" and "trend_filter", the additional
-arguments in \code{...} are passed to the underlying estimation function,
-\code{stats::smooth.spline()} and \code{genlasso::trendfilter()}, respectively. For
-the smoothing spline case, these additional arguments are passed
-directly. The trend filtering case works a bit differently: here, a custom
-set of arguments is allowed (and are internally distributed as appropriate
-to the functions \code{genlasso::trendfilter()}, \code{genlasso::cv.trendfilter()},
-and \code{genlasso::coef.genlasso()}):
+For the global methods, "smooth_spline" and "trend_filter", additional
+arguments can be specified via \code{...} for the underlying estimation
+function. For the smoothing spline case, these additional arguments are
+passed directly to \code{stats::smooth.spline()} (and the defaults are exactly
+as in this function). The trend filtering case works a bit differently:
+here, a custom set of arguments is allowed (which are distributed
+internally to \code{genlasso::trendfilter()} and \code{genlasso::cv.trendfilter()}):
 \itemize{
 \item \code{ord}: order of piecewise polynomial for the trend filtering fit. Default
 is 2.

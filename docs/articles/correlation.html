@@ -60,7 +60,7 @@
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct_change.html">2. Estimate growth rates in signals</a>
+      <a href="../articles/growth_rate.html">2. Estimate growth rates in signals</a>
     </li>
     <li>
       <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
@@ -104,8 +104,7 @@
 
     
     
-<p>The <code>epiprocess</code> package provides some simple functionality for computing lagged correlations between two signals, over space or time (or other variables), via <code><a href="../reference/epi_cor.html">epi_cor()</a></code>. This function is really just a convenience wrapper over some basic commands: it first performs specified time shifts, then computes correlations, grouped in a specified way.</p>
-<p>In this vignette, we’ll examine correlations between state-level COVID-19 case and death rates, smoothed using a 7-day trailing average.</p>
+<p>The <code>epiprocess</code> package provides some simple functionality for computing lagged correlations between two signals, over space or time (or other variables), via <code><a href="../reference/epi_cor.html">epi_cor()</a></code>. This function is really just a convenience wrapper over some basic commands: it first performs specified time shifts, then computes correlations, grouped in a specified way. In this vignette, we’ll examine correlations between state-level COVID-19 case and death rates, smoothed using 7-day trailing averages.</p>
 <div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">covidcast</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">epiprocess</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">dplyr</span>)
@@ -113,15 +112,15 @@
 <span class="no">start_day</span> <span class="kw">&lt;-</span> <span class="st">"2020-03-01"</span>
 <span class="no">end_day</span> <span class="kw">&lt;-</span> <span class="st">"2021-12-31"</span>
 
-<span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="kw">data_source</span> <span class="kw">=</span> <span class="st">"jhu-csse"</span>,
-                      <span class="kw">signal</span> <span class="kw">=</span> <span class="st">"confirmed_incidence_prop"</span>,
+<span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="st">"jhu-csse"</span>,
+                      <span class="st">"confirmed_7dav_incidence_prop"</span>,
                       <span class="kw">start_day</span> <span class="kw">=</span> <span class="no">start_day</span>,
                       <span class="kw">end_day</span> <span class="kw">=</span> <span class="no">end_day</span>,
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="kw">case_rates</span> <span class="kw">=</span> <span class="no">value</span>)
 
-<span class="no">y</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="kw">data_source</span> <span class="kw">=</span> <span class="st">"jhu-csse"</span>,
-                      <span class="kw">signal</span> <span class="kw">=</span> <span class="st">"deaths_incidence_prop"</span>,
+<span class="no">y</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="st">"jhu-csse"</span>,
+                      <span class="st">"deaths_7dav_incidence_prop"</span>,
                       <span class="kw">start_day</span> <span class="kw">=</span> <span class="no">start_day</span>,
                       <span class="kw">end_day</span> <span class="kw">=</span> <span class="no">end_day</span>,
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>) <span class="kw">%&gt;%</span>
@@ -129,11 +128,7 @@
 
 <span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html">full_join</a></span>(<span class="no">y</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"geo_value"</span>, <span class="st">"time_value"</span>)) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>() <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">case_rates</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">case_rates</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">death_rates</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">death_rates</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">ungroup</a></span>()</pre></body></html></div>
+  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>()</pre></body></html></div>
 <div id="correlations-grouped-by-time" class="section level2">
 <h2 class="hasAnchor">
 <a href="#correlations-grouped-by-time" class="anchor"></a>Correlations grouped by time</h2>
@@ -166,7 +161,7 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Correlation"</span>, <span class="kw">col</span> <span class="kw">=</span> <span class="st">"Lag"</span>)</pre></body></html></div>
 <p><img src="correlation_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
-<p>Note that <code><a href="../reference/epi_cor.html">epi_cor()</a></code> takes an argument <code>shift_by</code> that determines the grouping to use for the time shifts. The default is <code>geo_value</code>, which makes sense in our problem at hand (but in another setting, we may want to group by, say, geo value and age before time shifting).</p>
+<p>Note that <code><a href="../reference/epi_cor.html">epi_cor()</a></code> takes an argument <code>shift_by</code> that determines the grouping to use for the time shifts. The default is <code>geo_value</code>, which makes sense in our problem at hand (but in another setting, we may want to group by geo value and another variable—say, age—before time shifting).</p>
 <p>We can see that, generally, lagging the case rates back by 10 days improves the correlations, confirming case rates are better correlated with death rates 10 days from now.</p>
 </div>
 <div id="correlations-grouped-by-state" class="section level2">
@@ -200,7 +195,7 @@
 
 <span class="no">z</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">lag</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span>(<span class="kw">mean</span> <span class="kw">=</span> <span class="fu"><a href="../reference/Min.html">Mean</a></span>(<span class="no">cor</span>)) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span>(<span class="kw">mean</span> <span class="kw">=</span> <span class="fu">Mean</span>(<span class="no">cor</span>)) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">lag</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">mean</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>() + <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span>() +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Lag"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Mean correlation"</span>)</pre></body></html></div>

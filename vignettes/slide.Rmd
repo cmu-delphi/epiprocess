@@ -7,8 +7,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-One of the most central tools in the `epiprocess` package is `epi_slide()`,
-which is based on the family of functions provided by the
+A central tool in the `epiprocess` package is `epi_slide()`, which is based on
+the functionality provided in the
 [`slider`](https://cran.r-project.org/web/packages/slider/) package. In
 `epiprocess`, to "slide" means to apply a computation---represented as a
 function or formula---over a running window of `n` time steps. Suitable
@@ -17,8 +17,8 @@ groupings can always be achieved by a preliminary call to `group_by()`.
 By default, the meaning of one time step is inferred from the `time_value`
 column of the `epi_df` object under consideration, based on the way this column
 understands addition and subtraction. For example, if the time values are coded
-as `Date` objects, then one time step is one day, since `as.Date("2022-01-30") +
-1` equals `as.Date("2020-01-31")`. Alternatively, the time step can be specified
+as `Date` objects, then one time step is one day, since `as.Date("2022-01-01") +
+1` equals `as.Date("2022-01-02")`. Alternatively, the time step can be specified
 manually in the call to `epi_slide()`; you can read the documentation for more
 details. Furthermore, the alignment of the running window used in `epi_slide()`
 can be "right", "center", or "left"; the default is "right", and is what we use
@@ -79,13 +79,12 @@ We can also pass a function for the first argument in `epi_slide()`. In this
 case, the passed function must have the following argument structure: `x`, a
 data frame with the same column names as the original object; followed by any
 number of named arguments; and ending with `...` to capture additional
-arguments.  Recreating the last example of a 7-day trailing average:
+arguments. Recreating the last example of a 7-day trailing average:
 
 ```{r}
 x <- x %>% 
   group_by(geo_value) %>% 
-  epi_slide(function(x, ...) mean(x$cases), n = 7,
-            new_col_name = "cases_7dav")
+  epi_slide(function(x, ...) mean(x$cases), n = 7, new_col_name = "cases_7dav")
 
 head(x, 10)
 ```
@@ -96,8 +95,7 @@ Perhaps the most convenient way to setup a computation in `epi_slide()` is to
 pass in an expression for tidy evaluation. In this case, we can simply define
 the name of the new column directly as part of the expression, setting it equal
 to a computation in which we can access any columns of `x` by name, just as we
-would in a call to `dplyr::summarize()`, or any of the `dplyr` verbs. For
-example:
+would in a call to `dplyr::mutate()`, or any of the `dplyr` verbs. For example:
 
 ```{r}
 x <- x %>% 
@@ -122,8 +120,8 @@ ggplot(x, aes(x = time_value)) +
   labs(x = "Date", y = "Reported COVID-19 cases")
 ```
 
-As we can see from the top right panel, it looks like Texas moved to weekly
-reporting of COVID-19 cases in summer of 2021.
+As we can see from the top right panel, it looks like Texas moved to weekly 
+reporting of COVID-19 cases in summer of 2021.  
 
 ## Running a local forecaster
 

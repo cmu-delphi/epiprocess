@@ -102,7 +102,7 @@ examples." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct_change.html">2. Estimate growth rates in signals</a>
+      <a href="../articles/growth_rate.html">2. Estimate growth rates in signals</a>
     </li>
     <li>
       <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
@@ -150,7 +150,7 @@ examples.</p>
   <span class='no'>x</span>,
   <span class='no'>f</span>,
   <span class='no'>...</span>,
-  <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>14</span>,
+  <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>7</span>,
   <span class='kw'>align</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"right"</span>, <span class='st'>"center"</span>, <span class='st'>"left"</span>),
   <span class='no'>before</span>,
   <span class='kw'>complete</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
@@ -186,9 +186,9 @@ interpreted as an expression for tidy evaluation. See details.</p></td>
     <tr>
       <th>n</th>
       <td><p>Number of time steps to use in the running window. For example, if
-<code>n = 5</code>, one time step is one day, and the alignment is "right", then to
-produce a value on November 5, we apply the given function or formula to
-data in between November 1 and 5. Default is 14.</p></td>
+<code>n = 7</code>, one time step is one day, and the alignment is "right", then to
+produce a value on January 7 we apply the given function or formula to data
+in between January 1 and 7. Default is 7.</p></td>
     </tr>
     <tr>
       <th>align</th>
@@ -220,16 +220,17 @@ contain the derivative values. Default is "slide_value"; note that setting
     <tr>
       <th>as_list_col</th>
       <td><p>Should the new column be stored as a list column? Default
-is <code>FALSE</code>.</p></td>
+is <code>FALSE</code>, in which case a list object returned by <code>f</code> would be unnested
+(using <code><a href='https://tidyr.tidyverse.org/reference/nest.html'>tidyr::unnest()</a></code>), and the names of the resulting columns are given
+by prepending <code>new_col_name</code> to the names of the list elements.</p></td>
     </tr>
     <tr>
       <th>time_step</th>
       <td><p>Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
-metadata. This function must take a positive integer and return an object
-of class <code><a href='https://lubridate.tidyverse.org/reference/period.html'>lubridate::period</a></code>. For example, we can use <code>time_step = lubridate::hours</code> in order to set the time step to be one hour (this would
-only be meaningful if <code>time_value</code> is of class <code>POSIXct</code>, that is, if
-<code>time_type</code> is "day-time").</p></td>
+<code>time_value</code> column. This function must take a positive integer and return
+an object of class <code><a href='https://lubridate.tidyverse.org/reference/period.html'>lubridate::period</a></code>. For example, we can use <code>time_step = lubridate::hours</code> in order to set the time step to be one hour (this
+would only be meaningful if <code>time_value</code> is of class <code>POSIXct</code>).</p></td>
     </tr>
     </table>
 
@@ -241,15 +242,16 @@ according to the <code>new_col_name</code> argument, containing the slide values
 
     <p>To "slide" means to apply a function or formula over a running
 window of <code>n</code> time steps, where the unit (the meaning of one time step) is
-determined by the <code>time_type</code> field in the metadata: the unit is one day if
-<code>time_type</code> is either "day-time" or "day", and the unit is one week if
-<code>time_type</code> is "week". The time step can also be set explicitly using the
-<code>time_step</code> argument (which if specified would override the default choice
-based on the metadata).</p>
+implicitly defined by the way the <code>time_value</code> column treats addition and
+subtraction; for example, if the time values are coded as <code>Date</code> objects,
+then one time step is one day, since <code>as.Date("2022-01-01") + 1</code> equals
+<code><a href='https://rdrr.io/r/base/as.Date.html'>as.Date("2022-01-02")</a></code>. Alternatively, the time step can be set explicitly
+using the <code>time_step</code> argument (which if specified would override the
+default choice based on <code>time_value</code> column).</p>
 <p>If <code>f</code> is missing, then an expression for tidy evaluation can be specified,
 for example, as in:</p><pre><span class='fu'>epi_slide</span>(<span class='no'>x</span>, <span class='kw'>cases_7dav</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>(<span class='no'>cases</span>), <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>7</span>)</pre>
 
-<p>which would be equivalent to:</p><pre><span class='fu'>epi_slide</span>(<span class='no'>x</span>, <span class='kw'>f</span> <span class='kw'>=</span> <span class='kw'>function</span>(<span class='no'>x</span>, <span class='no'>...</span>) <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>(<span class='no'>x</span>$<span class='no'>cases</span>), <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>7</span>,
+<p>which would be equivalent to:</p><pre><span class='fu'>epi_slide</span>(<span class='no'>x</span>, <span class='kw'>function</span>(<span class='no'>x</span>, <span class='no'>...</span>) <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>(<span class='no'>x</span>$<span class='no'>cases</span>), <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>7</span>,
           <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"cases_7dav"</span>)</pre>
 
 <p>Thus, to be clear, when the computation is specified via an expression for

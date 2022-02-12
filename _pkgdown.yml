@@ -15,7 +15,7 @@ articles:
     contents:
       - epiprocess
       - slide
-      - pct_change
+      - growth_rate
       - correlation
       - aggregation
       - outliers
