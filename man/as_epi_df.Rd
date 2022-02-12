@@ -5,6 +5,7 @@
 \alias{as_epi_df.epi_df}
 \alias{as_epi_df.tbl_df}
 \alias{as_epi_df.data.frame}
+\alias{as_epi_df.tbl_ts}
 \title{Convert to \code{epi_df} format}
 \usage{
 as_epi_df(x, ...)
@@ -14,6 +15,8 @@ as_epi_df(x, ...)
 \method{as_epi_df}{tbl_df}(x, geo_type, time_type, as_of, additional_metadata = list(), ...)
 
 \method{as_epi_df}{data.frame}(x, geo_type, time_type, as_of, additional_metadata = list(), ...)
+
+\method{as_epi_df}{tbl_ts}(x, geo_type, time_type, as_of, additional_metadata = list(), ...)
 }
 \arguments{
 \item{...}{Additional arguments passed to methods.}
@@ -57,6 +60,11 @@ will try to guess it from an \code{as_of}, \code{issue}, or \code{version} colum
 be used.
 
 \item \code{data.frame}: Works analogously to \code{as_epi_df.tbl_df()}.
+
+\item \code{tbl_ts}: Works analogously to \code{as_epi_df.tbl_df()}, except that
+the \code{tbl_ts} class is dropped, and any key variables (other than
+"geo_value") are added to the metadata of the returned object, under the
+\code{other_keys} field.
 }}
 
 \seealso{

@@ -28,8 +28,10 @@ the following fields:
 Metadata for an \code{epi_df} object \code{x} can be accessed (and altered) via
 \code{attributes(x)$metadata}. The first two fields in the above list,
 \code{geo_type} and \code{time_type}, can usually be inferred from the \code{geo_value}
-and \code{time_value} columns, respectively. More information on their coding is
-given below.
+and \code{time_value} columns, respectively. They are not currently used by any
+downstream functions in the \code{epiprocess} package, and serve only as useful
+bits of information to convey about the data set at hand. More information
+on their coding is given below.
 
 The last field in the above list, \code{as_of}, is one of the most unique aspects
 of an \code{epi_df} object. In brief, we can think of an \code{epi_df} object as a
@@ -47,7 +49,7 @@ object).
 }
 \section{Geo Types}{
 
-The following geo types are supported in an \code{epi_df}. Their geo coding
+The following geo types are recognized in an \code{epi_df}. Their geo coding
 (specification of geo values for each geo type) is also described below.
 \itemize{
 \item \code{"county"}: each observation corresponds to a U.S. county; coded by 5-digit
@@ -64,14 +66,12 @@ note that Puerto Rico is "pr" and Washington D.C. is "dc".
 alpha-2 country codes (lowercase).
 }
 
-The above geo types come with aggregation utilities in the package, \emph{todo:
-refer to relevant functionality, vignette, and so on}. An unrecognizable
-geo type is labeled as "custom".
+An unrecognizable geo type is labeled "custom".
 }
 
 \section{Time Types}{
 
-The following time types are supported in an \code{epi_df}. Their time coding
+The following time types are recognized in an \code{epi_df}. Their time coding
 (specification of time values for each time type) is also described below.
 \itemize{
 \item \code{"day-time"}: each observation corresponds to a time on a given day
@@ -80,13 +80,20 @@ The following time types are supported in an \code{epi_df}. Their time coding
 \item \code{"day"}: each observation corresponds to a day; coded as a \code{Date} object,
 as in \code{as.Date("2022-01-31")}.
 \item \code{"week"}: each observation corresponds to a week; the alignment can be
-arbitrary (as to whether a week starts on a Monday, Tuesday, etc.; the
-U.S. CDC definition of an epidemiological week starts on a Sunday); coded
-as a \code{Date} object, representing the start date of week.
+arbitrary (as to whether a week starts on a Monday, Tuesday); coded as a
+\code{Date} object, representing the start date of week.
+\item \code{"yearweek"}: each observation corresponds to a week; the alignment can be
+arbitrary; coded as a \code{tsibble::yearweek} object, where the alignment is
+stored in the \code{week_start} field of its attributes.
+\item \code{"yearmonth"}: each observation corresponds to a month; coded as a
+\code{tsibble::yearmonth} object.
+\item \code{"yearquarter"}: each observation corresponds to a quarter; coded as a
+\code{tsibble::yearquarter} object.
+\item \code{"year"}: each observation corresponds to a year; coded as an integer
+greater than or equal to 1582.
 }
 
-An unrecognizable time type is labeled as "custom". \emph{todo: refer to vignette
-for time aggregation examples}
+An unrecognizable time type is labeled "custom".
 }
 
 \seealso{

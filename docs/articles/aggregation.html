@@ -60,7 +60,7 @@
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct_change.html">2. Estimate growth rates in signals</a>
+      <a href="../articles/growth_rate.html">2. Estimate growth rates in signals</a>
     </li>
     <li>
       <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
@@ -104,7 +104,7 @@
 
     
     
-<p>Aggregation, both time-wise and geo-wise, are common tasks when working with epidemiological data sets. To demonstrate how to carry out these kinds of tasks with <code>epi_df</code> objects, we’ll work with county-level reported COVID-19 cases in MA and VT.</p>
+<p>Aggregation, both time-wise and geo-wise, are common tasks when working with epidemiological data sets. This vignette demonstrates how to carry out these kinds of tasks with <code>epi_df</code> objects. We’ll work with county-level reported COVID-19 cases in MA and VT.</p>
 <div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">covidcast</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">epiprocess</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">dplyr</span>)
@@ -115,8 +115,8 @@
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="kw">geo_value</span> <span class="kw">=</span> <span class="no">FIPS</span>, <span class="kw">county_name</span> <span class="kw">=</span> <span class="no">CTYNAME</span>, <span class="kw">state_name</span> <span class="kw">=</span> <span class="no">STNAME</span>)
 
 <span class="co"># Fetch only counties from VT and NH, then append names columns as well</span>
-<span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="kw">data_source</span> <span class="kw">=</span> <span class="st">"jhu-csse"</span>,
-                      <span class="kw">signal</span> <span class="kw">=</span> <span class="st">"confirmed_incidence_num"</span>,
+<span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="st">"jhu-csse"</span>,
+                      <span class="st">"confirmed_incidence_num"</span>,
                       <span class="kw">start_day</span> <span class="kw">=</span> <span class="st">"2020-06-01"</span>,
                       <span class="kw">end_day</span> <span class="kw">=</span> <span class="st">"2021-12-31"</span>,
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"county"</span>,
@@ -155,7 +155,7 @@
 <div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html">as_tsibble</a></span>(<span class="no">x</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="st">"county_name"</span>))</pre></body></html></div>
 <pre><code>## Error: A valid tsibble must have distinct rows identified by key and index.
 ## ℹ Please use `duplicates()` to check the duplicated rows.</code></pre>
-<p>As we can see, there are duplicate county names between MA and VT, which caused the error.</p>
+<p>As we can see, there are duplicate county names between Massachusetts and Vermont, which caused the error.</p>
 <div class="sourceCode" id="cb12"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu"><a href="https://tsibble.tidyverts.org/reference/duplicates.html">duplicates</a></span>(<span class="no">x</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="st">"county_name"</span>))</pre></body></html></div>
 <pre><code>## # A tibble: 6 × 5
 ##   geo_value time_value cases county_name     state_name   
@@ -191,7 +191,7 @@
       <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/name_to_abbr.html">name_to_abbr</a></span>(<span class="no">state_name</span>), <span class="kw">sep</span> <span class="kw">=</span> <span class="st">", "</span>)) <span class="kw">%&gt;%</span>
     <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">cases</span>)
 
-<span class="no">xt</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html">as_tsibble</a></span>(<span class="no">x</span>) <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">cases</span> <span class="kw">&gt;=</span> <span class="fl">5</span>)</pre></body></html></div>
+<span class="no">xt</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html">as_tsibble</a></span>(<span class="no">x</span>) <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">cases</span> <span class="kw">&gt;=</span> <span class="fl">3</span>)</pre></body></html></div>
 <p>The functions <code><a href="https://tsibble.tidyverts.org/reference/has_gaps.html">has_gaps()</a></code>, <code><a href="https://tsibble.tidyverts.org/reference/scan_gaps.html">scan_gaps()</a></code>, <code><a href="https://tsibble.tidyverts.org/reference/count_gaps.html">count_gaps()</a></code> in the <code>tsibble</code> package each provide useful summaries, in slightly different formats.</p>
 <div class="sourceCode" id="cb17"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu"><a href="https://tsibble.tidyverts.org/reference/has_gaps.html">has_gaps</a></span>(<span class="no">xt</span>))</pre></body></html></div>
 <pre><code>## # A tibble: 6 × 2
@@ -208,22 +208,22 @@
 ## # Key:       geo_value [1]
 ##   geo_value   time_value
 ##   &lt;chr&gt;       &lt;date&gt;    
-## 1 Addison, VT 2020-10-06
-## 2 Addison, VT 2020-10-07
-## 3 Addison, VT 2020-10-08
-## 4 Addison, VT 2020-10-09
-## 5 Addison, VT 2020-10-10
-## 6 Addison, VT 2020-10-11</code></pre>
+## 1 Addison, VT 2020-08-28
+## 2 Addison, VT 2020-08-29
+## 3 Addison, VT 2020-08-30
+## 4 Addison, VT 2020-08-31
+## 5 Addison, VT 2020-09-01
+## 6 Addison, VT 2020-09-02</code></pre>
 <div class="sourceCode" id="cb21"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu"><a href="https://tsibble.tidyverts.org/reference/count_gaps.html">count_gaps</a></span>(<span class="no">xt</span>))</pre></body></html></div>
 <pre><code>## # A tibble: 6 × 4
 ##   geo_value   .from      .to           .n
 ##   &lt;chr&gt;       &lt;date&gt;     &lt;date&gt;     &lt;int&gt;
-## 1 Addison, VT 2020-10-06 2020-11-11    37
-## 2 Addison, VT 2020-11-14 2020-11-26    13
-## 3 Addison, VT 2020-11-28 2020-12-02     5
-## 4 Addison, VT 2020-12-06 2020-12-25    20
-## 5 Addison, VT 2020-12-27 2020-12-28     2
-## 6 Addison, VT 2020-12-30 2020-12-30     1</code></pre>
+## 1 Addison, VT 2020-08-28 2020-10-04    38
+## 2 Addison, VT 2020-10-06 2020-10-23    18
+## 3 Addison, VT 2020-10-25 2020-11-04    11
+## 4 Addison, VT 2020-11-06 2020-11-10     5
+## 5 Addison, VT 2020-11-14 2020-11-18     5
+## 6 Addison, VT 2020-11-20 2020-11-20     1</code></pre>
 <p>We can also visualize the patterns of missingness:</p>
 <div class="sourceCode" id="cb23"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
@@ -246,13 +246,13 @@
 ## # Key:       geo_value [1]
 ##   geo_value   time_value cases
 ##   &lt;chr&gt;       &lt;date&gt;     &lt;dbl&gt;
-## 1 Addison, VT 2020-10-05    26
-## 2 Addison, VT 2020-10-06     0
-## 3 Addison, VT 2020-10-07     0
-## 4 Addison, VT 2020-10-08     0
-## 5 Addison, VT 2020-10-09     0
-## 6 Addison, VT 2020-10-10     0</code></pre>
-<p>Note that the time series for Addison, VT only starts on October 5, 2020, even though the original (uncensored) data set itself was drawn from a period that went back to June 6, 2020. By setting <code>.full = TRUE</code>, we can at zero-fill over the entire span of the observed (censored) data.</p>
+## 1 Addison, VT 2020-08-27     3
+## 2 Addison, VT 2020-08-28     0
+## 3 Addison, VT 2020-08-29     0
+## 4 Addison, VT 2020-08-30     0
+## 5 Addison, VT 2020-08-31     0
+## 6 Addison, VT 2020-09-01     0</code></pre>
+<p>Note that the time series for Addison, VT only starts on August 27, 2020, even though the original (uncensored) data set itself was drawn from a period that went back to June 6, 2020. By setting <code>.full = TRUE</code>, we can at zero-fill over the entire span of the observed (censored) data.</p>
 <div class="sourceCode" id="cb26"><html><body><pre class="r"><span class="no">xt_filled</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html">fill_gaps</a></span>(<span class="no">xt</span>, <span class="kw">cases</span> <span class="kw">=</span> <span class="fl">0</span>, <span class="kw">.full</span> <span class="kw">=</span> <span class="fl">TRUE</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html">arrange</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>)
 
@@ -267,7 +267,7 @@
 ## 4 Addison, VT 2020-06-04     0
 ## 5 Addison, VT 2020-06-05     0
 ## 6 Addison, VT 2020-06-06     0</code></pre>
-<p>Explicit imputation for missingness (zero-filling in our case) can be important for protecting against bugs in all sorts of downstream tasks. For example, even something as simple as a 7-day trailing average is complicated by missingness. The function <code><a href="../reference/epi_slide.html">epi_slide()</a></code> looks for all rows within a window of 7 days anchored on the right at the reference time point (when <code>n = 7</code>, and <code>align = "right"</code>). But when some days in a given week are missing because they were censored because they had small case counts, taking an average of the observed case counts can be misleading and is unintentionally biased upwards. Meanwhile, running <code><a href="../reference/epi_slide.html">epi_slide()</a></code> on the zero-filled data brings these trailing averages (appropriately) downwards, as we can see inspecting Plymouth, MA around July 1, 2021.</p>
+<p>Explicit imputation for missingness (zero-filling in our case) can be important for protecting against bugs in all sorts of downstream tasks. For example, even something as simple as a 7-day trailing average is complicated by missingness. The function <code><a href="../reference/epi_slide.html">epi_slide()</a></code> looks for all rows within a window of 7 days anchored on the right at the reference time point (when <code>n = 7</code> and <code>align = "right"</code>). But when some days in a given week are missing because they were censored because they had small case counts, taking an average of the observed case counts can be misleading and is unintentionally biased upwards. Meanwhile, running <code><a href="../reference/epi_slide.html">epi_slide()</a></code> on the zero-filled data brings these trailing averages (appropriately) downwards, as we can see inspecting Plymouth, MA around July 1, 2021.</p>
 <div class="sourceCode" id="cb28"><html><body><pre class="r"><span class="no">xt</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>() <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
@@ -275,13 +275,19 @@
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">geo_value</span> <span class="kw">==</span> <span class="st">"Plymouth, MA"</span>,
          <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">abs</a></span>(<span class="no">time_value</span> - <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span>(<span class="st">"2021-07-01"</span>)) <span class="kw">&lt;=</span> <span class="fl">3</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span>(<span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>)</pre></body></html></div>
-<pre><code>## # A tibble: 3 × 4
+<pre><code>## An `epi_df` object, with metadata:
+## * geo_type  = nation
+## * time_type = day
+## * as_of     = 2022-02-12 17:12:22
+## 
+## # A tibble: 4 × 4
 ## # Groups:   geo_value [1]
 ##   geo_value    time_value cases cases_7dav
-##   &lt;chr&gt;        &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
-## 1 Plymouth, MA 2021-06-30     7       6.5 
-## 2 Plymouth, MA 2021-07-01     6       6.5 
-## 3 Plymouth, MA 2021-07-02     6       6.33</code></pre>
+## * &lt;chr&gt;        &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
+## 1 Plymouth, MA 2021-06-28     3       4.25
+## 2 Plymouth, MA 2021-06-30     7       5   
+## 3 Plymouth, MA 2021-07-01     6       5   
+## 4 Plymouth, MA 2021-07-02     6       5.2</code></pre>
 <div class="sourceCode" id="cb30"><html><body><pre class="r"><span class="no">xt_filled</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>() <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
@@ -289,17 +295,22 @@
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">geo_value</span> <span class="kw">==</span> <span class="st">"Plymouth, MA"</span>,
          <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">abs</a></span>(<span class="no">time_value</span> - <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span>(<span class="st">"2021-07-01"</span>)) <span class="kw">&lt;=</span> <span class="fl">3</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span>(<span class="kw">n</span> <span class="kw">=</span> <span class="fl">7</span>)</pre></body></html></div>
-<pre><code>## # A tibble: 7 × 4
+<pre><code>## An `epi_df` object, with metadata:
+## * geo_type  = nation
+## * time_type = day
+## * as_of     = 2022-02-12 17:12:22
+## 
+## # A tibble: 7 × 4
 ## # Groups:   geo_value [1]
 ##   geo_value    time_value cases cases_7dav
-##   &lt;chr&gt;        &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
-## 1 Plymouth, MA 2021-06-28     0      0.857
-## 2 Plymouth, MA 2021-06-29     0      0.857
-## 3 Plymouth, MA 2021-06-30     7      1.86 
-## 4 Plymouth, MA 2021-07-01     6      1.86 
-## 5 Plymouth, MA 2021-07-02     6      2.71 
-## 6 Plymouth, MA 2021-07-03     0      2.71 
-## 7 Plymouth, MA 2021-07-04     0      2.71</code></pre>
+## * &lt;chr&gt;        &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;
+## 1 Plymouth, MA 2021-06-28     3       2.43
+## 2 Plymouth, MA 2021-06-29     0       2.43
+## 3 Plymouth, MA 2021-06-30     7       2.86
+## 4 Plymouth, MA 2021-07-01     6       2.86
+## 5 Plymouth, MA 2021-07-02     6       3.71
+## 6 Plymouth, MA 2021-07-03     0       3.71
+## 7 Plymouth, MA 2021-07-04     0       3.14</code></pre>
 </div>
 <div id="aggregate-to-different-time-scales" class="section level2">
 <h2 class="hasAnchor">
@@ -337,9 +348,9 @@
 ## 1 Addison, VT 2020 May     0
 ## 2 Addison, VT 2020 Jun     0
 ## 3 Addison, VT 2020 Jul     0
-## 4 Addison, VT 2020 Aug     0
+## 4 Addison, VT 2020 Aug     3
 ## 5 Addison, VT 2020 Sep     0
-## 6 Addison, VT 2020 Oct    26</code></pre>
+## 6 Addison, VT 2020 Oct    29</code></pre>
 </div>
 <div id="geographic-aggregation" class="section level2">
 <h2 class="hasAnchor">

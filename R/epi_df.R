@@ -21,8 +21,10 @@
 #' Metadata for an `epi_df` object `x` can be accessed (and altered) via
 #'   `attributes(x)$metadata`. The first two fields in the above list,
 #'   `geo_type` and `time_type`, can usually be inferred from the `geo_value`
-#'   and `time_value` columns, respectively. More information on their coding is
-#'   given below.
+#'   and `time_value` columns, respectively. They are not currently used by any
+#'   downstream functions in the `epiprocess` package, and serve only as useful
+#'   bits of information to convey about the data set at hand. More information
+#'   on their coding is given below.
 #'
 #' The last field in the above list, `as_of`, is one of the most unique aspects
 #'   of an `epi_df` object. In brief, we can think of an `epi_df` object as a
@@ -39,7 +41,7 @@
 #'   object).
 #'
 #' @section Geo Types:
-#' The following geo types are supported in an `epi_df`. Their geo coding
+#' The following geo types are recognized in an `epi_df`. Their geo coding
 #'   (specification of geo values for each geo type) is also described below.
 #' 
 #' * `"county"`: each observation corresponds to a U.S. county; coded by 5-digit
@@ -55,12 +57,10 @@
 #' * `"nation"`: each observation corresponds to a country; coded by ISO 31661-
 #'   alpha-2 country codes (lowercase).
 #'
-#' The above geo types come with aggregation utilities in the package, *todo:
-#'   refer to relevant functionality, vignette, and so on*. An unrecognizable
-#'   geo type is labeled as "custom".
+#' An unrecognizable geo type is labeled "custom".
 #' 
 #' @section Time Types:
-#' The following time types are supported in an `epi_df`. Their time coding
+#' The following time types are recognized in an `epi_df`. Their time coding
 #'   (specification of time values for each time type) is also described below.
 #' 
 #' * `"day-time"`: each observation corresponds to a time on a given day
@@ -69,12 +69,19 @@
 #' * `"day"`: each observation corresponds to a day; coded as a `Date` object,
 #'   as in `as.Date("2022-01-31")`.
 #' * `"week"`: each observation corresponds to a week; the alignment can be
-#'   arbitrary (as to whether a week starts on a Monday, Tuesday, etc.; the
-#'   U.S. CDC definition of an epidemiological week starts on a Sunday); coded
-#'   as a `Date` object, representing the start date of week.
+#'   arbitrary (as to whether a week starts on a Monday, Tuesday); coded as a
+#'   `Date` object, representing the start date of week.
+#' * `"yearweek"`: each observation corresponds to a week; the alignment can be
+#'   arbitrary; coded as a `tsibble::yearweek` object, where the alignment is
+#'   stored in the `week_start` field of its attributes. 
+#' * `"yearmonth"`: each observation corresponds to a month; coded as a
+#'   `tsibble::yearmonth` object.
+#' * `"yearquarter"`: each observation corresponds to a quarter; coded as a
+#'   `tsibble::yearquarter` object.
+#' * `"year"`: each observation corresponds to a year; coded as an integer
+#'   greater than or equal to 1582.
 #'
-#' An unrecognizable time type is labeled as "custom". *todo: refer to vignette
-#'   for time aggregation examples*
+#' An unrecognizable time type is labeled "custom".
 #'
 #' @seealso [as_epi_df()] for converting to `epi_df` format
 #' @name epi_df
@@ -190,6 +197,23 @@ as_epi_df.data.frame = function(x, geo_type, time_type, as_of,
                    additional_metadata, ...)
 }
 
+#' @method as_epi_df tbl_ts
+#' @describeIn as_epi_df Works analogously to `as_epi_df.tbl_df()`, except that
+#'   the `tbl_ts` class is dropped, and any key variables (other than
+#'   "geo_value") are added to the metadata of the returned object, under the
+#'   `other_keys` field.
+#' @export
+as_epi_df.tbl_ts = function(x, geo_type, time_type, as_of,
+                            additional_metadata = list(), ...) {
+  tsibble_other_keys = setdiff(tsibble::key_vars(x), "geo_value")
+  if (length(tsibble_other_keys) != 0) {
+    additional_metadata$other_keys = unique(
+      c(additional_metadata$other_keys, tsibble_other_keys))
+  }
+  as_epi_df.tbl_df(tibble::as_tibble(x), geo_type, time_type, as_of,
+                   additional_metadata, ...)
+}
+
 #' Print `epi_df` object
 #'
 #' Prints a brief summary of the `epi_df` object, then prints the underlying
@@ -207,13 +231,6 @@ print.epi_df = function(x, ...) {
   cat(sprintf("* %-10s= %s\n", "as_of", attributes(x)$metadata$as_of))
   cat("\n")
   NextMethod()
-}
-
-#' @method head epi_df
-#' @importFrom utils head
-#' @export
-head.epi_df = function(x, ...) {
-  head(tibble::as_tibble(x))
 }
 
 #' Summarize `epi_df` object

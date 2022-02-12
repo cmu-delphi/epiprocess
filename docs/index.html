@@ -62,7 +62,7 @@
       <a href="articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="articles/pct_change.html">2. Estimate growth rates in signals</a>
+      <a href="articles/growth_rate.html">2. Estimate growth rates in signals</a>
     </li>
     <li>
       <a href="articles/correlation.html">3. Correlate signals over space and time</a>
@@ -103,13 +103,16 @@
 <h2 class="hasAnchor">
 <a href="#epi_df-snapshot-of-a-data-set" class="anchor"></a>epi_df: snapshot of a data set</h2>
 <p>The first main data structure in the <code>epiprocess</code> package is called <a href="reference/epi_df.html"><code>epi_df</code></a>. This is simply a tibble with a couple of required columns, <code>geo_value</code> and <code>time_value</code>. It can have any other number of columns, which can be seen as measured variables, which we also call signal variables. In brief, an <code>epi_df</code> object represents a snapshot of a data set that contains the most up-to-date values of the signals variables, as of a given time.</p>
-<p>The functions in the <code>epiprocess</code> package that operate on <code>epi_df</code> objects all begin with <code>epi</code>, namely:</p>
+<p>By convention, functions in the <code>epiprocess</code> package that operate on <code>epi_df</code> objects begin with <code>epi</code>. For example:</p>
 <ul>
 <li><p><code><a href="reference/epi_slide.html">epi_slide()</a></code>, for iteratively applying a custom computation to a variable in an <code>epi_df</code> object over sliding windows in time;</p></li>
-<li><p><code><a href="reference/epi_cor.html">epi_cor()</a></code>, for computing lagged correlations between variables in an <code>epi_df</code> object, (allowing for grouping by geo value, time value, or any other variables);</p></li>
-<li><p><code><a href="reference/epi_detect_outlr.html">epi_detect_outlr()</a></code>, for detecting and correcting outliers in a variable in an <code>epi_df</code> object, using either built-in or custom methodologies.</p></li>
+<li><p><code><a href="reference/epi_cor.html">epi_cor()</a></code>, for computing lagged correlations between variables in an <code>epi_df</code> object, (allowing for grouping by geo value, time value, or any other variables).</p></li>
 </ul>
-<p>Other notable functions include todo</p>
+<p>Functions in the package that operate directly on given variables do not begin with <code>epi</code>. For example:</p>
+<ul>
+<li><p><code><a href="reference/growth_rate.html">growth_rate()</a></code>, for estimating the growth rate of a given signal at given time values, using various methodologies;</p></li>
+<li><p><code>detect_outlr()</code>, for detecting outliers in a given signal over time, using either built-in or custom methodologies.</p></li>
+</ul>
 </div>
 <div id="epi_archive-full-version-history-of-a-data-set" class="section level2">
 <h2 class="hasAnchor">

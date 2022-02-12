@@ -8,9 +8,17 @@
 arrange.epi_df = function(x, ...) {
   metadata = attributes(x)$metadata
   x = NextMethod()
-  class(x) = c("epi_df", class(x))
-  attributes(x)$metadata = metadata
-  return(x)
+  reclass(x, metadata)
+}
+
+#' @method filter epi_df
+#' @rdname arrange.epi_df
+#' @importFrom dplyr filter
+#' @export
+filter.epi_df = function(x, ...) {
+  metadata = attributes(x)$metadata
+  x = NextMethod()
+  reclass(x, metadata)
 }
 
 #' @method group_by epi_df
@@ -20,9 +28,7 @@ arrange.epi_df = function(x, ...) {
 group_by.epi_df = function(x, ...) {
   metadata = attributes(x)$metadata
   x = NextMethod()
-  class(x) = c("epi_df", class(x))
-  attributes(x)$metadata = metadata
-  return(x)
+  reclass(x, metadata)
 }
 
 #' @method group_modify epi_df
@@ -32,9 +38,7 @@ group_by.epi_df = function(x, ...) {
 group_modify.epi_df = function(x, ...) {
   metadata = attributes(x)$metadata
   x = NextMethod()
-  class(x) = c("epi_df", class(x))
-  attributes(x)$metadata = metadata
-  return(x)
+  reclass(x, metadata)
 }
 
 #' @method mutate epi_df
@@ -44,9 +48,37 @@ group_modify.epi_df = function(x, ...) {
 mutate.epi_df = function(x, ...) {
   metadata = attributes(x)$metadata
   x = NextMethod()
-  class(x) = c("epi_df", class(x))
-  attributes(x)$metadata = metadata
-  return(x)
+  reclass(x, metadata)
+}
+
+#' @method relocate epi_df
+#' @rdname arrange.epi_df
+#' @importFrom dplyr relocate
+#' @export
+relocate.epi_df = function(x, ...) {
+  metadata = attributes(x)$metadata
+  x = NextMethod()
+  reclass(x, metadata)
+}
+
+#' @method rename epi_df
+#' @rdname arrange.epi_df
+#' @importFrom dplyr rename
+#' @export
+rename.epi_df = function(x, ...) {
+  metadata = attributes(x)$metadata
+  x = NextMethod()
+  reclass(x, metadata)
+}
+
+#' @method slice epi_df
+#' @rdname arrange.epi_df
+#' @importFrom dplyr slice
+#' @export
+slice.epi_df = function(x, ...) {
+  metadata = attributes(x)$metadata
+  x = NextMethod()
+  reclass(x, metadata)
 }
 
 #' @method ungroup epi_df
@@ -56,9 +88,7 @@ mutate.epi_df = function(x, ...) {
 ungroup.epi_df = function(x, ...) {
   metadata = attributes(x)$metadata
   x = NextMethod()
-  class(x) = c("epi_df", class(x))
-  attributes(x)$metadata = metadata
-  return(x)
+  reclass(x, metadata)
 }
 
 #' @method unnest epi_df
@@ -68,7 +98,12 @@ ungroup.epi_df = function(x, ...) {
 unnest.epi_df = function(x, ...) {
   metadata = attributes(x)$metadata
   x = NextMethod()
-  class(x) = c("epi_df", class(x))
+  reclass(x, metadata)
+}
+
+# Simple reclass function
+reclass = function(x, metadata) {
+  class(x) = unique(c("epi_df", class(x)))
   attributes(x)$metadata = metadata
   return(x)
 }

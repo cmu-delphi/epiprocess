@@ -101,7 +101,7 @@
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct_change.html">2. Estimate growth rates in signals</a>
+      <a href="../articles/growth_rate.html">2. Estimate growth rates in signals</a>
     </li>
     <li>
       <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
@@ -136,7 +136,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>dplyr verbs</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/epi_verbs.R'><code>R/epi_verbs.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/verbs.R'><code>R/verbs.R</code></a></small>
     <div class="hidden name"><code>arrange.epi_df.Rd</code></div>
     </div>
 
@@ -148,6 +148,9 @@
 <span class='fu'>arrange</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
 <span class='co'># S3 method for epi_df</span>
+<span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
 <span class='fu'>group_by</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
 <span class='co'># S3 method for epi_df</span>
@@ -155,6 +158,15 @@
 
 <span class='co'># S3 method for epi_df</span>
 <span class='fu'>mutate</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>relocate</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>rename</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>slice</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
 <span class='co'># S3 method for epi_df</span>
 <span class='fu'>ungroup</span>(<span class='no'>x</span>, <span class='no'>...</span>)

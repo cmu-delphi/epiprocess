@@ -8,7 +8,7 @@ epi_slide(
   x,
   f,
   ...,
-  n = 14,
+  n = 7,
   align = c("right", "center", "left"),
   before,
   complete = FALSE,
@@ -34,9 +34,9 @@ via \code{f}. Alternatively, if \code{f} is missing, then the current argument i
 interpreted as an expression for tidy evaluation. See details.}
 
 \item{n}{Number of time steps to use in the running window. For example, if
-\code{n = 5}, one time step is one day, and the alignment is "right", then to
-produce a value on November 5, we apply the given function or formula to
-data in between November 1 and 5. Default is 14.}
+\code{n = 7}, one time step is one day, and the alignment is "right", then to
+produce a value on January 7 we apply the given function or formula to data
+in between January 1 and 7. Default is 7.}
 
 \item{align}{One of "right", "center", or "left", indicating the alignment of
 the sliding window relative to the reference time point. If the alignment
@@ -58,14 +58,15 @@ contain the derivative values. Default is "slide_value"; note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
 
 \item{as_list_col}{Should the new column be stored as a list column? Default
-is \code{FALSE}.}
+is \code{FALSE}, in which case a list object returned by \code{f} would be unnested
+(using \code{tidyr::unnest()}), and the names of the resulting columns are given
+by prepending \code{new_col_name} to the names of the list elements.}
 
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
-metadata. This function must take a positive integer and return an object
-of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this would
-only be meaningful if \code{time_value} is of class \code{POSIXct}, that is, if
-\code{time_type} is "day-time").}
+\code{time_value} column. This function must take a positive integer and return
+an object of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this
+would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 }
 \value{
 An \code{epi_df} object given by appending a new column to \code{x}, named
@@ -78,17 +79,18 @@ examples.
 \details{
 To "slide" means to apply a function or formula over a running
 window of \code{n} time steps, where the unit (the meaning of one time step) is
-determined by the \code{time_type} field in the metadata: the unit is one day if
-\code{time_type} is either "day-time" or "day", and the unit is one week if
-\code{time_type} is "week". The time step can also be set explicitly using the
-\code{time_step} argument (which if specified would override the default choice
-based on the metadata).
+implicitly defined by the way the \code{time_value} column treats addition and
+subtraction; for example, if the time values are coded as \code{Date} objects,
+then one time step is one day, since \code{as.Date("2022-01-01") + 1} equals
+\code{as.Date("2022-01-02")}. Alternatively, the time step can be set explicitly
+using the \code{time_step} argument (which if specified would override the
+default choice based on \code{time_value} column).
 
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
 for example, as in:\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
 }
 
-which would be equivalent to:\preformatted{epi_slide(x, f = function(x, ...) mean(x$cases), n = 7,
+which would be equivalent to:\preformatted{epi_slide(x, function(x, ...) mean(x$cases), n = 7,
           new_col_name = "cases_7dav")
 }
 

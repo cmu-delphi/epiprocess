@@ -104,7 +104,7 @@ time." />
       <a href="../articles/slide.html">1. Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct_change.html">2. Estimate growth rates in signals</a>
+      <a href="../articles/growth_rate.html">2. Estimate growth rates in signals</a>
     </li>
     <li>
       <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
@@ -170,8 +170,10 @@ the following fields:</p><ul>
 <p>Metadata for an <code>epi_df</code> object <code>x</code> can be accessed (and altered) via
 <code>attributes(x)$metadata</code>. The first two fields in the above list,
 <code>geo_type</code> and <code>time_type</code>, can usually be inferred from the <code>geo_value</code>
-and <code>time_value</code> columns, respectively. More information on their coding is
-given below.</p>
+and <code>time_value</code> columns, respectively. They are not currently used by any
+downstream functions in the <code>epiprocess</code> package, and serve only as useful
+bits of information to convey about the data set at hand. More information
+on their coding is given below.</p>
 <p>The last field in the above list, <code>as_of</code>, is one of the most unique aspects
 of an <code>epi_df</code> object. In brief, we can think of an <code>epi_df</code> object as a
 single snapshot of a data set that contains the most up-to-date values of
@@ -188,7 +190,7 @@ object).</p>
 
     
 
-<p>The following geo types are supported in an <code>epi_df</code>. Their geo coding
+<p>The following geo types are recognized in an <code>epi_df</code>. Their geo coding
 (specification of geo values for each geo type) is also described below.</p><ul>
 <li><p><code>"county"</code>: each observation corresponds to a U.S. county; coded by 5-digit
 FIPS code.</p></li>
@@ -204,14 +206,12 @@ note that Puerto Rico is "pr" and Washington D.C. is "dc".</p></li>
 alpha-2 country codes (lowercase).</p></li>
 </ul>
 
-<p>The above geo types come with aggregation utilities in the package, <em>todo:
-refer to relevant functionality, vignette, and so on</em>. An unrecognizable
-geo type is labeled as "custom".</p>
+<p>An unrecognizable geo type is labeled "custom".</p>
     <h2 class="hasAnchor" id="time-types"><a class="anchor" href="#time-types"></a>Time Types</h2>
 
     
 
-<p>The following time types are supported in an <code>epi_df</code>. Their time coding
+<p>The following time types are recognized in an <code>epi_df</code>. Their time coding
 (specification of time values for each time type) is also described below.</p><ul>
 <li><p><code>"day-time"</code>: each observation corresponds to a time on a given day
 (measured to the second); coded as a <code>POSIXct</code> object, as in
@@ -219,13 +219,20 @@ geo type is labeled as "custom".</p>
 <li><p><code>"day"</code>: each observation corresponds to a day; coded as a <code>Date</code> object,
 as in <code><a href='https://rdrr.io/r/base/as.Date.html'>as.Date("2022-01-31")</a></code>.</p></li>
 <li><p><code>"week"</code>: each observation corresponds to a week; the alignment can be
-arbitrary (as to whether a week starts on a Monday, Tuesday, etc.; the
-U.S. CDC definition of an epidemiological week starts on a Sunday); coded
-as a <code>Date</code> object, representing the start date of week.</p></li>
+arbitrary (as to whether a week starts on a Monday, Tuesday); coded as a
+<code>Date</code> object, representing the start date of week.</p></li>
+<li><p><code>"yearweek"</code>: each observation corresponds to a week; the alignment can be
+arbitrary; coded as a <code><a href='https://tsibble.tidyverts.org/reference/year-week.html'>tsibble::yearweek</a></code> object, where the alignment is
+stored in the <code>week_start</code> field of its attributes.</p></li>
+<li><p><code>"yearmonth"</code>: each observation corresponds to a month; coded as a
+<code><a href='https://tsibble.tidyverts.org/reference/year-month.html'>tsibble::yearmonth</a></code> object.</p></li>
+<li><p><code>"yearquarter"</code>: each observation corresponds to a quarter; coded as a
+<code><a href='https://tsibble.tidyverts.org/reference/year-quarter.html'>tsibble::yearquarter</a></code> object.</p></li>
+<li><p><code>"year"</code>: each observation corresponds to a year; coded as an integer
+greater than or equal to 1582.</p></li>
 </ul>
 
-<p>An unrecognizable time type is labeled as "custom". <em>todo: refer to vignette
-for time aggregation examples</em></p>
+<p>An unrecognizable time type is labeled "custom".</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <div class='dont-index'><p><code><a href='as_epi_df.html'>as_epi_df()</a></code> for converting to <code>epi_df</code> format</p></div>

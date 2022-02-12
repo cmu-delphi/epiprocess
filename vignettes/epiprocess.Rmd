@@ -58,7 +58,7 @@ library(dplyr)
 
 cases <- covidcast_signal(data_source = "jhu-csse", 
                           signal = "confirmed_cumulative_num",
-                          start_day = "2020-06-01", 
+                          start_day = "2020-03-01", 
                           end_day = "2022-01-31",
                           geo_type = "state", 
                           geo_values = c("ca", "fl", "ny", "tx"))
@@ -76,7 +76,7 @@ x <- as_epi_df(cases,
                geo_type = "state",
                time_type = "day",
                as_of = max(cases$issue)) %>%
-  select(geo_value, time_value, cases_cum = value)
+  select(geo_value, time_value, total_cases = value)
 
 class(x)
 summary(x)
@@ -86,31 +86,35 @@ attributes(x)$metadata
 
 ## Some details on metadata
 
-In general, an `epi_df` object must have following fields in its metadata:
+In general, an `epi_df` object has the following fields in its metadata:
  
 * `geo_type`: the type for the geo values.
 * `time_type`: the type for the time values.
 * `as_of`: the time value at which the given data were available.
 
-The last field here, `as_of`, is one of the most unique aspects of an `epi_df`
-object. In brief, we can think of an `epi_df` object as a single snapshot of a
-data set that contains the most up-to-date values of some signals of interest,
-as of the time specified `as_of`. For example, if `as_of` is January 31, 2022,
-then the `epi_df` object has the most up-to-date version of the data available
-as of January 31, 2022. The `epiprocess` package also provides a companion data
-structure called `epi_archive`, which stores the full version history of a given
-data set. See the [archive
+The first two fields here, `geo_type` and `time_type`, are not currently used by
+any downstream functions in the `epiprocess` package, and serve only as useful
+bits of information to convey about the data set at hand. The last field here,
+`as_of`, is one of the most unique aspects of an `epi_df` object. In brief, we
+can think of an `epi_df` object as a single snapshot of a data set that contains
+the most up-to-date values of some signals of interest, as of the time specified
+`as_of`. For example, if `as_of` is January 31, 2022, then the `epi_df` object
+has the most up-to-date version of the data available as of January 31,
+2022. The `epiprocess` package also provides a companion data structure called
+`epi_archive`, which stores the full version history of a given data set. See
+the [archive
 vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 more.
 
-If either of the `geo_type` or `time_type` arguments are missing in a call to
-`as_epi_df()`, then this function will try to infer them from the passed
-object. Same with the `as_of` argument, though this is often harder to infer.
-See the documentation for `as_epi_df()` more details.
+If any of the `geo_type`, `time_type`, or `as_of` arguments are missing in a 
+call to `as_epi_df()`, then this function will try to infer them from the passed
+object. Usually, `geo_type` and `time_type` can be inferred from the `geo_value`
+and `time_value` columns, respectively, but inferring the `as_of` field is not 
+as easy. See the documentation for `as_epi_df()` more details.
 
 ```{r}
 x <- as_epi_df(cases) %>%
-  select(geo_value, time_value, cases_cum = value)
+  select(geo_value, time_value, total_cases = value)
 
 attributes(x)$metadata
 ```
@@ -127,7 +131,7 @@ like plotting, which is pretty easy to do `ggplot2`.
 library(ggplot2)
 theme_set(theme_bw())
 
-ggplot(x, aes(x = time_value, y = cases_cum, color = geo_value)) + 
+ggplot(x, aes(x = time_value, y = total_cases, color = geo_value)) + 
   geom_line() +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Cumulative COVID-19 cases", color = "State")

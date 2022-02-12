@@ -1,8 +1,8 @@
-#' Compute lagged correlations between variables in an `epi_df` object
+#' Compute correlations between variables in an `epi_df` object
 #'
-#' Computes lagged correlations between variables in an `epi_df` object,
-#' allowing for grouping by geo value, time value, or any other variables. See
-#' the [correlation
+#' Computes correlations between variables in an `epi_df` object, allowing for
+#' grouping by geo value, time value, or any other variables. See the
+#' [correlation
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/correlation.html)
 #' for examples.
 #'
@@ -36,7 +36,6 @@
 #' @return An tibble with the grouping columns first (`geo_value`, `time_value`,
 #'   or possibly others), and then a column `cor`, which gives the correlation. 
 #' 
-#' @importFrom dplyr arrange mutate summarize  
 #' @importFrom stats cor
 #' @importFrom rlang .data !! enquo
 #' @export
@@ -59,14 +58,14 @@ epi_cor = function(x, var1, var2, dt1 = 0, dt2 = 0, shift_by = geo_value,
 
   # Perform time shifts, then compute appropriate correlations and return
   return(x %>%
-         group_by(!!shift_by) %>%
-         arrange(.data$time_value) %>%
-         mutate(var1 = shift(!!var1, n = dt1),
-                var2 = shift(!!var2, n = dt2)) %>%
-         ungroup() %>%
-         group_by(!!cor_by) %>%
-         summarize(cor = cor(x = .data$var1, y = .data$var2,
-                             use = use, method = method)))
+         dplyr::group_by(!!shift_by) %>%
+         dplyr::arrange(.data$time_value) %>%
+         dplyr::mutate(var1 = shift(!!var1, n = dt1),
+                       var2 = shift(!!var2, n = dt2)) %>%
+         dplyr::ungroup() %>%
+         dplyr::group_by(!!cor_by) %>%
+         dplyr::summarize(cor = cor(x = .data$var1, y = .data$var2,
+                                    use = use, method = method)))
 }
 
 # Function to perform time shifts, lag or lead

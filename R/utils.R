@@ -1,46 +1,22 @@
-#' Computations with `NA` values removed
-#'
-#' These are just wrapper functions for common computational utilities with `NA`
-#' values removed by default.
-#' 
 #' @export
+#' @noRd
 Min = function(x) min(x, na.rm = TRUE)
 
-#' @rdname Min
 #' @export
+#' @noRd
 Max = function(x) max(x, na.rm = TRUE)
 
-#' @rdname Min
 #' @export
+#' @noRd
 Sum = function(x) sum(x, na.rm = TRUE)
 
-#' @rdname Min
 #' @export
+#' @noRd
 Mean = function(x) mean(x, na.rm = TRUE)
 
-#' @rdname Min
 #' @export
+#' @noRd
 Median = function(x) median(x, na.rm = TRUE)
-
-##########
-
-#' Start, middle, and end extrators
-#'
-#' These are just convenience functions for extracting the start, middle, and
-#' end of a sequence.
-#' 
-#' @export
-Start = function(x) x[1]
-
-#' @rdname Start
-#' @export
-Middle = function(x, floor = TRUE) {
-  ifelse(floor, x[floor(length(x)/2)], x[ceiling(length(x)/2)])
-}
-
-#' @rdname Start
-#' @export
-End = function(x) x[length(x)]
 
 ##########
 
@@ -51,6 +27,15 @@ quiet = function(x) {
   on.exit(sink()) 
   invisible(force(x)) 
 }
+
+##########
+
+Start = function(x) x[1]
+End = function(x) x[length(x)]
+MiddleL = function(x) x[floor(length(x)/2)]
+MiddleR = function(x) x[ceiling(length(x)/2)]
+ExtendL = function(x) c(Start(x), x)
+ExtendR = function(x) c(x, End(x))
 
 ##########
 
@@ -107,6 +92,18 @@ guess_time_type = function(time_value) {
     return(ifelse(all(diff(sort(time_value)) == -7), "week", "day"))
   }
 
+  # Else, check whether it's one of the tsibble classes
+  else if (inherits(time_value, "yearweek")) return("yearweek")
+  else if (inherits(time_value, "yearmonth")) return("yearmonth")
+  else if (inherits(time_value, "yearquarter")) return("yearquarter")
+
+  # Else, if it's an integer that's at least 1582, then use "year"
+  if (is.numeric(time_value) &&
+      all(time_value == as.integer(time_value)) &&
+      all(time_value >= 1582)) {
+    return("year")
+  }
+      
   # If we got here then we failed
   return("custom")
 }

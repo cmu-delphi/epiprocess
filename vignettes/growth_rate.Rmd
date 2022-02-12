@@ -1,0 +1,249 @@
+---
+title: 2. Estimate growth rates in signals
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{2. Estimate growth rates in signals}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+A basic way of assessing growth in a signal is to look at its relative change
+over two neighboring time windows. The `epiprocess` package provides a function
+`growth_rate()` to compute such relative changes, as well as more sophisticated 
+estimates the growth rate of a signal. We investigate this functionality in the
+current vignette, applied to state-level daily reported COVID-19 cases from GA
+and PA, smoothed using a 7-day trailing average.
+
+```{r, message = FALSE}
+library(covidcast)
+library(epiprocess)
+library(dplyr)
+library(tidyr)
+
+x <- covidcast_signal("jhu-csse", 
+                      "confirmed_7dav_incidence_num",
+                      start_day = "2020-06-01", 
+                      end_day = "2021-12-31",
+                      geo_type = "state", 
+                      geo_values = c("ga", "pa"))  %>%
+  select(geo_value, time_value, cases = value) %>% 
+  arrange(geo_value, time_value) %>%
+  as_epi_df() 
+```
+
+## Growth rate basics
+
+The growth rate of a function $f$ defined over a continuously-valued parameter
+$t$ is defined as $f'(t)/f(t)$, where $f'(t)$ is the derivative of $f$ at
+$t$. To estimate the growth rate of a signal in discrete-time (which can be
+thought of as evaluations or discretizations of an underlying function in
+continuous-time), we can estimate the derivative and divide by the signal value
+itself (or possibly a smoothed version of the signal value). 
+
+The `growth_rate()` function takes a sequence of underlying design points `x`
+and corresponding sequence `y` of signal values, and allows us to choose from
+the following methods for estimating the growth rate at a given reference point
+`x0`, by setting the `method` argument: 
+
+* "rel_change": uses (B/A - 1) / h, where B is the average of `y` over the
+  second half of a sliding window of bandwidth h centered at the reference 
+  point `x0`, and A the average over the first half. This can be seen as using
+  a first-difference approximation to the derivative.
+* "linear_reg": uses the slope from a linear regression of `y` on `x` over a
+  sliding window centered at the reference point `x0`, divided by the fitted
+  value from this linear regression at `x0`.
+* "smooth_spline": uses the estimated derivative at `x0` from a smoothing spline
+  fit to `x` and `y`, via `stats::smooth.spline()`, divided by the fitted value
+  of the spline at `x0`.
+* "trend_filter": uses the estimated derivative at `x0` from polynomial trend
+  filtering (a discrete spline) fit to `x` and `y`, via
+  `genlasso::trendfilter()`, divided by the fitted value of the discrete spline
+  at `x0`.
+
+The default in `growth_rate()` is `x0 = x`, so that it returns an estimate of
+the growth rate at each underlying design point.  
+
+## Relative change
+
+The default method is "rel_change", which is the simplest way to estimate growth
+rates. The default bandwidth is `h = 7`, which for daily data, considers the
+relative change in a signal over adjacent weeks. We can wrap `growth_rate()` in
+a call to `dplyr::mutate()` to append a new column to our `epi_df` object with
+the computed growth rates.
+
+```{r}
+x <- x %>% 
+  group_by(geo_value) %>% 
+  mutate(cases_gr1 = growth_rate(time_value, cases))
+
+head(x, 10)
+```
+
+We can visualize these growth rate estimates by plotting the signal values and
+highlighting the periods in time for which the relative change is above 1% (in
+red) and below -1% (in blue), faceting by geo value. 
+
+```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 4}
+library(ggplot2)
+theme_set(theme_bw())
+
+upper = 0.01
+lower = -0.01
+
+ggplot(x, aes(x = time_value, y = cases)) + 
+  geom_tile(data = x %>% filter(cases_gr1 >= upper),
+            aes(x = time_value, y = 0, width = 7, height = Inf), 
+            fill = 2, alpha = 0.08) + 
+  geom_tile(data = x %>% filter(cases_gr1 <= lower),
+            aes(x = time_value, y = 0, width = 7, height = Inf), 
+            fill = 4, alpha = 0.08) +  
+  geom_line() +   
+  facet_wrap(vars(geo_value), scales = "free_y") +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Reported COVID-19 cases")
+```
+
+As a more direct visualization, we plot the estimated growth rates themselves,
+overlaying the curves for the two states on one plot. 
+
+```{r, message = FALSE, warning = FALSE}
+ggplot(x, aes(x = time_value, y = cases_gr1)) + 
+  geom_line(aes(col = geo_value)) + 
+  geom_hline(yintercept = upper, linetype = 2, col = 2) +
+  geom_hline(yintercept = lower, linetype = 2, col = 4) +
+  scale_color_manual(values = c(3,6)) +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Growth rate", col = "State") 
+```
+
+We can see that the estimated growth rates from the relative change method are
+somewhat volatile, and there appears to be some bias towards towards the right
+boundary of the time span---look at the estimated growth rate for Georgia in
+late December 2021, which takes a potentially suspicious dip. In general,
+estimation of derivatives will be difficult near the boundary, but relative
+changes can suffer from particularly noticeable boundary bias because they are
+based on a difference in averages over two halves of a local window, and with
+this simplistic approach, one of these halves will be truncated near a boundary.
+
+## Linear regression
+
+The second simplest method available is "linear_reg", whose default bandwidth is
+again `h = 7`. Compared to "rel_change", it appears to behave similarly overall,
+but thankfully avoids some of the troublesome spikes:
+
+```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 7}
+x <- x %>% 
+  group_by(geo_value) %>% 
+  mutate(cases_gr2 = growth_rate(time_value, cases, method = "linear_reg"))
+
+x %>%
+  pivot_longer(cols = starts_with("cases_gr"),
+               names_to = "method", 
+               values_to = "gr") %>%
+  mutate(method = recode(method,
+                         cases_gr1 = "rel_change",
+                         cases_gr2 = "linear_reg")) %>%
+  ggplot(aes(x = time_value, y = gr)) + 
+  geom_line(aes(col = method)) + 
+  scale_color_manual(values = c(2,4)) +
+  facet_wrap(vars(geo_value), scales = "free_y", ncol = 1) +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Growth rate", col = "Method") 
+```
+
+## Nonparametric estimation
+
+We can also use a nonparametric method to estimate the derivative, through
+"smooth_spline" or "trend_filter". The latter is going to be generally more
+computationally expensive, but it is also able to adapt better to the local
+level of smoothness. (The apparent efficiency is actually compounded by the
+particular implementations and default settings for these methods:
+"trend_filter" is based on a full solution path algorithm provided in the
+`genlasso` package, and performs cross-validation by default in order to pick
+the level of regularization; read the documentation for `growth_rate()` more
+details.) 
+
+```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 7}
+x <- x %>% 
+  group_by(geo_value) %>% 
+  mutate(cases_gr3 = growth_rate(time_value, cases, method = "smooth_spline"),
+         cases_gr4 = growth_rate(time_value, cases, method = "trend_filter"))
+
+x %>%
+  select(geo_value, time_value, cases_gr3, cases_gr4) %>%
+  pivot_longer(cols = starts_with("cases_gr"),
+               names_to = "method", 
+               values_to = "gr") %>%
+  mutate(method = recode(method,
+                         cases_gr3 = "smooth_spline",
+                         cases_gr4 = "trend_filter")) %>%
+  ggplot(aes(x = time_value, y = gr)) + 
+  geom_line(aes(col = method)) + 
+  scale_color_manual(values = c(3,6)) +
+  facet_wrap(vars(geo_value), scales = "free_y", ncol = 1) +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Growth rate", col = "Method") 
+```
+
+In this particular example, the trend filtering estimates of growth rate appear 
+to be much more stable than those from the smoothing spline, and also much more stable than the estimates from local relative changes and linear regressions.
+
+The smoothing spline and trend filtering estimators can be tailored in various
+ways by passing additional arguments `...` to `growth_rate()`, and you can read
+the documentation for details.
+
+## Log scale estimation
+
+In general, and alternative view for the growth rate of a function $f$ is given
+by defining $g(t) = \log(f(t))$, and then observing that $g'(t) = f'(t)/f(t)$.
+Therefore, any method that estimates the derivative can be simply applied to the
+log of the signal of interest, and in this light, each method above 
+("rel_change", "linear_reg", "smooth_spline", and "trend_filter") has a log
+scale analog, which can be used by setting the argument `log_scale = TRUE` in
+the call to `growth_rate()`.
+
+```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 7}
+x <- x %>% 
+  group_by(geo_value) %>% 
+  mutate(cases_gr5 = growth_rate(time_value, cases, method = "rel_change", 
+                                 log_scale = TRUE),
+         cases_gr6 = growth_rate(time_value, cases, method = "linear_reg", 
+                                 log_scale = TRUE),
+         cases_gr7 = growth_rate(time_value, cases, method = "smooth_spline", 
+                                 log_scale = TRUE),
+         cases_gr8 = growth_rate(time_value, cases, method = "trend_filter", 
+                                 log_scale = TRUE))
+
+x %>%
+  select(geo_value, time_value, cases_gr5, cases_gr6) %>%
+  pivot_longer(cols = starts_with("cases_gr"),
+               names_to = "method", 
+               values_to = "gr") %>%
+  mutate(method = recode(method,
+                         cases_gr5 = "rel_change_log",
+                         cases_gr6 = "linear_reg_log")) %>%
+  ggplot(aes(x = time_value, y = gr)) + 
+  geom_line(aes(col = method)) + 
+  scale_color_manual(values = c(2,4)) +
+  facet_wrap(vars(geo_value), scales = "free_y", ncol = 1) +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Growth rate", col = "Method") 
+
+x %>%
+  select(geo_value, time_value, cases_gr7, cases_gr8) %>%
+  pivot_longer(cols = starts_with("cases_gr"),
+               names_to = "method", 
+               values_to = "gr") %>%
+  mutate(method = recode(method,
+                         cases_gr7 = "smooth_spline_log",
+                         cases_gr8 = "trend_filter_log")) %>%
+  ggplot(aes(x = time_value, y = gr)) + 
+  geom_line(aes(col = method)) + 
+  scale_color_manual(values = c(3,6)) +
+  facet_wrap(vars(geo_value), scales = "free_y", ncol = 1) +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Growth rate", col = "Method") 
+```
+
+Whether or not a log transform is used should likely be informed by the working
+model for noise. *todo: write something intelligent here?*

@@ -4,29 +4,6 @@
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
 #' examples.
 #'
-#' @details To "slide" means to apply a function or formula over a running
-#'   window of `n` time steps, where the unit (the meaning of one time step) is
-#'   determined by the `time_type` field in the metadata: the unit is one day if
-#'   `time_type` is either "day-time" or "day", and the unit is one week if
-#'   `time_type` is "week". The time step can also be set explicitly using the
-#'   `time_step` argument (which if specified would override the default choice
-#'   based on the metadata).
-#'
-#' If `f` is missing, then an expression for tidy evaluation can be specified,
-#'   for example, as in: 
-#'   ```
-#'   epi_slide(x, cases_7dav = mean(cases), n = 7)
-#'   ```
-#'   which would be equivalent to:
-#'   ```
-#'   epi_slide(x, f = function(x, ...) mean(x$cases), n = 7,
-#'             new_col_name = "cases_7dav")
-#'   ```
-#'   Thus, to be clear, when the computation is specified via an expression for
-#'   tidy evaluation (first example, above), then the name for the new column is 
-#'   inferred from the given expression and overrides any name passed explicitly 
-#'   through the `new_col_name` argument.
-#'
 #' @param x The `epi_df` object under consideration.
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
 #'   to apply a function or formula over a running window of `n` time steps
@@ -40,13 +17,13 @@
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation. See details.  
 #' @param n Number of time steps to use in the running window. For example, if
-#'   `n = 5`, one time step is one day, and the alignment is "right", then to 
-#'   produce a value on November 5, we apply the given function or formula to
-#'   data in between November 1 and 5. Default is 14. 
+#'   `n = 7`, one time step is one day, and the alignment is "right", then to
+#'   produce a value on January 7 we apply the given function or formula to data
+#'   in between January 1 and 7. Default is 7.
 #' @param align One of "right", "center", or "left", indicating the alignment of
 #'   the sliding window relative to the reference time point. If the alignment
 #'   is "center" and `n` is even, then one more time point will be used after
-#'   the reference time point than before. Default is "right". 
+#'   the reference time point than before. Default is "right".
 #' @param before Positive integer less than `n`, specifying the number of time
 #'   points to use in the sliding window strictly before the reference time
 #'   point. For example, setting `before = n-1` would be the same as setting
@@ -59,46 +36,65 @@
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
 #' @param as_list_col Should the new column be stored as a list column? Default
-#'   is `FALSE`.
+#'   is `FALSE`, in which case a list object returned by `f` would be unnested 
+#'   (using `tidyr::unnest()`), and the names of the resulting columns are given
+#'   by prepending `new_col_name` to the names of the list elements. 
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
-#'   metadata. This function must take a positive integer and return an object
-#'   of class `lubridate::period`. For example, we can use `time_step =
-#'   lubridate::hours` in order to set the time step to be one hour (this would
-#'   only be meaningful if `time_value` is of class `POSIXct`, that is, if
-#'   `time_type` is "day-time").
+#'   `time_value` column. This function must take a positive integer and return
+#'   an object of class `lubridate::period`. For example, we can use `time_step
+#'   = lubridate::hours` in order to set the time step to be one hour (this
+#'   would only be meaningful if `time_value` is of class `POSIXct`).
 #' @return An `epi_df` object given by appending a new column to `x`, named 
 #'   according to the `new_col_name` argument, containing the slide values. 
 #' 
-#' @importFrom dplyr mutate pull summarize 
+#' @details To "slide" means to apply a function or formula over a running
+#'   window of `n` time steps, where the unit (the meaning of one time step) is
+#'   implicitly defined by the way the `time_value` column treats addition and
+#'   subtraction; for example, if the time values are coded as `Date` objects,
+#'   then one time step is one day, since `as.Date("2022-01-01") + 1` equals
+#'   `as.Date("2022-01-02")`. Alternatively, the time step can be set explicitly
+#'   using the `time_step` argument (which if specified would override the
+#'   default choice based on `time_value` column).
+#'
+#' If `f` is missing, then an expression for tidy evaluation can be specified,
+#'   for example, as in: 
+#'   ```
+#'   epi_slide(x, cases_7dav = mean(cases), n = 7)
+#'   ```
+#'   which would be equivalent to:
+#'   ```
+#'   epi_slide(x, function(x, ...) mean(x$cases), n = 7,
+#'             new_col_name = "cases_7dav")
+#'   ```
+#'   Thus, to be clear, when the computation is specified via an expression for
+#'   tidy evaluation (first example, above), then the name for the new column is 
+#'   inferred from the given expression and overrides any name passed explicitly 
+#'   through the `new_col_name` argument.
+#' 
 #' @importFrom lubridate days weeks
 #' @importFrom rlang !! abort enquo enquos 
 #' @export
-epi_slide = function(x, f, ..., n = 14, align = c("right", "center", "left"),
+epi_slide = function(x, f, ..., n = 7, align = c("right", "center", "left"),
                      before, complete = FALSE, new_col_name = "slide_value", 
                      as_list_col = FALSE, time_step) {
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) abort("`x` must be of class `epi_df`.")
   
-  # What is one time step?
-  if (!missing(time_step)) before_fun = time_step
-  else if (attributes(x)$metadata$time_type == "week") before_fun = weeks
-  else before_fun = days # Use days for time_type = "day" or "day-time"
-  
   # If before is missing, then use align to set up alignment
   if (missing(before)) {
     align = match.arg(align)
     if (align == "right") {
-      before_num = before_fun(n-1)
+      before_num = n-1
       after_num = 0
     }
     else if (align == "center") {
-      before_num = before_fun(floor((n-1)/2))
-      after_num = before_fun(ceiling((n-1)/2))
+      before_num = floor((n-1)/2)
+      after_num = ceiling((n-1)/2)
     }
     else {
       before_num = 0
-      after_num = before_fun(n-1)
+      after_num = n-1
     }
   }
   
@@ -108,8 +104,14 @@ epi_slide = function(x, f, ..., n = 14, align = c("right", "center", "left"),
       abort("`before` must be in between 0 and n-1`.")
     }
 
-    before_num = before_fun(before)
-    after_num = before_fun(n-1-before)
+    before_num = before
+    after_num = n-1-before
+  }
+
+  # If a custom time step is specified, then redefine units 
+  if (!missing(time_step)) {
+    before_num = time_step(before_num)
+    after_num = time_step(after_num)
   }
 
   # Convenience function for sliding over just one group
@@ -125,6 +127,7 @@ epi_slide = function(x, f, ..., n = 14, align = c("right", "center", "left"),
                                        .before = before_num,
                                        .after = after_num,
                                        .complete = complete)
+
     return(mutate(.data_group, !!new_col_name := slide_values))
   }
 
@@ -166,6 +169,6 @@ epi_slide = function(x, f, ..., n = 14, align = c("right", "center", "left"),
   }
 
   # Unnest if we need to, and return
-  if (!as_list_col) x = tidyr::unnest(x, !!new_col_name)
+  if (!as_list_col) x = tidyr::unnest(x, !!new_col_name, names_sep = "_")
   return(x)
 }

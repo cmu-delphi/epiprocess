@@ -15,20 +15,24 @@ variables. In brief, an `epi_df` object represents a snapshot of a data set that
 contains the most up-to-date values of the signals variables, as of a given
 time.
 
-The functions in the `epiprocess` package that operate on `epi_df` objects all
-begin with `epi`, namely:
+By convention, functions in the `epiprocess` package that operate on `epi_df`
+objects begin with `epi`. For example: 
 
 - `epi_slide()`, for iteratively applying a custom computation to a variable in
-  an `epi_df` object over sliding windows in time; 
+  an `epi_df` object over sliding windows in time;
   
 - `epi_cor()`, for computing lagged correlations between variables in an
   `epi_df` object, (allowing for grouping by geo value, time value, or any other
-  variables); 
-  
-- `epi_detect_outlr()`, for detecting and correcting outliers in a variable in
-  an `epi_df` object, using either built-in or custom methodologies. 
+  variables).
 
-Other notable functions include todo
+Functions in the package that operate directly on given variables do not begin
+  with `epi`. For example: 
+
+- `growth_rate()`, for estimating the growth rate of a given signal at given
+  time values, using various methodologies;
+
+- `detect_outlr()`, for detecting outliers in a given signal over time, using
+  either built-in or custom methodologies.
 
 ## epi_archive: full version history of a data set
 
@@ -48,7 +52,7 @@ to generate an `epi_df` object containing a data snapshot as of January
 15, 2022.
 
 Importantly, sliding computations can also be done over a data archive. This is
-accomplished by calling the `slide()` method for an `epi_archive` object.  This
+accomplished by calling the `slide()` method for an `epi_archive` object. This
 works similarly to the way `epi_slide()` works for an `epi_df` object, but with
 one key difference: for an `epi_archive` object, the sliding computation at any
 given reference time point t is performed on the **data that would have been
