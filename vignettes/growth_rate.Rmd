@@ -186,11 +186,16 @@ x %>%
 ```
 
 In this particular example, the trend filtering estimates of growth rate appear 
-to be much more stable than those from the smoothing spline, and also much more stable than the estimates from local relative changes and linear regressions.
+to be much more stable than those from the smoothing spline, and also much more 
+stable than the estimates from local relative changes and linear regressions.
 
-The smoothing spline and trend filtering estimators can be tailored in various
-ways by passing additional arguments `...` to `growth_rate()`, and you can read
-the documentation for details.
+The smoothing spline growth rate estimates are based on the default settings in
+`stats::smooth.spline()`, and appear severely under-regularized here. Any of the
+arguments to `stats::smooth.spline()` can be customized by passing them as
+additional arguments `...` in the call to `growth_rate()`; similarly, we can
+also use additional arguments to customize the settings in the underlying trend
+filtering functions `genlasso::trendfilter()`, `genlasso::cv.trendfilter()`, and
+the documentation for `growth_rate()` gives the full details.
 
 ## Log scale estimation
 

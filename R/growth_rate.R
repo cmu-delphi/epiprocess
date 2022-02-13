@@ -83,7 +83,7 @@
 #'   internally to `genlasso::trendfilter()` and `genlasso::cv.trendfilter()`):
 #'
 #' * `ord`: order of piecewise polynomial for the trend filtering fit. Default
-#'   is 2.
+#'   is 3.
 #' * `maxsteps`: maximum number of steps to take in the solution path before
 #'   terminating. Default is 1000.
 #' * `cv`: should cross-validation be used to choose an effective degrees of
@@ -202,15 +202,15 @@ growth_rate = function(x = seq_along(y), y, x0 = x,
       k = params$k
 
       # Default parameters
-      if (is.null(ord)) ord = 2
+      if (is.null(ord)) ord = 3
       if (is.null(maxsteps)) maxsteps = 1000
       if (is.null(cv)) cv = TRUE
       if (is.null(df)) df = "min"
       if (is.null(k)) k = 3
 
       # Check cv and df combo
-      if (is.integer(df)) cv = FALSE
-      if (!cv && !is.integer(df)) {
+      if (is.numeric(df)) cv = FALSE
+      if (!cv && !(is.numeric(df) && df == round(df))) {
         abort("If `cv` is `FALSE`, then `df` must be an integer.")
       }
 
@@ -220,7 +220,7 @@ growth_rate = function(x = seq_along(y), y, x0 = x,
       # Use CV to find df, if we need to
       if (cv) {
         cv_obj = quiet(genlasso::cv.trendfilter(obj, k = k, mode = "df"))
-        df = ifelse(df == "1se", cv_obj$df.1se, cv_obj$df.min)
+        df = ifelse(df == "min", cv_obj$df.min, cv_obj$df.1se)
       }
 
       # Estimate growth rate and return

@@ -117,7 +117,7 @@ here, a custom set of arguments is allowed (which are distributed
 internally to \code{genlasso::trendfilter()} and \code{genlasso::cv.trendfilter()}):
 \itemize{
 \item \code{ord}: order of piecewise polynomial for the trend filtering fit. Default
-is 2.
+is 3.
 \item \code{maxsteps}: maximum number of steps to take in the solution path before
 terminating. Default is 1000.
 \item \code{cv}: should cross-validation be used to choose an effective degrees of
