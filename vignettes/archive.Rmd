@@ -113,16 +113,13 @@ object:
 
 * `geo_type`: the type for the geo values.
 * `time_type`: the type for the time values.
-* `max_version`: the max version in the data archive.
-* `other_keys`: the names of the other key variables (apart from "geo_value",
-  "time_value", and "version") in the data archive.
 * `additional_metadata`: list of additional metadata for the data archive.
 
-Unlike an `epi_df` object, metadata for an `epi_archive` object `x` can be
-accessed (and altered) directly, as in `x$geo_type` or `x$time_type`, etc. 
-Like `as_epi_df()`, the function `as_epi_archive()` attempts to guess fields
-in the metadata when an `epi_archive` object is instantiated, if they are not
-explicitly specified in the function call (as it did in the case above).
+Metadata for an `epi_archive` object `x` can be accessed (and altered) directly,
+as in `x$geo_type` or `x$time_type`, etc. Just like `as_epi_df()`, the function
+`as_epi_archive()` attempts to guess metadata fields when an `epi_archive`
+object is instantiated, if they are not explicitly specified in the function
+call (as it did in the case above).
 
 ## Producing snapshots in `epi_df` form
 
@@ -144,13 +141,14 @@ date was June 1, 2021. From this we can infer that the doctor's visits signal
 was 2 days latent on June 1. Also, we can see that the metadata in the `epi_df`
 object has the version date recorded in the `as_of` field.
 
-Using the `max_version` field of the `epi_archive` object itself generates a
-snapshot of the latest values of signal variables in the entire archive. The
-`as_of()` function issues a warning in this case (since updates to the current
-version may still come in at a later point in time, due to various reasons).
+Using the maximum of the `version` column in the underlying data table in an
+`epi_archive` object itself generates a snapshot of the latest values of signal
+variables in the entire archive. The `as_of()` function issues a warning in this
+case, since updates to the current version may still come in at a later point in
+time, due to various reasons like synchronization issues.
 
 ```{r}
-z <- x$as_of(max_version = x$max_version)
+z <- x$as_of(max_version = max(x$DT$version))
 ```
 
 Below, we pull several snapshots from the archive, spaced one month apart. We
@@ -163,12 +161,13 @@ library(purrr)
 library(ggplot2)
 theme_set(theme_bw())
 
-versions = seq(as.Date("2020-06-01"), x$max_version - 1, by = "1 month")
+self_max = max(x$DT$version)
+versions = seq(as.Date("2020-06-01"), self_max - 1, by = "1 month")
 snapshots <- map_dfr(versions, function(v) { 
   x$as_of(max_version = v) %>% mutate(version = v)
 }) %>%
-  bind_rows(z %>% mutate(version = x$max_version)) %>%
-  mutate(final = version == x$max_version)
+  bind_rows(z %>% mutate(version = self_max)) %>%
+  mutate(final = version == self_max)
 
 p <- ggplot(snapshots %>% filter(!final),
             aes(x = time_value, y = percent_cli)) +  
@@ -222,7 +221,7 @@ x$DT <- x$DT %>%
   setnafill(type = "locf", # Fill according to LOCF
             cols = c("percent_cli", "case_rates"))
 
-x$as_of(x$max_version) %>% 
+x$as_of(self_max) %>% 
   ggplot(aes(x = time_value)) +
   geom_line(aes(y = percent_cli), col = "red") + 
   geom_line(aes(y = case_rates / 1000), col = "blue") +

@@ -92,17 +92,20 @@ In general, an `epi_df` object has the following fields in its metadata:
 * `time_type`: the type for the time values.
 * `as_of`: the time value at which the given data were available.
 
-The first two fields here, `geo_type` and `time_type`, are not currently used by
-any downstream functions in the `epiprocess` package, and serve only as useful
-bits of information to convey about the data set at hand. The last field here,
-`as_of`, is one of the most unique aspects of an `epi_df` object. In brief, we
-can think of an `epi_df` object as a single snapshot of a data set that contains
-the most up-to-date values of some signals of interest, as of the time specified
-`as_of`. For example, if `as_of` is January 31, 2022, then the `epi_df` object
-has the most up-to-date version of the data available as of January 31,
-2022. The `epiprocess` package also provides a companion data structure called
-`epi_archive`, which stores the full version history of a given data set. See
-the [archive
+Metadata for an `epi_df` object `x` can be accessed (and altered) via
+`attributes(x)$metadata`. The first two fields here, `geo_type` and `time_type`,
+are not currently used by any downstream functions in the `epiprocess` package,
+and serve only as useful bits of information to convey about the data set at
+hand. The last field here, `as_of`, is one of the most unique aspects of an
+`epi_df` object.
+
+In brief, we can think of an `epi_df` object as a single snapshot of a data set
+that contains the most up-to-date values of some signals of interest, as of the
+time specified `as_of`. For example, if `as_of` is January 31, 2022, then the
+`epi_df` object has the most up-to-date version of the data available as of
+January 31, 2022. The `epiprocess` package also provides a companion data
+structure called `epi_archive`, which stores the full version history of a given
+data set. See the [archive
 vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 more.
 

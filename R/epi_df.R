@@ -226,9 +226,9 @@ as_epi_df.tbl_ts = function(x, geo_type, time_type, as_of,
 #' @export
 print.epi_df = function(x, ...) {
   cat("An `epi_df` object, with metadata:\n")
-  cat(sprintf("* %-10s= %s\n", "geo_type", attributes(x)$metadata$geo_type))
-  cat(sprintf("* %-10s= %s\n", "time_type", attributes(x)$metadata$time_type))
-  cat(sprintf("* %-10s= %s\n", "as_of", attributes(x)$metadata$as_of))
+  cat(sprintf("* %-9s = %s\n", "geo_type", attributes(x)$metadata$geo_type))
+  cat(sprintf("* %-9s = %s\n", "time_type", attributes(x)$metadata$time_type))
+  cat(sprintf("* %-9s = %s\n", "as_of", attributes(x)$metadata$as_of))
   cat("\n")
   NextMethod()
 }
@@ -248,19 +248,36 @@ print.epi_df = function(x, ...) {
 #' @export
 summary.epi_df = function(object, ...) {
   cat("An `epi_df` object, with metadata:\n")
-  cat(sprintf("* %-10s= %s\n", "geo_type", attributes(x)$metadata$geo_type))
-  cat(sprintf("* %-10s= %s\n", "time_type", attributes(x)$metadata$time_type))
-  cat(sprintf("* %-10s= %s\n", "as_of", attributes(x)$metadata$as_of))
-  cat("\nSummary of space-time coverage:\n")
-  cat(sprintf("* %-33s= %s\n", "earliest time value", min(object$time_value)))
-  cat(sprintf("* %-33s= %s\n", "latest time value", max(object$time_value)))
-  cat(sprintf("* %-33s= %i\n", "median geo values per time value",
+  cat(sprintf("* %-9s = %s\n", "geo_type",
+              attributes(object)$metadata$geo_type))
+  cat(sprintf("* %-9s = %s\n", "time_type",
+              attributes(object)$metadata$time_type))
+  cat(sprintf("* %-9s = %s\n", "as_of",
+              attributes(object)$metadata$as_of))
+  cat("----------\n")
+  cat(sprintf("* %-27s = %s\n", "min time value", min(object$time_value)))
+  cat(sprintf("* %-27s = %s\n", "max time value", max(object$time_value)))
+  cat(sprintf("* %-27s = %i\n", "average rows per time value",
               as.integer(object %>% dplyr::group_by(.data$time_value) %>%
                          dplyr::summarize(num = dplyr::n()) %>%
-                         dplyr::summarize(median(.data$num)))))
+                         dplyr::summarize(mean(.data$num)))))
 }
 
-#' Convert to tsibble object
+#' @method head epi_df
+#' @export
+#' @noRd
+head.epi_df = function(x, ...) {
+  head(tibble::as_tibble(x), ...)
+}
+
+#' @method tail epi_df
+#' @export
+#' @noRd
+tail.epi_df = function(x, ...) {
+  tail(tibble::as_tibble(x), ...)
+}
+
+#' Convert to tsibble format
 #' 
 #' Converts an `epi_df` object into a tsibble, where the index is taken to be 
 #' `time_value`, and the key variables taken to be `geo_value` along with any

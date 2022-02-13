@@ -1,6 +1,6 @@
-#' dplyr verbs
+#' `dplyr` verbs
 #'
-#' dplyr verbs for `epi_df` objexts, preserving class and attributes. 
+#' `dplyr` verbs for `epi_df` objexts, preserving class and attributes. 
 #'
 #' @method arrange epi_df
 #' @importFrom dplyr arrange

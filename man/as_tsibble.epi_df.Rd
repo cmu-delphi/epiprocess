@@ -2,7 +2,7 @@
 % Please edit documentation in R/epi_df.R
 \name{as_tsibble.epi_df}
 \alias{as_tsibble.epi_df}
-\title{Convert to tsibble object}
+\title{Convert to tsibble format}
 \usage{
 \method{as_tsibble}{epi_df}(x, key, ...)
 }

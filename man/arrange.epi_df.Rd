@@ -11,7 +11,7 @@
 \alias{slice.epi_df}
 \alias{ungroup.epi_df}
 \alias{unnest.epi_df}
-\title{dplyr verbs}
+\title{\code{dplyr} verbs}
 \usage{
 \method{arrange}{epi_df}(x, ...)
 
@@ -34,5 +34,5 @@
 \method{unnest}{epi_df}(x, ...)
 }
 \description{
-dplyr verbs for \code{epi_df} objexts, preserving class and attributes.
+\code{dplyr} verbs for \code{epi_df} objexts, preserving class and attributes.
 }
