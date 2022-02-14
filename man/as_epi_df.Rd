@@ -67,6 +67,3 @@ the \code{tbl_ts} class is dropped, and any key variables (other than
 \code{other_keys} field.
 }}
 
-\seealso{
-\code{\link{epi_df}} for more details on the \code{epi_df} format
-}

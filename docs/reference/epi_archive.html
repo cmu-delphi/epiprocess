@@ -88,40 +88,7 @@ interest." />
   </a>
 </li>
 <li>
-  <a href="../articles/epiprocess.html">Get started</a>
-</li>
-<li>
   <a href="../reference/index.html">Reference</a>
-</li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Articles
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/slide.html">1. Slide a computation over signal values</a>
-    </li>
-    <li>
-      <a href="../articles/pct_change.html">2. Compute percentage change over time</a>
-    </li>
-    <li>
-      <a href="../articles/derivative.html">3. Estimate derivatives of signals</a>
-    </li>
-    <li>
-      <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
-    </li>
-    <li>
-      <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
-    </li>
-    <li>
-      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
-    </li>
-    <li>
-      <a href="../articles/archive.html">7. Work with data archives and produce snapshots</a>
-    </li>
-  </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -145,7 +112,7 @@ interest." />
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1><code>epi_archive</code> object</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/epi_archive.R'><code>R/epi_archive.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/archive.R'><code>R/archive.R</code></a></small>
     <div class="hidden name"><code>epi_archive.Rd</code></div>
     </div>
 
@@ -173,19 +140,22 @@ later.</p></li>
 </ul>
 
 <p>The data table <code>DT</code> has key variables <code>geo_value</code>, <code>time_value</code>, <code>version</code>,
-as well as any other specified in the metadata (described below). There can
-only be a single row per unique combination of key variables, and thus the
-key variables are critical for figuring out how to generate a snapshot of
-data from the archive, as of a given version.</p>
+as well as any others (these can be specified when instantiating the
+<code>epi_archive</code> object via the <code>other_keys</code> argument, and/or set by operating
+on <code>DT</code> directly). There can only be a single row per unique combination of
+key variables, and thus the key variables are critical for figuring out how
+to generate a snapshot of data from the archive, as of a given version
+(also described below).</p>
 <p>In general, last-observation-carried-forward (LOCF) is used to data in
 between recorded versions. Currently, deletions must be represented as
 revising a row to a special state (e.g., making the entries <code>NA</code> or
 including a special column that flags the data as removed and performing
 some kind of post-processing), and the archive is unaware of what this
 state is.</p>
-<p>A word of caution: R6 objects, unlike most other objects in R, have reference
-semantics. A primary consequence of this is that objects are not copied
-when modified. You can read more about this in Hadley Wickham's <a href='https://adv-r.hadley.nz/r6.html#r6-semantics'>Advanced R</a> book.</p>
+<p><strong>A word of caution:</strong> R6 objects, unlike most other objects in R, have
+reference semantics. A primary consequence of this is that objects are not
+copied when modified. You can read more about this in Hadley Wickham's
+<a href='https://adv-r.hadley.nz/r6.html#r6-semantics'>Advanced R</a> book.</p>
     <h2 class="hasAnchor" id="metadata"><a class="anchor" href="#metadata"></a>Metadata</h2>
 
     
@@ -194,14 +164,15 @@ when modified. You can read more about this in Hadley Wickham's <a href='https:/
 object:</p><ul>
 <li><p><code>geo_type</code>: the type for the geo values.</p></li>
 <li><p><code>time_type</code>: the type for the time values.</p></li>
-<li><p><code>max_version</code>: the max version in the data archive.</p></li>
-<li><p><code>other_keys</code>: the names of the other key variables (apart from "geo_value",
-"time_value", and "version") in the data archive.</p></li>
 <li><p><code>additional_metadata</code>: list of additional metadata for the data archive.</p></li>
 </ul>
 
 <p>Unlike an <code>epi_df</code> object, metadata for an <code>epi_archive</code> object <code>x</code> can be
-accessed (and altered) directly via <code>x$geo_type</code>.</p>
+accessed (and altered) directly, as in <code>x$geo_type</code> or <code>x$time_type</code>,
+etc. Like an <code>epi_df</code> object, the <code>geo_type</code> and <code>time_type</code> fields in the
+metadata of an <code>epi_archive</code> object are not currently used by any
+downstream functions in the <code>epiprocess</code> package, and serve only as useful
+bits of information to convey about the data set at hand.</p>
     <h2 class="hasAnchor" id="generating-snapshots"><a class="anchor" href="#generating-snapshots"></a>Generating Snapshots</h2>
 
     
@@ -213,9 +184,18 @@ variables, as of the specified version. This is accomplished by calling the
 
 <p>to generate a snapshot as of January 15, 2022. More details on the
 <code>as_of()</code> method are documented below.</p>
-    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+    <h2 class="hasAnchor" id="sliding-computations"><a class="anchor" href="#sliding-computations"></a>Sliding Computations</h2>
 
-    <div class='dont-index'><p><code><a href='as_epi_archive.html'>as_epi_archive()</a></code> for converting to <code>epi_archive</code> format</p></div>
+    
+
+<p>We can run a sliding computation over an <code>epi_archive</code> object, much like
+<code><a href='epi_slide.html'>epi_slide()</a></code> does for an <code>epi_df</code> object. This is accomplished by calling
+the <code>slide()</code> method for an <code>epi_archive</code> object, which works similarly to
+the way <code><a href='epi_slide.html'>epi_slide()</a></code> works for an <code>epi_df</code> object, but with one key
+difference: it is version-aware. That is, for an <code>epi_archive</code> object, the
+sliding computation at any given reference time point t is performed on
+<strong>data that would have been available as of t</strong>. More details on <code>slide()</code>
+are documented below.</p>
     <h2 class="hasAnchor" id="methods"><a class="anchor" href="#methods"></a>Methods</h2>
 
     
@@ -223,20 +203,15 @@ variables, as of the specified version. This is accomplished by calling the
 
 <ul>
 <li><p><a href='#method-new'><code>epi_archive$new()</code></a></p></li>
+<li><p><a href='#method-print'><code>epi_archive$print()</code></a></p></li>
 <li><p><a href='#method-as_of'><code>epi_archive$as_of()</code></a></p></li>
+<li><p><a href='#method-slide'><code>epi_archive$slide()</code></a></p></li>
 <li><p><a href='#method-clone'><code>epi_archive$clone()</code></a></p></li>
 </ul>
 <p><hr>
 <a id="method-new"></a></p><h3>Method <code>new()</code></h3>
 <p>Creates a new <code>epi_archive</code> object.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>epi_archive</span>$<span class='fu'>new</span>(
-  <span class='no'>x</span>,
-  <span class='no'>geo_type</span>,
-  <span class='no'>time_type</span>,
-  <span class='no'>max_version</span>,
-  <span class='no'>other_keys</span>,
-  <span class='no'>additional_metadata</span>
-)</pre><p></div></p>
+<p><div class="r"></p><pre><span class='no'>epi_archive</span>$<span class='fu'>new</span>(<span class='no'>x</span>, <span class='no'>geo_type</span>, <span class='no'>time_type</span>, <span class='no'>other_keys</span>, <span class='no'>additional_metadata</span>)</pre><p></div></p>
 
 <h3>Arguments</h3>
 <p><div class="arguments"></p><dl'>
@@ -251,9 +226,6 @@ will be set to "custom".</p></dd>
 attempt to infer it from the time values present; if this fails, then it
 will be set to "custom".</p></dd>
 
-<dt><code>max_version</code></dt><dd><p>Maximum version in the data archive. If missing, then the
-function will set it equal to the maximum of the <code>version</code> column in <code>x</code>.</p></dd>
-
 <dt><code>other_keys</code></dt><dd><p>Character vector specifying the names of variables in <code>x</code>
 that should be considered key variables (in the language of <code>data.table</code>)
 apart from "geo_value", "time_value", and "version".</p></dd>
@@ -265,6 +237,12 @@ fields; named entries from the passed list or will be included as well.</p></dd>
 </dl><p></div></p>
 <h3>Returns</h3>
 <p>An <code>epi_archive</code> object.</p>
+<p><hr>
+<a id="method-print"></a></p><h3>Method <code><a href='https://rdrr.io/r/base/print.html'>print()</a></code></h3>
+
+<h3>Usage</h3>
+<p><div class="r"></p><pre><span class='no'>epi_archive</span>$<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>()</pre><p></div></p>
+
 <p><hr>
 <a id="method-as_of"></a></p><h3>Method <code>as_of()</code></h3>
 <p>Generates a snapshot in <code>epi_df</code> format as of a given version.</p><h3>Usage</h3>
@@ -284,6 +262,72 @@ minimum considered.</p></dd>
 </dl><p></div></p>
 <h3>Returns</h3>
 <p>An <code>epi_df</code> object.</p>
+<p><hr>
+<a id="method-slide"></a></p><h3>Method <code>slide()</code></h3>
+<p>Slides a given function over variables in an <code>epi_archive</code>
+object. Windows are <strong>always right-aligned</strong>, unlike <code><a href='epi_slide.html'>epi_slide()</a></code>. The
+other arguments are as in <code><a href='epi_slide.html'>epi_slide()</a></code>, and its documentation gives more
+details on their useage. The exception is the <code>by</code> argument, which used to
+specify the grouping upfront (whereas in an <code>epi_df</code>, this would be
+accomplished by a call to <code><a href='https://dplyr.tidyverse.org/reference/group_by.html'>dplyr::group_by()</a></code> that precedes a call to
+<code><a href='epi_df.html'>epi_df()</a></code>). See the archive vignette for examples.</p><h3>Usage</h3>
+<p><div class="r"></p><pre><span class='no'>epi_archive</span>$<span class='fu'>slide</span>(
+  <span class='no'>f</span>,
+  <span class='no'>...</span>,
+  <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>14</span>,
+  <span class='kw'>complete</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"slide_value"</span>,
+  <span class='kw'>as_list_col</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='no'>time_step</span>,
+  <span class='no'>by</span>
+)</pre><p></div></p>
+
+<h3>Arguments</h3>
+<p><div class="arguments"></p><dl'>
+<dt><code>f</code></dt><dd><p>Function or formula to slide over variables in <code>x</code>. To "slide" means
+to apply a function or formula over a running window of <code>n</code> time steps
+(where one time step is typically one day or one week). If a function, <code>f</code>
+must take <code>x</code>, a data frame with the same column names as the original
+object; followed by any number of named arguments; and ending with
+<code>...</code>. If a formula, <code>f</code> can operate directly on columns accessed via
+<code>.x$var</code>, as in <code>~ mean(.x$var)</code> to compute a mean of a column <code>var</code> over a
+sliding window of <code>n</code> time steps.</p></dd>
+
+<dt><code>...</code></dt><dd><p>Additional arguments to pass to the function or formula specified
+via <code>f</code>. Alternatively, if <code>f</code> is missing, then the current argument is
+interpreted as an expression for tidy evaluation.</p></dd>
+
+<dt><code>n</code></dt><dd><p>Number of time steps to use in the running window. For example, if
+<code>n = 5</code>, one time step is one day, and the alignment is "right", then to
+produce a value on November 5, we apply the given function or formula to
+data in between November 1 and 5. Default is 14.</p></dd>
+
+<dt><code>complete</code></dt><dd><p>Should the slide function be run over complete windows only?
+Default is <code>FALSE</code>, which allows for computation on partial windows.</p></dd>
+
+<dt><code>new_col_name</code></dt><dd><p>String indicating the name of the new column that will
+contain the derivative values. Default is "slide_value"; note that setting
+<code>new_col_name</code> equal to an existing column name will overwrite this column.</p></dd>
+
+<dt><code>as_list_col</code></dt><dd><p>Should the new column be stored as a list column? Default
+is <code>FALSE</code>, in which case a list object returned by <code>f</code> would be unnested
+(using <code><a href='https://tidyr.tidyverse.org/reference/nest.html'>tidyr::unnest()</a></code>), and the names of the resulting columns are given
+by prepending <code>new_col_name</code> to the names of the list elements.</p></dd>
+
+<dt><code>time_step</code></dt><dd><p>Optional function used to define the meaning of one time
+step, which if specified, overrides the default choice based on the
+<code>time_value</code> column. This function must take a positive integer and return
+an object of class <code><a href='https://lubridate.tidyverse.org/reference/period.html'>lubridate::period</a></code>. For example, we can use <code>time_step = lubridate::hours</code> in order to set the time step to be one hour (this
+would only be meaningful if <code>time_value</code> is of class <code>POSIXct</code>).</p></dd>
+
+<dt><code>by</code></dt><dd><p>The variable(s) to group by before slide computation. If missing,
+then the keys in the underlying data table, excluding <code>time_value</code> and
+<code>version</code>, will be used for grouping.</p></dd>
+
+</dl><p></div></p>
+<h3>Returns</h3>
+<p>A tibble with the grouping variables, <code>time_value</code>, and a new column
+named according to the <code>new_col_name</code> argument, with the slide values.</p>
 <p><hr>
 <a id="method-clone"></a></p><h3>Method <code>clone()</code></h3>
 <p>The objects of this class are cloneable with this method.</p><h3>Usage</h3>

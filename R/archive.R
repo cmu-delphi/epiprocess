@@ -40,10 +40,10 @@
 #'   some kind of post-processing), and the archive is unaware of what this
 #'   state is.
 #'
-#' A word of caution: R6 objects, unlike most other objects in R, have reference
-#'   semantics. A primary consequence of this is that objects are not copied
-#'   when modified. You can read more about this in Hadley Wickham's [Advanced 
-#'   R](https://adv-r.hadley.nz/r6.html#r6-semantics) book.
+#' **A word of caution:** R6 objects, unlike most other objects in R, have
+#'   reference semantics. A primary consequence of this is that objects are not
+#'   copied when modified. You can read more about this in Hadley Wickham's
+#'   [Advanced R](https://adv-r.hadley.nz/r6.html#r6-semantics) book.
 #' 
 #' @section Metadata:
 #' The following pieces of metadata are included as fields in an `epi_archive`
@@ -81,7 +81,6 @@
 #'   **data that would have been available as of t**. More details on `slide()`
 #'   are documented below.
 #' 
-#' @seealso [as_epi_archive()] for converting to `epi_archive` format
 #' @export
 epi_archive =
   R6::R6Class(
@@ -108,7 +107,7 @@ epi_archive =
 #'   `epi_archive` object. The metadata will have `geo_type` and `time_type`
 #'   fields; named entries from the passed list or will be included as well.
 #' @return An `epi_archive` object.
-#' @importFrom data.table as.data.table key setkey
+#' @importFrom data.table as.data.table key setkeyv
 #' @importFrom rlang .data abort warn
           initialize = function(x, geo_type, time_type, other_keys,
                                 additional_metadata) {  
@@ -157,7 +156,7 @@ epi_archive =
             # need to check this, then do it manually if needed
             key_vars = c("geo_value", "time_value", other_keys, "version")
             DT = as.data.table(x, key = key_vars)
-            if (!identical(key_vars, key(DT))) setkey(DT, key_vars)
+            if (!identical(key_vars, key(DT))) setkeyv(DT, cols = key_vars)
 
             # Instantiate all self variables
             self$DT = DT
@@ -241,14 +240,12 @@ epi_archive =
             )
           },
 #' @description Slides a given function over variables in an `epi_archive`
-#'   object. Windows are *always right-aligned*, unlike `epi_slide()`. The other
-#'   arguments are as in `epi_slide()`, and its documentation gives more details
-#'   on their useage. The exception is the `by` argument, which used to specify
-#'   the grouping upfront (whereas in an `epi_df`, this would be accomplished by
-#'   a call to `dplyr::group_by()` that precedes a call to `epi_df()`). See the
-#'   [archive
-#'   vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html)
-#'   for examples.
+#'   object. Windows are **always right-aligned**, unlike `epi_slide()`. The
+#'   other arguments are as in `epi_slide()`, and its documentation gives more
+#'   details on their useage. The exception is the `by` argument, which used to
+#'   specify the grouping upfront (whereas in an `epi_df`, this would be
+#'   accomplished by a call to `dplyr::group_by()` that precedes a call to
+#'   `epi_df()`). See the archive vignette for examples.
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
 #'   to apply a function or formula over a running window of `n` time steps
 #'   (where one time step is typically one day or one week). If a function, `f`
@@ -370,9 +367,7 @@ epi_archive =
 #' Convert to `epi_archive` format
 #'
 #' Converts a data frame, data table, or tibble into an `epi_archive`
-#' object. See the [archive
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for  
-#' examples.
+#' object. See the archive vignette for examples.
 #'
 #' @param x A data frame, data table, or tibble, with columns `geo_value`,
 #'   `time_value`, `version`, and then any additional number of columns.
@@ -390,8 +385,6 @@ epi_archive =
 #'   fields; named entries from the passed list or will be included as well.
 #' @return An `epi_archive` object.
 #'
-#' @seealso [`epi_archive`][epi_archive] for more details on the `epi_archive`
-#'   format 
 #' @export
 as_epi_archive = function(x, geo_type, time_type, other_keys,
                           additional_metadata = list()) { 

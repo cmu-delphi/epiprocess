@@ -53,7 +53,7 @@ Vector of growth rate estimates at the specified points \code{x0}.
 }
 \description{
 Estimates the growth rate of a signal at given points along the underlying
-sequence. Several methodologies are available; see the \href{https://cmu-delphi.github.io/epiprocess/articles/growth_rate.html}{growth rate vignette}
+sequence. Several methodologies are available; see the growth rate vignette
 for examples.
 }
 \details{

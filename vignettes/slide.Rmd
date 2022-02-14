@@ -1,8 +1,8 @@
 ---
-title: 1. Slide a computation over signal values
+title: Slide a computation over signal values
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{1. Slide a computation over signal values}
+  %\VignetteIndexEntry{Slide a computation over signal values}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -257,7 +257,7 @@ to an overly optimistic sense of accuracy; see, for example, [McDonald et al.
 therein. Fortunately, the `epiprocess` package provides a data structure called
 `epi_archive` that can be used to store all data revisions, and furthermore, an
 `epi_archive` object knows how to slide computations in the correct
-**version-aware** sense (for the computation at each reference time $t$, it uses
+version-aware sense (for the computation at each reference time $t$, it uses
 only data that would have been available as of $t$). See the [archive
 vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 more details.

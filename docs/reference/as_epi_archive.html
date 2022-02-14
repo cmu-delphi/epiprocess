@@ -41,8 +41,7 @@
 
 <meta property="og:title" content="Convert to <code>epi_archive</code> format — as_epi_archive" />
 <meta property="og:description" content="Converts a data frame, data table, or tibble into an epi_archive
-object. See the archive vignette for
-examples." />
+object. See the archive vignette for examples." />
 
 
 
@@ -87,37 +86,7 @@ examples." />
   </a>
 </li>
 <li>
-  <a href="../articles/epiprocess.html">Get started</a>
-</li>
-<li>
   <a href="../reference/index.html">Reference</a>
-</li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Articles
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/slide.html">1. Slide a computation over signal values</a>
-    </li>
-    <li>
-      <a href="../articles/pct_change.html">2. Compute percentage change over time</a>
-    </li>
-    <li>
-      <a href="../articles/correlation.html">4. Correlate signals over space and time</a>
-    </li>
-    <li>
-      <a href="../articles/aggregation.html">5. Aggregate signals over space and time</a>
-    </li>
-    <li>
-      <a href="../articles/outliers.html">6. Detect and correct outliers in signals</a>
-    </li>
-    <li>
-      <a href="../articles/archive.html">7. Work with archive objects and data revisions</a>
-    </li>
-  </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -141,21 +110,19 @@ examples." />
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Convert to <code>epi_archive</code> format</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/epi_archive.R'><code>R/epi_archive.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/archive.R'><code>R/archive.R</code></a></small>
     <div class="hidden name"><code>as_epi_archive.Rd</code></div>
     </div>
 
     <div class="ref-description">
     <p>Converts a data frame, data table, or tibble into an <code>epi_archive</code>
-object. See the <a href='https://cmu-delphi.github.io/epiprocess/articles/archive.html'>archive vignette</a> for
-examples.</p>
+object. See the archive vignette for examples.</p>
     </div>
 
     <pre class="usage"><span class='fu'>as_epi_archive</span>(
   <span class='no'>x</span>,
   <span class='no'>geo_type</span>,
   <span class='no'>time_type</span>,
-  <span class='no'>max_version</span>,
   <span class='no'>other_keys</span>,
   <span class='kw'>additional_metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>()
 )</pre>
@@ -181,11 +148,6 @@ attempt to infer it from the time values present; if this fails, then it
 will be set to "custom".</p></td>
     </tr>
     <tr>
-      <th>max_version</th>
-      <td><p>Maximum version in the data archive. If missing, then the
-function will set it equal to the maximum of the <code>version</code> column in <code>x</code>.</p></td>
-    </tr>
-    <tr>
       <th>other_keys</th>
       <td><p>Character vector specifying the names of variables in <code>x</code>
 that should be considered key variables (in the language of <code>data.table</code>)
@@ -202,10 +164,6 @@ fields; named entries from the passed list or will be included as well.</p></td>
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>An <code>epi_archive</code> object.</p>
-    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
-
-    <div class='dont-index'><p><code><a href='epi_archive.html'>epi_archive</a></code> for more details on the <code>epi_archive</code>
-format</p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

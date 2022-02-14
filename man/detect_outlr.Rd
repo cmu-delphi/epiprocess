@@ -45,8 +45,7 @@ method.
 \description{
 Applies one or more outlier detection methods to a given signal variable, and
 optionally aggregates the outputs to create a consensus result. See the
-\href{https://cmu-delphi.github.io/epiprocess/articles/outliers.html}{outliers vignette} for
-examples.
+outliers vignette for examples.
 }
 \details{
 Each outlier detection method, one per row of the passed \code{methods}

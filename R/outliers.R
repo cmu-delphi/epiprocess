@@ -2,9 +2,7 @@
 #'
 #' Applies one or more outlier detection methods to a given signal variable, and
 #' optionally aggregates the outputs to create a consensus result. See the
-#' [outliers
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/outliers.html) for
-#' examples.
+#' outliers vignette for examples.
 #' 
 #' @param x Design points corresponding to the signal values `y`. Default is
 #'   `seq_along(y)` (that is, equally-spaced points from 1 to the length of
@@ -191,7 +189,8 @@ detect_outlr_rm = function(x = seq_along(y), y, n = 21,
 #' The last set of arguments, `log_transform` through `replacement_multiplier`,
 #'   are exactly as in `detect_outlr_rm()`; refer to its help file for their
 #'   description.
-#' 
+#'
+#' @importFrom stats median
 #' @export
 detect_outlr_stl = function(x = seq_along(y), y,
                             n_trend = 21,

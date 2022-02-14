@@ -1,8 +1,8 @@
 ---
-title: 3. Correlate signals over space and time
+title: Correlate signals over space and time
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{3. Correlate signals over space and time}
+  %\VignetteIndexEntry{Correlate signals over space and time}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -20,20 +20,17 @@ library(covidcast)
 library(epiprocess)
 library(dplyr)
 
-start_day <- "2020-03-01"
-end_day <- "2021-12-31"
-
 x <- covidcast_signal("jhu-csse", 
                       "confirmed_7dav_incidence_prop",
-                      start_day = start_day, 
+                      start_day = "2020-03-01", 
                       end_day = end_day,
                       geo_type = "state") %>%
   select(geo_value, time_value, case_rates = value) 
 
 y <- covidcast_signal("jhu-csse", 
                       "deaths_7dav_incidence_prop",
-                      start_day = start_day, 
-                      end_day = end_day,
+                      start_day = "2020-03-01", 
+                      end_day = "2021-12-31",
                       geo_type = "state") %>%
   select(geo_value, time_value, death_rates = value) 
 

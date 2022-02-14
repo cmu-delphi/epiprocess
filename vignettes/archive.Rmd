@@ -1,8 +1,8 @@
 ---
-title: 6. Work with archive objects and data revisions
+title: Work with archive objects and data revisions
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{6. Work with archive objects and data revisions}
+  %\VignetteIndexEntry{Work with archive objects and data revisions}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -34,7 +34,7 @@ library(dplyr)
 dv <- covidcast_signal("doctor-visits", 
                        "smoothed_adj_cli",
                        start_day = "2020-06-01", 
-                       end_day = "2021-12-15",
+                       end_day = "2021-12-01",
                        issues = c("2020-06-01", "2021-12-01"),
                        geo_type = "state", 
                        geo_values = c("ca", "fl"))
@@ -44,8 +44,9 @@ colnames(dv)
 
 ## Getting data into `epi_archive` format
 
-An `epi_archive` object can be constructed from a data frame, data table, or
-tibble, provided that it has (at least) the following columns:
+An <code><a href="../reference/epi_archive.html">epi_archive</a></code> object
+can be constructed from a data frame, data table, or tibble, provided that it
+has (at least) the following columns:
 
 * `geo_value`: the geographic value associated with each row of measurements.
 * `time_value`: the time value associated with each row of measurements.
@@ -78,8 +79,8 @@ class(x$DT)
 head(x$DT)
 ```
 
-The variables `geo_value`, `time_value`, `version` serve as *key variables* for
-the data table, as well as any other specified in the metadata (described
+The variables `geo_value`, `time_value`, `version` serve as **key variables**
+for the data table, as well as any other specified in the metadata (described
 below). There can only be a single row per unique combination of key variables,
 and therefore the key variables are critical for figuring out how to generate a
 snapshot of data from the archive, as of a given version (also described below).
@@ -199,27 +200,36 @@ not quite as dramatically. Modeling the revision process, which is often called
 Next we demonstrate another key method of `epi_archive`, which is the `slide()`
 method. It works just like `epi_slide()` does for an `epi_df` object, but with
 one key difference: it performs version-aware computations. That is, for the 
-computation at any given reference time point t, it uses only **data that would 
-have been available as of t**. 
+computation at any given reference time t, it uses only **data that would have 
+been available as of t**.
 
 To demonstrate this, we're going to ...
 
 ```{r eval = FALSE}
-zz <- covidcast_signal("jhu-csse", 
-                          "confirmed_7dav_incidence_prop",
-                          start_day = "2020-06-01", 
-                          end_day = "2021-12-01",
-                          issues = c("2020-06-01", "2021-12-01"),
-                          geo_type = "state",
-                          geo_values = c("ca", "fl")) %>%
-  select(geo_value, time_value, version = issue, case_rates = value) #%>%
+y <- covidcast_signal("jhu-csse", 
+                      "confirmed_7dav_incidence_prop",
+                      start_day = "2020-06-01", 
+                      end_day = "2021-12-01",
+                      issues = c("2020-06-01", "2021-12-01"),
+                      geo_type = "state",
+                      geo_values = c("ca", "fl")) %>%
+  select(geo_value, time_value, version = issue, case_rates = value) %>%
+  as_epi_archive()
 
-# Do a full join at the data.table level---should make a function out of this
-x$DT <- x$DT %>% 
-  merge(zz, all = TRUE) %>% 
-  #table.express::group_by(geo_value, version) %>%
+# Do a full join at the data.table level
+id <- c("geo_value", "time_value", "version")
+unique_ids <- unique(c(x$DT[,..id], y$DT[,..id]))
+
+DT <- merge.data.table(x$DT, y$DT, all = TRUE)
+setkeyv(DT, cols = setdiff(key(DT), "version"))
+setnafill(DT, type = "locf", cols = names(DT), key(DT)
+
+xx %>%
+  table.express::group_by(t) %>%
   setnafill(type = "locf", # Fill according to LOCF
-            cols = c("percent_cli", "case_rates"))
+            cols = c("var", "var2"))
+
+xx[, var = fillna(var, type = "locf"), by  = t]
 
 x$as_of(self_max) %>% 
   ggplot(aes(x = time_value)) +

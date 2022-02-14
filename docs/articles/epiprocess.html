@@ -57,19 +57,10 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/slide.html">1. Slide a computation over signal values</a>
+      <a href="../articles/slide.html">Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/growth_rate.html">2. Estimate growth rates in signals</a>
-    </li>
-    <li>
-      <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
-    </li>
-    <li>
-      <a href="../articles/aggregation.html">4. Aggregate signals over space and time</a>
-    </li>
-    <li>
-      <a href="../articles/outliers.html">5. Detect and correct outliers in signals</a>
+      <a href="../articles/archive.html">Work with archive objects and data revisions</a>
     </li>
   </ul>
 </li>
@@ -118,14 +109,14 @@
 <div id="getting-data-into-epi_df-format" class="section level2">
 <h2 class="hasAnchor">
 <a href="#getting-data-into-epi_df-format" class="anchor"></a>Getting data into <code>epi_df</code> format</h2>
-<p>We’ll start by showing how to get data into <code>epi_df</code> format, which is just a tibble with a bit of special structure, and is the format assumed by all of the functions in the <code>epiprocess</code> package. An <code>epi_df</code> object has (at least) the following columns:</p>
+<p>We’ll start by showing how to get data into <code><a href="../reference/epi_df.html">epi_df</a></code> format, which is just a tibble with a bit of special structure, and is the format assumed by all of the functions in the <code>epiprocess</code> package. An <code>epi_df</code> object has (at least) the following columns:</p>
 <ul>
 <li>
 <code>geo_value</code>: the geographic value associated with each row of measurements.</li>
 <li>
 <code>time_value</code>: the time value associated with each row of measurements.</li>
 </ul>
-<p>It can have any number of other columns which can serve as measured variables, which we also broadly refer to as signal variables. The documentation for <a href="reference/epi_df.html"><code>epi_df</code></a> gives more details about this data format.</p>
+<p>It can have any number of other columns which can serve as measured variables, which we also broadly refer to as signal variables. The documentation for gives more details about this data format.</p>
 <p>A data frame or tibble that has <code>geo_value</code> and <code>time_value</code> columns can be converted into an <code>epi_df</code> object, using the function <code><a href="../reference/as_epi_df.html">as_epi_df()</a></code>. As an example, we’ll work with daily cumulative COVID-19 cases from four U.S. states: CA, FL, NY, and TX, over time span from mid 2020 to early 2022, and we’ll use the <a href="https://cmu-delphi.github.io/covidcast/covidcastR/"><code>covidcast</code></a> package to fetch this data from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/">COVIDcast API</a>.</p>
 <div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">covidcast</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">epiprocess</span>)
@@ -154,22 +145,16 @@
 <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span>(<span class="no">x</span>)</pre></body></html></div>
 <pre><code>## [1] "epi_df"     "tbl_df"     "tbl"        "data.frame"</code></pre>
 <div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span>(<span class="no">x</span>)</pre></body></html></div>
-<pre><code>## An `epi_df` object, with metadata:
+<pre><code>## An `epi_df` x, with metadata:
 ## * geo_type  = state
 ## * time_type = day
-## * as_of     = 2022-02-05
-## 
-## Summary of space-time coverage:
-## * earliest time value              = 2020-03-01
-## * latest time value                = 2022-01-31
-## * median geo values per time value = 4</code></pre>
+## * as_of     = 2022-02-13
+## ----------
+## * min time value              = 2020-03-01
+## * max time value              = 2022-01-31
+## * average rows per time value = 4</code></pre>
 <div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>)</pre></body></html></div>
-<pre><code>## An `epi_df` object, with metadata:
-## * geo_type  = state
-## * time_type = day
-## * as_of     = 2022-02-05
-## 
-## # A tibble: 6 × 3
+<pre><code>## # A tibble: 6 × 3
 ##   geo_value time_value total_cases
 ##   &lt;chr&gt;     &lt;date&gt;           &lt;dbl&gt;
 ## 1 ca        2020-03-01          19
@@ -186,7 +171,7 @@
 ## [1] "day"
 ## 
 ## $as_of
-## [1] "2022-02-05"</code></pre>
+## [1] "2022-02-13"</code></pre>
 </div>
 <div id="some-details-on-metadata" class="section level2">
 <h2 class="hasAnchor">
@@ -200,7 +185,8 @@
 <li>
 <code>as_of</code>: the time value at which the given data were available.</li>
 </ul>
-<p>The first two fields here, <code>geo_type</code> and <code>time_type</code>, are not currently used by any downstream functions in the <code>epiprocess</code> package, and serve only as useful bits of information to convey about the data set at hand. The last field here, <code>as_of</code>, is one of the most unique aspects of an <code>epi_df</code> object. In brief, we can think of an <code>epi_df</code> object as a single snapshot of a data set that contains the most up-to-date values of some signals of interest, as of the time specified <code>as_of</code>. For example, if <code>as_of</code> is January 31, 2022, then the <code>epi_df</code> object has the most up-to-date version of the data available as of January 31, 2022. The <code>epiprocess</code> package also provides a companion data structure called <code>epi_archive</code>, which stores the full version history of a given data set. See the <a href="https://cmu-delphi.github.io/epiprocess/articles/archive.html">archive vignette</a> for more.</p>
+<p>Metadata for an <code>epi_df</code> object <code>x</code> can be accessed (and altered) via <code>attributes(x)$metadata</code>. The first two fields here, <code>geo_type</code> and <code>time_type</code>, are not currently used by any downstream functions in the <code>epiprocess</code> package, and serve only as useful bits of information to convey about the data set at hand. The last field here, <code>as_of</code>, is one of the most unique aspects of an <code>epi_df</code> object.</p>
+<p>In brief, we can think of an <code>epi_df</code> object as a single snapshot of a data set that contains the most up-to-date values of some signals of interest, as of the time specified <code>as_of</code>. For example, if <code>as_of</code> is January 31, 2022, then the <code>epi_df</code> object has the most up-to-date version of the data available as of January 31, 2022. The <code>epiprocess</code> package also provides a companion data structure called <code>epi_archive</code>, which stores the full version history of a given data set. See the <a href="https://cmu-delphi.github.io/epiprocess/articles/archive.html">archive vignette</a> for more.</p>
 <p>If any of the <code>geo_type</code>, <code>time_type</code>, or <code>as_of</code> arguments are missing in a call to <code><a href="../reference/as_epi_df.html">as_epi_df()</a></code>, then this function will try to infer them from the passed object. Usually, <code>geo_type</code> and <code>time_type</code> can be inferred from the <code>geo_value</code> and <code>time_value</code> columns, respectively, but inferring the <code>as_of</code> field is not as easy. See the documentation for <code><a href="../reference/as_epi_df.html">as_epi_df()</a></code> more details.</p>
 <div class="sourceCode" id="cb13"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>(<span class="no">cases</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="kw">total_cases</span> <span class="kw">=</span> <span class="no">value</span>)
@@ -213,7 +199,7 @@
 ## [1] "day"
 ## 
 ## $as_of
-## [1] "2022-02-05"</code></pre>
+## [1] "2022-02-13"</code></pre>
 </div>
 <div id="working-with-epi_df-objects-downstream" class="section level2">
 <h2 class="hasAnchor">
@@ -234,12 +220,7 @@
   <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>(<span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"nation"</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>)</pre></body></html></div>
-<pre><code>## An `epi_df` object, with metadata:
-## * geo_type  = nation
-## * time_type = day
-## * as_of     = 2022-02-12 20:22:25
-## 
-## # A tibble: 6 × 6
+<pre><code>## # A tibble: 6 × 6
 ##   geo_value time_value cases_travel cases_household cases_healthcare cases_other
 ##   &lt;chr&gt;     &lt;date&gt;            &lt;int&gt;           &lt;int&gt;            &lt;int&gt;       &lt;int&gt;
 ## 1 ca        2003-02-23            1               0                0           0

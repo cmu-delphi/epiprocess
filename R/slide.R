@@ -1,8 +1,7 @@
 #' Slide a function over variables in an `epi_df` object
 #'
-#' Slides a given function over variables in an `epi_df` object. See the [slide
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
-#' examples.
+#' Slides a given function over variables in an `epi_df` object. See the slide
+#' vignette for examples.
 #'
 #' @param x The `epi_df` object under consideration.
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
@@ -75,6 +74,7 @@
 #' @importFrom lubridate days weeks
 #' @importFrom rlang !! abort enquo enquos 
 #' @export
+# epi_archive.html#method-slide
 epi_slide = function(x, f, ..., n = 7, align = c("right", "center", "left"),
                      before, complete = FALSE, new_col_name = "slide_value", 
                      as_list_col = FALSE, time_step) {

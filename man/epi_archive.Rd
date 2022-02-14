@@ -38,9 +38,10 @@ including a special column that flags the data as removed and performing
 some kind of post-processing), and the archive is unaware of what this
 state is.
 
-A word of caution: R6 objects, unlike most other objects in R, have reference
-semantics. A primary consequence of this is that objects are not copied
-when modified. You can read more about this in Hadley Wickham's \href{https://adv-r.hadley.nz/r6.html#r6-semantics}{Advanced R} book.
+\strong{A word of caution:} R6 objects, unlike most other objects in R, have
+reference semantics. A primary consequence of this is that objects are not
+copied when modified. You can read more about this in Hadley Wickham's
+\href{https://adv-r.hadley.nz/r6.html#r6-semantics}{Advanced R} book.
 }
 \section{Metadata}{
 
@@ -84,9 +85,6 @@ sliding computation at any given reference time point t is performed on
 are documented below.
 }
 
-\seealso{
-\code{\link[=as_epi_archive]{as_epi_archive()}} for converting to \code{epi_archive} format
-}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -175,13 +173,12 @@ An \code{epi_df} object.
 \if{latex}{\out{\hypertarget{method-slide}{}}}
 \subsection{Method \code{slide()}}{
 Slides a given function over variables in an \code{epi_archive}
-object. Windows are \emph{always right-aligned}, unlike \code{epi_slide()}. The other
-arguments are as in \code{epi_slide()}, and its documentation gives more details
-on their useage. The exception is the \code{by} argument, which used to specify
-the grouping upfront (whereas in an \code{epi_df}, this would be accomplished by
-a call to \code{dplyr::group_by()} that precedes a call to \code{epi_df()}). See the
-\href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{archive vignette}
-for examples.
+object. Windows are \strong{always right-aligned}, unlike \code{epi_slide()}. The
+other arguments are as in \code{epi_slide()}, and its documentation gives more
+details on their useage. The exception is the \code{by} argument, which used to
+specify the grouping upfront (whereas in an \code{epi_df}, this would be
+accomplished by a call to \code{dplyr::group_by()} that precedes a call to
+\code{epi_df()}). See the archive vignette for examples.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$slide(
   f,

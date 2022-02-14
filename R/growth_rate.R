@@ -1,8 +1,7 @@
 #' Estimate growth rate
 #' 
-#' Estimates the growth rate of a signal at given points along the underlying 
-#' sequence. Several methodologies are available; see the [growth rate
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/growth_rate.html)
+#' Estimates the growth rate of a signal at given points along the underlying
+#' sequence. Several methodologies are available; see the growth rate vignette
 #' for examples.
 #'
 #' @param x Design points corresponding to the signal values `y`. Default is

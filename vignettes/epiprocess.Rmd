@@ -31,9 +31,10 @@ devtools::install_github("cmu-delphi/epiprocess", ref = "main",
 
 ## Getting data into `epi_df` format
 
-We'll start by showing how to get data into `epi_df` format, which is just a
-tibble with a bit of special structure, and is the format assumed by all of the
-functions in the `epiprocess` package. An `epi_df` object has (at least) the
+We'll start by showing how to get data into 
+<code><a href="../reference/epi_df.html">epi_df</a></code> format, which is just
+a tibble with a bit of special structure, and is the format assumed by all of
+the functions in the `epiprocess` package. An `epi_df` object has (at least) the
 following columns:
 
 * `geo_value`: the geographic value associated with each row of measurements.
@@ -41,7 +42,7 @@ following columns:
 
 It can have any number of other columns which can serve as measured variables,
 which we also broadly refer to as signal variables. The documentation for
-[`epi_df`](reference/epi_df.html) gives more details about this data format. 
+ gives more details about this data format.
 
 A data frame or tibble that has `geo_value` and `time_value` columns can be
 converted into an `epi_df` object, using the function `as_epi_df()`. As an

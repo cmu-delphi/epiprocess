@@ -1,8 +1,8 @@
 ---
-title: 5. Detect and correct outliers in signals
+title: Detect and correct outliers in signals
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{5. Detect and correct outliers in signals}
+  %\VignetteIndexEntry{Detect and correct outliers in signals}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

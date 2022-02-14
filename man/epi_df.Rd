@@ -96,6 +96,3 @@ greater than or equal to 1582.
 An unrecognizable time type is labeled "custom".
 }
 
-\seealso{
-\code{\link[=as_epi_df]{as_epi_df()}} for converting to \code{epi_df} format
-}
