@@ -108,7 +108,7 @@ epi_archive =
 #'   fields; named entries from the passed list or will be included as well.
 #' @return An `epi_archive` object.
 #' @importFrom data.table as.data.table key setkeyv
-#' @importFrom rlang .data abort warn
+#' @importFrom rlang abort warn
           initialize = function(x, geo_type, time_type, other_keys,
                                 additional_metadata) {  
             # Check that we have a data frame
@@ -200,12 +200,12 @@ epi_archive =
 #'   the snapshot. Default is `-Inf`, which effectively means that there is no
 #'   minimum considered.
 #' @return An `epi_df` object.
-#' @importFrom rlang .data 
           as_of = function(max_version, min_time_value = -Inf) {
             # Self max version and other keys
             self_max = max(self$DT$version)
             other_keys = setdiff(data.table::key(self$DT),
                                  c("geo_value", "time_value", "version"))
+            if (length(other_keys) == 0) other_keys = NULL
             
             # Check a few things on max_version
             if (!identical(class(max_version), class(self$DT$version))) {
@@ -220,18 +220,20 @@ epi_archive =
             if (max_version == self_max) {
               warn("Getting data as of the latest version possible. For a variety of reasons, it is possible that we only have a preliminary picture of this version (e.g., the upstream source has updated it but we have not seen it due to latency in synchronization). Thus, the snapshot that we produce here might not be reproducible at a later time (e.g., when the archive has caught up in terms of synchronization).")
             }
-
+            
             # Filter by version and return
             return(
               self$DT %>%
               dplyr::filter(data.table::between(time_value,
                                                 min_time_value,
                                                 max_version)) %>%
-              dplyr::filter(.data$version <= max_version) %>% 
+              # RJT: using rlang::.data pronoun fails below! Is it related to 
+              # this issue? https://github.com/tidyverse/dbplyr/issues/132
+              dplyr::filter(version <= max_version) %>% 
               unique(by = c("geo_value", "time_value", other_keys),
                      fromLast = TRUE) %>%
-              dplyr::select(-.data$version) %>%
               tibble::as_tibble() %>% 
+              dplyr::select(-.data$version) %>%
               as_epi_df(geo_type = self$geo_type,
                         time_type = self$time_type,
                         as_of = max_version,

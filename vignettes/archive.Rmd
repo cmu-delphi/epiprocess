@@ -220,7 +220,12 @@ y <- covidcast_signal("jhu-csse",
 id <- c("geo_value", "time_value", "version")
 unique_ids <- unique(c(x$DT[,..id], y$DT[,..id]))
 
+
 DT <- merge.data.table(x$DT, y$DT, all = TRUE)
+
+DT[, percent_cli = nafill(percent_cli, type = "locf"), by = .(geo_value, )]
+
+
 setkeyv(DT, cols = setdiff(key(DT), "version"))
 setnafill(DT, type = "locf", cols = names(DT), key(DT)
 
@@ -229,7 +234,12 @@ xx %>%
   setnafill(type = "locf", # Fill according to LOCF
             cols = c("var", "var2"))
 
-xx[, var = fillna(var, type = "locf"), by  = t]
+xx[, var := nafill(var, type = "locf"), by  = t]
+
+cols = c("var", "var2")
+key_col = "t"
+xx[, ..cols := nafill(..cols, type = "locf"), by = t]
+
 
 x$as_of(self_max) %>% 
   ggplot(aes(x = time_value)) +
