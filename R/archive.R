@@ -200,6 +200,7 @@ epi_archive =
 #'   the snapshot. Default is `-Inf`, which effectively means that there is no
 #'   minimum considered.
 #' @return An `epi_df` object.
+#' @importFrom data.table between 
           as_of = function(max_version, min_time_value = -Inf) {
             # Self max version and other keys
             self_max = max(self$DT$version)
@@ -223,13 +224,11 @@ epi_archive =
             
             # Filter by version and return
             return(
-              self$DT %>%
-              dplyr::filter(data.table::between(time_value,
-                                                min_time_value,
-                                                max_version)) %>%
-              # RJT: using rlang::.data pronoun fails below! Is it related to 
-              # this issue? https://github.com/tidyverse/dbplyr/issues/132
-              dplyr::filter(version <= max_version) %>% 
+              # Make sure to use data.table ways of filtering and selecting 
+              self$DT[between(time_value,
+                              min_time_value,
+                              max_version) &
+                      version <= max_version, ] %>%
               unique(by = c("geo_value", "time_value", other_keys),
                      fromLast = TRUE) %>%
               tibble::as_tibble() %>% 

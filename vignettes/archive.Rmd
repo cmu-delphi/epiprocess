@@ -223,16 +223,21 @@ unique_ids <- unique(c(x$DT[,..id], y$DT[,..id]))
 
 DT <- merge.data.table(x$DT, y$DT, all = TRUE)
 
+dt0[, (vars2):=setnafill(.SD, type="locf", cols=vars2), .SDcols=vars2, by="id"])
+
 DT[, percent_cli = nafill(percent_cli, type = "locf"), by = .(geo_value, )]
 
 
-setkeyv(DT, cols = setdiff(key(DT), "version"))
-setnafill(DT, type = "locf", cols = names(DT), key(DT)
 
-xx %>%
-  table.express::group_by(t) %>%
-  setnafill(type = "locf", # Fill according to LOCF
-            cols = c("var", "var2"))
+xx = data.table(t = c(rep("a",5), rep("b",5)), v1 = 1:10, v2 = 1:10)
+xx[3,2] = NA # Shoud be filled be LOCF
+xx[6,3] = NA # Should NOT be filled by LOCF, it's the first one in group b
+xx[10,2:3] = NA # shuld both be filled by LOCF
+xx
+fillvars <- c("v1", "v2")
+xx[, (fillvars) := setnafill(.SD, type = "locf"), .SDcols = fillvars, by = "t"]
+xx
+
 
 xx[, var := nafill(var, type = "locf"), by  = t]
 
