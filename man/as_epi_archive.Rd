@@ -39,3 +39,11 @@ An \code{epi_archive} object.
 Converts a data frame, data table, or tibble into an \code{epi_archive}
 object. See the archive vignette for examples.
 }
+\details{
+This is a simple wrapper around the \code{new()} method of the
+\code{epi_archive} class, so, for example:\preformatted{x <- as_epi_archive(df, geo_type = "state", time_type = "day")
+}
+
+would be equivalent to:\preformatted{x <- epi_archive$new(df, geo_type = "state", time_type = "day")
+}
+}

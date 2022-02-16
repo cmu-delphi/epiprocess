@@ -52,33 +52,28 @@ detect_outlr = function(x = seq_along(y), y,
   combiner = match.arg(combiner)
 
   # Run all outlier detection methods
-  results = purrr::pmap_dfc(
-    methods, function(method, args, abbr, x, y) {
-      if (is.character(method)) {
-        method = paste0("detect_outlr_", method)
-      }
-      
-      # Call the method
-      results = do.call(
-        method, args = c(list("x" = x, "y" = y), args))
+  results = purrr::pmap_dfc(methods, function(method, args, abbr, x, y) {
+    if (is.character(method)) method = paste0("detect_outlr_", method)
+    
+    # Call the method
+    results = do.call(method, args = c(list("x" = x, "y" = y), args))
 
-      # Validate the output
-      if (!is.data.frame(results) ||
-          !all(c("lower", "upper", "replacement") %in%
-               colnames(results))) {
-        abort("Outlier detection method must return a data frame with columns `lower`, `upper`, and `replacement`.")
-      }
+   # Validate the output
+    if (!is.data.frame(results) || !all(c("lower", "upper", "replacement") %in% 
+                                        colnames(results))) {
+      abort("Outlier detection method must return a data frame with columns `lower`, `upper`, and `replacement`.")
+    }
 
-      # Update column names with model abbreviation
-      colnames(results) = paste(abbr, colnames(results), sep = "_")
-      return(results)
-    }, x, y)
+    # Update column names with model abbreviation
+    colnames(results) = paste(abbr, colnames(results), sep = "_") 
+    return(results)
+  }, x, y)
   
   # Combine information about detected outliers
   if (combiner != "none") {
     if (combiner == "mean") combine_fun = mean
     else if (combiner == "median") combine_fun = median
-   
+    
     for (target in c("lower", "upper", "replacement")) {
       results[[paste0("combined_", target)]] = apply(
         results %>%
@@ -223,21 +218,18 @@ detect_outlr_stl = function(x = seq_along(y), y,
     dplyr::transmute(
       trend = trend,
       seasonal = season_week,
-      resid = remainder
-    )
+      resid = remainder)
   
   # Allocate the seasonal term from STL to either fitted or resid 
   if (!is.null(seasonal_period)) {
     stl_components = stl_components %>%
       dplyr::mutate(
-        fitted = trend + seasonal
-      )
+        fitted = trend + seasonal)
   } else {
     stl_components = stl_components %>%
       dplyr::mutate(
         fitted = trend,
-        resid = seasonal + resid
-      )
+        resid = seasonal + resid)
   }
 
   # Detect negatives if requested
@@ -279,9 +271,7 @@ roll_iqr = function(z, n, detection_multiplier, min_radius,
       replacement = dplyr::case_when(
       (y < lower) ~ fitted - replacement_multiplier * roll_iqr,
       (y > upper) ~ fitted + replacement_multiplier * roll_iqr,
-      TRUE ~ y
-      )) %>%
+      TRUE ~ y)) %>%
     dplyr::select(lower, upper, replacement) %>%
-    unclass() %>%
     tibble::as_tibble()
 }

@@ -31,7 +31,7 @@ key variables, and thus the key variables are critical for figuring out how
 to generate a snapshot of data from the archive, as of a given version
 (also described below).
 
-In general, last-observation-carried-forward (LOCF) is used to data in
+In general, last observation carried forward (LOCF) is used to data in
 between recorded versions. Currently, deletions must be represented as
 revising a row to a special state (e.g., making the entries \code{NA} or
 including a special column that flags the data as removed and performing
@@ -91,6 +91,7 @@ are documented below.
 \item \href{#method-new}{\code{epi_archive$new()}}
 \item \href{#method-print}{\code{epi_archive$print()}}
 \item \href{#method-as_of}{\code{epi_archive$as_of()}}
+\item \href{#method-merge}{\code{epi_archive$merge()}}
 \item \href{#method-slide}{\code{epi_archive$slide()}}
 \item \href{#method-clone}{\code{epi_archive$clone()}}
 }
@@ -154,9 +155,10 @@ Generates a snapshot in \code{epi_df} format as of a given version.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{max_version}}{Time value specifying the max version to permit in the
-snapshot. That is, the snapshot will comprise the unique rows that
-represent the most up-to-date signal values, as of the specified
-\code{max_version}, whose time values are at least \code{min_time_value}.}
+snapshot. That is, the snapshot will comprise the unique rows of the
+current archive data that represent the most up-to-date signal values, as
+of the specified \code{max_version} (and whose time values are at least
+\code{min_time_value}.)}
 
 \item{\code{min_time_value}}{Time value specifying the min time value to permit in
 the snapshot. Default is \code{-Inf}, which effectively means that there is no
@@ -166,6 +168,39 @@ minimum considered.}
 }
 \subsection{Returns}{
 An \code{epi_df} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-merge"></a>}}
+\if{latex}{\out{\hypertarget{method-merge}{}}}
+\subsection{Method \code{merge()}}{
+Merges another \code{data.table} with the current one, and allows for
+a post-filling of \code{NA} values by last observation carried forward (LOCF).
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$merge(y, ..., locf = TRUE, nan = NA)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{y}}{A \code{data.table} to join to the current one. This can instead be an
+\code{epi_archive} object, in which case its underlying data table is joined.}
+
+\item{\code{...}}{Named arguments to pass to \code{data.table::merge.data.table()}, which
+is used for the join (with all default settings as in this function). For
+example, passing \code{all = TRUE} will perform a full join.}
+
+\item{\code{locf}}{Should LOCF be used after joining on all non-key columns? This
+will take the latest version of each signal value and propogate it forward
+to fill in gaps that appear after merging. Default is \code{TRUE}.}
+
+\item{\code{nan}}{Should \code{NaN} values be treated as \code{NA} values in the post-filling
+step?  Default is \code{NA}, which means that they are treated as \code{NA} values; if}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Nothing (the underlying data table overwritten with the merged one).
 }
 }
 \if{html}{\out{<hr>}}

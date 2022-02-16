@@ -33,7 +33,7 @@
 #'   to generate a snapshot of data from the archive, as of a given version
 #'   (also described below).
 #' 
-#' In general, last-observation-carried-forward (LOCF) is used to data in
+#' In general, last observation carried forward (LOCF) is used to data in
 #'   between recorded versions. Currently, deletions must be represented as
 #'   revising a row to a special state (e.g., making the entries `NA` or
 #'   including a special column that flags the data as removed and performing
@@ -193,18 +193,20 @@ epi_archive =
           #####
 #' @description Generates a snapshot in `epi_df` format as of a given version.
 #' @param max_version Time value specifying the max version to permit in the
-#'   snapshot. That is, the snapshot will comprise the unique rows that
-#'   represent the most up-to-date signal values, as of the specified
-#'   `max_version`, whose time values are at least `min_time_value`.
+#'   snapshot. That is, the snapshot will comprise the unique rows of the
+#'   current archive data that represent the most up-to-date signal values, as
+#'   of the specified `max_version` (and whose time values are at least
+#'   `min_time_value`.)
 #' @param min_time_value Time value specifying the min time value to permit in
 #'   the snapshot. Default is `-Inf`, which effectively means that there is no
 #'   minimum considered.
 #' @return An `epi_df` object.
-#' @importFrom data.table between 
+#' @importFrom data.table between key
+#' @importFrom rlang abort warn
           as_of = function(max_version, min_time_value = -Inf) {
             # Self max version and other keys
             self_max = max(self$DT$version)
-            other_keys = setdiff(data.table::key(self$DT),
+            other_keys = setdiff(key(self$DT),
                                  c("geo_value", "time_value", "version"))
             if (length(other_keys) == 0) other_keys = NULL
             
@@ -239,7 +241,50 @@ epi_archive =
                         additional_metadata = c(self$additional_metadata,
                                                 other_keys = other_keys))
             )
-          },
+          },          
+          #####
+#' @description Merges another `data.table` with the current one, and allows for
+#'   a post-filling of `NA` values by last observation carried forward (LOCF).
+#' @param y A `data.table` to join to the current one. This can instead be an
+#'   `epi_archive` object, in which case its underlying data table is joined.
+#' @param ... Named arguments to pass to `data.table::merge.data.table()`, which
+#'   is used for the join (with all default settings as in this function). For
+#'   example, passing `all = TRUE` will perform a full join.
+#' @param locf Should LOCF be used after joining on all non-key columns? This
+#'   will take the latest version of each signal value and propogate it forward
+#'   to fill in gaps that appear after merging. Default is `TRUE`.
+#' @param nan Should `NaN` values be treated as `NA` values in the post-filling
+#' step?  Default is `NA`, which means that they are treated as `NA` values; if
+#    `NaN`, then they are treated as distinct.
+#' @return Nothing (the underlying data table overwritten with the merged one).
+#' @importFrom data.table key merge.data.table nafill
+#' @importFrom rlang abort 
+          merge = function(y, ..., locf = TRUE, nan = NA) {
+            # Check we have a `data.table` object
+            if (!(inherits(y, "data.table") || inherits(y, "epi_archive"))) {
+              abort("`y` must be of class `data.table` or `epi_archive`.") 
+            }
+
+            # Use the data.table merge function, carrying through ... args
+            if (inherits(y, "data.table")) self$DT = merge(self$DT, y, ...)
+            else self$DT = merge(self$DT, y$DT, ...)
+
+            # Now use the data.table locf function, if we're asked to
+            if (locf) {
+              key_vars = key(self$DT)
+              cols = setdiff(names(self$DT), key_vars)
+              by = setdiff(key_vars, "version")
+
+              # Important: use nafill and not setnafill because the latter
+              # returns the entire data frame by reference, and the former can
+              # be set to act on particular columns by reference using := 
+              self$DT[,
+              (cols) := nafill(.SD, type = "locf", nan = nan),        
+              .SDcols = cols, 
+              by = by]
+            }
+          },   
+          #####
 #' @description Slides a given function over variables in an `epi_archive`
 #'   object. Windows are **always right-aligned**, unlike `epi_slide()`. The
 #'   other arguments are as in `epi_slide()`, and its documentation gives more
@@ -282,7 +327,8 @@ epi_archive =
 #'   `version`, will be used for grouping.
 #' @return A tibble with the grouping variables, `time_value`, and a new column
 #'   named according to the `new_col_name` argument, with the slide values.
-#' @importFrom rlang !! enquo enquos 
+#' @importFrom data.table key
+#' @importFrom rlang !! abort enquo enquos 
           slide = function(f, ..., n = 14, complete = FALSE,
                            new_col_name = "slide_value", as_list_col = FALSE,
                            time_step, by) { 
@@ -292,7 +338,7 @@ epi_archive =
             
             # What to group by? If missing, set according to internal keys
             if (missing(by)) {
-              by = setdiff(data.table::key(self$DT), c("time_value", "version"))
+              by = setdiff(key(self$DT), c("time_value", "version"))
             }
             by = enquo(by)
 
@@ -385,6 +431,16 @@ epi_archive =
 #'   `epi_archive` object. The metadata will have `geo_type` and `time_type`
 #'   fields; named entries from the passed list or will be included as well.
 #' @return An `epi_archive` object.
+#'
+#' @details This is a simple wrapper around the `new()` method of the
+#'   `epi_archive` class, so, for example:
+#'   ```
+#'   x <- as_epi_archive(df, geo_type = "state", time_type = "day")
+#'   ```
+#'   would be equivalent to:
+#'   ```
+#'   x <- epi_archive$new(df, geo_type = "state", time_type = "day")
+#'   ```
 #'
 #' @export
 as_epi_archive = function(x, geo_type, time_type, other_keys,

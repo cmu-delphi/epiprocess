@@ -89,7 +89,7 @@ snapshot of data from the archive, as of a given version (also described below).
 key(x$DT)
 ```
  
-In general, last-observation-carried-forward (LOCF) is used to data in between
+In general, last observation carried forward (LOCF) is used to data in between
 recorded versions.  **A word of caution:** R6 objects, unlike most other objects
 in R, have reference semantics. An important consequence of this is that objects
 are not copied when modified.
@@ -154,8 +154,8 @@ z <- x$as_of(max_version = max(x$DT$version))
 
 Below, we pull several snapshots from the archive, spaced one month apart. We
 overlay the corresponding signal curves as colored lines, with the version dates
-marked by dotted vertical lines, and draw the "finalized" curve in black, from
-the latest snapshot `z` that the archive can provide.
+marked by dotted vertical lines, and draw the latest curve in black (from the 
+latest snapshot `z` that the archive can provide).
 
 ```{r fig.width = 8, fig.height = 7}
 library(purrr)
@@ -168,9 +168,9 @@ snapshots <- map_dfr(versions, function(v) {
   x$as_of(max_version = v) %>% mutate(version = v)
 }) %>%
   bind_rows(z %>% mutate(version = self_max)) %>%
-  mutate(final = version == self_max)
+  mutate(latest = version == self_max)
 
-p <- ggplot(snapshots %>% filter(!final),
+p <- ggplot(snapshots %>% filter(!latest),
             aes(x = time_value, y = percent_cli)) +  
   geom_line(aes(color = factor(version))) + 
   geom_vline(aes(color = factor(version), xintercept = version), lty = 2) +
@@ -180,17 +180,17 @@ p <- ggplot(snapshots %>% filter(!final),
   theme(legend.position = "none")
 
 gginnards::append_layers(
-  p, geom_line(data = snapshots %>% filter(final),
+  p, geom_line(data = snapshots %>% filter(latest),
                aes(x = time_value, y = percent_cli), 
                inherit.aes = FALSE, color = "black"), pos = "top")
 ```
 
 We can see some interesting and highly nontrivial revision behavior: at some
-points in time the provisional data snapshots grossly underestimate the
-finalized curve (look in particular at Florida close to the end of 2021), and at
-others they overestimate it (both states towards the beginning of 2021), though
-not quite as dramatically. Modeling the revision process, which is often called
-*backfill* is an important statistical problem in it of itself.
+points in time the provisional data snapshots grossly underestimate the latest
+curve (look in particular at Florida close to the end of 2021), and at others
+they overestimate it (both states towards the beginning of 2021), though not 
+quite as dramatically. Modeling the revision process, which is often called
+*backfill modeling*, is an important statistical problem in it of itself.
 
 *todo: refer to some project/code? perhaps we should think about writing a
  function in `epiprocess` or even a separate package?*
@@ -205,17 +205,28 @@ been available as of t**.
 
 To demonstrate this, we're going to ...
 
-```{r eval = FALSE}
-y <- covidcast_signal("jhu-csse", 
-                      "confirmed_7dav_incidence_prop",
-                      start_day = "2020-06-01", 
-                      end_day = "2021-12-01",
-                      issues = c("2020-06-01", "2021-12-01"),
-                      geo_type = "state",
-                      geo_values = c("ca", "fl")) %>%
+```{r}
+x <- dv %>%
+  select(geo_value, time_value, version = issue, percent_cli = value) %>%
+  as_epi_archive()
+
+x2 <- covidcast_signal("jhu-csse", 
+                       "confirmed_7dav_incidence_prop",
+                       start_day = "2020-06-01", 
+                       end_day = "2021-12-01",
+                       issues = c("2020-06-01", "2021-12-01"),
+                       geo_type = "state",
+                       geo_values = c("ca", "fl")) %>%
   select(geo_value, time_value, version = issue, case_rates = value) %>%
   as_epi_archive()
 
+# Merge 
+x$merge(x2, all = TRUE, type = "locf")
+print(x)
+head(x$DT)
+```
+
+```{r eval = FALSE}
 # Do a full join at the data.table level
 id <- c("geo_value", "time_value", "version")
 unique_ids <- unique(c(x$DT[,..id], y$DT[,..id]))
@@ -228,31 +239,22 @@ dt0[, (vars2):=setnafill(.SD, type="locf", cols=vars2), .SDcols=vars2, by="id"])
 DT[, percent_cli = nafill(percent_cli, type = "locf"), by = .(geo_value, )]
 
 
-
-xx = data.table(t = c(rep("a",5), rep("b",5)), v1 = 1:10, v2 = 1:10)
-xx[3,2] = NA # Shoud be filled be LOCF
-xx[6,3] = NA # Should NOT be filled by LOCF, it's the first one in group b
-xx[10,2:3] = NA # shuld both be filled by LOCF
+library(data.table)
+xx = data.table(t = c(rep("a",5), rep("b",5)), u = 11:20, v1 = 1:10, v2 = 1:10)
+xx[3,3] = NA # Shoud be filled be LOCF
+xx[6,4] = NA # Should NOT be filled by LOCF, it's the first one in group b
+xx[10,3:4] = NA # Should both be filled by LOCF
 xx
 fillvars <- c("v1", "v2")
+#xx[, (fillvars) := setnafill(.SD, type = "locf", cols = fillvars), by = "t"]
 xx[, (fillvars) := setnafill(.SD, type = "locf"), .SDcols = fillvars, by = "t"]
 xx
 
 
-xx[, var := nafill(var, type = "locf"), by  = t]
-
-cols = c("var", "var2")
-key_col = "t"
-xx[, ..cols := nafill(..cols, type = "locf"), by = t]
 
 
-x$as_of(self_max) %>% 
-  ggplot(aes(x = time_value)) +
-  geom_line(aes(y = percent_cli), col = "red") + 
-  geom_line(aes(y = case_rates / 1000), col = "blue") +
-  facet_wrap(~ geo_value, scales = "free_y", ncol = 1) +
-  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
-  labs(x = "Date", y = "")
+
+
 ```
 
 [about training on finalized versus honest data...]
