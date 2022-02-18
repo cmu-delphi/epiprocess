@@ -19,6 +19,10 @@
 #'   `n = 7`, one time step is one day, and the alignment is "right", then to
 #'   produce a value on January 7 we apply the given function or formula to data
 #'   in between January 1 and 7. Default is 7.
+#' @param ref_time_values Time values for sliding computations, meaning, each
+#'   element of this vector serves as the reference time point for one sliding
+#'   window. If missing, then this will be set to all unique time values in the
+#'   underlying data table, by default.
 #' @param align One of "right", "center", or "left", indicating the alignment of
 #'   the sliding window relative to the reference time point. If the alignment
 #'   is "center" and `n` is even, then one more time point will be used after
@@ -29,23 +33,30 @@
 #'   `align = "right"`. The `before` argument allows for more flexible
 #'   specification of alignment than the `align` parameter, and if specified,
 #'   overrides `align`. 
-#' @param complete Should the slide function be run over complete windows only?
-#'   Default is `FALSE`, which allows for computation on partial windows.  
-#' @param new_col_name String indicating the name of the new column that will
-#'   contain the derivative values. Default is "slide_value"; note that setting
-#'   `new_col_name` equal to an existing column name will overwrite this column.
-#' @param as_list_col Should the new column be stored as a list column? Default
-#'   is `FALSE`, in which case a list object returned by `f` would be unnested 
-#'   (using `tidyr::unnest()`), and the names of the resulting columns are given
-#'   by prepending `new_col_name` to the names of the list elements. 
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
 #'   `time_value` column. This function must take a positive integer and return
 #'   an object of class `lubridate::period`. For example, we can use `time_step
 #'   = lubridate::hours` in order to set the time step to be one hour (this
 #'   would only be meaningful if `time_value` is of class `POSIXct`).
-#' @return An `epi_df` object given by appending a new column to `x`, named 
-#'   according to the `new_col_name` argument, containing the slide values. 
+#' @param complete Should the slide function be run over complete windows only?
+#'   (A complete window has distance `n-1` between its left and right
+#'   endpoints.) Default is `FALSE`, which allows for partial computations. 
+#' @param new_col_name String indicating the name of the new column that will
+#'   contain the derivative values. Default is "slide_value"; note that setting
+#'   `new_col_name` equal to an existing column name will overwrite this column.
+#' @param as_list_col Should the new column be stored as a list column? Default
+#'   is `FALSE`, in which case a list object returned by `f` would be unnested 
+#'   (using `tidyr::unnest()`), and the names of the resulting columns are given
+#'   by prepending `new_col_name` to the names of the list elements.
+#' @param names_sep String specifying the separator to use in `tidyr::unnest()`
+#'   when `as_list_col = FALSE`. Default is "_". Using `NULL` drops the prefix
+#'   from `new_col_name` entirely.
+#' @param all_rows If `all_rows = TRUE`, then all the rows of `x` will be kept
+#'   in the output; otherwise, there will be one row in the output for each time
+#'   value in `x` that acts as a reference time value. Default is `FALSE`.
+#' @return An `epi_df` object given by appending a new column to `x`, named
+#'   according to the `new_col_name` argument. 
 #' 
 #' @details To "slide" means to apply a function or formula over a running
 #'   window of `n` time steps, where the unit (the meaning of one time step) is
@@ -72,15 +83,30 @@
 #'   through the `new_col_name` argument.
 #' 
 #' @importFrom lubridate days weeks
-#' @importFrom rlang !! abort enquo enquos 
+#' @importFrom rlang .data .env !! abort enquo enquos sym
 #' @export
-# epi_archive.html#method-slide
-epi_slide = function(x, f, ..., n = 7, align = c("right", "center", "left"),
-                     before, complete = FALSE, new_col_name = "slide_value", 
-                     as_list_col = FALSE, time_step) {
+epi_slide = function(x, f, ..., n = 7, ref_time_values,
+                     align = c("right", "center", "left"),
+                     before, time_step, complete = FALSE,
+                     new_col_name = "slide_value",  
+                     as_list_col = FALSE, names_sep = "_",
+                     all_rows = FALSE) {
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) abort("`x` must be of class `epi_df`.")
   
+  # Arrange by increasing time_value
+  x = arrange(x, time_value)
+  
+  # If missing, then set ref time values to be everything; else make sure we
+  # intersect with observed time values
+  if (missing(ref_time_values)) {
+    ref_time_values = unique(x$time_value)
+  }
+  else {
+    ref_time_values = ref_time_values[ref_time_values %in%
+                                      unique(x$time_value)] 
+  }
+              
   # If before is missing, then use align to set up alignment
   if (missing(before)) {
     align = match.arg(align)
@@ -114,35 +140,81 @@ epi_slide = function(x, f, ..., n = 7, align = c("right", "center", "left"),
     after_num = time_step(after_num)
   }
 
-  # Convenience function for sliding over just one group
+  # Now set up starts and stops for sliding/hopping
+  time_range = range(unique(x$time_value))
+  starts = in_range(ref_time_values - before_num, time_range)
+  stops = in_range(ref_time_values + after_num, time_range)
+
+  # Symbolize new column name
+  new_col = sym(new_col_name)
+
+  # Computation for one group, all time values
   slide_one_grp = function(.data_group,
-                           f, ...,
-                           before_num,
-                           after_num,
+                           f, ..., n, 
+                           starts,
+                           stops,
+                           time_values,
                            complete,
-                           new_col_name) {
-    slide_values = slider::slide_index(.x = .data_group,
-                                       .i = .data_group$time_value,
-                                       .f = f, ..., 
-                                       .before = before_num,
-                                       .after = after_num,
-                                       .complete = complete)
+                           all_rows,
+                           new_col) {
+    # Figure out which windows are complete
+    slide_values = rep(NA, length(starts))
+    o = !complete | (stops - starts == n-1)
 
-    return(mutate(.data_group, !!new_col_name := slide_values))
+    # Compute the slide values only for complete windows
+    slide_values[o] = slider::hop_index(.x = .data_group,
+                                        .i = .data_group$time_value,
+                                        .f = f, ...,
+                                        .starts = starts[o],
+                                        .stops = stops[o])
+
+    # If we get back data frames from sliding, each with more than one row, then
+    # make unpack these rows. This will be useful in a case where, say, we don't
+    # group by geo value but return a separate computation per geo value, as
+    # rows of the returned data frame. Then we won't have to do any repetition
+    # in the next step to make the result size stable
+    if (sum(o) > 0 && inherits(slide_values[o][[1]], "data.frame") && 
+        nrow(slide_values[o][[1]]) > 1) {
+      slide_df = dplyr::bind_rows(slide_values)
+      slide_values = split(slide_df, 1:nrow(slide_df))
+      if (length(slide_values) != nrow(.data_group)) {
+        abort("If a slide computation produces a data frame, it must either have a single row, or else have one row per appearance of the reference time value in the sliding window.")
+      }
+    }
+    
+    # Important: make this size stable, by repeating each slide value the number
+    # of times its corresponding time value appears as a ref time value
+    if (length(slide_values) != nrow(.data_group)) {
+      counts = .data_group %>%
+        dplyr::count(.data$time_value) %>%
+        dplyr::filter(.data$time_value %in% time_values) %>%
+        dplyr::pull(n)
+      slide_values = rep(slide_values, times = counts)
+    }
+    
+    # If all rows, then pad slide values with NAs, else filter down data group
+    o = .data_group$time_value %in% time_values
+    if (all_rows) {
+      orig_values = slide_values
+      slide_values = rep(NA, nrow(.data_group))
+      slide_values[o] = orig_values
+    }
+    else .data_group = filter(.data_group, o)
+    return(mutate(.data_group, !!new_col := slide_values))
   }
-
-  # Arrange by increasing time_value, else slide may not work
-  x = arrange(x, time_value)
 
   # If f is not missing, then just go ahead, slide by group
   if (!missing(f)) {
     x = x %>%  
       group_modify(slide_one_grp,
-                   f = f, ...,
-                   before_num = before_num,
-                   after_num = after_num,
+                   f = f, ..., n = n,
+                   starts = starts,
+                   stops = stops,
+                   time_values = ref_time_values, 
                    complete = complete,
-                   new_col_name = new_col_name)
+                   all_rows = all_rows,
+                   new_col = new_col,
+                   .keep = FALSE)
   }
   
   # Else interpret ... as an expression for tidy evaluation
@@ -157,18 +229,21 @@ epi_slide = function(x, f, ..., n = 7, align = c("right", "center", "left"),
     
     quo = quos[[1]]
     f = function(x, quo, ...) rlang::eval_tidy(quo, x)
-    new_col_name = names(rlang::quos_auto_name(quos))
+    new_col = sym(names(rlang::quos_auto_name(quos)))
     
     x = x %>%  
       group_modify(slide_one_grp,
-                   f = f, quo = quo,
-                   before_num = before_num,
-                   after_num = after_num,
+                   f = f, quo = quo, n = n,
+                   starts = starts,
+                   stops = stops,
+                   time_values = ref_time_values, 
                    complete = complete,
-                   new_col_name = new_col_name)
+                   all_rows = all_rows,
+                   new_col = new_col,
+                   .keep = FALSE)
   }
-
+  
   # Unnest if we need to, and return
-  if (!as_list_col) x = tidyr::unnest(x, !!new_col_name, names_sep = "_")
+  if (!as_list_col) x = unnest(x, !!new_col, names_sep = names_sep)
   return(x)
 }

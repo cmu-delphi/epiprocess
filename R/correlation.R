@@ -5,7 +5,7 @@
 #' correlation vignette for examples.
 #'
 #' @param x The `epi_df` object under consideration.
-#' @param var1,var2 The variables in `x` to correlate. 
+#' @param var1,var2 The variables in `x` to correlate.
 #' @param dt1,dt2 Time shifts to consider for the two variables, respectively, 
 #'   before computing correlations. Negative shifts translate into in a lag
 #'   value and positive shifts into a lead value; for example, if `dt = -1`,
@@ -50,15 +50,15 @@ epi_cor = function(x, var1, var2, dt1 = 0, dt2 = 0, shift_by = geo_value,
   var1 = enquo(var1)
   var2 = enquo(var2)
   
-  # What are the groupings? This looks a bit more involved since we want to
+  # Defuse grouping variables. This looks a bit more involved since we want to
   # accomodate the option of specifying multiple variables for each grouping.
-  # Hence use the power of tidyselect::eval_select, which can accomodate any
-  # arguments of the form: 
+  # Hence use the power of tidyselect::eval_select(), which can accomodate any
+  # arguments of the form:
   # * cor_by = a
   # * cor_by = "a"
   # * cor_by = c(a, b)
   # * cor_by = c("a", "b")
-  # and so on, and similarly for shift_by. Nb make sure to follow with !!!
+  # and so on, and similarly for shift_by. Note: make sure to follow with !!!
   cor_by = syms(names(eval_select(enquo(cor_by), x)))
   shift_by = syms(names(eval_select(enquo(shift_by), x)))
 

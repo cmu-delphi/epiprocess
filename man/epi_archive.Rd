@@ -209,21 +209,23 @@ Nothing (the underlying data table overwritten with the merged one).
 \subsection{Method \code{slide()}}{
 Slides a given function over variables in an \code{epi_archive}
 object. Windows are \strong{always right-aligned}, unlike \code{epi_slide()}. The
-other arguments are as in \code{epi_slide()}, and its documentation gives more
-details on their useage. The exception is the \code{by} argument, which used to
-specify the grouping upfront (whereas in an \code{epi_df}, this would be
-accomplished by a call to \code{dplyr::group_by()} that precedes a call to
-\code{epi_df()}). See the archive vignette for examples.
+other arguments are just as in \code{epi_slide()}. The exception is the \code{by}
+argument, which used to specify the grouping upfront (whereas in an
+\code{epi_df}, this would be accomplished by a call to \code{dplyr::group_by()} that
+precedes a call to \code{epi_df()}). See the archive vignette for examples.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$slide(
   f,
   ...,
-  n = 14,
+  n = 7,
+  group_by,
+  ref_time_values,
+  time_step,
   complete = FALSE,
   new_col_name = "slide_value",
   as_list_col = FALSE,
-  time_step,
-  by
+  names_sep = "_",
+  all_rows = FALSE
 )}\if{html}{\out{</div>}}
 }
 
@@ -244,12 +246,29 @@ via \code{f}. Alternatively, if \code{f} is missing, then the current argument i
 interpreted as an expression for tidy evaluation.}
 
 \item{\code{n}}{Number of time steps to use in the running window. For example, if
-\code{n = 5}, one time step is one day, and the alignment is "right", then to
-produce a value on November 5, we apply the given function or formula to
-data in between November 1 and 5. Default is 14.}
+\code{n = 7}, and one time step is one day, then to produce a value on January 7
+we apply the given function or formula to data in between January 1 and
+7. Default is 7.}
+
+\item{\code{group_by}}{The variable(s) to group by before slide computation. If
+missing, then the keys in the underlying data table, excluding \code{time_value}
+and \code{version}, will be used for grouping. To omit a grouping entirely, use
+\code{group_by = NULL}.}
+
+\item{\code{ref_time_values}}{Time values for sliding computations, meaning, each
+element of this vector serves as the reference time point for one sliding
+window. If missing, then this will be set to all unique time values in the
+underlying data table, by default.}
+
+\item{\code{time_step}}{Optional function used to define the meaning of one time
+step, which if specified, overrides the default choice based on the
+\code{time_value} column. This function must take a positive integer and return
+an object of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this
+would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
 \item{\code{complete}}{Should the slide function be run over complete windows only?
-Default is \code{FALSE}, which allows for computation on partial windows.}
+(A complete window has distance \code{n-1} between its left and right
+endpoints.) Default is \code{FALSE}, which allows for partial computations.}
 
 \item{\code{new_col_name}}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
@@ -260,21 +279,24 @@ is \code{FALSE}, in which case a list object returned by \code{f} would be unnes
 (using \code{tidyr::unnest()}), and the names of the resulting columns are given
 by prepending \code{new_col_name} to the names of the list elements.}
 
-\item{\code{time_step}}{Optional function used to define the meaning of one time
-step, which if specified, overrides the default choice based on the
-\code{time_value} column. This function must take a positive integer and return
-an object of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this
-would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
+\item{\code{names_sep}}{String specifying the separator to use in \code{tidyr::unnest()}
+when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
+from \code{new_col_name} entirely.}
 
-\item{\code{by}}{The variable(s) to group by before slide computation. If missing,
-then the keys in the underlying data table, excluding \code{time_value} and
-\code{version}, will be used for grouping.}
+\item{\code{all_rows}}{If \code{all_rows = TRUE}, then there will be one row per
+combination of grouping variables and unique time values in output. the rows corresponding to
+unique time values  the underlying
+data table will be kept
+in the output; otherwise, there will be one row in the output for each time
+value in \code{x} that acts as a reference time value. Default is \code{FALSE}.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A tibble with the grouping variables, \code{time_value}, and a new column
-named according to the \code{new_col_name} argument, with the slide values.
+A tibble with whose columns are the grouping variables; \code{time_value},
+containing the reference time values for the slide computation; and a new
+column named according to the \code{new_col_name} argument, containing the slide
+values.
 }
 }
 \if{html}{\out{<hr>}}

@@ -23,7 +23,7 @@ library(dplyr)
 x <- covidcast_signal("jhu-csse", 
                       "confirmed_7dav_incidence_prop",
                       start_day = "2020-03-01", 
-                      end_day = end_day,
+                      end_day = "2021-12-31",
                       geo_type = "state") %>%
   select(geo_value, time_value, case_rates = value) 
 
@@ -55,7 +55,7 @@ time value, and by geo value. The former is obtained via `cor_by = time_value`.
 library(ggplot2)
 theme_set(theme_bw())
 
-z1 <- epi_cor(x, case_rates, death_rates, cor_by = time_value)
+z1 <- epi_cor(x, case_rates, death_rates, cor_by = "time_value")
 
 ggplot(z1, aes(x = time_value, y = cor)) + 
   geom_line() +

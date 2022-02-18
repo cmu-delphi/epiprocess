@@ -1,44 +1,3 @@
-#' @export
-#' @noRd
-Min = function(x) min(x, na.rm = TRUE)
-
-#' @export
-#' @noRd
-Max = function(x) max(x, na.rm = TRUE)
-
-#' @export
-#' @noRd
-Sum = function(x) sum(x, na.rm = TRUE)
-
-#' @export
-#' @noRd
-Mean = function(x) mean(x, na.rm = TRUE)
-
-#' @export
-#' @noRd
-Median = function(x) median(x, na.rm = TRUE)
-
-##########
-
-#' @export
-#' @noRd
-quiet = function(x) { 
-  sink(tempfile()) 
-  on.exit(sink()) 
-  invisible(force(x)) 
-}
-
-##########
-
-Start = function(x) x[1]
-End = function(x) x[length(x)]
-MiddleL = function(x) x[floor(length(x)/2)]
-MiddleR = function(x) x[ceiling(length(x)/2)]
-ExtendL = function(x) c(Start(x), x)
-ExtendR = function(x) c(x, End(x))
-
-##########
-
 guess_geo_type = function(geo_value) {
   if (is.character(geo_value)) {
     # Convert geo values to lowercase
@@ -106,6 +65,37 @@ guess_time_type = function(time_value) {
       
   # If we got here then we failed
   return("custom")
+}
+
+##########
+
+in_range = function(x, rng) pmin(pmax(x, rng[1]), rng[2])
+
+##########
+
+Min = function(x) min(x, na.rm = TRUE)
+Max = function(x) max(x, na.rm = TRUE)
+Sum = function(x) sum(x, na.rm = TRUE)
+Mean = function(x) mean(x, na.rm = TRUE)
+Median = function(x) median(x, na.rm = TRUE)
+
+##########
+
+Start = function(x) x[1]
+End = function(x) x[length(x)]
+MiddleL = function(x) x[floor(length(x)/2)]
+MiddleR = function(x) x[ceiling(length(x)/2)]
+ExtendL = function(x) c(Start(x), x)
+ExtendR = function(x) c(x, End(x))
+
+##########
+
+#' @export
+#' @noRd
+quiet = function(x) { 
+  sink(tempfile()) 
+  on.exit(sink()) 
+  invisible(force(x)) 
 }
 
 ##########

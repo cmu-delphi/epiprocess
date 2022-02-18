@@ -129,14 +129,14 @@ of the archive in `epi_df` format. This represents the most up-to-date values of
 the signal variables as of a given version.
 
 ```{r}
-y <- x$as_of(max_version = as.Date("2021-06-01"))
-class(y)
-head(y)
-max(y$time_value)
-attributes(y)$metadata$as_of
+x_snapshot <- x$as_of(max_version = as.Date("2021-06-01"))
+class(x_snapshot)
+head(x_snapshot)
+max(x_snapshot$time_value)
+attributes(x_snapshot)$metadata$as_of
 ```
 
-We can see that the max time value in the `epi_df` object `y` that has been
+We can see that the max time value in the `epi_df` object `x_snapshot` that was 
 generated from the archive is May 29, 2021, even though the specified version
 date was June 1, 2021. From this we can infer that the doctor's visits signal
 was 2 days latent on June 1. Also, we can see that the metadata in the `epi_df`
@@ -149,13 +149,13 @@ case, since updates to the current version may still come in at a later point in
 time, due to various reasons like synchronization issues.
 
 ```{r}
-z <- x$as_of(max_version = max(x$DT$version))
+x_latest <- x$as_of(max_version = max(x$DT$version))
 ```
 
 Below, we pull several snapshots from the archive, spaced one month apart. We
 overlay the corresponding signal curves as colored lines, with the version dates
 marked by dotted vertical lines, and draw the latest curve in black (from the 
-latest snapshot `z` that the archive can provide).
+latest snapshot `x_latest` that the archive can provide).
 
 ```{r fig.width = 8, fig.height = 7}
 library(purrr)
@@ -167,7 +167,7 @@ versions = seq(as.Date("2020-06-01"), self_max - 1, by = "1 month")
 snapshots <- map_dfr(versions, function(v) { 
   x$as_of(max_version = v) %>% mutate(version = v)
 }) %>%
-  bind_rows(z %>% mutate(version = self_max)) %>%
+  bind_rows(x_latest %>% mutate(version = self_max)) %>%
   mutate(latest = version == self_max)
 
 p <- ggplot(snapshots %>% filter(!latest),
@@ -192,8 +192,8 @@ they overestimate it (both states towards the beginning of 2021), though not
 quite as dramatically. Modeling the revision process, which is often called
 *backfill modeling*, is an important statistical problem in it of itself.
 
-*todo: refer to some project/code? perhaps we should think about writing a
- function in `epiprocess` or even a separate package?*
+<!-- todo: refer to some project/code? perhaps we should think about writing a
+ function in `epiprocess` or even a separate package? -->
 
 # Sliding version-aware computations
     
@@ -206,54 +206,125 @@ been available as of t**.
 To demonstrate this, we're going to ...
 
 ```{r}
-x <- dv %>%
-  select(geo_value, time_value, version = issue, percent_cli = value) %>%
-  as_epi_archive()
-
-x2 <- covidcast_signal("jhu-csse", 
-                       "confirmed_7dav_incidence_prop",
-                       start_day = "2020-06-01", 
-                       end_day = "2021-12-01",
-                       issues = c("2020-06-01", "2021-12-01"),
-                       geo_type = "state",
-                       geo_values = c("ca", "fl")) %>%
+y <- covidcast_signal("jhu-csse", 
+                      "confirmed_7dav_incidence_prop",
+                      start_day = "2020-06-01", 
+                      end_day = "2021-12-01",
+                      issues = c("2020-06-01", "2021-12-01"),
+                      geo_type = "state",
+                      geo_values = c("ca", "fl")) %>%
   select(geo_value, time_value, version = issue, case_rates = value) %>%
   as_epi_archive()
 
 # Merge 
-x$merge(x2, all = TRUE, type = "locf")
+x$merge(y, all = TRUE, type = "locf")
 print(x)
 head(x$DT)
 ```
 
-```{r eval = FALSE}
-# Do a full join at the data.table level
-id <- c("geo_value", "time_value", "version")
-unique_ids <- unique(c(x$DT[,..id], y$DT[,..id]))
+```{r}
+prob_ar <- function(x, y, lags = c(0, 7, 14), ahead = 7, min_train_window = 20,
+                    lower_level = 0.05, upper_level = 0.95, symmetrize = TRUE, 
+                    nonneg = TRUE) {   
+  # Return NA if insufficient training data
+  if (length(y) < min_train_window + max(lags) + ahead) {
+    return(data.frame(point = NA, lower = NA, upper = NA))
+  }
+  
+  # Useful transformations
+  if (!missing(x)) x <- data.frame(x, y)
+  else x <- data.frame(y)
+  if (!is.list(lags)) lags = list(lags)
+  lags = rep(lags, length.out = ncol(x))
+  
+  # Build features and response for the AR model, and then fit it
+  dat <- do.call(
+    data.frame, 
+    unlist( # Below we loop through and build the lagged features
+      purrr::map(1:ncol(x), function(i) { 
+        purrr::map(lags[[i]], function(lag) dplyr::lag(x[,i], n = lag))
+      }),
+      recursive = FALSE
+    )
+  )
+  dat$y <- dplyr::lead(y, n = ahead) 
+  obj <- lm(y ~ ., data = dat)
+  
+  # Use LOCF to fill NAs in the latest feature values, make a prediction
+  data.table::setnafill(dat, type = "locf")
+  point <- predict(obj, newdata = tail(dat, 1))
+  
+  # Compute a band 
+  r <- residuals(obj)
+  s <- ifelse(symmetrize, -1, NA) # Should the residuals be symmetrized?
+  q <- quantile(c(r, s * r), probs = c(lower_level, upper_level), na.rm = TRUE)
+  lower <- point + q[1]
+  upper <- point + q[2]
+  
+  # Clip at zero if we need to, then return
+  if (nonneg) { 
+    point = max(point, 0) 
+    lower = max(lower, 0) 
+    upper = max(upper, 0) 
+  }
+  return(data.frame(point = point, lower = lower, upper = upper))
+}
+```
 
+```{r}
+slide_time_values = seq(as.Date("2020-08-01"), 
+                        as.Date("2021-12-01"), 
+                        by = "1 month")
 
-DT <- merge.data.table(x$DT, y$DT, all = TRUE)
+document()
 
-dt0[, (vars2):=setnafill(.SD, type="locf", cols=vars2), .SDcols=vars2, by="id"])
+x <- dv %>%
+  select(geo_value, time_value, version = issue, percent_cli = value) %>%
+  as_epi_archive()
 
-DT[, percent_cli = nafill(percent_cli, type = "locf"), by = .(geo_value, )]
+x$merge(y, all = TRUE, type = "locf")
 
+z <- x$slide(fc = prob_ar(case_rates, percent_cli), n = 120, 
+        slide_time_values = slide_time_values)
 
-library(data.table)
-xx = data.table(t = c(rep("a",5), rep("b",5)), u = 11:20, v1 = 1:10, v2 = 1:10)
-xx[3,3] = NA # Shoud be filled be LOCF
-xx[6,4] = NA # Should NOT be filled by LOCF, it's the first one in group b
-xx[10,3:4] = NA # Should both be filled by LOCF
-xx
-fillvars <- c("v1", "v2")
-#xx[, (fillvars) := setnafill(.SD, type = "locf", cols = fillvars), by = "t"]
-xx[, (fillvars) := setnafill(.SD, type = "locf"), .SDcols = fillvars, by = "t"]
-xx
+tail(z, 10)
+```
 
+```{r}
+k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
+  if (as_of) {
+      x$slide(fc = prob_ar(case_rates, percent_cli, ahead = ahead), 
+              n = 120, slide_time_values = slide_time_values) %>%
+        mutate(target_date = time_value + ahead, as_of = TRUE) 
+  }
+  else {
+    x %>% 
+      group_by(geo_value) %>%
+      epi_slide(fc = prob_ar(case_rates, percent_cli, ahead = ahead), 
+                n = 120, slide_time_values = slide_time_values) %>%
+      mutate(target_date = time_value + ahead, as_of = FALSE) 
+  }
+}
 
+# First generate the forecasts, and bind them together
+fc <- bind_rows(k_week_ahead(x, ahead = 7),
+                k_week_ahead(x, ahead = 14),
+                k_week_ahead(x, ahead = 21),
+                k_week_ahead(x, ahead = 28))
 
+# Now plot some of them, spaced apart by 2 months
 
-
+p <- ggplot(fc, aes(x = target_date, group = time_value)) +
+  geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), fill = 6, alpha = 0.4) +
+  geom_line(aes(y = fc_point)) + geom_point(aes(y = fc_point), size = 0.5) + 
+  geom_vline(aes(xintercept = time_value), linetype = 2, alpha = 0.5) +
+  facet_wrap(vars(geo_value, as_of), scales = "free_y") +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Reported COVID-19 cases")
+  
+gginnards::append_layers(
+  p, geom_line(data = z, aes(x = time_value, y = case_rates), 
+               inherit.aes = FALSE, color = "gray50"), pos = "bottom")
 
 ```
 

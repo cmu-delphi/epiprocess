@@ -202,7 +202,7 @@ epi_archive =
 #'   minimum considered.
 #' @return An `epi_df` object.
 #' @importFrom data.table between key
-#' @importFrom rlang abort warn
+#' @importFrom rlang .data abort warn
           as_of = function(max_version, min_time_value = -Inf) {
             # Self max version and other keys
             self_max = max(self$DT$version)
@@ -287,11 +287,10 @@ epi_archive =
           #####
 #' @description Slides a given function over variables in an `epi_archive`
 #'   object. Windows are **always right-aligned**, unlike `epi_slide()`. The
-#'   other arguments are as in `epi_slide()`, and its documentation gives more
-#'   details on their useage. The exception is the `by` argument, which used to
-#'   specify the grouping upfront (whereas in an `epi_df`, this would be
-#'   accomplished by a call to `dplyr::group_by()` that precedes a call to
-#'   `epi_df()`). See the archive vignette for examples.
+#'   other arguments are just as in `epi_slide()`. The exception is the `by`
+#'   argument, which used to specify the grouping upfront (whereas in an
+#'   `epi_df`, this would be accomplished by a call to `dplyr::group_by()` that
+#'   precedes a call to `epi_df()`). See the archive vignette for examples.
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
 #'   to apply a function or formula over a running window of `n` time steps
 #'   (where one time step is typically one day or one week). If a function, `f`
@@ -304,73 +303,104 @@ epi_archive =
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation.
 #' @param n Number of time steps to use in the running window. For example, if
-#'   `n = 5`, one time step is one day, and the alignment is "right", then to 
-#'   produce a value on November 5, we apply the given function or formula to
-#'   data in between November 1 and 5. Default is 14. 
-#' @param complete Should the slide function be run over complete windows only?
-#'   Default is `FALSE`, which allows for computation on partial windows.  
-#' @param new_col_name String indicating the name of the new column that will
-#'   contain the derivative values. Default is "slide_value"; note that setting
-#'   `new_col_name` equal to an existing column name will overwrite this column.
-#' @param as_list_col Should the new column be stored as a list column? Default
-#'   is `FALSE`, in which case a list object returned by `f` would be unnested 
-#'   (using `tidyr::unnest()`), and the names of the resulting columns are given
-#'   by prepending `new_col_name` to the names of the list elements. 
+#'   `n = 7`, and one time step is one day, then to produce a value on January 7
+#'   we apply the given function or formula to data in between January 1 and
+#'   7. Default is 7.
+#' @param group_by The variable(s) to group by before slide computation. If
+#'   missing, then the keys in the underlying data table, excluding `time_value`
+#'   and `version`, will be used for grouping. To omit a grouping entirely, use
+#'   `group_by = NULL`.
+#' @param ref_time_values Time values for sliding computations, meaning, each
+#'   element of this vector serves as the reference time point for one sliding
+#'   window. If missing, then this will be set to all unique time values in the
+#'   underlying data table, by default.
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
 #'   `time_value` column. This function must take a positive integer and return
 #'   an object of class `lubridate::period`. For example, we can use `time_step
 #'   = lubridate::hours` in order to set the time step to be one hour (this
 #'   would only be meaningful if `time_value` is of class `POSIXct`).
-#' @param by The variable(s) to group by before slide computation. If missing,
-#'   then the keys in the underlying data table, excluding `time_value` and
-#'   `version`, will be used for grouping.
-#' @return A tibble with the grouping variables, `time_value`, and a new column
-#'   named according to the `new_col_name` argument, with the slide values.
+#' @param complete Should the slide function be run over complete windows only?
+#'   (A complete window has distance `n-1` between its left and right
+#'   endpoints.) Default is `FALSE`, which allows for partial computations. 
+#' @param new_col_name String indicating the name of the new column that will
+#'   contain the derivative values. Default is "slide_value"; note that setting
+#'   `new_col_name` equal to an existing column name will overwrite this column.
+#' @param as_list_col Should the new column be stored as a list column? Default
+#'   is `FALSE`, in which case a list object returned by `f` would be unnested 
+#'   (using `tidyr::unnest()`), and the names of the resulting columns are given
+#'   by prepending `new_col_name` to the names of the list elements.
+#' @param names_sep String specifying the separator to use in `tidyr::unnest()`
+#'   when `as_list_col = FALSE`. Default is "_". Using `NULL` drops the prefix
+#'   from `new_col_name` entirely.
+#' @param all_rows If `all_rows = TRUE`, then there will be one row per
+#'   combination of grouping variables and unique time values in output. the rows corresponding to
+#'   unique time values  the underlying
+#'   data table will be kept
+#'   in the output; otherwise, there will be one row in the output for each time
+#'   value in `x` that acts as a reference time value. Default is `FALSE`.
+#' @return A tibble with whose columns are the grouping variables; `time_value`,
+#'   containing the reference time values for the slide computation; and a new
+#'   column named according to the `new_col_name` argument, containing the slide
+#'   values. 
 #' @importFrom data.table key
-#' @importFrom rlang !! abort enquo enquos 
-          slide = function(f, ..., n = 14, complete = FALSE,
-                           new_col_name = "slide_value", as_list_col = FALSE,
-                           time_step, by) { 
+#' @importFrom rlang !! !!! abort enquo enquos sym syms
+          slide = function(f, ..., n = 7, group_by, ref_time_values, 
+                           time_step, complete = FALSE,
+                           new_col_name = "slide_value",
+                           as_list_col = FALSE, names_sep = "_",
+                           all_rows = FALSE) { 
+            # If missing, then set ref time values to be everything; else make
+            # sure we intersect with observed time values 
+            if (missing(ref_time_values)) {
+              ref_time_values = unique(self$DT$time_value)
+            }
+            else {
+              ref_time_values = ref_time_values[ref_time_values %in%
+                                                unique(self$DT$time_value)]
+            }
+              
             # If a custom time step is specified, then redefine units 
             before_num = n-1
             if (!missing(time_step)) before_num = time_step(n-1)
             
             # What to group by? If missing, set according to internal keys
-            if (missing(by)) {
-              by = setdiff(key(self$DT), c("time_value", "version"))
+            if (missing(group_by)) {
+              group_by = setdiff(key(self$DT), c("time_value", "version"))
             }
-            by = enquo(by)
-
-            # Computation for just one group
+            
+            # Symbolize column name, defuse grouping variables
+            new_col = sym(new_col_name)
+            group_by = syms(names(eval_select(enquo(group_by), self$DT)))
+            
+            # Computation for one group, one time value
             comp_one_grp = function(.data_group,
-                                    ...,
-                                    f,
-                                    complete,
-                                    min_time_value,
-                                    new_col_name) {
-              # Check if we don't have a complete window, and if we needed
-              # to have one, then return NA
-              if (complete && min(.data_group$time_value > min_time_value)) {
-                comp_value = NA
+                                    f, ..., n,
+                                    time_value,
+                                    complete, 
+                                    new_col) {
+              # Check if we need a complete window (max - min = n-1)
+              if (complete && diff(range(.data_group$time_value)) < n-1) {
+                comp_values = NA
               }
-              else comp_value = f(.data_group, ...)
-              return(dplyr::mutate(.data_group, !!new_col_name := comp_value))
+              # Else carry out the specified computation and return 
+              else comp_values = f(.data_group, ...)
+              return(tibble::tibble(time_value = time_value,
+                                    !!new_col := comp_values))
             }
             
             # If f is not missing, then just go ahead, slide by group
             if (!missing(f)) {
-              x = purrr::map_dfr(self$DT$time_value, function(t) {
+              x = purrr::map_dfr(ref_time_values, function(t) {
                 self$as_of(t, min_time_value = t - before_num) %>%
-                  tibble::as_tsibble() %>% 
-                  dplyr::group_by(!!by) %>%
+                  tibble::as_tibble() %>% 
+                  dplyr::group_by(!!!group_by) %>%
                   dplyr::group_modify(comp_one_grp,
-                                      f = f,
-                                      ...,
+                                      f = f, ..., n = n,
+                                      time_value = t,
                                       complete = complete,
-                                      min_time_value = t - before_num,
-                                      new_col_name = new_col_name) %>%
-                  dplyr::select(!!by, time_value, !!new_col_name)
+                                      new_col = new_col) %>%
+                  dplyr::ungroup()
               })
             }
 
@@ -386,25 +416,28 @@ epi_archive =
               
               quo = quos[[1]]
               f = function(x, quo, ...) rlang::eval_tidy(quo, x)
-              new_col_name = names(rlang::quos_auto_name(quos))
+              new_col = sym(names(rlang::quos_auto_name(quos)))
 
-              x = purrr::map(self$DT$time_value, function(t) {
+              x = purrr::map_dfr(ref_time_values, function(t) {
                 self$as_of(t, min_time_value = t - before_num) %>%
-                  tibble::as_tsibble() %>% 
-                  dplyr::group_by(!!by) %>%
+                  tibble::as_tibble() %>% 
+                  dplyr::group_by(!!!group_by) %>%
                   dplyr::group_modify(comp_one_grp,
-                                      f = f,
-                                      quo = quo,
+                                      f = f, quo = quo, n = n,
+                                      time_value = t,
                                       complete = complete,
-                                      min_time_value = t - before_num,
-                                      new_col_name = new_col_name) %>%
-                  dplyr::select(!!by, time_value, !!new_col_name)
+                                      new_col = new_col) %>%
+                  dplyr::ungroup()
               })
+            }
+
+            # If we're asked for all rows, then do a join
+            if (all_rows) {
             }
             
             # Unnest if we need to, and return
-            if (!as_list_col && is.list(pull(x, !!new_col_name))) {
-              x = tidyr::unnest(x, !!new_col_name, names_sep = "_")
+            if (!as_list_col && is.list(dplyr::pull(x, !!new_col))) {
+              x = tidyr::unnest(x, !!new_col, names_sep = names_sep)
             }
             return(x)
           }

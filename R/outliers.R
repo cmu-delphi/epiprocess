@@ -52,22 +52,22 @@ detect_outlr = function(x = seq_along(y), y,
   combiner = match.arg(combiner)
 
   # Run all outlier detection methods
-  results = purrr::pmap_dfc(methods, function(method, args, abbr, x, y) {
+  results = purrr::pmap_dfc(methods, function(method, args, abbr) {
     if (is.character(method)) method = paste0("detect_outlr_", method)
     
     # Call the method
     results = do.call(method, args = c(list("x" = x, "y" = y), args))
 
    # Validate the output
-    if (!is.data.frame(results) || !all(c("lower", "upper", "replacement") %in% 
-                                        colnames(results))) {
+    if (!is.data.frame(results) ||
+        !all(c("lower", "upper", "replacement") %in% colnames(results))) {
       abort("Outlier detection method must return a data frame with columns `lower`, `upper`, and `replacement`.")
     }
 
     # Update column names with model abbreviation
     colnames(results) = paste(abbr, colnames(results), sep = "_") 
     return(results)
-  }, x, y)
+  })
   
   # Combine information about detected outliers
   if (combiner != "none") {
