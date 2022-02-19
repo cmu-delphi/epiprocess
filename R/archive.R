@@ -30,8 +30,7 @@
 #'   `epi_archive` object via the `other_keys` argument, and/or set by operating
 #'   on `DT` directly). There can only be a single row per unique combination of
 #'   key variables, and thus the key variables are critical for figuring out how
-#'   to generate a snapshot of data from the archive, as of a given version
-#'   (also described below).
+#'   to generate a snapshot of data from the archive, as of a given version.
 #' 
 #' In general, last observation carried forward (LOCF) is used to data in
 #'   between recorded versions. Currently, deletions must be represented as
@@ -69,7 +68,7 @@
 #'   x$as_of(as.Date("2022-01-15"))
 #'   ```
 #'   to generate a snapshot as of January 15, 2022. More details on the
-#'   `as_of()` method are documented below.
+#'   `as_of()` method are documented in the wrapper function `epx_as_of()`. 
 #'
 #' @section Sliding Computations:
 #' We can run a sliding computation over an `epi_archive` object, much like
@@ -79,7 +78,7 @@
 #'   difference: it is version-aware. That is, for an `epi_archive` object, the
 #'   sliding computation at any given reference time point t is performed on
 #'   **data that would have been available as of t**. More details on `slide()`
-#'   are documented below.
+#'   are documented in the wrapper function `epx_slide()`.
 #' 
 #' @export
 epi_archive =
@@ -192,15 +191,7 @@ epi_archive =
           },
           #####
 #' @description Generates a snapshot in `epi_df` format as of a given version.
-#' @param max_version Time value specifying the max version to permit in the
-#'   snapshot. That is, the snapshot will comprise the unique rows of the
-#'   current archive data that represent the most up-to-date signal values, as
-#'   of the specified `max_version` (and whose time values are at least
-#'   `min_time_value`.)
-#' @param min_time_value Time value specifying the min time value to permit in
-#'   the snapshot. Default is `-Inf`, which effectively means that there is no
-#'   minimum considered.
-#' @return An `epi_df` object.
+#'   See the documentation for the wrapper function `epx_as_of()` for details.
 #' @importFrom data.table between key
 #' @importFrom rlang .data abort warn
           as_of = function(max_version, min_time_value = -Inf) {
@@ -245,18 +236,7 @@ epi_archive =
           #####
 #' @description Merges another `data.table` with the current one, and allows for
 #'   a post-filling of `NA` values by last observation carried forward (LOCF).
-#' @param y A `data.table` to join to the current one. This can instead be an
-#'   `epi_archive` object, in which case its underlying data table is joined.
-#' @param ... Named arguments to pass to `data.table::merge.data.table()`, which
-#'   is used for the join (with all default settings as in this function). For
-#'   example, passing `all = TRUE` will perform a full join.
-#' @param locf Should LOCF be used after joining on all non-key columns? This
-#'   will take the latest version of each signal value and propogate it forward
-#'   to fill in gaps that appear after merging. Default is `TRUE`.
-#' @param nan Should `NaN` values be treated as `NA` values in the post-filling
-#' step?  Default is `NA`, which means that they are treated as `NA` values; if
-#    `NaN`, then they are treated as distinct.
-#' @return Nothing (the underlying data table overwritten with the merged one).
+#'   See the documentation for the wrapper function `epx_merge()` for details.
 #' @importFrom data.table key merge.data.table nafill
 #' @importFrom rlang abort 
           merge = function(y, ..., locf = TRUE, nan = NA) {
@@ -286,63 +266,8 @@ epi_archive =
           },   
           #####
 #' @description Slides a given function over variables in an `epi_archive`
-#'   object. Windows are **always right-aligned**, unlike `epi_slide()`. The
-#'   other arguments are just as in `epi_slide()`. The exception is the `by`
-#'   argument, which used to specify the grouping upfront (whereas in an
-#'   `epi_df`, this would be accomplished by a call to `dplyr::group_by()` that
-#'   precedes a call to `epi_df()`). See the archive vignette for examples.
-#' @param f Function or formula to slide over variables in `x`. To "slide" means
-#'   to apply a function or formula over a running window of `n` time steps
-#'   (where one time step is typically one day or one week). If a function, `f`
-#'   must take `x`, a data frame with the same column names as the original
-#'   object; followed by any number of named arguments; and ending with
-#'   `...`. If a formula, `f` can operate directly on columns accessed via
-#'   `.x$var`, as in `~ mean(.x$var)` to compute a mean of a column `var` over a
-#'   sliding window of `n` time steps.
-#' @param ... Additional arguments to pass to the function or formula specified
-#'   via `f`. Alternatively, if `f` is missing, then the current argument is
-#'   interpreted as an expression for tidy evaluation.
-#' @param n Number of time steps to use in the running window. For example, if
-#'   `n = 7`, and one time step is one day, then to produce a value on January 7
-#'   we apply the given function or formula to data in between January 1 and
-#'   7. Default is 7.
-#' @param group_by The variable(s) to group by before slide computation. If
-#'   missing, then the keys in the underlying data table, excluding `time_value`
-#'   and `version`, will be used for grouping. To omit a grouping entirely, use
-#'   `group_by = NULL`.
-#' @param ref_time_values Time values for sliding computations, meaning, each
-#'   element of this vector serves as the reference time point for one sliding
-#'   window. If missing, then this will be set to all unique time values in the
-#'   underlying data table, by default.
-#' @param time_step Optional function used to define the meaning of one time
-#'   step, which if specified, overrides the default choice based on the
-#'   `time_value` column. This function must take a positive integer and return
-#'   an object of class `lubridate::period`. For example, we can use `time_step
-#'   = lubridate::hours` in order to set the time step to be one hour (this
-#'   would only be meaningful if `time_value` is of class `POSIXct`).
-#' @param complete Should the slide function be run over complete windows only?
-#'   (A complete window has distance `n-1` between its left and right
-#'   endpoints.) Default is `FALSE`, which allows for partial computations. 
-#' @param new_col_name String indicating the name of the new column that will
-#'   contain the derivative values. Default is "slide_value"; note that setting
-#'   `new_col_name` equal to an existing column name will overwrite this column.
-#' @param as_list_col Should the new column be stored as a list column? Default
-#'   is `FALSE`, in which case a list object returned by `f` would be unnested 
-#'   (using `tidyr::unnest()`), and the names of the resulting columns are given
-#'   by prepending `new_col_name` to the names of the list elements.
-#' @param names_sep String specifying the separator to use in `tidyr::unnest()`
-#'   when `as_list_col = FALSE`. Default is "_". Using `NULL` drops the prefix
-#'   from `new_col_name` entirely.
-#' @param all_rows If `all_rows = TRUE`, then there will be one row per
-#'   combination of grouping variables and unique time values in output. the rows corresponding to
-#'   unique time values  the underlying
-#'   data table will be kept
-#'   in the output; otherwise, there will be one row in the output for each time
-#'   value in `x` that acts as a reference time value. Default is `FALSE`.
-#' @return A tibble with whose columns are the grouping variables; `time_value`,
-#'   containing the reference time values for the slide computation; and a new
-#'   column named according to the `new_col_name` argument, containing the slide
-#'   values. 
+#'   object. See the documentation for the wrapper function `epx_as_of()` for
+#'   details. 
 #' @importFrom data.table key
 #' @importFrom rlang !! !!! abort enquo enquos sym syms
           slide = function(f, ..., n = 7, group_by, ref_time_values, 
@@ -372,21 +297,50 @@ epi_archive =
             # Symbolize column name, defuse grouping variables
             new_col = sym(new_col_name)
             group_by = syms(names(eval_select(enquo(group_by), self$DT)))
+
+            # Key variable names, apart from time value and version
+            key_vars = setdiff(key(self$DT), c("time_value", "version"))
             
             # Computation for one group, one time value
             comp_one_grp = function(.data_group,
                                     f, ..., n,
                                     time_value,
-                                    complete, 
+                                    complete,
+                                    key_vars,
                                     new_col) {
               # Check if we need a complete window (max - min = n-1)
               if (complete && diff(range(.data_group$time_value)) < n-1) {
-                comp_values = NA
+                comp_value = NA
               }
-              # Else carry out the specified computation and return 
-              else comp_values = f(.data_group, ...)
-              return(tibble::tibble(time_value = time_value,
-                                    !!new_col := comp_values))
+              # Else carry out the specified computation 
+              else comp_value = f(.data_group, ...)
+
+              # Count the number of appearances of the reference time value
+              # Note: ideally, we'd like to just count the occurences of the ref
+              # time value but due to latency, this will often not appear in the
+              # data group. So we count the number of unique key values, outside
+              # of the time value column
+              count = sum(!duplicated(.data_group[, key_vars]))
+              
+              # If we get back data frames from sliding, then below we unpack
+              # these rows  
+              if (inherits(comp_value, "data.frame")) {
+                if (nrow(comp_value) == 1) {
+                  comp_value = rep(list(comp_value), count)
+                }
+                else if (nrow(comp_value) != count) {
+                  abort("If the slide computation returns a data frame, it must either have a single row, or else have one row per appearance of the reference time value in the local window.")
+                }
+                else {
+                  comp_value = split(comp_value, 1:nrow(comp_value))
+                }
+              }
+ 
+              # Size stable: make sure to return one row per appearance of the
+              # reference value (if comp value is a single atomic value, then
+              # tibble() will recycle it)  
+              return(tibble::tibble(time_value = rep(time_value, count),
+                                    !!new_col := comp_value))
             }
             
             # If f is not missing, then just go ahead, slide by group
@@ -399,7 +353,9 @@ epi_archive =
                                       f = f, ..., n = n,
                                       time_value = t,
                                       complete = complete,
-                                      new_col = new_col) %>%
+                                      key_vars = key_vars,
+                                      new_col = new_col,
+                                      .keep = TRUE) %>%
                   dplyr::ungroup()
               })
             }
@@ -426,18 +382,23 @@ epi_archive =
                                       f = f, quo = quo, n = n,
                                       time_value = t,
                                       complete = complete,
-                                      new_col = new_col) %>%
+                                      key_vars = key_vars,
+                                      new_col = new_col,
+                                      .keep = TRUE) %>%
                   dplyr::ungroup()
               })
             }
-
-            # If we're asked for all rows, then do a join
-            if (all_rows) {
+            
+            # Unnest if we need to
+            if (!as_list_col) {
+              x = tidyr::unnest(x, !!new_col, names_sep = names_sep)
             }
             
-            # Unnest if we need to, and return
-            if (!as_list_col && is.list(dplyr::pull(x, !!new_col))) {
-              x = tidyr::unnest(x, !!new_col, names_sep = names_sep)
+            # Join to get all rows, if we need to, then return
+            if (all_rows) {
+              cols = c(as.character(group_by), "time_value")
+              y = unique(self$DT[, ..cols])
+              x = dplyr::left_join(y, x, by = cols)
             }
             return(x)
           }
@@ -447,7 +408,9 @@ epi_archive =
 #' Convert to `epi_archive` format
 #'
 #' Converts a data frame, data table, or tibble into an `epi_archive`
-#' object. See the archive vignette for examples.
+#' object. See the [archive
+#' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
+#' examples.
 #'
 #' @param x A data frame, data table, or tibble, with columns `geo_value`,
 #'   `time_value`, `version`, and then any additional number of columns.
@@ -465,8 +428,8 @@ epi_archive =
 #'   fields; named entries from the passed list or will be included as well.
 #' @return An `epi_archive` object.
 #'
-#' @details This is a simple wrapper around the `new()` method of the
-#'   `epi_archive` class, so, for example:
+#' @details This simply a wrapper around the `new()` method of the `epi_archive`
+#'   class, so for example:
 #'   ```
 #'   x <- as_epi_archive(df, geo_type = "state", time_type = "day")
 #'   ```

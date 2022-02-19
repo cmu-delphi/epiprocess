@@ -2,7 +2,9 @@
 #'
 #' Applies one or more outlier detection methods to a given signal variable, and
 #' optionally aggregates the outputs to create a consensus result. See the
-#' outliers vignette for examples.
+#' [outliers
+#' vignette](https://cmu-delphi.github.io/epiprocess/articles/outliers.html) for
+#' examples.  
 #' 
 #' @param x Design points corresponding to the signal values `y`. Default is
 #'   `seq_along(y)` (that is, equally-spaced points from 1 to the length of

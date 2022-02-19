@@ -155,7 +155,7 @@ the signals variables, as of the time specified in the <code>as_of</code> field.
 version history of a given data set. Revisions are common in many types of
 epidemiological data streams, and paying attention to data revisions can be
 important for all sorts of downstream data analysis and modeling tasks. See
-the documentation for <code>epi_archive</code> for more details on how
+the documentation for <code><a href='epi_archive.html'>epi_archive</a></code> for more details on how
 data versioning works in the <code>epiprocess</code> package (including how to
 generate <code>epi_df</code> objects, as data snapshots, from an <code>epi_archive</code>
 object).</p>
@@ -163,8 +163,7 @@ object).</p>
 
     
 
-<p>The following geo types are recognized in an <code>epi_df</code>. Their geo coding
-(specification of geo values for each geo type) is also described below.</p><ul>
+<p>The following geo types are recognized in an <code>epi_df</code>.</p><ul>
 <li><p><code>"county"</code>: each observation corresponds to a U.S. county; coded by 5-digit
 FIPS code.</p></li>
 <li><p><code>"hrr"</code>: each observation corresponds to a U.S. hospital referral region
@@ -184,8 +183,7 @@ alpha-2 country codes (lowercase).</p></li>
 
     
 
-<p>The following time types are recognized in an <code>epi_df</code>. Their time coding
-(specification of time values for each time type) is also described below.</p><ul>
+<p>The following time types are recognized in an <code>epi_df</code>.</p><ul>
 <li><p><code>"day-time"</code>: each observation corresponds to a time on a given day
 (measured to the second); coded as a <code>POSIXct</code> object, as in
 <code><a href='https://rdrr.io/r/base/as.POSIXlt.html'>as.POSIXct("2022-01-31 18:45:40")</a></code>.</p></li>

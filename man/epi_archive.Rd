@@ -28,8 +28,7 @@ as well as any others (these can be specified when instantiating the
 \code{epi_archive} object via the \code{other_keys} argument, and/or set by operating
 on \code{DT} directly). There can only be a single row per unique combination of
 key variables, and thus the key variables are critical for figuring out how
-to generate a snapshot of data from the archive, as of a given version
-(also described below).
+to generate a snapshot of data from the archive, as of a given version.
 
 In general, last observation carried forward (LOCF) is used to data in
 between recorded versions. Currently, deletions must be represented as
@@ -70,7 +69,7 @@ variables, as of the specified version. This is accomplished by calling the
 }
 
 to generate a snapshot as of January 15, 2022. More details on the
-\code{as_of()} method are documented below.
+\code{as_of()} method are documented in the wrapper function \code{epx_as_of()}.
 }
 
 \section{Sliding Computations}{
@@ -82,7 +81,7 @@ the way \code{epi_slide()} works for an \code{epi_df} object, but with one key
 difference: it is version-aware. That is, for an \code{epi_archive} object, the
 sliding computation at any given reference time point t is performed on
 \strong{data that would have been available as of t}. More details on \code{slide()}
-are documented below.
+are documented in the wrapper function \code{epx_slide()}.
 }
 
 \section{Methods}{
@@ -147,28 +146,11 @@ An \code{epi_archive} object.
 \if{latex}{\out{\hypertarget{method-as_of}{}}}
 \subsection{Method \code{as_of()}}{
 Generates a snapshot in \code{epi_df} format as of a given version.
+See the documentation for the wrapper function \code{epx_as_of()} for details.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$as_of(max_version, min_time_value = -Inf)}\if{html}{\out{</div>}}
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{max_version}}{Time value specifying the max version to permit in the
-snapshot. That is, the snapshot will comprise the unique rows of the
-current archive data that represent the most up-to-date signal values, as
-of the specified \code{max_version} (and whose time values are at least
-\code{min_time_value}.)}
-
-\item{\code{min_time_value}}{Time value specifying the min time value to permit in
-the snapshot. Default is \code{-Inf}, which effectively means that there is no
-minimum considered.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-An \code{epi_df} object.
-}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-merge"></a>}}
@@ -176,43 +158,19 @@ An \code{epi_df} object.
 \subsection{Method \code{merge()}}{
 Merges another \code{data.table} with the current one, and allows for
 a post-filling of \code{NA} values by last observation carried forward (LOCF).
+See the documentation for the wrapper function \code{epx_merge()} for details.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$merge(y, ..., locf = TRUE, nan = NA)}\if{html}{\out{</div>}}
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{y}}{A \code{data.table} to join to the current one. This can instead be an
-\code{epi_archive} object, in which case its underlying data table is joined.}
-
-\item{\code{...}}{Named arguments to pass to \code{data.table::merge.data.table()}, which
-is used for the join (with all default settings as in this function). For
-example, passing \code{all = TRUE} will perform a full join.}
-
-\item{\code{locf}}{Should LOCF be used after joining on all non-key columns? This
-will take the latest version of each signal value and propogate it forward
-to fill in gaps that appear after merging. Default is \code{TRUE}.}
-
-\item{\code{nan}}{Should \code{NaN} values be treated as \code{NA} values in the post-filling
-step?  Default is \code{NA}, which means that they are treated as \code{NA} values; if}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Nothing (the underlying data table overwritten with the merged one).
-}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-slide"></a>}}
 \if{latex}{\out{\hypertarget{method-slide}{}}}
 \subsection{Method \code{slide()}}{
 Slides a given function over variables in an \code{epi_archive}
-object. Windows are \strong{always right-aligned}, unlike \code{epi_slide()}. The
-other arguments are just as in \code{epi_slide()}. The exception is the \code{by}
-argument, which used to specify the grouping upfront (whereas in an
-\code{epi_df}, this would be accomplished by a call to \code{dplyr::group_by()} that
-precedes a call to \code{epi_df()}). See the archive vignette for examples.
+object. See the documentation for the wrapper function \code{epx_as_of()} for
+details.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$slide(
   f,
@@ -229,75 +187,6 @@ precedes a call to \code{epi_df()}). See the archive vignette for examples.
 )}\if{html}{\out{</div>}}
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{f}}{Function or formula to slide over variables in \code{x}. To "slide" means
-to apply a function or formula over a running window of \code{n} time steps
-(where one time step is typically one day or one week). If a function, \code{f}
-must take \code{x}, a data frame with the same column names as the original
-object; followed by any number of named arguments; and ending with
-\code{...}. If a formula, \code{f} can operate directly on columns accessed via
-\code{.x$var}, as in \code{~ mean(.x$var)} to compute a mean of a column \code{var} over a
-sliding window of \code{n} time steps.}
-
-\item{\code{...}}{Additional arguments to pass to the function or formula specified
-via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
-interpreted as an expression for tidy evaluation.}
-
-\item{\code{n}}{Number of time steps to use in the running window. For example, if
-\code{n = 7}, and one time step is one day, then to produce a value on January 7
-we apply the given function or formula to data in between January 1 and
-7. Default is 7.}
-
-\item{\code{group_by}}{The variable(s) to group by before slide computation. If
-missing, then the keys in the underlying data table, excluding \code{time_value}
-and \code{version}, will be used for grouping. To omit a grouping entirely, use
-\code{group_by = NULL}.}
-
-\item{\code{ref_time_values}}{Time values for sliding computations, meaning, each
-element of this vector serves as the reference time point for one sliding
-window. If missing, then this will be set to all unique time values in the
-underlying data table, by default.}
-
-\item{\code{time_step}}{Optional function used to define the meaning of one time
-step, which if specified, overrides the default choice based on the
-\code{time_value} column. This function must take a positive integer and return
-an object of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this
-would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
-
-\item{\code{complete}}{Should the slide function be run over complete windows only?
-(A complete window has distance \code{n-1} between its left and right
-endpoints.) Default is \code{FALSE}, which allows for partial computations.}
-
-\item{\code{new_col_name}}{String indicating the name of the new column that will
-contain the derivative values. Default is "slide_value"; note that setting
-\code{new_col_name} equal to an existing column name will overwrite this column.}
-
-\item{\code{as_list_col}}{Should the new column be stored as a list column? Default
-is \code{FALSE}, in which case a list object returned by \code{f} would be unnested
-(using \code{tidyr::unnest()}), and the names of the resulting columns are given
-by prepending \code{new_col_name} to the names of the list elements.}
-
-\item{\code{names_sep}}{String specifying the separator to use in \code{tidyr::unnest()}
-when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
-from \code{new_col_name} entirely.}
-
-\item{\code{all_rows}}{If \code{all_rows = TRUE}, then there will be one row per
-combination of grouping variables and unique time values in output. the rows corresponding to
-unique time values  the underlying
-data table will be kept
-in the output; otherwise, there will be one row in the output for each time
-value in \code{x} that acts as a reference time value. Default is \code{FALSE}.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A tibble with whose columns are the grouping variables; \code{time_value},
-containing the reference time values for the slide computation; and a new
-column named according to the \code{new_col_name} argument, containing the slide
-values.
-}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}

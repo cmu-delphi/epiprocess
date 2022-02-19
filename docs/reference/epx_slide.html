@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Slide a function over variables in an <code>epi_df</code> object — epi_slide • epiprocess</title>
+<title>Slide a function over variables in an <code>epi_archive</code> object — epx_slide • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,12 @@
 
 
 
-<meta property="og:title" content="Slide a function over variables in an <code>epi_df</code> object — epi_slide" />
-<meta property="og:description" content="Slides a given function over variables in an epi_df object. See the slide vignette for
+<meta property="og:title" content="Slide a function over variables in an <code>epi_archive</code> object — epx_slide" />
+<meta property="og:description" content="Slides a given function over variables in an epi_archive object. This
+behaves similarly to epi_slide(), with the key exception that it is
+version-aware: the sliding computation at any given reference time point
+t is performed on data that would have been available as of t. See the
+archive vignette for
 examples." />
 
 
@@ -109,24 +113,26 @@ examples." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Slide a function over variables in an <code>epi_df</code> object</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/slide.R'><code>R/slide.R</code></a></small>
-    <div class="hidden name"><code>epi_slide.Rd</code></div>
+    <h1>Slide a function over variables in an <code>epi_archive</code> object</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/methods2.R'><code>R/methods2.R</code></a></small>
+    <div class="hidden name"><code>epx_slide.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Slides a given function over variables in an <code>epi_df</code> object. See the <a href='https://cmu-delphi.github.io/epiprocess/articles/slide.html'>slide vignette</a> for
+    <p>Slides a given function over variables in an <code>epi_archive</code> object. This
+behaves similarly to <code><a href='epi_slide.html'>epi_slide()</a></code>, with the key exception that it is
+<strong>version-aware</strong>: the sliding computation at any given reference time point
+t is performed on <strong>data that would have been available as of t</strong>. See the
+<a href='https://cmu-delphi.github.io/epiprocess/articles/archive.html'>archive vignette</a> for
 examples.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>epi_slide</span>(
-  <span class='no'>x</span>,
+    <pre class="usage"><span class='fu'>epx_slide</span>(
   <span class='no'>f</span>,
   <span class='no'>...</span>,
   <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>7</span>,
+  <span class='no'>group_by</span>,
   <span class='no'>ref_time_values</span>,
-  <span class='kw'>align</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"right"</span>, <span class='st'>"center"</span>, <span class='st'>"left"</span>),
-  <span class='no'>before</span>,
   <span class='no'>time_step</span>,
   <span class='kw'>complete</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"slide_value"</span>,
@@ -139,32 +145,35 @@ examples.</p>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>x</th>
-      <td><p>The <code>epi_df</code> object under consideration.</p></td>
-    </tr>
-    <tr>
       <th>f</th>
       <td><p>Function or formula to slide over variables in <code>x</code>. To "slide" means
 to apply a function or formula over a running window of <code>n</code> time steps
-(where one time step is typically one day or one week; see details for more
-explanation). If a function, <code>f</code> must take <code>x</code>, a data frame with the same
-column names as the original object; followed by any number of named
-arguments; and ending with <code>...</code>. If a formula, <code>f</code> can operate directly on
-columns accessed via <code>.x$var</code>, as in <code>~ mean(.x$var)</code> to compute a mean of
-a column <code>var</code> over a sliding window of <code>n</code> time steps.</p></td>
+(where one time step is typically one day or one week). If a function, <code>f</code>
+must take <code>x</code>, a data frame with the same column names as the original
+object; followed by any number of named arguments; and ending with
+<code>...</code>. If a formula, <code>f</code> can operate directly on columns accessed via
+<code>.x$var</code>, as in <code>~ mean(.x$var)</code> to compute a mean of a column <code>var</code> over a
+sliding window of <code>n</code> time steps.</p></td>
     </tr>
     <tr>
       <th>...</th>
       <td><p>Additional arguments to pass to the function or formula specified
 via <code>f</code>. Alternatively, if <code>f</code> is missing, then the current argument is
-interpreted as an expression for tidy evaluation. See details.</p></td>
+interpreted as an expression for tidy evaluation.</p></td>
     </tr>
     <tr>
       <th>n</th>
       <td><p>Number of time steps to use in the running window. For example, if
-<code>n = 7</code>, one time step is one day, and the alignment is "right", then to
-produce a value on January 7 we apply the given function or formula to data
-in between January 1 and 7. Default is 7.</p></td>
+<code>n = 7</code>, and one time step is one day, then to produce a value on January 7
+we apply the given function or formula to data in between January 1 and
+7. Default is 7.</p></td>
+    </tr>
+    <tr>
+      <th>group_by</th>
+      <td><p>The variable(s) to group by before slide computation. If
+missing, then the keys in the underlying data table, excluding <code>time_value</code>
+and <code>version</code>, will be used for grouping. To omit a grouping entirely, use
+<code>group_by = NULL</code>.</p></td>
     </tr>
     <tr>
       <th>ref_time_values</th>
@@ -172,22 +181,6 @@ in between January 1 and 7. Default is 7.</p></td>
 element of this vector serves as the reference time point for one sliding
 window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.</p></td>
-    </tr>
-    <tr>
-      <th>align</th>
-      <td><p>One of "right", "center", or "left", indicating the alignment of
-the sliding window relative to the reference time point. If the alignment
-is "center" and <code>n</code> is even, then one more time point will be used after
-the reference time point than before. Default is "right".</p></td>
-    </tr>
-    <tr>
-      <th>before</th>
-      <td><p>Positive integer less than <code>n</code>, specifying the number of time
-points to use in the sliding window strictly before the reference time
-point. For example, setting <code>before = n-1</code> would be the same as setting
-<code>align = "right"</code>. The <code>before</code> argument allows for more flexible
-specification of alignment than the <code>align</code> parameter, and if specified,
-overrides <code>align</code>.</p></td>
     </tr>
     <tr>
       <th>time_step</th>
@@ -224,36 +217,39 @@ from <code>new_col_name</code> entirely.</p></td>
     </tr>
     <tr>
       <th>all_rows</th>
-      <td><p>If <code>all_rows = TRUE</code>, then all rows of <code>x</code> will be kept in
-the output; otherwise, there will be one row for each time value in <code>x</code>
-that acts as a reference time value. Default is <code>FALSE</code>.</p></td>
+      <td><p>If <code>all_rows = TRUE</code>, then the output will have one row per
+combination of grouping variables and unique time values in the underlying
+data table. Otherwise, there will be one row in the output for each time
+value in <code>x</code> that acts as a reference time value. Default is <code>FALSE</code>.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An <code>epi_df</code> object given by appending a new column to <code>x</code>, named
-according to the <code>new_col_name</code> argument.</p>
+    <p>A tibble whose columns are: the grouping variables, <code>time_value</code>,
+containing the reference time values for the slide computation, and a
+column named according to the <code>new_col_name</code> argument, containing the slide
+values.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>To "slide" means to apply a function or formula over a running
-window of <code>n</code> time steps, where the unit (the meaning of one time step) is
-implicitly defined by the way the <code>time_value</code> column treats addition and
-subtraction; for example, if the time values are coded as <code>Date</code> objects,
-then one time step is one day, since <code>as.Date("2022-01-01") + 1</code> equals
-<code><a href='https://rdrr.io/r/base/as.Date.html'>as.Date("2022-01-02")</a></code>. Alternatively, the time step can be set explicitly
-using the <code>time_step</code> argument (which if specified would override the
-default choice based on <code>time_value</code> column).</p>
-<p>If <code>f</code> is missing, then an expression for tidy evaluation can be specified,
-for example, as in:</p><pre><span class='fu'>epi_slide</span>(<span class='no'>x</span>, <span class='kw'>cases_7dav</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>(<span class='no'>cases</span>), <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>7</span>)</pre>
+    <p>Unlike <code><a href='epi_slide.html'>epi_slide()</a></code>, windows in <code>epx_slide()</code> are <strong>always
+right-aligned</strong>. Another distinction is the <code>by</code> argument, which used to
+specify the grouping upfront (whereas for an <code>epi_df</code>, this would be
+accomplished by a call to <code><a href='https://dplyr.tidyverse.org/reference/group_by.html'>dplyr::group_by()</a></code> that precedes a call to
+<code><a href='epi_df.html'>epi_df()</a></code>). Apart from this, the interfaces between <code>epx_slide()</code> and
+<code><a href='epi_slide.html'>epi_slide()</a></code> are altogether similar.</p>
+<p>The current function can be considerably slower than <code><a href='epi_slide.html'>epi_slide()</a></code>, for two
+reasons: (1) it must repeatedly fetch properly-versioned snapshots from the
+data archive (via its <code>as_of()</code> method), and (2) it performs a "manual"
+sliding of sorts, and does not benefit from the highly efficient <code>slider</code>
+package. For this reason, it should never be used in place of
+<code><a href='epi_slide.html'>epi_slide()</a></code>, and only used when version-aware sliding is necessary (as it
+its purpose).</p>
+<p>Finally, this is simply a wrapper around the <code>slide()</code> method of the
+<code>epi_archive</code> class, so if <code>x</code> is an <code>epi_archive</code> object, then:</p><pre><span class='fu'>epx_slide</span>(<span class='no'>x</span>, <span class='kw'>new_var</span> <span class='kw'>=</span> <span class='fu'>comp</span>(<span class='no'>old_var</span>), <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>120</span>)</pre>
 
-<p>which would be equivalent to:</p><pre><span class='fu'>epi_slide</span>(<span class='no'>x</span>, <span class='kw'>function</span>(<span class='no'>x</span>, <span class='no'>...</span>) <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>(<span class='no'>x</span>$<span class='no'>cases</span>), <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>7</span>,
-          <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"cases_7dav"</span>)</pre>
+<p>is equivalent to:</p><pre><span class='no'>x</span>$<span class='fu'>slide</span>(<span class='no'>x</span>, <span class='kw'>new_var</span> <span class='kw'>=</span> <span class='fu'>comp</span>(<span class='no'>old_var</span>), <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>120</span>)</pre>
 
-<p>Thus, to be clear, when the computation is specified via an expression for
-tidy evaluation (first example, above), then the name for the new column is
-inferred from the given expression and overrides any name passed explicitly
-through the <code>new_col_name</code> argument.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

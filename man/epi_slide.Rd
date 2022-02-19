@@ -81,17 +81,17 @@ by prepending \code{new_col_name} to the names of the list elements.}
 when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
 from \code{new_col_name} entirely.}
 
-\item{all_rows}{If \code{all_rows = TRUE}, then all the rows of \code{x} will be kept
-in the output; otherwise, there will be one row in the output for each time
-value in \code{x} that acts as a reference time value. Default is \code{FALSE}.}
+\item{all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
+the output; otherwise, there will be one row for each time value in \code{x}
+that acts as a reference time value. Default is \code{FALSE}.}
 }
 \value{
 An \code{epi_df} object given by appending a new column to \code{x}, named
 according to the \code{new_col_name} argument.
 }
 \description{
-Slides a given function over variables in an \code{epi_df} object. See the slide
-vignette for examples.
+Slides a given function over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
+examples.
 }
 \details{
 To "slide" means to apply a function or formula over a running

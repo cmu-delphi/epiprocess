@@ -217,7 +217,7 @@ y <- covidcast_signal("jhu-csse",
   as_epi_archive()
 
 # Merge 
-x$merge(y, all = TRUE, type = "locf")
+x$merge(y, all = TRUE)
 print(x)
 head(x$DT)
 ```
@@ -234,7 +234,7 @@ prob_ar <- function(x, y, lags = c(0, 7, 14), ahead = 7, min_train_window = 20,
   # Useful transformations
   if (!missing(x)) x <- data.frame(x, y)
   else x <- data.frame(y)
-  if (!is.list(lags)) lags = list(lags)
+  if (!is.list(lags)) lags <- list(lags)
   lags = rep(lags, length.out = ncol(x))
   
   # Build features and response for the AR model, and then fit it
@@ -272,58 +272,57 @@ prob_ar <- function(x, y, lags = c(0, 7, 14), ahead = 7, min_train_window = 20,
 ```
 
 ```{r}
-slide_time_values = seq(as.Date("2020-08-01"), 
-                        as.Date("2021-12-01"), 
-                        by = "1 month")
+fc_time_values = seq(as.Date("2020-08-01"), 
+                     as.Date("2021-12-01"), 
+                     by = "1 month")
 
-document()
+z <- x$slide(fc = prob_ar(x = percent_cli, y = case_rates), n = 120, 
+             ref_time_values = fc_time_values, group_by = geo_value)
 
-x <- dv %>%
-  select(geo_value, time_value, version = issue, percent_cli = value) %>%
-  as_epi_archive()
-
-x$merge(y, all = TRUE, type = "locf")
-
-z <- x$slide(fc = prob_ar(case_rates, percent_cli), n = 120, 
-        slide_time_values = slide_time_values)
-
-tail(z, 10)
+head(z, 10)
 ```
 
 ```{r}
+x_latest = x$as_of(max_version = max(x$DT$version))
+
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
-      x$slide(fc = prob_ar(case_rates, percent_cli, ahead = ahead), 
-              n = 120, slide_time_values = slide_time_values) %>%
-        mutate(target_date = time_value + ahead, as_of = TRUE) 
+    x$slide(fc = prob_ar(percent_cli, case_rates, ahead = ahead), 
+            n = 120, ref_time_values = fc_time_values, group_by = geo_value) %>%
+      mutate(target_date = time_value + ahead, as_of = TRUE) 
   }
   else {
-    x %>% 
+    x_latest %>% 
       group_by(geo_value) %>%
-      epi_slide(fc = prob_ar(case_rates, percent_cli, ahead = ahead), 
-                n = 120, slide_time_values = slide_time_values) %>%
+      epi_slide(fc = prob_ar(percent_cli, case_rates, ahead = ahead), 
+                n = 120, ref_time_values = fc_time_values) %>%
       mutate(target_date = time_value + ahead, as_of = FALSE) 
   }
 }
 
 # First generate the forecasts, and bind them together
-fc <- bind_rows(k_week_ahead(x, ahead = 7),
-                k_week_ahead(x, ahead = 14),
-                k_week_ahead(x, ahead = 21),
-                k_week_ahead(x, ahead = 28))
+fc <- bind_rows(k_week_ahead(x, ahead = 7, as_of = TRUE),
+                k_week_ahead(x, ahead = 14, as_of = TRUE),
+                k_week_ahead(x, ahead = 21, as_of = TRUE),
+                k_week_ahead(x, ahead = 28, as_of = TRUE),
+                k_week_ahead(x, ahead = 7, as_of = FALSE),
+                k_week_ahead(x, ahead = 14, as_of = FALSE),
+                k_week_ahead(x, ahead = 21, as_of = FALSE),
+                k_week_ahead(x, ahead = 28, as_of = FALSE))
 
 # Now plot some of them, spaced apart by 2 months
 
-p <- ggplot(fc, aes(x = target_date, group = time_value)) +
-  geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), fill = 6, alpha = 0.4) +
+p <- ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
+  geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), alpha = 0.4) +
   geom_line(aes(y = fc_point)) + geom_point(aes(y = fc_point), size = 0.5) + 
   geom_vline(aes(xintercept = time_value), linetype = 2, alpha = 0.5) +
-  facet_wrap(vars(geo_value, as_of), scales = "free_y") +
+  facet_grid(vars(geo_value), vars(as_of), scales = "free") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
-  labs(x = "Date", y = "Reported COVID-19 cases")
+  labs(x = "Date", y = "Reported COVID-19 case rates") + 
+  theme(legend.position = "none")
   
 gginnards::append_layers(
-  p, geom_line(data = z, aes(x = time_value, y = case_rates), 
+  p, geom_line(data = x_latest, aes(x = time_value, y = case_rates), 
                inherit.aes = FALSE, color = "gray50"), pos = "bottom")
 
 ```

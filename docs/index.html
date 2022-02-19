@@ -91,10 +91,12 @@
 <h2 class="hasAnchor">
 <a href="#epi_archive-full-version-history-of-a-data-set" class="anchor"></a><code>epi_archive</code>: full version history of a data set</h2>
 <p>The second main data structure in the package is called <a href="reference/epi_archive.html"><code>epi_archive</code></a>. This is a special class (R6 format) wrapped around a data table that stores the archive (version history) of some signal variables of interest.</p>
-<p>An <code>epi_archive</code> object can be used to generate a snapshot of the associated data set in <code>epi_df</code> format, which represents the most up-to-date values of the signal variables, as of the specified version. This is accomplished by calling the <code>as_of()</code> method for an <code>epi_archive</code> object <code>x</code>, for example:</p>
-<pre><code>x$as_of(as.Date("2022-01-15"))</code></pre>
-<p>to generate an <code>epi_df</code> object containing a data snapshot as of January 15, 2022.</p>
-<p>Sliding computations can also be done over a data archive. This is accomplished by calling the <code>slide()</code> method for an <code>epi_archive</code> object, which works similarly to <code><a href="reference/epi_slide.html">epi_slide()</a></code> for an <code>epi_df</code> object, but with one key difference: for an <code>epi_archive</code> object, the sliding computation at any given reference time t is performed on the <strong>data that would have been available as of t</strong>.</p>
+<p>By convention, functions in the <code>epiprocess</code> package that operate on <code>epi_df</code> objects begin with <code>epx</code> (the “x” is meant to remind you of “archive”). These are just wrapper functions around the public methods for the <code>epi_archive</code> R6 class. For example:</p>
+<ul>
+<li><p><code><a href="reference/epx_as_of.html">epx_as_of()</a></code>, for generating a snapshot in <code>epi_df</code> from the data archive, which represents the most up-to-date values of the signal variables, as of the specified version;</p></li>
+<li><p><code><a href="reference/epx_merge.html">epx_merge()</a></code>, for merging two data archives with each other, with support for filling in missing values via last observation carried forward (LOCF);</p></li>
+<li><p><code><a href="reference/epx_slide.html">epx_slide()</a></code>, for sliding a custom computation to a data archive over local windows in time, much like <code>epi_slide</code> for an <code>epi_df</code> object, but with one key difference: the sliding computation at any given reference time t is performed only on the <strong>data that would have been available as of t</strong>.</p></li>
+</ul>
 </div>
 </div>
   </div>

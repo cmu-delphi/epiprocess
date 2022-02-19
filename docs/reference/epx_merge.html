@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Convert to <code>epi_archive</code> format — as_epi_archive • epiprocess</title>
+<title>Merge two <code>epi_archive</code> objects — epx_merge • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,10 @@
 
 
 
-<meta property="og:title" content="Convert to <code>epi_archive</code> format — as_epi_archive" />
-<meta property="og:description" content="Converts a data frame, data table, or tibble into an epi_archive
-object. See the archive vignette for
+<meta property="og:title" content="Merge two <code>epi_archive</code> objects — epx_merge" />
+<meta property="og:description" content="Merges the underlying data tables in two epi_archive objects, allows for
+post-filling of NA values by last observation carried forward (LOCF), and
+overwrites the first data table with the merged one. See the archive vignette for
 examples." />
 
 
@@ -110,68 +111,59 @@ examples." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Convert to <code>epi_archive</code> format</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/archive.R'><code>R/archive.R</code></a></small>
-    <div class="hidden name"><code>as_epi_archive.Rd</code></div>
+    <h1>Merge two <code>epi_archive</code> objects</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/methods2.R'><code>R/methods2.R</code></a></small>
+    <div class="hidden name"><code>epx_merge.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Converts a data frame, data table, or tibble into an <code>epi_archive</code>
-object. See the <a href='https://cmu-delphi.github.io/epiprocess/articles/archive.html'>archive vignette</a> for
+    <p>Merges the underlying data tables in two <code>epi_archive</code> objects, allows for
+post-filling of <code>NA</code> values by last observation carried forward (LOCF), and
+<strong>overwrites</strong> the first data table with the merged one. See the <a href='https://cmu-delphi.github.io/epiprocess/articles/archive.html'>archive vignette</a> for
 examples.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>as_epi_archive</span>(
-  <span class='no'>x</span>,
-  <span class='no'>geo_type</span>,
-  <span class='no'>time_type</span>,
-  <span class='no'>other_keys</span>,
-  <span class='kw'>additional_metadata</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>()
-)</pre>
+    <pre class="usage"><span class='fu'>epx_merge</span>(<span class='no'>x</span>, <span class='no'>y</span>, <span class='no'>...</span>, <span class='kw'>locf</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>nan</span> <span class='kw'>=</span> <span class='fl'>NA</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>x</th>
-      <td><p>A data frame, data table, or tibble, with columns <code>geo_value</code>,
-<code>time_value</code>, <code>version</code>, and then any additional number of columns.</p></td>
+      <th>x, y</th>
+      <td><p>Two <code>epi_archive</code> objects to join together, or more specifically,
+whose underlying data tables are to be joined together. The data table in
+<code>x</code> will be overwritten with the joined data table. For convenience, we
+also allow <code>y</code> to be passed in directly as a <code>data.table</code> (need not be an
+<code>epi_archive</code> object).</p></td>
     </tr>
     <tr>
-      <th>geo_type</th>
-      <td><p>Type for the geo values. If missing, then the function will
-attempt to infer it from the geo values present; if this fails, then it
-will be set to "custom".</p></td>
+      <th>...</th>
+      <td><p>Named arguments to pass to <code><a href='https://Rdatatable.gitlab.io/data.table/reference/merge.html'>data.table::merge.data.table()</a></code>, which
+is used for the join (with all default settings as in this function). For
+example, passing <code>all = TRUE</code> will perform a full join.</p></td>
     </tr>
     <tr>
-      <th>time_type</th>
-      <td><p>Type for the time values. If missing, then the function will
-attempt to infer it from the time values present; if this fails, then it
-will be set to "custom".</p></td>
+      <th>locf</th>
+      <td><p>Should LOCF be used after joining on all non-key columns? This
+will take the latest version of each signal value and propogate it forward
+to fill in gaps that appear after merging. Default is <code>TRUE</code>.</p></td>
     </tr>
     <tr>
-      <th>other_keys</th>
-      <td><p>Character vector specifying the names of variables in <code>x</code>
-that should be considered key variables (in the language of <code>data.table</code>)
-apart from "geo_value", "time_value", and "version".</p></td>
-    </tr>
-    <tr>
-      <th>additional_metadata</th>
-      <td><p>List of additional metadata to attach to the
-<code>epi_archive</code> object. The metadata will have <code>geo_type</code> and <code>time_type</code>
-fields; named entries from the passed list or will be included as well.</p></td>
+      <th>nan</th>
+      <td><p>Should <code>NaN</code> values be treated as <code>NA</code> values in the post-filling
+step?  Default is <code>NA</code>, which means that they are treated as <code>NA</code> values; if</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An <code>epi_archive</code> object.</p>
+    <p>Nothing; the data table in <code>x</code> is overwritten with the merged one.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>This simply a wrapper around the <code>new()</code> method of the <code>epi_archive</code>
-class, so for example:</p><pre><span class='no'>x</span> <span class='kw'>&amp;</span><span class='no'>lt</span>;- <span class='fu'>as_epi_archive</span>(<span class='no'>df</span>, <span class='kw'>geo_type</span> <span class='kw'>=</span> <span class='st'>"state"</span>, <span class='kw'>time_type</span> <span class='kw'>=</span> <span class='st'>"day"</span>)</pre>
+    <p>This is simply a wrapper around the <code><a href='https://rdrr.io/r/base/merge.html'>merge()</a></code> method of the
+<code>epi_archive</code> class, so if <code>x</code> and <code>y</code> are an <code>epi_archive</code> objects, then:</p><pre><span class='fu'>epx_merge</span>(<span class='no'>x</span>, <span class='no'>y</span>)</pre>
 
-<p>would be equivalent to:</p><pre><span class='no'>x</span> <span class='kw'>&amp;</span><span class='no'>lt</span>;- <span class='no'>epi_archive</span>$<span class='fu'>new</span>(<span class='no'>df</span>, <span class='kw'>geo_type</span> <span class='kw'>=</span> <span class='st'>"state"</span>, <span class='kw'>time_type</span> <span class='kw'>=</span> <span class='st'>"day"</span>)</pre>
+<p>is equivalent to:</p><pre><span class='no'>x</span>$<span class='fu'><a href='https://rdrr.io/r/base/merge.html'>merge</a></span>(<span class='no'>y</span>)</pre>
 
 
   </div>

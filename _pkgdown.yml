@@ -53,9 +53,9 @@ reference:
   - contents:
       - epi_archive
       - as_epi_archive  
-  - title: epa_*() functions
+  - title: epx_*() functions
     desc: Functions that act on an epi_archive object.
   - contents:
-      - epa_as_of
-      - epa_merge
-      - epa_slide
+      - epx_as_of
+      - epx_merge
+      - epx_slide

@@ -1,7 +1,8 @@
 #' Slide a function over variables in an `epi_df` object
 #'
-#' Slides a given function over variables in an `epi_df` object. See the slide
-#' vignette for examples.
+#' Slides a given function over variables in an `epi_df` object. See the [slide
+#' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
+#' examples.
 #'
 #' @param x The `epi_df` object under consideration.
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
@@ -52,9 +53,9 @@
 #' @param names_sep String specifying the separator to use in `tidyr::unnest()`
 #'   when `as_list_col = FALSE`. Default is "_". Using `NULL` drops the prefix
 #'   from `new_col_name` entirely.
-#' @param all_rows If `all_rows = TRUE`, then all the rows of `x` will be kept
-#'   in the output; otherwise, there will be one row in the output for each time
-#'   value in `x` that acts as a reference time value. Default is `FALSE`.
+#' @param all_rows If `all_rows = TRUE`, then all rows of `x` will be kept in
+#'   the output; otherwise, there will be one row for each time value in `x`
+#'   that acts as a reference time value. Default is `FALSE`.
 #' @return An `epi_df` object given by appending a new column to `x`, named
 #'   according to the `new_col_name` argument. 
 #' 
@@ -169,16 +170,16 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
                                         .stops = stops[o])
 
     # If we get back data frames from sliding, each with more than one row, then
-    # make unpack these rows. This will be useful in a case where, say, we don't
-    # group by geo value but return a separate computation per geo value, as
-    # rows of the returned data frame. Then we won't have to do any repetition
-    # in the next step to make the result size stable
+    # below we unpack these rows. This will be useful in a case where, e.g., we
+    # don't group by geo value but return a separate computation per geo value,
+    # as rows of the returned data frame. Then we won't have to do repetition in
+    # the next step to and we still ensure that the result size stable 
     if (sum(o) > 0 && inherits(slide_values[o][[1]], "data.frame") && 
         nrow(slide_values[o][[1]]) > 1) {
       slide_df = dplyr::bind_rows(slide_values)
       slide_values = split(slide_df, 1:nrow(slide_df))
       if (length(slide_values) != nrow(.data_group)) {
-        abort("If a slide computation produces a data frame, it must either have a single row, or else have one row per appearance of the reference time value in the sliding window.")
+        abort("If the slide computation returns a data frame, it must either have a single row, or else have one row per appearance of the reference time value in the local window.")
       }
     }
     
@@ -186,8 +187,8 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
     # of times its corresponding time value appears as a ref time value
     if (length(slide_values) != nrow(.data_group)) {
       counts = .data_group %>%
-        dplyr::count(.data$time_value) %>%
         dplyr::filter(.data$time_value %in% time_values) %>%
+        dplyr::count(.data$time_value) %>%
         dplyr::pull(n)
       slide_values = rep(slide_values, times = counts)
     }
@@ -244,6 +245,8 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
   }
   
   # Unnest if we need to, and return
-  if (!as_list_col) x = unnest(x, !!new_col, names_sep = names_sep)
+  if (!as_list_col) {
+    x = unnest(x, !!new_col, names_sep = names_sep)
+  }
   return(x)
 }

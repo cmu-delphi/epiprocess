@@ -54,5 +54,6 @@ or possibly others), and then a column \code{cor}, which gives the correlation.
 \description{
 Computes correlations between variables in an \code{epi_df} object, allowing for
 grouping by geo value, time value, or any other variables. See the
-correlation vignette for examples.
+\href{https://cmu-delphi.github.io/epiprocess/articles/correlation.html}{correlation vignette}
+for examples.
 }

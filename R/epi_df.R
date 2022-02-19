@@ -41,8 +41,7 @@
 #'   object).
 #'
 #' @section Geo Types:
-#' The following geo types are recognized in an `epi_df`. Their geo coding
-#'   (specification of geo values for each geo type) is also described below.
+#' The following geo types are recognized in an `epi_df`.
 #' 
 #' * `"county"`: each observation corresponds to a U.S. county; coded by 5-digit
 #'   FIPS code. 
@@ -60,8 +59,7 @@
 #' An unrecognizable geo type is labeled "custom".
 #' 
 #' @section Time Types:
-#' The following time types are recognized in an `epi_df`. Their time coding
-#'   (specification of time values for each time type) is also described below.
+#' The following time types are recognized in an `epi_df`.
 #' 
 #' * `"day-time"`: each observation corresponds to a time on a given day
 #'   (measured to the second); coded as a `POSIXct` object, as in
