@@ -143,10 +143,10 @@ ggplot(x, aes(x = time_value, y = total_cases, color = geo_value)) +
   labs(x = "Date", y = "Cumulative COVID-19 cases", color = "State")
 ```
 
-As last example, we'll look at a few more data sets just to show how we might
-get them into `epi_df` format. Data on daily new (not cumulative) SARS cases 
-in Canada in 2003, from the [outbreaks](https://github.com/reconverse/outbreaks)
-package:
+As a last couple examples, we'll look at some more data sets just to show how 
+we might get them into `epi_df` format. Data on daily new (not cumulative) SARS 
+cases in Canada in 2003, from the 
+[outbreaks](https://github.com/reconverse/outbreaks) package:
 
 ```{r}
 x <- outbreaks::sars_canada_2003 %>%
@@ -165,38 +165,34 @@ yrange <- range(x %>% group_by(time_value) %>%
                   summarize(value = sum(value)) %>% pull(value))
 
 ggplot(x, aes(x = time_value, y = value)) +
-  geom_col(aes(y = value, fill = type)) +
+  geom_col(aes(fill = type)) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   scale_y_continuous(breaks = yrange[1]:yrange[2]) +
   labs(x = "Date", y = "SARS cases in Canada", fill = "Type")
 ```
 
-Also from the [outbreaks](https://github.com/reconverse/outbreaks) package, we use the function `as_epi_df` on confirmed cases of ebola in Sierra Leone in 2014.
+Data on new cases of Ebola in Sierra Leone in 2014, from the same package:
 
-```{r,message=FALSE}
-x = outbreaks::ebola_sierraleone_2014 %>%
+```{r, message = FALSE, fig.width = 9, fig.height = 6}
+x <- outbreaks::ebola_sierraleone_2014 %>%
   mutate(
-    cases=ifelse(status=='confirmed',1,0),
+    cases = ifelse(status == "confirmed", 1, 0),
     province = case_when(
-      district %in% c('Kailahun','Kenema','Kono') ~ "Eastern",
-      district %in% c('Bombali','Kambia','Koinadugu',
-                      'Port Loko','Tonkolili') ~ 'Northern',
-      district %in% c('Bo','Bonthe','Moyamba','Pujehun') ~ 'Sourthern',
-      district %in% c('Western Rural','Western Urban') ~ 'Western')) %>% 
-  select(geo_value=province,
+      district %in% c("Kailahun", "Kenema", "Kono") ~ "Eastern",
+      district %in% c("Bombali", "Kambia", "Koinadugu",
+                      "Port Loko", "Tonkolili") ~ "Northern",
+      district %in% c("Bo", "Bonthe", "Moyamba", "Pujehun") ~ "Sourthern",
+      district %in% c("Western Rural", "Western Urban") ~ "Western")) %>% 
+  select(geo_value = province,
          time_value = date_of_onset,
          cases) %>% filter(cases==1) %>%
-  group_by(geo_value,time_value) %>% 
-  summarise(cases=sum(cases)) %>%
-  as_epi_df(geo_type='province')
+  group_by(geo_value, time_value) %>% 
+  summarise(cases = sum(cases)) %>%
+  as_epi_df(geo_type="province")
 
-ggplot(x, aes(x = time_value, y = cases,fill=geo_value)) + 
-  geom_col() + facet_grid(geo_value~.)+
+ggplot(x, aes(x = time_value, y = cases)) + 
+  geom_col(aes(fill = geo_value), show.legend = FALSE) + 
+  facet_wrap(~ geo_value, scales = "free_y") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
-  labs(x = "Date", y = "Confirmed cases of ebola")+
-  guides(fill=guide_legend(title="Province"))
+  labs(x = "Date", y = "Confirmed cases of Ebola in Sierra Leone") 
 ```
-
-
-
-

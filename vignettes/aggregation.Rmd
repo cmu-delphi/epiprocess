@@ -224,7 +224,4 @@ head(xt_filled_month)
 
 ## Geographic aggregation  
 
-Geo stuff:
-
-- similar? but without the `tsibble` utilities, we would need to implement some 
-  of this on our own and demo it in the vignette
+TODO

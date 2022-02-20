@@ -88,7 +88,37 @@ interest." />
   </a>
 </li>
 <li>
+  <a href="../articles/epiprocess.html">Get started</a>
+</li>
+<li>
   <a href="../reference/index.html">Reference</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/slide.html">Slide a computation over signal values</a>
+    </li>
+    <li>
+      <a href="../articles/growth_rate.html">Estimate growth rates in signals</a>
+    </li>
+    <li>
+      <a href="../articles/correlation.html">Correlate signals over space and time</a>
+    </li>
+    <li>
+      <a href="../articles/aggregation.html">Aggregate signals over space and time</a>
+    </li>
+    <li>
+      <a href="../articles/outliers.html">Detect and correct outliers in signals</a>
+    </li>
+    <li>
+      <a href="../articles/archive.html">Work with archive objects and data revisions</a>
+    </li>
+  </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -179,10 +209,8 @@ bits of information to convey about the data set at hand.</p>
 <p>An <code>epi_archive</code> object can be used to generate a snapshot of the data in
 <code>epi_df</code> format, which represents the most up-to-date values of the signal
 variables, as of the specified version. This is accomplished by calling the
-<code>as_of()</code> method for an <code>epi_archive</code> object <code>x</code>, for example:</p><pre><span class='no'>x</span>$<span class='fu'>as_of</span>(<span class='fu'><a href='https://rdrr.io/r/base/as.Date.html'>as.Date</a></span>(<span class='st'>"2022-01-15"</span>))</pre>
-
-<p>to generate a snapshot as of January 15, 2022. More details on the
-<code>as_of()</code> method are documented in the wrapper function <code><a href='epx_as_of.html'>epx_as_of()</a></code>.</p>
+<code>as_of()</code> method for an <code>epi_archive</code> object <code>x</code>. More details on this
+method are documented in the wrapper function <code><a href='epix_as_of.html'>epix_as_of()</a></code>.</p>
     <h2 class="hasAnchor" id="sliding-computations"><a class="anchor" href="#sliding-computations"></a>Sliding Computations</h2>
 
     
@@ -194,7 +222,7 @@ the way <code><a href='epi_slide.html'>epi_slide()</a></code> works for an <code
 difference: it is version-aware. That is, for an <code>epi_archive</code> object, the
 sliding computation at any given reference time point t is performed on
 <strong>data that would have been available as of t</strong>. More details on <code>slide()</code>
-are documented in the wrapper function <code><a href='epx_slide.html'>epx_slide()</a></code>.</p>
+are documented in the wrapper function <code><a href='epix_slide.html'>epix_slide()</a></code>.</p>
     <h2 class="hasAnchor" id="methods"><a class="anchor" href="#methods"></a>Methods</h2>
 
     
@@ -246,20 +274,20 @@ fields; named entries from the passed list or will be included as well.</p></dd>
 <p><hr>
 <a id="method-as_of"></a></p><h3>Method <code>as_of()</code></h3>
 <p>Generates a snapshot in <code>epi_df</code> format as of a given version.
-See the documentation for the wrapper function <code><a href='epx_as_of.html'>epx_as_of()</a></code> for details.</p><h3>Usage</h3>
+See the documentation for the wrapper function <code><a href='epix_as_of.html'>epix_as_of()</a></code> for details.</p><h3>Usage</h3>
 <p><div class="r"></p><pre><span class='no'>epi_archive</span>$<span class='fu'>as_of</span>(<span class='no'>max_version</span>, <span class='kw'>min_time_value</span> <span class='kw'>=</span> -<span class='fl'>Inf</span>)</pre><p></div></p>
 
 <p><hr>
 <a id="method-merge"></a></p><h3>Method <code><a href='https://rdrr.io/r/base/merge.html'>merge()</a></code></h3>
 <p>Merges another <code>data.table</code> with the current one, and allows for
 a post-filling of <code>NA</code> values by last observation carried forward (LOCF).
-See the documentation for the wrapper function <code><a href='epx_merge.html'>epx_merge()</a></code> for details.</p><h3>Usage</h3>
+See the documentation for the wrapper function <code><a href='epix_merge.html'>epix_merge()</a></code> for details.</p><h3>Usage</h3>
 <p><div class="r"></p><pre><span class='no'>epi_archive</span>$<span class='fu'><a href='https://rdrr.io/r/base/merge.html'>merge</a></span>(<span class='no'>y</span>, <span class='no'>...</span>, <span class='kw'>locf</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>nan</span> <span class='kw'>=</span> <span class='fl'>NA</span>)</pre><p></div></p>
 
 <p><hr>
 <a id="method-slide"></a></p><h3>Method <code>slide()</code></h3>
 <p>Slides a given function over variables in an <code>epi_archive</code>
-object. See the documentation for the wrapper function <code><a href='epx_as_of.html'>epx_as_of()</a></code> for
+object. See the documentation for the wrapper function <code><a href='epix_as_of.html'>epix_as_of()</a></code> for
 details.</p><h3>Usage</h3>
 <p><div class="r"></p><pre><span class='no'>epi_archive</span>$<span class='fu'>slide</span>(
   <span class='no'>f</span>,
@@ -299,7 +327,7 @@ details.</p><h3>Usage</h3>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Rafael Catoia, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

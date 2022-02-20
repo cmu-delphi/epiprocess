@@ -158,6 +158,15 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
                            complete,
                            all_rows,
                            new_col) {
+    # Figure out which reference time values appear in the data group in the
+    # first place (we need to do this because it could differ based on the
+    # group, hence the setup/checks for the reference time values based on all
+    # the data could still be off)
+    o = time_values %in% .data_group$time_value
+    starts = starts[o]
+    stops = stops[o]
+    time_values = time_values[o] 
+    
     # Figure out which windows are complete
     slide_values = rep(NA, length(starts))
     o = !complete | (stops - starts == n-1)
@@ -182,7 +191,7 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
         abort("If the slide computation returns a data frame, it must either have a single row, or else have one row per appearance of the reference time value in the local window.")
       }
     }
-    
+
     # Important: make this size stable, by repeating each slide value the number
     # of times its corresponding time value appears as a ref time value
     if (length(slide_values) != nrow(.data_group)) {

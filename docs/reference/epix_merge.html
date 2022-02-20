@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Start, middle, and end extrators — Start • epiprocess</title>
+<title>Merge two <code>epi_archive</code> objects — epix_merge • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,11 @@
 
 
 
-<meta property="og:title" content="Start, middle, and end extrators — Start" />
-<meta property="og:description" content="These are just convenience functions for extracting the start, middle, and
-end of a sequence." />
+<meta property="og:title" content="Merge two <code>epi_archive</code> objects — epix_merge" />
+<meta property="og:description" content="Merges the underlying data tables in two epi_archive objects, allows for
+post-filling of NA values by last observation carried forward (LOCF), and
+overwrites the first data table with the merged one. See the archive vignette for
+examples." />
 
 
 
@@ -99,19 +101,22 @@ end of a sequence." />
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/slide.html">1. Slide a computation over signal values</a>
+      <a href="../articles/slide.html">Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/pct_change.html">2. Estimate growth rates in signals</a>
+      <a href="../articles/growth_rate.html">Estimate growth rates in signals</a>
     </li>
     <li>
-      <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
+      <a href="../articles/correlation.html">Correlate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/aggregation.html">4. Aggregate signals over space and time</a>
+      <a href="../articles/aggregation.html">Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/outliers.html">5. Detect and correct outliers in signals</a>
+      <a href="../articles/outliers.html">Detect and correct outliers in signals</a>
+    </li>
+    <li>
+      <a href="../articles/archive.html">Work with archive objects and data revisions</a>
     </li>
   </ul>
 </li>
@@ -136,22 +141,59 @@ end of a sequence." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Start, middle, and end extrators</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/utils.R'><code>R/utils.R</code></a></small>
-    <div class="hidden name"><code>Start.Rd</code></div>
+    <h1>Merge two <code>epi_archive</code> objects</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/methods2.R'><code>R/methods2.R</code></a></small>
+    <div class="hidden name"><code>epix_merge.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>These are just convenience functions for extracting the start, middle, and
-end of a sequence.</p>
+    <p>Merges the underlying data tables in two <code>epi_archive</code> objects, allows for
+post-filling of <code>NA</code> values by last observation carried forward (LOCF), and
+<strong>overwrites</strong> the first data table with the merged one. See the <a href='https://cmu-delphi.github.io/epiprocess/articles/archive.html'>archive vignette</a> for
+examples.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>Start</span>(<span class='no'>x</span>)
+    <pre class="usage"><span class='fu'>epix_merge</span>(<span class='no'>x</span>, <span class='no'>y</span>, <span class='no'>...</span>, <span class='kw'>locf</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>nan</span> <span class='kw'>=</span> <span class='fl'>NA</span>)</pre>
 
-<span class='fu'>Middle</span>(<span class='no'>x</span>, <span class='kw'>floor</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>x, y</th>
+      <td><p>Two <code>epi_archive</code> objects to join together, or more specifically,
+whose underlying data tables are to be joined together. The data table in
+<code>x</code> will be overwritten with the joined data table. For convenience, we
+also allow <code>y</code> to be passed in directly as a <code>data.table</code> (need not be an
+<code>epi_archive</code> object).</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Named arguments to pass to <code><a href='https://Rdatatable.gitlab.io/data.table/reference/merge.html'>data.table::merge.data.table()</a></code>, which
+is used for the join (with all default settings as in this function). For
+example, passing <code>all = TRUE</code> will perform a full join.</p></td>
+    </tr>
+    <tr>
+      <th>locf</th>
+      <td><p>Should LOCF be used after joining on all non-key columns? This
+will take the latest version of each signal value and propogate it forward
+to fill in gaps that appear after merging. Default is <code>TRUE</code>.</p></td>
+    </tr>
+    <tr>
+      <th>nan</th>
+      <td><p>Should <code>NaN</code> values be treated as <code>NA</code> values in the post-filling
+step?  Default is <code>NA</code>, which means that they are treated as <code>NA</code> values; if</p></td>
+    </tr>
+    </table>
 
-<span class='fu'>End</span>(<span class='no'>x</span>)</pre>
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
+    <p>Nothing; the data table in <code>x</code> is overwritten with the merged one.</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>This is simply a wrapper around the <code><a href='https://rdrr.io/r/base/merge.html'>merge()</a></code> method of the
+<code>epi_archive</code> class, so if <code>x</code> and <code>y</code> are an <code>epi_archive</code> objects, then:</p><pre><span class='fu'>epix_merge</span>(<span class='no'>x</span>, <span class='no'>y</span>)</pre>
+
+<p>is equivalent to:</p><pre><span class='no'>x</span>$<span class='fu'><a href='https://rdrr.io/r/base/merge.html'>merge</a></span>(<span class='no'>y</span>)</pre>
 
 
   </div>
@@ -165,7 +207,7 @@ end of a sequence.</p>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Rafael Catoia, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

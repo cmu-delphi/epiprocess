@@ -46,7 +46,37 @@
   </a>
 </li>
 <li>
+  <a href="articles/epiprocess.html">Get started</a>
+</li>
+<li>
   <a href="reference/index.html">Reference</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+<li>
+      <a href="articles/slide.html">Slide a computation over signal values</a>
+    </li>
+    <li>
+      <a href="articles/growth_rate.html">Estimate growth rates in signals</a>
+    </li>
+    <li>
+      <a href="articles/correlation.html">Correlate signals over space and time</a>
+    </li>
+    <li>
+      <a href="articles/aggregation.html">Aggregate signals over space and time</a>
+    </li>
+    <li>
+      <a href="articles/outliers.html">Detect and correct outliers in signals</a>
+    </li>
+    <li>
+      <a href="articles/archive.html">Work with archive objects and data revisions</a>
+    </li>
+  </ul>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
@@ -91,11 +121,11 @@
 <h2 class="hasAnchor">
 <a href="#epi_archive-full-version-history-of-a-data-set" class="anchor"></a><code>epi_archive</code>: full version history of a data set</h2>
 <p>The second main data structure in the package is called <a href="reference/epi_archive.html"><code>epi_archive</code></a>. This is a special class (R6 format) wrapped around a data table that stores the archive (version history) of some signal variables of interest.</p>
-<p>By convention, functions in the <code>epiprocess</code> package that operate on <code>epi_df</code> objects begin with <code>epx</code> (the “x” is meant to remind you of “archive”). These are just wrapper functions around the public methods for the <code>epi_archive</code> R6 class. For example:</p>
+<p>By convention, functions in the <code>epiprocess</code> package that operate on <code>epi_df</code> objects begin with <code>epix</code> (the “x” is meant to remind you of “archive”). These are just wrapper functions around the public methods for the <code>epi_archive</code> R6 class. For example:</p>
 <ul>
-<li><p><code><a href="reference/epx_as_of.html">epx_as_of()</a></code>, for generating a snapshot in <code>epi_df</code> from the data archive, which represents the most up-to-date values of the signal variables, as of the specified version;</p></li>
-<li><p><code><a href="reference/epx_merge.html">epx_merge()</a></code>, for merging two data archives with each other, with support for filling in missing values via last observation carried forward (LOCF);</p></li>
-<li><p><code><a href="reference/epx_slide.html">epx_slide()</a></code>, for sliding a custom computation to a data archive over local windows in time, much like <code>epi_slide</code> for an <code>epi_df</code> object, but with one key difference: the sliding computation at any given reference time t is performed only on the <strong>data that would have been available as of t</strong>.</p></li>
+<li><p><code><a href="reference/epix_as_of.html">epix_as_of()</a></code>, for generating a snapshot in <code>epi_df</code> from the data archive, which represents the most up-to-date values of the signal variables, as of the specified version;</p></li>
+<li><p><code><a href="reference/epix_merge.html">epix_merge()</a></code>, for merging two data archives with each other, with support for filling in missing values via last observation carried forward (LOCF);</p></li>
+<li><p><code><a href="reference/epix_slide.html">epix_slide()</a></code>, for sliding a custom computation to a data archive over local windows in time, much like <code>epi_slide</code> for an <code>epi_df</code> object, but with one key difference: the sliding computation at any given reference time t is performed only on the <strong>data that would have been available as of t</strong>.</p></li>
 </ul>
 </div>
 </div>
@@ -123,6 +153,7 @@
 <h2>Developers</h2>
 <ul class="list-unstyled">
 <li>Logan Brooks <br><small class="roles"> Author </small>  </li>
+<li>Rafael Catoia <br><small class="roles"> Author </small>  </li>
 <li>Evan Ray <br><small class="roles"> Author </small>  </li>
 <li>Ryan Tibshirani <br><small class="roles"> Author, maintainer </small>  </li>
 <li><a href="authors.html">All authors...</a></li>
@@ -134,7 +165,7 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Rafael Catoia, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>4. Aggregate signals over space and time • epiprocess</title>
+<title>Aggregate signals over space and time • epiprocess</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="4. Aggregate signals over space and time">
+<script src="../pkgdown.js"></script><meta property="og:title" content="Aggregate signals over space and time">
 <meta property="og:description" content="epiprocess">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -57,19 +57,22 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/slide.html">1. Slide a computation over signal values</a>
+      <a href="../articles/slide.html">Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/growth_rate.html">2. Estimate growth rates in signals</a>
+      <a href="../articles/growth_rate.html">Estimate growth rates in signals</a>
     </li>
     <li>
-      <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
+      <a href="../articles/correlation.html">Correlate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/aggregation.html">4. Aggregate signals over space and time</a>
+      <a href="../articles/aggregation.html">Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/outliers.html">5. Detect and correct outliers in signals</a>
+      <a href="../articles/outliers.html">Detect and correct outliers in signals</a>
+    </li>
+    <li>
+      <a href="../articles/archive.html">Work with archive objects and data revisions</a>
     </li>
   </ul>
 </li>
@@ -94,7 +97,7 @@
       </header><script src="aggregation_files/header-attrs-2.10/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>4. Aggregate signals over space and time</h1>
+      <h1 data-toc-skip>Aggregate signals over space and time</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/main/vignettes/aggregation.Rmd"><code>vignettes/aggregation.Rmd</code></a></small>
@@ -127,7 +130,7 @@
 <div id="converting-to-tsibble-format" class="section level2">
 <h2 class="hasAnchor">
 <a href="#converting-to-tsibble-format" class="anchor"></a>Converting to <code>tsibble</code> format</h2>
-<p>For manipulating and wrangling time series data, the <a href="https://tsibble.tidyverts.org/index.html"><code>tsibble</code></a> already provides a whole bunch of useful tools. A <code>tsibble</code> is basically a tibble (data frame) but with two specially-marked columns: an <em>index</em> column representing the time variable (defining an order from past to present), and a <em>key</em> column identifying a unique observational unit for each time point. In fact, the key in a <code>tsibble</code> can be made up of any number of columns, not just a single one.</p>
+<p>For manipulating and wrangling time series data, the <a href="https://tsibble.tidyverts.org/index.html"><code>tsibble</code></a> already provides a whole bunch of useful tools. A tsibble object (formerly, of class <code>tbl_ts</code>) is basically a tibble (data frame) but with two specially-marked columns: an <strong>index</strong> column representing the time variable (defining an order from past to present), and a <strong>key</strong> column identifying a unique observational unit for each time point. In fact, the key can be made up of any number of columns, not just a single one.</p>
 <p>In an <code>epi_df</code> object, the index variable is <code>time_value</code>, and the key variable is typically <code>geo_value</code> (though this need not always be the case: for example, if we have an age group variable as another column, then this could serve as a second key variable). The <code>epiprocess</code> package thus provides an implementation of <code><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html">as_tsibble()</a></code> for <code>epi_df</code> objects, which sets these variables according to these defaults.</p>
 <div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">tsibble</span>)
 
@@ -182,7 +185,7 @@
 <div id="detecting-and-filling-time-gaps" class="section level2">
 <h2 class="hasAnchor">
 <a href="#detecting-and-filling-time-gaps" class="anchor"></a>Detecting and filling time gaps</h2>
-<p>One of the major advantages of the <code>tsibble</code> package is its ability to handle <em>implicit gaps</em> in time series data. In other words, it can infer what time scale we’re interested in (say, daily data), and detect apparent gaps (say, when values are reported on January 1 and 3 but not January 2). We can subsequently use functionality to make these missing entries explicit, which will generally help avoid bugs in further downstream data processing tasks.</p>
+<p>One of the major advantages of the <code>tsibble</code> package is its ability to handle <strong>implicit gaps</strong> in time series data. In other words, it can infer what time scale we’re interested in (say, daily data), and detect apparent gaps (say, when values are reported on January 1 and 3 but not January 2). We can subsequently use functionality to make these missing entries explicit, which will generally help avoid bugs in further downstream data processing tasks.</p>
 <p>Let’s first remove certain dates from our data set to create gaps:</p>
 <div class="sourceCode" id="cb16"><html><body><pre class="r"><span class="co"># First make geo value more readable for tables, plots, etc.</span>
 <span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
@@ -278,7 +281,7 @@
 <pre><code>## An `epi_df` object, with metadata:
 ## * geo_type  = nation
 ## * time_type = day
-## * as_of     = 2022-02-12 20:21:49
+## * as_of     = 2022-02-19 20:54:13
 ## 
 ## # A tibble: 4 × 4
 ## # Groups:   geo_value [1]
@@ -298,7 +301,7 @@
 <pre><code>## An `epi_df` object, with metadata:
 ## * geo_type  = nation
 ## * time_type = day
-## * as_of     = 2022-02-12 20:21:49
+## * as_of     = 2022-02-19 20:54:13
 ## 
 ## # A tibble: 7 × 4
 ## # Groups:   geo_value [1]
@@ -355,10 +358,7 @@
 <div id="geographic-aggregation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#geographic-aggregation" class="anchor"></a>Geographic aggregation</h2>
-<p>Geo stuff:</p>
-<ul>
-<li>similar? but without the <code>tsibble</code> utilities, we would need to implement some of this on our own and demo it in the vignette</li>
-</ul>
+<p>TODO</p>
 </div>
   </div>
 
@@ -373,7 +373,7 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Rafael Catoia, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

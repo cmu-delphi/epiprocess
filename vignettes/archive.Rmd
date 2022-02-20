@@ -316,11 +316,7 @@ forecast COVID-19 case rates 7 days into the future.
 fc_time_values = seq(as.Date("2020-08-01"), 
                      as.Date("2021-12-01"), 
                      by = "1 month")
-document()
-x <- dv %>%
-  select(geo_value, time_value, version = issue, percent_cli = value) %>%
-  as_epi_archive()
-epix_merge(x, y, all = TRUE)
+
 z <- epix_slide(x, fc = prob_arx(x = percent_cli, y = case_rates), n = 120, 
                 ref_time_values = fc_time_values, group_by = geo_value)
 

@@ -141,7 +141,7 @@ z <- map_dfr(lags, function(lag) {
 
 z %>%
   group_by(lag) %>%
-  summarize(mean = Mean(cor)) %>%
+  summarize(mean = mean(cor, na.rm = TRUE)) %>%
   ggplot(aes(x = lag, y = mean)) + 
   geom_line() + geom_point() +
   labs(x = "Lag", y = "Mean correlation")
@@ -149,4 +149,4 @@ z %>%
 
 We can see that some pretty clear curvature here in the mean correlation between 
 case and death rates (where the correlations come from grouping by geo value) as
-a function of lag. The maximum occurs at a lag of somewhere around 17 days.
+a function of lag. The maximum occurs at a lag of somewhere around 18 days.

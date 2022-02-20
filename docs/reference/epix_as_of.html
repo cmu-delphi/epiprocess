@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>epiprocess: Tools for basic signal processing in epidemiology — epiprocess • epiprocess</title>
+<title>Generate a snapshot from an <code>epi_archive</code> object — epix_as_of • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,10 @@
 
 
 
-<meta property="og:title" content="epiprocess: Tools for basic signal processing in epidemiology — epiprocess" />
-<meta property="og:description" content="This package introduces a common data structure for epidemiological data sets
-measured over space and time, and offers associated utilities to perform
-basic signal processing tasks." />
+<meta property="og:title" content="Generate a snapshot from an <code>epi_archive</code> object — epix_as_of" />
+<meta property="og:description" content="Generates a snapshot in epi_df format from an epi_archive object, as of a
+given version. See the archive vignette for
+examples." />
 
 
 
@@ -140,18 +140,47 @@ basic signal processing tasks." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>epiprocess: Tools for basic signal processing in epidemiology</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/epiprocess.R'><code>R/epiprocess.R</code></a></small>
-    <div class="hidden name"><code>epiprocess.Rd</code></div>
+    <h1>Generate a snapshot from an <code>epi_archive</code> object</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/methods2.R'><code>R/methods2.R</code></a></small>
+    <div class="hidden name"><code>epix_as_of.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>This package introduces a common data structure for epidemiological data sets
-measured over space and time, and offers associated utilities to perform
-basic signal processing tasks.</p>
+    <p>Generates a snapshot in <code>epi_df</code> format from an <code>epi_archive</code> object, as of a
+given version. See the <a href='https://cmu-delphi.github.io/epiprocess/articles/archive.html'>archive vignette</a> for
+examples.</p>
     </div>
 
+    <pre class="usage"><span class='fu'>epix_as_of</span>(<span class='no'>x</span>, <span class='no'>max_version</span>, <span class='kw'>min_time_value</span> <span class='kw'>=</span> -<span class='fl'>Inf</span>)</pre>
 
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>max_version</th>
+      <td><p>Time value specifying the max version to permit in the
+snapshot. That is, the snapshot will comprise the unique rows of the
+current archive data that represent the most up-to-date signal values, as
+of the specified <code>max_version</code> (and whose time values are at least
+<code>min_time_value</code>.)</p></td>
+    </tr>
+    <tr>
+      <th>min_time_value</th>
+      <td><p>Time value specifying the min time value to permit in
+the snapshot. Default is <code>-Inf</code>, which effectively means that there is no
+minimum considered.</p></td>
+    </tr>
+    </table>
+
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>An <code>epi_df</code> object.</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>This is simply a wrapper around the <code>as_of()</code> method of the
+<code>epi_archive</code> class, so if <code>x</code> is an <code>epi_archive</code> object, then:</p><pre><span class='fu'>epix_as_of</span>(<span class='no'>x</span>, <span class='kw'>max_version</span> <span class='kw'>=</span> <span class='no'>v</span>)</pre>
+
+<p>is equivalent to:</p><pre><span class='no'>x</span>$<span class='fu'>as_of</span>(<span class='kw'>max_version</span> <span class='kw'>=</span> <span class='no'>v</span>)</pre>
 
 
   </div>
