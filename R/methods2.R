@@ -18,7 +18,7 @@
 #' @details This is simply a wrapper around the `as_of()` method of the
 #'   `epi_archive` class, so if `x` is an `epi_archive` object, then: 
 #'   ```
-#'   epx_as_of(x, max_version = v)
+#'   epix_as_of(x, max_version = v)
 #'   ```
 #'   is equivalent to:
 #'   ```
@@ -27,7 +27,7 @@
 #' 
 #' @importFrom rlang abort
 #' @export 
-epx_as_of = function(x, max_version, min_time_value = -Inf) {
+epix_as_of = function(x, max_version, min_time_value = -Inf) {
   if (!inherits(x, "epi_archive")) abort("`x` must be of class `epi_archive`.")
   return(x$as_of(max_version, min_time_value))
 }
@@ -59,7 +59,7 @@ epx_as_of = function(x, max_version, min_time_value = -Inf) {
 #' @details This is simply a wrapper around the `merge()` method of the
 #'   `epi_archive` class, so if `x` and `y` are an `epi_archive` objects, then:
 #'   ```
-#'   epx_merge(x, y)
+#'   epix_merge(x, y)
 #'   ```
 #'   is equivalent to:
 #'   ```
@@ -68,7 +68,7 @@ epx_as_of = function(x, max_version, min_time_value = -Inf) {
 #' 
 #' @importFrom rlang abort
 #' @export
-epx_merge = function(x, y, ..., locf = TRUE, nan = NA) {
+epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
   if (!inherits(x, "epi_archive")) abort("`x` must be of class `epi_archive`.")
   return(x$merge(y, ..., locf = locf, nan = nan))
 }
@@ -77,8 +77,8 @@ epx_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'
 #' Slides a given function over variables in an `epi_archive` object. This
 #' behaves similarly to `epi_slide()`, with the key exception that it is
-#' **version-aware**: the sliding computation at any given reference time point
-#' t is performed on **data that would have been available as of t**. See the
+#' version-aware: the sliding computation at any given reference time t is
+#' performed on **data that would have been available as of t**. See the
 #' [archive
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 #' examples.
@@ -134,11 +134,11 @@ epx_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'   column named according to the `new_col_name` argument, containing the slide
 #'   values.
 #'
-#' @details Unlike `epi_slide()`, windows in `epx_slide()` are **always
+#' @details Unlike `epi_slide()`, windows in `epix_slide()` are **always
 #'   right-aligned**. Another distinction is the `by` argument, which used to
 #'   specify the grouping upfront (whereas for an `epi_df`, this would be
 #'   accomplished by a call to `dplyr::group_by()` that precedes a call to
-#'   `epi_df()`). Apart from this, the interfaces between `epx_slide()` and
+#'   `epi_df()`). Apart from this, the interfaces between `epix_slide()` and
 #'   `epi_slide()` are altogether similar.
 #' 
 #' The current function can be considerably slower than `epi_slide()`, for two
@@ -152,23 +152,23 @@ epx_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #' Finally, this is simply a wrapper around the `slide()` method of the
 #'   `epi_archive` class, so if `x` is an `epi_archive` object, then: 
 #'   ```
-#'   epx_slide(x, new_var = comp(old_var), n = 120)
+#'   epix_slide(x, new_var = comp(old_var), n = 120)
 #'   ```
 #'   is equivalent to:
 #'   ```
 #'   x$slide(x, new_var = comp(old_var), n = 120)
 #'   ```
 #' 
-#' @importFrom rlang abort
+#' @importFrom rlang abort enquo
 #' @export
-epx_slide = function(f, ..., n = 7, group_by, ref_time_values,
-                     time_step, complete = FALSE,
-                     new_col_name = "slide_value",
-                     as_list_col = FALSE, names_sep = "_",
-                     all_rows = FALSE) {
+epix_slide = function(x, f, ..., n = 7, group_by, ref_time_values,
+                      time_step, complete = FALSE,
+                      new_col_name = "slide_value",
+                      as_list_col = FALSE, names_sep = "_",
+                      all_rows = FALSE) {
   if (!inherits(x, "epi_archive")) abort("`x` must be of class `epi_archive`.")
   return(x$slide(f, ..., n = n,
-                 group_by = group_by,
+                 group_by = enquo(group_by),
                  ref_time_values = ref_time_values,
                  time_step = time_step,
                  complete = complete,

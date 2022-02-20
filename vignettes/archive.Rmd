@@ -90,7 +90,7 @@ key(x$DT)
 ```
  
 In general, last observation carried forward (LOCF) is used to data in between
-recorded versions.  **A word of caution:** R6 objects, unlike most other objects
+recorded versions. **A word of caution:** R6 objects, unlike most other objects
 in R, have reference semantics. An important consequence of this is that objects
 are not copied when modified.
    
@@ -126,10 +126,13 @@ call (as it did in the case above).
 
 A key method of an `epi_archive` class is `as_of()`, which generates a snapshot
 of the archive in `epi_df` format. This represents the most up-to-date values of
-the signal variables as of a given version.
+the signal variables as of a given version. This can be accessed via `x$as_of()`
+for an `epi_archive` object `x`, but the package also provides a simple wrapper 
+function `epix_as_of()` since this is likely a more familiar interface for users
+not familiar with R6 (or object-oriented programming).
 
 ```{r}
-x_snapshot <- x$as_of(max_version = as.Date("2021-06-01"))
+x_snapshot <- epix_as_of(x, max_version = as.Date("2021-06-01"))
 class(x_snapshot)
 head(x_snapshot)
 max(x_snapshot$time_value)
@@ -144,12 +147,12 @@ object has the version date recorded in the `as_of` field.
 
 Using the maximum of the `version` column in the underlying data table in an
 `epi_archive` object itself generates a snapshot of the latest values of signal
-variables in the entire archive. The `as_of()` function issues a warning in this
-case, since updates to the current version may still come in at a later point in
-time, due to various reasons like synchronization issues.
+variables in the entire archive. The `epix_as_of()` function issues a warning in
+this case, since updates to the current version may still come in at a later 
+point in time, due to various reasons, such as synchronization issues.
 
 ```{r}
-x_latest <- x$as_of(max_version = max(x$DT$version))
+x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 ```
 
 Below, we pull several snapshots from the archive, spaced one month apart. We
@@ -157,7 +160,7 @@ overlay the corresponding signal curves as colored lines, with the version dates
 marked by dotted vertical lines, and draw the latest curve in black (from the 
 latest snapshot `x_latest` that the archive can provide).
 
-```{r fig.width = 8, fig.height = 7}
+```{r, fig.width = 8, fig.height = 7}
 library(purrr)
 library(ggplot2)
 theme_set(theme_bw())
@@ -165,7 +168,7 @@ theme_set(theme_bw())
 self_max = max(x$DT$version)
 versions = seq(as.Date("2020-06-01"), self_max - 1, by = "1 month")
 snapshots <- map_dfr(versions, function(v) { 
-  x$as_of(max_version = v) %>% mutate(version = v)
+  epix_as_of(x, max_version = v) %>% mutate(version = v)
 }) %>%
   bind_rows(x_latest %>% mutate(version = self_max)) %>%
   mutate(latest = version == self_max)
@@ -195,15 +198,27 @@ quite as dramatically. Modeling the revision process, which is often called
 <!-- todo: refer to some project/code? perhaps we should think about writing a
  function in `epiprocess` or even a separate package? -->
 
-# Sliding version-aware computations
-    
-Next we demonstrate another key method of `epi_archive`, which is the `slide()`
-method. It works just like `epi_slide()` does for an `epi_df` object, but with
-one key difference: it performs version-aware computations. That is, for the 
-computation at any given reference time t, it uses only **data that would have 
-been available as of t**.
+## Merging `epi_archive` objects 
 
-To demonstrate this, we're going to ...
+Now we demonstrate how to merge the underlying data tables in two `epi_archive`
+objects together. The `epi_archive` class provides a method `merge()` precisely
+for this purpose. The wrapper function is called `epix_merge()`; as before, this
+is just offered as a matter of convenience/familiarity for some users. Below we
+merge the working `epi_archive` of versioned percentage CLI from outpatient
+visits to another one of versioned COVID-19 case reporting data, which we fetch
+the from the [COVIDcast
+API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/), on the
+rate scale (counts per 100,000 people in the population).
+
+When merging archives, we typically want to perform a *full join*, otherwise we
+will be throwing out versioned data from one table or the other.  This is
+accomplished by setting `all = TRUE` in the call to `epix_merge()`. Furthermore,
+this function provides an option for filling `NA` values via LOCF by setting
+`locf = TRUE`. In general, unless two data tables have the exact same pattern of
+updates, we will get `NA` values in the signals after performing a full join.
+Because the original data archives are stored in LOCF (last observation carried
+forward) format in the first place, it generally makes sense to perform `NA`
+filling after merging using LOCF. Therefore `locf = TRUE` is the default.
 
 ```{r}
 y <- covidcast_signal("jhu-csse", 
@@ -216,16 +231,39 @@ y <- covidcast_signal("jhu-csse",
   select(geo_value, time_value, version = issue, case_rates = value) %>%
   as_epi_archive()
 
-# Merge 
-x$merge(y, all = TRUE)
+epix_merge(x, y, all = TRUE)
 print(x)
 head(x$DT)
 ```
 
+Importantly, as we can see, the way `epix_merge()` works is that it
+**overwrites** the data table in the first `epi_archive` object `x` by the
+merged data table.
+
+## Sliding version-aware computations
+    
+Lastly, we demonstrate another key method of the `epi_archive` class, which is
+the `slide()` method. It works just like `epi_slide()` does for an `epi_df`
+object, but with one key difference: it performs version-aware computations.
+That is, for the computation at any given reference time t, it only uses **data
+that would have been available as of t**. The wrapper function is called
+`epix_slide()`; again, this is just for convenience/familiarity---and its 
+interface is purposely designed mirror that of `epi_slide()` for `epi_df`
+objects.
+
+For the demonstration, we'll revisit the forecasting example from the [slide 
+vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html), and now
+we'll build a forecaster that uses properly-versioned data (that would have been
+available in real-time) to forecast future COVID-19 case rates from current and
+past COVID-19 case rates, as well as current and past values of the outpatient 
+CLI signal from medical claims. We'll extend the `prob_ar()` function from the
+slide vignette to accomodate exogenous variables in the autoregressive model,
+which is often referred to as an ARX model. 
+
 ```{r}
-prob_ar <- function(x, y, lags = c(0, 7, 14), ahead = 7, min_train_window = 20,
-                    lower_level = 0.05, upper_level = 0.95, symmetrize = TRUE, 
-                    nonneg = TRUE) {   
+prob_arx <- function(x, y, lags = c(0, 7, 14), ahead = 7, min_train_window = 20,
+                     lower_level = 0.05, upper_level = 0.95, symmetrize = TRUE, 
+                     nonneg = TRUE) {   
   # Return NA if insufficient training data
   if (length(y) < min_train_window + max(lags) + ahead) {
     return(data.frame(point = NA, lower = NA, upper = NA))
@@ -271,31 +309,56 @@ prob_ar <- function(x, y, lags = c(0, 7, 14), ahead = 7, min_train_window = 20,
 }
 ```
 
+Next we slide this forecaster over the working `epi_archive` object, in order to
+forecast COVID-19 case rates 7 days into the future.
+
 ```{r}
 fc_time_values = seq(as.Date("2020-08-01"), 
                      as.Date("2021-12-01"), 
                      by = "1 month")
-
-z <- x$slide(fc = prob_ar(x = percent_cli, y = case_rates), n = 120, 
-             ref_time_values = fc_time_values, group_by = geo_value)
+document()
+x <- dv %>%
+  select(geo_value, time_value, version = issue, percent_cli = value) %>%
+  as_epi_archive()
+epix_merge(x, y, all = TRUE)
+z <- epix_slide(x, fc = prob_arx(x = percent_cli, y = case_rates), n = 120, 
+                ref_time_values = fc_time_values, group_by = geo_value)
 
 head(z, 10)
 ```
 
-```{r}
-x_latest = x$as_of(max_version = max(x$DT$version))
+We get back a tibble `z` with the grouping variables (here geo value), the time
+values, and three columns `fc_point`, `fc_lower`, and `fc_upper` produced by the
+slide computation that correspond to the point forecast, and the lower and upper
+endpoints of the 95\% prediction band, respectively. (If instead we had set
+`as_list_col = TRUE` in the call to `epix_slide()`, then we would have gotten a
+list column `fc`, where each element of `fc` is a data frame with named columns
+`point`, `lower`, and `upper`.)
+
+On the whole, `epix_slide()` works similarly to `epix_slide()`, though there are
+a few notable differences, even apart from the version-aware aspect. You can
+read the documentation for `epix_slide()` for details.
+
+We finish off by comparing version-aware and version-unaware forecasts at
+various points in time and forecast horizons. The former will come from applying
+`epix_slide()` to the `epi_archive` object `x`, and the latter from applying
+`epi_slide()` to the latest snapshot of the data `x_latest`.
+
+```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
+x_latest = epix_as_of(x, max_version = max(x$DT$version))
 
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
-    x$slide(fc = prob_ar(percent_cli, case_rates, ahead = ahead), 
-            n = 120, ref_time_values = fc_time_values, group_by = geo_value) %>%
+    x %>%
+      epix_slide(fc = prob_arx(percent_cli, case_rates, ahead = ahead), n = 120,
+                 ref_time_values = fc_time_values, group_by = geo_value) %>%
       mutate(target_date = time_value + ahead, as_of = TRUE) 
   }
   else {
     x_latest %>% 
       group_by(geo_value) %>%
-      epi_slide(fc = prob_ar(percent_cli, case_rates, ahead = ahead), 
-                n = 120, ref_time_values = fc_time_values) %>%
+      epi_slide(fc = prob_arx(percent_cli, case_rates, ahead = ahead), n = 120,
+                ref_time_values = fc_time_values) %>%
       mutate(target_date = time_value + ahead, as_of = FALSE) 
   }
 }
@@ -310,8 +373,7 @@ fc <- bind_rows(k_week_ahead(x, ahead = 7, as_of = TRUE),
                 k_week_ahead(x, ahead = 21, as_of = FALSE),
                 k_week_ahead(x, ahead = 28, as_of = FALSE))
 
-# Now plot some of them, spaced apart by 2 months
-
+# Now plot them, on top of latest COVID-19 case counts 
 p <- ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
   geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), alpha = 0.4) +
   geom_line(aes(y = fc_point)) + geom_point(aes(y = fc_point), size = 0.5) + 
@@ -324,12 +386,24 @@ p <- ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
 gginnards::append_layers(
   p, geom_line(data = x_latest, aes(x = time_value, y = case_rates), 
                inherit.aes = FALSE, color = "gray50"), pos = "bottom")
-
 ```
 
-[about training on finalized versus honest data...]
+Each row displays the forecasts for a different location (CA and FL), and each
+column corresponds to whether properly-versioned data is used (`FALSE` means no,
+and `TRUE` means yes). We can see that the properly-versioned forecaster is, at
+some points in time, more problematic; for example, it massively overpredicts
+the peak in both locations in winter wave of 2020. However, performance is
+pretty poor across the board here, whether or not properly-versioned data is
+used. Similar to what we saw in the [slide
+vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html), the
+ARX forecasts can too volatile, overconfident, or both.
 
-This makes a bigger deal for some signals than others; for reported
-COVID-19 cases, data revisions are most often made in the form of big spikes or
-drops; for other signals (like those based on medical insurance claims), the 
-revision process can be more regular and incremental. 
+Some of the volatility can be attenuated here by training an ARX model jointly
+over locations; the [advanced sliding
+vignette](https://cmu-delphi.github.io/epiprocess/articles/advanced.html) gives
+a demonstration of how to do this. But really, the
+[`epipredict`](https://cmu-delphi.github.io/epipredict/) package, which builds
+off the data structures and functionality in the current package, is the place
+to look for more robust forecasting methodology. The forecasters that appear in
+the vignettes in the current package are only meant to demo the slide
+functionality with some of the most basic forecasting methodology possible.

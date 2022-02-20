@@ -53,9 +53,9 @@ reference:
   - contents:
       - epi_archive
       - as_epi_archive  
-  - title: epx_*() functions
-    desc: Functions that act on an epi_archive object.
+  - title: epix_*() functions
+    desc: Functions that act on an `epi_archive` object.
   - contents:
-      - epx_as_of
-      - epx_merge
-      - epx_slide
+      - epix_as_of
+      - epix_merge
+      - epix_slide

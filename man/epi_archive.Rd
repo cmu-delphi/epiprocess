@@ -65,11 +65,8 @@ bits of information to convey about the data set at hand.
 An \code{epi_archive} object can be used to generate a snapshot of the data in
 \code{epi_df} format, which represents the most up-to-date values of the signal
 variables, as of the specified version. This is accomplished by calling the
-\code{as_of()} method for an \code{epi_archive} object \code{x}, for example:\preformatted{x$as_of(as.Date("2022-01-15"))
-}
-
-to generate a snapshot as of January 15, 2022. More details on the
-\code{as_of()} method are documented in the wrapper function \code{epx_as_of()}.
+\code{as_of()} method for an \code{epi_archive} object \code{x}. More details on this
+method are documented in the wrapper function \code{epix_as_of()}.
 }
 
 \section{Sliding Computations}{
@@ -81,7 +78,7 @@ the way \code{epi_slide()} works for an \code{epi_df} object, but with one key
 difference: it is version-aware. That is, for an \code{epi_archive} object, the
 sliding computation at any given reference time point t is performed on
 \strong{data that would have been available as of t}. More details on \code{slide()}
-are documented in the wrapper function \code{epx_slide()}.
+are documented in the wrapper function \code{epix_slide()}.
 }
 
 \section{Methods}{
@@ -146,7 +143,7 @@ An \code{epi_archive} object.
 \if{latex}{\out{\hypertarget{method-as_of}{}}}
 \subsection{Method \code{as_of()}}{
 Generates a snapshot in \code{epi_df} format as of a given version.
-See the documentation for the wrapper function \code{epx_as_of()} for details.
+See the documentation for the wrapper function \code{epix_as_of()} for details.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$as_of(max_version, min_time_value = -Inf)}\if{html}{\out{</div>}}
 }
@@ -158,7 +155,7 @@ See the documentation for the wrapper function \code{epx_as_of()} for details.
 \subsection{Method \code{merge()}}{
 Merges another \code{data.table} with the current one, and allows for
 a post-filling of \code{NA} values by last observation carried forward (LOCF).
-See the documentation for the wrapper function \code{epx_merge()} for details.
+See the documentation for the wrapper function \code{epix_merge()} for details.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$merge(y, ..., locf = TRUE, nan = NA)}\if{html}{\out{</div>}}
 }
@@ -169,7 +166,7 @@ See the documentation for the wrapper function \code{epx_merge()} for details.
 \if{latex}{\out{\hypertarget{method-slide}{}}}
 \subsection{Method \code{slide()}}{
 Slides a given function over variables in an \code{epi_archive}
-object. See the documentation for the wrapper function \code{epx_as_of()} for
+object. See the documentation for the wrapper function \code{epix_as_of()} for
 details.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$slide(

@@ -194,14 +194,15 @@ x %>%
             ref_time_values = fc_time_values) %>%
   head(10)
 ```
-Note that here we have utilized an argument `ref_time_values` to perform the 
-sliding computation (here, compute a forecast) at a specific subset of reference 
-time values. Now we get three columns `fc_point`, `fc_lower`, and `fc_upper`
-that correspond to the point forecast, and the lower and upper endpoints of the 
-95\% prediction band, respectively. (If instead we had set `as_list_col = TRUE` 
-in the call to `epi_slide()`, then we would have gotten a list column `fc`, and
-each element of this column would have been a data frame with named columns
-`point`, `lower`, and `upper`.)
+
+Note that here we have utilized an argument `ref_time_values` to perform the
+sliding computation (here, compute a forecast) at a specific subset of reference
+time values. We get out three columns `fc_point`, `fc_lower`, and `fc_upper`
+that correspond to the point forecast, and the lower and upper endpoints of the
+95\% prediction band, respectively. (If instead we had set `as_list_col = TRUE`
+in the call to `epi_slide()`, then we would have gotten a list column `fc`, 
+where each element of `fc` is a data frame with named columns `point`, `lower`,
+and `upper`.)
 
 To finish off, we plot the forecasts at some times (spaced out by a few months)
 over the last year, at multiple horizons: 7, 14, 21, and 28 days ahead. To do 
@@ -209,8 +210,7 @@ so, we encapsulate the process of generating forecasts into a simple function,
 so that we can call it a few times.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
-# Note the use of all_rows = TRUE, so that we get to keep all original rows in
-# the returned object
+# Note the use of all_rows = TRUE (so keep all original rows in the output)
 k_week_ahead <- function(x, ahead = 7) {
   x %>% 
     group_by(geo_value) %>%
@@ -263,6 +263,6 @@ therein. Fortunately, the `epiprocess` package provides a data structure called
 `epi_archive` that can be used to store all data revisions, and furthermore, an
 `epi_archive` object knows how to slide computations in the correct
 version-aware sense (for the computation at each reference time $t$, it uses
-only data that would have been available as of $t$). See the [archive
-vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
-more details.
+only data that would have been available as of $t$). We will revisit this 
+example in the [archive 
+vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html).

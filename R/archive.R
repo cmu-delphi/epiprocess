@@ -62,13 +62,9 @@
 #' @section Generating Snapshots:
 #' An `epi_archive` object can be used to generate a snapshot of the data in
 #'   `epi_df` format, which represents the most up-to-date values of the signal
-#'   variables, as of the specified version. This is accomplished by calling the 
-#'   `as_of()` method for an `epi_archive` object `x`, for example:
-#'   ```
-#'   x$as_of(as.Date("2022-01-15"))
-#'   ```
-#'   to generate a snapshot as of January 15, 2022. More details on the
-#'   `as_of()` method are documented in the wrapper function `epx_as_of()`. 
+#'   variables, as of the specified version. This is accomplished by calling the
+#'   `as_of()` method for an `epi_archive` object `x`. More details on this
+#'   method are documented in the wrapper function `epix_as_of()`.
 #'
 #' @section Sliding Computations:
 #' We can run a sliding computation over an `epi_archive` object, much like
@@ -78,7 +74,7 @@
 #'   difference: it is version-aware. That is, for an `epi_archive` object, the
 #'   sliding computation at any given reference time point t is performed on
 #'   **data that would have been available as of t**. More details on `slide()`
-#'   are documented in the wrapper function `epx_slide()`.
+#'   are documented in the wrapper function `epix_slide()`.
 #' 
 #' @export
 epi_archive =
@@ -191,7 +187,7 @@ epi_archive =
           },
           #####
 #' @description Generates a snapshot in `epi_df` format as of a given version.
-#'   See the documentation for the wrapper function `epx_as_of()` for details.
+#'   See the documentation for the wrapper function `epix_as_of()` for details.
 #' @importFrom data.table between key
 #' @importFrom rlang .data abort warn
           as_of = function(max_version, min_time_value = -Inf) {
@@ -236,7 +232,7 @@ epi_archive =
           #####
 #' @description Merges another `data.table` with the current one, and allows for
 #'   a post-filling of `NA` values by last observation carried forward (LOCF).
-#'   See the documentation for the wrapper function `epx_merge()` for details.
+#'   See the documentation for the wrapper function `epix_merge()` for details.
 #' @importFrom data.table key merge.data.table nafill
 #' @importFrom rlang abort 
           merge = function(y, ..., locf = TRUE, nan = NA) {
@@ -266,10 +262,10 @@ epi_archive =
           },   
           #####
 #' @description Slides a given function over variables in an `epi_archive`
-#'   object. See the documentation for the wrapper function `epx_as_of()` for
+#'   object. See the documentation for the wrapper function `epix_as_of()` for
 #'   details. 
 #' @importFrom data.table key
-#' @importFrom rlang !! !!! abort enquo enquos sym syms
+#' @importFrom rlang !! !!! abort enquo enquos is_quosure sym syms
           slide = function(f, ..., n = 7, group_by, ref_time_values, 
                            time_step, complete = FALSE,
                            new_col_name = "slide_value",
@@ -294,9 +290,14 @@ epi_archive =
               group_by = setdiff(key(self$DT), c("time_value", "version"))
             }
             
-            # Symbolize column name, defuse grouping variables
+            # Symbolize column name, defuse grouping variables. We have to do
+            # the middle step here which is a bit complicated (unfortunately)
+            # since the function epix_slide() could have called the current one,
+            # and in doing so, it may have already needed to defuse the grouping
+            # variables
             new_col = sym(new_col_name)
-            group_by = syms(names(eval_select(enquo(group_by), self$DT)))
+            if (!is_quosure(group_by)) group_by = enquo(group_by)
+            group_by = syms(names(eval_select(group_by, self$DT)))
 
             # Key variable names, apart from time value and version
             key_vars = setdiff(key(self$DT), c("time_value", "version"))
