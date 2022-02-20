@@ -97,19 +97,22 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/slide.html">1. Slide a computation over signal values</a>
+      <a href="../articles/slide.html">Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/growth_rate.html">2. Estimate growth rates in signals</a>
+      <a href="../articles/growth_rate.html">Estimate growth rates in signals</a>
     </li>
     <li>
-      <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
+      <a href="../articles/correlation.html">Correlate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/aggregation.html">4. Aggregate signals over space and time</a>
+      <a href="../articles/aggregation.html">Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/outliers.html">5. Detect and correct outliers in signals</a>
+      <a href="../articles/outliers.html">Detect and correct outliers in signals</a>
+    </li>
+    <li>
+      <a href="../articles/archive.html">Work with archive objects and data revisions</a>
     </li>
   </ul>
 </li>
@@ -148,8 +151,8 @@
     <tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-all-functions" class="hasAnchor"><a href="#section-all-functions" class="anchor"></a>All functions</h2>
-          <p class="section-desc"></p>
+          <h2 id="section-epi-df-basics" class="hasAnchor"><a href="#section-epi-df-basics" class="anchor"></a>epi_df basics</h2>
+          <p class="section-desc"><p>Details on <code>epi_df</code> format, and basic functionality.</p></p>
         </th>
       </tr>
       
@@ -160,9 +163,9 @@
       <tr>
         
         <td>
-          <p><code><a href="arrange.epi_df.html">arrange(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="arrange.epi_df.html">filter(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="arrange.epi_df.html">group_by(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="arrange.epi_df.html">group_modify(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="arrange.epi_df.html">mutate(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="arrange.epi_df.html">relocate(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="arrange.epi_df.html">rename(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="arrange.epi_df.html">slice(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="arrange.epi_df.html">ungroup(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="arrange.epi_df.html">unnest(<i>&lt;epi_df&gt;</i>)</a></code> </p>
+          <p><code><a href="epi_df.html">epi_df</a></code> </p>
         </td>
-        <td><p>dplyr verbs</p></td>
+        <td><p><code>epi_df</code> object</p></td>
       </tr><tr>
         
         <td>
@@ -172,9 +175,53 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="as_tsibble.epi_df.html">as_tsibble(<i>&lt;epi_df&gt;</i>)</a></code> </p>
+          <p><code><a href="print.epi_df.html">print(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">summary(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">arrange(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">filter(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">group_by(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">group_modify(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">mutate(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">relocate(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">rename(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">slice(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">ungroup(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">unnest(<i>&lt;epi_df&gt;</i>)</a></code> </p>
         </td>
-        <td><p>Convert to tsibble object</p></td>
+        <td><p>S3 methods for an <code>epi_df</code> object</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-epi-functions" class="hasAnchor"><a href="#section-epi-functions" class="anchor"></a>epi_*() functions</h2>
+          <p class="section-desc"><p>Functions that act on <code>epi_df</code> objects.</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="epi_slide.html">epi_slide()</a></code> </p>
+        </td>
+        <td><p>Slide a function over variables in an <code>epi_df</code> object</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="epi_cor.html">epi_cor()</a></code> </p>
+        </td>
+        <td><p>Compute correlations between variables in an <code>epi_df</code> object</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-vector-functions" class="hasAnchor"><a href="#section-vector-functions" class="anchor"></a>Vector functions</h2>
+          <p class="section-desc"><p>Functions that act directly on signal variables.</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="growth_rate.html">growth_rate()</a></code> </p>
+        </td>
+        <td><p>Estimate growth rate</p></td>
       </tr><tr>
         
         <td>
@@ -193,48 +240,62 @@
           <p><code><a href="detect_outlr_stl.html">detect_outlr_stl()</a></code> </p>
         </td>
         <td><p>Detect outliers based on an STL decomposition</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-epi-archive-basics" class="hasAnchor"><a href="#section-epi-archive-basics" class="anchor"></a>epi_archive basics</h2>
+          <p class="section-desc"><p>Details on <code>epi_archive</code>, and basic functionality.</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="epi_archive.html">epi_archive</a></code> </p>
+        </td>
+        <td><p><code>epi_archive</code> object</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="epi_cor.html">epi_cor()</a></code> </p>
+          <p><code><a href="as_epi_archive.html">as_epi_archive()</a></code> </p>
         </td>
-        <td><p>Compute correlations between variables in an <code>epi_df</code> object</p></td>
+        <td><p>Convert to <code>epi_archive</code> format</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-epix-functions" class="hasAnchor"><a href="#section-epix-functions" class="anchor"></a>epix_*() functions</h2>
+          <p class="section-desc"><p>Functions that act on an <code>epi_archive</code> object.</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="epix_as_of.html">epix_as_of()</a></code> </p>
+        </td>
+        <td><p>Generate a snapshot from an <code>epi_archive</code> object</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="epi_df.html">epi_df</a></code> </p>
+          <p><code><a href="epix_merge.html">epix_merge()</a></code> </p>
         </td>
-        <td><p><code>epi_df</code> object</p></td>
+        <td><p>Merge two <code>epi_archive</code> objects</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="epi_slide.html">epi_slide()</a></code> </p>
+          <p><code><a href="epix_slide.html">epix_slide()</a></code> </p>
         </td>
-        <td><p>Slide a function over variables in an <code>epi_df</code> object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="epiprocess.html">epiprocess</a></code> </p>
-        </td>
-        <td><p>epiprocess: Tools for basic signal processing in epidemiology</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="growth_rate.html">growth_rate()</a></code> </p>
-        </td>
-        <td><p>Estimate growth rate</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="print.epi_df.html">print(<i>&lt;epi_df&gt;</i>)</a></code> </p>
-        </td>
-        <td><p>Print <code>epi_df</code> object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="summary.epi_df.html">summary(<i>&lt;epi_df&gt;</i>)</a></code> </p>
-        </td>
-        <td><p>Summarize <code>epi_df</code> object</p></td>
+        <td><p>Slide a function over variables in an <code>epi_archive</code> object</p></td>
       </tr>
     </tbody>
     </table>
@@ -250,7 +311,7 @@
 
       <footer>
       <div class="copyright">
-  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Rafael Catoia, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

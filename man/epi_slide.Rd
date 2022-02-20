@@ -9,12 +9,15 @@ epi_slide(
   f,
   ...,
   n = 7,
+  ref_time_values,
   align = c("right", "center", "left"),
   before,
+  time_step,
   complete = FALSE,
   new_col_name = "slide_value",
   as_list_col = FALSE,
-  time_step
+  names_sep = "_",
+  all_rows = FALSE
 )
 }
 \arguments{
@@ -38,6 +41,11 @@ interpreted as an expression for tidy evaluation. See details.}
 produce a value on January 7 we apply the given function or formula to data
 in between January 1 and 7. Default is 7.}
 
+\item{ref_time_values}{Time values for sliding computations, meaning, each
+element of this vector serves as the reference time point for one sliding
+window. If missing, then this will be set to all unique time values in the
+underlying data table, by default.}
+
 \item{align}{One of "right", "center", or "left", indicating the alignment of
 the sliding window relative to the reference time point. If the alignment
 is "center" and \code{n} is even, then one more time point will be used after
@@ -50,8 +58,15 @@ point. For example, setting \code{before = n-1} would be the same as setting
 specification of alignment than the \code{align} parameter, and if specified,
 overrides \code{align}.}
 
+\item{time_step}{Optional function used to define the meaning of one time
+step, which if specified, overrides the default choice based on the
+\code{time_value} column. This function must take a positive integer and return
+an object of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this
+would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
+
 \item{complete}{Should the slide function be run over complete windows only?
-Default is \code{FALSE}, which allows for computation on partial windows.}
+(A complete window has distance \code{n-1} between its left and right
+endpoints.) Default is \code{FALSE}, which allows for partial computations.}
 
 \item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
@@ -62,15 +77,17 @@ is \code{FALSE}, in which case a list object returned by \code{f} would be unnes
 (using \code{tidyr::unnest()}), and the names of the resulting columns are given
 by prepending \code{new_col_name} to the names of the list elements.}
 
-\item{time_step}{Optional function used to define the meaning of one time
-step, which if specified, overrides the default choice based on the
-\code{time_value} column. This function must take a positive integer and return
-an object of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this
-would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
+\item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
+when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
+from \code{new_col_name} entirely.}
+
+\item{all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
+the output; otherwise, there will be one row for each time value in \code{x}
+that acts as a reference time value. Default is \code{FALSE}.}
 }
 \value{
 An \code{epi_df} object given by appending a new column to \code{x}, named
-according to the \code{new_col_name} argument, containing the slide values.
+according to the \code{new_col_name} argument.
 }
 \description{
 Slides a given function over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for

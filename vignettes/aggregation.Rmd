@@ -1,8 +1,8 @@
 ---
-title: 4. Aggregate signals over space and time
+title: Aggregate signals over space and time
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{4. Aggregate signals over space and time}
+  %\VignetteIndexEntry{Aggregate signals over space and time}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -38,11 +38,12 @@ x <- covidcast_signal("jhu-csse",
 
 For manipulating and wrangling time series data, the
 [`tsibble`](https://tsibble.tidyverts.org/index.html) already provides a whole
-bunch of useful tools. A `tsibble` is basically a tibble (data frame) but with
-two specially-marked columns: an *index* column representing the time variable
-(defining an order from past to present), and a *key* column identifying a
-unique observational unit for each time point. In fact, the key in a `tsibble`
-can be made up of any number of columns, not just a single one.
+bunch of useful tools. A tsibble object (formerly, of class `tbl_ts`) is
+basically a tibble (data frame) but with two specially-marked columns: an
+**index** column representing the time variable (defining an order from past to
+present), and a **key** column identifying a unique observational unit for each
+time point. In fact, the key can be made up of any number of columns, not just a
+single one. 
 
 In an `epi_df` object, the index variable is `time_value`, and the key variable
 is typically `geo_value` (though this need not always be the case: for example,
@@ -86,7 +87,7 @@ head(as_tsibble(x, key = c("county_name", "state_name")))
 ## Detecting and filling time gaps
  
 One of the major advantages of the `tsibble` package is its ability to handle
-*implicit gaps* in time series data. In other words, it can infer what time
+**implicit gaps** in time series data. In other words, it can infer what time
 scale we're interested in (say, daily data), and detect apparent gaps (say, when
 values are reported on January 1 and 3 but not January 2). We can subsequently
 use functionality to make these missing entries explicit, which will generally
@@ -223,7 +224,4 @@ head(xt_filled_month)
 
 ## Geographic aggregation  
 
-Geo stuff:
-
-- similar? but without the `tsibble` utilities, we would need to implement some 
-  of this on our own and demo it in the vignette
+TODO

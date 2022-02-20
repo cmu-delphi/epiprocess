@@ -4,10 +4,10 @@
 #' grouping by geo value, time value, or any other variables. See the
 #' [correlation
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/correlation.html)
-#' for examples.
+#' for examples. 
 #'
 #' @param x The `epi_df` object under consideration.
-#' @param var1,var2 The variables in `x` to correlate. 
+#' @param var1,var2 The variables in `x` to correlate.
 #' @param dt1,dt2 Time shifts to consider for the two variables, respectively, 
 #'   before computing correlations. Negative shifts translate into in a lag
 #'   value and positive shifts into a lead value; for example, if `dt = -1`,
@@ -37,7 +37,8 @@
 #'   or possibly others), and then a column `cor`, which gives the correlation. 
 #' 
 #' @importFrom stats cor
-#' @importFrom rlang .data !! enquo
+#' @importFrom rlang .data !! !!! enquo syms
+#' @importFrom tidyselect eval_select
 #' @export
 epi_cor = function(x, var1, var2, dt1 = 0, dt2 = 0, shift_by = geo_value,
                    cor_by = geo_value, use = "na.or.complete",
@@ -51,19 +52,29 @@ epi_cor = function(x, var1, var2, dt1 = 0, dt2 = 0, shift_by = geo_value,
   var1 = enquo(var1)
   var2 = enquo(var2)
   
-  # What are the groupings? Which method?
-  shift_by = enquo(shift_by)
-  cor_by = enquo(cor_by)
+  # Defuse grouping variables. This looks a bit more involved since we want to
+  # accomodate the option of specifying multiple variables for each grouping.
+  # Hence use the power of tidyselect::eval_select(), which can accomodate any
+  # arguments of the form:
+  # * cor_by = a
+  # * cor_by = "a"
+  # * cor_by = c(a, b)
+  # * cor_by = c("a", "b")
+  # and so on, and similarly for shift_by. Note: make sure to follow with !!!
+  cor_by = syms(names(eval_select(enquo(cor_by), x)))
+  shift_by = syms(names(eval_select(enquo(shift_by), x)))
+
+  # Which method?
   method = match.arg(method)
 
   # Perform time shifts, then compute appropriate correlations and return
   return(x %>%
-         dplyr::group_by(!!shift_by) %>%
+         dplyr::group_by(!!!shift_by) %>%
          dplyr::arrange(.data$time_value) %>%
          dplyr::mutate(var1 = shift(!!var1, n = dt1),
                        var2 = shift(!!var2, n = dt2)) %>%
          dplyr::ungroup() %>%
-         dplyr::group_by(!!cor_by) %>%
+         dplyr::group_by(!!!cor_by) %>%
          dplyr::summarize(cor = cor(x = .data$var1, y = .data$var2,
                                     use = use, method = method)))
 }

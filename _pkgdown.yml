@@ -19,6 +19,7 @@ articles:
       - correlation
       - aggregation
       - outliers
+      - archive
 
 repo:
   url:
@@ -26,3 +27,35 @@ repo:
     source: https://github.com/cmu-delphi/epiprocess/blob/main/
     issue: https://github.com/cmu-delphi/epiprocess/issues
     user: https://github.com/
+
+reference:
+  - title: epi_df basics
+    desc: Details on `epi_df` format, and basic functionality. 
+  - contents:
+      - epi_df
+      - as_epi_df
+      - as_tsibble
+      - print.epi_df
+  - title: epi_*() functions
+    desc: Functions that act on `epi_df` objects.
+  - contents:
+      - epi_slide
+      - epi_cor
+  - title: Vector functions
+    desc: Functions that act directly on signal variables. 
+  - contents:
+      - growth_rate
+      - detect_outlr
+      - detect_outlr_rm
+      - detect_outlr_stl
+  - title: epi_archive basics
+    desc: Details on `epi_archive`, and basic functionality. 
+  - contents:
+      - epi_archive
+      - as_epi_archive  
+  - title: epix_*() functions
+    desc: Functions that act on an `epi_archive` object.
+  - contents:
+      - epix_as_of
+      - epix_merge
+      - epix_slide

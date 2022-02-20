@@ -33,9 +33,10 @@ devtools::install_github("cmu-delphi/epiprocess", ref = "main",
 
 ## Getting data into `epi_df` format
 
-We'll start by showing how to get data into `epi_df` format, which is just a
-tibble with a bit of special structure, and is the format assumed by all of the
-functions in the `epiprocess` package. An `epi_df` object has (at least) the
+We'll start by showing how to get data into 
+<code><a href="../reference/epi_df.html">epi_df</a></code> format, which is just
+a tibble with a bit of special structure, and is the format assumed by all of
+the functions in the `epiprocess` package. An `epi_df` object has (at least) the
 following columns:
 
 * `geo_value`: the geographic value associated with each row of measurements.
@@ -43,7 +44,7 @@ following columns:
 
 It can have any number of other columns which can serve as measured variables,
 which we also broadly refer to as signal variables. The documentation for
-[`epi_df`](reference/epi_df.html) gives more details about this data format. 
+ gives more details about this data format.
 
 A data frame or tibble that has `geo_value` and `time_value` columns can be
 converted into an `epi_df` object, using the function `as_epi_df()`. As an
@@ -94,17 +95,20 @@ In general, an `epi_df` object has the following fields in its metadata:
 * `time_type`: the type for the time values.
 * `as_of`: the time value at which the given data were available.
 
-The first two fields here, `geo_type` and `time_type`, are not currently used by
-any downstream functions in the `epiprocess` package, and serve only as useful
-bits of information to convey about the data set at hand. The last field here,
-`as_of`, is one of the most unique aspects of an `epi_df` object. In brief, we
-can think of an `epi_df` object as a single snapshot of a data set that contains
-the most up-to-date values of some signals of interest, as of the time specified
-`as_of`. For example, if `as_of` is January 31, 2022, then the `epi_df` object
-has the most up-to-date version of the data available as of January 31,
-2022. The `epiprocess` package also provides a companion data structure called
-`epi_archive`, which stores the full version history of a given data set. See
-the [archive
+Metadata for an `epi_df` object `x` can be accessed (and altered) via
+`attributes(x)$metadata`. The first two fields here, `geo_type` and `time_type`,
+are not currently used by any downstream functions in the `epiprocess` package,
+and serve only as useful bits of information to convey about the data set at
+hand. The last field here, `as_of`, is one of the most unique aspects of an
+`epi_df` object.
+
+In brief, we can think of an `epi_df` object as a single snapshot of a data set
+that contains the most up-to-date values of some signals of interest, as of the
+time specified `as_of`. For example, if `as_of` is January 31, 2022, then the
+`epi_df` object has the most up-to-date version of the data available as of
+January 31, 2022. The `epiprocess` package also provides a companion data
+structure called `epi_archive`, which stores the full version history of a given
+data set. See the [archive
 vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 more.
 
@@ -139,10 +143,10 @@ ggplot(x, aes(x = time_value, y = total_cases, color = geo_value)) +
   labs(x = "Date", y = "Cumulative COVID-19 cases", color = "State")
 ```
 
-As last example, we'll look at a few more data sets just to show how we might
-get them into `epi_df` format. Data on daily new (not cumulative) SARS cases 
-in Canada in 2003, from the [outbreaks](https://github.com/reconverse/outbreaks)
-package:
+As a last couple examples, we'll look at some more data sets just to show how 
+we might get them into `epi_df` format. Data on daily new (not cumulative) SARS 
+cases in Canada in 2003, from the 
+[outbreaks](https://github.com/reconverse/outbreaks) package:
 
 ```{r}
 x <- outbreaks::sars_canada_2003 %>%
@@ -161,38 +165,34 @@ yrange <- range(x %>% group_by(time_value) %>%
                   summarize(value = sum(value)) %>% pull(value))
 
 ggplot(x, aes(x = time_value, y = value)) +
-  geom_col(aes(y = value, fill = type)) +
+  geom_col(aes(fill = type)) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   scale_y_continuous(breaks = yrange[1]:yrange[2]) +
   labs(x = "Date", y = "SARS cases in Canada", fill = "Type")
 ```
 
-Also from the [outbreaks](https://github.com/reconverse/outbreaks) package, we use the function `as_epi_df` on confirmed cases of ebola in Sierra Leone in 2014.
+Data on new cases of Ebola in Sierra Leone in 2014, from the same package:
 
-```{r,message=FALSE}
-x = outbreaks::ebola_sierraleone_2014 %>%
+```{r, message = FALSE, fig.width = 9, fig.height = 6}
+x <- outbreaks::ebola_sierraleone_2014 %>%
   mutate(
-    cases=ifelse(status=='confirmed',1,0),
+    cases = ifelse(status == "confirmed", 1, 0),
     province = case_when(
-      district %in% c('Kailahun','Kenema','Kono') ~ "Eastern",
-      district %in% c('Bombali','Kambia','Koinadugu',
-                      'Port Loko','Tonkolili') ~ 'Northern',
-      district %in% c('Bo','Bonthe','Moyamba','Pujehun') ~ 'Sourthern',
-      district %in% c('Western Rural','Western Urban') ~ 'Western')) %>% 
-  select(geo_value=province,
+      district %in% c("Kailahun", "Kenema", "Kono") ~ "Eastern",
+      district %in% c("Bombali", "Kambia", "Koinadugu",
+                      "Port Loko", "Tonkolili") ~ "Northern",
+      district %in% c("Bo", "Bonthe", "Moyamba", "Pujehun") ~ "Sourthern",
+      district %in% c("Western Rural", "Western Urban") ~ "Western")) %>% 
+  select(geo_value = province,
          time_value = date_of_onset,
          cases) %>% filter(cases==1) %>%
-  group_by(geo_value,time_value) %>% 
-  summarise(cases=sum(cases)) %>%
-  as_epi_df(geo_type='province')
+  group_by(geo_value, time_value) %>% 
+  summarise(cases = sum(cases)) %>%
+  as_epi_df(geo_type="province")
 
-ggplot(x, aes(x = time_value, y = cases,fill=geo_value)) + 
-  geom_col() + facet_grid(geo_value~.)+
+ggplot(x, aes(x = time_value, y = cases)) + 
+  geom_col(aes(fill = geo_value), show.legend = FALSE) + 
+  facet_wrap(~ geo_value, scales = "free_y") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
-  labs(x = "Date", y = "Confirmed cases of ebola")+
-  guides(fill=guide_legend(title="Province"))
+  labs(x = "Date", y = "Confirmed cases of Ebola in Sierra Leone") 
 ```
-
-
-
-

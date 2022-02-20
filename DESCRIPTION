@@ -4,8 +4,14 @@ Title: Tools for basic signal processing in epidemiology
 Version: 1.0.0
 Authors@R:
   c(
+  person(given = "Jacob",
+         family = "Bien",
+         role = "ctb"),
   person(given = "Logan",
          family = "Brooks",
+         role = "aut"),
+  person(given = "Rafael",
+         family = "Catoia",
          role = "aut"),
   person(given = "Daniel",
          family = "McDonald",

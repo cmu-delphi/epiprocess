@@ -1,14 +1,14 @@
 ---
-title: 1. Slide a computation over signal values
+title: Slide a computation over signal values
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{1. Slide a computation over signal values}
+  %\VignetteIndexEntry{Slide a computation over signal values}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
 A central tool in the `epiprocess` package is `epi_slide()`, which is based on
-the functionality provided in the
+the powerful functionality provided in the 
 [`slider`](https://cran.r-project.org/web/packages/slider/) package. In
 `epiprocess`, to "slide" means to apply a computation---represented as a
 function or formula---over a running window of `n` time steps. Suitable
@@ -67,7 +67,7 @@ front using the `new_col_name` argument:
 
 ```{r}
 x <- x %>% 
-  group_by(geo_value) %>% 
+  group_by(geo_value) %>%
   epi_slide(~ mean(.x$cases), n = 7, new_col_name = "cases_7dav")
 
 head(x, 10)
@@ -143,28 +143,27 @@ units of the `time_value` column; so, days, in the working `epi_df` being
 considered in this vignette).
 
 ```{r}
-prob_ar <- function(v, lags = c(0, 7, 14), ahead = 7, min_train_window = 20, 
+prob_ar <- function(y, lags = c(0, 7, 14), ahead = 7, min_train_window = 20, 
                     lower_level = 0.05, upper_level = 0.95, symmetrize = TRUE,
                     nonneg = TRUE) {   
   # Return NA if insufficient training data
-  if (length(v) < min_train_window + max(lags) + ahead) {
+  if (length(y) < min_train_window + max(lags) + ahead) {
     return(data.frame(point = NA, lower = NA, upper = NA))
   }
   
-  # Perform other simple checks
-  stopifnot(all(lags >= 0), ahead > 0, max(lags) + ahead < length(v))
+  # Build features and response for the AR model
+  dat <- do.call(
+    data.frame, 
+    purrr::map(lags, function(lag) dplyr::lag(y, n = lag))
+  )
+  dat$y <- dplyr::lead(y, n = ahead) 
   
-  # Go and fit the AR model
-  y <- dplyr::lead(v, n = ahead)
-  x <- do.call(cbind, purrr::map(lags, ~ dplyr::lag(v, n = .x)))
-  fit <- lm(y ~ x, na.action = na.omit)
-
-  # Make a prediction
-  newx <- tail(x, 1)
-  point <- drop(c(1, newx) %*% coef(fit))
+  # Now fit the AR model and make a prediction
+  obj <- lm(y ~ ., data = dat)
+  point <- predict(obj, newdata = tail(dat, 1))
   
   # Compute a band 
-  r <- residuals(fit)
+  r <- residuals(obj)
   s <- ifelse(symmetrize, -1, NA) # Should the residuals be symmetrized?
   q <- quantile(c(r, s * r), probs = c(lower_level, upper_level), na.rm = TRUE)
   lower <- point + q[1]
@@ -186,17 +185,24 @@ scale of smoothed COVID-19 cases. This is clearly equivalent, up to a constant,
 to modeling weekly sums of COVID-19 cases.
 
 ```{r}
+fc_time_values <- seq(as.Date("2020-06-01"), 
+                      as.Date("2021-12-01"), 
+                      by = "2 months")
 x %>% 
   group_by(geo_value) %>%
-  epi_slide(fc = prob_ar(cases_7dav), n = 120) %>%
-  tail(10)
+  epi_slide(fc = prob_ar(cases_7dav), n = 120, 
+            ref_time_values = fc_time_values) %>%
+  head(10)
 ```
 
-Now we get three columns `fc_point`, `fc_lower`, and `fc_upper` that correspond
-to the point forecast, and the lower and upper endpoints of the 95\% prediction 
-band, respectively. (If instead we had set `as_list_col = TRUE` in the call to 
-`epi_slide()`, then we would have gotten a list column `fc`, where each element
-is a data frame with named components `point`, `lower`, and `upper`.)
+Note that here we have utilized an argument `ref_time_values` to perform the
+sliding computation (here, compute a forecast) at a specific subset of reference
+time values. We get out three columns `fc_point`, `fc_lower`, and `fc_upper`
+that correspond to the point forecast, and the lower and upper endpoints of the
+95\% prediction band, respectively. (If instead we had set `as_list_col = TRUE`
+in the call to `epi_slide()`, then we would have gotten a list column `fc`, 
+where each element of `fc` is a data frame with named columns `point`, `lower`,
+and `upper`.)
 
 To finish off, we plot the forecasts at some times (spaced out by a few months)
 over the last year, at multiple horizons: 7, 14, 21, and 28 days ahead. To do 
@@ -204,10 +210,12 @@ so, we encapsulate the process of generating forecasts into a simple function,
 so that we can call it a few times.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
+# Note the use of all_rows = TRUE (so keep all original rows in the output)
 k_week_ahead <- function(x, ahead = 7) {
   x %>% 
     group_by(geo_value) %>%
-    epi_slide(fc = prob_ar(cases_7dav, ahead = ahead), n = 120) %>%
+    epi_slide(fc = prob_ar(cases_7dav, ahead = ahead), n = 120,
+              ref_time_values = fc_time_values, all_rows = TRUE) %>%
     mutate(target_date = time_value + ahead) 
 }
 
@@ -217,22 +225,19 @@ z <- bind_rows(k_week_ahead(x, ahead = 7),
                k_week_ahead(x, ahead = 21),
                k_week_ahead(x, ahead = 28))
 
-# Now plot some of them, spaced apart by 2 months
-z_to_show <- z %>%
-  filter(time_value %in% 
-           seq(as.Date("2020-06-01"), as.Date("2021-12-31"), by = "2 months"))
-
-p <- ggplot(z_to_show, aes(x = target_date, group = time_value)) +
-  geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), fill = 6, alpha = 0.4) +
-  geom_line(aes(y = fc_point)) + geom_point(aes(y = fc_point), size = 0.5) + 
-  geom_vline(aes(xintercept = time_value), linetype = 2, alpha = 0.5) +
+# Now plot them, on top of actual COVID-19 case counts 
+ggplot(z) +
+  geom_line(aes(x = time_value, y = cases_7dav), color = "gray50") + 
+  geom_ribbon(aes(x = target_date, ymin = fc_lower, ymax = fc_upper,
+                  group = time_value), fill = 6, alpha = 0.4) + 
+  geom_line(aes(x = target_date, y = fc_point, group = time_value)) + 
+  geom_point(aes(x = target_date, y = fc_point, group = time_value), 
+             size = 0.5) + 
+  geom_vline(data = tibble(x = fc_time_values), aes(xintercept = x), 
+             linetype = 2, alpha = 0.5) +
   facet_wrap(vars(geo_value), scales = "free_y") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Reported COVID-19 cases")
-  
-gginnards::append_layers(
-  p, geom_line(data = z, aes(x = time_value, y = cases_7dav), 
-               inherit.aes = FALSE, color = "gray50"), pos = "bottom")
 ```
 
 Two points are worth making. First, the AR model's performance here is pretty
@@ -257,7 +262,7 @@ to an overly optimistic sense of accuracy; see, for example, [McDonald et al.
 therein. Fortunately, the `epiprocess` package provides a data structure called
 `epi_archive` that can be used to store all data revisions, and furthermore, an
 `epi_archive` object knows how to slide computations in the correct
-**version-aware** sense (for the computation at each reference time $t$, it uses
-only data that would have been available as of $t$). See the [archive
-vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
-more details.
+version-aware sense (for the computation at each reference time $t$, it uses
+only data that would have been available as of $t$). We will revisit this 
+example in the [archive 
+vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html).

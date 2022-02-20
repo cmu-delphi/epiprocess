@@ -101,19 +101,22 @@ time." />
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/slide.html">1. Slide a computation over signal values</a>
+      <a href="../articles/slide.html">Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/growth_rate.html">2. Estimate growth rates in signals</a>
+      <a href="../articles/growth_rate.html">Estimate growth rates in signals</a>
     </li>
     <li>
-      <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
+      <a href="../articles/correlation.html">Correlate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/aggregation.html">4. Aggregate signals over space and time</a>
+      <a href="../articles/aggregation.html">Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/outliers.html">5. Detect and correct outliers in signals</a>
+      <a href="../articles/outliers.html">Detect and correct outliers in signals</a>
+    </li>
+    <li>
+      <a href="../articles/archive.html">Work with archive objects and data revisions</a>
     </li>
   </ul>
 </li>
@@ -182,7 +185,7 @@ the signals variables, as of the time specified in the <code>as_of</code> field.
 version history of a given data set. Revisions are common in many types of
 epidemiological data streams, and paying attention to data revisions can be
 important for all sorts of downstream data analysis and modeling tasks. See
-the documentation for <code>epi_archive</code> for more details on how
+the documentation for <code><a href='epi_archive.html'>epi_archive</a></code> for more details on how
 data versioning works in the <code>epiprocess</code> package (including how to
 generate <code>epi_df</code> objects, as data snapshots, from an <code>epi_archive</code>
 object).</p>
@@ -190,8 +193,7 @@ object).</p>
 
     
 
-<p>The following geo types are recognized in an <code>epi_df</code>. Their geo coding
-(specification of geo values for each geo type) is also described below.</p><ul>
+<p>The following geo types are recognized in an <code>epi_df</code>.</p><ul>
 <li><p><code>"county"</code>: each observation corresponds to a U.S. county; coded by 5-digit
 FIPS code.</p></li>
 <li><p><code>"hrr"</code>: each observation corresponds to a U.S. hospital referral region
@@ -211,8 +213,7 @@ alpha-2 country codes (lowercase).</p></li>
 
     
 
-<p>The following time types are recognized in an <code>epi_df</code>. Their time coding
-(specification of time values for each time type) is also described below.</p><ul>
+<p>The following time types are recognized in an <code>epi_df</code>.</p><ul>
 <li><p><code>"day-time"</code>: each observation corresponds to a time on a given day
 (measured to the second); coded as a <code>POSIXct</code> object, as in
 <code><a href='https://rdrr.io/r/base/as.POSIXlt.html'>as.POSIXct("2022-01-31 18:45:40")</a></code>.</p></li>
@@ -233,9 +234,6 @@ greater than or equal to 1582.</p></li>
 </ul>
 
 <p>An unrecognizable time type is labeled "custom".</p>
-    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
-
-    <div class='dont-index'><p><code><a href='as_epi_df.html'>as_epi_df()</a></code> for converting to <code>epi_df</code> format</p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -248,7 +246,7 @@ greater than or equal to 1582.</p></li>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Rafael Catoia, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

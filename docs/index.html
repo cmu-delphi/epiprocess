@@ -59,19 +59,22 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="articles/slide.html">1. Slide a computation over signal values</a>
+      <a href="articles/slide.html">Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="articles/growth_rate.html">2. Estimate growth rates in signals</a>
+      <a href="articles/growth_rate.html">Estimate growth rates in signals</a>
     </li>
     <li>
-      <a href="articles/correlation.html">3. Correlate signals over space and time</a>
+      <a href="articles/correlation.html">Correlate signals over space and time</a>
     </li>
     <li>
-      <a href="articles/aggregation.html">4. Aggregate signals over space and time</a>
+      <a href="articles/aggregation.html">Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="articles/outliers.html">5. Detect and correct outliers in signals</a>
+      <a href="articles/outliers.html">Detect and correct outliers in signals</a>
+    </li>
+    <li>
+      <a href="articles/archive.html">Work with archive objects and data revisions</a>
     </li>
   </ul>
 </li>
@@ -101,7 +104,7 @@
 <p>This package introduces a common data structure for epidemiological data sets measured over space and time, and offers associated utilities to perform basic signal processing tasks. See the getting started guide and vignettes for examples.</p>
 <div id="epi_df-snapshot-of-a-data-set" class="section level2">
 <h2 class="hasAnchor">
-<a href="#epi_df-snapshot-of-a-data-set" class="anchor"></a>epi_df: snapshot of a data set</h2>
+<a href="#epi_df-snapshot-of-a-data-set" class="anchor"></a><code>epi_df</code>: snapshot of a data set</h2>
 <p>The first main data structure in the <code>epiprocess</code> package is called <a href="reference/epi_df.html"><code>epi_df</code></a>. This is simply a tibble with a couple of required columns, <code>geo_value</code> and <code>time_value</code>. It can have any other number of columns, which can be seen as measured variables, which we also call signal variables. In brief, an <code>epi_df</code> object represents a snapshot of a data set that contains the most up-to-date values of the signals variables, as of a given time.</p>
 <p>By convention, functions in the <code>epiprocess</code> package that operate on <code>epi_df</code> objects begin with <code>epi</code>. For example:</p>
 <ul>
@@ -116,12 +119,14 @@
 </div>
 <div id="epi_archive-full-version-history-of-a-data-set" class="section level2">
 <h2 class="hasAnchor">
-<a href="#epi_archive-full-version-history-of-a-data-set" class="anchor"></a>epi_archive: full version history of a data set</h2>
-<p>The second main data structure in the package is called <a href="reference/epi_archive.html"><code>epi_archive</code></a>. This is a special class wrapped around a data table that stores the archive (version history) of some signal variables of interest.</p>
-<p>An <code>epi_archive</code> object can be used to generate a snapshot of the associated data set in <code>epi_df</code> format, which represents the most up-to-date values of the signal variables, as of the specified version. This is accomplished by calling the <code>as_of()</code> method for an <code>epi_archive</code> object <code>x</code>, for example:</p>
-<pre><code>x$as_of(as.Date("2022-01-15"))</code></pre>
-<p>to generate an <code>epi_df</code> object containing a data snapshot as of January 15, 2022.</p>
-<p>Importantly, sliding computations can also be done over a data archive. This is accomplished by calling the <code>slide()</code> method for an <code>epi_archive</code> object. This works similarly to the way <code><a href="reference/epi_slide.html">epi_slide()</a></code> works for an <code>epi_df</code> object, but with one key difference: for an <code>epi_archive</code> object, the sliding computation at any given reference time point t is performed on the <strong>data that would have been available as of t</strong>.</p>
+<a href="#epi_archive-full-version-history-of-a-data-set" class="anchor"></a><code>epi_archive</code>: full version history of a data set</h2>
+<p>The second main data structure in the package is called <a href="reference/epi_archive.html"><code>epi_archive</code></a>. This is a special class (R6 format) wrapped around a data table that stores the archive (version history) of some signal variables of interest.</p>
+<p>By convention, functions in the <code>epiprocess</code> package that operate on <code>epi_df</code> objects begin with <code>epix</code> (the “x” is meant to remind you of “archive”). These are just wrapper functions around the public methods for the <code>epi_archive</code> R6 class. For example:</p>
+<ul>
+<li><p><code><a href="reference/epix_as_of.html">epix_as_of()</a></code>, for generating a snapshot in <code>epi_df</code> from the data archive, which represents the most up-to-date values of the signal variables, as of the specified version;</p></li>
+<li><p><code><a href="reference/epix_merge.html">epix_merge()</a></code>, for merging two data archives with each other, with support for filling in missing values via last observation carried forward (LOCF);</p></li>
+<li><p><code><a href="reference/epix_slide.html">epix_slide()</a></code>, for sliding a custom computation to a data archive over local windows in time, much like <code>epi_slide</code> for an <code>epi_df</code> object, but with one key difference: the sliding computation at any given reference time t is performed only on the <strong>data that would have been available as of t</strong>.</p></li>
+</ul>
 </div>
 </div>
   </div>
@@ -148,6 +153,7 @@
 <h2>Developers</h2>
 <ul class="list-unstyled">
 <li>Logan Brooks <br><small class="roles"> Author </small>  </li>
+<li>Rafael Catoia <br><small class="roles"> Author </small>  </li>
 <li>Evan Ray <br><small class="roles"> Author </small>  </li>
 <li>Ryan Tibshirani <br><small class="roles"> Author, maintainer </small>  </li>
 <li><a href="authors.html">All authors...</a></li>
@@ -159,7 +165,7 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Rafael Catoia, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

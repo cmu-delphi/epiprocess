@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Print <code>epi_df</code> object — print.epi_df • epiprocess</title>
+<title>S3 methods for an <code>epi_df</code> object — print.epi_df • epiprocess</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,12 @@
 
 
 
-<meta property="og:title" content="Print <code>epi_df</code> object — print.epi_df" />
-<meta property="og:description" content="Prints a brief summary of the epi_df object, then prints the underlying
-tibble." />
+<meta property="og:title" content="S3 methods for an <code>epi_df</code> object — print.epi_df" />
+<meta property="og:description" content="Print, summary, and dplyr verbs (that preserve class and attributes) for an
+epi_df object.
+Prints a variety of summary statistics about the epi_df object, such as
+the time range included and geographic coverage.
+dplyr verbs for epi_df objexts, preserving class and attributes." />
 
 
 
@@ -99,19 +102,22 @@ tibble." />
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/slide.html">1. Slide a computation over signal values</a>
+      <a href="../articles/slide.html">Slide a computation over signal values</a>
     </li>
     <li>
-      <a href="../articles/growth_rate.html">2. Estimate growth rates in signals</a>
+      <a href="../articles/growth_rate.html">Estimate growth rates in signals</a>
     </li>
     <li>
-      <a href="../articles/correlation.html">3. Correlate signals over space and time</a>
+      <a href="../articles/correlation.html">Correlate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/aggregation.html">4. Aggregate signals over space and time</a>
+      <a href="../articles/aggregation.html">Aggregate signals over space and time</a>
     </li>
     <li>
-      <a href="../articles/outliers.html">5. Detect and correct outliers in signals</a>
+      <a href="../articles/outliers.html">Detect and correct outliers in signals</a>
+    </li>
+    <li>
+      <a href="../articles/archive.html">Work with archive objects and data revisions</a>
     </li>
   </ul>
 </li>
@@ -136,18 +142,54 @@ tibble." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Print <code>epi_df</code> object</h1>
-    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/epi_df.R'><code>R/epi_df.R</code></a></small>
+    <h1>S3 methods for an <code>epi_df</code> object</h1>
+    <small class="dont-index">Source: <a href='https://github.com/cmu-delphi/epiprocess/blob/main/R/methods.R'><code>R/methods.R</code></a></small>
     <div class="hidden name"><code>print.epi_df.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Prints a brief summary of the <code>epi_df</code> object, then prints the underlying
-tibble.</p>
+    <p>Print, summary, and <code>dplyr</code> verbs (that preserve class and attributes) for an
+<code>epi_df</code> object.</p>
+<p>Prints a variety of summary statistics about the <code>epi_df</code> object, such as
+the time range included and geographic coverage.</p>
+<p><code>dplyr</code> verbs for <code>epi_df</code> objexts, preserving class and attributes.</p>
     </div>
 
     <pre class="usage"><span class='co'># S3 method for epi_df</span>
-<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='no'>x</span>, <span class='no'>...</span>)</pre>
+<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>arrange</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>group_by</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>group_modify</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>mutate</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>relocate</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>rename</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>slice</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>ungroup</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for epi_df</span>
+<span class='fu'>unnest</span>(<span class='no'>x</span>, <span class='no'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -158,7 +200,12 @@ tibble.</p>
     </tr>
     <tr>
       <th>...</th>
-      <td><p>Additional arguments passed to methods.</p></td>
+      <td><p>Additional arguments, for compatibility with <code><a href='https://rdrr.io/r/base/summary.html'>summary()</a></code>.
+Currently unused.</p></td>
+    </tr>
+    <tr>
+      <th>object</th>
+      <td><p>The <code>epi_df</code> object.</p></td>
     </tr>
     </table>
 
@@ -174,7 +221,7 @@ tibble.</p>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Rafael Catoia, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

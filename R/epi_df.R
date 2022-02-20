@@ -41,8 +41,7 @@
 #'   object).
 #'
 #' @section Geo Types:
-#' The following geo types are recognized in an `epi_df`. Their geo coding
-#'   (specification of geo values for each geo type) is also described below.
+#' The following geo types are recognized in an `epi_df`.
 #' 
 #' * `"county"`: each observation corresponds to a U.S. county; coded by 5-digit
 #'   FIPS code. 
@@ -60,8 +59,7 @@
 #' An unrecognizable geo type is labeled "custom".
 #' 
 #' @section Time Types:
-#' The following time types are recognized in an `epi_df`. Their time coding
-#'   (specification of time values for each time type) is also described below.
+#' The following time types are recognized in an `epi_df`.
 #' 
 #' * `"day-time"`: each observation corresponds to a time on a given day
 #'   (measured to the second); coded as a `POSIXct` object, as in
@@ -83,7 +81,6 @@
 #'
 #' An unrecognizable time type is labeled "custom".
 #'
-#' @seealso [as_epi_df()] for converting to `epi_df` format
 #' @name epi_df
 NULL
 
@@ -112,7 +109,6 @@ NULL
 #' @param ... Additional arguments passed to methods.
 #' @return An `epi_df` object.
 #' 
-#' @seealso [`epi_df`][epi_df] for more details on the `epi_df` format 
 #' @export
 as_epi_df = function(x, ...) {
   UseMethod("as_epi_df")
@@ -212,64 +208,4 @@ as_epi_df.tbl_ts = function(x, geo_type, time_type, as_of,
   }
   as_epi_df.tbl_df(tibble::as_tibble(x), geo_type, time_type, as_of,
                    additional_metadata, ...)
-}
-
-#' Print `epi_df` object
-#'
-#' Prints a brief summary of the `epi_df` object, then prints the underlying
-#' tibble.
-#'
-#' @param x The `epi_df` object.
-#' @param ... Additional arguments passed to methods.
-#'
-#' @method print epi_df
-#' @export
-print.epi_df = function(x, ...) {
-  cat("An `epi_df` object, with metadata:\n")
-  cat(sprintf("* %-10s= %s\n", "geo_type", attributes(x)$metadata$geo_type))
-  cat(sprintf("* %-10s= %s\n", "time_type", attributes(x)$metadata$time_type))
-  cat(sprintf("* %-10s= %s\n", "as_of", attributes(x)$metadata$as_of))
-  cat("\n")
-  NextMethod()
-}
-
-#' Summarize `epi_df` object
-#'
-#' Prints a variety of summary statistics about the `epi_df` object, such as
-#' the time range included and geographic coverage.
-#'
-#' @param object The `epi_df` object.
-#' @param ... Additional arguments, for compatibility with `summary()`.
-#'   Currently unused.
-#'
-#' @method summary epi_df
-#' @importFrom rlang .data
-#' @importFrom stats median
-#' @export
-summary.epi_df = function(object, ...) {
-  cat("An `epi_df` object, with metadata:\n")
-  cat(sprintf("* %-10s= %s\n", "geo_type", attributes(x)$metadata$geo_type))
-  cat(sprintf("* %-10s= %s\n", "time_type", attributes(x)$metadata$time_type))
-  cat(sprintf("* %-10s= %s\n", "as_of", attributes(x)$metadata$as_of))
-  cat("\nSummary of space-time coverage:\n")
-  cat(sprintf("* %-33s= %s\n", "earliest time value", min(object$time_value)))
-  cat(sprintf("* %-33s= %s\n", "latest time value", max(object$time_value)))
-  cat(sprintf("* %-33s= %i\n", "median geo values per time value",
-              as.integer(object %>% dplyr::group_by(.data$time_value) %>%
-                         dplyr::summarize(num = dplyr::n()) %>%
-                         dplyr::summarize(median(.data$num)))))
-}
-
-#' Convert to tsibble object
-#' 
-#' Converts an `epi_df` object into a tsibble, where the index is taken to be 
-#' `time_value`, and the key variables taken to be `geo_value` along with any
-#' others in the `other_keys` field of the metadata, or else explicitly set. 
-#'
-#' @importFrom tsibble as_tsibble
-#' @method as_tsibble epi_df
-#' @export
-as_tsibble.epi_df = function(x, key, ...) {
-  if (missing(key)) key = c("geo_value", attributes(x)$metadata$other_keys)
-  return(as_tsibble(tibble::as_tibble(x), key, index = "time_value", ...))
 }

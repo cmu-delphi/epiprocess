@@ -5,7 +5,7 @@ measured over space and time, and offers associated utilities to perform basic
 signal processing tasks. See the getting started guide and vignettes for
 examples.
 
-## epi_df: snapshot of a data set
+## `epi_df`: snapshot of a data set
 
 The first main data structure in the `epiprocess` package is called
 [`epi_df`](reference/epi_df.html). This is simply a tibble with a couple of
@@ -34,26 +34,26 @@ Functions in the package that operate directly on given variables do not begin
 - `detect_outlr()`, for detecting outliers in a given signal over time, using
   either built-in or custom methodologies.
 
-## epi_archive: full version history of a data set
+## `epi_archive`: full version history of a data set
 
 The second main data structure in the package is called
-[`epi_archive`](reference/epi_archive.html). This is a special class wrapped
-around a data table that stores the archive (version history) of some signal
-variables of interest. 
+[`epi_archive`](reference/epi_archive.html). This is a special class (R6 format) 
+wrapped around a data table that stores the archive (version history) of some
+signal variables of interest.
 
-An `epi_archive` object can be used to generate a snapshot of the associated
-data set in `epi_df` format, which represents the most up-to-date values of the
-signal variables, as of the specified version. This is accomplished by calling
-the `as_of()` method for an `epi_archive` object `x`, for example:
-```
-x$as_of(as.Date("2022-01-15"))
-```
-to generate an `epi_df` object containing a data snapshot as of January
-15, 2022.
+By convention, functions in the `epiprocess` package that operate on `epi_df`
+objects begin with `epix` (the "x" is meant to remind you of "archive"). These
+are just wrapper functions around the public methods for the `epi_archive` R6
+class. For example:
 
-Importantly, sliding computations can also be done over a data archive. This is
-accomplished by calling the `slide()` method for an `epi_archive` object. This
-works similarly to the way `epi_slide()` works for an `epi_df` object, but with
-one key difference: for an `epi_archive` object, the sliding computation at any
-given reference time point t is performed on the **data that would have been
-available as of t**.
+- `epix_as_of()`, for generating a snapshot in `epi_df` from the data archive,
+  which represents the most up-to-date values of the signal variables, as of the
+  specified version;
+
+- `epix_merge()`, for merging two data archives with each other, with support
+  for filling in missing values via last observation carried forward (LOCF);
+
+- `epix_slide()`, for sliding a custom computation to a data archive over local
+  windows in time, much like `epi_slide` for an `epi_df` object, but with one
+  key difference: the sliding computation at any given reference time t is
+  performed only on the **data that would have been available as of t**.

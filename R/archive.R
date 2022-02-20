@@ -26,22 +26,23 @@
 #'   later.
 #'
 #' The data table `DT` has key variables `geo_value`, `time_value`, `version`,
-#'   as well as any other specified in the metadata (described below). There can
-#'   only be a single row per unique combination of key variables, and thus the
-#'   key variables are critical for figuring out how to generate a snapshot of
-#'   data from the archive, as of a given version (also described below). 
+#'   as well as any others (these can be specified when instantiating the
+#'   `epi_archive` object via the `other_keys` argument, and/or set by operating
+#'   on `DT` directly). There can only be a single row per unique combination of
+#'   key variables, and thus the key variables are critical for figuring out how
+#'   to generate a snapshot of data from the archive, as of a given version.
 #' 
-#' In general, last-observation-carried-forward (LOCF) is used to data in
+#' In general, last observation carried forward (LOCF) is used to data in
 #'   between recorded versions. Currently, deletions must be represented as
 #'   revising a row to a special state (e.g., making the entries `NA` or
 #'   including a special column that flags the data as removed and performing
 #'   some kind of post-processing), and the archive is unaware of what this
 #'   state is.
 #'
-#' A word of caution: R6 objects, unlike most other objects in R, have reference
-#'   semantics. A primary consequence of this is that objects are not copied
-#'   when modified. You can read more about this in Hadley Wickham's [Advanced 
-#'   R](https://adv-r.hadley.nz/r6.html#r6-semantics) book.
+#' **A word of caution:** R6 objects, unlike most other objects in R, have
+#'   reference semantics. A primary consequence of this is that objects are not
+#'   copied when modified. You can read more about this in Hadley Wickham's
+#'   [Advanced R](https://adv-r.hadley.nz/r6.html#r6-semantics) book.
 #' 
 #' @section Metadata:
 #' The following pieces of metadata are included as fields in an `epi_archive`
@@ -49,9 +50,6 @@
 #'
 #' * `geo_type`: the type for the geo values.
 #' * `time_type`: the type for the time values.
-#' * `max_version`: the max version in the data archive.
-#' * `other_keys`: the names of the other key variables (apart from "geo_value",
-#'   "time_value", and "version") in the data archive.
 #' * `additional_metadata`: list of additional metadata for the data archive.
 #'
 #' Unlike an `epi_df` object, metadata for an `epi_archive` object `x` can be
@@ -64,13 +62,9 @@
 #' @section Generating Snapshots:
 #' An `epi_archive` object can be used to generate a snapshot of the data in
 #'   `epi_df` format, which represents the most up-to-date values of the signal
-#'   variables, as of the specified version. This is accomplished by calling the 
-#'   `as_of()` method for an `epi_archive` object `x`, for example:
-#'   ```
-#'   x$as_of(as.Date("2022-01-15"))
-#'   ```
-#'   to generate a snapshot as of January 15, 2022. More details on the
-#'   `as_of()` method are documented below.
+#'   variables, as of the specified version. This is accomplished by calling the
+#'   `as_of()` method for an `epi_archive` object `x`. More details on this
+#'   method are documented in the wrapper function `epix_as_of()`.
 #'
 #' @section Sliding Computations:
 #' We can run a sliding computation over an `epi_archive` object, much like
@@ -80,12 +74,8 @@
 #'   difference: it is version-aware. That is, for an `epi_archive` object, the
 #'   sliding computation at any given reference time point t is performed on
 #'   **data that would have been available as of t**. More details on `slide()`
-#'   are documented below.
+#'   are documented in the wrapper function `epix_slide()`.
 #' 
-#' @seealso [as_epi_archive()] for converting to `epi_archive` format
-#' @importFrom data.table as.data.table key setkey
-#' @importFrom dplyr filter select
-#' @importFrom rlang .data abort warn
 #' @export
 epi_archive =
   R6::R6Class(
@@ -95,8 +85,6 @@ epi_archive =
           DT = NULL,
           geo_type = NULL,
           time_type = NULL,
-          max_version = NULL,
-          other_keys = NULL,
           additional_metadata = NULL,
 #' @description Creates a new `epi_archive` object.
 #' @param x A data frame, data table, or tibble, with columns `geo_value`,
@@ -107,8 +95,6 @@ epi_archive =
 #' @param time_type Type for the time values. If missing, then the function will
 #'   attempt to infer it from the time values present; if this fails, then it
 #'   will be set to "custom".
-#' @param max_version Maximum version in the data archive. If missing, then the
-#'   function will set it equal to the maximum of the `version` column in `x`.
 #' @param other_keys Character vector specifying the names of variables in `x`
 #'   that should be considered key variables (in the language of `data.table`)
 #'   apart from "geo_value", "time_value", and "version".
@@ -116,8 +102,10 @@ epi_archive =
 #'   `epi_archive` object. The metadata will have `geo_type` and `time_type`
 #'   fields; named entries from the passed list or will be included as well.
 #' @return An `epi_archive` object.
-          initialize = function(x, geo_type, time_type, max_version,
-                                other_keys, additional_metadata) {
+#' @importFrom data.table as.data.table key setkeyv
+#' @importFrom rlang abort warn
+          initialize = function(x, geo_type, time_type, other_keys,
+                                additional_metadata) {  
             # Check that we have a data frame
             if (!is.data.frame(x)) {
               abort("`x` must be a data frame.")
@@ -143,20 +131,6 @@ epi_archive =
             if (missing(time_type)) {
               time_type = guess_time_type(x$time_value)
             }
-
-            # Check several things about max version
-            if (missing(max_version)) {
-              max_version = max(x$version)
-            }
-            if (!identical(class(max_version), class(x$version))) {
-              abort("`max_version` and `x$version` must have same class.")
-            }
-            if (length(max_version) > 1) {
-              abort("`max_version` cannot be a vector.")
-            }
-            if (max_version < max(x$version)) {
-              abort("`max_version` must be at least `max(x$version)`.")
-            }
             
             # Finish off with small checks on keys variables and metadata
             if (missing(other_keys)) other_keys = NULL
@@ -168,8 +142,8 @@ epi_archive =
               abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
             }
             if (any(names(additional_metadata) %in%
-                    c("geo_type", "time_type", "max_version", "other_keys"))) {
-              warn("`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\", \"max_version\", and \"other_keys\".")
+                    c("geo_type", "time_type"))) {
+              warn("`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\".")
             }
             
             # Create the data table; if x was an un-keyed data.table itself,
@@ -177,49 +151,52 @@ epi_archive =
             # need to check this, then do it manually if needed
             key_vars = c("geo_value", "time_value", other_keys, "version")
             DT = as.data.table(x, key = key_vars)
-            if (!identical(key_vars, key(DT))) setkey(DT, key_vars)
+            if (!identical(key_vars, key(DT))) setkeyv(DT, cols = key_vars)
 
             # Instantiate all self variables
             self$DT = DT
             self$geo_type = geo_type
             self$time_type = time_type
-            self$max_version = max_version
-            self$other_keys = other_keys
             self$additional_metadata = additional_metadata
           },
           print = function() {
             cat("An `epi_archive` object, with metadata:\n")
-            cat(sprintf("* %-12s= %s\n", "geo_type", self$geo_type))
-            cat(sprintf("* %-12s= %s\n", "time_type", self$time_type))
-            cat(sprintf("* %-12s= %s\n", "max_version", self$max_version))
-            if (!is.null(self$other_keys)) {
-              cat(sprintf("* %-12s= %s\n", "other_keys", self$other_keys))
-            }
+            cat(sprintf("* %-9s = %s\n", "geo_type", self$geo_type))
+            cat(sprintf("* %-9s = %s\n", "time_type", self$time_type))
             if (!is.null(self$additional_metadata)) { 
               sapply(self$additional_metadata, function(m) { 
-                cat(sprintf("* %-12s= %s\n", names(m), m))
+                cat(sprintf("* %-9s = %s\n", names(m), m))
               })
             }
-            cat("\n")
-            cat(sprintf("Data archive (stored in DT field): %i x %i", 
+            cat("----------\n")
+            cat(sprintf("* %-14s = %s\n", "min time value",
+                        min(self$DT$time_value)))
+            cat(sprintf("* %-14s = %s\n", "max time value",
+                        max(self$DT$time_value)))
+            cat(sprintf("* %-14s = %s\n", "min version",
+                        min(self$DT$version)))
+            cat(sprintf("* %-14s = %s\n", "max version",
+                        max(self$DT$version)))
+            cat("----------\n")
+            cat(sprintf("Data archive (stored in DT field): %i x %i\n", 
                         nrow(self$DT), ncol(self$DT)))
-            cat("\n")
+            cat("----------\n")
             cat(sprintf("Public methods: %s",
                         paste(names(epi_archive$public_methods),
                               collapse = ", ")))
           },
           #####
 #' @description Generates a snapshot in `epi_df` format as of a given version.
-#' @param max_version Time value specifying the max version to permit in the
-#'   snapshot. That is, the snapshot will comprise the unique rows that
-#'   represent the most up-to-date signal values, as of the specified
-#'   `max_version`, whose time values are at least `min_time_value`.
-#' @param min_time_value Time value specifying the min time value to permit in
-#'   the snapshot. Default is `-Inf`, which effectively means that there is no
-#'   minimum considered.
-#' @return An `epi_df` object.
-#' @importFrom rlang .data 
+#'   See the documentation for the wrapper function `epix_as_of()` for details.
+#' @importFrom data.table between key
+#' @importFrom rlang .data abort warn
           as_of = function(max_version, min_time_value = -Inf) {
+            # Self max version and other keys
+            self_max = max(self$DT$version)
+            other_keys = setdiff(key(self$DT),
+                                 c("geo_value", "time_value", "version"))
+            if (length(other_keys) == 0) other_keys = NULL
+            
             # Check a few things on max_version
             if (!identical(class(max_version), class(self$DT$version))) {
               abort("`max_version` and `DT$version` must have same class.")
@@ -227,117 +204,160 @@ epi_archive =
             if (length(max_version) != 1) {
               abort("`max_version` cannot be a vector.")
             }
-            if (max_version > self$max_version) {
-              abort("`max_version` must be at most `max_version`.")
+            if (max_version > self_max) {
+              abort("`max_version` must be at most `max(DT$max_version)`.")
             }
-            if (max_version == self$max_version) {
+            if (max_version == self_max) {
               warn("Getting data as of the latest version possible. For a variety of reasons, it is possible that we only have a preliminary picture of this version (e.g., the upstream source has updated it but we have not seen it due to latency in synchronization). Thus, the snapshot that we produce here might not be reproducible at a later time (e.g., when the archive has caught up in terms of synchronization).")
             }
-
+            
+            # Filter by version and return
             return(
-              self$DT %>%
-              filter(data.table::between(time_value,
-                                         min_time_value,
-                                         max_version)) %>%
-              filter(.data$version <= max_version) %>% 
-              unique(by = c("geo_value", "time_value", self$other_keys),
+              # Make sure to use data.table ways of filtering and selecting 
+              self$DT[between(time_value,
+                              min_time_value,
+                              max_version) &
+                      version <= max_version, ] %>%
+              unique(by = c("geo_value", "time_value", other_keys),
                      fromLast = TRUE) %>%
-              select(-.data$version) %>%
               tibble::as_tibble() %>% 
+              dplyr::select(-.data$version) %>%
               as_epi_df(geo_type = self$geo_type,
                         time_type = self$time_type,
                         as_of = max_version,
                         additional_metadata = c(self$additional_metadata,
-                                                other_keys = self$other_keys))
+                                                other_keys = other_keys))
             )
-          },
+          },          
+          #####
+#' @description Merges another `data.table` with the current one, and allows for
+#'   a post-filling of `NA` values by last observation carried forward (LOCF).
+#'   See the documentation for the wrapper function `epix_merge()` for details.
+#' @importFrom data.table key merge.data.table nafill
+#' @importFrom rlang abort 
+          merge = function(y, ..., locf = TRUE, nan = NA) {
+            # Check we have a `data.table` object
+            if (!(inherits(y, "data.table") || inherits(y, "epi_archive"))) {
+              abort("`y` must be of class `data.table` or `epi_archive`.") 
+            }
+
+            # Use the data.table merge function, carrying through ... args
+            if (inherits(y, "data.table")) self$DT = merge(self$DT, y, ...)
+            else self$DT = merge(self$DT, y$DT, ...)
+
+            # Now use the data.table locf function, if we're asked to
+            if (locf) {
+              key_vars = key(self$DT)
+              cols = setdiff(names(self$DT), key_vars)
+              by = setdiff(key_vars, "version")
+
+              # Important: use nafill and not setnafill because the latter
+              # returns the entire data frame by reference, and the former can
+              # be set to act on particular columns by reference using := 
+              self$DT[,
+              (cols) := nafill(.SD, type = "locf", nan = nan),        
+              .SDcols = cols, 
+              by = by]
+            }
+          },   
+          #####
 #' @description Slides a given function over variables in an `epi_archive`
-#'   object. Windows are *always right-aligned*, unlike `epi_slide()`. The other
-#'   arguments are as in `epi_slide()`, and its documentation gives more details
-#'   on their useage. The exception is the `by` argument, which used to specify
-#'   the grouping upfront (whereas in an `epi_df`, this would be accomplished by
-#'   a call to `dplyr::group_by()` that precedes a call to `epi_df()`). See the
-#'   [archive
-#'   vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html)
-#'   for examples.
-#' @param f Function or formula to slide over variables in `x`. To "slide" means
-#'   to apply a function or formula over a running window of `n` time steps
-#'   (where one time step is typically one day or one week). If a function, `f`
-#'   must take `x`, a data frame with the same column names as the original
-#'   object; followed by any number of named arguments; and ending with
-#'   `...`. If a formula, `f` can operate directly on columns accessed via
-#'   `.x$var`, as in `~ mean(.x$var)` to compute a mean of a column `var` over a
-#'   sliding window of `n` time steps.
-#' @param ... Additional arguments to pass to the function or formula specified
-#'   via `f`. Alternatively, if `f` is missing, then the current argument is
-#'   interpreted as an expression for tidy evaluation.
-#' @param n Number of time steps to use in the running window. For example, if
-#'   `n = 5`, one time step is one day, and the alignment is "right", then to 
-#'   produce a value on November 5, we apply the given function or formula to
-#'   data in between November 1 and 5. Default is 14. 
-#' @param complete Should the slide function be run over complete windows only?
-#'   Default is `FALSE`, which allows for computation on partial windows.  
-#' @param new_col_name String indicating the name of the new column that will
-#'   contain the derivative values. Default is "slide_value"; note that setting
-#'   `new_col_name` equal to an existing column name will overwrite this column.
-#' @param as_list_col Should the new column be stored as a list column? Default
-#'   is `FALSE`, in which case a list object returned by `f` would be unnested 
-#'   (using `tidyr::unnest()`), and the names of the resulting columns are given
-#'   by prepending `new_col_name` to the names of the list elements. 
-#' @param time_step Optional function used to define the meaning of one time
-#'   step, which if specified, overrides the default choice based on the
-#'   `time_value` column. This function must take a positive integer and return
-#'   an object of class `lubridate::period`. For example, we can use `time_step
-#'   = lubridate::hours` in order to set the time step to be one hour (this
-#'   would only be meaningful if `time_value` is of class `POSIXct`).
-#' @param by The variable(s) to group by before slide computation. If missing,
-#'   then `geo_value` and the variable names in the `other_keys` field of the
-#'   `epi_archive` object will be used for grouping.
-#' @return A tibble with the grouping variables, `time_value`, and a new column
-#'   named according to the `new_col_name` argument, with the slide values.
-#' @importFrom dplyr group_by group_modify mutate select
-#' @importFrom lubridate days weeks
-#' @importFrom rlang !! enquo enquos 
-          slide = function(f, ..., n = 14, complete = FALSE,
-                           new_col_name = "slide_value", as_list_col = FALSE,
-                           time_step, by) { 
+#'   object. See the documentation for the wrapper function `epix_as_of()` for
+#'   details. 
+#' @importFrom data.table key
+#' @importFrom rlang !! !!! abort enquo enquos is_quosure sym syms
+          slide = function(f, ..., n = 7, group_by, ref_time_values, 
+                           time_step, complete = FALSE,
+                           new_col_name = "slide_value",
+                           as_list_col = FALSE, names_sep = "_",
+                           all_rows = FALSE) { 
+            # If missing, then set ref time values to be everything; else make
+            # sure we intersect with observed time values 
+            if (missing(ref_time_values)) {
+              ref_time_values = unique(self$DT$time_value)
+            }
+            else {
+              ref_time_values = ref_time_values[ref_time_values %in%
+                                                unique(self$DT$time_value)]
+            }
+              
             # If a custom time step is specified, then redefine units 
             before_num = n-1
             if (!missing(time_step)) before_num = time_step(n-1)
             
             # What to group by? If missing, set according to internal keys
-            if (missing(by)) by = c("geo_value", other_keys)
-            by = enquo(by)
+            if (missing(group_by)) {
+              group_by = setdiff(key(self$DT), c("time_value", "version"))
+            }
+            
+            # Symbolize column name, defuse grouping variables. We have to do
+            # the middle step here which is a bit complicated (unfortunately)
+            # since the function epix_slide() could have called the current one,
+            # and in doing so, it may have already needed to defuse the grouping
+            # variables
+            new_col = sym(new_col_name)
+            if (!is_quosure(group_by)) group_by = enquo(group_by)
+            group_by = syms(names(eval_select(group_by, self$DT)))
 
-            # Computation for just one group
+            # Key variable names, apart from time value and version
+            key_vars = setdiff(key(self$DT), c("time_value", "version"))
+            
+            # Computation for one group, one time value
             comp_one_grp = function(.data_group,
-                                    ...,
-                                    f,
+                                    f, ..., n,
+                                    time_value,
                                     complete,
-                                    min_time_value,
-                                    new_col_name) {
-              # Check if we don't have a complete window, and if we needed
-              # to have one, then return NA
-              if (complete && min(.data_group$time_value > min_time_value)) {
+                                    key_vars,
+                                    new_col) {
+              # Check if we need a complete window (max - min = n-1)
+              if (complete && diff(range(.data_group$time_value)) < n-1) {
                 comp_value = NA
               }
+              # Else carry out the specified computation 
               else comp_value = f(.data_group, ...)
-              return(mutate(.data_group, !!new_col_name := comp_value))
+
+              # Count the number of appearances of the reference time value
+              # Note: ideally, we'd like to just count the occurences of the ref
+              # time value but due to latency, this will often not appear in the
+              # data group. So we count the number of unique key values, outside
+              # of the time value column
+              count = sum(!duplicated(.data_group[, key_vars]))
+              
+              # If we get back data frames from sliding, then below we unpack
+              # these rows  
+              if (inherits(comp_value, "data.frame")) {
+                if (nrow(comp_value) == 1) {
+                  comp_value = rep(list(comp_value), count)
+                }
+                else if (nrow(comp_value) != count) {
+                  abort("If the slide computation returns a data frame, it must either have a single row, or else have one row per appearance of the reference time value in the local window.")
+                }
+                else {
+                  comp_value = split(comp_value, 1:nrow(comp_value))
+                }
+              }
+ 
+              # Size stable: make sure to return one row per appearance of the
+              # reference value (if comp value is a single atomic value, then
+              # tibble() will recycle it)  
+              return(tibble::tibble(time_value = rep(time_value, count),
+                                    !!new_col := comp_value))
             }
             
             # If f is not missing, then just go ahead, slide by group
             if (!missing(f)) {
-              x = purrr::map_dfr(self$DT$time_value, function(t) {
+              x = purrr::map_dfr(ref_time_values, function(t) {
                 self$as_of(t, min_time_value = t - before_num) %>%
-                  tibble::as_tsibble() %>% 
-                  group_by(!!by) %>%
-                  group_modify(comp_one_grp,
-                               f = f,
-                               ...,
-                               complete = complete,
-                               min_time_value = t - before_num,
-                               new_col_name = new_col_name) %>%
-                  select(!!by, time_value, !!new_col_name)
+                  tibble::as_tibble() %>% 
+                  dplyr::group_by(!!!group_by) %>%
+                  dplyr::group_modify(comp_one_grp,
+                                      f = f, ..., n = n,
+                                      time_value = t,
+                                      complete = complete,
+                                      key_vars = key_vars,
+                                      new_col = new_col,
+                                      .keep = TRUE) %>%
+                  dplyr::ungroup()
               })
             }
 
@@ -353,25 +373,33 @@ epi_archive =
               
               quo = quos[[1]]
               f = function(x, quo, ...) rlang::eval_tidy(quo, x)
-              new_col_name = names(rlang::quos_auto_name(quos))
+              new_col = sym(names(rlang::quos_auto_name(quos)))
 
-              x = purrr::map(self$DT$time_value, function(t) {
+              x = purrr::map_dfr(ref_time_values, function(t) {
                 self$as_of(t, min_time_value = t - before_num) %>%
-                  tibble::as_tsibble() %>% 
-                  group_by(!!by) %>%
-                  group_modify(comp_one_grp,
-                               f = f,
-                               quo = quo,
-                               complete = complete,
-                               min_time_value = t - before_num,
-                               new_col_name = new_col_name) %>%
-                  select(!!by, time_value, !!new_col_name)
+                  tibble::as_tibble() %>% 
+                  dplyr::group_by(!!!group_by) %>%
+                  dplyr::group_modify(comp_one_grp,
+                                      f = f, quo = quo, n = n,
+                                      time_value = t,
+                                      complete = complete,
+                                      key_vars = key_vars,
+                                      new_col = new_col,
+                                      .keep = TRUE) %>%
+                  dplyr::ungroup()
               })
             }
             
-            # Unnest if we need to, and return
-            if (!as_list_col && is.list(pull(x, !!new_col_name))) {
-              x = tidyr::unnest(x, !!new_col_name, names_sep = "_")
+            # Unnest if we need to
+            if (!as_list_col) {
+              x = tidyr::unnest(x, !!new_col, names_sep = names_sep)
+            }
+            
+            # Join to get all rows, if we need to, then return
+            if (all_rows) {
+              cols = c(as.character(group_by), "time_value")
+              y = unique(self$DT[, ..cols])
+              x = dplyr::left_join(y, x, by = cols)
             }
             return(x)
           }
@@ -382,7 +410,7 @@ epi_archive =
 #'
 #' Converts a data frame, data table, or tibble into an `epi_archive`
 #' object. See the [archive
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for  
+#' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 #' examples.
 #'
 #' @param x A data frame, data table, or tibble, with columns `geo_value`,
@@ -393,8 +421,6 @@ epi_archive =
 #' @param time_type Type for the time values. If missing, then the function will
 #'   attempt to infer it from the time values present; if this fails, then it
 #'   will be set to "custom".
-#' @param max_version Maximum version in the data archive. If missing, then the
-#'   function will set it equal to the maximum of the `version` column in `x`.
 #' @param other_keys Character vector specifying the names of variables in `x`
 #'   that should be considered key variables (in the language of `data.table`)
 #'   apart from "geo_value", "time_value", and "version".
@@ -403,11 +429,18 @@ epi_archive =
 #'   fields; named entries from the passed list or will be included as well.
 #' @return An `epi_archive` object.
 #'
-#' @seealso [`epi_archive`][epi_archive] for more details on the `epi_archive`
-#'   format 
+#' @details This simply a wrapper around the `new()` method of the `epi_archive`
+#'   class, so for example:
+#'   ```
+#'   x <- as_epi_archive(df, geo_type = "state", time_type = "day")
+#'   ```
+#'   would be equivalent to:
+#'   ```
+#'   x <- epi_archive$new(df, geo_type = "state", time_type = "day")
+#'   ```
+#'
 #' @export
-as_epi_archive = function(x, geo_type, time_type, max_version, other_keys,
-                          additional_metadata = list()) {
-  epi_archive$new(x, geo_type, time_type, max_version, other_keys,
-                  additional_metadata) 
+as_epi_archive = function(x, geo_type, time_type, other_keys,
+                          additional_metadata = list()) { 
+  epi_archive$new(x, geo_type, time_type, other_keys, additional_metadata) 
 }

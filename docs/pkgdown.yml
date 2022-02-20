@@ -3,10 +3,11 @@ pkgdown: 1.5.1
 pkgdown_sha: ~
 articles:
   aggregation: aggregation.html
+  archive: archive.html
   correlation: correlation.html
   epiprocess: epiprocess.html
   growth_rate: growth_rate.html
   outliers: outliers.html
   slide: slide.html
-last_built: 2022-02-13T01:21Z
+last_built: 2022-02-20T01:53Z
 

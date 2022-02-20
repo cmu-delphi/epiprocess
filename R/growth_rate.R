@@ -1,6 +1,6 @@
 #' Estimate growth rate
 #' 
-#' Estimates the growth rate of a signal at given points along the underlying 
+#' Estimates the growth rate of a signal at given points along the underlying
 #' sequence. Several methodologies are available; see the [growth rate
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/growth_rate.html)
 #' for examples.
@@ -18,7 +18,7 @@
 #'   growth rates); the latter two are global methods: they are run once over
 #'   the entire sequence. See details for more explanation.
 #' @param h Bandwidth for the sliding window, when `method` is "rel_change" or
-#'   "linear_reg". See details for more explanation. 
+#'   "linear_reg". See details for more explanation.
 #' @param log_scale Should growth rates be estimated using the parametrization
 #'   on the log scale? See details for an explanation. Default is `FALSE`.
 #' @param dup_rm Should we check and remove duplicates in `x` (and corresponding
@@ -100,8 +100,9 @@
 #' @importFrom rlang abort 
 #' @export
 growth_rate = function(x = seq_along(y), y, x0 = x,
-                       method = c("rel_change", "linear_reg", "smooth_spline",
-                                  "trend_filter"), h = 7, log_scale = FALSE,
+                       method = c("rel_change", "linear_reg",
+                                  "smooth_spline", "trend_filter"),
+                       h = 7, log_scale = FALSE,
                        dup_rm = FALSE, na_rm = FALSE, ...) { 
   # Check x, y, x0
   if (length(x) != length(y)) abort("`x` and `y` must have the same length.")
@@ -138,7 +139,7 @@ growth_rate = function(x = seq_along(y), y, x0 = x,
 
   # Local methods
   if (method == "rel_change" || method == "linear_reg") {    
-    g = purrr::map_dbl(x, function(x_ref, x, y, h, method, log_scale) {
+    g = purrr::map_dbl(x, function(x_ref) {
       # Form the local window
       ii = (x > x_ref - h) & (x <= x_ref + h)
       xx = x[ii]
@@ -168,7 +169,7 @@ growth_rate = function(x = seq_along(y), y, x0 = x,
         if (log_scale) return(b)
         else return(b / (a + b * x_ref))
       }
-    }, x, y, h, method, log_scale)
+    })
     
     return(g[i0])
   }
@@ -211,7 +212,7 @@ growth_rate = function(x = seq_along(y), y, x0 = x,
       # Check cv and df combo
       if (is.numeric(df)) cv = FALSE
       if (!cv && !(is.numeric(df) && df == round(df))) {
-        abort("If `cv` is `FALSE`, then `df` must be an integer.")
+        abort("If `cv = FALSE`, then `df` must be an integer.")
       }
 
       # Compute trend filtering path
