@@ -45,9 +45,9 @@ and corresponding sequence `y` of signal values, and allows us to choose from
 the following methods for estimating the growth rate at a given reference point
 `x0`, by setting the `method` argument: 
 
-* "rel_change": uses (B/A - 1) / h, where B is the average of `y` over the
+* "rel_change": uses $(\bar B/\bar A - 1) / h$, where $\bar B$ is the average of `y` over the
   second half of a sliding window of bandwidth h centered at the reference 
-  point `x0`, and A the average over the first half. This can be seen as using
+  point `x0`, and $\bar A$ the average over the first half. This can be seen as using
   a first-difference approximation to the derivative.
 * "linear_reg": uses the slope from a linear regression of `y` on `x` over a
   sliding window centered at the reference point `x0`, divided by the fitted
@@ -249,6 +249,15 @@ x %>%
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Growth rate", col = "Method") 
 ```
+
+Comparing the `rel_change_log` curves with their `rel_change` counterparts (shown in earlier figures), we see that the `rel_change_log` curves appear less volatile and match the linear regression estimates much more closely.  In particular, when `rel_change` has upward spikes, `rel_change_log` has less pronounced spikes.  Why does this occur?  The estimate of $g'(t)$ is computed as $\mathbb E[\log(B)-\log(A)]/h=\mathbb E[\log(1+hR)]/h$, where $R = ((B-A)/h) / A$ and the expectation refers to averaging over the $h$ observations in each window.  There are two relevant inequalities for relating these, both based on the concavity of log:
+
+$$
+\mathbb E[\log(1+hR)]/h \le \log(1+h\mathbb E[R])/h \le \mathbb E[R].
+$$
+
+The first inequality is Jensen's; the second inequality is because the tangent line of a concave function lies above it.  Finally, we observe that $\mathbb E[R]\approx((\bar B-\bar A)/h) / \bar A$, which is `rel_change`.  This explains why the `rel_change_log` curve lies below the `rel_change` curve.
+
 
 Whether or not a log transform is used should likely be informed by the working
 model for noise. *todo: write something intelligent here?*
