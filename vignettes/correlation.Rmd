@@ -25,14 +25,14 @@ x <- covidcast_signal("jhu-csse",
                       start_day = "2020-03-01", 
                       end_day = "2021-12-31",
                       geo_type = "state") %>%
-  select(geo_value, time_value, case_rates = value) 
+  select(geo_value, time_value, case_rate = value) 
 
 y <- covidcast_signal("jhu-csse", 
                       "deaths_7dav_incidence_prop",
                       start_day = "2020-03-01", 
                       end_day = "2021-12-31",
                       geo_type = "state") %>%
-  select(geo_value, time_value, death_rates = value) 
+  select(geo_value, time_value, death_rate = value) 
 
 x <- x %>%
   full_join(y, by = c("geo_value", "time_value")) %>%
@@ -55,7 +55,7 @@ time value, and by geo value. The former is obtained via `cor_by = time_value`.
 library(ggplot2)
 theme_set(theme_bw())
 
-z1 <- epi_cor(x, case_rates, death_rates, cor_by = "time_value")
+z1 <- epi_cor(x, case_rate, death_rate, cor_by = "time_value")
 
 ggplot(z1, aes(x = time_value, y = cor)) + 
   geom_line() +
@@ -76,13 +76,13 @@ Spearman correlation is highly robust and invariant to monotone transformations.
 We might also be interested in how case rates associate with death rates in the
 *future*. Using the `dt1` parameter in `epi_cor()`, we can lag case rates back
 any number of days we want, before calculating correlations. Below, we set `dt1
-= -10`. This means that `var1 = case_rates` will be lagged by 10 days, so that
+= -10`. This means that `var1 = case_rate` will be lagged by 10 days, so that
 case rates on June 1st will be correlated with death rates on June 11th.  (It
 might also help to think of it this way: death rates on a certain day will be
 correlated with case rates at an offset of -10 days.)
 
 ```{r, message = FALSE, warning = FALSE}
-z2 <- epi_cor(x, case_rates, death_rates, cor_by = time_value, dt1 = -10)
+z2 <- epi_cor(x, case_rate, death_rate, cor_by = time_value, dt1 = -10)
 
 z <- rbind(z1 %>% mutate(lag = 0), 
            z2 %>% mutate(lag = 10)) %>%
@@ -110,8 +110,8 @@ The second option we have is to group by geo value, obtained by setting `cor_by
 case rates.
 
 ```{r, message = FALSE, warning = FALSE}
-z1 <- epi_cor(x, case_rates, death_rates, cor_by = geo_value)
-z2 <- epi_cor(x, case_rates, death_rates, cor_by = geo_value, dt1 = -10)
+z1 <- epi_cor(x, case_rate, death_rate, cor_by = geo_value)
+z2 <- epi_cor(x, case_rate, death_rate, cor_by = geo_value, dt1 = -10)
 
 z <- rbind(z1 %>% mutate(lag = 0), 
            z2 %>% mutate(lag = 10)) %>%
@@ -135,7 +135,7 @@ library(purrr)
 lags = 0:35
 
 z <- map_dfr(lags, function(lag) {
-  epi_cor(x, case_rates, death_rates, cor_by = geo_value, dt1 = -lag) %>% 
+  epi_cor(x, case_rate, death_rate, cor_by = geo_value, dt1 = -lag) %>% 
     mutate(lag = lag) 
   })
 
