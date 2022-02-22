@@ -25,7 +25,7 @@ signal is subject to very heavy and regular revision; you can read more about it
 on its [API documentation
 page](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
 
-```{r, message = FALSE}
+```{r, message = FALSE, warning = FALSE}
 library(covidcast)
 library(epiprocess)
 library(data.table)
@@ -220,7 +220,7 @@ Because the original data archives are stored in LOCF (last observation carried
 forward) format in the first place, it generally makes sense to perform `NA`
 filling after merging using LOCF. Therefore `locf = TRUE` is the default.
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 y <- covidcast_signal("jhu-csse", 
                       "confirmed_7dav_incidence_prop",
                       start_day = "2020-06-01", 
@@ -335,14 +335,15 @@ On the whole, `epix_slide()` works similarly to `epix_slide()`, though there are
 a few notable differences, even apart from the version-aware aspect. You can
 read the documentation for `epix_slide()` for details.
 
-We finish off by comparing version-aware and version-unaware forecasts at
-various points in time and forecast horizons. The former will come from applying
+We finish off by comparing version-aware and -unaware forecasts at various 
+points in time and forecast horizons. The former comes from applying 
 `epix_slide()` to the `epi_archive` object `x`, and the latter from applying
 `epi_slide()` to the latest snapshot of the data `x_latest`.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
 x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 
+# Simple function to produce forecasts k weeks ahead
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
@@ -359,7 +360,7 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   }
 }
 
-# First generate the forecasts, and bind them together
+# Generate the forecasts, and bind them together
 fc <- bind_rows(k_week_ahead(x, ahead = 7, as_of = TRUE),
                 k_week_ahead(x, ahead = 14, as_of = TRUE),
                 k_week_ahead(x, ahead = 21, as_of = TRUE),
@@ -369,7 +370,7 @@ fc <- bind_rows(k_week_ahead(x, ahead = 7, as_of = TRUE),
                 k_week_ahead(x, ahead = 21, as_of = FALSE),
                 k_week_ahead(x, ahead = 28, as_of = FALSE))
 
-# Now plot them, on top of latest COVID-19 case counts 
+# Plot them, on top of latest COVID-19 case rates 
 p <- ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
   geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), alpha = 0.4) +
   geom_line(aes(y = fc_point)) + geom_point(aes(y = fc_point), size = 0.5) + 

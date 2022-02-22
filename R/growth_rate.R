@@ -97,7 +97,6 @@
 #'   TRUE`). Note that if `cv = FALSE`, then we require `df` to be set by the
 #'   user.
 #' 
-#' @importFrom rlang abort 
 #' @export
 growth_rate = function(x = seq_along(y), y, x0 = x,
                        method = c("rel_change", "linear_reg",
@@ -105,8 +104,8 @@ growth_rate = function(x = seq_along(y), y, x0 = x,
                        h = 7, log_scale = FALSE,
                        dup_rm = FALSE, na_rm = FALSE, ...) { 
   # Check x, y, x0
-  if (length(x) != length(y)) abort("`x` and `y` must have the same length.")
-  if (!all(x0 %in% x)) abort("`x0` must be a subset of `x`.")
+  if (length(x) != length(y)) Abort("`x` and `y` must have the same length.")
+  if (!all(x0 %in% x)) Abort("`x0` must be a subset of `x`.")
   
   # Check the method
   method = match.arg(method)
@@ -212,7 +211,7 @@ growth_rate = function(x = seq_along(y), y, x0 = x,
       # Check cv and df combo
       if (is.numeric(df)) cv = FALSE
       if (!cv && !(is.numeric(df) && df == round(df))) {
-        abort("If `cv = FALSE`, then `df` must be an integer.")
+        Abort("If `cv = FALSE`, then `df` must be an integer.")
       }
 
       # Compute trend filtering path

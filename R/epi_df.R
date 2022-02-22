@@ -129,16 +129,16 @@ as_epi_df.epi_df = function(x, ...) {
 #'   (if any of these are present), or from as an `as_of` field in its metadata
 #'   (stored in its attributes); if this fails, then the current day-time will
 #'   be used.
-#' @importFrom rlang .data abort
+#' @importFrom rlang .data
 #' @export
 as_epi_df.tbl_df = function(x, geo_type, time_type, as_of,
                             additional_metadata = list(), ...) {
   # Check that we have geo_value and time_value columns
   if (!("geo_value" %in% names(x))) {
-    abort("`x` must contain a `geo_value` column.")
+    Abort("`x` must contain a `geo_value` column.")
   }
   if (!("time_value" %in% names(x))) {
-    abort("`x` must contain a `time_value` column.")
+    Abort("`x` must contain a `time_value` column.")
   }
 
   # If geo type is missing, then try to guess it

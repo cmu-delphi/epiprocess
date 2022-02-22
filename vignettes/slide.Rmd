@@ -210,7 +210,7 @@ so, we encapsulate the process of generating forecasts into a simple function,
 so that we can call it a few times.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
-# Note the use of all_rows = TRUE (so keep all original rows in the output)
+# Note the use of all_rows = TRUE (keeps all original rows in the output)
 k_week_ahead <- function(x, ahead = 7) {
   x %>% 
     group_by(geo_value) %>%

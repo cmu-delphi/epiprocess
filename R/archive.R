@@ -103,23 +103,22 @@ epi_archive =
 #'   fields; named entries from the passed list or will be included as well.
 #' @return An `epi_archive` object.
 #' @importFrom data.table as.data.table key setkeyv
-#' @importFrom rlang abort warn
           initialize = function(x, geo_type, time_type, other_keys,
                                 additional_metadata) {  
             # Check that we have a data frame
             if (!is.data.frame(x)) {
-              abort("`x` must be a data frame.")
+              Abort("`x` must be a data frame.")
             }
                   
             # Check that we have geo_value, time_value, version columns
             if (!("geo_value" %in% names(x))) {
-              abort("`x` must contain a `geo_value` column.")
+              Abort("`x` must contain a `geo_value` column.")
             }
             if (!("time_value" %in% names(x))) {
-              abort("`x` must contain a `time_value` column.")
+              Abort("`x` must contain a `time_value` column.")
             }
             if (!("version" %in% names(x))) {
-              abort("`x` must contain a `version` column.")
+              Abort("`x` must contain a `version` column.")
             }
               
             # If geo type is missing, then try to guess it
@@ -136,14 +135,14 @@ epi_archive =
             if (missing(other_keys)) other_keys = NULL
             if (missing(additional_metadata)) additional_metadata = list()
             if (!all(other_keys %in% names(x))) {
-              abort("`other_keys` must be contained in the column names of `x`.")
+              Abort("`other_keys` must be contained in the column names of `x`.")
             }
             if (any(c("geo_value", "time_value", "version") %in% other_keys)) {
-              abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
+              Abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
             }
             if (any(names(additional_metadata) %in%
                     c("geo_type", "time_type"))) {
-              warn("`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\".")
+              Warn("`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\".")
             }
             
             # Create the data table; if x was an un-keyed data.table itself,
@@ -189,7 +188,6 @@ epi_archive =
 #' @description Generates a snapshot in `epi_df` format as of a given version.
 #'   See the documentation for the wrapper function `epix_as_of()` for details.
 #' @importFrom data.table between key
-#' @importFrom rlang .data abort warn
           as_of = function(max_version, min_time_value = -Inf) {
             # Self max version and other keys
             self_max = max(self$DT$version)
@@ -199,16 +197,16 @@ epi_archive =
             
             # Check a few things on max_version
             if (!identical(class(max_version), class(self$DT$version))) {
-              abort("`max_version` and `DT$version` must have same class.")
+              Abort("`max_version` and `DT$version` must have same class.")
             }
             if (length(max_version) != 1) {
-              abort("`max_version` cannot be a vector.")
+              Abort("`max_version` cannot be a vector.")
             }
             if (max_version > self_max) {
-              abort("`max_version` must be at most `max(DT$max_version)`.")
+              Abort("`max_version` must be at most `max(DT$max_version)`.")
             }
             if (max_version == self_max) {
-              warn("Getting data as of the latest version possible. For a variety of reasons, it is possible that we only have a preliminary picture of this version (e.g., the upstream source has updated it but we have not seen it due to latency in synchronization). Thus, the snapshot that we produce here might not be reproducible at a later time (e.g., when the archive has caught up in terms of synchronization).")
+              Warn("Getting data as of the latest version possible. For a variety of reasons, it is possible that we only have a preliminary picture of this version (e.g., the upstream source has updated it but we have not seen it due to latency in synchronization). Thus, the snapshot that we produce here might not be reproducible at a later time (e.g., when the archive has caught up in terms of synchronization).")
             }
             
             # Filter by version and return
@@ -234,11 +232,10 @@ epi_archive =
 #'   a post-filling of `NA` values by last observation carried forward (LOCF).
 #'   See the documentation for the wrapper function `epix_merge()` for details.
 #' @importFrom data.table key merge.data.table nafill
-#' @importFrom rlang abort 
           merge = function(y, ..., locf = TRUE, nan = NA) {
             # Check we have a `data.table` object
             if (!(inherits(y, "data.table") || inherits(y, "epi_archive"))) {
-              abort("`y` must be of class `data.table` or `epi_archive`.") 
+              Abort("`y` must be of class `data.table` or `epi_archive`.") 
             }
 
             # Use the data.table merge function, carrying through ... args
@@ -265,7 +262,7 @@ epi_archive =
 #'   object. See the documentation for the wrapper function `epix_as_of()` for
 #'   details. 
 #' @importFrom data.table key
-#' @importFrom rlang !! !!! abort enquo enquos is_quosure sym syms
+#' @importFrom rlang !! !!! enquo enquos is_quosure sym syms
           slide = function(f, ..., n = 7, group_by, ref_time_values, 
                            time_step, complete = FALSE,
                            new_col_name = "slide_value",
@@ -330,7 +327,7 @@ epi_archive =
                 }
                 # If not a singleton, should be the right length, else abort
                 else if (length(comp_value) != count) {
-                  abort("If the slide computation returns an atomic vector, then it must have a single element, or else one element per appearance of the reference time value in the local window.")
+                  Abort("If the slide computation returns an atomic vector, then it must have a single element, or else one element per appearance of the reference time value in the local window.")
                 }
               }
 
@@ -341,7 +338,7 @@ epi_archive =
                 }
                 # If not a single row, should be the right length, else abort
                 else if (nrow(comp_value) != count) {
-                  abort("If the slide computation returns a data frame, then it must have a single row, or else one row per appearance of the reference time value in the local window.")
+                  Abort("If the slide computation returns a data frame, then it must have a single row, or else one row per appearance of the reference time value in the local window.")
                 }
                 # Make into a list
                 else {
@@ -351,7 +348,7 @@ epi_archive =
 
               # If neither an atomic vector data frame, then abort
               else {
-                abort("The slide computation must return an atomic vector or a data frame.")
+                Abort("The slide computation must return an atomic vector or a data frame.")
               }
  
               # Note that we've already recycled comp value to make size stable,
@@ -381,10 +378,10 @@ epi_archive =
             else {
               quos = enquos(...)
               if (length(quos) == 0) {
-                abort("If `f` is missing then a computation must be specified via `...`.")
+                Abort("If `f` is missing then a computation must be specified via `...`.")
               }
               if (length(quos) > 1) {
-                abort("If `f` is missing then only a single computation can be specified via `...`.")
+                Abort("If `f` is missing then only a single computation can be specified via `...`.")
               }
               
               quo = quos[[1]]

@@ -44,11 +44,11 @@ epi_cor = function(x, var1, var2, dt1 = 0, dt2 = 0, shift_by = geo_value,
                    cor_by = geo_value, use = "na.or.complete",
                    method = c("pearson", "kendall", "spearman")) {
   # Check we have an `epi_df` object
-  if (!inherits(x, "epi_df")) abort("`x` must be of class `epi_df`.")
+  if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
 
   # Check that we have variables to do computations on
-  if (missing(var1)) abort("`var1` must be specified.")
-  if (missing(var2)) abort("`var2` must be specified.")
+  if (missing(var1)) Abort("`var1` must be specified.")
+  if (missing(var2)) Abort("`var2` must be specified.")
   var1 = enquo(var1)
   var2 = enquo(var2)
   
