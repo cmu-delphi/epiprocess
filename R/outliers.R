@@ -43,7 +43,6 @@
 #'   "stl", shorthand for `detect_outlr_stl()`, which detects outliers via an
 #'   STL decomposition.
 #' 
-#' @importFrom rlang abort
 #' @export
 detect_outlr = function(x = seq_along(y), y,
                         methods = tibble(method = "rm",
@@ -63,7 +62,7 @@ detect_outlr = function(x = seq_along(y), y,
    # Validate the output
     if (!is.data.frame(results) ||
         !all(c("lower", "upper", "replacement") %in% colnames(results))) {
-      abort("Outlier detection method must return a data frame with columns `lower`, `upper`, and `replacement`.")
+      Abort("Outlier detection method must return a data frame with columns `lower`, `upper`, and `replacement`.")
     }
 
     # Update column names with model abbreviation

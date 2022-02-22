@@ -25,10 +25,9 @@
 #'   x$as_of(max_version = v)
 #'   ```
 #' 
-#' @importFrom rlang abort
 #' @export 
 epix_as_of = function(x, max_version, min_time_value = -Inf) {
-  if (!inherits(x, "epi_archive")) abort("`x` must be of class `epi_archive`.")
+  if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   return(x$as_of(max_version, min_time_value))
 }
 
@@ -66,10 +65,9 @@ epix_as_of = function(x, max_version, min_time_value = -Inf) {
 #'   x$merge(y)
 #'   ```
 #' 
-#' @importFrom rlang abort
 #' @export
 epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
-  if (!inherits(x, "epi_archive")) abort("`x` must be of class `epi_archive`.")
+  if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   return(x$merge(y, ..., locf = locf, nan = nan))
 }
 
@@ -159,14 +157,14 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'   x$slide(x, new_var = comp(old_var), n = 120)
 #'   ```
 #' 
-#' @importFrom rlang abort enquo
+#' @importFrom rlang enquo
 #' @export
 epix_slide = function(x, f, ..., n = 7, group_by, ref_time_values,
                       time_step, complete = FALSE,
                       new_col_name = "slide_value",
                       as_list_col = FALSE, names_sep = "_",
                       all_rows = FALSE) {
-  if (!inherits(x, "epi_archive")) abort("`x` must be of class `epi_archive`.")
+  if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   return(x$slide(f, ..., n = n,
                  group_by = enquo(group_by),
                  ref_time_values = ref_time_values,

@@ -84,7 +84,7 @@
 #'   through the `new_col_name` argument.
 #' 
 #' @importFrom lubridate days weeks
-#' @importFrom rlang .data .env !! abort enquo enquos sym
+#' @importFrom rlang .data .env !! enquo enquos sym
 #' @export
 epi_slide = function(x, f, ..., n = 7, ref_time_values,
                      align = c("right", "center", "left"),
@@ -93,7 +93,7 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
                      as_list_col = FALSE, names_sep = "_",
                      all_rows = FALSE) {
   # Check we have an `epi_df` object
-  if (!inherits(x, "epi_df")) abort("`x` must be of class `epi_df`.")
+  if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
   
   # Arrange by increasing time_value
   x = arrange(x, time_value)
@@ -128,7 +128,7 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
   # Otherwise set up alignment based on passed before value
   else {
     if (before < 0 || before > n-1) {
-      abort("`before` must be in between 0 and n-1`.")
+      Abort("`before` must be in between 0 and n-1`.")
     }
 
     before_num = before
@@ -199,7 +199,7 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
           # Unlist, then check its length, and abort if not right
           slide_values = unlist(slide_values)
           if (length(slide_values) != num_ref_rows) {
-            abort("If the slide computations return atomic vectors, then they must each have a single element, or else one element per appearance of the reference time value in the local window.")
+            Abort("If the slide computations return atomic vectors, then they must each have a single element, or else one element per appearance of the reference time value in the local window.")
           }
         }
       }
@@ -215,14 +215,14 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
           slide_df = dplyr::bind_rows(slide_values)
           slide_values = split(slide_df, 1:nrow(slide_df))
           if (length(slide_values) != num_ref_rows) {
-            abort("If the slide computations return data frames, then they must each have a single row, or else one row per appearance of the reference time value in the local window.")
+            Abort("If the slide computations return data frames, then they must each have a single row, or else one row per appearance of the reference time value in the local window.")
           }
         }
       }
 
       # If neither all atomic vectors or all data frames, then abort 
       else {
-        abort("The slide computations must return always atomic vectors or data frames (and not a mix of these two structures).")
+        Abort("The slide computations must return always atomic vectors or data frames (and not a mix of these two structures).")
       }      
     }
     
@@ -254,10 +254,10 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
   else {
     quos = enquos(...)
     if (length(quos) == 0) {
-      abort("If `f` is missing then a computation must be specified via `...`.")
+      Abort("If `f` is missing then a computation must be specified via `...`.")
     }
     if (length(quos) > 1) {
-      abort("If `f` is missing then only a single computation can be specified via `...`.")
+      Abort("If `f` is missing then only a single computation can be specified via `...`.")
     }
     
     quo = quos[[1]]

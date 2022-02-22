@@ -11,15 +11,15 @@ In this vignette, we discuss how to use the sliding functionality in the
 `epiprocess` package with computations that have advanced output structures.
 
 In general, the functions `epi_slide()` and `epix_slide()` do what they can to
-make the result of a slide operation *size stable*, meaning, it will return 
-something whose length is the same as the size of the input data frame (or data
-table, for `epix_slide()`), or, in the case that `ref_time_values` is specified, 
-the same as the number of appearances of the references time values in the input
-data frame (or data table).
+ensure the result of a slide operation is *size stable*, meaning, it will return 
+something whose length is the same as the number of appearances of reference 
+time values for the slide computation in the given data frame/table (this 
+defaults to all time values, but can be some given subset when `ref_time_values` 
+is specified).
 
 The output of a slide computation should either be an atomic value/vector, or a 
 data frame. This data frame can have multiple columns, multiple rows, or both. 
-Below we demonstrate how to accomplish some advanced behavior with these output 
+Below we demonstrate some advanced use cases of sliding with these output 
 structures. We focus on `epi_slide()` for the most part, though the behavior we
 demonstrate also carries over to `epix_slide()`.
 
@@ -28,7 +28,7 @@ demonstrate also carries over to `epix_slide()`.
 When a computation returns a single atomic value, `epi_slide()` will internally 
 try to recycle the output so that it is size stable (in the sense described 
 above). We can use this to our advantage, for example, in order to compute a
-trailing average marginally over geo values, which we demonstrate below with a
+trailing average marginally over geo values, which we demonstrate below in a
 simple synthetic example. 
 
 ```{r message = FALSE}
@@ -63,10 +63,11 @@ df %>%
   as_epi_archive() %>%
   epix_slide(x_2dav = mean(x), n = 2, ref_time_values = as.Date("2020-06-02"))
 ```
+
 When the slide computation returns an atomic vector (rather than a single value)
-then `epi_slide()` checks whether its return length ensure size stability, and 
-if so, uses it to fill the new column. For example, this next computation gives
-the same results as the last one.
+`epi_slide()` checks whether its return length ensures size stability, and if 
+so, uses it to fill the new column. For example, this next computation gives the
+same result as the last one.
 
 ```{r}
 df %>% 
@@ -74,10 +75,10 @@ df %>%
 ```
 
 However, if the output is an atomic vector (rather than a single value) and it
-is not size stable, then `epi_slide()` throws an error. 
+is *not* size stable, then `epi_slide()` throws an error. For example, below we 
+are trying to return 2 things for 3 states.
 
-```{r, error = TRUE}
-# This should fail (trying to return 2 things for 3 states)
+```{r, error = TRUE, tidy = TRUE, tidy.opts = list(width.cutoff=80)}
 df %>% 
   epi_slide(x_2dav = rep(mean(x), 2), n = 2)
 ```
@@ -88,8 +89,8 @@ Now we move on to outputs that are data frames with a single row but multiple
 columns. Working with this type of output structure has in fact has already been 
 demonstrated in the [slide
 vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html). When
-we set `as_list_col = TRUE` in the call to `epi_slide()`, the ultimate `epi_df` 
-object has a list column containing the slide values.
+we set `as_list_col = TRUE` in the call to `epi_slide()`, the resulting `epi_df` 
+object returned by `epi_slide()` has a list column containing the slide values.
 
 ```{r}
 df2 <- df %>% 
@@ -99,12 +100,15 @@ df2 <- df %>%
 
 class(df2$a)
 length(df2$a)
-df2$a[[1]]
+df2$a[[2]]
 ```
 
 When we use `as_list_col = FALSE` (the default in `epi_slide()`), the function 
 unnests (in the sense of `tidyr::unnest()`) the list column `a`, so that the 
-resulting `epi_df` has multiple new columns with the slide values.
+resulting `epi_df` has multiple new columns containing the slide values. The
+default is to name these unnested columns by prefixing the name assigned to the 
+list column (here `a`) onto the column names of the output data frame from the
+slide computation (here `x_2dav` and `x_2dma`) separated by "_".
 
 ```{r}
 df %>% 
@@ -114,7 +118,7 @@ df %>%
 ```
 
 We can use `names_sep = NULL` (which gets passed to `tidyr::unnest()`) to drop
-the prefix associated with list column name, in naming the new `epi_df` columns.
+the prefix associated with list column name, in naming the unnested columns.
 
 ```{r}
 df %>% 
@@ -156,8 +160,8 @@ will fill the new column(s) in the resulting `epi_df` object appropriately.
 
 This can be convenient for modeling in the following sense: we can, for example,
 fit a sliding forecasting model by pooling data from different locations, and
-then return separate forecasts from this common model for each location. We 
-first use our synthetic example to demonstrate this abstractly but simply.
+then return separate forecasts from this common model for each location. We use
+our synthetic example to demonstrate this idea abstractly but simply.
 
 ```{r}
 df$y <- 2 * df$x + 0.05 * rnorm(length(df$x))
@@ -170,26 +174,30 @@ df %>%
         predict(obj, newdata = df %>% 
                   group_by(geo_value) %>%
                   filter(time_value == max(time_value)), 
-                interval = "pred", level = 0.9)
+                interval = "prediction", level = 0.9)
       ))
-  }, n = 2, new_col_name = "fc", names_sep = NULL)
+  }, n = 2, new_col_name = "fc", names_sep = NULL) %>%
+  filter(time_value == as.Date("2020-06-02")) %>%
+  select(fit, lwr, upr)
+
+predict(lm(y ~ x, data = df %>% filter(time_value <= as.Date("2020-06-02"))),
+        newdata = df %>% filter(time_value == as.Date("2020-06-02")), 
+        interval = "prediction", level= 0.9)
 ```
 
-Next, we recall the COVID-19 forecasting example from the [archive 
-vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) in order
-to demonstrate this in a more grounded way. Note that, because `epix_slide()`
-only returns the grouping variables, `time_value`, and the slide computations
-in the eventual returned tibble, we must include `geo_value` in the output data
-frame from our slide computation when we don't group by it (as in this case),
-provided we want it to appear in the returned tibble.
+## Version-aware forecasting, revisited
 
-```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
+Finally, we revisit the COVID-19 forecasting example from the [archive 
+vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) in order
+to demonstrate the last point in a more realistic setting. First, we fetch the
+versioned data and build the archive.
+
+```{r, message = FALSE, warning = FALSE}
 library(covidcast)
 library(data.table)
 library(ggplot2)
 theme_set(theme_bw())
 
-# Fetch CLI and COVID case rates
 y <- covidcast_signals(c("doctor-visits", "jhu-csse"),
                        c("smoothed_adj_cli", 
                          "confirmed_7dav_incidence_prop"),
@@ -199,7 +207,6 @@ y <- covidcast_signals(c("doctor-visits", "jhu-csse"),
                        geo_type = "state", 
                        geo_values = c("ca", "fl")) 
 
-# Wrangle into an epi_archive
 x <- y[[1]] %>% 
   select(geo_value, time_value, 
          version = issue,
@@ -212,8 +219,16 @@ epix_merge(x, y[[2]] %>%
                     case_rate = value) %>%
              as_epi_archive(),
            all = TRUE)
+```
 
-# Extend ARX to handle multiple geos
+Next, we extend the ARX function to handle multiple geo values, since in the 
+present case, we will not be grouping by geo value and each slide computation
+will be run on multiple geo values at once. Note that, because `epix_slide()` 
+only returns the grouping variables, `time_value`, and the slide computations in
+the eventual returned tibble, we need to include `geo_value` as a column in the 
+output data frame from our ARX computation.
+
+```{r}
 prob_arx <- function(x, y, geo_value, time_value, lags = c(0, 7, 14), 
                      ahead = 7, min_train_window = 20, lower_level = 0.05, 
                      upper_level = 0.95, symmetrize = TRUE, nonneg = TRUE) {   
@@ -264,14 +279,19 @@ prob_arx <- function(x, y, geo_value, time_value, lags = c(0, 7, 14),
   return(data.frame(geo_value = unique(geo_value), # Must include geo value!
                     point = point, lower = lower, upper = upper))
 }
+```
 
-# Next make forecasts on the archive and compare to forecasts on latest data
+We now make forecasts on the archive and compare to forecasts on the latest
+data. 
+
+```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
+# Latest snapshot of data, and forecast dates
 x_latest <- epix_as_of(x, max_version = max(x$DT$version))
-
 fc_time_values <- seq(as.Date("2020-08-01"), 
                       as.Date("2021-12-01"), 
                       by = "1 month")
 
+# Simple function to produce forecasts k weeks ahead
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
@@ -290,7 +310,7 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   }
 }
 
-# First generate the forecasts, and bind them together
+# Generate the forecasts, and bind them together
 fc <- bind_rows(k_week_ahead(x, ahead = 7, as_of = TRUE),
                 k_week_ahead(x, ahead = 14, as_of = TRUE),
                 k_week_ahead(x, ahead = 21, as_of = TRUE),
@@ -300,7 +320,7 @@ fc <- bind_rows(k_week_ahead(x, ahead = 7, as_of = TRUE),
                 k_week_ahead(x, ahead = 21, as_of = FALSE),
                 k_week_ahead(x, ahead = 28, as_of = FALSE))
 
-# Now plot them, on top of latest COVID-19 case counts 
+# Plot them, on top of latest COVID-19 case rates 
 p <- ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
   geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), alpha = 0.4) +
   geom_line(aes(y = fc_point)) + geom_point(aes(y = fc_point), size = 0.5) + 
@@ -314,3 +334,10 @@ gginnards::append_layers(
   p, geom_line(data = x_latest, aes(x = time_value, y = case_rate), 
                inherit.aes = FALSE, color = "gray50"), pos = "bottom")
 ```
+
+We can see that these forecasts, which come from training an ARX model jointly
+over CA and FL, exhibit overall less variability and wider prediction bands
+compared to the ones from the archive vignette that come from training a 
+separate ARX model on each state. As in the archive vignette, we can also see a
+pretty big difference between version-aware (right column) and -unaware (right
+column) forecasting, as well.
