@@ -74,6 +74,9 @@
     <li>
       <a href="../articles/archive.html">Work with archive objects and data revisions</a>
     </li>
+    <li>
+      <a href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -290,7 +293,7 @@
                       <span class="kw">issues</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"2020-06-01"</span>, <span class="st">"2021-12-01"</span>),
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>,
                       <span class="kw">geo_values</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"ca"</span>, <span class="st">"fl"</span>)) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="kw">version</span> <span class="kw">=</span> <span class="no">issue</span>, <span class="kw">case_rates</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="kw">version</span> <span class="kw">=</span> <span class="no">issue</span>, <span class="kw">case_rate</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="../reference/as_epi_archive.html">as_epi_archive</a></span>()</pre></body></html></div>
 <pre><code>## Fetched day 2020-06-01 to 2021-12-01: num_entries = 12105</code></pre>
 <pre><code>## Warning: Data not fetched for the following days: 2021-12-01</code></pre>
@@ -309,13 +312,13 @@
 ## ----------
 ## Public methods: initialize, print, as_of, merge, slide, clone</code></pre>
 <div class="sourceCode" id="cb39"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>$<span class="no">DT</span>)</pre></body></html></div>
-<pre><code>##    geo_value time_value    version percent_cli case_rates
-## 1:        ca 2020-06-01 2020-06-02          NA   6.628329
-## 2:        ca 2020-06-01 2020-06-06    2.140116   6.628329
-## 3:        ca 2020-06-01 2020-06-07    2.140116   6.628329
-## 4:        ca 2020-06-01 2020-06-08    2.140379   6.628329
-## 5:        ca 2020-06-01 2020-06-09    2.114430   6.628329
-## 6:        ca 2020-06-01 2020-06-10    2.133677   6.628329</code></pre>
+<pre><code>##    geo_value time_value    version percent_cli case_rate
+## 1:        ca 2020-06-01 2020-06-02          NA  6.628329
+## 2:        ca 2020-06-01 2020-06-06    2.140116  6.628329
+## 3:        ca 2020-06-01 2020-06-07    2.140116  6.628329
+## 4:        ca 2020-06-01 2020-06-08    2.140379  6.628329
+## 5:        ca 2020-06-01 2020-06-09    2.114430  6.628329
+## 6:        ca 2020-06-01 2020-06-10    2.133677  6.628329</code></pre>
 <p>Importantly, as we can see, the way <code><a href="../reference/epix_merge.html">epix_merge()</a></code> works is that it <strong>overwrites</strong> the data table in the first <code>epi_archive</code> object <code>x</code> by the merged data table.</p>
 </div>
 <div id="sliding-version-aware-computations" class="section level2">
@@ -370,11 +373,11 @@
   <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">point</span> <span class="kw">=</span> <span class="no">point</span>, <span class="kw">lower</span> <span class="kw">=</span> <span class="no">lower</span>, <span class="kw">upper</span> <span class="kw">=</span> <span class="no">upper</span>))
 }</pre></body></html></div>
 <p>Next we slide this forecaster over the working <code>epi_archive</code> object, in order to forecast COVID-19 case rates 7 days into the future.</p>
-<div class="sourceCode" id="cb42"><html><body><pre class="r"><span class="no">fc_time_values</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span>(<span class="st">"2020-08-01"</span>),
-                     <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span>(<span class="st">"2021-12-01"</span>),
-                     <span class="kw">by</span> <span class="kw">=</span> <span class="st">"1 month"</span>)
+<div class="sourceCode" id="cb42"><html><body><pre class="r"><span class="no">fc_time_values</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span>(<span class="st">"2020-08-01"</span>),
+                      <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span>(<span class="st">"2021-12-01"</span>),
+                      <span class="kw">by</span> <span class="kw">=</span> <span class="st">"1 month"</span>)
 
-<span class="no">z</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span>(<span class="no">x</span>, <span class="kw">fc</span> <span class="kw">=</span> <span class="fu">prob_arx</span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">percent_cli</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">case_rates</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">120</span>,
+<span class="no">z</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span>(<span class="no">x</span>, <span class="kw">fc</span> <span class="kw">=</span> <span class="fu">prob_arx</span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">percent_cli</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">case_rate</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">120</span>,
                 <span class="kw">ref_time_values</span> <span class="kw">=</span> <span class="no">fc_time_values</span>, <span class="kw">group_by</span> <span class="kw">=</span> <span class="no">geo_value</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">z</span>, <span class="fl">10</span>)</pre></body></html></div>
@@ -394,19 +397,19 @@
 <p>We get back a tibble <code>z</code> with the grouping variables (here geo value), the time values, and three columns <code>fc_point</code>, <code>fc_lower</code>, and <code>fc_upper</code> produced by the slide computation that correspond to the point forecast, and the lower and upper endpoints of the 95% prediction band, respectively. (If instead we had set <code>as_list_col = TRUE</code> in the call to <code><a href="../reference/epix_slide.html">epix_slide()</a></code>, then we would have gotten a list column <code>fc</code>, where each element of <code>fc</code> is a data frame with named columns <code>point</code>, <code>lower</code>, and <code>upper</code>.)</p>
 <p>On the whole, <code><a href="../reference/epix_slide.html">epix_slide()</a></code> works similarly to <code><a href="../reference/epix_slide.html">epix_slide()</a></code>, though there are a few notable differences, even apart from the version-aware aspect. You can read the documentation for <code><a href="../reference/epix_slide.html">epix_slide()</a></code> for details.</p>
 <p>We finish off by comparing version-aware and version-unaware forecasts at various points in time and forecast horizons. The former will come from applying <code><a href="../reference/epix_slide.html">epix_slide()</a></code> to the <code>epi_archive</code> object <code>x</code>, and the latter from applying <code><a href="../reference/epi_slide.html">epi_slide()</a></code> to the latest snapshot of the data <code>x_latest</code>.</p>
-<div class="sourceCode" id="cb44"><html><body><pre class="r"><span class="no">x_latest</span> <span class="kw">=</span> <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span>(<span class="no">x</span>, <span class="kw">max_version</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(<span class="no">x</span>$<span class="no">DT</span>$<span class="no">version</span>))
+<div class="sourceCode" id="cb44"><html><body><pre class="r"><span class="no">x_latest</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span>(<span class="no">x</span>, <span class="kw">max_version</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(<span class="no">x</span>$<span class="no">DT</span>$<span class="no">version</span>))
 
 <span class="no">k_week_ahead</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">x</span>, <span class="no">ahead</span> <span class="kw">=</span> <span class="fl">7</span>, <span class="no">as_of</span> <span class="kw">=</span> <span class="fl">TRUE</span>) {
   <span class="kw">if</span> (<span class="no">as_of</span>) {
     <span class="no">x</span> <span class="kw">%&gt;%</span>
-      <span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span>(<span class="kw">fc</span> <span class="kw">=</span> <span class="fu">prob_arx</span>(<span class="no">percent_cli</span>, <span class="no">case_rates</span>, <span class="kw">ahead</span> <span class="kw">=</span> <span class="no">ahead</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">120</span>,
+      <span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span>(<span class="kw">fc</span> <span class="kw">=</span> <span class="fu">prob_arx</span>(<span class="no">percent_cli</span>, <span class="no">case_rate</span>, <span class="kw">ahead</span> <span class="kw">=</span> <span class="no">ahead</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">120</span>,
                  <span class="kw">ref_time_values</span> <span class="kw">=</span> <span class="no">fc_time_values</span>, <span class="kw">group_by</span> <span class="kw">=</span> <span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
       <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">target_date</span> <span class="kw">=</span> <span class="no">time_value</span> + <span class="no">ahead</span>, <span class="kw">as_of</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
   }
   <span class="kw">else</span> {
     <span class="no">x_latest</span> <span class="kw">%&gt;%</span>
       <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
-      <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">fc</span> <span class="kw">=</span> <span class="fu">prob_arx</span>(<span class="no">percent_cli</span>, <span class="no">case_rates</span>, <span class="kw">ahead</span> <span class="kw">=</span> <span class="no">ahead</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">120</span>,
+      <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span>(<span class="kw">fc</span> <span class="kw">=</span> <span class="fu">prob_arx</span>(<span class="no">percent_cli</span>, <span class="no">case_rate</span>, <span class="kw">ahead</span> <span class="kw">=</span> <span class="no">ahead</span>), <span class="kw">n</span> <span class="kw">=</span> <span class="fl">120</span>,
                 <span class="kw">ref_time_values</span> <span class="kw">=</span> <span class="no">fc_time_values</span>) <span class="kw">%&gt;%</span>
       <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">target_date</span> <span class="kw">=</span> <span class="no">time_value</span> + <span class="no">ahead</span>, <span class="kw">as_of</span> <span class="kw">=</span> <span class="fl">FALSE</span>)
   }
@@ -433,7 +436,7 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span>(<span class="kw">legend.position</span> <span class="kw">=</span> <span class="st">"none"</span>)
 
 <span class="kw pkg">gginnards</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/gginnards/man/delete_layers.html">append_layers</a></span>(
-  <span class="no">p</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">x_latest</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">case_rates</span>),
+  <span class="no">p</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">x_latest</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">case_rate</span>),
                <span class="kw">inherit.aes</span> <span class="kw">=</span> <span class="fl">FALSE</span>, <span class="kw">color</span> <span class="kw">=</span> <span class="st">"gray50"</span>), <span class="kw">pos</span> <span class="kw">=</span> <span class="st">"bottom"</span>)</pre></body></html></div>
 <p><img src="archive_files/figure-html/unnamed-chunk-12-1.png" width="864"></p>
 <p>Each row displays the forecasts for a different location (CA and FL), and each column corresponds to whether properly-versioned data is used (<code>FALSE</code> means no, and <code>TRUE</code> means yes). We can see that the properly-versioned forecaster is, at some points in time, more problematic; for example, it massively overpredicts the peak in both locations in winter wave of 2020. However, performance is pretty poor across the board here, whether or not properly-versioned data is used. Similar to what we saw in the <a href="https://cmu-delphi.github.io/epiprocess/articles/archive.html">slide vignette</a>, the ARX forecasts can too volatile, overconfident, or both.</p>
@@ -452,7 +455,7 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Logan Brooks, Rafael Catoia, Evan Ray, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

@@ -183,19 +183,21 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
       o3 = .data_group$time_value %in% time_values
       num_ref_rows = sum(o3)
     
-      # If we get back data frames from sliding, each with more than one row,
-      # then below we unpack these rows. This will be useful in a case where,
-      # e.g., we don't group by geo value but return a separate computation per
-      # geo value, as rows of the returned data frame. Then we won't have to do
-      # repetition in the next step to and we still ensure that the result size
-      # stable  
+      # Count the number of appearances of each reference time value
+      counts = .data_group %>%
+        dplyr::filter(.data$time_value %in% time_values) %>%
+        dplyr::count(.data$time_value) %>%
+        dplyr::pull(n)
 
       # If they're all atomic vectors 
       if (all(sapply(slide_values[o2], is.atomic))) {
-        if (any(sapply(slide_values[o2], length) > 1)) {
-          slide_values = as.list(unlist(slide_values))
-          
-          # Now that we've unpacked, should be the right length, else abort 
+        if (all(sapply(slide_values[o2], length) == 1)) {
+          # Recycle to make size stable (one slide value per ref time value)
+          slide_values = rep(unlist(slide_values), times = counts)
+        }
+        else {
+          # Unlist, then check its length, and abort if not right
+          slide_values = unlist(slide_values)
           if (length(slide_values) != num_ref_rows) {
             abort("If the slide computations return atomic vectors, then they must each have a single element, or else one element per appearance of the reference time value in the local window.")
           }
@@ -204,33 +206,24 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
       
       # If they're all data frames
       else if (all(sapply(slide_values[o2], is.data.frame))) {
-        if (any(sapply(slide_values[o2], nrow) > 1)) {
+        if (all(sapply(slide_values[o2], nrow) == 1)) {
+          # Recycle to make size stable (one slide value per ref time value)
+          slide_values = rep(slide_values, times = counts)
+        }
+        else {
+          # Split (each row on its own), check length, abort if not right
           slide_df = dplyr::bind_rows(slide_values)
           slide_values = split(slide_df, 1:nrow(slide_df))
-          
-          # Now that we've unpacked, should be the right num rows, else abort  
           if (length(slide_values) != num_ref_rows) {
             abort("If the slide computations return data frames, then they must each have a single row, or else one row per appearance of the reference time value in the local window.")
           }
         }
       }
 
-      # If neither all atomic vectors or all data frames, then abort because
-      # they can't return mixed structures 
+      # If neither all atomic vectors or all data frames, then abort 
       else {
         abort("The slide computations must return always atomic vectors or data frames (and not a mix of these two structures).")
-      }
-      
-
-      # Size stable: repeat each slide value the number of times its time value
-      # appears as a ref time value 
-      if (length(slide_values) != num_ref_rows) {
-        counts = .data_group %>%
-          dplyr::filter(.data$time_value %in% time_values) %>%
-          dplyr::count(.data$time_value) %>%
-          dplyr::pull(n)
-        slide_values = rep(slide_values, times = counts)
-      }
+      }      
     }
     
     # If all rows, then pad slide values with NAs, else filter down data group

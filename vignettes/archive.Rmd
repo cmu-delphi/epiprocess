@@ -313,9 +313,9 @@ Next we slide this forecaster over the working `epi_archive` object, in order to
 forecast COVID-19 case rates 7 days into the future.
 
 ```{r}
-fc_time_values = seq(as.Date("2020-08-01"), 
-                     as.Date("2021-12-01"), 
-                     by = "1 month")
+fc_time_values <- seq(as.Date("2020-08-01"), 
+                      as.Date("2021-12-01"), 
+                      by = "1 month")
 
 z <- epix_slide(x, fc = prob_arx(x = percent_cli, y = case_rate), n = 120, 
                 ref_time_values = fc_time_values, group_by = geo_value)
@@ -341,7 +341,7 @@ various points in time and forecast horizons. The former will come from applying
 `epi_slide()` to the latest snapshot of the data `x_latest`.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
-x_latest = epix_as_of(x, max_version = max(x$DT$version))
+x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {

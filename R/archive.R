@@ -317,7 +317,7 @@ epi_archive =
               else comp_value = f(.data_group, ...)
 
               # Count the number of appearances of the reference time value.
-              # Note: ideally, we'd like to just count the occurences of the ref
+              # Note: ideally, we want to directly count occurrences of the ref
               # time value but due to latency, this will often not appear in the
               # data group. So we count the number of unique key values, outside 
               # of the time value column
@@ -326,18 +326,14 @@ epi_archive =
               # If we get back an atomic vector
               if (is.atomic(comp_value)) {
                 if (length(comp_value) == 1) {
-                  comp_value = rep(list(comp_value), count)
+                  comp_value = rep(comp_value, count)
                 }
                 # If not a singleton, should be the right length, else abort
                 else if (length(comp_value) != count) {
                   abort("If the slide computation returns an atomic vector, then it must have a single element, or else one element per appearance of the reference time value in the local window.")
                 }
-                # Make into a list
-                else {
-                  comp_value = as.list(comp_value)
-                }
               }
-              
+
               # If we get back a data frame
               else if (is.data.frame(comp_value)) {
                 if (nrow(comp_value) == 1) {
@@ -358,9 +354,8 @@ epi_archive =
                 abort("The slide computation must return an atomic vector or a data frame.")
               }
  
-              # Size stable: make sure to return one row per appearance of the
-              # reference value (comp_value is already recycled appropriately,
-              # so time_value will be repeated by tibble())
+              # Note that we've already recycled comp value to make size stable,
+              # so tibble() will just recycle time value appropriately
               return(tibble::tibble(time_value = time_value, 
                                     !!new_col := comp_value))
             }
