@@ -20,6 +20,7 @@ articles:
       - aggregation
       - outliers
       - archive
+      - advanced
 
 repo:
   url:

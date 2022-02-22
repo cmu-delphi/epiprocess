@@ -74,6 +74,9 @@
     <li>
       <a href="../articles/archive.html">Work with archive objects and data revisions</a>
     </li>
+    <li>
+      <a href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -117,14 +120,14 @@
                       <span class="kw">start_day</span> <span class="kw">=</span> <span class="st">"2020-03-01"</span>,
                       <span class="kw">end_day</span> <span class="kw">=</span> <span class="st">"2021-12-31"</span>,
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="kw">case_rates</span> <span class="kw">=</span> <span class="no">value</span>)
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="kw">case_rate</span> <span class="kw">=</span> <span class="no">value</span>)
 
 <span class="no">y</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="st">"jhu-csse"</span>,
                       <span class="st">"deaths_7dav_incidence_prop"</span>,
                       <span class="kw">start_day</span> <span class="kw">=</span> <span class="st">"2020-03-01"</span>,
                       <span class="kw">end_day</span> <span class="kw">=</span> <span class="st">"2021-12-31"</span>,
                       <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="kw">death_rates</span> <span class="kw">=</span> <span class="no">value</span>)
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="kw">death_rate</span> <span class="kw">=</span> <span class="no">value</span>)
 
 <span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html">full_join</a></span>(<span class="no">y</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"geo_value"</span>, <span class="st">"time_value"</span>)) <span class="kw">%&gt;%</span>
@@ -137,7 +140,7 @@
 <div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
 
-<span class="no">z1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_cor.html">epi_cor</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="no">death_rates</span>, <span class="kw">cor_by</span> <span class="kw">=</span> <span class="st">"time_value"</span>)
+<span class="no">z1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_cor.html">epi_cor</a></span>(<span class="no">x</span>, <span class="no">case_rate</span>, <span class="no">death_rate</span>, <span class="kw">cor_by</span> <span class="kw">=</span> <span class="st">"time_value"</span>)
 
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">z1</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">cor</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>() +
@@ -149,8 +152,8 @@
 <div id="lagged-correlations" class="section level2">
 <h2 class="hasAnchor">
 <a href="#lagged-correlations" class="anchor"></a>Lagged correlations</h2>
-<p>We might also be interested in how case rates associate with death rates in the <em>future</em>. Using the <code>dt1</code> parameter in <code><a href="../reference/epi_cor.html">epi_cor()</a></code>, we can lag case rates back any number of days we want, before calculating correlations. Below, we set <code>dt1 = -10</code>. This means that <code>var1 = case_rates</code> will be lagged by 10 days, so that case rates on June 1st will be correlated with death rates on June 11th. (It might also help to think of it this way: death rates on a certain day will be correlated with case rates at an offset of -10 days.)</p>
-<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">z2</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_cor.html">epi_cor</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="no">death_rates</span>, <span class="kw">cor_by</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">dt1</span> <span class="kw">=</span> -<span class="fl">10</span>)
+<p>We might also be interested in how case rates associate with death rates in the <em>future</em>. Using the <code>dt1</code> parameter in <code><a href="../reference/epi_cor.html">epi_cor()</a></code>, we can lag case rates back any number of days we want, before calculating correlations. Below, we set <code>dt1 = -10</code>. This means that <code>var1 = case_rate</code> will be lagged by 10 days, so that case rates on June 1st will be correlated with death rates on June 11th. (It might also help to think of it this way: death rates on a certain day will be correlated with case rates at an offset of -10 days.)</p>
+<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">z2</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_cor.html">epi_cor</a></span>(<span class="no">x</span>, <span class="no">case_rate</span>, <span class="no">death_rate</span>, <span class="kw">cor_by</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">dt1</span> <span class="kw">=</span> -<span class="fl">10</span>)
 
 <span class="no">z</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">rbind</a></span>(<span class="no">z1</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">lag</span> <span class="kw">=</span> <span class="fl">0</span>),
            <span class="no">z2</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">lag</span> <span class="kw">=</span> <span class="fl">10</span>)) <span class="kw">%&gt;%</span>
@@ -168,8 +171,8 @@
 <h2 class="hasAnchor">
 <a href="#correlations-grouped-by-state" class="anchor"></a>Correlations grouped by state</h2>
 <p>The second option we have is to group by geo value, obtained by setting <code>cor_by = geo_value</code>. We’ll again look at correlations for both 0- and 10-day lagged case rates.</p>
-<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">z1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_cor.html">epi_cor</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="no">death_rates</span>, <span class="kw">cor_by</span> <span class="kw">=</span> <span class="no">geo_value</span>)
-<span class="no">z2</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_cor.html">epi_cor</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="no">death_rates</span>, <span class="kw">cor_by</span> <span class="kw">=</span> <span class="no">geo_value</span>, <span class="kw">dt1</span> <span class="kw">=</span> -<span class="fl">10</span>)
+<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">z1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_cor.html">epi_cor</a></span>(<span class="no">x</span>, <span class="no">case_rate</span>, <span class="no">death_rate</span>, <span class="kw">cor_by</span> <span class="kw">=</span> <span class="no">geo_value</span>)
+<span class="no">z2</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/epi_cor.html">epi_cor</a></span>(<span class="no">x</span>, <span class="no">case_rate</span>, <span class="no">death_rate</span>, <span class="kw">cor_by</span> <span class="kw">=</span> <span class="no">geo_value</span>, <span class="kw">dt1</span> <span class="kw">=</span> -<span class="fl">10</span>)
 
 <span class="no">z</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">rbind</a></span>(<span class="no">z1</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">lag</span> <span class="kw">=</span> <span class="fl">0</span>),
            <span class="no">z2</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">lag</span> <span class="kw">=</span> <span class="fl">10</span>)) <span class="kw">%&gt;%</span>
@@ -189,7 +192,7 @@
 <span class="no">lags</span> <span class="kw">=</span> <span class="fl">0</span>:<span class="fl">35</span>
 
 <span class="no">z</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html">map_dfr</a></span>(<span class="no">lags</span>, <span class="kw">function</span>(<span class="no">lag</span>) {
-  <span class="fu"><a href="../reference/epi_cor.html">epi_cor</a></span>(<span class="no">x</span>, <span class="no">case_rates</span>, <span class="no">death_rates</span>, <span class="kw">cor_by</span> <span class="kw">=</span> <span class="no">geo_value</span>, <span class="kw">dt1</span> <span class="kw">=</span> -<span class="no">lag</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="../reference/epi_cor.html">epi_cor</a></span>(<span class="no">x</span>, <span class="no">case_rate</span>, <span class="no">death_rate</span>, <span class="kw">cor_by</span> <span class="kw">=</span> <span class="no">geo_value</span>, <span class="kw">dt1</span> <span class="kw">=</span> -<span class="no">lag</span>) <span class="kw">%&gt;%</span>
     <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">lag</span> <span class="kw">=</span> <span class="no">lag</span>)
   })
 
@@ -215,7 +218,7 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Logan Brooks, Rafael Catoia, Evan Ray, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

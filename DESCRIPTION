@@ -12,7 +12,7 @@ Authors@R:
          role = "aut"),
   person(given = "Rafael",
          family = "Catoia",
-         role = "aut"),
+         role = "ctb"),
   person(given = "Daniel",
          family = "McDonald",
          role = "ctb"),
