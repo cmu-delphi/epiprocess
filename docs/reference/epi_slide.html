@@ -161,7 +161,6 @@ examples.</p>
   <span class='kw'>align</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"right"</span>, <span class='st'>"center"</span>, <span class='st'>"left"</span>),
   <span class='no'>before</span>,
   <span class='no'>time_step</span>,
-  <span class='kw'>complete</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"slide_value"</span>,
   <span class='kw'>as_list_col</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>names_sep</span> <span class='kw'>=</span> <span class='st'>"_"</span>,
@@ -231,12 +230,6 @@ an object of class <code><a href='https://lubridate.tidyverse.org/reference/peri
 would only be meaningful if <code>time_value</code> is of class <code>POSIXct</code>).</p></td>
     </tr>
     <tr>
-      <th>complete</th>
-      <td><p>Should the slide function be run over complete windows only?
-(A complete window has distance <code>n-1</code> between its left and right
-endpoints.) Default is <code>FALSE</code>, which allows for partial computations.</p></td>
-    </tr>
-    <tr>
       <th>new_col_name</th>
       <td><p>String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
@@ -276,7 +269,12 @@ subtraction; for example, if the time values are coded as <code>Date</code> obje
 then one time step is one day, since <code>as.Date("2022-01-01") + 1</code> equals
 <code><a href='https://rdrr.io/r/base/as.Date.html'>as.Date("2022-01-02")</a></code>. Alternatively, the time step can be set explicitly
 using the <code>time_step</code> argument (which if specified would override the
-default choice based on <code>time_value</code> column).</p>
+default choice based on <code>time_value</code> column). If less than <code>n</code> time steps
+are available at any given reference time value, then <code>epi_slide()</code> still
+attempts to perform the computation anyway (it does not require a complete
+window). The issue of what to do with partial computations (those run on
+incomplete windows) is therefore left up to the user, either through the
+specified function or formula <code>f</code>, or through post-processing.</p>
 <p>If <code>f</code> is missing, then an expression for tidy evaluation can be specified,
 for example, as in:</p><pre><span class='fu'>epi_slide</span>(<span class='no'>x</span>, <span class='kw'>cases_7dav</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>(<span class='no'>cases</span>), <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>7</span>)</pre>
 

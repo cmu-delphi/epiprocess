@@ -176,7 +176,6 @@ details.
   group_by,
   ref_time_values,
   time_step,
-  complete = FALSE,
   new_col_name = "slide_value",
   as_list_col = FALSE,
   names_sep = "_",

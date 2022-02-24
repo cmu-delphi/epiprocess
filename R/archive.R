@@ -264,8 +264,7 @@ epi_archive =
 #' @importFrom data.table key
 #' @importFrom rlang !! !!! enquo enquos is_quosure sym syms
           slide = function(f, ..., n = 7, group_by, ref_time_values, 
-                           time_step, complete = FALSE,
-                           new_col_name = "slide_value",
+                           time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
                            all_rows = FALSE) { 
             # If missing, then set ref time values to be everything; else make
@@ -301,17 +300,12 @@ epi_archive =
             
             # Computation for one group, one time value
             comp_one_grp = function(.data_group,
-                                    f, ..., n,
+                                    f, ..., 
                                     time_value,
-                                    complete,
                                     key_vars,
                                     new_col) {
-              # Check if we need a complete window (max - min = n-1)
-              if (complete && diff(range(.data_group$time_value)) < n-1) {
-                comp_value = NA
-              }
-              # Else carry out the specified computation 
-              else comp_value = f(.data_group, ...)
+              # Carry out the specified computation 
+              comp_value = f(.data_group, ...)
 
               # Count the number of appearances of the reference time value.
               # Note: ideally, we want to directly count occurrences of the ref
@@ -364,9 +358,8 @@ epi_archive =
                   tibble::as_tibble() %>% 
                   dplyr::group_by(!!!group_by) %>%
                   dplyr::group_modify(comp_one_grp,
-                                      f = f, ..., n = n,
+                                      f = f, ..., 
                                       time_value = t,
-                                      complete = complete,
                                       key_vars = key_vars,
                                       new_col = new_col,
                                       .keep = TRUE) %>%
@@ -393,9 +386,8 @@ epi_archive =
                   tibble::as_tibble() %>% 
                   dplyr::group_by(!!!group_by) %>%
                   dplyr::group_modify(comp_one_grp,
-                                      f = f, quo = quo, n = n,
+                                      f = f, quo = quo,
                                       time_value = t,
-                                      complete = complete,
                                       key_vars = key_vars,
                                       new_col = new_col,
                                       .keep = TRUE) %>%

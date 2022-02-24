@@ -168,7 +168,6 @@ examples.</p>
   <span class='no'>group_by</span>,
   <span class='no'>ref_time_values</span>,
   <span class='no'>time_step</span>,
-  <span class='kw'>complete</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>new_col_name</span> <span class='kw'>=</span> <span class='st'>"slide_value"</span>,
   <span class='kw'>as_list_col</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>names_sep</span> <span class='kw'>=</span> <span class='st'>"_"</span>,
@@ -223,12 +222,6 @@ step, which if specified, overrides the default choice based on the
 <code>time_value</code> column. This function must take a positive integer and return
 an object of class <code><a href='https://lubridate.tidyverse.org/reference/period.html'>lubridate::period</a></code>. For example, we can use <code>time_step = lubridate::hours</code> in order to set the time step to be one hour (this
 would only be meaningful if <code>time_value</code> is of class <code>POSIXct</code>).</p></td>
-    </tr>
-    <tr>
-      <th>complete</th>
-      <td><p>Should the slide function be run over complete windows only?
-(A complete window has distance <code>n-1</code> between its left and right
-endpoints.) Default is <code>FALSE</code>, which allows for partial computations.</p></td>
     </tr>
     <tr>
       <th>new_col_name</th>

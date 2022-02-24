@@ -13,7 +13,6 @@ epi_slide(
   align = c("right", "center", "left"),
   before,
   time_step,
-  complete = FALSE,
   new_col_name = "slide_value",
   as_list_col = FALSE,
   names_sep = "_",
@@ -64,10 +63,6 @@ step, which if specified, overrides the default choice based on the
 an object of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this
 would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
-\item{complete}{Should the slide function be run over complete windows only?
-(A complete window has distance \code{n-1} between its left and right
-endpoints.) Default is \code{FALSE}, which allows for partial computations.}
-
 \item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
@@ -101,7 +96,12 @@ subtraction; for example, if the time values are coded as \code{Date} objects,
 then one time step is one day, since \code{as.Date("2022-01-01") + 1} equals
 \code{as.Date("2022-01-02")}. Alternatively, the time step can be set explicitly
 using the \code{time_step} argument (which if specified would override the
-default choice based on \code{time_value} column).
+default choice based on \code{time_value} column). If less than \code{n} time steps
+are available at any given reference time value, then \code{epi_slide()} still
+attempts to perform the computation anyway (it does not require a complete
+window). The issue of what to do with partial computations (those run on
+incomplete windows) is therefore left up to the user, either through the
+specified function or formula \code{f}, or through post-processing.
 
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
 for example, as in:\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
