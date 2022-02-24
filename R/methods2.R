@@ -110,9 +110,6 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'   an object of class `lubridate::period`. For example, we can use `time_step
 #'   = lubridate::hours` in order to set the time step to be one hour (this
 #'   would only be meaningful if `time_value` is of class `POSIXct`).
-#' @param complete Should the slide function be run over complete windows only?
-#'   (A complete window has distance `n-1` between its left and right
-#'   endpoints.) Default is `FALSE`, which allows for partial computations. 
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
@@ -160,16 +157,13 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #' @importFrom rlang enquo
 #' @export
 epix_slide = function(x, f, ..., n = 7, group_by, ref_time_values,
-                      time_step, complete = FALSE,
-                      new_col_name = "slide_value",
-                      as_list_col = FALSE, names_sep = "_",
-                      all_rows = FALSE) {
+                      time_step, new_col_name = "slide_value",
+                      as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   return(x$slide(f, ..., n = n,
                  group_by = enquo(group_by),
                  ref_time_values = ref_time_values,
                  time_step = time_step,
-                 complete = complete,
                  new_col_name = new_col_name,
                  as_list_col = as_list_col,
                  names_sep = names_sep,

@@ -12,7 +12,6 @@ epix_slide(
   group_by,
   ref_time_values,
   time_step,
-  complete = FALSE,
   new_col_name = "slide_value",
   as_list_col = FALSE,
   names_sep = "_",
@@ -53,10 +52,6 @@ step, which if specified, overrides the default choice based on the
 \code{time_value} column. This function must take a positive integer and return
 an object of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this
 would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
-
-\item{complete}{Should the slide function be run over complete windows only?
-(A complete window has distance \code{n-1} between its left and right
-endpoints.) Default is \code{FALSE}, which allows for partial computations.}
 
 \item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting

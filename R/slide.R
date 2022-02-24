@@ -40,9 +40,6 @@
 #'   an object of class `lubridate::period`. For example, we can use `time_step
 #'   = lubridate::hours` in order to set the time step to be one hour (this
 #'   would only be meaningful if `time_value` is of class `POSIXct`).
-#' @param complete Should the slide function be run over complete windows only?
-#'   (A complete window has distance `n-1` between its left and right
-#'   endpoints.) Default is `FALSE`, which allows for partial computations. 
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
@@ -66,8 +63,13 @@
 #'   then one time step is one day, since `as.Date("2022-01-01") + 1` equals
 #'   `as.Date("2022-01-02")`. Alternatively, the time step can be set explicitly
 #'   using the `time_step` argument (which if specified would override the
-#'   default choice based on `time_value` column).
-#'
+#'   default choice based on `time_value` column). If less than `n` time steps
+#'   are available at any given reference time value, then `epi_slide()` still
+#'   attempts to perform the computation anyway (it does not require a complete
+#'   window). The issue of what to do with partial computations (those run on
+#'   incomplete windows) is therefore left up to the user, either through the
+#'   specified function or formula `f`, or through post-processing.  
+#' 
 #' If `f` is missing, then an expression for tidy evaluation can be specified,
 #'   for example, as in: 
 #'   ```
@@ -87,11 +89,9 @@
 #' @importFrom rlang .data .env !! enquo enquos sym
 #' @export
 epi_slide = function(x, f, ..., n = 7, ref_time_values,
-                     align = c("right", "center", "left"),
-                     before, time_step, complete = FALSE,
-                     new_col_name = "slide_value",  
-                     as_list_col = FALSE, names_sep = "_",
-                     all_rows = FALSE) {
+                     align = c("right", "center", "left"), before, time_step, 
+                     new_col_name = "slide_value", as_list_col = FALSE,
+                     names_sep = "_", all_rows = FALSE) { 
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
   
@@ -151,88 +151,82 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
 
   # Computation for one group, all time values
   slide_one_grp = function(.data_group,
-                           f, ..., n, 
+                           f, ...,  
                            starts,
                            stops,
                            time_values,
-                           complete,
                            all_rows,
                            new_col) {
     # Figure out which reference time values appear in the data group in the
     # first place (we need to do this because it could differ based on the
     # group, hence the setup/checks for the reference time values based on all
     # the data could still be off)
-    o1 = time_values %in% .data_group$time_value
-    starts = starts[o1]
-    stops = stops[o1]
-    time_values = time_values[o1] 
-    # Figure out which windows are complete
-    slide_values = rep(NA, length(starts))
-    o2 = !complete | (stops - starts == n-1)
-
-    if (sum(o2) > 0) {
-      # Compute the slide values only for complete windows
-      slide_values[o2] = slider::hop_index(.x = .data_group,
-                                           .i = .data_group$time_value,
-                                           .f = f, ...,
-                                           .starts = starts[o2],
-                                           .stops = stops[o2])
-
-      # Now figure out which rows in the data group are in the reference time
-      # values; this will be useful for all sorts of checks that follow
-      o3 = .data_group$time_value %in% time_values
-      num_ref_rows = sum(o3)
+    o = time_values %in% .data_group$time_value
+    starts = starts[o]
+    stops = stops[o]
+    time_values = time_values[o] 
     
-      # Count the number of appearances of each reference time value
-      counts = .data_group %>%
-        dplyr::filter(.data$time_value %in% time_values) %>%
-        dplyr::count(.data$time_value) %>%
-        dplyr::pull(n)
+    # Compute the slide values 
+    slide_values = slider::hop_index(.x = .data_group,
+                                     .i = .data_group$time_value,
+                                     .f = f, ...,
+                                     .starts = starts,
+                                     .stops = stops)
 
-      # If they're all atomic vectors 
-      if (all(sapply(slide_values[o2], is.atomic))) {
-        if (all(sapply(slide_values[o2], length) == 1)) {
-          # Recycle to make size stable (one slide value per ref time value)
-          slide_values = rep(unlist(slide_values), times = counts)
-        }
-        else {
-          # Unlist, then check its length, and abort if not right
-          slide_values = unlist(slide_values)
-          if (length(slide_values) != num_ref_rows) {
-            Abort("If the slide computations return atomic vectors, then they must each have a single element, or else one element per appearance of the reference time value in the local window.")
-          }
-        }
-      }
-      
-      # If they're all data frames
-      else if (all(sapply(slide_values[o2], is.data.frame))) {
-        if (all(sapply(slide_values[o2], nrow) == 1)) {
-          # Recycle to make size stable (one slide value per ref time value)
-          slide_values = rep(slide_values, times = counts)
-        }
-        else {
-          # Split (each row on its own), check length, abort if not right
-          slide_df = dplyr::bind_rows(slide_values)
-          slide_values = split(slide_df, 1:nrow(slide_df))
-          if (length(slide_values) != num_ref_rows) {
-            Abort("If the slide computations return data frames, then they must each have a single row, or else one row per appearance of the reference time value in the local window.")
-          }
-        }
-      }
+    # Now figure out which rows in the data group are in the reference time
+    # values; this will be useful for all sorts of checks that follow
+    o = .data_group$time_value %in% time_values
+    num_ref_rows = sum(o)
+    
+    # Count the number of appearances of each reference time value
+    counts = .data_group %>%
+      dplyr::filter(.data$time_value %in% time_values) %>%
+      dplyr::count(.data$time_value) %>%
+      dplyr::pull(n)
 
-      # If neither all atomic vectors or all data frames, then abort 
+    # If they're all atomic vectors 
+    if (all(sapply(slide_values, is.atomic))) {
+      if (all(sapply(slide_values, length) == 1)) {
+        # Recycle to make size stable (one slide value per ref time value)
+        slide_values = rep(unlist(slide_values), times = counts)
+      }
       else {
-        Abort("The slide computations must return always atomic vectors or data frames (and not a mix of these two structures).")
-      }      
+        # Unlist, then check its length, and abort if not right
+        slide_values = unlist(slide_values)
+        if (length(slide_values) != num_ref_rows) {
+          Abort("If the slide computations return atomic vectors, then they must each have a single element, or else one element per appearance of the reference time value in the local window.")
+        }
+      }
     }
+      
+    # If they're all data frames
+    else if (all(sapply(slide_values, is.data.frame))) {
+      if (all(sapply(slide_values, nrow) == 1)) {
+        # Recycle to make size stable (one slide value per ref time value)
+        slide_values = rep(slide_values, times = counts)
+      }
+      else {
+        # Split (each row on its own), check length, abort if not right
+        slide_df = dplyr::bind_rows(slide_values)
+        slide_values = split(slide_df, 1:nrow(slide_df))
+        if (length(slide_values) != num_ref_rows) {
+          Abort("If the slide computations return data frames, then they must each have a single row, or else one row per appearance of the reference time value in the local window.")
+        }
+      }
+    }
+      
+    # If neither all atomic vectors or all data frames, then abort 
+    else {
+      Abort("The slide computations must return always atomic vectors or data frames (and not a mix of these two structures).")
+    }      
     
     # If all rows, then pad slide values with NAs, else filter down data group
     if (all_rows) {
       orig_values = slide_values
       slide_values = rep(NA, nrow(.data_group))
-      slide_values[o3] = orig_values
+      slide_values[o] = orig_values
     }
-    else .data_group = filter(.data_group, o3)
+    else .data_group = filter(.data_group, o)
     return(mutate(.data_group, !!new_col := slide_values))
   }
 
@@ -240,11 +234,10 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
   if (!missing(f)) {
     x = x %>%  
       group_modify(slide_one_grp,
-                   f = f, ..., n = n,
+                   f = f, ...,
                    starts = starts,
                    stops = stops,
                    time_values = ref_time_values, 
-                   complete = complete,
                    all_rows = all_rows,
                    new_col = new_col,
                    .keep = FALSE)
@@ -266,11 +259,10 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
     
     x = x %>%  
       group_modify(slide_one_grp,
-                   f = f, quo = quo, n = n,
+                   f = f, quo = quo,
                    starts = starts,
                    stops = stops,
                    time_values = ref_time_values, 
-                   complete = complete,
                    all_rows = all_rows,
                    new_col = new_col,
                    .keep = FALSE)
