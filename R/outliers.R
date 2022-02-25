@@ -45,12 +45,15 @@
 #' 
 #' @export
 detect_outlr = function(x = seq_along(y), y,
-                        methods = tibble(method = "rm",
+                        methods = tibble::tibble(method = "rm",
                                          args = list(list()),
                                          abbr = "rm"),
                         combiner = c("median", "mean", "none")) {
   # Validate combiner
   combiner = match.arg(combiner)
+  
+  # Validate that x contains all distinct values
+  if (max(table(x)) > 1) Abort("`x` must not contain duplicate values; did you group your `epi_df` by all relevant key variables?")
 
   # Run all outlier detection methods
   results = purrr::pmap_dfc(methods, function(method, args, abbr) {
@@ -187,6 +190,7 @@ detect_outlr_rm = function(x = seq_along(y), y, n = 21,
 #'   description.
 #'
 #' @importFrom stats median
+#' @importFrom tidyselect starts_with
 #' @export
 detect_outlr_stl = function(x = seq_along(y), y,
                             n_trend = 21,
@@ -216,11 +220,10 @@ detect_outlr_stl = function(x = seq_along(y), y,
     fabletools::model(feasts::STL(stl_formula, robust = TRUE)) %>%
     generics::components() %>%
     tibble::as_tibble() %>%
-    dplyr::transmute(
-      trend = trend,
-      seasonal = season_week,
-      resid = remainder)
-  
+    dplyr::select(trend:remainder) %>%
+    dplyr::rename_with(~ "seasonal", tidyselect::starts_with("season")) %>%
+    dplyr::rename(resid = remainder)
+    
   # Allocate the seasonal term from STL to either fitted or resid 
   if (!is.null(seasonal_period)) {
     stl_components = stl_components %>%
@@ -263,15 +266,18 @@ detect_outlr_stl = function(x = seq_along(y), y,
 
 # Common function for rolling IQR, using fitted and resid variables
 roll_iqr = function(z, n, detection_multiplier, min_radius,
-                    replacement_multiplier, min_lower) { 
+                    replacement_multiplier, min_lower) {
+  if (typeof(z$y) == "integer") as_type = as.integer
+  else as_type = as.numeric
+  
   epi_slide(z, roll_iqr = IQR(resid), n = n, align = "center") %>%
     dplyr::mutate(
       lower = pmax(min_lower,
                    fitted - pmax(min_radius, detection_multiplier * roll_iqr)),
       upper = fitted + pmax(min_radius, detection_multiplier * roll_iqr),
       replacement = dplyr::case_when(
-      (y < lower) ~ fitted - replacement_multiplier * roll_iqr,
-      (y > upper) ~ fitted + replacement_multiplier * roll_iqr,
+      (y < lower) ~ as_type(fitted - replacement_multiplier * roll_iqr),
+      (y > upper) ~ as_type(fitted + replacement_multiplier * roll_iqr),
       TRUE ~ y)) %>%
     dplyr::select(lower, upper, replacement) %>%
     tibble::as_tibble()
