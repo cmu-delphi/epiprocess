@@ -7,7 +7,7 @@
 detect_outlr(
   x = seq_along(y),
   y,
-  methods = tibble(method = "rm", args = list(list()), abbr = "rm"),
+  methods = tibble::tibble(method = "rm", args = list(list()), abbr = "rm"),
   combiner = c("median", "mean", "none")
 )
 }

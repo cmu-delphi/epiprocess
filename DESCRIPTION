@@ -51,6 +51,8 @@ Imports:
   tidyr,
   tsibble
 Suggests:
+    testthat (>= 3.0.0),
     delphi.epidata
 Remotes:
     github::cmu-delphi/delphi-epidata-r
+Config/testthat/edition: 3
