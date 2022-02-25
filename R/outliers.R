@@ -53,7 +53,9 @@ detect_outlr = function(x = seq_along(y), y,
   combiner = match.arg(combiner)
   
   # Validate that x contains all distinct values
-  if (max(table(x)) > 1) Abort("`x` must not contain duplicate values; did you group your `epi_df` by all relevant key variables?")
+  if (any(duplicated(x))) {
+    Abort("`x` cannot contain duplicate values. (If being run on a column in an `epi_df`, did you group by relevant key variables?)")
+  }
 
   # Run all outlier detection methods
   results = purrr::pmap_dfc(methods, function(method, args, abbr) {

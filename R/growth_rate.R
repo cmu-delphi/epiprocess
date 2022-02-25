@@ -22,7 +22,9 @@
 #' @param log_scale Should growth rates be estimated using the parametrization
 #'   on the log scale? See details for an explanation. Default is `FALSE`.
 #' @param dup_rm Should we check and remove duplicates in `x` (and corresponding
-#'   elements of `y`) before the computation? Default is `FALSE`.
+#'   elements of `y`) before the computation? Some methods might handle
+#'   duplicate `x` values gracefully, whereas others might fail (either quietly
+#'   or loudly). Default is `FALSE`.
 #' @param na_rm Should missing values be removed before the computation? Default
 #'   is `FALSE`.
 #' @param ... Additional arguments to pass to the method used to estimate the
@@ -122,9 +124,13 @@ growth_rate = function(x = seq_along(y), y, x0 = x,
   # Remove duplicates if we need to
   if (dup_rm) {
     o = !duplicated(x)
+    if (any(!o)) {
+      Warn("`x` contains duplicate values. (If being run on a column in an `epi_df`, did you group by relevant key variables?)")
+    }
     x = x[o]
     y = y[o]
   }
+    
   
   # Remove NAs if we need to
   if (na_rm) {
