@@ -239,24 +239,34 @@ prob_arx <- function(x, y, geo_value, time_value, lags = c(0, 7, 14),
   lags = rep(lags, length.out = ncol(x))
   
   # Build features and response for the AR model, and then fit it
-  dat <- do.call(
-    data.frame, 
-    unlist( # Below we loop through and build the lagged features
-      purrr::map(1:ncol(x), function(i) { 
-        purrr::map(lags[[i]], function(lag) dplyr::lag(x[,i], n = lag))
-      }),
-      recursive = FALSE
-    )
-  )
-  names(dat) <- paste0("x", 1:ncol(dat))
-  dat$y <- dplyr::lead(y, n = ahead) 
-  obj <- lm(y ~ ., data = dat)
+  dat =
+    # Make each (covariate,lag) request into a row of a tibble...
+    tibble::tibble(i = seq_len(ncol(x)), lag=lags) %>%
+    tidyr::unchop(lag) %>%
+    # ... assign names we know will won't conflict...
+    dplyr::mutate(name = paste0("x",seq_len(nrow(.)))) %>%
+    # ... turn each of these requests into a separate tibble with indexing columns...
+    purrr::pmap(function(i, lag, name) {
+      tibble::tibble(
+        geo_value = geo_value,
+        time_value = time_value + lag, # shifting variable back by `lag` = adding `lag` to time_values
+        !!name := x[,i]
+      )
+    }) %>%
+    # ... as well as one for the desired shift of y...
+    c(list(tibble(
+      geo_value = geo_value,
+      time_value = time_value - ahead, # shifting variable forward by `ahead` = subtracting `lead` from time_values
+      y = y
+    ))) %>%
+    # ... and combine them together.
+    purrr::reduce(full_join, by=c("geo_value","time_value"))
+  obj <- lm(y ~ ., data = select(dat, -geo_value, -time_value))
   
   # Use LOCF to fill NAs in the latest feature values. Do it by geo value, and
   # use data.table functionality for this
-  cols <- names(dat)
-  dat <- cbind(dat, data.frame(geo_value, time_value))
-  dat <- as.data.table(dat)
+  cols <- setdiff(names(dat), c("geo_value","time_value"))
+  setDT(dat)
   dat[, (cols) := nafill(.SD, type = "locf"), .SDcols = cols, by = "geo_value"]
   
   # Make predictions
