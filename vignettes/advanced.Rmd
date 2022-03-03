@@ -260,7 +260,8 @@ prob_arx <- function(x, y, geo_value, time_value, lags = c(0, 7, 14),
       y = y
     ))) %>%
     # ... and combine them together.
-    purrr::reduce(full_join, by=c("geo_value","time_value"))
+    purrr::reduce(full_join, by=c("geo_value","time_value")) %>%
+    dplyr::arrange(time_value)
   obj <- lm(y ~ ., data = select(dat, -geo_value, -time_value))
   
   # Use LOCF to fill NAs in the latest feature values. Do it by geo value, and
@@ -270,9 +271,10 @@ prob_arx <- function(x, y, geo_value, time_value, lags = c(0, 7, 14),
   dat[, (cols) := nafill(.SD, type = "locf"), .SDcols = cols, by = "geo_value"]
   
   # Make predictions
+  test_time_value = max(time_value) # max of `time_value` vector arg, not the `dat` column with the same name
   point <- predict(obj, newdata = dat %>% 
                      dplyr::group_by(geo_value) %>%
-                     dplyr::filter(time_value == max(time_value)))
+                     dplyr::filter(time_value == test_time_value))
   
   # Compute bands
   r <- residuals(obj)
