@@ -263,7 +263,7 @@ which is often referred to as an ARX model.
 ```{r}
 prob_arx <- function(x, y, lags = c(0, 7, 14), ahead = 7, min_train_window = 20,
                      lower_level = 0.05, upper_level = 0.95, symmetrize = TRUE, 
-                     nonneg = TRUE) {   
+                     intercept = FALSE, nonneg = TRUE) {   
   # Return NA if insufficient training data
   if (length(y) < min_train_window + max(lags) + ahead) {
     return(data.frame(point = NA, lower = NA, upper = NA))
@@ -280,16 +280,17 @@ prob_arx <- function(x, y, lags = c(0, 7, 14), ahead = 7, min_train_window = 20,
     data.frame, 
     unlist( # Below we loop through and build the lagged features
       purrr::map(1:ncol(x), function(i) { 
-        purrr::map(lags[[i]], function(lag) dplyr::lag(x[,i], n = lag))
+        purrr::map(lags[[i]], function(j) lag(x[,i], n = j))
       }),
-      recursive = FALSE
-    )
-  )
-  dat$y <- dplyr::lead(y, n = ahead) 
-  obj <- lm(y ~ ., data = dat)
+      recursive = FALSE))
+  names(dat) = paste0("x", 1:ncol(dat))
+  if (intercept) dat$x0 = rep(1, nrow(dat))
+  dat$y <- lead(y, n = ahead) 
+  obj <- lm(y ~ . + 0, data = dat)
   
   # Use LOCF to fill NAs in the latest feature values, make a prediction
-  data.table::setnafill(dat, type = "locf")
+  setDT(dat) 
+  setnafill(dat, type = "locf")
   point <- predict(obj, newdata = tail(dat, 1))
   
   # Compute a band 

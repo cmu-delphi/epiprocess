@@ -223,68 +223,82 @@ the eventual returned tibble, we need to include `geo_value` as a column in the
 output data frame from our ARX computation.
 
 ```{r}
-prob_arx <- function(x, y, geo_value, time_value, lags = c(0, 7, 14), 
-                     ahead = 7, min_train_window = 20, lower_level = 0.05, 
-                     upper_level = 0.95, symmetrize = TRUE, nonneg = TRUE) {  
+library(tidyr)
+library(purrr)
+
+prob_arx_args <- function(lags = c(0, 7, 14), 
+                          ahead = 7, 
+                          min_train_window = 20,
+                          lower_level = 0.05, 
+                          upper_level = 0.95, 
+                          symmetrize = TRUE, 
+                          intercept = FALSE,
+                          nonneg = TRUE) {
+  return(list(lags = lags, 
+              ahead = ahead, 
+              min_train_window = min_train_window,
+              lower_level = lower_level,
+              upper_level = upper_level,
+              symmetrize = symmetrize, 
+              intercept = intercept,
+              nonneg = nonneg))
+}
+
+prob_arx <- function(x, y, geo_value, time_value, args = prob_arx_args()) {  
   # Return NA if insufficient training data
-  if (length(y) < min_train_window + max(lags) + ahead) {
+  if (length(y) < args$min_train_window + max(args$lags) + args$ahead) {
     return(data.frame(geo_value = unique(geo_value), # Return geo value!
                       point = NA, lower = NA, upper = NA))
   }
   
-  # Useful transformations
+  # Set up x, y, lags list
   if (!missing(x)) x <- data.frame(x, y)
   else x <- data.frame(y)
-  if (!is.list(lags)) lags <- list(lags)
-  lags = rep(lags, length.out = ncol(x))
+  if (!is.list(args$lags)) args$lags <- list(args$lags)
+  args$lags = rep(args$lags, length.out = ncol(x))
   
   # Build features and response for the AR model, and then fit it
-  dat =
-    # Make each (covariate,lag) request into a row of a tibble...
-    tibble::tibble(i = seq_len(ncol(x)), lag=lags) %>%
-    tidyr::unchop(lag) %>%
-    # ... assign names we know will won't conflict...
-    dplyr::mutate(name = paste0("x",seq_len(nrow(.)))) %>%
-    # ... turn each of these requests into a separate tibble with indexing columns...
-    purrr::pmap(function(i, lag, name) {
-      tibble::tibble(
-        geo_value = geo_value,
-        time_value = time_value + lag, # shifting variable back by `lag` = adding `lag` to time_values
-        !!name := x[,i]
-      )
-    }) %>%
-    # ... as well as one for the desired shift of y...
-    c(list(tibble(
-      geo_value = geo_value,
-      time_value = time_value - ahead, # shifting variable forward by `ahead` = subtracting `lead` from time_values
-      y = y
-    ))) %>%
-    # ... and combine them together.
-    purrr::reduce(full_join, by=c("geo_value","time_value")) %>%
-    dplyr::arrange(time_value)
-  obj <- lm(y ~ ., data = select(dat, -geo_value, -time_value))
+  dat <-
+    tibble(i = 1:ncol(x), lag = args$lags) %>%
+    unnest(lag) %>%
+    mutate(name = paste0("x", 1:nrow(.))) %>%
+    # One list element for each lagged feature
+    pmap(function(i, lag, name) {
+      tibble(geo_value = geo_value,
+             time_value = time_value + lag, # Shift back 
+             !!name := x[,i])
+    }) %>% 
+    # One list element for the response vector
+    c(list(
+      tibble(geo_value = geo_value,
+             time_value = time_value - args$ahead, # Shift forward 
+             y = y))) %>%
+    # Combine them together into one data frame
+    reduce(full_join, by = c("geo_value", "time_value")) %>%
+    arrange(time_value)
+  if (intercept) dat$x0 = rep(1, nrow(dat))
+  obj <- lm(y ~ . + 0, data = select(dat, -geo_value, -time_value))
   
-  # Use LOCF to fill NAs in the latest feature values. Do it by geo value, and
-  # use data.table functionality for this
-  cols <- setdiff(names(dat), c("geo_value","time_value"))
-  setDT(dat)
+  # Use LOCF to fill NAs in the latest feature values (do this by geo value)
+  setDT(dat) # Convert to a data.table object by reference
+  cols <- setdiff(names(dat), c("geo_value", "time_value"))
   dat[, (cols) := nafill(.SD, type = "locf"), .SDcols = cols, by = "geo_value"]
   
   # Make predictions
-  test_time_value = max(time_value) # max of `time_value` vector arg, not the `dat` column with the same name
+  test_time_value = max(time_value)
   point <- predict(obj, newdata = dat %>% 
                      dplyr::group_by(geo_value) %>%
                      dplyr::filter(time_value == test_time_value))
   
   # Compute bands
   r <- residuals(obj)
-  s <- ifelse(symmetrize, -1, NA) # Should the residuals be symmetrized?
-  q <- quantile(c(r, s * r), probs = c(lower_level, upper_level), na.rm = TRUE)
+  s <- ifelse(args$symmetrize, -1, NA) # Should the residuals be symmetrized?
+  q <- quantile(c(r, s * r), probs = c(args$lower, args$upper), na.rm = TRUE)
   lower <- point + q[1]
   upper <- point + q[2]
   
   # Clip at zero if we need to, then return
-  if (nonneg) { 
+  if (args$nonneg) { 
     point = pmax(point, 0) 
     lower = pmax(lower, 0) 
     upper = pmax(upper, 0) 
@@ -309,7 +323,7 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
       epix_slide(fc = prob_arx(percent_cli, case_rate, geo_value, time_value, 
-                               ahead = ahead), 
+                               args = prob_arx_args(ahead = ahead)), 
                  n = 120, ref_time_values = fc_time_values) %>%
       mutate(target_date = time_value + ahead, as_of = TRUE, 
              geo_value = fc_geo_value)
@@ -317,7 +331,7 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   else {
     x_latest %>% 
       epi_slide(fc = prob_arx(percent_cli, case_rate, geo_value, time_value, 
-                              ahead = ahead), 
+                              args = prob_arx_args(ahead = ahead)), 
                 n = 120, ref_time_values = fc_time_values) %>%
       mutate(target_date = time_value + ahead, as_of = FALSE) 
   }
@@ -349,8 +363,8 @@ gginnards::append_layers(
 ```
 
 We can see that these forecasts, which come from training an ARX model jointly
-over CA and FL, exhibit overall less variability and wider prediction bands
-compared to the ones from the archive vignette that come from training a 
-separate ARX model on each state. As in the archive vignette, we can also see a
-pretty big difference between version-aware (right column) and -unaware (left
-column) forecasting, as well.
+over CA and FL, exhibit generally less variability and wider prediction bands
+compared to the ones from the archive vignette, which come from training a 
+separate ARX model on each state. As in the archive vignette, we can see a
+difference between version-aware (right column) and -unaware (left column)
+forecasting, as well.
