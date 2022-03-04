@@ -153,7 +153,8 @@
          <span class="kw">abbr</span> <span class="kw">=</span> <span class="st">"rm"</span>),
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/reexports.html">tibble</a></span>(<span class="kw">method</span> <span class="kw">=</span> <span class="st">"stl"</span>,
          <span class="kw">args</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">detect_negatives</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
-                          <span class="kw">detection_multiplier</span> <span class="kw">=</span> <span class="fl">2.5</span>)),
+                          <span class="kw">detection_multiplier</span> <span class="kw">=</span> <span class="fl">2.5</span>,
+                          <span class="kw">seasonal_period</span> <span class="kw">=</span> <span class="fl">7</span>)),
          <span class="kw">abbr</span> <span class="kw">=</span> <span class="st">"stl_seasonal"</span>),
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/reexports.html">tibble</a></span>(<span class="kw">method</span> <span class="kw">=</span> <span class="st">"stl"</span>,
          <span class="kw">args</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">detect_negatives</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
@@ -166,7 +167,7 @@
 ##   method args             abbr           
 ##   &lt;chr&gt;  &lt;list&gt;           &lt;chr&gt;          
 ## 1 rm     &lt;named list [2]&gt; rm             
-## 2 stl    &lt;named list [2]&gt; stl_seasonal   
+## 2 stl    &lt;named list [3]&gt; stl_seasonal   
 ## 3 stl    &lt;named list [3]&gt; stl_nonseasonal</code></pre>
 <p>Additionally, we’ll form combined lower and upper thresholds, calculated as the median of the lower and upper thresholds from the methods at each time point. Note that using this combined median threshold is equivalent to using a majority vote across the base methods to determine whether a value is an outlier.</p>
 <div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
@@ -181,12 +182,12 @@
 <pre><code>## # A tibble: 6 × 15
 ##   geo_value time_value cases rm_lower rm_upper rm_replacement stl_seasonal_lower
 ##   &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;          &lt;dbl&gt;              &lt;dbl&gt;
-## 1 fl        2020-06-01   667    345      2195             667               10.5
-## 2 nj        2020-06-01   486     64.4     926.            486              110. 
-## 3 fl        2020-06-02   617    406.     2169.            617              201. 
-## 4 nj        2020-06-02   658    140.      841.            658               95.6
-## 5 fl        2020-06-03  1317    468.     2142.           1317               90.5
-## 6 nj        2020-06-03   541    216       756             541               81.5
+## 1 fl        2020-06-01   667    345      2195             667                 0 
+## 2 nj        2020-06-01   486     64.4     926.            486               221.
+## 3 fl        2020-06-02   617    406.     2169.            617                 0 
+## 4 nj        2020-06-02   658    140.      841.            658               245.
+## 5 fl        2020-06-03  1317    468.     2142.           1317                 0 
+## 6 nj        2020-06-03   541    216       756             541               227.
 ## # … with 8 more variables: stl_seasonal_upper &lt;dbl&gt;,
 ## #   stl_seasonal_replacement &lt;dbl&gt;, stl_nonseasonal_lower &lt;dbl&gt;,
 ## #   stl_nonseasonal_upper &lt;dbl&gt;, stl_nonseasonal_replacement &lt;dbl&gt;,
@@ -253,30 +254,21 @@
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">cases</span>, <span class="no">cases_corrected</span>)
 
 <span class="no">y</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">cases</span> <span class="kw">!=</span> <span class="no">cases_corrected</span>)</pre></body></html></div>
-<pre><code>## # A tibble: 20 × 4
+<pre><code>## # A tibble: 22 × 4
 ## # Groups:   geo_value [2]
 ##    geo_value time_value cases cases_corrected
 ##    &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;           &lt;dbl&gt;
-##  1 fl        2020-07-12 15300           9165.
+##  1 fl        2020-07-12 15300          10181 
 ##  2 nj        2020-07-19    -8            320.
 ##  3 nj        2020-08-13   694            404.
 ##  4 nj        2020-08-14   619            397.
-##  5 nj        2020-08-16    40            379.
-##  6 nj        2020-08-22   555            329.
+##  5 nj        2020-08-16    40            366 
+##  6 nj        2020-08-22   555            360 
 ##  7 fl        2020-09-01  7569           2861.
 ##  8 nj        2020-10-08  1415            873.
-##  9 fl        2020-10-10     0           2643.
-## 10 fl        2020-10-11  5570           2699.
-## 11 nj        2020-10-19  1807           1262.
-## 12 fl        2020-11-26     0           8435.
-## 13 fl        2020-11-27 17344           8553.
-## 14 fl        2020-12-25     0          11905.
-## 15 fl        2021-01-02 31518          12849.
-## 16 nj        2021-02-15  1445           3454.
-## 17 fl        2021-03-01  1700           5378.
-## 18 fl        2021-04-12  1613           6157.
-## 19 nj        2021-04-26 -9005           2193.
-## 20 nj        2021-05-08  -221            904.</code></pre>
+##  9 fl        2020-10-10     0           2660 
+## 10 fl        2020-10-11  5570           2660 
+## # … with 12 more rows</code></pre>
 <div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">y</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">y</span> <span class="kw">=</span> <span class="no">cases</span>), <span class="kw">linetype</span> <span class="kw">=</span> <span class="fl">2</span>) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">y</span> <span class="kw">=</span> <span class="no">cases_corrected</span>), <span class="kw">col</span> <span class="kw">=</span> <span class="fl">2</span>) +
