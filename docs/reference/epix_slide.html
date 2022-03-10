@@ -259,19 +259,29 @@ column named according to the <code>new_col_name</code> argument, containing the
 values.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Unlike <code><a href='epi_slide.html'>epi_slide()</a></code>, windows in <code>epix_slide()</code> are <strong>always
-right-aligned</strong>. Another distinction is the <code>by</code> argument, which used to
-specify the grouping upfront (whereas for an <code>epi_df</code>, this would be
-accomplished by a call to <code><a href='https://dplyr.tidyverse.org/reference/group_by.html'>dplyr::group_by()</a></code> that precedes a call to
-<code><a href='epi_df.html'>epi_df()</a></code>). Apart from this, the interfaces between <code>epix_slide()</code> and
-<code><a href='epi_slide.html'>epi_slide()</a></code> are altogether similar.</p>
-<p>The current function can be considerably slower than <code><a href='epi_slide.html'>epi_slide()</a></code>, for two
-reasons: (1) it must repeatedly fetch properly-versioned snapshots from the
-data archive (via its <code>as_of()</code> method), and (2) it performs a "manual"
-sliding of sorts, and does not benefit from the highly efficient <code>slider</code>
-package. For this reason, it should never be used in place of
-<code><a href='epi_slide.html'>epi_slide()</a></code>, and only used when version-aware sliding is necessary (as it
-its purpose).</p>
+    <p>Two key distinctions between inputs to the current function and
+<code><a href='epi_slide.html'>epi_slide()</a></code>:</p><ol>
+<li><p><code>epix_slide()</code> uses windows that are <strong>always right-aligned</strong> (in
+<code><a href='epi_slide.html'>epi_slide()</a></code>, custom alignments could be specified using the <code>align</code> or
+<code>before</code> arguments).</p></li>
+<li><p><code>epix_slide()</code> uses a <code>group_by</code> to specify the grouping upfront (in
+<code><a href='epi_slide.html'>epi_slide()</a></code>, this would be accomplished by a preceding function call to
+<code><a href='https://dplyr.tidyverse.org/reference/group_by.html'>dplyr::group_by()</a></code>).
+Apart from this, the interfaces between <code>epix_slide()</code> and <code><a href='epi_slide.html'>epi_slide()</a></code> are
+the same.</p></li>
+</ol>
+
+<p>Note that the outputs are a similar but different: <code>epix_slide()</code> only
+returns the grouping variables, <code>time_value</code>, and the new columns from
+sliding, whereas <code><a href='epi_slide.html'>epi_slide()</a></code> returns all original variables plus the new
+columns from sliding.</p>
+<p>Furthermore, the current function can be considerably slower than
+<code><a href='epi_slide.html'>epi_slide()</a></code>, for two reasons: (1) it must repeatedly fetch
+properly-versioned snapshots from the data archive (via its <code>as_of()</code>
+method), and (2) it performs a "manual" sliding of sorts, and does not
+benefit from the highly efficient <code>slider</code> package. For this reason, it
+should never be used in place of <code><a href='epi_slide.html'>epi_slide()</a></code>, and only used when
+version-aware sliding is necessary (as it its purpose).</p>
 <p>Finally, this is simply a wrapper around the <code>slide()</code> method of the
 <code>epi_archive</code> class, so if <code>x</code> is an <code>epi_archive</code> object, then:</p><pre><span class='fu'>epix_slide</span>(<span class='no'>x</span>, <span class='kw'>new_var</span> <span class='kw'>=</span> <span class='fu'>comp</span>(<span class='no'>old_var</span>), <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>120</span>)</pre>
 

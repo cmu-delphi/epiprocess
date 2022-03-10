@@ -129,20 +129,29 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'   column named according to the `new_col_name` argument, containing the slide
 #'   values.
 #'
-#' @details Unlike `epi_slide()`, windows in `epix_slide()` are **always
-#'   right-aligned**. Another distinction is the `by` argument, which used to
-#'   specify the grouping upfront (whereas for an `epi_df`, this would be
-#'   accomplished by a call to `dplyr::group_by()` that precedes a call to
-#'   `epi_df()`). Apart from this, the interfaces between `epix_slide()` and
-#'   `epi_slide()` are altogether similar.
+#' @details Two key distinctions between inputs to the current function and
+#'   `epi_slide()`: 
+#'   1. `epix_slide()` uses windows that are **always right-aligned** (in
+#'   `epi_slide()`, custom alignments could be specified using the `align` or
+#'   `before` arguments).
+#'   2. `epix_slide()` uses a `group_by` to specify the grouping upfront (in
+#'   `epi_slide()`, this would be accomplished by a preceding function call to
+#'   `dplyr::group_by()`). 
+#' Apart from this, the interfaces between `epix_slide()` and `epi_slide()` are
+#'   the same.
+#'
+#' Note that the outputs are a similar but different: `epix_slide()` only
+#'   returns the grouping variables, `time_value`, and the new columns from
+#'   sliding, whereas `epi_slide()` returns all original variables plus the new
+#'   columns from sliding.
 #' 
-#' The current function can be considerably slower than `epi_slide()`, for two
-#'   reasons: (1) it must repeatedly fetch properly-versioned snapshots from the
-#'   data archive (via its `as_of()` method), and (2) it performs a "manual"
-#'   sliding of sorts, and does not benefit from the highly efficient `slider`
-#'   package. For this reason, it should never be used in place of
-#'   `epi_slide()`, and only used when version-aware sliding is necessary (as it
-#'   its purpose).
+#' Furthermore, the current function can be considerably slower than
+#'   `epi_slide()`, for two reasons: (1) it must repeatedly fetch
+#'   properly-versioned snapshots from the data archive (via its `as_of()`
+#'   method), and (2) it performs a "manual" sliding of sorts, and does not
+#'   benefit from the highly efficient `slider` package. For this reason, it
+#'   should never be used in place of `epi_slide()`, and only used when
+#'   version-aware sliding is necessary (as it its purpose).
 #'
 #' Finally, this is simply a wrapper around the `slide()` method of the
 #'   `epi_archive` class, so if `x` is an `epi_archive` object, then: 

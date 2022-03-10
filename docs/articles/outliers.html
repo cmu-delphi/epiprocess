@@ -198,7 +198,7 @@
                        <span class="no">facet_vars</span> <span class="kw">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html">vars</a></span>(<span class="no">geo_value</span>), <span class="no">nrow</span> <span class="kw">=</span> <span class="kw">NULL</span>, <span class="no">ncol</span> <span class="kw">=</span> <span class="kw">NULL</span>,
                        <span class="no">scales</span> <span class="kw">=</span> <span class="st">"fixed"</span>) {
   <span class="co"># Convert outlier detection results to long format </span>
-  <span class="no">signal</span> <span class="kw">&lt;-</span> <span class="kw pkg">rlang</span><span class="kw ns">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/nse-defuse.html">enquo</a></span>(<span class="no">signal</span>)
+  <span class="no">signal</span> <span class="kw">&lt;-</span> <span class="kw pkg">rlang</span><span class="kw ns">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/enquo.html">enquo</a></span>(<span class="no">signal</span>)
   <span class="no">x_long</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
     <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html">pivot_longer</a></span>(
       <span class="kw">cols</span> <span class="kw">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/reexports.html">starts_with</a></span>(<span class="no">method_abbr</span>),

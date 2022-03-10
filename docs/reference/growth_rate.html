@@ -206,7 +206,9 @@ on the log scale? See details for an explanation. Default is <code>FALSE</code>.
     <tr>
       <th>dup_rm</th>
       <td><p>Should we check and remove duplicates in <code>x</code> (and corresponding
-elements of <code>y</code>) before the computation? Default is <code>FALSE</code>.</p></td>
+elements of <code>y</code>) before the computation? Some methods might handle
+duplicate <code>x</code> values gracefully, whereas others might fail (either quietly
+or loudly). Default is <code>FALSE</code>.</p></td>
     </tr>
     <tr>
       <th>na_rm</th>

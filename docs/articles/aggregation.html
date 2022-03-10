@@ -159,7 +159,8 @@
 ## [1] 1D</code></pre>
 <p>We can also set the key variable(s) directly in a call to <code><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html">as_tsibble()</a></code>. Similar to SQL keys, if the key does not uniquely identify each time point (that is, the key and index together do not not uniquely identify each row), then <code><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html">as_tsibble()</a></code> throws an error:</p>
 <div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html">as_tsibble</a></span>(<span class="no">x</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="st">"county_name"</span>))</pre></body></html></div>
-<pre><code>## Error: A valid tsibble must have distinct rows identified by key and index.
+<pre><code>## Error in `validate_tsibble()`:
+## ! A valid tsibble must have distinct rows identified by key and index.
 ## ℹ Please use `duplicates()` to check the duplicated rows.</code></pre>
 <p>As we can see, there are duplicate county names between Massachusetts and Vermont, which caused the error.</p>
 <div class="sourceCode" id="cb12"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="fu"><a href="https://tsibble.tidyverts.org/reference/duplicates.html">duplicates</a></span>(<span class="no">x</span>, <span class="kw">key</span> <span class="kw">=</span> <span class="st">"county_name"</span>))</pre></body></html></div>
@@ -284,7 +285,7 @@
 <pre><code>## An `epi_df` object, with metadata:
 ## * geo_type  = nation
 ## * time_type = day
-## * as_of     = 2022-03-03 20:43:56
+## * as_of     = 2022-03-10 11:57:41
 ## 
 ## # A tibble: 4 × 4
 ## # Groups:   geo_value [1]
@@ -304,7 +305,7 @@
 <pre><code>## An `epi_df` object, with metadata:
 ## * geo_type  = nation
 ## * time_type = day
-## * as_of     = 2022-03-03 20:43:57
+## * as_of     = 2022-03-10 11:57:42
 ## 
 ## # A tibble: 7 × 4
 ## # Groups:   geo_value [1]
