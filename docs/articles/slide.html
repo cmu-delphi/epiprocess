@@ -280,14 +280,14 @@
 ##    &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
 ##  1 ca        2020-06-01  2440      2655.    2960.    2514.    3405.
 ##  2 ca        2020-07-01  7342      6749.    8283.    7618.    8948.
-##  3 ca        2020-08-01  8609      8284.    7952.    6521.    9384.
+##  3 ca        2020-08-01  8609      8284.    7952.    6521.    9383.
 ##  4 ca        2020-09-01  4244      4705.    4184.    2148.    6221.
 ##  5 ca        2020-10-01  3503      3361     3246.    1148.    5345.
-##  6 ca        2020-11-01  4211      4441.    3801.    2123.    5478.
-##  7 ca        2020-12-01 23566     15715    18421.   16683.   20159.
-##  8 ca        2021-01-01 50243     41148.   49888.   41978.   57798.
-##  9 ca        2021-02-01 13122     17972    14519.    4443.   24594.
-## 10 ca        2021-03-01  3054      5214.    4362.       0    14403.</code></pre>
+##  6 ca        2020-11-01  4211      4441.    3801.    2123.    5479.
+##  7 ca        2020-12-01 23567     15715.   18421.   16683.   20160.
+##  8 ca        2021-01-01 50242     41147.   49886.   41977.   57796.
+##  9 ca        2021-02-01 13123     17972    14519.    4443.   24595.
+## 10 ca        2021-03-01  3054      5214.    4362.       0    14404.</code></pre>
 <p>Note that here we have utilized an argument <code>ref_time_values</code> to perform the sliding computation (here, compute a forecast) at a specific subset of reference time values. We get out three columns <code>fc_point</code>, <code>fc_lower</code>, and <code>fc_upper</code> that correspond to the point forecast, and the lower and upper endpoints of the 95% prediction band, respectively. (If instead we had set <code>as_list_col = TRUE</code> in the call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code>, then we would have gotten a list column <code>fc</code>, where each element of <code>fc</code> is a data frame with named columns <code>point</code>, <code>lower</code>, and <code>upper</code>.)</p>
 <p>To finish off, we plot the forecasts at some times (spaced out by a few months) over the last year, at multiple horizons: 7, 14, 21, and 28 days ahead. To do so, we encapsulate the process of generating forecasts into a simple function, so that we can call it a few times.</p>
 <div class="sourceCode" id="cb14"><html><body><pre class="r"><span class="co"># Note the use of all_rows = TRUE (keeps all original rows in the output)</span>
