@@ -86,20 +86,31 @@ performed on \strong{data that would have been available as of t}. See the
 examples.
 }
 \details{
-Unlike \code{epi_slide()}, windows in \code{epix_slide()} are \strong{always
-right-aligned}. Another distinction is the \code{by} argument, which used to
-specify the grouping upfront (whereas for an \code{epi_df}, this would be
-accomplished by a call to \code{dplyr::group_by()} that precedes a call to
-\code{epi_df()}). Apart from this, the interfaces between \code{epix_slide()} and
-\code{epi_slide()} are altogether similar.
+Two key distinctions between inputs to the current function and
+\code{epi_slide()}:
+\enumerate{
+\item \code{epix_slide()} uses windows that are \strong{always right-aligned} (in
+\code{epi_slide()}, custom alignments could be specified using the \code{align} or
+\code{before} arguments).
+\item \code{epix_slide()} uses a \code{group_by} to specify the grouping upfront (in
+\code{epi_slide()}, this would be accomplished by a preceding function call to
+\code{dplyr::group_by()}).
+Apart from this, the interfaces between \code{epix_slide()} and \code{epi_slide()} are
+the same.
+}
 
-The current function can be considerably slower than \code{epi_slide()}, for two
-reasons: (1) it must repeatedly fetch properly-versioned snapshots from the
-data archive (via its \code{as_of()} method), and (2) it performs a "manual"
-sliding of sorts, and does not benefit from the highly efficient \code{slider}
-package. For this reason, it should never be used in place of
-\code{epi_slide()}, and only used when version-aware sliding is necessary (as it
-its purpose).
+Note that the outputs are a similar but different: \code{epix_slide()} only
+returns the grouping variables, \code{time_value}, and the new columns from
+sliding, whereas \code{epi_slide()} returns all original variables plus the new
+columns from sliding.
+
+Furthermore, the current function can be considerably slower than
+\code{epi_slide()}, for two reasons: (1) it must repeatedly fetch
+properly-versioned snapshots from the data archive (via its \code{as_of()}
+method), and (2) it performs a "manual" sliding of sorts, and does not
+benefit from the highly efficient \code{slider} package. For this reason, it
+should never be used in place of \code{epi_slide()}, and only used when
+version-aware sliding is necessary (as it its purpose).
 
 Finally, this is simply a wrapper around the \code{slide()} method of the
 \code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:\preformatted{epix_slide(x, new_var = comp(old_var), n = 120)

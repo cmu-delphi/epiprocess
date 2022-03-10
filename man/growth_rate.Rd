@@ -40,7 +40,9 @@ the entire sequence. See details for more explanation.}
 on the log scale? See details for an explanation. Default is \code{FALSE}.}
 
 \item{dup_rm}{Should we check and remove duplicates in \code{x} (and corresponding
-elements of \code{y}) before the computation? Default is \code{FALSE}.}
+elements of \code{y}) before the computation? Some methods might handle
+duplicate \code{x} values gracefully, whereas others might fail (either quietly
+or loudly). Default is \code{FALSE}.}
 
 \item{na_rm}{Should missing values be removed before the computation? Default
 is \code{FALSE}.}
