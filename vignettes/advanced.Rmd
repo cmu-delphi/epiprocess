@@ -62,6 +62,11 @@ df %>%
   mutate(version = time_value) %>% 
   as_epi_archive() %>%
   epix_slide(x_2dav = mean(x), n = 2, ref_time_values = as.Date("2020-06-02"))
+
+df %>% 
+  mutate(version = time_value) %>% 
+  as_epi_archive() %>%
+  epix_slide(~ mean(.x$x), n = 2, ref_time_values = as.Date("2020-06-02"))
 ```
 
 When the slide computation returns an atomic vector (rather than a single value)
