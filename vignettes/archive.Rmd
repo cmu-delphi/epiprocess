@@ -26,18 +26,20 @@ on its [API documentation
 page](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
 
 ```{r, message = FALSE, warning = FALSE}
-library(covidcast)
+library(delphi.epidata)
 library(epiprocess)
 library(data.table)
 library(dplyr)
 
-dv <- covidcast_signal("doctor-visits", 
-                       "smoothed_adj_cli",
-                       start_day = "2020-06-01", 
-                       end_day = "2021-12-01",
-                       issues = c("2020-06-01", "2021-12-01"),
-                       geo_type = "state", 
-                       geo_values = c("ca", "fl"))
+dv <- covidcast(
+  data_source = "doctor-visits",
+  signals = "smoothed_adj_cli",
+  time_type = "day",
+  geo_type = "state",
+  time_value = epirange(20200601, 20211201),
+  issues = epirange(20200601, 20211201),
+  geo_value = "ca,fl"
+) %>% fetch_tbl()
 
 colnames(dv)
 ```
@@ -56,7 +58,7 @@ has (at least) the following columns:
   the data for January 14, 2022 that were available one day later.
 
 As we can see from the above, the data frame returned by
-`covidcast::covidcast_signal()` has the columns required for the `epi_archive`
+`delphi.epidata::covidcast()` has the columns required for the `epi_archive`
 format, with `issue` playing the role of `version`. We can now use
 `as_epi_archive()` to bring it into `epi_archive` format.
 
@@ -101,8 +103,8 @@ y$DT$percent_cli[1] = 0
 head(y$DT)
 head(x$DT) 
 x$DT$percent_cli[1] <- original_value
-```   
-   
+```
+
 To make a copy, we can use the `clone()` method for an R6 class, as in `y <-
 x$clone()`. You can read more about reference semantics in Hadley Wickham's
 [Advanced R](https://adv-r.hadley.nz/r6.html#r6-semantics) book.
@@ -221,13 +223,16 @@ forward) format in the first place, it generally makes sense to perform `NA`
 filling after merging using LOCF. Therefore `locf = TRUE` is the default.
 
 ```{r, message = FALSE, warning = FALSE}
-y <- covidcast_signal("jhu-csse", 
-                      "confirmed_7dav_incidence_prop",
-                      start_day = "2020-06-01", 
-                      end_day = "2021-12-01",
-                      issues = c("2020-06-01", "2021-12-01"),
-                      geo_type = "state",
-                      geo_values = c("ca", "fl")) %>%
+y <- covidcast(
+  data_source = "jhu-csse",
+  signals = "confirmed_7dav_incidence_prop",
+  geo_type = "state",
+  time_type = "day",
+  time_value = epirange(20200601, 20211201),
+  issues = epirange(20200601, 20211201),
+  geo_values = "ca,fl"
+) %>%
+  fetch_tbl() %>%
   select(geo_value, time_value, version = issue, case_rate = value) %>%
   as_epi_archive()
 

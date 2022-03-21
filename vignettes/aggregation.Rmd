@@ -14,24 +14,28 @@ COVID-19 cases in MA and VT.
 
 ```{r, message = FALSE}
 library(covidcast)
+library(delphi.epidata)
 library(epiprocess)
 library(dplyr)
 
 # Use covidcast::county_census to get the county and state names
-y <- covidcast::county_census %>% 
+y <- covidcast::county_census %>%
   filter(STNAME %in% c("Massachusetts", "Vermont"), STNAME != CTYNAME) %>%
   select(geo_value = FIPS, county_name = CTYNAME, state_name = STNAME)
 
 # Fetch only counties from VT and NH, then append names columns as well
-x <- covidcast_signal("jhu-csse", 
-                      "confirmed_incidence_num",
-                      start_day = "2020-06-01", 
-                      end_day = "2021-12-31",
-                      geo_type = "county", 
-                      geo_values = y$geo_value) %>% 
+x <- covidcast(
+  data_source = "jhu-csse",
+  signals = "confirmed_incidence_num",
+  geo_type = "county",
+  time_type = "day",
+  time_values = epirange(20200601, 20211231),
+  geo_values = paste(y$geo_value, collapse = ",")
+) %>%
+  fetch_tbl() %>%
   select(geo_value, time_value, cases = value) %>%
   full_join(y, by = "geo_value") %>%
-  as_epi_df() 
+  as_epi_df()
 ```
 
 ## Converting to `tsibble` format
