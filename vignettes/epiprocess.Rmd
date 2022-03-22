@@ -71,7 +71,7 @@ cases <- covidcast(
 colnames(cases)
 ```
 
-As we can see, a data frame returned by `covidcast::covidcast_signal()` has the
+As we can see, a data frame returned by `delphi.epidata::covidcast()` has the
 columns required for an `epi_df` object (along with many others). We can use
 `as_epi_df()`, with specification of some relevant metadata, to bring the data
 frame into `epi_df` format.

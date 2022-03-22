@@ -37,8 +37,8 @@ dv <- covidcast(
   time_type = "day",
   geo_type = "state",
   time_value = epirange(20200601, 20211201),
-  issues = epirange(20200601, 20211201),
-  geo_value = "ca,fl"
+  geo_value = "ca,fl",
+  issues = epirange(20200601, 20211201)
 ) %>% fetch_tbl()
 
 colnames(dv)
@@ -226,11 +226,11 @@ filling after merging using LOCF. Therefore `locf = TRUE` is the default.
 y <- covidcast(
   data_source = "jhu-csse",
   signals = "confirmed_7dav_incidence_prop",
-  geo_type = "state",
   time_type = "day",
+  geo_type = "state",
   time_value = epirange(20200601, 20211201),
-  issues = epirange(20200601, 20211201),
-  geo_values = "ca,fl"
+  geo_values = "ca,fl",
+  issues = epirange(20200601, 20211201)
 ) %>%
   fetch_tbl() %>%
   select(geo_value, time_value, version = issue, case_rate = value) %>%

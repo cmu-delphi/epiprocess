@@ -27,8 +27,8 @@ y <- covidcast::county_census %>%
 x <- covidcast(
   data_source = "jhu-csse",
   signals = "confirmed_incidence_num",
-  geo_type = "county",
   time_type = "day",
+  geo_type = "county",
   time_values = epirange(20200601, 20211231),
   geo_values = paste(y$geo_value, collapse = ",")
 ) %>%
