@@ -19,6 +19,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -31,18 +33,12 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">epiprocess</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-<li>
-  <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
 <li>
   <a href="../articles/epiprocess.html">Get started</a>
 </li>
@@ -82,7 +78,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/cmu-delphi/epiprocess/tree/main/">
+  <a href="https://github.com/cmu-delphi/epiprocess/tree/main/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -97,13 +93,13 @@
 
       
 
-      </header><script src="outliers_files/header-attrs-2.10/header-attrs.js"></script><div class="row">
+      </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Detect and correct outliers in signals</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/main/vignettes/outliers.Rmd"><code>vignettes/outliers.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/main/vignettes/outliers.Rmd" class="external-link"><code>vignettes/outliers.Rmd</code></a></small>
       <div class="hidden name"><code>outliers.Rmd</code></div>
 
     </div>
@@ -111,34 +107,38 @@
     
     
 <p>This vignette describes functionality for detecting and correcting outliers in signals in the <code><a href="../reference/detect_outlr.html">detect_outlr()</a></code> and <code>correct_outlr()</code> functions provided in the <code>epiprocess</code> package. These functions is designed to be modular and extendable, so that you can define your own outlier detection and correction routines and apply them to <code>epi_df</code> objects. We’ll demonstrate this using state-level daily reported COVID-19 case counts from FL and NJ.</p>
-<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">covidcast</span>)
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">epiprocess</span>)
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">dplyr</span>)
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">tidyr</span>)
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
-<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>())
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cmu-delphi/delphi-epidata-r" class="external-link">delphi.epidata</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">epiprocess</span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span>
+<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>
 
-<span class="no">x</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/covidcast/man/covidcast_signal.html">covidcast_signal</a></span>(<span class="st">"jhu-csse"</span>,
-                      <span class="st">"confirmed_incidence_num"</span>,
-                      <span class="kw">start_day</span> <span class="kw">=</span> <span class="st">"2020-06-01"</span>,
-                      <span class="kw">end_day</span> <span class="kw">=</span> <span class="st">"2021-05-31"</span>,
-                      <span class="kw">geo_type</span> <span class="kw">=</span> <span class="st">"state"</span>,
-                      <span class="kw">geo_values</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"fl"</span>, <span class="st">"nj"</span>),
-                      <span class="kw">as_of</span> <span class="kw">=</span> <span class="st">"2021-10-28"</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="kw">cases</span> <span class="kw">=</span> <span class="no">value</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span>()
+<span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/covidcast.html" class="external-link">covidcast</a></span><span class="op">(</span>
+  data_source <span class="op">=</span> <span class="st">"jhu-csse"</span>,
+  signals <span class="op">=</span> <span class="st">"confirmed_incidence_num"</span>,
+  time_type <span class="op">=</span> <span class="st">"day"</span>,
+  geo_type <span class="op">=</span> <span class="st">"state"</span>,
+  time_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20210531</span><span class="op">)</span>,
+  geo_values <span class="op">=</span> <span class="st">"fl,nj"</span>,
+  as_of <span class="op">=</span> <span class="fl">20211028</span>
+<span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/fetch_tbl.html" class="external-link">fetch_tbl</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, cases <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span><span class="op">)</span>
 
-<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">cases</span>)) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>() +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_hline</a></span>(<span class="kw">yintercept</span> <span class="kw">=</span> <span class="fl">0</span>, <span class="kw">linetype</span> <span class="kw">=</span> <span class="fl">3</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html">facet_wrap</a></span>(<span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html">vars</a></span>(<span class="no">geo_value</span>), <span class="kw">scales</span> <span class="kw">=</span> <span class="st">"free_y"</span>, <span class="kw">ncol</span> <span class="kw">=</span> <span class="fl">1</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Reported COVID-19 counts"</span>)</pre></body></html></div>
+<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time_value</span>, y <span class="op">=</span> <span class="va">cases</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fl">0</span>, linetype <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 counts"</span><span class="op">)</span></code></pre></div>
 <p><img src="outliers_files/figure-html/unnamed-chunk-1-1.png" width="768"></p>
 <p>There are multiple outliers in these data that a modeler may want to detect and correct. We’ll discuss those two tasks in turn.</p>
-<div id="outlier-detection" class="section level2">
-<h2 class="hasAnchor">
-<a href="#outlier-detection" class="anchor"></a>Outlier detection</h2>
+<div class="section level2">
+<h2 id="outlier-detection">Outlier detection<a class="anchor" aria-label="anchor" href="#outlier-detection"></a>
+</h2>
 <p>The <code><a href="../reference/detect_outlr.html">detect_outlr()</a></code> function allows us to run multiple outlier detection methods on a given signal, and then (optionally) combine the results from those methods. Here, we’ll investigate outlier detection results from the following methods.</p>
 <ol style="list-style-type: decimal">
 <li>Detection based on a rolling median, using <code><a href="../reference/detect_outlr_rm.html">detect_outlr_rm()</a></code>, which computes a rolling median on with a default window size of <code>n</code> time points centered at the time point under consideration, and then computes thresholds based on a multiplier times a rolling IQR computed on the residuals.</li>
@@ -146,136 +146,143 @@
 <li>Detection based on an STL decomposition, but without seasonality term, which amounts to smoothing using LOESS.</li>
 </ol>
 <p>The outlier detection methods are specified using a <code>tibble</code> that is passed to <code><a href="../reference/detect_outlr.html">detect_outlr()</a></code>, with one row per method, and whose columms specify the outlier detection function, any input arguments (only nondefault values need to be supplied), and an abbreviated name for the method used in tracking results. Abbreviations “rm” and “stl” can be used for the built-in detection functions <code><a href="../reference/detect_outlr_rm.html">detect_outlr_rm()</a></code> and <code><a href="../reference/detect_outlr_stl.html">detect_outlr_stl()</a></code>, respectively.</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">detection_methods</span> <span class="kw">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind.html">bind_rows</a></span>(
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/reexports.html">tibble</a></span>(<span class="kw">method</span> <span class="kw">=</span> <span class="st">"rm"</span>,
-         <span class="kw">args</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">detect_negatives</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
-                          <span class="kw">detection_multiplier</span> <span class="kw">=</span> <span class="fl">2.5</span>)),
-         <span class="kw">abbr</span> <span class="kw">=</span> <span class="st">"rm"</span>),
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/reexports.html">tibble</a></span>(<span class="kw">method</span> <span class="kw">=</span> <span class="st">"stl"</span>,
-         <span class="kw">args</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">detect_negatives</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
-                          <span class="kw">detection_multiplier</span> <span class="kw">=</span> <span class="fl">2.5</span>,
-                          <span class="kw">seasonal_period</span> <span class="kw">=</span> <span class="fl">7</span>)),
-         <span class="kw">abbr</span> <span class="kw">=</span> <span class="st">"stl_seasonal"</span>),
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/reexports.html">tibble</a></span>(<span class="kw">method</span> <span class="kw">=</span> <span class="st">"stl"</span>,
-         <span class="kw">args</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">detect_negatives</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
-                          <span class="kw">detection_multiplier</span> <span class="kw">=</span> <span class="fl">2.5</span>,
-                          <span class="kw">seasonal_period</span> <span class="kw">=</span> <span class="kw">NULL</span>)),
-         <span class="kw">abbr</span> <span class="kw">=</span> <span class="st">"stl_nonseasonal"</span>))
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">detection_methods</span> <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind.html" class="external-link">bind_rows</a></span><span class="op">(</span>
+  <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"rm"</span>,
+         args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>detect_negatives <span class="op">=</span> <span class="cn">TRUE</span>,
+                          detection_multiplier <span class="op">=</span> <span class="fl">2.5</span><span class="op">)</span><span class="op">)</span>,
+         abbr <span class="op">=</span> <span class="st">"rm"</span><span class="op">)</span>,
+  <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"stl"</span>,
+         args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>detect_negatives <span class="op">=</span> <span class="cn">TRUE</span>,
+                          detection_multiplier <span class="op">=</span> <span class="fl">2.5</span>,
+                          seasonal_period <span class="op">=</span> <span class="fl">7</span><span class="op">)</span><span class="op">)</span>,
+         abbr <span class="op">=</span> <span class="st">"stl_seasonal"</span><span class="op">)</span>,
+  <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"stl"</span>,
+         args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>detect_negatives <span class="op">=</span> <span class="cn">TRUE</span>,
+                          detection_multiplier <span class="op">=</span> <span class="fl">2.5</span>,
+                          seasonal_period <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span>,
+         abbr <span class="op">=</span> <span class="st">"stl_nonseasonal"</span><span class="op">)</span><span class="op">)</span>
 
-<span class="no">detection_methods</span></pre></body></html></div>
-<pre><code>## # A tibble: 3 × 3
-##   method args             abbr           
-##   &lt;chr&gt;  &lt;list&gt;           &lt;chr&gt;          
-## 1 rm     &lt;named list [2]&gt; rm             
-## 2 stl    &lt;named list [3]&gt; stl_seasonal   
-## 3 stl    &lt;named list [3]&gt; stl_nonseasonal</code></pre>
+<span class="va">detection_methods</span></code></pre></div>
+<pre><code><span class="co">## <span style="color: #949494;"># A tibble: 3 × 3</span></span>
+<span class="co">##   method args             abbr           </span>
+<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          </span>
+<span class="co">## <span style="color: #BCBCBC;">1</span> rm     <span style="color: #949494;">&lt;named list [2]&gt;</span> rm             </span>
+<span class="co">## <span style="color: #BCBCBC;">2</span> stl    <span style="color: #949494;">&lt;named list [3]&gt;</span> stl_seasonal   </span>
+<span class="co">## <span style="color: #BCBCBC;">3</span> stl    <span style="color: #949494;">&lt;named list [3]&gt;</span> stl_nonseasonal</span></code></pre>
 <p>Additionally, we’ll form combined lower and upper thresholds, calculated as the median of the lower and upper thresholds from the methods at each time point. Note that using this combined median threshold is equivalent to using a majority vote across the base methods to determine whether a value is an outlier.</p>
-<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">x</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">geo_value</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">outlier_info</span>  <span class="kw">=</span> <span class="fu"><a href="../reference/detect_outlr.html">detect_outlr</a></span>(
-    <span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">cases</span>,
-    <span class="kw">methods</span> <span class="kw">=</span> <span class="no">detection_methods</span>,
-    <span class="kw">combiner</span> <span class="kw">=</span> <span class="st">"median"</span>)) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/nest.html">unnest</a></span>(<span class="no">outlier_info</span>)
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>outlier_info  <span class="op">=</span> <span class="fu"><a href="../reference/detect_outlr.html">detect_outlr</a></span><span class="op">(</span>
+    x <span class="op">=</span> <span class="va">time_value</span>, y <span class="op">=</span> <span class="va">cases</span>,
+    methods <span class="op">=</span> <span class="va">detection_methods</span>,
+    combiner <span class="op">=</span> <span class="st">"median"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/nest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">outlier_info</span><span class="op">)</span>
 
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">x</span>)</pre></body></html></div>
-<pre><code>## # A tibble: 6 × 15
-##   geo_value time_value cases rm_lower rm_upper rm_replacement stl_seasonal_lower
-##   &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;          &lt;dbl&gt;              &lt;dbl&gt;
-## 1 fl        2020-06-01   667    345      2195             667                 0 
-## 2 nj        2020-06-01   486     64.4     926.            486               221.
-## 3 fl        2020-06-02   617    406.     2169.            617                 0 
-## 4 nj        2020-06-02   658    140.      841.            658               245.
-## 5 fl        2020-06-03  1317    468.     2142.           1317                 0 
-## 6 nj        2020-06-03   541    216       756             541               227.
-## # … with 8 more variables: stl_seasonal_upper &lt;dbl&gt;,
-## #   stl_seasonal_replacement &lt;dbl&gt;, stl_nonseasonal_lower &lt;dbl&gt;,
-## #   stl_nonseasonal_upper &lt;dbl&gt;, stl_nonseasonal_replacement &lt;dbl&gt;,
-## #   combined_lower &lt;dbl&gt;, combined_upper &lt;dbl&gt;, combined_replacement &lt;dbl&gt;</code></pre>
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></code></pre></div>
+<pre><code><span class="co">## <span style="color: #949494;"># A tibble: 6 × 15</span></span>
+<span class="co">##   geo_value time_value cases rm_lower rm_upper rm_replacement stl_seasonal_lower</span>
+<span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="co">## <span style="color: #BCBCBC;">1</span> fl        2020-06-01   667    345      <span style="text-decoration: underline;">2</span>195             667                 0 </span>
+<span class="co">## <span style="color: #BCBCBC;">2</span> nj        2020-06-01   486     64.4     926.            486               221.</span>
+<span class="co">## <span style="color: #BCBCBC;">3</span> fl        2020-06-02   617    406.     <span style="text-decoration: underline;">2</span>169.            617                 0 </span>
+<span class="co">## <span style="color: #BCBCBC;">4</span> nj        2020-06-02   658    140.      841.            658               245.</span>
+<span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-03  <span style="text-decoration: underline;">1</span>317    468.     <span style="text-decoration: underline;">2</span>142.           <span style="text-decoration: underline;">1</span>317                 0 </span>
+<span class="co">## <span style="color: #BCBCBC;">6</span> nj        2020-06-03   541    216       756             541               227.</span>
+<span class="co">## <span style="color: #949494;"># … with 8 more variables: stl_seasonal_upper &lt;dbl&gt;,</span></span>
+<span class="co">## <span style="color: #949494;">#   stl_seasonal_replacement &lt;dbl&gt;, stl_nonseasonal_lower &lt;dbl&gt;,</span></span>
+<span class="co">## <span style="color: #949494;">#   stl_nonseasonal_upper &lt;dbl&gt;, stl_nonseasonal_replacement &lt;dbl&gt;,</span></span>
+<span class="co">## <span style="color: #949494;">#   combined_lower &lt;dbl&gt;, combined_upper &lt;dbl&gt;, combined_replacement &lt;dbl&gt;</span></span></code></pre>
 <p>To visualize the results, we first define a convenience function for plotting.</p>
-<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="co"># Plot outlier detection bands and/or points identified as outliers</span>
-<span class="no">plot_outlr</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">x</span>, <span class="no">signal</span>, <span class="no">method_abbr</span>, <span class="no">bands</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="no">points</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
-                       <span class="no">facet_vars</span> <span class="kw">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html">vars</a></span>(<span class="no">geo_value</span>), <span class="no">nrow</span> <span class="kw">=</span> <span class="kw">NULL</span>, <span class="no">ncol</span> <span class="kw">=</span> <span class="kw">NULL</span>,
-                       <span class="no">scales</span> <span class="kw">=</span> <span class="st">"fixed"</span>) {
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Plot outlier detection bands and/or points identified as outliers</span>
+<span class="va">plot_outlr</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">signal</span>, <span class="va">method_abbr</span>, <span class="va">bands</span> <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">points</span> <span class="op">=</span> <span class="cn">TRUE</span>, 
+                       <span class="va">facet_vars</span> <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, <span class="va">nrow</span> <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">ncol</span> <span class="op">=</span> <span class="cn">NULL</span>,
+                       <span class="va">scales</span> <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span> <span class="op">{</span>
   <span class="co"># Convert outlier detection results to long format </span>
-  <span class="no">signal</span> <span class="kw">&lt;-</span> <span class="kw pkg">rlang</span><span class="kw ns">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/enquo.html">enquo</a></span>(<span class="no">signal</span>)
-  <span class="no">x_long</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
-    <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html">pivot_longer</a></span>(
-      <span class="kw">cols</span> <span class="kw">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/reexports.html">starts_with</a></span>(<span class="no">method_abbr</span>),
-      <span class="kw">names_to</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"method"</span>, <span class="st">".value"</span>),
-      <span class="kw">names_pattern</span> <span class="kw">=</span> <span class="st">"(.+)_(.+)"</span>)
-
+  <span class="va">signal</span> <span class="op">&lt;-</span> <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/enquo.html" class="external-link">enquo</a></span><span class="op">(</span><span class="va">signal</span><span class="op">)</span>
+  <span class="va">x_long</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+    <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span>
+      cols <span class="op">=</span> <span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="va">method_abbr</span><span class="op">)</span>,
+      names_to <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"method"</span>, <span class="st">".value"</span><span class="op">)</span>,
+      names_pattern <span class="op">=</span> <span class="st">"(.+)_(.+)"</span><span class="op">)</span>
+  
   <span class="co"># Start of plot with observed data</span>
-  <span class="no">p</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>() +
-    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">x</span>, <span class="kw">mapping</span> <span class="kw">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> !!<span class="no">signal</span>))
+  <span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">x</span>, mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time_value</span>, y <span class="op">=</span> <span class="op">!</span><span class="op">!</span><span class="va">signal</span><span class="op">)</span><span class="op">)</span>
 
   <span class="co"># If requested, add bands</span>
-  <span class="kw">if</span> (<span class="no">bands</span>)
-    <span class="no">p</span> <span class="kw">&lt;-</span> <span class="no">p</span> + <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html">geom_ribbon</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">x_long</span>,
-                         <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">ymin</span> <span class="kw">=</span> <span class="no">lower</span>, <span class="kw">ymax</span> <span class="kw">=</span> <span class="no">upper</span>,
-                             <span class="kw">color</span> <span class="kw">=</span> <span class="no">method</span>), <span class="kw">fill</span> <span class="kw">=</span> <span class="fl">NA</span>)
+  <span class="kw">if</span> <span class="op">(</span><span class="va">bands</span><span class="op">)</span> 
+    <span class="va">p</span> <span class="op">&lt;-</span> <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">x_long</span>, 
+                         <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time_value</span>, ymin <span class="op">=</span> <span class="va">lower</span>, ymax <span class="op">=</span> <span class="va">upper</span>, 
+                             color <span class="op">=</span> <span class="va">method</span><span class="op">)</span>, fill <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span>
 
   <span class="co"># If requested, add points</span>
-  <span class="kw">if</span> (<span class="no">points</span>) {
-    <span class="no">x_detected</span> <span class="kw">&lt;-</span> <span class="no">x_long</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>((!!<span class="no">signal</span> <span class="kw">&lt;</span> <span class="no">lower</span>) <span class="kw">|</span> (!!<span class="no">signal</span> <span class="kw">&gt;</span> <span class="no">upper</span>))
-    <span class="no">p</span> <span class="kw">&lt;-</span> <span class="no">p</span> + <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span>(<span class="kw">data</span> <span class="kw">=</span> <span class="no">x_detected</span>,
-                        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>, <span class="kw">y</span> <span class="kw">=</span> !!<span class="no">signal</span>, <span class="kw">color</span> <span class="kw">=</span> <span class="no">method</span>,
-                            <span class="kw">shape</span> <span class="kw">=</span> <span class="no">method</span>))
-  }
+  <span class="kw">if</span> <span class="op">(</span><span class="va">points</span><span class="op">)</span> <span class="op">{</span>
+    <span class="va">x_detected</span> <span class="op">&lt;-</span> <span class="va">x_long</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">(</span><span class="op">!</span><span class="op">!</span><span class="va">signal</span> <span class="op">&lt;</span> <span class="va">lower</span><span class="op">)</span> <span class="op">|</span> <span class="op">(</span><span class="op">!</span><span class="op">!</span><span class="va">signal</span> <span class="op">&gt;</span> <span class="va">upper</span><span class="op">)</span><span class="op">)</span>
+    <span class="va">p</span> <span class="op">&lt;-</span> <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">x_detected</span>, 
+                        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time_value</span>, y <span class="op">=</span> <span class="op">!</span><span class="op">!</span><span class="va">signal</span>, color <span class="op">=</span> <span class="va">method</span>, 
+                            shape <span class="op">=</span> <span class="va">method</span><span class="op">)</span><span class="op">)</span>
+  <span class="op">}</span>
 
   <span class="co"># If requested, add faceting</span>
-  <span class="kw">if</span> (!<span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span>(<span class="no">facet_vars</span>))
-    <span class="no">p</span> <span class="kw">&lt;-</span> <span class="no">p</span> + <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html">facet_wrap</a></span>(<span class="no">facet_vars</span>, <span class="kw">nrow</span> <span class="kw">=</span> <span class="no">nrow</span>, <span class="kw">ncol</span> <span class="kw">=</span> <span class="no">ncol</span>, <span class="kw">scales</span> <span class="kw">=</span> <span class="no">scales</span>)
+  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">facet_vars</span><span class="op">)</span><span class="op">)</span> 
+    <span class="va">p</span> <span class="op">&lt;-</span> <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="va">facet_vars</span>, nrow <span class="op">=</span> <span class="va">nrow</span>, ncol <span class="op">=</span> <span class="va">ncol</span>, scales <span class="op">=</span> <span class="va">scales</span><span class="op">)</span>
 
-  <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="no">p</span>)
-}</pre></body></html></div>
+  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span>
+<span class="op">}</span></code></pre></div>
 <p>Now we produce plots for each state at a time, faceting by the detection method.</p>
-<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="no">method_abbr</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="no">detection_methods</span>$<span class="no">abbr</span>, <span class="st">"combined"</span>)
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">method_abbr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">detection_methods</span><span class="op">$</span><span class="va">abbr</span>, <span class="st">"combined"</span><span class="op">)</span>
 
-<span class="fu">plot_outlr</span>(<span class="no">x</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">geo_value</span> <span class="kw">==</span> <span class="st">"fl"</span>), <span class="no">cases</span>, <span class="no">method_abbr</span>,
-           <span class="kw">facet_vars</span> <span class="kw">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html">vars</a></span>(<span class="no">method</span>), <span class="kw">scales</span> <span class="kw">=</span> <span class="st">"free_y"</span>, <span class="kw">ncol</span> <span class="kw">=</span> <span class="fl">1</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Reported COVID-19 counts"</span>, <span class="kw">color</span>  <span class="kw">=</span> <span class="st">"Method"</span>,
-       <span class="kw">shape</span> <span class="kw">=</span> <span class="st">"Method"</span>)</pre></body></html></div>
+<span class="fu">plot_outlr</span><span class="op">(</span><span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">geo_value</span> <span class="op">==</span> <span class="st">"fl"</span><span class="op">)</span>, <span class="va">cases</span>, <span class="va">method_abbr</span>,
+           facet_vars <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">method</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 counts"</span>, color  <span class="op">=</span> <span class="st">"Method"</span>,
+       shape <span class="op">=</span> <span class="st">"Method"</span><span class="op">)</span></code></pre></div>
 <p><img src="outliers_files/figure-html/unnamed-chunk-5-1.png" width="864"></p>
-<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="fu">plot_outlr</span>(<span class="no">x</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">geo_value</span> <span class="kw">==</span> <span class="st">"nj"</span>), <span class="no">cases</span>, <span class="no">method_abbr</span>,
-           <span class="kw">facet_vars</span> <span class="kw">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html">vars</a></span>(<span class="no">method</span>), <span class="kw">scales</span> <span class="kw">=</span> <span class="st">"free_y"</span>, <span class="kw">ncol</span> <span class="kw">=</span> <span class="fl">1</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Reported COVID-19 counts"</span>, <span class="kw">color</span>  <span class="kw">=</span> <span class="st">"Method"</span>,
-       <span class="kw">shape</span> <span class="kw">=</span> <span class="st">"Method"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">plot_outlr</span><span class="op">(</span><span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">geo_value</span> <span class="op">==</span> <span class="st">"nj"</span><span class="op">)</span>, <span class="va">cases</span>, <span class="va">method_abbr</span>,
+           facet_vars <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">method</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 counts"</span>, color  <span class="op">=</span> <span class="st">"Method"</span>,
+       shape <span class="op">=</span> <span class="st">"Method"</span><span class="op">)</span></code></pre></div>
 <p><img src="outliers_files/figure-html/unnamed-chunk-5-2.png" width="864"></p>
 </div>
-<div id="outlier-correction" class="section level2">
-<h2 class="hasAnchor">
-<a href="#outlier-correction" class="anchor"></a>Outlier correction</h2>
+<div class="section level2">
+<h2 id="outlier-correction">Outlier correction<a class="anchor" aria-label="anchor" href="#outlier-correction"></a>
+</h2>
 <p>Finally, in order to correct outliers, we can use the posited replacement values returned by each outlier detection method. Below we use the replacement value from the combined method, which is defined by the median of replacement values from the base methods at each time point.</p>
-<div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="no">y</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">cases_corrected</span> <span class="kw">=</span> <span class="no">combined_replacement</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">geo_value</span>, <span class="no">time_value</span>, <span class="no">cases</span>, <span class="no">cases_corrected</span>)
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> 
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cases_corrected <span class="op">=</span> <span class="va">combined_replacement</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, <span class="va">cases_corrected</span><span class="op">)</span> 
 
-<span class="no">y</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">cases</span> <span class="kw">!=</span> <span class="no">cases_corrected</span>)</pre></body></html></div>
-<pre><code>## # A tibble: 22 × 4
-## # Groups:   geo_value [2]
-##    geo_value time_value cases cases_corrected
-##    &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;           &lt;dbl&gt;
-##  1 fl        2020-07-12 15300          10181 
-##  2 nj        2020-07-19    -8            320.
-##  3 nj        2020-08-13   694            404.
-##  4 nj        2020-08-14   619            397.
-##  5 nj        2020-08-16    40            366 
-##  6 nj        2020-08-22   555            360 
-##  7 fl        2020-09-01  7569           2861.
-##  8 nj        2020-10-08  1415            873.
-##  9 fl        2020-10-10     0           2660 
-## 10 fl        2020-10-11  5570           2660 
-## # … with 12 more rows</code></pre>
-<div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">y</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">time_value</span>)) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">y</span> <span class="kw">=</span> <span class="no">cases</span>), <span class="kw">linetype</span> <span class="kw">=</span> <span class="fl">2</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">y</span> <span class="kw">=</span> <span class="no">cases_corrected</span>), <span class="kw">col</span> <span class="kw">=</span> <span class="fl">2</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_hline</a></span>(<span class="kw">yintercept</span> <span class="kw">=</span> <span class="fl">0</span>, <span class="kw">linetype</span> <span class="kw">=</span> <span class="fl">3</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html">facet_wrap</a></span>(<span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html">vars</a></span>(<span class="no">geo_value</span>), <span class="kw">scales</span> <span class="kw">=</span> <span class="st">"free_y"</span>, <span class="kw">ncol</span> <span class="kw">=</span> <span class="fl">1</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html">scale_x_date</a></span>(<span class="kw">minor_breaks</span> <span class="kw">=</span> <span class="st">"month"</span>, <span class="kw">date_labels</span> <span class="kw">=</span> <span class="st">"%b %y"</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Date"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Reported COVID-19 counts"</span>)</pre></body></html></div>
+<span class="va">y</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">cases</span> <span class="op">!=</span> <span class="va">cases_corrected</span><span class="op">)</span></code></pre></div>
+<pre><code><span class="co">## <span style="color: #949494;"># A tibble: 22 × 4</span></span>
+<span class="co">## <span style="color: #949494;"># Groups:   geo_value [2]</span></span>
+<span class="co">##    geo_value time_value cases cases_corrected</span>
+<span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="co">## <span style="color: #BCBCBC;"> 1</span> fl        2020-07-12 <span style="text-decoration: underline;">15</span>300          <span style="text-decoration: underline;">10</span>181 </span>
+<span class="co">## <span style="color: #BCBCBC;"> 2</span> nj        2020-07-19    -<span style="color: #BB0000;">8</span>            320.</span>
+<span class="co">## <span style="color: #BCBCBC;"> 3</span> nj        2020-08-13   694            404.</span>
+<span class="co">## <span style="color: #BCBCBC;"> 4</span> nj        2020-08-14   619            397.</span>
+<span class="co">## <span style="color: #BCBCBC;"> 5</span> nj        2020-08-16    40            366 </span>
+<span class="co">## <span style="color: #BCBCBC;"> 6</span> nj        2020-08-22   555            360 </span>
+<span class="co">## <span style="color: #BCBCBC;"> 7</span> fl        2020-09-01  <span style="text-decoration: underline;">7</span>569           <span style="text-decoration: underline;">2</span>861.</span>
+<span class="co">## <span style="color: #BCBCBC;"> 8</span> nj        2020-10-08  <span style="text-decoration: underline;">1</span>415            873.</span>
+<span class="co">## <span style="color: #BCBCBC;"> 9</span> fl        2020-10-10     0           <span style="text-decoration: underline;">2</span>660 </span>
+<span class="co">## <span style="color: #BCBCBC;">10</span> fl        2020-10-11  <span style="text-decoration: underline;">5</span>570           <span style="text-decoration: underline;">2</span>660 </span>
+<span class="co">## <span style="color: #949494;"># … with 12 more rows</span></span></code></pre>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">y</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time_value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">cases</span><span class="op">)</span>, linetype <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">cases_corrected</span><span class="op">)</span>, col <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fl">0</span>, linetype <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 counts"</span><span class="op">)</span></code></pre></div>
 <p><img src="outliers_files/figure-html/unnamed-chunk-6-1.png" width="768"></p>
 <p>More advanced correction functionality will be coming at some point in the future.</p>
 </div>
@@ -292,11 +299,13 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
+  <p></p>
+<p>Developed by Logan Brooks, Evan Ray, Dmitry Shemetov, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
       </footer>
@@ -304,6 +313,8 @@
 
   
 
+
+  
 
   </body>
 </html>
