@@ -206,6 +206,7 @@ y1 <- covidcast(
   issues = epirange(20200601, 20211201),
   geo_values = "ca,fl"
 ) %>% fetch_tbl()
+
 y2 <- covidcast(
   data_source = "jhu-csse",
   signal = "confirmed_7dav_incidence_prop",

@@ -129,7 +129,7 @@ ggplot(count_gaps(xt),
        aes(x = reorder(geo_value, desc(geo_value)),
            color = geo_value)) +
   geom_linerange(aes(ymin = .from, ymax = .to)) + 
-  geom_point(aes(y = .from))+
+  geom_point(aes(y = .from)) +
   geom_point(aes(y = .to)) + 
   coord_flip() + 
   labs(x = "County", y = "Date") + 

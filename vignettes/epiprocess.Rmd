@@ -50,8 +50,8 @@ A data frame or tibble that has `geo_value` and `time_value` columns can be
 converted into an `epi_df` object, using the function `as_epi_df()`. As an
 example, we'll work with daily cumulative COVID-19 cases from four U.S. states:
 CA, FL, NY, and TX, over time span from mid 2020 to early 2022, and we'll use
-the [`delphi-epidata-r`](https://github.com/cmu-delphi/delphi-epidata-r) package to
-fetch this data from the [COVIDcast
+the [`delphi-epidata-r`](https://github.com/cmu-delphi/delphi-epidata-r) package
+to fetch this data from the [COVIDcast
 API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/).
 
 ```{r, message = FALSE}
