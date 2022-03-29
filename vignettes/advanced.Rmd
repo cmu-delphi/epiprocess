@@ -192,32 +192,46 @@ to demonstrate the last point in a more realistic setting. First, we fetch the
 versioned data and build the archive.
 
 ```{r, message = FALSE, warning = FALSE}
-library(covidcast)
+library(delphi.epidata)
 library(data.table)
 library(ggplot2)
 theme_set(theme_bw())
 
-y <- covidcast_signals(c("doctor-visits", "jhu-csse"),
-                       c("smoothed_adj_cli", 
-                         "confirmed_7dav_incidence_prop"),
-                       start_day = "2020-06-01", 
-                       end_day = "2021-12-01",
-                       issues = c("2020-06-01", "2021-12-01"),
-                       geo_type = "state", 
-                       geo_values = c("ca", "fl")) 
+y1 <- covidcast(
+  data_source = "doctor-visits",
+  signals = "smoothed_adj_cli",
+  time_type = "day",
+  geo_type = "state",
+  time_value = epirange(20200601, 20211201),
+  geo_values = "ca,fl",
+  issues = epirange(20200601, 20211201)
+) %>% fetch_tbl()
 
-x <- y[[1]] %>% 
-  select(geo_value, time_value, 
-         version = issue,
-         percent_cli = value) %>%
+y2 <- covidcast(
+  data_source = "jhu-csse",
+  signal = "confirmed_7dav_incidence_prop",
+  time_type = "day",
+  geo_type = "state",
+  time_value = epirange(20200601, 20211201),
+  geo_values = "ca,fl",
+  issues = epirange(20200601, 20211201)
+) %>% fetch_tbl()
+
+x <- y1 %>%
+  select(geo_value, time_value,
+    version = issue,
+    percent_cli = value
+  ) %>%
   as_epi_archive()
 
-epix_merge(x, y[[2]] %>%
-             select(geo_value, time_value, 
-                    version = issue,
-                    case_rate = value) %>%
-             as_epi_archive(),
-           all = TRUE)
+epix_merge(x, y2 %>%
+  select(geo_value, time_value,
+    version = issue,
+    case_rate = value
+  ) %>%
+  as_epi_archive(),
+all = TRUE
+)
 ```
 
 Next, we extend the ARX function to handle multiple geo values, since in the 

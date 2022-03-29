@@ -15,20 +15,23 @@ current vignette, applied to state-level daily reported COVID-19 cases from GA
 and PA, smoothed using a 7-day trailing average.
 
 ```{r, message = FALSE}
-library(covidcast)
+library(delphi.epidata)
 library(epiprocess)
 library(dplyr)
 library(tidyr)
 
-x <- covidcast_signal("jhu-csse", 
-                      "confirmed_7dav_incidence_num",
-                      start_day = "2020-06-01", 
-                      end_day = "2021-12-31",
-                      geo_type = "state", 
-                      geo_values = c("ga", "pa"))  %>%
-  select(geo_value, time_value, cases = value) %>% 
+x <- covidcast(
+  data_source = "jhu-csse",
+  signals = "confirmed_7dav_incidence_num",
+  time_type = "day",
+  geo_type = "state",
+  time_values = epirange(20200601, 20211231),
+  geo_values = "ga,pa"
+) %>%
+  fetch_tbl() %>%
+  select(geo_value, time_value, cases = value) %>%
   arrange(geo_value, time_value) %>%
-  as_epi_df() 
+  as_epi_df()
 ```
 
 ## Growth rate basics

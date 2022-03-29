@@ -50,26 +50,28 @@ A data frame or tibble that has `geo_value` and `time_value` columns can be
 converted into an `epi_df` object, using the function `as_epi_df()`. As an
 example, we'll work with daily cumulative COVID-19 cases from four U.S. states:
 CA, FL, NY, and TX, over time span from mid 2020 to early 2022, and we'll use
-the [`covidcast`](https://cmu-delphi.github.io/covidcast/covidcastR/) package to
-fetch this data from the [COVIDcast
+the [`delphi-epidata-r`](https://github.com/cmu-delphi/delphi-epidata-r) package
+to fetch this data from the [COVIDcast
 API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/).
 
 ```{r, message = FALSE}
-library(covidcast)
+library(delphi.epidata)
 library(epiprocess)
 library(dplyr)
 
-cases <- covidcast_signal(data_source = "jhu-csse", 
-                          signal = "confirmed_cumulative_num",
-                          start_day = "2020-03-01", 
-                          end_day = "2022-01-31",
-                          geo_type = "state", 
-                          geo_values = c("ca", "fl", "ny", "tx"))
+cases <- covidcast(
+  data_source = "jhu-csse",
+  signals = "confirmed_cumulative_num",
+  time_type = "day",
+  geo_type = "state",
+  time_values = epirange(20200301, 20220131),
+  geo_values = "ca,fl,ny,tx"
+) %>% fetch_tbl()
 
 colnames(cases)
 ```
 
-As we can see, a data frame returned by `covidcast::covidcast_signal()` has the
+As we can see, a data frame returned by `delphi.epidata::covidcast()` has the
 columns required for an `epi_df` object (along with many others). We can use
 `as_epi_df()`, with specification of some relevant metadata, to bring the data
 frame into `epi_df` format.
