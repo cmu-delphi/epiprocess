@@ -9,7 +9,7 @@ vignette: >
 
 A central tool in the `epiprocess` package is `epi_slide()`, which is based on
 the powerful functionality provided in the 
-[`slider`](https://cran.r-project.org/web/packages/slider/) package. In
+[`slider`](https://cran.r-project.org/web/packages/slider) package. In
 `epiprocess`, to "slide" means to apply a computation---represented as a
 function or formula---over a running window of `n` time steps. Suitable
 groupings can always be achieved by a preliminary call to `group_by()`.
@@ -26,7 +26,7 @@ in this vignette.
 
 As in getting started guide, we'll fetch daily reported COVID-19 cases from CA,
 FL, NY, and TX (note: here we're using new, not cumulative cases) using the
-[`delphi-epidata-r`](https://github.com/cmu-delphi/delphi-epidata-r) package,
+[`delphi.epidata`](https://github.com/cmu-delphi/delphi-epidata-r) package,
 and then convert this to `epi_df` format.
 
 ```{r, message = FALSE}
@@ -250,7 +250,7 @@ spotty. At various points in time, we can see that its forecasts are volatile
 (its point predictions are all over the place), or overconfident (its bands are
 too narrow), or both at the same time. This is only meant as a simple demo and
 not entirely unexpected given the way the AR model is set up. The
-[`epipredict`](https://cmu-delphi.github.io/epipredict/) package, which is a
+[`epipredict`](https://cmu-delphi.github.io/epipredict) package, which is a
 companion package to `epiprocess`, offers a suite of predictive modeling tools 
 that can improve on some of the shortcomings of the above simple AR model.
 

@@ -13,8 +13,8 @@ kinds of tasks with `epi_df` objects. We'll work with county-level reported
 COVID-19 cases in MA and VT.
 
 ```{r, message = FALSE}
-library(covidcast)
 library(delphi.epidata)
+library(covidcast)
 library(epiprocess)
 library(dplyr)
 

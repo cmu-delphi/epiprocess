@@ -20,7 +20,7 @@ This vignette walks through working with `epi_archive` objects and demonstrates
 some of their key functionality. We'll work with a signal on the percentage of
 doctor's visits with CLI (COVID-like illness) computed from medical insurance
 claims, available through the [COVIDcast
-API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/). This
+API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html). This
 signal is subject to very heavy and regular revision; you can read more about it
 on its [API documentation
 page](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
@@ -57,9 +57,9 @@ has (at least) the following columns:
   `time_value` is January 14, 2022, then this row contains the measurements of
   the data for January 14, 2022 that were available one day later.
 
-As we can see from the above, the data frame returned by
-`delphi.epidata::covidcast()` has the columns required for the `epi_archive`
-format, with `issue` playing the role of `version`. We can now use
+As we can see from the above, the data frame returned by 
+`delphi.epidata::covidcast()` has the columns required for the `epi_archive` 
+format, with `issue` playing the role of `version`. We can now use 
 `as_epi_archive()` to bring it into `epi_archive` format.
 
 ```{r}

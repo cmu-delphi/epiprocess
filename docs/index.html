@@ -21,8 +21,6 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
-    
-
     <div class="container template-home">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -35,12 +33,18 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">epiprocess</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
+<li>
+  <a href="index.html">
+    <span class="fas fa-home fa-lg"></span>
+     
+  </a>
+</li>
 <li>
   <a href="articles/epiprocess.html">Get started</a>
 </li>
@@ -80,7 +84,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/cmu-delphi/epiprocess/tree/main/" class="external-link">
+  <a href="https://github.com/cmu-delphi/epiprocess/tree/main/">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -97,14 +101,13 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
-<div class="section level1">
-<div class="page-header"><h1 id="epiprocess">epiprocess<a class="anchor" aria-label="anchor" href="#epiprocess"></a>
-</h1></div>
+<div id="epiprocess" class="section level1">
+<div class="page-header"><h1 class="hasAnchor">
+<a href="#epiprocess" class="anchor"></a>epiprocess</h1></div>
 <p>This package introduces a common data structure for epidemiological data sets measured over space and time, and offers associated utilities to perform basic signal processing tasks. See the getting started guide and vignettes for examples.</p>
-<div class="section level2">
-<h2 id="epi_df-snapshot-of-a-data-set">
-<code>epi_df</code>: snapshot of a data set<a class="anchor" aria-label="anchor" href="#epi_df-snapshot-of-a-data-set"></a>
-</h2>
+<div id="epi_df-snapshot-of-a-data-set" class="section level2">
+<h2 class="hasAnchor">
+<a href="#epi_df-snapshot-of-a-data-set" class="anchor"></a><code>epi_df</code>: snapshot of a data set</h2>
 <p>The first main data structure in the <code>epiprocess</code> package is called <a href="reference/epi_df.html"><code>epi_df</code></a>. This is simply a tibble with a couple of required columns, <code>geo_value</code> and <code>time_value</code>. It can have any other number of columns, which can be seen as measured variables, which we also call signal variables. In brief, an <code>epi_df</code> object represents a snapshot of a data set that contains the most up-to-date values of the signals variables, as of a given time.</p>
 <p>By convention, functions in the <code>epiprocess</code> package that operate on <code>epi_df</code> objects begin with <code>epi</code>. For example:</p>
 <ul>
@@ -117,10 +120,9 @@
 <li><p><code><a href="reference/detect_outlr.html">detect_outlr()</a></code>, for detecting outliers in a given signal over time, using either built-in or custom methodologies.</p></li>
 </ul>
 </div>
-<div class="section level2">
-<h2 id="epi_archive-full-version-history-of-a-data-set">
-<code>epi_archive</code>: full version history of a data set<a class="anchor" aria-label="anchor" href="#epi_archive-full-version-history-of-a-data-set"></a>
-</h2>
+<div id="epi_archive-full-version-history-of-a-data-set" class="section level2">
+<h2 class="hasAnchor">
+<a href="#epi_archive-full-version-history-of-a-data-set" class="anchor"></a><code>epi_archive</code>: full version history of a data set</h2>
 <p>The second main data structure in the package is called <a href="reference/epi_archive.html"><code>epi_archive</code></a>. This is a special class (R6 format) wrapped around a data table that stores the archive (version history) of some signal variables of interest.</p>
 <p>By convention, functions in the <code>epiprocess</code> package that operate on <code>epi_df</code> objects begin with <code>epix</code> (the “x” is meant to remind you of “archive”). These are just wrapper functions around the public methods for the <code>epi_archive</code> R6 class. For example:</p>
 <ul>
@@ -134,54 +136,43 @@
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <div class="links">
-<h2 data-toc-skip>Links</h2>
+<h2>Links</h2>
 <ul class="list-unstyled">
-<li><a href="https://github.com/cmu-delphi/epiprocess/tree/main/" class="external-link">Browse source code</a></li>
-<li><a href="https://cmu-delphi.github.io/epiprocess/" class="external-link">Get the epipredict R package</a></li>
-<li><a href="https://cmu-delphi.github.io/covidcast/covidcastR/" class="external-link">Get the covidcast R package</a></li>
+<li>Browse source code at <br><a href="https://github.com/cmu-delphi/epiprocess/tree/main/">https://​github.com/​cmu-delphi/​epiprocess/​tree/​main/​</a>
+</li>
+<li>Get the epipredict R package at <br><a href="https://cmu-delphi.github.io/epiprocess/">https://​cmu-delphi.github.io/​epiprocess/​</a>
+</li>
+<li>Get the covidcast R package at <br><a href="https://cmu-delphi.github.io/covidcast/covidcastR/">https://​cmu-delphi.github.io/​covidcast/​covidcastR/​</a>
+</li>
 </ul>
 </div>
-
 <div class="license">
-<h2 data-toc-skip>License</h2>
+<h2>License</h2>
 <ul class="list-unstyled">
-<li><a href="https://opensource.org/licenses/mit-license.php" class="external-link">MIT</a></li>
+<li><a href="https://opensource.org/licenses/mit-license.php">MIT</a></li>
 </ul>
 </div>
-
-
-<div class="citation">
-<h2 data-toc-skip>Citation</h2>
-<ul class="list-unstyled">
-<li><a href="authors.html#citation">Citing epiprocess</a></li>
-</ul>
-</div>
-
 <div class="developers">
-<h2 data-toc-skip>Developers</h2>
+<h2>Developers</h2>
 <ul class="list-unstyled">
 <li>Logan Brooks <br><small class="roles"> Author </small>  </li>
 <li>Evan Ray <br><small class="roles"> Author </small>  </li>
 <li>Dmitry Shemetov <br><small class="roles"> Author </small>  </li>
 <li>Ryan Tibshirani <br><small class="roles"> Author, maintainer </small>  </li>
-<li><a href="authors.html">More about authors...</a></li>
+<li><a href="authors.html">All authors...</a></li>
 </ul>
 </div>
-
-
 
   </div>
 </div>
 
 
       <footer><div class="copyright">
-  <p></p>
-<p>Developed by Logan Brooks, Evan Ray, Dmitry Shemetov, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Evan Ray, Dmitry Shemetov, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
 
       </footer>
@@ -189,8 +180,6 @@
 
   
 
-
-  
 
   </body>
 </html>
