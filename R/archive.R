@@ -451,3 +451,13 @@ as_epi_archive = function(x, geo_type, time_type, other_keys,
                           additional_metadata = list()) { 
   epi_archive$new(x, geo_type, time_type, other_keys, additional_metadata) 
 }
+
+#' Test for `epi_archive` format
+#'
+#' @param x An object.
+#' @return `TRUE` if the object inherits from `epi_archive`.
+#' 
+#' @export
+is_epi_archive = function(x) {
+  inherits(x, "epi_archive")
+}

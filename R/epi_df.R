@@ -210,11 +210,11 @@ as_epi_df.tbl_ts = function(x, geo_type, time_type, as_of,
                    additional_metadata, ...)
 }
 
-#' Test if the object is an epi_df
+#' Test for `epi_df` format
 #'
 #' @param x An object.
-#'
-#' @return TRUE if the object inherits from the `epi_df` class.
+#' @return `TRUE` if the object inherits from `epi_df`.
+#' 
 #' @export
 is_epi_df = function(x) {
   inherits(x, "epi_df")

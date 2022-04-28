@@ -2,7 +2,7 @@
 % Please edit documentation in R/epi_df.R
 \name{is_epi_df}
 \alias{is_epi_df}
-\title{Test if the object is an epi_df}
+\title{Test for \code{epi_df} format}
 \usage{
 is_epi_df(x)
 }
@@ -10,8 +10,8 @@ is_epi_df(x)
 \item{x}{An object.}
 }
 \value{
-TRUE if the object inherits from the \code{epi_df} class.
+\code{TRUE} if the object inherits from \code{epi_df}.
 }
 \description{
-Test if the object is an epi_df
+Test for \code{epi_df} format
 }

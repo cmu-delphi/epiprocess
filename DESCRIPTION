@@ -24,7 +24,7 @@ Authors@R:
          role = "aut"),
   person(given = "Dmitry",
          family = "Shemetov",
-         role = "aut"),
+         role = "ctb"),
   person(given = "Ryan",
          family = "Tibshirani",
          role = c("aut", "cre"),
