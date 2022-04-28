@@ -282,15 +282,15 @@
 ##    geo_value time_value cases cases_7dav fc_point fc_lower fc_upper
 ##    &lt;chr&gt;     &lt;date&gt;     &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
 ##  1 ca        2020-06-01  2439      2655.    2958.    2513.    3404.
-##  2 ca        2020-07-01  7345      6721.    8050.    7392.    8707.
-##  3 ca        2020-08-01  8614      8283.    7144.    5971.    8316.
+##  2 ca        2020-07-01  7346      6722     8051.    7393.    8708.
+##  3 ca        2020-08-01  8614      8283.    7143.    5971.    8315.
 ##  4 ca        2020-09-01  4247      4704.    3989.    1896.    6082.
-##  5 ca        2020-10-01  3505      3361.    3238.    1283.    5194.
-##  6 ca        2020-11-01  4211      4442     3761.    2083.    5438.
-##  7 ca        2020-12-01 23636     15698.   18396.   16630.   20162.
-##  8 ca        2021-01-01 50253     41112.   49688.   41822.   57554.
-##  9 ca        2021-02-01 13118     17960.   14531.    4436.   24626.
-## 10 ca        2021-03-01  3033      5211.    4364.       0    14445.</code></pre>
+##  5 ca        2020-10-01  3506      3362.    3239.    1283.    5195.
+##  6 ca        2020-11-01  4211      4442.    3761.    2084.    5438.
+##  7 ca        2020-12-01 23637     15698.   18396.   16630.   20162.
+##  8 ca        2021-01-01 50254     41112.   49681.   41816.   57547.
+##  9 ca        2021-02-01 13117     17961.   14531.    4438.   24624.
+## 10 ca        2021-03-01  3033      5212.    4365.       0    14446.</code></pre>
 <p>Note that here we have utilized an argument <code>ref_time_values</code> to perform the sliding computation (here, compute a forecast) at a specific subset of reference time values. We get out three columns <code>fc_point</code>, <code>fc_lower</code>, and <code>fc_upper</code> that correspond to the point forecast, and the lower and upper endpoints of the 95% prediction band, respectively. (If instead we had set <code>as_list_col = TRUE</code> in the call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code>, then we would have gotten a list column <code>fc</code>, where each element of <code>fc</code> is a data frame with named columns <code>point</code>, <code>lower</code>, and <code>upper</code>.)</p>
 <p>To finish off, we plot the forecasts at some times (spaced out by a few months) over the last year, at multiple horizons: 7, 14, 21, and 28 days ahead. To do so, we encapsulate the process of generating forecasts into a simple function, so that we can call it a few times.</p>
 <div class="sourceCode" id="cb14"><html><body><pre class="r"><span class="co"># Note the use of all_rows = TRUE (keeps all original rows in the output)</span>
@@ -338,7 +338,7 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Logan Brooks, Evan Ray, Dmitry Shemetov, Ryan Tibshirani.</p>
+  <p>Developed by Logan Brooks, Evan Ray, Ryan Tibshirani.</p>
 </div>
 
 <div class="pkgdown">

@@ -4,16 +4,16 @@
 #'   and metadata. It can be seen as a snapshot of a data set that contains the
 #'   most up-to-date values of some signal variables of interest, as of a given
 #'   time.
-#' 
-#' @details An `epi_df` is a tibble with (at least) the following columns:  
-#' 
+#'
+#' @details An `epi_df` is a tibble with (at least) the following columns:
+#'
 #' * `geo_value`: the geographic value associated with each row of measurements.
 #' * `time_value`: the time value associated with each row of measurements.
 #'
 #' Other columns can be considered as measured variables, which we also refer to
 #'   as signal variables. An `epi_df` object also has metadata with (at least)
-#'   the following fields: 
-#' 
+#'   the following fields:
+#'
 #' * `geo_type`: the type for the geo values.
 #' * `time_type`: the type for the time values.
 #' * `as_of`: the time value at which the given data were available.
@@ -42,25 +42,25 @@
 #'
 #' @section Geo Types:
 #' The following geo types are recognized in an `epi_df`.
-#' 
+#'
 #' * `"county"`: each observation corresponds to a U.S. county; coded by 5-digit
-#'   FIPS code. 
+#'   FIPS code.
 #' * `"hrr"`: each observation corresponds to a U.S. hospital referral region
 #'   (designed to represent regional healthcare markets); there are 306 HRRs in
 #'   the U.S; coded by number (nonconsecutive, between 1 and 457).
 #' * `"state"`: each observation corresponds to a U.S. state; coded by 2-digit
-#'   postal abbreviation (lowercase); 
-#'   note that Puerto Rico is "pr" and Washington D.C. is "dc".  
+#'   postal abbreviation (lowercase);
+#'   note that Puerto Rico is "pr" and Washington D.C. is "dc".
 #' * `"hhs"`: each observation corresponds to a U.S. HHS region; coded by number
 #'   (consecutive, between 1 and 10).
 #' * `"nation"`: each observation corresponds to a country; coded by ISO 31661-
 #'   alpha-2 country codes (lowercase).
 #'
 #' An unrecognizable geo type is labeled "custom".
-#' 
+#'
 #' @section Time Types:
 #' The following time types are recognized in an `epi_df`.
-#' 
+#'
 #' * `"day-time"`: each observation corresponds to a time on a given day
 #'   (measured to the second); coded as a `POSIXct` object, as in
 #'   `as.POSIXct("2022-01-31 18:45:40")`.
@@ -71,7 +71,7 @@
 #'   `Date` object, representing the start date of week.
 #' * `"yearweek"`: each observation corresponds to a week; the alignment can be
 #'   arbitrary; coded as a `tsibble::yearweek` object, where the alignment is
-#'   stored in the `week_start` field of its attributes. 
+#'   stored in the `week_start` field of its attributes.
 #' * `"yearmonth"`: each observation corresponds to a month; coded as a
 #'   `tsibble::yearmonth` object.
 #' * `"yearquarter"`: each observation corresponds to a quarter; coded as a
@@ -108,7 +108,7 @@ NULL
 #'   well.
 #' @param ... Additional arguments passed to methods.
 #' @return An `epi_df` object.
-#' 
+#'
 #' @export
 as_epi_df = function(x, ...) {
   UseMethod("as_epi_df")
@@ -158,13 +158,13 @@ as_epi_df.tbl_df = function(x, geo_type, time_type, as_of,
         "as_of" %in% names(attributes(x)$metadata)) {
       as_of = attributes(x)$metadata$as_of
     }
-    
+
     # Next check for as_of, issue, or version columns
     else if ("as_of" %in% names(x)) as_of = max(x$as_of)
     else if ("issue" %in% names(x)) as_of = max(x$issue)
     else if ("version" %in% names(x)) as_of = max(x$version)
 
-    # If we got here then we failed 
+    # If we got here then we failed
     else as_of = Sys.time() # Use the current day-time
   }
 
@@ -174,10 +174,10 @@ as_epi_df.tbl_df = function(x, geo_type, time_type, as_of,
   metadata$time_type = time_type
   metadata$as_of = as_of
   metadata = c(metadata, additional_metadata)
- 
-  # Reorder columns (geo_value, time_value, ...) 
+
+  # Reorder columns (geo_value, time_value, ...)
   x = dplyr::relocate(x, .data$geo_value, .data$time_value)
-  
+
   # Apply epi_df class, attach metadata, and return
   class(x) = c("epi_df", class(x))
   attributes(x)$metadata = metadata
@@ -208,4 +208,14 @@ as_epi_df.tbl_ts = function(x, geo_type, time_type, as_of,
   }
   as_epi_df.tbl_df(tibble::as_tibble(x), geo_type, time_type, as_of,
                    additional_metadata, ...)
+}
+
+#' Test for `epi_df` format
+#'
+#' @param x An object.
+#' @return `TRUE` if the object inherits from `epi_df`.
+#' 
+#' @export
+is_epi_df = function(x) {
+  inherits(x, "epi_df")
 }
