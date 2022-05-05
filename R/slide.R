@@ -88,6 +88,28 @@
 #' @importFrom lubridate days weeks
 #' @importFrom rlang .data .env !! enquo enquos sym
 #' @export
+#' @examples 
+#' library(delphi.epidata)
+#' library(epiprocess)
+#' library(dplyr)
+#' 
+#' # must take `epi_df` obejct as paramater
+#' # generate example data
+#'x <- covidcast(
+#'  data_source = "jhu-csse",
+#'  signals = "confirmed_incidence_num",
+#'  time_type = "day",
+#'  geo_type = "state",
+#'  time_values = epirange(20200301, 20211231),
+#'  geo_values = "ca"
+#' ) %>%
+#'   fetch_tbl() %>%
+#'   select(geo_value, time_value, cases = value) %>%
+#'   arrange(geo_value, time_value) %>%
+#'   as_epi_df()
+#'   
+#' # slide a 7-day trailing average formula on cases
+#' epi_slide(x, cases7dav = mean(cases), n = 7)
 epi_slide = function(x, f, ..., n = 7, ref_time_values,
                      align = c("right", "center", "left"), before, time_step, 
                      new_col_name = "slide_value", as_list_col = FALSE,
