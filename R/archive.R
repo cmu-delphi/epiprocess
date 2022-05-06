@@ -447,6 +447,12 @@ epi_archive =
 #'   ```
 #'
 #' @export
+#' @examples 
+#' library(dplyr)
+#' 
+#' x <- epix_doctor_visits %>%
+#'   select(geo_value, time_value, version, percent_cli) %>%
+#'   as_epi_archive() 
 as_epi_archive = function(x, geo_type, time_type, other_keys,
                           additional_metadata = list()) { 
   epi_archive$new(x, geo_type, time_type, other_keys, additional_metadata) 
@@ -458,6 +464,8 @@ as_epi_archive = function(x, geo_type, time_type, other_keys,
 #' @return `TRUE` if the object inherits from `epi_archive`.
 #' 
 #' @export
+#' @examples
+#' is_epi_archive(epix_doctor_visits) 
 is_epi_archive = function(x) {
   inherits(x, "epi_archive")
 }

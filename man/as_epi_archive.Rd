@@ -48,3 +48,10 @@ class, so for example:\preformatted{x <- as_epi_archive(df, geo_type = "state", 
 would be equivalent to:\preformatted{x <- epi_archive$new(df, geo_type = "state", time_type = "day")
 }
 }
+\examples{
+library(dplyr)
+
+x <- epix_doctor_visits \%>\%
+  select(geo_value, time_value, version, percent_cli) \%>\%
+  as_epi_archive() 
+}
