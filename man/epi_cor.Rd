@@ -58,46 +58,16 @@ grouping by geo value, time value, or any other variables. See the
 for examples.
 }
 \examples{
-library(delphi.epidata)
-library(epiprocess)
-library(dplyr)
-
-# get data as an `epi_df` object 
-x <- covidcast(
-data_source = "jhu-csse",
-signals = "confirmed_7dav_incidence_prop",
-time_type = "day",
-geo_type = "state",
-time_values = epirange(20200301, 20211231),
-geo_values = "*"
-) \%>\%
- fetch_tbl() \%>\%
- select(geo_value, time_value, case_rate = value)
-
-y <- covidcast(
-data_source = "jhu-csse",
-signals = "deaths_7dav_incidence_prop",
-time_type = "day",
-geo_type = "state",
-time_values = epirange(20200301, 20211231),
-geo_values = "*"
-) \%>\%
- fetch_tbl() \%>\%
- select(geo_value, time_value, death_rate = value)
-
-x <- x \%>\%
-full_join(y, by = c("geo_value", "time_value")) \%>\%
- as_epi_df()
  
 # linear association of case and death rates on any given day
-epi_cor(x, case_rate, death_rate, cor_by = "time_value")
+epi_cor(ca_fl_death_rate_and_cases, case_rate, death_rate, cor_by = "time_value")
 
 # correlation of death rates and lagged case rates
-epi_cor(x, case_rate, death_rate, cor_by = time_value, dt1 = -10)
+epi_cor(ca_fl_death_rate_and_cases, case_rate, death_rate, cor_by = time_value, dt1 = -10)
 
 # correlation grouped by location 
-epi_cor(x, case_rate, death_rate, cor_by = geo_value)
+epi_cor(ca_fl_death_rate_and_cases, case_rate, death_rate, cor_by = geo_value)
 
 # correlation grouped by location and incorporates lagged cases rates
-epi_cor(x, case_rate, death_rate, cor_by = geo_value, dt1 = -10)
+epi_cor(ca_fl_death_rate_and_cases, case_rate, death_rate, cor_by = geo_value, dt1 = -10)
 }
