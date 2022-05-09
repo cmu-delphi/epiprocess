@@ -101,7 +101,7 @@
 #' 
 #' @export
 #' @examples
-#' head(growth_rate(ca_daily_cases$time_value, ca_daily_cases$cases))
+#' growth_rate(ca_daily_cases$time_value, ca_daily_cases$cases)
 
 growth_rate = function(x = seq_along(y), y, x0 = x,
                        method = c("rel_change", "linear_reg",
