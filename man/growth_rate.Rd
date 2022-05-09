@@ -135,5 +135,5 @@ user.
 }
 
 \examples{
-x = rnorm(5)
+head(growth_rate(ca_daily_cases$time_value, ca_daily_cases$cases))
 }
