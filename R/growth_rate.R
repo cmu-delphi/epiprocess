@@ -100,12 +100,62 @@
 #'   user.
 #' 
 #' @export
+#' @examples
+#' library(delphi.epidata)
+#' library(epiprocess)
+#' library(dplyr)
+#' library(tidyr)
+#' 
+#' # We then want to load the dataset for this example.
+#' x <- covidcast(
+#'  data_source = "jhu-csse",
+#'  signals = "confirmed_7dav_incidence_num",
+#'  time_type = "day",
+#'  geo_type = "state",
+#'  time_values = epirange(20200601, 20211231),
+#'  geo_values = "ga,pa"
+#' ) %>%
+#'  fetch_tbl() %>%
+#'  select(geo_value, time_value, cases = value) %>%
+#'  arrange(geo_value, time_value) %>%
+#'  as_epi_df()
+#'
+#' # We want to group by geographical values and make a new column using mutate to
+#' # calculate the growth rate of cases.
+#'
+#' x <- x %>%
+#'  group_by(geo_value) %>%
+#'  mutate(cases_gr1 = growth_rate(time_value, cases))
+#'
+#' head(x)
+#' 
+#' # Note how these values can be used to denote growth and decline rates, such as
+#' # in this graph below, with red denoting growth and blue denoting decline.
+#' 
+#' library(ggplot2)
+#' theme_set(theme_bw())
+#'
+#' upper = 0.01
+#' lower = -0.01
+#' 
+#' ggplot(x, aes(x = time_value, y = cases)) +
+#'   geom_tile(data = x %>% filter(cases_gr1 >= upper),
+#'            aes(x = time_value, y = 0, width = 7, height = Inf),
+#'            fill = 2, alpha = 0.08) +
+#'  geom_tile(data = x %>% filter(cases_gr1 <= lower),
+#'            aes(x = time_value, y = 0, width = 7, height = Inf),
+#'            fill = 4, alpha = 0.08) +
+#'  geom_line() +
+#'  facet_wrap(vars(geo_value), scales = "free_y") +
+#'  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+#'  labs(x = "Date", y = "Reported COVID-19 cases")
+
 growth_rate = function(x = seq_along(y), y, x0 = x,
                        method = c("rel_change", "linear_reg",
                                   "smooth_spline", "trend_filter"),
                        h = 7, log_scale = FALSE,
                        dup_rm = FALSE, na_rm = FALSE, ...) { 
-  # Check x, y, x0
+# Check x, y, x0
   if (length(x) != length(y)) Abort("`x` and `y` must have the same length.")
   if (!all(x0 %in% x)) Abort("`x0` must be a subset of `x`.")
   

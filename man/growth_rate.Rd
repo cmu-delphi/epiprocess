@@ -134,3 +134,6 @@ user.
 }
 }
 
+\examples{
+x = rnorm(5)
+}
