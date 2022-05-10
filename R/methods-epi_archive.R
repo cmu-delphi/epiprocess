@@ -4,7 +4,8 @@
 #' given version. See the [archive
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 #' examples.
-#'
+#' 
+#' @param x An `epi_archive` object
 #' @param max_version Time value specifying the max version to permit in the
 #'   snapshot. That is, the snapshot will comprise the unique rows of the
 #'   current archive data that represent the most up-to-date signal values, as
@@ -81,6 +82,7 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 #' examples.
 #' 
+#' @param x An `epi_archive` object.
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
 #'   to apply a function or formula over a running window of `n` time steps
 #'   (where one time step is typically one day or one week). If a function, `f`
