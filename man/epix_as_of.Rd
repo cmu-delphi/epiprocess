@@ -7,6 +7,8 @@
 epix_as_of(x, max_version, min_time_value = -Inf)
 }
 \arguments{
+\item{x}{An \code{epi_archive} object}
+
 \item{max_version}{Time value specifying the max version to permit in the
 snapshot. That is, the snapshot will comprise the unique rows of the
 current archive data that represent the most up-to-date signal values, as

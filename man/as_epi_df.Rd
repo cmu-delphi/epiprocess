@@ -19,6 +19,8 @@ as_epi_df(x, ...)
 \method{as_epi_df}{tbl_ts}(x, geo_type, time_type, as_of, additional_metadata = list(), ...)
 }
 \arguments{
+\item{x}{A data.frame, \link[tibble:tibble]{tibble::tibble}, or \link[tsibble:tsibble]{tsibble::tsibble} to be converted}
+
 \item{...}{Additional arguments passed to methods.}
 
 \item{geo_type}{Type for the geo values. If missing, then the function will

@@ -6,6 +6,14 @@
 \usage{
 \method{as_tsibble}{epi_df}(x, key, ...)
 }
+\arguments{
+\item{x}{The \code{epi_df} object.}
+
+\item{key}{Optional. Any additional keys (other than \code{geo_value}) to add to
+the \code{tsibble}.}
+
+\item{...}{additional arguments passed on to \code{tsibble::as_tsibble()}}
+}
 \description{
 Converts an \code{epi_df} object into a tsibble, where the index is taken to be
 \code{time_value}, and the key variables taken to be \code{geo_value} along with any

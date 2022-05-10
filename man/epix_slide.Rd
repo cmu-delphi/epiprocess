@@ -19,6 +19,8 @@ epix_slide(
 )
 }
 \arguments{
+\item{x}{An \code{epi_archive} object.}
+
 \item{f}{Function or formula to slide over variables in \code{x}. To "slide" means
 to apply a function or formula over a running window of \code{n} time steps
 (where one time step is typically one day or one week). If a function, \code{f}

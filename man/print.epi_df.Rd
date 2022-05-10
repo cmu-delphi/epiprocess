@@ -13,31 +13,31 @@
 \alias{slice.epi_df}
 \alias{ungroup.epi_df}
 \alias{unnest.epi_df}
-\title{S3 methods for an \code{epi_df} object}
+\title{Base S3 methods for an \code{epi_df} object}
 \usage{
 \method{print}{epi_df}(x, ...)
 
-\method{summary}{epi_df}(x, ...)
+\method{summary}{epi_df}(object, ...)
 
-\method{arrange}{epi_df}(x, ...)
+\method{arrange}{epi_df}(.data, ...)
 
-\method{filter}{epi_df}(x, ...)
+\method{filter}{epi_df}(.data, ...)
 
-\method{group_by}{epi_df}(x, ...)
+\method{group_by}{epi_df}(.data, ...)
 
-\method{group_modify}{epi_df}(x, ...)
+\method{group_modify}{epi_df}(.data, ...)
 
-\method{mutate}{epi_df}(x, ...)
+\method{mutate}{epi_df}(.data, ...)
 
-\method{relocate}{epi_df}(x, ...)
+\method{relocate}{epi_df}(.data, ...)
 
-\method{rename}{epi_df}(x, ...)
+\method{rename}{epi_df}(.data, ...)
 
-\method{slice}{epi_df}(x, ...)
+\method{slice}{epi_df}(.data, ...)
 
 \method{ungroup}{epi_df}(x, ...)
 
-\method{unnest}{epi_df}(x, ...)
+\method{unnest}{epi_df}(data, ...)
 }
 \arguments{
 \item{x}{The \code{epi_df} object.}
@@ -46,6 +46,10 @@
 Currently unused.}
 
 \item{object}{The \code{epi_df} object.}
+
+\item{.data}{The \code{epi_df} object.}
+
+\item{data}{The \code{epi_df} object.}
 }
 \description{
 Print, summary, and \code{dplyr} verbs (that preserve class and attributes) for an
@@ -54,5 +58,5 @@ Print, summary, and \code{dplyr} verbs (that preserve class and attributes) for 
 Prints a variety of summary statistics about the \code{epi_df} object, such as
 the time range included and geographic coverage.
 
-\code{dplyr} verbs for \code{epi_df} objexts, preserving class and attributes.
+\code{dplyr} verbs for \code{epi_df} objects, preserving class and attributes.
 }
