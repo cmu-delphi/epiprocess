@@ -20,6 +20,12 @@ jobs:
       - uses: r-lib/actions/setup-r@v1
         with:
           use-public-rspm: true
+      
+      - name: Install delphi.epidata
+        shell: Rscript {0}
+        run: |
+          install.packages('remotes')
+          remotes::install_github("cmu-delphi/delphi-epidata-r")
 
       - uses: r-lib/actions/setup-r-dependencies@v1
         with:
