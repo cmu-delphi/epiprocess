@@ -36,6 +36,8 @@ Imports:
     tsibble,
     utils
 Suggests:
+    covidcast,
+    gginnards,
     knitr,
     outbreaks,
     rmarkdown,
