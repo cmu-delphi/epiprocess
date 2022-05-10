@@ -101,7 +101,17 @@
 #' 
 #' @export
 #' @examples
-#' growth_rate(ca_daily_cases$time_value, ca_daily_cases$cases)
+#' Y <- ca_daily_cases$cases
+#' z <- growth_rate(y=Y) # Simple example
+#' # The values of smooth splines differ from the default rel_change
+#' plot(z, growth_rate(y=Y,method="smooth_spline"))
+#' # More use of different variables:
+#' growth_rate(
+#'   x = ca_daily_cases$time_value, # Case dates
+#'   y = Y, # Number of cases is what we measure, as always
+#'   ord = 4, # order (degree) 4 polynomial
+#'   k = 6 # Cross validate with 6 folds
+#' )
 
 growth_rate = function(x = seq_along(y), y, x0 = x,
                        method = c("rel_change", "linear_reg",
