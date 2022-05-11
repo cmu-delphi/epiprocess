@@ -36,8 +36,8 @@ dv <- covidcast(
   signals = "smoothed_adj_cli",
   time_type = "day",
   geo_type = "state",
-  time_value = epirange(20200601, 20211201),
-  geo_value = "ca,fl",
+  time_values = epirange(20200601, 20211201),
+  geo_values = "ca,fl",
   issues = epirange(20200601, 20211201)
 ) %>% fetch_tbl()
 
@@ -88,7 +88,7 @@ and therefore the key variables are critical for figuring out how to generate a
 snapshot of data from the archive, as of a given version (also described below).
    
 ```{r}
-key(x$DT)
+# key(x$DT)
 ```
  
 In general, last observation carried forward (LOCF) is used to data in between

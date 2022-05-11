@@ -18,7 +18,6 @@ Description: This package introduces a common data structure for
 License: MIT + file LICENSE
 Imports: 
     data.table,
-    delphi.epidata,
     dplyr,
     fabletools,
     feasts,
@@ -37,7 +36,9 @@ Imports:
     utils
 Suggests:
     covidcast,
+    delphi.epidata,
     gginnards,
+    ggplot2,
     knitr,
     outbreaks,
     rmarkdown,
