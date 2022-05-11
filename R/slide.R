@@ -144,14 +144,14 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
   time_range = range(unique(x$time_value)) #%%
   #print(time_range)
   starts = in_range(ref_time_values - before_num, time_range)
-  print(starts)
-  print(length(starts))
+  #print(starts)
+  #print(length(starts))
   #class(starts)
   stops = in_range(ref_time_values + after_num, time_range)
-  print(stops)
+  #print(stops)
   
   if(length(starts) == 0 | length(stops) == 0){ 
-    Abort("The starting and/or stopping dates used to construct the slide windows are out of bounds with respect to the time range in your data. Check the values used for ref_time_values and align (or before, depending on which of align or before you've used).")
+    Abort("The starting and/or stopping times for sliding are out of bounds with respect to the range of times in your data. Check the values used for ref_time_values and align (or before, depending on which of align or before you've used).")
   }
 
   # Symbolize new column name
