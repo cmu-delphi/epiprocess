@@ -150,7 +150,7 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
   stops = in_range(ref_time_values + after_num, time_range)
   print(stops)
   
-  if(length(starts) == 0 & length(stops) == 0){ 
+  if(length(starts) == 0 | length(stops) == 0){ 
     Abort("The starting and/or stopping dates used to construct the slide windows are out of bounds with respect to the time range in your data. Check the values used for ref_time_values and align (or before, depending on which of align or before you've used).")
   }
 
