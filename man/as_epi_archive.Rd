@@ -49,9 +49,21 @@ would be equivalent to:\preformatted{x <- epi_archive$new(df, geo_type = "state"
 }
 }
 \examples{
+library(delphi.epidata)
+library(epiprocess)
+library(data.table)
 library(dplyr)
 
-x <- epix_doctor_visits \%>\%
-  select(geo_value, time_value, version, percent_cli) \%>\%
-  as_epi_archive() 
+# must be given a dataframe and contain a `version` column
+covidcast(data_source = "jhu-csse",
+signals = "confirmed_7dav_incidence_prop",
+time_type = "day",
+geo_type = "state",
+time_value = epirange(20200601, 20200603),
+geo_values = "ca,fl",
+issues = epirange(20200601, 20200603)
+) \%>\%
+fetch_tbl() \%>\%
+select(geo_value, time_value, version = issue, case_rate = value) \%>\%
+as_epi_archive() 
 }

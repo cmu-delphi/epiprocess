@@ -43,16 +43,30 @@
 #' @examples
 #'  
 #' # linear association of case and death rates on any given day
-#' epi_cor(ca_fl_death_rate_and_cases, case_rate, death_rate, cor_by = "time_value")
+#' epi_cor(x = jhu_csse_daily, 
+#'         var1 = case_rate_7d_av, 
+#'         var2 = death_rate_7d_av, 
+#'         cor_by = "time_value")
 #' 
 #' # correlation of death rates and lagged case rates
-#' epi_cor(ca_fl_death_rate_and_cases, case_rate, death_rate, cor_by = time_value, dt1 = -10)
+#' epi_cor(x = jhu_csse_daily, 
+#'         var1 = case_rate_7d_av, 
+#'         var2 = death_rate_7d_av, 
+#'         cor_by = time_value, 
+#'         dt1 = -10)
 #' 
 #' # correlation grouped by location 
-#' epi_cor(ca_fl_death_rate_and_cases, case_rate, death_rate, cor_by = geo_value)
+#' epi_cor(x = jhu_csse_daily, 
+#'         var1 = case_rate_7d_av, 
+#'         var2 = death_rate_7d_av, 
+#'         cor_by = geo_value)
 #' 
 #' # correlation grouped by location and incorporates lagged cases rates
-#' epi_cor(ca_fl_death_rate_and_cases, case_rate, death_rate, cor_by = geo_value, dt1 = -10)
+#' epi_cor(x = jhu_csse_daily, 
+#'         var1 = case_rate_7d_av, 
+#'         var2 = death_rate_7d_av, 
+#'         cor_by = geo_value, 
+#'         dt1 = -10)
 epi_cor = function(x, var1, var2, dt1 = 0, dt2 = 0, shift_by = geo_value,
                    cor_by = geo_value, use = "na.or.complete",
                    method = c("pearson", "kendall", "spearman")) {

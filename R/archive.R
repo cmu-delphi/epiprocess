@@ -448,11 +448,23 @@ epi_archive =
 #'
 #' @export
 #' @examples 
+#' library(delphi.epidata)
+#' library(epiprocess)
+#' library(data.table)
 #' library(dplyr)
 #' 
-#' x <- epix_doctor_visits %>%
-#'   select(geo_value, time_value, version, percent_cli) %>%
-#'   as_epi_archive() 
+#' # must be given a dataframe and contain a `version` column
+#' covidcast(data_source = "jhu-csse",
+#' signals = "confirmed_7dav_incidence_prop",
+#' time_type = "day",
+#' geo_type = "state",
+#' time_value = epirange(20200601, 20200603),
+#' geo_values = "ca,fl",
+#' issues = epirange(20200601, 20200603)
+#' ) %>%
+#' fetch_tbl() %>%
+#' select(geo_value, time_value, version = issue, case_rate = value) %>%
+#' as_epi_archive() 
 as_epi_archive = function(x, geo_type, time_type, other_keys,
                           additional_metadata = list()) { 
   epi_archive$new(x, geo_type, time_type, other_keys, additional_metadata) 
@@ -465,7 +477,8 @@ as_epi_archive = function(x, geo_type, time_type, other_keys,
 #' 
 #' @export
 #' @examples
-#' is_epi_archive(epix_doctor_visits) 
+#' is_epi_archive(jhu_csse_daily) # FALSE 
+#' is_epi_archive(archive_cases_dv) # TRUE 
 is_epi_archive = function(x) {
   inherits(x, "epi_archive")
 }

@@ -89,8 +89,12 @@
 #' @importFrom rlang .data .env !! enquo enquos sym
 #' @export
 #' @examples 
+#' library(dplyr)
+#' 
 #' # slide a 7-day trailing average formula on cases
-#' epi_slide(ca_daily_cases, cases7dav = mean(cases), n = 7)
+#'   jhu_csse_daily %>%
+#'   group_by(geo_value) %>%
+#'   epi_slide(cases_7dav = mean(cases), n = 7)
 epi_slide = function(x, f, ..., n = 7, ref_time_values,
                      align = c("right", "center", "left"), before, time_step, 
                      new_col_name = "slide_value", as_list_col = FALSE,
