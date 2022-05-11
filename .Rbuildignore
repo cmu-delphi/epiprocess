@@ -1,8 +1,8 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
-<<<<<<< HEAD
-^data-raw$
-=======
 ^\.github$
->>>>>>> 9344e0bda0c84f7809d00478f65c1130baa30df9
+^docs$
+^_pkgdown.yml
+^index\.md$
+^data-raw$
