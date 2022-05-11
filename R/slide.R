@@ -151,7 +151,7 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
   #print(stops)
   
   if(length(starts) == 0 | length(stops) == 0){ 
-    Abort("The starting and/or stopping times for sliding are out of bounds with respect to the range of times in your data. Check the values used for ref_time_values and align (or before, depending on which of align or before you've used).")
+    Abort("The starting and/or stopping times for sliding are out of bounds with respect to the range of times in your data. Check the values used for ref_time_values and align (or before if that was specified instead).")
   }
 
   # Symbolize new column name
