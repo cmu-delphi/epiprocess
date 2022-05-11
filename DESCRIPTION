@@ -53,30 +53,6 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
-Remotes:
-  dajmcdon/delphi.epidata,
-  reconverse/outbreaks
-Imports: 
-  data.table,
-  delphi.epidata,
-  dplyr,
-  fabletools,
-  feasts,
-  genlasso,
-  lubridate,
-  magrittr,
-  purrr,
-  R6,
-  rlang,
-  slider,
-  tibble,
-  tidyselect,
-  tidyr,
-  tsibble
-Suggests:
-  outbreaks,
-  testthat (>= 3.0.0),
-Config/testthat/edition: 3
 Depends: 
     R (>= 2.10)
 
