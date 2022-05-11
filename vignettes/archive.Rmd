@@ -87,8 +87,8 @@ below). There can only be a single row per unique combination of key variables,
 and therefore the key variables are critical for figuring out how to generate a
 snapshot of data from the archive, as of a given version (also described below).
    
-```{r}
-# key(x$DT)
+```{r, error=TRUE}
+key(x$DT)
 ```
  
 In general, last observation carried forward (LOCF) is used to data in between
