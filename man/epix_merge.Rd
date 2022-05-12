@@ -41,3 +41,15 @@ This is simply a wrapper around the \code{merge()} method of the
 is equivalent to:\preformatted{x$merge(y)
 }
 }
+\examples{
+# create two example epi_archive datasets
+x <- archive_cases_dv$DT \%>\% 
+  select(geo_value,time_value,version,case_rate) \%>\% 
+  as_epi_archive()
+y <- archive_cases_dv$DT \%>\% 
+  select(geo_value,time_value,version,percent_cli) \%>\% 
+  as_epi_archive()
+  
+# a full join stored in x
+epix_merge(x, y, all = TRUE) 
+}

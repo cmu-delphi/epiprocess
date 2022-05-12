@@ -27,6 +27,9 @@
 #'   ```
 #' 
 #' @export 
+#' @examples 
+#' epix_as_of(archive_cases_dv, 
+#'            max_version = max(archive_cases_dv$DT$version))
 epix_as_of = function(x, max_version, min_time_value = -Inf) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   return(x$as_of(max_version, min_time_value))
@@ -67,6 +70,17 @@ epix_as_of = function(x, max_version, min_time_value = -Inf) {
 #'   ```
 #' 
 #' @export
+#' @examples 
+#' # create two example epi_archive datasets
+#' x <- archive_cases_dv$DT %>% 
+#'   select(geo_value,time_value,version,case_rate) %>% 
+#'   as_epi_archive()
+#' y <- archive_cases_dv$DT %>% 
+#'   select(geo_value,time_value,version,percent_cli) %>% 
+#'   as_epi_archive()
+#'   
+#' # a full join stored in x
+#' epix_merge(x, y, all = TRUE) 
 epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   return(x$merge(y, ..., locf = locf, nan = nan))
