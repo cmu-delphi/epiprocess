@@ -101,15 +101,13 @@
 #' 
 #' @export
 #' @examples
-#' # Example adding California's growth rate in COVID cases
+#' # California's growth rate in COVID cases
 #'  mutate(ca_daily_cases, gr = growth_rate(time_value,cases))
 #' 
-#' # Example using degree 4 polynomial and 6-fold cross validation
+#' # Log scale, degree 4 polynomial and 6-fold cross validation
 #' growth_rate(
-#'   x = ca_daily_cases$time_value, # Case dates
-#'   y = ca_daily_cases$cases # Cases each day
-#'   ord = 4, # order (degree) 4 polynomial
-#'   k = 6 # Cross validate with 6 folds
+#'   x = ca_daily_cases$time_value, y = ca_daily_cases$cases,
+#'   log_scale = TRUE, ord = 4, k = 6
 #' )
 
 growth_rate = function(x = seq_along(y), y, x0 = x,
