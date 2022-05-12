@@ -170,7 +170,7 @@ epix_slide = function(x, f, ..., n = 7, group_by, ref_time_values,
                       as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   return(x$slide(f, ..., n = n,
-                 group_by = enquo(group_by),
+                 group_by = {{group_by}},
                  ref_time_values = ref_time_values,
                  time_step = time_step,
                  new_col_name = new_col_name,

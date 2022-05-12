@@ -262,7 +262,7 @@ epi_archive =
 #'   object. See the documentation for the wrapper function `epix_as_of()` for
 #'   details. 
 #' @importFrom data.table key
-#' @importFrom rlang !! !!! enquo enquos is_quosure sym syms
+#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
           slide = function(f, ..., n = 7, group_by, ref_time_values, 
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
@@ -281,19 +281,16 @@ epi_archive =
             before_num = n-1
             if (!missing(time_step)) before_num = time_step(n-1)
             
-            # What to group by? If missing, set according to internal keys
-            if (missing(group_by)) {
-              group_by = setdiff(key(self$DT), c("time_value", "version"))
+            # What to group by? If missing, set according to internal keys;
+            # otherwise, tidyselect.
+            if (quo_is_missing(enquo(group_by))) {
+              group_by <- syms(setdiff(key(self$DT), c("time_value", "version")))
+            } else {
+              group_by <- syms(names(eval_select(enquo(group_by), self$DT)))
             }
             
-            # Symbolize column name, defuse grouping variables. We have to do
-            # the middle step here which is a bit complicated (unfortunately)
-            # since the function epix_slide() could have called the current one,
-            # and in doing so, it may have already needed to defuse the grouping
-            # variables
+            # Symbolize column name
             new_col = sym(new_col_name)
-            if (!is_quosure(group_by)) group_by = enquo(group_by)
-            group_by = syms(names(eval_select(group_by, self$DT)))
 
             # Key variable names, apart from time value and version
             key_vars = setdiff(key(self$DT), c("time_value", "version"))
