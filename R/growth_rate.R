@@ -101,14 +101,13 @@
 #' 
 #' @export
 #' @examples
-#' Y <- ca_daily_cases$cases
-#' z <- growth_rate(y=Y) # Simple example
-#' # The values of smooth splines differ from the default rel_change
-#' plot(z, growth_rate(y=Y,method="smooth_spline"))
-#' # More use of different variables:
+#' # Example adding California's growth rate in COVID cases
+#'  mutate(ca_daily_cases, gr = growth_rate(time_value,cases))
+#' 
+#' # Example using degree 4 polynomial and 6-fold cross validation
 #' growth_rate(
 #'   x = ca_daily_cases$time_value, # Case dates
-#'   y = Y, # Number of cases is what we measure, as always
+#'   y = ca_daily_cases$cases # Cases each day
 #'   ord = 4, # order (degree) 4 polynomial
 #'   k = 6 # Cross validate with 6 folds
 #' )
