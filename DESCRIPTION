@@ -37,7 +37,6 @@ Imports:
 Suggests:
     covidcast,
     delphi.epidata,
-    gginnards,
     ggplot2,
     knitr,
     outbreaks,
