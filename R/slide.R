@@ -141,22 +141,12 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
   }
 
   # Now set up starts and stops for sliding/hopping
-  time_range = range(unique(x$time_value)) #%%
-  print(time_range[1])
-  print(time_range[2])
-  print(ref_time_values - before_num)
+  time_range = range(unique(x$time_value))
   starts = in_range(ref_time_values - before_num, time_range)
-  #print(ref_time_values)
-  print(starts)
-  #print(length(starts))
-  #class(starts)
   stops = in_range(ref_time_values + after_num, time_range)
-  print(stops)
-  print(before_num)
-  print(after_num)
   
   if(length(starts) == 0 | length(stops) == 0){ 
-    Abort("The starting and/or stopping times for sliding are out of bounds with respect to the range of times in your data. Check the values used for ref_time_values and align (or before if that was specified instead).")
+    Abort("The starting and/or stopping times for sliding are out of bounds with respect to the range of times in your data. Check your settings for ref_time_values and align (and before, if specified).")
   }
 
   # Symbolize new column name
