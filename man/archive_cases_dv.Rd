@@ -12,7 +12,6 @@ An \code{epi_archive} data format. The data table DT has 160 rows and 5 columns:
 \item{version}{ the time value specifying the version for each row of measurements. }
 \item{percent_cli}{percentage of doctor’s visits with CLI (COVID-like illness) computed from medical insurance claims}
 \item{case_rate}{7-day average signal of number of new confirmed deaths due to COVID-19 per 100,000 population, daily}
-...
 }
 }
 \source{
@@ -20,10 +19,6 @@ These data sources are provided under the terms of the
 \href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons Attribution license:}
 \itemize{
 \item \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html}{Doctor Visits}
-\item \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/hospital-admissions.html}{Hospital Admissions}
-\item \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/indicator-combination-inactive.html}{Indicator Combination:} signals with names beginning \code{nmf_}
-\item \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/quidel.html}{Quidel}
-\item \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/fb-survey.html}{COVID-19 Trends and Impact Survey}
 }
 
 COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University.

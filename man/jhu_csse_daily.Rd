@@ -13,7 +13,6 @@ A tibble with 30 rows and 6 variables:
 \item{death_rate_7d_av}{7-day average signal of number of new confirmed deaths due to COVID-19 per 100,000 population, daily}
 \item{cases}{Number of new confirmed COVID-19 cases, daily}
 \item{cases_7d_av}{7-day average signal of number of new confirmed COVID-19 cases, daily}
-...
 }
 }
 \source{
