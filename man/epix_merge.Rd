@@ -42,6 +42,7 @@ is equivalent to:\preformatted{x$merge(y)
 }
 }
 \examples{
+library(dplyr)
 # create two example epi_archive datasets
 x <- archive_cases_dv$DT \%>\% 
   select(geo_value,time_value,version,case_rate) \%>\% 
