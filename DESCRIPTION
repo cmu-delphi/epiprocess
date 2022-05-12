@@ -1,63 +1,55 @@
-Package: epiprocess
 Type: Package
+Package: epiprocess
 Title: Tools for basic signal processing in epidemiology
 Version: 1.0.0
-Authors@R:
-  c(
-  person(given = "Jacob",
-         family = "Bien",
-         role = "ctb"),
-  person(given = "Logan",
-         family = "Brooks",
-         role = "aut"),
-  person(given = "Rafael",
-         family = "Catoia",
-         role = "ctb"),
-  person(given = "Daniel",
-         family = "McDonald",
-         role = "ctb"),
-  person(given = "Quang",
-         family = "Nguyen",
-         role = "ctb"),
-  person(given = "Evan",
-         family = "Ray",
-         role = "aut"),
-  person(given = "Dmitry",
-         family = "Shemetov",
-         role = "ctb"),
-  person(given = "Ryan",
-         family = "Tibshirani",
-         role = c("aut", "cre"),
-         email = "ryantibs@cmu.edu"))
-Description: This package introduces a common data structure for epidemiological
-  data sets measured over space and time, and offers associated utilities to
-  perform basic signal processing tasks.    
+Authors@R: c(
+    person("Jacob", "Bien", role = "ctb"),
+    person("Logan", "Brooks", role = "aut"),
+    person("Rafael", "Catoia", role = "ctb"),
+    person("Daniel", "McDonald", role = "ctb"),
+    person("Quang", "Nguyen", role = "ctb"),
+    person("Evan", "Ray", role = "aut"),
+    person("Dmitry", "Shemetov", role = "ctb"),
+    person("Ryan", "Tibshirani", , "ryantibs@cmu.edu", role = c("aut", "cre"))
+  )
+Description: This package introduces a common data structure for
+    epidemiological data sets measured over space and time, and offers
+    associated utilities to perform basic signal processing tasks.
 License: MIT + file LICENSE
+Imports: 
+    data.table,
+    dplyr,
+    fabletools,
+    feasts,
+    generics,
+    genlasso,
+    lubridate,
+    magrittr,
+    purrr,
+    R6,
+    rlang,
+    slider,
+    tibble,
+    tidyr,
+    tidyselect,
+    tsibble,
+    utils
+Suggests:
+    covidcast,
+    delphi.epidata,
+    gginnards,
+    ggplot2,
+    knitr,
+    outbreaks,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: 
+    knitr
+Remotes:
+    dajmcdon/delphi.epidata,
+    reconverse/outbreaks
+Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
-Remotes:
-  dajmcdon/delphi.epidata,
-  reconverse/outbreaks
-Imports: 
-  data.table,
-  delphi.epidata,
-  dplyr,
-  fabletools,
-  feasts,
-  genlasso,
-  lubridate,
-  magrittr,
-  purrr,
-  R6,
-  rlang,
-  slider,
-  tibble,
-  tidyselect,
-  tidyr,
-  tsibble
-Suggests:
-  outbreaks,
-  testthat (>= 3.0.0),
-Config/testthat/edition: 3

@@ -36,8 +36,8 @@ dv <- covidcast(
   signals = "smoothed_adj_cli",
   time_type = "day",
   geo_type = "state",
-  time_value = epirange(20200601, 20211201),
-  geo_value = "ca,fl",
+  time_values = epirange(20200601, 20211201),
+  geo_values = "ca,fl",
   issues = epirange(20200601, 20211201)
 ) %>% fetch_tbl()
 
@@ -87,7 +87,7 @@ below). There can only be a single row per unique combination of key variables,
 and therefore the key variables are critical for figuring out how to generate a
 snapshot of data from the archive, as of a given version (also described below).
    
-```{r}
+```{r, error=TRUE}
 key(x$DT)
 ```
  

@@ -178,6 +178,21 @@ detect_outlr_rm = function(x = seq_along(y), y, n = 21,
 #' @param seasonal_period Integer specifying period of seasonality. For example,
 #'   for daily data, a period 7 means weekly seasonality. The default is `NULL`,
 #'   meaning that no seasonal term will be included in the STL decomposition.
+#' @param log_transform Should a log transform be applied before running outlier
+#'   detection? Default is `FALSE`. If `TRUE`, and zeros are present, then the
+#'   log transform will be padded by 1.
+#' @param detect_negatives Should negative values automatically count as
+#'   outliers? Default is `FALSE`.
+#' @param detection_multiplier Value determining how far the outlier detection
+#'   thresholds are from the rolling median, which are calculated as (rolling 
+#'   median) +/- (detection multiplier) * (rolling IQR). Default is 2. 
+#' @param min_radius Minimum distance between rolling median and threshold, on
+#'   transformed scale. Default is 0.
+#' @param replacement_multiplier Value determining how far the replacement
+#'   values are from the rolling median. The replacement is the original value
+#'   if it is within the detection thresholds, or otherwise it is rounded to the
+#'   nearest (rolling median) +/- (replacement multiplier) * (rolling IQR).
+#'   Default is 0.
 #' @return A tibble with number of rows equal to `length(y)`, and columns
 #'   `lower`, `upper`, and `replacement`. 
 #'
@@ -188,8 +203,7 @@ detect_outlr_rm = function(x = seq_along(y), y, n = 21,
 #'   residuals to the rolling median, respectively.
 #'
 #' The last set of arguments, `log_transform` through `replacement_multiplier`,
-#'   are exactly as in `detect_outlr_rm()`; refer to its help file for their
-#'   description.
+#'   are exactly as in `detect_outlr_rm()`.
 #'
 #' @importFrom stats median
 #' @importFrom tidyselect starts_with
@@ -272,7 +286,7 @@ roll_iqr = function(z, n, detection_multiplier, min_radius,
   if (typeof(z$y) == "integer") as_type = as.integer
   else as_type = as.numeric
   
-  epi_slide(z, roll_iqr = IQR(resid), n = n, align = "center") %>%
+  epi_slide(z, roll_iqr = stats::IQR(resid), n = n, align = "center") %>%
     dplyr::mutate(
       lower = pmax(min_lower,
                    fitted - pmax(min_radius, detection_multiplier * roll_iqr)),
