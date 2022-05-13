@@ -35,3 +35,7 @@ This is simply a wrapper around the \code{as_of()} method of the
 is equivalent to:\preformatted{x$as_of(max_version = v)
 }
 }
+\examples{
+epix_as_of(x = archive_cases_dv, 
+           max_version = max(archive_cases_dv$DT$version))
+}

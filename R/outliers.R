@@ -44,6 +44,33 @@
 #'   STL decomposition.
 #' 
 #' @export
+#' @importFrom dplyr select
+#' @examples
+#'  detection_methods = dplyr::bind_rows(
+#'    dplyr::tibble(method = "rm",
+#'           args = list(list(detect_negatives = TRUE,
+#'                            detection_multiplier = 2.5)),
+#'           abbr = "rm"),
+#'    dplyr::tibble(method = "stl",
+#'           args = list(list(detect_negatives = TRUE,
+#'                            detection_multiplier = 2.5,
+#'                            seasonal_period = 7)),
+#'           abbr = "stl_seasonal"),
+#'    dplyr::tibble(method = "stl",
+#'           args = list(list(detect_negatives = TRUE,
+#'                            detection_multiplier = 2.5,
+#'                            seasonal_period = NULL)),
+#'           abbr = "stl_nonseasonal"))  
+#'  
+#'  x <- jhu_csse_daily %>% 
+#'    dplyr::select(geo_value,time_value,cases) %>% 
+#'    as_epi_df()%>% 
+#'    group_by(geo_value) %>%
+#'    mutate(outlier_info  = detect_outlr(
+#'      x = time_value, y = cases,
+#'      methods = detection_methods,
+#'      combiner = "median")) %>%
+#'    unnest(outlier_info)
 detect_outlr = function(x = seq_along(y), y,
                         methods = tibble::tibble(method = "rm",
                                          args = list(list()),
@@ -120,6 +147,15 @@ detect_outlr = function(x = seq_along(y), y,
 #'   `lower`, `upper`, and `replacement`.
 #'
 #' @export
+#' @examples 
+# # Detect outliers based on a rolling median
+#' jhu_csse_daily %>% 
+#'   dplyr::select(geo_value,time_value,cases) %>% 
+#'   as_epi_df()%>% 
+#'   group_by(geo_value) %>%
+#'   mutate(outlier_info  = detect_outlr_rm(
+#'     x = time_value, y = cases)) %>%
+#'   unnest(outlier_info)
 detect_outlr_rm = function(x = seq_along(y), y, n = 21,
                            log_transform = FALSE,
                            detect_negatives = FALSE,
@@ -208,6 +244,16 @@ detect_outlr_rm = function(x = seq_along(y), y, n = 21,
 #' @importFrom stats median
 #' @importFrom tidyselect starts_with
 #' @export
+#' @examples 
+# # Detects outliers based on a seasonal-trend decomposition using LOESS 
+#' jhu_csse_daily %>% 
+#'   dplyr::select(geo_value,time_value,cases) %>% 
+#'   as_epi_df()%>% 
+#'   group_by(geo_value) %>%
+#'   mutate(outlier_info  = detect_outlr_stl(
+#'     x = time_value, y = cases,
+#'     seasonal_period = 7 )) %>% # weekly seasonality for daily data
+#'   unnest(outlier_info)
 detect_outlr_stl = function(x = seq_along(y), y,
                             n_trend = 21,
                             n_seasonal = 21,
