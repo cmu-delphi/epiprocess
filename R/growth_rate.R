@@ -102,11 +102,11 @@
 #' @export
 #' @examples
 #' # California's growth rate in COVID cases
-#'  mutate(ca_daily_cases, gr = growth_rate(time_value,cases))
+#'  mutate(jhu_csse_daily, gr = growth_rate(time_value,cases))
 #' 
 #' # Log scale, degree 4 polynomial and 6-fold cross validation
 #' growth_rate(
-#'   x = ca_daily_cases$time_value, y = ca_daily_cases$cases,
+#'   x = jhu_csse_daily$time_value, y = jhu_csse_daily$cases,
 #'   log_scale = TRUE, ord = 4, k = 6
 #' )
 
