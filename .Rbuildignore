@@ -5,3 +5,4 @@
 ^docs$
 ^_pkgdown.yml
 ^index\.md$
+^data-raw$
