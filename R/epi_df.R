@@ -91,6 +91,7 @@ NULL
 #' guide](https://cmu-delphi.github.io/epiprocess/articles/epiprocess.html) for
 #' examples.
 #'
+#' @param x A data.frame, [tibble::tibble], or [tsibble::tsibble] to be converted
 #' @param geo_type Type for the geo values. If missing, then the function will
 #'   attempt to infer it from the geo values present; if this fails, then it
 #'   will be set to "custom".
