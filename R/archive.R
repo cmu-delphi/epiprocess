@@ -102,10 +102,15 @@ epi_archive =
 #' @param additional_metadata List of additional metadata to attach to the
 #'   `epi_archive` object. The metadata will have `geo_type` and `time_type`
 #'   fields; named entries from the passed list or will be included as well.
+#' @param compactify Determines whether redundant rows are removed for last
+#'   observation carried first (LOCF) results. Set to TRUE to remove these,
+#'   FALSE to leave as is. Not specifying the argument does the same as TRUE,
+#'   except it also notifies the user of change in the data, as well as the
+#'   methods that can be done to silence the message.
 #' @return An `epi_archive` object.
 #' @importFrom data.table as.data.table key setkeyv
           initialize = function(x, geo_type, time_type, other_keys,
-                                additional_metadata) {
+                                additional_metadata, compacify) {
             # Check that we have a data frame
             if (!is.data.frame(x)) {
               Abort("`x` must be a data frame.")
@@ -132,7 +137,7 @@ epi_archive =
               time_type = guess_time_type(x$time_value)
             }
 
-            # Finish off with small checks on keys variables and metadata
+            # Conduct checks on keys variables and metadata
             if (missing(other_keys)) other_keys = NULL
             if (missing(additional_metadata)) additional_metadata = list()
             if (!all(other_keys %in% names(x))) {
@@ -145,6 +150,9 @@ epi_archive =
                     c("geo_type", "time_type"))) {
               Warn("`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\".")
             }
+            
+            # Finish off with compactify
+            if (missing(compacify)) compactify = NULL
 
             # Create the data table; if x was an un-keyed data.table itself,
             # then the call to as.data.table() will fail to set keys, so we
