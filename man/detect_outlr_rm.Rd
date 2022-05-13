@@ -53,9 +53,8 @@ Detects outliers based on a distance from the rolling median specified in
 terms of multiples of the rolling interquartile range (IQR).
 }
 \examples{
-library(dplyr)
 jhu_csse_daily \%>\% 
-  select(geo_value,time_value,cases) \%>\% 
+  dplyr::select(geo_value,time_value,cases) \%>\% 
   as_epi_df()\%>\% 
   group_by(geo_value) \%>\%
   mutate(outlier_info  = detect_outlr_rm(

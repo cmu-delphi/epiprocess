@@ -64,26 +64,24 @@ For convenience, the outlier detection method can be specified (in the
 STL decomposition.
 }
 \examples{
- library(dplyr)
- 
- detection_methods = bind_rows(
-   tibble(method = "rm",
+ detection_methods = dplyr::bind_rows(
+   dplyr::tibble(method = "rm",
           args = list(list(detect_negatives = TRUE,
                            detection_multiplier = 2.5)),
           abbr = "rm"),
-   tibble(method = "stl",
+   dplyr::tibble(method = "stl",
           args = list(list(detect_negatives = TRUE,
                            detection_multiplier = 2.5,
                            seasonal_period = 7)),
           abbr = "stl_seasonal"),
-   tibble(method = "stl",
+   dplyr::tibble(method = "stl",
           args = list(list(detect_negatives = TRUE,
                            detection_multiplier = 2.5,
                            seasonal_period = NULL)),
           abbr = "stl_nonseasonal"))  
  
  x <- jhu_csse_daily \%>\% 
-   select(geo_value,time_value,cases) \%>\% 
+   dplyr::select(geo_value,time_value,cases) \%>\% 
    as_epi_df()\%>\% 
    group_by(geo_value) \%>\%
    mutate(outlier_info  = detect_outlr(

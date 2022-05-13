@@ -89,8 +89,6 @@
 #' @importFrom rlang .data .env !! enquo enquos sym
 #' @export
 #' @examples 
-#' library(dplyr)
-#' 
 #'  # slide a 7-day trailing average formula on cases
 #'   jhu_csse_daily %>%
 #'   group_by(geo_value) %>%

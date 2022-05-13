@@ -76,9 +76,8 @@ The last set of arguments, \code{log_transform} through \code{replacement_multip
 are exactly as in \code{detect_outlr_rm()}.
 }
 \examples{
-library(dplyr)
 jhu_csse_daily \%>\% 
-  select(geo_value,time_value,cases) \%>\% 
+  dplyr::select(geo_value,time_value,cases) \%>\% 
   as_epi_df()\%>\% 
   group_by(geo_value) \%>\%
   mutate(outlier_info  = detect_outlr_stl(

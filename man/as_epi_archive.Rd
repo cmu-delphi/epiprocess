@@ -49,8 +49,6 @@ would be equivalent to:\preformatted{x <- epi_archive$new(df, geo_type = "state"
 }
 }
 \examples{
-library(dplyr)
-
 df <- data.frame (geo_value  = c(replicate(2, "ca"), replicate(2, "fl")),
                  county = c(1, 3, 2, 5),
                  time_value = c("2020-06-01", 

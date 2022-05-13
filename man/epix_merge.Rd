@@ -42,13 +42,12 @@ is equivalent to:\preformatted{x$merge(y)
 }
 }
 \examples{
-library(dplyr)
 # create two example epi_archive datasets
 x <- archive_cases_dv$DT \%>\% 
-  select(geo_value,time_value,version,case_rate) \%>\% 
+  dplyr::select(geo_value,time_value,version,case_rate) \%>\% 
   as_epi_archive()
 y <- archive_cases_dv$DT \%>\% 
-  select(geo_value,time_value,version,percent_cli) \%>\% 
+  dplyr::select(geo_value,time_value,version,percent_cli) \%>\% 
   as_epi_archive()
   
 # a full join stored in x

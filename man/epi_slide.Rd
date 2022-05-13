@@ -117,8 +117,6 @@ inferred from the given expression and overrides any name passed explicitly
 through the \code{new_col_name} argument.
 }
 \examples{
-library(dplyr)
-
  # slide a 7-day trailing average formula on cases
   jhu_csse_daily \%>\%
   group_by(geo_value) \%>\%
