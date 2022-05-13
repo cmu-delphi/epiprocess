@@ -145,7 +145,7 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
   starts = in_range(ref_time_values - before_num, time_range)
   stops = in_range(ref_time_values + after_num, time_range)
   
-  if(length(starts) == 0 | length(stops) == 0){ 
+  if( length(starts) == 0 || length(stops) == 0 ) { 
     Abort("The starting and/or stopping times for sliding are out of bounds with respect to the range of times in your data. Check your settings for ref_time_values and align (and before, if specified).")
   }
 
