@@ -180,6 +180,9 @@ epi_archive =
             cat(sprintf("Data archive (stored in DT field): %i x %i\n", 
                         nrow(self$DT), ncol(self$DT)))
             cat("----------\n")
+            cat(sprintf("Column names in DT: %s\n", 
+                        paste(colnames(self$DT), collapse = ", ")))
+            cat("----------\n")
             cat(sprintf("Public methods: %s\n",
                         paste(names(epi_archive$public_methods),
                               collapse = ", ")))
