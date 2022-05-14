@@ -18,7 +18,6 @@ Description: This package introduces a common data structure for
 License: MIT + file LICENSE
 Imports: 
     data.table,
-    delphi.epidata,
     dplyr,
     fabletools,
     feasts,
@@ -36,6 +35,9 @@ Imports:
     tsibble,
     utils
 Suggests:
+    covidcast,
+    delphi.epidata,
+    ggplot2,
     knitr,
     outbreaks,
     rmarkdown,
@@ -50,3 +52,6 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
+Depends: 
+    R (>= 2.10)
+

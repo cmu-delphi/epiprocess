@@ -75,3 +75,13 @@ residuals to the rolling median, respectively.
 The last set of arguments, \code{log_transform} through \code{replacement_multiplier},
 are exactly as in \code{detect_outlr_rm()}.
 }
+\examples{
+jhu_csse_daily \%>\% 
+  dplyr::select(geo_value,time_value,cases) \%>\% 
+  as_epi_df()\%>\% 
+  group_by(geo_value) \%>\%
+  mutate(outlier_info  = detect_outlr_stl(
+    x = time_value, y = cases,
+    seasonal_period = 7 )) \%>\% # weekly seasonality for daily data
+  unnest(outlier_info)
+}

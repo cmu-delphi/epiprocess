@@ -4,5 +4,5 @@
 ^\.github$
 ^docs$
 ^_pkgdown.yml
-^vignettes$
 ^index\.md$
+^data-raw$
