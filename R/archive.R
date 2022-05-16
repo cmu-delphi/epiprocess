@@ -152,7 +152,12 @@ epi_archive =
             }
             
             # Finish off with compactify
-            if (missing(compacify)) compactify = NULL
+            if (missing(compacify)) {
+              compactify = NULL
+            } else if (compactify != TRUE && compactify != FALSE) {
+              Warn("Non-boolean value inserted for boolean. Resetting to default")
+              compactify = NULL
+            }
 
             # Create the data table; if x was an un-keyed data.table itself,
             # then the call to as.data.table() will fail to set keys, so we
@@ -166,6 +171,7 @@ epi_archive =
             self$geo_type = geo_type
             self$time_type = time_type
             self$additional_metadata = additional_metadata
+            self$compactify = compactify
           },
           print = function() {
             cat("An `epi_archive` object, with metadata:\n")
