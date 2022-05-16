@@ -159,14 +159,9 @@ epi_archive =
               compactify = NULL
             }
             
-            # Code for running compactify
-            comp <- function(df) {
-              df #stub
-            }
-            
             # Runs compactify on data frame
             if (compactify == TRUE || is.null(compactify)) {
-              self$comp(df)
+              df # stub
             }
             
             # Create the data table; if x was an un-keyed data.table itself,
@@ -176,7 +171,6 @@ epi_archive =
             DT = as.data.table(x, key = key_vars)
             if (!identical(key_vars, key(DT))) setkeyv(DT, cols = key_vars)
             
-
             # Instantiate all self variables
             self$DT = DT
             self$geo_type = geo_type
@@ -211,8 +205,10 @@ epi_archive =
                               collapse = ", ")))
             if (is.null(compactify)) {
               cat("----------\n")
-              cat(sprintf("To avoid warning, please do the following:"))
-              # !!!
+              cat(sprintf("Note: redundant rows found. To remove warning,
+                          set compactify to TRUE or fix these rows"))
+              # print redundant row numbers
+              # stub
             }
           },
           #####
