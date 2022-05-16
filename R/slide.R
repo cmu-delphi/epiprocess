@@ -85,11 +85,11 @@
 #'   inferred from the given expression and overrides any name passed explicitly 
 #'   through the `new_col_name` argument.
 #'   
-#' When `f` is a named function with arguments, if a tibble that does not have a 
-#'   designated grouping variable is passed in as the method argument to `f`, 
-#'   to prevent the specified method for `f` from being overridden, include a 
-#'   parameter for the grouping-variable in function() just prior to specifying 
-#'   the method. For example:
+#' If `f` is a named function with arguments and a tibble with an unnamed
+#'   grouping variable is passed in as its method argument, then naturally
+#'   any specified method for `f` would be overridden. To prevent this, include 
+#'   a parameter for the grouping variable in `function()` just prior to  
+#'   specifying the method. For example:
 #'   ```
 #'   # Construct an tibble with an unnamed grouping variable
 #'   edf = bind_rows(tibble(geo_value = "ak", time_value = as.Date("2020-01-01") 
