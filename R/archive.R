@@ -212,6 +212,7 @@ epi_archive =
             if (is.null(compactify)) {
               cat("----------\n")
               cat(sprintf("To avoid warning, please do the following:"))
+              # !!!
             }
           },
           #####
