@@ -155,16 +155,27 @@ epi_archive =
             if (missing(compacify)) {
               compactify = NULL
             } else if (compactify != TRUE && compactify != FALSE) {
-              Warn("Non-boolean value inserted for boolean. Resetting to default")
+              Warn("Non-boolean value inserted for compactify. Resetting to default")
               compactify = NULL
             }
-
+            
+            # Code for running compactify
+            comp <- function(df) {
+              df #stub
+            }
+            
+            # Runs compactify on data frame
+            if (compactify == TRUE || is.null(compactify)) {
+              self$comp(df)
+            }
+            
             # Create the data table; if x was an un-keyed data.table itself,
             # then the call to as.data.table() will fail to set keys, so we
             # need to check this, then do it manually if needed
             key_vars = c("geo_value", "time_value", other_keys, "version")
             DT = as.data.table(x, key = key_vars)
             if (!identical(key_vars, key(DT))) setkeyv(DT, cols = key_vars)
+            
 
             # Instantiate all self variables
             self$DT = DT
@@ -198,6 +209,10 @@ epi_archive =
             cat(sprintf("Public methods: %s",
                         paste(names(epi_archive$public_methods),
                               collapse = ", ")))
+            if (is.null(compactify)) {
+              cat("----------\n")
+              cat(sprintf("To avoid warning, please do the following:"))
+            }
           },
           #####
 #' @description Generates a snapshot in `epi_df` format as of a given version.
