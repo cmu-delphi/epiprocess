@@ -85,17 +85,18 @@
 #'   inferred from the given expression and overrides any name passed explicitly 
 #'   through the `new_col_name` argument.
 #'   
-#' If a tibble that does not have a designated grouping variable is passed in 
-#'   as the method argument to `f`, to prevent the specified method for `f` 
-#'   from being overridden, include a parameter for the grouping-variable in 
-#'   function() just prior to specifying the method. For example:
+#' When `f` is a named function with arguments, if a tibble that does not have a 
+#'   designated grouping variable is passed in as the method argument to `f`, 
+#'   to prevent the specified method for `f` from being overridden, include a 
+#'   parameter for the grouping-variable in function() just prior to specifying 
+#'   the method. For example:
 #'   ```
-#'   # Construct an tibble with an unnamed grouping-variable
+#'   # Construct an tibble with an unnamed grouping variable
 #'   edf = bind_rows(tibble(geo_value = "ak", time_value = as.Date("2020-01-01") 
 #'             + 1:10, x1=1:10, y=1:10 + rnorm(10L))) %>% 
 #'     as_epi_df()
 #'   
-#'   # Now, include a row parameter for the grouping-variable in the tibble, 
+#'   # Now, include a row parameter for the grouping variable in the tibble, 
 #'   # which we denote as g, just prior to method = "qr"
 #'   # Note that if g was not included below, then the method = "qr" would be 
 #'   # overridden, as described above
