@@ -108,6 +108,24 @@ x$DT$percent_cli[1] <- original_value
 To make a copy, we can use the `clone()` method for an R6 class, as in `y <-
 x$clone()`. You can read more about reference semantics in Hadley Wickham's
 [Advanced R](https://adv-r.hadley.nz/r6.html#r6-semantics) book.
+
+## Removing LOCF data to save space
+
+We need not even include LOCF values, as they use up extra space. The
+`compactify` argument is a way of removing LOCF values, as they use up extra
+space that can slow down computational time. There are three
+different values that can be asssigned to `compactify`:
+
+* No argument: Does not put in LOCF values, and prints a list of LOCF values
+that have been omitted but could have been placed.
+* `TRUE`: Does not put in LOCF values, but doesn't print anything relating
+to which values have been omitted.
+* `FALSE`: Includes LOCF values.
+
+For this example, we have one chart using LOCF values, while another doesn't
+use them to illustrate LOCF.
+
+<!-- PROVIDE AN EXAMPLE HERE -->
  
 ## Some details on metadata
 
@@ -202,10 +220,6 @@ quite as dramatically. Modeling the revision process, which is often called
 
 <!-- todo: refer to some project/code? perhaps we should think about writing a
  function in `epiprocess` or even a separate package? -->
- 
-Finally, we can use compactify to remove variables that match the LOCF (last
-observation carried forward)
-
 
 ## Merging `epi_archive` objects 
 

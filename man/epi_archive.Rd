@@ -98,7 +98,14 @@ are documented in the wrapper function \code{epix_slide()}.
 \subsection{Method \code{new()}}{
 Creates a new \code{epi_archive} object.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$new(x, geo_type, time_type, other_keys, additional_metadata)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$new(
+  x,
+  geo_type,
+  time_type,
+  other_keys,
+  additional_metadata,
+  compacify
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -122,6 +129,12 @@ apart from "geo_value", "time_value", and "version".}
 \item{\code{additional_metadata}}{List of additional metadata to attach to the
 \code{epi_archive} object. The metadata will have \code{geo_type} and \code{time_type}
 fields; named entries from the passed list or will be included as well.}
+
+\item{\code{compactify}}{Determines whether redundant rows are removed for last
+observation carried first (LOCF) results. Set to TRUE to remove these,
+FALSE to leave as is. Not specifying the argument does the same as TRUE,
+except it also notifies the user of change in the data, as well as the
+methods that can be done to silence the message.}
 }
 \if{html}{\out{</div>}}
 }
