@@ -117,6 +117,9 @@ object:
 * `geo_type`: the type for the geo values.
 * `time_type`: the type for the time values.
 * `additional_metadata`: list of additional metadata for the data archive.
+* `compactify`: TRUE eliminates redundant entries using LOCF for efficiency;
+no entry also brings up a message to indicate which columns should be removed
+for efficiency; and FALSE does not eliminate redundant entries
 
 Metadata for an `epi_archive` object `x` can be accessed (and altered) directly,
 as in `x$geo_type` or `x$time_type`, etc. Just like `as_epi_df()`, the function
@@ -199,6 +202,10 @@ quite as dramatically. Modeling the revision process, which is often called
 
 <!-- todo: refer to some project/code? perhaps we should think about writing a
  function in `epiprocess` or even a separate package? -->
+ 
+Finally, we can use compactify to remove variables that match the LOCF (last
+observation carried forward)
+
 
 ## Merging `epi_archive` objects 
 

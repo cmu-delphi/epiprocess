@@ -164,6 +164,12 @@ epi_archive =
               df # stub
             }
             
+            # Warns about redundant rows
+            if (is.null(compactify)) {
+              Warn("Note: redundant rows found. To remove warning,
+                          set compactify to TRUE or fix these rows")
+            }
+            
             # Create the data table; if x was an un-keyed data.table itself,
             # then the call to as.data.table() will fail to set keys, so we
             # need to check this, then do it manually if needed
@@ -203,13 +209,7 @@ epi_archive =
             cat(sprintf("Public methods: %s",
                         paste(names(epi_archive$public_methods),
                               collapse = ", ")))
-            if (is.null(compactify)) {
-              cat("----------\n")
-              cat(sprintf("Note: redundant rows found. To remove warning,
-                          set compactify to TRUE or fix these rows"))
-              # print redundant row numbers
-              # stub
-            }
+
           },
           #####
 #' @description Generates a snapshot in `epi_df` format as of a given version.
