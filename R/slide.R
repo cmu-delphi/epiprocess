@@ -121,7 +121,8 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
   # intersect with observed time values
   if (missing(ref_time_values)) {
     ref_time_values = unique(x$time_value)
-  } else {
+  } 
+  else {
     ref_time_values = ref_time_values[ref_time_values %in%
                                       unique(x$time_value)] 
   }
