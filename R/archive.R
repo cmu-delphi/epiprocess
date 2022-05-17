@@ -181,9 +181,10 @@ epi_archive =
             cat(sprintf("Data archive (stored in DT field): %i x %i\n",
                         nrow(self$DT), ncol(self$DT)))
             cat("----------\n")
-            cat(sprintf("Column names in DT: %s\n", paste(ifelse(length(colnames(self$DT))<=10, paste(colnames(self$DT), collapse = ", "), 
-                                                                 paste(paste(colnames(self$DT)[1:3], collapse = ", "), ",\n", paste(colnames(self$DT)[4:10], collapse = ", "), sep = "")), 
-                                                          "\nand", length(colnames(self$DT)[11:length(colnames(self$DT))]), "more columns")))
+            cat(sprintf("Columns in DT: %s\n", paste(ifelse(length(
+              colnames(self$DT)) <= 4, paste(colnames(self$DT), collapse = ", "), 
+              paste(paste(colnames(self$DT)[1:4], collapse = ", "), "and", 
+              length(colnames(self$DT)[5:length(colnames(self$DT))]), "more columns")))))
             cat("----------\n")
             cat(sprintf("Public methods: %s\n",
                         paste(names(epi_archive$public_methods),
