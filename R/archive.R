@@ -76,6 +76,7 @@
 #'   **data that would have been available as of t**. More details on `slide()`
 #'   are documented in the wrapper function `epix_slide()`.
 #' 
+#' @importFrom R6 R6Class
 #' @export
 epi_archive =
   R6::R6Class(
