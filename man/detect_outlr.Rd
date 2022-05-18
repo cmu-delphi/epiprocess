@@ -78,11 +78,11 @@ STL decomposition.
           args = list(list(detect_negatives = TRUE,
                            detection_multiplier = 2.5,
                            seasonal_period = NULL)),
-          abbr = "stl_nonseasonal"))  
- 
- x <- jhu_csse_daily \%>\% 
-   dplyr::select(geo_value,time_value,cases) \%>\% 
-   as_epi_df()\%>\% 
+          abbr = "stl_nonseasonal"))
+
+ x <- jhu_csse_daily \%>\%
+   dplyr::select(geo_value,time_value,cases) \%>\%
+   as_epi_df() \%>\%
    group_by(geo_value) \%>\%
    mutate(outlier_info  = detect_outlr(
      x = time_value, y = cases,

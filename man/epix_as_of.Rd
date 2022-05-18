@@ -40,6 +40,6 @@ is equivalent to:
 }\if{html}{\out{</div>}}
 }
 \examples{
-epix_as_of(x = archive_cases_dv, 
+epix_as_of(x = archive_cases_dv,
            max_version = max(archive_cases_dv$DT$version))
 }

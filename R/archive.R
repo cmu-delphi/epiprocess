@@ -448,22 +448,22 @@ epi_archive =
 #'   ```
 #'
 #' @export
-#' @examples 
+#' @examples
 #' df <- data.frame (geo_value  = c(replicate(2, "ca"), replicate(2, "fl")),
 #'                  county = c(1, 3, 2, 5),
-#'                  time_value = c("2020-06-01", 
-#'                  "2020-06-02", 
-#'                  "2020-06-01", 
+#'                  time_value = c("2020-06-01",
+#'                  "2020-06-02",
+#'                  "2020-06-01",
 #'                  "2020-06-02"),
-#'                  version = c("2020-06-02", 
-#'                  "2020-06-03", 
+#'                  version = c("2020-06-02",
+#'                  "2020-06-03",
 #'                  "2020-06-02",
 #'                  "2020-06-03"),
 #'                  cases = c(1, 2, 3, 4),
 #'                  cases_rate = c(0.01, 0.02, 0.01, 0.05))
 #'
-#' x <- df %>% as_epi_archive(geo_type = "state", 
-#'                           time_type = "day", 
+#' x <- df %>% as_epi_archive(geo_type = "state",
+#'                           time_type = "day",
 #'                           other_keys = "county")
 as_epi_archive = function(x, geo_type, time_type, other_keys,
                           additional_metadata = list()) {
@@ -477,8 +477,8 @@ as_epi_archive = function(x, geo_type, time_type, other_keys,
 #'
 #' @export
 #' @examples
-#' is_epi_archive(jhu_csse_daily) # FALSE 
-#' is_epi_archive(archive_cases_dv) # TRUE 
+#' is_epi_archive(jhu_csse_daily) # FALSE (this is an epi_df, not epi_archive)
+#' is_epi_archive(archive_cases_dv) # TRUE
 is_epi_archive = function(x) {
   inherits(x, "epi_archive")
 }
