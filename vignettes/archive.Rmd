@@ -175,19 +175,17 @@ snapshots <- map_dfr(versions, function(v) {
   bind_rows(x_latest %>% mutate(version = self_max)) %>%
   mutate(latest = version == self_max)
 
-p <- ggplot(snapshots %>% filter(!latest),
+ggplot(snapshots %>% filter(!latest),
             aes(x = time_value, y = percent_cli)) +  
   geom_line(aes(color = factor(version))) + 
   geom_vline(aes(color = factor(version), xintercept = version), lty = 2) +
   facet_wrap(~ geo_value, scales = "free_y", ncol = 1) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "% of doctor's visits with CLI") + 
-  theme(legend.position = "none")
-
-gginnards::append_layers(
-  p, geom_line(data = snapshots %>% filter(latest),
+  theme(legend.position = "none") +
+  geom_line(data = snapshots %>% filter(latest),
                aes(x = time_value, y = percent_cli), 
-               inherit.aes = FALSE, color = "black"), pos = "top")
+               inherit.aes = FALSE, color = "black")
 ```
 
 We can see some interesting and highly nontrivial revision behavior: at some
@@ -377,18 +375,16 @@ fc <- bind_rows(k_week_ahead(x, ahead = 7, as_of = TRUE),
                 k_week_ahead(x, ahead = 28, as_of = FALSE))
 
 # Plot them, on top of latest COVID-19 case rates 
-p <- ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
+ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
   geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), alpha = 0.4) +
+  geom_line(data = x_latest, aes(x = time_value, y = case_rate), 
+               inherit.aes = FALSE, color = "gray50") +
   geom_line(aes(y = fc_point)) + geom_point(aes(y = fc_point), size = 0.5) + 
   geom_vline(aes(xintercept = time_value), linetype = 2, alpha = 0.5) +
   facet_grid(vars(geo_value), vars(as_of), scales = "free") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Reported COVID-19 case rates") + 
-  theme(legend.position = "none")
-  
-gginnards::append_layers(
-  p, geom_line(data = x_latest, aes(x = time_value, y = case_rate), 
-               inherit.aes = FALSE, color = "gray50"), pos = "bottom")
+  theme(legend.position = "none") 
 ```
 
 Each row displays the forecasts for a different location (CA and FL), and each

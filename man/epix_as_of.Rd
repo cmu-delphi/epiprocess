@@ -39,3 +39,7 @@ is equivalent to:
 \if{html}{\out{<div class="sourceCode">}}\preformatted{x$as_of(max_version = v)
 }\if{html}{\out{</div>}}
 }
+\examples{
+epix_as_of(x = archive_cases_dv, 
+           max_version = max(archive_cases_dv$DT$version))
+}

@@ -125,3 +125,15 @@ is equivalent to:
 \if{html}{\out{<div class="sourceCode">}}\preformatted{x$slide(x, new_var = comp(old_var), n = 120)
 }\if{html}{\out{</div>}}
 }
+\examples{
+# every date is a reference time point for the 3 day average sliding window
+fc_time_values <- seq(as.Date("2020-06-01"),
+                      as.Date("2020-06-15"),
+                      by = "1 day")
+epix_slide(x = archive_cases_dv, 
+           f = ~ mean(.x$case_rate), 
+           n = 3, 
+           group_by = geo_value,
+           ref_time_values = fc_time_values,
+           new_col_name = 'case_rate_3d_av')
+}

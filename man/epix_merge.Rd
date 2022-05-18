@@ -45,3 +45,15 @@ is equivalent to:
 \if{html}{\out{<div class="sourceCode">}}\preformatted{x$merge(y)
 }\if{html}{\out{</div>}}
 }
+\examples{
+# create two example epi_archive datasets
+x <- archive_cases_dv$DT \%>\% 
+  dplyr::select(geo_value,time_value,version,case_rate) \%>\% 
+  as_epi_archive()
+y <- archive_cases_dv$DT \%>\% 
+  dplyr::select(geo_value,time_value,version,percent_cli) \%>\% 
+  as_epi_archive()
+  
+# a full join stored in x
+epix_merge(x, y, all = TRUE) 
+}
