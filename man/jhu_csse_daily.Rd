@@ -16,8 +16,16 @@ A tibble with 60 rows and 6 variables:
 }
 }
 \source{
-COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University.
-\url{https://github.com/CSSEGISandData/COVID-19}
+This data set is licensed under the terms of the
+\href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons Attribution 4.0 International license}
+by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering.
+Copyright Johns Hopkins University 2020.
+\itemize{
+\item \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 Data Repository}
+\item \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{COVIDcast Epidata JHU Cases and Death}
+}
+
+The example data is a filtered time view of the full data, and is also limited to California, Florida, Texas, and New York.
 }
 \usage{
 jhu_csse_daily

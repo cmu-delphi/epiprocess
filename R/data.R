@@ -14,8 +14,15 @@
 #'   \item{cases}{Number of new confirmed COVID-19 cases, daily}
 #'   \item{cases_7d_av}{7-day average signal of number of new confirmed COVID-19 cases, daily}
 #' }
-#' @source COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University. 
-#' \url{https://github.com/CSSEGISandData/COVID-19}
+#' @source This data set is licensed under the terms of the 
+#' \href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons Attribution 4.0 International license} 
+#' by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. 
+#' Copyright Johns Hopkins University 2020.
+#' 
+#' * \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 Data Repository}
+#' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{COVIDcast Epidata JHU Cases and Death}
+#' 
+#' The example data is a filtered time view of the full data, and is also limited to California, Florida, Texas, and New York.
 "jhu_csse_daily"
 
 
@@ -35,11 +42,15 @@
 #'   \item{percent_cli}{percentage of doctor’s visits with CLI (COVID-like illness) computed from medical insurance claims}
 #'   \item{case_rate}{7-day average signal of number of new confirmed deaths due to COVID-19 per 100,000 population, daily}
 #' }
-#' @source These data sources are provided under the terms of the 
-#' \href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons Attribution license:}
-#' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html}{Doctor Visits}
+#' @source 
+#' This data set is licensed under the terms of the 
+#' \href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons Attribution 4.0 International license} 
+#' by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. 
+#' Copyright Johns Hopkins University 2020.
 #' 
-#' COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University. 
-#' \url{https://github.com/CSSEGISandData/COVID-19}
+#' * \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 Data Repository}
+#' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html}{COVIDcast Epidata Doctor Visits}
+#' 
+#' The example data is a filtered time view of the full data, and is also limited to California, Florida, Texas, and New York.
 "archive_cases_dv"
 
