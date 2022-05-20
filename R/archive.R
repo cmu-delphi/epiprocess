@@ -212,7 +212,10 @@ epi_archive =
             if (is.null(compactify)) {
               Warn("Note: redundant rows found. To remove warning,
                           set compactify to TRUE or fix these rows")
-              # call elim with for loop
+              # call elim with for loop, up to 6
+              for (i in min(6,nrow(elim))) {
+                print(elim[i,])
+              }
             }
             
             # Instantiate all self variables
@@ -530,8 +533,9 @@ epi_archive =
 #'                           time_type = "day", 
 #'                           other_keys = "county")
 as_epi_archive = function(x, geo_type, time_type, other_keys,
-                          additional_metadata = list()) {
-  epi_archive$new(x, geo_type, time_type, other_keys, additional_metadata)
+                          additional_metadata = list(),compactify = NULL) {
+  epi_archive$new(x, geo_type, time_type, other_keys, additional_metadata,
+                  compactify)
 }
 
 #' Test for `epi_archive` format
