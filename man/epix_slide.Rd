@@ -115,15 +115,11 @@ should never be used in place of \code{epi_slide()}, and only used when
 version-aware sliding is necessary (as it its purpose).
 
 Finally, this is simply a wrapper around the \code{slide()} method of the
-\code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:
+\code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:\preformatted{epix_slide(x, new_var = comp(old_var), n = 120)
+}
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epix_slide(x, new_var = comp(old_var), n = 120)
-}\if{html}{\out{</div>}}
-
-is equivalent to:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{x$slide(x, new_var = comp(old_var), n = 120)
-}\if{html}{\out{</div>}}
+is equivalent to:\preformatted{x$slide(x, new_var = comp(old_var), n = 120)
+}
 }
 \examples{
 # every date is a reference time point for the 3 day average sliding window

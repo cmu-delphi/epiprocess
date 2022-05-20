@@ -9,7 +9,7 @@ archive_cases_dv <- covidcast(
   time_type = "day",
   geo_type = "state",
   time_value = epirange(20200601, 20200615),
-  geo_values = "ca,fl",
+  geo_values = "ca,fl,ny,tx",
   issues = epirange(20200601, 20200615)
 ) %>% 
   fetch_tbl() %>%
@@ -22,7 +22,7 @@ case_rate <- covidcast(
   time_type = "day",
   geo_type = "state",
   time_value = epirange(20200601, 20200615),
-  geo_values = "ca,fl",
+  geo_values = "ca,fl,ny,tx",
   issues = epirange(20200601, 20200615)
 ) %>%
   fetch_tbl() %>%

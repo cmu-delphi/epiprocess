@@ -70,7 +70,7 @@ epi_cor(x = jhu_csse_daily,
         var1 = case_rate_7d_av, 
         var2 = death_rate_7d_av, 
         cor_by = time_value, 
-        dt1 = -10)
+        dt1 = -2)
 
 # correlation grouped by location 
 epi_cor(x = jhu_csse_daily, 
@@ -83,5 +83,5 @@ epi_cor(x = jhu_csse_daily,
         var1 = case_rate_7d_av, 
         var2 = death_rate_7d_av, 
         cor_by = geo_value, 
-        dt1 = -10)
+        dt1 = -2)
 }

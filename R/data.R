@@ -1,11 +1,11 @@
-#' JHU daily cases and deaths from California and Florida
+#' JHU daily cases and deaths from California, Florida, Texas, and New York
 #'
 #' This data source of confirmed COVID-19 cases and deaths 
 #' is based on reports made available by the Center for 
 #' Systems Science and Engineering at Johns Hopkins University. 
 #' This example data ranges from June 1 to June 15, 2020. 
 #'
-#' @format A tibble with 30 rows and 6 variables:
+#' @format A tibble with 60 rows and 6 variables:
 #' \describe{
 #'   \item{geo_value}{the geographic value associated with each row of measurements.}
 #'   \item{time_value}{the time value associated with each row of measurements.}
@@ -19,7 +19,7 @@
 "jhu_csse_daily"
 
 
-#' Daily doctor visits and cases from California and Florida in archive format
+#' Daily doctor visits and cases from California, Florida, Texas, and New York in archive format
 #'
 #' This data source is based on information about outpatient visits, 
 #' provided to us by health system partners, and also contains confirmed 

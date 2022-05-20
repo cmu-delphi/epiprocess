@@ -3,9 +3,9 @@
 \docType{data}
 \name{jhu_csse_daily}
 \alias{jhu_csse_daily}
-\title{JHU daily cases and deaths from California and Florida}
+\title{JHU daily cases and deaths from California, Florida, Texas, and New York}
 \format{
-A tibble with 30 rows and 6 variables:
+A tibble with 60 rows and 6 variables:
 \describe{
 \item{geo_value}{the geographic value associated with each row of measurements.}
 \item{time_value}{the time value associated with each row of measurements.}

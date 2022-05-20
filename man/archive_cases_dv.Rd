@@ -3,7 +3,7 @@
 \docType{data}
 \name{archive_cases_dv}
 \alias{archive_cases_dv}
-\title{Daily doctor visits and cases from California and Florida in archive format}
+\title{Daily doctor visits and cases from California, Florida, Texas, and New York in archive format}
 \format{
 An \code{epi_archive} data format. The data table DT has 160 rows and 5 columns:
 \describe{
