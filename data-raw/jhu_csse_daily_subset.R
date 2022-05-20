@@ -50,7 +50,7 @@ confirmed_7dav_incidence_num <- covidcast(
   select(geo_value, time_value, cases_7d_av = value) %>%
   arrange(geo_value, time_value)
 
-jhu_csse_daily <- confirmed_7dav_incidence_prop %>%
+jhu_csse_daily_subset <- confirmed_7dav_incidence_prop %>%
    full_join(deaths_7dav_incidence_prop, 
              by = c("geo_value", "time_value")) %>%
   full_join(confirmed_incidence_num, 
@@ -59,4 +59,4 @@ jhu_csse_daily <- confirmed_7dav_incidence_prop %>%
             by = c("geo_value", "time_value")) %>%
    as_epi_df()
 
-usethis::use_data(jhu_csse_daily, overwrite = TRUE)
+usethis::use_data(jhu_csse_daily_subset, overwrite = TRUE)

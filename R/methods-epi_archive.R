@@ -28,8 +28,8 @@
 #'
 #' @export
 #' @examples
-#' epix_as_of(x = archive_cases_dv,
-#'            max_version = max(archive_cases_dv$DT$version))
+#' epix_as_of(x = archive_cases_dv_subset,
+#'            max_version = max(archive_cases_dv_subset$DT$version))
 epix_as_of = function(x, max_version, min_time_value = -Inf) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   return(x$as_of(max_version, min_time_value))
@@ -72,10 +72,10 @@ epix_as_of = function(x, max_version, min_time_value = -Inf) {
 #' @export
 #' @examples
 #' # create two example epi_archive datasets
-#' x <- archive_cases_dv$DT %>%
+#' x <- archive_cases_dv_subset$DT %>%
 #'   dplyr::select(geo_value,time_value,version,case_rate) %>%
 #'   as_epi_archive()
-#' y <- archive_cases_dv$DT %>%
+#' y <- archive_cases_dv_subset$DT %>%
 #'   dplyr::select(geo_value,time_value,version,percent_cli) %>%
 #'   as_epi_archive()
 #'
@@ -186,7 +186,7 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #' time_values <- seq(as.Date("2020-06-01"),
 #'                       as.Date("2020-06-15"),
 #'                       by = "1 day")
-#' epix_slide(x = archive_cases_dv,
+#' epix_slide(x = archive_cases_dv_subset,
 #'            f = ~ mean(.x$case_rate),
 #'            n = 3,
 #'            group_by = geo_value,

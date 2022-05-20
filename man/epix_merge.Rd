@@ -43,10 +43,10 @@ is equivalent to:\preformatted{x$merge(y)
 }
 \examples{
 # create two example epi_archive datasets
-x <- archive_cases_dv$DT \%>\%
+x <- archive_cases_dv_subset$DT \%>\%
   dplyr::select(geo_value,time_value,version,case_rate) \%>\%
   as_epi_archive()
-y <- archive_cases_dv$DT \%>\%
+y <- archive_cases_dv_subset$DT \%>\%
   dplyr::select(geo_value,time_value,version,percent_cli) \%>\%
   as_epi_archive()
 

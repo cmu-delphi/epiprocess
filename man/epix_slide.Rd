@@ -126,7 +126,7 @@ is equivalent to:\preformatted{x$slide(x, new_var = comp(old_var), n = 120)
 time_values <- seq(as.Date("2020-06-01"),
                       as.Date("2020-06-15"),
                       by = "1 day")
-epix_slide(x = archive_cases_dv,
+epix_slide(x = archive_cases_dv_subset,
            f = ~ mean(.x$case_rate),
            n = 3,
            group_by = geo_value,

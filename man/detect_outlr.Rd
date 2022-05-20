@@ -80,7 +80,7 @@ STL decomposition.
                            seasonal_period = NULL)),
           abbr = "stl_nonseasonal"))
 
- x <- jhu_csse_daily \%>\%
+ x <- jhu_csse_daily_subset \%>\%
    dplyr::select(geo_value,time_value,cases) \%>\%
    as_epi_df() \%>\%
    group_by(geo_value) \%>\%

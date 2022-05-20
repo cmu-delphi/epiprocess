@@ -1,9 +1,9 @@
-#' JHU daily cases and deaths from California, Florida, Texas, and New York
+#' Subset of JHU daily cases and deaths from California, Florida, Texas, and New York
 #'
 #' This data source of confirmed COVID-19 cases and deaths 
 #' is based on reports made available by the Center for 
 #' Systems Science and Engineering at Johns Hopkins University. 
-#' This example data ranges from June 1 to June 15, 2020. 
+#' This example data ranges from June 1 to June 15, 2020 and is limited to California, Florida, Texas, and New York.
 #'
 #' @format A tibble with 60 rows and 6 variables:
 #' \describe{
@@ -23,10 +23,10 @@
 #' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{COVIDcast Epidata JHU Cases and Death}
 #' 
 #' The example data is a filtered time view of the full data, and is also limited to California, Florida, Texas, and New York.
-"jhu_csse_daily"
+"jhu_csse_daily_subset"
 
 
-#' Daily doctor visits and cases from California, Florida, Texas, and New York in archive format
+#' Subset of daily doctor visits and cases from California, Florida, Texas, and New York in archive format
 #'
 #' This data source is based on information about outpatient visits, 
 #' provided to us by health system partners, and also contains confirmed 
@@ -52,5 +52,5 @@
 #' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html}{COVIDcast Epidata Doctor Visits}
 #' 
 #' The example data is a filtered time view of the full data, and is also limited to California, Florida, Texas, and New York.
-"archive_cases_dv"
+"archive_cases_dv_subset"
 

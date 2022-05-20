@@ -54,7 +54,7 @@ terms of multiples of the rolling interquartile range (IQR).
 }
 \examples{
 # Detect outliers based on a rolling median
-jhu_csse_daily \%>\%
+jhu_csse_daily_subset \%>\%
   dplyr::select(geo_value,time_value,cases) \%>\%
   as_epi_df() \%>\%
   group_by(geo_value) \%>\%
