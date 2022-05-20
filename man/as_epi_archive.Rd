@@ -9,7 +9,8 @@ as_epi_archive(
   geo_type,
   time_type,
   other_keys,
-  additional_metadata = list()
+  additional_metadata = list(),
+  compactify = NULL
 )
 }
 \arguments{

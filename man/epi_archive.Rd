@@ -104,7 +104,7 @@ Creates a new \code{epi_archive} object.
   time_type,
   other_keys,
   additional_metadata,
-  compacify
+  compacify = NULL
 )}\if{html}{\out{</div>}}
 }
 

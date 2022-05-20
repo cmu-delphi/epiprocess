@@ -110,7 +110,7 @@ epi_archive =
 #' @return An `epi_archive` object.
 #' @importFrom data.table as.data.table key setkeyv
           initialize = function(x, geo_type, time_type, other_keys,
-                                additional_metadata, compacify) {
+                                additional_metadata, compactify) {
             # Check that we have a data frame
             if (!is.data.frame(x)) {
               Abort("`x` must be a data frame.")
