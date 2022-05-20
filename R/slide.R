@@ -95,7 +95,7 @@
 #'   epi_slide(cases_7dav = mean(cases), n = 7, 
 #'             align = "right")
 #'  
-#'  # slide a left-aligned 7-day trailing average
+#'  # slide a left-aligned 7-day average
 #'   jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), n = 7, 
