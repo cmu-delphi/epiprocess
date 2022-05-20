@@ -159,23 +159,61 @@ epi_archive =
               compactify = NULL
             }
             
-            # Runs compactify on data frame
-            if (compactify == TRUE || is.null(compactify)) {
-              df # stub
-            }
-            
-            # Warns about redundant rows
-            if (is.null(compactify)) {
-              Warn("Note: redundant rows found. To remove warning,
-                          set compactify to TRUE or fix these rows")
-            }
-            
             # Create the data table; if x was an un-keyed data.table itself,
             # then the call to as.data.table() will fail to set keys, so we
             # need to check this, then do it manually if needed
             key_vars = c("geo_value", "time_value", other_keys, "version")
             DT = as.data.table(x, key = key_vars)
             if (!identical(key_vars, key(DT))) setkeyv(DT, cols = key_vars)
+            
+            # functions for LOCF
+            ###
+            order <- function(df) {
+              arrange(df,version,time_value,geo_value)
+            }
+            
+            # Check if previous entry is in group.
+            mutate_in_group <- function(df) {
+              mutate(df, in_group =
+                       replace_na(
+                         (geo_value == lag(geo_value) &
+                            version == lag(version)),
+                         FALSE
+                       )
+              )
+            }
+            
+            # Remove LOCF values
+            rm_locf <- function (df) {
+              df %>%
+                order() %>%
+                mutate_in_group() %>%
+                filter(!in_group | percent_cli != lag(percent_cli)) %>%
+                select(-in_group)
+            }
+            
+            # Keeps LOCF values, such as to be printed
+            keep_locf <- function(df) {
+              df %>%
+                order() %>%
+                mutate_in_group() %>%
+                filter(in_group & percent_cli == lag(percent_cli)) %>%
+                select(-in_group)  
+            }
+            ###
+            
+            # Runs compactify on data frame
+            if (compactify == TRUE | is.null(compactify)) {
+              elim = keep_locf(DT)
+              DT = rm_locf(DT)
+            }
+            
+            # Warns about redundant rows
+            if (is.null(compactify)) {
+              Warn("Note: redundant rows found. To remove warning,
+                          set compactify to TRUE or fix these rows")
+              # call elim with for loop
+            }
             
             # Instantiate all self variables
             self$DT = DT
