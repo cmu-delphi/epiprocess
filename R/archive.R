@@ -152,12 +152,7 @@ epi_archive =
             }
             
             # Finish off with compactify
-            if (missing(compacify)) {
-              compactify = NULL
-            } else if (compactify != TRUE && compactify != FALSE) {
-              Warn("Non-boolean value inserted for compactify. Resetting to default")
-              compactify = NULL
-            }
+            if (missing(compactify)) compactify = NULL
             
             # Create the data table; if x was an un-keyed data.table itself,
             # then the call to as.data.table() will fail to set keys, so we
@@ -169,7 +164,7 @@ epi_archive =
             # functions for LOCF
             ###
             order <- function(df) {
-              arrange(df,version,time_value,geo_value)
+              arrange(df,geo_value,version,time_value)
             }
             
             # Check if previous entry is in group.
@@ -203,18 +198,21 @@ epi_archive =
             ###
             
             # Runs compactify on data frame
-            if (compactify == TRUE | is.null(compactify)) {
+            if (is.null(compactify) || compactify == TRUE) {
               elim = keep_locf(DT)
               DT = rm_locf(DT)
             }
             
             # Warns about redundant rows
-            if (is.null(compactify)) {
+            if (is.null(compactify) & nrow(elim) > 0) {
               Warn("Note: redundant rows found. To remove warning,
                           set compactify to TRUE or fix these rows")
               # call elim with for loop, up to 6
               for (i in min(6,nrow(elim))) {
                 print(elim[i,])
+              }
+              if (nrow(elim) > 6) {
+                print("And so on...")
               }
             }
             
@@ -223,7 +221,6 @@ epi_archive =
             self$geo_type = geo_type
             self$time_type = time_type
             self$additional_metadata = additional_metadata
-            self$compactify = compactify
           },
           print = function() {
             cat("An `epi_archive` object, with metadata:\n")
