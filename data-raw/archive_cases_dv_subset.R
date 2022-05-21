@@ -26,7 +26,7 @@ case_rate_subset <- covidcast(
   issues = epirange(20200601, 20200615)
 ) %>%
   fetch_tbl() %>%
-  select(geo_value, time_value, version = issue, case_rate = value) %>%
+  select(geo_value, time_value, version = issue, case_rate_7d_av = value) %>%
   as_epi_archive()
 
 epix_merge(archive_cases_dv_subset, case_rate_subset, all = TRUE)
