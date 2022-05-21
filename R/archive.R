@@ -162,7 +162,7 @@ epi_archive =
             if (!identical(key_vars, key(DT))) setkeyv(DT, cols = key_vars)
             
             # functions for LOCF
-            ###
+            # orders data frame to observe potential LOCF
             order <- function(df) {
               arrange(df,geo_value,version,time_value)
             }
@@ -195,7 +195,6 @@ epi_archive =
                 filter(in_group & percent_cli == lag(percent_cli)) %>%
                 select(-in_group)  
             }
-            ###
             
             # Runs compactify on data frame
             if (is.null(compactify) || compactify == TRUE) {
