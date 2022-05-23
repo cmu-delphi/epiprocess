@@ -7,8 +7,8 @@ confirmed_7dav_incidence_prop <- covidcast(
   signals = "confirmed_7dav_incidence_prop",
   time_type = "day",
   geo_type = "state",
-  time_values = epirange(20200601, 20200615),
-  geo_values = "ca,fl,ny,tx"
+  time_values = epirange(20200301, 20211231),
+  geo_values = "ca,fl,ny,tx,ga,pa"
 ) %>%
   fetch_tbl() %>%
   select(geo_value, time_value, case_rate_7d_av = value) %>%
@@ -19,8 +19,8 @@ deaths_7dav_incidence_prop <- covidcast(
   signals = "deaths_7dav_incidence_prop",
   time_type = "day",
   geo_type = "state",
-  time_values = epirange(20200601, 20200615),
-  geo_values = "ca,fl,ny,tx"
+  time_values = epirange(20200301, 20211231),
+  geo_values = "ca,fl,ny,tx,ga,pa"
 ) %>%
   fetch_tbl() %>%
   select(geo_value, time_value, death_rate_7d_av = value) %>%
@@ -31,8 +31,8 @@ confirmed_incidence_num <- covidcast(
   signals = "confirmed_incidence_num",
   time_type = "day",
   geo_type = "state",
-  time_values = epirange(20200601, 20200615),
-  geo_values = "ca,fl,ny,tx"
+  time_values = epirange(20200301, 20211231),
+  geo_values = "ca,fl,ny,tx,ga,pa"
 ) %>%
   fetch_tbl() %>%
   select(geo_value, time_value, cases = value) %>%
@@ -43,8 +43,8 @@ confirmed_7dav_incidence_num <- covidcast(
   signals = "confirmed_7dav_incidence_num",
   time_type = "day",
   geo_type = "state",
-  time_values = epirange(20200601, 20200615),
-  geo_values = "ca,fl,ny,tx"
+  time_values = epirange(20200301, 20211231),
+  geo_values = "ca,fl,ny,tx,ga,pa"
 ) %>%
   fetch_tbl() %>%
   select(geo_value, time_value, cases_7d_av = value) %>%

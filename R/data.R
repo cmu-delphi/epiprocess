@@ -1,11 +1,11 @@
-#' Subset of JHU daily cases and deaths from California, Florida, Texas, and New York
+#' Subset of JHU daily cases and deaths from California, Florida, Texas, New York, Georgia, and Pennsylvania
 #'
 #' This data source of confirmed COVID-19 cases and deaths 
 #' is based on reports made available by the Center for 
 #' Systems Science and Engineering at Johns Hopkins University. 
-#' This example data ranges from June 1 to June 15, 2020 and is limited to California, Florida, Texas, and New York.
+#' This example data ranges from Mar 1, 2020 to Dec 31, 2021, and is limited to California, Florida, Texas, New York, Georgia, and Pennsylvania.
 #'
-#' @format A tibble with 60 rows and 6 variables:
+#' @format A tibble with 4026 rows and 6 variables:
 #' \describe{
 #'   \item{geo_value}{the geographic value associated with each row of measurements.}
 #'   \item{time_value}{the time value associated with each row of measurements.}
@@ -78,3 +78,5 @@
 #' * Furthermore, the data has been limited to a very small number of rows, the signal names slightly altered, and formatted into a tibble.
 "incidence_num_outlier_example"
 
+#' TO-DO
+"jhu_csse_county_level_subset"

@@ -14,12 +14,15 @@ estimates the growth rate of a signal. We investigate this functionality in the
 current vignette, applied to state-level daily reported COVID-19 cases from GA
 and PA, smoothed using a 7-day trailing average.
 
-```{r, message = FALSE}
+```{r, message = FALSE, warning = FALSE}
 library(delphi.epidata)
 library(epiprocess)
 library(dplyr)
 library(tidyr)
+```
 
+The data is fetched with the following query:
+```{r, message = FALSE, eval=F}
 x <- covidcast(
   data_source = "jhu-csse",
   signals = "confirmed_7dav_incidence_num",
@@ -30,6 +33,18 @@ x <- covidcast(
 ) %>%
   fetch_tbl() %>%
   select(geo_value, time_value, cases = value) %>%
+  arrange(geo_value, time_value) %>%
+  as_epi_df()
+```
+
+The data has 1,158 rows and 3 columns.
+
+
+```{r, echo=FALSE}
+data(jhu_csse_daily_subset)
+x <- jhu_csse_daily_subset %>%
+  select(geo_value, time_value, cases = cases_7d_av) %>%
+  filter(geo_value %in% c("pa","ga") & time_value >= "2020-06-01") %>%
   arrange(geo_value, time_value) %>%
   as_epi_df()
 ```
