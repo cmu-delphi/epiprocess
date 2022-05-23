@@ -8,9 +8,9 @@ archive_cases_dv_subset <- covidcast(
   signals = "smoothed_adj_cli",
   time_type = "day",
   geo_type = "state",
-  time_value = epirange(20200601, 20200615),
+  time_value = epirange(20200601, 20211201),
   geo_values = "ca,fl,ny,tx",
-  issues = epirange(20200601, 20200615)
+  issues = epirange(20200601, 20211201)
 ) %>% 
   fetch_tbl() %>%
   select(geo_value, time_value, version = issue, percent_cli = value) %>%
@@ -21,9 +21,9 @@ case_rate_subset <- covidcast(
   signals = "confirmed_7dav_incidence_prop",
   time_type = "day",
   geo_type = "state",
-  time_value = epirange(20200601, 20200615),
+  time_value = epirange(20200601, 20211201),
   geo_values = "ca,fl,ny,tx",
-  issues = epirange(20200601, 20200615)
+  issues = epirange(20200601, 20211201)
 ) %>%
   fetch_tbl() %>%
   select(geo_value, time_value, version = issue, case_rate_7d_av = value) %>%

@@ -23,7 +23,7 @@ y <- covidcast::county_census %>%
   filter(STNAME %in% c("Massachusetts", "Vermont"), STNAME != CTYNAME) %>%
   select(geo_value = FIPS, county_name = CTYNAME, state_name = STNAME)
 
-# Fetch only counties from VT and NH, then append names columns as well
+# Fetch only counties from Massachusetts and Vermont, then append names columns as well
 x <- covidcast(
   data_source = "jhu-csse",
   signals = "confirmed_incidence_num",
@@ -38,7 +38,14 @@ x <- covidcast(
   as_epi_df()
 ```
 
-```{r, echo=FALSE}
+The data contains 16,212 rows and 5 columns.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(delphi.epidata)
+library(covidcast)
+library(epiprocess)
+library(dplyr)
+
 data(jhu_csse_county_level_subset)
 x <- jhu_csse_county_level_subset 
 ```
@@ -152,7 +159,6 @@ second call to `tidyr::fill()`.)
 
 ```{r}
 fill_gaps(xt, cases = 0) %>%
-  arrange(geo_value, time_value) %>%
   head()
 ```
 
@@ -162,8 +168,7 @@ went back to June 6, 2020. By setting `.full = TRUE`, we can at zero-fill over
 the entire span of the observed (censored) data.
 
 ```{r}
-xt_filled <- fill_gaps(xt, cases = 0, .full = TRUE) %>%
-  arrange(geo_value, time_value) 
+xt_filled <- fill_gaps(xt, cases = 0, .full = TRUE) 
   
 head(xt_filled)
 ```
