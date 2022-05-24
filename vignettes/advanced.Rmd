@@ -191,7 +191,7 @@ vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) in order
 to demonstrate the last point in a more realistic setting. First, we fetch the
 versioned data and build the archive.
 
-```{r, message = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE, eval =FALSE}
 library(delphi.epidata)
 library(data.table)
 library(ggplot2)
@@ -227,11 +227,22 @@ x <- y1 %>%
 epix_merge(x, y2 %>%
   select(geo_value, time_value,
     version = issue,
-    case_rate = value
+    case_rate_7d_av = value
   ) %>%
   as_epi_archive(),
 all = TRUE
 )
+```
+
+```{r, message = FALSE, warning = FALSE, echo =FALSE}
+library(data.table)
+library(ggplot2)
+theme_set(theme_bw())
+
+x <- archive_cases_dv_subset$DT %>%
+  filter(geo_value %in% c("ca","fl")) %>%
+  as_epi_archive()
+
 ```
 
 Next, we extend the ARX function to handle multiple geo values, since in the 
@@ -341,7 +352,7 @@ fc_time_values <- seq(as.Date("2020-08-01"),
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
-      epix_slide(fc = prob_arx(percent_cli, case_rate, geo_value, time_value, 
+      epix_slide(fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, time_value, 
                                args = prob_arx_args(ahead = ahead)), 
                  n = 120, ref_time_values = fc_time_values) %>%
       mutate(target_date = time_value + ahead, as_of = TRUE, 
@@ -349,7 +360,7 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   }
   else {
     x_latest %>% 
-      epi_slide(fc = prob_arx(percent_cli, case_rate, geo_value, time_value, 
+      epi_slide(fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, time_value, 
                               args = prob_arx_args(ahead = ahead)), 
                 n = 120, ref_time_values = fc_time_values) %>%
       mutate(target_date = time_value + ahead, as_of = FALSE) 
@@ -367,18 +378,16 @@ fc <- bind_rows(k_week_ahead(x, ahead = 7, as_of = TRUE),
                 k_week_ahead(x, ahead = 28, as_of = FALSE))
 
 # Plot them, on top of latest COVID-19 case rates 
-p <- ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
+ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
   geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), alpha = 0.4) +
+  geom_line(data = x_latest, aes(x = time_value, y = case_rate_7d_av), 
+               inherit.aes = FALSE, color = "gray50") +
   geom_line(aes(y = fc_point)) + geom_point(aes(y = fc_point), size = 0.5) + 
   geom_vline(aes(xintercept = time_value), linetype = 2, alpha = 0.5) +
   facet_grid(vars(geo_value), vars(as_of), scales = "free") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Reported COVID-19 case rates") + 
-  theme(legend.position = "none")
-  
-gginnards::append_layers(
-  p, geom_line(data = x_latest, aes(x = time_value, y = case_rate), 
-               inherit.aes = FALSE, color = "gray50"), pos = "bottom")
+  theme(legend.position = "none") 
 ```
 
 We can see that these forecasts, which come from training an ARX model jointly
@@ -387,3 +396,10 @@ compared to the ones from the archive vignette, which come from training a
 separate ARX model on each state. As in the archive vignette, we can see a
 difference between version-aware (right column) and -unaware (left column)
 forecasting, as well.
+
+
+## Attribution
+This document contains dataset that is a modified part of the [COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) as [republished in the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html). This data set is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.
+
+[From the COVIDcast Epidatab Doctor's Visit API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html): 
+ These signals are taken directly from the JHU CSSE [COVID-19 GitHub repository](https://github.com/CSSEGISandData/COVID-19) without changes. 

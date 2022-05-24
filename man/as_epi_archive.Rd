@@ -48,3 +48,21 @@ class, so for example:\preformatted{x <- as_epi_archive(df, geo_type = "state", 
 would be equivalent to:\preformatted{x <- epi_archive$new(df, geo_type = "state", time_type = "day")
 }
 }
+\examples{
+df <- data.frame (geo_value  = c(replicate(2, "ca"), replicate(2, "fl")),
+                 county = c(1, 3, 2, 5),
+                 time_value = c("2020-06-01",
+                 "2020-06-02",
+                 "2020-06-01",
+                 "2020-06-02"),
+                 version = c("2020-06-02",
+                 "2020-06-03",
+                 "2020-06-02",
+                 "2020-06-03"),
+                 cases = c(1, 2, 3, 4),
+                 cases_rate = c(0.01, 0.02, 0.01, 0.05))
+
+x <- df \%>\% as_epi_archive(geo_type = "state",
+                          time_type = "day",
+                          other_keys = "county")
+}

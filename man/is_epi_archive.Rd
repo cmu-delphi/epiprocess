@@ -15,3 +15,7 @@ is_epi_archive(x)
 \description{
 Test for \code{epi_archive} format
 }
+\examples{
+is_epi_archive(jhu_csse_daily_subset) # FALSE (this is an epi_df, not epi_archive)
+is_epi_archive(archive_cases_dv_subset) # TRUE
+}

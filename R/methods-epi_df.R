@@ -4,15 +4,18 @@
 #' `time_value`, and the key variables taken to be `geo_value` along with any
 #' others in the `other_keys` field of the metadata, or else explicitly set. 
 #'
-#' @importFrom tsibble as_tsibble
 #' @method as_tsibble epi_df
+#' @param x The `epi_df` object.
+#' @param key Optional. Any additional keys (other than `geo_value`) to add to 
+#'   the `tsibble`.
+#' @param ... additional arguments passed on to `tsibble::as_tsibble()`
 #' @export
 as_tsibble.epi_df = function(x, key, ...) {
   if (missing(key)) key = c("geo_value", attributes(x)$metadata$other_keys)
   return(as_tsibble(tibble::as_tibble(x), key, index = "time_value", ...))
 }
 
-#' S3 methods for an `epi_df` object
+#' Base S3 methods for an `epi_df` object
 #'
 #' Print, summary, and `dplyr` verbs (that preserve class and attributes) for an
 #' `epi_df` object.
@@ -45,21 +48,22 @@ print.epi_df = function(x, ...) {
 #' @importFrom rlang .data
 #' @importFrom stats median
 #' @export
-summary.epi_df = function(x, ...) {
+summary.epi_df = function(object, ...) {
   cat("An `epi_df` x, with metadata:\n")
-  cat(sprintf("* %-9s = %s\n", "geo_type", attributes(x)$metadata$geo_type))
-  cat(sprintf("* %-9s = %s\n", "time_type", attributes(x)$metadata$time_type))
-  cat(sprintf("* %-9s = %s\n", "as_of", attributes(x)$metadata$as_of))
+  cat(sprintf("* %-9s = %s\n", "geo_type", attributes(object)$metadata$geo_type))
+  cat(sprintf("* %-9s = %s\n", "time_type", attributes(object)$metadata$time_type))
+  cat(sprintf("* %-9s = %s\n", "as_of", attributes(object)$metadata$as_of))
   cat("----------\n")
-  cat(sprintf("* %-27s = %s\n", "min time value", min(x$time_value)))
-  cat(sprintf("* %-27s = %s\n", "max time value", max(x$time_value)))
+  cat(sprintf("* %-27s = %s\n", "min time value", min(object$time_value)))
+  cat(sprintf("* %-27s = %s\n", "max time value", max(object$time_value)))
   cat(sprintf("* %-27s = %i\n", "average rows per time value",
-              as.integer(x %>% dplyr::group_by(.data$time_value) %>%
+              as.integer(object %>% dplyr::group_by(.data$time_value) %>%
                          dplyr::summarize(num = dplyr::n()) %>%
                          dplyr::summarize(mean(.data$num)))))
 }
 
 #' @method head epi_df
+#' @importFrom utils head
 #' @export
 #' @noRd
 head.epi_df = function(x, ...) {
@@ -67,6 +71,7 @@ head.epi_df = function(x, ...) {
 }
 
 #' @method tail epi_df
+#' @importFrom utils tail
 #' @export
 #' @noRd
 tail.epi_df = function(x, ...) {
@@ -75,91 +80,83 @@ tail.epi_df = function(x, ...) {
 
 #' `dplyr` verbs
 #'
-#' `dplyr` verbs for `epi_df` objexts, preserving class and attributes. 
+#' `dplyr` verbs for `epi_df` objects, preserving class and attributes. 
 #'
 #' @method arrange epi_df
+#' @param .data The `epi_df` object.
 #' @rdname print.epi_df
-#' @importFrom dplyr arrange
 #' @export
-arrange.epi_df = function(x, ...) {
-  metadata = attributes(x)$metadata
-  x = NextMethod()
-  reclass(x, metadata)
+arrange.epi_df = function(.data, ...) {
+  metadata = attributes(.data)$metadata
+  .data = NextMethod()
+  reclass(.data, metadata)
 }
 
 #' @method filter epi_df
 #' @rdname print.epi_df
-#' @importFrom dplyr filter
 #' @export
-filter.epi_df = function(x, ...) {
-  metadata = attributes(x)$metadata
-  x = NextMethod()
-  reclass(x, metadata)
+filter.epi_df = function(.data, ...) {
+  metadata = attributes(.data)$metadata
+  .data = NextMethod()
+  reclass(.data, metadata)
 }
 
 #' @method group_by epi_df
 #' @rdname print.epi_df
-#' @importFrom dplyr group_by
 #' @export
-group_by.epi_df = function(x, ...) {
-  metadata = attributes(x)$metadata
-  x = NextMethod()
-  reclass(x, metadata)
+group_by.epi_df = function(.data, ...) {
+  metadata = attributes(.data)$metadata
+  .data = NextMethod()
+  reclass(.data, metadata)
 }
 
 #' @method group_modify epi_df
 #' @rdname print.epi_df
-#' @importFrom dplyr group_modify
 #' @export
-group_modify.epi_df = function(x, ...) {
-  metadata = attributes(x)$metadata
-  x = NextMethod()
-  reclass(x, metadata)
+group_modify.epi_df = function(.data, ...) {
+  metadata = attributes(.data)$metadata
+  .data = NextMethod()
+  reclass(.data, metadata)
 }
 
 #' @method mutate epi_df
 #' @rdname print.epi_df
-#' @importFrom dplyr mutate
 #' @export
-mutate.epi_df = function(x, ...) {
-  metadata = attributes(x)$metadata
-  x = NextMethod()
-  reclass(x, metadata)
+mutate.epi_df = function(.data, ...) {
+  metadata = attributes(.data)$metadata
+  .data = NextMethod()
+  reclass(.data, metadata)
 }
 
 #' @method relocate epi_df
 #' @rdname print.epi_df
-#' @importFrom dplyr relocate
 #' @export
-relocate.epi_df = function(x, ...) {
-  metadata = attributes(x)$metadata
-  x = NextMethod()
-  reclass(x, metadata)
+relocate.epi_df = function(.data, ...) {
+  metadata = attributes(.data)$metadata
+  .data = NextMethod()
+  reclass(.data, metadata)
 }
 
 #' @method rename epi_df
 #' @rdname print.epi_df
-#' @importFrom dplyr rename
 #' @export
-rename.epi_df = function(x, ...) {
-  metadata = attributes(x)$metadata
-  x = NextMethod()
-  reclass(x, metadata)
+rename.epi_df = function(.data, ...) {
+  metadata = attributes(.data)$metadata
+  .data = NextMethod()
+  reclass(.data, metadata)
 }
 
 #' @method slice epi_df
 #' @rdname print.epi_df
-#' @importFrom dplyr slice
 #' @export
-slice.epi_df = function(x, ...) {
-  metadata = attributes(x)$metadata
-  x = NextMethod()
-  reclass(x, metadata)
+slice.epi_df = function(.data, ...) {
+  metadata = attributes(.data)$metadata
+  .data = NextMethod()
+  reclass(.data, metadata)
 }
 
 #' @method ungroup epi_df
 #' @rdname print.epi_df
-#' @importFrom dplyr ungroup
 #' @export
 ungroup.epi_df = function(x, ...) {
   metadata = attributes(x)$metadata
@@ -169,12 +166,12 @@ ungroup.epi_df = function(x, ...) {
 
 #' @method unnest epi_df
 #' @rdname print.epi_df
-#' @importFrom tidyr unnest
+#' @param data The `epi_df` object.
 #' @export
-unnest.epi_df = function(x, ...) {
-  metadata = attributes(x)$metadata
-  x = NextMethod()
-  reclass(x, metadata)
+unnest.epi_df = function(data, ...) {
+  metadata = attributes(data)$metadata
+  data = NextMethod()
+  reclass(data, metadata)
 }
 
 # Simple reclass function

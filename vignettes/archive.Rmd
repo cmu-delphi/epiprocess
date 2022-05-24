@@ -25,7 +25,7 @@ signal is subject to very heavy and regular revision; you can read more about it
 on its [API documentation
 page](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
 
-```{r, message = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE, eval=FALSE}
 library(delphi.epidata)
 library(epiprocess)
 library(data.table)
@@ -36,12 +36,18 @@ dv <- covidcast(
   signals = "smoothed_adj_cli",
   time_type = "day",
   geo_type = "state",
-  time_value = epirange(20200601, 20211201),
-  geo_value = "ca,fl",
+  time_values = epirange(20200601, 20211201),
+  geo_values = "ca,fl,ny,tx",
   issues = epirange(20200601, 20211201)
 ) %>% fetch_tbl()
 
-colnames(dv)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(delphi.epidata)
+library(epiprocess)
+library(data.table)
+library(dplyr)
 ```
 
 ## Getting data into `epi_archive` format
@@ -62,9 +68,18 @@ As we can see from the above, the data frame returned by
 format, with `issue` playing the role of `version`. We can now use 
 `as_epi_archive()` to bring it into `epi_archive` format.
 
-```{r}
+```{r, eval=FALSE}
 x <- dv %>%
   select(geo_value, time_value, version = issue, percent_cli = value) %>%
+  as_epi_archive()
+
+class(x)
+print(x)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+x <- archive_cases_dv_subset$DT %>%
+  select(geo_value, time_value, version , percent_cli)  %>%
   as_epi_archive()
 
 class(x)
@@ -87,7 +102,7 @@ below). There can only be a single row per unique combination of key variables,
 and therefore the key variables are critical for figuring out how to generate a
 snapshot of data from the archive, as of a given version (also described below).
    
-```{r}
+```{r, error=TRUE}
 key(x$DT)
 ```
  
@@ -175,19 +190,17 @@ snapshots <- map_dfr(versions, function(v) {
   bind_rows(x_latest %>% mutate(version = self_max)) %>%
   mutate(latest = version == self_max)
 
-p <- ggplot(snapshots %>% filter(!latest),
+ggplot(snapshots %>% filter(!latest),
             aes(x = time_value, y = percent_cli)) +  
   geom_line(aes(color = factor(version))) + 
   geom_vline(aes(color = factor(version), xintercept = version), lty = 2) +
   facet_wrap(~ geo_value, scales = "free_y", ncol = 1) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "% of doctor's visits with CLI") + 
-  theme(legend.position = "none")
-
-gginnards::append_layers(
-  p, geom_line(data = snapshots %>% filter(latest),
+  theme(legend.position = "none") +
+  geom_line(data = snapshots %>% filter(latest),
                aes(x = time_value, y = percent_cli), 
-               inherit.aes = FALSE, color = "black"), pos = "top")
+               inherit.aes = FALSE, color = "black")
 ```
 
 We can see some interesting and highly nontrivial revision behavior: at some
@@ -222,21 +235,27 @@ Because the original data archives are stored in LOCF (last observation carried
 forward) format in the first place, it generally makes sense to perform `NA`
 filling after merging using LOCF. Therefore `locf = TRUE` is the default.
 
-```{r, message = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE,eval=FALSE}
 y <- covidcast(
   data_source = "jhu-csse",
   signals = "confirmed_7dav_incidence_prop",
   time_type = "day",
   geo_type = "state",
   time_value = epirange(20200601, 20211201),
-  geo_values = "ca,fl",
+  geo_values = "ca,fl,ny,tx",
   issues = epirange(20200601, 20211201)
 ) %>%
   fetch_tbl() %>%
-  select(geo_value, time_value, version = issue, case_rate = value) %>%
+  select(geo_value, time_value, version = issue, case_rate_7d_av = value) %>%
   as_epi_archive()
 
 epix_merge(x, y, all = TRUE)
+print(x)
+head(x$DT)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+x <- archive_cases_dv_subset
 print(x)
 head(x$DT)
 ```
@@ -323,7 +342,7 @@ fc_time_values <- seq(as.Date("2020-08-01"),
                       as.Date("2021-12-01"), 
                       by = "1 month")
 
-z <- epix_slide(x, fc = prob_arx(x = percent_cli, y = case_rate), n = 120, 
+z <- epix_slide(x, fc = prob_arx(x = percent_cli, y = case_rate_7d_av), n = 120, 
                 ref_time_values = fc_time_values, group_by = geo_value)
 
 head(z, 10)
@@ -353,14 +372,14 @@ x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
-      epix_slide(fc = prob_arx(percent_cli, case_rate, ahead = ahead), n = 120,
+      epix_slide(fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead), n = 120,
                  ref_time_values = fc_time_values, group_by = geo_value) %>%
       mutate(target_date = time_value + ahead, as_of = TRUE) 
   }
   else {
     x_latest %>% 
       group_by(geo_value) %>%
-      epi_slide(fc = prob_arx(percent_cli, case_rate, ahead = ahead), n = 120,
+      epi_slide(fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead), n = 120,
                 ref_time_values = fc_time_values) %>%
       mutate(target_date = time_value + ahead, as_of = FALSE) 
   }
@@ -377,18 +396,16 @@ fc <- bind_rows(k_week_ahead(x, ahead = 7, as_of = TRUE),
                 k_week_ahead(x, ahead = 28, as_of = FALSE))
 
 # Plot them, on top of latest COVID-19 case rates 
-p <- ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
+ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
   geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), alpha = 0.4) +
+  geom_line(data = x_latest, aes(x = time_value, y = case_rate_7d_av), 
+               inherit.aes = FALSE, color = "gray50") +
   geom_line(aes(y = fc_point)) + geom_point(aes(y = fc_point), size = 0.5) + 
   geom_vline(aes(xintercept = time_value), linetype = 2, alpha = 0.5) +
   facet_grid(vars(geo_value), vars(as_of), scales = "free") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Reported COVID-19 case rates") + 
-  theme(legend.position = "none")
-  
-gginnards::append_layers(
-  p, geom_line(data = x_latest, aes(x = time_value, y = case_rate), 
-               inherit.aes = FALSE, color = "gray50"), pos = "bottom")
+  theme(legend.position = "none") 
 ```
 
 Each row displays the forecasts for a different location (CA and FL), and each
@@ -410,3 +427,10 @@ off the data structures and functionality in the current package, is the place
 to look for more robust forecasting methodology. The forecasters that appear in
 the vignettes in the current package are only meant to demo the slide
 functionality with some of the most basic forecasting methodology possible.
+
+## Attribution
+This document contains dataset that is a modified part of the [COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) as [republished in the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html). This data set is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.
+
+[From the COVIDcast Epidatab Doctor's Visit API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html): 
+ These signals are taken directly from the JHU CSSE [COVID-19 GitHub repository](https://github.com/CSSEGISandData/COVID-19) without changes. 
+

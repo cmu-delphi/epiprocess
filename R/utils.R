@@ -1,5 +1,5 @@
 break_str = function(str, nchar = 79, init = "") {
-  str = paste(strwrap(str, nchar, init = init), collapse = "\n")
+  str = paste(strwrap(str, nchar, initial = init), collapse = "\n")
   str[1] = substring(str, nchar(init)+1)
   return(str)
 }
@@ -34,7 +34,8 @@ guess_geo_type = function(geo_value) {
     geo_value = tolower(geo_value)
       
     # If all geo values are state abbreviations, then use "state" 
-    state_values = c(tolower(state.abb), "as", "dc", "gu", "mp", "pr", "vi")
+    state_values = c(tolower(datasets::state.abb), 
+                     "as", "dc", "gu", "mp", "pr", "vi")
     if (all(geo_value %in% state_values)) return("state")
 
     # Else if all geo values are 2 letters, then use "nation"
@@ -99,8 +100,7 @@ guess_time_type = function(time_value) {
 
 ##########
 
-#' @export
-#' @noRd
+
 quiet = function(x) { 
   sink(tempfile()) 
   on.exit(sink()) 

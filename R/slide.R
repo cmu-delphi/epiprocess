@@ -88,6 +88,25 @@
 #' @importFrom lubridate days weeks
 #' @importFrom rlang .data .env !! enquo enquos sym
 #' @export
+#' @examples 
+#'  # slide a 7-day trailing average formula on cases
+#'   jhu_csse_daily_subset %>%
+#'   group_by(geo_value) %>%
+#'   epi_slide(cases_7dav = mean(cases), n = 7, 
+#'             align = "right")
+#'  
+#'  # slide a left-aligned 7-day average
+#'   jhu_csse_daily_subset %>%
+#'   group_by(geo_value) %>%
+#'   epi_slide(cases_7dav = mean(cases), n = 7, 
+#'             align = "left")
+#'  
+#'  # nested new columns
+#'  jhu_csse_daily_subset %>% 
+#'  group_by(geo_value) %>%
+#'  epi_slide(a = data.frame(cases_2dav = mean(cases), 
+#'                           cases_2dma = mad(cases)),
+#'            n = 2, as_list_col = TRUE)
 epi_slide = function(x, f, ..., n = 7, ref_time_values,
                      align = c("right", "center", "left"), before, time_step, 
                      new_col_name = "slide_value", as_list_col = FALSE,

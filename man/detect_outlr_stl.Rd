@@ -37,6 +37,26 @@ outlier thresholds.}
 \item{seasonal_period}{Integer specifying period of seasonality. For example,
 for daily data, a period 7 means weekly seasonality. The default is \code{NULL},
 meaning that no seasonal term will be included in the STL decomposition.}
+
+\item{log_transform}{Should a log transform be applied before running outlier
+detection? Default is \code{FALSE}. If \code{TRUE}, and zeros are present, then the
+log transform will be padded by 1.}
+
+\item{detect_negatives}{Should negative values automatically count as
+outliers? Default is \code{FALSE}.}
+
+\item{detection_multiplier}{Value determining how far the outlier detection
+thresholds are from the rolling median, which are calculated as (rolling
+median) +/- (detection multiplier) * (rolling IQR). Default is 2.}
+
+\item{min_radius}{Minimum distance between rolling median and threshold, on
+transformed scale. Default is 0.}
+
+\item{replacement_multiplier}{Value determining how far the replacement
+values are from the rolling median. The replacement is the original value
+if it is within the detection thresholds, or otherwise it is rounded to the
+nearest (rolling median) +/- (replacement multiplier) * (rolling IQR).
+Default is 0.}
 }
 \value{
 A tibble with number of rows equal to \code{length(y)}, and columns
@@ -53,6 +73,16 @@ from the STL decomposition taking the place of the rolling median and
 residuals to the rolling median, respectively.
 
 The last set of arguments, \code{log_transform} through \code{replacement_multiplier},
-are exactly as in \code{detect_outlr_rm()}; refer to its help file for their
-description.
+are exactly as in \code{detect_outlr_rm()}.
+}
+\examples{
+# Detects outliers based on a seasonal-trend decomposition using LOESS
+incidence_num_outlier_example \%>\%
+  dplyr::select(geo_value,time_value,cases) \%>\%
+  as_epi_df() \%>\%
+  group_by(geo_value) \%>\%
+  mutate(outlier_info  = detect_outlr_stl(
+    x = time_value, y = cases,
+    seasonal_period = 7 )) \%>\% # weekly seasonality for daily data
+  unnest(outlier_info)
 }
