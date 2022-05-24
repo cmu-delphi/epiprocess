@@ -29,17 +29,17 @@ examples.
 }
 \details{
 This is simply a wrapper around the \code{as_of()} method of the
-\code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:
+\code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:\preformatted{epix_as_of(x, max_version = v)
+}
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epix_as_of(x, max_version = v)
-}\if{html}{\out{</div>}}
-
-is equivalent to:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{x$as_of(max_version = v)
-}\if{html}{\out{</div>}}
+is equivalent to:\preformatted{x$as_of(max_version = v)
+}
 }
 \examples{
-epix_as_of(x = archive_cases_dv,
-           max_version = max(archive_cases_dv$DT$version))
+# warning message of data latency shown
+epix_as_of(x = archive_cases_dv_subset,
+           max_version = max(archive_cases_dv_subset$DT$version))
+
+# no warning shown
+epix_as_of(archive_cases_dv_subset, max_version = as.Date("2020-06-10"))          
 }

@@ -35,22 +35,18 @@ examples.
 }
 \details{
 This is simply a wrapper around the \code{merge()} method of the
-\code{epi_archive} class, so if \code{x} and \code{y} are an \code{epi_archive} objects, then:
+\code{epi_archive} class, so if \code{x} and \code{y} are an \code{epi_archive} objects, then:\preformatted{epix_merge(x, y)
+}
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epix_merge(x, y)
-}\if{html}{\out{</div>}}
-
-is equivalent to:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{x$merge(y)
-}\if{html}{\out{</div>}}
+is equivalent to:\preformatted{x$merge(y)
+}
 }
 \examples{
 # create two example epi_archive datasets
-x <- archive_cases_dv$DT \%>\%
-  dplyr::select(geo_value,time_value,version,case_rate) \%>\%
+x <- archive_cases_dv_subset$DT \%>\%
+  dplyr::select(geo_value,time_value,version,case_rate_7d_av) \%>\%
   as_epi_archive()
-y <- archive_cases_dv$DT \%>\%
+y <- archive_cases_dv_subset$DT \%>\%
   dplyr::select(geo_value,time_value,version,percent_cli) \%>\%
   as_epi_archive()
 

@@ -62,7 +62,7 @@
 #'                            seasonal_period = NULL)),
 #'           abbr = "stl_nonseasonal"))
 #'
-#'  x <- jhu_csse_daily %>%
+#'  x <- incidence_num_outlier_example %>%
 #'    dplyr::select(geo_value,time_value,cases) %>%
 #'    as_epi_df() %>%
 #'    group_by(geo_value) %>%
@@ -149,7 +149,7 @@ detect_outlr = function(x = seq_along(y), y,
 #' @export
 #' @examples
 #' # Detect outliers based on a rolling median
-#' jhu_csse_daily %>%
+#' incidence_num_outlier_example %>%
 #'   dplyr::select(geo_value,time_value,cases) %>%
 #'   as_epi_df() %>%
 #'   group_by(geo_value) %>%
@@ -246,7 +246,7 @@ detect_outlr_rm = function(x = seq_along(y), y, n = 21,
 #' @export
 #' @examples
 #' # Detects outliers based on a seasonal-trend decomposition using LOESS
-#' jhu_csse_daily %>%
+#' incidence_num_outlier_example %>%
 #'   dplyr::select(geo_value,time_value,cases) %>%
 #'   as_epi_df() %>%
 #'   group_by(geo_value) %>%

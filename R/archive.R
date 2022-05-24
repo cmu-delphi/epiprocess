@@ -477,8 +477,8 @@ as_epi_archive = function(x, geo_type, time_type, other_keys,
 #'
 #' @export
 #' @examples
-#' is_epi_archive(jhu_csse_daily) # FALSE (this is an epi_df, not epi_archive)
-#' is_epi_archive(archive_cases_dv) # TRUE
+#' is_epi_archive(jhu_csse_daily_subset) # FALSE (this is an epi_df, not epi_archive)
+#' is_epi_archive(archive_cases_dv_subset) # TRUE
 is_epi_archive = function(x) {
   inherits(x, "epi_archive")
 }

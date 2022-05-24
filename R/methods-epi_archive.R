@@ -28,8 +28,12 @@
 #'
 #' @export
 #' @examples
-#' epix_as_of(x = archive_cases_dv,
-#'            max_version = max(archive_cases_dv$DT$version))
+#' # warning message of data latency shown
+#' epix_as_of(x = archive_cases_dv_subset,
+#'            max_version = max(archive_cases_dv_subset$DT$version))
+#' 
+#' # no warning shown
+#' epix_as_of(archive_cases_dv_subset, max_version = as.Date("2020-06-10"))          
 epix_as_of = function(x, max_version, min_time_value = -Inf) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   return(x$as_of(max_version, min_time_value))
@@ -72,10 +76,10 @@ epix_as_of = function(x, max_version, min_time_value = -Inf) {
 #' @export
 #' @examples
 #' # create two example epi_archive datasets
-#' x <- archive_cases_dv$DT %>%
-#'   dplyr::select(geo_value,time_value,version,case_rate) %>%
+#' x <- archive_cases_dv_subset$DT %>%
+#'   dplyr::select(geo_value,time_value,version,case_rate_7d_av) %>%
 #'   as_epi_archive()
-#' y <- archive_cases_dv$DT %>%
+#' y <- archive_cases_dv_subset$DT %>%
 #'   dplyr::select(geo_value,time_value,version,percent_cli) %>%
 #'   as_epi_archive()
 #'
@@ -182,11 +186,17 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #' @importFrom rlang enquo
 #' @export
 #' @examples
-#' # every date is a reference time point for the 3 day average sliding window
+#' # these dates are reference time points for the 3 day average sliding window
+#' # The resulting epi_archive ends up including data averaged from:
+#' # 0 day which has no results, for 2020-06-01
+#' # 1 day, for 2020-06-02
+#' # 2 days, for the rest of the results
+#' # never 3 days dur to data latency
+#' 
 #' time_values <- seq(as.Date("2020-06-01"),
 #'                       as.Date("2020-06-15"),
 #'                       by = "1 day")
-#' epix_slide(x = archive_cases_dv,
+#' epix_slide(x = archive_cases_dv_subset,
 #'            f = ~ mean(.x$case_rate),
 #'            n = 3,
 #'            group_by = geo_value,

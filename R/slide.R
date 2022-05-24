@@ -90,19 +90,19 @@
 #' @export
 #' @examples 
 #'  # slide a 7-day trailing average formula on cases
-#'   jhu_csse_daily %>%
+#'   jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), n = 7, 
 #'             align = "right")
 #'  
-#'  # slide a left-aligned 7-day trailing average
-#'   jhu_csse_daily %>%
+#'  # slide a left-aligned 7-day average
+#'   jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), n = 7, 
 #'             align = "left")
 #'  
 #'  # nested new columns
-#'  jhu_csse_daily %>% 
+#'  jhu_csse_daily_subset %>% 
 #'  group_by(geo_value) %>%
 #'  epi_slide(a = data.frame(cases_2dav = mean(cases), 
 #'                           cases_2dma = mad(cases)),
