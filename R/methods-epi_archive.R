@@ -77,7 +77,7 @@ epix_as_of = function(x, max_version, min_time_value = -Inf) {
 #' @examples
 #' # create two example epi_archive datasets
 #' x <- archive_cases_dv_subset$DT %>%
-#'   dplyr::select(geo_value,time_value,version,case_rate) %>%
+#'   dplyr::select(geo_value,time_value,version,case_rate_7d_av) %>%
 #'   as_epi_archive()
 #' y <- archive_cases_dv_subset$DT %>%
 #'   dplyr::select(geo_value,time_value,version,percent_cli) %>%
