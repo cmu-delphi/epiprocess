@@ -1,10 +1,15 @@
+template:
+  bootstrap: 5
+  
 url: https://cmu-delphi.github.io/epiprocess/
+
 home:
   links:
   - text: Get the epipredict R package
     href: https://cmu-delphi.github.io/epiprocess/
   - text: Get the covidcast R package
     href: https://cmu-delphi.github.io/covidcast/covidcastR/
+
 articles:
 - title: Using the package
   desc: Basic usage and examples.
@@ -18,21 +23,20 @@ articles:
   - outliers
   - archive
   - advanced
+
 repo:
   url:
     home: https://github.com/cmu-delphi/epiprocess/tree/main/
     source: https://github.com/cmu-delphi/epiprocess/blob/main/
     issue: https://github.com/cmu-delphi/epiprocess/issues
     user: https://github.com/
+
+
 reference:
 - title: epi_df basics
   desc: Details on `epi_df` format, and basic functionality.
 - contents:
-  - epi_df
-  - as_epi_df
-  - is_epi_df
-  - as_tsibble.epi_df
-  - print.epi_df
+  - matches("epi_df")
 - title: epi_*() functions
   desc: Functions that act on `epi_df` objects.
 - contents:
@@ -48,13 +52,17 @@ reference:
 - title: epi_archive basics
   desc: Details on `epi_archive`, and basic functionality.
 - contents:
-  - epi_archive
-  - as_epi_archive
-  - is_epi_archive
+  - matches("archive")
 - title: epix_*() functions
   desc: Functions that act on an `epi_archive` object.
 - contents:
-  - epix_as_of
-  - epix_merge
-  - epix_slide
+  - starts_with("epix")
+- title: Example data
+- contents:
+  - archive_cases_dv_subset
+  - incidence_num_outlier_example
+  - contains("jhu_csse")
+- title: internal
+- contents:
+  - epiprocess
 
