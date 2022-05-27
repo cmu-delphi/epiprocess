@@ -22,8 +22,9 @@ Copyright Johns Hopkins University 2020.
 
 Modifications:
 \itemize{
-\item \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html}{From the COVIDcast Epidata Doctor Visits API}: These signals are taken directly from the JHU CSSE \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 GitHub repository} without changes. The 7-day average signals are computed by Delphi by calculating moving averages of the preceding 7 days, so the signal for June 7 is the average of the underlying data for June 1 through 7, inclusive.
-\item Furthermore, the data has been limited to a very small number of rows, the signal names slightly altered, and formatted into a tibble.
+\item \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html}{From the COVIDcast Doctor Visits API}: The signal \code{percent_cli} is taken directly from the API without changes.
+\item \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{From the COVIDcast Epidata API}: \code{case_rate_7d_av} is taken directly from the JHU CSSE \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 GitHub repository} without changes. The 7-day average signals are computed by Delphi by calculating moving averages of the preceding 7 days, so the signal for June 7 is the average of the underlying data for June 1 through 7, inclusive.
+\item Furthermore, the data is a subset of the full dataset, the signal names slightly altered, and formatted into a tibble.
 }
 }
 \usage{
