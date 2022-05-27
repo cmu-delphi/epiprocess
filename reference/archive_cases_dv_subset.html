@@ -103,8 +103,9 @@ This example data ranges from June 1, 2020 to Dec 1, 2021, and is also limited t
 <a href="https://creativecommons.org/licenses/by/4.0/" class="external-link">Creative Commons Attribution 4.0 International license</a>
 by Johns Hopkins University on behalf of its Center for Systems Science in Engineering.
 Copyright Johns Hopkins University 2020.</p>
-<p>Modifications:</p><ul><li><p><a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html" class="external-link">From the COVIDcast Epidata Doctor Visits API</a>: These signals are taken directly from the JHU CSSE <a href="https://github.com/CSSEGISandData/COVID-19" class="external-link">COVID-19 GitHub repository</a> without changes. The 7-day average signals are computed by Delphi by calculating moving averages of the preceding 7 days, so the signal for June 7 is the average of the underlying data for June 1 through 7, inclusive.</p></li>
-<li><p>Furthermore, the data has been limited to a very small number of rows, the signal names slightly altered, and formatted into a tibble.</p></li>
+<p>Modifications:</p><ul><li><p><a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html" class="external-link">From the COVIDcast Doctor Visits API</a>: The signal <code>percent_cli</code> is taken directly from the API without changes.</p></li>
+<li><p><a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html" class="external-link">From the COVIDcast Epidata API</a>: <code>case_rate_7d_av</code> is taken directly from the JHU CSSE <a href="https://github.com/CSSEGISandData/COVID-19" class="external-link">COVID-19 GitHub repository</a> without changes. The 7-day average signals are computed by Delphi by calculating moving averages of the preceding 7 days, so the signal for June 7 is the average of the underlying data for June 1 through 7, inclusive.</p></li>
+<li><p>Furthermore, the data is a subset of the full dataset, the signal names slightly altered, and formatted into a tibble.</p></li>
 </ul></div>
 
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
