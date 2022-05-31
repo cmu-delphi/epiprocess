@@ -212,6 +212,7 @@ epi_archive =
               # call elim with for loop, up to 6
               for (i in min(6,nrow(elim))) {
                 print(elim[i,])
+                # TODO: This needs to print rows properly!
               }
               if (nrow(elim) > 6) {
                 print("And so on...")
