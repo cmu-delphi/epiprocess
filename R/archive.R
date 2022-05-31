@@ -211,8 +211,8 @@ epi_archive =
                           set compactify to TRUE or fix these rows")
               # call elim with for loop, up to 6
               for (i in min(6,nrow(elim))) {
-                print(elim[i,])
                 # TODO: This needs to print rows properly!
+                print(elim[i,])
               }
               if (nrow(elim) > 6) {
                 print("And so on...")

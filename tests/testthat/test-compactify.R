@@ -20,18 +20,14 @@ for (i in 1:5) {
   dv_duplicated[i,4] <- 6
 }
 
-# These are object pointers
 dv_true <- as_tibble(as_epi_archive(dv_duplicated,compactify=TRUE)$DT)
 dv_false <- as_tibble(as_epi_archive(dv_duplicated,compactify=FALSE)$DT)
-dv_null <- as_tibble(as_epi_archive(dv_duplicated,compactify=TRUE)$DT)
+dv_null <- as_tibble(as_epi_archive(dv_duplicated,compactify=NULL)$DT)
 
-# No compactify applied
 test_that("LOCF values are ignored", {
-  expect_identical(dv_duplicated,dv_false)
+  expect_identical(nrow(dv_duplicated),nrow(dv_false))
 })
 
-# compacity applied
-# No compactify applied
 test_that("LOCF values are taken out", {
   dv_unique <- distinct(dv_false,percent_cli,.keep_all = TRUE)
   expect_identical(dv_true,dv_null)
