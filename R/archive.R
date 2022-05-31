@@ -200,6 +200,9 @@ epi_archive =
             if (is.null(compactify) || compactify == TRUE) {
               elim = keep_locf(DT)
               DT = rm_locf(DT)
+            } else {
+              # Create empty data frame for nrow(elim) to be 0
+              elim = tibble()
             }
             
             # Warns about redundant rows
