@@ -206,17 +206,18 @@ epi_archive =
             }
             
             # Warns about redundant rows
-            if (is.null(compactify) & nrow(elim) > 0) {
-              Warn("Note: redundant rows found. To remove warning,
-                          set compactify to TRUE or fix these rows")
+            if (is.null(compactify) && nrow(elim) > 0) {
+              warning <- "Redundant rows found. To remove warning,
+                          set compactify to TRUE or fix these rows \n"
               # call elim with for loop, up to 6
-              for (i in min(6,nrow(elim))) {
-                # TODO: This needs to print rows properly!
-                print(elim[i,])
+              for (i in 1:min(6,nrow(elim))) {
+                warning <- paste(warning,
+                  elim[[i,1]],elim[[i,2]],elim[[i,3]],elim[[i,4]],"\n")
               }
               if (nrow(elim) > 6) {
-                print("And so on...")
+                warning <- paste(warning,"And so on...")
               }
+              Warn(warning)
             }
             
             # Instantiate all self variables
@@ -249,7 +250,7 @@ epi_archive =
             cat("----------\n")
             cat(sprintf("Public methods: %s",
                         paste(names(epi_archive$public_methods),
-                              collapse = ", ")))
+                              collapse = ", ")),"\n")
 
           },
           #####

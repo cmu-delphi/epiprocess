@@ -20,6 +20,8 @@ for (i in 1:5) {
   dv_duplicated[i,4] <- 6
 }
 
+as_epi_archive(dv_duplicated,compactify=NULL)
+
 dv_true <- as_tibble(as_epi_archive(dv_duplicated,compactify=TRUE)$DT)
 dv_false <- as_tibble(as_epi_archive(dv_duplicated,compactify=FALSE)$DT)
 dv_null <- as_tibble(as_epi_archive(dv_duplicated,compactify=NULL)$DT)
