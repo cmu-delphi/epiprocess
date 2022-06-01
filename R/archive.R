@@ -207,17 +207,18 @@ epi_archive =
             
             # Warns about redundant rows
             if (is.null(compactify) && nrow(elim) > 0) {
-              warning <- "Redundant rows found. To remove warning,
-                          set compactify to TRUE or fix these rows \n"
+              warn <- paste("\nRedundant rows found. To remove warning, set",
+              "compactify to TRUE or fix these rows: \n")
               # call elim with for loop, up to 6
               for (i in 1:min(6,nrow(elim))) {
-                warning <- paste(warning,
-                  elim[[i,1]],elim[[i,2]],elim[[i,3]],elim[[i,4]],"\n")
+                warn <- paste0(warn,
+                  paste(elim[[i,1]],elim[[i,2]],elim[[i,3]],elim[[i,4]],"\n")
+                )
               }
               if (nrow(elim) > 6) {
-                warning <- paste(warning,"And so on...")
+                warn <- paste0(warn,"And so on...")
               }
-              Warn(warning)
+              warning(warn)
             }
             
             # Instantiate all self variables

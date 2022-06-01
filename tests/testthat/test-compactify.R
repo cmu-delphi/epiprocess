@@ -16,7 +16,7 @@ dv <- covidcast(
   select(geo_value, time_value, version = issue, percent_cli = value)
 
 dv_duplicated <- dv
-for (i in 1:5) {
+for (i in 1:8) {
   dv_duplicated[i,4] <- 6
 }
 
