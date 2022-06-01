@@ -19,12 +19,14 @@ dv_duplicated <- dv
 for (i in 1:8) {
   dv_duplicated[i,4] <- 6
 }
-
-as_epi_archive(dv_duplicated,compactify=NULL)
-
+  
 dv_true <- as_tibble(as_epi_archive(dv_duplicated,compactify=TRUE)$DT)
 dv_false <- as_tibble(as_epi_archive(dv_duplicated,compactify=FALSE)$DT)
 dv_null <- as_tibble(as_epi_archive(dv_duplicated,compactify=NULL)$DT)
+
+test_that("Warning for LOCF with compactify as NULL", {
+  expect_warning(as_epi_archive(dv_duplicated,compactify=NULL))
+})
 
 test_that("LOCF values are ignored", {
   expect_identical(nrow(dv_duplicated),nrow(dv_false))
