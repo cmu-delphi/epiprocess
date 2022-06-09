@@ -184,9 +184,9 @@ epi_archive =
               )
             }
             
-            # Checks if a value is LOCF
-            is_locf <- function(row) {
-              FALSE #stub
+            # Checks for LOCF's in a data frame
+            is_locf <- function(df) {
+              df #stub
             }
             
             # Remove LOCF values
