@@ -152,7 +152,12 @@ epi_archive =
             }
             
             # Finish off with compactify
-            if (missing(compactify)) compactify = NULL
+            if (missing(compactify)) {
+              compactify = NULL
+            } else if (!rlang::is_bool(compactify) &&
+                        !rlang::is_null(compactify)) {
+              Abort("compactify must be boolean or null.")
+            }
             
             # Create the data table; if x was an un-keyed data.table itself,
             # then the call to as.data.table() will fail to set keys, so we
@@ -163,14 +168,14 @@ epi_archive =
             
             # functions for LOCF
             # orders data frame to observe potential LOCF
-            order <- function(df) {
+            order_locf <- function(df) {
               arrange(df,geo_value,version,time_value)
             }
             
             # Check if previous entry is in group.
             mutate_in_group <- function(df) {
               mutate(df, in_group =
-                       replace_na(
+                       tidyr::replace_na(
                          (geo_value == lag(geo_value) &
                             version == lag(version)),
                          FALSE
@@ -181,7 +186,7 @@ epi_archive =
             # Remove LOCF values
             rm_locf <- function (df) {
               df %>%
-                order() %>%
+                order_locf() %>%
                 mutate_in_group() %>%
                 filter(!in_group | percent_cli != lag(percent_cli)) %>%
                 select(-in_group)
@@ -190,7 +195,7 @@ epi_archive =
             # Keeps LOCF values, such as to be printed
             keep_locf <- function(df) {
               df %>%
-                order() %>%
+                order_locf() %>%
                 mutate_in_group() %>%
                 filter(in_group & percent_cli == lag(percent_cli)) %>%
                 select(-in_group)  

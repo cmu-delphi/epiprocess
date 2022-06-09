@@ -29,11 +29,15 @@ examples.
 }
 \details{
 This is simply a wrapper around the \code{as_of()} method of the
-\code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:\preformatted{epix_as_of(x, max_version = v)
-}
+\code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:
 
-is equivalent to:\preformatted{x$as_of(max_version = v)
-}
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epix_as_of(x, max_version = v)
+}\if{html}{\out{</div>}}
+
+is equivalent to:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{x$as_of(max_version = v)
+}\if{html}{\out{</div>}}
 }
 \examples{
 epix_as_of(x = archive_cases_dv, 

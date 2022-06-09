@@ -1,35 +1,24 @@
-library(delphi.epidata)
 library(epiprocess)
 library(data.table)
 library(dplyr)
 
-dv <- covidcast(
-  data_source = "doctor-visits",
-  signals = "smoothed_adj_cli",
-  time_type = "day",
-  geo_type = "state",
-  time_values = epirange(20211101, 20211201),
-  geo_values = "ca",
-  issues = epirange(20211129, 20211129)
-) %>%
-  fetch_tbl() %>%
-  select(geo_value, time_value, version = issue, percent_cli = value)
+dt <- filter(dv$DT,geo_value=="ca")
+dt <- select(dt,-case_rate)
 
-dv_duplicated <- dv
-for (i in 1:8) {
-  dv_duplicated[i,4] <- 6
-}
+test_that("Input for compactify must be NULL or a boolean", {
+  expect_error(as_epi_archive(dv_duplicated,compactify="no"))
+})
   
-dv_true <- as_tibble(as_epi_archive(dv_duplicated,compactify=TRUE)$DT)
-dv_false <- as_tibble(as_epi_archive(dv_duplicated,compactify=FALSE)$DT)
-dv_null <- as_tibble(as_epi_archive(dv_duplicated,compactify=NULL)$DT)
+dv_true <- as_tibble(as_epi_archive(dt,compactify=TRUE)$DT)
+dv_false <- as_tibble(as_epi_archive(dt,compactify=FALSE)$DT)
+dv_null <- as_tibble(as_epi_archive(dt,compactify=NULL)$DT)
 
 test_that("Warning for LOCF with compactify as NULL", {
-  expect_warning(as_epi_archive(dv_duplicated,compactify=NULL))
+  expect_warning(as_epi_archive(dt,compactify=NULL))
 })
 
 test_that("LOCF values are ignored", {
-  expect_identical(nrow(dv_duplicated),nrow(dv_false))
+  expect_identical(nrow(dt),nrow(dv_false))
 })
 
 test_that("LOCF values are taken out", {

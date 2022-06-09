@@ -84,17 +84,17 @@ are documented in the wrapper function \code{epix_slide()}.
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{epi_archive$new()}}
-\item \href{#method-print}{\code{epi_archive$print()}}
-\item \href{#method-as_of}{\code{epi_archive$as_of()}}
-\item \href{#method-merge}{\code{epi_archive$merge()}}
-\item \href{#method-slide}{\code{epi_archive$slide()}}
-\item \href{#method-clone}{\code{epi_archive$clone()}}
+\item \href{#method-epi_archive-new}{\code{epi_archive$new()}}
+\item \href{#method-epi_archive-print}{\code{epi_archive$print()}}
+\item \href{#method-epi_archive-as_of}{\code{epi_archive$as_of()}}
+\item \href{#method-epi_archive-merge}{\code{epi_archive$merge()}}
+\item \href{#method-epi_archive-slide}{\code{epi_archive$slide()}}
+\item \href{#method-epi_archive-clone}{\code{epi_archive$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-epi_archive-new"></a>}}
+\if{latex}{\out{\hypertarget{method-epi_archive-new}{}}}
 \subsection{Method \code{new()}}{
 Creates a new \code{epi_archive} object.
 \subsection{Usage}{
@@ -143,8 +143,8 @@ An \code{epi_archive} object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-print"></a>}}
-\if{latex}{\out{\hypertarget{method-print}{}}}
+\if{html}{\out{<a id="method-epi_archive-print"></a>}}
+\if{latex}{\out{\hypertarget{method-epi_archive-print}{}}}
 \subsection{Method \code{print()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$print()}\if{html}{\out{</div>}}
@@ -152,8 +152,8 @@ An \code{epi_archive} object.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-as_of"></a>}}
-\if{latex}{\out{\hypertarget{method-as_of}{}}}
+\if{html}{\out{<a id="method-epi_archive-as_of"></a>}}
+\if{latex}{\out{\hypertarget{method-epi_archive-as_of}{}}}
 \subsection{Method \code{as_of()}}{
 Generates a snapshot in \code{epi_df} format as of a given version.
 See the documentation for the wrapper function \code{epix_as_of()} for details.
@@ -163,8 +163,8 @@ See the documentation for the wrapper function \code{epix_as_of()} for details.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-merge"></a>}}
-\if{latex}{\out{\hypertarget{method-merge}{}}}
+\if{html}{\out{<a id="method-epi_archive-merge"></a>}}
+\if{latex}{\out{\hypertarget{method-epi_archive-merge}{}}}
 \subsection{Method \code{merge()}}{
 Merges another \code{data.table} with the current one, and allows for
 a post-filling of \code{NA} values by last observation carried forward (LOCF).
@@ -175,8 +175,8 @@ See the documentation for the wrapper function \code{epix_merge()} for details.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-slide"></a>}}
-\if{latex}{\out{\hypertarget{method-slide}{}}}
+\if{html}{\out{<a id="method-epi_archive-slide"></a>}}
+\if{latex}{\out{\hypertarget{method-epi_archive-slide}{}}}
 \subsection{Method \code{slide()}}{
 Slides a given function over variables in an \code{epi_archive}
 object. See the documentation for the wrapper function \code{epix_as_of()} for
@@ -198,8 +198,8 @@ details.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-epi_archive-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-epi_archive-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{
