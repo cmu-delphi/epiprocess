@@ -169,7 +169,7 @@ epi_archive =
             # functions for LOCF
             # orders data frame to observe potential LOCF
             order_locf <- function(df) {
-              arrange(df,geo_value,version,time_value)
+              arrange(df,geo_value,time_value,version)
             }
             
             # Check if previous entry is in group.
@@ -177,7 +177,7 @@ epi_archive =
               mutate(df, in_group =
                        tidyr::replace_na(
                          (geo_value == lag(geo_value) &
-                            version == lag(version)),
+                            time_value == lag(time_value)),
                          FALSE
                        )
               )
