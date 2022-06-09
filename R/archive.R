@@ -172,8 +172,9 @@ epi_archive =
               arrange(df,geo_value,time_value,version)
             }
             
-            # Check if previous entry is in group.
-            mutate_in_group <- function(df) {
+            # Check if previous entry is an LCOF value, and adds this column of
+            # Boolean values for the sake of filtering; NA values are FALSE
+            mutate_is_locf <- function(df) {
               mutate(df, in_group =
                        tidyr::replace_na(
                          (geo_value == lag(geo_value) &
@@ -183,11 +184,16 @@ epi_archive =
               )
             }
             
+            # Checks if a value is LOCF
+            is_locf <- function(row) {
+              FALSE #stub
+            }
+            
             # Remove LOCF values
             rm_locf <- function (df) {
               df %>%
                 order_locf() %>%
-                mutate_in_group() %>%
+                mutate_is_locf() %>%
                 filter(!in_group | percent_cli != lag(percent_cli)) %>%
                 select(-in_group)
             }
@@ -196,7 +202,7 @@ epi_archive =
             keep_locf <- function(df) {
               df %>%
                 order_locf() %>%
-                mutate_in_group() %>%
+                mutate_is_locf() %>%
                 filter(in_group & percent_cli == lag(percent_cli)) %>%
                 select(-in_group)  
             }
