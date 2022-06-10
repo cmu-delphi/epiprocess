@@ -171,22 +171,15 @@ epi_archive =
             order_locf <- function(df) {
               arrange(df,geo_value,time_value,version)
             }
-            
-            # Check if previous entry is an LCOF value, and adds this column of
-            # Boolean values for the sake of filtering; NA values are FALSE
-            mutate_is_locf <- function(df) {
-              mutate(df, in_group =
-                       tidyr::replace_na(
-                         (geo_value == lag(geo_value) &
-                            time_value == lag(time_value)),
-                         FALSE
-                       )
-              )
-            }
-            
+
             # Checks for LOCF's in a data frame
-            is_locf <- function(df) {
-              df #stub
+            mutate_is_locf <- function(df) {
+              df2 <- select(df,-version)
+              df2_lag <- lag(df2)
+              df_is_match <- ifelse(!is.na(df2) & !is.na(df2_lag),
+                                    df2 == df2_lag,
+                                    is.na(df2) & is.na(df2_lag))
+              mutate(df,is_locf = apply(df_is_match,1,all))
             }
             
             # Remove LOCF values
@@ -194,8 +187,8 @@ epi_archive =
               df %>%
                 order_locf() %>%
                 mutate_is_locf() %>%
-                filter(!in_group | percent_cli != lag(percent_cli)) %>%
-                select(-in_group)
+                filter(!is_locf) %>%
+                select(-is_locf)
             }
             
             # Keeps LOCF values, such as to be printed
@@ -203,8 +196,8 @@ epi_archive =
               df %>%
                 order_locf() %>%
                 mutate_is_locf() %>%
-                filter(in_group & percent_cli == lag(percent_cli)) %>%
-                select(-in_group)  
+                filter(is_locf) %>%
+                select(-is_locf)  
             }
             
             # Runs compactify on data frame
