@@ -172,32 +172,40 @@ epi_archive =
               arrange(df,geo_value,time_value,version)
             }
 
-            # Checks for LOCF's in a data frame
-            mutate_is_locf <- function(df) {
+            # Checks for LOCF's in a data frame (this includes NA's)
+            mutate_is_redundant <- function(df) {
               df2 <- select(df,-version)
-              df2_lag <- lag(df2)
-              df_is_match <- ifelse(!is.na(df2) & !is.na(df2_lag),
-                                    df2 == df2_lag,
-                                    is.na(df2) & is.na(df2_lag))
-              mutate(df,is_locf = apply(df_is_match,1,all))
+              df_is_locf <- ifelse(!is.na(df2) & !is.na(lag(df2)),
+                                   df2 == lag(df2),
+                                   is.na(df2))
+              is_locf <- apply(df_is_locf,1,all)
+              
+              df3 <- select(df,-version,-geo_value,-time_value)
+              is_na <- apply(is.na(df3),1,all)
+              
+              is_redundant <- data.frame(is_redundant = is_locf | is_na)
+              bind_cols(df, is_redundant)
             }
+            
+            # NOTE: compactify removes both LOCF values and all null values,
+            # as to enable better handling of NA's that can also be redundant
             
             # Remove LOCF values
             rm_locf <- function (df) {
               df %>%
                 order_locf() %>%
-                mutate_is_locf() %>%
-                filter(!is_locf) %>%
-                select(-is_locf)
+                mutate_is_redundant() %>%
+                filter(!is_redundant) %>%
+                select(-is_redundant)
             }
             
             # Keeps LOCF values, such as to be printed
             keep_locf <- function(df) {
               df %>%
                 order_locf() %>%
-                mutate_is_locf() %>%
-                filter(is_locf) %>%
-                select(-is_locf)  
+                mutate_is_redundant() %>%
+                filter(is_redundant) %>%
+                select(-is_redundant)  
             }
             
             # Runs compactify on data frame
