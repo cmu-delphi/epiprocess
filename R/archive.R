@@ -169,7 +169,9 @@ epi_archive =
             # functions for LOCF
             # orders data frame to observe potential LOCF
             order_locf <- function(df) {
-              arrange(df,geo_value,time_value,version)
+              ifelse(is.null(other_keys),
+                     arrange(df,geo_value,time_value,version),
+                     arrange(df,geo_value,time_value,other_keys,version))
             }
 
             # Checks for LOCF's in a data frame (this includes NA's)
