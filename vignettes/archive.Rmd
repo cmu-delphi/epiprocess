@@ -111,9 +111,14 @@ x$clone()`. You can read more about reference semantics in Hadley Wickham's
 
 ## Removing LOCF data to save space
 
-We need not even include LOCF values, as they use up extra space. The
-`compactify` argument is a way of removing LOCF values, as they use up extra
-space that can slow down computational time. There are three
+We need not even store rows that look like the last observation carried forward,
+as they use up extra space. Furthermore, we already apply LOCF in the
+epi_archive-related functions, such that the results should be the same with or
+without the rows, aas long as use code does not rely on directly modifying
+epi_archive's fields in a way that expects all the original records and breaks
+if they are trimmed down.
+ 
+There are three
 different values that can be asssigned to `compactify`:
 
 * No argument: Does not put in LOCF values, and prints a list of LOCF values
@@ -126,15 +131,6 @@ For this example, we have one chart using LOCF values, while another doesn't
 use them to illustrate LOCF.
 
 <!-- PROVIDE AN EXAMPLE HERE -->
-
-We need not even store rows that just look like the last observation carried
-forward (LOCF), as they use up extra space, and we apply LOCF in
-epi_archive-related functions, such that the results should be the same with or
-without these rows, as long as use code does not rely on directly modifying the
-epi_archive's fields in a way that expects all the original records and breaks
-if they are trimmed down.
-
-<!-- PLS UPDATE ABOVE AS IT WAS COPY-PASTED FROM LOGAN'S COMMENT AS REFERENCE>
  
 ## Some details on metadata
 
@@ -146,7 +142,7 @@ object:
 * `additional_metadata`: list of additional metadata for the data archive.
 * `compactify`: TRUE eliminates redundant entries using LOCF for efficiency;
 no entry also brings up a message to indicate which columns should be removed
-for efficiency; and FALSE does not eliminate redundant entries
+for efficiency; and FALSE does not eliminate redundant entries.
 
 Metadata for an `epi_archive` object `x` can be accessed (and altered) directly,
 as in `x$geo_type` or `x$time_type`, etc. Just like `as_epi_df()`, the function

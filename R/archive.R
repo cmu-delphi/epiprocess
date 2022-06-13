@@ -166,48 +166,21 @@ epi_archive =
             DT = as.data.table(x, key = key_vars)
             if (!identical(key_vars, key(DT))) setkeyv(DT, cols = key_vars)
             
-            # functions for LOCF
-            # orders data frame to observe potential LOCF
-            order_locf <- function(df) {
-              ifelse(is.null(other_keys),
-                     arrange(df,geo_value,time_value,version),
-                     arrange(df,geo_value,time_value,other_keys,version))
-            }
-
-            # Checks for LOCF's in a data frame (this includes NA's)
-            mutate_is_redundant <- function(df) {
-              df2 <- select(df,-version)
-              df_is_locf <- ifelse(!is.na(df2) & !is.na(lag(df2)),
-                                   df2 == lag(df2),
-                                   is.na(df2))
-              is_locf <- apply(df_is_locf,1,all)
-              
-              df3 <- select(df,-version,-geo_value,-time_value)
-              is_na <- apply(is.na(df3),1,all)
-              
-              is_redundant <- data.frame(is_redundant = is_locf | is_na)
-              bind_cols(df, is_redundant)
+            # Checks to see if a value in a vector is LOCF
+            is_locf <- function(vec) {
+              ifelse(!is.na(vec) & !is.na(lag(vec)),
+                     vec == lag(vec),
+                     is.na(vec) & is.na(lag(vec)))
             }
             
-            # NOTE: compactify removes both LOCF values and all null values,
-            # as to enable better handling of NA's that can also be redundant
-            
-            # Remove LOCF values
-            rm_locf <- function (df) {
-              df %>%
-                order_locf() %>%
-                mutate_is_redundant() %>%
-                filter(!is_redundant) %>%
-                select(-is_redundant)
+            # Checks for LOCF's in a data frame
+            rm_locf <- function(df) {
+             filter(df,if_any(c(everything(),-key_vars),~ !is_locf(.))) 
             }
             
             # Keeps LOCF values, such as to be printed
             keep_locf <- function(df) {
-              df %>%
-                order_locf() %>%
-                mutate_is_redundant() %>%
-                filter(is_redundant) %>%
-                select(-is_redundant)  
+              filter(df,if_all(c(everything(),-key_vars),~ is_locf(.))) 
             }
             
             # Runs compactify on data frame
