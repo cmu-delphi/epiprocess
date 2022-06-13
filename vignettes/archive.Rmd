@@ -126,6 +126,15 @@ For this example, we have one chart using LOCF values, while another doesn't
 use them to illustrate LOCF.
 
 <!-- PROVIDE AN EXAMPLE HERE -->
+
+We need not even store rows that just look like the last observation carried
+forward (LOCF), as they use up extra space, and we apply LOCF in
+epi_archive-related functions, such that the results should be the same with or
+without these rows, as long as use code does not rely on directly modifying the
+epi_archive's fields in a way that expects all the original records and breaks
+if they are trimmed down.
+
+<!-- PLS UPDATE ABOVE AS IT WAS COPY-PASTED FROM LOGAN'S COMMENT AS REFERENCE>
  
 ## Some details on metadata
 
