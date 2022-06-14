@@ -111,6 +111,7 @@ NULL
 #' @return An `epi_df` object.
 #'
 #' @export
+#' @includeRmd man/rmd/epi_df_example.Rmd examples
 as_epi_df = function(x, ...) {
   UseMethod("as_epi_df")
 }
