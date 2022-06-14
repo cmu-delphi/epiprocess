@@ -103,10 +103,10 @@ epi_archive =
 #'   `epi_archive` object. The metadata will have `geo_type` and `time_type`
 #'   fields; named entries from the passed list or will be included as well.
 #' @param compactify Determines whether redundant rows are removed for last
-#'   observation carried first (LOCF) results. Set to TRUE to remove these,
-#'   FALSE to leave as is. Not specifying the argument does the same as TRUE,
-#'   except it also notifies the user of change in the data, as well as the
-#'   methods that can be done to silence the message.
+#'   observation carried first (LOCF) results, as to potentially save space.
+#'   Set to TRUE to remove these, FALSE to leave as is. Not specifying the
+#'   argument does the same as TRUE, except it also notifies the user of change
+#'   in the data by mentioning which rows are LOCF.
 #' @return An `epi_archive` object.
 #' @importFrom data.table as.data.table key setkeyv
           initialize = function(x, geo_type, time_type, other_keys,
@@ -194,7 +194,7 @@ epi_archive =
             
             # Warns about redundant rows
             if (is.null(compactify) && nrow(elim) > 0) {
-              warn <- paste("\nRedundant rows found. To remove warning, set",
+              warn <- paste("\nLOCF rows found. To remove warning, set",
               "compactify to TRUE or fix these rows: \n")
               # call elim with for loop, up to 6
               for (i in 1:min(6,nrow(elim))) {

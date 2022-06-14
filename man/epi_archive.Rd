@@ -131,10 +131,10 @@ apart from "geo_value", "time_value", and "version".}
 fields; named entries from the passed list or will be included as well.}
 
 \item{\code{compactify}}{Determines whether redundant rows are removed for last
-observation carried first (LOCF) results. Set to TRUE to remove these,
-FALSE to leave as is. Not specifying the argument does the same as TRUE,
-except it also notifies the user of change in the data, as well as the
-methods that can be done to silence the message.}
+observation carried first (LOCF) results, as to potentially save space.
+Set to TRUE to remove these, FALSE to leave as is. Not specifying the
+argument does the same as TRUE, except it also notifies the user of change
+in the data by mentioning which rows are LOCF.}
 }
 \if{html}{\out{</div>}}
 }

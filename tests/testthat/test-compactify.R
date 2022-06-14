@@ -20,8 +20,11 @@ row_replace <- function(row,x,y) {
 # Rows 11 and 12 correspond to different time_values
 dt <- row_replace(12,11,11) # Not LOCF
 
+# Rows 20 and 21 only differ in version
+dt <- row_replace(21,20,20) # LOCF
+
 # Rows 21 and 22 only differ in version
-dt <- row_replace(22,21,21) # LOCF
+dt <- row_replace(22,20,20) # LOCF
 
 # Row 39 comprises the first NA's
 dt <-row_replace(39,NA,NA) # Not LOCF
@@ -52,7 +55,7 @@ test_that("LOCF values are ignored with compactify=FALSE", {
 })
 
 test_that("LOCF values are taken out with compactify=TRUE", {
-  dt_test <- as_tibble(as_epi_archive(dt[-c(22,40),],compactify=FALSE)$DT)
+  dt_test <- as_tibble(as_epi_archive(dt[-c(21,22,40),],compactify=FALSE)$DT)
   
   expect_identical(dt_true,dt_null)
   expect_identical(dt_null,dt_test)
