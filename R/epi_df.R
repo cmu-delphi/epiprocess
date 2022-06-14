@@ -111,7 +111,51 @@ NULL
 #' @return An `epi_df` object.
 #'
 #' @export
-#' @includeRmd man/rmd/epi_df_example.Rmd examples
+#' @examples 
+#' # Convert a `tsibble` that has county code as an extra key
+#' ex1 <- tsibble::tibble(
+#'   geo_value = rep(c("ca", "fl", "pa"), each = 3),
+#'   county_code = c(06059,06061,06067,
+#'                   12111,12113,12117,
+#'                   42101, 42103,42105),
+#'   time_value = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
+#'                        by = "day"), length.out = length(geo_value)),
+#'   value = 1:length(geo_value) + 0.01 * rnorm(length(geo_value))
+#' ) %>% 
+#'   tsibble::as_tsibble(index = time_value, key = c(geo_value, county_code))
+#' 
+#' ex1 <- as_epi_df(x = ex1, geo_type = "state", time_type = "day", as_of = "2020-06-03")
+#' attr(ex1,"metadata")
+#' 
+#' # Dealing with misspecified column names
+#' ex2 <- tsibble::tibble(
+#'   state = rep(c("ca", "fl", "pa"), each = 3), # misnamed
+#'   pol = rep(c("blue", "swing", "swing"), each = 3), # extra key
+#'   reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
+#'                           by = "day"), length.out = length(state)), # misnamed
+#'   value = 1:length(state) + 0.01 * rnorm(length(state))
+#' ) %>% data.frame()
+#' 
+#' head(ex2) 
+#' 
+#' ex2 <- ex2 %>% dplyr::rename(geo_value = state, time_value = reported_date) %>%
+#'   as_epi_df(geo_type = "state", as_of = "2020-06-03", 
+#'             additional_metadata = c(other_keys = "pol"))
+#' 
+#' attr(ex2,"metadata")
+#' 
+#' # Adding additional keys to an `epi_df` object
+#' 
+#' ex3 <- jhu_csse_county_level_subset %>%
+#'   filter(time_value > "2021-12-01", state_name == "Massachusetts") %>%
+#'   dplyr::slice_tail(n = 6) 
+#' 
+#' ex3 <- ex3 %>% 
+#'   tsibble::as_tsibble() %>% # needed to add the additional metadata
+#'   dplyr::mutate(state = rep("MA",6)) %>%
+#'   as_epi_df(additional_metadata = c(other_keys = "state"))
+#' 
+#' attr(ex3,"metadata")
 as_epi_df = function(x, ...) {
   UseMethod("as_epi_df")
 }

@@ -69,50 +69,24 @@ the \code{tbl_ts} class is dropped, and any key variables (other than
 \code{other_keys} field.
 }}
 
-\section{Convert a \code{tsibble} that has county code as an extra key}{
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{ex1 <- tibble(
+\examples{
+# Convert a `tsibble` that has county code as an extra key
+ex1 <- tsibble::tibble(
   geo_value = rep(c("ca", "fl", "pa"), each = 3),
   county_code = c(06059,06061,06067,
-             12111,12113,12117,
-             42101, 42103,42105),
+                  12111,12113,12117,
+                  42101, 42103,42105),
   time_value = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
                        by = "day"), length.out = length(geo_value)),
   value = 1:length(geo_value) + 0.01 * rnorm(length(geo_value))
-  ) \%>\% 
-  as_tsibble(index = time_value, key = c(geo_value, county_code))
+) \%>\% 
+  tsibble::as_tsibble(index = time_value, key = c(geo_value, county_code))
 
 ex1 <- as_epi_df(x = ex1, geo_type = "state", time_type = "day", as_of = "2020-06-03")
-}\if{html}{\out{</div>}}
+attr(ex1,"metadata")
 
-The metadata now includes \code{county_code} as an extra key.\if{html}{\out{<div class="sourceCode r">}}\preformatted{attr(ex1,"metadata")
-}\if{html}{\out{</div>}}\preformatted{## $geo_type
-## [1] "state"
-## 
-## $time_type
-## [1] "day"
-## 
-## $as_of
-## [1] "2020-06-03"
-## 
-## $other_keys
-## [1] "county_code"
-}
-}
-
-\section{Dealing with misspecified column names}{
-\code{epi_df} requires there to be columns \code{geo_value} and \code{time_value}, if
-they do not exist then \code{as_epi_df()} throws an error.\if{html}{\out{<div class="sourceCode r">}}\preformatted{data.frame(
-  state = rep(c("ca", "fl", "pa"), each = 3), # misnamed
-  pol = rep(c("blue", "swing", "swing"), each = 3), # extra key
-  reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
-                       by = "day"), length.out = length(geo_value)), # misnamed
-  value = 1:length(geo_value) + 0.01 * rnorm(length(geo_value))
-) \%>\% as_epi_df() 
-}\if{html}{\out{</div>}}\preformatted{## Error in NextMethod(): object 'geo_value' not found
-}
-
-The columns can be renamed to match \code{epi_df} format. In the example
-below, notice there is also an additional key \code{pol}.\if{html}{\out{<div class="sourceCode r">}}\preformatted{ex2 <- tibble(
+# Dealing with misspecified column names
+ex2 <- tsibble::tibble(
   state = rep(c("ca", "fl", "pa"), each = 3), # misnamed
   pol = rep(c("blue", "swing", "swing"), each = 3), # extra key
   reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
@@ -121,72 +95,23 @@ below, notice there is also an additional key \code{pol}.\if{html}{\out{<div cla
 ) \%>\% data.frame()
 
 head(ex2) 
-}\if{html}{\out{</div>}}\preformatted{##   state   pol reported_date    value
-## 1    ca  blue    2020-06-01 1.006594
-## 2    ca  blue    2020-06-02 2.020959
-## 3    ca  blue    2020-06-03 3.009690
-## 4    fl swing    2020-06-01 4.005818
-## 5    fl swing    2020-06-02 5.007931
-## 6    fl swing    2020-06-03 6.015640
-}\if{html}{\out{<div class="sourceCode r">}}\preformatted{ex2 <- ex2 \%>\% rename(geo_value = state, time_value = reported_date) \%>\%
+
+ex2 <- ex2 \%>\% dplyr::rename(geo_value = state, time_value = reported_date) \%>\%
   as_epi_df(geo_type = "state", as_of = "2020-06-03", 
             additional_metadata = c(other_keys = "pol"))
 
 attr(ex2,"metadata")
-}\if{html}{\out{</div>}}\preformatted{## $geo_type
-## [1] "state"
-## 
-## $time_type
-## [1] "day"
-## 
-## $as_of
-## [1] "2020-06-03"
-## 
-## $other_keys
-## [1] "pol"
-}
-\subsection{Adding additional keys to an \code{epi_df} object}{
 
-In the above examples, all the keys are added to objects that are not
-\code{epi_df} objects. We illustrate how to add keys to an \code{epi_df} object.
+# Adding additional keys to an `epi_df` object
 
-We use a subset dataset from the the \code{covidcast} library.\if{html}{\out{<div class="sourceCode r">}}\preformatted{ex3 <- jhu_csse_county_level_subset \%>\%
+ex3 <- jhu_csse_county_level_subset \%>\%
   filter(time_value > "2021-12-01", state_name == "Massachusetts") \%>\%
-  slice_tail(n = 6) 
-  
-attr(ex3,"metadata") # geo_type is county currently
-}\if{html}{\out{</div>}}\preformatted{## $geo_type
-## [1] "county"
-## 
-## $time_type
-## [1] "day"
-## 
-## $as_of
-## [1] "2022-05-23 14:35:45 PDT"
-}
+  dplyr::slice_tail(n = 6) 
 
-Now we add state (MA) as a new column and a key to the metadata.\if{html}{\out{<div class="sourceCode r">}}\preformatted{ex3 <- ex3 \%>\% 
-  as_tsibble() \%>\% # needed to add the additional metadata
-  mutate(state = rep("MA",6)) \%>\%
+ex3 <- ex3 \%>\% 
+  tsibble::as_tsibble() \%>\% # needed to add the additional metadata
+  dplyr::mutate(state = rep("MA",6)) \%>\%
   as_epi_df(additional_metadata = c(other_keys = "state"))
 
 attr(ex3,"metadata")
-}\if{html}{\out{</div>}}\preformatted{## $geo_type
-## [1] "county"
-## 
-## $time_type
-## [1] "day"
-## 
-## $as_of
-## [1] "2022-06-14 13:38:06 PDT"
-## 
-## $other_keys
-## [1] "state"
-}
-}
-}
-
-\examples{
-In the following examples we will show how to create an \code{epi_df} with
-additional keys.
 }
