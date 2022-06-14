@@ -13,6 +13,7 @@ Authors@R: c(
     person("Quang", "Nguyen", role = "ctb"),
     person("Evan", "Ray", role = "aut"),
     person("Dmitry", "Shemetov", role = "ctb"),
+    person("Jingjing", "Tang", role = "ctb"),
     person("Ryan", "Tibshirani", , "ryantibs@cmu.edu", role = c("aut", "cre"))
   )
 Description: This package introduces a common data structure for
