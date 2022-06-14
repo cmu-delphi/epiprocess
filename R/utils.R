@@ -1,11 +1,3 @@
-break_str = function(str, nchar = 79, init = "") {
-  str = paste(strwrap(str, nchar, init = init), collapse = "\n")
-  str[1] = substring(str, nchar(init)+1)
-  return(str)
-}
-
-Abort = function(msg, ...) rlang::abort(break_str(msg, init = "Error: "), ...)
-Warn = function(msg, ...) rlang::warn(break_str(msg, init = "Warning: "), ...)
 
 ##########
 
