@@ -128,9 +128,16 @@ to which values have been omitted.
 * `FALSE`: Includes LOCF values.
 
 For this example, we have one chart using LOCF values, while another doesn't
-use them to illustrate LOCF.
+use them to illustrate LOCF. Notice how the head of the first dataset differs
+from the second from the third value included.
 
-<!-- PROVIDE AN EXAMPLE HERE -->
+```{r}
+locf_omitted <- as_epi_archive(archive_cases_dv$DT)
+locf_included <- as_epi_archive(archive_cases_dv$DT,compactify = FALSE)
+
+head(locf_omitted$DT)
+head(locf_included$DT)
+```
  
 ## Some details on metadata
 
