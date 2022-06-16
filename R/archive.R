@@ -104,9 +104,13 @@ epi_archive =
 #'   fields; named entries from the passed list or will be included as well.
 #' @param compactify Determines whether redundant rows are removed for last
 #'   observation carried first (LOCF) results, as to potentially save space.
-#'   Set to TRUE to remove these, FALSE to leave as is. Not specifying the
-#'   argument does the same as TRUE, except it also notifies the user of change
-#'   in the data by mentioning which rows are LOCF.
+#'   Optional, Boolean: As these methods use the last (version of an)
+#'   observation carried forward (LOCF) to interpolate between the version data
+#'   provided, rows that won't change these LOCF results can potentially be
+#'   omitted to save space. Generally, this can be set to TRUE, but if you
+#'   directly inspect or edit the fields of the epi_archive such as the $DT,
+#'   you will have to determine whether compactify=TRUE will still produce
+#'   equivalent results.
 #' @return An `epi_archive` object.
 #' @importFrom data.table as.data.table key setkeyv
           initialize = function(x, geo_type, time_type, other_keys,
@@ -168,9 +172,9 @@ epi_archive =
             
             # Checks to see if a value in a vector is LOCF
             is_locf <- function(vec) {
-              ifelse(!is.na(vec) & !is.na(lag(vec)),
+              ifelse(!is.na(vec) & !is.na(dplyr::lag(vec)),
                      vec == lag(vec),
-                     is.na(vec) & is.na(lag(vec)))
+                     is.na(vec) & is.na(dplyr::lag(vec)))
             }
             
             # Checks for LOCF's in a data frame
@@ -491,6 +495,9 @@ epi_archive =
 #' @param additional_metadata List of additional metadata to attach to the
 #'   `epi_archive` object. The metadata will have `geo_type` and `time_type`
 #'   fields; named entries from the passed list or will be included as well.
+#' @param compactify By default, removes LOCF rows and warns the user about
+#'   them. Optionally, one can input a Boolean: TRUE eliminates LOCF rows,
+#'   while FALSE keeps them.
 #' @return An `epi_archive` object.
 #'
 #' @details This simply a wrapper around the `new()` method of the `epi_archive`
