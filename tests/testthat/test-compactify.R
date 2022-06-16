@@ -64,12 +64,16 @@ test_that("LOCF values are taken out with compactify=TRUE", {
   expect_identical(dt_null,dt_test)
 })
 
-dt2 <- dt
-dt2$percent_cli <- 1
-dt2$case_rate <- 1
-
-as_tibble(as_epi_archive(dt2,compactify=NULL)$DT)
-
 test_that("as_of works correctly",{
-  # pls test
+  ea_true <- as_epi_archive(dt,compactify=TRUE)
+  ea_false <- as_epi_archive(dt,compactify=FALSE)
+  
+  epix_as_of(ea_true,max(ea_true$DT$version))
+  
+  # Row 22, an LOCF row corresponding to the latest version, but for the
+  # date 2020-06-02, is omitted in ea_true
+  as_of_true  <- ea_true$as_of(max(ea_true$DT$version))
+  as_of_false <- ea_false$as_of(max(ea_false$DT$version))
+  
+  expect_identical(as_of_true,as_of_false)
 })
