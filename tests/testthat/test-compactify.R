@@ -2,6 +2,8 @@ library(epiprocess)
 library(data.table)
 library(dplyr)
 
+
+
 dt <- archive_cases_dv$DT
 test_that("Input for compactify must be NULL or a boolean", {
   expect_error(as_epi_archive(dv_duplicated,compactify="no"))
@@ -19,6 +21,11 @@ row_replace <- function(row,x,y) {
 
 # Rows 1 should not be eliminated even if NA
 dt <- row_replace(1,NA,NA) # Not LOCF
+
+# NOTE! We are assuming that there are no NA's in geo_value, time_value,
+# and version. Even though compactify may erroneously remove the first row
+# if it has all NA's, we are not testing this behaviour for now as this dataset
+# has problems beyond the scope of this test
 
 # Rows 11 and 12 correspond to different time_values
 dt <- row_replace(12,11,11) # Not LOCF
@@ -77,3 +84,6 @@ test_that("as_of utilizes LOCF even after removal of LOCF values",{
   
   expect_identical(as_of_true,as_of_false)
 })
+
+
+

@@ -177,6 +177,9 @@ epi_archive =
                      is.na(vec) & is.na(dplyr::lag(vec)))
             }
             
+            # LOCF is defined by a row where all values except for the version
+            # differ from their respective lag values
+            
             # Checks for LOCF's in a data frame
             rm_locf <- function(df) {
              filter(df,if_any(c(everything(),-version),~ !is_locf(.))) 
