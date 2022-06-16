@@ -71,5 +71,5 @@ dt2$case_rate <- 1
 as_tibble(as_epi_archive(dt2,compactify=NULL)$DT)
 
 test_that("as_of works correctly",{
-  
+  # pls test
 })
