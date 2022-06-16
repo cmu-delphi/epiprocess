@@ -198,19 +198,21 @@ epi_archive =
             
             # Warns about redundant rows
             if (is.null(compactify) && nrow(elim) > 0) {
-              warning_intro <- paste("\nLOCF rows found. To remove warning,",
-              "set compactify to TRUE or fix these rows: \n")
+              warning_intro <- paste("LOCF rows found;",
+                                     "these have been removed: \n")
               
               # elim size capped at 6
               len <- nrow(elim)
               elim <- elim[1:min(6,len),]
               
               warning_data <- paste(collapse="\n",capture.output(print(elim)))
-              warning_msg <- paste(warning_intro,warning_data)
+              
+              warning_message <- paste(warning_intro,warning_data)
               if (len > 6) {
-                warning_msg <- paste0(warning_msg,"\nAnd so on...")
+                warning_message <- paste0(warning_msg,"\nAnd so on...")
               }
-              rlang::warn(warning_msg)
+              
+              rlang::warn(warning_message)
             }
             
             # Instantiate all self variables

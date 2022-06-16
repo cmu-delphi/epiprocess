@@ -147,15 +147,21 @@ object:
 * `geo_type`: the type for the geo values.
 * `time_type`: the type for the time values.
 * `additional_metadata`: list of additional metadata for the data archive.
-* `compactify`: TRUE eliminates redundant entries using LOCF for efficiency;
-no entry also brings up a message to indicate which columns should be removed
-for efficiency; and FALSE does not eliminate redundant entries.
 
 Metadata for an `epi_archive` object `x` can be accessed (and altered) directly,
 as in `x$geo_type` or `x$time_type`, etc. Just like `as_epi_df()`, the function
 `as_epi_archive()` attempts to guess metadata fields when an `epi_archive`
 object is instantiated, if they are not explicitly specified in the function
 call (as it did in the case above).
+
+Note that `compactify` is NOT metadata and is an argument passed when creating
+the dataset, without being stored in the end:
+
+```{r,message=FALSE}
+# `dt` here is taken from the tests
+as_epi_archive(archive_cases_dv$DT,compactify=TRUE)$geo_type # "state"
+as_epi_archive(archive_cases_dv$DT,compactify=TRUE)$compactify # NULL
+```
 
 ## Producing snapshots in `epi_df` form
 
