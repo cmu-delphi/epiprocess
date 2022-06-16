@@ -34,9 +34,9 @@
 #' 
 #' # no warning shown
 #' epix_as_of(archive_cases_dv_subset, max_version = as.Date("2020-06-10"))          
-epix_as_of = function(x, max_version, min_time_value = -Inf) {
+epix_as_of = function(x, max_version) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
-  return(x$as_of(max_version, min_time_value))
+  return(x$as_of(max_version))
 }
 
 #' Merge two `epi_archive` objects
