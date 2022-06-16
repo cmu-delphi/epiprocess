@@ -9,7 +9,8 @@ new_epi_df(
   geo_type,
   time_type,
   as_of,
-  additional_metadata = list()
+  additional_metadata = list(),
+  ...
 )
 }
 \arguments{
@@ -40,7 +41,7 @@ well.}
 An \code{epi_df} object.
 }
 \description{
-Creates a new \code{epi_df} object. By default builds an empty tibble with the
+Creates a new \code{epi_df} object. By default, builds an empty tibble with the
 correct metadata for an \code{epi_df} object (ie. \code{geo_type}, \code{time_type}, and \code{as_of}).
 Refer to the below info. about the arguments for more details.
 }
