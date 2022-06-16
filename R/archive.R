@@ -210,10 +210,14 @@ epi_archive =
               warning_message <- paste(warning_intro,warning_data)
               if (len > 6) {
                 warning_message <- paste0(warning_message,"\n",
-                                          "Only the first 6 LOCF rows are
-                                          printed. There are more than 6 LOCF
-                                          rows.")
+                                          "Only the first 6 LOCF rows are ",
+                                          "printed. There are more than 6 LOCF",
+                                          " rows.")
               }
+              
+              warning_message <- paste0(warning_message,"\n",
+                                        "To disable warning but still remove ",
+                                        "LOCF rows, set compactify=FALSE.")
               
               rlang::warn(warning_message)
             }
