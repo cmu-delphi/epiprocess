@@ -11,6 +11,9 @@
 ### library(dyplr)
 ### library(tidyverse)
 
+# Global setting taken from original constants.R; should be made into function
+# parameter wherever used, or made into an `options` setting
+ref_lag <- 60
 
 #' Re-index, fill na, make sure all reference date have enough rows for updates
 #' @param df Data Frame of aggregated counts within a single location 
@@ -19,8 +22,6 @@
 #' @param lag_col column name for the column of lag
 #' @param min_refd the earliest reference date considered in the data
 #' @param max_refd the latest reference date considered in the data
-#' 
-#' @importFrom constants ref_lag
 #' 
 #' @return df_new Data Frame with filled rows for missing lags
 #' 
@@ -35,9 +36,9 @@ fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd){
   return (df_new)
 }
 
-#' Get pivot table, filling NANs. If there is no update on issue date D but 
-#' previous reports exist for issue date D_p < D, all the dates between
-#' [D_p, D] are filled with with the reported value on date D_p. If there is 
+#' Get pivot table, filling NAs. If there is no update on issue date \eqn{D} but 
+#' previous reports exist for issue date \eqn{D_p} < \eqn{D}, all the dates between
+#' \eqn{[D_p, D]} are filled with with the reported value on date \eqn{D_p}. If there is 
 #' no update for any previous issue date, fill in with 0.
 #' @param df Data Frame of aggregated counts within a single location 
 #'    reported for each reference date and issue date.
@@ -45,9 +46,8 @@ fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd){
 #' @param refd_col column name for the column of reference date
 #' @param lag_col column name for the column of lag
 #' 
-#' @importFrom constants ref_lag
 #' @importFrom tidyr fill
-#' @importFrom dplyr everything, select
+#' @importFrom dplyr everything select
 #' 
 #' @export
 fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
@@ -63,7 +63,7 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
 }
 
 #' Calculate 7 day moving average for each issue date
-#' The 7dav for date D reported on issue date D_i is the average from D-7 to D-1
+#' The 7dav for date \eqn{D} reported on issue date \eqn{D_i} is the average from \eqn{D-7} to \eqn{D-1}
 #' @param pivot_df Data Frame where the columns are issue dates and the rows are 
 #'    reference dates
 #' @param refd_col column name for the column of reference date

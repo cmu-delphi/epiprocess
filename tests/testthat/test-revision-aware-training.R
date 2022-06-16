@@ -5,7 +5,6 @@ library(tidyr)
 library(zoo)
 library(stats)
 library(lubridate)
-context("Testing preprocessing helper functions")
 
 refd_col <- "time_value"
 lag_col <- "lag"
