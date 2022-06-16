@@ -84,6 +84,85 @@
 #' @name epi_df
 NULL
 
+
+#' Creates an `epi_df` object
+#'
+#' Creates a new `epi_df` object. By default builds an empty tibble with the 
+#' correct metadata for an `epi_df` object (ie. `geo_type`, `time_type`, and `as_of`).
+#' Refer to the below info. about the arguments for more details.
+#'
+#' @param x A data.frame, [tibble::tibble], or [tsibble::tsibble] to be converted
+#' @param geo_type Type for the geo values. If missing, then the function will
+#'   attempt to infer it from the geo values present; if this fails, then it
+#'   will be set to "custom".
+#' @param time_type Type for the time values. If missing, then the function will
+#'   attempt to infer it from the time values present; if this fails, then it
+#'   will be set to "custom".
+#' @param as_of Time value representing the time at which the given data were
+#'   available. For example, if `as_of` is January 31, 2022, then the `epi_df`
+#'   object that is created would represent the most up-to-date version of the
+#'   data available as of January 31, 2022. If the `as_of` argument is missing,
+#'   then the current day-time will be used.
+#' @param additional_metadata List of additional metadata to attach to the
+#'   `epi_df` object. The metadata will have `geo_type`, `time_type`, and
+#'   `as_of` fields; named entries from the passed list or will be included as
+#'   well.
+#' @param ... Additional arguments passed to methods.
+#' @return An `epi_df` object.
+#' 
+#' @export
+new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
+                      additional_metadata = list()) {
+  # Check that we have a data frame
+  if (!is.data.frame(x)) {
+    Abort("`x` must be a data frame.")
+  }
+  
+  # If geo type is missing, then try to guess it
+  if (missing(geo_type)) {
+    geo_type = guess_geo_type(x$geo_value)
+  }
+  
+  # If time type is missing, then try to guess it
+  if (missing(time_type)) {
+    time_type = guess_time_type(x$time_value)
+  }
+  
+  # If as_of is missing, then try to guess it
+  if (missing(as_of)) {
+    # First check the metadata for an as_of field
+    if ("metadata" %in% names(attributes(x)) &&
+        "as_of" %in% names(attributes(x)$metadata)) {
+      as_of = attributes(x)$metadata$as_of
+    }
+    
+    # Next check for as_of, issue, or version columns
+    else if ("as_of" %in% names(x)) as_of = max(x$as_of)
+    else if ("issue" %in% names(x)) as_of = max(x$issue)
+    else if ("version" %in% names(x)) as_of = max(x$version)
+    
+    # If we got here then we failed
+    else as_of = Sys.time() # Use the current day-time
+  }
+  
+  # Define metadata fields
+  metadata = list()
+  metadata$geo_type = geo_type
+  metadata$time_type = time_type
+  metadata$as_of = as_of
+  metadata = c(metadata, additional_metadata)
+  
+  # Reorder columns (geo_value, time_value, ...)
+  if(sum(dim(x)) != 0){
+    x = dplyr::relocate(x, .data$geo_value, .data$time_value)
+  }
+  
+  # Apply epi_df class, attach metadata, and return
+  class(x) = c("epi_df", class(x))
+  attributes(x)$metadata = metadata
+  return(x)
+}
+
 #' Convert to `epi_df` format
 #'
 #' Converts a data frame or tibble into an `epi_df` object. See the [getting
@@ -142,47 +221,8 @@ as_epi_df.tbl_df = function(x, geo_type, time_type, as_of,
     Abort("`x` must contain a `time_value` column.")
   }
 
-  # If geo type is missing, then try to guess it
-  if (missing(geo_type)) {
-    geo_type = guess_geo_type(x$geo_value)
-  }
-
-  # If time type is missing, then try to guess it
-  if (missing(time_type)) {
-    time_type = guess_time_type(x$time_value)
-  }
-
-  # If as_of is missing, then try to guess it
-  if (missing(as_of)) {
-    # First check the metadata for an as_of field
-    if ("metadata" %in% names(attributes(x)) &&
-        "as_of" %in% names(attributes(x)$metadata)) {
-      as_of = attributes(x)$metadata$as_of
-    }
-
-    # Next check for as_of, issue, or version columns
-    else if ("as_of" %in% names(x)) as_of = max(x$as_of)
-    else if ("issue" %in% names(x)) as_of = max(x$issue)
-    else if ("version" %in% names(x)) as_of = max(x$version)
-
-    # If we got here then we failed
-    else as_of = Sys.time() # Use the current day-time
-  }
-
-  # Define metadata fields
-  metadata = list()
-  metadata$geo_type = geo_type
-  metadata$time_type = time_type
-  metadata$as_of = as_of
-  metadata = c(metadata, additional_metadata)
-
-  # Reorder columns (geo_value, time_value, ...)
-  x = dplyr::relocate(x, .data$geo_value, .data$time_value)
-
-  # Apply epi_df class, attach metadata, and return
-  class(x) = c("epi_df", class(x))
-  attributes(x)$metadata = metadata
-  return(x)
+  new_epi_df(x, geo_type, time_type, as_of,
+             additional_metadata = list(), ...)
 }
 
 #' @method as_epi_df data.frame
