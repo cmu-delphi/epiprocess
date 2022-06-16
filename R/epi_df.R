@@ -112,7 +112,7 @@ NULL
 #' 
 #' @export
 new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
-                      additional_metadata = list()) {
+                      additional_metadata = list(), ...) {
   # Check that we have a data frame
   if (!is.data.frame(x)) {
     Abort("`x` must be a data frame.")
