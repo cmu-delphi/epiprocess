@@ -211,34 +211,6 @@ as_epi_df.tbl_ts = function(x, geo_type, time_type, as_of,
                    additional_metadata, ...)
 }
 
-#' @method head epi_df
-#' @describeIn heads Returns the head of the `epi_df` object.
-#' @export
-head.epi_df <- function(x) {
-  as_epi_df(NextMethod("head"))
-}   
-
-#' @method tail epi_df
-#' @describeIn heads Returns the tail of the `epi_df` object.
-#' @export
-tail.epi_df <- function(x) {
-  as_epi_df(NextMethod("tail"))
-}   
-
-#' @method head epi_df
-#' @describeIn heads Returns the head of the `epi_df` object.
-#' @export
-head.epi_df <- function(x) {
-  as_epi_df(NextMethod("head"))
-}   
-
-#' @method tail epi_df
-#' @describeIn heads Returns the tail of the `epi_df` object.
-#' @export
-tail.epi_df <- function(x) {
-  as_epi_df(NextMethod("tail"))
-} 
-
 #' Test for `epi_df` format
 #'
 #' @param x An object.
