@@ -64,7 +64,7 @@ test_that("LOCF values are taken out with compactify=TRUE", {
   expect_identical(dt_null,dt_test)
 })
 
-test_that("as_of works correctly",{
+test_that("as_of utilizes LOCF even after removal of LOCF values",{
   ea_true <- as_epi_archive(dt,compactify=TRUE)
   ea_false <- as_epi_archive(dt,compactify=FALSE)
   
