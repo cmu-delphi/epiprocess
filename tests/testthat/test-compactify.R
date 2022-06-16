@@ -17,6 +17,9 @@ row_replace <- function(row,x,y) {
   dt
 }
 
+# Rows 1 should not be eliminated even if NA
+dt <- row_replace(1,NA,NA) # Not LOCF
+
 # Rows 11 and 12 correspond to different time_values
 dt <- row_replace(12,11,11) # Not LOCF
 
@@ -60,3 +63,9 @@ test_that("LOCF values are taken out with compactify=TRUE", {
   expect_identical(dt_true,dt_null)
   expect_identical(dt_null,dt_test)
 })
+
+dt2 <- dt
+dt2$percent_cli <- 1
+dt2$case_rate <- 1
+
+as_tibble(as_epi_archive(dt2,compactify=NULL)$DT)

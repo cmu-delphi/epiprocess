@@ -130,14 +130,14 @@ apart from "geo_value", "time_value", and "version".}
 \code{epi_archive} object. The metadata will have \code{geo_type} and \code{time_type}
 fields; named entries from the passed list or will be included as well.}
 
-\item{\code{compactify}}{Determines whether redundant rows are removed for last
-observation carried first (LOCF) results, as to potentially save space.
-Optional, Boolean: As these methods use the last (version of an)
+\item{\code{compactify}}{Optional, Boolean: should we remove rows that are
+considered redundant for the purposes of \code{epi_archive}'s built-in methods
+such as \verb{$as_of}? As these methods use the last (version of an)
 observation carried forward (LOCF) to interpolate between the version data
 provided, rows that won't change these LOCF results can potentially be
-omitted to save space. Generally, this can be set to TRUE, but if you
-directly inspect or edit the fields of the epi_archive such as the $DT,
-you will have to determine whether compactify=TRUE will still produce
+omitted to save space. Generally, this can be set to \code{TRUE}, but if you
+directly inspect or edit the fields of the \code{epi_archive} such as the \verb{$DT},
+you will have to determine whether \code{compactify=TRUE} will still produce
 equivalent results.}
 }
 \if{html}{\out{</div>}}

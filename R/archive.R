@@ -102,14 +102,14 @@ epi_archive =
 #' @param additional_metadata List of additional metadata to attach to the
 #'   `epi_archive` object. The metadata will have `geo_type` and `time_type`
 #'   fields; named entries from the passed list or will be included as well.
-#' @param compactify Determines whether redundant rows are removed for last
-#'   observation carried first (LOCF) results, as to potentially save space.
-#'   Optional, Boolean: As these methods use the last (version of an)
+#' @param compactify Optional, Boolean: should we remove rows that are
+#'   considered redundant for the purposes of `epi_archive`'s built-in methods
+#'   such as `$as_of`? As these methods use the last (version of an)
 #'   observation carried forward (LOCF) to interpolate between the version data
 #'   provided, rows that won't change these LOCF results can potentially be
-#'   omitted to save space. Generally, this can be set to TRUE, but if you
-#'   directly inspect or edit the fields of the epi_archive such as the $DT,
-#'   you will have to determine whether compactify=TRUE will still produce
+#'   omitted to save space. Generally, this can be set to `TRUE`, but if you
+#'   directly inspect or edit the fields of the `epi_archive` such as the `$DT`,
+#'   you will have to determine whether `compactify=TRUE` will still produce
 #'   equivalent results.
 #' @return An `epi_archive` object.
 #' @importFrom data.table as.data.table key setkeyv
@@ -172,7 +172,7 @@ epi_archive =
             
             # Checks to see if a value in a vector is LOCF
             is_locf <- function(vec) {
-              ifelse(!is.na(vec) & !is.na(dplyr::lag(vec)),
+              if_else(!is.na(vec) & !is.na(dplyr::lag(vec)),
                      vec == lag(vec),
                      is.na(vec) & is.na(dplyr::lag(vec)))
             }
@@ -198,18 +198,19 @@ epi_archive =
             
             # Warns about redundant rows
             if (is.null(compactify) && nrow(elim) > 0) {
-              warn <- paste("\nLOCF rows found. To remove warning, set",
-              "compactify to TRUE or fix these rows: \n")
-              # call elim with for loop, up to 6
-              for (i in 1:min(6,nrow(elim))) {
-                warn <- paste0(warn,
-                  paste(elim[[i,1]],elim[[i,2]],elim[[i,3]],elim[[i,4]],"\n")
-                )
+              warning_intro <- paste("\nLOCF rows found. To remove warning,",
+              "set compactify to TRUE or fix these rows: \n")
+              
+              # elim size capped at 6
+              len <- nrow(elim)
+              elim <- elim[1:min(6,len),]
+              
+              warning_data <- paste(collapse="\n",capture.output(print(elim)))
+              warning_msg <- paste(warning_intro,warning_data)
+              if (len > 6) {
+                warning_msg <- paste0(warning_msg,"\nAnd so on...")
               }
-              if (nrow(elim) > 6) {
-                warn <- paste0(warn,"And so on...")
-              }
-              warning(warn)
+              rlang::warn(warning_msg)
             }
             
             # Instantiate all self variables
