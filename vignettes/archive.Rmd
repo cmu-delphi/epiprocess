@@ -154,7 +154,7 @@ as in `x$geo_type` or `x$time_type`, etc. Just like `as_epi_df()`, the function
 object is instantiated, if they are not explicitly specified in the function
 call (as it did in the case above).
 
-Note that `compactify` is NOT metadata and is an argument passed when creating
+Note that `compactify` is **NOT** metadata and is an argument passed when creating
 the dataset, without being stored in the end:
 
 ```{r,message=FALSE}
