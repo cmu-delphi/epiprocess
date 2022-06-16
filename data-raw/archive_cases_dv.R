@@ -14,7 +14,7 @@ archive_cases_dv <- covidcast(
 ) %>% 
   fetch_tbl() %>%
   select(geo_value, time_value, version = issue, percent_cli = value) %>%
-  as_epi_archive()
+  as_epi_archive(compactify=TRUE)
 
 case_rate <- covidcast(
   data_source = "jhu-csse",
@@ -27,7 +27,7 @@ case_rate <- covidcast(
 ) %>%
   fetch_tbl() %>%
   select(geo_value, time_value, version = issue, case_rate = value) %>%
-  as_epi_archive()
+  as_epi_archive(compactify=TRUE)
 
 epix_merge(archive_cases_dv, case_rate, all = TRUE)
 
