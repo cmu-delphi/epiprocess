@@ -87,7 +87,7 @@ NULL
 
 #' Creates an `epi_df` object
 #'
-#' Creates a new `epi_df` object. By default builds an empty tibble with the 
+#' Creates a new `epi_df` object. By default, builds an empty tibble with the 
 #' correct metadata for an `epi_df` object (ie. `geo_type`, `time_type`, and `as_of`).
 #' Refer to the below info. about the arguments for more details.
 #'
@@ -107,12 +107,11 @@ NULL
 #'   `epi_df` object. The metadata will have `geo_type`, `time_type`, and
 #'   `as_of` fields; named entries from the passed list or will be included as
 #'   well.
-#' @param ... Additional arguments passed to methods.
 #' @return An `epi_df` object.
 #' 
 #' @export
 new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
-                      additional_metadata = list(), ...) {
+                      additional_metadata = list()) {
   # Check that we have a data frame
   if (!is.data.frame(x)) {
     Abort("`x` must be a data frame.")
