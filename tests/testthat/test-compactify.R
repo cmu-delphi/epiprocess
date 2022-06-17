@@ -2,8 +2,6 @@ library(epiprocess)
 library(data.table)
 library(dplyr)
 
-
-
 dt <- archive_cases_dv$DT
 test_that("Input for compactify must be NULL or a boolean", {
   expect_error(as_epi_archive(dv_duplicated,compactify="no"))
@@ -84,6 +82,3 @@ test_that("as_of utilizes LOCF even after removal of LOCF values",{
   
   expect_identical(as_of_true,as_of_false)
 })
-
-
-
