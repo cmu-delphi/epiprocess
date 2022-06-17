@@ -6,5 +6,6 @@ test_that("epi_cor throws errors as needed",{
 
 test_that("shift works as it should",{
   expect_identical(shift(1:100,1),dplyr::lead(1:100))
+  expect_identical(shift(1:100,0),1:100)
   expect_identical(shift(1:100,-1),dplyr::lag(1:100))
 })
