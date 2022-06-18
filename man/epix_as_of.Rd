@@ -40,6 +40,22 @@ is equivalent to:
 }\if{html}{\out{</div>}}
 }
 \examples{
-epix_as_of(x = archive_cases_dv, 
-           max_version = max(archive_cases_dv$DT$version))
+
+range(archive_cases_dv$DT$version) # 2020-06-02 -- 2020-06-15
+
+epix_as_of(x = archive_cases_dv,
+           max_version = as.Date("2020-06-12"))
+
+# When fetching a snapshot as of the latest version with update data in the
+# archive, a warning is issued as this update data might not yet be finalized
+# (for example, if data versions are labeled with dates, these versions might be
+# overwritten throughout the day if the data can be updated multiple times per
+# day; when we build an archive based on special update-data queries all made at
+# the same time, the latest available update might still be subject to change,
+# but previous versions should be finalized). We can muffle such warnings with
+# the following pattern:
+withCallingHandlers({
+  epix_as_of(x = archive_cases_dv,
+             max_version = max(archive_cases_dv$DT$version))
+}, epiprocess__snapshot_as_of_last_update_version = function(wrn) invokeRestart("muffleWarning"))
 }

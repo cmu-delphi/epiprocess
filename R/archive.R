@@ -196,7 +196,7 @@ epi_archive =
               DT = rm_locf(DT)
             } else {
               # Create empty data frame for nrow(elim) to be 0
-              elim = tibble()
+              elim = tibble::tibble()
             }
             
             # Warns about redundant rows
@@ -280,7 +280,7 @@ epi_archive =
               Abort("`max_version` must be at most `max(DT$max_version)`.")
             }
             if (max_version == self_max) {
-              Warn("Getting data as of the latest version possible. For a variety of reasons, it is possible that we only have a preliminary picture of this version (e.g., the upstream source has updated it but we have not seen it due to latency in synchronization). Thus, the snapshot that we produce here might not be reproducible at a later time (e.g., when the archive has caught up in terms of synchronization).")
+              Warn("Getting data as of the latest version possible. For a variety of reasons, it is possible that we only have a preliminary picture of this version (e.g., the upstream source has updated it but we have not seen it due to latency in synchronization). Thus, the snapshot that we produce here might not be reproducible at a later time (e.g., when the archive has caught up in terms of synchronization).", class="epiprocess__snapshot_as_of_last_update_version")
             }
 
             # Filter by version and return
@@ -525,7 +525,7 @@ epi_archive =
 #'
 #' @export
 #' @examples 
-#' df <- data.frame (geo_value  = c(replicate(2, "ca"), replicate(2, "fl")),
+#' df <- data.frame (geo_value  = c(rep("ca", 2), rep("fl", 2)),
 #'                  county = c(1, 3, 2, 5),
 #'                  time_value = c("2020-06-01", 
 #'                  "2020-06-02", 

@@ -48,7 +48,7 @@ dt <- row_replace(74,73,74) # Not LOCF
 
 dt_true <- as_tibble(as_epi_archive(dt,compactify=TRUE)$DT)
 dt_false <- as_tibble(as_epi_archive(dt,compactify=FALSE)$DT)
-dt_null <- as_tibble(as_epi_archive(dt,compactify=NULL)$DT)
+dt_null <- suppressWarnings(as_tibble(as_epi_archive(dt,compactify=NULL)$DT))
 
 test_that("Warning for LOCF with compactify as NULL", {
   expect_warning(as_epi_archive(dt,compactify=NULL))
@@ -73,12 +73,14 @@ test_that("as_of utilizes LOCF even after removal of LOCF values",{
   ea_true <- as_epi_archive(dt,compactify=TRUE)
   ea_false <- as_epi_archive(dt,compactify=FALSE)
   
-  epix_as_of(ea_true,max(ea_true$DT$version))
-  
   # Row 22, an LOCF row corresponding to the latest version, but for the
   # date 2020-06-02, is omitted in ea_true
-  as_of_true  <- ea_true$as_of(max(ea_true$DT$version))
-  as_of_false <- ea_false$as_of(max(ea_false$DT$version))
+  expect_warning({
+    as_of_true  <- ea_true$as_of(max(ea_true$DT$version))
+  }, class = "epiprocess__snapshot_as_of_last_update_version")
+  expect_warning({
+    as_of_false <- ea_false$as_of(max(ea_false$DT$version))
+  }, class = "epiprocess__snapshot_as_of_last_update_version")
   
   expect_identical(as_of_true,as_of_false)
 })

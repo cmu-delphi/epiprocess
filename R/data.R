@@ -41,5 +41,10 @@
 #' 
 #' COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University. 
 #' \url{https://github.com/CSSEGISandData/COVID-19}
+#'
+#' @export
 "archive_cases_dv"
 
+# Like normal data objects, set archive_cases_dv up as a promise, so it doesn't
+# take unnecessary space. This also avoids a need for @include tags.
+delayedAssign("archive_cases_dv", as_epi_archive(archive_cases_dv_dt, compactify=FALSE))

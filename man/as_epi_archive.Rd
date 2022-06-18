@@ -58,7 +58,7 @@ would be equivalent to:
 }\if{html}{\out{</div>}}
 }
 \examples{
-df <- data.frame (geo_value  = c(replicate(2, "ca"), replicate(2, "fl")),
+df <- data.frame (geo_value  = c(rep("ca", 2), rep("fl", 2)),
                  county = c(1, 3, 2, 5),
                  time_value = c("2020-06-01", 
                  "2020-06-02", 
