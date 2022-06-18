@@ -173,7 +173,7 @@ epi_archive =
             # Checks to see if a value in a vector is LOCF
             is_locf <- function(vec) {
               dplyr::if_else(!is.na(vec) & !is.na(dplyr::lag(vec)),
-                     vec == lag(vec),
+                     vec == dplyr::lag(vec),
                      is.na(vec) & is.na(dplyr::lag(vec)))
             }
             
