@@ -12,7 +12,7 @@ epidemiological data sets. This vignette demonstrates how to carry out these
 kinds of tasks with `epi_df` objects. We'll work with county-level reported 
 COVID-19 cases in MA and VT.
 
-```{r, message = FALSE}
+```{r, message = FALSE, eval= FALSE, warning= FALSE}
 library(delphi.epidata)
 library(covidcast)
 library(epiprocess)
@@ -23,7 +23,7 @@ y <- covidcast::county_census %>%
   filter(STNAME %in% c("Massachusetts", "Vermont"), STNAME != CTYNAME) %>%
   select(geo_value = FIPS, county_name = CTYNAME, state_name = STNAME)
 
-# Fetch only counties from VT and NH, then append names columns as well
+# Fetch only counties from Massachusetts and Vermont, then append names columns as well
 x <- covidcast(
   data_source = "jhu-csse",
   signals = "confirmed_incidence_num",
@@ -36,6 +36,18 @@ x <- covidcast(
   select(geo_value, time_value, cases = value) %>%
   full_join(y, by = "geo_value") %>%
   as_epi_df()
+```
+
+The data contains 16,212 rows and 5 columns.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(delphi.epidata)
+library(covidcast)
+library(epiprocess)
+library(dplyr)
+
+data(jhu_csse_county_level_subset)
+x <- jhu_csse_county_level_subset 
 ```
 
 ## Converting to `tsibble` format
@@ -147,7 +159,6 @@ second call to `tidyr::fill()`.)
 
 ```{r}
 fill_gaps(xt, cases = 0) %>%
-  arrange(geo_value, time_value) %>%
   head()
 ```
 
@@ -157,8 +168,7 @@ went back to June 6, 2020. By setting `.full = TRUE`, we can at zero-fill over
 the entire span of the observed (censored) data.
 
 ```{r}
-xt_filled <- fill_gaps(xt, cases = 0, .full = TRUE) %>%
-  arrange(geo_value, time_value) 
+xt_filled <- fill_gaps(xt, cases = 0, .full = TRUE) 
   
 head(xt_filled)
 ```
@@ -229,3 +239,10 @@ head(xt_filled_month)
 ## Geographic aggregation  
 
 TODO
+
+## Attribution
+This document contains dataset that is a modified part of the [COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) as [republished in the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html). This data set is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.
+
+[From the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html): 
+ These signals are taken directly from the JHU CSSE [COVID-19 GitHub repository](https://github.com/CSSEGISandData/COVID-19) without changes. 
+
