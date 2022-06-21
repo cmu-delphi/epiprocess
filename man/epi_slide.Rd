@@ -123,7 +123,9 @@ through the \code{new_col_name} argument.
 When \code{f} is a named function with arguments, if a tibble with an unnamed
 grouping variable is passed in as the method argument to \code{f}, include a
 parameter for the grouping-variable in \verb{function()} just prior to
-specifying the method to prevent that from being overridden. For example:\preformatted{# Construct an tibble with an unnamed grouping variable
+specifying the method to prevent that from being overridden. For example:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{# Construct an tibble with an unnamed grouping variable
 edf = bind_rows(tibble(geo_value = "ak", time_value = as.Date("2020-01-01") 
           + 1:10, x1=1:10, y=1:10 + rnorm(10L))) \%>\% 
   as_epi_df()
@@ -136,7 +138,7 @@ edf \%>\%
 group_by(geo_value) \%>\%
 epi_slide(function(x, g, method="qr", ...) tibble(model=list(
           lm(y ~ x1, x, method=method))), n=7L) 
-}
+}\if{html}{\out{</div>}}
 }
 \examples{
  # slide a 7-day trailing average formula on cases

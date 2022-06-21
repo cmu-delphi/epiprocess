@@ -114,11 +114,7 @@ epi_archive =
 #' @return An `epi_archive` object.
 #' @importFrom data.table as.data.table key setkeyv
           initialize = function(x, geo_type, time_type, other_keys,
-<<<<<<< HEAD
                                 additional_metadata, compactify) {
-=======
-                                additional_metadata) {  
->>>>>>> d16d8890a0445c133fd34b20fce68addf947c4be
             # Check that we have a data frame
             if (!is.data.frame(x)) {
               Abort("`x` must be a data frame.")
@@ -144,13 +140,7 @@ epi_archive =
             if (missing(time_type)) {
               time_type = guess_time_type(x$time_value)
             }
-<<<<<<< HEAD
-
-            # Conduct checks on keys variables and metadata
-=======
-            
             # Finish off with small checks on keys variables and metadata
->>>>>>> d16d8890a0445c133fd34b20fce68addf947c4be
             if (missing(other_keys)) other_keys = NULL
             if (missing(additional_metadata)) additional_metadata = list()
             if (!all(other_keys %in% names(x))) {
@@ -164,17 +154,13 @@ epi_archive =
               Warn("`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\".")
             }
             
-<<<<<<< HEAD
             # Finish off with compactify
             if (missing(compactify)) {
               compactify = NULL
             } else if (!rlang::is_bool(compactify) &&
                         !rlang::is_null(compactify)) {
               Abort("compactify must be boolean or null.")
-            }
-            
-=======
->>>>>>> d16d8890a0445c133fd34b20fce68addf947c4be
+            } 
             # Create the data table; if x was an un-keyed data.table itself,
             # then the call to as.data.table() will fail to set keys, so we
             # need to check this, then do it manually if needed
@@ -559,14 +545,9 @@ epi_archive =
 #'                           time_type = "day",
 #'                           other_keys = "county")
 as_epi_archive = function(x, geo_type, time_type, other_keys,
-<<<<<<< HEAD
                           additional_metadata = list(),compactify = NULL) {
   epi_archive$new(x, geo_type, time_type, other_keys, additional_metadata,
                   compactify)
-=======
-                          additional_metadata = list()) { 
-  epi_archive$new(x, geo_type, time_type, other_keys, additional_metadata) 
->>>>>>> d16d8890a0445c133fd34b20fce68addf947c4be
 }
 
 #' Test for `epi_archive` format
