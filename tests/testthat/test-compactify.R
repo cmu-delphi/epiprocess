@@ -8,7 +8,7 @@ dt <- filter(dt,geo_value == "ca") %>%
   select(-case_rate_7d_av)
 
 test_that("Input for compactify must be NULL or a boolean", {
-  expect_error(as_epi_archive(dv_duplicated,compactify="no"))
+  expect_error(as_epi_archive(dt,compactify="no"))
 })
   
 dt$percent_cli <- c(1:80)
