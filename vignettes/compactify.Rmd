@@ -1,0 +1,12 @@
+---
+title: Compactify to remove LOCF values
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Compactify to remove LOCF values}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r}
+print("Hello world!")
+```
