@@ -23,7 +23,7 @@ fake_df <- data.frame(time_value = c(as.Date("2022-01-03"), as.Date("2022-01-03"
   
 test_that("testing rows filling for missing lags", {
   #Make sure all reference date have enough rows for updates
-  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd)
+  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd, ref_lag)
   n_refds <- as.numeric(max_refd - min_refd)+1
   
   expect_equal(dim(df_new)[1], n_refds*(ref_lag+1))
@@ -39,7 +39,7 @@ test_that("testing NA filling for missing udpates", {
                "Risk exists in forward fill")
   
   # Assuming the input data is already prepared 
-  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd)
+  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd, ref_lag)
   n_refds <- as.numeric(max_refd - min_refd)+1
   backfill_df <- fill_missing_updates(df_new, value_col, refd_col, lag_col)
 
@@ -52,7 +52,7 @@ test_that("testing NA filling for missing udpates", {
 
 
 test_that("testing the caculation of 7-day moving average", {
-  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd)
+  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd, ref_lag)
   df <- fill_missing_updates(df_new, value_col, refd_col, lag_col)
   df$issue_date <- df[[refd_col]] + df[[lag_col]]
   pivot_df <- df[order(df$issue_date, decreasing=FALSE), ] %>%
@@ -74,9 +74,9 @@ test_that("testing the data shifting", {
 })
 
 test_that("testing adding 7 day avg and target", {
-  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd)
+  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd, ref_lag)
   backfill_df <- fill_missing_updates(df_new, value_col, refd_col, lag_col)
-  df_new <- add_7davs_and_target(backfill_df, "value_raw", refd_col, lag_col)
+  df_new <- add_7davs_and_target(backfill_df, "value_raw", refd_col, lag_col, ref_lag)
   
   # Existing columns:
   #     time_value: reference date

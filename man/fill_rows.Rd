@@ -4,7 +4,7 @@
 \alias{fill_rows}
 \title{Re-index, fill na, make sure all reference date have enough rows for updates}
 \usage{
-fill_rows(df, refd_col, lag_col, min_refd, max_refd)
+fill_rows(df, refd_col, lag_col, min_refd, max_refd, ref_lag)
 }
 \arguments{
 \item{df}{Data Frame of aggregated counts within a single location
@@ -17,6 +17,8 @@ reported for each reference date and issue date.}
 \item{min_refd}{the earliest reference date considered in the data}
 
 \item{max_refd}{the latest reference date considered in the data}
+
+\item{ref_lag}{the maximum lag value through which to complete}
 }
 \value{
 df_new Data Frame with filled rows for missing lags

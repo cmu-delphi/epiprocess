@@ -11,10 +11,6 @@
 ### library(dyplr)
 ### library(tidyverse)
 
-# Global setting taken from original constants.R; should be made into function
-# parameter wherever used, or made into an `options` setting
-ref_lag <- 60
-
 #' Re-index, fill na, make sure all reference date have enough rows for updates
 #' @param df Data Frame of aggregated counts within a single location 
 #'    reported for each reference date and issue date.
@@ -22,11 +18,12 @@ ref_lag <- 60
 #' @param lag_col column name for the column of lag
 #' @param min_refd the earliest reference date considered in the data
 #' @param max_refd the latest reference date considered in the data
+#' @param ref_lag the maximum lag value through which to complete
 #' 
 #' @return df_new Data Frame with filled rows for missing lags
 #' 
 #' @export
-fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd){
+fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag){
   lags <- min(df[[lag_col]]): ref_lag # Full list of lags
   refds <- seq(min_refd, max_refd, by="day") # Full list reference date
   row_inds_df <- as.data.frame(crossing(refds, lags)) %>%
@@ -103,9 +100,10 @@ add_shift <- function(df, n_day, refd_col){
 #' @param value_col column name for the column of raw value
 #' @param refd_col column name for the column of reference date
 #' @param lag_col column name for the column of lag
+#' @param ref_lag target lag
 #' 
 #' @export
-add_7davs_and_target <- function(df, value_col, refd_col, lag_col){
+add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag){
   
   df$issue_date <- df[[refd_col]] + df[[lag_col]]
   pivot_df <- df[order(df$issue_date, decreasing=FALSE), ] %>%
