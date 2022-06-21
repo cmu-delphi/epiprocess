@@ -66,7 +66,9 @@ has (at least) the following columns:
 As we can see from the above, the data frame returned by 
 `delphi.epidata::covidcast()` has the columns required for the `epi_archive` 
 format, with `issue` playing the role of `version`. We can now use 
-`as_epi_archive()` to bring it into `epi_archive` format.
+`as_epi_archive()` to bring it into `epi_archive` format. For removal of
+LOCF values using `as_epi_archive` using compactify, please refer to the
+compactify vignette.
 
 ```{r, eval=FALSE}
 x <- dv %>%
@@ -124,36 +126,6 @@ To make a copy, we can use the `clone()` method for an R6 class, as in `y <-
 x$clone()`. You can read more about reference semantics in Hadley Wickham's
 [Advanced R](https://adv-r.hadley.nz/r6.html#r6-semantics) book.
 
-## Removing LOCF data to save space
-
-We need not even store rows that look like the last observation carried forward,
-as they use up extra space. Furthermore, we already apply LOCF in the
-epi_archive-related functions, such that the results should be the same with or
-without the rows, aas long as use code does not rely on directly modifying
-epi_archive's fields in a way that expects all the original records and breaks
-if they are trimmed down.
- 
-There are three
-different values that can be asssigned to `compactify`:
-
-* No argument: Does not put in LOCF values, and prints a list of LOCF values
-that have been omitted but could have been placed.
-* `TRUE`: Does not put in LOCF values, but doesn't print anything relating
-to which values have been omitted.
-* `FALSE`: Includes LOCF values.
-
-For this example, we have one chart using LOCF values, while another doesn't
-use them to illustrate LOCF. Notice how the head of the first dataset differs
-from the second from the third value included.
-
-```{r}
-locf_omitted <- as_epi_archive(archive_cases_dv$DT)
-locf_included <- as_epi_archive(archive_cases_dv$DT,compactify = FALSE)
-
-head(locf_omitted$DT)
-head(locf_included$DT)
-```
- 
 ## Some details on metadata
 
 The following pieces of metadata are included as fields in an `epi_archive`

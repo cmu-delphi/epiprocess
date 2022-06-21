@@ -7,6 +7,49 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+## Removing LOCF data to save space
+
+We need not even store rows that look like the last observation carried forward,
+as they use up extra space. Furthermore, we already apply LOCF in the
+epi_archive-related functions, such that the results should be the same with or
+without the rows, aas long as use code does not rely on directly modifying
+epi_archive's fields in a way that expects all the original records and breaks
+if they are trimmed down.
+ 
+There are three
+different values that can be assigned to `compactify`:
+
+* No argument: Does not put in LOCF values, and prints the first six LOCF values
+that have been omitted but could have been placed.
+* `TRUE`: Does not put in LOCF values, but doesn't print anything relating
+to which values have been omitted.
+* `FALSE`: Includes LOCF values.
+
+For this example, we have one chart using LOCF values, while another doesn't
+use them to illustrate LOCF. Notice how the head of the first dataset differs
+from the second from the third value included.
+
 ```{r}
-print("Hello world!")
+dt <- archive_cases_dv_subset$DT
+
+locf_omitted <- as_epi_archive(dt)
+locf_included <- as_epi_archive(dt,compactify = FALSE)
+
+head(locf_omitted$DT)
+head(locf_included$DT)
+```
+ 
+LOCF can mar the performance of dataset operationsm as evidenced with the
+system time.
+
+```{r}
+iterate_test <- function(my_dt) {
+  for (i in 1:200) {
+    filter(dt,version >= as.Date("2020-01-01") + i)
+  }
+}
+
+system.time(iterate_test(locf_included$DT))
+
+system.time(iterate_test(locf_omitted$DT))
 ```
