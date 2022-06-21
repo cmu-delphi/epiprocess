@@ -6,3 +6,5 @@
 ^_pkgdown.yml
 ^index\.md$
 ^data-raw$
+^_pkgdown\.yml$
+^pkgdown$

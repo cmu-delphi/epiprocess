@@ -40,6 +40,10 @@ is equivalent to:
 }\if{html}{\out{</div>}}
 }
 \examples{
-epix_as_of(x = archive_cases_dv, 
-           max_version = max(archive_cases_dv$DT$version))
+# warning message of data latency shown
+epix_as_of(x = archive_cases_dv_subset,
+           max_version = max(archive_cases_dv_subset$DT$version))
+
+# no warning shown
+epix_as_of(archive_cases_dv_subset, max_version = as.Date("2020-06-10"))          
 }

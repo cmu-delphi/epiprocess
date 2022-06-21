@@ -54,3 +54,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.0
 Depends: 
     R (>= 2.10)
+<<<<<<< HEAD
+=======
+URL: https://cmu-delphi.github.io/epiprocess/
+>>>>>>> d16d8890a0445c133fd34b20fce68addf947c4be
