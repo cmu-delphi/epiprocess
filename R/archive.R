@@ -140,6 +140,7 @@ epi_archive =
             if (missing(time_type)) {
               time_type = guess_time_type(x$time_value)
             }
+            
             # Finish off with small checks on keys variables and metadata
             if (missing(other_keys)) other_keys = NULL
             if (missing(additional_metadata)) additional_metadata = list()
