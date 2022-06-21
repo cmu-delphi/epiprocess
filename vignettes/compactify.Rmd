@@ -39,17 +39,38 @@ head(locf_omitted$DT)
 head(locf_included$DT)
 ```
  
-LOCF can mar the performance of dataset operationsm as evidenced with the
-system time.
+LOCF can mar the performance of dataset operations. As we can see, both 500
+iterations of `filter` and 500 iterations of `as_of` are both faster when
+the LOCF values are omitted.
 
 ```{r}
-iterate_test <- function(my_dt) {
-  for (i in 1:200) {
-    filter(dt,version >= as.Date("2020-01-01") + i)
+dt2 <- select(dt,-percent_cli)
+
+locf_included_2 <- as_epi_archive(dt2,compactify=FALSE)
+locf_omitted_2 <- as_epi_archive(dt2,compactify=TRUE)
+
+nrow(locf_included_2$DT)
+nrow(locf_omitted_2$DT)
+
+iterate_filter <- function(my_ea) {
+  for (i in 1:500) {
+    dplyr::filter(my_ea$DT,version >= as.Date("2020-01-01") + i)
   }
 }
 
-system.time(iterate_test(locf_included$DT))
+# Performance of filtering
+system.time(iterate_filter(locf_included_2))
+system.time(iterate_filter(locf_omitted_2))
 
-system.time(iterate_test(locf_omitted$DT))
+iterate_as_of <- function(my_ea) {
+  for (i in 1:500) {
+    my_ea$as_of(min(my_ea$DT$time_value) + i)
+  }
+}
+
+# Performance of as_of
+system.time(iterate_as_of(locf_included_2))
+system.time(iterate_as_of(locf_omitted_2))
+
+
 ```
