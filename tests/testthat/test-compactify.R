@@ -2,6 +2,8 @@ library(epiprocess)
 library(data.table)
 library(dplyr)
 
+# RECTIFY TESTS FOR NEW DATASETS AND TO ENSURE THEY PASS!!!
+
 dt <- archive_cases_dv$DT
 test_that("Input for compactify must be NULL or a boolean", {
   expect_error(as_epi_archive(dv_duplicated,compactify="no"))
