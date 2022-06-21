@@ -2,8 +2,6 @@ library(epiprocess)
 library(data.table)
 library(dplyr)
 
-# RECTIFY TESTS FOR NEW DATASETS AND TO ENSURE THEY PASS!!!
-
 dt <- archive_cases_dv_subset$DT
 dt <- filter(dt,geo_value == "ca") %>%
   filter(version <= "2020-06-15") %>%
