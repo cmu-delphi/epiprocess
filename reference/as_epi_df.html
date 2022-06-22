@@ -85,31 +85,44 @@ examples.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>x</dt>
 <dd><p>A data.frame, <a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble::tibble</a>, or <a href="https://tsibble.tidyverts.org/reference/tsibble.html" class="external-link">tsibble::tsibble</a> to be converted</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Additional arguments passed to methods.</p></dd>
+
+
 <dt>geo_type</dt>
 <dd><p>Type for the geo values. If missing, then the function will
 attempt to infer it from the geo values present; if this fails, then it
 will be set to "custom".</p></dd>
+
+
 <dt>time_type</dt>
 <dd><p>Type for the time values. If missing, then the function will
 attempt to infer it from the time values present; if this fails, then it
 will be set to "custom".</p></dd>
+
+
 <dt>as_of</dt>
 <dd><p>Time value representing the time at which the given data were
 available. For example, if <code>as_of</code> is January 31, 2022, then the <code>epi_df</code>
 object that is created would represent the most up-to-date version of the
 data available as of January 31, 2022. If the <code>as_of</code> argument is missing,
 then the current day-time will be used.</p></dd>
+
+
 <dt>additional_metadata</dt>
 <dd><p>List of additional metadata to attach to the
 <code>epi_df</code> object. The metadata will have <code>geo_type</code>, <code>time_type</code>, and
 <code>as_of</code> fields; named entries from the passed list or will be included as
 well.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An <code>epi_df</code> object.</p>
+    
+
+<p>An <code>epi_df</code> object.</p>
     </div>
     <div class="section level2">
     <h2 id="methods-by-class-">Methods (by class)<a class="anchor" aria-label="anchor" href="#methods-by-class-"></a></h2>
@@ -138,7 +151,7 @@ the <code>tbl_ts</code> class is dropped, and any key variables (other than
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
     </footer></div>

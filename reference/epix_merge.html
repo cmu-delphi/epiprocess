@@ -83,21 +83,30 @@ whose underlying data tables are to be joined together. The data table in
 <code>x</code> will be overwritten with the joined data table. For convenience, we
 also allow <code>y</code> to be passed in directly as a <code>data.table</code> (need not be an
 <code>epi_archive</code> object).</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Named arguments to pass to <code><a href="https://Rdatatable.gitlab.io/data.table/reference/merge.html" class="external-link">data.table::merge.data.table()</a></code>, which
 is used for the join (with all default settings as in this function). For
 example, passing <code>all = TRUE</code> will perform a full join.</p></dd>
+
+
 <dt>locf</dt>
 <dd><p>Should LOCF be used after joining on all non-key columns? This
 will take the latest version of each signal value and propogate it forward
 to fill in gaps that appear after merging. Default is <code>TRUE</code>.</p></dd>
+
+
 <dt>nan</dt>
 <dd><p>Should <code>NaN</code> values be treated as <code>NA</code> values in the post-filling
 step?  Default is <code>NA</code>, which means that they are treated as <code>NA</code> values; if</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Nothing; the data table in <code>x</code> is overwritten with the merged one.</p>
+    
+
+<p>Nothing; the data table in <code>x</code> is overwritten with the merged one.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -143,7 +152,7 @@ step?  Default is <code>NA</code>, which means that they are treated as <code>NA
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
     </footer></div>

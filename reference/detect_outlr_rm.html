@@ -84,34 +84,51 @@ terms of multiples of the rolling interquartile range (IQR).</p>
 <dd><p>Design points corresponding to the signal values <code>y</code>. Default is
 <code>seq_along(y)</code> (that is, equally-spaced points from 1 to the length of
 <code>y</code>).</p></dd>
+
+
 <dt>y</dt>
 <dd><p>Signal values.</p></dd>
+
+
 <dt>n</dt>
 <dd><p>Number of time steps to use in the rolling window. Default is 21.</p></dd>
+
+
 <dt>log_transform</dt>
 <dd><p>Should a log transform be applied before running outlier
 detection? Default is <code>FALSE</code>. If <code>TRUE</code>, and zeros are present, then the
 log transform will be padded by 1.</p></dd>
+
+
 <dt>detect_negatives</dt>
 <dd><p>Should negative values automatically count as
 outliers? Default is <code>FALSE</code>.</p></dd>
+
+
 <dt>detection_multiplier</dt>
 <dd><p>Value determining how far the outlier detection
 thresholds are from the rolling median, which are calculated as (rolling
 median) +/- (detection multiplier) * (rolling IQR). Default is 2.</p></dd>
+
+
 <dt>min_radius</dt>
 <dd><p>Minimum distance between rolling median and threshold, on
 transformed scale. Default is 0.</p></dd>
+
+
 <dt>replacement_multiplier</dt>
 <dd><p>Value determining how far the replacement
 values are from the rolling median. The replacement is the original value
 if it is within the detection thresholds, or otherwise it is rounded to the
 nearest (rolling median) +/- (replacement multiplier) * (rolling IQR).
 Default is 0.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A tibble with number of rows equal to <code>length(y)</code>, and columns
+    
+
+<p>A tibble with number of rows equal to <code>length(y)</code>, and columns
 <code>lower</code>, <code>upper</code>, and <code>replacement</code>.</p>
     </div>
 
@@ -156,7 +173,7 @@ Default is 0.</p></dd>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
     </footer></div>
