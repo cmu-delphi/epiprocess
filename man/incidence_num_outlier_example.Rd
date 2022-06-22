@@ -32,7 +32,8 @@ incidence_num_outlier_example
 This data source of confirmed COVID-19 cases
 is based on reports made available by the Center for
 Systems Science and Engineering at Johns Hopkins University.
-This example data is a snapshot as of Oct 28, 2021 and captures the cases from June 1, 2020 to May 31, 2021
+This example data is a snapshot as of Oct 28, 2021 and captures the cases
+from June 1, 2020 to May 31, 2021
 and is limited to California and Florida.
 }
 \keyword{datasets}
