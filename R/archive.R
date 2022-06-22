@@ -180,12 +180,12 @@ epi_archive =
             
             # Checks for LOCF's in a data frame
             rm_locf <- function(df) {
-             filter(df,if_any(c(everything(),-version),~ !is_locf(.))) 
+             dplyr::filter(df,if_any(c(everything(),-version),~ !is_locf(.))) 
             }
             
             # Keeps LOCF values, such as to be printed
             keep_locf <- function(df) {
-              filter(df,if_all(c(everything(),-version),~ is_locf(.))) 
+              dplyr::filter(df,if_all(c(everything(),-version),~ is_locf(.))) 
             }
             
             # Runs compactify on data frame
