@@ -30,6 +30,8 @@ use them to illustrate LOCF. Notice how the head of the first dataset differs
 from the second from the third value included.
 
 ```{r}
+library(dplyr)
+
 dt <- archive_cases_dv_subset$DT
 
 locf_omitted <- as_epi_archive(dt)
@@ -60,17 +62,13 @@ nrow(locf_omitted_2$DT)
 
 
 As we can see, performing 200 iterations of `dplyr::filter` is faster when the
-LOCF values are omitted. What would happen if we filter the data with base R's
-`subset` instead? Again, 200 iterations would happen more quickly without the
-LOCF values. **NOTE:** While this is omitted here, one may also be willing to
-compare performance of filtering with `[]` that would be similar to how one
-would filter data in Python.
+LOCF values are omitted.
 
 ```{r}
 # Performance of filtering
 iterate_filter <- function(my_ea) {
   for (i in 1:1000) {
-    dplyr::filter(my_ea$DT,version >= as.Date("2020-01-01") + i)
+    filter(my_ea$DT,version >= as.Date("2020-01-01") + i)
   }
 }
 
@@ -84,9 +82,11 @@ speed_test <- function(f,name) {
   )
 }
 
-speed_test(iterate_filter,"filter_1000x")
+speeds <- speed_test(iterate_filter,"filter_1000x")
 
 ```
+
+We would also like to measure the speed of `epi_archive` methods.
 
 ```{r}
 # Performance of as_of iterated 200 times
@@ -96,12 +96,22 @@ iterate_as_of <- function(my_ea) {
   }
 }
 
-speed_test(iterate_as_of,"as_of_1000x")
+speeds <- rbind(speeds, speed_test(iterate_as_of,"as_of_1000x"))
 
 # Performance of slide
 slide_median <- function(my_ea) {
     my_ea$slide(median = median(case_rate_7d_av))
 }
 
-speed_test(slide_median,"slide_median")
+speeds <- rbind(speeds, speed_test(slide_median,"slide_median"))
+```
+Here is a detailed performance comparison:
+
+```{r}
+speeds_tidy <- gather(speeds,key="is_locf",value="time_in_s",locf,no_locf)
+
+library(ggplot2)
+
+ggplot(speeds_tidy) +
+  geom_bar(aes(x=is_locf,y=time_in_s,fill=operation),stat = "identity")
 ```
