@@ -67,7 +67,7 @@ summary.epi_df = function(object, ...) {
 #' @export
 #' @noRd
 head.epi_df = function(x, ...) {
-  as_epi_df(NextMethod("head"))
+  NextMethod("head")
 }
 
 #' @method tail epi_df
@@ -75,7 +75,7 @@ head.epi_df = function(x, ...) {
 #' @export
 #' @noRd
 tail.epi_df = function(x, ...) {
-  as_epi_df(NextMethod("tail"))
+  NextMethod("tail")
 }
 
 #' `dplyr` verbs
