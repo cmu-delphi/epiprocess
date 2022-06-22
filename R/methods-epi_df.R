@@ -67,6 +67,7 @@ summary.epi_df = function(object, ...) {
 #' @export
 #' @noRd
 head.epi_df = function(x, ...) {
+  # offload work to the generic fun. that is specified
   NextMethod("head")
 }
 
