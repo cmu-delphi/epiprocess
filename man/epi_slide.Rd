@@ -104,12 +104,16 @@ incomplete windows) is therefore left up to the user, either through the
 specified function or formula \code{f}, or through post-processing.
 
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
-for example, as in:\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
-}
+for example, as in:
 
-which would be equivalent to:\preformatted{epi_slide(x, function(x, ...) mean(x$cases), n = 7,
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
+}\if{html}{\out{</div>}}
+
+which would be equivalent to:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, ...) mean(x$cases), n = 7,
           new_col_name = "cases_7dav")
-}
+}\if{html}{\out{</div>}}
 
 Thus, to be clear, when the computation is specified via an expression for
 tidy evaluation (first example, above), then the name for the new column is
@@ -119,7 +123,9 @@ through the \code{new_col_name} argument.
 When \code{f} is a named function with arguments, if a tibble with an unnamed
 grouping variable is passed in as the method argument to \code{f}, include a
 parameter for the grouping-variable in \verb{function()} just prior to
-specifying the method to prevent that from being overridden. For example:\preformatted{# Construct an tibble with an unnamed grouping variable
+specifying the method to prevent that from being overridden. For example:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{# Construct an tibble with an unnamed grouping variable
 edf = bind_rows(tibble(geo_value = "ak", time_value = as.Date("2020-01-01") 
           + 1:10, x1=1:10, y=1:10 + rnorm(10L))) \%>\% 
   as_epi_df()
@@ -132,7 +138,7 @@ edf \%>\%
 group_by(geo_value) \%>\%
 epi_slide(function(x, g, method="qr", ...) tibble(model=list(
           lm(y ~ x1, x, method=method))), n=7L) 
-}
+}\if{html}{\out{</div>}}
 }
 \examples{
  # slide a 7-day trailing average formula on cases
