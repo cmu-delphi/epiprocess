@@ -122,14 +122,20 @@ is equivalent to:\preformatted{x$slide(x, new_var = comp(old_var), n = 120)
 }
 }
 \examples{
-# every date is a reference time point for the 3 day average sliding window
-fc_time_values <- seq(as.Date("2020-06-01"),
+# these dates are reference time points for the 3 day average sliding window
+# The resulting epi_archive ends up including data averaged from:
+# 0 day which has no results, for 2020-06-01
+# 1 day, for 2020-06-02
+# 2 days, for the rest of the results
+# never 3 days dur to data latency
+
+time_values <- seq(as.Date("2020-06-01"),
                       as.Date("2020-06-15"),
                       by = "1 day")
-epix_slide(x = archive_cases_dv, 
-           f = ~ mean(.x$case_rate), 
-           n = 3, 
+epix_slide(x = archive_cases_dv_subset,
+           f = ~ mean(.x$case_rate),
+           n = 3,
            group_by = geo_value,
-           ref_time_values = fc_time_values,
+           ref_time_values = time_values,
            new_col_name = 'case_rate_3d_av')
 }
