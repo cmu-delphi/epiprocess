@@ -26,7 +26,8 @@ as_tsibble.epi_df = function(x, key, ...) {
 #' @method print epi_df
 #' @export
 print.epi_df = function(x, ...) {
-  cat("An `epi_df` object, with metadata:\n")
+  cat("An `epi_df` object,", prettyNum(nrow(x),","), "x",
+      prettyNum(ncol(x),","), "with metadata:\n")
   cat(sprintf("* %-9s = %s\n", "geo_type", attributes(x)$metadata$geo_type))
   cat(sprintf("* %-9s = %s\n", "time_type", attributes(x)$metadata$time_type))
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(x)$metadata$as_of))
