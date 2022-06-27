@@ -66,18 +66,18 @@ summary.epi_df = function(object, ...) {
 #' @importFrom utils head
 #' @export
 #' @noRd
-head.epi_df = function(x, ...) {
-  # Arg. of NextMethod() is the generic fun. to offload work to
-  NextMethod("head")
-}
+#head.epi_df = function(x, ...) {
+#  # Arg. of NextMethod() is the generic fun. to offload work to
+#  NextMethod("head")
+#}
 
 #' @method tail epi_df
 #' @importFrom utils tail
 #' @export
 #' @noRd
-tail.epi_df = function(x, ...) {
-  NextMethod("tail")
-}
+#tail.epi_df = function(x, ...) {
+#  NextMethod("tail")
+#}
 
 #' `dplyr` verbs
 #'
