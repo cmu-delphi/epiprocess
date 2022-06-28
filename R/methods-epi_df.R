@@ -62,22 +62,57 @@ summary.epi_df = function(object, ...) {
                          dplyr::summarize(mean(.data$num)))))
 }
 
-#' @method head epi_df
-#' @importFrom utils head
 #' @export
-#' @noRd
-#head.epi_df = function(x, ...) {
-#  # Arg. of NextMethod() is the generic fun. to offload work to
-#  NextMethod("head")
-#}
-
-#' @method tail epi_df
-#' @importFrom utils tail
-#' @export
-#' @noRd
-#tail.epi_df = function(x, ...) {
-#  NextMethod("tail")
-#}
+`[.epi_df` <- function(x, i, j, drop = FALSE) { 
+  res <- NextMethod() 
+  
+  if (!is.data.frame(res)) return(res)
+  
+  i_arg <- substitute(i) 
+  j_arg <- substitute(j) 
+  
+  if (missing(i)) {
+    i <- NULL
+    i_arg <- NULL
+  } else if (is.null(i)) {
+    i <- integer()
+  }
+  
+  if (missing(j)) {
+    j <- NULL
+    j_arg <- NULL
+  } else if (is.null(j)) {
+    j <- integer()
+  }
+  
+  # Ignore drop as an argument for counting
+  n_real_args <- nargs() - !missing(drop) 
+  
+  # Case when the number of args (excluding drop) is not 3 or more
+  if (n_real_args <= 2L) {
+    j <- i
+    i <- NULL
+    j_arg <- i_arg
+    i_arg <- NULL
+  }
+  
+  cn <- names(res)
+  nr <- vctrs::vec_size(x) 
+  not_epi_df <- !("time_value" %in% cn) || !("geo_value" %in% cn) || vctrs::vec_size(res) > nr || any(i > nr)
+  if (not_epi_df) return(tibble::as_tibble(res))
+  
+  # Case when i is numeric and there are duplicate values in it
+  if (is.numeric(i) && vctrs::vec_duplicate_any(i) > 0) return(tibble::as_tibble(res))
+  
+  # Column subsetting only, then return res as tibble
+  if (rlang::is_null(i) && !rlang::is_null(j)) return(tibble::as_tibble(res))
+  
+  att_x = attributes(x)
+  new_epi_df(tibble::as_tibble(res), geo_type = att_x$metadata$geo_type, 
+             time_type = att_x$metadata$time_type, as_of = att_x$metadata$as_of,
+             additional_metadata = 
+               as.list(names(att_x$metadata)[!(names(att_x$metadata) %in% c("geo_type", "time_type", "as_of"))]))
+}
 
 #' `dplyr` verbs
 #'
