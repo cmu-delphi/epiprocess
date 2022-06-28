@@ -49,20 +49,24 @@ test_that("guess_geo_type tests for different types of geo_value's",{
   # HRR regions
   hrr <- c(100,200)
   
+  # Long numbers should be custom
+  long_nums <- c(123456789,111222333)
+  
   # Health regions in British Columbia
   bc <- c("Vancouver Coastal","Interior","Fraser",
               "Northern","Vancouver Island")
   
-  # Long numbers as strings that should also be custom
-  long_nums <- c("123456789","111222333")
+  # Long numbers as strings should also be custom
+  long_num_strings <- c("123456789","111222333")
   
   expect_equal(guess_geo_type(states),"state")
   expect_equal(guess_geo_type(nations),"nation")
   expect_equal(guess_geo_type(counties),"county")
   expect_equal(guess_geo_type(hhs),"hhs")
   expect_equal(guess_geo_type(hrr),"hrr")
-  # expect_equal(guess_geo_type(bc),"custom") # EDIT LINE 42
-  # expect_equal(guess_geo_type(long_nums),"custom") # EDIT LINE 45
+  expect_equal(guess_geo_type(long_num_strings),"custom")
+  expect_equal(guess_geo_type(bc),"custom")
+  expect_equal(guess_geo_type(long_nums),"custom")
 })
 
 test_that("guess_time_type works for different types",{
@@ -83,7 +87,7 @@ test_that("guess_time_type works for different types",{
   not_a_date <- "asdf"
   
   expect_equal(guess_time_type(days),"day")
-  # expect_equal(guess_time_type(weeks),"week") # EDIT LINE 82
+  expect_equal(guess_time_type(weeks),"week")
 
   expect_equal(guess_time_type(yearweeks),"yearweek")  
   expect_equal(guess_time_type(yearmonths),"yearmonth")
