@@ -32,6 +32,10 @@ apart from "geo_value", "time_value", and "version".}
 \item{additional_metadata}{List of additional metadata to attach to the
 \code{epi_archive} object. The metadata will have \code{geo_type} and \code{time_type}
 fields; named entries from the passed list or will be included as well.}
+
+\item{compactify}{By default, removes LOCF rows and warns the user about
+them. Optionally, one can input a Boolean: TRUE eliminates LOCF rows,
+while FALSE keeps them.}
 }
 \value{
 An \code{epi_archive} object.
@@ -54,7 +58,7 @@ would be equivalent to:
 }\if{html}{\out{</div>}}
 }
 \examples{
-df <- data.frame (geo_value  = c(replicate(2, "ca"), replicate(2, "fl")),
+df <- data.frame (geo_value  = c(rep("ca", 2), rep("fl", 2)),
                  county = c(1, 3, 2, 5),
                  time_value = c("2020-06-01",
                  "2020-06-02",

@@ -17,6 +17,14 @@ row_replace <- function(row,x,y) {
   dt
 }
 
+# Rows 1 should not be eliminated even if NA
+dt <- row_replace(1,NA,NA) # Not LOCF
+
+# NOTE! We are assuming that there are no NA's in geo_value, time_value,
+# and version. Even though compactify may erroneously remove the first row
+# if it has all NA's, we are not testing this behaviour for now as this dataset
+# has problems beyond the scope of this test
+
 # Rows 11 and 12 correspond to different time_values
 dt <- row_replace(12,11,11) # Not LOCF
 
@@ -40,7 +48,7 @@ dt <- row_replace(74,73,74) # Not LOCF
 
 dt_true <- as_tibble(as_epi_archive(dt,compactify=TRUE)$DT)
 dt_false <- as_tibble(as_epi_archive(dt,compactify=FALSE)$DT)
-dt_null <- as_tibble(as_epi_archive(dt,compactify=NULL)$DT)
+dt_null <- suppressWarnings(as_tibble(as_epi_archive(dt,compactify=NULL)$DT))
 
 test_that("Warning for LOCF with compactify as NULL", {
   expect_warning(as_epi_archive(dt,compactify=NULL))
@@ -59,4 +67,20 @@ test_that("LOCF values are taken out with compactify=TRUE", {
   
   expect_identical(dt_true,dt_null)
   expect_identical(dt_null,dt_test)
+})
+
+test_that("as_of utilizes LOCF even after removal of LOCF values",{
+  ea_true <- as_epi_archive(dt,compactify=TRUE)
+  ea_false <- as_epi_archive(dt,compactify=FALSE)
+  
+  # Row 22, an LOCF row corresponding to the latest version, but for the
+  # date 2020-06-02, is omitted in ea_true
+  expect_warning({
+    as_of_true  <- ea_true$as_of(max(ea_true$DT$version))
+  }, class = "epiprocess__snapshot_as_of_last_update_version")
+  expect_warning({
+    as_of_false <- ea_false$as_of(max(ea_false$DT$version))
+  }, class = "epiprocess__snapshot_as_of_last_update_version")
+  
+  expect_identical(as_of_true,as_of_false)
 })

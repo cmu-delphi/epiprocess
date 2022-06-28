@@ -102,11 +102,15 @@ epi_archive =
 #' @param additional_metadata List of additional metadata to attach to the
 #'   `epi_archive` object. The metadata will have `geo_type` and `time_type`
 #'   fields; named entries from the passed list or will be included as well.
-#' @param compactify Determines whether redundant rows are removed for last
-#'   observation carried first (LOCF) results, as to potentially save space.
-#'   Set to TRUE to remove these, FALSE to leave as is. Not specifying the
-#'   argument does the same as TRUE, except it also notifies the user of change
-#'   in the data by mentioning which rows are LOCF.
+#' @param compactify Optional, Boolean: should we remove rows that are
+#'   considered redundant for the purposes of `epi_archive`'s built-in methods
+#'   such as `$as_of`? As these methods use the last (version of an)
+#'   observation carried forward (LOCF) to interpolate between the version data
+#'   provided, rows that won't change these LOCF results can potentially be
+#'   omitted to save space. Generally, this can be set to `TRUE`, but if you
+#'   directly inspect or edit the fields of the `epi_archive` such as the `$DT`,
+#'   you will have to determine whether `compactify=TRUE` will still produce
+#'   equivalent results.
 #' @return An `epi_archive` object.
 #' @importFrom data.table as.data.table key setkeyv
           initialize = function(x, geo_type, time_type, other_keys,
@@ -168,10 +172,13 @@ epi_archive =
             
             # Checks to see if a value in a vector is LOCF
             is_locf <- function(vec) {
-              ifelse(!is.na(vec) & !is.na(lag(vec)),
-                     vec == lag(vec),
-                     is.na(vec) & is.na(lag(vec)))
+              dplyr::if_else(!is.na(vec) & !is.na(dplyr::lag(vec)),
+                     vec == dplyr::lag(vec),
+                     is.na(vec) & is.na(dplyr::lag(vec)))
             }
+            
+            # LOCF is defined by a row where all values except for the version
+            # differ from their respective lag values
             
             # Checks for LOCF's in a data frame
             rm_locf <- function(df) {
@@ -189,23 +196,33 @@ epi_archive =
               DT = rm_locf(DT)
             } else {
               # Create empty data frame for nrow(elim) to be 0
-              elim = tibble()
+              elim = tibble::tibble()
             }
             
             # Warns about redundant rows
             if (is.null(compactify) && nrow(elim) > 0) {
-              warn <- paste("\nLOCF rows found. To remove warning, set",
-              "compactify to TRUE or fix these rows: \n")
-              # call elim with for loop, up to 6
-              for (i in 1:min(6,nrow(elim))) {
-                warn <- paste0(warn,
-                  paste(elim[[i,1]],elim[[i,2]],elim[[i,3]],elim[[i,4]],"\n")
-                )
+              warning_intro <- paste("LOCF rows found;",
+                                     "these have been removed: \n")
+              
+              # elim size capped at 6
+              len <- nrow(elim)
+              elim <- elim[1:min(6,len),]
+              
+              warning_data <- paste(collapse="\n",capture.output(print(elim)))
+              
+              warning_message <- paste(warning_intro,warning_data)
+              if (len > 6) {
+                warning_message <- paste0(warning_message,"\n",
+                                          "Only the first 6 LOCF rows are ",
+                                          "printed. There are more than 6 LOCF",
+                                          " rows.")
               }
-              if (nrow(elim) > 6) {
-                warn <- paste0(warn,"And so on...")
-              }
-              warning(warn)
+              
+              warning_message <- paste0(warning_message,"\n",
+                                        "To disable warning but still remove ",
+                                        "LOCF rows, set compactify=FALSE.")
+              
+              rlang::warn(warning_message)
             }
             
             # Instantiate all self variables
@@ -263,7 +280,7 @@ epi_archive =
               Abort("`max_version` must be at most `max(DT$max_version)`.")
             }
             if (max_version == self_max) {
-              Warn("Getting data as of the latest version possible. For a variety of reasons, it is possible that we only have a preliminary picture of this version (e.g., the upstream source has updated it but we have not seen it due to latency in synchronization). Thus, the snapshot that we produce here might not be reproducible at a later time (e.g., when the archive has caught up in terms of synchronization).")
+              Warn("Getting data as of the latest version possible. For a variety of reasons, it is possible that we only have a preliminary picture of this version (e.g., the upstream source has updated it but we have not seen it due to latency in synchronization). Thus, the snapshot that we produce here might not be reproducible at a later time (e.g., when the archive has caught up in terms of synchronization).", class="epiprocess__snapshot_as_of_last_update_version")
             }
 
             # Filter by version and return
@@ -491,6 +508,9 @@ epi_archive =
 #' @param additional_metadata List of additional metadata to attach to the
 #'   `epi_archive` object. The metadata will have `geo_type` and `time_type`
 #'   fields; named entries from the passed list or will be included as well.
+#' @param compactify By default, removes LOCF rows and warns the user about
+#'   them. Optionally, one can input a Boolean: TRUE eliminates LOCF rows,
+#'   while FALSE keeps them.
 #' @return An `epi_archive` object.
 #'
 #' @details This simply a wrapper around the `new()` method of the `epi_archive`
@@ -504,8 +524,8 @@ epi_archive =
 #'   ```
 #'
 #' @export
-#' @examples
-#' df <- data.frame (geo_value  = c(replicate(2, "ca"), replicate(2, "fl")),
+#' @examples 
+#' df <- data.frame (geo_value  = c(rep("ca", 2), rep("fl", 2)),
 #'                  county = c(1, 3, 2, 5),
 #'                  time_value = c("2020-06-01",
 #'                  "2020-06-02",
