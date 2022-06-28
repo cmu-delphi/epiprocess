@@ -189,7 +189,7 @@ epi_archive =
 #' @description Generates a snapshot in `epi_df` format as of a given version.
 #'   See the documentation for the wrapper function `epix_as_of()` for details.
 #' @importFrom data.table between key
-          as_of = function(max_version) {
+          as_of = function(max_version, min_time_value = -Inf) {
             # Self max version and other keys
             self_max = max(self$DT$version)
             other_keys = setdiff(key(self$DT),
@@ -213,7 +213,8 @@ epi_archive =
             # Filter by version and return
             return(
               # Make sure to use data.table ways of filtering and selecting
-              self$DT[version <= max_version, ] %>%
+              self$DT[time_value >= min_time_value &
+                        version <= max_version, ] %>%
               unique(by = c("geo_value", "time_value", other_keys),
                      fromLast = TRUE) %>%
               tibble::as_tibble() %>%
