@@ -145,13 +145,17 @@ epi_slide(function(x, g, method="qr", ...) tibble(model=list(
   jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), n = 7, 
-            align = "right")
+            align = "right") \%>\% 
+  # rmv a nonessential var. to ensure new col is printed
+  dplyr::select(-death_rate_7d_av) 
  
  # slide a left-aligned 7-day average
   jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), n = 7, 
-            align = "left")
+            align = "left") \%>\% 
+  # rmv a nonessential var. to ensure new col is printed
+  dplyr::select(-death_rate_7d_av) 
  
  # nested new columns
  jhu_csse_daily_subset \%>\% 
