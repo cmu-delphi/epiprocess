@@ -45,9 +45,9 @@ epix_as_of(x = archive_cases_dv_subset,
            max_version = max(archive_cases_dv_subset$DT$version))
 
 
-range(archive_cases_dv$DT$version) # 2020-06-02 -- 2020-06-15
+range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
 
-epix_as_of(x = archive_cases_dv,
+epix_as_of(x = archive_cases_dv_subset,
            max_version = as.Date("2020-06-12"))
 
 # When fetching a snapshot as of the latest version with update data in the
@@ -59,7 +59,7 @@ epix_as_of(x = archive_cases_dv,
 # but previous versions should be finalized). We can muffle such warnings with
 # the following pattern:
 withCallingHandlers({
-  epix_as_of(x = archive_cases_dv,
-             max_version = max(archive_cases_dv$DT$version))
+  epix_as_of(x = archive_cases_dv_subset,
+             max_version = max(archive_cases_dv_subset$DT$version))
 }, epiprocess__snapshot_as_of_last_update_version = function(wrn) invokeRestart("muffleWarning"))
 }
