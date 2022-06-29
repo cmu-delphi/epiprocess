@@ -123,7 +123,7 @@ through the \code{new_col_name} argument.
   epi_slide(cases_7dav = mean(cases), n = 7, 
             align = "right") \%>\% 
   # rmv a nonessential var. to ensure new col is printed
-  dplyr::select(-c(death_rate_7d_av))
+  dplyr::select(-death_rate_7d_av) 
  
  # slide a left-aligned 7-day average
   jhu_csse_daily_subset \%>\%
@@ -131,7 +131,7 @@ through the \code{new_col_name} argument.
   epi_slide(cases_7dav = mean(cases), n = 7, 
             align = "left") \%>\% 
   # rmv a nonessential var. to ensure new col is printed
-  dplyr::select(-c(death_rate_7d_av))
+  dplyr::select(-death_rate_7d_av) 
  
  # nested new columns
  jhu_csse_daily_subset \%>\% 
