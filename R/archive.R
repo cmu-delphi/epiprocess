@@ -288,11 +288,9 @@ epi_archive =
             
             # Filter by version and return
             return(
-              # Make sure to use data.table ways of filtering and selecting 
-              self$DT[between(time_value,
-                              min_time_value,
-                              max_version) &
-                      version <= max_version, ] %>%
+              # Make sure to use data.table ways of filtering and selecting
+              self$DT[time_value >= min_time_value &
+                        version <= max_version, ] %>%
               unique(by = c("geo_value", "time_value", other_keys),
                      fromLast = TRUE) %>%
               tibble::as_tibble() %>% 
