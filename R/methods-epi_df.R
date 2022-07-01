@@ -115,7 +115,7 @@ summary.epi_df = function(object, ...) {
              geo_type = att_x$geo_type, 
              time_type = att_x$time_type, 
              as_of = att_x$as_of,
-             additional_metadata = att_x$other_keys)
+             additional_metadata = att_x$additional_metadata)
 }
 
 #' `dplyr` verbs

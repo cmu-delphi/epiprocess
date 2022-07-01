@@ -7,10 +7,10 @@ toy_epi_df <- tibble::tibble(
     length.out = 5
   ), times = 2),
   geo_value = rep(c("ca", "hi"), each = 5),
-  additional_key = as.factor(rep(1:2, times = 5)),
+  additional_key_val = as.factor(rep(1:2, times = 5)),
 ) %>% epiprocess::as_epi_df()
 
-attributes(toy_epi_df)$metadata$other_keys <- "additional_key"
+attributes(toy_epi_df)$metadata$additional_metadata <- "additional_key"
 att_toy = attr(toy_epi_df, "metadata")
 
 test_that("head and tail do not drop the epi_df class", {
@@ -39,7 +39,7 @@ test_that("subsetting drops or does not drop the epi_df class appropriately", {
   expect_identical(attributes(row_subset)$metadata$geo_type, att_toy$geo_type)
   expect_identical(attributes(row_subset)$metadata$time_type, att_toy$time_type)
   expect_identical(attributes(row_subset)$metadata$as_of, att_toy$as_of)
-  expect_identical(attributes(row_subset)$metadata$other_keys, att_toy$other_keys)
+  expect_identical(attributes(row_subset)$metadata$additional_metadata, att_toy$additional_metadata)
   
   # Col subset - shouldn't be an epi_df
   col_subset = toy_epi_df[, 2:3]
