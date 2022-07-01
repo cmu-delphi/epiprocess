@@ -524,23 +524,23 @@ epi_archive =
 #'   ```
 #'
 #' @export
-#' @examples 
-#' df <- data.frame (geo_value  = c(rep("ca", 2), rep("fl", 2)),
+#' @examples
+#' df <- data.frame(geo_value  = c(rep("ca", 2), rep("fl", 2)),
 #'                  county = c(1, 3, 2, 5),
-#'                  time_value = c("2020-06-01", 
-#'                  "2020-06-02", 
-#'                  "2020-06-01", 
-#'                  "2020-06-02"),
-#'                  version = c("2020-06-02", 
-#'                  "2020-06-03", 
-#'                  "2020-06-02",
-#'                  "2020-06-03"),
+#'                  time_value = c("2020-06-01",
+#'                                 "2020-06-02",
+#'                                 "2020-06-01",
+#'                                 "2020-06-02"),
+#'                  version = c("2020-06-02",
+#'                              "2020-06-03",
+#'                              "2020-06-02",
+#'                              "2020-06-03"),
 #'                  cases = c(1, 2, 3, 4),
 #'                  cases_rate = c(0.01, 0.02, 0.01, 0.05))
 #'
-#' x <- df %>% as_epi_archive(geo_type = "state", 
-#'                           time_type = "day", 
-#'                           other_keys = "county")
+#' x <- df %>% as_epi_archive(geo_type = "state",
+#'                            time_type = "day",
+#'                            other_keys = "county")
 as_epi_archive = function(x, geo_type, time_type, other_keys,
                           additional_metadata = list(),compactify = NULL) {
   epi_archive$new(x, geo_type, time_type, other_keys, additional_metadata,
