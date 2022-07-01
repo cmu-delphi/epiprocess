@@ -98,20 +98,24 @@ summary.epi_df = function(object, ...) {
   
   cn <- names(res)
   nr <- vctrs::vec_size(x) 
-  not_epi_df <- !("time_value" %in% cn) || !("geo_value" %in% cn) || vctrs::vec_size(res) > nr || any(i > nr)
+  not_epi_df <- !("time_value" %in% cn) || !("geo_value" %in% cn) || 
+    vctrs::vec_size(res) > nr || any(i > nr)
   if (not_epi_df) return(tibble::as_tibble(res))
   
   # Case when i is numeric and there are duplicate values in it
-  if (is.numeric(i) && vctrs::vec_duplicate_any(i) > 0) return(tibble::as_tibble(res))
+  if (is.numeric(i) && vctrs::vec_duplicate_any(i) > 0) 
+    return(tibble::as_tibble(res))
   
   # Column subsetting only, then return res as tibble
-  if (rlang::is_null(i) && !rlang::is_null(j)) return(tibble::as_tibble(res))
+  if (rlang::is_null(i) && !rlang::is_null(j)) 
+    return(tibble::as_tibble(res))
   
-  att_x = attributes(x)
-  new_epi_df(tibble::as_tibble(res), geo_type = att_x$metadata$geo_type, 
-             time_type = att_x$metadata$time_type, as_of = att_x$metadata$as_of,
-             additional_metadata = 
-               as.list(names(att_x$metadata)[!(names(att_x$metadata) %in% c("geo_type", "time_type", "as_of"))]))
+  att_x = attr(x, "metadata")
+  new_epi_df(tibble::as_tibble(res), 
+             geo_type = att_x$geo_type, 
+             time_type = att_x$time_type, 
+             as_of = att_x$as_of,
+             additional_metadata = att_x$other_keys)
 }
 
 #' `dplyr` verbs
