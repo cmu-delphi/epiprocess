@@ -201,28 +201,25 @@ epi_archive =
             
             # Warns about redundant rows
             if (is.null(compactify) && nrow(elim) > 0) {
-              warning_intro <- paste("LOCF rows found;",
-                                     "these have been removed: \n")
+              warning_intro <- break_str(paste(
+                'Found rows that appear redundant based on',
+                'last (version of an) observation carried forward;',
+                'these rows have been removed to "compactify" and save space:'
+              ))
               
-              # elim size capped at 6
-              len <- nrow(elim)
-              elim <- elim[1:min(6,len),]
+              warning_data <- paste(collapse="\n", capture.output(print(elim, topn=3L, nrows=7L)))
               
-              warning_data <- paste(collapse="\n",capture.output(print(elim)))
+              warning_outro <- break_str(paste(
+                "Built-in `epi_archive` functionality should be unaffected,",
+                "but results may change if you work directly with its fields (such as `DT`).",
+                "See `?as_epi_archive` for details.",
+                "To silence this warning but keep compactification,",
+                "you can pass `compactify=TRUE` when constructing the archive."
+              ))
               
-              warning_message <- paste(warning_intro,warning_data)
-              if (len > 6) {
-                warning_message <- paste0(warning_message,"\n",
-                                          "Only the first 6 LOCF rows are ",
-                                          "printed. There are more than 6 LOCF",
-                                          " rows.")
-              }
+              warning_message <- paste(sep="\n", warning_intro, warning_data, warning_outro)
               
-              warning_message <- paste0(warning_message,"\n",
-                                        "To disable warning but still remove ",
-                                        "LOCF rows, set compactify=FALSE.")
-              
-              rlang::warn(warning_message)
+              rlang::warn(warning_message, class="epiprocess__compactify_default_removed_rows")
             }
             
             # Instantiate all self variables
