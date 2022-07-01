@@ -104,12 +104,16 @@ incomplete windows) is therefore left up to the user, either through the
 specified function or formula \code{f}, or through post-processing.
 
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
-for example, as in:\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
-}
+for example, as in:
 
-which would be equivalent to:\preformatted{epi_slide(x, function(x, ...) mean(x$cases), n = 7,
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
+}\if{html}{\out{</div>}}
+
+which would be equivalent to:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, ...) mean(x$cases), n = 7,
           new_col_name = "cases_7dav")
-}
+}\if{html}{\out{</div>}}
 
 Thus, to be clear, when the computation is specified via an expression for
 tidy evaluation (first example, above), then the name for the new column is
@@ -121,13 +125,17 @@ through the \code{new_col_name} argument.
   jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), n = 7, 
-            align = "right")
+            align = "right") \%>\% 
+  # rmv a nonessential var. to ensure new col is printed
+  dplyr::select(-death_rate_7d_av) 
  
  # slide a left-aligned 7-day average
   jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), n = 7, 
-            align = "left")
+            align = "left") \%>\% 
+  # rmv a nonessential var. to ensure new col is printed
+  dplyr::select(-death_rate_7d_av) 
  
  # nested new columns
  jhu_csse_daily_subset \%>\% 
