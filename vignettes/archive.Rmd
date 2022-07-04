@@ -146,8 +146,8 @@ the dataset, without being stored in the end:
 
 ```{r,message=FALSE}
 # `dt` here is taken from the tests
-as_epi_archive(archive_cases_dv$DT,compactify=TRUE)$geo_type # "state"
-as_epi_archive(archive_cases_dv$DT,compactify=TRUE)$compactify # NULL
+as_epi_archive(archive_cases_dv_subset$DT,compactify=TRUE)$geo_type # "state"
+as_epi_archive(archive_cases_dv_subset$DT,compactify=TRUE)$compactify # NULL
 ```
 
 ## Producing snapshots in `epi_df` form
