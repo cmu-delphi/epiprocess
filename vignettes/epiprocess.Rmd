@@ -58,6 +58,7 @@ API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html).
 library(delphi.epidata)
 library(epiprocess)
 library(dplyr)
+library(withr)
 
 cases <- covidcast(
   data_source = "jhu-csse",
@@ -126,6 +127,91 @@ x <- as_epi_df(cases) %>%
 
 attributes(x)$metadata
 ```
+
+## Using additional key columns in `epi_df`
+In the following examples we will show how to create an `epi_df` with additional keys.
+
+### Converting a `tsibble` that has county code as an extra key
+```{r}
+ex1 <- tibble(
+  geo_value = rep(c("ca", "fl", "pa"), each = 3),
+  county_code = c("06059","06061","06067",
+             "12111","12113","12117",
+             "42101","42103","42105"),
+  time_value = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
+                       by = "day"), length.out = length(geo_value)),
+  value = 1:length(geo_value) + 0.01 * withr::with_rng_version("3.0.0", withr::with_seed(42, length(geo_value)))
+  ) %>% 
+  as_tsibble(index = time_value, key = c(geo_value, county_code))
+
+ex1 <- as_epi_df(x = ex1, geo_type = "state", time_type = "day", as_of = "2020-06-03")
+```
+
+The metadata now includes `county_code` as an extra key.
+```{r}
+attr(ex1,"metadata")
+```
+
+
+### Dealing with misspecified column names 
+
+`epi_df` requires there to be columns `geo_value` and `time_value`, if they do not exist then `as_epi_df()` throws an error.
+```{r, error = TRUE}
+data.frame(
+  state = rep(c("ca", "fl", "pa"), each = 3), # misnamed
+  pol = rep(c("blue", "swing", "swing"), each = 3), # extra key
+  reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
+                       by = "day"), length.out = length(geo_value)), # misnamed
+  value = 1:length(geo_value) + 0.01 * withr::with_rng_version("3.0.0", withr::with_seed(42, length(geo_value)))
+) %>% as_epi_df() 
+```
+
+The columns can be renamed to match `epi_df` format. In the example below, notice there is also an additional key `pol`. 
+```{r}
+ex2 <- tibble(
+  state = rep(c("ca", "fl", "pa"), each = 3), # misnamed
+  pol = rep(c("blue", "swing", "swing"), each = 3), # extra key
+  reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
+                          by = "day"), length.out = length(state)), # misnamed
+  value = 1:length(state) + 0.01 * withr::with_rng_version("3.0.0", withr::with_seed(42, length(state)))
+) %>% data.frame()
+
+head(ex2) 
+
+ex2 <- ex2 %>% rename(geo_value = state, time_value = reported_date) %>%
+  as_epi_df(geo_type = "state", as_of = "2020-06-03", 
+            additional_metadata = c(other_keys = "pol"))
+
+attr(ex2,"metadata")
+```
+
+
+### Adding additional keys to an `epi_df` object
+
+In the above examples, all the keys are added to objects that are not `epi_df` objects. We illustrate how to add keys to an `epi_df` object. 
+
+We use a toy data set included in `epiprocess` prepared using the `covidcast` library and are filtering to a single state for simplicity.
+
+```{r}
+ex3 <- jhu_csse_county_level_subset %>%
+  filter(time_value > "2021-12-01", state_name == "Massachusetts") %>%
+  slice_tail(n = 6) 
+  
+attr(ex3,"metadata") # geo_type is county currently
+```
+
+Now we add state (MA) as a new column and a key to the metadata. Reminder that lower case state name abbreviations are what we would expect if this were a `geo_value` column.
+```{r}
+
+ex3 <- ex3 %>% 
+  as_tibble() %>% # needed to add the additional metadata
+  mutate(state = rep(tolower("MA"),6)) %>%
+  as_epi_df(additional_metadata = c(other_keys = "state"))
+
+attr(ex3,"metadata")
+```
+
+Setting these other keys affects the default `epi_slide` behavior, since the grouping is
 
 ## Working with `epi_df` objects downstream
 
@@ -199,88 +285,11 @@ ggplot(x, aes(x = time_value, y = cases)) +
   labs(x = "Date", y = "Confirmed cases of Ebola in Sierra Leone") 
 ```
 
-## Examples on Additional Keys in epi_df
-In the following examples we will show how to create an `epi_df` with additional keys.
-
-### Convert a `tsibble` that has county code as an extra key
-```{r}
-ex1 <- tibble(
-  geo_value = rep(c("ca", "fl", "pa"), each = 3),
-  county_code = c(06059,06061,06067,
-             12111,12113,12117,
-             42101, 42103,42105),
-  time_value = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
-                       by = "day"), length.out = length(geo_value)),
-  value = 1:length(geo_value) + 0.01 * rnorm(length(geo_value))
-  ) %>% 
-  as_tsibble(index = time_value, key = c(geo_value, county_code))
-
-ex1 <- as_epi_df(x = ex1, geo_type = "state", time_type = "day", as_of = "2020-06-03")
-```
-
-The metadata now includes `county_code` as an extra key.
-```{r}
-attr(ex1,"metadata")
-```
 
 
-### Dealing with misspecified column names 
+## Attribution
+This document contains dataset that is a modified part of the [COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) as [republished in the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html). This data set is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.
 
-`epi_df` requires there to be columns `geo_value` and `time_value`, if they do not exist then `as_epi_df()` throws an error.
-```{r, error = TRUE}
-data.frame(
-  state = rep(c("ca", "fl", "pa"), each = 3), # misnamed
-  pol = rep(c("blue", "swing", "swing"), each = 3), # extra key
-  reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
-                       by = "day"), length.out = length(geo_value)), # misnamed
-  value = 1:length(geo_value) + 0.01 * rnorm(length(geo_value))
-) %>% as_epi_df() 
-```
-
-The columns can be renamed to match `epi_df` format. In the example below, notice there is also an additional key `pol`. 
-```{r}
-ex2 <- tibble(
-  state = rep(c("ca", "fl", "pa"), each = 3), # misnamed
-  pol = rep(c("blue", "swing", "swing"), each = 3), # extra key
-  reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
-                          by = "day"), length.out = length(state)), # misnamed
-  value = 1:length(state) + 0.01 * rnorm(length(state))
-) %>% data.frame()
-
-head(ex2) 
-
-ex2 <- ex2 %>% rename(geo_value = state, time_value = reported_date) %>%
-  as_epi_df(geo_type = "state", as_of = "2020-06-03", 
-            additional_metadata = c(other_keys = "pol"))
-
-attr(ex2,"metadata")
-```
-
-
-### Adding additional keys to an `epi_df` object
-
-In the above examples, all the keys are added to objects that are not `epi_df` objects. We illustrate how to add keys to an `epi_df` object. 
-
-We use a subset dataset from the the `covidcast` library. 
-
-```{r}
-ex3 <- jhu_csse_county_level_subset %>%
-  filter(time_value > "2021-12-01", state_name == "Massachusetts") %>%
-  slice_tail(n = 6) 
-  
-attr(ex3,"metadata") # geo_type is county currently
-```
-
-Now we add state (MA) as a new column and a key to the metadata. 
-```{r}
-
-ex3 <- ex3 %>% 
-  as_tsibble() %>% # needed to add the additional metadata
-  mutate(state = rep("MA",6)) %>%
-  as_epi_df(additional_metadata = c(other_keys = "state"))
-
-attr(ex3,"metadata")
-```
-
-
+[From the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html): 
+ These signals are taken directly from the JHU CSSE [COVID-19 GitHub repository](https://github.com/CSSEGISandData/COVID-19) without changes. 
 
