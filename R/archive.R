@@ -78,6 +78,19 @@
 #'
 #' @importFrom R6 R6Class
 #' @export
+#' @examples
+#' tib <- tibble::tibble(
+#'   geo_value = rep(c("ca", "hi"), each = 5),
+#'   time_value = rep(seq(as.Date("2020-01-01"), 
+#'                        by = 1, length.out = 5), times = 2),
+#'   version = rep(seq(as.Date("2020-01-02"), 
+#'                     by = 1, length.out = 5), times = 2),
+#'   value = rnorm(10, mean = 2, sd = 1)
+#' )
+#' 
+#' toy_epi_archive <- tib %>% epi_archive$new(geo_type = "state", 
+#'                                            time_type = "day")
+#' toy_epi_archive 
 epi_archive =
   R6::R6Class(
         classname = "epi_archive",
@@ -447,6 +460,21 @@ epi_archive =
 #'
 #' @export
 #' @examples
+#' # Simple ex. with necessary keys
+#' tib <- tibble::tibble(
+#'   geo_value = rep(c("ca", "hi"), each = 5),
+#'   time_value = rep(seq(as.Date("2020-01-01"), 
+#'                        by = 1, length.out = 5), times = 2),
+#'   version = rep(seq(as.Date("2020-01-02"), 
+#'                     by = 1, length.out = 5), times = 2),
+#'   value = rnorm(10, mean = 2, sd = 1)
+#' )
+#' 
+#' toy_epi_archive <- tib %>% as_epi_archive(geo_type = "state", 
+#'                                           time_type = "day")
+#' toy_epi_archive 
+#' 
+#' # Ex. with an additional key for county
 #' df <- data.frame (geo_value  = c(replicate(2, "ca"), replicate(2, "fl")),
 #'                  county = c(1, 3, 2, 5),
 #'                  time_value = c("2020-06-01",

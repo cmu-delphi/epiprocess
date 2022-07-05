@@ -104,16 +104,12 @@ incomplete windows) is therefore left up to the user, either through the
 specified function or formula \code{f}, or through post-processing.
 
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
-for example, as in:
+for example, as in:\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
+}
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
-}\if{html}{\out{</div>}}
-
-which would be equivalent to:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, ...) mean(x$cases), n = 7,
+which would be equivalent to:\preformatted{epi_slide(x, function(x, ...) mean(x$cases), n = 7,
           new_col_name = "cases_7dav")
-}\if{html}{\out{</div>}}
+}
 
 Thus, to be clear, when the computation is specified via an expression for
 tidy evaluation (first example, above), then the name for the new column is
