@@ -134,3 +134,14 @@ user.
 }
 }
 
+\examples{
+# COVID cases growth rate by state using default method relative change
+jhu_csse_daily_subset \%>\% 
+  group_by(geo_value) \%>\% 
+  mutate(cases_gr = growth_rate(x = time_value,  y = cases))
+
+# Log scale, degree 4 polynomial and 6-fold cross validation
+jhu_csse_daily_subset \%>\% 
+  group_by(geo_value) \%>\% 
+  mutate(gr_poly = growth_rate( x = time_value, y = cases, log_scale = TRUE,  ord = 4,  k = 6))
+}
