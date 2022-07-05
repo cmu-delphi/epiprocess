@@ -71,18 +71,38 @@ test_that("LOCF values are taken out with compactify=TRUE", {
   expect_identical(dt_null,dt_test)
 })
 
-test_that("as_of utilizes LOCF even after removal of LOCF values",{
+test_that("as_of produces the same results with compactify=TRUE as with compactify=FALSE", {
   ea_true <- as_epi_archive(dt,compactify=TRUE)
   ea_false <- as_epi_archive(dt,compactify=FALSE)
   
-  # Row 22, an LOCF row corresponding to the latest version, but for the
-  # date 2020-06-02, is omitted in ea_true
+  # Row 22, an LOCF row corresponding to the latest version, is omitted in
+  # ea_true
+  latest_version = max(ea_false$DT$version)
   expect_warning({
-    as_of_true  <- ea_true$as_of(max(ea_true$DT$version))
-  }, class = "epiprocess__snapshot_as_of_last_update_version")
+    as_of_true  <- ea_true$as_of(latest_version)
+  }, class = "epiprocess__snapshot_as_of_clobberable_version")
   expect_warning({
-    as_of_false <- ea_false$as_of(max(ea_false$DT$version))
-  }, class = "epiprocess__snapshot_as_of_last_update_version")
+    as_of_false <- ea_false$as_of(latest_version)
+  }, class = "epiprocess__snapshot_as_of_clobberable_version")
   
   expect_identical(as_of_true,as_of_false)
+})
+
+test_that("compactify does not alter the default clobberable and observed version bounds", {
+  x = tibble::tibble(
+    geo_value = "geo1",
+    time_value = as.Date("2000-01-01"),
+    version = as.Date("2000-01-01") + 1:5,
+    value = 42L
+  )
+  ea_true <- as_epi_archive(x, compactify=TRUE)
+  ea_false <- as_epi_archive(x, compactify=FALSE)
+  # We say that we base the bounds on the user's `x` arg. We might mess up or
+  # change our minds and base things on the `DT` field (or a temporary `DT`
+  # variable, post-compactify) instead. Check that this test would trigger
+  # in that case:
+  expect_true(max(ea_true$DT$version) != max(ea_false$DT$version))
+  # The actual test:
+  expect_identical(ea_true$clobberable_versions_start, ea_false$clobberable_versions_start)
+  expect_identical(ea_true$observed_versions_end, ea_false$observed_versions_end)
 })

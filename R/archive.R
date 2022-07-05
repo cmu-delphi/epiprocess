@@ -6,6 +6,79 @@
 # `data.table::` everywhere and not importing things.
 .datatable.aware = TRUE
 
+#' Validate a version bound arg
+#'
+#' Expected to be used on `clobberable_versions_start` and
+#' `observed_versions_end`. Some additional checks are needed.
+#'
+#' @param version_bound the version bound to validate
+#' @param x a data frame containing a version column with which to check
+#'   compatibility
+#' @param null_ok Boolean; is `NULL` an acceptable "bound"? (If so, `NULL` will
+#'   have a special context-dependent meaning.)
+#' @param version_bound_arg optional string; what to call the version bound in
+#'   error messages
+#'
+#' @section Side effects: raises an error if version bound appears invalid
+#'
+#' @noRd
+validate_version_bound = function(version_bound, x, null_ok,
+                                  version_bound_arg=rlang::caller_arg(version_bound)) {
+  if (is.null(version_bound)) {
+    # Check for NULL (length 0) before length-1-ness.
+    if (null_ok) {
+      # Looks like a valid version bound; return:
+      return(invisible(NULL))
+    } else {
+      Abort(sprintf("%s must not be NULL", version_bound_arg),
+            class=sprintf("epiprocess__%s_is_null", version_bound_arg))
+    }
+  } else if (length(version_bound) != 1L) {
+    # Check for length-1-ness fairly early so we don't have to worry as much
+    # about our `if`s receiving non-length-1 "Boolean"s.
+    Abort(sprintf("`version_bound` must%s have length 1, but instead was length %d",
+                  if (null_ok) " be `NULL` or" else "",
+                  length(version_bound)),
+          class=sprintf("epiprocess__%s_is_not_length_1", version_bound_arg))
+  } else if (is.na(version_bound)) {
+    # Check for NA-ness before class check, as it's probably the more relevant
+    # error message, as using an NA of a different class is easy to do
+    # accidentally and for some classes is "necessary" as they don't have
+    # built-in NAs.
+    Abort(sprintf(
+      '`%s` must not satisfy `is.na`%s',
+      version_bound_arg,
+      if (null_ok) "; if you were trying to disable a version-related feature, `NULL` may work instead" else ""
+    ), class=sprintf("epiprocess__%s_is_na", version_bound_arg))
+  } else  if (!identical(class(version_bound), class(x[["version"]])) ||
+                !identical(typeof(version_bound), typeof(x[["version"]]))) {
+    Abort(sprintf('`class(%1$s)` must be identical to `class(%2$s)` and `typeof(%1$s)` must be identical to `typeof(%2$s)`',
+                  version_bound_arg, 'x[["version"]]'),
+          class=sprintf("epiprocess__%s_has_invalid_class_or_typeof", version_bound_arg))
+  } else {
+    # Looks like a valid version bound; return:
+    return(invisible(NULL))
+  }
+}
+
+#' Default arg helper: `max(x$version)`, with error if `x` has 0 rows
+#'
+#' Exported to make defaults more easily copyable.
+#'
+#' @param x `x` argument of [`as_epi_archive`]
+#'
+#' @return `max(x$version)` if it has any rows; raises error if it has 0 rows
+#'
+#' @export
+max_version_with_row_in = function(x) {
+  if (nrow(x) == 0L) {
+    Abort(sprintf("`nrow(x)==0L`, representing a data set history with no row up through the latest observed version, but we don't have a sensible guess at what version that is, or whether any of the empty versions might be clobbered in the future; if we use `x` to form an `epi_archive`, then `clobberable_versions_start` and `observed_versions_end` must be manually specified."),
+          class="epiprocess__max_version_cannot_be_used")
+  } else {
+    version_bound <- max(x[["version"]])
+  }
+}
+
 #' @title `epi_archive` object
 #'
 #' @description An `epi_archive` is an R6 class which contains a data table
@@ -87,6 +160,8 @@ epi_archive =
           geo_type = NULL,
           time_type = NULL,
           additional_metadata = NULL,
+          clobberable_versions_start = NULL,
+          observed_versions_end = NULL,
 #' @description Creates a new `epi_archive` object.
 #' @param x A data frame, data table, or tibble, with columns `geo_value`,
 #'   `time_value`, `version`, and then any additional number of columns.
@@ -102,19 +177,53 @@ epi_archive =
 #' @param additional_metadata List of additional metadata to attach to the
 #'   `epi_archive` object. The metadata will have `geo_type` and `time_type`
 #'   fields; named entries from the passed list or will be included as well.
-#' @param compactify Optional, Boolean: should we remove rows that are
+#' @param compactify Optional; Boolean or `NULL`: should we remove rows that are
 #'   considered redundant for the purposes of `epi_archive`'s built-in methods
-#'   such as `$as_of`? As these methods use the last (version of an)
-#'   observation carried forward (LOCF) to interpolate between the version data
-#'   provided, rows that won't change these LOCF results can potentially be
-#'   omitted to save space. Generally, this can be set to `TRUE`, but if you
-#'   directly inspect or edit the fields of the `epi_archive` such as the `$DT`,
-#'   you will have to determine whether `compactify=TRUE` will still produce
-#'   equivalent results.
+#'   such as `as_of`? As these methods use the last (version of an) observation
+#'   carried forward (LOCF) to interpolate between the version data provided,
+#'   rows that don't change these LOCF results can potentially be omitted to
+#'   save space while maintaining the same behavior (with the help of the
+#'   `clobberable_versions_start` and `observed_versions_end` fields in some
+#'   edge cases). `TRUE` will remove these rows, `FALSE` will not, and missing
+#'   or `NULL` will remove these rows and issue a warning. Generally, this can
+#'   be set to `TRUE`, but if you directly inspect or edit the fields of the
+#'   `epi_archive` such as its `DT`, you will have to determine whether
+#'   `compactify=TRUE` will produce the desired results. If compactification
+#'   here is removing a large proportion of the rows, this may indicate a
+#'   potential for space, time, or bandwidth savings upstream the data pipeline,
+#'   e.g., when fetching, storing, or preparing the input data `x`
+#' @param clobberable_versions_start Optional; `length`-1; either a value of the
+#'   same `class` and `typeof` as `x$version`, or `NULL`: specifically, either
+#'   (a) the earliest version that could be subject to "clobbering" (being
+#'   overwritten with different update data using the same version tag as the
+#'   old update data) or (b), `NULL` if no versions are clobberable. The default
+#'   value is `max_version_with_row_in(x)`; this default assumes that (i) there
+#'   is at least one row in `x`, (ii) if an update row (even a
+#'   compactify-redundant update row) is present with version `ver`, then all
+#'   previous versions must be finalized and non-clobberable, although `ver`
+#'   (and onward) might still be modified, (iii) even if we have "observed"
+#'   empty updates for some versions beyond `max(x$version)` (as indicated by
+#'   `observed_versions_end`; see below), we can't assume `max(x$version)` has
+#'   been finalized, because we might see a nonfinalized version + empty
+#'   subsequent versions due to upstream database replication delays in
+#'   combination with the upstream replicas using last-version-carried-forward
+#'   to extrapolate that there were no updates, and (iv) "redundant" update rows
+#'   that would be removed by `compactify` are not redundant, and actually come
+#'   from an explicit version release that indicates that preceding versions are
+#'   finalized.
+#' @param observed_versions_end Optional; a value of the same `class` and
+#'   `typeof` as `x$version`: what is the last version we have observed? The
+#'   default is `max_version_with_row_in(x)`, but values greater than this could
+#'   also be valid, and would indicate that we observed additional versions of
+#'   the data beyond `max(x$version)`, but they all contained empty updates.
+#'   (The default value of `clobberable_versions_start` does not fully trust
+#'   these empty updates, and assumes that any version `>= max(x$version)` could
+#'   be clobbered.) If `nrow(x) == 0`, then this argument is mandatory.
 #' @return An `epi_archive` object.
 #' @importFrom data.table as.data.table key setkeyv
           initialize = function(x, geo_type, time_type, other_keys,
-                                additional_metadata, compactify) {
+                                additional_metadata, compactify,
+                                clobberable_versions_start, observed_versions_end) {
             # Check that we have a data frame
             if (!is.data.frame(x)) {
               Abort("`x` must be a data frame.")
@@ -129,6 +238,9 @@ epi_archive =
             }
             if (!("version" %in% names(x))) {
               Abort("`x` must contain a `version` column.")
+            }
+            if (anyNA(x$version)) {
+              Abort("`x$version` must not contain `NA`s")
             }
 
             # If geo type is missing, then try to guess it
@@ -154,15 +266,40 @@ epi_archive =
                     c("geo_type", "time_type"))) {
               Warn("`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\".")
             }
-            
-            # Finish off with compactify
+
+            # Conduct checks and apply defaults for `compactify`
             if (missing(compactify)) {
               compactify = NULL
             } else if (!rlang::is_bool(compactify) &&
-                        !rlang::is_null(compactify)) {
+                         !rlang::is_null(compactify)) {
               Abort("compactify must be boolean or null.")
             }
-            
+
+            # Apply defaults and conduct checks and apply defaults for
+            # `clobberable_versions_start`, `observed_versions_end`:
+            if (missing(clobberable_versions_start)) {
+              clobberable_versions_start <- max_version_with_row_in(x)
+            }
+            if (missing(observed_versions_end)) {
+              observed_versions_end <- max_version_with_row_in(x)
+            }
+            validate_version_bound(clobberable_versions_start, x, null_ok=TRUE)
+            validate_version_bound(observed_versions_end, x, null_ok=FALSE)
+            if (nrow(x) > 0L && observed_versions_end < max(x[["version"]])) {
+              Abort(sprintf("`observed_versions_end` was %s, but `x` contained
+                             updates for a later version or versions, up through %s",
+                            observed_versions_end, max(x[["version"]])),
+                    class="epiprocess__observed_versions_end_earlier_than_updates")
+            }
+            if (!is.na(clobberable_versions_start) && clobberable_versions_start > observed_versions_end) {
+              Abort(sprintf("`observed_versions_end` was %s, but a `clobberable_versions_start`
+                             of %s indicated that there were later observed versions",
+                            observed_versions_end, clobberable_versions_start),
+                    class="epiprocess__observed_versions_end_earlier_than_clobberable_versions_start")
+            }
+
+            # --- End of validation and replacing missing args with defaults ---
+
             # Create the data table; if x was an un-keyed data.table itself,
             # then the call to as.data.table() will fail to set keys, so we
             # need to check this, then do it manually if needed
@@ -227,6 +364,8 @@ epi_archive =
             self$geo_type = geo_type
             self$time_type = time_type
             self$additional_metadata = additional_metadata
+            self$clobberable_versions_start = clobberable_versions_start
+            self$observed_versions_end = observed_versions_end
           },
           print = function() {
             cat("An `epi_archive` object, with metadata:\n")
@@ -261,23 +400,27 @@ epi_archive =
 #' @importFrom data.table between key
           as_of = function(max_version, min_time_value = -Inf) {
             # Self max version and other keys
-            self_max = max(self$DT$version)
             other_keys = setdiff(key(self$DT),
                                  c("geo_value", "time_value", "version"))
             if (length(other_keys) == 0) other_keys = NULL
 
             # Check a few things on max_version
-            if (!identical(class(max_version), class(self$DT$version))) {
-              Abort("`max_version` and `DT$version` must have same class.")
+            if (!identical(class(max_version), class(self$DT$version)) ||
+                  !identical(typeof(max_version), typeof(self$DT$version))) {
+              Abort("`max_version` and `DT$version` must have same `class` and `typeof`.")
             }
             if (length(max_version) != 1) {
               Abort("`max_version` cannot be a vector.")
             }
-            if (max_version > self_max) {
-              Abort("`max_version` must be at most `max(DT$max_version)`.")
+            if (is.na(max_version)) {
+              Abort("`max_version` must not be NA.")
             }
-            if (max_version == self_max) {
-              Warn("Getting data as of the latest version possible. For a variety of reasons, it is possible that we only have a preliminary picture of this version (e.g., the upstream source has updated it but we have not seen it due to latency in synchronization). Thus, the snapshot that we produce here might not be reproducible at a later time (e.g., when the archive has caught up in terms of synchronization).", class="epiprocess__snapshot_as_of_last_update_version")
+            if (max_version > self$observed_versions_end) {
+              Abort("`max_version` must be at most `self$observed_versions_end`.")
+            }
+            if (!is.null(self$clobberable_versions_start) && max_version >= self$clobberable_versions_start) {
+              Warn('Getting data as of some "clobberable" version (`>= self$clobberable_versions_start`). For a variety of reasons, it is possible that we only have a preliminary picture of this version (e.g., the upstream source has updated it but we have not seen it due to latency in synchronization). Thus, the snapshot that we produce here might not be reproducible at a later time (e.g., when the archive has caught up in terms of synchronization and "clobbered" the current picture of this version).  (You can muffle this warning with `withCallingHandlers({<code>}, "epiprocess__snapshot_as_of_clobberable_version"=function(wrn) invokeRestart("muffleWarning"))`.)',
+                   class="epiprocess__snapshot_as_of_clobberable_version")
             }
 
             # Filter by version and return
@@ -505,9 +648,19 @@ epi_archive =
 #' @param additional_metadata List of additional metadata to attach to the
 #'   `epi_archive` object. The metadata will have `geo_type` and `time_type`
 #'   fields; named entries from the passed list or will be included as well.
-#' @param compactify By default, removes LOCF rows and warns the user about
-#'   them. Optionally, one can input a Boolean: TRUE eliminates LOCF rows,
-#'   while FALSE keeps them.
+#' @param compactify Optional; Boolean or `NULL`: should we remove rows that are
+#'   considered redundant for the purposes of `epi_archive`'s built-in methods
+#'   such as `as_of`? As these methods use the last (version of an) observation
+#'   carried forward (LOCF) to interpolate between the version data provided,
+#'   rows that don't change these LOCF results can potentially be omitted to
+#'   save space. `TRUE` will remove these rows, `FALSE` will not, and missing or
+#'   `NULL` will remove these rows and issue a warning. Generally, this can be
+#'   set to `TRUE`, but if you directly inspect or edit the fields of the
+#'   `epi_archive` such as its `DT`, you will have to determine whether
+#'   `compactify=TRUE` will produce the desired results. If compactification
+#'   here is removing a large proportion of the rows, this may indicate a
+#'   potential for space, time, or bandwidth savings upstream the data pipeline,
+#'   e.g., when fetching, storing, or preparing the input data `x`
 #' @return An `epi_archive` object.
 #'
 #' @details This simply a wrapper around the `new()` method of the `epi_archive`
@@ -539,9 +692,12 @@ epi_archive =
 #'                            time_type = "day",
 #'                            other_keys = "county")
 as_epi_archive = function(x, geo_type, time_type, other_keys,
-                          additional_metadata = list(),compactify = NULL) {
+                          additional_metadata = list(),
+                          compactify = NULL,
+                          clobberable_versions_start = max_version_with_row_in(x),
+                          observed_versions_end = max_version_with_row_in(x)) {
   epi_archive$new(x, geo_type, time_type, other_keys, additional_metadata,
-                  compactify)
+                  compactify, clobberable_versions_start, observed_versions_end)
 }
 
 #' Test for `epi_archive` format

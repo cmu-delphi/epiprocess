@@ -10,7 +10,9 @@ as_epi_archive(
   time_type,
   other_keys,
   additional_metadata = list(),
-  compactify = NULL
+  compactify = NULL,
+  clobberable_versions_start = max_version_with_row_in(x),
+  observed_versions_end = max_version_with_row_in(x)
 )
 }
 \arguments{
@@ -33,9 +35,19 @@ apart from "geo_value", "time_value", and "version".}
 \code{epi_archive} object. The metadata will have \code{geo_type} and \code{time_type}
 fields; named entries from the passed list or will be included as well.}
 
-\item{compactify}{By default, removes LOCF rows and warns the user about
-them. Optionally, one can input a Boolean: TRUE eliminates LOCF rows,
-while FALSE keeps them.}
+\item{compactify}{Optional; Boolean or \code{NULL}: should we remove rows that are
+considered redundant for the purposes of \code{epi_archive}'s built-in methods
+such as \code{as_of}? As these methods use the last (version of an) observation
+carried forward (LOCF) to interpolate between the version data provided,
+rows that don't change these LOCF results can potentially be omitted to
+save space. \code{TRUE} will remove these rows, \code{FALSE} will not, and missing or
+\code{NULL} will remove these rows and issue a warning. Generally, this can be
+set to \code{TRUE}, but if you directly inspect or edit the fields of the
+\code{epi_archive} such as its \code{DT}, you will have to determine whether
+\code{compactify=TRUE} will produce the desired results. If compactification
+here is removing a large proportion of the rows, this may indicate a
+potential for space, time, or bandwidth savings upstream the data pipeline,
+e.g., when fetching, storing, or preparing the input data \code{x}}
 }
 \value{
 An \code{epi_archive} object.

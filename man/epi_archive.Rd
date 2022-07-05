@@ -104,7 +104,9 @@ Creates a new \code{epi_archive} object.
   time_type,
   other_keys,
   additional_metadata,
-  compactify
+  compactify,
+  clobberable_versions_start,
+  observed_versions_end
 )}\if{html}{\out{</div>}}
 }
 
@@ -130,15 +132,50 @@ apart from "geo_value", "time_value", and "version".}
 \code{epi_archive} object. The metadata will have \code{geo_type} and \code{time_type}
 fields; named entries from the passed list or will be included as well.}
 
-\item{\code{compactify}}{Optional, Boolean: should we remove rows that are
+\item{\code{compactify}}{Optional; Boolean or \code{NULL}: should we remove rows that are
 considered redundant for the purposes of \code{epi_archive}'s built-in methods
-such as \verb{$as_of}? As these methods use the last (version of an)
-observation carried forward (LOCF) to interpolate between the version data
-provided, rows that won't change these LOCF results can potentially be
-omitted to save space. Generally, this can be set to \code{TRUE}, but if you
-directly inspect or edit the fields of the \code{epi_archive} such as the \verb{$DT},
-you will have to determine whether \code{compactify=TRUE} will still produce
-equivalent results.}
+such as \code{as_of}? As these methods use the last (version of an) observation
+carried forward (LOCF) to interpolate between the version data provided,
+rows that don't change these LOCF results can potentially be omitted to
+save space while maintaining the same behavior (with the help of the
+\code{clobberable_versions_start} and \code{observed_versions_end} fields in some
+edge cases). \code{TRUE} will remove these rows, \code{FALSE} will not, and missing
+or \code{NULL} will remove these rows and issue a warning. Generally, this can
+be set to \code{TRUE}, but if you directly inspect or edit the fields of the
+\code{epi_archive} such as its \code{DT}, you will have to determine whether
+\code{compactify=TRUE} will produce the desired results. If compactification
+here is removing a large proportion of the rows, this may indicate a
+potential for space, time, or bandwidth savings upstream the data pipeline,
+e.g., when fetching, storing, or preparing the input data \code{x}}
+
+\item{\code{clobberable_versions_start}}{Optional; \code{length}-1; either a value of the
+same \code{class} and \code{typeof} as \code{x$version}, or \code{NULL}: specifically, either
+(a) the earliest version that could be subject to "clobbering" (being
+overwritten with different update data using the same version tag as the
+old update data) or (b), \code{NULL} if no versions are clobberable. The default
+value is \code{max_version_with_row_in(x)}; this default assumes that (i) there
+is at least one row in \code{x}, (ii) if an update row (even a
+compactify-redundant update row) is present with version \code{ver}, then all
+previous versions must be finalized and non-clobberable, although \code{ver}
+(and onward) might still be modified, (iii) even if we have "observed"
+empty updates for some versions beyond \code{max(x$version)} (as indicated by
+\code{observed_versions_end}; see below), we can't assume \code{max(x$version)} has
+been finalized, because we might see a nonfinalized version + empty
+subsequent versions due to upstream database replication delays in
+combination with the upstream replicas using last-version-carried-forward
+to extrapolate that there were no updates, and (iv) "redundant" update rows
+that would be removed by \code{compactify} are not redundant, and actually come
+from an explicit version release that indicates that preceding versions are
+finalized.}
+
+\item{\code{observed_versions_end}}{Optional; a value of the same \code{class} and
+\code{typeof} as \code{x$version}: what is the last version we have observed? The
+default is \code{max_version_with_row_in(x)}, but values greater than this could
+also be valid, and would indicate that we observed additional versions of
+the data beyond \code{max(x$version)}, but they all contained empty updates.
+(The default value of \code{clobberable_versions_start} does not fully trust
+these empty updates, and assumes that any version \verb{>= max(x$version)} could
+be clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
 }
 \if{html}{\out{</div>}}
 }
