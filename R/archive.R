@@ -28,10 +28,12 @@
 #' The data table `DT` has key variables `geo_value`, `time_value`, `version`,
 #'   as well as any others (these can be specified when instantiating the
 #'   `epi_archive` object via the `other_keys` argument, and/or set by operating
-#'   on `DT` directly). There can only be a single row per unique combination of
+#'   on `DT` directly). Refer to the documentation for `as_epi_archive()` for 
+#'   information and examples of relevant parameter names for an `epi_archive` object.
+#'   Note that there can only be a single row per unique combination of
 #'   key variables, and thus the key variables are critical for figuring out how
 #'   to generate a snapshot of data from the archive, as of a given version.
-#'
+#'  
 #' In general, last observation carried forward (LOCF) is used to data in
 #'   between recorded versions. Currently, deletions must be represented as
 #'   revising a row to a special state (e.g., making the entries `NA` or
@@ -117,6 +119,10 @@ epi_archive =
 #'   fields; named entries from the passed list or will be included as well.
 #' @return An `epi_archive` object.
 #' @importFrom data.table as.data.table key setkeyv
+#' 
+#' @details 
+#' Refer to the documentation for `as_epi_archive()` for more information 
+#' and examples of parameter names.
           initialize = function(x, geo_type, time_type, other_keys,
                                 additional_metadata) {
             # Check that we have a data frame
