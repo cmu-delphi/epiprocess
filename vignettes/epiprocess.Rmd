@@ -211,7 +211,7 @@ ex3 <- ex3 %>%
 attr(ex3,"metadata")
 ```
 
-Setting these other keys affects the default `epi_slide` behavior, since the grouping is
+Currently `other_keys` metadata in `epi_df` doesn't impact `epi_slide()`, contrary to `other_keys` in `as_epi_archive` which affects how the update data is interpreted.
 
 ## Working with `epi_df` objects downstream
 
