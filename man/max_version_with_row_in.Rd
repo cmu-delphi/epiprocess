@@ -10,7 +10,8 @@ max_version_with_row_in(x)
 \item{x}{\code{x} argument of \code{\link{as_epi_archive}}}
 }
 \value{
-\code{max(x$version)} if it has any rows; raises error if it has 0 rows
+\code{max(x$version)} if it has any rows; raises error if it has 0 rows or
+an \code{NA} version value
 }
 \description{
 Exported to make defaults more easily copyable.
