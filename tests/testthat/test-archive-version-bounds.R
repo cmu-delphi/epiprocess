@@ -1,35 +1,25 @@
-test_that("`validate_version_bound` allows/catches `NULL` as requested", {
-  my_version_bound = NULL
-  validate_version_bound(my_version_bound, null_ok=TRUE)
-  expect_error(validate_version_bound(my_version_bound, null_ok=FALSE),
-               class="epiprocess__my_version_bound_is_null")
+test_that("`validate_version_bound` allows/catches `NA` as requested", {
+  my_version_bound = NA
+  validate_version_bound(my_version_bound, na_ok=TRUE)
+  expect_error(validate_version_bound(my_version_bound, na_ok=FALSE),
+               class="epiprocess__my_version_bound_is_na")
   # Note that if the error class name changes, this test may produce some
   # confusing output along the following lines:
   #
   # > Error in `$<-.data.frame`(`*tmp*`, "call_text", value = c("testthat::expect_error(...)",  :
-  # >   replacement has 4 rows, data has 3
+  # >   replacement has 5 rows, data has 3
 })
 
 test_that("`validate_version_bound` catches bounds that are the wrong length", {
-  # Even if NULL is allowed, we should disallow other length-0 things:
-  my_version_bound1 = integer(0L)
-  expect_error(validate_version_bound(my_version_bound1, null_ok=TRUE),
-               class="epiprocess__my_version_bound1_is_not_length_1")
-  # And length > 1 things:
+  my_version_bound1a = NULL
+  expect_error(validate_version_bound(my_version_bound1a, na_ok=TRUE),
+               class="epiprocess__my_version_bound1a_is_not_length_1")
+  my_version_bound1b = integer(0L)
+  expect_error(validate_version_bound(my_version_bound1b, na_ok=TRUE),
+               class="epiprocess__my_version_bound1b_is_not_length_1")
   my_version_bound2 = c(2, 10)
-  expect_error(validate_version_bound(my_version_bound2, null_ok=TRUE),
+  expect_error(validate_version_bound(my_version_bound2, na_ok=TRUE),
                class="epiprocess__my_version_bound2_is_not_length_1")
-})
-
-test_that("`validate_version_bound` catches NA and outputs a sensible error message", {
-  my_version_bound1 = as.Date(NA)
-  expect_error(validate_version_bound(my_version_bound1, null_ok=FALSE),
-               regexp = "satisfy `is.na`$",
-               class = "epiprocess__my_version_bound1_is_na")
-  my_version_bound2 = NA_integer_
-  expect_error(validate_version_bound(my_version_bound2, null_ok=FALSE),
-               regexp = "satisfy `is.na`$",
-               class = "epiprocess__my_version_bound2_is_na")
 })
 
 test_that("`validate_version_bound` validate and class checks together allow and catch as intended", {
@@ -58,17 +48,17 @@ test_that("`validate_version_bound` validate and class checks together allow and
   x_datetime = tibble::tibble(version = my_datetime)
   # Custom classes matter (test vectors and non-vctrs-specialized lists separately):
   my_version_bound1 = `class<-`(24, "c1")
-  expect_error(validate_version_bound(my_version_bound1, x_int, null_ok=FALSE),
+  expect_error(validate_version_bound(my_version_bound1, x_int, na_ok=FALSE),
                class="epiprocess__my_version_bound1_has_invalid_class_or_typeof")
   my_version_bound2 = `class<-`(list(12), c("c2a","c2b","c2c"))
-  expect_error(validate_version_bound(my_version_bound2, x_list, null_ok=FALSE),
+  expect_error(validate_version_bound(my_version_bound2, x_list, na_ok=FALSE),
                class="epiprocess__my_version_bound2_has_invalid_class_or_typeof")
   # Want no error matching date to date or datetime to datetime, but no interop due to tz issues:
   validate_version_bound(my_date, x_date, version_bound_arg="vb")
   validate_version_bound(my_datetime, x_datetime, version_bound_arg="vb")
-  expect_error(validate_version_bound(my_datetime, x_date, null_ok=TRUE, version_bound_arg="vb"),
+  expect_error(validate_version_bound(my_datetime, x_date, na_ok=TRUE, version_bound_arg="vb"),
                class="epiprocess__vb_has_invalid_class_or_typeof")
-  expect_error(validate_version_bound(my_date, x_datetime, null_ok=TRUE, version_bound_arg="vb"),
+  expect_error(validate_version_bound(my_date, x_datetime, na_ok=TRUE, version_bound_arg="vb"),
                class="epiprocess__vb_has_invalid_class_or_typeof")
   # Bad:
   expect_error(validate_version_bound(3.5, x_int, TRUE, "vb"))
@@ -101,15 +91,15 @@ test_that("archive version bounds args work as intended", {
   expect_error(as_epi_archive(update_tbl[integer(0L),]),
                class="epiprocess__max_version_cannot_be_used")
   expect_error(as_epi_archive(update_tbl,
-                              clobberable_versions_start = NULL,
+                              clobberable_versions_start = NA,
                               observed_versions_end = measurement_date),
                class="epiprocess__observed_versions_end_earlier_than_updates")
   expect_error(as_epi_archive(update_tbl,
                               clobberable_versions_start=measurement_date+6L,
                               observed_versions_end = measurement_date+5L),
                class="epiprocess__observed_versions_end_earlier_than_clobberable_versions_start")
-  expect_error(as_epi_archive(update_tbl, observed_versions_end = NULL),
-               regexp="observed_versions_end.*must not be NULL")
+  expect_error(as_epi_archive(update_tbl, observed_versions_end = NA),
+               regexp="observed_versions_end.*must not satisfy.*is.na")
   ea_default = as_epi_archive(update_tbl)
   ea_default$as_of(measurement_date+4L)
   expect_warning(ea_default$as_of(measurement_date+5L),

@@ -14,7 +14,7 @@
 #' @param version_bound the version bound to validate
 #' @param x a data frame containing a version column with which to check
 #'   compatibility
-#' @param null_ok Boolean; is `NULL` an acceptable "bound"? (If so, `NULL` will
+#' @param na_ok Boolean; is `NULL` an acceptable "bound"? (If so, `NULL` will
 #'   have a special context-dependent meaning.)
 #' @param version_bound_arg optional string; what to call the version bound in
 #'   error messages
@@ -22,41 +22,41 @@
 #' @section Side effects: raises an error if version bound appears invalid
 #'
 #' @noRd
-validate_version_bound = function(version_bound, x, null_ok,
-                                  version_bound_arg=rlang::caller_arg(version_bound)) {
-  if (is.null(version_bound)) {
-    # Check for NULL (length 0) before length-1-ness.
-    if (null_ok) {
-      # Looks like a valid version bound; return:
-      return(invisible(NULL))
-    } else {
-      Abort(sprintf("%s must not be NULL", version_bound_arg),
-            class=sprintf("epiprocess__%s_is_null", version_bound_arg))
-    }
-  } else if (length(version_bound) != 1L) {
+validate_version_bound = function(version_bound, x, na_ok,
+                                  version_bound_arg = rlang::caller_arg(version_bound),
+                                  x_arg = rlang::caller_arg(version_bound)) {
+  # We might want some (optional?) validation here to detect internal bugs.
+  if (length(version_bound) != 1L) {
     # Check for length-1-ness fairly early so we don't have to worry as much
     # about our `if`s receiving non-length-1 "Boolean"s.
-    Abort(sprintf("`version_bound` must%s have length 1, but instead was length %d",
-                  if (null_ok) " be `NULL` or" else "",
+    Abort(sprintf("`version_bound` must have length 1, but instead was length %d",
                   length(version_bound)),
           class=sprintf("epiprocess__%s_is_not_length_1", version_bound_arg))
   } else if (is.na(version_bound)) {
-    # Check for NA-ness before class check, as it's probably the more relevant
-    # error message, as using an NA of a different class is easy to do
-    # accidentally and for some classes is "necessary" as they don't have
-    # built-in NAs.
-    Abort(sprintf(
-      '`%s` must not satisfy `is.na`%s',
-      version_bound_arg,
-      if (null_ok) "; if you were trying to disable a version-related feature, `NULL` may work instead" else ""
-    ), class=sprintf("epiprocess__%s_is_na", version_bound_arg))
+    # Check for NA before class&type, as any-class&type NA should be fine for
+    # our purposes, and some version classes&types might not have their own NA
+    # value to pass in.
+    if (na_ok) {
+      # Looks like a valid version bound; exit without error.
+      return(invisible(NULL))
+    } else {
+      Abort(sprintf(
+        '`%s` must not satisfy `is.na` (NAs are not allowed for this kind of version bound)',
+        version_bound_arg
+      ), class=sprintf("epiprocess__%s_is_na", version_bound_arg))
+    }
   } else  if (!identical(class(version_bound), class(x[["version"]])) ||
                 !identical(typeof(version_bound), typeof(x[["version"]]))) {
-    Abort(sprintf('`class(%1$s)` must be identical to `class(%2$s)` and `typeof(%1$s)` must be identical to `typeof(%2$s)`',
-                  version_bound_arg, 'x[["version"]]'),
-          class=sprintf("epiprocess__%s_has_invalid_class_or_typeof", version_bound_arg))
+    Abort(sprintf(
+      '`class(%1$s)` must be identical to `class(%2$s)` and `typeof(%1$s)` must be identical to `typeof(%2$s)`',
+      version_bound_arg,
+      # '{x_arg}[["version"]]' except adding parentheses if needed:
+      rlang::expr_deparse(rlang::new_call(
+        quote(`[[`), rlang::pairlist2(rlang::parse_expr(x_arg), "version")
+      ))
+    ), class=sprintf("epiprocess__%s_has_invalid_class_or_typeof", version_bound_arg))
   } else {
-    # Looks like a valid version bound; return:
+    # Looks like a valid version bound; exit without error.
     return(invisible(NULL))
   }
 }
@@ -67,7 +67,8 @@ validate_version_bound = function(version_bound, x, null_ok,
 #'
 #' @param x `x` argument of [`as_epi_archive`]
 #'
-#' @return `max(x$version)` if it has any rows; raises error if it has 0 rows
+#' @return `max(x$version)` if it has any rows; raises error if it has 0 rows or
+#'   an `NA` version value
 #'
 #' @export
 max_version_with_row_in = function(x) {
@@ -75,9 +76,29 @@ max_version_with_row_in = function(x) {
     Abort(sprintf("`nrow(x)==0L`, representing a data set history with no row up through the latest observed version, but we don't have a sensible guess at what version that is, or whether any of the empty versions might be clobbered in the future; if we use `x` to form an `epi_archive`, then `clobberable_versions_start` and `observed_versions_end` must be manually specified."),
           class="epiprocess__max_version_cannot_be_used")
   } else {
-    version_bound <- max(x[["version"]])
+    version_col = purrr::pluck(x, "version") # error not NULL if doesn't exist
+    if (anyNA(version_col)) {
+      Abort("version values cannot be NA",
+            class="epiprocess__version_values_must_not_be_na")
+    } else {
+      version_bound <- max(version_col)
+    }
   }
 }
+
+#' Get the next possible value greater than `x` of the same type
+#'
+#' @param x the starting "value"(s)
+#' @return same class, typeof, and length as `x`
+#'
+#' @export
+next_after = function(x) UseMethod("next_after")
+
+#' @export
+next_after.integer = function(x) x + 1L
+
+#' @export
+next_after.Date = function(x) x + 1L
 
 #' @title `epi_archive` object
 #'
@@ -193,32 +214,32 @@ epi_archive =
 #'   potential for space, time, or bandwidth savings upstream the data pipeline,
 #'   e.g., when fetching, storing, or preparing the input data `x`
 #' @param clobberable_versions_start Optional; `length`-1; either a value of the
-#'   same `class` and `typeof` as `x$version`, or `NULL`: specifically, either
-#'   (a) the earliest version that could be subject to "clobbering" (being
-#'   overwritten with different update data using the same version tag as the
-#'   old update data) or (b), `NULL` if no versions are clobberable. The default
-#'   value is `max_version_with_row_in(x)`; this default assumes that (i) there
-#'   is at least one row in `x`, (ii) if an update row (even a
-#'   compactify-redundant update row) is present with version `ver`, then all
-#'   previous versions must be finalized and non-clobberable, although `ver`
-#'   (and onward) might still be modified, (iii) even if we have "observed"
-#'   empty updates for some versions beyond `max(x$version)` (as indicated by
-#'   `observed_versions_end`; see below), we can't assume `max(x$version)` has
-#'   been finalized, because we might see a nonfinalized version + empty
-#'   subsequent versions due to upstream database replication delays in
-#'   combination with the upstream replicas using last-version-carried-forward
-#'   to extrapolate that there were no updates, and (iv) "redundant" update rows
-#'   that would be removed by `compactify` are not redundant, and actually come
-#'   from an explicit version release that indicates that preceding versions are
-#'   finalized.
-#' @param observed_versions_end Optional; a value of the same `class` and
-#'   `typeof` as `x$version`: what is the last version we have observed? The
-#'   default is `max_version_with_row_in(x)`, but values greater than this could
-#'   also be valid, and would indicate that we observed additional versions of
-#'   the data beyond `max(x$version)`, but they all contained empty updates.
-#'   (The default value of `clobberable_versions_start` does not fully trust
-#'   these empty updates, and assumes that any version `>= max(x$version)` could
-#'   be clobbered.) If `nrow(x) == 0`, then this argument is mandatory.
+#'   same `class` and `typeof` as `x$version`, or an `NA` of any `class` and
+#'   `typeof`: specifically, either (a) the earliest version that could be
+#'   subject to "clobbering" (being overwritten with different update data using
+#'   the same version tag as the old update data), or (b) `NA`, to indicate that
+#'   no versions are clobberable. The default value is
+#'   `max_version_with_row_in(x)`; this default assumes that (i) there is at
+#'   least one row in `x`, (ii) if an update row (even a compactify-redundant
+#'   update row) is present with version `ver`, then all previous versions must
+#'   be finalized and non-clobberable, although `ver` (and onward) might still
+#'   be modified, (iii) even if we have "observed" empty updates for some
+#'   versions beyond `max(x$version)` (as indicated by `observed_versions_end`;
+#'   see below), we can't assume `max(x$version)` has been finalized, because we
+#'   might see a nonfinalized version + empty subsequent versions due to
+#'   upstream database replication delays in combination with the upstream
+#'   replicas using last-version-carried-forward to extrapolate that there were
+#'   no updates, and (iv) "redundant" update rows that would be removed by
+#'   `compactify` are not redundant, and actually come from an explicit version
+#'   release that indicates that preceding versions are finalized.
+#' @param observed_versions_end Optional; length-1, same `class` and `typeof` as
+#'   `x$version`: what is the last version we have observed? The default is
+#'   `max_version_with_row_in(x)`, but values greater than this could also be
+#'   valid, and would indicate that we observed additional versions of the data
+#'   beyond `max(x$version)`, but they all contained empty updates. (The default
+#'   value of `clobberable_versions_start` does not fully trust these empty
+#'   updates, and assumes that any version `>= max(x$version)` could be
+#'   clobbered.) If `nrow(x) == 0`, then this argument is mandatory.
 #' @return An `epi_archive` object.
 #' @importFrom data.table as.data.table key setkeyv
           initialize = function(x, geo_type, time_type, other_keys,
@@ -240,7 +261,8 @@ epi_archive =
               Abort("`x` must contain a `version` column.")
             }
             if (anyNA(x$version)) {
-              Abort("`x$version` must not contain `NA`s")
+              Abort("`x$version` must not contain `NA`s",
+                    class = "epiprocess__version_values_must_not_be_na")
             }
               
             # If geo type is missing, then try to guess it
@@ -283,8 +305,8 @@ epi_archive =
             if (missing(observed_versions_end)) {
               observed_versions_end <- max_version_with_row_in(x)
             }
-            validate_version_bound(clobberable_versions_start, x, null_ok=TRUE)
-            validate_version_bound(observed_versions_end, x, null_ok=FALSE)
+            validate_version_bound(clobberable_versions_start, x, na_ok=TRUE)
+            validate_version_bound(observed_versions_end, x, na_ok=FALSE)
             if (nrow(x) > 0L && observed_versions_end < max(x[["version"]])) {
               Abort(sprintf("`observed_versions_end` was %s, but `x` contained
                              updates for a later version or versions, up through %s",
@@ -381,10 +403,18 @@ epi_archive =
                         min(self$DT$time_value)))
             cat(sprintf("* %-14s = %s\n", "max time value",
                         max(self$DT$time_value)))
-            cat(sprintf("* %-14s = %s\n", "min version",
+            cat(sprintf("* %-14s = %s\n", "first version with update",
                         min(self$DT$version)))
-            cat(sprintf("* %-14s = %s\n", "max version",
+            cat(sprintf("* %-14s = %s\n", "last version with update",
                         max(self$DT$version)))
+            if (is.na(self$clobberable_versions_start)) {
+              cat("No clobberable versions\n")
+            } else {
+              cat(sprintf("* %-14s = %s\n", "clobberable versions start",
+                          self$clobberable_versions_start))
+            }
+            cat(sprintf("* %-14s = %s\n", "observed versions end",
+                        self$observed_versions_end))
             cat("----------\n")
             cat(sprintf("Data archive (stored in DT field): %i x %i\n", 
                         nrow(self$DT), ncol(self$DT)))
@@ -423,7 +453,7 @@ epi_archive =
             if (max_version > self$observed_versions_end) {
               Abort("`max_version` must be at most `self$observed_versions_end`.")
             }
-            if (!is.null(self$clobberable_versions_start) && max_version >= self$clobberable_versions_start) {
+            if (!is.na(self$clobberable_versions_start) && max_version >= self$clobberable_versions_start) {
               Warn('Getting data as of some "clobberable" version (`>= self$clobberable_versions_start`). For a variety of reasons, it is possible that we only have a preliminary picture of this version (e.g., the upstream source has updated it but we have not seen it due to latency in synchronization). Thus, the snapshot that we produce here might not be reproducible at a later time (e.g., when the archive has caught up in terms of synchronization and "clobbered" the current picture of this version).  (You can muffle this warning with `withCallingHandlers({<code>}, "epiprocess__snapshot_as_of_clobberable_version"=function(wrn) invokeRestart("muffleWarning"))`.)',
                    class="epiprocess__snapshot_as_of_clobberable_version")
             }
