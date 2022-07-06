@@ -1,0 +1,117 @@
+---
+title: Compactify to remove LOCF values
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Compactify to remove LOCF values}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Removing LOCF data to save space
+
+We need not even store rows that look like the last observation carried forward,
+as they use up extra space. Furthermore, we already apply LOCF in the
+epi_archive-related functions, such that the results should be the same with or
+without the rows, aas long as use code does not rely on directly modifying
+epi_archive's fields in a way that expects all the original records and breaks
+if they are trimmed down.
+ 
+There are three
+different values that can be assigned to `compactify`:
+
+* No argument: Does not put in LOCF values, and prints the first six LOCF values
+that have been omitted but could have been placed.
+* `TRUE`: Does not put in LOCF values, but doesn't print anything relating
+to which values have been omitted.
+* `FALSE`: Includes LOCF values.
+
+For this example, we have one chart using LOCF values, while another doesn't
+use them to illustrate LOCF. Notice how the head of the first dataset differs
+from the second from the third value included.
+
+```{r}
+library(dplyr)
+
+dt <- archive_cases_dv_subset$DT
+
+locf_omitted <- as_epi_archive(dt)
+locf_included <- as_epi_archive(dt,compactify = FALSE)
+
+head(locf_omitted$DT)
+head(locf_included$DT)
+```
+ 
+LOCF can mar the performance of dataset operations. As the column
+`case_rate_7d_av` has many more LOCF values than `percent_cli`, we will omit the
+`percent_cli` column for comparing performance.
+
+```{r}
+dt2 <- select(dt,-percent_cli)
+
+locf_included_2 <- as_epi_archive(dt2,compactify=FALSE)
+locf_omitted_2 <- as_epi_archive(dt2,compactify=TRUE)
+```
+
+We can see how large each dataset is to better understand why LOCF uses up
+space that may slow down performance.
+
+```{r}
+nrow(locf_included_2$DT)
+nrow(locf_omitted_2$DT)
+```
+
+
+As we can see, performing 200 iterations of `dplyr::filter` is faster when the
+LOCF values are omitted.
+
+```{r}
+# Performance of filtering
+iterate_filter <- function(my_ea) {
+  for (i in 1:1000) {
+    filter(my_ea$DT,version >= as.Date("2020-01-01") + i)
+  }
+}
+
+elapsed_time <- function(fx) c(system.time(fx))[[3]]
+
+speed_test <- function(f,name) {
+  data.frame(
+    operation = name,
+    locf=elapsed_time(f(locf_included_2)),
+    no_locf=elapsed_time(f(locf_omitted_2))
+  )
+}
+
+speeds <- speed_test(iterate_filter,"filter_1000x")
+
+```
+
+We would also like to measure the speed of `epi_archive` methods.
+
+```{r}
+# Performance of as_of iterated 200 times
+iterate_as_of <- function(my_ea) {
+  for (i in 1:1000) {
+    my_ea$as_of(min(my_ea$DT$time_value) + i - 1000)
+  }
+}
+
+speeds <- rbind(speeds, speed_test(iterate_as_of,"as_of_1000x"))
+
+# Performance of slide
+slide_median <- function(my_ea) {
+    my_ea$slide(median = median(case_rate_7d_av))
+}
+
+speeds <- rbind(speeds, speed_test(slide_median,"slide_median"))
+```
+Here is a detailed performance comparison:
+
+```{r}
+speeds_tidy <- gather(speeds,key="is_locf",value="time_in_s",locf,no_locf)
+
+library(ggplot2)
+
+ggplot(speeds_tidy) +
+  geom_bar(aes(x=is_locf,y=time_in_s,fill=operation),stat = "identity")
+```

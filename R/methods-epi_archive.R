@@ -4,7 +4,7 @@
 #' given version. See the [archive
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 #' examples.
-#' 
+#'
 #' @param x An `epi_archive` object
 #' @param max_version Time value specifying the max version to permit in the
 #'   snapshot. That is, the snapshot will comprise the unique rows of the
@@ -17,7 +17,7 @@
 #' @return An `epi_df` object.
 #'
 #' @details This is simply a wrapper around the `as_of()` method of the
-#'   `epi_archive` class, so if `x` is an `epi_archive` object, then: 
+#'   `epi_archive` class, so if `x` is an `epi_archive` object, then:
 #'   ```
 #'   epix_as_of(x, max_version = v)
 #'   ```
@@ -25,13 +25,19 @@
 #'   ```
 #'   x$as_of(max_version = v)
 #'   ```
+#'
+#' @export
+#' @examples
+#' # warning message of data latency shown
+#' epix_as_of(x = archive_cases_dv_subset,
+#'            max_version = max(archive_cases_dv_subset$DT$version))
 #' 
 #' @export 
 #' @examples
 #'
-#' range(archive_cases_dv$DT$version) # 2020-06-02 -- 2020-06-15
+#' range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
 #'
-#' epix_as_of(x = archive_cases_dv,
+#' epix_as_of(x = archive_cases_dv_subset,
 #'            max_version = as.Date("2020-06-12"))
 #'
 #' # When fetching a snapshot as of the latest version with update data in the
@@ -43,8 +49,8 @@
 #' # but previous versions should be finalized). We can muffle such warnings with
 #' # the following pattern:
 #' withCallingHandlers({
-#'   epix_as_of(x = archive_cases_dv,
-#'              max_version = max(archive_cases_dv$DT$version))
+#'   epix_as_of(x = archive_cases_dv_subset,
+#'              max_version = max(archive_cases_dv_subset$DT$version))
 #' }, epiprocess__snapshot_as_of_last_update_version = function(wrn) invokeRestart("muffleWarning"))
 epix_as_of = function(x, max_version, min_time_value = -Inf) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
@@ -74,7 +80,7 @@ epix_as_of = function(x, max_version, min_time_value = -Inf) {
 #' step?  Default is `NA`, which means that they are treated as `NA` values; if
 #    `NaN`, then they are treated as distinct.
 #' @return Nothing; the data table in `x` is overwritten with the merged one.
-#' 
+#'
 #' @details This is simply a wrapper around the `merge()` method of the
 #'   `epi_archive` class, so if `x` and `y` are an `epi_archive` objects, then:
 #'   ```
@@ -84,19 +90,18 @@ epix_as_of = function(x, max_version, min_time_value = -Inf) {
 #'   ```
 #'   x$merge(y)
 #'   ```
-#' 
+#'
 #' @export
-#' @examples 
+#' @examples
 #' # create two example epi_archive datasets
-#' x <- archive_cases_dv$DT %>% 
-#'   dplyr::select(geo_value,time_value,version,case_rate) %>% 
+#' x <- archive_cases_dv_subset$DT %>% 
+#'   dplyr::select(geo_value,time_value,version,case_rate_7d_av) %>% 
 #'   as_epi_archive(compactify=TRUE)
-#' y <- archive_cases_dv$DT %>% 
+#' y <- archive_cases_dv_subset$DT %>% 
 #'   dplyr::select(geo_value,time_value,version,percent_cli) %>% 
 #'   as_epi_archive(compactify=TRUE)
-#'   
 #' # a full join stored in x
-#' epix_merge(x, y, all = TRUE) 
+#' epix_merge(x, y, all = TRUE)
 epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   return(x$merge(y, ..., locf = locf, nan = nan))
@@ -111,7 +116,7 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #' [archive
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 #' examples.
-#' 
+#'
 #' @param x An `epi_archive` object.
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
 #'   to apply a function or formula over a running window of `n` time steps
@@ -146,7 +151,7 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
 #' @param as_list_col Should the new column be stored as a list column? Default
-#'   is `FALSE`, in which case a list object returned by `f` would be unnested 
+#'   is `FALSE`, in which case a list object returned by `f` would be unnested
 #'   (using `tidyr::unnest()`), and the names of the resulting columns are given
 #'   by prepending `new_col_name` to the names of the list elements.
 #' @param names_sep String specifying the separator to use in `tidyr::unnest()`
@@ -162,13 +167,13 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'   values.
 #'
 #' @details Two key distinctions between inputs to the current function and
-#'   `epi_slide()`: 
+#'   `epi_slide()`:
 #'   1. `epix_slide()` uses windows that are **always right-aligned** (in
 #'   `epi_slide()`, custom alignments could be specified using the `align` or
 #'   `before` arguments).
 #'   2. `epix_slide()` uses a `group_by` to specify the grouping upfront (in
 #'   `epi_slide()`, this would be accomplished by a preceding function call to
-#'   `dplyr::group_by()`). 
+#'   `dplyr::group_by()`).
 #' Apart from this, the interfaces between `epix_slide()` and `epi_slide()` are
 #'   the same.
 #'
@@ -176,7 +181,7 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'   returns the grouping variables, `time_value`, and the new columns from
 #'   sliding, whereas `epi_slide()` returns all original variables plus the new
 #'   columns from sliding.
-#' 
+#'
 #' Furthermore, the current function can be considerably slower than
 #'   `epi_slide()`, for two reasons: (1) it must repeatedly fetch
 #'   properly-versioned snapshots from the data archive (via its `as_of()`
@@ -186,7 +191,7 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'   version-aware sliding is necessary (as it its purpose).
 #'
 #' Finally, this is simply a wrapper around the `slide()` method of the
-#'   `epi_archive` class, so if `x` is an `epi_archive` object, then: 
+#'   `epi_archive` class, so if `x` is an `epi_archive` object, then:
 #'   ```
 #'   epix_slide(x, new_var = comp(old_var), n = 120)
 #'   ```
@@ -194,19 +199,25 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'   ```
 #'   x$slide(x, new_var = comp(old_var), n = 120)
 #'   ```
-#' 
+#'
 #' @importFrom rlang enquo
 #' @export
-#' @examples 
-#' # every date is a reference time point for the 3 day average sliding window
-#' fc_time_values <- seq(as.Date("2020-06-01"),
+#' @examples
+#' # these dates are reference time points for the 3 day average sliding window
+#' # The resulting epi_archive ends up including data averaged from:
+#' # 0 day which has no results, for 2020-06-01
+#' # 1 day, for 2020-06-02
+#' # 2 days, for the rest of the results
+#' # never 3 days dur to data latency
+#' 
+#' time_values <- seq(as.Date("2020-06-01"),
 #'                       as.Date("2020-06-15"),
 #'                       by = "1 day")
-#' epix_slide(x = archive_cases_dv, 
-#'            f = ~ mean(.x$case_rate), 
-#'            n = 3, 
+#' epix_slide(x = archive_cases_dv_subset,
+#'            f = ~ mean(.x$case_rate),
+#'            n = 3,
 #'            group_by = geo_value,
-#'            ref_time_values = fc_time_values,
+#'            ref_time_values = time_values,
 #'            new_col_name = 'case_rate_3d_av')
 epix_slide = function(x, f, ..., n = 7, group_by, ref_time_values,
                       time_step, new_col_name = "slide_value",

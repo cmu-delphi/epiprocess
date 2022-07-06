@@ -84,25 +84,49 @@
 #'   tidy evaluation (first example, above), then the name for the new column is 
 #'   inferred from the given expression and overrides any name passed explicitly 
 #'   through the `new_col_name` argument.
-#' 
+#'   
+#' When `f` is a named function with arguments, if a tibble with an unnamed 
+#'   grouping variable is passed in as the method argument to `f`, include a 
+#'   parameter for the grouping-variable in `function()` just prior to 
+#'   specifying the method to prevent that from being overridden. For example:
+#'   ```
+#'   # Construct an tibble with an unnamed grouping variable
+#'   edf = bind_rows(tibble(geo_value = "ak", time_value = as.Date("2020-01-01") 
+#'             + 1:10, x1=1:10, y=1:10 + rnorm(10L))) %>% 
+#'     as_epi_df()
+#'   
+#'   # Now, include a row parameter for the grouping variable in the tibble, 
+#'   # which we denote as g, just prior to method = "qr"
+#'   # Note that if g was not included below, then the method = "qr" would be 
+#'   # overridden, as described above
+#'   edf %>%
+#'   group_by(geo_value) %>%
+#'   epi_slide(function(x, g, method="qr", ...) tibble(model=list(
+#'             lm(y ~ x1, x, method=method))), n=7L) 
+#'   ```
+#'   
 #' @importFrom lubridate days weeks
 #' @importFrom rlang .data .env !! enquo enquos sym
 #' @export
 #' @examples 
 #'  # slide a 7-day trailing average formula on cases
-#'   jhu_csse_daily %>%
+#'   jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), n = 7, 
-#'             align = "right")
+#'             align = "right") %>% 
+#'   # rmv a nonessential var. to ensure new col is printed
+#'   dplyr::select(-death_rate_7d_av) 
 #'  
-#'  # slide a left-aligned 7-day trailing average
-#'   jhu_csse_daily %>%
+#'  # slide a left-aligned 7-day average
+#'   jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), n = 7, 
-#'             align = "left")
+#'             align = "left") %>% 
+#'   # rmv a nonessential var. to ensure new col is printed
+#'   dplyr::select(-death_rate_7d_av) 
 #'  
 #'  # nested new columns
-#'  jhu_csse_daily %>% 
+#'  jhu_csse_daily_subset %>% 
 #'  group_by(geo_value) %>%
 #'  epi_slide(a = data.frame(cases_2dav = mean(cases), 
 #'                           cases_2dma = mad(cases)),
@@ -121,7 +145,7 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
   # intersect with observed time values
   if (missing(ref_time_values)) {
     ref_time_values = unique(x$time_value)
-  }
+  } 
   else {
     ref_time_values = ref_time_values[ref_time_values %in%
                                       unique(x$time_value)] 
@@ -164,6 +188,10 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
   time_range = range(unique(x$time_value))
   starts = in_range(ref_time_values - before_num, time_range)
   stops = in_range(ref_time_values + after_num, time_range)
+  
+  if( length(starts) == 0 || length(stops) == 0 ) { 
+    Abort("The starting and/or stopping times for sliding are out of bounds with respect to the range of times in your data. Check your settings for ref_time_values and align (and before, if specified).")
+  }
 
   # Symbolize new column name
   new_col = sym(new_col_name)

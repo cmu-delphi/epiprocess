@@ -6,15 +6,19 @@ Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", role = "aut"),
     person("Rafael", "Catoia", role = "ctb"),
-    person("Daniel", "McDonald", role = "ctb"),
+    person("Daniel", "McDonald", role = "aut"),
+    person("Rachel", "Lobay", role = "ctb"),
+    person("Ken", "Mawer", role = "ctb"),
+    person("Chloe", "You", role = "ctb"),
     person("Quang", "Nguyen", role = "ctb"),
     person("Evan", "Ray", role = "aut"),
     person("Dmitry", "Shemetov", role = "ctb"),
     person("Ryan", "Tibshirani", , "ryantibs@cmu.edu", role = c("aut", "cre"))
   )
-Description: This package introduces a common data structure for
-    epidemiological data sets measured over space and time, and offers
-    associated utilities to perform basic signal processing tasks.
+Description: This package introduces a common data structure for epidemiological
+    data reported by location and time, provides another data structure to
+    work with revisions to these data sets over time, and offers associated
+    utilities to perform basic signal processing tasks.
 License: MIT + file LICENSE
 Imports: 
     data.table,
@@ -55,3 +59,4 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.0
 Depends: 
     R (>= 2.10)
+URL: https://cmu-delphi.github.io/epiprocess/

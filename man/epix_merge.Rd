@@ -47,13 +47,12 @@ is equivalent to:
 }
 \examples{
 # create two example epi_archive datasets
-x <- archive_cases_dv$DT \%>\% 
-  dplyr::select(geo_value,time_value,version,case_rate) \%>\% 
+x <- archive_cases_dv_subset$DT \%>\% 
+  dplyr::select(geo_value,time_value,version,case_rate_7d_av) \%>\% 
   as_epi_archive(compactify=TRUE)
-y <- archive_cases_dv$DT \%>\% 
+y <- archive_cases_dv_subset$DT \%>\% 
   dplyr::select(geo_value,time_value,version,percent_cli) \%>\% 
   as_epi_archive(compactify=TRUE)
-  
 # a full join stored in x
-epix_merge(x, y, all = TRUE) 
+epix_merge(x, y, all = TRUE)
 }

@@ -25,7 +25,7 @@ signal is subject to very heavy and regular revision; you can read more about it
 on its [API documentation
 page](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
 
-```{r, message = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE, eval=FALSE}
 library(delphi.epidata)
 library(epiprocess)
 library(data.table)
@@ -37,11 +37,17 @@ dv <- covidcast(
   time_type = "day",
   geo_type = "state",
   time_values = epirange(20200601, 20211201),
-  geo_values = "ca,fl",
+  geo_values = "ca,fl,ny,tx",
   issues = epirange(20200601, 20211201)
 ) %>% fetch_tbl()
 
-colnames(dv)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(delphi.epidata)
+library(epiprocess)
+library(data.table)
+library(dplyr)
 ```
 
 ## Getting data into `epi_archive` format
@@ -60,11 +66,22 @@ has (at least) the following columns:
 As we can see from the above, the data frame returned by 
 `delphi.epidata::covidcast()` has the columns required for the `epi_archive` 
 format, with `issue` playing the role of `version`. We can now use 
-`as_epi_archive()` to bring it into `epi_archive` format.
+`as_epi_archive()` to bring it into `epi_archive` format. For removal of
+LOCF values using `as_epi_archive` using compactify, please refer to the
+compactify vignette.
 
-```{r}
+```{r, eval=FALSE}
 x <- dv %>%
   select(geo_value, time_value, version = issue, percent_cli = value) %>%
+  as_epi_archive()
+
+class(x)
+print(x)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+x <- archive_cases_dv_subset$DT %>%
+  select(geo_value, time_value, version , percent_cli)  %>%
   as_epi_archive()
 
 class(x)
@@ -109,36 +126,6 @@ To make a copy, we can use the `clone()` method for an R6 class, as in `y <-
 x$clone()`. You can read more about reference semantics in Hadley Wickham's
 [Advanced R](https://adv-r.hadley.nz/r6.html#r6-semantics) book.
 
-## Removing LOCF data to save space
-
-We need not even store rows that look like the last observation carried forward,
-as they use up extra space. Furthermore, we already apply LOCF in the
-epi_archive-related functions, such that the results should be the same with or
-without the rows, aas long as use code does not rely on directly modifying
-epi_archive's fields in a way that expects all the original records and breaks
-if they are trimmed down.
- 
-There are three
-different values that can be asssigned to `compactify`:
-
-* No argument: Does not put in LOCF values, and prints a list of LOCF values
-that have been omitted but could have been placed.
-* `TRUE`: Does not put in LOCF values, but doesn't print anything relating
-to which values have been omitted.
-* `FALSE`: Includes LOCF values.
-
-For this example, we have one chart using LOCF values, while another doesn't
-use them to illustrate LOCF. Notice how the head of the first dataset differs
-from the second from the third value included.
-
-```{r}
-locf_omitted <- as_epi_archive(archive_cases_dv$DT)
-locf_included <- as_epi_archive(archive_cases_dv$DT,compactify = FALSE)
-
-head(locf_omitted$DT)
-head(locf_included$DT)
-```
- 
 ## Some details on metadata
 
 The following pieces of metadata are included as fields in an `epi_archive`
@@ -159,8 +146,8 @@ the dataset, without being stored in the end:
 
 ```{r,message=FALSE}
 # `dt` here is taken from the tests
-as_epi_archive(archive_cases_dv$DT,compactify=TRUE)$geo_type # "state"
-as_epi_archive(archive_cases_dv$DT,compactify=TRUE)$compactify # NULL
+as_epi_archive(archive_cases_dv_subset$DT,compactify=TRUE)$geo_type # "state"
+as_epi_archive(archive_cases_dv_subset$DT,compactify=TRUE)$compactify # NULL
 ```
 
 ## Producing snapshots in `epi_df` form
@@ -259,21 +246,27 @@ Because the original data archives are stored in LOCF (last observation carried
 forward) format in the first place, it generally makes sense to perform `NA`
 filling after merging using LOCF. Therefore `locf = TRUE` is the default.
 
-```{r, message = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE,eval=FALSE}
 y <- covidcast(
   data_source = "jhu-csse",
   signals = "confirmed_7dav_incidence_prop",
   time_type = "day",
   geo_type = "state",
   time_value = epirange(20200601, 20211201),
-  geo_values = "ca,fl",
+  geo_values = "ca,fl,ny,tx",
   issues = epirange(20200601, 20211201)
 ) %>%
   fetch_tbl() %>%
-  select(geo_value, time_value, version = issue, case_rate = value) %>%
+  select(geo_value, time_value, version = issue, case_rate_7d_av = value) %>%
   as_epi_archive()
 
 epix_merge(x, y, all = TRUE)
+print(x)
+head(x$DT)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+x <- archive_cases_dv_subset
 print(x)
 head(x$DT)
 ```
@@ -360,7 +353,7 @@ fc_time_values <- seq(as.Date("2020-08-01"),
                       as.Date("2021-12-01"), 
                       by = "1 month")
 
-z <- epix_slide(x, fc = prob_arx(x = percent_cli, y = case_rate), n = 120, 
+z <- epix_slide(x, fc = prob_arx(x = percent_cli, y = case_rate_7d_av), n = 120, 
                 ref_time_values = fc_time_values, group_by = geo_value)
 
 head(z, 10)
@@ -390,14 +383,14 @@ x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
-      epix_slide(fc = prob_arx(percent_cli, case_rate, ahead = ahead), n = 120,
+      epix_slide(fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead), n = 120,
                  ref_time_values = fc_time_values, group_by = geo_value) %>%
       mutate(target_date = time_value + ahead, as_of = TRUE) 
   }
   else {
     x_latest %>% 
       group_by(geo_value) %>%
-      epi_slide(fc = prob_arx(percent_cli, case_rate, ahead = ahead), n = 120,
+      epi_slide(fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead), n = 120,
                 ref_time_values = fc_time_values) %>%
       mutate(target_date = time_value + ahead, as_of = FALSE) 
   }
@@ -416,7 +409,7 @@ fc <- bind_rows(k_week_ahead(x, ahead = 7, as_of = TRUE),
 # Plot them, on top of latest COVID-19 case rates 
 ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
   geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), alpha = 0.4) +
-  geom_line(data = x_latest, aes(x = time_value, y = case_rate), 
+  geom_line(data = x_latest, aes(x = time_value, y = case_rate_7d_av), 
                inherit.aes = FALSE, color = "gray50") +
   geom_line(aes(y = fc_point)) + geom_point(aes(y = fc_point), size = 0.5) + 
   geom_vline(aes(xintercept = time_value), linetype = 2, alpha = 0.5) +
@@ -445,3 +438,10 @@ off the data structures and functionality in the current package, is the place
 to look for more robust forecasting methodology. The forecasters that appear in
 the vignettes in the current package are only meant to demo the slide
 functionality with some of the most basic forecasting methodology possible.
+
+## Attribution
+This document contains dataset that is a modified part of the [COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) as [republished in the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html). This data set is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.
+
+The `percent_cli` data is a modified part of the [COVIDcast Epidata API Doctor Visits data](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html). This dataset is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/). Copyright Delphi Research Group at Carnegie Mellon University 2020.
+
+

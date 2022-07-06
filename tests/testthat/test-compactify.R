@@ -2,12 +2,15 @@ library(epiprocess)
 library(data.table)
 library(dplyr)
 
-dt <- archive_cases_dv$DT
+dt <- archive_cases_dv_subset$DT
+dt <- filter(dt,geo_value == "ca") %>%
+  filter(version <= "2020-06-15") %>%
+  select(-case_rate_7d_av)
+
 test_that("Input for compactify must be NULL or a boolean", {
-  expect_error(as_epi_archive(dv_duplicated,compactify="no"))
+  expect_error(as_epi_archive(dt,compactify="no"))
 })
 
-dt <- dplyr::filter(dt, geo_value == "ca")
 dt$percent_cli <- c(1:80)
 dt$case_rate <- c(1:80)
 
@@ -57,7 +60,7 @@ test_that("Warning for LOCF with compactify as NULL", {
 })
 
 test_that("No warning when there is no LOCF", {
-  expect_warning(as_epi_archive(dt[1:10,],compactify=NULL),NA)
+  expect_warning(as_epi_archive(dt[1:5],compactify=NULL),NA)
 })
 
 test_that("LOCF values are ignored with compactify=FALSE", {
