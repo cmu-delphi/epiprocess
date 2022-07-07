@@ -111,7 +111,7 @@ summary.epi_df = function(object, ...) {
     return(tibble::as_tibble(res))
   
   att_x = attr(x, "metadata")
-  test <<- att_x
+
   new_epi_df(tibble::as_tibble(res), 
              geo_type = att_x$geo_type, 
              time_type = att_x$time_type, 
