@@ -73,8 +73,6 @@ the \code{tbl_ts} class is dropped, and any key variables (other than
 # Convert a `tsibble` that has county code as an extra key
 # Notice that county code should be a character string to preserve any leading zeroes
 
-# `other_keys` are specified in the `key` parameter 
-# in the `as_tsibble()` function, along with the primary key
 ex1_input <- tibble::tibble(
   geo_value = rep(c("ca", "fl", "pa"), each = 3),
   county_code = c("06059","06061","06067",
@@ -86,8 +84,12 @@ ex1_input <- tibble::tibble(
 ) \%>\% 
   tsibble::as_tsibble(index = time_value, key = c(geo_value, county_code))
 
+# The `other_keys` metadata (`"county_code"` in this case) is automatically
+# inferred from the `tsibble`'s `key`:
 ex1 <- as_epi_df(x = ex1_input, geo_type = "state", time_type = "day", as_of = "2020-06-03")
-attr(ex1,"metadata")
+attr(ex1,"metadata")[["other_keys"]]
+
+
 
 # Dealing with misspecified column names:
 # Geographical and temporal information must be provided in columns named
@@ -110,6 +112,8 @@ ex2 <- ex2_input \%>\% dplyr::rename(geo_value = state, time_value = reported_da
             additional_metadata = c(other_keys = "pol"))
 
 attr(ex2,"metadata")
+
+
 
 # Adding additional keys to an `epi_df` object
 
