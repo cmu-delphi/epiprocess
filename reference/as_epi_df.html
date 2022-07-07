@@ -142,6 +142,98 @@ the <code>tbl_ts</code> class is dropped, and any key variables (other than
 <code>other_keys</code> field.</p></li>
 </ul></div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># Convert a `tsibble` that has county code as an extra key</span></span>
+<span class="r-in"><span class="co"># Notice that county code should be a character string to preserve any leading zeroes</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="va">ex1_input</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
+<span class="r-in">  geo_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ca"</span>, <span class="st">"fl"</span>, <span class="st">"pa"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,</span>
+<span class="r-in">  county_code <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"06059"</span>,<span class="st">"06061"</span>,<span class="st">"06067"</span>,</span>
+<span class="r-in">                  <span class="st">"12111"</span>,<span class="st">"12113"</span>,<span class="st">"12117"</span>,</span>
+<span class="r-in">                  <span class="st">"42101"</span>, <span class="st">"42103"</span>,<span class="st">"42105"</span><span class="op">)</span>,</span>
+<span class="r-in">  time_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-01"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-03"</span><span class="op">)</span>,</span>
+<span class="r-in">                       by <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span><span class="op">)</span>,</span>
+<span class="r-in">  value <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.01</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-in"><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
+<span class="r-in">  <span class="fu">tsibble</span><span class="fu">::</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span>index <span class="op">=</span> <span class="va">time_value</span>, key <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">county_code</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="co"># The `other_keys` metadata (`"county_code"` in this case) is automatically</span></span>
+<span class="r-in"><span class="co"># inferred from the `tsibble`'s `key`:</span></span>
+<span class="r-in"><span class="va">ex1</span> <span class="op">&lt;-</span> <span class="fu">as_epi_df</span><span class="op">(</span>x <span class="op">=</span> <span class="va">ex1_input</span>, geo_type <span class="op">=</span> <span class="st">"state"</span>, time_type <span class="op">=</span> <span class="st">"day"</span>, as_of <span class="op">=</span> <span class="st">"2020-06-03"</span><span class="op">)</span></span>
+<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">ex1</span>,<span class="st">"metadata"</span><span class="op">)</span><span class="op">[[</span><span class="st">"other_keys"</span><span class="op">]</span><span class="op">]</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
+<span class="r-in"></span>
+<span class="r-in"></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="co"># Dealing with misspecified column names:</span></span>
+<span class="r-in"><span class="co"># Geographical and temporal information must be provided in columns named</span></span>
+<span class="r-in"><span class="co"># `geo_value` and `time_value`; if we start from a data frame with a</span></span>
+<span class="r-in"><span class="co"># different format, it must be converted to use `geo_value` and `time_value`</span></span>
+<span class="r-in"><span class="co"># before calling `as_epi_df`.</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="va">ex2_input</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
+<span class="r-in">  state <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ca"</span>, <span class="st">"fl"</span>, <span class="st">"pa"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>, <span class="co"># misnamed</span></span>
+<span class="r-in">  pol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"blue"</span>, <span class="st">"swing"</span>, <span class="st">"swing"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>, <span class="co"># extra key</span></span>
+<span class="r-in">  reported_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-01"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-03"</span><span class="op">)</span>,</span>
+<span class="r-in">                          by <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">state</span><span class="op">)</span><span class="op">)</span>, <span class="co"># misnamed</span></span>
+<span class="r-in">  value <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">state</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.01</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">state</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-in"><span class="op">)</span> </span>
+<span class="r-in"></span>
+<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">ex2_input</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 9 × 4</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   state pol   reported_date value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> ca    blue  2020-06-01     1.01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> ca    blue  2020-06-02     2.00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> ca    blue  2020-06-03     2.98</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> fl    swing 2020-06-01     4.00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> fl    swing 2020-06-02     5.00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> fl    swing 2020-06-03     5.99</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> pa    swing 2020-06-01     7.02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> pa    swing 2020-06-02     8.00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">9</span> pa    swing 2020-06-03     9.00</span>
+<span class="r-in"></span>
+<span class="r-in"><span class="va">ex2</span> <span class="op">&lt;-</span> <span class="va">ex2_input</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>geo_value <span class="op">=</span> <span class="va">state</span>, time_value <span class="op">=</span> <span class="va">reported_date</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
+<span class="r-in">  <span class="fu">as_epi_df</span><span class="op">(</span>geo_type <span class="op">=</span> <span class="st">"state"</span>, as_of <span class="op">=</span> <span class="st">"2020-06-03"</span>, </span>
+<span class="r-in">            additional_metadata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>other_keys <span class="op">=</span> <span class="st">"pol"</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">ex2</span>,<span class="st">"metadata"</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $geo_type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "state"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $time_type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "day"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $as_of</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "2020-06-03"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"></span>
+<span class="r-in"></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="co"># Adding additional keys to an `epi_df` object</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="va">ex3_input</span> <span class="op">&lt;-</span> <span class="va">jhu_csse_county_level_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
+<span class="r-in">  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">time_value</span> <span class="op">&gt;</span> <span class="st">"2021-12-01"</span>, <span class="va">state_name</span> <span class="op">==</span> <span class="st">"Massachusetts"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
+<span class="r-in">  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice_tail</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> </span>
+<span class="r-in"></span>
+<span class="r-in"><span class="va">ex3</span> <span class="op">&lt;-</span> <span class="va">ex3_input</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
+<span class="r-in">  <span class="fu">tsibble</span><span class="fu">::</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="co"># needed to add the additional metadata</span></span>
+<span class="r-in">  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>state <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"MA"</span>,<span class="fl">6</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
+<span class="r-in">  <span class="fu">as_epi_df</span><span class="op">(</span>additional_metadata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>other_keys <span class="op">=</span> <span class="st">"state"</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">ex3</span>,<span class="st">"metadata"</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $geo_type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "county"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $time_type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "day"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $as_of</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "2022-07-07 16:59:53 UTC"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
 

@@ -113,6 +113,7 @@
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cmu-delphi/delphi-epidata-r" class="external-link">delphi.epidata</a></span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a></span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://withr.r-lib.org" class="external-link">withr</a></span><span class="op">)</span>
 
 <span class="va">cases</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/covidcast.html" class="external-link">covidcast</a></span><span class="op">(</span>
   data_source <span class="op">=</span> <span class="st">"jhu-csse"</span>,
@@ -201,10 +202,126 @@
 <span class="co">## [1] "2022-06-28"</span></code></pre>
 </div>
 <div class="section level2">
+<h2 id="using-additional-key-columns-in-epi_df">Using additional key columns in <code>epi_df</code><a class="anchor" aria-label="anchor" href="#using-additional-key-columns-in-epi_df"></a>
+</h2>
+<p>In the following examples we will show how to create an <code>epi_df</code> with additional keys.</p>
+<div class="section level3">
+<h3 id="converting-a-tsibble-that-has-county-code-as-an-extra-key">Converting a <code>tsibble</code> that has county code as an extra key<a class="anchor" aria-label="anchor" href="#converting-a-tsibble-that-has-county-code-as-an-extra-key"></a>
+</h3>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">ex1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>
+  geo_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ca"</span>, <span class="st">"fl"</span>, <span class="st">"pa"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,
+  county_code <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"06059"</span>,<span class="st">"06061"</span>,<span class="st">"06067"</span>,
+             <span class="st">"12111"</span>,<span class="st">"12113"</span>,<span class="st">"12117"</span>,
+             <span class="st">"42101"</span>,<span class="st">"42103"</span>,<span class="st">"42105"</span><span class="op">)</span>,
+  time_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-01"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-03"</span><span class="op">)</span>,
+                       by <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span><span class="op">)</span>,
+  value <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.01</span> <span class="op">*</span> <span class="fu">withr</span><span class="fu">::</span><span class="fu"><a href="https://withr.r-lib.org/reference/with_rng_version.html" class="external-link">with_rng_version</a></span><span class="op">(</span><span class="st">"3.0.0"</span>, <span class="fu">withr</span><span class="fu">::</span><span class="fu"><a href="https://withr.r-lib.org/reference/with_seed.html" class="external-link">with_seed</a></span><span class="op">(</span><span class="fl">42</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
+  <span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> 
+  <span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span>index <span class="op">=</span> <span class="va">time_value</span>, key <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">county_code</span><span class="op">)</span><span class="op">)</span>
+
+<span class="va">ex1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">ex1</span>, geo_type <span class="op">=</span> <span class="st">"state"</span>, time_type <span class="op">=</span> <span class="st">"day"</span>, as_of <span class="op">=</span> <span class="st">"2020-06-03"</span><span class="op">)</span></code></pre></div>
+<p>The metadata now includes <code>county_code</code> as an extra key.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">ex1</span>,<span class="st">"metadata"</span><span class="op">)</span></code></pre></div>
+<pre><code><span class="co">## $geo_type</span>
+<span class="co">## [1] "state"</span>
+<span class="co">## </span>
+<span class="co">## $time_type</span>
+<span class="co">## [1] "day"</span>
+<span class="co">## </span>
+<span class="co">## $as_of</span>
+<span class="co">## [1] "2020-06-03"</span></code></pre>
+</div>
+<div class="section level3">
+<h3 id="dealing-with-misspecified-column-names">Dealing with misspecified column names<a class="anchor" aria-label="anchor" href="#dealing-with-misspecified-column-names"></a>
+</h3>
+<p><code>epi_df</code> requires there to be columns <code>geo_value</code> and <code>time_value</code>, if they do not exist then <code><a href="../reference/as_epi_df.html">as_epi_df()</a></code> throws an error.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>
+  state <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ca"</span>, <span class="st">"fl"</span>, <span class="st">"pa"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>, <span class="co"># misnamed</span>
+  pol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"blue"</span>, <span class="st">"swing"</span>, <span class="st">"swing"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>, <span class="co"># extra key</span>
+  reported_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-01"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-03"</span><span class="op">)</span>,
+                       by <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span><span class="op">)</span>, <span class="co"># misnamed</span>
+  value <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.01</span> <span class="op">*</span> <span class="fu">withr</span><span class="fu">::</span><span class="fu"><a href="https://withr.r-lib.org/reference/with_rng_version.html" class="external-link">with_rng_version</a></span><span class="op">(</span><span class="st">"3.0.0"</span>, <span class="fu">withr</span><span class="fu">::</span><span class="fu"><a href="https://withr.r-lib.org/reference/with_seed.html" class="external-link">with_seed</a></span><span class="op">(</span><span class="fl">42</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
+<span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span><span class="op">)</span> </code></pre></div>
+<pre><code><span class="co">## Error in NextMethod(): object 'geo_value' not found</span></code></pre>
+<p>The columns can be renamed to match <code>epi_df</code> format. In the example below, notice there is also an additional key <code>pol</code>.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">ex2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>
+  state <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ca"</span>, <span class="st">"fl"</span>, <span class="st">"pa"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>, <span class="co"># misnamed</span>
+  pol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"blue"</span>, <span class="st">"swing"</span>, <span class="st">"swing"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>, <span class="co"># extra key</span>
+  reported_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-01"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-03"</span><span class="op">)</span>,
+                          by <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">state</span><span class="op">)</span><span class="op">)</span>, <span class="co"># misnamed</span>
+  value <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">state</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.01</span> <span class="op">*</span> <span class="fu">withr</span><span class="fu">::</span><span class="fu"><a href="https://withr.r-lib.org/reference/with_rng_version.html" class="external-link">with_rng_version</a></span><span class="op">(</span><span class="st">"3.0.0"</span>, <span class="fu">withr</span><span class="fu">::</span><span class="fu"><a href="https://withr.r-lib.org/reference/with_seed.html" class="external-link">with_seed</a></span><span class="op">(</span><span class="fl">42</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">state</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
+<span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="op">)</span>
+
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">ex2</span><span class="op">)</span> </code></pre></div>
+<pre><code><span class="co">##   state   pol reported_date value</span>
+<span class="co">## 1    ca  blue    2020-06-01  1.09</span>
+<span class="co">## 2    ca  blue    2020-06-02  2.09</span>
+<span class="co">## 3    ca  blue    2020-06-03  3.09</span>
+<span class="co">## 4    fl swing    2020-06-01  4.09</span>
+<span class="co">## 5    fl swing    2020-06-02  5.09</span>
+<span class="co">## 6    fl swing    2020-06-03  6.09</span></code></pre>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">ex2</span> <span class="op">&lt;-</span> <span class="va">ex2</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>geo_value <span class="op">=</span> <span class="va">state</span>, time_value <span class="op">=</span> <span class="va">reported_date</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span>geo_type <span class="op">=</span> <span class="st">"state"</span>, as_of <span class="op">=</span> <span class="st">"2020-06-03"</span>, 
+            additional_metadata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>other_keys <span class="op">=</span> <span class="st">"pol"</span><span class="op">)</span><span class="op">)</span>
+
+<span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">ex2</span>,<span class="st">"metadata"</span><span class="op">)</span></code></pre></div>
+<pre><code><span class="co">## $geo_type</span>
+<span class="co">## [1] "state"</span>
+<span class="co">## </span>
+<span class="co">## $time_type</span>
+<span class="co">## [1] "day"</span>
+<span class="co">## </span>
+<span class="co">## $as_of</span>
+<span class="co">## [1] "2020-06-03"</span></code></pre>
+</div>
+<div class="section level3">
+<h3 id="adding-additional-keys-to-an-epi_df-object">Adding additional keys to an <code>epi_df</code> object<a class="anchor" aria-label="anchor" href="#adding-additional-keys-to-an-epi_df-object"></a>
+</h3>
+<p>In the above examples, all the keys are added to objects that are not <code>epi_df</code> objects. We illustrate how to add keys to an <code>epi_df</code> object.</p>
+<p>We use a toy data set included in <code>epiprocess</code> prepared using the <code>covidcast</code> library and are filtering to a single state for simplicity.</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">ex3</span> <span class="op">&lt;-</span> <span class="va">jhu_csse_county_level_subset</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">time_value</span> <span class="op">&gt;</span> <span class="st">"2021-12-01"</span>, <span class="va">state_name</span> <span class="op">==</span> <span class="st">"Massachusetts"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice_tail</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> 
+  
+<span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">ex3</span>,<span class="st">"metadata"</span><span class="op">)</span> <span class="co"># geo_type is county currently</span></code></pre></div>
+<pre><code><span class="co">## $geo_type</span>
+<span class="co">## [1] "county"</span>
+<span class="co">## </span>
+<span class="co">## $time_type</span>
+<span class="co">## [1] "day"</span>
+<span class="co">## </span>
+<span class="co">## $as_of</span>
+<span class="co">## [1] "2022-05-23 21:35:45 UTC"</span></code></pre>
+<p>Now we add state (MA) as a new column and a key to the metadata. Reminder that lower case state name abbreviations are what we would expect if this were a <code>geo_value</code> column.</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">ex3</span> <span class="op">&lt;-</span> <span class="va">ex3</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> 
+  <span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="co"># needed to add the additional metadata</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>state <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/chartr.html" class="external-link">tolower</a></span><span class="op">(</span><span class="st">"MA"</span><span class="op">)</span>,<span class="fl">6</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span>additional_metadata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>other_keys <span class="op">=</span> <span class="st">"state"</span><span class="op">)</span><span class="op">)</span>
+
+<span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">ex3</span>,<span class="st">"metadata"</span><span class="op">)</span></code></pre></div>
+<pre><code><span class="co">## $geo_type</span>
+<span class="co">## [1] "county"</span>
+<span class="co">## </span>
+<span class="co">## $time_type</span>
+<span class="co">## [1] "day"</span>
+<span class="co">## </span>
+<span class="co">## $as_of</span>
+<span class="co">## [1] "2022-05-23 21:35:45 UTC"</span></code></pre>
+<p>Currently <code>other_keys</code> metadata in <code>epi_df</code> doesn’t impact <code><a href="../reference/epi_slide.html">epi_slide()</a></code>, contrary to <code>other_keys</code> in <code>as_epi_archive</code> which affects how the update data is interpreted.</p>
+</div>
+</div>
+<div class="section level2">
 <h2 id="working-with-epi_df-objects-downstream">Working with <code>epi_df</code> objects downstream<a class="anchor" aria-label="anchor" href="#working-with-epi_df-objects-downstream"></a>
 </h2>
 <p>Data in <code>epi_df</code> format should be easy to work with downstream, since it is a very standard tabular data format; in the other vignettes, we’ll walk through some basic signal processing tasks using functions provided in the <code>epiprocess</code> package. Of course, we can also write custom code for other downstream uses, like plotting, which is pretty easy to do <code>ggplot2</code>.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span>
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>
 
@@ -212,9 +329,9 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Cumulative COVID-19 cases"</span>, color <span class="op">=</span> <span class="st">"State"</span><span class="op">)</span></code></pre></div>
-<p><img src="epiprocess_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
+<p><img src="epiprocess_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
 <p>As a last couple examples, we’ll look at some more data sets just to show how we might get them into <code>epi_df</code> format. Data on daily new (not cumulative) SARS cases in Canada in 2003, from the <a href="https://github.com/reconverse/outbreaks" class="external-link">outbreaks</a> package:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu">outbreaks</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/outbreaks/man/sars_canada_2003.html" class="external-link">sars_canada_2003</a></span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>geo_value <span class="op">=</span> <span class="st">"ca"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, time_value <span class="op">=</span> <span class="va">date</span>, <span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="st">"cases"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
@@ -230,7 +347,7 @@
 <span class="co">## <span style="color: #BCBCBC;">4</span> ca        2003-02-26            0               1                0           0</span>
 <span class="co">## <span style="color: #BCBCBC;">5</span> ca        2003-02-27            0               0                0           0</span>
 <span class="co">## <span style="color: #BCBCBC;">6</span> ca        2003-02-28            1               0                0           0</span></code></pre>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span>
 <span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> 
   <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="st">"cases"</span><span class="op">)</span>, names_to <span class="op">=</span> <span class="st">"type"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
@@ -244,9 +361,9 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>breaks <span class="op">=</span> <span class="va">yrange</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">:</span><span class="va">yrange</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"SARS cases in Canada"</span>, fill <span class="op">=</span> <span class="st">"Type"</span><span class="op">)</span></code></pre></div>
-<p><img src="epiprocess_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
+<p><img src="epiprocess_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
 <p>Data on new cases of Ebola in Sierra Leone in 2014, from the same package:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu">outbreaks</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/outbreaks/man/ebola_sierraleone_2014.html" class="external-link">ebola_sierraleone_2014</a></span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>
     cases <span class="op">=</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/fifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">status</span> <span class="op">==</span> <span class="st">"confirmed"</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>,
@@ -268,7 +385,13 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span> <span class="va">geo_value</span>, scales <span class="op">=</span> <span class="st">"free_y"</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Confirmed cases of Ebola in Sierra Leone"</span><span class="op">)</span> </code></pre></div>
-<p><img src="epiprocess_files/figure-html/unnamed-chunk-8-1.png" width="864"></p>
+<p><img src="epiprocess_files/figure-html/unnamed-chunk-14-1.png" width="864"></p>
+</div>
+<div class="section level2">
+<h2 id="attribution">Attribution<a class="anchor" aria-label="anchor" href="#attribution"></a>
+</h2>
+<p>This document contains dataset that is a modified part of the <a href="https://github.com/CSSEGISandData/COVID-19" class="external-link">COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University</a> as <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html" class="external-link">republished in the COVIDcast Epidata API</a>. This data set is licensed under the terms of the <a href="https://creativecommons.org/licenses/by/4.0/" class="external-link">Creative Commons Attribution 4.0 International license</a> by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.</p>
+<p><a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html" class="external-link">From the COVIDcast Epidata API</a>: These signals are taken directly from the JHU CSSE <a href="https://github.com/CSSEGISandData/COVID-19" class="external-link">COVID-19 GitHub repository</a> without changes.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>
