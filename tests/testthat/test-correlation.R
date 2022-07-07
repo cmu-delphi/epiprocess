@@ -28,7 +28,7 @@ test_that("epi_cor functions as intended",{
 })
 
 test_that("shift works as intended",{
-  expect_identical(shift(1:100,1),dplyr::lead(1:100))
-  expect_identical(shift(1:100,0),1:100)
-  expect_identical(shift(1:100,-1),dplyr::lag(1:100))
+  expect_identical(epiprocess:::shift(1:100,1),dplyr::lead(1:100))
+  expect_identical(epiprocess:::shift(1:100,0),1:100)
+  expect_identical(epiprocess:::shift(1:100,-1),dplyr::lag(1:100))
 })
