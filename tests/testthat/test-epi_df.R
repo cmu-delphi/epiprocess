@@ -1,5 +1,4 @@
 test_that("new_epi_df works as intended", {
-  
   # Empty tibble
   wmsg = capture_warnings(a <- new_epi_df())
   expect_match(wmsg[1],
