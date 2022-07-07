@@ -26,7 +26,9 @@ later.
 The data table \code{DT} has key variables \code{geo_value}, \code{time_value}, \code{version},
 as well as any others (these can be specified when instantiating the
 \code{epi_archive} object via the \code{other_keys} argument, and/or set by operating
-on \code{DT} directly). There can only be a single row per unique combination of
+on \code{DT} directly). Refer to the documentation for \code{\link[=as_epi_archive]{as_epi_archive()}} for
+information and examples of relevant parameter names for an \code{epi_archive} object.
+Note that there can only be a single row per unique combination of
 key variables, and thus the key variables are critical for figuring out how
 to generate a snapshot of data from the archive, as of a given version.
 
@@ -81,20 +83,34 @@ sliding computation at any given reference time point t is performed on
 are documented in the wrapper function \code{epix_slide()}.
 }
 
+\examples{
+tib <- tibble::tibble(
+  geo_value = rep(c("ca", "hi"), each = 5),
+  time_value = rep(seq(as.Date("2020-01-01"), 
+                       by = 1, length.out = 5), times = 2),
+  version = rep(seq(as.Date("2020-01-02"), 
+                    by = 1, length.out = 5), times = 2),
+  value = rnorm(10, mean = 2, sd = 1)
+)
+
+toy_epi_archive <- tib \%>\% epi_archive$new(geo_type = "state", 
+                                           time_type = "day")
+toy_epi_archive 
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-epi_archive-new}{\code{epi_archive$new()}}
-\item \href{#method-epi_archive-print}{\code{epi_archive$print()}}
-\item \href{#method-epi_archive-as_of}{\code{epi_archive$as_of()}}
-\item \href{#method-epi_archive-merge}{\code{epi_archive$merge()}}
-\item \href{#method-epi_archive-slide}{\code{epi_archive$slide()}}
-\item \href{#method-epi_archive-clone}{\code{epi_archive$clone()}}
+\item \href{#method-new}{\code{epi_archive$new()}}
+\item \href{#method-print}{\code{epi_archive$print()}}
+\item \href{#method-as_of}{\code{epi_archive$as_of()}}
+\item \href{#method-merge}{\code{epi_archive$merge()}}
+\item \href{#method-slide}{\code{epi_archive$slide()}}
+\item \href{#method-clone}{\code{epi_archive$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-new"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-new}{}}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Creates a new \code{epi_archive} object.
 \subsection{Usage}{
@@ -125,13 +141,18 @@ fields; named entries from the passed list or will be included as well.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+Refer to the documentation for \code{\link[=as_epi_archive]{as_epi_archive()}} for more information
+and examples of parameter names.
+}
+
 \subsection{Returns}{
 An \code{epi_archive} object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-print"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-print}{}}}
+\if{html}{\out{<a id="method-print"></a>}}
+\if{latex}{\out{\hypertarget{method-print}{}}}
 \subsection{Method \code{print()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$print()}\if{html}{\out{</div>}}
@@ -139,8 +160,8 @@ An \code{epi_archive} object.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-as_of"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-as_of}{}}}
+\if{html}{\out{<a id="method-as_of"></a>}}
+\if{latex}{\out{\hypertarget{method-as_of}{}}}
 \subsection{Method \code{as_of()}}{
 Generates a snapshot in \code{epi_df} format as of a given version.
 See the documentation for the wrapper function \code{epix_as_of()} for details.
@@ -150,8 +171,8 @@ See the documentation for the wrapper function \code{epix_as_of()} for details.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-merge"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-merge}{}}}
+\if{html}{\out{<a id="method-merge"></a>}}
+\if{latex}{\out{\hypertarget{method-merge}{}}}
 \subsection{Method \code{merge()}}{
 Merges another \code{data.table} with the current one, and allows for
 a post-filling of \code{NA} values by last observation carried forward (LOCF).
@@ -162,8 +183,8 @@ See the documentation for the wrapper function \code{epix_merge()} for details.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-slide"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-slide}{}}}
+\if{html}{\out{<a id="method-slide"></a>}}
+\if{latex}{\out{\hypertarget{method-slide}{}}}
 \subsection{Method \code{slide()}}{
 Slides a given function over variables in an \code{epi_archive}
 object. See the documentation for the wrapper function \code{epix_as_of()} for
@@ -185,8 +206,8 @@ details.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-clone}{}}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{
