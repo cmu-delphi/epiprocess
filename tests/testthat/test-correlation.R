@@ -1,7 +1,11 @@
 library(tibble)
 
-test_that("epi_cor throws errors as needed",{
+test_that("epi_cor throws an error for a non-epi df for its first argument",{
+  expect_error(epi_cor(1:10,1,1))
   expect_error(epi_cor(data.frame(x=1:10),1,1))
+})
+
+test_that("epi_cor requires two var arguments, var1 and var2",{
   expect_error(epi_cor(archive_cases_dv_subset$DT,var2=1))
   expect_error(epi_cor(archive_cases_dv_subset$DT,var1=1))
 })
