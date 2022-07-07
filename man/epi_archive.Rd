@@ -26,7 +26,7 @@ later.
 The data table \code{DT} has key variables \code{geo_value}, \code{time_value}, \code{version},
 as well as any others (these can be specified when instantiating the
 \code{epi_archive} object via the \code{other_keys} argument, and/or set by operating
-on \code{DT} directly). Refer to the documentation for \code{as_epi_archive()} for
+on \code{DT} directly). Refer to the documentation for \code{\link[=as_epi_archive]{as_epi_archive()}} for
 information and examples of relevant parameter names for an \code{epi_archive} object.
 Note that there can only be a single row per unique combination of
 key variables, and thus the key variables are critical for figuring out how
@@ -142,7 +142,7 @@ fields; named entries from the passed list or will be included as well.}
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-Refer to the documentation for \code{as_epi_archive()} for more information
+Refer to the documentation for \code{\link[=as_epi_archive]{as_epi_archive()}} for more information
 and examples of parameter names.
 }
 

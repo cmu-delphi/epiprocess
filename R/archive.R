@@ -28,7 +28,7 @@
 #' The data table `DT` has key variables `geo_value`, `time_value`, `version`,
 #'   as well as any others (these can be specified when instantiating the
 #'   `epi_archive` object via the `other_keys` argument, and/or set by operating
-#'   on `DT` directly). Refer to the documentation for `as_epi_archive()` for 
+#'   on `DT` directly). Refer to the documentation for [as_epi_archive()] for 
 #'   information and examples of relevant parameter names for an `epi_archive` object.
 #'   Note that there can only be a single row per unique combination of
 #'   key variables, and thus the key variables are critical for figuring out how
@@ -121,7 +121,7 @@ epi_archive =
 #' @importFrom data.table as.data.table key setkeyv
 #' 
 #' @details 
-#' Refer to the documentation for `as_epi_archive()` for more information 
+#' Refer to the documentation for [as_epi_archive()] for more information 
 #' and examples of parameter names.
           initialize = function(x, geo_type, time_type, other_keys,
                                 additional_metadata) {
