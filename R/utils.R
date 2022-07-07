@@ -39,10 +39,12 @@ guess_geo_type = function(geo_value) {
     if (all(geo_value %in% state_values)) return("state")
 
     # Else if all geo values are 2 letters, then use "nation"
-    else if (all(grepl("[a-z]{2}", geo_value))) return("nation")
+    else if (all(grepl("[a-z]{2}", geo_value))
+             & !any(grepl("[a-z]{3}", geo_value))) return("nation")
 
     # Else if all geo values are 5 numbers, then use "county"
-    else if (all(grepl("[0-9]{5}", geo_value))) return("county")
+    else if (all(grepl("[0-9]{5}", geo_value)) &
+             !any(grepl("[0-9]{6}", geo_value))) return("county")
   }
 
   else if (is.numeric(geo_value)) {
@@ -79,7 +81,7 @@ guess_time_type = function(time_value) {
 
   # Else, if a Date class, then use "week" or "day" depending on gaps 
   else if (inherits(time_value, "Date")) {
-    return(ifelse(all(diff(sort(time_value)) == -7), "week", "day"))
+    return(ifelse(all(diff(sort(time_value)) == 7), "week", "day"))
   }
 
   # Else, check whether it's one of the tsibble classes
