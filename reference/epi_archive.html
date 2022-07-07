@@ -85,7 +85,9 @@ later.</p></li>
 </ul><p>The data table <code>DT</code> has key variables <code>geo_value</code>, <code>time_value</code>, <code>version</code>,
 as well as any others (these can be specified when instantiating the
 <code>epi_archive</code> object via the <code>other_keys</code> argument, and/or set by operating
-on <code>DT</code> directly). There can only be a single row per unique combination of
+on <code>DT</code> directly). Refer to the documentation for <code><a href="as_epi_archive.html">as_epi_archive()</a></code> for
+information and examples of relevant parameter names for an <code>epi_archive</code> object.
+Note that there can only be a single row per unique combination of
 key variables, and thus the key variables are critical for figuring out how
 to generate a snapshot of data from the archive, as of a given version.</p>
 <p>In general, last observation carried forward (LOCF) is used to data in
@@ -143,13 +145,13 @@ are documented in the wrapper function <code><a href="epix_slide.html">epix_slid
 <div class="section">
 <h3 id="public-methods">Public methods<a class="anchor" aria-label="anchor" href="#public-methods"></a></h3>
 
-<ul><li><p><a href="#method-epi_archive-new"><code>epi_archive$new()</code></a></p></li>
-<li><p><a href="#method-epi_archive-print"><code>epi_archive$print()</code></a></p></li>
-<li><p><a href="#method-epi_archive-as_of"><code>epi_archive$as_of()</code></a></p></li>
-<li><p><a href="#method-epi_archive-merge"><code>epi_archive$merge()</code></a></p></li>
-<li><p><a href="#method-epi_archive-slide"><code>epi_archive$slide()</code></a></p></li>
-<li><p><a href="#method-epi_archive-clone"><code>epi_archive$clone()</code></a></p></li>
-</ul></div><p></p><hr><a id="method-epi_archive-new"></a><div class="section">
+<ul><li><p><a href="#method-new"><code>epi_archive$new()</code></a></p></li>
+<li><p><a href="#method-print"><code>epi_archive$print()</code></a></p></li>
+<li><p><a href="#method-as_of"><code>epi_archive$as_of()</code></a></p></li>
+<li><p><a href="#method-merge"><code>epi_archive$merge()</code></a></p></li>
+<li><p><a href="#method-slide"><code>epi_archive$slide()</code></a></p></li>
+<li><p><a href="#method-clone"><code>epi_archive$clone()</code></a></p></li>
+</ul></div><p></p><hr><a id="method-new"></a><div class="section">
 <h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
 <p>Creates a new <code>epi_archive</code> object.</p><div class="section">
 <h4 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a></h4>
@@ -190,11 +192,17 @@ fields; named entries from the passed list or will be included as well.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
+<h4 id="details-1">Details<a class="anchor" aria-label="anchor" href="#details-1"></a></h4>
+<p>Refer to the documentation for <code><a href="as_epi_archive.html">as_epi_archive()</a></code> for more information
+and examples of parameter names.</p>
+</div>
+
+<div class="section">
 <h4 id="returns">Returns<a class="anchor" aria-label="anchor" href="#returns"></a></h4>
 <p>An <code>epi_archive</code> object.</p>
 </div>
 
-</div><p></p><hr><a id="method-epi_archive-print"></a><div class="section">
+</div><p></p><hr><a id="method-print"></a><div class="section">
 <h3 id="method-print-">Method <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code><a class="anchor" aria-label="anchor" href="#method-print-"></a></h3>
 
 <div class="section">
@@ -203,7 +211,7 @@ fields; named entries from the passed list or will be included as well.</p></dd>
 </div>
 
 
-</div><p></p><hr><a id="method-epi_archive-as_of"></a><div class="section">
+</div><p></p><hr><a id="method-as_of"></a><div class="section">
 <h3 id="method-as-of-">Method <code>as_of()</code><a class="anchor" aria-label="anchor" href="#method-as-of-"></a></h3>
 <p>Generates a snapshot in <code>epi_df</code> format as of a given version.
 See the documentation for the wrapper function <code><a href="epix_as_of.html">epix_as_of()</a></code> for details.</p><div class="section">
@@ -212,7 +220,7 @@ See the documentation for the wrapper function <code><a href="epix_as_of.html">e
 </div>
 
 
-</div><p></p><hr><a id="method-epi_archive-merge"></a><div class="section">
+</div><p></p><hr><a id="method-merge"></a><div class="section">
 <h3 id="method-merge-">Method <code><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge()</a></code><a class="anchor" aria-label="anchor" href="#method-merge-"></a></h3>
 <p>Merges another <code>data.table</code> with the current one, and allows for
 a post-filling of <code>NA</code> values by last observation carried forward (LOCF).
@@ -222,7 +230,7 @@ See the documentation for the wrapper function <code><a href="epix_merge.html">e
 </div>
 
 
-</div><p></p><hr><a id="method-epi_archive-slide"></a><div class="section">
+</div><p></p><hr><a id="method-slide"></a><div class="section">
 <h3 id="method-slide-">Method <code>slide()</code><a class="anchor" aria-label="anchor" href="#method-slide-"></a></h3>
 <p>Slides a given function over variables in an <code>epi_archive</code>
 object. See the documentation for the wrapper function <code><a href="epix_as_of.html">epix_as_of()</a></code> for
@@ -243,7 +251,7 @@ details.</p><div class="section">
 </div>
 
 
-</div><p></p><hr><a id="method-epi_archive-clone"></a><div class="section">
+</div><p></p><hr><a id="method-clone"></a><div class="section">
 <h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
 <p>The objects of this class are cloneable with this method.</p><div class="section">
 <h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
@@ -263,6 +271,36 @@ details.</p><div class="section">
 
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="va">tib</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
+<span class="r-in">  geo_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ca"</span>, <span class="st">"hi"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span>
+<span class="r-in">  time_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-01-01"</span><span class="op">)</span>, </span>
+<span class="r-in">                       by <span class="op">=</span> <span class="fl">1</span>, length.out <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>, times <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span>
+<span class="r-in">  version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-01-02"</span><span class="op">)</span>, </span>
+<span class="r-in">                    by <span class="op">=</span> <span class="fl">1</span>, length.out <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>, times <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span>
+<span class="r-in">  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">10</span>, mean <span class="op">=</span> <span class="fl">2</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span class="r-in"><span class="op">)</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="va">toy_epi_archive</span> <span class="op">&lt;-</span> <span class="va">tib</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="va">epi_archive</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>geo_type <span class="op">=</span> <span class="st">"state"</span>, </span>
+<span class="r-in">                                           time_type <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">toy_epi_archive</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_archive` object, with metadata:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * min time value = 2020-01-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * max time value = 2020-01-05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * min version    = 2020-01-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * max version    = 2020-01-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Data archive (stored in DT field): 10 x 4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Columns in DT: geo_value, time_value, version, value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Public methods: initialize, print, as_of, merge, slide, clone</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
 
