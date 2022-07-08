@@ -117,6 +117,7 @@
   <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span><span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">.x</span><span class="op">$</span><span class="va">cases</span><span class="op">)</span>, n <span class="op">=</span> <span class="fl">7</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
   <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></code></pre></div>
 <pre><code><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span>
+<span class="co">## <span style="color: #949494;"># Groups:   geo_value [1]</span></span>
 <span class="co">##    geo_value time_value cases slide_value</span>
 <span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="co">## <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6        6   </span>
@@ -137,6 +138,7 @@
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">10</span><span class="op">)</span></code></pre></div>
 <pre><code><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span>
+<span class="co">## <span style="color: #949494;"># Groups:   geo_value [1]</span></span>
 <span class="co">##    geo_value time_value cases cases_7dav</span>
 <span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="co">## <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6       6   </span>
@@ -161,6 +163,7 @@
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">10</span><span class="op">)</span></code></pre></div>
 <pre><code><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span>
+<span class="co">## <span style="color: #949494;"># Groups:   geo_value [1]</span></span>
 <span class="co">##    geo_value time_value cases cases_7dav</span>
 <span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="co">## <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6       6   </span>
@@ -185,6 +188,7 @@
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">10</span><span class="op">)</span></code></pre></div>
 <pre><code><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span>
+<span class="co">## <span style="color: #949494;"># Groups:   geo_value [1]</span></span>
 <span class="co">##    geo_value time_value cases cases_7dav</span>
 <span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="co">## <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6       6   </span>
@@ -264,6 +268,7 @@
             ref_time_values <span class="op">=</span> <span class="va">fc_time_values</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
   <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></code></pre></div>
 <pre><code><span class="co">## <span style="color: #949494;"># A tibble: 10 × 7</span></span>
+<span class="co">## <span style="color: #949494;"># Groups:   geo_value [1]</span></span>
 <span class="co">##    geo_value time_value cases cases_7dav fc_point fc_lower fc_upper</span>
 <span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="co">## <span style="color: #BCBCBC;"> 1</span> ca        2020-06-01  <span style="text-decoration: underline;">2</span>439      <span style="text-decoration: underline;">2</span>655.    <span style="text-decoration: underline;">2</span>959.    <span style="text-decoration: underline;">2</span>513.    <span style="text-decoration: underline;">3</span>404.</span>

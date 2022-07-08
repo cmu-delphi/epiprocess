@@ -152,7 +152,12 @@
 <span class="co">## * average rows per time value = 4</span></code></pre>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tibble: 6 × 3</span></span>
+<pre><code><span class="co">## An `epi_df` object, 6 x 3 with metadata:</span>
+<span class="co">## * geo_type  = state</span>
+<span class="co">## * time_type = day</span>
+<span class="co">## * as_of     = 2022-06-28</span>
+<span class="co">## </span>
+<span class="co">## <span style="color: #949494;"># A tibble: 6 × 3</span></span>
 <span class="co">##   geo_value time_value total_cases</span>
 <span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-03-01          19</span>
@@ -231,7 +236,10 @@
 <span class="co">## [1] "day"</span>
 <span class="co">## </span>
 <span class="co">## $as_of</span>
-<span class="co">## [1] "2020-06-03"</span></code></pre>
+<span class="co">## [1] "2020-06-03"</span>
+<span class="co">## </span>
+<span class="co">## $other_keys</span>
+<span class="co">## [1] "county_code"</span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="dealing-with-misspecified-column-names">Dealing with misspecified column names<a class="anchor" aria-label="anchor" href="#dealing-with-misspecified-column-names"></a>
@@ -277,7 +285,10 @@
 <span class="co">## [1] "day"</span>
 <span class="co">## </span>
 <span class="co">## $as_of</span>
-<span class="co">## [1] "2020-06-03"</span></code></pre>
+<span class="co">## [1] "2020-06-03"</span>
+<span class="co">## </span>
+<span class="co">## $other_keys</span>
+<span class="co">## [1] "pol"</span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="adding-additional-keys-to-an-epi_df-object">Adding additional keys to an <code>epi_df</code> object<a class="anchor" aria-label="anchor" href="#adding-additional-keys-to-an-epi_df-object"></a>
@@ -313,7 +324,10 @@
 <span class="co">## [1] "day"</span>
 <span class="co">## </span>
 <span class="co">## $as_of</span>
-<span class="co">## [1] "2022-05-23 21:35:45 UTC"</span></code></pre>
+<span class="co">## [1] "2022-05-23 21:35:45 UTC"</span>
+<span class="co">## </span>
+<span class="co">## $other_keys</span>
+<span class="co">## [1] "state"</span></code></pre>
 <p>Currently <code>other_keys</code> metadata in <code>epi_df</code> doesn’t impact <code><a href="../reference/epi_slide.html">epi_slide()</a></code>, contrary to <code>other_keys</code> in <code>as_epi_archive</code> which affects how the update data is interpreted.</p>
 </div>
 </div>
@@ -338,7 +352,12 @@
   <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span>geo_type <span class="op">=</span> <span class="st">"nation"</span><span class="op">)</span>
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tibble: 6 × 6</span></span>
+<pre><code><span class="co">## An `epi_df` object, 6 x 6 with metadata:</span>
+<span class="co">## * geo_type  = nation</span>
+<span class="co">## * time_type = day</span>
+<span class="co">## * as_of     = 2022-07-08 00:47:27</span>
+<span class="co">## </span>
+<span class="co">## <span style="color: #949494;"># A tibble: 6 × 6</span></span>
 <span class="co">##   geo_value time_value cases_travel cases_household cases_healthcare cases_other</span>
 <span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
 <span class="co">## <span style="color: #BCBCBC;">1</span> ca        2003-02-23            1               0                0           0</span>
