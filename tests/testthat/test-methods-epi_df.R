@@ -8,8 +8,7 @@ toy_epi_df <- tibble::tibble(
   ), times = 2),
   geo_value = rep(c("ca", "hi"), each = 5),
   indicator_var = as.factor(rep(1:2, times = 5)), 
-) %>% epiprocess::as_epi_df(additional_metadata = 
-                              c(other_keys = "indicator_var"))
+) %>% as_epi_df(additional_metadata = c(other_keys = "indicator_var"))
 
 att_toy = attr(toy_epi_df, "metadata")
 
