@@ -7,11 +7,10 @@ toy_epi_df <- tibble::tibble(
     length.out = 5
   ), times = 2),
   geo_value = rep(c("ca", "hi"), each = 5),
-  additional_key_val = as.factor(rep(1:2, times = 5)),
-) %>% epiprocess::as_epi_df()
+  indicator_var = as.factor(rep(1:2, times = 5)), 
+) %>% epiprocess::as_epi_df(additional_metadata = 
+                              c(other_keys = "indicator_var"))
 
-attributes(toy_epi_df)$metadata$additional_metadata <- 
-  list(additional_key_name = "additional_key_type")
 att_toy = attr(toy_epi_df, "metadata")
 
 test_that("head and tail do not drop the epi_df class", {
@@ -23,13 +22,11 @@ test_that("head and tail do not drop the epi_df class", {
   expect_identical(att_head$geo_type, att_toy$geo_type)
   expect_identical(att_head$time_type, att_toy$time_type)
   expect_identical(att_head$as_of, att_toy$as_of)
-  expect_identical(att_head$additional_key_name, 
-                   att_toy$additional_metadata$additional_key_name)
+  expect_identical(att_head$other_keys, att_toy$other_keys)
   expect_identical(att_tail$geo_type, att_toy$geo_type)
   expect_identical(att_tail$time_type, att_toy$time_type)
   expect_identical(att_tail$as_of, att_toy$as_of)
-  expect_identical(att_tail$additional_key_name, 
-                   att_toy$additional_metadata$additional_key_name)
+  expect_identical(att_tail$other_keys, att_toy$other_keys)
 })
 
 
@@ -45,8 +42,7 @@ test_that("subsetting drops or does not drop the epi_df class appropriately", {
   expect_identical(att_row_subset$geo_type, att_toy$geo_type)
   expect_identical(att_row_subset$time_type, att_toy$time_type)
   expect_identical(att_row_subset$as_of, att_toy$as_of)
-  expect_identical(att_row_subset$additional_key_name, 
-                   att_toy$additional_metadata$additional_key_name)
+  expect_identical(att_row_subset$other_keys, att_toy$other_keys)
   
   # Col subset - shouldn't be an epi_df
   col_subset = toy_epi_df[, 2:3]
@@ -73,7 +69,6 @@ test_that("subsetting drops or does not drop the epi_df class appropriately", {
   expect_identical(att_row_col_subset2$geo_type, att_toy$geo_type)
   expect_identical(att_row_col_subset2$time_type, att_toy$time_type)
   expect_identical(att_row_col_subset2$as_of, att_toy$as_of)
-  expect_identical(att_row_col_subset2$additional_key_name, 
-                   att_toy$additional_metadata$additional_key_name)
+  expect_identical(att_row_col_subset2$other_keys, att_toy$other_keys)
   
 })

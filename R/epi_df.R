@@ -222,7 +222,7 @@ as_epi_df.tbl_df = function(x, geo_type, time_type, as_of,
   }
   
   new_epi_df(x, geo_type, time_type, as_of,
-             additional_metadata = list(), ...)
+             additional_metadata, ...)
 }
 
 #' @method as_epi_df data.frame

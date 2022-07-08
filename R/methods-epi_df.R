@@ -98,8 +98,9 @@ summary.epi_df = function(object, ...) {
   
   cn <- names(res)
   nr <- vctrs::vec_size(x) 
-  not_epi_df <- !("time_value" %in% cn) || !("geo_value" %in% cn) || 
-    vctrs::vec_size(res) > nr || any(i > nr)
+  not_epi_df <- (!("time_value" %in% cn) || !("geo_value" %in% cn)
+                 || vctrs::vec_size(res) > nr || any(i > nr))
+
   if (not_epi_df) return(tibble::as_tibble(res))
   
   # Case when i is numeric and there are duplicate values in it
@@ -115,7 +116,8 @@ summary.epi_df = function(object, ...) {
              geo_type = att_x$geo_type, 
              time_type = att_x$time_type, 
              as_of = att_x$as_of,
-             additional_metadata = list(att_x$additional_metadata))
+             additional_metadata = 
+               att_x[!(names(att_x)  %in% c("geo_type", "time_type", "as_of"))])
 }
 
 #' `dplyr` verbs
