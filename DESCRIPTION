@@ -37,7 +37,8 @@ Imports:
     tidyr,
     tidyselect,
     tsibble,
-    utils
+    utils,
+    vctrs
 Suggests:
     covidcast,
     delphi.epidata,

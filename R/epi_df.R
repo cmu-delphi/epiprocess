@@ -278,9 +278,9 @@ as_epi_df.tbl_df = function(x, geo_type, time_type, as_of,
   if (!("time_value" %in% names(x))) {
     Abort("`x` must contain a `time_value` column.")
   }
-
+  
   new_epi_df(x, geo_type, time_type, as_of,
-             additional_metadata = list(), ...)
+             additional_metadata, ...)
 }
 
 #' @method as_epi_df data.frame
