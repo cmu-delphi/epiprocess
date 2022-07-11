@@ -59,11 +59,15 @@ examples.
 }
 \details{
 This simply a wrapper around the \code{new()} method of the \code{epi_archive}
-class, so for example:\preformatted{x <- as_epi_archive(df, geo_type = "state", time_type = "day")
-}
+class, so for example:
 
-would be equivalent to:\preformatted{x <- epi_archive$new(df, geo_type = "state", time_type = "day")
-}
+\if{html}{\out{<div class="sourceCode">}}\preformatted{x <- as_epi_archive(df, geo_type = "state", time_type = "day")
+}\if{html}{\out{</div>}}
+
+would be equivalent to:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{x <- epi_archive$new(df, geo_type = "state", time_type = "day")
+}\if{html}{\out{</div>}}
 }
 \examples{
 # Simple ex. with necessary keys
