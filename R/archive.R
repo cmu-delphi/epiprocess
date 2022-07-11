@@ -122,10 +122,12 @@ next_after.Date = function(x) x + 1L
 #' The data table `DT` has key variables `geo_value`, `time_value`, `version`,
 #'   as well as any others (these can be specified when instantiating the
 #'   `epi_archive` object via the `other_keys` argument, and/or set by operating
-#'   on `DT` directly). There can only be a single row per unique combination of
+#'   on `DT` directly). Refer to the documentation for [as_epi_archive()] for 
+#'   information and examples of relevant parameter names for an `epi_archive` object.
+#'   Note that there can only be a single row per unique combination of
 #'   key variables, and thus the key variables are critical for figuring out how
 #'   to generate a snapshot of data from the archive, as of a given version.
-#' 
+#'  
 #' In general, last observation carried forward (LOCF) is used to data in
 #'   between recorded versions. Currently, deletions must be represented as
 #'   revising a row to a special state (e.g., making the entries `NA` or
@@ -172,6 +174,19 @@ next_after.Date = function(x) x + 1L
 #' 
 #' @importFrom R6 R6Class
 #' @export
+#' @examples
+#' tib <- tibble::tibble(
+#'   geo_value = rep(c("ca", "hi"), each = 5),
+#'   time_value = rep(seq(as.Date("2020-01-01"), 
+#'                        by = 1, length.out = 5), times = 2),
+#'   version = rep(seq(as.Date("2020-01-02"), 
+#'                     by = 1, length.out = 5), times = 2),
+#'   value = rnorm(10, mean = 2, sd = 1)
+#' )
+#' 
+#' toy_epi_archive <- tib %>% epi_archive$new(geo_type = "state", 
+#'                                            time_type = "day")
+#' toy_epi_archive 
 epi_archive =
   R6::R6Class(
         classname = "epi_archive",
@@ -242,6 +257,10 @@ epi_archive =
 #'   clobbered.) If `nrow(x) == 0`, then this argument is mandatory.
 #' @return An `epi_archive` object.
 #' @importFrom data.table as.data.table key setkeyv
+#' 
+#' @details 
+#' Refer to the documentation for [as_epi_archive()] for more information 
+#' and examples of parameter names.
           initialize = function(x, geo_type, time_type, other_keys,
                                 additional_metadata, compactify,
                                 clobberable_versions_start, observed_versions_end) {
@@ -710,7 +729,22 @@ epi_archive =
 #'
 #' @export
 #' @examples
-#' df <- data.frame(geo_value  = c(rep("ca", 2), rep("fl", 2)),
+#' # Simple ex. with necessary keys
+#' tib <- tibble::tibble(
+#'   geo_value = rep(c("ca", "hi"), each = 5),
+#'   time_value = rep(seq(as.Date("2020-01-01"), 
+#'                        by = 1, length.out = 5), times = 2),
+#'   version = rep(seq(as.Date("2020-01-02"), 
+#'                     by = 1, length.out = 5), times = 2),
+#'   value = rnorm(10, mean = 2, sd = 1)
+#' )
+#' 
+#' toy_epi_archive <- tib %>% as_epi_archive(geo_type = "state", 
+#'                                           time_type = "day")
+#' toy_epi_archive 
+#' 
+#' # Ex. with an additional key for county
+#' df <- data.frame (geo_value  = c(replicate(2, "ca"), replicate(2, "fl")),
 #'                  county = c(1, 3, 2, 5),
 #'                  time_value = c("2020-06-01",
 #'                                 "2020-06-02",

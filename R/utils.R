@@ -23,8 +23,8 @@ Median = function(x) median(x, na.rm = TRUE)
 
 Start = function(x) x[1]
 End = function(x) x[length(x)]
-MiddleL = function(x) x[floor(length(x)/2)]
-MiddleR = function(x) x[ceiling(length(x)/2)]
+MiddleL = function(x) x[floor((length(x)+1)/2)]
+MiddleR = function(x) x[ceiling((length(x)+1)/2)]
 ExtendL = function(x) c(Start(x), x)
 ExtendR = function(x) c(x, End(x))
 
