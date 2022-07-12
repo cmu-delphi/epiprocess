@@ -38,8 +38,8 @@ test_that("as_of properly grabs the data",{
 })
 
 # epix_merge tests
-test_that("merge cannot work ",{
-  
+test_that("merge requires second argument to be a data.table or epi_archive",{
+  expect_error(ea$merge(data.frame(x=1)))
 })
 
 # (epi_archive) slide tests
