@@ -73,13 +73,13 @@ test_that("epix_slide only works on an epi_archive",{
 
 test_that("epix_slide works as intended",{
   x2 <- ea$clone()$DT %>%
-    filter(geo_value %in% c("ca","ny"), version <= as.Date("2020-06-07")) %>%
+    filter(geo_value == "ca", version <= as.Date("2020-06-09")) %>%
     select(-percent_cli,-case_rate_7d_av) %>%
     mutate(binary = 2^(row_number()-1)) %>%
     as_epi_archive()
   
   time_values <- seq(as.Date("2020-06-01"),
-                     as.Date("2020-06-15"),
+                     as.Date("2020-06-09"),
                      by = "1 day")
   xx <- epix_slide(x = x2,
             f = ~ sum(.x$binary),
