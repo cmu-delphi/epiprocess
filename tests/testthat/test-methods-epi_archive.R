@@ -87,4 +87,6 @@ test_that("epix_slide works as intended",{
             group_by = geo_value,
             ref_time_values = time_values,
             new_col_name = '3d_sum_binary')
+  
+  # No test here as this is broken
 })
