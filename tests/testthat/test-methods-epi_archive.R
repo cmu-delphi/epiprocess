@@ -59,6 +59,11 @@ test_that("data.table merging works as intended",{
   dt1 <- select(ea$DT , -case_rate_7d_av)
   ea1 <- as_epi_archive(dt1)
   dt2 <- select(ea$DT , -percent_cli)
+  
+  expect_identical(
+    as_epi_archive(ea$DT),
+    as_epi_archive(merge(dt1,dt2))
+  )
 })
 
 # (epi_archive) slide tests
