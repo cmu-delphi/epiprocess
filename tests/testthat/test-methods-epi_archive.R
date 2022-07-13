@@ -1,6 +1,6 @@
 library(dplyr)
 
-ea <- archive_cases_dv_subset
+ea <- archive_cases_dv_subset$clone()
 
 # epix_as_of tests
 test_that("epix_as_of behaves identically to as_of method",{
@@ -38,8 +38,27 @@ test_that("as_of properly grabs the data",{
 })
 
 # epix_merge tests
-test_that("merge requires second argument to be a data.table or epi_archive",{
-  expect_error(ea$merge(data.frame(x=1)))
+test_that("epix_merge requires second argument to be a data.table or
+          epi_archive",{
+  expect_error(epix_merge(ea,data.frame(x=1)))
+})
+
+test_that("data.table merging is utilized if second argument is a data.table",{
+  dt1 <- select(ea$DT , -case_rate_7d_av)
+  ea1 <- as_epi_archive(dt1)
+  dt2 <- select(ea$DT , -percent_cli)
+  
+  expect_identical(
+    epix_merge(ea1,dt2),
+    merge(dt1,dt2)
+  )
+})
+
+test_that("data.table merging works as intended",{
+  ea <- archive_cases_dv_subset$clone()
+  dt1 <- select(ea$DT , -case_rate_7d_av)
+  ea1 <- as_epi_archive(dt1)
+  dt2 <- select(ea$DT , -percent_cli)
 })
 
 # (epi_archive) slide tests
