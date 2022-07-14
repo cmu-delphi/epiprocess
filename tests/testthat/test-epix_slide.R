@@ -21,7 +21,18 @@ test_that("epix_slide works as intended",{
                    n = 3,
                    group_by = geo_value,
                    ref_time_values = time_values,
-                   new_col_name = '3d_sum_binary')
+                   new_col_name = 'sum_binary')
   
   # No test here as this is broken
+  
+  xx2 <- x2$DT %>%
+    filter(time_value + 1 == version) %>%
+    mutate(sum_binary = lag(binary) + lag(binary,2) + lag(binary,3)) %>%
+    select(-version,-binary) %>%
+    as_tibble()
+  
+  xx2 <- tail(xx2,-2)
+  xx2[1,3] <- 1
+ 
+  expect_identical(xx,xx2)
 })
