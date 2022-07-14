@@ -1,4 +1,7 @@
-# (epi_archive) slide tests
+library(dplyr)
+
+ea <- archive_cases_dv_subset$clone()
+
 test_that("epix_slide only works on an epi_archive",{
   expect_error(epix_slide(data.frame(x=1)))
 })
