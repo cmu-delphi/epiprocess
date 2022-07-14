@@ -31,8 +31,9 @@ test_that("epix_slide works as intended",{
     select(-version,-binary) %>%
     as_tibble()
   
-  xx2 <- tail(xx2,-2)
+  xx2 <- tail(xx2,-1)
   xx2[1,3] <- 1
+  xx2[2,3] <- 33
  
   expect_identical(xx,xx2)
 })
