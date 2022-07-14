@@ -65,28 +65,3 @@ test_that("data.table merging works as intended",{
     as_epi_archive(merge(dt1,dt2))
   )
 })
-
-# (epi_archive) slide tests
-test_that("epix_slide only works on an epi_archive",{
-  expect_error(epix_slide(data.frame(x=1)))
-})
-
-test_that("epix_slide works as intended",{
-  x2 <- ea$clone()$DT %>%
-    filter(geo_value == "ca", version <= as.Date("2020-06-09")) %>%
-    select(-percent_cli,-case_rate_7d_av) %>%
-    mutate(binary = 2^(row_number()-1)) %>%
-    as_epi_archive()
-  
-  time_values <- seq(as.Date("2020-06-01"),
-                     as.Date("2020-06-09"),
-                     by = "1 day")
-  xx <- epix_slide(x = x2,
-            f = ~ sum(.x$binary),
-            n = 3,
-            group_by = geo_value,
-            ref_time_values = time_values,
-            new_col_name = '3d_sum_binary')
-  
-  # No test here as this is broken
-})
