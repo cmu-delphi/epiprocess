@@ -16,6 +16,7 @@ test_that("epix_slide works as intended",{
   time_values <- seq(as.Date("2020-06-01"),
                      as.Date("2020-06-09"),
                      by = "1 day")
+  
   xx <- epix_slide(x = x2,
                    f = ~ sum(.x$binary),
                    n = 5,
