@@ -23,4 +23,6 @@ test_that("epix_slide works as intended",{
                    group_by = geo_value,
                    ref_time_values = time_values,
                    new_col_name = 'sum_binary')
+  
+  expect_equal(colnames(xx)[2], "version")
 })
