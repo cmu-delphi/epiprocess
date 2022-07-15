@@ -131,7 +131,7 @@ is equivalent to:
 # 0 day which has no results, for 2020-06-01
 # 1 day, for 2020-06-02
 # 2 days, for the rest of the results
-# never 3 days dur to data latency
+# never 3 days due to data latency
 
 time_values <- seq(as.Date("2020-06-01"),
                       as.Date("2020-06-15"),
