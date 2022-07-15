@@ -324,7 +324,7 @@ epi_archive =
             # Computation for one group, one time value
             comp_one_grp = function(.data_group,
                                     f, ..., 
-                                    time_value,
+                                    version,
                                     key_vars,
                                     new_col) {
               # Carry out the specified computation 
@@ -370,7 +370,7 @@ epi_archive =
  
               # Note that we've already recycled comp value to make size stable,
               # so tibble() will just recycle time value appropriately
-              return(tibble::tibble(time_value = time_value, 
+              return(tibble::tibble(version = version, 
                                     !!new_col := comp_value))
             }
             
@@ -384,7 +384,7 @@ epi_archive =
                   dplyr::group_by(!!!group_by) %>%
                   dplyr::group_modify(comp_one_grp,
                                       f = f, ..., 
-                                      time_value = t,
+                                      version = t,
                                       key_vars = key_vars,
                                       new_col = new_col,
                                       .keep = TRUE) %>%
@@ -412,7 +412,7 @@ epi_archive =
                   dplyr::group_by(!!!group_by) %>%
                   dplyr::group_modify(comp_one_grp,
                                       f = f, quo = quo,
-                                      time_value = t,
+                                      version = t,
                                       key_vars = key_vars,
                                       new_col = new_col,
                                       .keep = TRUE) %>%
