@@ -25,11 +25,14 @@ epi_slide(
 \item{f}{Function or formula to slide over variables in \code{x}. To "slide" means
 to apply a function or formula over a running window of \code{n} time steps
 (where one time step is typically one day or one week; see details for more
-explanation). If a function, \code{f} must take \code{x}, a data frame with the same
-column names as the original object; followed by any number of named
-arguments; and ending with \code{...}. If a formula, \code{f} can operate directly on
-columns accessed via \code{.x$var}, as in \code{~ mean(.x$var)} to compute a mean of
-a column \code{var} over a sliding window of \code{n} time steps.}
+explanation). If a function, \code{f} should take \code{x}, an \code{epi_df} with the same
+names as the non-grouping columns, followed by \code{g} to refer to the one row
+tibble with one column per grouping variable that identifies the group,
+and any number of named arguments (which will be taken from \code{...}). If a
+formula, \code{f} can operate directly on columns accessed via \code{.x$var}, as
+in \code{~ mean(.x$var)} to compute a mean of a column var over a sliding
+window of n time steps. As well, \code{.y} may be used in the formula to refer
+to the groupings that would be described by \code{g} if \code{f} was a function.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
@@ -115,26 +118,6 @@ Thus, to be clear, when the computation is specified via an expression for
 tidy evaluation (first example, above), then the name for the new column is
 inferred from the given expression and overrides any name passed explicitly
 through the \code{new_col_name} argument.
-
-When \code{f} is a named function with arguments, if a tibble with an unnamed
-grouping variable is passed in as the method argument to \code{f}, include a
-parameter for the grouping-variable in \verb{function()} just prior to
-specifying the method to prevent that from being overridden. For example:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{# Construct an tibble with an unnamed grouping variable
-edf = bind_rows(tibble(geo_value = "ak", time_value = as.Date("2020-01-01") 
-          + 1:10, x1=1:10, y=1:10 + rnorm(10L))) \%>\% 
-  as_epi_df()
-
-# Now, include a row parameter for the grouping variable in the tibble, 
-# which we denote as g, just prior to method = "qr"
-# Note that if g was not included below, then the method = "qr" would be 
-# overridden, as described above
-edf \%>\%
-group_by(geo_value) \%>\%
-epi_slide(function(x, g, method="qr", ...) tibble(model=list(
-          lm(y ~ x1, x, method=method))), n=7L) 
-}\if{html}{\out{</div>}}
 }
 \examples{
  # slide a 7-day trailing average formula on cases

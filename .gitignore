@@ -5,3 +5,6 @@
 *.Rproj
 inst/doc
 docs
+/doc/
+/Meta/
+*.DS_Store
