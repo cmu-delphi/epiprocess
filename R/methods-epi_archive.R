@@ -208,7 +208,8 @@ epix_slide = function(x, f, ..., max_version_gap, group_by, ref_time_values,
                       time_step, new_col_name = "slide_value",
                       as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
-  return(x$slide(f, ..., max_version_gap = max_version_gap,
+  return(x$slide(f, ...,
+                 max_version_gap = max_version_gap,
                  group_by = enquo(group_by),
                  ref_time_values = ref_time_values,
                  time_step = time_step,

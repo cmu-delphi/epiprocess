@@ -8,7 +8,7 @@ epix_slide(
   x,
   f,
   ...,
-  max_version_gap = 7,
+  max_version_gap,
   group_by,
   ref_time_values,
   time_step,
