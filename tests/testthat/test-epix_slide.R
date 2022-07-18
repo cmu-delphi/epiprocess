@@ -19,7 +19,7 @@ test_that("epix_slide works as intended",{
   
   xx1 <- epix_slide(x = x2,
                    f = ~ sum(.x$binary),
-                   n = 5,
+                   max_version_gap = 5,
                    group_by = geo_value,
                    ref_time_values = time_values,
                    new_col_name = 'sum_binary')

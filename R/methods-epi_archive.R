@@ -113,7 +113,8 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation.
 #' @param n Number of time steps to use in the running window. For example, if
-#'   `n = 7`, and one time step is one day, then to produce a value on January 7
+#'   `max_version_gap = 7`, and one time step is one day, then to produce a
+#'   value on January 7
 #'   we apply the given function or formula to data in between January 1 and
 #'   7. Default is 7.
 #' @param group_by The variable(s) to group by before slide computation. If
@@ -176,11 +177,11 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #' Finally, this is simply a wrapper around the `slide()` method of the
 #'   `epi_archive` class, so if `x` is an `epi_archive` object, then:
 #'   ```
-#'   epix_slide(x, new_var = comp(old_var), n = 120)
+#'   epix_slide(x, new_var = comp(old_var), max_version_gap = 120)
 #'   ```
 #'   is equivalent to:
 #'   ```
-#'   x$slide(x, new_var = comp(old_var), n = 120)
+#'   x$slide(new_var = comp(old_var), max_version_gap = 120)
 #'   ```
 #'
 #' @importFrom rlang enquo
@@ -198,15 +199,15 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'                       by = "1 day")
 #' epix_slide(x = archive_cases_dv_subset,
 #'            f = ~ mean(.x$case_rate),
-#'            n = 3,
+#'            max_version_gap = 3,
 #'            group_by = geo_value,
 #'            ref_time_values = time_values,
 #'            new_col_name = 'case_rate_3d_av')
-epix_slide = function(x, f, ..., n = 7, group_by, ref_time_values,
+epix_slide = function(x, f, ..., max_version_gap = 7, group_by, ref_time_values,
                       time_step, new_col_name = "slide_value",
                       as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
-  return(x$slide(f, ..., n = n,
+  return(x$slide(f, ..., max_version_gap = max_version_gap,
                  group_by = enquo(group_by),
                  ref_time_values = ref_time_values,
                  time_step = time_step,

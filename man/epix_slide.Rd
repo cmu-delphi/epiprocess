@@ -8,7 +8,7 @@ epix_slide(
   x,
   f,
   ...,
-  n = 7,
+  max_version_gap = 7,
   group_by,
   ref_time_values,
   time_step,
@@ -33,11 +33,6 @@ sliding window of \code{n} time steps.}
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
 interpreted as an expression for tidy evaluation.}
-
-\item{n}{Number of time steps to use in the running window. For example, if
-\code{n = 7}, and one time step is one day, then to produce a value on January 7
-we apply the given function or formula to data in between January 1 and
-7. Default is 7.}
 
 \item{group_by}{The variable(s) to group by before slide computation. If
 missing, then the keys in the underlying data table, excluding \code{time_value}
@@ -72,6 +67,12 @@ from \code{new_col_name} entirely.}
 combination of grouping variables and unique time values in the underlying
 data table. Otherwise, there will be one row in the output for each time
 value in \code{x} that acts as a reference time value. Default is \code{FALSE}.}
+
+\item{n}{Number of time steps to use in the running window. For example, if
+\code{max_version_gap = 7}, and one time step is one day, then to produce a
+value on January 7
+we apply the given function or formula to data in between January 1 and
+7. Default is 7.}
 }
 \value{
 A tibble whose columns are: the grouping variables, \code{time_value},
@@ -138,7 +139,7 @@ time_values <- seq(as.Date("2020-06-01"),
                       by = "1 day")
 epix_slide(x = archive_cases_dv_subset,
            f = ~ mean(.x$case_rate),
-           n = 3,
+           max_version_gap = 3,
            group_by = geo_value,
            ref_time_values = time_values,
            new_col_name = 'case_rate_3d_av')

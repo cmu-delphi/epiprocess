@@ -193,7 +193,7 @@ details.
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$slide(
   f,
   ...,
-  n = 7,
+  max_version_gap = 7,
   group_by,
   ref_time_values,
   time_step,
