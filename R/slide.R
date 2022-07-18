@@ -8,11 +8,14 @@
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
 #'   to apply a function or formula over a running window of `n` time steps
 #'   (where one time step is typically one day or one week; see details for more
-#'   explanation). If a function, `f` must take `x`, a data frame with the same
-#'   column names as the original object; followed by any number of named
-#'   arguments; and ending with `...`. If a formula, `f` can operate directly on
-#'   columns accessed via `.x$var`, as in `~ mean(.x$var)` to compute a mean of
-#'   a column `var` over a sliding window of `n` time steps.
+#'   explanation). If a function, `f` should take `x`, an `epi_df` with the same 
+#'   names as the non-grouping columns, followed by `g` to refer to the one row 
+#'   tibble with one column per grouping variable that identifies the group, 
+#'   and any number of named arguments (which will be taken from `...`). If a 
+#'   formula, `f` can operate directly on columns accessed via `.x$var`, as 
+#'   in `~ mean(.x$var)` to compute a mean of a column var over a sliding 
+#'   window of n time steps. As well, `.y` may be used in the formula to refer 
+#'   to the groupings that would be described by `g` if `f` was a function.
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation. See details.  
@@ -84,26 +87,6 @@
 #'   tidy evaluation (first example, above), then the name for the new column is 
 #'   inferred from the given expression and overrides any name passed explicitly 
 #'   through the `new_col_name` argument.
-#'   
-#' When `f` is a named function with arguments, if a tibble with an unnamed 
-#'   grouping variable is passed in as the method argument to `f`, include a 
-#'   parameter for the grouping-variable in `function()` just prior to 
-#'   specifying the method to prevent that from being overridden. For example:
-#'   ```
-#'   # Construct an tibble with an unnamed grouping variable
-#'   edf = bind_rows(tibble(geo_value = "ak", time_value = as.Date("2020-01-01") 
-#'             + 1:10, x1=1:10, y=1:10 + rnorm(10L))) %>% 
-#'     as_epi_df()
-#'   
-#'   # Now, include a row parameter for the grouping variable in the tibble, 
-#'   # which we denote as g, just prior to method = "qr"
-#'   # Note that if g was not included below, then the method = "qr" would be 
-#'   # overridden, as described above
-#'   edf %>%
-#'   group_by(geo_value) %>%
-#'   epi_slide(function(x, g, method="qr", ...) tibble(model=list(
-#'             lm(y ~ x1, x, method=method))), n=7L) 
-#'   ```
 #'   
 #' @importFrom lubridate days weeks
 #' @importFrom rlang .data .env !! enquo enquos sym
