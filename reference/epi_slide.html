@@ -194,11 +194,11 @@ window). The issue of what to do with partial computations (those run on
 incomplete windows) is therefore left up to the user, either through the
 specified function or formula <code>f</code>, or through post-processing.</p>
 <p>If <code>f</code> is missing, then an expression for tidy evaluation can be specified,
-for example, as in:</p><div class="sourceCode"><pre><code><span><span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span><span class="va">x</span>, cases_7dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, n <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span></code></pre></div>
-
-<p>which would be equivalent to:</p><div class="sourceCode"><pre><code><span><span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span><span class="va">x</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">cases</span><span class="op">)</span>, n <span class="op">=</span> <span class="fl">7</span>,</span>
-<span>          new_col_name <span class="op">=</span> <span class="st">"cases_7dav"</span><span class="op">)</span></span></code></pre></div>
-
+for example, as in:</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">epi_slide</span>(x, <span class="dt">cases_7dav =</span> <span class="kw">mean</span>(cases), <span class="dt">n =</span> <span class="dv">7</span>)</span></code></pre><p></p></div>
+<p>which would be equivalent to:</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">epi_slide</span>(x, <span class="cf">function</span>(x, ...) <span class="kw">mean</span>(x<span class="op">$</span>cases), <span class="dt">n =</span> <span class="dv">7</span>,</span>
+<span id="cb1-2"><a href="#cb1-2"></a>          <span class="dt">new_col_name =</span> <span class="st">"cases_7dav"</span>)</span></code></pre><p></p></div>
 <p>Thus, to be clear, when the computation is specified via an expression for
 tidy evaluation (first example, above), then the name for the new column is
 inferred from the given expression and overrides any name passed explicitly
@@ -233,6 +233,7 @@ through the <code>new_col_name</code> argument.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09         0.041<span style="text-decoration: underline;">0</span>     23       16.1       16.1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10         0.046<span style="text-decoration: underline;">8</span>     22       18.4       18.4 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 4,016 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ Use `print(n = ...)` to see more rows</span></span>
 <span class="r-in"><span> </span></span>
 <span class="r-in"><span> <span class="co"># slide a left-aligned 7-day average</span></span></span>
 <span class="r-in"><span>  <span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
@@ -260,6 +261,7 @@ through the <code>new_col_name</code> argument.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09         0.041<span style="text-decoration: underline;">0</span>     23       16.1        37.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10         0.046<span style="text-decoration: underline;">8</span>     22       18.4        56.7</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 4,016 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ Use `print(n = ...)` to see more rows</span></span>
 <span class="r-in"><span> </span></span>
 <span class="r-in"><span> <span class="co"># nested new columns</span></span></span>
 <span class="r-in"><span> <span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
@@ -287,6 +289,7 @@ through the <code>new_col_name</code> argument.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09         0.041<span style="text-decoration: underline;">0</span>          0.000<span style="text-decoration: underline;">726</span>    23       16.1  &lt;df&gt; </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10         0.046<span style="text-decoration: underline;">8</span>          0.000<span style="text-decoration: underline;">726</span>    22       18.4  &lt;df&gt; </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 4,016 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ Use `print(n = ...)` to see more rows</span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

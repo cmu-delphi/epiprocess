@@ -203,10 +203,10 @@ benefit from the highly efficient <code>slider</code> package. For this reason, 
 should never be used in place of <code><a href="epi_slide.html">epi_slide()</a></code>, and only used when
 version-aware sliding is necessary (as it its purpose).</p>
 <p>Finally, this is simply a wrapper around the <code>slide()</code> method of the
-<code>epi_archive</code> class, so if <code>x</code> is an <code>epi_archive</code> object, then:</p><div class="sourceCode"><pre><code><span><span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span><span class="op">(</span><span class="va">x</span>, new_var <span class="op">=</span> <span class="fu">comp</span><span class="op">(</span><span class="va">old_var</span><span class="op">)</span>, n <span class="op">=</span> <span class="fl">120</span><span class="op">)</span></span></code></pre></div>
-
-<p>is equivalent to:</p><div class="sourceCode"><pre><code><span><span class="va">x</span><span class="op">$</span><span class="fu">slide</span><span class="op">(</span><span class="va">x</span>, new_var <span class="op">=</span> <span class="fu">comp</span><span class="op">(</span><span class="va">old_var</span><span class="op">)</span>, n <span class="op">=</span> <span class="fl">120</span><span class="op">)</span></span></code></pre></div>
-
+<code>epi_archive</code> class, so if <code>x</code> is an <code>epi_archive</code> object, then:</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">epix_slide</span>(x, <span class="dt">new_var =</span> <span class="kw">comp</span>(old_var), <span class="dt">n =</span> <span class="dv">120</span>)</span></code></pre><p></p></div>
+<p>is equivalent to:</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1"></a>x<span class="op">$</span><span class="kw">slide</span>(x, <span class="dt">new_var =</span> <span class="kw">comp</span>(old_var), <span class="dt">n =</span> <span class="dv">120</span>)</span></code></pre><p></p></div>
     </div>
 
     <div class="section level2">
@@ -355,6 +355,7 @@ version-aware sliding is necessary (as it its purpose).</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-06-04              <span style="color: #BB0000;">NA</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> fl        2020-06-04              <span style="color: #BB0000;">NA</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 46 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ Use `print(n = ...)` to see more rows</span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
