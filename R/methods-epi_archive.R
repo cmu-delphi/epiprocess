@@ -112,7 +112,8 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation.
-#' @param n Number of time steps to use in the running window. For example, if
+#' @param max_version_gap Number of time steps to use in the running window.
+#' For example, if
 #'   `max_version_gap = 7`, and one time step is one day, then to produce a
 #'   value on January 7
 #'   we apply the given function or formula to data in between January 1 and

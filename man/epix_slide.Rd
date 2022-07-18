@@ -34,6 +34,13 @@ sliding window of \code{n} time steps.}
 via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
 interpreted as an expression for tidy evaluation.}
 
+\item{max_version_gap}{Number of time steps to use in the running window.
+For example, if
+\code{max_version_gap = 7}, and one time step is one day, then to produce a
+value on January 7
+we apply the given function or formula to data in between January 1 and
+7. Default is 7.}
+
 \item{group_by}{The variable(s) to group by before slide computation. If
 missing, then the keys in the underlying data table, excluding \code{time_value}
 and \code{version}, will be used for grouping. To omit a grouping entirely, use
@@ -67,12 +74,6 @@ from \code{new_col_name} entirely.}
 combination of grouping variables and unique time values in the underlying
 data table. Otherwise, there will be one row in the output for each time
 value in \code{x} that acts as a reference time value. Default is \code{FALSE}.}
-
-\item{n}{Number of time steps to use in the running window. For example, if
-\code{max_version_gap = 7}, and one time step is one day, then to produce a
-value on January 7
-we apply the given function or formula to data in between January 1 and
-7. Default is 7.}
 }
 \value{
 A tibble whose columns are: the grouping variables, \code{time_value},
