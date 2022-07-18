@@ -204,7 +204,7 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'            group_by = geo_value,
 #'            ref_time_values = time_values,
 #'            new_col_name = 'case_rate_3d_av')
-epix_slide = function(x, f, ..., max_version_gap = 7, group_by, ref_time_values,
+epix_slide = function(x, f, ..., max_version_gap, group_by, ref_time_values,
                       time_step, new_col_name = "slide_value",
                       as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
