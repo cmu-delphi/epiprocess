@@ -352,7 +352,7 @@ fc_time_values <- seq(as.Date("2020-08-01"),
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
-      epix_slide(fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, version, 
+      epix_slide(fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, time_value, 
                                args = prob_arx_args(ahead = ahead)), 
                  max_version_gap = 120, ref_time_values = fc_time_values) %>%
       mutate(target_date = version + ahead, as_of = TRUE, 
