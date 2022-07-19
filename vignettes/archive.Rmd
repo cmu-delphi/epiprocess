@@ -255,7 +255,7 @@ head(x$DT)
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-x <- archive_cases_dv_subset
+x <- as_epi_archive(archive_cases_dv_subset$DT)
 print(x)
 head(x$DT)
 ```
@@ -376,7 +376,7 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
       epix_slide(fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead),
                  max_version_gap = 120,
                  ref_time_values = fc_time_values, group_by = geo_value) %>%
-      mutate(target_date = time_value + ahead, as_of = TRUE) 
+      mutate(target_date = version + ahead, as_of = TRUE) 
   }
   else {
     x_latest %>% 
@@ -384,7 +384,7 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
       epi_slide(fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead),
                 max_version_gap = 120,
                 ref_time_values = fc_time_values) %>%
-      mutate(target_date = time_value + ahead, as_of = FALSE) 
+      mutate(target_date = version + ahead, as_of = FALSE) 
   }
 }
 

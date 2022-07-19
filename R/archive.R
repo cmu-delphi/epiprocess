@@ -376,6 +376,7 @@ epi_archive =
             
             # If f is not missing, then just go ahead, slide by group
             if (!missing(f)) {
+              
               if (rlang::is_formula(f)) f = rlang::as_function(f)
               
               x = purrr::map_dfr(ref_time_values, function(t) {
