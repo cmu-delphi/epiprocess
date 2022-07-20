@@ -13,7 +13,7 @@ test_that("epix_slide works as intended",{
     mutate(binary = 2^(row_number())) %>%
     as_epi_archive()
   
-  time_values <- seq(as.Date("2020-06-01"),
+  versions <- seq(as.Date("2020-06-01"),
                      as.Date("2020-06-09"),
                      by = "1 day")
   
@@ -21,7 +21,7 @@ test_that("epix_slide works as intended",{
                    f = ~ sum(.x$binary),
                    max_version_gap = 5,
                    group_by = geo_value,
-                   ref_time_values = time_values,
+                   ref_versions = versions,
                    new_col_name = 'sum_binary')
   
   xx2 <- tibble(geo_value = rep("ca",7),

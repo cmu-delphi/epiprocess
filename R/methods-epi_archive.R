@@ -122,7 +122,7 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'   missing, then the keys in the underlying data table, excluding `time_value`
 #'   and `version`, will be used for grouping. To omit a grouping entirely, use
 #'   `group_by = NULL`.
-#' @param ref_time_values Time values for sliding computations, meaning, each
+#' @param ref_versions Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
 #'   window. If missing, then this will be set to all unique time values in the
 #'   underlying data table, by default.
@@ -202,16 +202,16 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'            f = ~ mean(.x$case_rate_7d_av),
 #'            n = 3,
 #'            group_by = geo_value,
-#'            ref_time_values = time_values,
+#'            ref_versions = time_values,
 #'            new_col_name = 'case_rate_3d_av')
-epix_slide = function(x, f, ..., max_version_gap, group_by, ref_time_values,
+epix_slide = function(x, f, ..., max_version_gap, group_by, ref_versions,
                       time_step, new_col_name = "slide_value",
                       as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   return(x$slide(f, ...,
                  max_version_gap = max_version_gap,
                  group_by = enquo(group_by),
-                 ref_time_values = ref_time_values,
+                 ref_versions = ref_versions,
                  time_step = time_step,
                  new_col_name = new_col_name,
                  as_list_col = as_list_col,

@@ -195,7 +195,7 @@ details.
   ...,
   max_version_gap,
   group_by,
-  ref_time_values,
+  ref_versions,
   time_step,
   new_col_name = "slide_value",
   as_list_col = FALSE,

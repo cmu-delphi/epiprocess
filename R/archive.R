@@ -286,17 +286,17 @@ epi_archive =
 #'   details. 
 #' @importFrom data.table key
 #' @importFrom rlang !! !!! enquo enquos is_quosure sym syms
-          slide = function(f, ..., max_version_gap, group_by, ref_time_values, 
+          slide = function(f, ..., max_version_gap, group_by, ref_versions, 
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
                            all_rows = FALSE) { 
             # If missing, then set ref time values to be everything; else make
             # sure we intersect with observed time values 
-            if (missing(ref_time_values)) {
-              ref_time_values = unique(self$DT$time_value)
+            if (missing(ref_versions)) {
+              ref_versions = unique(self$DT$time_value)
             }
             else {
-              ref_time_values = ref_time_values[ref_time_values %in%
+              ref_versions = ref_versions[ref_versions %in%
                                                 unique(self$DT$time_value)]
             }
               
@@ -379,7 +379,7 @@ epi_archive =
               
               if (rlang::is_formula(f)) f = rlang::as_function(f)
               
-              x = purrr::map_dfr(ref_time_values, function(t) {
+              x = purrr::map_dfr(ref_versions, function(t) {
                 self$as_of(t, min_time_value = t - before_num) %>%
                   tibble::as_tibble() %>% 
                   dplyr::group_by(!!!group_by) %>%
@@ -407,7 +407,7 @@ epi_archive =
               f = function(x, quo, ...) rlang::eval_tidy(quo, x)
               new_col = sym(names(rlang::quos_auto_name(quos)))
 
-              x = purrr::map_dfr(ref_time_values, function(t) {
+              x = purrr::map_dfr(ref_versions, function(t) {
                 self$as_of(t, min_time_value = t - before_num) %>%
                   tibble::as_tibble() %>% 
                   dplyr::group_by(!!!group_by) %>%

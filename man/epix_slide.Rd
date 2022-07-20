@@ -10,7 +10,7 @@ epix_slide(
   ...,
   max_version_gap,
   group_by,
-  ref_time_values,
+  ref_versions,
   time_step,
   new_col_name = "slide_value",
   as_list_col = FALSE,
@@ -46,7 +46,7 @@ missing, then the keys in the underlying data table, excluding \code{time_value}
 and \code{version}, will be used for grouping. To omit a grouping entirely, use
 \code{group_by = NULL}.}
 
-\item{ref_time_values}{Time values for sliding computations, meaning, each
+\item{ref_versions}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
 window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.}
@@ -142,6 +142,6 @@ epix_slide(x = archive_cases_dv_subset,
            f = ~ mean(.x$case_rate_7d_av),
            n = 3,
            group_by = geo_value,
-           ref_time_values = time_values,
+           ref_versions = time_values,
            new_col_name = 'case_rate_3d_av')
 }

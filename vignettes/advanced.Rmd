@@ -15,7 +15,7 @@ ensure the result of a slide operation is *size stable*, meaning, it will return
 something whose length is the same as the number of appearances of reference 
 time values for the slide computation in the given data frame/table (this 
 defaults to all time values, but can be some given subset when `ref_time_values` 
-is specified).
+or `ref_versions` is specified, respectively).
 
 The output of a slide computation should either be an atomic value/vector, or a 
 data frame. This data frame can have multiple columns, multiple rows, or both. 
@@ -61,12 +61,12 @@ df %>%
 df %>% 
   mutate(version = time_value) %>% 
   as_epi_archive() %>%
-  epix_slide(x_2dav = mean(x), max_version_gap = 2, ref_time_values = as.Date("2020-06-02"))
+  epix_slide(x_2dav = mean(x), max_version_gap = 2, ref_versions = as.Date("2020-06-02"))
 
 df %>% 
   mutate(version = time_value) %>% 
   as_epi_archive() %>%
-  epix_slide(~ mean(.x$x), max_version_gap = 2, ref_time_values = as.Date("2020-06-02"))
+  epix_slide(~ mean(.x$x), max_version_gap = 2, ref_versions = as.Date("2020-06-02"))
 ```
 
 When the slide computation returns an atomic vector (rather than a single value)
@@ -152,7 +152,7 @@ df %>%
   mutate(version = time_value) %>% 
   as_epi_archive() %>%
   epix_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-             ref_time_values = as.Date("2020-06-02"),
+             ref_versions = as.Date("2020-06-02"),
              max_version_gap = 2, as_list_col = FALSE, names_sep = NULL)
 ```
 
@@ -344,7 +344,7 @@ data.
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
 # Latest snapshot of data, and forecast dates
 x_latest <- epix_as_of(x, max_version = max(x$DT$version))
-fc_time_values <- seq(as.Date("2020-08-01"), 
+fc_verions <- seq(as.Date("2020-08-01"), 
                       as.Date("2021-12-01"), 
                       by = "1 month")
 
@@ -354,7 +354,7 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
     x %>%
       epix_slide(fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, time_value, 
                                args = prob_arx_args(ahead = ahead)), 
-                 max_version_gap = 120, ref_time_values = fc_time_values) %>%
+                 max_version_gap = 120, ref_versions = fc_versions) %>%
       mutate(target_date = version + ahead, as_of = TRUE, 
              geo_value = fc_geo_value)
   }
@@ -362,7 +362,7 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
     x_latest %>% 
       epi_slide(fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, time_value, 
                               args = prob_arx_args(ahead = ahead)), 
-                n = 120, ref_time_values = fc_time_values) %>%
+                n = 120, ref_versions = fc_versions) %>%
       mutate(target_date = time_value + ahead, as_of = FALSE) 
   }
 }
