@@ -195,14 +195,14 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #' # 2 days, for the rest of the results
 #' # never 3 days due to data latency
 #' 
-#' time_values <- seq(as.Date("2020-06-01"),
+#' versions <- seq(as.Date("2020-06-01"),
 #'                       as.Date("2020-06-15"),
 #'                       by = "1 day")
 #' epix_slide(x = archive_cases_dv_subset,
 #'            f = ~ mean(.x$case_rate_7d_av),
 #'            n = 3,
 #'            group_by = geo_value,
-#'            ref_versions = time_values,
+#'            ref_versions = versions,
 #'            new_col_name = 'case_rate_3d_av')
 epix_slide = function(x, f, ..., max_version_gap, group_by, ref_versions,
                       time_step, new_col_name = "slide_value",
