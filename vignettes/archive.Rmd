@@ -285,52 +285,88 @@ slide vignette to accomodate exogenous variables in the autoregressive model,
 which is often referred to as an ARX model. 
 
 ```{r}
-prob_arx <- function(x, y, lags = c(0, 7, 14), ahead = 7, min_train_window = 20,
-                     lower_level = 0.05, upper_level = 0.95, symmetrize = TRUE, 
-                     intercept = FALSE, nonneg = TRUE) {   
+library(tidyr)
+library(purrr)
+
+prob_arx_args <- function(lags = c(0, 7, 14), 
+                          ahead = 7, 
+                          min_train_window = 20,
+                          lower_level = 0.05, 
+                          upper_level = 0.95, 
+                          symmetrize = TRUE, 
+                          intercept = FALSE,
+                          nonneg = TRUE) {
+  return(list(lags = lags, 
+              ahead = ahead, 
+              min_train_window = min_train_window,
+              lower_level = lower_level,
+              upper_level = upper_level,
+              symmetrize = symmetrize, 
+              intercept = intercept,
+              nonneg = nonneg))
+}
+
+prob_arx <- function(x, y, geo_value, time_value, args = prob_arx_args()) {  
   # Return NA if insufficient training data
-  if (length(y) < min_train_window + max(lags) + ahead) {
-    return(data.frame(point = NA, lower = NA, upper = NA))
+  if (length(y) < args$min_train_window + max(args$lags) + args$ahead) {
+    return(data.frame(geo_value = unique(geo_value), # Return geo value!
+                      point = NA, lower = NA, upper = NA))
   }
   
-  # Useful transformations
+  # Set up x, y, lags list
   if (!missing(x)) x <- data.frame(x, y)
   else x <- data.frame(y)
-  if (!is.list(lags)) lags <- list(lags)
-  lags = rep(lags, length.out = ncol(x))
+  if (!is.list(args$lags)) args$lags <- list(args$lags)
+  args$lags = rep(args$lags, length.out = ncol(x))
   
   # Build features and response for the AR model, and then fit it
-  dat <- do.call(
-    data.frame, 
-    unlist( # Below we loop through and build the lagged features
-      purrr::map(1:ncol(x), function(i) { 
-        purrr::map(lags[[i]], function(j) lag(x[,i], n = j))
-      }),
-      recursive = FALSE))
-  names(dat) = paste0("x", 1:ncol(dat))
-  if (intercept) dat$x0 = rep(1, nrow(dat))
-  dat$y <- lead(y, n = ahead) 
-  obj <- lm(y ~ . + 0, data = dat)
+  dat <-
+    tibble(i = 1:ncol(x), lag = args$lags) %>%
+    unnest(lag) %>%
+    mutate(name = paste0("x", 1:nrow(.))) %>%
+    # One list element for each lagged feature
+    pmap(function(i, lag, name) {
+      tibble(geo_value = geo_value,
+             time_value = time_value + lag, # Shift back 
+             !!name := x[,i])
+    }) %>% 
+    # One list element for the response vector
+    c(list(
+      tibble(geo_value = geo_value,
+             time_value = time_value - args$ahead, # Shift forward 
+             y = y))) %>%
+    # Combine them together into one data frame
+    reduce(full_join, by = c("geo_value", "time_value")) %>%
+    arrange(time_value)
+  if (args$intercept) dat$x0 = rep(1, nrow(dat))
+  obj <- lm(y ~ . + 0, data = select(dat, -geo_value, -time_value))
   
-  # Use LOCF to fill NAs in the latest feature values, make a prediction
-  setDT(dat) 
-  setnafill(dat, type = "locf")
-  point <- predict(obj, newdata = tail(dat, 1))
+  # Use LOCF to fill NAs in the latest feature values (do this by geo value)
+  setDT(dat) # Convert to a data.table object by reference
+  cols <- setdiff(names(dat), c("geo_value", "time_value"))
+  dat[, (cols) := nafill(.SD, type = "locf"), .SDcols = cols, by = "geo_value"]
   
-  # Compute a band 
+  # Make predictions
+  test_time_value = max(time_value)
+  point <- predict(obj, newdata = dat %>% 
+                     dplyr::group_by(geo_value) %>%
+                     dplyr::filter(time_value == test_time_value))
+  
+  # Compute bands
   r <- residuals(obj)
-  s <- ifelse(symmetrize, -1, NA) # Should the residuals be symmetrized?
-  q <- quantile(c(r, s * r), probs = c(lower_level, upper_level), na.rm = TRUE)
+  s <- ifelse(args$symmetrize, -1, NA) # Should the residuals be symmetrized?
+  q <- quantile(c(r, s * r), probs = c(args$lower, args$upper), na.rm = TRUE)
   lower <- point + q[1]
   upper <- point + q[2]
   
   # Clip at zero if we need to, then return
-  if (nonneg) { 
-    point = max(point, 0) 
-    lower = max(lower, 0) 
-    upper = max(upper, 0) 
+  if (args$nonneg) { 
+    point = pmax(point, 0) 
+    lower = pmax(lower, 0) 
+    upper = pmax(upper, 0) 
   }
-  return(data.frame(point = point, lower = lower, upper = upper))
+  return(data.frame(geo_value = unique(geo_value), # Return geo value!
+                    point = point, lower = lower, upper = upper))
 }
 ```
 
@@ -342,7 +378,8 @@ fc_time_values <- seq(as.Date("2020-08-01"),
                       as.Date("2021-12-01"), 
                       by = "1 month")
 
-z <- epix_slide(x, fc = prob_arx(x = percent_cli, y = case_rate_7d_av),
+z <- epix_slide(x, fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, time_value, 
+                               args = prob_arx_args(ahead = 7)),
                 max_version_gap = 120, 
                 ref_time_values = fc_time_values, group_by = geo_value)
 
@@ -373,20 +410,21 @@ x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
-      epix_slide(fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead),
-                 max_version_gap = 120,
-                 ref_time_values = fc_time_values, group_by = geo_value) %>%
-      mutate(target_date = version + ahead, as_of = TRUE) 
+      epix_slide(fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, time_value, 
+                               args = prob_arx_args(ahead = ahead)), 
+                 max_version_gap = 120, ref_time_values = fc_time_values) %>%
+      mutate(target_date = version + ahead, as_of = TRUE, 
+             geo_value = fc_geo_value)
   }
   else {
     x_latest %>% 
-      group_by(geo_value) %>%
-      epi_slide(fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead),
-                max_version_gap = 120,
-                ref_time_values = fc_time_values) %>%
-      mutate(target_date = version + ahead, as_of = FALSE) 
+      epi_slide(fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, time_value, 
+                              args = prob_arx_args(ahead = ahead)), 
+                n = 120, ref_time_values = fc_time_values) %>%
+      mutate(target_date = time_value + ahead, as_of = FALSE) 
   }
 }
+
 
 # Generate the forecasts, and bind them together
 fc <- bind_rows(k_week_ahead(x, ahead = 7, as_of = TRUE),
