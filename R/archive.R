@@ -286,14 +286,15 @@ epi_archive =
 #'   details. 
 #' @importFrom data.table key
 #' @importFrom rlang !! !!! enquo enquos is_quosure sym syms
-          slide = function(f, ..., max_version_gap, group_by, ref_versions, 
+          slide = function(f, ..., max_version_gap, group_by,
+                           ref_versions, 
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
                            all_rows = FALSE) { 
             # If missing, then set ref time values to be everything; else make
             # sure we intersect with observed time values 
             if (missing(ref_versions)) {
-              ref_versions = unique(self$DT$time_value)
+              ref_versions = unique(self$DT$version)
             }
             else {
               ref_versions = ref_versions[ref_versions %in%
