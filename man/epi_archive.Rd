@@ -26,7 +26,9 @@ later.
 The data table \code{DT} has key variables \code{geo_value}, \code{time_value}, \code{version},
 as well as any others (these can be specified when instantiating the
 \code{epi_archive} object via the \code{other_keys} argument, and/or set by operating
-on \code{DT} directly). There can only be a single row per unique combination of
+on \code{DT} directly). Refer to the documentation for \code{\link[=as_epi_archive]{as_epi_archive()}} for
+information and examples of relevant parameter names for an \code{epi_archive} object.
+Note that there can only be a single row per unique combination of
 key variables, and thus the key variables are critical for figuring out how
 to generate a snapshot of data from the archive, as of a given version.
 
@@ -85,6 +87,20 @@ sliding computation at any given reference time point t is performed on
 are documented in the wrapper function \code{\link[=epix_slide]{epix_slide()}}.
 }
 
+\examples{
+tib <- tibble::tibble(
+  geo_value = rep(c("ca", "hi"), each = 5),
+  time_value = rep(seq(as.Date("2020-01-01"), 
+                       by = 1, length.out = 5), times = 2),
+  version = rep(seq(as.Date("2020-01-02"), 
+                    by = 1, length.out = 5), times = 2),
+  value = rnorm(10, mean = 2, sd = 1)
+)
+
+toy_epi_archive <- tib \%>\% epi_archive$new(geo_type = "state", 
+                                           time_type = "day")
+toy_epi_archive 
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -187,6 +203,11 @@ clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+Refer to the documentation for \code{\link[=as_epi_archive]{as_epi_archive()}} for more information
+and examples of parameter names.
+}
+
 \subsection{Returns}{
 An \code{epi_archive} object.
 }

@@ -26,8 +26,10 @@ test_that("Other capital letter functions work",{
   x <- c(1,2,3,4,5)
   expect_equal(Start(x),1)
   expect_equal(End(x),5)
-  expect_equal(MiddleL(x),2) # Questionable for odd length vectors
-  expect_equal(MiddleR(x),3) # Questionable for odd length vectors
+  expect_equal(MiddleL(x),3)
+  expect_equal(MiddleR(x),3)
+  expect_equal(MiddleL(x[-5]),2)
+  expect_equal(MiddleR(x[-5]),3)
   expect_equal(ExtendL(x),c(1,1,2,3,4,5))
   expect_equal(ExtendR(x),c(1,2,3,4,5,5))
 })
