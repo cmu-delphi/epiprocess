@@ -189,9 +189,27 @@ epi_archive =
             }
             cat("----------\n")
             cat(sprintf("* %-14s = %s\n", "min time value",
-                        Min(self$DT$time_value)))
+                        tryCatch({
+                          Min(self$DT$time_value)
+                        },
+                        warning = function(w) {
+                          if (w$message != "no non-missing arguments to min; returning Inf") {
+                            warning(w)
+                          }
+                          NA
+                        }
+                        )))
             cat(sprintf("* %-14s = %s\n", "max time value",
-                        Max(self$DT$time_value)))
+                        tryCatch({
+                          Max(self$DT$time_value)
+                        },
+                        warning = function(w) {
+                          if (w$message != "no non-missing arguments to max; returning -Inf") {
+                            warning(w)
+                          }
+                          NA
+                        }
+                        )))
             cat(sprintf("* %-14s = %s\n", "min version",
                         min(self$DT$version)))
             cat(sprintf("* %-14s = %s\n", "max version",
