@@ -170,7 +170,7 @@ delayed_assign_with_unregister_awareness = function(x, value,
   })
 }
 
-# Like normal data objects, set `archive_cases_dv` up as a promise, so it
+# Like normal data objects, set `archive_cases_dv_subset` up as a promise, so it
 # doesn't take unnecessary space before it's evaluated. This also avoids a need
 # for @include tags. However, this pattern will use unnecessary space after this
 # promise is evaluated, because `as_epi_archive` clones `archive_cases_dv_subset_dt`
@@ -181,6 +181,14 @@ delayed_assign_with_unregister_awareness = function(x, value,
 # `DT` field from the user (make it non-`public` in general) or make it
 # read-only (in this specific case), so that the user cannot modify the `DT`
 # here and potentially mess up examples that they refer to later on.
+#
+# During development, note that reloading the package and re-evaluating this
+# promise should prepare the archive from the DT using any changes that have
+# been made to `as_epi_archive`; however, if earlier, any field of
+# `archive_cases_dv_subset` was modified using `<-`, a global environment
+# binding may have been created with the same name as the package promise, and
+# this binding will stick around even when the package is reloaded, and will
+# need to be `rm`-d to easily access the refreshed package promise.
 delayed_assign_with_unregister_awareness("archive_cases_dv_subset", as_epi_archive(archive_cases_dv_subset_dt, compactify=FALSE))
 
 #' Subset of JHU daily cases from California and Florida

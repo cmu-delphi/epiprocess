@@ -40,7 +40,11 @@ state is.
 \strong{A word of caution:} R6 objects, unlike most other objects in R, have
 reference semantics. A primary consequence of this is that objects are not
 copied when modified. You can read more about this in Hadley Wickham's
-\href{https://adv-r.hadley.nz/r6.html#r6-semantics}{Advanced R} book.
+\href{https://adv-r.hadley.nz/r6.html#r6-semantics}{Advanced R} book. In order
+to construct a modified archive while keeping the original intact, first
+make a clone using the \verb{$clone} method, then overwrite the clone's \code{DT}
+field with \code{data.table::copy(clone$DT)}, and finally perform the
+modifications on the clone.
 }
 \section{Metadata}{
 
@@ -66,7 +70,7 @@ An \code{epi_archive} object can be used to generate a snapshot of the data in
 \code{epi_df} format, which represents the most up-to-date values of the signal
 variables, as of the specified version. This is accomplished by calling the
 \code{as_of()} method for an \code{epi_archive} object \code{x}. More details on this
-method are documented in the wrapper function \code{epix_as_of()}.
+method are documented in the wrapper function \code{\link[=epix_as_of]{epix_as_of()}}.
 }
 
 \section{Sliding Computations}{
@@ -78,7 +82,7 @@ the way \code{epi_slide()} works for an \code{epi_df} object, but with one key
 difference: it is version-aware. That is, for an \code{epi_archive} object, the
 sliding computation at any given reference time point t is performed on
 \strong{data that would have been available as of t}. More details on \code{slide()}
-are documented in the wrapper function \code{epix_slide()}.
+are documented in the wrapper function \code{\link[=epix_slide]{epix_slide()}}.
 }
 
 \section{Methods}{
@@ -87,6 +91,7 @@ are documented in the wrapper function \code{epix_slide()}.
 \item \href{#method-epi_archive-new}{\code{epi_archive$new()}}
 \item \href{#method-epi_archive-print}{\code{epi_archive$print()}}
 \item \href{#method-epi_archive-as_of}{\code{epi_archive$as_of()}}
+\item \href{#method-epi_archive-fill_through_version}{\code{epi_archive$fill_through_version()}}
 \item \href{#method-epi_archive-merge}{\code{epi_archive$merge()}}
 \item \href{#method-epi_archive-slide}{\code{epi_archive$slide()}}
 \item \href{#method-epi_archive-clone}{\code{epi_archive$clone()}}
@@ -151,22 +156,25 @@ e.g., when fetching, storing, or preparing the input data \code{x}}
 \item{\code{clobberable_versions_start}}{Optional; \code{length}-1; either a value of the
 same \code{class} and \code{typeof} as \code{x$version}, or an \code{NA} of any \code{class} and
 \code{typeof}: specifically, either (a) the earliest version that could be
-subject to "clobbering" (being overwritten with different update data using
-the same version tag as the old update data), or (b) \code{NA}, to indicate that
-no versions are clobberable. The default value is
-\code{max_version_with_row_in(x)}; this default assumes that (i) there is at
-least one row in \code{x}, (ii) if an update row (even a compactify-redundant
-update row) is present with version \code{ver}, then all previous versions must
+subject to "clobbering" (being overwritten with different update data, but
+using the same version tag as the old update data), or (b) \code{NA}, to
+indicate that no versions are clobberable. There are a variety of reasons
+why versions could be clobberable, such as upstream hotfixes to the latest
+version, or delays in data synchronization that were mistaken for versions
+with no updates; potential causes vary between different data pipelines.
+The default value is \code{max_version_with_row_in(x)}; this default assumes
+that (i) if a row in \code{x} (even one that \code{compactify} would consider
+redundant) is present with version \code{ver}, then all previous versions must
 be finalized and non-clobberable, although \code{ver} (and onward) might still
-be modified, (iii) even if we have "observed" empty updates for some
+be modified, (ii) even if we have "observed" empty updates for some
 versions beyond \code{max(x$version)} (as indicated by \code{observed_versions_end};
 see below), we can't assume \code{max(x$version)} has been finalized, because we
 might see a nonfinalized version + empty subsequent versions due to
 upstream database replication delays in combination with the upstream
 replicas using last-version-carried-forward to extrapolate that there were
-no updates, and (iv) "redundant" update rows that would be removed by
+no updates, (iii) "redundant" update rows that would be removed by
 \code{compactify} are not redundant, and actually come from an explicit version
-release that indicates that preceding versions are finalized.}
+release that indicates that preceding versions are finalized. If \code{nrow(x) == 0}, then this argument is mandatory.}
 
 \item{\code{observed_versions_end}}{Optional; length-1, same \code{class} and \code{typeof} as
 \code{x$version}: what is the last version we have observed? The default is
@@ -197,30 +205,68 @@ An \code{epi_archive} object.
 \if{latex}{\out{\hypertarget{method-epi_archive-as_of}{}}}
 \subsection{Method \code{as_of()}}{
 Generates a snapshot in \code{epi_df} format as of a given version.
-See the documentation for the wrapper function \code{epix_as_of()} for details.
+See the documentation for the wrapper function \code{\link[=epix_as_of]{epix_as_of()}} for details.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$as_of(max_version, min_time_value = -Inf)}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-epi_archive-fill_through_version"></a>}}
+\if{latex}{\out{\hypertarget{method-epi_archive-fill_through_version}{}}}
+\subsection{Method \code{fill_through_version()}}{
+Fill in unobserved history using requested scheme by mutating
+\code{self} and potentially reseating its fields. See
+\code{\link{epix_fill_through_version}} for a full description of the non-R6-method
+version, which doesn't mutate the input archive but might alias its fields.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$fill_through_version(fill_versions_end, how = c("na", "lvcf"))}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{fill_versions_end}}{as in \code{\link{epix_fill_through_version}}}
+
+\item{\code{how}}{as in \code{\link{epix_fill_through_version}}}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-epi_archive-merge"></a>}}
 \if{latex}{\out{\hypertarget{method-epi_archive-merge}{}}}
 \subsection{Method \code{merge()}}{
-Merges another \code{data.table} with the current one, and allows for
-a post-filling of \code{NA} values by last observation carried forward (LOCF).
-See the documentation for the wrapper function \code{epix_merge()} for details.
+Merges another \code{epi_archive} with the current one, overwriting
+fields of \code{self}, reseating its fields, and returning invisibly. See
+\code{\link{epix_merge}} for a full description of the non-R6-method version, which
+does not overwrite, and does not alias either archive's \code{DT}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$merge(y, ..., locf = TRUE, nan = NA)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$merge(
+  y,
+  observed_versions_end_conflict = c("stop", "na", "lvcf", "truncate"),
+  compactify = TRUE
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{y}}{as in \code{\link{epix_merge}}}
+
+\item{\code{observed_versions_end_conflict}}{as in \code{\link{epix_merge}}}
+
+\item{\code{compactify}}{as in \code{\link{epix_merge}}}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-epi_archive-slide"></a>}}
 \if{latex}{\out{\hypertarget{method-epi_archive-slide}{}}}
 \subsection{Method \code{slide()}}{
 Slides a given function over variables in an \code{epi_archive}
-object. See the documentation for the wrapper function \code{epix_as_of()} for
+object. See the documentation for the wrapper function \code{\link[=epix_slide]{epix_slide()}} for
 details.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$slide(

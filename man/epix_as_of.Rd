@@ -61,5 +61,7 @@ epix_as_of(x = archive_cases_dv_subset,
 withCallingHandlers({
   epix_as_of(x = archive_cases_dv_subset,
              max_version = max(archive_cases_dv_subset$DT$version))
-}, epiprocess__snapshot_as_of_last_update_version = function(wrn) invokeRestart("muffleWarning"))
+}, epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning"))
+# Since R 4.0, there is a `globalCallingHandlers` function that can be used
+# to globally toggle these warnings.
 }

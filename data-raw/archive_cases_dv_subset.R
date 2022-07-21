@@ -3,7 +3,7 @@ library(epiprocess)
 library(data.table)
 library(dplyr)
 
-archive_cases_dv_subset <- covidcast(
+dv_subset <- covidcast(
   data_source = "doctor-visits",
   signals = "smoothed_adj_cli",
   time_type = "day",
@@ -11,9 +11,11 @@ archive_cases_dv_subset <- covidcast(
   time_values = epirange(20200601, 20211201),
   geo_values = "ca,fl,ny,tx",
   issues = epirange(20200601, 20211201)
-) %>% 
+) %>%
   fetch_tbl() %>%
   select(geo_value, time_value, version = issue, percent_cli = value) %>%
+  # We're using compactify=FALSE here and below to avoid some testthat test
+  # failures on tests that were based on a non-compactified version.
   as_epi_archive(compactify=FALSE)
 
 case_rate_subset <- covidcast(
@@ -29,7 +31,9 @@ case_rate_subset <- covidcast(
   select(geo_value, time_value, version = issue, case_rate_7d_av = value) %>%
   as_epi_archive(compactify=FALSE)
 
-epix_merge(archive_cases_dv_subset, case_rate_subset, all = TRUE)
+archive_cases_dv_subset = epix_merge(dv_subset, case_rate_subset,
+                                     observed_versions_end_conflict="na",
+                                     compactify=FALSE)
 
 # If we directly store an epi_archive R6 object as data, it will store its class
 # implementation there as well. To prevent mismatches between these stored

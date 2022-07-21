@@ -8,8 +8,8 @@
 
 #' Validate a version bound arg
 #'
-#' Expected to be used on `clobberable_versions_start` and
-#' `observed_versions_end`. Some additional checks are needed.
+#' Expected to be used on `clobberable_versions_start`, `observed_versions_end`,
+#' and similar arguments. Some additional context-specific checks may be needed.
 #'
 #' @param version_bound the version bound to validate
 #' @param x a data frame containing a version column with which to check
@@ -136,7 +136,11 @@ next_after.Date = function(x) x + 1L
 #' **A word of caution:** R6 objects, unlike most other objects in R, have
 #'   reference semantics. A primary consequence of this is that objects are not
 #'   copied when modified. You can read more about this in Hadley Wickham's
-#'   [Advanced R](https://adv-r.hadley.nz/r6.html#r6-semantics) book.
+#'   [Advanced R](https://adv-r.hadley.nz/r6.html#r6-semantics) book. In order
+#'   to construct a modified archive while keeping the original intact, first
+#'   make a clone using the `$clone` method, then overwrite the clone's `DT`
+#'   field with `data.table::copy(clone$DT)`, and finally perform the
+#'   modifications on the clone.
 #' 
 #' @section Metadata:
 #' The following pieces of metadata are included as fields in an `epi_archive`
@@ -158,7 +162,7 @@ next_after.Date = function(x) x + 1L
 #'   `epi_df` format, which represents the most up-to-date values of the signal
 #'   variables, as of the specified version. This is accomplished by calling the
 #'   `as_of()` method for an `epi_archive` object `x`. More details on this
-#'   method are documented in the wrapper function `epix_as_of()`.
+#'   method are documented in the wrapper function [`epix_as_of()`].
 #'
 #' @section Sliding Computations:
 #' We can run a sliding computation over an `epi_archive` object, much like
@@ -168,8 +172,8 @@ next_after.Date = function(x) x + 1L
 #'   difference: it is version-aware. That is, for an `epi_archive` object, the
 #'   sliding computation at any given reference time point t is performed on
 #'   **data that would have been available as of t**. More details on `slide()`
-#'   are documented in the wrapper function `epix_slide()`.
-#' 
+#'   are documented in the wrapper function [`epix_slide()`].
+#'
 #' @importFrom R6 R6Class
 #' @export
 epi_archive =
@@ -216,22 +220,26 @@ epi_archive =
 #' @param clobberable_versions_start Optional; `length`-1; either a value of the
 #'   same `class` and `typeof` as `x$version`, or an `NA` of any `class` and
 #'   `typeof`: specifically, either (a) the earliest version that could be
-#'   subject to "clobbering" (being overwritten with different update data using
-#'   the same version tag as the old update data), or (b) `NA`, to indicate that
-#'   no versions are clobberable. The default value is
-#'   `max_version_with_row_in(x)`; this default assumes that (i) there is at
-#'   least one row in `x`, (ii) if an update row (even a compactify-redundant
-#'   update row) is present with version `ver`, then all previous versions must
+#'   subject to "clobbering" (being overwritten with different update data, but
+#'   using the same version tag as the old update data), or (b) `NA`, to
+#'   indicate that no versions are clobberable. There are a variety of reasons
+#'   why versions could be clobberable, such as upstream hotfixes to the latest
+#'   version, or delays in data synchronization that were mistaken for versions
+#'   with no updates; potential causes vary between different data pipelines.
+#'   The default value is `max_version_with_row_in(x)`; this default assumes
+#'   that (i) if a row in `x` (even one that `compactify` would consider
+#'   redundant) is present with version `ver`, then all previous versions must
 #'   be finalized and non-clobberable, although `ver` (and onward) might still
-#'   be modified, (iii) even if we have "observed" empty updates for some
+#'   be modified, (ii) even if we have "observed" empty updates for some
 #'   versions beyond `max(x$version)` (as indicated by `observed_versions_end`;
 #'   see below), we can't assume `max(x$version)` has been finalized, because we
 #'   might see a nonfinalized version + empty subsequent versions due to
 #'   upstream database replication delays in combination with the upstream
 #'   replicas using last-version-carried-forward to extrapolate that there were
-#'   no updates, and (iv) "redundant" update rows that would be removed by
+#'   no updates, (iii) "redundant" update rows that would be removed by
 #'   `compactify` are not redundant, and actually come from an explicit version
-#'   release that indicates that preceding versions are finalized.
+#'   release that indicates that preceding versions are finalized. If `nrow(x)
+#'   == 0`, then this argument is mandatory.
 #' @param observed_versions_end Optional; length-1, same `class` and `typeof` as
 #'   `x$version`: what is the last version we have observed? The default is
 #'   `max_version_with_row_in(x)`, but values greater than this could also be
@@ -431,7 +439,7 @@ epi_archive =
           },
           #####
 #' @description Generates a snapshot in `epi_df` format as of a given version.
-#'   See the documentation for the wrapper function `epix_as_of()` for details.
+#'   See the documentation for the wrapper function [`epix_as_of()`] for details.
 #' @importFrom data.table between key
           as_of = function(max_version, min_time_value = -Inf) {
             # Self max version and other keys
@@ -454,7 +462,7 @@ epi_archive =
               Abort("`max_version` must be at most `self$observed_versions_end`.")
             }
             if (!is.na(self$clobberable_versions_start) && max_version >= self$clobberable_versions_start) {
-              Warn('Getting data as of some "clobberable" version (`>= self$clobberable_versions_start`). For a variety of reasons, it is possible that we only have a preliminary picture of this version (e.g., the upstream source has updated it but we have not seen it due to latency in synchronization). Thus, the snapshot that we produce here might not be reproducible at a later time (e.g., when the archive has caught up in terms of synchronization and "clobbered" the current picture of this version).  (You can muffle this warning with `withCallingHandlers({<code>}, "epiprocess__snapshot_as_of_clobberable_version"=function(wrn) invokeRestart("muffleWarning"))`.)',
+              Warn('Getting data as of some "clobberable" version that might be hotfixed, synced, or otherwise replaced later with different data using the same version tag.  Thus, the snapshot that we produce here might not be reproducible later. See `?epi_archive` for more info and `?epix_as_of` on how to muffle.',
                    class="epiprocess__snapshot_as_of_clobberable_version")
             }
             
@@ -475,40 +483,88 @@ epi_archive =
             )
           },          
           #####
-#' @description Merges another `data.table` with the current one, and allows for
-#'   a post-filling of `NA` values by last observation carried forward (LOCF).
-#'   See the documentation for the wrapper function `epix_merge()` for details.
-#' @importFrom data.table key merge.data.table nafill
-          merge = function(y, ..., locf = TRUE, nan = NA) {
-            # FIXME need to do something with the version bounds
+#' @description Fill in unobserved history using requested scheme by mutating
+#'   `self` and potentially reseating its fields. See
+#'   [`epix_fill_through_version`] for a full description of the non-R6-method
+#'   version, which doesn't mutate the input archive but might alias its fields.
+#'
+#' @param fill_versions_end as in [`epix_fill_through_version`]
+#' @param how as in [`epix_fill_through_version`]
+#'
+#' @importFrom data.table key setkeyv :=
+#' @importFrom rlang arg_match
+          fill_through_version = function(fill_versions_end,
+                                          how=c("na", "lvcf")) {
+            validate_version_bound(fill_versions_end, self$DT, na_ok=FALSE)
+            how <- arg_match(how)
+            if (self$observed_versions_end < fill_versions_end) {
+              new_DT = switch(
+                how,
+                "na" = {
+                  # old DT + a version consisting of all NA observations
+                  # immediately after the last currently/actually-observed
+                  # version. Note that this NA-observation version must only be
+                  # added if `self` is outdated.
+                  nonversion_key_cols = setdiff(key(self$DT), "version")
+                  nonkey_cols = setdiff(names(self$DT), key(self$DT))
+                  next_version_tag = next_after(self$observed_versions_end)
+                  if (next_version_tag > fill_versions_end) {
+                    Abort(sprintf(paste(
+                      "Apparent problem with `next_after` implementation:",
+                      "archive contained observations through version %s",
+                      "and the next possible version was supposed to be %s,",
+                      "but this appeared to jump from a version < %3$s",
+                      "to one > %3$s, implying at least one version in between."
+                    ), self$observed_versions_end, next_version_tag, fill_versions_end))
+                  }
+                  next_version_DT = unique(self$DT, by=nonversion_key_cols)[
+                  , version := next_version_tag][
+                  , (nonkey_cols) := NA]
+                  setkeyv(rbind(self$DT, next_version_DT), key(self$DT))[]
+                },
+                "lvcf" = {
+                  # just the old DT; LVCF is built into other methods:
+                  self$DT
+                }
+              )
+              new_observed_versions_end = fill_versions_end
+              # Update `self` all at once with simple, error-free operations +
+              # return below:
+              self$DT <- new_DT
+              self$observed_versions_end <- new_observed_versions_end
+            } else {
+              # Already sufficiently up to date; nothing to do.
+            }
+            return (invisible(self))
+          },
+          #####
+#' @description Merges another `epi_archive` with the current one, overwriting
+#'   fields of `self`, reseating its fields, and returning invisibly. See
+#'   [`epix_merge`] for a full description of the non-R6-method version, which
+#'   does not overwrite, and does not alias either archive's `DT`.
+#' @param y as in [`epix_merge`]
+#' @param observed_versions_end_conflict as in [`epix_merge`]
+#' @param compactify as in [`epix_merge`]
+          merge = function(y, observed_versions_end_conflict = c("stop","na","lvcf","truncate"), compactify=TRUE) {
+            result = epix_merge(self, y,
+                                observed_versions_end_conflict = observed_versions_end_conflict,
+                                compactify = compactify)
 
-            # Check we have a `data.table` object
-            if (!(inherits(y, "data.table") || inherits(y, "epi_archive"))) {
-              Abort("`y` must be of class `data.table` or `epi_archive`.") 
+            if (length(epi_archive$private_fields) != 0L) {
+              Abort("expected no private fields in epi_archive",
+                    internal=TRUE)
             }
 
-            # Use the data.table merge function, carrying through ... args
-            if (inherits(y, "data.table")) self$DT = merge(self$DT, y, ...)
-            else self$DT = merge(self$DT, y$DT, ...)
-
-            # Now use the data.table locf function, if we're asked to
-            if (locf) {
-              key_vars = key(self$DT)
-              cols = setdiff(names(self$DT), key_vars)
-              by = setdiff(key_vars, "version")
-
-              # Important: use nafill and not setnafill because the latter
-              # returns the entire data frame by reference, and the former can
-              # be set to act on particular columns by reference using := 
-              self$DT[,
-              (cols) := nafill(.SD, type = "locf", nan = nan),        
-              .SDcols = cols, 
-              by = by]
+            # Mutate fields all at once, trying to avoid any potential errors:
+            for (field_name in names(epi_archive$public_fields)) {
+              self[[field_name]] <- result[[field_name]]
             }
-          },   
+
+            return (invisible(self))
+          },
           #####
 #' @description Slides a given function over variables in an `epi_archive`
-#'   object. See the documentation for the wrapper function `epix_as_of()` for
+#'   object. See the documentation for the wrapper function [`epix_slide()`] for
 #'   details. 
 #' @importFrom data.table key
 #' @importFrom rlang !! !!! enquo enquos is_quosure sym syms

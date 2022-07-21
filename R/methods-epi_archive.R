@@ -51,60 +51,281 @@
 #' withCallingHandlers({
 #'   epix_as_of(x = archive_cases_dv_subset,
 #'              max_version = max(archive_cases_dv_subset$DT$version))
-#' }, epiprocess__snapshot_as_of_last_update_version = function(wrn) invokeRestart("muffleWarning"))
+#' }, epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning"))
+#' # Since R 4.0, there is a `globalCallingHandlers` function that can be used
+#' # to globally toggle these warnings.
 epix_as_of = function(x, max_version, min_time_value = -Inf) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   return(x$as_of(max_version, min_time_value))
 }
 
+#' `epi_archive` with unobserved history filled in (won't mutate, might alias)
+#'
+#' Sometimes, due to upstream data pipeline issues, we have to work with a
+#' version history that isn't completely up to date, but with functions that
+#' expect archives that are completely up to date, or equally as up-to-date as
+#' another archive. This function provides one way to approach such mismatches:
+#' pretend that we've "observed" additional versions, filling in these versions
+#' with NAs or extrapolated values.
+#'
+#' '`epix_fill_through_version` will not mutate its `x` argument, but its result
+#'  might alias fields of `x` (e.g., mutating the result's `DT` might mutate
+#'  `x$DT`). The R6 method variant, `x$fill_through_version`, will mutate `x` to
+#'  give the result, but might reseat its fields (e.g., references to the old
+#'  `x$DT` might not be updated by this function or subsequent operations on
+#'  `x`), and returns the updated `x` \link[base:invisible]{invisibly}.
+#'
+#' @param x An `epi_archive`
+#' @param fill_versions_end Length-1, same class&type as `%s$version`: the
+#'   version through which to fill in missing version history; this will be the
+#'   result's `$observed_versions_end` unless it already had a later
+#'   `$observed_versions_end`.
+#' @param how Optional; `"na"` or `"lvcf"`: `"na"` will fill in any missing
+#'   required version history with `NA`s, by inserting (if necessary) an update
+#'   immediately after the current `$observed_versions_end` that revises all
+#'   existing measurements to be `NA` (this is only supported for `version`
+#'   classes with a `next_after` implementation); `"lvcf"` will fill in missing
+#'   version history with the last version of each observation carried forward
+#'   (LVCF), by leaving the update `$DT` alone (other `epi_archive` methods are
+#'   based on LVCF).  Default is `"na"`.
+#' @return An `epi_archive`
+epix_fill_through_version = function(x, fill_versions_end,
+                                     how=c("na", "lvcf")) {
+  if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
+  # Enclosing parentheses drop the invisibility flag. See description above of
+  # potential mutation and aliasing behavior.
+  ( x$clone()$fill_through_version(fill_versions_end, how=how) )
+}
+
 #' Merge two `epi_archive` objects
 #'
-#' Merges the underlying data tables in two `epi_archive` objects, allows for
-#' post-filling of `NA` values by last observation carried forward (LOCF), and
-#' **overwrites** the first data table with the merged one. See the [archive
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
-#' examples.
+#' Merges two `epi_archive`s that share a common `geo_value`, `time_value`, and
+#' set of key columns. When they also share a common `observed_versions_end`,
+#' using `$as_of` on the result should be the same as using `$as_of` on `x` and
+#' `y` individually, then performing a full join of the `DT`s on the non-version
+#' key columns (potentially consolidating multiple warnings about clobberable
+#' versions). If the `observed_versions_end` values differ, the
+#' `observed_versions_end_conflict` parameter controls what is done.
 #'
-#' @param x,y Two `epi_archive` objects to join together, or more specifically,
-#'   whose underlying data tables are to be joined together. The data table in
-#'   `x` will be overwritten with the joined data table. For convenience, we
-#'   also allow `y` to be passed in directly as a `data.table` (need not be an
-#'   `epi_archive` object).
-#' @param ... Named arguments to pass to `data.table::merge.data.table()`, which
-#'   is used for the join (with all default settings as in this function). For
-#'   example, passing `all = TRUE` will perform a full join.
-#' @param locf Should LOCF be used after joining on all non-key columns? This
-#'   will take the latest version of each signal value and propogate it forward
-#'   to fill in gaps that appear after merging. Default is `TRUE`.
-#' @param nan Should `NaN` values be treated as `NA` values in the post-filling
-#' step?  Default is `NA`, which means that they are treated as `NA` values; if
-#    `NaN`, then they are treated as distinct.
-#' @return Nothing; the data table in `x` is overwritten with the merged one.
+#' This function, [`epix_merge`], does not mutate its inputs and will not alias
+#' either archive's `DT`, but may alias other fields; `x$merge` will overwrite
+#' `x` with the result of the merge, reseating its fields.
 #'
-#' @details This is simply a wrapper around the `merge()` method of the
-#'   `epi_archive` class, so if `x` and `y` are an `epi_archive` objects, then:
-#'   ```
-#'   epix_merge(x, y)
-#'   ```
-#'   is equivalent to:
-#'   ```
-#'   x$merge(y)
-#'   ```
+#' @param x,y Two `epi_archive` objects to join together.
+#' @param observed_versions_end_conflict Optional; `"stop"`, `"na"`, `"lvcf"`,
+#'   or `"truncate"`; in the case that `x$observed_versions_end` doesn't match
+#'   `y$observed_versions_end`, what do we do?: `"stop"`: emit an error; "na":
+#'   use `max(x$observed_versions_end, y$observed_versions_end)`, but in the
+#'   less up-to-date input archive, imagine there was an update immediately
+#'   after its last observed version which revised all observations to be `NA`;
+#'   `"locf"`: use `max(x$observed_versions_end, y$observed_versions_end)`, and
+#'   last-version-carried-forward extrapolation to invent update data for the
+#'   less up-to-date input archive; or `"truncate"`: use
+#'   `min(x$observed_versions_end, y$observed_versions_end)` and discard any
+#'   rows containing update rows for later versions.
+#' @param compactify Optional; `TRUE`, `FALSE`, or `NULL`; should the result be
+#'   compactified? See [`as_epi_archive`] for an explanation of what this means.
+#'   Default here is `TRUE`.
+#' @return the resulting `epi_archive`
 #'
-#' @export
+#' @details In all cases, `additional_metadata` will be an empty list, and
+#'   `clobberable_versions_start` will be set to the earliest version that could
+#'   be clobbered in either input archive. The result's `DT` will always be
+#'   compactified.
+#'
 #' @examples
 #' # create two example epi_archive datasets
-#' x <- archive_cases_dv_subset$DT %>% 
-#'   dplyr::select(geo_value,time_value,version,case_rate_7d_av) %>% 
+#' x <- archive_cases_dv_subset$DT %>%
+#'   dplyr::select(geo_value,time_value,version,case_rate_7d_av) %>%
 #'   as_epi_archive(compactify=TRUE)
-#' y <- archive_cases_dv_subset$DT %>% 
-#'   dplyr::select(geo_value,time_value,version,percent_cli) %>% 
+#' y <- archive_cases_dv_subset$DT %>%
+#'   dplyr::select(geo_value,time_value,version,percent_cli) %>%
 #'   as_epi_archive(compactify=TRUE)
 #' # a full join stored in x
-#' epix_merge(x, y, all = TRUE)
-epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
-  if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
-  return(x$merge(y, ..., locf = locf, nan = nan))
+#' epix_merge(x, y)
+#'
+#' @importFrom data.table key set
+#' @export
+epix_merge = function(x, y,
+                      observed_versions_end_conflict = c("stop","na","lvcf","truncate"),
+                      compactify = TRUE) {
+  if (!inherits(x, "epi_archive")) {
+    Abort("`x` must be of class `epi_archive`.")
+  }
+
+  if (!inherits(y, "epi_archive")) {
+    Abort("`y` must be of class `epi_archive`.")
+  }
+
+  observed_versions_end_conflict <- rlang::arg_match(observed_versions_end_conflict)
+
+  if (!identical(x$geo_type, y$geo_type)) {
+    Abort("`x` and `y` must have the same `$geo_type`")
+  }
+
+  if (!identical(x$time_type, y$time_type)) {
+    Abort("`x` and `y` must have the same `$time_type`")
+  }
+
+  if (length(x$additional_metadata) != 0L) {
+    Warn("x$additional_metadata will be dropped",
+         class = "epiprocess__epix_merge_drops_additional_metadata")
+  }
+  if (length(y$additional_metadata) != 0L) {
+    Warn("y$additional_metadata will be dropped",
+         class = "epiprocess__epix_merge_drops_additional_metadata")
+  }
+  result_additional_metadata = list()
+
+  result_clobberable_versions_start =
+    if (all(is.na(c(x$clobberable_versions_start, y$clobberable_versions_start)))) {
+      NA # (any type of NA is fine here)
+    } else {
+      Min(c(x$clobberable_versions_start, y$clobberable_versions_start))
+    }
+
+  # The actual merge below may not succeed 100% of the time, so do this
+  # preprocessing using non-mutating (but potentially aliasing) functions. This
+  # approach potentially uses more memory, but won't leave behind a
+  # partially-mutated `x` on failure.
+  if (observed_versions_end_conflict == "stop") {
+    if (!identical(x$observed_versions_end, y$observed_versions_end)) {
+      Abort(paste(
+        "`x` and `y` were not equally up to date version-wise:",
+        "`x$observed_versions_end` was not identical to `y$observed_versions_end`;",
+        "either ensure that `x` and `y` are equally up to date before merging,",
+        "or specify how to deal with this using `observed_versions_end_conflict`"
+      ))
+    } else {
+      new_observed_versions_end = x$observed_versions_end
+      x_DT = x$DT
+      y_DT = y$DT
+    }
+  } else if (observed_versions_end_conflict %in% c("na", "lvcf")) {
+    new_observed_versions_end = max(x$observed_versions_end, y$observed_versions_end)
+    x_DT = epix_fill_through_version(x, new_observed_versions_end, observed_versions_end_conflict)$DT
+    y_DT = epix_fill_through_version(y, new_observed_versions_end, observed_versions_end_conflict)$DT
+  } else if (observed_versions_end_conflict == "truncate") {
+    new_observed_versions_end = min(x$observed_versions_end, y$observed_versions_end)
+    x_DT = x$DT[version <= ..new_observed_versions_end]
+    y_DT = y$DT[version <= ..new_observed_versions_end]
+  } else Abort("unimplemented")
+
+  if (!identical(key(x$DT), key(x_DT)) || !identical(key(y$DT), key(y_DT))) {
+    Abort("preprocessing of data tables in merge changed the key unexpectedly",
+          internal=TRUE)
+  }
+  ## key(x_DT) should be the same as key(x$DT) and key(y_DT) should be the same
+  ## as key(y$DT). If we want to break this function into parts it makes sense
+  ## to use {x,y}_DT below, but this makes the error checks and messages look a
+  ## little weird and rely on the key-matching assumption above.
+  if (!identical(sort(key(x_DT)), sort(key(y_DT)))) {
+    Abort("
+            The archives must have the same set of key column names; if the
+            key columns represent the same things, just with different
+            names, please retry after manually renaming to match; if they
+            represent different things (e.g., x has an age breakdown
+            but y does not), please retry after processing them to share
+            the same key (e.g., by summarizing x to remove the age breakdown,
+            or by applying a static age breakdown to y).
+          ", class="epiprocess__epix_merge_x_y_must_have_same_key_set")
+  }
+  # `by` cols = result (and each input's) `key` cols, and determine
+  # the row set, determined using a full join via `merge`
+  #
+  # non-`by` cols = "value"-ish cols, and are looked up with last
+  #                 version carried forward via rolling joins
+  by = key(x_DT) # = some perm of key(y_DT)
+  if (!all(c("geo_value","time_value","version") %in% key(x_DT))) {
+    Abort('Invalid `by`; `by` is currently set to the common `key` of
+           the two archives, and is expected to contain
+           "geo_value", "time_value", and "version".',
+          class="epiprocess__epi_archive_must_have_required_key_cols")
+  }
+  if (length(by) < 1L || tail(by, 1L) != "version") {
+    Abort('Invalid `by`; `by` is currently set to the common `key` of
+           the two archives, and is expected to have a "version" as
+           the last key col.',
+          class="epiprocess__epi_archive_must_have_version_at_end_of_key")
+  }
+  x_nonby_colnames = setdiff(names(x_DT), by)
+  y_nonby_colnames = setdiff(names(y_DT), by)
+  if (length(intersect(x_nonby_colnames, y_nonby_colnames)) != 0L) {
+    Abort("
+            `x` and `y` DTs have overlapping non-by column names;
+            this is currently not supported; please manually fix up first:
+            any overlapping columns that can are key-like should be
+            incorporated into the key, and other columns should be renamed.
+          ", class="epiprocess__epix_merge_x_y_must_not_have_overlapping_nonby_colnames")
+  }
+  x_by_vals = x_DT[, ..by]
+  if (anyDuplicated(x_by_vals) != 0L) {
+    Abort("
+            The `by` columns must uniquely determine rows of `x$DT`;
+            the `by` is currently set to the common `key` of the two
+            archives, so this can be resolved by adding key-like columns
+            to `x`'s key (to get a unique key).
+          ", class="epiprocess__epix_merge_by_cols_must_act_as_unique_key")
+  }
+  y_by_vals = y_DT[, ..by]
+  if (anyDuplicated(y_by_vals) != 0L) {
+    Abort("
+            The `by` columns must uniquely determine rows of `y$DT`;
+            the `by` is currently set to the common `key` of the two
+            archives, so this can be resolved by adding key-like columns
+            to `y`'s key (to get a unique key).
+          ", class="epiprocess__epix_merge_by_cols_must_act_as_unique_key")
+  }
+  result_DT = merge(x_by_vals, y_by_vals, by=by,
+                    # We must have `all=TRUE` or we may skip updates
+                    # from x and/or y and corrupt the history
+                    all=TRUE,
+                    # We don't want Cartesian products, but the
+                    # by-is-unique-key check above already ensures
+                    # this. (Note that `allow.cartesian=FALSE` doesn't
+                    # actually catch all Cartesian products anyway.)
+                    # Disable superfluous check:
+                    allow.cartesian=TRUE)
+  set(result_DT,, x_nonby_colnames,
+      x_DT[result_DT[, ..by], ..x_nonby_colnames,
+           # It's good practice to specify `on`, and we must
+           # explicitly specify `on` if there's a potential key vs.
+           # by order mismatch (not possible currently for x
+           # with by = key(x$DT), but possible for y):
+           on = by,
+           # last version carried forward:
+           roll=TRUE,
+           # requesting non-version key that doesn't exist in the other archive,
+           # or before its first version, should result in NA
+           nomatch=NA,
+           # see note on `allow.cartesian` above; currently have a
+           # similar story here.
+           allow.cartesian=TRUE])
+  set(result_DT,,  y_nonby_colnames,
+      y_DT[result_DT[, ..by], ..y_nonby_colnames,
+           on = by,
+           roll=TRUE,
+           nomatch=NA,
+           allow.cartesian=TRUE])
+  # The key could be unset in case of a key vs. by order mismatch as
+  # noted above. Ensure that we keep it:
+  setkeyv(result_DT, by)
+
+  return (as_epi_archive(
+    result_DT[], # clear data.table internal invisibility flag if set
+    geo_type = x$geo_type,
+    time_type = x$time_type,
+    other_keys = setdiff(key(result_DT), c("geo_value","time_value","version")),
+    additional_metadata = result_additional_metadata,
+    # it'd probably be better to pre-compactify before the merge, and might be
+    # guaranteed not to be necessary to compactify the merge result if the
+    # inputs are already compactified, but at time of writing we don't have
+    # compactify in its own method or field, and it seems like it should be
+    # pretty fast anyway.
+    compactify=compactify,
+    clobberable_versions_start = result_clobberable_versions_start,
+    observed_versions_end = new_observed_versions_end
+  ))
 }
 
 #' Slide a function over variables in an `epi_archive` object
