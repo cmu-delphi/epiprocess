@@ -45,12 +45,14 @@ versions). If the \code{observed_versions_end} values differ, the
 \details{
 This function, \code{\link{epix_merge}}, does not mutate its inputs and will not alias
 either archive's \code{DT}, but may alias other fields; \code{x$merge} will overwrite
-\code{x} with the result of the merge, reseating its fields.
+\code{x} with the result of the merge, reseating its \code{DT} and several other fields
+(making them point to different objects), but avoiding mutation of the
+contents of the old \code{DT} (only relevant if you have another reference to the
+old \code{DT} in another object).
 
 In all cases, \code{additional_metadata} will be an empty list, and
 \code{clobberable_versions_start} will be set to the earliest version that could
-be clobbered in either input archive. The result's \code{DT} will always be
-compactified.
+be clobbered in either input archive.
 }
 \examples{
 # create two example epi_archive datasets

@@ -109,7 +109,10 @@ epix_fill_through_version = function(x, fill_versions_end,
 #'
 #' This function, [`epix_merge`], does not mutate its inputs and will not alias
 #' either archive's `DT`, but may alias other fields; `x$merge` will overwrite
-#' `x` with the result of the merge, reseating its fields.
+#' `x` with the result of the merge, reseating its `DT` and several other fields
+#' (making them point to different objects), but avoiding mutation of the
+#' contents of the old `DT` (only relevant if you have another reference to the
+#' old `DT` in another object).
 #'
 #' @param x,y Two `epi_archive` objects to join together.
 #' @param observed_versions_end_conflict Optional; `"stop"`, `"na"`, `"lvcf"`,
@@ -130,8 +133,7 @@ epix_fill_through_version = function(x, fill_versions_end,
 #'
 #' @details In all cases, `additional_metadata` will be an empty list, and
 #'   `clobberable_versions_start` will be set to the earliest version that could
-#'   be clobbered in either input archive. The result's `DT` will always be
-#'   compactified.
+#'   be clobbered in either input archive.
 #'
 #' @examples
 #' # create two example epi_archive datasets

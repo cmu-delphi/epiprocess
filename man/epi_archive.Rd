@@ -258,10 +258,12 @@ version, which doesn't mutate the input archive but might alias its fields.
 \if{html}{\out{<a id="method-epi_archive-merge"></a>}}
 \if{latex}{\out{\hypertarget{method-epi_archive-merge}{}}}
 \subsection{Method \code{merge()}}{
-Merges another \code{epi_archive} with the current one, overwriting
-fields of \code{self}, reseating its fields, and returning invisibly. See
-\code{\link{epix_merge}} for a full description of the non-R6-method version, which
-does not overwrite, and does not alias either archive's \code{DT}.
+Merges another \code{epi_archive} with the current one, mutating the
+current one by reseating its \code{DT} and several other fields, but avoiding
+mutation of the old \code{DT}; returns the current archive
+\link{base:invisible}\link{invisibly}. See \code{\link{epix_merge}} for a full description
+of the non-R6-method version, which does not overwrite, and does not alias
+either archive's \code{DT}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$merge(
   y,

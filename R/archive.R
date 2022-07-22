@@ -557,10 +557,12 @@ epi_archive =
             return (invisible(self))
           },
           #####
-#' @description Merges another `epi_archive` with the current one, overwriting
-#'   fields of `self`, reseating its fields, and returning invisibly. See
-#'   [`epix_merge`] for a full description of the non-R6-method version, which
-#'   does not overwrite, and does not alias either archive's `DT`.
+#' @description Merges another `epi_archive` with the current one, mutating the
+#'   current one by reseating its `DT` and several other fields, but avoiding
+#'   mutation of the old `DT`; returns the current archive
+#'   \link{base:invisible}[invisibly]. See [`epix_merge`] for a full description
+#'   of the non-R6-method version, which does not overwrite, and does not alias
+#'   either archive's `DT`.
 #' @param y as in [`epix_merge`]
 #' @param observed_versions_end_conflict as in [`epix_merge`]
 #' @param compactify as in [`epix_merge`]
