@@ -32,12 +32,22 @@ Note that there can only be a single row per unique combination of
 key variables, and thus the key variables are critical for figuring out how
 to generate a snapshot of data from the archive, as of a given version.
 
-In general, last observation carried forward (LOCF) is used to data in
-between recorded versions. Currently, deletions must be represented as
-revising a row to a special state (e.g., making the entries \code{NA} or
-including a special column that flags the data as removed and performing
-some kind of post-processing), and the archive is unaware of what this
-state is.
+In general, the last version of each observation is carried forward (LVCF) to
+fill in data between recorded versions, and between the last recorded
+update and the \code{observed_versions_end}. One consequence is that the \code{DT}
+doesn't have to contain a full snapshot of every version (although this
+generally works), but can instead contain only the rows that are new or
+changed from the previous version (see \code{compactify}, which does this
+automatically). Currently, deletions must be represented as revising a row
+to a special state (e.g., making the entries \code{NA} or including a special
+column that flags the data as removed and performing some kind of
+post-processing), and the archive is unaware of what this state is. Note
+that \code{NA}s \emph{can} be introduced by \code{epi_archive} methods for other reasons,
+e.g., in \code{\link{epix_fill_through_version}} and \code{\link{epix_merge}}, if requested, to
+represent potential update data that we do not yet have access to; or in
+\code{\link{epix_merge}} to represent the "value" of an observation before the
+version in which it was first released, or if no version of that
+observation appears in the archive data at all.
 
 \strong{A word of caution:} R6 objects, unlike most other objects in R, have
 reference semantics. A primary consequence of this is that objects are not
@@ -155,9 +165,9 @@ fields; named entries from the passed list or will be included as well.}
 
 \item{\code{compactify}}{Optional; Boolean or \code{NULL}: should we remove rows that are
 considered redundant for the purposes of \code{epi_archive}'s built-in methods
-such as \code{as_of}? As these methods use the last (version of an) observation
-carried forward (LOCF) to interpolate between the version data provided,
-rows that don't change these LOCF results can potentially be omitted to
+such as \code{as_of}? As these methods use the last version of each observation
+carried forward (LVCF) to interpolate between the version data provided,
+rows that don't change these LVCF results can potentially be omitted to
 save space while maintaining the same behavior (with the help of the
 \code{clobberable_versions_start} and \code{observed_versions_end} fields in some
 edge cases). \code{TRUE} will remove these rows, \code{FALSE} will not, and missing
@@ -262,8 +272,8 @@ Merges another \code{epi_archive} with the current one, mutating the
 current one by reseating its \code{DT} and several other fields, but avoiding
 mutation of the old \code{DT}; returns the current archive
 \link{base:invisible}\link{invisibly}. See \code{\link{epix_merge}} for a full description
-of the non-R6-method version, which does not overwrite, and does not alias
-either archive's \code{DT}.
+of the non-R6-method version, which does not mutate either archive, and
+does not alias either archive's \code{DT}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$merge(
   y,

@@ -20,7 +20,7 @@ or \code{"truncate"}; in the case that \code{x$observed_versions_end} doesn't ma
 use \code{max(x$observed_versions_end, y$observed_versions_end)}, but in the
 less up-to-date input archive, imagine there was an update immediately
 after its last observed version which revised all observations to be \code{NA};
-\code{"locf"}: use \code{max(x$observed_versions_end, y$observed_versions_end)}, and
+\code{"lvcf"}: use \code{max(x$observed_versions_end, y$observed_versions_end)}, and
 last-version-carried-forward extrapolation to invent update data for the
 less up-to-date input archive; or \code{"truncate"}: use
 \code{min(x$observed_versions_end, y$observed_versions_end)} and discard any

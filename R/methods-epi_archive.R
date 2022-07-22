@@ -121,7 +121,7 @@ epix_fill_through_version = function(x, fill_versions_end,
 #'   use `max(x$observed_versions_end, y$observed_versions_end)`, but in the
 #'   less up-to-date input archive, imagine there was an update immediately
 #'   after its last observed version which revised all observations to be `NA`;
-#'   `"locf"`: use `max(x$observed_versions_end, y$observed_versions_end)`, and
+#'   `"lvcf"`: use `max(x$observed_versions_end, y$observed_versions_end)`, and
 #'   last-version-carried-forward extrapolation to invent update data for the
 #'   less up-to-date input archive; or `"truncate"`: use
 #'   `min(x$observed_versions_end, y$observed_versions_end)` and discard any
@@ -319,12 +319,12 @@ epix_merge = function(x, y,
     time_type = x$time_type,
     other_keys = setdiff(key(result_DT), c("geo_value","time_value","version")),
     additional_metadata = result_additional_metadata,
-    # it'd probably be better to pre-compactify before the merge, and might be
+    # It'd probably be better to pre-compactify before the merge, and might be
     # guaranteed not to be necessary to compactify the merge result if the
     # inputs are already compactified, but at time of writing we don't have
     # compactify in its own method or field, and it seems like it should be
     # pretty fast anyway.
-    compactify=compactify,
+    compactify = compactify,
     clobberable_versions_start = result_clobberable_versions_start,
     observed_versions_end = new_observed_versions_end
   ))

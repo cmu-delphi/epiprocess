@@ -128,12 +128,22 @@ next_after.Date = function(x) x + 1L
 #'   key variables, and thus the key variables are critical for figuring out how
 #'   to generate a snapshot of data from the archive, as of a given version.
 #'  
-#' In general, last observation carried forward (LOCF) is used to data in
-#'   between recorded versions. Currently, deletions must be represented as
-#'   revising a row to a special state (e.g., making the entries `NA` or
-#'   including a special column that flags the data as removed and performing
-#'   some kind of post-processing), and the archive is unaware of what this
-#'   state is.
+#' In general, the last version of each observation is carried forward (LVCF) to
+#'   fill in data between recorded versions, and between the last recorded
+#'   update and the `observed_versions_end`. One consequence is that the `DT`
+#'   doesn't have to contain a full snapshot of every version (although this
+#'   generally works), but can instead contain only the rows that are new or
+#'   changed from the previous version (see `compactify`, which does this
+#'   automatically). Currently, deletions must be represented as revising a row
+#'   to a special state (e.g., making the entries `NA` or including a special
+#'   column that flags the data as removed and performing some kind of
+#'   post-processing), and the archive is unaware of what this state is. Note
+#'   that `NA`s *can* be introduced by `epi_archive` methods for other reasons,
+#'   e.g., in [`epix_fill_through_version`] and [`epix_merge`], if requested, to
+#'   represent potential update data that we do not yet have access to; or in
+#'   [`epix_merge`] to represent the "value" of an observation before the
+#'   version in which it was first released, or if no version of that
+#'   observation appears in the archive data at all.
 #'
 #' **A word of caution:** R6 objects, unlike most other objects in R, have
 #'   reference semantics. A primary consequence of this is that objects are not
@@ -219,9 +229,9 @@ epi_archive =
 #'   fields; named entries from the passed list or will be included as well.
 #' @param compactify Optional; Boolean or `NULL`: should we remove rows that are
 #'   considered redundant for the purposes of `epi_archive`'s built-in methods
-#'   such as `as_of`? As these methods use the last (version of an) observation
-#'   carried forward (LOCF) to interpolate between the version data provided,
-#'   rows that don't change these LOCF results can potentially be omitted to
+#'   such as `as_of`? As these methods use the last version of each observation
+#'   carried forward (LVCF) to interpolate between the version data provided,
+#'   rows that don't change these LVCF results can potentially be omitted to
 #'   save space while maintaining the same behavior (with the help of the
 #'   `clobberable_versions_start` and `observed_versions_end` fields in some
 #'   edge cases). `TRUE` will remove these rows, `FALSE` will not, and missing
@@ -356,30 +366,30 @@ epi_archive =
             DT = as.data.table(x, key = key_vars)
             if (!identical(key_vars, key(DT))) setkeyv(DT, cols = key_vars)
             
-            # Checks to see if a value in a vector is LOCF
-            is_locf <- function(vec) {
+            # Checks to see if a value in a vector is LVCF
+            is_lvcf <- function(vec) {
               dplyr::if_else(!is.na(vec) & !is.na(dplyr::lag(vec)),
                      vec == dplyr::lag(vec),
                      is.na(vec) & is.na(dplyr::lag(vec)))
             }
             
-            # LOCF is defined by a row where all values except for the version
+            # LVCF is defined by a row where all values except for the version
             # differ from their respective lag values
             
-            # Checks for LOCF's in a data frame
-            rm_locf <- function(df) {
-             dplyr::filter(df,if_any(c(everything(),-version),~ !is_locf(.))) 
+            # Checks for LVCF's in a data frame
+            rm_lvcf <- function(df) {
+             dplyr::filter(df,if_any(c(everything(),-version),~ !is_lvcf(.))) 
             }
             
-            # Keeps LOCF values, such as to be printed
-            keep_locf <- function(df) {
-              dplyr::filter(df,if_all(c(everything(),-version),~ is_locf(.))) 
+            # Keeps LVCF values, such as to be printed
+            keep_lvcf <- function(df) {
+              dplyr::filter(df,if_all(c(everything(),-version),~ is_lvcf(.))) 
             }
             
             # Runs compactify on data frame
             if (is.null(compactify) || compactify == TRUE) {
-              elim = keep_locf(DT)
-              DT = rm_locf(DT)
+              elim = keep_lvcf(DT)
+              DT = rm_lvcf(DT)
             } else {
               # Create empty data frame for nrow(elim) to be 0
               elim = tibble::tibble()
@@ -561,8 +571,8 @@ epi_archive =
 #'   current one by reseating its `DT` and several other fields, but avoiding
 #'   mutation of the old `DT`; returns the current archive
 #'   \link{base:invisible}[invisibly]. See [`epix_merge`] for a full description
-#'   of the non-R6-method version, which does not overwrite, and does not alias
-#'   either archive's `DT`.
+#'   of the non-R6-method version, which does not mutate either archive, and
+#'   does not alias either archive's `DT`.
 #' @param y as in [`epix_merge`]
 #' @param observed_versions_end_conflict as in [`epix_merge`]
 #' @param compactify as in [`epix_merge`]
@@ -762,9 +772,9 @@ epi_archive =
 #'   fields; named entries from the passed list or will be included as well.
 #' @param compactify Optional; Boolean or `NULL`: should we remove rows that are
 #'   considered redundant for the purposes of `epi_archive`'s built-in methods
-#'   such as `as_of`? As these methods use the last (version of an) observation
-#'   carried forward (LOCF) to interpolate between the version data provided,
-#'   rows that don't change these LOCF results can potentially be omitted to
+#'   such as `as_of`? As these methods use the last version of each observation
+#'   carried forward (LVCF) to interpolate between the version data provided,
+#'   rows that don't change these LVCF results can potentially be omitted to
 #'   save space. `TRUE` will remove these rows, `FALSE` will not, and missing or
 #'   `NULL` will remove these rows and issue a warning. Generally, this can be
 #'   set to `TRUE`, but if you directly inspect or edit the fields of the
