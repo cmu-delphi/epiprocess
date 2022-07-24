@@ -437,7 +437,7 @@ epix_merge = function(x, y,
 #'                       as.Date("2020-06-15"),
 #'                       by = "1 day")
 #' epix_slide(x = archive_cases_dv_subset,
-#'            f = ~ mean(.x$case_rate),
+#'            f = ~ mean(.x$case_rate_7d_av),
 #'            n = 3,
 #'            group_by = geo_value,
 #'            ref_time_values = time_values,
