@@ -211,8 +211,8 @@ epix_merge = function(x, y,
     y_DT = epix_fill_through_version(y, new_observed_versions_end, observed_versions_end_conflict)$DT
   } else if (observed_versions_end_conflict == "truncate") {
     new_observed_versions_end = min(x$observed_versions_end, y$observed_versions_end)
-    x_DT = x$DT[version <= ..new_observed_versions_end]
-    y_DT = y$DT[version <= ..new_observed_versions_end]
+    x_DT = x$DT[x[["DT"]][["version"]] <= new_observed_versions_end, with=FALSE]
+    y_DT = y$DT[y[["DT"]][["version"]] <= new_observed_versions_end, with=FALSE]
   } else Abort("unimplemented")
 
   if (!identical(key(x$DT), key(x_DT)) || !identical(key(y$DT), key(y_DT))) {
@@ -262,7 +262,7 @@ epix_merge = function(x, y,
             incorporated into the key, and other columns should be renamed.
           ", class="epiprocess__epix_merge_x_y_must_not_have_overlapping_nonby_colnames")
   }
-  x_by_vals = x_DT[, ..by]
+  x_by_vals = x_DT[, by, with=FALSE]
   if (anyDuplicated(x_by_vals) != 0L) {
     Abort("
             The `by` columns must uniquely determine rows of `x$DT`;
@@ -271,7 +271,7 @@ epix_merge = function(x, y,
             to `x`'s key (to get a unique key).
           ", class="epiprocess__epix_merge_by_cols_must_act_as_unique_key")
   }
-  y_by_vals = y_DT[, ..by]
+  y_by_vals = y_DT[, by, with=FALSE]
   if (anyDuplicated(y_by_vals) != 0L) {
     Abort("
             The `by` columns must uniquely determine rows of `y$DT`;
@@ -291,7 +291,7 @@ epix_merge = function(x, y,
                     # Disable superfluous check:
                     allow.cartesian=TRUE)
   set(result_DT,, x_nonby_colnames,
-      x_DT[result_DT[, ..by], ..x_nonby_colnames,
+      x_DT[result_DT[, by, with=FALSE], x_nonby_colnames, with=FALSE,
            # It's good practice to specify `on`, and we must
            # explicitly specify `on` if there's a potential key vs.
            # by order mismatch (not possible currently for x
@@ -306,7 +306,7 @@ epix_merge = function(x, y,
            # similar story here.
            allow.cartesian=TRUE])
   set(result_DT,,  y_nonby_colnames,
-      y_DT[result_DT[, ..by], ..y_nonby_colnames,
+      y_DT[result_DT[, by, with=FALSE], y_nonby_colnames, with=FALSE,
            on = by,
            roll=TRUE,
            nomatch=NA,
