@@ -46,18 +46,34 @@ test_that("epix_fill_through_version can extend observed versions, gives expecte
 })
 
 test_that("epix_fill_through_version does not mutate x", {
-  ea_orig = as_epi_archive(data.table::data.table(geo_value = "g1", time_value = as.Date("2020-01-01"),
-                                                  version = 1:5, value = 1:5))
-  # We want to perform a strict comparison of the contents of `ea_orig` before
-  # and `ea_orig` after. `clone` + `expect_identical` based on waldo would sort
-  # of work, but we might want something stricter. `as.list` + `identical` seems
-  # to do the trick
-  ea_orig_before_as_list = as.list(ea_orig)
-  some_unobserved_version = 8L
-  ea_fill_na = epix_fill_through_version(ea_orig, some_unobserved_version, "na")
-  ea_orig_after_as_list = as.list(ea_orig)
-  # use identical, not expect_identical; latter isn't as strict
-  expect_true(identical(ea_orig_before_as_list, ea_orig_after_as_list))
+  for (ea_orig in list(
+    # vanilla case
+    as_epi_archive(data.table::data.table(geo_value = "g1", time_value = as.Date("2020-01-01"),
+                                          version = 1:5, value = 1:5)),
+    # data.table unique yielding original DT by reference special case (maybe
+    # having only 1 row is the trigger? having no revisions of initial values
+    # doesn't seem sufficient to trigger)
+    as_epi_archive(tibble::tibble(geo_value=1L, time_value=1L, version=1L, value=10L))
+  )) {
+    # We want to perform a strict comparison of the contents of `ea_orig` before
+    # and `ea_orig` after. `clone` + `expect_identical` based on waldo would
+    # sort of work, but we might want something stricter. `as.list` +
+    # `identical` plus a check of the DT seems to do the trick.
+    ea_orig_before_as_list = as.list(ea_orig)
+    ea_orig_DT_before_copy = data.table::copy(ea_orig$DT)
+    some_unobserved_version = 8L
+    #
+    ea_fill_na = epix_fill_through_version(ea_orig, some_unobserved_version, "na")
+    ea_orig_after_as_list = as.list(ea_orig)
+    # use identical, not expect_identical, for the R6-as-list test; latter isn't as strict
+    expect_true(identical(ea_orig_before_as_list, ea_orig_after_as_list))
+    expect_identical(ea_orig_DT_before_copy, ea_orig$DT)
+    #
+    ea_fill_lvcf = epix_fill_through_version(ea_orig, some_unobserved_version, "lvcf")
+    ea_orig_after_as_list = as.list(ea_orig)
+    expect_true(identical(ea_orig_before_as_list, ea_orig_after_as_list))
+    expect_identical(ea_orig_DT_before_copy, ea_orig$DT)
+  }
 })
 
 test_that("x$fill_through_version mutates x (if needed)", {
@@ -77,4 +93,14 @@ test_that("{epix_,$}fill_through_version return with expected visibility", {
                                              version = 1:5, value = 1:5))
   expect_true(withVisible(epix_fill_through_version(ea, 10L, "na"))[["visible"]])
   expect_false(withVisible(ea$fill_through_version(15L, "na"))[["visible"]])
+})
+
+test_that("epix_fill_through_version returns same key & doesn't mutate old DT or its key", {
+  ea = as_epi_archive(tibble::tibble(geo_value=1L, time_value=1L, version=1L, value=10L))
+  old_DT = ea$DT
+  old_DT_copy = data.table::copy(old_DT)
+  old_key = data.table::key(ea$DT)
+  expect_identical(data.table::key(epix_fill_through_version(ea, 5L, "na")$DT), old_key)
+  expect_identical(data.table::key(epix_fill_through_version(ea, 5L, "lvcf")$DT), old_key)
+  expect_identical(data.table::key(ea$DT), old_key)
 })

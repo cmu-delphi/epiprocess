@@ -22,7 +22,9 @@ test_that("Warning against max_version being same as edf's max version",{
   expect_warning(ea$as_of(max_version = min(ea$DT$version)),NA)
 })
 
-test_that("as_of properly grabs the data",{
+test_that("as_of properly grabs the data and doesn't mutate key",{
+  old_key = data.table::key(ea$DT)
+
   df_as_of <- ea %>%
     epix_as_of(max_version = as.Date("2020-07-01")) %>%
     na.omit() %>%
@@ -35,6 +37,7 @@ test_that("as_of properly grabs the data",{
     as.data.frame()
   
   expect_equal(df_as_of[1:4],df_filter)
+  expect_equal(data.table::key(ea$DT), old_key)
 })
 
 # epix_merge tests

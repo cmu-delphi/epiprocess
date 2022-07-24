@@ -520,7 +520,7 @@ epi_archive =
 #' @param fill_versions_end as in [`epix_fill_through_version`]
 #' @param how as in [`epix_fill_through_version`]
 #'
-#' @importFrom data.table key setkeyv :=
+#' @importFrom data.table key setkeyv := address copy
 #' @importFrom rlang arg_match
           fill_through_version = function(fill_versions_end,
                                           how=c("na", "lvcf")) {
@@ -546,9 +546,19 @@ epi_archive =
                       "to one > %3$s, implying at least one version in between."
                     ), self$observed_versions_end, next_version_tag, fill_versions_end))
                   }
-                  next_version_DT = unique(self$DT, by=nonversion_key_cols)[
+                  nonversion_key_vals_ever_recorded = unique(self$DT, by=nonversion_key_cols)
+                  # In edge cases, the `unique` result can alias the original
+                  # DT; detect and copy if necessary:
+                  if (identical(address(self$DT), address(nonversion_key_vals_ever_recorded))) {
+                    nonversion_key_vals_ever_recorded <- copy(nonversion_key_vals_ever_recorded)
+                  }
+                  next_version_DT = nonversion_key_vals_ever_recorded[
                   , version := next_version_tag][
+                    # this makes the class of these columns logical (`NA` is a
+                    # logical NA; we're relying on the rbind below to convert to
+                    # the proper class&typeof)
                   , (nonkey_cols) := NA]
+                  # full result DT:
                   setkeyv(rbind(self$DT, next_version_DT), key(self$DT))[]
                 },
                 "lvcf" = {
