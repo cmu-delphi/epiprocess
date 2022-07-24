@@ -39,3 +39,107 @@ test_that("as_of properly grabs the data and doesn't mutate key",{
   expect_equal(df_as_of[1:4],df_filter)
   expect_equal(data.table::key(ea$DT), old_key)
 })
+
+test_that("quosure passing issue in epix_slide is resolved + other potential issues", {
+  # (First part adapted from @examples)
+  time_values <- seq(as.Date("2020-06-01"),
+                     as.Date("2020-06-02"),
+                     by = "1 day")
+  reference = epix_slide(x = archive_cases_dv_subset,
+                         f = ~ mean(.x$case_rate_7d_av),
+                         n = 3,
+                         group_by = geo_value,
+                         ref_time_values = time_values,
+                         new_col_name = 'case_rate_3d_av')
+  # test the passing-something-that-must-be-enquosed behavior:
+  expect_identical(
+    archive_cases_dv_subset$slide(
+      f = ~ mean(.x$case_rate_7d_av),
+      n = 3,
+      group_by = geo_value,
+      ref_time_values = time_values,
+      new_col_name = 'case_rate_3d_av'
+    ),
+    reference
+  )
+  # test the passing-string-literal behavior:
+  expect_identical(
+    epix_slide(x = archive_cases_dv_subset,
+               f = ~ mean(.x$case_rate_7d_av),
+               n = 3,
+               group_by = "geo_value",
+               ref_time_values = time_values,
+               new_col_name = 'case_rate_3d_av'),
+    reference
+  )
+  expect_identical(
+    archive_cases_dv_subset$slide(
+      f = ~ mean(.x$case_rate_7d_av),
+      n = 3,
+      group_by = "geo_value",
+      ref_time_values = time_values,
+      new_col_name = 'case_rate_3d_av'
+    ),
+    reference
+  )
+  # test the passing-string-var behavior:
+  my_group_by = "geo_value"
+  expect_identical(
+    epix_slide(x = archive_cases_dv_subset,
+               f = ~ mean(.x$case_rate_7d_av),
+               n = 3,
+               group_by = my_group_by,
+               ref_time_values = time_values,
+               new_col_name = 'case_rate_3d_av'),
+    reference
+  )
+  expect_identical(
+    archive_cases_dv_subset$slide(
+      f = ~ mean(.x$case_rate_7d_av),
+      n = 3,
+      group_by = my_group_by,
+      ref_time_values = time_values,
+      new_col_name = 'case_rate_3d_av'
+    ),
+    reference
+  )
+  # test the passing-splatted-string-var behavior:
+  my_group_by = "geo_value"
+  expect_identical(
+    epix_slide(x = archive_cases_dv_subset,
+               f = ~ mean(.x$case_rate_7d_av),
+               n = 3,
+               group_by = !!!my_group_by,
+               ref_time_values = time_values,
+               new_col_name = 'case_rate_3d_av'),
+    reference
+  )
+  expect_identical(
+    archive_cases_dv_subset$slide(
+      f = ~ mean(.x$case_rate_7d_av),
+      n = 3,
+      group_by = !!!my_group_by,
+      ref_time_values = time_values,
+      new_col_name = 'case_rate_3d_av'
+    ),
+    reference
+  )
+  # test the default behavior (default in this case should just be "geo_value"):
+  expect_identical(
+    epix_slide(x = archive_cases_dv_subset,
+               f = ~ mean(.x$case_rate_7d_av),
+               n = 3,
+               ref_time_values = time_values,
+               new_col_name = 'case_rate_3d_av'),
+    reference
+  )
+  expect_identical(
+    archive_cases_dv_subset$slide(
+      f = ~ mean(.x$case_rate_7d_av),
+      n = 3,
+      ref_time_values = time_values,
+      new_col_name = 'case_rate_3d_av'
+    ),
+    reference
+  )
+})
