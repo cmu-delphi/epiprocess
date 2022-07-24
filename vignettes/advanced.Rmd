@@ -224,13 +224,13 @@ x <- y1 %>%
   ) %>%
   as_epi_archive()
 
-epix_merge(x, y2 %>%
+# mutating merge operation:
+x$merge(y2 %>%
   select(geo_value, time_value,
     version = issue,
     case_rate_7d_av = value
   ) %>%
-  as_epi_archive(),
-all = TRUE
+  as_epi_archive()
 )
 ```
 

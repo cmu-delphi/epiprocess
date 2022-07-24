@@ -143,8 +143,10 @@ epix_fill_through_version = function(x, fill_versions_end,
 #' y <- archive_cases_dv_subset$DT %>%
 #'   dplyr::select(geo_value,time_value,version,percent_cli) %>%
 #'   as_epi_archive(compactify=TRUE)
-#' # a full join stored in x
-#' epix_merge(x, y)
+#' # merge results stored in a third object:
+#' xy = epix_merge(x, y)
+#' # vs. mutating x to hold the merge result:
+#' x$merge(y)
 #'
 #' @importFrom data.table key set
 #' @export
