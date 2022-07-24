@@ -29,6 +29,7 @@ use them to illustrate LVCF. Notice how the head of the first dataset differs
 from the second from the third value included.
 
 ```{r}
+library(epiprocess)
 library(dplyr)
 
 dt <- archive_cases_dv_subset$DT
