@@ -96,13 +96,13 @@ some_package_is_being_unregistered = function(parent_n = 0L) {
   # triggering if, in a later version, we decide to loosen the `call_name`
   # checks below to something that would be `TRUE` for the name of this function
   # or one of the undesired call ancestors.
-  calls_to_inspect = head(calls, n = -(parent_n + 1L))
-  # Note that `head(sys.calls(), n=-1L)` isn't equivalent, due to lazy argument
-  # evaluation. Note that copy-pasting the body of this function without this
-  # `head` operation isn't always equivalent to calling it; e.g., within the
-  # `value` argument of a package-level `delayedAssign`, `sys.calls()` will
-  # return `NULL` is some or all cases, including when its evaluation has been
-  # triggered via `unregister`.
+  calls_to_inspect = utils::head(calls, n = -(parent_n + 1L))
+  # Note that `utils::head(sys.calls(), n=-1L)` isn't equivalent, due to lazy
+  # argument evaluation. Note that copy-pasting the body of this function
+  # without this `utils::head` operation isn't always equivalent to calling it;
+  # e.g., within the `value` argument of a package-level `delayedAssign`,
+  # `sys.calls()` will return `NULL` is some or all cases, including when its
+  # evaluation has been triggered via `unregister`.
   simple_call_names = purrr::map_chr(calls_to_inspect, function(call) {
     maybe_simple_call_name = rlang::call_name(call)
     if (is.null(maybe_simple_call_name)) NA_character_ else maybe_simple_call_name
