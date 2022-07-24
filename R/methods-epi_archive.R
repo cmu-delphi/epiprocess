@@ -73,7 +73,7 @@ epix_as_of = function(x, max_version, min_time_value = -Inf) {
 #'  `x$DT`). The R6 method variant, `x$fill_through_version`, will mutate `x` to
 #'  give the result, but might reseat its fields (e.g., references to the old
 #'  `x$DT` might not be updated by this function or subsequent operations on
-#'  `x`), and returns the updated `x` \link[base:invisible]{invisibly}.
+#'  `x`), and returns the updated `x` [invisibly][base::invisible].
 #'
 #' @param x An `epi_archive`
 #' @param fill_versions_end Length-1, same class&type as `%s$version`: the

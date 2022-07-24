@@ -242,37 +242,8 @@ epi_archive =
 #'   here is removing a large proportion of the rows, this may indicate a
 #'   potential for space, time, or bandwidth savings upstream the data pipeline,
 #'   e.g., when fetching, storing, or preparing the input data `x`
-#' @param clobberable_versions_start Optional; `length`-1; either a value of the
-#'   same `class` and `typeof` as `x$version`, or an `NA` of any `class` and
-#'   `typeof`: specifically, either (a) the earliest version that could be
-#'   subject to "clobbering" (being overwritten with different update data, but
-#'   using the same version tag as the old update data), or (b) `NA`, to
-#'   indicate that no versions are clobberable. There are a variety of reasons
-#'   why versions could be clobberable, such as upstream hotfixes to the latest
-#'   version, or delays in data synchronization that were mistaken for versions
-#'   with no updates; potential causes vary between different data pipelines.
-#'   The default value is `max_version_with_row_in(x)`; this default assumes
-#'   that (i) if a row in `x` (even one that `compactify` would consider
-#'   redundant) is present with version `ver`, then all previous versions must
-#'   be finalized and non-clobberable, although `ver` (and onward) might still
-#'   be modified, (ii) even if we have "observed" empty updates for some
-#'   versions beyond `max(x$version)` (as indicated by `observed_versions_end`;
-#'   see below), we can't assume `max(x$version)` has been finalized, because we
-#'   might see a nonfinalized version + empty subsequent versions due to
-#'   upstream database replication delays in combination with the upstream
-#'   replicas using last-version-carried-forward to extrapolate that there were
-#'   no updates, (iii) "redundant" update rows that would be removed by
-#'   `compactify` are not redundant, and actually come from an explicit version
-#'   release that indicates that preceding versions are finalized. If `nrow(x)
-#'   == 0`, then this argument is mandatory.
-#' @param observed_versions_end Optional; length-1, same `class` and `typeof` as
-#'   `x$version`: what is the last version we have observed? The default is
-#'   `max_version_with_row_in(x)`, but values greater than this could also be
-#'   valid, and would indicate that we observed additional versions of the data
-#'   beyond `max(x$version)`, but they all contained empty updates. (The default
-#'   value of `clobberable_versions_start` does not fully trust these empty
-#'   updates, and assumes that any version `>= max(x$version)` could be
-#'   clobbered.) If `nrow(x) == 0`, then this argument is mandatory.
+#' @param clobberable_versions_start Optional; as in [`as_epi_archive`]
+#' @param observed_versions_end Optiona; as in [`as_epi_archive`]
 #' @return An `epi_archive` object.
 #' @importFrom data.table as.data.table key setkeyv
 #' 
@@ -580,7 +551,7 @@ epi_archive =
 #' @description Merges another `epi_archive` with the current one, mutating the
 #'   current one by reseating its `DT` and several other fields, but avoiding
 #'   mutation of the old `DT`; returns the current archive
-#'   \link{base:invisible}[invisibly]. See [`epix_merge`] for a full description
+#'   [invisibly][base::invisible]. See [`epix_merge`] for a full description
 #'   of the non-R6-method version, which does not mutate either archive, and
 #'   does not alias either archive's `DT`.
 #' @param y as in [`epix_merge`]
@@ -793,6 +764,37 @@ epi_archive =
 #'   here is removing a large proportion of the rows, this may indicate a
 #'   potential for space, time, or bandwidth savings upstream the data pipeline,
 #'   e.g., when fetching, storing, or preparing the input data `x`
+#' @param clobberable_versions_start Optional; `length`-1; either a value of the
+#'   same `class` and `typeof` as `x$version`, or an `NA` of any `class` and
+#'   `typeof`: specifically, either (a) the earliest version that could be
+#'   subject to "clobbering" (being overwritten with different update data, but
+#'   using the same version tag as the old update data), or (b) `NA`, to
+#'   indicate that no versions are clobberable. There are a variety of reasons
+#'   why versions could be clobberable, such as upstream hotfixes to the latest
+#'   version, or delays in data synchronization that were mistaken for versions
+#'   with no updates; potential causes vary between different data pipelines.
+#'   The default value is `max_version_with_row_in(x)`; this default assumes
+#'   that (i) if a row in `x` (even one that `compactify` would consider
+#'   redundant) is present with version `ver`, then all previous versions must
+#'   be finalized and non-clobberable, although `ver` (and onward) might still
+#'   be modified, (ii) even if we have "observed" empty updates for some
+#'   versions beyond `max(x$version)` (as indicated by `observed_versions_end`;
+#'   see below), we can't assume `max(x$version)` has been finalized, because we
+#'   might see a nonfinalized version + empty subsequent versions due to
+#'   upstream database replication delays in combination with the upstream
+#'   replicas using last-version-carried-forward to extrapolate that there were
+#'   no updates, (iii) "redundant" update rows that would be removed by
+#'   `compactify` are not redundant, and actually come from an explicit version
+#'   release that indicates that preceding versions are finalized. If `nrow(x)
+#'   == 0`, then this argument is mandatory.
+#' @param observed_versions_end Optional; length-1, same `class` and `typeof` as
+#'   `x$version`: what is the last version we have observed? The default is
+#'   `max_version_with_row_in(x)`, but values greater than this could also be
+#'   valid, and would indicate that we observed additional versions of the data
+#'   beyond `max(x$version)`, but they all contained empty updates. (The default
+#'   value of `clobberable_versions_start` does not fully trust these empty
+#'   updates, and assumes that any version `>= max(x$version)` could be
+#'   clobbered.) If `nrow(x) == 0`, then this argument is mandatory.
 #' @return An `epi_archive` object.
 #'
 #' @details This simply a wrapper around the `new()` method of the `epi_archive`

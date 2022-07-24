@@ -48,6 +48,38 @@ set to \code{TRUE}, but if you directly inspect or edit the fields of the
 here is removing a large proportion of the rows, this may indicate a
 potential for space, time, or bandwidth savings upstream the data pipeline,
 e.g., when fetching, storing, or preparing the input data \code{x}}
+
+\item{clobberable_versions_start}{Optional; \code{length}-1; either a value of the
+same \code{class} and \code{typeof} as \code{x$version}, or an \code{NA} of any \code{class} and
+\code{typeof}: specifically, either (a) the earliest version that could be
+subject to "clobbering" (being overwritten with different update data, but
+using the same version tag as the old update data), or (b) \code{NA}, to
+indicate that no versions are clobberable. There are a variety of reasons
+why versions could be clobberable, such as upstream hotfixes to the latest
+version, or delays in data synchronization that were mistaken for versions
+with no updates; potential causes vary between different data pipelines.
+The default value is \code{max_version_with_row_in(x)}; this default assumes
+that (i) if a row in \code{x} (even one that \code{compactify} would consider
+redundant) is present with version \code{ver}, then all previous versions must
+be finalized and non-clobberable, although \code{ver} (and onward) might still
+be modified, (ii) even if we have "observed" empty updates for some
+versions beyond \code{max(x$version)} (as indicated by \code{observed_versions_end};
+see below), we can't assume \code{max(x$version)} has been finalized, because we
+might see a nonfinalized version + empty subsequent versions due to
+upstream database replication delays in combination with the upstream
+replicas using last-version-carried-forward to extrapolate that there were
+no updates, (iii) "redundant" update rows that would be removed by
+\code{compactify} are not redundant, and actually come from an explicit version
+release that indicates that preceding versions are finalized. If \code{nrow(x) == 0}, then this argument is mandatory.}
+
+\item{observed_versions_end}{Optional; length-1, same \code{class} and \code{typeof} as
+\code{x$version}: what is the last version we have observed? The default is
+\code{max_version_with_row_in(x)}, but values greater than this could also be
+valid, and would indicate that we observed additional versions of the data
+beyond \code{max(x$version)}, but they all contained empty updates. (The default
+value of \code{clobberable_versions_start} does not fully trust these empty
+updates, and assumes that any version \verb{>= max(x$version)} could be
+clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
 }
 \value{
 An \code{epi_archive} object.
