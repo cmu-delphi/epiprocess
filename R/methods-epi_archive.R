@@ -244,7 +244,7 @@ epix_merge = function(x, y,
            "geo_value", "time_value", and "version".',
           class="epiprocess__epi_archive_must_have_required_key_cols")
   }
-  if (length(by) < 1L || tail(by, 1L) != "version") {
+  if (length(by) < 1L || utils::tail(by, 1L) != "version") {
     Abort('Invalid `by`; `by` is currently set to the common `key` of
            the two archives, and is expected to have a "version" as
            the last key col.',
