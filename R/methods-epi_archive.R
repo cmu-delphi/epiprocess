@@ -170,12 +170,12 @@ epix_merge = function(x, y,
   }
 
   if (length(x$additional_metadata) != 0L) {
-    Warn("x$additional_metadata will be dropped",
-         class = "epiprocess__epix_merge_drops_additional_metadata")
+    Warn("x$additional_metadata won't appear in merge result",
+         class = "epiprocess__epix_merge_ignores_additional_metadata")
   }
   if (length(y$additional_metadata) != 0L) {
-    Warn("y$additional_metadata will be dropped",
-         class = "epiprocess__epix_merge_drops_additional_metadata")
+    Warn("y$additional_metadata won't appear in merge result",
+         class = "epiprocess__epix_merge_ignores_additional_metadata")
   }
   result_additional_metadata = list()
 
@@ -197,7 +197,7 @@ epix_merge = function(x, y,
         "`x$observed_versions_end` was not identical to `y$observed_versions_end`;",
         "either ensure that `x` and `y` are equally up to date before merging,",
         "or specify how to deal with this using `observed_versions_end_conflict`"
-      ))
+      ), class="epiprocess__epix_merge_unresolved_observed_versions_end_conflict")
     } else {
       new_observed_versions_end = x$observed_versions_end
       x_DT = x$DT
