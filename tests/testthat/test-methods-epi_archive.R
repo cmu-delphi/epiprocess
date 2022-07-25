@@ -45,84 +45,97 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   time_values <- seq(as.Date("2020-06-01"),
                      as.Date("2020-06-02"),
                      by = "1 day")
-  reference = epix_slide(x = archive_cases_dv_subset,
-                         f = ~ mean(.x$case_rate_7d_av),
-                         n = 3,
-                         group_by = geo_value,
-                         ref_time_values = time_values,
-                         new_col_name = 'case_rate_3d_av')
+  # We only have one non-version, non-time key in the example archive. Add
+  # another so that we don't accidentally pass tests due to accidentally
+  # matching the default grouping.
+  ea = as_epi_archive(archive_cases_dv_subset$DT %>%
+                        dplyr::mutate(modulus = seq_len(nrow(.)) %% 5L),
+                      other_keys = "modulus",
+                      compactify = TRUE)
+  reference_by_modulus = epix_slide(x = ea,
+                                      f = ~ mean(.x$case_rate_7d_av),
+                                      n = 3,
+                                      group_by = modulus,
+                                      ref_time_values = time_values,
+                                      new_col_name = 'case_rate_3d_av')
+  reference_by_both = epix_slide(x = ea,
+                                 f = ~ mean(.x$case_rate_7d_av),
+                                 n = 3,
+                                 group_by = c(geo_value, modulus),
+                                 ref_time_values = time_values,
+                                 new_col_name = 'case_rate_3d_av')
   # test the passing-something-that-must-be-enquosed behavior:
   expect_identical(
-    archive_cases_dv_subset$slide(
+    ea$slide(
       f = ~ mean(.x$case_rate_7d_av),
       n = 3,
-      group_by = geo_value,
+      group_by = modulus,
       ref_time_values = time_values,
       new_col_name = 'case_rate_3d_av'
     ),
-    reference
+    reference_by_modulus
   )
   # test the passing-string-literal behavior:
   expect_identical(
-    epix_slide(x = archive_cases_dv_subset,
+    epix_slide(x = ea,
                f = ~ mean(.x$case_rate_7d_av),
                n = 3,
-               group_by = "geo_value",
+               group_by = "modulus",
                ref_time_values = time_values,
                new_col_name = 'case_rate_3d_av'),
-    reference
+    reference_by_modulus
   )
   expect_identical(
-    archive_cases_dv_subset$slide(
+    ea$slide(
       f = ~ mean(.x$case_rate_7d_av),
       n = 3,
-      group_by = "geo_value",
+      group_by = "modulus",
       ref_time_values = time_values,
       new_col_name = 'case_rate_3d_av'
     ),
-    reference
+    reference_by_modulus
   )
   # Might also want to test the passing-string-var-without-all_of behavior, but
   # make sure to set, trigger, then reset (or restore to old value) the
   # tidyselect once-per-session message about the ambiguity
   #
   # test the passing-all-of-string-var behavior:
-  my_group_by = "geo_value"
+  my_group_by = "modulus"
   expect_identical(
-    epix_slide(x = archive_cases_dv_subset,
+    epix_slide(x = ea,
                f = ~ mean(.x$case_rate_7d_av),
                n = 3,
                group_by = tidyselect::all_of(my_group_by),
                ref_time_values = time_values,
                new_col_name = 'case_rate_3d_av'),
-    reference
+    reference_by_modulus
   )
   expect_identical(
-    archive_cases_dv_subset$slide(
+    ea$slide(
       f = ~ mean(.x$case_rate_7d_av),
       n = 3,
       group_by = tidyselect::all_of(my_group_by),
       ref_time_values = time_values,
       new_col_name = 'case_rate_3d_av'
     ),
-    reference
+    reference_by_modulus
   )
   # test the default behavior (default in this case should just be "geo_value"):
   expect_identical(
-    epix_slide(x = archive_cases_dv_subset,
+    epix_slide(x = ea,
                f = ~ mean(.x$case_rate_7d_av),
                n = 3,
                ref_time_values = time_values,
                new_col_name = 'case_rate_3d_av'),
-    reference
+    reference_by_both
   )
   expect_identical(
-    archive_cases_dv_subset$slide(
+    ea$slide(
       f = ~ mean(.x$case_rate_7d_av),
       n = 3,
       ref_time_values = time_values,
       new_col_name = 'case_rate_3d_av'
     ),
-    reference
+    reference_by_both
   )
 })
