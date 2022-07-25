@@ -82,13 +82,17 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
     ),
     reference
   )
-  # test the passing-string-var behavior:
+  # Might also want to test the passing-string-var-without-all_of behavior, but
+  # make sure to set, trigger, then reset (or restore to old value) the
+  # tidyselect once-per-session message about the ambiguity
+  #
+  # test the passing-all-of-string-var behavior:
   my_group_by = "geo_value"
   expect_identical(
     epix_slide(x = archive_cases_dv_subset,
                f = ~ mean(.x$case_rate_7d_av),
                n = 3,
-               group_by = my_group_by,
+               group_by = tidyselect::all_of(my_group_by),
                ref_time_values = time_values,
                new_col_name = 'case_rate_3d_av'),
     reference
@@ -97,28 +101,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
     archive_cases_dv_subset$slide(
       f = ~ mean(.x$case_rate_7d_av),
       n = 3,
-      group_by = my_group_by,
-      ref_time_values = time_values,
-      new_col_name = 'case_rate_3d_av'
-    ),
-    reference
-  )
-  # test the passing-splatted-string-var behavior:
-  my_group_by = "geo_value"
-  expect_identical(
-    epix_slide(x = archive_cases_dv_subset,
-               f = ~ mean(.x$case_rate_7d_av),
-               n = 3,
-               group_by = !!!my_group_by,
-               ref_time_values = time_values,
-               new_col_name = 'case_rate_3d_av'),
-    reference
-  )
-  expect_identical(
-    archive_cases_dv_subset$slide(
-      f = ~ mean(.x$case_rate_7d_av),
-      n = 3,
-      group_by = !!!my_group_by,
+      group_by = tidyselect::all_of(my_group_by),
       ref_time_values = time_values,
       new_col_name = 'case_rate_3d_av'
     ),
