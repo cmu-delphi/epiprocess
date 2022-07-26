@@ -114,8 +114,7 @@
 #'  epi_slide(a = data.frame(cases_2dav = mean(cases), 
 #'                           cases_2dma = mad(cases)),
 #'            n = 2, as_list_col = TRUE)
-epi_slide = function(x, f, ..., n = 7, ref_time_values,
-                     align = c("right", "center", "left"), before, time_step, 
+epi_slide = function(x, f, ..., before, after, ref_time_values, time_step, 
                      new_col_name = "slide_value", as_list_col = FALSE,
                      names_sep = "_", all_rows = FALSE) { 
   # Check we have an `epi_df` object
@@ -133,33 +132,18 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
     ref_time_values = ref_time_values[ref_time_values %in%
                                       unique(x$time_value)] 
   }
-              
-  # If before is missing, then use align to set up alignment
-  if (missing(before)) {
-    align = match.arg(align)
-    if (align == "right") {
-      before_num = n-1
-      after_num = 0
-    }
-    else if (align == "center") {
-      before_num = floor((n-1)/2)
-      after_num = ceiling((n-1)/2)
-    }
-    else {
-      before_num = 0
-      after_num = n-1
-    }
-  }
   
   # Otherwise set up alignment based on passed before value
-  else {
-    if (before < 0 || before > n-1) {
-      Abort("`before` must be in between 0 and n-1`.")
-    }
-
-    before_num = before
-    after_num = n-1-before
+  if (before < 0 ||after < 0) {
+    Abort("`before` and `after` must be at least 0.")
   }
+  
+  if (floor(before) < ceiling(before) || floor(after) < ceiling(after)) {
+    Abort("`before` and `after` must be integers.")
+  }
+  
+  before_num = before
+  after_num = after
 
   # If a custom time step is specified, then redefine units 
   if (!missing(time_step)) {
