@@ -114,7 +114,7 @@
 #'  epi_slide(a = data.frame(cases_2dav = mean(cases), 
 #'                           cases_2dma = mad(cases)),
 #'            n = 2, as_list_col = TRUE)
-epi_slide = function(x, f, ..., n = 7, ref_time_values,
+epi_slide = function(x, f, ..., n, ref_time_values,
                      align = c("right", "center", "left"), before, time_step, 
                      new_col_name = "slide_value", as_list_col = FALSE,
                      names_sep = "_", all_rows = FALSE) { 

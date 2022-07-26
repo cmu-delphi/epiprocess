@@ -8,7 +8,7 @@ epi_slide(
   x,
   f,
   ...,
-  n = 7,
+  n,
   ref_time_values,
   align = c("right", "center", "left"),
   before,
