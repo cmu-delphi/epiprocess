@@ -41,7 +41,7 @@ interpreted as an expression for tidy evaluation. See details.}
 \item{n}{Number of time steps to use in the running window. For example, if
 \code{n = 7}, one time step is one day, and the alignment is "right", then to
 produce a value on January 7 we apply the given function or formula to data
-in between January 1 and 7. Default is 7.}
+in between January 1 and 7.}
 
 \item{ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
