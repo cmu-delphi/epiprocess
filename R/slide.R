@@ -123,7 +123,7 @@ epi_slide = function(x, f, ..., before = 0, after = 0, ref_time_values,
   }
   
   # Otherwise set up alignment based on passed before value
-  if (before < 0 ||after < 0) {
+  if (before < 0 || after < 0) {
     Abort("`before` and `after` must be at least 0.")
   }
   
