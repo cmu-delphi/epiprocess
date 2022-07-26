@@ -188,28 +188,16 @@ epi_archive =
               })
             }
             cat("----------\n")
+            if (length(self$DT$time_value) == 0 || all(is.na(self$DT$time_value)) || all(is.nan(self$DT$time_value))) {
+              min_time = max_time = NA
+            } else {
+              min_time = Min(self$DT$time_value)
+              max_time = Max(self$DT$time_value)
+            }
             cat(sprintf("* %-14s = %s\n", "min time value",
-                        tryCatch({
-                          Min(self$DT$time_value)
-                        },
-                        warning = function(w) {
-                          if (w$message != "no non-missing arguments to min; returning Inf") {
-                            warning(w)
-                          }
-                          NA
-                        }
-                        )))
+                          min_time))
             cat(sprintf("* %-14s = %s\n", "max time value",
-                        tryCatch({
-                          Max(self$DT$time_value)
-                        },
-                        warning = function(w) {
-                          if (w$message != "no non-missing arguments to max; returning -Inf") {
-                            warning(w)
-                          }
-                          NA
-                        }
-                        )))
+                          max_time))
             cat(sprintf("* %-14s = %s\n", "min version",
                         min(self$DT$version)))
             cat(sprintf("* %-14s = %s\n", "max version",
