@@ -128,7 +128,7 @@ next_after.Date = function(x) x + 1L
 #'   key variables, and thus the key variables are critical for figuring out how
 #'   to generate a snapshot of data from the archive, as of a given version.
 #'  
-#' In general, the last version of each observation is carried forward (LVCF) to
+#' In general, the last version of each observation is carried forward (LOCF) to
 #'   fill in data between recorded versions, and between the last recorded
 #'   update and the `observed_versions_end`. One consequence is that the `DT`
 #'   doesn't have to contain a full snapshot of every version (although this
@@ -230,8 +230,8 @@ epi_archive =
 #' @param compactify Optional; Boolean or `NULL`: should we remove rows that are
 #'   considered redundant for the purposes of `epi_archive`'s built-in methods
 #'   such as `as_of`? As these methods use the last version of each observation
-#'   carried forward (LVCF) to interpolate between the version data provided,
-#'   rows that don't change these LVCF results can potentially be omitted to
+#'   carried forward (LOCF) to interpolate between the version data provided,
+#'   rows that don't change these LOCF results can potentially be omitted to
 #'   save space while maintaining the same behavior (with the help of the
 #'   `clobberable_versions_start` and `observed_versions_end` fields in some
 #'   edge cases). `TRUE` will remove these rows, `FALSE` will not, and missing
@@ -337,30 +337,30 @@ epi_archive =
             DT = as.data.table(x, key = key_vars)
             if (!identical(key_vars, key(DT))) setkeyv(DT, cols = key_vars)
             
-            # Checks to see if a value in a vector is LVCF
-            is_lvcf <- function(vec) {
+            # Checks to see if a value in a vector is LOCF
+            is_locf <- function(vec) {
               dplyr::if_else(!is.na(vec) & !is.na(dplyr::lag(vec)),
                      vec == dplyr::lag(vec),
                      is.na(vec) & is.na(dplyr::lag(vec)))
             }
             
-            # LVCF is defined by a row where all values except for the version
+            # LOCF is defined by a row where all values except for the version
             # differ from their respective lag values
             
-            # Checks for LVCF's in a data frame
-            rm_lvcf <- function(df) {
-             dplyr::filter(df,if_any(c(everything(),-version),~ !is_lvcf(.))) 
+            # Checks for LOCF's in a data frame
+            rm_locf <- function(df) {
+             dplyr::filter(df,if_any(c(everything(),-version),~ !is_locf(.))) 
             }
             
-            # Keeps LVCF values, such as to be printed
-            keep_lvcf <- function(df) {
-              dplyr::filter(df,if_all(c(everything(),-version),~ is_lvcf(.))) 
+            # Keeps LOCF values, such as to be printed
+            keep_locf <- function(df) {
+              dplyr::filter(df,if_all(c(everything(),-version),~ is_locf(.))) 
             }
             
             # Runs compactify on data frame
             if (is.null(compactify) || compactify == TRUE) {
-              elim = keep_lvcf(DT)
-              DT = rm_lvcf(DT)
+              elim = keep_locf(DT)
+              DT = rm_locf(DT)
             } else {
               # Create empty data frame for nrow(elim) to be 0
               elim = tibble::tibble()
@@ -370,7 +370,7 @@ epi_archive =
             if (is.null(compactify) && nrow(elim) > 0) {
               warning_intro <- break_str(paste(
                 'Found rows that appear redundant based on',
-                'last (version of an) observation carried forward;',
+                'last (version of each) observation carried forward;',
                 'these rows have been removed to "compactify" and save space:'
               ))
               
@@ -494,7 +494,7 @@ epi_archive =
 #' @importFrom data.table key setkeyv := address copy
 #' @importFrom rlang arg_match
           fill_through_version = function(fill_versions_end,
-                                          how=c("na", "lvcf")) {
+                                          how=c("na", "locf")) {
             validate_version_bound(fill_versions_end, self$DT, na_ok=FALSE)
             how <- arg_match(how)
             if (self$observed_versions_end < fill_versions_end) {
@@ -532,8 +532,8 @@ epi_archive =
                   # full result DT:
                   setkeyv(rbind(self$DT, next_version_DT), key(self$DT))[]
                 },
-                "lvcf" = {
-                  # just the old DT; LVCF is built into other methods:
+                "locf" = {
+                  # just the old DT; LOCF is built into other methods:
                   self$DT
                 }
               )
@@ -557,7 +557,7 @@ epi_archive =
 #' @param y as in [`epix_merge`]
 #' @param observed_versions_end_conflict as in [`epix_merge`]
 #' @param compactify as in [`epix_merge`]
-          merge = function(y, observed_versions_end_conflict = c("stop","na","lvcf","truncate"), compactify=TRUE) {
+          merge = function(y, observed_versions_end_conflict = c("stop","na","locf","truncate"), compactify=TRUE) {
             result = epix_merge(self, y,
                                 observed_versions_end_conflict = observed_versions_end_conflict,
                                 compactify = compactify)
@@ -751,8 +751,8 @@ epi_archive =
 #' @param compactify Optional; Boolean or `NULL`: should we remove rows that are
 #'   considered redundant for the purposes of `epi_archive`'s built-in methods
 #'   such as `as_of`? As these methods use the last version of each observation
-#'   carried forward (LVCF) to interpolate between the version data provided,
-#'   rows that don't change these LVCF results can potentially be omitted to
+#'   carried forward (LOCF) to interpolate between the version data provided,
+#'   rows that don't change these LOCF results can potentially be omitted to
 #'   save space. `TRUE` will remove these rows, `FALSE` will not, and missing or
 #'   `NULL` will remove these rows and issue a warning. Generally, this can be
 #'   set to `TRUE`, but if you directly inspect or edit the fields of the

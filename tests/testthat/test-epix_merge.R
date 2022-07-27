@@ -17,7 +17,11 @@ test_that("epix_merge merges and carries forward updates properly", {
                       "g1", 3L, 2L, paste0("XC", 2L),
                       # x has 1 version, y has 0
                       "g1", 4L, 1L, paste0("XD", 1L),
-                      # values that should be LVCF'd + NAs that should be LVCF's as NA
+                      # non-NA values that should be carried forward
+                      # (version-wise LOCF) in other versions, plus NAs that
+                      # should (similarly) be carried forward as NA (latter
+                      # wouldn't work with an ordinary merge + post-processing
+                      # with `data.table::nafill`)
                       "g1", 6L, c(1L,3L,5L), paste0("XE", c(1L, NA, 5L))
                       ) %>%
         tidyr::unchop(c(version, x_value)) %>%
@@ -137,13 +141,13 @@ local({
         ), clobberable_versions_start=1L)
     )
   })
-  test_that('epix_merge observed_versions_end_conflict="lvcf" works', {
+  test_that('epix_merge observed_versions_end_conflict="locf" works', {
     expect_equal(
-      epix_merge(x,y, observed_versions_end_conflict = "lvcf"),
+      epix_merge(x,y, observed_versions_end_conflict = "locf"),
       as_epi_archive(tibble::tribble(
         ~geo_value, ~time_value, ~version, ~x_value, ~y_value,
         1L, 1L, 1L, 10L, NA_integer_,  # x updated, y not observed yet
-        1L, 1L, 5L, 10L, 20L, # x LVCF'd, y updated
+        1L, 1L, 5L, 10L, 20L, # x LOCF'd, y updated
         ), clobberable_versions_start=1L)
     )
   })
@@ -168,9 +172,9 @@ local({
       xy_no_conflict_expected
     )
   })
-  test_that('epix_merge observed_versions_end_conflict="lvcf" on no-conflict works', {
+  test_that('epix_merge observed_versions_end_conflict="locf" on no-conflict works', {
     expect_equal(
-      epix_merge(x_no_conflict, y_no_conflict, observed_versions_end_conflict = "lvcf"),
+      epix_merge(x_no_conflict, y_no_conflict, observed_versions_end_conflict = "locf"),
       xy_no_conflict_expected
     )
   })

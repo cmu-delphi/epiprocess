@@ -41,13 +41,13 @@
 #'            max_version = as.Date("2020-06-12"))
 #'
 #' # When fetching a snapshot as of the latest version with update data in the
-#' # archive, a warning is issued as this update data might not yet be finalized
-#' # (for example, if data versions are labeled with dates, these versions might be
-#' # overwritten throughout the day if the data can be updated multiple times per
-#' # day; when we build an archive based on special update-data queries all made at
-#' # the same time, the latest available update might still be subject to change,
-#' # but previous versions should be finalized). We can muffle such warnings with
-#' # the following pattern:
+#' # archive, a warning is issued by default, as this update data might not yet
+#' # be finalized (for example, if data versions are labeled with dates, these
+#' # versions might be overwritten throughout the corresponding days with
+#' # additional data or "hotfixes" of erroroneous data; when we build an archive
+#' # based on database queries, the latest available update might still be
+#' # subject to change, but previous versions should be finalized). We can
+#' # muffle such warnings with the following pattern:
 #' withCallingHandlers({
 #'   epix_as_of(x = archive_cases_dv_subset,
 #'              max_version = max(archive_cases_dv_subset$DT$version))
@@ -80,17 +80,17 @@ epix_as_of = function(x, max_version, min_time_value = -Inf) {
 #'   version through which to fill in missing version history; this will be the
 #'   result's `$observed_versions_end` unless it already had a later
 #'   `$observed_versions_end`.
-#' @param how Optional; `"na"` or `"lvcf"`: `"na"` will fill in any missing
+#' @param how Optional; `"na"` or `"locf"`: `"na"` will fill in any missing
 #'   required version history with `NA`s, by inserting (if necessary) an update
 #'   immediately after the current `$observed_versions_end` that revises all
 #'   existing measurements to be `NA` (this is only supported for `version`
-#'   classes with a `next_after` implementation); `"lvcf"` will fill in missing
+#'   classes with a `next_after` implementation); `"locf"` will fill in missing
 #'   version history with the last version of each observation carried forward
-#'   (LVCF), by leaving the update `$DT` alone (other `epi_archive` methods are
-#'   based on LVCF).  Default is `"na"`.
+#'   (LOCF), by leaving the update `$DT` alone (other `epi_archive` methods are
+#'   based on LOCF).  Default is `"na"`.
 #' @return An `epi_archive`
 epix_fill_through_version = function(x, fill_versions_end,
-                                     how=c("na", "lvcf")) {
+                                     how=c("na", "locf")) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   # Enclosing parentheses drop the invisibility flag. See description above of
   # potential mutation and aliasing behavior.
@@ -115,17 +115,17 @@ epix_fill_through_version = function(x, fill_versions_end,
 #' old `DT` in another object).
 #'
 #' @param x,y Two `epi_archive` objects to join together.
-#' @param observed_versions_end_conflict Optional; `"stop"`, `"na"`, `"lvcf"`,
+#' @param observed_versions_end_conflict Optional; `"stop"`, `"na"`, `"locf"`,
 #'   or `"truncate"`; in the case that `x$observed_versions_end` doesn't match
 #'   `y$observed_versions_end`, what do we do?: `"stop"`: emit an error; "na":
 #'   use `max(x$observed_versions_end, y$observed_versions_end)`, but in the
 #'   less up-to-date input archive, imagine there was an update immediately
 #'   after its last observed version which revised all observations to be `NA`;
-#'   `"lvcf"`: use `max(x$observed_versions_end, y$observed_versions_end)`, and
-#'   last-version-carried-forward extrapolation to invent update data for the
-#'   less up-to-date input archive; or `"truncate"`: use
-#'   `min(x$observed_versions_end, y$observed_versions_end)` and discard any
-#'   rows containing update rows for later versions.
+#'   `"locf"`: use `max(x$observed_versions_end, y$observed_versions_end)`,
+#'   allowing the last version of each observation to be carried forward to
+#'   extrapolate unavailable versions for the less up-to-date input archive; or
+#'   `"truncate"`: use `min(x$observed_versions_end, y$observed_versions_end)`
+#'   and discard any rows containing update rows for later versions.
 #' @param compactify Optional; `TRUE`, `FALSE`, or `NULL`; should the result be
 #'   compactified? See [`as_epi_archive`] for an explanation of what this means.
 #'   Default here is `TRUE`.
@@ -151,7 +151,7 @@ epix_fill_through_version = function(x, fill_versions_end,
 #' @importFrom data.table key set
 #' @export
 epix_merge = function(x, y,
-                      observed_versions_end_conflict = c("stop","na","lvcf","truncate"),
+                      observed_versions_end_conflict = c("stop","na","locf","truncate"),
                       compactify = TRUE) {
   if (!inherits(x, "epi_archive")) {
     Abort("`x` must be of class `epi_archive`.")
@@ -205,7 +205,7 @@ epix_merge = function(x, y,
       x_DT = x$DT
       y_DT = y$DT
     }
-  } else if (observed_versions_end_conflict %in% c("na", "lvcf")) {
+  } else if (observed_versions_end_conflict %in% c("na", "locf")) {
     new_observed_versions_end = max(x$observed_versions_end, y$observed_versions_end)
     x_DT = epix_fill_through_version(x, new_observed_versions_end, observed_versions_end_conflict)$DT
     y_DT = epix_fill_through_version(y, new_observed_versions_end, observed_versions_end_conflict)$DT

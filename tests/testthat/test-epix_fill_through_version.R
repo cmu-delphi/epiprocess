@@ -5,7 +5,7 @@ test_that("epix_fill_through_version mirrors input when it is sufficiently up to
   some_earlier_observed_version = 2L
   ea_trivial_fill_na1 = epix_fill_through_version(ea_orig, some_earlier_observed_version, "na")
   ea_trivial_fill_na2 = epix_fill_through_version(ea_orig, ea_orig$observed_versions_end, "na")
-  ea_trivial_fill_lvcf = epix_fill_through_version(ea_orig, some_earlier_observed_version, "lvcf")
+  ea_trivial_fill_locf = epix_fill_through_version(ea_orig, some_earlier_observed_version, "locf")
   # Below, we want R6 objects to be compared based on contents rather than
   # addresses. We appear to get this with `expect_identical` in `testthat`
   # edition 3, which is based on `waldo::compare` rather than `base::identical`;
@@ -16,7 +16,7 @@ test_that("epix_fill_through_version mirrors input when it is sufficiently up to
   local_edition(3)
   expect_identical(ea_orig, ea_trivial_fill_na1)
   expect_identical(ea_orig, ea_trivial_fill_na2)
-  expect_identical(ea_orig, ea_trivial_fill_lvcf)
+  expect_identical(ea_orig, ea_trivial_fill_locf)
 })
 
 test_that("epix_fill_through_version can extend observed versions, gives expected `as_of`s", {
@@ -28,7 +28,7 @@ test_that("epix_fill_through_version can extend observed versions, gives expecte
   first_unobserved_version = 6L
   later_unobserved_version = 10L
   ea_fill_na = epix_fill_through_version(ea_orig, later_unobserved_version, "na")
-  ea_fill_lvcf = epix_fill_through_version(ea_orig, later_unobserved_version, "lvcf")
+  ea_fill_locf = epix_fill_through_version(ea_orig, later_unobserved_version, "locf")
 
   # We use edition 3 features here, passing `ignore_attr` to `waldo::compare`.
   # Ensure we are using edition 3:
@@ -38,9 +38,9 @@ test_that("epix_fill_through_version can extend observed versions, gives expecte
     expect_identical(tibble::as_tibble(ea_fill_na$as_of(first_unobserved_version)),
                      tibble::tibble(geo_value="g1", time_value=as.Date("2020-01-01")+0:1, value=rep(NA_integer_, 2L)),
                      ignore_attr = TRUE)
-    expect_identical(ea_fill_lvcf$observed_versions_end, later_unobserved_version)
-    expect_identical(ea_fill_lvcf$as_of(first_unobserved_version),
-                     ea_fill_lvcf$as_of(ea_orig$observed_versions_end) %>%
+    expect_identical(ea_fill_locf$observed_versions_end, later_unobserved_version)
+    expect_identical(ea_fill_locf$as_of(first_unobserved_version),
+                     ea_fill_locf$as_of(ea_orig$observed_versions_end) %>%
                        {attr(., "metadata")$as_of <- first_unobserved_version; .})
   }, epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning"))
 })
@@ -69,7 +69,7 @@ test_that("epix_fill_through_version does not mutate x", {
     expect_true(identical(ea_orig_before_as_list, ea_orig_after_as_list))
     expect_identical(ea_orig_DT_before_copy, ea_orig$DT)
     #
-    ea_fill_lvcf = epix_fill_through_version(ea_orig, some_unobserved_version, "lvcf")
+    ea_fill_locf = epix_fill_through_version(ea_orig, some_unobserved_version, "locf")
     ea_orig_after_as_list = as.list(ea_orig)
     expect_true(identical(ea_orig_before_as_list, ea_orig_after_as_list))
     expect_identical(ea_orig_DT_before_copy, ea_orig$DT)
@@ -101,6 +101,6 @@ test_that("epix_fill_through_version returns same key & doesn't mutate old DT or
   old_DT_copy = data.table::copy(old_DT)
   old_key = data.table::key(ea$DT)
   expect_identical(data.table::key(epix_fill_through_version(ea, 5L, "na")$DT), old_key)
-  expect_identical(data.table::key(epix_fill_through_version(ea, 5L, "lvcf")$DT), old_key)
+  expect_identical(data.table::key(epix_fill_through_version(ea, 5L, "locf")$DT), old_key)
   expect_identical(data.table::key(ea$DT), old_key)
 })

@@ -4,7 +4,7 @@
 \alias{epix_fill_through_version}
 \title{\code{epi_archive} with unobserved history filled in (won't mutate, might alias)}
 \usage{
-epix_fill_through_version(x, fill_versions_end, how = c("na", "lvcf"))
+epix_fill_through_version(x, fill_versions_end, how = c("na", "locf"))
 }
 \arguments{
 \item{x}{An \code{epi_archive}}
@@ -14,14 +14,14 @@ version through which to fill in missing version history; this will be the
 result's \verb{$observed_versions_end} unless it already had a later
 \verb{$observed_versions_end}.}
 
-\item{how}{Optional; \code{"na"} or \code{"lvcf"}: \code{"na"} will fill in any missing
+\item{how}{Optional; \code{"na"} or \code{"locf"}: \code{"na"} will fill in any missing
 required version history with \code{NA}s, by inserting (if necessary) an update
 immediately after the current \verb{$observed_versions_end} that revises all
 existing measurements to be \code{NA} (this is only supported for \code{version}
-classes with a \code{next_after} implementation); \code{"lvcf"} will fill in missing
+classes with a \code{next_after} implementation); \code{"locf"} will fill in missing
 version history with the last version of each observation carried forward
-(LVCF), by leaving the update \verb{$DT} alone (other \code{epi_archive} methods are
-based on LVCF).  Default is \code{"na"}.}
+(LOCF), by leaving the update \verb{$DT} alone (other \code{epi_archive} methods are
+based on LOCF).  Default is \code{"na"}.}
 }
 \value{
 An \code{epi_archive}

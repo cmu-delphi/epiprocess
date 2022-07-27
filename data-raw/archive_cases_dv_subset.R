@@ -32,7 +32,7 @@ case_rate_subset <- covidcast(
   as_epi_archive(compactify=FALSE)
 
 archive_cases_dv_subset = epix_merge(dv_subset, case_rate_subset,
-                                     observed_versions_end_conflict="lvcf",
+                                     observed_versions_end_conflict="locf",
                                      compactify=FALSE)
 
 # If we directly store an epi_archive R6 object as data, it will store its class

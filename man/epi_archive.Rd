@@ -32,7 +32,7 @@ Note that there can only be a single row per unique combination of
 key variables, and thus the key variables are critical for figuring out how
 to generate a snapshot of data from the archive, as of a given version.
 
-In general, the last version of each observation is carried forward (LVCF) to
+In general, the last version of each observation is carried forward (LOCF) to
 fill in data between recorded versions, and between the last recorded
 update and the \code{observed_versions_end}. One consequence is that the \code{DT}
 doesn't have to contain a full snapshot of every version (although this
@@ -166,8 +166,8 @@ fields; named entries from the passed list or will be included as well.}
 \item{\code{compactify}}{Optional; Boolean or \code{NULL}: should we remove rows that are
 considered redundant for the purposes of \code{epi_archive}'s built-in methods
 such as \code{as_of}? As these methods use the last version of each observation
-carried forward (LVCF) to interpolate between the version data provided,
-rows that don't change these LVCF results can potentially be omitted to
+carried forward (LOCF) to interpolate between the version data provided,
+rows that don't change these LOCF results can potentially be omitted to
 save space while maintaining the same behavior (with the help of the
 \code{clobberable_versions_start} and \code{observed_versions_end} fields in some
 edge cases). \code{TRUE} will remove these rows, \code{FALSE} will not, and missing
@@ -223,7 +223,7 @@ Fill in unobserved history using requested scheme by mutating
 \code{\link{epix_fill_through_version}} for a full description of the non-R6-method
 version, which doesn't mutate the input archive but might alias its fields.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$fill_through_version(fill_versions_end, how = c("na", "lvcf"))}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$fill_through_version(fill_versions_end, how = c("na", "locf"))}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -249,7 +249,7 @@ does not alias either archive's \code{DT}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$merge(
   y,
-  observed_versions_end_conflict = c("stop", "na", "lvcf", "truncate"),
+  observed_versions_end_conflict = c("stop", "na", "locf", "truncate"),
   compactify = TRUE
 )}\if{html}{\out{</div>}}
 }

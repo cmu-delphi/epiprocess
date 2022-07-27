@@ -108,7 +108,7 @@ snapshot of data from the archive, as of a given version (also described below).
 key(x$DT)
 ```
  
-In general, the last version of each observation is carried forward (LVCF) to
+In general, the last version of each observation is carried forward (LOCF) to
 fill in data between recorded versions. **A word of caution:** R6 objects,
 unlike most other objects in R, have reference semantics. An important
 consequence of this is that objects are not copied when modified.

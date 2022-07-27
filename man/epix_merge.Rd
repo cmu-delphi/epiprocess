@@ -7,24 +7,24 @@
 epix_merge(
   x,
   y,
-  observed_versions_end_conflict = c("stop", "na", "lvcf", "truncate"),
+  observed_versions_end_conflict = c("stop", "na", "locf", "truncate"),
   compactify = TRUE
 )
 }
 \arguments{
 \item{x, y}{Two \code{epi_archive} objects to join together.}
 
-\item{observed_versions_end_conflict}{Optional; \code{"stop"}, \code{"na"}, \code{"lvcf"},
+\item{observed_versions_end_conflict}{Optional; \code{"stop"}, \code{"na"}, \code{"locf"},
 or \code{"truncate"}; in the case that \code{x$observed_versions_end} doesn't match
 \code{y$observed_versions_end}, what do we do?: \code{"stop"}: emit an error; "na":
 use \code{max(x$observed_versions_end, y$observed_versions_end)}, but in the
 less up-to-date input archive, imagine there was an update immediately
 after its last observed version which revised all observations to be \code{NA};
-\code{"lvcf"}: use \code{max(x$observed_versions_end, y$observed_versions_end)}, and
-last-version-carried-forward extrapolation to invent update data for the
-less up-to-date input archive; or \code{"truncate"}: use
-\code{min(x$observed_versions_end, y$observed_versions_end)} and discard any
-rows containing update rows for later versions.}
+\code{"locf"}: use \code{max(x$observed_versions_end, y$observed_versions_end)},
+allowing the last version of each observation to be carried forward to
+extrapolate unavailable versions for the less up-to-date input archive; or
+\code{"truncate"}: use \code{min(x$observed_versions_end, y$observed_versions_end)}
+and discard any rows containing update rows for later versions.}
 
 \item{compactify}{Optional; \code{TRUE}, \code{FALSE}, or \code{NULL}; should the result be
 compactified? See \code{\link{as_epi_archive}} for an explanation of what this means.

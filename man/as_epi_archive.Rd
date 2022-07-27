@@ -38,8 +38,8 @@ fields; named entries from the passed list or will be included as well.}
 \item{compactify}{Optional; Boolean or \code{NULL}: should we remove rows that are
 considered redundant for the purposes of \code{epi_archive}'s built-in methods
 such as \code{as_of}? As these methods use the last version of each observation
-carried forward (LVCF) to interpolate between the version data provided,
-rows that don't change these LVCF results can potentially be omitted to
+carried forward (LOCF) to interpolate between the version data provided,
+rows that don't change these LOCF results can potentially be omitted to
 save space. \code{TRUE} will remove these rows, \code{FALSE} will not, and missing or
 \code{NULL} will remove these rows and issue a warning. Generally, this can be
 set to \code{TRUE}, but if you directly inspect or edit the fields of the
