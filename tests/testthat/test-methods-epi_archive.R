@@ -25,33 +25,21 @@ test_that("Warning against max_version being same as edf's max version",{
 test_that("as_of properly grabs the data",{
   d <- as.Date("2020-06-01")
   
-  generate_time_values <- function() {
-    x <- c()
-    for (i in 0:3) {
-      x <- c(rep(d+i,4),x)
-    }
-    return(rev(x))
-  }
-  
-  generate_versions <- function() {
-    x <- c()
-    for (i in 0:3) {
-      x <- c(d+i,x)
-    }
-    x <- rep(x,4)
-    return(rev(x))
-  }
-  
-  ea2 <- tibble(
-    geo_value = "ca",
-    time_value = generate_time_values(),
-    version = generate_versions()
-  ) %>%
-    filter(version >= time_value)
-  
-  ea2 <- ea2[-c(9,4,3),]
-  ea2 <- bind_cols(ea2,cases=c(1,2,0,1,2,1,4))
-  ea2 <- as_epi_archive(ea2)
+  ea2 = tibble::tribble(
+    ~geo_value, ~time_value,      ~version, ~cases,
+          "ca", "2020-06-01", "2020-06-01",      1,
+          "ca", "2020-06-01", "2020-06-02",      2,
+    #
+          "ca", "2020-06-02", "2020-06-02",      0,
+          "ca", "2020-06-02", "2020-06-03",      1,
+          "ca", "2020-06-02", "2020-06-04",      2,
+    #
+          "ca", "2020-06-03", "2020-06-03",      1,
+    #
+          "ca", "2020-06-04", "2020-06-04",      4,
+    ) %>%
+    dplyr::mutate(dplyr::across(c(time_value, version), as.Date)) %>%
+    as_epi_archive()
   
   df_as_of <- ea2 %>%
     epix_as_of(max_version = as.Date("2020-06-03")) %>%
