@@ -188,10 +188,16 @@ epi_archive =
               })
             }
             cat("----------\n")
+            if (length(self$DT$time_value) == 0 || all(is.na(self$DT$time_value))) {
+              min_time = max_time = NA
+            } else {
+              min_time = Min(self$DT$time_value)
+              max_time = Max(self$DT$time_value)
+            }
             cat(sprintf("* %-14s = %s\n", "min time value",
-                        min(self$DT$time_value)))
+                          min_time))
             cat(sprintf("* %-14s = %s\n", "max time value",
-                        max(self$DT$time_value)))
+                          max_time))
             cat(sprintf("* %-14s = %s\n", "min version",
                         min(self$DT$version)))
             cat(sprintf("* %-14s = %s\n", "max version",
