@@ -188,7 +188,7 @@ epi_archive =
               })
             }
             cat("----------\n")
-            if (length(self$DT$time_value) == 0 || all(is.na(self$DT$time_value)) || all(is.nan(self$DT$time_value))) {
+            if (length(self$DT$time_value) == 0 || all(is.na(self$DT$time_value))) {
               min_time = max_time = NA
             } else {
               min_time = Min(self$DT$time_value)
