@@ -31,10 +31,19 @@ test_that("other_keys cannot contain names geo_value, time_value or version",{
                regexp="`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
 })
 
-test_that("Warning thrown when other_metadata contains overlapping names with
-          geo_type or time_type fields",{
+test_that("Warning thrown when other_metadata contains overlapping names with geo_type or time_type fields",{
   expect_warning(as_epi_archive(dt,additional_metadata = list(geo_type = 1)),
                  regexp="`additional_metadata` names overlap with existing metadata fields\n\"geo_type\", \"time_type\".")
   expect_warning(as_epi_archive(dt,additional_metadata = list(time_type = 1)),
                  regexp="`additional_metadata` names overlap with existing metadata fields\n\"geo_type\", \"time_type\".")
+})
+
+test_that("epi_archives are correctly instantiated with a variety of data types",{
+  df <- data.frame(geo_value="ca",
+                   time_value=as.Date("2020-01-01"),
+                   version = as.Date("2020-01-01") + 0:19,
+                   value=1:20)
+  
+  ea <- as_epi_archive(df)
+  expect_equal(key(ea$DT),c("geo_value","time_value","version"))
 })
