@@ -33,6 +33,8 @@ test_that("other_keys cannot contain names geo_value, time_value or version",{
 
 test_that("Warning thrown when other_metadata contains overlapping names with
           geo_type or time_type fields",{
-  expect_warning(as_epi_archive(dt,additional_metadata = list(geo_type = 1)))
-  expect_warning(as_epi_archive(dt,additional_metadata = list(time_type = 1)))
+  expect_warning(as_epi_archive(dt,additional_metadata = list(geo_type = 1)),
+                 regexp="`additional_metadata` names overlap with existing metadata fields\n\"geo_type\", \"time_type\".")
+  expect_warning(as_epi_archive(dt,additional_metadata = list(time_type = 1)),
+                 regexp="`additional_metadata` names overlap with existing metadata fields\n\"geo_type\", \"time_type\".")
 })
