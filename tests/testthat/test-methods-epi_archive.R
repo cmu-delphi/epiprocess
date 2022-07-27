@@ -22,22 +22,38 @@ test_that("Warning against max_version being same as edf's max version",{
   expect_warning(ea$as_of(max_version = min(ea$DT$version)),NA)
 })
 
-test_that("as_of properly grabs the data and doesn't mutate key",{
-  old_key = data.table::key(ea$DT)
-
-  df_as_of <- ea %>%
-    epix_as_of(max_version = as.Date("2020-07-01")) %>%
-    na.omit() %>%
-    as.data.frame()
-    
-  df_filter <- ea$DT %>%
-    filter(version == as.Date("2020-07-01")) %>%
-    na.omit() %>%
-    select(-version) %>%
-    as.data.frame()
+test_that("as_of properly grabs the data",{
+  d <- as.Date("2020-06-01")
   
-  expect_equal(df_as_of[1:4],df_filter)
-  expect_equal(data.table::key(ea$DT), old_key)
+  ea2 = tibble::tribble(
+    ~geo_value, ~time_value,      ~version, ~cases,
+          "ca", "2020-06-01", "2020-06-01",      1,
+          "ca", "2020-06-01", "2020-06-02",      2,
+    #
+          "ca", "2020-06-02", "2020-06-02",      0,
+          "ca", "2020-06-02", "2020-06-03",      1,
+          "ca", "2020-06-02", "2020-06-04",      2,
+    #
+          "ca", "2020-06-03", "2020-06-03",      1,
+    #
+          "ca", "2020-06-04", "2020-06-04",      4,
+    ) %>%
+    dplyr::mutate(dplyr::across(c(time_value, version), as.Date)) %>%
+    as_epi_archive()
+  
+  df_as_of <- ea2 %>%
+    epix_as_of(max_version = as.Date("2020-06-03")) %>%
+    as_tibble()
+  
+  df_expected <- tibble(
+    geo_value = "ca",
+    time_value = d + 0:2,
+    cases = c(2,1,1)
+  )
+  
+  expect_identical(df_as_of[[1]],df_expected[[1]])
+  expect_identical(df_as_of[[2]],df_expected[[2]])
+  expect_identical(df_as_of[[3]],df_expected[[3]])
 })
 
 test_that("quosure passing issue in epix_slide is resolved + other potential issues", {
@@ -66,76 +82,11 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
                                  new_col_name = 'case_rate_3d_av')
   # test the passing-something-that-must-be-enquosed behavior:
   expect_identical(
-    ea$slide(
-      f = ~ mean(.x$case_rate_7d_av),
-      n = 3,
-      group_by = modulus,
-      ref_time_values = time_values,
-      new_col_name = 'case_rate_3d_av'
-    ),
-    reference_by_modulus
-  )
-  # test the passing-string-literal behavior:
-  expect_identical(
-    epix_slide(x = ea,
-               f = ~ mean(.x$case_rate_7d_av),
-               n = 3,
-               group_by = "modulus",
-               ref_time_values = time_values,
-               new_col_name = 'case_rate_3d_av'),
-    reference_by_modulus
+    epix_merge(ea1,dt2),
+    merge(dt1,dt2,all=TRUE)
   )
   expect_identical(
-    ea$slide(
-      f = ~ mean(.x$case_rate_7d_av),
-      n = 3,
-      group_by = "modulus",
-      ref_time_values = time_values,
-      new_col_name = 'case_rate_3d_av'
-    ),
-    reference_by_modulus
-  )
-  # Might also want to test the passing-string-var-without-all_of behavior, but
-  # make sure to set, trigger, then reset (or restore to old value) the
-  # tidyselect once-per-session message about the ambiguity
-  #
-  # test the passing-all-of-string-var behavior:
-  my_group_by = "modulus"
-  expect_identical(
-    epix_slide(x = ea,
-               f = ~ mean(.x$case_rate_7d_av),
-               n = 3,
-               group_by = tidyselect::all_of(my_group_by),
-               ref_time_values = time_values,
-               new_col_name = 'case_rate_3d_av'),
-    reference_by_modulus
-  )
-  expect_identical(
-    ea$slide(
-      f = ~ mean(.x$case_rate_7d_av),
-      n = 3,
-      group_by = tidyselect::all_of(my_group_by),
-      ref_time_values = time_values,
-      new_col_name = 'case_rate_3d_av'
-    ),
-    reference_by_modulus
-  )
-  # test the default behavior (default in this case should just be "geo_value"):
-  expect_identical(
-    epix_slide(x = ea,
-               f = ~ mean(.x$case_rate_7d_av),
-               n = 3,
-               ref_time_values = time_values,
-               new_col_name = 'case_rate_3d_av'),
-    reference_by_both
-  )
-  expect_identical(
-    ea$slide(
-      f = ~ mean(.x$case_rate_7d_av),
-      n = 3,
-      ref_time_values = time_values,
-      new_col_name = 'case_rate_3d_av'
-    ),
-    reference_by_both
+    as_epi_archive(ea$DT),
+    as_epi_archive(merge(dt1,dt2,all=TRUE))
   )
 })
