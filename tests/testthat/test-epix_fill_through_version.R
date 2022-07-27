@@ -4,7 +4,7 @@ test_that("epix_fill_through_version mirrors input when it is sufficiently up to
                                                   version = 1:5, value = 1:5))
   some_earlier_observed_version = 2L
   ea_trivial_fill_na1 = epix_fill_through_version(ea_orig, some_earlier_observed_version, "na")
-  ea_trivial_fill_na2 = epix_fill_through_version(ea_orig, ea_orig$observed_versions_end, "na")
+  ea_trivial_fill_na2 = epix_fill_through_version(ea_orig, ea_orig$versions_end, "na")
   ea_trivial_fill_locf = epix_fill_through_version(ea_orig, some_earlier_observed_version, "locf")
   # Below, we want R6 objects to be compared based on contents rather than
   # addresses. We appear to get this with `expect_identical` in `testthat`
@@ -34,13 +34,13 @@ test_that("epix_fill_through_version can extend observed versions, gives expecte
   # Ensure we are using edition 3:
   local_edition(3)
   withCallingHandlers({
-    expect_identical(ea_fill_na$observed_versions_end, later_unobserved_version)
+    expect_identical(ea_fill_na$versions_end, later_unobserved_version)
     expect_identical(tibble::as_tibble(ea_fill_na$as_of(first_unobserved_version)),
                      tibble::tibble(geo_value="g1", time_value=as.Date("2020-01-01")+0:1, value=rep(NA_integer_, 2L)),
                      ignore_attr = TRUE)
-    expect_identical(ea_fill_locf$observed_versions_end, later_unobserved_version)
+    expect_identical(ea_fill_locf$versions_end, later_unobserved_version)
     expect_identical(ea_fill_locf$as_of(first_unobserved_version),
-                     ea_fill_locf$as_of(ea_orig$observed_versions_end) %>%
+                     ea_fill_locf$as_of(ea_orig$versions_end) %>%
                        {attr(., "metadata")$as_of <- first_unobserved_version; .})
   }, epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning"))
 })

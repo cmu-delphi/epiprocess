@@ -107,5 +107,5 @@ test_that("compactify does not alter the default clobberable and observed versio
   expect_true(max(ea_true$DT$version) != max(ea_false$DT$version))
   # The actual test:
   expect_identical(ea_true$clobberable_versions_start, ea_false$clobberable_versions_start)
-  expect_identical(ea_true$observed_versions_end, ea_false$observed_versions_end)
+  expect_identical(ea_true$versions_end, ea_false$versions_end)
 })

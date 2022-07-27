@@ -86,24 +86,24 @@ test_that("archive version bounds args work as intended", {
   )
   expect_error(as_epi_archive(update_tbl,
                               clobberable_versions_start = 1241,
-                              observed_versions_end = measurement_date),
+                              versions_end = measurement_date),
                class="epiprocess__clobberable_versions_start_has_invalid_class_or_typeof")
   expect_error(as_epi_archive(update_tbl[integer(0L),]),
                class="epiprocess__max_version_cannot_be_used")
   expect_error(as_epi_archive(update_tbl,
                               clobberable_versions_start = NA,
-                              observed_versions_end = measurement_date),
-               class="epiprocess__observed_versions_end_earlier_than_updates")
+                              versions_end = measurement_date),
+               class="epiprocess__versions_end_earlier_than_updates")
   expect_error(as_epi_archive(update_tbl,
                               clobberable_versions_start=measurement_date+6L,
-                              observed_versions_end = measurement_date+5L),
-               class="epiprocess__observed_versions_end_earlier_than_clobberable_versions_start")
-  expect_error(as_epi_archive(update_tbl, observed_versions_end = NA),
-               regexp="observed_versions_end.*must not satisfy.*is.na")
+                              versions_end = measurement_date+5L),
+               class="epiprocess__versions_end_earlier_than_clobberable_versions_start")
+  expect_error(as_epi_archive(update_tbl, versions_end = NA),
+               regexp="versions_end.*must not satisfy.*is.na")
   ea_default = as_epi_archive(update_tbl)
   ea_default$as_of(measurement_date+4L)
   expect_warning(ea_default$as_of(measurement_date+5L),
                  class = "epiprocess__snapshot_as_of_clobberable_version")
   expect_error(ea_default$as_of(measurement_date+6L),
-               regexp = "max_version.*at most.*observed_versions_end")
+               regexp = "max_version.*at most.*versions_end")
 })

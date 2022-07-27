@@ -78,11 +78,11 @@ epix_as_of = function(x, max_version, min_time_value = -Inf) {
 #' @param x An `epi_archive`
 #' @param fill_versions_end Length-1, same class&type as `%s$version`: the
 #'   version through which to fill in missing version history; this will be the
-#'   result's `$observed_versions_end` unless it already had a later
-#'   `$observed_versions_end`.
+#'   result's `$versions_end` unless it already had a later
+#'   `$versions_end`.
 #' @param how Optional; `"na"` or `"locf"`: `"na"` will fill in any missing
 #'   required version history with `NA`s, by inserting (if necessary) an update
-#'   immediately after the current `$observed_versions_end` that revises all
+#'   immediately after the current `$versions_end` that revises all
 #'   existing measurements to be `NA` (this is only supported for `version`
 #'   classes with a `next_after` implementation); `"locf"` will fill in missing
 #'   version history with the last version of each observation carried forward
@@ -100,12 +100,12 @@ epix_fill_through_version = function(x, fill_versions_end,
 #' Merge two `epi_archive` objects
 #'
 #' Merges two `epi_archive`s that share a common `geo_value`, `time_value`, and
-#' set of key columns. When they also share a common `observed_versions_end`,
+#' set of key columns. When they also share a common `versions_end`,
 #' using `$as_of` on the result should be the same as using `$as_of` on `x` and
 #' `y` individually, then performing a full join of the `DT`s on the non-version
 #' key columns (potentially consolidating multiple warnings about clobberable
-#' versions). If the `observed_versions_end` values differ, the
-#' `observed_versions_end_conflict` parameter controls what is done.
+#' versions). If the `versions_end` values differ, the
+#' `versions_end_conflict` parameter controls what is done.
 #'
 #' This function, [`epix_merge`], does not mutate its inputs and will not alias
 #' either archive's `DT`, but may alias other fields; `x$merge` will overwrite
@@ -115,16 +115,16 @@ epix_fill_through_version = function(x, fill_versions_end,
 #' old `DT` in another object).
 #'
 #' @param x,y Two `epi_archive` objects to join together.
-#' @param observed_versions_end_conflict Optional; `"stop"`, `"na"`, `"locf"`,
-#'   or `"truncate"`; in the case that `x$observed_versions_end` doesn't match
-#'   `y$observed_versions_end`, what do we do?: `"stop"`: emit an error; "na":
-#'   use `max(x$observed_versions_end, y$observed_versions_end)`, but in the
+#' @param versions_end_conflict Optional; `"stop"`, `"na"`, `"locf"`,
+#'   or `"truncate"`; in the case that `x$versions_end` doesn't match
+#'   `y$versions_end`, what do we do?: `"stop"`: emit an error; "na":
+#'   use `max(x$versions_end, y$versions_end)`, but in the
 #'   less up-to-date input archive, imagine there was an update immediately
 #'   after its last observed version which revised all observations to be `NA`;
-#'   `"locf"`: use `max(x$observed_versions_end, y$observed_versions_end)`,
+#'   `"locf"`: use `max(x$versions_end, y$versions_end)`,
 #'   allowing the last version of each observation to be carried forward to
 #'   extrapolate unavailable versions for the less up-to-date input archive; or
-#'   `"truncate"`: use `min(x$observed_versions_end, y$observed_versions_end)`
+#'   `"truncate"`: use `min(x$versions_end, y$versions_end)`
 #'   and discard any rows containing update rows for later versions.
 #' @param compactify Optional; `TRUE`, `FALSE`, or `NULL`; should the result be
 #'   compactified? See [`as_epi_archive`] for an explanation of what this means.
@@ -151,7 +151,7 @@ epix_fill_through_version = function(x, fill_versions_end,
 #' @importFrom data.table key set
 #' @export
 epix_merge = function(x, y,
-                      observed_versions_end_conflict = c("stop","na","locf","truncate"),
+                      versions_end_conflict = c("stop","na","locf","truncate"),
                       compactify = TRUE) {
   if (!inherits(x, "epi_archive")) {
     Abort("`x` must be of class `epi_archive`.")
@@ -161,7 +161,7 @@ epix_merge = function(x, y,
     Abort("`y` must be of class `epi_archive`.")
   }
 
-  observed_versions_end_conflict <- rlang::arg_match(observed_versions_end_conflict)
+  versions_end_conflict <- rlang::arg_match(versions_end_conflict)
 
   if (!identical(x$geo_type, y$geo_type)) {
     Abort("`x` and `y` must have the same `$geo_type`")
@@ -192,27 +192,27 @@ epix_merge = function(x, y,
   # preprocessing using non-mutating (but potentially aliasing) functions. This
   # approach potentially uses more memory, but won't leave behind a
   # partially-mutated `x` on failure.
-  if (observed_versions_end_conflict == "stop") {
-    if (!identical(x$observed_versions_end, y$observed_versions_end)) {
+  if (versions_end_conflict == "stop") {
+    if (!identical(x$versions_end, y$versions_end)) {
       Abort(paste(
         "`x` and `y` were not equally up to date version-wise:",
-        "`x$observed_versions_end` was not identical to `y$observed_versions_end`;",
+        "`x$versions_end` was not identical to `y$versions_end`;",
         "either ensure that `x` and `y` are equally up to date before merging,",
-        "or specify how to deal with this using `observed_versions_end_conflict`"
-      ), class="epiprocess__epix_merge_unresolved_observed_versions_end_conflict")
+        "or specify how to deal with this using `versions_end_conflict`"
+      ), class="epiprocess__epix_merge_unresolved_versions_end_conflict")
     } else {
-      new_observed_versions_end = x$observed_versions_end
+      new_versions_end = x$versions_end
       x_DT = x$DT
       y_DT = y$DT
     }
-  } else if (observed_versions_end_conflict %in% c("na", "locf")) {
-    new_observed_versions_end = max(x$observed_versions_end, y$observed_versions_end)
-    x_DT = epix_fill_through_version(x, new_observed_versions_end, observed_versions_end_conflict)$DT
-    y_DT = epix_fill_through_version(y, new_observed_versions_end, observed_versions_end_conflict)$DT
-  } else if (observed_versions_end_conflict == "truncate") {
-    new_observed_versions_end = min(x$observed_versions_end, y$observed_versions_end)
-    x_DT = x$DT[x[["DT"]][["version"]] <= new_observed_versions_end, with=FALSE]
-    y_DT = y$DT[y[["DT"]][["version"]] <= new_observed_versions_end, with=FALSE]
+  } else if (versions_end_conflict %in% c("na", "locf")) {
+    new_versions_end = max(x$versions_end, y$versions_end)
+    x_DT = epix_fill_through_version(x, new_versions_end, versions_end_conflict)$DT
+    y_DT = epix_fill_through_version(y, new_versions_end, versions_end_conflict)$DT
+  } else if (versions_end_conflict == "truncate") {
+    new_versions_end = min(x$versions_end, y$versions_end)
+    x_DT = x$DT[x[["DT"]][["version"]] <= new_versions_end, with=FALSE]
+    y_DT = y$DT[y[["DT"]][["version"]] <= new_versions_end, with=FALSE]
   } else Abort("unimplemented")
 
   if (!identical(key(x$DT), key(x_DT)) || !identical(key(y$DT), key(y_DT))) {
@@ -328,7 +328,7 @@ epix_merge = function(x, y,
     # pretty fast anyway.
     compactify = compactify,
     clobberable_versions_start = result_clobberable_versions_start,
-    observed_versions_end = new_observed_versions_end
+    versions_end = new_versions_end
   ))
 }
 

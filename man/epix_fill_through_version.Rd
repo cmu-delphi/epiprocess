@@ -11,12 +11,12 @@ epix_fill_through_version(x, fill_versions_end, how = c("na", "locf"))
 
 \item{fill_versions_end}{Length-1, same class&type as \verb{\%s$version}: the
 version through which to fill in missing version history; this will be the
-result's \verb{$observed_versions_end} unless it already had a later
-\verb{$observed_versions_end}.}
+result's \verb{$versions_end} unless it already had a later
+\verb{$versions_end}.}
 
 \item{how}{Optional; \code{"na"} or \code{"locf"}: \code{"na"} will fill in any missing
 required version history with \code{NA}s, by inserting (if necessary) an update
-immediately after the current \verb{$observed_versions_end} that revises all
+immediately after the current \verb{$versions_end} that revises all
 existing measurements to be \code{NA} (this is only supported for \code{version}
 classes with a \code{next_after} implementation); \code{"locf"} will fill in missing
 version history with the last version of each observation carried forward

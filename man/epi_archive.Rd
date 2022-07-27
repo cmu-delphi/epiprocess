@@ -34,7 +34,7 @@ to generate a snapshot of data from the archive, as of a given version.
 
 In general, the last version of each observation is carried forward (LOCF) to
 fill in data between recorded versions, and between the last recorded
-update and the \code{observed_versions_end}. One consequence is that the \code{DT}
+update and the \code{versions_end}. One consequence is that the \code{DT}
 doesn't have to contain a full snapshot of every version (although this
 generally works), but can instead contain only the rows that are new or
 changed from the previous version (see \code{compactify}, which does this
@@ -137,7 +137,7 @@ Creates a new \code{epi_archive} object.
   additional_metadata,
   compactify,
   clobberable_versions_start,
-  observed_versions_end
+  versions_end
 )}\if{html}{\out{</div>}}
 }
 
@@ -169,7 +169,7 @@ such as \code{as_of}? As these methods use the last version of each observation
 carried forward (LOCF) to interpolate between the version data provided,
 rows that don't change these LOCF results can potentially be omitted to
 save space while maintaining the same behavior (with the help of the
-\code{clobberable_versions_start} and \code{observed_versions_end} fields in some
+\code{clobberable_versions_start} and \code{versions_end} fields in some
 edge cases). \code{TRUE} will remove these rows, \code{FALSE} will not, and missing
 or \code{NULL} will remove these rows and issue a warning. Generally, this can
 be set to \code{TRUE}, but if you directly inspect or edit the fields of the
@@ -181,7 +181,7 @@ e.g., when fetching, storing, or preparing the input data \code{x}}
 
 \item{\code{clobberable_versions_start}}{Optional; as in \code{\link{as_epi_archive}}}
 
-\item{\code{observed_versions_end}}{Optiona; as in \code{\link{as_epi_archive}}}
+\item{\code{versions_end}}{Optional; as in \code{\link{as_epi_archive}}}
 }
 \if{html}{\out{</div>}}
 }
@@ -249,7 +249,7 @@ does not alias either archive's \code{DT}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$merge(
   y,
-  observed_versions_end_conflict = c("stop", "na", "locf", "truncate"),
+  versions_end_conflict = c("stop", "na", "locf", "truncate"),
   compactify = TRUE
 )}\if{html}{\out{</div>}}
 }
@@ -259,7 +259,7 @@ does not alias either archive's \code{DT}.
 \describe{
 \item{\code{y}}{as in \code{\link{epix_merge}}}
 
-\item{\code{observed_versions_end_conflict}}{as in \code{\link{epix_merge}}}
+\item{\code{versions_end_conflict}}{as in \code{\link{epix_merge}}}
 
 \item{\code{compactify}}{as in \code{\link{epix_merge}}}
 }

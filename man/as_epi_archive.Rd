@@ -12,7 +12,7 @@ as_epi_archive(
   additional_metadata = list(),
   compactify = NULL,
   clobberable_versions_start = max_version_with_row_in(x),
-  observed_versions_end = max_version_with_row_in(x)
+  versions_end = max_version_with_row_in(x)
 )
 }
 \arguments{
@@ -63,7 +63,7 @@ that (i) if a row in \code{x} (even one that \code{compactify} would consider
 redundant) is present with version \code{ver}, then all previous versions must
 be finalized and non-clobberable, although \code{ver} (and onward) might still
 be modified, (ii) even if we have "observed" empty updates for some
-versions beyond \code{max(x$version)} (as indicated by \code{observed_versions_end};
+versions beyond \code{max(x$version)} (as indicated by \code{versions_end};
 see below), we can't assume \code{max(x$version)} has been finalized, because we
 might see a nonfinalized version + empty subsequent versions due to
 upstream database replication delays in combination with the upstream
@@ -72,7 +72,7 @@ no updates, (iii) "redundant" update rows that would be removed by
 \code{compactify} are not redundant, and actually come from an explicit version
 release that indicates that preceding versions are finalized. If \code{nrow(x) == 0}, then this argument is mandatory.}
 
-\item{observed_versions_end}{Optional; length-1, same \code{class} and \code{typeof} as
+\item{versions_end}{Optional; length-1, same \code{class} and \code{typeof} as
 \code{x$version}: what is the last version we have observed? The default is
 \code{max_version_with_row_in(x)}, but values greater than this could also be
 valid, and would indicate that we observed additional versions of the data

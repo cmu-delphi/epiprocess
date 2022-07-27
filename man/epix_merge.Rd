@@ -7,23 +7,23 @@
 epix_merge(
   x,
   y,
-  observed_versions_end_conflict = c("stop", "na", "locf", "truncate"),
+  versions_end_conflict = c("stop", "na", "locf", "truncate"),
   compactify = TRUE
 )
 }
 \arguments{
 \item{x, y}{Two \code{epi_archive} objects to join together.}
 
-\item{observed_versions_end_conflict}{Optional; \code{"stop"}, \code{"na"}, \code{"locf"},
-or \code{"truncate"}; in the case that \code{x$observed_versions_end} doesn't match
-\code{y$observed_versions_end}, what do we do?: \code{"stop"}: emit an error; "na":
-use \code{max(x$observed_versions_end, y$observed_versions_end)}, but in the
+\item{versions_end_conflict}{Optional; \code{"stop"}, \code{"na"}, \code{"locf"},
+or \code{"truncate"}; in the case that \code{x$versions_end} doesn't match
+\code{y$versions_end}, what do we do?: \code{"stop"}: emit an error; "na":
+use \code{max(x$versions_end, y$versions_end)}, but in the
 less up-to-date input archive, imagine there was an update immediately
 after its last observed version which revised all observations to be \code{NA};
-\code{"locf"}: use \code{max(x$observed_versions_end, y$observed_versions_end)},
+\code{"locf"}: use \code{max(x$versions_end, y$versions_end)},
 allowing the last version of each observation to be carried forward to
 extrapolate unavailable versions for the less up-to-date input archive; or
-\code{"truncate"}: use \code{min(x$observed_versions_end, y$observed_versions_end)}
+\code{"truncate"}: use \code{min(x$versions_end, y$versions_end)}
 and discard any rows containing update rows for later versions.}
 
 \item{compactify}{Optional; \code{TRUE}, \code{FALSE}, or \code{NULL}; should the result be
@@ -35,12 +35,12 @@ the resulting \code{epi_archive}
 }
 \description{
 Merges two \code{epi_archive}s that share a common \code{geo_value}, \code{time_value}, and
-set of key columns. When they also share a common \code{observed_versions_end},
+set of key columns. When they also share a common \code{versions_end},
 using \verb{$as_of} on the result should be the same as using \verb{$as_of} on \code{x} and
 \code{y} individually, then performing a full join of the \code{DT}s on the non-version
 key columns (potentially consolidating multiple warnings about clobberable
-versions). If the \code{observed_versions_end} values differ, the
-\code{observed_versions_end_conflict} parameter controls what is done.
+versions). If the \code{versions_end} values differ, the
+\code{versions_end_conflict} parameter controls what is done.
 }
 \details{
 This function, \code{\link{epix_merge}}, does not mutate its inputs and will not alias

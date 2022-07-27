@@ -108,31 +108,31 @@ test_that('epix_merge stops and warns on metadata and naming issues', {
 # elsewhere, while allowing reuse across a couple tests
 local({
   x = as_epi_archive(tibble::tibble(geo_value=1L, time_value=1L, version=1L, x_value=1L),
-                     clobberable_versions_start=1L, observed_versions_end = 10L)
+                     clobberable_versions_start=1L, versions_end = 10L)
   y = as_epi_archive(tibble::tibble(geo_value=1L, time_value=1L, version=1L, y_value=2L),
-                     clobberable_versions_start=3L, observed_versions_end = 10L)
+                     clobberable_versions_start=3L, versions_end = 10L)
   xy = epix_merge(x,y)
   test_that('epix_merge considers partially-clobberable row to be clobberable', {
     expect_identical(xy$clobberable_versions_start, 1L)
   })
-  test_that('epix_merge result uses observed_versions_end metadata not max version val', {
-    expect_identical(xy$observed_versions_end, 10L)
+  test_that('epix_merge result uses versions_end metadata not max version val', {
+    expect_identical(xy$versions_end, 10L)
   })
 })
 
 local({
   x = as_epi_archive(tibble::tibble(geo_value=1L, time_value=1L, version=1L, x_value=10L))
   y = as_epi_archive(tibble::tibble(geo_value=1L, time_value=1L, version=5L, y_value=20L))
-  print(epix_merge(x,y, observed_versions_end_conflict = "na"))
-  test_that('epix_merge stops on observed_versions_end_conflict default or "stop"', {
+  print(epix_merge(x,y, versions_end_conflict = "na"))
+  test_that('epix_merge stops on versions_end_conflict default or "stop"', {
     expect_error(epix_merge(x,y),
-                 class="epiprocess__epix_merge_unresolved_observed_versions_end_conflict")
-    expect_error(epix_merge(x,y, observed_versions_end_conflict = "stop"),
-                 class="epiprocess__epix_merge_unresolved_observed_versions_end_conflict")
+                 class="epiprocess__epix_merge_unresolved_versions_end_conflict")
+    expect_error(epix_merge(x,y, versions_end_conflict = "stop"),
+                 class="epiprocess__epix_merge_unresolved_versions_end_conflict")
   })
-  test_that('epix_merge observed_versions_end_conflict="na" works', {
+  test_that('epix_merge versions_end_conflict="na" works', {
     expect_equal(
-      epix_merge(x,y, observed_versions_end_conflict = "na"),
+      epix_merge(x,y, versions_end_conflict = "na"),
       as_epi_archive(tibble::tribble(
         ~geo_value, ~time_value, ~version, ~x_value, ~y_value,
         1L, 1L, 1L, 10L, NA_integer_,         # x updated, y not observed yet
@@ -141,9 +141,9 @@ local({
         ), clobberable_versions_start=1L)
     )
   })
-  test_that('epix_merge observed_versions_end_conflict="locf" works', {
+  test_that('epix_merge versions_end_conflict="locf" works', {
     expect_equal(
-      epix_merge(x,y, observed_versions_end_conflict = "locf"),
+      epix_merge(x,y, versions_end_conflict = "locf"),
       as_epi_archive(tibble::tribble(
         ~geo_value, ~time_value, ~version, ~x_value, ~y_value,
         1L, 1L, 1L, 10L, NA_integer_,  # x updated, y not observed yet
@@ -157,36 +157,36 @@ local({
     ~geo_value, ~time_value, ~version, ~x_value, ~y_value,
     1L, 1L, 1L, 10L, 20L,         # x updated, y not observed yet
     ))
-  test_that('epix_merge observed_versions_end_conflict="stop" on no-conflict works', {
+  test_that('epix_merge versions_end_conflict="stop" on no-conflict works', {
     expect_equal(
-      epix_merge(x_no_conflict, y_no_conflict, observed_versions_end_conflict = "stop"),
+      epix_merge(x_no_conflict, y_no_conflict, versions_end_conflict = "stop"),
       xy_no_conflict_expected
     )
   })
-  test_that('epix_merge observed_versions_end_conflict="na" on no-conflict works', {
+  test_that('epix_merge versions_end_conflict="na" on no-conflict works', {
     # This test is the main reason for these no-conflict tests. We want to make
     # sure that we don't add an unnecessary NA-ing-out version beyond a common
-    # observed_versions_end.
+    # versions_end.
     expect_equal(
-      epix_merge(x_no_conflict, y_no_conflict, observed_versions_end_conflict = "na"),
+      epix_merge(x_no_conflict, y_no_conflict, versions_end_conflict = "na"),
       xy_no_conflict_expected
     )
   })
-  test_that('epix_merge observed_versions_end_conflict="locf" on no-conflict works', {
+  test_that('epix_merge versions_end_conflict="locf" on no-conflict works', {
     expect_equal(
-      epix_merge(x_no_conflict, y_no_conflict, observed_versions_end_conflict = "locf"),
+      epix_merge(x_no_conflict, y_no_conflict, versions_end_conflict = "locf"),
       xy_no_conflict_expected
     )
   })
 })
 
 
-test_that('epix_merge observed_versions_end_conflict="na" balks if do not know next_after', {
+test_that('epix_merge versions_end_conflict="na" balks if do not know next_after', {
   expect_error(
     epix_merge(
       as_epi_archive(tibble::tibble(geo_value=1L, time_value=1L, version=as.POSIXct(as.Date("2020-01-01")), x_value=10L)),
       as_epi_archive(tibble::tibble(geo_value=1L, time_value=1L, version=as.POSIXct(as.Date("2020-01-02")), y_value=20L)),
-      observed_versions_end_conflict = "na"
+      versions_end_conflict = "na"
     ),
     regexp = "no applicable method.*next_after"
   )
