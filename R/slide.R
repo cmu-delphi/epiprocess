@@ -85,14 +85,14 @@
 #'  # slide a 7-day trailing average formula on cases
 #'   jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide(cases_7dav = mean(cases), before = 7) %>% 
+#'   epi_slide(cases_7dav = mean(cases), before = 6) %>% 
 #'   # rmv a nonessential var. to ensure new col is printed
 #'   dplyr::select(-death_rate_7d_av) 
 #'  
 #'  # slide a left-aligned 7-day average
 #'   jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide(cases_7dav = mean(cases), before = 7) %>% 
+#'   epi_slide(cases_7dav = mean(cases), before = 6) %>% 
 #'   # rmv a nonessential var. to ensure new col is printed
 #'   dplyr::select(-death_rate_7d_av) 
 #'  
@@ -101,7 +101,7 @@
 #'  group_by(geo_value) %>%
 #'  epi_slide(a = data.frame(cases_2dav = mean(cases), 
 #'                           cases_2dma = mad(cases)),
-#'            before = 2, as_list_col = TRUE)
+#'            before = 1, as_list_col = TRUE)
 epi_slide = function(x, f, ..., before = 0, after = 0, ref_time_values,
                      time_step, 
                      new_col_name = "slide_value", as_list_col = FALSE,
