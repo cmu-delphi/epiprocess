@@ -7,23 +7,26 @@
 epix_merge(
   x,
   y,
-  versions_end_conflict = c("stop", "na", "locf", "truncate"),
+  sync = c("forbid", "na", "locf", "truncate"),
   compactify = TRUE
 )
 }
 \arguments{
 \item{x, y}{Two \code{epi_archive} objects to join together.}
 
-\item{versions_end_conflict}{Optional; \code{"stop"}, \code{"na"}, \code{"locf"},
-or \code{"truncate"}; in the case that \code{x$versions_end} doesn't match
-\code{y$versions_end}, what do we do?: \code{"stop"}: emit an error; "na":
-use \code{max(x$versions_end, y$versions_end)}, but in the
-less up-to-date input archive, imagine there was an update immediately
-after its last observed version which revised all observations to be \code{NA};
-\code{"locf"}: use \code{max(x$versions_end, y$versions_end)},
-allowing the last version of each observation to be carried forward to
-extrapolate unavailable versions for the less up-to-date input archive; or
-\code{"truncate"}: use \code{min(x$versions_end, y$versions_end)}
+\item{sync}{Optional; \code{"forbid"}, \code{"na"}, \code{"locf"}, or \code{"truncate"}; in the
+case that \code{x$versions_end} doesn't match \code{y$versions_end}, what do we do?:
+\code{"forbid"}: emit an error; "na": use \code{max(x$versions_end, y$versions_end)}
+as the result's \code{versions_end}, but ensure that, if we request a snapshot
+as of a version after \code{min(x$versions_end, y$versions_end)}, the
+observation columns from the less up-to-date archive will be all NAs (i.e.,
+imagine there was an update immediately after its \code{versions_end} which
+revised all observations to be \code{NA}); \code{"locf"}: use \code{max(x$versions_end, y$versions_end)} as the result's \code{versions_end}, allowing the last version
+of each observation to be carried forward to extrapolate unavailable
+versions for the less up-to-date input archive (i.e., imagining that in the
+less up-to-date archive's data set remained unchanged between its actual
+\code{versions_end} and the other archive's \code{versions_end}); or \code{"truncate"}:
+use \code{min(x$versions_end, y$versions_end)} as the result's \code{versions_end},
 and discard any rows containing update rows for later versions.}
 
 \item{compactify}{Optional; \code{TRUE}, \code{FALSE}, or \code{NULL}; should the result be
@@ -40,7 +43,7 @@ using \verb{$as_of} on the result should be the same as using \verb{$as_of} on \
 \code{y} individually, then performing a full join of the \code{DT}s on the non-version
 key columns (potentially consolidating multiple warnings about clobberable
 versions). If the \code{versions_end} values differ, the
-\code{versions_end_conflict} parameter controls what is done.
+\code{sync} parameter controls what is done.
 }
 \details{
 This function, \code{\link{epix_merge}}, does not mutate its inputs and will not alias

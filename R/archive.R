@@ -555,11 +555,11 @@ epi_archive =
 #'   of the non-R6-method version, which does not mutate either archive, and
 #'   does not alias either archive's `DT`.
 #' @param y as in [`epix_merge`]
-#' @param versions_end_conflict as in [`epix_merge`]
+#' @param sync as in [`epix_merge`]
 #' @param compactify as in [`epix_merge`]
-          merge = function(y, versions_end_conflict = c("stop","na","locf","truncate"), compactify=TRUE) {
+          merge = function(y, sync = c("forbid","na","locf","truncate"), compactify = TRUE) {
             result = epix_merge(self, y,
-                                versions_end_conflict = versions_end_conflict,
+                                sync = sync,
                                 compactify = compactify)
 
             if (length(epi_archive$private_fields) != 0L) {

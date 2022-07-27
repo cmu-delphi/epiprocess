@@ -249,7 +249,7 @@ does not alias either archive's \code{DT}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$merge(
   y,
-  versions_end_conflict = c("stop", "na", "locf", "truncate"),
+  sync = c("forbid", "na", "locf", "truncate"),
   compactify = TRUE
 )}\if{html}{\out{</div>}}
 }
@@ -259,7 +259,7 @@ does not alias either archive's \code{DT}.
 \describe{
 \item{\code{y}}{as in \code{\link{epix_merge}}}
 
-\item{\code{versions_end_conflict}}{as in \code{\link{epix_merge}}}
+\item{\code{sync}}{as in \code{\link{epix_merge}}}
 
 \item{\code{compactify}}{as in \code{\link{epix_merge}}}
 }
