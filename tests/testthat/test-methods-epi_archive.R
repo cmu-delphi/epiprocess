@@ -23,18 +23,37 @@ test_that("Warning against max_version being same as edf's max version",{
 })
 
 test_that("as_of properly grabs the data",{
-  df_as_of <- ea %>%
-    epix_as_of(max_version = as.Date("2020-07-01")) %>%
-    na.omit() %>%
-    as.data.frame()
-    
-  df_filter <- ea$DT %>%
-    filter(version == as.Date("2020-07-01")) %>%
-    na.omit() %>%
-    select(-version) %>%
-    as.data.frame()
+  d <- as.Date("2020-06-01")
   
-  expect_equal(df_as_of[1:4],df_filter)
+  ea2 = tibble::tribble(
+    ~geo_value, ~time_value,      ~version, ~cases,
+          "ca", "2020-06-01", "2020-06-01",      1,
+          "ca", "2020-06-01", "2020-06-02",      2,
+    #
+          "ca", "2020-06-02", "2020-06-02",      0,
+          "ca", "2020-06-02", "2020-06-03",      1,
+          "ca", "2020-06-02", "2020-06-04",      2,
+    #
+          "ca", "2020-06-03", "2020-06-03",      1,
+    #
+          "ca", "2020-06-04", "2020-06-04",      4,
+    ) %>%
+    dplyr::mutate(dplyr::across(c(time_value, version), as.Date)) %>%
+    as_epi_archive()
+  
+  df_as_of <- ea2 %>%
+    epix_as_of(max_version = as.Date("2020-06-03")) %>%
+    as_tibble()
+  
+  df_expected <- tibble(
+    geo_value = "ca",
+    time_value = d + 0:2,
+    cases = c(2,1,1)
+  )
+  
+  expect_identical(df_as_of[[1]],df_expected[[1]])
+  expect_identical(df_as_of[[2]],df_expected[[2]])
+  expect_identical(df_as_of[[3]],df_expected[[3]])
 })
 
 # epix_merge tests
@@ -50,7 +69,7 @@ test_that("data.table merging is utilized if second argument is a data.table",{
   
   expect_identical(
     epix_merge(ea1,dt2),
-    merge(dt1,dt2)
+    merge(dt1,dt2,all=TRUE)
   )
 })
 
@@ -62,6 +81,6 @@ test_that("data.table merging works as intended",{
   
   expect_identical(
     as_epi_archive(ea$DT),
-    as_epi_archive(merge(dt1,dt2))
+    as_epi_archive(merge(dt1,dt2,all=TRUE))
   )
 })
