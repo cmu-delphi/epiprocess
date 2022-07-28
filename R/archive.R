@@ -416,7 +416,7 @@ epi_archive =
             cat(sprintf("* %-14s = %s\n", "min time value",
                           min_time))
             cat(sprintf("* %-14s = %s\n", "max time value",
-                        max(self$DT$time_value)))
+                        max_time))
             cat(sprintf("* %-14s = %s\n", "first version with update",
                         min(self$DT$version)))
             cat(sprintf("* %-14s = %s\n", "last version with update",

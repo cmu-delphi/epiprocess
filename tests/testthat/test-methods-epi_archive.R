@@ -23,21 +23,38 @@ test_that("Warning against max_version being same as edf's max version",{
 })
 
 test_that("as_of properly grabs the data and doesn't mutate key",{
-  old_key = data.table::key(ea$DT)
 
-  df_as_of <- ea %>%
-    epix_as_of(max_version = as.Date("2020-07-01")) %>%
-    na.omit() %>%
-    as.data.frame()
-    
-  df_filter <- ea$DT %>%
-    filter(version == as.Date("2020-07-01")) %>%
-    na.omit() %>%
-    select(-version) %>%
-    as.data.frame()
-  
-  expect_equal(df_as_of[1:4],df_filter)
-  expect_equal(data.table::key(ea$DT), old_key)
+  d <- as.Date("2020-06-01")
+
+  ea2 = tibble::tribble(
+    ~geo_value, ~time_value,      ~version, ~cases,
+    "ca", "2020-06-01", "2020-06-01",      1,
+    "ca", "2020-06-01", "2020-06-02",      2,
+    #
+    "ca", "2020-06-02", "2020-06-02",      0,
+    "ca", "2020-06-02", "2020-06-03",      1,
+    "ca", "2020-06-02", "2020-06-04",      2,
+    #
+    "ca", "2020-06-03", "2020-06-03",      1,
+    #
+    "ca", "2020-06-04", "2020-06-04",      4,
+    ) %>%
+    dplyr::mutate(dplyr::across(c(time_value, version), as.Date)) %>%
+    as_epi_archive()
+
+  old_key = data.table::key(ea2$DT)
+
+  edf_as_of <- ea2 %>%
+    epix_as_of(max_version = as.Date("2020-06-03"))
+
+  edf_expected <- as_epi_df(tibble(
+    geo_value = "ca",
+    time_value = d + 0:2,
+    cases = c(2,1,1)
+  ), as_of = as.Date("2020-06-03"))
+
+  expect_equal(edf_as_of, edf_expected, ignore_attr=c(".internal.selfref", "sorted"))
+  expect_equal(data.table::key(ea2$DT), old_key)
 })
 
 test_that("quosure passing issue in epix_slide is resolved + other potential issues", {
