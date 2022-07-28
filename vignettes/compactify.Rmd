@@ -102,7 +102,7 @@ speeds <- rbind(speeds, speed_test(iterate_as_of,"as_of_1000x"))
 
 # Performance of slide
 slide_median <- function(my_ea) {
-    my_ea$slide(median = median(case_rate_7d_av))
+    my_ea$slide(median = median, n = 7)
 }
 
 speeds <- rbind(speeds, speed_test(slide_median,"slide_median"))
