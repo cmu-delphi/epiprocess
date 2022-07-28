@@ -115,7 +115,7 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #' @param n Number of time steps to use in the running window. For example, if
 #'   `n = 7`, and one time step is one day, then to produce a value on January 7
 #'   we apply the given function or formula to data in between January 1 and
-#'   7. Default is 7.
+#'   7.
 #' @param group_by The variable(s) to group by before slide computation. If
 #'   missing, then the keys in the underlying data table, excluding `time_value`
 #'   and `version`, will be used for grouping. To omit a grouping entirely, use
@@ -202,7 +202,7 @@ epix_merge = function(x, y, ..., locf = TRUE, nan = NA) {
 #'            group_by = geo_value,
 #'            ref_time_values = time_values,
 #'            new_col_name = 'case_rate_3d_av')
-epix_slide = function(x, f, ..., n = 7, group_by, ref_time_values,
+epix_slide = function(x, f, ..., n, group_by, ref_time_values,
                       time_step, new_col_name = "slide_value",
                       as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")

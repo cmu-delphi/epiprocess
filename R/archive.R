@@ -292,7 +292,7 @@ epi_archive =
 #'   details. 
 #' @importFrom data.table key
 #' @importFrom rlang !! !!! enquo enquos is_quosure sym syms
-          slide = function(f, ..., n = 7, group_by, ref_time_values, 
+          slide = function(f, ..., n, group_by, ref_time_values, 
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
                            all_rows = FALSE) { 
