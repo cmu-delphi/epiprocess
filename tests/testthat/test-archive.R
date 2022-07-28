@@ -44,6 +44,30 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
                    version = as.Date("2020-01-01") + 0:19,
                    value=1:20)
   
-  ea <- as_epi_archive(df)
-  expect_equal(key(ea$DT),c("geo_value","time_value","version"))
+  ea1 <- as_epi_archive(df)
+  expect_equal(key(ea1$DT),c("geo_value","time_value","version"))
+  expect_equal(ea1$additional_metadata,list())
+  
+  ea2 <- as_epi_archive(df,other_keys="value",additional_metadata=list(value=df$value))
+  expect_equal(key(ea2$DT),c("geo_value","time_value","value","version"))
+  expect_equal(ea2$additional_metadata,list(value=df$value))
+  
+  
+  tib <- tibble::tibble(df, code="x")
+  
+  ea3 <- as_epi_archive(tib)
+  expect_equal(key(ea3$DT),c("geo_value","time_value","version"))
+  expect_equal(ea3$additional_metadata,list())
+  
+  ea4 <- as_epi_archive(tib,other_keys="code",additional_metadata=list(value=df$value))
+  expect_equal(key(ea4$DT),c("geo_value","time_value","code","version"))
+  expect_equal(ea4$additional_metadata,list(value=df$value))
+  
+  
+  dt <- jhu_csse_daily_subset %>%
+    select(geo_value,time_value,cases) %>%
+    mutate(version = max(time_value))
+  
+  ea5 <- as_epi_archive(dt)
+  
 })
