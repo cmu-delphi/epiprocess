@@ -153,8 +153,8 @@ explicit value. The default is `NA`, but in the current case, where missingness
 is not at random but rather represents a small value that was censored (only a
 hypothetical with COVID-19 reports, but certainly a real phenomenon that occurs
 in other signals), it is better to replace it by zero, which is what we do here.
-(Other approaches, such as LOCF: last-observation-carried-forward, could be
-accomplished by first filling with `NA` values and then following up with a
+(Other approaches, such as LOCF: last observation carried forward in time, could
+be accomplished by first filling with `NA` values and then following up with a
 second call to `tidyr::fill()`.)
 
 ```{r}
