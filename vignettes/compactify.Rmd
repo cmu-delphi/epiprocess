@@ -63,7 +63,7 @@ nrow(locf_omitted_2$DT)
 ```
 
 
-As we would expect, performing 200 iterations of `dplyr::filter` is faster when
+As we would expect, performing 1000 iterations of `dplyr::filter` is faster when
 the LOCF values are omitted.
 
 ```{r}
