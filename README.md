@@ -53,9 +53,15 @@ class. For example:
 - `epix_as_of()`, for generating a snapshot in `epi_df` from the data archive,
   which represents the most up-to-date values of the signal variables, as of the
   specified version;
+  
+- `epix_fill_through_version()`, for filling in some fake version data following
+  simple rules, for use when downstream methods expect an archive that is more
+  up-to-date (e.g., if it is a forecasting deadline date and one of our data
+  sources cannot be accessed to provide the latest versions of its data)
 
 - `epix_merge()`, for merging two data archives with each other, with support
-  for filling in missing values via last observation carried forward (LOCF);
+  for various approaches to handling when one of the archives is more up-to-date
+  version-wise than the other;
 
 - `epix_slide()`, for sliding a custom computation to a data archive over local
   windows in time, much like `epi_slide` for an `epi_df` object, but with one
