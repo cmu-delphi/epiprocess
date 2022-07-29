@@ -8,10 +8,9 @@ epi_slide(
   x,
   f,
   ...,
-  n,
+  before = 0,
+  after = 0,
   ref_time_values,
-  align = c("right", "center", "left"),
-  before,
   time_step,
   new_col_name = "slide_value",
   as_list_col = FALSE,
@@ -38,27 +37,16 @@ to the groupings that would be described by \code{g} if \code{f} was a function.
 via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
 interpreted as an expression for tidy evaluation. See details.}
 
-\item{n}{Number of time steps to use in the running window. For example, if
-\code{n = 7}, one time step is one day, and the alignment is "right", then to
-produce a value on January 7 we apply the given function or formula to data
-in between January 1 and 7.}
+\item{before}{A nonnegative integer specifying the number of days before to
+extract data from. Set to 0 for a "left" alignment in slide.}
+
+\item{after}{A nonnegative integer specifying the number of days after to
+extract data from. Set to 0 for a "right" alignment in slide.}
 
 \item{ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
 window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.}
-
-\item{align}{One of "right", "center", or "left", indicating the alignment of
-the sliding window relative to the reference time point. If the alignment
-is "center" and \code{n} is even, then one more time point will be used after
-the reference time point than before. Default is "right".}
-
-\item{before}{Positive integer less than \code{n}, specifying the number of time
-points to use in the sliding window strictly before the reference time
-point. For example, setting \code{before = n-1} would be the same as setting
-\code{align = "right"}. The \code{before} argument allows for more flexible
-specification of alignment than the \code{align} parameter, and if specified,
-overrides \code{align}.}
 
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
@@ -109,12 +97,12 @@ specified function or formula \code{f}, or through post-processing.
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
 for example, as in:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, cases_7dav = mean(cases), before = 7)
 }\if{html}{\out{</div>}}
 
 which would be equivalent to:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, ...) mean(x$cases), n = 7,
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, ...) mean(x$cases), before = 7,
           new_col_name = "cases_7dav")
 }\if{html}{\out{</div>}}
 
@@ -127,16 +115,14 @@ through the \code{new_col_name} argument.
  # slide a 7-day trailing average formula on cases
   jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide(cases_7dav = mean(cases), n = 7, 
-            align = "right") \%>\% 
+  epi_slide(cases_7dav = mean(cases), before = 6) \%>\% 
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av) 
  
  # slide a left-aligned 7-day average
   jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide(cases_7dav = mean(cases), n = 7, 
-            align = "left") \%>\% 
+  epi_slide(cases_7dav = mean(cases), before = 6) \%>\% 
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av) 
  
@@ -145,5 +131,5 @@ through the \code{new_col_name} argument.
  group_by(geo_value) \%>\%
  epi_slide(a = data.frame(cases_2dav = mean(cases), 
                           cases_2dma = mad(cases)),
-           n = 2, as_list_col = TRUE)
+           before = 1, as_list_col = TRUE)
 }
