@@ -179,7 +179,7 @@ detect_outlr_rm = function(x = seq_along(y), y, n = 21,
 
   # Calculate lower and upper thresholds and replacement value
   z = z %>%
-    epi_slide(fitted = median(y), n = n, align = "center") %>%
+    epi_slide(fitted = median(y), before = floor((n-1)/2), after = ceiling((n-1)/2)) %>%
     dplyr::mutate(resid = y - fitted) %>%
     roll_iqr(n = n,
              detection_multiplier = detection_multiplier,
@@ -332,7 +332,7 @@ roll_iqr = function(z, n, detection_multiplier, min_radius,
   if (typeof(z$y) == "integer") as_type = as.integer
   else as_type = as.numeric
 
-  epi_slide(z, roll_iqr = stats::IQR(resid), n = n, align = "center") %>%
+  epi_slide(z, roll_iqr = stats::IQR(resid), before = floor((n-1)/2), after = ceiling((n-1)/2), align = "center") %>%
     dplyr::mutate(
       lower = pmax(min_lower,
                    fitted - pmax(min_radius, detection_multiplier * roll_iqr)),
