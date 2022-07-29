@@ -4,56 +4,70 @@
 \alias{epix_merge}
 \title{Merge two \code{epi_archive} objects}
 \usage{
-epix_merge(x, y, ..., locf = TRUE, nan = NA)
+epix_merge(
+  x,
+  y,
+  sync = c("forbid", "na", "locf", "truncate"),
+  compactify = TRUE
+)
 }
 \arguments{
-\item{x, y}{Two \code{epi_archive} objects to join together, or more specifically,
-whose underlying data tables are to be joined together. The data table in
-\code{x} will be overwritten with the joined data table. For convenience, we
-also allow \code{y} to be passed in directly as a \code{data.table} (need not be an
-\code{epi_archive} object).}
+\item{x, y}{Two \code{epi_archive} objects to join together.}
 
-\item{...}{Named arguments to pass to \code{data.table::merge.data.table()}, which
-is used for the join (with all default settings as in this function). For
-example, passing \code{all = TRUE} will perform a full join.}
+\item{sync}{Optional; \code{"forbid"}, \code{"na"}, \code{"locf"}, or \code{"truncate"}; in the
+case that \code{x$versions_end} doesn't match \code{y$versions_end}, what do we do?:
+\code{"forbid"}: emit an error; "na": use \code{max(x$versions_end, y$versions_end)}
+as the result's \code{versions_end}, but ensure that, if we request a snapshot
+as of a version after \code{min(x$versions_end, y$versions_end)}, the
+observation columns from the less up-to-date archive will be all NAs (i.e.,
+imagine there was an update immediately after its \code{versions_end} which
+revised all observations to be \code{NA}); \code{"locf"}: use \code{max(x$versions_end, y$versions_end)} as the result's \code{versions_end}, allowing the last version
+of each observation to be carried forward to extrapolate unavailable
+versions for the less up-to-date input archive (i.e., imagining that in the
+less up-to-date archive's data set remained unchanged between its actual
+\code{versions_end} and the other archive's \code{versions_end}); or \code{"truncate"}:
+use \code{min(x$versions_end, y$versions_end)} as the result's \code{versions_end},
+and discard any rows containing update rows for later versions.}
 
-\item{locf}{Should LOCF be used after joining on all non-key columns? This
-will take the latest version of each signal value and propogate it forward
-to fill in gaps that appear after merging. Default is \code{TRUE}.}
-
-\item{nan}{Should \code{NaN} values be treated as \code{NA} values in the post-filling
-step?  Default is \code{NA}, which means that they are treated as \code{NA} values; if}
+\item{compactify}{Optional; \code{TRUE}, \code{FALSE}, or \code{NULL}; should the result be
+compactified? See \code{\link{as_epi_archive}} for an explanation of what this means.
+Default here is \code{TRUE}.}
 }
 \value{
-Nothing; the data table in \code{x} is overwritten with the merged one.
+the resulting \code{epi_archive}
 }
 \description{
-Merges the underlying data tables in two \code{epi_archive} objects, allows for
-post-filling of \code{NA} values by last observation carried forward (LOCF), and
-\strong{overwrites} the first data table with the merged one. See the \href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{archive vignette} for
-examples.
+Merges two \code{epi_archive}s that share a common \code{geo_value}, \code{time_value}, and
+set of key columns. When they also share a common \code{versions_end},
+using \verb{$as_of} on the result should be the same as using \verb{$as_of} on \code{x} and
+\code{y} individually, then performing a full join of the \code{DT}s on the non-version
+key columns (potentially consolidating multiple warnings about clobberable
+versions). If the \code{versions_end} values differ, the
+\code{sync} parameter controls what is done.
 }
 \details{
-This is simply a wrapper around the \code{merge()} method of the
-\code{epi_archive} class, so if \code{x} and \code{y} are an \code{epi_archive} objects, then:
+This function, \code{\link{epix_merge}}, does not mutate its inputs and will not alias
+either archive's \code{DT}, but may alias other fields; \code{x$merge} will overwrite
+\code{x} with the result of the merge, reseating its \code{DT} and several other fields
+(making them point to different objects), but avoiding mutation of the
+contents of the old \code{DT} (only relevant if you have another reference to the
+old \code{DT} in another object).
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epix_merge(x, y)
-}\if{html}{\out{</div>}}
-
-is equivalent to:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{x$merge(y)
-}\if{html}{\out{</div>}}
+In all cases, \code{additional_metadata} will be an empty list, and
+\code{clobberable_versions_start} will be set to the earliest version that could
+be clobbered in either input archive.
 }
 \examples{
 # create two example epi_archive datasets
 x <- archive_cases_dv_subset$DT \%>\%
   dplyr::select(geo_value,time_value,version,case_rate_7d_av) \%>\%
-  as_epi_archive()
+  as_epi_archive(compactify=TRUE)
 y <- archive_cases_dv_subset$DT \%>\%
   dplyr::select(geo_value,time_value,version,percent_cli) \%>\%
-  as_epi_archive()
+  as_epi_archive(compactify=TRUE)
+# merge results stored in a third object:
+xy = epix_merge(x, y)
+# vs. mutating x to hold the merge result:
+x$merge(y)
 
-# a full join stored in x
-epix_merge(x, y, all = TRUE)
 }

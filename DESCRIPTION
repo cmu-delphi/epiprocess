@@ -46,7 +46,9 @@ Suggests:
     knitr,
     outbreaks,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    waldo (>= 0.3.1),
+    withr
 VignetteBuilder: 
     knitr
 Remotes:
