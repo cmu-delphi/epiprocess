@@ -97,12 +97,12 @@ specified function or formula \code{f}, or through post-processing.
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
 for example, as in:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, cases_7dav = mean(cases), before = 7)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, cases_7dav = mean(cases), before = 6)
 }\if{html}{\out{</div>}}
 
 which would be equivalent to:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, ...) mean(x$cases), before = 7,
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, ...) mean(x$cases), before = 6,
           new_col_name = "cases_7dav")
 }\if{html}{\out{</div>}}
 

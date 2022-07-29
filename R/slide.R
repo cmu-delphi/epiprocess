@@ -66,11 +66,11 @@
 #' If `f` is missing, then an expression for tidy evaluation can be specified,
 #'   for example, as in: 
 #'   ```
-#'   epi_slide(x, cases_7dav = mean(cases), before = 7)
+#'   epi_slide(x, cases_7dav = mean(cases), before = 6)
 #'   ```
 #'   which would be equivalent to:
 #'   ```
-#'   epi_slide(x, function(x, ...) mean(x$cases), before = 7,
+#'   epi_slide(x, function(x, ...) mean(x$cases), before = 6,
 #'             new_col_name = "cases_7dav")
 #'   ```
 #'   Thus, to be clear, when the computation is specified via an expression for
