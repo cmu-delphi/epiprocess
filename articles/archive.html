@@ -51,6 +51,7 @@
     <a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a>
     <a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a>
     <a class="dropdown-item" href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a>
+    <a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a>
   </div>
 </li>
       </ul>
@@ -114,11 +115,11 @@
 <li>
 <code>version</code>: the time value specifying the version for each row of measurements. For example, if in a given row the <code>version</code> is January 15, 2022 and <code>time_value</code> is January 14, 2022, then this row contains the measurements of the data for January 14, 2022 that were available one day later.</li>
 </ul>
-<p>As we can see from the above, the data frame returned by <code><a href="https://rdrr.io/pkg/delphi.epidata/man/covidcast.html" class="external-link">delphi.epidata::covidcast()</a></code> has the columns required for the <code>epi_archive</code> format, with <code>issue</code> playing the role of <code>version</code>. We can now use <code><a href="../reference/as_epi_archive.html">as_epi_archive()</a></code> to bring it into <code>epi_archive</code> format.</p>
+<p>As we can see from the above, the data frame returned by <code><a href="https://rdrr.io/pkg/delphi.epidata/man/covidcast.html" class="external-link">delphi.epidata::covidcast()</a></code> has the columns required for the <code>epi_archive</code> format, with <code>issue</code> playing the role of <code>version</code>. We can now use <code><a href="../reference/as_epi_archive.html">as_epi_archive()</a></code> to bring it into <code>epi_archive</code> format. For removal of redundant version updates in <code>as_epi_archive</code> using compactify, please refer to the compactify vignette.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">dv</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, version <span class="op">=</span> <span class="va">issue</span>, percent_cli <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/as_epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/as_epi_archive.html">as_epi_archive</a></span><span class="op">(</span>compactify<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
@@ -129,14 +130,17 @@
 <span><span class="co">## ----------</span></span>
 <span><span class="co">## * min time value = 2020-06-01</span></span>
 <span><span class="co">## * max time value = 2021-11-30</span></span>
-<span><span class="co">## * min version    = 2020-06-02</span></span>
-<span><span class="co">## * max version    = 2021-12-01</span></span>
+<span><span class="co">## * first version with update = 2020-06-02</span></span>
+<span><span class="co">## * last version with update = 2021-12-01</span></span>
+<span><span class="co">## * clobberable versions start = 2021-12-01</span></span>
+<span><span class="co">## * versions end   = 2021-12-01</span></span>
 <span><span class="co">## ----------</span></span>
-<span><span class="co">## Data archive (stored in DT field): 129638 x 4</span></span>
+<span><span class="co">## Data archive (stored in DT field): 119316 x 4</span></span>
 <span><span class="co">## ----------</span></span>
 <span><span class="co">## Columns in DT: geo_value, time_value, version, percent_cli</span></span>
 <span><span class="co">## ----------</span></span>
-<span><span class="co">## Public methods: initialize, print, as_of, merge, slide, clone</span></span></code></pre>
+<span><span class="co">## Public methods: initialize, print, as_of, fill_through_version, merge, slide, clone</span></span>
+<span><span class="co">## </span></span></code></pre>
 <p>An <code>epi_archive</code> is special kind of class called an R6 class. Its primary field is a data table <code>DT</code>, which is of class <code>data.table</code> (from the <code>data.table</code> package), and has columns <code>geo_value</code>, <code>time_value</code>, <code>version</code>, as well as any number of additional columns.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
@@ -146,15 +150,15 @@
 <pre><code><span><span class="co">##    geo_value time_value    version percent_cli</span></span>
 <span><span class="co">## 1:        ca 2020-06-01 2020-06-02          NA</span></span>
 <span><span class="co">## 2:        ca 2020-06-01 2020-06-06    2.140116</span></span>
-<span><span class="co">## 3:        ca 2020-06-01 2020-06-07    2.140116</span></span>
-<span><span class="co">## 4:        ca 2020-06-01 2020-06-08    2.140379</span></span>
-<span><span class="co">## 5:        ca 2020-06-01 2020-06-09    2.114430</span></span>
-<span><span class="co">## 6:        ca 2020-06-01 2020-06-10    2.133677</span></span></code></pre>
+<span><span class="co">## 3:        ca 2020-06-01 2020-06-08    2.140379</span></span>
+<span><span class="co">## 4:        ca 2020-06-01 2020-06-09    2.114430</span></span>
+<span><span class="co">## 5:        ca 2020-06-01 2020-06-10    2.133677</span></span>
+<span><span class="co">## 6:        ca 2020-06-01 2020-06-11    2.197207</span></span></code></pre>
 <p>The variables <code>geo_value</code>, <code>time_value</code>, <code>version</code> serve as <strong>key variables</strong> for the data table, as well as any other specified in the metadata (described below). There can only be a single row per unique combination of key variables, and therefore the key variables are critical for figuring out how to generate a snapshot of data from the archive, as of a given version (also described below).</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/setkey.html" class="external-link">key</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "geo_value"  "time_value" "version"</span></span></code></pre>
-<p>In general, last observation carried forward (LOCF) is used to data in between recorded versions. <strong>A word of caution:</strong> R6 objects, unlike most other objects in R, have reference semantics. An important consequence of this is that objects are not copied when modified.</p>
+<p>In general, the last version of each observation is carried forward (LOCF) to fill in data between recorded versions. <strong>A word of caution:</strong> R6 objects, unlike most other objects in R, have reference semantics. An important consequence of this is that objects are not copied when modified.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">original_value</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">percent_cli</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="co"># This DOES NOT make a copy of x</span></span>
@@ -163,19 +167,19 @@
 <pre><code><span><span class="co">##    geo_value time_value    version percent_cli</span></span>
 <span><span class="co">## 1:        ca 2020-06-01 2020-06-02    0.000000</span></span>
 <span><span class="co">## 2:        ca 2020-06-01 2020-06-06    2.140116</span></span>
-<span><span class="co">## 3:        ca 2020-06-01 2020-06-07    2.140116</span></span>
-<span><span class="co">## 4:        ca 2020-06-01 2020-06-08    2.140379</span></span>
-<span><span class="co">## 5:        ca 2020-06-01 2020-06-09    2.114430</span></span>
-<span><span class="co">## 6:        ca 2020-06-01 2020-06-10    2.133677</span></span></code></pre>
+<span><span class="co">## 3:        ca 2020-06-01 2020-06-08    2.140379</span></span>
+<span><span class="co">## 4:        ca 2020-06-01 2020-06-09    2.114430</span></span>
+<span><span class="co">## 5:        ca 2020-06-01 2020-06-10    2.133677</span></span>
+<span><span class="co">## 6:        ca 2020-06-01 2020-06-11    2.197207</span></span></code></pre>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span> </span></code></pre></div>
 <pre><code><span><span class="co">##    geo_value time_value    version percent_cli</span></span>
 <span><span class="co">## 1:        ca 2020-06-01 2020-06-02    0.000000</span></span>
 <span><span class="co">## 2:        ca 2020-06-01 2020-06-06    2.140116</span></span>
-<span><span class="co">## 3:        ca 2020-06-01 2020-06-07    2.140116</span></span>
-<span><span class="co">## 4:        ca 2020-06-01 2020-06-08    2.140379</span></span>
-<span><span class="co">## 5:        ca 2020-06-01 2020-06-09    2.114430</span></span>
-<span><span class="co">## 6:        ca 2020-06-01 2020-06-10    2.133677</span></span></code></pre>
+<span><span class="co">## 3:        ca 2020-06-01 2020-06-08    2.140379</span></span>
+<span><span class="co">## 4:        ca 2020-06-01 2020-06-09    2.114430</span></span>
+<span><span class="co">## 5:        ca 2020-06-01 2020-06-10    2.133677</span></span>
+<span><span class="co">## 6:        ca 2020-06-01 2020-06-11    2.197207</span></span></code></pre>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">percent_cli</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">original_value</span></span></code></pre></div>
 <p>To make a copy, we can use the <code>clone()</code> method for an R6 class, as in <code>y &lt;- x$clone()</code>. You can read more about reference semantics in Hadley Wickham’s <a href="https://adv-r.hadley.nz/r6.html#r6-semantics" class="external-link">Advanced R</a> book.</p>
@@ -193,16 +197,24 @@
 <code>additional_metadata</code>: list of additional metadata for the data archive.</li>
 </ul>
 <p>Metadata for an <code>epi_archive</code> object <code>x</code> can be accessed (and altered) directly, as in <code>x$geo_type</code> or <code>x$time_type</code>, etc. Just like <code><a href="../reference/as_epi_df.html">as_epi_df()</a></code>, the function <code><a href="../reference/as_epi_archive.html">as_epi_archive()</a></code> attempts to guess metadata fields when an <code>epi_archive</code> object is instantiated, if they are not explicitly specified in the function call (as it did in the case above).</p>
+<p>Note that <code>compactify</code> is <strong>NOT</strong> metadata and is an argument passed when creating the dataset, without being stored in the end:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># `dt` here is taken from the tests</span></span>
+<span><span class="fu"><a href="../reference/as_epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span>,compactify<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">geo_type</span> <span class="co"># "state"</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] "state"</span></span></code></pre>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/as_epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span>,compactify<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">compactify</span> <span class="co"># NULL</span></span></code></pre></div>
+<pre><code><span><span class="co">## NULL</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="producing-snapshots-in-epi_df-form">Producing snapshots in <code>epi_df</code> form<a class="anchor" aria-label="anchor" href="#producing-snapshots-in-epi_df-form"></a>
 </h2>
 <p>A key method of an <code>epi_archive</code> class is <code>as_of()</code>, which generates a snapshot of the archive in <code>epi_df</code> format. This represents the most up-to-date values of the signal variables as of a given version. This can be accessed via <code>x$as_of()</code> for an <code>epi_archive</code> object <code>x</code>, but the package also provides a simple wrapper function <code><a href="../reference/epix_as_of.html">epix_as_of()</a></code> since this is likely a more familiar interface for users not familiar with R6 (or object-oriented programming).</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x_snapshot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span><span class="op">(</span><span class="va">x</span>, max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2021-06-01"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">x_snapshot</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "epi_df"     "tbl_df"     "tbl"        "data.frame"</span></span></code></pre>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x_snapshot</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## An `epi_df` object, 6 x 3 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
@@ -218,31 +230,29 @@
 <span><span class="co">## <span style="color: #BCBCBC;">4</span> ca        2020-06-04        2.41</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">5</span> ca        2020-06-05        2.57</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">6</span> ca        2020-06-06        2.63</span></span></code></pre>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x_snapshot</span><span class="op">$</span><span class="va">time_value</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "2021-05-31"</span></span></code></pre>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/attributes.html" class="external-link">attributes</a></span><span class="op">(</span><span class="va">x_snapshot</span><span class="op">)</span><span class="op">$</span><span class="va">metadata</span><span class="op">$</span><span class="va">as_of</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "2021-06-01"</span></span></code></pre>
 <p>We can see that the max time value in the <code>epi_df</code> object <code>x_snapshot</code> that was generated from the archive is May 29, 2021, even though the specified version date was June 1, 2021. From this we can infer that the doctor’s visits signal was 2 days latent on June 1. Also, we can see that the metadata in the <code>epi_df</code> object has the version date recorded in the <code>as_of</code> field.</p>
-<p>Using the maximum of the <code>version</code> column in the underlying data table in an <code>epi_archive</code> object itself generates a snapshot of the latest values of signal variables in the entire archive. The <code><a href="../reference/epix_as_of.html">epix_as_of()</a></code> function issues a warning in this case, since updates to the current version may still come in at a later point in time, due to various reasons, such as synchronization issues.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<p>By default, using the maximum of the <code>version</code> column in the underlying data table in an <code>epi_archive</code> object itself generates a snapshot of the latest values of signal variables in the entire archive. The <code><a href="../reference/epix_as_of.html">epix_as_of()</a></code> function issues a warning in this case, since updates to the current version may still come in at a later point in time, due to various reasons, such as synchronization issues.</p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x_latest</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span><span class="op">(</span><span class="va">x</span>, max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning: Getting data as of the latest version possible. For a variety of</span></span>
-<span><span class="co">## reasons, it is possible that we only have a preliminary picture of this</span></span>
-<span><span class="co">## version (e.g., the upstream source has updated it but we have not seen it due</span></span>
-<span><span class="co">## to latency in synchronization). Thus, the snapshot that we produce here might</span></span>
-<span><span class="co">## not be reproducible at a later time (e.g., when the archive has caught up in</span></span>
-<span><span class="co">## terms of synchronization).</span></span></code></pre>
+<pre><code><span><span class="co">## Warning: Getting data as of some "clobberable" version that might be hotfixed,</span></span>
+<span><span class="co">## synced, or otherwise replaced later with different data using the same version</span></span>
+<span><span class="co">## tag.  Thus, the snapshot that we produce here might not be reproducible later.</span></span>
+<span><span class="co">## See `?epi_archive` for more info and `?epix_as_of` on how to muffle.</span></span></code></pre>
 <p>Below, we pull several snapshots from the archive, spaced one month apart. We overlay the corresponding signal curves as colored lines, with the version dates marked by dotted vertical lines, and draw the latest curve in black (from the latest snapshot <code>x_latest</code> that the archive can provide).</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://purrr.tidyverse.org" class="external-link">purrr</a></span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## Attaching package: 'purrr'</span></span></code></pre>
 <pre><code><span><span class="co">## The following object is masked from 'package:data.table':</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##     transpose</span></span></code></pre>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -267,7 +277,7 @@
 <span>               inherit.aes <span class="op">=</span> <span class="cn">FALSE</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning: Removed 53 row(s) containing missing values (geom_path).</span></span></code></pre>
 <pre><code><span><span class="co">## Warning: Removed 4 row(s) containing missing values (geom_path).</span></span></code></pre>
-<p><img src="archive_files/figure-html/unnamed-chunk-10-1.png" width="768"></p>
+<p><img src="archive_files/figure-html/unnamed-chunk-11-1.png" width="768"></p>
 <p>We can see some interesting and highly nontrivial revision behavior: at some points in time the provisional data snapshots grossly underestimate the latest curve (look in particular at Florida close to the end of 2021), and at others they overestimate it (both states towards the beginning of 2021), though not quite as dramatically. Modeling the revision process, which is often called <em>backfill modeling</em>, is an important statistical problem in it of itself.</p>
 <!-- todo: refer to some project/code? perhaps we should think about writing a
  function in `epiprocess` or even a separate package? -->
@@ -275,23 +285,23 @@
 <div class="section level2">
 <h2 id="merging-epi_archive-objects">Merging <code>epi_archive</code> objects<a class="anchor" aria-label="anchor" href="#merging-epi_archive-objects"></a>
 </h2>
-<p>Now we demonstrate how to merge the underlying data tables in two <code>epi_archive</code> objects together. The <code>epi_archive</code> class provides a method <code><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge()</a></code> precisely for this purpose. The wrapper function is called <code><a href="../reference/epix_merge.html">epix_merge()</a></code>; as before, this is just offered as a matter of convenience/familiarity for some users. Below we merge the working <code>epi_archive</code> of versioned percentage CLI from outpatient visits to another one of versioned COVID-19 case reporting data, which we fetch the from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/" class="external-link">COVIDcast API</a>, on the rate scale (counts per 100,000 people in the population).</p>
-<p>When merging archives, we typically want to perform a <em>full join</em>, otherwise we will be throwing out versioned data from one table or the other. This is accomplished by setting <code>all = TRUE</code> in the call to <code><a href="../reference/epix_merge.html">epix_merge()</a></code>. Furthermore, this function provides an option for filling <code>NA</code> values via LOCF by setting <code>locf = TRUE</code>. In general, unless two data tables have the exact same pattern of updates, we will get <code>NA</code> values in the signals after performing a full join. Because the original data archives are stored in LOCF (last observation carried forward) format in the first place, it generally makes sense to perform <code>NA</code> filling after merging using LOCF. Therefore <code>locf = TRUE</code> is the default.</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<p>Now we demonstrate how to merge two <code>epi_archive</code> objects together, e.g., so that grabbing data from multiple sources as of a particular version can be performed with a single <code>as_of</code> call. The <code>epi_archive</code> class provides a method <code><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge()</a></code> precisely for this purpose. The wrapper function is called <code><a href="../reference/epix_merge.html">epix_merge()</a></code>; this wrapper avoids mutating its inputs, while <code>x$merge</code> will mutate <code>x</code>. Below we merge the working <code>epi_archive</code> of versioned percentage CLI from outpatient visits to another one of versioned COVID-19 case reporting data, which we fetch the from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/" class="external-link">COVIDcast API</a>, on the rate scale (counts per 100,000 people in the population).</p>
+<p>When merging archives, unless the archives have identical data release patterns, <code>NA</code>s can be introduced in the non-key variables for a few reasons: - to represent the “value” of an observation before its initial release (when we need to pair it with additional observations from the other archive that have been released) - to represent the “value” of an observation that has no recorded versions at all (in the same sort of situation) - if requested via <code>sync="na"</code>, to represent potential update data that we do not yet have access to (e.g., due to encountering issues while attempting to download the currently available version data for one of the archives, but not the other).</p>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/covidcast.html" class="external-link">covidcast</a></span><span class="op">(</span></span>
 <span>  data_source <span class="op">=</span> <span class="st">"jhu-csse"</span>,</span>
 <span>  signals <span class="op">=</span> <span class="st">"confirmed_7dav_incidence_prop"</span>,</span>
 <span>  time_type <span class="op">=</span> <span class="st">"day"</span>,</span>
 <span>  geo_type <span class="op">=</span> <span class="st">"state"</span>,</span>
-<span>  time_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20211201</span><span class="op">)</span>,</span>
+<span>  time_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20211201</span><span class="op">)</span>,</span>
 <span>  geo_values <span class="op">=</span> <span class="st">"ca,fl,ny,tx"</span>,</span>
 <span>  issues <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20211201</span><span class="op">)</span></span>
 <span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/fetch_tbl.html" class="external-link">fetch_tbl</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, version <span class="op">=</span> <span class="va">issue</span>, case_rate_7d_av <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/as_epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/as_epi_archive.html">as_epi_archive</a></span><span class="op">(</span>compactify<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/epix_merge.html">epix_merge</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, all <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">x</span><span class="op">$</span><span class="fu">epix_merge</span><span class="op">(</span><span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## An `epi_archive` object, with metadata:</span></span>
@@ -300,12 +310,17 @@
 <span><span class="co">## ----------</span></span>
 <span><span class="co">## * min time value = 2020-06-01</span></span>
 <span><span class="co">## * max time value = 2021-11-30</span></span>
-<span><span class="co">## * min version    = 2020-06-02</span></span>
-<span><span class="co">## * max version    = 2021-12-01</span></span>
+<span><span class="co">## * first version with update = 2020-06-02</span></span>
+<span><span class="co">## * last version with update = 2021-12-01</span></span>
+<span><span class="co">## * clobberable versions start = 2021-12-01</span></span>
+<span><span class="co">## * versions end   = 2021-12-01</span></span>
 <span><span class="co">## ----------</span></span>
 <span><span class="co">## Data archive (stored in DT field): 129638 x 5</span></span>
 <span><span class="co">## ----------</span></span>
-<span><span class="co">## Public methods: initialize, print, as_of, merge, slide, clone</span></span></code></pre>
+<span><span class="co">## Columns in DT: geo_value, time_value, version, percent_cli and 1 more columns</span></span>
+<span><span class="co">## ----------</span></span>
+<span><span class="co">## Public methods: initialize, print, as_of, fill_through_version, merge, slide, clone</span></span>
+<span><span class="co">## </span></span></code></pre>
 <pre><code><span><span class="co">##    geo_value time_value    version percent_cli case_rate_7d_av</span></span>
 <span><span class="co">## 1:        ca 2020-06-01 2020-06-02          NA        6.628329</span></span>
 <span><span class="co">## 2:        ca 2020-06-01 2020-06-06    2.140116        6.628329</span></span>
@@ -313,14 +328,14 @@
 <span><span class="co">## 4:        ca 2020-06-01 2020-06-08    2.140379        6.628329</span></span>
 <span><span class="co">## 5:        ca 2020-06-01 2020-06-09    2.114430        6.628329</span></span>
 <span><span class="co">## 6:        ca 2020-06-01 2020-06-10    2.133677        6.628329</span></span></code></pre>
-<p>Importantly, as we can see, the way <code><a href="../reference/epix_merge.html">epix_merge()</a></code> works is that it <strong>overwrites</strong> the data table in the first <code>epi_archive</code> object <code>x</code> by the merged data table.</p>
+<p>Importantly, see that <code>x$merge</code> mutated <code>x</code> to hold the result of the merge. We could also have used <code>xy = epix_merge(x,y)</code> to avoid mutating <code>x</code>. See the documentation for either for more detailed descriptions of what mutation, pointer aliasing, and pointer reseating is possible.</p>
 </div>
 <div class="section level2">
 <h2 id="sliding-version-aware-computations">Sliding version-aware computations<a class="anchor" aria-label="anchor" href="#sliding-version-aware-computations"></a>
 </h2>
 <p>Lastly, we demonstrate another key method of the <code>epi_archive</code> class, which is the <code>slide()</code> method. It works just like <code><a href="../reference/epi_slide.html">epi_slide()</a></code> does for an <code>epi_df</code> object, but with one key difference: it performs version-aware computations. That is, for the computation at any given reference time t, it only uses <strong>data that would have been available as of t</strong>. The wrapper function is called <code><a href="../reference/epix_slide.html">epix_slide()</a></code>; again, this is just for convenience/familiarity—and its interface is purposely designed mirror that of <code><a href="../reference/epi_slide.html">epi_slide()</a></code> for <code>epi_df</code> objects.</p>
 <p>For the demonstration, we’ll revisit the forecasting example from the <a href="https://cmu-delphi.github.io/epiprocess/articles/slide.html">slide vignette</a>, and now we’ll build a forecaster that uses properly-versioned data (that would have been available in real-time) to forecast future COVID-19 case rates from current and past COVID-19 case rates, as well as current and past values of the outpatient CLI signal from medical claims. We’ll extend the <code>prob_ar()</code> function from the slide vignette to accomodate exogenous variables in the autoregressive model, which is often referred to as an ARX model.</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prob_arx</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">lags</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">7</span>, <span class="fl">14</span><span class="op">)</span>, <span class="va">ahead</span> <span class="op">=</span> <span class="fl">7</span>, <span class="va">min_train_window</span> <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>                     <span class="va">lower_level</span> <span class="op">=</span> <span class="fl">0.05</span>, <span class="va">upper_level</span> <span class="op">=</span> <span class="fl">0.95</span>, <span class="va">symmetrize</span> <span class="op">=</span> <span class="cn">TRUE</span>, </span>
 <span>                     <span class="va">intercept</span> <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">nonneg</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span>   </span>
@@ -369,7 +384,7 @@
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>point <span class="op">=</span> <span class="va">point</span>, lower <span class="op">=</span> <span class="va">lower</span>, upper <span class="op">=</span> <span class="va">upper</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>Next we slide this forecaster over the working <code>epi_archive</code> object, in order to forecast COVID-19 case rates 7 days into the future.</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fc_time_values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-08-01"</span><span class="op">)</span>, </span>
 <span>                      <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2021-12-01"</span><span class="op">)</span>, </span>
 <span>                      by <span class="op">=</span> <span class="st">"1 month"</span><span class="op">)</span></span>
@@ -394,7 +409,7 @@
 <p>We get back a tibble <code>z</code> with the grouping variables (here geo value), the time values, and three columns <code>fc_point</code>, <code>fc_lower</code>, and <code>fc_upper</code> produced by the slide computation that correspond to the point forecast, and the lower and upper endpoints of the 95% prediction band, respectively. (If instead we had set <code>as_list_col = TRUE</code> in the call to <code><a href="../reference/epix_slide.html">epix_slide()</a></code>, then we would have gotten a list column <code>fc</code>, where each element of <code>fc</code> is a data frame with named columns <code>point</code>, <code>lower</code>, and <code>upper</code>.)</p>
 <p>On the whole, <code><a href="../reference/epix_slide.html">epix_slide()</a></code> works similarly to <code><a href="../reference/epix_slide.html">epix_slide()</a></code>, though there are a few notable differences, even apart from the version-aware aspect. You can read the documentation for <code><a href="../reference/epix_slide.html">epix_slide()</a></code> for details.</p>
 <p>We finish off by comparing version-aware and -unaware forecasts at various points in time and forecast horizons. The former comes from applying <code><a href="../reference/epix_slide.html">epix_slide()</a></code> to the <code>epi_archive</code> object <code>x</code>, and the latter from applying <code><a href="../reference/epi_slide.html">epi_slide()</a></code> to the latest snapshot of the data <code>x_latest</code>.</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x_latest</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span><span class="op">(</span><span class="va">x</span>, max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Simple function to produce forecasts k weeks ahead</span></span>
@@ -435,8 +450,8 @@
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 case rates"</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> </span></code></pre></div>
-<p><img src="archive_files/figure-html/unnamed-chunk-15-1.png" width="864"></p>
-<p>Each row displays the forecasts for a different location (CA and FL), and each column corresponds to whether properly-versioned data is used (<code>FALSE</code> means no, and <code>TRUE</code> means yes). We can see that the properly-versioned forecaster is, at some points in time, more problematic; for example, it massively overpredicts the peak in both locations in winter wave of 2020. However, performance is pretty poor across the board here, whether or not properly-versioned data is used. Similar to what we saw in the <a href="https://cmu-delphi.github.io/epiprocess/articles/archive.html">slide vignette</a>, the ARX forecasts can too volatile, overconfident, or both.</p>
+<p><img src="archive_files/figure-html/unnamed-chunk-16-1.png" width="864"></p>
+<p>Each row displays the forecasts for a different location (CA, FL, NY, and TX), and each column corresponds to whether properly-versioned data is used (<code>FALSE</code> means no, and <code>TRUE</code> means yes). We can see that the properly-versioned forecaster is, at some points in time, more problematic; for example, it massively overpredicts the peak in both locations in winter wave of 2020. However, performance is pretty poor across the board here, whether or not properly-versioned data is used. Similar to what we saw in the <a href="https://cmu-delphi.github.io/epiprocess/articles/archive.html">slide vignette</a>, the ARX forecasts can too volatile, overconfident, or both.</p>
 <p>Some of the volatility can be attenuated here by training an ARX model jointly over locations; the <a href="https://cmu-delphi.github.io/epiprocess/articles/advanced.html">advanced sliding vignette</a> gives a demonstration of how to do this. But really, the <a href="https://cmu-delphi.github.io/epipredict/" class="external-link"><code>epipredict</code></a> package, which builds off the data structures and functionality in the current package, is the place to look for more robust forecasting methodology. The forecasters that appear in the vignettes in the current package are only meant to demo the slide functionality with some of the most basic forecasting methodology possible.</p>
 </div>
 <div class="section level2">

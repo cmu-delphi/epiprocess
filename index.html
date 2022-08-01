@@ -57,6 +57,7 @@
     <a class="dropdown-item" href="articles/outliers.html">Detect and correct outliers in signals</a>
     <a class="dropdown-item" href="articles/archive.html">Work with archive objects and data revisions</a>
     <a class="dropdown-item" href="articles/advanced.html">Advanced sliding with nonstandard outputs</a>
+    <a class="dropdown-item" href="articles/compactify.html">Compactify to remove redundant archive data</a>
   </div>
 </li>
       </ul>
@@ -107,7 +108,8 @@
 <p>By convention, functions in the <code>epiprocess</code> package that operate on <code>epi_df</code> objects begin with <code>epix</code> (the “x” is meant to remind you of “archive”). These are just wrapper functions around the public methods for the <code>epi_archive</code> R6 class. For example:</p>
 <ul>
 <li><p><code><a href="reference/epix_as_of.html">epix_as_of()</a></code>, for generating a snapshot in <code>epi_df</code> from the data archive, which represents the most up-to-date values of the signal variables, as of the specified version;</p></li>
-<li><p><code><a href="reference/epix_merge.html">epix_merge()</a></code>, for merging two data archives with each other, with support for filling in missing values via last observation carried forward (LOCF);</p></li>
+<li><p><code><a href="reference/epix_fill_through_version.html">epix_fill_through_version()</a></code>, for filling in some fake version data following simple rules, for use when downstream methods expect an archive that is more up-to-date (e.g., if it is a forecasting deadline date and one of our data sources cannot be accessed to provide the latest versions of its data)</p></li>
+<li><p><code><a href="reference/epix_merge.html">epix_merge()</a></code>, for merging two data archives with each other, with support for various approaches to handling when one of the archives is more up-to-date version-wise than the other;</p></li>
 <li><p><code><a href="reference/epix_slide.html">epix_slide()</a></code>, for sliding a custom computation to a data archive over local windows in time, much like <code>epi_slide</code> for an <code>epi_df</code> object, but with one key difference: the sliding computation at any given reference time t is performed only on the <strong>data that would have been available as of t</strong>.</p></li>
 </ul>
 </div>

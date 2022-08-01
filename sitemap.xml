@@ -19,6 +19,9 @@
     <loc>https://cmu-delphi.github.io/epiprocess/articles/archive.html</loc>
   </url>
   <url>
+    <loc>https://cmu-delphi.github.io/epiprocess/articles/compactify.html</loc>
+  </url>
+  <url>
     <loc>https://cmu-delphi.github.io/epiprocess/articles/correlation.html</loc>
   </url>
   <url>
@@ -82,6 +85,9 @@
     <loc>https://cmu-delphi.github.io/epiprocess/reference/epix_as_of.html</loc>
   </url>
   <url>
+    <loc>https://cmu-delphi.github.io/epiprocess/reference/epix_fill_through_version.html</loc>
+  </url>
+  <url>
     <loc>https://cmu-delphi.github.io/epiprocess/reference/epix_merge.html</loc>
   </url>
   <url>
@@ -109,7 +115,13 @@
     <loc>https://cmu-delphi.github.io/epiprocess/reference/jhu_csse_daily_subset.html</loc>
   </url>
   <url>
+    <loc>https://cmu-delphi.github.io/epiprocess/reference/max_version_with_row_in.html</loc>
+  </url>
+  <url>
     <loc>https://cmu-delphi.github.io/epiprocess/reference/new_epi_df.html</loc>
+  </url>
+  <url>
+    <loc>https://cmu-delphi.github.io/epiprocess/reference/next_after.html</loc>
   </url>
   <url>
     <loc>https://cmu-delphi.github.io/epiprocess/reference/pipe.html</loc>

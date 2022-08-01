@@ -5,12 +5,13 @@ articles:
   advanced: advanced.html
   aggregation: aggregation.html
   archive: archive.html
+  compactify: compactify.html
   correlation: correlation.html
   epiprocess: epiprocess.html
   growth_rate: growth_rate.html
   outliers: outliers.html
   slide: slide.html
-last_built: 2022-07-28T18:19Z
+last_built: 2022-08-01T01:53Z
 urls:
   reference: https://cmu-delphi.github.io/epiprocess/reference
   article: https://cmu-delphi.github.io/epiprocess/articles

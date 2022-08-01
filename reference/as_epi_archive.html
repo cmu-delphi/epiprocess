@@ -38,6 +38,7 @@ examples."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/m
     <a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a>
     <a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a>
     <a class="dropdown-item" href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a>
+    <a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a>
   </div>
 </li>
       </ul><form class="form-inline my-2 my-lg-0" role="search">
@@ -74,7 +75,10 @@ examples.</p>
 <span>  <span class="va">geo_type</span>,</span>
 <span>  <span class="va">time_type</span>,</span>
 <span>  <span class="va">other_keys</span>,</span>
-<span>  additional_metadata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  additional_metadata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  compactify <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  clobberable_versions_start <span class="op">=</span> <span class="fu"><a href="max_version_with_row_in.html">max_version_with_row_in</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>,</span>
+<span>  versions_end <span class="op">=</span> <span class="fu"><a href="max_version_with_row_in.html">max_version_with_row_in</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -107,6 +111,58 @@ apart from "geo_value", "time_value", and "version".</p></dd>
 <dd><p>List of additional metadata to attach to the
 <code>epi_archive</code> object. The metadata will have <code>geo_type</code> and <code>time_type</code>
 fields; named entries from the passed list or will be included as well.</p></dd>
+
+
+<dt>compactify</dt>
+<dd><p>Optional; Boolean or <code>NULL</code>: should we remove rows that are
+considered redundant for the purposes of <code>epi_archive</code>'s built-in methods
+such as <code>as_of</code>? As these methods use the last version of each observation
+carried forward (LOCF) to interpolate between the version data provided,
+rows that don't change these LOCF results can potentially be omitted to
+save space. <code>TRUE</code> will remove these rows, <code>FALSE</code> will not, and missing or
+<code>NULL</code> will remove these rows and issue a warning. Generally, this can be
+set to <code>TRUE</code>, but if you directly inspect or edit the fields of the
+<code>epi_archive</code> such as its <code>DT</code>, you will have to determine whether
+<code>compactify=TRUE</code> will produce the desired results. If compactification
+here is removing a large proportion of the rows, this may indicate a
+potential for space, time, or bandwidth savings upstream the data pipeline,
+e.g., when fetching, storing, or preparing the input data <code>x</code></p></dd>
+
+
+<dt>clobberable_versions_start</dt>
+<dd><p>Optional; <code>length</code>-1; either a value of the
+same <code>class</code> and <code>typeof</code> as <code>x$version</code>, or an <code>NA</code> of any <code>class</code> and
+<code>typeof</code>: specifically, either (a) the earliest version that could be
+subject to "clobbering" (being overwritten with different update data, but
+using the same version tag as the old update data), or (b) <code>NA</code>, to
+indicate that no versions are clobberable. There are a variety of reasons
+why versions could be clobberable, such as upstream hotfixes to the latest
+version, or delays in data synchronization that were mistaken for versions
+with no updates; potential causes vary between different data pipelines.
+The default value is <code>max_version_with_row_in(x)</code>; this default assumes
+that (i) if a row in <code>x</code> (even one that <code>compactify</code> would consider
+redundant) is present with version <code>ver</code>, then all previous versions must
+be finalized and non-clobberable, although <code>ver</code> (and onward) might still
+be modified, (ii) even if we have "observed" empty updates for some
+versions beyond <code>max(x$version)</code> (as indicated by <code>versions_end</code>;
+see below), we can't assume <code>max(x$version)</code> has been finalized, because we
+might see a nonfinalized version + empty subsequent versions due to
+upstream database replication delays in combination with the upstream
+replicas using last-version-carried-forward to extrapolate that there were
+no updates, (iii) "redundant" update rows that would be removed by
+<code>compactify</code> are not redundant, and actually come from an explicit version
+release that indicates that preceding versions are finalized. If <code>nrow(x) == 0</code>, then this argument is mandatory.</p></dd>
+
+
+<dt>versions_end</dt>
+<dd><p>Optional; length-1, same <code>class</code> and <code>typeof</code> as
+<code>x$version</code>: what is the last version we have observed? The default is
+<code>max_version_with_row_in(x)</code>, but values greater than this could also be
+valid, and would indicate that we observed additional versions of the data
+beyond <code>max(x$version)</code>, but they all contained empty updates. (The default
+value of <code>clobberable_versions_start</code> does not fully trust these empty
+updates, and assumes that any version <code>&gt;= max(x$version)</code> could be
+clobbered.) If <code>nrow(x) == 0</code>, then this argument is mandatory.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -145,32 +201,35 @@ class, so for example:</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * min time value = 2020-01-01</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * max time value = 2020-01-05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * min version    = 2020-01-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * max version    = 2020-01-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * first version with update = 2020-01-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * last version with update = 2020-01-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * clobberable versions start = 2020-01-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * versions end   = 2020-01-06</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data archive (stored in DT field): 10 x 4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Columns in DT: geo_value, time_value, version, value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Public methods: initialize, print, as_of, merge, slide, clone</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Public methods: initialize, print, as_of, fill_through_version, merge, slide, clone</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Ex. with an additional key for county</span></span></span>
 <span class="r-in"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span> <span class="op">(</span>geo_value  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="fl">2</span>, <span class="st">"ca"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="fl">2</span>, <span class="st">"fl"</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                 county <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span>, <span class="fl">2</span>, <span class="fl">5</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                 time_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2020-06-01"</span>,</span></span>
-<span class="r-in"><span>                 <span class="st">"2020-06-02"</span>,</span></span>
-<span class="r-in"><span>                 <span class="st">"2020-06-01"</span>,</span></span>
-<span class="r-in"><span>                 <span class="st">"2020-06-02"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                <span class="st">"2020-06-02"</span>,</span></span>
+<span class="r-in"><span>                                <span class="st">"2020-06-01"</span>,</span></span>
+<span class="r-in"><span>                                <span class="st">"2020-06-02"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                 version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2020-06-02"</span>,</span></span>
-<span class="r-in"><span>                 <span class="st">"2020-06-03"</span>,</span></span>
-<span class="r-in"><span>                 <span class="st">"2020-06-02"</span>,</span></span>
-<span class="r-in"><span>                 <span class="st">"2020-06-03"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                             <span class="st">"2020-06-03"</span>,</span></span>
+<span class="r-in"><span>                             <span class="st">"2020-06-02"</span>,</span></span>
+<span class="r-in"><span>                             <span class="st">"2020-06-03"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                 cases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                 cases_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.01</span>, <span class="fl">0.02</span>, <span class="fl">0.01</span>, <span class="fl">0.05</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu">as_epi_archive</span><span class="op">(</span>geo_type <span class="op">=</span> <span class="st">"state"</span>,</span></span>
-<span class="r-in"><span>                          time_type <span class="op">=</span> <span class="st">"day"</span>,</span></span>
-<span class="r-in"><span>                          other_keys <span class="op">=</span> <span class="st">"county"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                           time_type <span class="op">=</span> <span class="st">"day"</span>,</span></span>
+<span class="r-in"><span>                           other_keys <span class="op">=</span> <span class="st">"county"</span><span class="op">)</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

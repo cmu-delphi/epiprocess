@@ -40,6 +40,7 @@ interest."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/m
     <a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a>
     <a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a>
     <a class="dropdown-item" href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a>
+    <a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a>
   </div>
 </li>
       </ul><form class="form-inline my-2 my-lg-0" role="search">
@@ -90,16 +91,30 @@ information and examples of relevant parameter names for an <code>epi_archive</c
 Note that there can only be a single row per unique combination of
 key variables, and thus the key variables are critical for figuring out how
 to generate a snapshot of data from the archive, as of a given version.</p>
-<p>In general, last observation carried forward (LOCF) is used to data in
-between recorded versions. Currently, deletions must be represented as
-revising a row to a special state (e.g., making the entries <code>NA</code> or
-including a special column that flags the data as removed and performing
-some kind of post-processing), and the archive is unaware of what this
-state is.</p>
+<p>In general, the last version of each observation is carried forward (LOCF) to
+fill in data between recorded versions, and between the last recorded
+update and the <code>versions_end</code>. One consequence is that the <code>DT</code>
+doesn't have to contain a full snapshot of every version (although this
+generally works), but can instead contain only the rows that are new or
+changed from the previous version (see <code>compactify</code>, which does this
+automatically). Currently, deletions must be represented as revising a row
+to a special state (e.g., making the entries <code>NA</code> or including a special
+column that flags the data as removed and performing some kind of
+post-processing), and the archive is unaware of what this state is. Note
+that <code>NA</code>s <em>can</em> be introduced by <code>epi_archive</code> methods for other reasons,
+e.g., in <code><a href="epix_fill_through_version.html">epix_fill_through_version</a></code> and <code><a href="epix_merge.html">epix_merge</a></code>, if requested, to
+represent potential update data that we do not yet have access to; or in
+<code><a href="epix_merge.html">epix_merge</a></code> to represent the "value" of an observation before the
+version in which it was first released, or if no version of that
+observation appears in the archive data at all.</p>
 <p><strong>A word of caution:</strong> R6 objects, unlike most other objects in R, have
 reference semantics. A primary consequence of this is that objects are not
 copied when modified. You can read more about this in Hadley Wickham's
-<a href="https://adv-r.hadley.nz/r6.html#r6-semantics" class="external-link">Advanced R</a> book.</p>
+<a href="https://adv-r.hadley.nz/r6.html#r6-semantics" class="external-link">Advanced R</a> book. In order
+to construct a modified archive while keeping the original intact, first
+make a clone using the <code>$clone</code> method, then overwrite the clone's <code>DT</code>
+field with <code>data.table::copy(clone$DT)</code>, and finally perform the
+modifications on the clone.</p>
     </div>
     <div class="section level2">
     <h2 id="metadata">Metadata<a class="anchor" aria-label="anchor" href="#metadata"></a></h2>
@@ -148,6 +163,7 @@ are documented in the wrapper function <code><a href="epix_slide.html">epix_slid
 <ul><li><p><a href="#method-epi_archive-new"><code>epi_archive$new()</code></a></p></li>
 <li><p><a href="#method-epi_archive-print"><code>epi_archive$print()</code></a></p></li>
 <li><p><a href="#method-epi_archive-as_of"><code>epi_archive$as_of()</code></a></p></li>
+<li><p><a href="#method-epi_archive-fill_through_version"><code>epi_archive$fill_through_version()</code></a></p></li>
 <li><p><a href="#method-epi_archive-merge"><code>epi_archive$merge()</code></a></p></li>
 <li><p><a href="#method-epi_archive-slide"><code>epi_archive$slide()</code></a></p></li>
 <li><p><a href="#method-epi_archive-clone"><code>epi_archive$clone()</code></a></p></li>
@@ -155,7 +171,16 @@ are documented in the wrapper function <code><a href="epix_slide.html">epix_slid
 <h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
 <p>Creates a new <code>epi_archive</code> object.</p><div class="section">
 <h4 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va"><a href="../reference/epi_archive.html">epi_archive</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">x</span>, <span class="va">geo_type</span>, <span class="va">time_type</span>, <span class="va">other_keys</span>, <span class="va">additional_metadata</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va"><a href="../reference/epi_archive.html">epi_archive</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">geo_type</span>,</span>
+<span>  <span class="va">time_type</span>,</span>
+<span>  <span class="va">other_keys</span>,</span>
+<span>  <span class="va">additional_metadata</span>,</span>
+<span>  <span class="va">compactify</span>,</span>
+<span>  <span class="va">clobberable_versions_start</span>,</span>
+<span>  <span class="va">versions_end</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -189,6 +214,32 @@ apart from "geo_value", "time_value", and "version".</p></dd>
 fields; named entries from the passed list or will be included as well.</p></dd>
 
 
+<dt><code>compactify</code></dt>
+<dd><p>Optional; Boolean or <code>NULL</code>: should we remove rows that are
+considered redundant for the purposes of <code>epi_archive</code>'s built-in methods
+such as <code>as_of</code>? As these methods use the last version of each observation
+carried forward (LOCF) to interpolate between the version data provided,
+rows that don't change these LOCF results can potentially be omitted to
+save space while maintaining the same behavior (with the help of the
+<code>clobberable_versions_start</code> and <code>versions_end</code> fields in some
+edge cases). <code>TRUE</code> will remove these rows, <code>FALSE</code> will not, and missing
+or <code>NULL</code> will remove these rows and issue a warning. Generally, this can
+be set to <code>TRUE</code>, but if you directly inspect or edit the fields of the
+<code>epi_archive</code> such as its <code>DT</code>, you will have to determine whether
+<code>compactify=TRUE</code> will produce the desired results. If compactification
+here is removing a large proportion of the rows, this may indicate a
+potential for space, time, or bandwidth savings upstream the data pipeline,
+e.g., when fetching, storing, or preparing the input data <code>x</code></p></dd>
+
+
+<dt><code>clobberable_versions_start</code></dt>
+<dd><p>Optional; as in <code><a href="as_epi_archive.html">as_epi_archive</a></code></p></dd>
+
+
+<dt><code>versions_end</code></dt>
+<dd><p>Optional; as in <code><a href="as_epi_archive.html">as_epi_archive</a></code></p></dd>
+
+
 </dl><p></p></div>
 </div>
 <div class="section">
@@ -220,22 +271,68 @@ See the documentation for the wrapper function <code><a href="epix_as_of.html">e
 </div>
 
 
-</div><p></p><hr><a id="method-epi_archive-merge"></a><div class="section">
-<h3 id="method-merge-">Method <code><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge()</a></code><a class="anchor" aria-label="anchor" href="#method-merge-"></a></h3>
-<p>Merges another <code>data.table</code> with the current one, and allows for
-a post-filling of <code>NA</code> values by last observation carried forward (LOCF).
-See the documentation for the wrapper function <code><a href="epix_merge.html">epix_merge()</a></code> for details.</p><div class="section">
+</div><p></p><hr><a id="method-epi_archive-fill_through_version"></a><div class="section">
+<h3 id="method-fill-through-version-">Method <code>fill_through_version()</code><a class="anchor" aria-label="anchor" href="#method-fill-through-version-"></a></h3>
+<p>Fill in unobserved history using requested scheme by mutating
+<code>self</code> and potentially reseating its fields. See
+<code><a href="epix_fill_through_version.html">epix_fill_through_version</a></code> for a full description of the non-R6-method
+version, which doesn't mutate the input archive but might alias its fields.</p><div class="section">
 <h4 id="usage-3">Usage<a class="anchor" aria-label="anchor" href="#usage-3"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">merge</span><span class="op">(</span><span class="va">y</span>, <span class="va">...</span>, locf <span class="op">=</span> <span class="cn">TRUE</span>, nan <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">fill_through_version</span><span class="op">(</span><span class="va">fill_versions_end</span>, how <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"na"</span>, <span class="st">"locf"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
+<div class="section">
+<h4 id="arguments-1">Arguments<a class="anchor" aria-label="anchor" href="#arguments-1"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>fill_versions_end</code></dt>
+<dd><p>as in <code><a href="epix_fill_through_version.html">epix_fill_through_version</a></code></p></dd>
+
+
+<dt><code>how</code></dt>
+<dd><p>as in <code><a href="epix_fill_through_version.html">epix_fill_through_version</a></code></p></dd>
+
+
+</dl><p></p></div>
+</div>
+
+</div><p></p><hr><a id="method-epi_archive-merge"></a><div class="section">
+<h3 id="method-merge-">Method <code><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge()</a></code><a class="anchor" aria-label="anchor" href="#method-merge-"></a></h3>
+<p>Merges another <code>epi_archive</code> with the current one, mutating the
+current one by reseating its <code>DT</code> and several other fields, but avoiding
+mutation of the old <code>DT</code>; returns the current archive
+<a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisibly</a>. See <code><a href="epix_merge.html">epix_merge</a></code> for a full description
+of the non-R6-method version, which does not mutate either archive, and
+does not alias either archive's <code>DT</code>.</p><div class="section">
+<h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">merge</span><span class="op">(</span></span>
+<span>  <span class="va">y</span>,</span>
+<span>  sync <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"forbid"</span>, <span class="st">"na"</span>, <span class="st">"locf"</span>, <span class="st">"truncate"</span><span class="op">)</span>,</span>
+<span>  compactify <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div>
+
+<div class="section">
+<h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>y</code></dt>
+<dd><p>as in <code><a href="epix_merge.html">epix_merge</a></code></p></dd>
+
+
+<dt><code>sync</code></dt>
+<dd><p>as in <code><a href="epix_merge.html">epix_merge</a></code></p></dd>
+
+
+<dt><code>compactify</code></dt>
+<dd><p>as in <code><a href="epix_merge.html">epix_merge</a></code></p></dd>
+
+
+</dl><p></p></div>
+</div>
 
 </div><p></p><hr><a id="method-epi_archive-slide"></a><div class="section">
 <h3 id="method-slide-">Method <code>slide()</code><a class="anchor" aria-label="anchor" href="#method-slide-"></a></h3>
 <p>Slides a given function over variables in an <code>epi_archive</code>
-object. See the documentation for the wrapper function <code><a href="epix_as_of.html">epix_as_of()</a></code> for
+object. See the documentation for the wrapper function <code><a href="epix_slide.html">epix_slide()</a></code> for
 details.</p><div class="section">
-<h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
+<h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">slide</span><span class="op">(</span></span>
 <span>  <span class="va">f</span>,</span>
 <span>  <span class="va">...</span>,</span>
@@ -254,12 +351,12 @@ details.</p><div class="section">
 </div><p></p><hr><a id="method-epi_archive-clone"></a><div class="section">
 <h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
 <p>The objects of this class are cloneable with this method.</p><div class="section">
-<h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
+<h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span>deep <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-1">Arguments<a class="anchor" aria-label="anchor" href="#arguments-1"></a></h4>
+<h4 id="arguments-3">Arguments<a class="anchor" aria-label="anchor" href="#arguments-3"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
 
@@ -291,14 +388,17 @@ details.</p><div class="section">
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * min time value = 2020-01-01</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * max time value = 2020-01-05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * min version    = 2020-01-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * max version    = 2020-01-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * first version with update = 2020-01-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * last version with update = 2020-01-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * clobberable versions start = 2020-01-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * versions end   = 2020-01-06</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data archive (stored in DT field): 10 x 4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Columns in DT: geo_value, time_value, version, value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Public methods: initialize, print, as_of, merge, slide, clone</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Public methods: initialize, print, as_of, fill_through_version, merge, slide, clone</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

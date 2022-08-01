@@ -38,6 +38,7 @@ examples."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/m
     <a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a>
     <a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a>
     <a class="dropdown-item" href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a>
+    <a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a>
   </div>
 </li>
       </ul><form class="form-inline my-2 my-lg-0" role="search">
@@ -112,12 +113,10 @@ minimum considered.</p></dd>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># warning message of data latency shown</span></span></span>
 <span class="r-in"><span><span class="fu">epix_as_of</span><span class="op">(</span>x <span class="op">=</span> <span class="va">archive_cases_dv_subset</span>,</span></span>
 <span class="r-in"><span>           max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Getting data as of the latest version possible. For a variety of</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> reasons, it is possible that we only have a preliminary picture of this</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> version (e.g., the upstream source has updated it but we have not seen it due</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> to latency in synchronization). Thus, the snapshot that we produce here might</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> not be reproducible at a later time (e.g., when the archive has caught up in</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> terms of synchronization).</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Getting data as of some "clobberable" version that might be hotfixed,</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> synced, or otherwise replaced later with different data using the same version</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> tag.  Thus, the snapshot that we produce here might not be reproducible later.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> See `?epi_archive` for more info and `?epix_as_of` on how to muffle.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 2,192 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
@@ -139,28 +138,67 @@ minimum considered.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 2,182 more rows</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ Use `print(n = ...)` to see more rows</span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># no warning shown</span></span></span>
-<span class="r-in"><span><span class="fu">epix_as_of</span><span class="op">(</span><span class="va">archive_cases_dv_subset</span>, max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-10"</span><span class="op">)</span><span class="op">)</span>          </span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 36 x 4 with metadata:</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span> <span class="co"># 2020-06-02 -- 2021-12-01</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "2020-06-02" "2021-12-01"</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu">epix_as_of</span><span class="op">(</span>x <span class="op">=</span> <span class="va">archive_cases_dv_subset</span>,</span></span>
+<span class="r-in"><span>           max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-12"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 44 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2020-06-10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2020-06-12</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 36 × 4</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 44 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value percent_cli case_rate_7d_av</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-06-01        2.13            6.63</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-06-02        1.96            6.45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-06-03        1.79            6.62</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-06-04        1.63            6.64</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-06-05        1.58            6.91</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-06-06        1.34            6.76</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-06-07       <span style="color: #BB0000;">NA</span>               6.75</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-06-08       <span style="color: #BB0000;">NA</span>               6.90</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-06-01        2.23            6.63</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-06-02        2.06            6.45</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-06-03        1.90            6.62</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-06-04        1.79            6.64</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-06-05        1.83            6.91</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-06-06        1.86            6.76</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-06-07        1.78            6.75</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-06-08        1.90            6.90</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-06-09       <span style="color: #BB0000;">NA</span>               7.02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> fl        2020-06-01        1.86            3.38</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 26 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-06-10       <span style="color: #BB0000;">NA</span>               7.36</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 34 more rows</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ Use `print(n = ...)` to see more rows</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># When fetching a snapshot as of the latest version with update data in the</span></span></span>
+<span class="r-in"><span><span class="co"># archive, a warning is issued by default, as this update data might not yet</span></span></span>
+<span class="r-in"><span><span class="co"># be finalized (for example, if data versions are labeled with dates, these</span></span></span>
+<span class="r-in"><span><span class="co"># versions might be overwritten throughout the corresponding days with</span></span></span>
+<span class="r-in"><span><span class="co"># additional data or "hotfixes" of erroroneous data; when we build an archive</span></span></span>
+<span class="r-in"><span><span class="co"># based on database queries, the latest available update might still be</span></span></span>
+<span class="r-in"><span><span class="co"># subject to change, but previous versions should be finalized). We can</span></span></span>
+<span class="r-in"><span><span class="co"># muffle such warnings with the following pattern:</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">withCallingHandlers</a></span><span class="op">(</span><span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="fu">epix_as_of</span><span class="op">(</span>x <span class="op">=</span> <span class="va">archive_cases_dv_subset</span>,</span></span>
+<span class="r-in"><span>             max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span>, epiprocess__snapshot_as_of_clobberable_version <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">wrn</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">invokeRestart</a></span><span class="op">(</span><span class="st">"muffleWarning"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 2,192 x 4 with metadata:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2021-12-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2,192 × 4</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value percent_cli case_rate_7d_av</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-06-01        2.75            6.84</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-06-02        2.57            6.82</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-06-03        2.48            6.66</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-06-04        2.41            6.98</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-06-05        2.57            6.97</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-06-06        2.63            6.66</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-06-07        2.73            6.74</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-06-08        3.04            6.67</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-06-09        2.97            6.81</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-06-10        2.99            7.13</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 2,182 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ Use `print(n = ...)` to see more rows</span></span>
+<span class="r-in"><span><span class="co"># Since R 4.0, there is a `globalCallingHandlers` function that can be used</span></span></span>
+<span class="r-in"><span><span class="co"># to globally toggle these warnings.</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
