@@ -65,4 +65,6 @@ reference:
 - title: internal
   contents:
   - epiprocess
+  - max_version_with_row_in
+  - next_after
 
