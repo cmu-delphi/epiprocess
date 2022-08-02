@@ -12,8 +12,9 @@ test_that("epix_fill_through_version mirrors input when it is sufficiently up to
   # `waldo::compare` in waldo >=0.3.1 appears (as of 0.4.0) to compare R6
   # objects by contents rather than address (in a way that is tested but maybe
   # not guaranteed via user docs). Use `local_edition` to ensure we use edition
-  # 3 here.
-  local_edition(3)
+  # 3 here. Use `testthat::` due to naming conflict issues that can arise with
+  # `readr`.
+  testthat::local_edition(3)
   expect_identical(ea_orig, ea_trivial_fill_na1)
   expect_identical(ea_orig, ea_trivial_fill_na2)
   expect_identical(ea_orig, ea_trivial_fill_locf)
@@ -32,7 +33,7 @@ test_that("epix_fill_through_version can extend observed versions, gives expecte
 
   # We use edition 3 features here, passing `ignore_attr` to `waldo::compare`.
   # Ensure we are using edition 3:
-  local_edition(3)
+  testthat::local_edition(3)
   withCallingHandlers({
     expect_identical(ea_fill_na$versions_end, later_unobserved_version)
     expect_identical(tibble::as_tibble(ea_fill_na$as_of(first_unobserved_version)),
