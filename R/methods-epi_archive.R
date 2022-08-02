@@ -362,9 +362,11 @@ epix_merge = function(x, y,
 #'   `n = 7`, and one time step is one day, then to produce a value on January 7
 #'   we apply the given function or formula to data in between January 1 and
 #'   7.
-#' @param group_by The variable(s) to group by before slide computation. If
-#'   missing, then the keys in the underlying data table, excluding `time_value`
-#'   and `version`, will be used for grouping. To omit a grouping entirely, use
+#' @param group_by `r lifecycle::badge("deprecated")` (Recommend using `%>%
+#'   group_by(<grouping vars>)` or `$group_by(<group vars>)` before sliding,
+#'   instead.) The variable(s) to group by before slide computation. If missing,
+#'   then the keys in the underlying data table, excluding `time_value` and
+#'   `version`, will be used for grouping. To omit a grouping entirely, use
 #'   `group_by = NULL`.
 #' @param ref_time_values Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
@@ -429,37 +431,46 @@ epix_merge = function(x, y,
 #'   x$slide(x, new_var = comp(old_var), n = 120)
 #'   ```
 #'
-#' @importFrom rlang enquo
-#' @export
 #' @examples
+#' library(dplyr)
+#'
 #' # these dates are reference time points for the 3 day average sliding window
 #' # The resulting epi_archive ends up including data averaged from:
 #' # 0 day which has no results, for 2020-06-01
 #' # 1 day, for 2020-06-02
 #' # 2 days, for the rest of the results
-#' # never 3 days dur to data latency
-#' 
-#' time_values <- seq(as.Date("2020-06-01"),
-#'                       as.Date("2020-06-15"),
-#'                       by = "1 day")
+#' # never 3 days due to data latency
+#'
+#' ref_time_values <- seq(as.Date("2020-06-01"),
+#'                        as.Date("2020-06-15"),
+#'                        by = "1 day")
+#'
 #' epix_slide(x = archive_cases_dv_subset,
 #'            f = ~ mean(.x$case_rate_7d_av),
 #'            n = 3,
 #'            group_by = geo_value,
 #'            ref_time_values = time_values,
 #'            new_col_name = 'case_rate_3d_av')
-epix_slide = function(x, f, ..., n, group_by, ref_time_values,
+#'
+#' @importFrom lifecycle deprecated
+#' @importFrom rlang enquo
+#' @export
+epix_slide = function(x, f, ..., n, ref_time_values,
                       time_step, new_col_name = "slide_value",
+                      group_by = deprecated(),
+                      groups = NULL,
                       as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
-  if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
+  if (!is_epi_archive(x, grouped_okay=TRUE)) {
+    Abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
+  }
   return(x$slide(f, ..., n = n,
-                 group_by = {{group_by}},
                  ref_time_values = ref_time_values,
                  time_step = time_step,
                  new_col_name = new_col_name,
+                 group_by = {{ group_by }},
+                 groups = groups,
                  as_list_col = as_list_col,
                  names_sep = names_sep,
-                 all_rows = all_rows))
+                 all_rows = all_rows
+                 ))
 }
-
-

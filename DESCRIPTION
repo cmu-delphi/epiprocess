@@ -27,6 +27,7 @@ Imports:
     feasts,
     generics,
     genlasso,
+    lifecycle (>= 1.0.1),
     lubridate,
     magrittr,
     purrr,

@@ -9,10 +9,11 @@ epix_slide(
   f,
   ...,
   n,
-  group_by,
   ref_time_values,
   time_step,
   new_col_name = "slide_value",
+  group_by = deprecated(),
+  groups = NULL,
   as_list_col = FALSE,
   names_sep = "_",
   all_rows = FALSE
@@ -39,11 +40,6 @@ interpreted as an expression for tidy evaluation.}
 we apply the given function or formula to data in between January 1 and
 7.}
 
-\item{group_by}{The variable(s) to group by before slide computation. If
-missing, then the keys in the underlying data table, excluding \code{time_value}
-and \code{version}, will be used for grouping. To omit a grouping entirely, use
-\code{group_by = NULL}.}
-
 \item{ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
 window. If missing, then this will be set to all unique time values in the
@@ -58,6 +54,12 @@ would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 \item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
+
+\item{group_by}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} (Recommend using \verb{\%>\% group_by(<grouping vars>)} or \verb{$group_by(<group vars>)} before sliding,
+instead.) The variable(s) to group by before slide computation. If missing,
+then the keys in the underlying data table, excluding \code{time_value} and
+\code{version}, will be used for grouping. To omit a grouping entirely, use
+\code{group_by = NULL}.}
 
 \item{as_list_col}{Should the new column be stored as a list column? Default
 is \code{FALSE}, in which case a list object returned by \code{f} would be unnested
@@ -126,20 +128,24 @@ is equivalent to:
 }\if{html}{\out{</div>}}
 }
 \examples{
+library(dplyr)
+
 # these dates are reference time points for the 3 day average sliding window
 # The resulting epi_archive ends up including data averaged from:
 # 0 day which has no results, for 2020-06-01
 # 1 day, for 2020-06-02
 # 2 days, for the rest of the results
-# never 3 days dur to data latency
+# never 3 days due to data latency
 
-time_values <- seq(as.Date("2020-06-01"),
-                      as.Date("2020-06-15"),
-                      by = "1 day")
+ref_time_values <- seq(as.Date("2020-06-01"),
+                       as.Date("2020-06-15"),
+                       by = "1 day")
+
 epix_slide(x = archive_cases_dv_subset,
            f = ~ mean(.x$case_rate_7d_av),
            n = 3,
            group_by = geo_value,
            ref_time_values = time_values,
            new_col_name = 'case_rate_3d_av')
+
 }

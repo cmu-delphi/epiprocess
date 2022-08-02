@@ -4,6 +4,77 @@ break_str = function(str, nchar = 79, init = "") {
   return(str)
 }
 
+#' Format chr holding variable/column/other names, with prefix&indent
+#'
+#' Helps pretty-print vectors of variable/column/slot/field names. Adds
+#' backticks, commas, prefixes, and indentation. Wraps lines, but won't insert
+#' line breaks in the middle of the names while doing so.
+#'
+#' @param nms Character vector: the variable names (potentially empty)
+#' @param initial Optional; single string: a prefix for the initial line in the
+#'   result; e.g., "Variable names: ". Defaults to "". Any non-initial lines
+#'   will be indented with whitespace matching the (estimated) visual width of
+#'   `initial`.
+#' @param common_prefix Optional; single string: a prefix for every line (will
+#'   appear before `initial`); e.g., "# ". Defaults to "".
+#' @param none_str Optional; single string: what to display in place of a
+#'   length-0 `nms` vector. Will be combined with `common_prefix` and `initial`.
+#' @param width Optional; single integer: desired maximum formatted line width.
+#'   The formatted output may not obey this setting if `common_prefix` plus
+#'   `initial` is long or the printing width is very narrow.
+#' @return Character vector; lines to be [`cat`]; to print, `cat` with a `"\n"`
+#'   after each entry.
+#'
+#' @noRd
+format_varnames = function(nms,
+                           initial = "", common_prefix = "", none_str = "<none>",
+                           width = getOption("width", 80L)) {
+  if (!rlang::is_character(nms)) {
+    Abort("`nms` must be a character vector")
+  }
+  if (!rlang::is_string(initial)) {
+    Abort("`initial` must be a string")
+  }
+  if (!rlang::is_string(common_prefix)) {
+    Abort("`common_prefix` must be a string")
+  }
+  if (!rlang::is_string(none_str)) {
+    Abort("`none_str` must be a string")
+  }
+  prefix = strrep(" ", nchar(initial, type="width"))
+  full_initial = paste0(common_prefix, initial)
+  full_prefix = paste0(common_prefix, prefix)
+  full_initial_width = nchar(full_initial, type="width")
+  minimum_reasonable_line_width_for_syms = 20L
+  line_width_for_syms = max(width - full_initial_width,
+                            minimum_reasonable_line_width_for_syms)
+  unprefixed_lines =
+    if (length(nms) == 0L) {
+      none_str
+    } else {
+      utils::capture.output(
+        withr::with_options(list("width" = line_width_for_syms), {
+          # `rlang::syms` + `paste` takes care of backquotes. `cat` with
+          # `fill=TRUE` takes care of spacing + line wrapping exclusively between
+          # elements. We need to add commas appropriately.
+          cat(paste0(rlang::syms(nms), c(rep(",", times=length(nms)-1L), "")), fill=TRUE)
+        })
+      )
+    }
+  lines = paste0(c(full_initial, rep(full_prefix, times=length(unprefixed_lines)-1L)),
+                 unprefixed_lines)
+}
+
+#' [`cat`] chr holding variable/column/other names, with prefix&indent
+#'
+#' @inheritParams format_varnames
+#'
+#' @noRd
+cat_varnames = function(nms, initial="", common_prefix="", none_str="<none>") {
+  lines = format_varnames(nms, initial=initial, common_prefix=common_prefix, none_str=none_str)
+  cat(paste(paste0(lines,"\n"), collapse=""))
+}
+
 Abort = function(msg, ...) rlang::abort(break_str(msg, init = "Error: "), ...)
 Warn = function(msg, ...) rlang::warn(break_str(msg, init = "Warning: "), ...)
 
@@ -127,4 +198,71 @@ enlist = function(...) {
 # down to child environments  
 list2var = function(x) {
   list2env(x, envir = parent.frame())
+}
+
+##########
+
+#' [`lifecycle::is_present`] for enquosed deprecated NSE arg
+#'
+#' [`lifecycle::is_present`] is designed for use with args that undergo standard
+#' evaluation, rather than non-standard evaluation (NSE). This function is
+#' designed to fulfill a similar purpose, but for args we have
+#' [enquosed][rlang::enquo] in preparation for NSE.
+#'
+#' @param quo [enquosed][rlang::enquo] arg
+#' @return bool; was `quo` "present", or did it look like a missing quosure or
+#'   have an expr that looked like `deprecated()` or `lifecycle::deprecated()`?
+#'
+#' @examples
+#'
+#' fn = function(x = deprecated()) {
+#'   deprecated_quo_is_present(rlang::enquo(x))
+#' }
+#'
+#' fn() # FALSE
+#' fn(.data$something) # TRUE
+#'
+#' # Functions that wrap `fn` should forward the NSE arg to `fn` using
+#' # [`{{ arg }}`][rlang::embrace-operator] (or, if they are working from an
+#' # argument that has already been defused into a quosure, `!!quo`). (This is
+#' # already how NSE arguments that will be enquosed should be forwarded.)
+#'
+#' wrapper1 = function(x=deprecated()) fn({{x}})
+#' wrapper2 = function(x=lifecycle::deprecated()) fn({{x}})
+#' wrapper3 = function(x) fn({{x}})
+#' wrapper4 = function(x) fn(!!rlang::enquo(x))
+#'
+#' wrapper1() # FALSE
+#' wrapper2() # FALSE
+#' wrapper3() # FALSE
+#' wrapper4() # FALSE
+#'
+#' # More advanced: wrapper that receives an already-enquosed arg:
+#'
+#' inner_wrapper = function(quo) fn(!!quo)
+#' outer_wrapper1 = function(x=deprecated()) inner_wrapper(rlang::enquo(x))
+#'
+#' outer_wrapper1() # FALSE
+#'
+#' # Improper argument forwarding from a wrapper function will cause this
+#' # function to produce incorrect results.
+#' bad_wrapper1 = function(x) fn(x)
+#' bad_wrapper1() # TRUE, bad
+#'
+#' @noRd
+deprecated_quo_is_present = function(quo) {
+  if (!rlang::is_quosure(quo)) {
+    Abort("`quo` must be a quosure; `enquo` the arg first",
+          internal=TRUE)
+  } else if (rlang::quo_is_missing(quo)) {
+    FALSE
+  } else {
+    quo_expr = rlang::get_expr(quo)
+    if (identical(quo_expr, rlang::expr(deprecated())) ||
+          identical(quo_expr, rlang::expr(lifecycle::deprecated()))) {
+      FALSE
+    } else {
+      TRUE
+    }
+  }
 }

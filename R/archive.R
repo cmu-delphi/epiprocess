@@ -397,8 +397,8 @@ epi_archive =
             self$clobberable_versions_start = clobberable_versions_start
             self$versions_end = versions_end
           },
-          print = function() {
-            cat("An `epi_archive` object, with metadata:\n")
+          print = function(header = TRUE) {
+            if (header) cat("An `epi_archive` object, with metadata:\n")
             cat(sprintf("* %-9s = %s\n", "geo_type", self$geo_type))
             cat(sprintf("* %-9s = %s\n", "time_type", self$time_type))
             if (!is.null(self$additional_metadata)) { 
@@ -430,7 +430,6 @@ epi_archive =
             cat("----------\n")
             cat(sprintf("Data archive (stored in DT field): %i x %i\n", 
                         nrow(self$DT), ncol(self$DT)))
-            cat("----------\n")
             cat(sprintf("Columns in DT: %s\n", paste(ifelse(length(
               colnames(self$DT)) <= 4, paste(colnames(self$DT), collapse = ", "), 
               paste(paste(colnames(self$DT)[1:4], collapse = ", "), "and", 
@@ -579,158 +578,60 @@ epi_archive =
             return (invisible(self))
           },
           #####
-#' @description Slides a given function over variables in an `epi_archive`
-#'   object. See the documentation for the wrapper function [`epix_slide()`] for
-#'   details. 
-#' @importFrom data.table key
-#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
-          slide = function(f, ..., n, group_by, ref_time_values, 
+          group_by = function(..., .add = FALSE, .drop = dplyr::group_by_drop_default(self)) {
+            grouped_epi_archive$new(self,
+                                    eval_select_names_from_dots(..., .data=self$DT),
+                                    drop = .drop)
+          },
+          #' @description Slides a given function over variables in a `epi_archive`
+          #'   object. See the documentation for the wrapper function [`epix_slide()`] for
+          #'   details.
+          #' @importFrom lifecycle deprecated
+          slide = function(f, ..., n, ref_time_values,
                            time_step, new_col_name = "slide_value",
+                           group_by = deprecated(),
+                           groups = NULL,
                            as_list_col = FALSE, names_sep = "_",
-                           all_rows = FALSE) { 
-            # If missing, then set ref time values to be everything; else make
-            # sure we intersect with observed time values 
-            if (missing(ref_time_values)) {
-              ref_time_values = unique(self$DT$time_value)
-            }
-            else {
-              ref_time_values = ref_time_values[ref_time_values %in%
-                                                unique(self$DT$time_value)]
-            }
-              
-            # If a custom time step is specified, then redefine units 
-            before_num = n-1
-            if (!missing(time_step)) before_num = time_step(n-1)
-            
-            # What to group by? If missing, set according to internal keys;
-            # otherwise, tidyselect.
-            if (quo_is_missing(enquo(group_by))) {
-              group_by <- syms(setdiff(key(self$DT), c("time_value", "version")))
-            } else {
-              group_by <- syms(names(eval_select(enquo(group_by), self$DT)))
-            }
-            
-            # Symbolize column name
-            new_col = sym(new_col_name)
-
-            # Key variable names, apart from time value and version
-            key_vars = setdiff(key(self$DT), c("time_value", "version"))
-            
-            # Computation for one group, one time value
-            comp_one_grp = function(.data_group,
-                                    f, ..., 
-                                    time_value,
-                                    key_vars,
-                                    new_col) {
-              # Carry out the specified computation 
-              comp_value = f(.data_group, ...)
-
-              # Count the number of appearances of the reference time value.
-              # Note: ideally, we want to directly count occurrences of the ref
-              # time value but due to latency, this will often not appear in the
-              # data group. So we count the number of unique key values, outside 
-              # of the time value column
-              count = sum(!duplicated(.data_group[, key_vars]))
-
-              # If we get back an atomic vector
-              if (is.atomic(comp_value)) {
-                if (length(comp_value) == 1) {
-                  comp_value = rep(comp_value, count)
-                }
-                # If not a singleton, should be the right length, else abort
-                else if (length(comp_value) != count) {
-                  Abort("If the slide computation returns an atomic vector, then it must have a single element, or else one element per appearance of the reference time value in the local window.")
-                }
+                           all_rows = FALSE) {
+            group_by_quo = rlang::enquo(group_by)
+            grouped =
+              if (deprecated_quo_is_present(group_by_quo)) {
+                lifecycle::deprecate_warn(
+                  when = "1.0.0 dev",
+                  # lifecycle >= 1.0.1 to recognize R6 method in this format
+                  what = "epi_archive$slide(group_by)",
+                  details = paste("Please use `%>% group_by(<grouping vars>) %>% epix_slide(<args>)` or",
+                                  "`$group_by(<grouping vars>)$slide(<args>)` instead.")
+                )
+                self$group_by(!!group_by_quo)
+              } else {
+                guessed_group_vars = setdiff(key(self$DT), c("time_value", "version"))
+                rlang::inform(c(
+                  "i" = "Calling `$slide` on an (ungrouped) `epi_archive`; grouping by the",
+                  " " = "non-`time_value`, non-`version` key columns.",
+                  format_varnames(guessed_group_vars,
+                                  # add extra indentation past the text above:
+                                  common_prefix = "-> Group vars: ",
+                                  # subtract out rlang message
+                                  # indentation from available width:
+                                  width = getOption("width", 80L) - 2L) %>%
+                    stats::setNames(rep(" ", length(.))),
+                  " " = 'To override or muffle, manually `group_by` first.  "Ungrouped" slides',
+                  " " = 'are possible by specifying zero grouping columns (e.g., `group_by(c())`),',
+                  " " = 'indicating to use a single group containing all data.'
+                ), class="epiprocess__epix_slide_on_ungrouped_epi_archive")
+                self$group_by(tidyselect::all_of(guessed_group_vars))
               }
-
-              # If we get back a data frame
-              else if (is.data.frame(comp_value)) {
-                if (nrow(comp_value) == 1) {
-                  comp_value = rep(list(comp_value), count)
-                }
-                # If not a single row, should be the right length, else abort
-                else if (nrow(comp_value) != count) {
-                  Abort("If the slide computation returns a data frame, then it must have a single row, or else one row per appearance of the reference time value in the local window.")
-                }
-                # Make into a list
-                else {
-                  comp_value = split(comp_value, 1:nrow(comp_value))
-                }
-              }
-
-              # If neither an atomic vector data frame, then abort
-              else {
-                Abort("The slide computation must return an atomic vector or a data frame.")
-              }
- 
-              # Note that we've already recycled comp value to make size stable,
-              # so tibble() will just recycle time value appropriately
-              return(tibble::tibble(time_value = time_value, 
-                                    !!new_col := comp_value))
-            }
-            
-            # If f is not missing, then just go ahead, slide by group
-            if (!missing(f)) {
-              if (rlang::is_formula(f)) f = rlang::as_function(f)
-              
-              x = purrr::map_dfr(ref_time_values, function(t) {
-                self$as_of(t, min_time_value = t - before_num) %>%
-                  tibble::as_tibble() %>% 
-                  dplyr::group_by(!!!group_by) %>%
-                  dplyr::group_modify(comp_one_grp,
-                                      f = f, ..., 
-                                      time_value = t,
-                                      key_vars = key_vars,
-                                      new_col = new_col,
-                                      .keep = TRUE) %>%
-                  dplyr::ungroup()
-              })
-            }
-
-            # Else interpret ... as an expression for tidy evaluation
-            else {
-              quos = enquos(...)
-              if (length(quos) == 0) {
-                Abort("If `f` is missing then a computation must be specified via `...`.")
-              }
-              if (length(quos) > 1) {
-                Abort("If `f` is missing then only a single computation can be specified via `...`.")
-              }
-              
-              quo = quos[[1]]
-              f = function(x, quo, ...) rlang::eval_tidy(quo, x)
-              new_col = sym(names(rlang::quos_auto_name(quos)))
-
-              x = purrr::map_dfr(ref_time_values, function(t) {
-                self$as_of(t, min_time_value = t - before_num) %>%
-                  tibble::as_tibble() %>% 
-                  dplyr::group_by(!!!group_by) %>%
-                  dplyr::group_modify(comp_one_grp,
-                                      f = f, quo = quo,
-                                      time_value = t,
-                                      key_vars = key_vars,
-                                      new_col = new_col,
-                                      .keep = TRUE) %>%
-                  dplyr::ungroup()
-              })
-            }
-            
-            # Unnest if we need to
-            if (!as_list_col) {
-              x = tidyr::unnest(x, !!new_col, names_sep = names_sep)
-            }
-            
-            # Join to get all rows, if we need to, then return
-            if (all_rows) {
-              cols = c(as.character(group_by), "time_value")
-              y = unique(self$DT[, ..cols])
-              x = dplyr::left_join(y, x, by = cols)
-            }
-            return(x)
+            grouped$slide(f, ...,
+                          n = n, ref_time_values = ref_time_values,
+                          time_step = time_step, new_col_name = new_col_name,
+                          as_list_col = as_list_col, names_sep = names_sep,
+                          all_rows = all_rows,
+                          groups = groups)
           }
         )
       )
-          
+
 #' Convert to `epi_archive` format
 #'
 #' Converts a data frame, data table, or tibble into an `epi_archive`
@@ -853,12 +754,23 @@ as_epi_archive = function(x, geo_type, time_type, other_keys,
 #' Test for `epi_archive` format
 #'
 #' @param x An object.
+#' @param grouped_okay Optional; Boolean; should a `grouped_epi_archive` also
+#'   count? Default is `FALSE`.
 #' @return `TRUE` if the object inherits from `epi_archive`.
 #' 
 #' @export
 #' @examples
 #' is_epi_archive(jhu_csse_daily_subset) # FALSE (this is an epi_df, not epi_archive)
 #' is_epi_archive(archive_cases_dv_subset) # TRUE
-is_epi_archive = function(x) {
-  inherits(x, "epi_archive")
+#'
+#' # By default, grouped_epi_archives don't count as epi_archives, as they may
+#' # support a different set of operations from regular `epi_archives`. This
+#' # behavior can be controlled by `grouped_okay`.
+#' grouped_archive = archive_cases_dv_subset$group_by(geo_value)
+#' is_epi_archive(grouped_archive) # FALSE
+#' is_epi_archive(grouped_archive, grouped_okay=TRUE) # TRUE
+#'
+#' @seealso [`is_grouped_epi_archive`]
+is_epi_archive = function(x, grouped_okay=FALSE) {
+  inherits(x, "epi_archive") || grouped_okay && inherits(x, "grouped_epi_archive")
 }

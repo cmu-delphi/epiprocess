@@ -119,6 +119,7 @@ toy_epi_archive
 \item \href{#method-epi_archive-as_of}{\code{epi_archive$as_of()}}
 \item \href{#method-epi_archive-fill_through_version}{\code{epi_archive$fill_through_version()}}
 \item \href{#method-epi_archive-merge}{\code{epi_archive$merge()}}
+\item \href{#method-epi_archive-group_by}{\code{epi_archive$group_by()}}
 \item \href{#method-epi_archive-slide}{\code{epi_archive$slide()}}
 \item \href{#method-epi_archive-clone}{\code{epi_archive$clone()}}
 }
@@ -199,7 +200,7 @@ An \code{epi_archive} object.
 \if{latex}{\out{\hypertarget{method-epi_archive-print}{}}}
 \subsection{Method \code{print()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$print()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$print(header = TRUE)}\if{html}{\out{</div>}}
 }
 
 }
@@ -267,10 +268,23 @@ does not alias either archive's \code{DT}.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-epi_archive-group_by"></a>}}
+\if{latex}{\out{\hypertarget{method-epi_archive-group_by}{}}}
+\subsection{Method \code{group_by()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$group_by(
+  ...,
+  .add = FALSE,
+  .drop = dplyr::group_by_drop_default(self)
+)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-epi_archive-slide"></a>}}
 \if{latex}{\out{\hypertarget{method-epi_archive-slide}{}}}
 \subsection{Method \code{slide()}}{
-Slides a given function over variables in an \code{epi_archive}
+Slides a given function over variables in a \code{epi_archive}
 object. See the documentation for the wrapper function \code{\link[=epix_slide]{epix_slide()}} for
 details.
 \subsection{Usage}{
@@ -278,10 +292,11 @@ details.
   f,
   ...,
   n,
-  group_by,
   ref_time_values,
   time_step,
   new_col_name = "slide_value",
+  group_by = deprecated(),
+  groups = NULL,
   as_list_col = FALSE,
   names_sep = "_",
   all_rows = FALSE

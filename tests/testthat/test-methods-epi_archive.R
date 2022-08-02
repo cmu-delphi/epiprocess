@@ -138,21 +138,23 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
     reference_by_modulus
   )
   # test the default behavior (default in this case should just be "geo_value"):
-  expect_identical(
-    epix_slide(x = ea,
-               f = ~ mean(.x$case_rate_7d_av),
-               n = 3,
-               ref_time_values = time_values,
-               new_col_name = 'case_rate_3d_av'),
-    reference_by_both
+  expect_message(
+    result_wrapper_no_group_by <- epix_slide(x = ea,
+                                             f = ~ mean(.x$case_rate_7d_av),
+                                             n = 3,
+                                             ref_time_values = time_values,
+                                             new_col_name = 'case_rate_3d_av'),
+    class="epiprocess__epix_slide_on_ungrouped_epi_archive"
   )
-  expect_identical(
-    ea$slide(
-      f = ~ mean(.x$case_rate_7d_av),
-      n = 3,
-      ref_time_values = time_values,
-      new_col_name = 'case_rate_3d_av'
-    ),
-    reference_by_both
+  expect_identical(result_wrapper_no_group_by, reference_by_both)
+  expect_message(
+    result_r6_no_group_by <- ea$slide(
+        f = ~ mean(.x$case_rate_7d_av),
+        n = 3,
+        ref_time_values = time_values,
+        new_col_name = 'case_rate_3d_av'
+      ),
+    class="epiprocess__epix_slide_on_ungrouped_epi_archive"
   )
+  expect_identical(result_r6_no_group_by, reference_by_both)
 })
