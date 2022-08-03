@@ -112,7 +112,7 @@ properly-versioned snapshots from the data archive (via its \code{as_of()}
 method), and (2) it performs a "manual" sliding of sorts, and does not
 benefit from the highly efficient \code{slider} package. For this reason, it
 should never be used in place of \code{epi_slide()}, and only used when
-version-aware sliding is necessary (as it its purpose).
+version-aware sliding is necessary (as is its purpose).
 
 Finally, this is simply a wrapper around the \code{slide()} method of the
 \code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:
@@ -131,7 +131,7 @@ is equivalent to:
 # 0 day which has no results, for 2020-06-01
 # 1 day, for 2020-06-02
 # 2 days, for the rest of the results
-# never 3 days dur to data latency
+# never 3 days due to data latency
 
 time_values <- seq(as.Date("2020-06-01"),
                       as.Date("2020-06-15"),

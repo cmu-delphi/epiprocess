@@ -417,7 +417,7 @@ epix_merge = function(x, y,
 #'   method), and (2) it performs a "manual" sliding of sorts, and does not
 #'   benefit from the highly efficient `slider` package. For this reason, it
 #'   should never be used in place of `epi_slide()`, and only used when
-#'   version-aware sliding is necessary (as it its purpose).
+#'   version-aware sliding is necessary (as is its purpose).
 #'
 #' Finally, this is simply a wrapper around the `slide()` method of the
 #'   `epi_archive` class, so if `x` is an `epi_archive` object, then:
@@ -437,7 +437,7 @@ epix_merge = function(x, y,
 #' # 0 day which has no results, for 2020-06-01
 #' # 1 day, for 2020-06-02
 #' # 2 days, for the rest of the results
-#' # never 3 days dur to data latency
+#' # never 3 days due to data latency
 #' 
 #' time_values <- seq(as.Date("2020-06-01"),
 #'                       as.Date("2020-06-15"),
