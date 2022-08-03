@@ -50,7 +50,7 @@ fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag){
 fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
   pivot_df <- df[order(df[[lag_col]], decreasing=FALSE), ] %>%
     pivot_wider(id_cols=lag_col, names_from=refd_col, values_from=value_col)
-  if (any(diff(pivot_df[[lag_col]])!=1)){stop("Risk exists in forward fill")}
+  if (any(diff(pivot_df[[lag_col]])!=1)){Abort("Risk exists in forward fill")}
   pivot_df <- pivot_df %>% fill(everything(), .direction="down")
   pivot_df[is.na(pivot_df)] <- 0 # fill NAs with 0s
   backfill_df <- pivot_df %>%
