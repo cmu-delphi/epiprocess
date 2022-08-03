@@ -169,6 +169,7 @@
 <span><span class="co">## * as_of     = 2022-05-21 22:17:14</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 15</span></span></span>
+<span><span class="co">## <span style="color: #949494;"># Groups:   geo_value [2]</span></span></span>
 <span><span class="co">##   geo_value time_value cases rm_lower rm_upper rm_repl…¹ stl_s…² stl_s…³ stl_s…⁴</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">1</span> fl        2020-06-01   667    345      <span style="text-decoration: underline;">2</span>195        667      0    <span style="text-decoration: underline;">1</span>537.     667</span></span>
@@ -249,14 +250,10 @@
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, <span class="va">cases_corrected</span><span class="op">)</span> </span>
 <span></span>
 <span><span class="va">y</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">cases</span> <span class="op">!=</span> <span class="va">cases_corrected</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## An `epi_df` object, 22 x 4 with metadata:</span></span>
-<span><span class="co">## * geo_type  = state</span></span>
-<span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2022-05-21 22:17:14</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 22 × 4</span></span></span>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 22 × 4</span></span></span>
+<span><span class="co">## <span style="color: #949494;"># Groups:   geo_value [2]</span></span></span>
 <span><span class="co">##    geo_value time_value cases cases_corrected</span></span>
-<span><span class="co">##  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 1</span> fl        2020-07-12 <span style="text-decoration: underline;">15</span>300          <span style="text-decoration: underline;">10</span>181 </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 2</span> nj        2020-07-19    -<span style="color: #BB0000;">8</span>            320.</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 3</span> nj        2020-08-13   694            404.</span></span>
