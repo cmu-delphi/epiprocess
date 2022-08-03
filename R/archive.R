@@ -723,7 +723,8 @@ epi_archive =
             # Join to get all rows, if we need to, then return
             if (all_rows) {
               cols = c(as.character(group_by), "time_value")
-              y = unique(self$DT[, ..cols])
+              y = unique(self$DT[, ..cols]) %>%
+                  tibble::as_tibble()
               x = dplyr::left_join(y, x, by = cols)
             }
             return(x)
