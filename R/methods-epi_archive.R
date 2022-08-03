@@ -449,7 +449,7 @@ epix_merge = function(x, y,
 #'            f = ~ mean(.x$case_rate_7d_av),
 #'            n = 3,
 #'            group_by = geo_value,
-#'            ref_time_values = time_values,
+#'            ref_time_values = ref_time_values,
 #'            new_col_name = 'case_rate_3d_av')
 #'
 #' @importFrom lifecycle deprecated
