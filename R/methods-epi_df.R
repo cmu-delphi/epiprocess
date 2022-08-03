@@ -88,7 +88,6 @@ summary.epi_df = function(object, ...) {
   reclass(res, attr(x, "metadata"))
 }
 
-
 #' `dplyr` verbs
 #'
 #' `dplyr` verbs for `epi_df` objects, preserving class and attributes. 
