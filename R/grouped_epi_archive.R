@@ -250,7 +250,7 @@ grouped_epi_archive =
             
             # Join to get all rows, if we need to, then return
             if (all_rows) {
-              cols = c(as.character(group_by), "time_value")
+              cols = c(private$vars, "time_value")
               y = unique(private$ungrouped$DT[, ..cols])
               x = dplyr::left_join(y, x, by = cols)
             }
