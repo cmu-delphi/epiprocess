@@ -63,6 +63,7 @@ summary.epi_df = function(object, ...) {
                          dplyr::summarize(mean(.data$num)))))
 }
 
+#' @export
 `[.epi_df` <- function(x, i, j, drop = FALSE) { 
   res <- NextMethod() 
   
