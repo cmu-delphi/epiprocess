@@ -117,7 +117,11 @@ new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
   if (!is.data.frame(x)) {
     Abort("`x` must be a data frame.")
   }
-  
+    
+  if (!is.list(additional_metadata)) {
+    Abort("`additional_metadata` must be a list type.")
+  }
+
   # If geo type is missing, then try to guess it
   if (missing(geo_type)) {
     geo_type = guess_geo_type(x$geo_value)
@@ -230,7 +234,7 @@ new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
 #' 
 #' ex2 <- ex2_input %>% dplyr::rename(geo_value = state, time_value = reported_date) %>%
 #'   as_epi_df(geo_type = "state", as_of = "2020-06-03", 
-#'             additional_metadata = c(other_keys = "pol"))
+#'             additional_metadata = list(other_keys = "pol")) 
 #' 
 #' attr(ex2,"metadata")
 #' 
@@ -244,8 +248,10 @@ new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
 #' 
 #' ex3 <- ex3_input %>% 
 #'   tsibble::as_tsibble() %>% # needed to add the additional metadata
-#'   dplyr::mutate(state = rep("MA",6)) %>%
-#'   as_epi_df(additional_metadata = c(other_keys = "state"))
+#'   dplyr::mutate(
+#'     state = rep("MA",6),
+#'     pol = rep(c("blue", "swing", "swing"), each = 2)) %>% # 2 extra keys
+#'   as_epi_df(additional_metadata = list(other_keys = "state", "pol")) %>%
 #' 
 #' attr(ex3,"metadata")
 as_epi_df = function(x, ...) {
