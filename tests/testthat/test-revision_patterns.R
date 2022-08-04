@@ -90,5 +90,11 @@ test_that("testing adding 7 day avg and target", {
   #     target_date: the date ref_lag days after the reference date
   expect_equal(dim(df_new)[2], 3 + 1 + 1 + 1 + 1 + 1)
   expect_equal(dim(df_new)[1], 7 * 8)
+  
+  # Same check with non-standard value field name
+  backfill_df <- rename(backfill_df, new_val_field = value_raw)
+  df_new <- add_7davs_and_target(backfill_df, "new_val_field", refd_col, lag_col, ref_lag)
+  
+  expect_equal(dim(df_new)[2], 3 + 1 + 1 + 1 + 1 + 1)
+  expect_equal(dim(df_new)[1], 7 * 8)
 })
-

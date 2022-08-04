@@ -125,6 +125,7 @@ add_shift <- function(df, n_day, refd_col){
 #' @param ref_lag target lag
 #' 
 #' @importFrom tidyr pivot_wider
+#' @importFrom rlang .env
 #'
 #' @export
 add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag){
@@ -148,7 +149,7 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag){
   # Add target
   target_df <- df[df$lag==ref_lag, ] %>%
     select(c(refd_col, value_col, "issue_date")) %>%
-    rename(value_target = "value_raw", target_date = issue_date)
+    rename(value_target = .env$value_col, target_date = issue_date)
   
   backfill_df <- merge(backfill_df, target_df, by=refd_col, all.x=TRUE)
   
