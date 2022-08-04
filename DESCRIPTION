@@ -37,7 +37,8 @@ Imports:
     tidyr,
     tidyselect,
     tsibble,
-    utils
+    utils,
+    zoo
 Suggests:
     covidcast,
     delphi.epidata,
