@@ -51,9 +51,9 @@ examples.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{as_epi_df(epi_df)}: Simply returns the \code{epi_df} object unchanged.
+\item \code{epi_df}: Simply returns the \code{epi_df} object unchanged.
 
-\item \code{as_epi_df(tbl_df)}: The input tibble \code{x} must contain the columns
+\item \code{tbl_df}: The input tibble \code{x} must contain the columns
 \code{geo_value} and \code{time_value}. All other columns will be preserved as is,
 and treated as measured variables. If \code{as_of} is missing, then the function
 will try to guess it from an \code{as_of}, \code{issue}, or \code{version} column of \code{x}
@@ -61,14 +61,14 @@ will try to guess it from an \code{as_of}, \code{issue}, or \code{version} colum
 (stored in its attributes); if this fails, then the current day-time will
 be used.
 
-\item \code{as_epi_df(data.frame)}: Works analogously to \code{as_epi_df.tbl_df()}.
+\item \code{data.frame}: Works analogously to \code{as_epi_df.tbl_df()}.
 
-\item \code{as_epi_df(tbl_ts)}: Works analogously to \code{as_epi_df.tbl_df()}, except that
+\item \code{tbl_ts}: Works analogously to \code{as_epi_df.tbl_df()}, except that
 the \code{tbl_ts} class is dropped, and any key variables (other than
 "geo_value") are added to the metadata of the returned object, under the
 \code{other_keys} field.
-
 }}
+
 \examples{
 # Convert a `tsibble` that has county code as an extra key
 # Notice that county code should be a character string to preserve any leading zeroes
@@ -109,7 +109,7 @@ print(ex2_input)
 
 ex2 <- ex2_input \%>\% dplyr::rename(geo_value = state, time_value = reported_date) \%>\%
   as_epi_df(geo_type = "state", as_of = "2020-06-03", 
-            additional_metadata = c(other_keys = "pol"))
+            additional_metadata = list(other_keys = "pol")) 
 
 attr(ex2,"metadata")
 
@@ -123,8 +123,10 @@ ex3_input <- jhu_csse_county_level_subset \%>\%
 
 ex3 <- ex3_input \%>\% 
   tsibble::as_tsibble() \%>\% # needed to add the additional metadata
-  dplyr::mutate(state = rep("MA",6)) \%>\%
-  as_epi_df(additional_metadata = c(other_keys = "state"))
+  dplyr::mutate(
+    state = rep("MA",6),
+    pol = rep(c("blue", "swing", "swing"), each = 2)) \%>\% # 2 extra keys
+  as_epi_df(additional_metadata = list(other_keys = "state", "pol")) 
 
 attr(ex3,"metadata")
 }

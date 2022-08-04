@@ -180,7 +180,7 @@ head(ex2)
 
 ex2 <- ex2 %>% rename(geo_value = state, time_value = reported_date) %>%
   as_epi_df(geo_type = "state", as_of = "2020-06-03", 
-            additional_metadata = c(other_keys = "pol"))
+            additional_metadata = list(other_keys = "pol"))
 
 attr(ex2,"metadata")
 ```
@@ -206,7 +206,7 @@ Now we add state (MA) as a new column and a key to the metadata. Reminder that l
 ex3 <- ex3 %>% 
   as_tibble() %>% # needed to add the additional metadata
   mutate(state = rep(tolower("MA"),6)) %>%
-  as_epi_df(additional_metadata = c(other_keys = "state"))
+  as_epi_df(additional_metadata = list(other_keys = "state"))
 
 attr(ex3,"metadata")
 ```
