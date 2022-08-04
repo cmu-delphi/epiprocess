@@ -136,18 +136,19 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag){
   
   # Add 7dav avg
   avg_df <- get_7dav(pivot_df, refd_col)
-  avg_df <- add_shift(avg_df, 1, refd_col) # 7dav until yesterday
-  names(avg_df)[names(avg_df) == 'value_raw'] <- 'value_7dav'
-  avg_df_prev7 <- add_shift(avg_df, 7, refd_col)
-  names(avg_df_prev7)[names(avg_df_prev7) == 'value_7dav'] <- 'value_prev_7dav'
-  
-  backfill_df <- Reduce(function(x, y) merge(x, y, all=TRUE), 
+  # 7dav until yesterday
+  avg_df <- add_shift(avg_df, 1, refd_col) %>%
+    rename(value_7dav = value_raw)
+  avg_df_prev7 <- add_shift(avg_df, 7, refd_col) %>%
+    rename(value_prev_7dav = value_7dav)
+
+  backfill_df <- Reduce(function(x, y) merge(x, y, all=TRUE),
                         list(df, avg_df, avg_df_prev7))
-  
+
   # Add target
-  target_df <- df[df$lag==ref_lag, ] %>% select(c(refd_col, "value_raw", "issue_date"))
-  names(target_df)[names(target_df) == 'value_raw'] <- 'value_target'
-  names(target_df)[names(target_df) == 'issue_date'] <- 'target_date'
+  target_df <- df[df$lag==ref_lag, ] %>%
+    select(c(refd_col, value_col, "issue_date")) %>%
+    rename(value_target = "value_raw", target_date = issue_date)
   
   backfill_df <- merge(backfill_df, target_df, by=refd_col, all.x=TRUE)
   
