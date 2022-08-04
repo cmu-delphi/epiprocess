@@ -2,7 +2,7 @@
 % Please edit documentation in R/revision_patterns.R
 \name{add_shift}
 \alias{add_shift}
-\title{Used for data shifting in terms of reference date}
+\title{Shift reference dates by \code{n} days, keeping all other columns the same.}
 \usage{
 add_shift(df, n_day, refd_col)
 }
@@ -10,10 +10,11 @@ add_shift(df, n_day, refd_col)
 \item{df}{Data Frame of aggregated counts within a single location
 reported for each reference date and issue date.}
 
-\item{n_day}{number of days to be shifted}
+\item{n_day}{number of days to be shifted. A positive value corresponds to
+a shift forward in time, negative shifts dates backwards in time.}
 
 \item{refd_col}{column name for the column of reference date}
 }
 \description{
-Used for data shifting in terms of reference date
+Shift reference dates by \code{n} days, keeping all other columns the same.
 }

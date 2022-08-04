@@ -11,7 +11,12 @@
 ### library(dyplr)
 ### library(tidyverse)
 
-#' Re-index, fill na, make sure all reference date have enough rows for updates
+#' Create empty obs for every sequentially missing date-lag combo
+#'
+#' Make sure all reference date have enough rows for updates. Re-index
+#' dataframe to insert a row for each missing date between `min_refd`
+#' and `max_refd` for every requested lag from 1 to `ref_lag`, filling with `NA`.
+#'
 #' @param df Data Frame of aggregated counts within a single location 
 #'    reported for each reference date and issue date.
 #' @param refd_col column name for the column of reference date
@@ -21,6 +26,8 @@
 #' @param ref_lag the maximum lag value through which to complete
 #' 
 #' @return df_new Data Frame with filled rows for missing lags
+#'
+#' @importFrom tidyr crossing
 #' 
 #' @export
 fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag){
@@ -33,17 +40,21 @@ fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag){
   return (df_new)
 }
 
-#' Get pivot table, filling NAs. If there is no update on issue date \eqn{D} but 
-#' previous reports exist for issue date \eqn{D_p} < \eqn{D}, all the dates between
-#' \eqn{[D_p, D]} are filled with with the reported value on date \eqn{D_p}. If there is 
-#' no update for any previous issue date, fill in with 0.
+#' Perform LOCF to fill missing values in issues
+#'
+#' Perform LOCF to fill `NA`s if a group is missing from an issue but was
+#' previously available. If there is no update on issue date \eqn{D} but
+#' previous reports exist for issue date \eqn{D_p} < \eqn{D}, all the dates
+#' between \eqn{[D_p, D]} are filled with the value reported on date \eqn{D_p}.
+#' If there is no update for any previous issue date, fill in with 0.
+#'
 #' @param df Data Frame of aggregated counts within a single location 
 #'    reported for each reference date and issue date.
 #' @param value_col column name for the column of counts
 #' @param refd_col column name for the column of reference date
 #' @param lag_col column name for the column of lag
 #' 
-#' @importFrom tidyr fill
+#' @importFrom tidyr fill pivot_wider pivot_longer
 #' @importFrom dplyr everything select
 #' 
 #' @export
@@ -60,12 +71,16 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
 }
 
 #' Calculate 7 day moving average for each issue date
-#' The 7dav for date \eqn{D} reported on issue date \eqn{D_i} is the average from \eqn{D-7} to \eqn{D-1}
+#'
+#' The 7-day average for date \eqn{D} reported on issue date \eqn{D_i} uses data
+#' from \eqn{D-7} to \eqn{D-1}.
+#'
 #' @param pivot_df Data Frame where the columns are issue dates and the rows are 
 #'    reference dates
 #' @param refd_col column name for the column of reference date
 #' 
 #' @importFrom zoo rollmeanr
+#' @importFrom tidyr pivot_longer
 #' 
 #' @export
 get_7dav <- function(pivot_df, refd_col){
@@ -80,11 +95,12 @@ get_7dav <- function(pivot_df, refd_col){
   return (as.data.frame(backfill_df))
 }
 
-#' Used for data shifting in terms of reference date
+#' Shift reference dates by `n` days, keeping all other columns the same.
 #' 
 #' @param df Data Frame of aggregated counts within a single location 
 #'    reported for each reference date and issue date.
-#' @param n_day number of days to be shifted
+#' @param n_day number of days to be shifted. A positive value corresponds to
+#'     a shift forward in time, negative shifts dates backwards in time.
 #' @param refd_col column name for the column of reference date
 #' 
 #' @export
@@ -93,8 +109,14 @@ add_shift <- function(df, n_day, refd_col){
   return (df)
 }
 
-#' Add 7dav and target to the data
-#' Target is the updates made ref_lag days after the first release
+#' Add 7-day moving average and prediction target to a dataframe
+#'
+#' Each row must be uniquely identified by a reference date + lag combination.
+#' Issue dates are not required and are regenerated from the reference date and
+#' lag fields.
+#'
+#' Targets are updates made `ref_lag` days after the first release.
+#'
 #' @param df Data Frame of aggregated counts within a single location 
 #'    reported for each reference date and issue date.
 #' @param value_col column name for the column of raw value
@@ -102,6 +124,8 @@ add_shift <- function(df, n_day, refd_col){
 #' @param lag_col column name for the column of lag
 #' @param ref_lag target lag
 #' 
+#' @importFrom tidyr pivot_wider
+#'
 #' @export
 add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag){
   

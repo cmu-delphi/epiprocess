@@ -2,8 +2,7 @@
 % Please edit documentation in R/revision_patterns.R
 \name{get_7dav}
 \alias{get_7dav}
-\title{Calculate 7 day moving average for each issue date
-The 7dav for date \eqn{D} reported on issue date \eqn{D_i} is the average from \eqn{D-7} to \eqn{D-1}}
+\title{Calculate 7 day moving average for each issue date}
 \usage{
 get_7dav(pivot_df, refd_col)
 }
@@ -14,6 +13,6 @@ reference dates}
 \item{refd_col}{column name for the column of reference date}
 }
 \description{
-Calculate 7 day moving average for each issue date
-The 7dav for date \eqn{D} reported on issue date \eqn{D_i} is the average from \eqn{D-7} to \eqn{D-1}
+The 7-day average for date \eqn{D} reported on issue date \eqn{D_i} uses data
+from \eqn{D-7} to \eqn{D-1}.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/revision_patterns.R
 \name{fill_rows}
 \alias{fill_rows}
-\title{Re-index, fill na, make sure all reference date have enough rows for updates}
+\title{Create empty obs for every sequentially missing date-lag combo}
 \usage{
 fill_rows(df, refd_col, lag_col, min_refd, max_refd, ref_lag)
 }
@@ -24,5 +24,7 @@ reported for each reference date and issue date.}
 df_new Data Frame with filled rows for missing lags
 }
 \description{
-Re-index, fill na, make sure all reference date have enough rows for updates
+Make sure all reference date have enough rows for updates. Re-index
+dataframe to insert a row for each missing date between \code{min_refd}
+and \code{max_refd} for every requested lag from 1 to \code{ref_lag}, filling with \code{NA}.
 }

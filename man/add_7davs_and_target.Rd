@@ -2,8 +2,7 @@
 % Please edit documentation in R/revision_patterns.R
 \name{add_7davs_and_target}
 \alias{add_7davs_and_target}
-\title{Add 7dav and target to the data
-Target is the updates made ref_lag days after the first release}
+\title{Add 7-day moving average and prediction target to a dataframe}
 \usage{
 add_7davs_and_target(df, value_col, refd_col, lag_col, ref_lag)
 }
@@ -20,6 +19,10 @@ reported for each reference date and issue date.}
 \item{ref_lag}{target lag}
 }
 \description{
-Add 7dav and target to the data
-Target is the updates made ref_lag days after the first release
+Each row must be uniquely identified by a reference date + lag combination.
+Issue dates are not required and are regenerated from the reference date and
+lag fields.
+}
+\details{
+Targets are updates made \code{ref_lag} days after the first release.
 }

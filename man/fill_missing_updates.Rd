@@ -2,10 +2,7 @@
 % Please edit documentation in R/revision_patterns.R
 \name{fill_missing_updates}
 \alias{fill_missing_updates}
-\title{Get pivot table, filling NAs. If there is no update on issue date \eqn{D} but
-previous reports exist for issue date \eqn{D_p} < \eqn{D}, all the dates between
-\eqn{[D_p, D]} are filled with with the reported value on date \eqn{D_p}. If there is
-no update for any previous issue date, fill in with 0.}
+\title{Perform LOCF to fill missing values in issues}
 \usage{
 fill_missing_updates(df, value_col, refd_col, lag_col)
 }
@@ -20,8 +17,9 @@ reported for each reference date and issue date.}
 \item{lag_col}{column name for the column of lag}
 }
 \description{
-Get pivot table, filling NAs. If there is no update on issue date \eqn{D} but
-previous reports exist for issue date \eqn{D_p} < \eqn{D}, all the dates between
-\eqn{[D_p, D]} are filled with with the reported value on date \eqn{D_p}. If there is
-no update for any previous issue date, fill in with 0.
+Perform LOCF to fill \code{NA}s if a group is missing from an issue but was
+previously available. If there is no update on issue date \eqn{D} but
+previous reports exist for issue date \eqn{D_p} < \eqn{D}, all the dates
+between \eqn{[D_p, D]} are filled with the value reported on date \eqn{D_p}.
+If there is no update for any previous issue date, fill in with 0.
 }
