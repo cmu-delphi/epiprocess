@@ -8,18 +8,21 @@
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
 #'   to apply a function or formula over a running window of `n` time steps
 #'   (where one time step is typically one day or one week; see details for more
-#'   explanation). If a function, `f` must take `x`, a data frame with the same
-#'   column names as the original object; followed by any number of named
-#'   arguments; and ending with `...`. If a formula, `f` can operate directly on
-#'   columns accessed via `.x$var`, as in `~ mean(.x$var)` to compute a mean of
-#'   a column `var` over a sliding window of `n` time steps.
+#'   explanation). If a function, `f` should take `x`, an `epi_df` with the same 
+#'   names as the non-grouping columns, followed by `g` to refer to the one row 
+#'   tibble with one column per grouping variable that identifies the group, 
+#'   and any number of named arguments (which will be taken from `...`). If a 
+#'   formula, `f` can operate directly on columns accessed via `.x$var`, as 
+#'   in `~ mean(.x$var)` to compute a mean of a column var over a sliding 
+#'   window of n time steps. As well, `.y` may be used in the formula to refer 
+#'   to the groupings that would be described by `g` if `f` was a function.
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation. See details.  
 #' @param n Number of time steps to use in the running window. For example, if
 #'   `n = 7`, one time step is one day, and the alignment is "right", then to
 #'   produce a value on January 7 we apply the given function or formula to data
-#'   in between January 1 and 7. Default is 7.
+#'   in between January 1 and 7.
 #' @param ref_time_values Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
 #'   window. If missing, then this will be set to all unique time values in the
@@ -84,7 +87,7 @@
 #'   tidy evaluation (first example, above), then the name for the new column is 
 #'   inferred from the given expression and overrides any name passed explicitly 
 #'   through the `new_col_name` argument.
-#' 
+#'   
 #' @importFrom lubridate days weeks
 #' @importFrom rlang .data .env !! enquo enquos sym
 #' @export
@@ -93,13 +96,17 @@
 #'   jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), n = 7, 
-#'             align = "right")
+#'             align = "right") %>% 
+#'   # rmv a nonessential var. to ensure new col is printed
+#'   dplyr::select(-death_rate_7d_av) 
 #'  
 #'  # slide a left-aligned 7-day average
 #'   jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), n = 7, 
-#'             align = "left")
+#'             align = "left") %>% 
+#'   # rmv a nonessential var. to ensure new col is printed
+#'   dplyr::select(-death_rate_7d_av) 
 #'  
 #'  # nested new columns
 #'  jhu_csse_daily_subset %>% 
@@ -107,7 +114,7 @@
 #'  epi_slide(a = data.frame(cases_2dav = mean(cases), 
 #'                           cases_2dma = mad(cases)),
 #'            n = 2, as_list_col = TRUE)
-epi_slide = function(x, f, ..., n = 7, ref_time_values,
+epi_slide = function(x, f, ..., n, ref_time_values,
                      align = c("right", "center", "left"), before, time_step, 
                      new_col_name = "slide_value", as_list_col = FALSE,
                      names_sep = "_", all_rows = FALSE) { 
@@ -121,7 +128,7 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
   # intersect with observed time values
   if (missing(ref_time_values)) {
     ref_time_values = unique(x$time_value)
-  }
+  } 
   else {
     ref_time_values = ref_time_values[ref_time_values %in%
                                       unique(x$time_value)] 
@@ -164,6 +171,10 @@ epi_slide = function(x, f, ..., n = 7, ref_time_values,
   time_range = range(unique(x$time_value))
   starts = in_range(ref_time_values - before_num, time_range)
   stops = in_range(ref_time_values + after_num, time_range)
+  
+  if( length(starts) == 0 || length(stops) == 0 ) { 
+    Abort("The starting and/or stopping times for sliding are out of bounds with respect to the range of times in your data. Check your settings for ref_time_values and align (and before, if specified).")
+  }
 
   # Symbolize new column name
   new_col = sym(new_col_name)

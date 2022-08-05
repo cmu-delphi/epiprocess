@@ -16,9 +16,10 @@ Authors@R: c(
     person("Jingjing", "Tang", role = "ctb"),
     person("Ryan", "Tibshirani", , "ryantibs@cmu.edu", role = c("aut", "cre"))
   )
-Description: This package introduces a common data structure for
-    epidemiological data sets measured over space and time, and offers
-    associated utilities to perform basic signal processing tasks.
+Description: This package introduces a common data structure for epidemiological
+    data reported by location and time, provides another data structure to
+    work with revisions to these data sets over time, and offers associated
+    utilities to perform basic signal processing tasks.
 License: MIT + file LICENSE
 Imports: 
     data.table,
@@ -38,7 +39,8 @@ Imports:
     tidyselect,
     tsibble,
     utils,
-    zoo
+    zoo,
+    vctrs
 Suggests:
     covidcast,
     delphi.epidata,
@@ -46,7 +48,9 @@ Suggests:
     knitr,
     outbreaks,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    waldo (>= 0.3.1),
+    withr
 VignetteBuilder: 
     knitr
 Remotes:

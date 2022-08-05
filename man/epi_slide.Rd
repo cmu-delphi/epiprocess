@@ -8,7 +8,7 @@ epi_slide(
   x,
   f,
   ...,
-  n = 7,
+  n,
   ref_time_values,
   align = c("right", "center", "left"),
   before,
@@ -25,11 +25,14 @@ epi_slide(
 \item{f}{Function or formula to slide over variables in \code{x}. To "slide" means
 to apply a function or formula over a running window of \code{n} time steps
 (where one time step is typically one day or one week; see details for more
-explanation). If a function, \code{f} must take \code{x}, a data frame with the same
-column names as the original object; followed by any number of named
-arguments; and ending with \code{...}. If a formula, \code{f} can operate directly on
-columns accessed via \code{.x$var}, as in \code{~ mean(.x$var)} to compute a mean of
-a column \code{var} over a sliding window of \code{n} time steps.}
+explanation). If a function, \code{f} should take \code{x}, an \code{epi_df} with the same
+names as the non-grouping columns, followed by \code{g} to refer to the one row
+tibble with one column per grouping variable that identifies the group,
+and any number of named arguments (which will be taken from \code{...}). If a
+formula, \code{f} can operate directly on columns accessed via \code{.x$var}, as
+in \code{~ mean(.x$var)} to compute a mean of a column var over a sliding
+window of n time steps. As well, \code{.y} may be used in the formula to refer
+to the groupings that would be described by \code{g} if \code{f} was a function.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
@@ -38,7 +41,7 @@ interpreted as an expression for tidy evaluation. See details.}
 \item{n}{Number of time steps to use in the running window. For example, if
 \code{n = 7}, one time step is one day, and the alignment is "right", then to
 produce a value on January 7 we apply the given function or formula to data
-in between January 1 and 7. Default is 7.}
+in between January 1 and 7.}
 
 \item{ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
@@ -125,13 +128,17 @@ through the \code{new_col_name} argument.
   jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), n = 7, 
-            align = "right")
+            align = "right") \%>\% 
+  # rmv a nonessential var. to ensure new col is printed
+  dplyr::select(-death_rate_7d_av) 
  
  # slide a left-aligned 7-day average
   jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), n = 7, 
-            align = "left")
+            align = "left") \%>\% 
+  # rmv a nonessential var. to ensure new col is printed
+  dplyr::select(-death_rate_7d_av) 
  
  # nested new columns
  jhu_csse_daily_subset \%>\% 

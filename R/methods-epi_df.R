@@ -26,7 +26,8 @@ as_tsibble.epi_df = function(x, key, ...) {
 #' @method print epi_df
 #' @export
 print.epi_df = function(x, ...) {
-  cat("An `epi_df` object, with metadata:\n")
+  cat("An `epi_df` object,", prettyNum(nrow(x),","), "x",
+      prettyNum(ncol(x),","), "with metadata:\n")
   cat(sprintf("* %-9s = %s\n", "geo_type", attributes(x)$metadata$geo_type))
   cat(sprintf("* %-9s = %s\n", "time_type", attributes(x)$metadata$time_type))
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(x)$metadata$as_of))
@@ -62,20 +63,30 @@ summary.epi_df = function(object, ...) {
                          dplyr::summarize(mean(.data$num)))))
 }
 
-#' @method head epi_df
-#' @importFrom utils head
 #' @export
-#' @noRd
-head.epi_df = function(x, ...) {
-  head(tibble::as_tibble(x), ...)
-}
-
-#' @method tail epi_df
-#' @importFrom utils tail
-#' @export
-#' @noRd
-tail.epi_df = function(x, ...) {
-  tail(tibble::as_tibble(x), ...)
+`[.epi_df` <- function(x, i, j, drop = FALSE) { 
+  res <- NextMethod() 
+  
+  if (!is.data.frame(res)) return(res)
+  
+  if (missing(i)) {
+    i <- NULL
+    i_arg <- NULL
+  } 
+  
+  if (missing(j)) {
+    j <- NULL
+    j_arg <- NULL
+  } 
+  
+  cn <- names(res)
+  nr <- vctrs::vec_size(x) 
+  not_epi_df <- (!("time_value" %in% cn) || !("geo_value" %in% cn) || vctrs::vec_size(res) > nr || any(i > nr))
+  
+  if (not_epi_df) return(tibble::as_tibble(res))
+  
+  # Use reclass as safeguard (in case class & metadata are dropped)
+  reclass(res, attr(x, "metadata"))
 }
 
 #' `dplyr` verbs
