@@ -126,7 +126,7 @@ ex3 <- ex3_input \%>\%
   dplyr::mutate(
     state = rep("MA",6),
     pol = rep(c("blue", "swing", "swing"), each = 2)) \%>\% # 2 extra keys
-  as_epi_df(additional_metadata = list(other_keys = "state", "pol")) 
+  as_epi_df(additional_metadata = list(other_keys = c("state", "pol")))
 
 attr(ex3,"metadata")
 }

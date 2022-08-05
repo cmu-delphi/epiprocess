@@ -251,7 +251,7 @@ new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
 #'   dplyr::mutate(
 #'     state = rep("MA",6),
 #'     pol = rep(c("blue", "swing", "swing"), each = 2)) %>% # 2 extra keys
-#'   as_epi_df(additional_metadata = list(other_keys = "state", "pol")) 
+#'   as_epi_df(additional_metadata = list(other_keys = c("state", "pol")))
 #' 
 #' attr(ex3,"metadata")
 as_epi_df = function(x, ...) {
