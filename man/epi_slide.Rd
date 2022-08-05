@@ -8,7 +8,7 @@ epi_slide(
   x,
   f,
   ...,
-  before = 0,
+  before,
   after = 0,
   ref_time_values,
   time_step,

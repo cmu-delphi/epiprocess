@@ -9,6 +9,16 @@ edf = dplyr::bind_rows(
 f = function(x, ...) dplyr::tibble(value=mean(x$value), count=length(x$value))
 
 ## --- These cases generate the error: ---
+test_that("`after` must be defined as a non-zero integer if `before` is missing", {
+  expect_error(edf %>% group_by(geo_value) %>% epi_slide(f, after = 0L, ref_time_values=as.Date("2020-01-01")),
+               "`before` cannot be missing when `after` is set to 0.")
+})
+
+test_that({
+  expect_warning(edf %>% group_by(geo_value) %>% epi_slide(f, after = 1L, ref_time_values=as.Date("2020-01-01")+1L),
+                 "`before` missing but `after` nonzero; `before` has been set to 0.")
+})
+
 test_that("`ref_time_values` + `align` that result in no slide data, generate the error", {
   expect_error(edf %>% group_by(geo_value) %>% epi_slide(f, before=2L, ref_time_values=as.Date("2020-01-01")), 
                "starting and/or stopping times for sliding are out of bounds") # before the first, no data in the slide windows

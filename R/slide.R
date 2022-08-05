@@ -102,10 +102,11 @@
 #'  epi_slide(a = data.frame(cases_2dav = mean(cases), 
 #'                           cases_2dma = mad(cases)),
 #'            before = 1, as_list_col = TRUE)
-epi_slide = function(x, f, ..., before = 0, after = 0, ref_time_values,
+epi_slide = function(x, f, ..., before, after = 0, ref_time_values,
                      time_step, 
                      new_col_name = "slide_value", as_list_col = FALSE,
                      names_sep = "_", all_rows = FALSE) { 
+ 
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
   
@@ -120,6 +121,18 @@ epi_slide = function(x, f, ..., before = 0, after = 0, ref_time_values,
   else {
     ref_time_values = ref_time_values[ref_time_values %in%
                                       unique(x$time_value)] 
+  }
+  
+  # Before cannot be missing if after is set to 0. If after is set to a nonzero
+  # number, then before must be set to 0
+  if (missing(before)) {
+    if (after == 0) {
+      Abort("`before` cannot be missing when `after` is set to 0.")
+    } else {
+      Warn("`before` missing but `after` nonzero;
+           `before` has been set to 0.")
+      before = 0 
+    }
   }
   
   # Otherwise set up alignment based on passed before value
