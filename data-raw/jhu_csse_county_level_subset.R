@@ -1,4 +1,4 @@
-library(delphi.epidata)
+library(epidatr)
 library(covidcast)
 library(epiprocess)
 library(dplyr)
