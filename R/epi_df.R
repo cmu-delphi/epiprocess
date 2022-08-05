@@ -105,8 +105,9 @@ NULL
 #'   then the current day-time will be used.
 #' @param additional_metadata List of additional metadata to attach to the
 #'   `epi_df` object. The metadata will have `geo_type`, `time_type`, and
-#'   `as_of` fields; named entries from the passed list or will be included as
-#'   well.
+#'   `as_of` fields; named entries from the passed list will be included as
+#'   well. If your tibble has additional keys, be sure to specify them as a
+#'   character vector in the `other_keys` component of `additional_metadata`. 
 #' @param ... Additional arguments passed to methods.
 #' @return An `epi_df` object.
 #' 
@@ -117,7 +118,11 @@ new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
   if (!is.data.frame(x)) {
     Abort("`x` must be a data frame.")
   }
-  
+    
+  if (!is.list(additional_metadata)) {
+    Abort("`additional_metadata` must be a list type.")
+  }
+
   # If geo type is missing, then try to guess it
   if (missing(geo_type)) {
     geo_type = guess_geo_type(x$geo_value)
@@ -184,8 +189,9 @@ new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
 #'   then the current day-time will be used.
 #' @param additional_metadata List of additional metadata to attach to the
 #'   `epi_df` object. The metadata will have `geo_type`, `time_type`, and
-#'   `as_of` fields; named entries from the passed list or will be included as
-#'   well.
+#'   `as_of` fields; named entries from the passed list will be included as
+#'   well. If your tibble has additional keys, be sure to specify them as a
+#'   character vector in the `other_keys` component of `additional_metadata`.
 #' @param ... Additional arguments passed to methods.
 #' @return An `epi_df` object.
 #'
@@ -230,7 +236,7 @@ new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
 #' 
 #' ex2 <- ex2_input %>% dplyr::rename(geo_value = state, time_value = reported_date) %>%
 #'   as_epi_df(geo_type = "state", as_of = "2020-06-03", 
-#'             additional_metadata = c(other_keys = "pol"))
+#'             additional_metadata = list(other_keys = "pol")) 
 #' 
 #' attr(ex2,"metadata")
 #' 
@@ -244,8 +250,13 @@ new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
 #' 
 #' ex3 <- ex3_input %>% 
 #'   tsibble::as_tsibble() %>% # needed to add the additional metadata
-#'   dplyr::mutate(state = rep("MA",6)) %>%
-#'   as_epi_df(additional_metadata = c(other_keys = "state"))
+#'   # add 2 extra keys
+#'   dplyr::mutate(
+#'     state = rep("MA",6),
+#'     pol = rep(c("blue", "swing", "swing"), each = 2)) %>% 
+#'   # the 2 extra keys we added have to be specified in the other_keys 
+#'   # component of additional_metadata.
+#'   as_epi_df(additional_metadata = list(other_keys = c("state", "pol")))
 #' 
 #' attr(ex3,"metadata")
 as_epi_df = function(x, ...) {
