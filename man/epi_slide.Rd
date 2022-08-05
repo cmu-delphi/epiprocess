@@ -8,7 +8,7 @@ epi_slide(
   x,
   f,
   ...,
-  n = 7,
+  n,
   ref_time_values,
   align = c("right", "center", "left"),
   before,
@@ -41,7 +41,7 @@ interpreted as an expression for tidy evaluation. See details.}
 \item{n}{Number of time steps to use in the running window. For example, if
 \code{n = 7}, one time step is one day, and the alignment is "right", then to
 produce a value on January 7 we apply the given function or formula to data
-in between January 1 and 7. Default is 7.}
+in between January 1 and 7.}
 
 \item{ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
@@ -107,16 +107,12 @@ incomplete windows) is therefore left up to the user, either through the
 specified function or formula \code{f}, or through post-processing.
 
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
-for example, as in:
+for example, as in:\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
+}
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
-}\if{html}{\out{</div>}}
-
-which would be equivalent to:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, ...) mean(x$cases), n = 7,
+which would be equivalent to:\preformatted{epi_slide(x, function(x, ...) mean(x$cases), n = 7,
           new_col_name = "cases_7dav")
-}\if{html}{\out{</div>}}
+}
 
 Thus, to be clear, when the computation is specified via an expression for
 tidy evaluation (first example, above), then the name for the new column is

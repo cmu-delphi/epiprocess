@@ -8,7 +8,7 @@ epix_slide(
   x,
   f,
   ...,
-  n = 7,
+  n,
   group_by,
   ref_time_values,
   time_step,
@@ -37,7 +37,7 @@ interpreted as an expression for tidy evaluation.}
 \item{n}{Number of time steps to use in the running window. For example, if
 \code{n = 7}, and one time step is one day, then to produce a value on January 7
 we apply the given function or formula to data in between January 1 and
-7. Default is 7.}
+7.}
 
 \item{group_by}{The variable(s) to group by before slide computation. If
 missing, then the keys in the underlying data table, excluding \code{time_value}
@@ -115,15 +115,11 @@ should never be used in place of \code{epi_slide()}, and only used when
 version-aware sliding is necessary (as it its purpose).
 
 Finally, this is simply a wrapper around the \code{slide()} method of the
-\code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:
+\code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:\preformatted{epix_slide(x, new_var = comp(old_var), n = 120)
+}
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epix_slide(x, new_var = comp(old_var), n = 120)
-}\if{html}{\out{</div>}}
-
-is equivalent to:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{x$slide(x, new_var = comp(old_var), n = 120)
-}\if{html}{\out{</div>}}
+is equivalent to:\preformatted{x$slide(x, new_var = comp(old_var), n = 120)
+}
 }
 \examples{
 # these dates are reference time points for the 3 day average sliding window
