@@ -26,7 +26,7 @@ on its [API documentation
 page](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
 
 ```{r, message = FALSE, warning = FALSE, eval=FALSE}
-library(delphi.epidata)
+library(epidatr)
 library(epiprocess)
 library(data.table)
 library(dplyr)
@@ -44,7 +44,7 @@ dv <- covidcast(
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-library(delphi.epidata)
+library(epidatr)
 library(epiprocess)
 library(data.table)
 library(dplyr)
@@ -64,7 +64,7 @@ has (at least) the following columns:
   the data for January 14, 2022 that were available one day later.
 
 As we can see from the above, the data frame returned by
-`delphi.epidata::covidcast()` has the columns required for the `epi_archive`
+`epidatr::covidcast()` has the columns required for the `epi_archive`
 format, with `issue` playing the role of `version`. We can now use
 `as_epi_archive()` to bring it into `epi_archive` format. For removal of
 redundant version updates in `as_epi_archive` using compactify, please refer
