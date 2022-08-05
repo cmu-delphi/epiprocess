@@ -109,8 +109,9 @@ then the current day-time will be used.</p></dd>
 <dt>additional_metadata</dt>
 <dd><p>List of additional metadata to attach to the
 <code>epi_df</code> object. The metadata will have <code>geo_type</code>, <code>time_type</code>, and
-<code>as_of</code> fields; named entries from the passed list or will be included as
-well.</p></dd>
+<code>as_of</code> fields; named entries from the passed list will be included as
+well. If your tibble has additional keys, be sure to specify them as a
+character vector in the <code>other_keys</code> component of <code>additional_metadata</code>.</p></dd>
 
 
 <dt>...</dt>
