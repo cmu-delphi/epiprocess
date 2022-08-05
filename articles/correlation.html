@@ -88,31 +88,31 @@
     
 <p>The <code>epiprocess</code> package provides some simple functionality for computing lagged correlations between two signals, over space or time (or other variables), via <code><a href="../reference/epi_cor.html">epi_cor()</a></code>. This function is really just a convenience wrapper over some basic commands: it first performs specified time shifts, then computes correlations, grouped in a specified way. In this vignette, we’ll examine correlations between state-level COVID-19 case and death rates, smoothed using 7-day trailing averages.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cmu-delphi/delphi-epidata-r" class="external-link">delphi.epidata</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cmu-delphi/delphi-epidata-r" class="external-link">epidatr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></code></pre></div>
 <p>The data is fetched with the following query:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/covidcast.html" class="external-link">covidcast</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/covidcast.html" class="external-link">covidcast</a></span><span class="op">(</span></span>
 <span>  data_source <span class="op">=</span> <span class="st">"jhu-csse"</span>,</span>
 <span>  signals <span class="op">=</span> <span class="st">"confirmed_7dav_incidence_prop"</span>,</span>
 <span>  time_type <span class="op">=</span> <span class="st">"day"</span>,</span>
 <span>  geo_type <span class="op">=</span> <span class="st">"state"</span>,</span>
-<span>  time_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200301</span>, <span class="fl">20211231</span><span class="op">)</span>,</span>
+<span>  time_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200301</span>, <span class="fl">20211231</span><span class="op">)</span>,</span>
 <span>  geo_values <span class="op">=</span> <span class="st">"ca,fl,ny,tx,ga,pa"</span></span>
 <span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/fetch_tbl.html" class="external-link">fetch_tbl</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/fetch_tbl.html" class="external-link">fetch_tbl</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, case_rate <span class="op">=</span> <span class="va">value</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/covidcast.html" class="external-link">covidcast</a></span><span class="op">(</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/covidcast.html" class="external-link">covidcast</a></span><span class="op">(</span></span>
 <span>  data_source <span class="op">=</span> <span class="st">"jhu-csse"</span>,</span>
 <span>  signals <span class="op">=</span> <span class="st">"deaths_7dav_incidence_prop"</span>,</span>
 <span>  time_type <span class="op">=</span> <span class="st">"day"</span>,</span>
 <span>  geo_type <span class="op">=</span> <span class="st">"state"</span>,</span>
-<span>  time_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200301</span>, <span class="fl">20211231</span><span class="op">)</span>,</span>
+<span>  time_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200301</span>, <span class="fl">20211231</span><span class="op">)</span>,</span>
 <span>  geo_values <span class="op">=</span> <span class="st">"ca,fl,ny,tx,ga,pa"</span></span>
 <span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/fetch_tbl.html" class="external-link">fetch_tbl</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/fetch_tbl.html" class="external-link">fetch_tbl</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, death_rate <span class="op">=</span> <span class="va">value</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>

@@ -88,7 +88,7 @@
     
 <p>Aggregation, both time-wise and geo-wise, are common tasks when working with epidemiological data sets. This vignette demonstrates how to carry out these kinds of tasks with <code>epi_df</code> objects. We’ll work with county-level reported COVID-19 cases in MA and VT.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cmu-delphi/delphi-epidata-r" class="external-link">delphi.epidata</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cmu-delphi/delphi-epidata-r" class="external-link">epidatr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/covidcast/covidcastR/" class="external-link">covidcast</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
@@ -99,15 +99,15 @@
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span>geo_value <span class="op">=</span> <span class="va">FIPS</span>, county_name <span class="op">=</span> <span class="va">CTYNAME</span>, state_name <span class="op">=</span> <span class="va">STNAME</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Fetch only counties from Massachusetts and Vermont, then append names columns as well</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/covidcast.html" class="external-link">covidcast</a></span><span class="op">(</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/covidcast.html" class="external-link">covidcast</a></span><span class="op">(</span></span>
 <span>  data_source <span class="op">=</span> <span class="st">"jhu-csse"</span>,</span>
 <span>  signals <span class="op">=</span> <span class="st">"confirmed_incidence_num"</span>,</span>
 <span>  time_type <span class="op">=</span> <span class="st">"day"</span>,</span>
 <span>  geo_type <span class="op">=</span> <span class="st">"county"</span>,</span>
-<span>  time_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20211231</span><span class="op">)</span>,</span>
+<span>  time_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20211231</span><span class="op">)</span>,</span>
 <span>  geo_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">y</span><span class="op">$</span><span class="va">geo_value</span>, collapse <span class="op">=</span> <span class="st">","</span><span class="op">)</span></span>
 <span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/delphi.epidata/man/fetch_tbl.html" class="external-link">fetch_tbl</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/fetch_tbl.html" class="external-link">fetch_tbl</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, cases <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">full_join</a></span><span class="op">(</span><span class="va">y</span>, by <span class="op">=</span> <span class="st">"geo_value"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
@@ -280,7 +280,7 @@
 <pre><code><span><span class="co">## An `epi_df` object, 4 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = custom</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2022-08-05 17:16:29</span></span>
+<span><span class="co">## * as_of     = 2022-08-05 23:17:26</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 4 × 4</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># Groups:   geo_value [1]</span></span></span>
@@ -301,7 +301,7 @@
 <pre><code><span><span class="co">## An `epi_df` object, 7 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = custom</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2022-08-05 17:16:30</span></span>
+<span><span class="co">## * as_of     = 2022-08-05 23:17:27</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 7 × 4</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># Groups:   geo_value [1]</span></span></span>
