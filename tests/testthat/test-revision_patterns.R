@@ -1,4 +1,3 @@
-library(jsonlite)
 library(testthat)
 library(dplyr)
 library(tidyr)
