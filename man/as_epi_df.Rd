@@ -40,8 +40,8 @@ then the current day-time will be used.}
 \item{additional_metadata}{List of additional metadata to attach to the
 \code{epi_df} object. The metadata will have \code{geo_type}, \code{time_type}, and
 \code{as_of} fields; named entries from the passed list will be included as
-well. If your tibble has additional keys, be sure to specify them
-in the \code{other_keys} component of \code{additional_metadata}.}
+well. If your tibble has additional keys, be sure to specify them as a
+character vector in the \code{other_keys} component of \code{additional_metadata}.}
 }
 \value{
 An \code{epi_df} object.

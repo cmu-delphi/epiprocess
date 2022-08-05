@@ -106,8 +106,8 @@ NULL
 #' @param additional_metadata List of additional metadata to attach to the
 #'   `epi_df` object. The metadata will have `geo_type`, `time_type`, and
 #'   `as_of` fields; named entries from the passed list will be included as
-#'   well. If your tibble has additional keys, be sure to specify them 
-#'   in the `other_keys` component of `additional_metadata`. 
+#'   well. If your tibble has additional keys, be sure to specify them as a
+#'   character vector in the `other_keys` component of `additional_metadata`. 
 #' @param ... Additional arguments passed to methods.
 #' @return An `epi_df` object.
 #' 
@@ -190,8 +190,8 @@ new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
 #' @param additional_metadata List of additional metadata to attach to the
 #'   `epi_df` object. The metadata will have `geo_type`, `time_type`, and
 #'   `as_of` fields; named entries from the passed list will be included as
-#'   well. If your tibble has additional keys, be sure to specify them 
-#'   in the `other_keys` component of `additional_metadata`.
+#'   well. If your tibble has additional keys, be sure to specify them as a
+#'   character vector in the `other_keys` component of `additional_metadata`.
 #' @param ... Additional arguments passed to methods.
 #' @return An `epi_df` object.
 #'
