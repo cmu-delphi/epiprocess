@@ -137,7 +137,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
     ),
     reference_by_modulus
   )
-  # test the default behavior (default in this case should just be "geo_value"):
+  # test the default behavior (default in this case should just be grouping by both):
   expect_message(
     result_wrapper_no_group_by <- epix_slide(x = ea,
                                              f = ~ mean(.x$case_rate_7d_av),
