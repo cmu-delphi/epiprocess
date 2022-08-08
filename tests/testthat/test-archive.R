@@ -65,19 +65,46 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(ea4$additional_metadata,list(value=df$value))
   
   # Keyed data.table
-  kdt <- 1
-  ea5 <- 1
+  kdt <- data.table::data.table(geo_value="ca",
+                                time_value=as.Date("2020-01-01"),
+                                version = as.Date("2020-01-01") + 0:19,
+                                value = 1:20,
+                                code = "CA",
+                                key = "code")
+  
+  ea5 <- as_epi_archive(kdt)
+  expect_equal(key(ea5$DT),c("geo_value","time_value","version")) # Key from data.table isn't absorbed
+  expect_equal(ea5$additional_metadata,list())
+  
+  ea6 <- as_epi_archive(kdt,other_keys="code",additional_metadata=list(value=df$value))
+  expect_equal(key(ea6$DT),c("geo_value","time_value","code","version"))
+  expect_equal(ea6$additional_metadata,list(value=df$value))
   
   # Unkeyed data.table
-  udt <- 2
-  ea6 <- 2
+  udt <- data.table::data.table(geo_value="ca",
+                                time_value=as.Date("2020-01-01"),
+                                version = as.Date("2020-01-01") + 0:19,
+                                value=1:20,
+                                code = "CA")
+  
+  ea7 <- as_epi_archive(udt)
+  expect_equal(key(ea7$DT),c("geo_value","time_value","version"))
+  expect_equal(ea7$additional_metadata,list())
+  
+  ea8 <- as_epi_archive(udt,other_keys="code",additional_metadata=list(value=df$value))
+  expect_equal(key(ea8$DT),c("geo_value","time_value","code","version"))
+  expect_equal(ea8$additional_metadata,list(value=df$value))
   
   #epi_df
   edf <- jhu_csse_daily_subset %>%
     select(geo_value,time_value,cases) %>%
-    mutate(version = max(time_value))
+    mutate(version = max(time_value), code = "USA")
   
-  ea7 <- as_epi_archive(edf)
-  expect_equal(key(ea7$DT),c("geo_value","time_value","version"))
-  expect_equal(ea7$additional_metadata,list())
+  ea9 <- as_epi_archive(edf)
+  expect_equal(key(ea9$DT),c("geo_value","time_value","version"))
+  expect_equal(ea9$additional_metadata,list())
+  
+  ea10 <- as_epi_archive(edf,other_keys="code",additional_metadata=list(value=df$value))
+  expect_equal(key(ea10$DT),c("geo_value","time_value","code","version"))
+  expect_equal(ea10$additional_metadata,list(value=df$value))
 })
