@@ -81,7 +81,7 @@ summary.epi_df = function(object, ...) {
   
   cn <- names(res)
   
-  # Duplicate key columns, Abort
+  # Duplicate columns, Abort
   dup_col_names = cn[duplicated(cn)]
   if (length(dup_col_names) != 0) {
     Abort(paste0("Column name(s) ", 
