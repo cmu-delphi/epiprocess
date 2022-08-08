@@ -73,11 +73,13 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
                                 key = "code")
   
   ea5 <- as_epi_archive(kdt)
-  expect_equal(key(ea5$DT),c("geo_value","time_value","version")) # Key from data.table isn't absorbed
+  # Key from data.table isn't absorbed when as_epi_archive is used
+  expect_equal(key(ea5$DT),c("geo_value","time_value","version")) 
   expect_equal(ea5$additional_metadata,list())
   
-  ea6 <- as_epi_archive(kdt,other_keys="code",additional_metadata=list(value=df$value))
-  expect_equal(key(ea6$DT),c("geo_value","time_value","code","version"))
+  ea6 <- as_epi_archive(kdt,other_keys="value",additional_metadata=list(value=df$value))
+  # Mismatched keys, but the one from as_epi_archive overrides
+  expect_equal(key(ea6$DT),c("geo_value","time_value","value","version"))
   expect_equal(ea6$additional_metadata,list(value=df$value))
   
   # Unkeyed data.table
@@ -95,7 +97,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(key(ea8$DT),c("geo_value","time_value","code","version"))
   expect_equal(ea8$additional_metadata,list(value=df$value))
   
-  #epi_df
+  # epi_df
   edf <- jhu_csse_daily_subset %>%
     select(geo_value,time_value,cases) %>%
     mutate(version = max(time_value), code = "USA")
