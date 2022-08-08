@@ -106,7 +106,7 @@ summary.epi_df = function(object, ...) {
   only_in_orig = setdiff(unlist(attr(x, "metadata")$other_keys), 
                          cn[!(cn %in% c("geo_value", "time_value"))]) 
   
-  if (length(only_orig) != 0) {
+  if (length(only_in_orig) != 0) {
     # remove all other_keys elements in the original epi_df that do not occur in subset
     attr(res, "metadata")$other_keys = 
       attr(res, "metadata")$other_keys[! attr(res, "metadata")$other_keys %in% only_in_orig]
