@@ -15,7 +15,7 @@ apply them to `epi_df` objects. We'll demonstrate this using state-level daily
 reported COVID-19 case counts from FL and NJ.
 
 ```{r, message = FALSE, eval= FALSE}
-library(delphi.epidata)
+library(epidatr)
 library(epiprocess)
 library(dplyr)
 library(tidyr)
@@ -37,7 +37,7 @@ x <- covidcast(
 The dataset has 730 rows and 3 columns.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-library(delphi.epidata)
+library(epidatr)
 library(epiprocess)
 library(dplyr)
 library(tidyr)

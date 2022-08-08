@@ -15,7 +15,7 @@ current vignette, applied to state-level daily reported COVID-19 cases from GA
 and PA, smoothed using a 7-day trailing average.
 
 ```{r, message = FALSE, warning = FALSE}
-library(delphi.epidata)
+library(epidatr)
 library(epiprocess)
 library(dplyr)
 library(tidyr)

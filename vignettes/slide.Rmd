@@ -26,11 +26,11 @@ in this vignette.
 
 As in getting started guide, we'll fetch daily reported COVID-19 cases from CA,
 FL, NY, and TX (note: here we're using new, not cumulative cases) using the
-[`delphi.epidata`](https://github.com/cmu-delphi/delphi-epidata-r) package,
+[`epidatr`](https://github.com/cmu-delphi/epidatr) package,
 and then convert this to `epi_df` format.
 
 ```{r, message = FALSE, warning=FALSE}
-library(delphi.epidata)
+library(epidatr)
 library(epiprocess)
 library(dplyr)
 ```
