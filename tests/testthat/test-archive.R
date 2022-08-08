@@ -39,6 +39,7 @@ test_that("Warning thrown when other_metadata contains overlapping names with ge
 })
 
 test_that("epi_archives are correctly instantiated with a variety of data types",{
+  # Data frame
   df <- data.frame(geo_value="ca",
                    time_value=as.Date("2020-01-01"),
                    version = as.Date("2020-01-01") + 0:19,
@@ -52,7 +53,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(key(ea2$DT),c("geo_value","time_value","value","version"))
   expect_equal(ea2$additional_metadata,list(value=df$value))
   
-  
+  # Tibble
   tib <- tibble::tibble(df, code="x")
   
   ea3 <- as_epi_archive(tib)
@@ -63,11 +64,20 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(key(ea4$DT),c("geo_value","time_value","code","version"))
   expect_equal(ea4$additional_metadata,list(value=df$value))
   
+  # Keyed data.table
+  kdt <- 1
+  ea5 <- 1
   
-  dt <- jhu_csse_daily_subset %>%
+  # Unkeyed data.table
+  udt <- 2
+  ea6 <- 2
+  
+  #epi_df
+  edf <- jhu_csse_daily_subset %>%
     select(geo_value,time_value,cases) %>%
     mutate(version = max(time_value))
   
-  ea5 <- as_epi_archive(dt)
-  
+  ea7 <- as_epi_archive(edf)
+  expect_equal(key(ea7$DT),c("geo_value","time_value","version"))
+  expect_equal(ea7$additional_metadata,list())
 })
