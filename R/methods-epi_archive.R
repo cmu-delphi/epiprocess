@@ -336,7 +336,12 @@ epix_merge = function(x, y,
   ))
 }
 
-#' Slide a function over variables in an `epi_archive` object
+#' @export
+group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_drop_default(.data)) {
+  .data$group_by(..., .add=.add, .drop=.drop)
+}
+
+#' Slide a function over variables in an `epi_archive` or `grouped_epi_archive`
 #'
 #' Slides a given function over variables in an `epi_archive` object. This
 #' behaves similarly to `epi_slide()`, with the key exception that it is
@@ -362,12 +367,6 @@ epix_merge = function(x, y,
 #'   `n = 7`, and one time step is one day, then to produce a value on January 7
 #'   we apply the given function or formula to data in between January 1 and
 #'   7.
-#' @param group_by `r lifecycle::badge("deprecated")` (Recommend using `%>%
-#'   group_by(<grouping vars>)` or `$group_by(<group vars>)` before sliding,
-#'   instead.) The variable(s) to group by before slide computation. If missing,
-#'   then the keys in the underlying data table, excluding `time_value` and
-#'   `version`, will be used for grouping. To omit a grouping entirely, use
-#'   `group_by = NULL`.
 #' @param ref_time_values Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
 #'   window. If missing, then this will be set to all unique time values in the
@@ -381,6 +380,12 @@ epix_merge = function(x, y,
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
+#' @param groups `r lifecycle::badge("experimental")` Optional; `.groups`
+#'   argument to [`dplyr::summarize`] used to control whether/how the slide
+#'   results are grouped before passing to the optional `as_list_col` and
+#'   `all_rows` steps; available choices as of dplyr 1.0.9 are `NULL` (default,
+#'   guessing what should be done), `"drop"`, `"keep"`, `"rowwise"`, and
+#'   `"drop_last"`.
 #' @param as_list_col Should the new column be stored as a list column? Default
 #'   is `FALSE`, in which case a list object returned by `f` would be unnested
 #'   (using `tidyr::unnest()`), and the names of the resulting columns are given
@@ -397,14 +402,11 @@ epix_merge = function(x, y,
 #'   column named according to the `new_col_name` argument, containing the slide
 #'   values.
 #'
-#' @details Two key distinctions between inputs to the current function and
+#' @details One key distinction between inputs to the current function and
 #'   `epi_slide()`:
 #'   1. `epix_slide()` uses windows that are **always right-aligned** (in
 #'   `epi_slide()`, custom alignments could be specified using the `align` or
 #'   `before` arguments).
-#'   2. `epix_slide()` uses a `group_by` to specify the grouping upfront (in
-#'   `epi_slide()`, this would be accomplished by a preceding function call to
-#'   `dplyr::group_by()`).
 #' Apart from this, the interfaces between `epix_slide()` and `epi_slide()` are
 #'   the same.
 #'
@@ -422,7 +424,8 @@ epix_merge = function(x, y,
 #'   version-aware sliding is necessary (as it its purpose).
 #'
 #' Finally, this is simply a wrapper around the `slide()` method of the
-#'   `epi_archive` class, so if `x` is an `epi_archive` object, then:
+#'   `epi_archive` and `grouped_epi_archive` classes, so if `x` is an
+#'   object of either of these classes, then:
 #'   ```
 #'   epix_slide(x, new_var = comp(old_var), n = 120)
 #'   ```
@@ -445,19 +448,18 @@ epix_merge = function(x, y,
 #'                        as.Date("2020-06-15"),
 #'                        by = "1 day")
 #'
-#' epix_slide(x = archive_cases_dv_subset,
-#'            f = ~ mean(.x$case_rate_7d_av),
-#'            n = 3,
-#'            group_by = geo_value,
-#'            ref_time_values = ref_time_values,
-#'            new_col_name = 'case_rate_3d_av')
+#' archive_cases_dv_subset %>%
+#'   group_by(geo_value) %>%
+#'   epix_slide(f = ~ mean(.x$case_rate_7d_av),
+#'              n = 3,
+#'              ref_time_values = ref_time_values,
+#'              new_col_name = 'case_rate_3d_av',
+#'              groups = "drop")
 #'
-#' @importFrom lifecycle deprecated
 #' @importFrom rlang enquo
 #' @export
 epix_slide = function(x, f, ..., n, ref_time_values,
                       time_step, new_col_name = "slide_value",
-                      group_by = deprecated(),
                       groups = NULL,
                       as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
   if (!is_epi_archive(x, grouped_okay=TRUE)) {
@@ -467,7 +469,6 @@ epix_slide = function(x, f, ..., n, ref_time_values,
                  ref_time_values = ref_time_values,
                  time_step = time_step,
                  new_col_name = new_col_name,
-                 group_by = {{ group_by }},
                  groups = groups,
                  as_list_col = as_list_col,
                  names_sep = names_sep,

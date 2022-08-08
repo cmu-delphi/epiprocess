@@ -2,7 +2,7 @@
 % Please edit documentation in R/methods-epi_archive.R
 \name{epix_slide}
 \alias{epix_slide}
-\title{Slide a function over variables in an \code{epi_archive} object}
+\title{Slide a function over variables in an \code{epi_archive} or \code{grouped_epi_archive}}
 \usage{
 epix_slide(
   x,
@@ -12,7 +12,6 @@ epix_slide(
   ref_time_values,
   time_step,
   new_col_name = "slide_value",
-  group_by = deprecated(),
   groups = NULL,
   as_list_col = FALSE,
   names_sep = "_",
@@ -55,11 +54,12 @@ would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 contain the derivative values. Default is "slide_value"; note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
 
-\item{group_by}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} (Recommend using \verb{\%>\% group_by(<grouping vars>)} or \verb{$group_by(<group vars>)} before sliding,
-instead.) The variable(s) to group by before slide computation. If missing,
-then the keys in the underlying data table, excluding \code{time_value} and
-\code{version}, will be used for grouping. To omit a grouping entirely, use
-\code{group_by = NULL}.}
+\item{groups}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} Optional; \code{.groups}
+argument to \code{\link[dplyr:summarise]{dplyr::summarize}} used to control whether/how the slide
+results are grouped before passing to the optional \code{as_list_col} and
+\code{all_rows} steps; available choices as of dplyr 1.0.9 are \code{NULL} (default,
+guessing what should be done), \code{"drop"}, \code{"keep"}, \code{"rowwise"}, and
+\code{"drop_last"}.}
 
 \item{as_list_col}{Should the new column be stored as a list column? Default
 is \code{FALSE}, in which case a list object returned by \code{f} would be unnested
@@ -90,15 +90,12 @@ performed on \strong{data that would have been available as of t}. See the
 examples.
 }
 \details{
-Two key distinctions between inputs to the current function and
+One key distinction between inputs to the current function and
 \code{epi_slide()}:
 \enumerate{
 \item \code{epix_slide()} uses windows that are \strong{always right-aligned} (in
 \code{epi_slide()}, custom alignments could be specified using the \code{align} or
 \code{before} arguments).
-\item \code{epix_slide()} uses a \code{group_by} to specify the grouping upfront (in
-\code{epi_slide()}, this would be accomplished by a preceding function call to
-\code{dplyr::group_by()}).
 Apart from this, the interfaces between \code{epix_slide()} and \code{epi_slide()} are
 the same.
 }
@@ -117,7 +114,8 @@ should never be used in place of \code{epi_slide()}, and only used when
 version-aware sliding is necessary (as it its purpose).
 
 Finally, this is simply a wrapper around the \code{slide()} method of the
-\code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:
+\code{epi_archive} and \code{grouped_epi_archive} classes, so if \code{x} is an
+object of either of these classes, then:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{epix_slide(x, new_var = comp(old_var), n = 120)
 }\if{html}{\out{</div>}}
@@ -141,11 +139,12 @@ ref_time_values <- seq(as.Date("2020-06-01"),
                        as.Date("2020-06-15"),
                        by = "1 day")
 
-epix_slide(x = archive_cases_dv_subset,
-           f = ~ mean(.x$case_rate_7d_av),
-           n = 3,
-           group_by = geo_value,
-           ref_time_values = time_values,
-           new_col_name = 'case_rate_3d_av')
+archive_cases_dv_subset \%>\%
+  group_by(geo_value) \%>\%
+  epix_slide(f = ~ mean(.x$case_rate_7d_av),
+             n = 3,
+             ref_time_values = ref_time_values,
+             new_col_name = 'case_rate_3d_av',
+             groups = "drop")
 
 }

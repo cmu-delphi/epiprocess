@@ -295,7 +295,6 @@ details.
   ref_time_values,
   time_step,
   new_col_name = "slide_value",
-  group_by = deprecated(),
   groups = NULL,
   as_list_col = FALSE,
   names_sep = "_",

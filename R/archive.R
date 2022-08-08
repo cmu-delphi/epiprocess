@@ -589,45 +589,29 @@ epi_archive =
           #' @importFrom lifecycle deprecated
           slide = function(f, ..., n, ref_time_values,
                            time_step, new_col_name = "slide_value",
-                           group_by = deprecated(),
+                           # We give the `epi_archive` a trivial (0-group-var)
+                           # grouping below, which is silently dropped in the
+                           # result using `groups=NULL` at time of writing. We
+                           # might want to ensure this by passing `groups =
+                           # "drop"` by default or removing this parameter
+                           # entirely, but that would necessitate some extra
+                           # work in `epix_slide`. Keep the interface&defaults
+                           # the same as `epix_slide` and grouped `$slide` for
+                           # now. Technically, this also provides extra
+                           # functionality, as it allows for `groups="rowwise"`.
                            groups = NULL,
                            as_list_col = FALSE, names_sep = "_",
                            all_rows = FALSE) {
-            group_by_quo = rlang::enquo(group_by)
-            grouped =
-              if (deprecated_quo_is_present(group_by_quo)) {
-                lifecycle::deprecate_warn(
-                  when = "1.0.0 dev",
-                  # lifecycle >= 1.0.1 to recognize R6 method in this format
-                  what = "epi_archive$slide(group_by)",
-                  details = paste("Please use `%>% group_by(<grouping vars>) %>% epix_slide(<args>)` or",
-                                  "`$group_by(<grouping vars>)$slide(<args>)` instead.")
-                )
-                self$group_by(!!group_by_quo)
-              } else {
-                guessed_group_vars = setdiff(key(self$DT), c("time_value", "version"))
-                rlang::inform(c(
-                  "i" = "Calling `$slide` on an (ungrouped) `epi_archive`; grouping by the",
-                  " " = "non-`time_value`, non-`version` key columns.",
-                  format_varnames(guessed_group_vars,
-                                  # add extra indentation past the text above:
-                                  common_prefix = "-> Group vars: ",
-                                  # subtract out rlang message
-                                  # indentation from available width:
-                                  width = getOption("width", 80L) - 2L) %>%
-                    stats::setNames(rep(" ", length(.))),
-                  " " = 'To override or muffle, manually `group_by` first.  "Ungrouped" slides',
-                  " " = 'are possible by specifying zero grouping columns (e.g., `group_by(c())`),',
-                  " " = 'indicating to use a single group containing all data.'
-                ), class="epiprocess__epix_slide_on_ungrouped_epi_archive")
-                self$group_by(tidyselect::all_of(guessed_group_vars))
-              }
-            grouped$slide(f, ...,
-                          n = n, ref_time_values = ref_time_values,
-                          time_step = time_step, new_col_name = new_col_name,
-                          as_list_col = as_list_col, names_sep = names_sep,
-                          all_rows = all_rows,
-                          groups = groups)
+            # For an "ungrouped" slide, treat all rows as belonging to one big
+            # group (group by 0 vars), like `dplyr::summarize`:
+            self$group_by()$slide(
+              f, ...,
+              n = n, ref_time_values = ref_time_values,
+              time_step = time_step, new_col_name = new_col_name,
+              groups = groups,
+              as_list_col = as_list_col, names_sep = names_sep,
+              all_rows = all_rows
+            )
           }
         )
       )

@@ -69,24 +69,25 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
                         dplyr::mutate(modulus = seq_len(nrow(.)) %% 5L),
                       other_keys = "modulus",
                       compactify = TRUE)
-  reference_by_modulus = epix_slide(x = ea,
-                                      f = ~ mean(.x$case_rate_7d_av),
-                                      n = 3,
-                                      group_by = modulus,
-                                      ref_time_values = time_values,
-                                      new_col_name = 'case_rate_3d_av')
-  reference_by_both = epix_slide(x = ea,
-                                 f = ~ mean(.x$case_rate_7d_av),
-                                 n = 3,
-                                 group_by = c(geo_value, modulus),
-                                 ref_time_values = time_values,
-                                 new_col_name = 'case_rate_3d_av')
+  reference_by_modulus =
+    ea %>%
+    group_by(modulus) %>%
+    epix_slide(f = ~ mean(.x$case_rate_7d_av),
+               n = 3,
+               ref_time_values = time_values,
+               new_col_name = 'case_rate_3d_av')
+    reference_by_neither =
+      ea %>%
+      group_by() %>%
+      epix_slide(f = ~ mean(.x$case_rate_7d_av),
+                 n = 3,
+                 ref_time_values = time_values,
+                 new_col_name = 'case_rate_3d_av')
   # test the passing-something-that-must-be-enquosed behavior:
   expect_identical(
-    ea$slide(
+    ea$group_by(modulus)$slide(
       f = ~ mean(.x$case_rate_7d_av),
       n = 3,
-      group_by = modulus,
       ref_time_values = time_values,
       new_col_name = 'case_rate_3d_av'
     ),
@@ -94,7 +95,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   )
   # test the passing-string-literal behavior:
   expect_identical(
-    epix_slide(x = ea,
+    epix_slide(x = ea %>% group_by("modulus"),
                f = ~ mean(.x$case_rate_7d_av),
                n = 3,
                group_by = "modulus",
@@ -103,10 +104,9 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
     reference_by_modulus
   )
   expect_identical(
-    ea$slide(
+    ea$group_by("modulus")$slide(
       f = ~ mean(.x$case_rate_7d_av),
       n = 3,
-      group_by = "modulus",
       ref_time_values = time_values,
       new_col_name = 'case_rate_3d_av'
     ),
@@ -119,42 +119,38 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   # test the passing-all-of-string-var behavior:
   my_group_by = "modulus"
   expect_identical(
-    epix_slide(x = ea,
+    epix_slide(x = ea %>% group_by(tidyselect::all_of(my_group_by)),
                f = ~ mean(.x$case_rate_7d_av),
                n = 3,
-               group_by = tidyselect::all_of(my_group_by),
                ref_time_values = time_values,
                new_col_name = 'case_rate_3d_av'),
     reference_by_modulus
   )
   expect_identical(
-    ea$slide(
+    ea$group_by(tidyselect::all_of(my_group_by))$slide(
       f = ~ mean(.x$case_rate_7d_av),
       n = 3,
-      group_by = tidyselect::all_of(my_group_by),
       ref_time_values = time_values,
       new_col_name = 'case_rate_3d_av'
     ),
     reference_by_modulus
   )
-  # test the default behavior (default in this case should just be grouping by both):
-  expect_message(
-    result_wrapper_no_group_by <- epix_slide(x = ea,
-                                             f = ~ mean(.x$case_rate_7d_av),
-                                             n = 3,
-                                             ref_time_values = time_values,
-                                             new_col_name = 'case_rate_3d_av'),
-    class="epiprocess__epix_slide_on_ungrouped_epi_archive"
+  # test the default behavior (default in this case should just be grouping by neither):
+  expect_identical(
+    epix_slide(x = ea,
+               f = ~ mean(.x$case_rate_7d_av),
+               n = 3,
+               ref_time_values = time_values,
+               new_col_name = 'case_rate_3d_av'),
+    reference_by_neither
   )
-  expect_identical(result_wrapper_no_group_by, reference_by_both)
-  expect_message(
-    result_r6_no_group_by <- ea$slide(
-        f = ~ mean(.x$case_rate_7d_av),
-        n = 3,
-        ref_time_values = time_values,
-        new_col_name = 'case_rate_3d_av'
-      ),
-    class="epiprocess__epix_slide_on_ungrouped_epi_archive"
+  expect_identical(
+    ea$slide(
+      f = ~ mean(.x$case_rate_7d_av),
+      n = 3,
+      ref_time_values = time_values,
+      new_col_name = 'case_rate_3d_av'
+    ),
+    reference_by_neither
   )
-  expect_identical(result_r6_no_group_by, reference_by_both)
 })

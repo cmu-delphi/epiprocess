@@ -8,6 +8,7 @@ eval_select_names_from_dots = function(..., .data) {
   names(tidyselect::eval_select(rlang::expr(c(...)), .data))
 }
 
+#' @export
 group_by_drop_default.grouped_epi_archive = function(.tbl) {
   .tbl$group_by_drop_default()
 }
@@ -87,7 +88,6 @@ grouped_epi_archive =
         private$drop
       },
       group_by = function(..., .add = FALSE, .drop = dplyr::group_by_drop_default(self)) {
-        vars_from_dots = eval_select_names_from_dots(..., .data=self$ungrouped$DT)
         if (!rlang::is_bool(.add)) {
           Abort("`.add` must be a Boolean")
         }
@@ -99,6 +99,7 @@ grouped_epi_archive =
                 ',
                 class = "epiprocess__grouped_epi_archive_group_by_with_add_FALSE")
         } else {
+          vars_from_dots = eval_select_names_from_dots(..., .data=private$ungrouped$DT)
           vars = union(self$vars, vars_from_dots)
           grouped_epi_archive$new(self$ungrouped, vars, .drop)
         }
@@ -259,6 +260,12 @@ grouped_epi_archive =
     )
   )
 
+#' @export
+group_by.grouped_epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_drop_default(.data)) {
+  .data$group_by(..., .add=.add, .drop=.drop)
+}
+
+#' @export
 is_grouped_epi_archive = function(x) {
   inherits(x, "grouped_epi_archive")
 }
