@@ -50,12 +50,12 @@ A data frame or tibble that has `geo_value` and `time_value` columns can be
 converted into an `epi_df` object, using the function `as_epi_df()`. As an
 example, we'll work with daily cumulative COVID-19 cases from four U.S. states:
 CA, FL, NY, and TX, over time span from mid 2020 to early 2022, and we'll use
-the [`delphi.epidata`](https://github.com/cmu-delphi/delphi-epidata-r) package
+the [`epidatr`](https://github.com/cmu-delphi/epidatr) package
 to fetch this data from the [COVIDcast
 API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html).
 
 ```{r, message = FALSE}
-library(delphi.epidata)
+library(epidatr)
 library(epiprocess)
 library(dplyr)
 library(withr)
@@ -72,7 +72,7 @@ cases <- covidcast(
 colnames(cases)
 ```
 
-As we can see, a data frame returned by `delphi.epidata::covidcast()` has the
+As we can see, a data frame returned by `epidatr::covidcast()` has the
 columns required for an `epi_df` object (along with many others). We can use
 `as_epi_df()`, with specification of some relevant metadata, to bring the data
 frame into `epi_df` format.
@@ -180,7 +180,7 @@ head(ex2)
 
 ex2 <- ex2 %>% rename(geo_value = state, time_value = reported_date) %>%
   as_epi_df(geo_type = "state", as_of = "2020-06-03", 
-            additional_metadata = c(other_keys = "pol"))
+            additional_metadata = list(other_keys = "pol"))
 
 attr(ex2,"metadata")
 ```
@@ -200,16 +200,20 @@ ex3 <- jhu_csse_county_level_subset %>%
 attr(ex3,"metadata") # geo_type is county currently
 ```
 
-Now we add state (MA) as a new column and a key to the metadata. Reminder that lower case state name abbreviations are what we would expect if this were a `geo_value` column.
-```{r}
+Now we add `state` (MA) and `pol` as new columns to the data and as new keys to the metadata. Reminder that lower case state name abbreviations are what we would expect if this were a `geo_value` column. 
 
+```{r}
 ex3 <- ex3 %>% 
   as_tibble() %>% # needed to add the additional metadata
-  mutate(state = rep(tolower("MA"),6)) %>%
-  as_epi_df(additional_metadata = c(other_keys = "state"))
+  mutate(
+    state = rep(tolower("MA"),6),
+    pol = rep(c("blue", "swing", "swing"), each = 2)) %>%
+  as_epi_df(additional_metadata = list(other_keys = c("state", "pol")))
 
 attr(ex3,"metadata")
 ```
+
+Note that the two additional keys we added, `state` and `pol`, are specified as a character vector in the `other_keys` component of the `additional_metadata` list. They must be specified in this manner so that downstream actions on the `epi_df`, like model fitting and prediction, can recognize and use these keys.
 
 Currently `other_keys` metadata in `epi_df` doesn't impact `epi_slide()`, contrary to `other_keys` in `as_epi_archive` which affects how the update data is interpreted.
 

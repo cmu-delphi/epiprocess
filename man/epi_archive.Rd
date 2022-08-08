@@ -32,17 +32,31 @@ Note that there can only be a single row per unique combination of
 key variables, and thus the key variables are critical for figuring out how
 to generate a snapshot of data from the archive, as of a given version.
 
-In general, last observation carried forward (LOCF) is used to data in
-between recorded versions. Currently, deletions must be represented as
-revising a row to a special state (e.g., making the entries \code{NA} or
-including a special column that flags the data as removed and performing
-some kind of post-processing), and the archive is unaware of what this
-state is.
+In general, the last version of each observation is carried forward (LOCF) to
+fill in data between recorded versions, and between the last recorded
+update and the \code{versions_end}. One consequence is that the \code{DT}
+doesn't have to contain a full snapshot of every version (although this
+generally works), but can instead contain only the rows that are new or
+changed from the previous version (see \code{compactify}, which does this
+automatically). Currently, deletions must be represented as revising a row
+to a special state (e.g., making the entries \code{NA} or including a special
+column that flags the data as removed and performing some kind of
+post-processing), and the archive is unaware of what this state is. Note
+that \code{NA}s \emph{can} be introduced by \code{epi_archive} methods for other reasons,
+e.g., in \code{\link{epix_fill_through_version}} and \code{\link{epix_merge}}, if requested, to
+represent potential update data that we do not yet have access to; or in
+\code{\link{epix_merge}} to represent the "value" of an observation before the
+version in which it was first released, or if no version of that
+observation appears in the archive data at all.
 
 \strong{A word of caution:} R6 objects, unlike most other objects in R, have
 reference semantics. A primary consequence of this is that objects are not
 copied when modified. You can read more about this in Hadley Wickham's
-\href{https://adv-r.hadley.nz/r6.html#r6-semantics}{Advanced R} book.
+\href{https://adv-r.hadley.nz/r6.html#r6-semantics}{Advanced R} book. In order
+to construct a modified archive while keeping the original intact, first
+make a clone using the \verb{$clone} method, then overwrite the clone's \code{DT}
+field with \code{data.table::copy(clone$DT)}, and finally perform the
+modifications on the clone.
 }
 \section{Metadata}{
 
@@ -68,7 +82,7 @@ An \code{epi_archive} object can be used to generate a snapshot of the data in
 \code{epi_df} format, which represents the most up-to-date values of the signal
 variables, as of the specified version. This is accomplished by calling the
 \code{as_of()} method for an \code{epi_archive} object \code{x}. More details on this
-method are documented in the wrapper function \code{epix_as_of()}.
+method are documented in the wrapper function \code{\link[=epix_as_of]{epix_as_of()}}.
 }
 
 \section{Sliding Computations}{
@@ -80,7 +94,7 @@ the way \code{epi_slide()} works for an \code{epi_df} object, but with one key
 difference: it is version-aware. That is, for an \code{epi_archive} object, the
 sliding computation at any given reference time point t is performed on
 \strong{data that would have been available as of t}. More details on \code{slide()}
-are documented in the wrapper function \code{epix_slide()}.
+are documented in the wrapper function \code{\link[=epix_slide]{epix_slide()}}.
 }
 
 \examples{
@@ -100,12 +114,13 @@ toy_epi_archive
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-epi_archive-new}{\code{epi_archive$new()}}
-\item \href{#method-epi_archive-print}{\code{epi_archive$print()}}
-\item \href{#method-epi_archive-as_of}{\code{epi_archive$as_of()}}
-\item \href{#method-epi_archive-merge}{\code{epi_archive$merge()}}
-\item \href{#method-epi_archive-slide}{\code{epi_archive$slide()}}
-\item \href{#method-epi_archive-clone}{\code{epi_archive$clone()}}
+\item \href{#method-new}{\code{epi_archive$new()}}
+\item \href{#method-print}{\code{epi_archive$print()}}
+\item \href{#method-as_of}{\code{epi_archive$as_of()}}
+\item \href{#method-fill_through_version}{\code{epi_archive$fill_through_version()}}
+\item \href{#method-merge}{\code{epi_archive$merge()}}
+\item \href{#method-slide}{\code{epi_archive$slide()}}
+\item \href{#method-clone}{\code{epi_archive$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -114,7 +129,16 @@ toy_epi_archive
 \subsection{Method \code{new()}}{
 Creates a new \code{epi_archive} object.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$new(x, geo_type, time_type, other_keys, additional_metadata)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$new(
+  x,
+  geo_type,
+  time_type,
+  other_keys,
+  additional_metadata,
+  compactify,
+  clobberable_versions_start,
+  versions_end
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -138,6 +162,26 @@ apart from "geo_value", "time_value", and "version".}
 \item{\code{additional_metadata}}{List of additional metadata to attach to the
 \code{epi_archive} object. The metadata will have \code{geo_type} and \code{time_type}
 fields; named entries from the passed list or will be included as well.}
+
+\item{\code{compactify}}{Optional; Boolean or \code{NULL}: should we remove rows that are
+considered redundant for the purposes of \code{epi_archive}'s built-in methods
+such as \code{as_of}? As these methods use the last version of each observation
+carried forward (LOCF) to interpolate between the version data provided,
+rows that don't change these LOCF results can potentially be omitted to
+save space while maintaining the same behavior (with the help of the
+\code{clobberable_versions_start} and \code{versions_end} fields in some
+edge cases). \code{TRUE} will remove these rows, \code{FALSE} will not, and missing
+or \code{NULL} will remove these rows and issue a warning. Generally, this can
+be set to \code{TRUE}, but if you directly inspect or edit the fields of the
+\code{epi_archive} such as its \code{DT}, you will have to determine whether
+\code{compactify=TRUE} will produce the desired results. If compactification
+here is removing a large proportion of the rows, this may indicate a
+potential for space, time, or bandwidth savings upstream the data pipeline,
+e.g., when fetching, storing, or preparing the input data \code{x}}
+
+\item{\code{clobberable_versions_start}}{Optional; as in \code{\link{as_epi_archive}}}
+
+\item{\code{versions_end}}{Optional; as in \code{\link{as_epi_archive}}}
 }
 \if{html}{\out{</div>}}
 }
@@ -164,36 +208,76 @@ An \code{epi_archive} object.
 \if{latex}{\out{\hypertarget{method-epi_archive-as_of}{}}}
 \subsection{Method \code{as_of()}}{
 Generates a snapshot in \code{epi_df} format as of a given version.
-See the documentation for the wrapper function \code{epix_as_of()} for details.
+See the documentation for the wrapper function \code{\link[=epix_as_of]{epix_as_of()}} for details.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$as_of(max_version, min_time_value = -Inf)}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-merge"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-merge}{}}}
-\subsection{Method \code{merge()}}{
-Merges another \code{data.table} with the current one, and allows for
-a post-filling of \code{NA} values by last observation carried forward (LOCF).
-See the documentation for the wrapper function \code{epix_merge()} for details.
+\if{html}{\out{<a id="method-fill_through_version"></a>}}
+\if{latex}{\out{\hypertarget{method-fill_through_version}{}}}
+\subsection{Method \code{fill_through_version()}}{
+Fill in unobserved history using requested scheme by mutating
+\code{self} and potentially reseating its fields. See
+\code{\link{epix_fill_through_version}} for a full description of the non-R6-method
+version, which doesn't mutate the input archive but might alias its fields.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$merge(y, ..., locf = TRUE, nan = NA)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$fill_through_version(fill_versions_end, how = c("na", "locf"))}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{fill_versions_end}}{as in \code{\link{epix_fill_through_version}}}
+
+\item{\code{how}}{as in \code{\link{epix_fill_through_version}}}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-merge"></a>}}
+\if{latex}{\out{\hypertarget{method-merge}{}}}
+\subsection{Method \code{merge()}}{
+Merges another \code{epi_archive} with the current one, mutating the
+current one by reseating its \code{DT} and several other fields, but avoiding
+mutation of the old \code{DT}; returns the current archive
+\link[base:invisible]{invisibly}. See \code{\link{epix_merge}} for a full description
+of the non-R6-method version, which does not mutate either archive, and
+does not alias either archive's \code{DT}.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$merge(
+  y,
+  sync = c("forbid", "na", "locf", "truncate"),
+  compactify = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{y}}{as in \code{\link{epix_merge}}}
+
+\item{\code{sync}}{as in \code{\link{epix_merge}}}
+
+\item{\code{compactify}}{as in \code{\link{epix_merge}}}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-epi_archive-slide"></a>}}
 \if{latex}{\out{\hypertarget{method-epi_archive-slide}{}}}
 \subsection{Method \code{slide()}}{
 Slides a given function over variables in an \code{epi_archive}
-object. See the documentation for the wrapper function \code{epix_as_of()} for
+object. See the documentation for the wrapper function \code{\link[=epix_slide]{epix_slide()}} for
 details.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$slide(
   f,
   ...,
-  n = 7,
+  n,
   group_by,
   ref_time_values,
   time_step,
