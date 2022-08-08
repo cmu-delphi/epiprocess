@@ -89,6 +89,7 @@ summary.epi_df = function(object, ...) {
                        collapse = ", "), " must not be duplicated."))
   } 
   
+  # If not an epi_df (missing time_value or geo_value), return a tibble
   not_epi_df <- (!("time_value" %in% cn) || !("geo_value" %in% cn))
   
   if (not_epi_df) {
