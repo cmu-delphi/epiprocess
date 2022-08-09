@@ -4,7 +4,7 @@
 \alias{add_7davs_and_target}
 \title{Add 7-day moving average and prediction target to a dataframe}
 \usage{
-add_7davs_and_target(df, value_col, refd_col, lag_col, ref_lag)
+add_7davs_and_target(df, value_col, refd_col, lag_col, ref_lag, issued_col)
 }
 \arguments{
 \item{df}{Data Frame of aggregated counts within a single location
@@ -17,6 +17,8 @@ reported for each reference date and issue date.}
 \item{lag_col}{column name for the column of lag}
 
 \item{ref_lag}{target lag}
+
+\item{issued_col}{name of the issue (report) date column}
 }
 \description{
 Each row must be uniquely identified by a reference date + lag combination.

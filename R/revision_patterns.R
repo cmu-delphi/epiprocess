@@ -24,14 +24,16 @@
 #' @param min_refd the earliest reference date considered in the data
 #' @param max_refd the latest reference date considered in the data
 #' @param ref_lag the maximum lag value through which to complete
+#' @param issued_col name of the issue (report) date column
 #' 
 #' @return df_new Data Frame with filled rows for missing lags
 #'
 #' @importFrom tidyr crossing
 #' 
 #' @export
-fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag){
-  lags <- min(df[[lag_col]]): ref_lag # Full list of lags
+fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag, issued_col){
+  lags <- get_lags(df, lag_col, refd_col, issued_col)
+  lags <- min(lags): ref_lag
   refds <- seq(min_refd, max_refd, by="day") # Full list reference date
   row_inds_df <- as.data.frame(crossing(refds, lags)) %>%
     setNames(c(refd_col, lag_col))
@@ -53,13 +55,24 @@ fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag){
 #' @param value_col column name for the column of counts
 #' @param refd_col column name for the column of reference date
 #' @param lag_col column name for the column of lag
+#' @param issued_col name of the issue (report) date column
 #' 
 #' @importFrom tidyr fill pivot_wider pivot_longer
-#' @importFrom dplyr everything select
+#' @importFrom dplyr everything select arrange across all_of mutate
+#' @importFrom rlang .env !!
 #' 
 #' @export
-fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
-  pivot_df <- df[order(df[[lag_col]], decreasing=FALSE), ] %>%
+fill_missing_updates <- function(df, value_col, refd_col, lag_col, issued_col) {
+  lags <- get_lags(df, lag_col, refd_col, issued_col)
+  if (missing(lag_col)) {
+    lag_col <- "lag"
+  }
+
+  # Add lag col to df (without modifying the orignal df) if using implied lag
+  # col. If lag col already exists, it is overwritten with the original
+  # values.
+  pivot_df <- mutate(df, !!lag_col := lags) %>%
+    arrange(across(all_of(lag_col))) %>%
     pivot_wider(id_cols=lag_col, names_from=refd_col, values_from=value_col)
   if (any(diff(pivot_df[[lag_col]])!=1)){Abort("Risk exists in forward fill")}
   pivot_df <- pivot_df %>% fill(everything(), .direction="down")
@@ -123,13 +136,14 @@ add_shift <- function(df, n_day, refd_col){
 #' @param refd_col column name for the column of reference date
 #' @param lag_col column name for the column of lag
 #' @param ref_lag target lag
+#' @param issued_col name of the issue (report) date column
 #' 
 #' @importFrom tidyr pivot_wider
 #' @importFrom rlang .env
 #'
 #' @export
-add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag){
-  
+add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag, issued_col){
+  ## TODO: need to adapt to be able to use existing issue date field instead of regenerating.
   df$issue_date <- df[[refd_col]] + df[[lag_col]]
   pivot_df <- df[order(df$issue_date, decreasing=FALSE), ] %>%
     pivot_wider(id_cols=refd_col, names_from="issue_date", 
@@ -157,4 +171,34 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag){
   backfill_df <- backfill_df %>% drop_na(c(lag_col))
   
   return (as.data.frame(backfill_df))
+}
+
+#' Calculate an implied lag column as the difference between reference
+#' date and report date. Meant to be used when `lag_col` is not specified.
+#' Don't add field to dataframe directly.
+#'
+#' @param df Data Frame of aggregated counts within a single location
+#'    reported for each reference date and issue date.
+#' @param refd_col column name for the column of reference date
+#' @param lag_col column name for the column of lag
+#' @param issued_col name of the issue (report) date column
+#'
+#' @export
+get_lags <- function(df, lag_col, refd_col, issued_col) {
+  if (missing(lag_col)) {
+    if (missing(refd_col) || missing(issued_col)) {
+      Abort(paste(
+        "Either `lag_col`, or both of`refd_col` and `issued_col` names must be ",
+        "specified to be able to fetch lags"
+      ))
+    }
+    if (!all(c(refd_col, issued_col) %in% names(df))) {
+      Abort("`refd_col` and `issued_col` names not found in data")
+    }
+    lags <- df[[issued_col]] - df[[refd_col]]
+  } else {
+    lags <- df[[lag_col]]
+  }
+
+  return (lags)
 }

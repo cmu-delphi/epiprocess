@@ -4,7 +4,7 @@
 \alias{fill_missing_updates}
 \title{Perform LOCF to fill missing values in issues}
 \usage{
-fill_missing_updates(df, value_col, refd_col, lag_col)
+fill_missing_updates(df, value_col, refd_col, lag_col, issued_col)
 }
 \arguments{
 \item{df}{Data Frame of aggregated counts within a single location
@@ -15,6 +15,8 @@ reported for each reference date and issue date.}
 \item{refd_col}{column name for the column of reference date}
 
 \item{lag_col}{column name for the column of lag}
+
+\item{issued_col}{name of the issue (report) date column}
 }
 \description{
 Perform LOCF to fill \code{NA}s if a group is missing from an issue but was

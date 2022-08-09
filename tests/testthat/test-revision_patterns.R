@@ -50,7 +50,7 @@ test_that("testing NA filling for missing udpates", {
 })
 
 
-test_that("testing the caculation of 7-day moving average", {
+test_that("testing the calculation of 7-day moving average", {
   df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd, ref_lag)
   df <- fill_missing_updates(df_new, value_col, refd_col, lag_col)
   df$issue_date <- df[[refd_col]] + df[[lag_col]]

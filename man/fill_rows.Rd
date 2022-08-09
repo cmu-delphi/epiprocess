@@ -4,7 +4,7 @@
 \alias{fill_rows}
 \title{Create empty obs for every sequentially missing date-lag combo}
 \usage{
-fill_rows(df, refd_col, lag_col, min_refd, max_refd, ref_lag)
+fill_rows(df, refd_col, lag_col, min_refd, max_refd, ref_lag, issued_col)
 }
 \arguments{
 \item{df}{Data Frame of aggregated counts within a single location
@@ -19,6 +19,8 @@ reported for each reference date and issue date.}
 \item{max_refd}{the latest reference date considered in the data}
 
 \item{ref_lag}{the maximum lag value through which to complete}
+
+\item{issued_col}{name of the issue (report) date column}
 }
 \value{
 df_new Data Frame with filled rows for missing lags
