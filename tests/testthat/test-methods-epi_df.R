@@ -68,6 +68,6 @@ test_that("subsetting drops or does not drop the epi_df class appropriately", {
   expect_identical(att_row_col_subset2$geo_type, att_toy$geo_type)
   expect_identical(att_row_col_subset2$time_type, att_toy$time_type)
   expect_identical(att_row_col_subset2$as_of, att_toy$as_of)
-  expect_identical(att_row_col_subset2$other_keys, att_toy$other_keys)
+  expect_identical(att_row_col_subset2$other_keys, character(0))
   
 })
