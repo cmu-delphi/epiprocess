@@ -104,7 +104,7 @@ which would be equivalent to:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, ...) mean(x$cases), before = 6,
           new_col_name = "cases_7dav")
-}
+}\if{html}{\out{</div>}}
 
 Thus, to be clear, when the computation is specified via an expression for
 tidy evaluation (first example, above), then the name for the new column is
