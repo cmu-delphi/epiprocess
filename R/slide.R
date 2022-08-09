@@ -6,7 +6,8 @@
 #'
 #' @param x The `epi_df` object under consideration.
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
-#'   to apply a function or formula over a running window of `n` time steps
+#'   to apply a function or formula over a running window of `before`
+#'   and `after` time steps
 #'   (where one time step is typically one day or one week; see details for more
 #'   explanation). If a function, `f` should take `x`, an `epi_df` with the same 
 #'   names as the non-grouping columns, followed by `g` to refer to the one row 
@@ -19,10 +20,12 @@
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation. See details.  
-#' @param before A nonnegative integer specifying the number of days before to
-#'   extract data from. Set to 0 for a "left" alignment in slide.
-#' @param after A nonnegative integer specifying the number of days after to
-#'   extract data from. Set to 0 for a "right" alignment in slide.
+#' @param before A nonnegative integer specifying the number of time steps
+#'   before each of the `ref_time_values` to extract data from.
+#'   Set to 0 for a "left" alignment in slide.
+#' @param after A nonnegative integer specifying the number of time steps after
+#'   each of the `ref_time_values` to extract data from. Set to 0 for a "right"
+#'   alignment in slide.
 #' @param ref_time_values Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
 #'   window. If missing, then this will be set to all unique time values in the
