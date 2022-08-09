@@ -53,14 +53,15 @@
 #'   according to the `new_col_name` argument. 
 #' 
 #' @details To "slide" means to apply a function or formula over a running
-#'   window of `n` time steps, where the unit (the meaning of one time step) is
+#'   window of `before` time steps before and `after` time steps after,
+#'   where the unit (the meaning of one time step) is
 #'   implicitly defined by the way the `time_value` column treats addition and
 #'   subtraction; for example, if the time values are coded as `Date` objects,
 #'   then one time step is one day, since `as.Date("2022-01-01") + 1` equals
 #'   `as.Date("2022-01-02")`. Alternatively, the time step can be set explicitly
 #'   using the `time_step` argument (which if specified would override the
-#'   default choice based on `time_value` column). If less than `n` time steps
-#'   are available at any given reference time value, then `epi_slide()` still
+#'   default choice based on `time_value` column). If certain time steps
+#'   are unavailable at any given reference time value, then `epi_slide()` still
 #'   attempts to perform the computation anyway (it does not require a complete
 #'   window). The issue of what to do with partial computations (those run on
 #'   incomplete windows) is therefore left up to the user, either through the
