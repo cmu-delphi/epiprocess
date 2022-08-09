@@ -22,7 +22,8 @@ epi_slide(
 \item{x}{The \code{epi_df} object under consideration.}
 
 \item{f}{Function or formula to slide over variables in \code{x}. To "slide" means
-to apply a function or formula over a running window of \code{n} time steps
+to apply a function or formula over a running window of \code{before}
+and \code{after} time steps
 (where one time step is typically one day or one week; see details for more
 explanation). If a function, \code{f} should take \code{x}, an \code{epi_df} with the same
 names as the non-grouping columns, followed by \code{g} to refer to the one row
@@ -37,11 +38,18 @@ to the groupings that would be described by \code{g} if \code{f} was a function.
 via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
 interpreted as an expression for tidy evaluation. See details.}
 
-\item{before}{A nonnegative integer specifying the number of days before to
-extract data from. Set to 0 for a "left" alignment in slide.}
+\item{before}{A nonnegative integer specifying the number of time steps
+before each of the \code{ref_time_values} to extract data from.
+Set to 0 for a "left" alignment for the sliding window, meaning that no
+\code{time_value} after the slide will be used for the sliding calculation.
+It is mandatory to specify a \code{before} value, unless \code{after} is specified
+as a non-zero value. In this case, \code{before} will be assumed to be 0.
+However, this usage is discouraged and will thus produce a warning.}
 
-\item{after}{A nonnegative integer specifying the number of days after to
-extract data from. Set to 0 for a "right" alignment in slide.}
+\item{after}{A nonnegative integer specifying the number of time steps after
+each of the \code{ref_time_values} to extract data from.
+Set to 0 for a "right" alignment for the sliding window, meaning that no
+\code{time_value} before the slide will be used for the sliding calculation.}
 
 \item{ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
@@ -81,14 +89,15 @@ examples.
 }
 \details{
 To "slide" means to apply a function or formula over a running
-window of \code{n} time steps, where the unit (the meaning of one time step) is
+window of \code{before} time steps before and \code{after} time steps after,
+where the unit (the meaning of one time step) is
 implicitly defined by the way the \code{time_value} column treats addition and
 subtraction; for example, if the time values are coded as \code{Date} objects,
 then one time step is one day, since \code{as.Date("2022-01-01") + 1} equals
 \code{as.Date("2022-01-02")}. Alternatively, the time step can be set explicitly
 using the \code{time_step} argument (which if specified would override the
-default choice based on \code{time_value} column). If less than \code{n} time steps
-are available at any given reference time value, then \code{epi_slide()} still
+default choice based on \code{time_value} column). If certain time steps
+are unavailable at any given reference time value, then \code{epi_slide()} still
 attempts to perform the computation anyway (it does not require a complete
 window). The issue of what to do with partial computations (those run on
 incomplete windows) is therefore left up to the user, either through the
@@ -122,7 +131,7 @@ through the \code{new_col_name} argument.
  # slide a left-aligned 7-day average
   jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide(cases_7dav = mean(cases), before = 6) \%>\% 
+  epi_slide(cases_7dav = mean(cases), before = 0, after = 6) \%>\% 
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av) 
  
