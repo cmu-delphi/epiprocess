@@ -60,7 +60,7 @@ test_that("`ref_time_values` + `before` + `after` that have some slide data, but
 ## --- These cases generate warnings (or not): ---
 test_that("Warn user against having a blank `before`",{
   expect_warning(epi_slide(grouped, f, after = 1L, ref_time_values=as.Date("2020-01-01")+1L),
-                 regexp="`before` missing, `after` nonzero; assuming that left-aligned/leading\nwindow is desired and setting `before` = 0.")
+                 "`before` missing, `after` nonzero; assuming that left-aligned/leading\nwindow is desired and setting `before` = 0.")
   expect_warning(epi_slide(grouped, f, before = 0L, after = 1L,
                            ref_time_values=as.Date("2020-01-01")+1L), NA)
 })
