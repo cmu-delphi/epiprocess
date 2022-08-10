@@ -4,13 +4,15 @@
 \alias{get_7dav}
 \title{Calculate 7 day moving average for each issue date}
 \usage{
-get_7dav(pivot_df, refd_col)
+get_7dav(pivot_df, refd_col, issued_col = "issue_date")
 }
 \arguments{
 \item{pivot_df}{Data Frame where the columns are issue dates and the rows are
 reference dates}
 
 \item{refd_col}{column name for the column of reference date}
+
+\item{issued_col}{name of the issue (report) date column; default "issue_date"}
 }
 \description{
 The 7-day average for date \eqn{D} reported on issue date \eqn{D_i} uses data

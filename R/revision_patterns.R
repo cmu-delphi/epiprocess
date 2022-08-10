@@ -1,12 +1,15 @@
 ### Data Preprocessing
-### The raw input data should have 4/5 basic columns: 
+###
+### The raw input data should have 4 or 5 basic columns:
 ### time_value: reference date
 ### issue_date: issue date/date of reporting
 ### geo_value: location
-### lag: the number of days between issue date and the reference date
+### (optional) lag: the number of days between issue date and the reference
+###   date; if not provided, will be calculated from the issue and reference
+###   dates.
 ### counts: the number of counts used for estimation
+###
 ### library(lubridate)
-### library(stats)
 ### library(stats)
 ### library(dyplr)
 ### library(tidyverse)
@@ -29,16 +32,26 @@
 #' @return df_new Data Frame with filled rows for missing lags
 #'
 #' @importFrom tidyr crossing
+#' @importFrom stats setNames
+#' @importFrom dplyr mutate
+#' @importFrom rlang !!
 #' 
 #' @export
 fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag, issued_col){
   lags <- get_lags(df, lag_col, refd_col, issued_col)
-  lags <- min(lags): ref_lag
+  lag_seq <- min(lags):ref_lag
+  if (missing(lag_col)) {
+    lag_col <- "lag"
+  }
+
   refds <- seq(min_refd, max_refd, by="day") # Full list reference date
-  row_inds_df <- as.data.frame(crossing(refds, lags)) %>%
+  row_inds_df <- as.data.frame(crossing(refds, lag_seq)) %>%
     setNames(c(refd_col, lag_col))
-  df_new = merge(x=df, y=row_inds_df,
-                 by=c(refd_col, lag_col),  all.y=TRUE)
+  df_new = merge(
+    x=mutate(df, !!lag_col := lags), y=row_inds_df,
+    by=c(refd_col, lag_col),
+    all.y=TRUE
+  )
   return (df_new)
 }
 
@@ -68,7 +81,7 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col, issued_col) {
     lag_col <- "lag"
   }
 
-  # Add lag col to df (without modifying the orignal df) if using implied lag
+  # Add lag col to df if using implied lag
   # col. If lag col already exists, it is overwritten with the original
   # values.
   pivot_df <- mutate(df, !!lag_col := lags) %>%
@@ -91,20 +104,21 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col, issued_col) {
 #' @param pivot_df Data Frame where the columns are issue dates and the rows are 
 #'    reference dates
 #' @param refd_col column name for the column of reference date
+#' @param issued_col name of the issue (report) date column; default "issue_date"
 #' 
 #' @importFrom zoo rollmeanr
 #' @importFrom tidyr pivot_longer
 #' 
 #' @export
-get_7dav <- function(pivot_df, refd_col){
+get_7dav <- function(pivot_df, refd_col, issued_col = "issue_date"){
   for (col in colnames(pivot_df)){
     if (col == refd_col) next
     pivot_df[, col] <- rollmeanr(pivot_df[, col], 7, align="right", fill=NA)
   }
   backfill_df <- pivot_df %>%
-    pivot_longer(-refd_col, values_to="value_raw", names_to="issue_date")
+    pivot_longer(-refd_col, values_to="value_raw", names_to=issued_col)
   backfill_df[[refd_col]] = as.Date(backfill_df[[refd_col]])
-  backfill_df[["issue_date"]] = as.Date(backfill_df[["issue_date"]])
+  backfill_df[[issued_col]] = as.Date(backfill_df[[issued_col]])
   return (as.data.frame(backfill_df))
 }
 
@@ -138,19 +152,33 @@ add_shift <- function(df, n_day, refd_col){
 #' @param ref_lag target lag
 #' @param issued_col name of the issue (report) date column
 #' 
-#' @importFrom tidyr pivot_wider
+#' @importFrom tidyr pivot_wider drop_na
 #' @importFrom rlang .env
 #'
 #' @export
 add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag, issued_col){
-  ## TODO: need to adapt to be able to use existing issue date field instead of regenerating.
-  df$issue_date <- df[[refd_col]] + df[[lag_col]]
-  pivot_df <- df[order(df$issue_date, decreasing=FALSE), ] %>%
-    pivot_wider(id_cols=refd_col, names_from="issue_date", 
+  if (missing(issued_col) && missing(lag_col)) {
+    Abort("One of `issued_col` and `lag_col` must be provided and present in the data")
+  }
+  if (missing(issued_col)) {
+    issued_col = "issue_date"
+  }
+  if (!(issued_col %in% names(df))) {
+    df[[issued_col]] <- df[[refd_col]] + df[[lag_col]]
+  }
+  if (missing(lag_col)) {
+    lag_col = "lag"
+  }
+  if (!(lag_col %in% names(df))) {
+    df[[lag_col]] <- get_lags(df, lag_col, refd_col, issued_col)
+  }
+
+  pivot_df <- arrange(df, across(all_of(issued_col))) %>%
+    pivot_wider(id_cols=refd_col, names_from=issued_col,
                 values_from=value_col)
   
   # Add 7dav avg
-  avg_df <- get_7dav(pivot_df, refd_col)
+  avg_df <- get_7dav(pivot_df, refd_col, issued_col)
   # 7dav until yesterday
   avg_df <- add_shift(avg_df, 1, refd_col) %>%
     rename(value_7dav = value_raw)
@@ -162,8 +190,8 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag, issu
 
   # Add target
   target_df <- df[df$lag==ref_lag, ] %>%
-    select(c(refd_col, value_col, "issue_date")) %>%
-    rename(value_target = .env$value_col, target_date = issue_date)
+    select(c(refd_col, value_col, issued_col)) %>%
+    rename(value_target = .env$value_col, target_date = .env$issued_col)
   
   backfill_df <- merge(backfill_df, target_df, by=refd_col, all.x=TRUE)
   
@@ -185,7 +213,7 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag, issu
 #'
 #' @export
 get_lags <- function(df, lag_col, refd_col, issued_col) {
-  if (missing(lag_col)) {
+  if (missing(lag_col) || !(lag_col %in% names(df))) {
     if (missing(refd_col) || missing(issued_col)) {
       Abort(paste(
         "Either `lag_col`, or both of`refd_col` and `issued_col` names must be ",
