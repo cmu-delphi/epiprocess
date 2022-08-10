@@ -162,15 +162,16 @@ epi_slide = function(x, f, ..., before, after = 0, ref_time_values,
     }
   }
   
-  # Otherwise set up alignment based on passed before value
-  if (before < 0 || after < 0) {
-    Abort("`before` and `after` must be at least 0.")
-  }
-  
   if (!(is.numeric(before) && is.numeric(after))||
       floor(before) < ceiling(before) ||
       floor(after) < ceiling(after)) {
     Abort("`before` and `after` must be integers.")
+  }
+  
+  
+  # Otherwise set up alignment based on passed before value
+  if (before < 0 || after < 0) {
+    Abort("`before` and `after` must be at least 0.")
   }
 
   # If a custom time step is specified, then redefine units 

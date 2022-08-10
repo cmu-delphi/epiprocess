@@ -222,7 +222,7 @@ x <- y1 %>%
     version = issue,
     percent_cli = value
   ) %>%
-  as_epi_archive(compactify=FALSE)
+  as_epi_archive(compactify=TRUE)
 
 # mutating merge operation:
 x$merge(y2 %>%
@@ -230,7 +230,7 @@ x$merge(y2 %>%
     version = issue,
     case_rate_7d_av = value
   ) %>%
-  as_epi_archive(compactify=FALSE)
+  as_epi_archive(compactify=TRUE)
 )
 ```
 

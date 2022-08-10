@@ -39,6 +39,10 @@ test_that("Both `before` and `after` must be nonnegative integers",{
                "`before` and `after` must be integers.")
   expect_error(epi_slide(grouped, f, before = 1L, after = 0.5, ref_time_values=as.Date("2020-01-01")+2L),
                "`before` and `after` must be integers.")
+  expect_error(epi_slide(grouped, f, before = NA, ref_time_values=as.Date("2020-01-01")+2L),
+               "`before` and `after` must be integers.")
+  expect_error(epi_slide(grouped, f, before = 1L, after = NA, ref_time_values=as.Date("2020-01-01")+2L),
+               "`before` and `after` must be integers.")
   # The before and after values can be numerics that are integerish
   expect_error(epi_slide(grouped, f, before = 1, after = 1, ref_time_values=as.Date("2020-01-01")+2L),NA)
 })
