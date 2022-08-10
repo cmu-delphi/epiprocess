@@ -43,14 +43,14 @@ test_that("Both `before` and `after` must be nonnegative integers",{
   expect_error(epi_slide(grouped, f, before = 1, after = 1, ref_time_values=as.Date("2020-01-01")+2L),NA)
 })
 
-test_that("`ref_time_values` + `align` that result in no slide data, generate the error", {
+test_that("`ref_time_values` + `before` + `after` that result in no slide data, generate the error", {
   expect_error(epi_slide(grouped, f, before=2L, ref_time_values=as.Date("2020-01-01")), 
                "starting and/or stopping times for sliding are out of bounds") # before the first, no data in the slide windows
   expect_error(epi_slide(grouped, f, before=2L, ref_time_values=as.Date("2020-01-01")+207L), 
                "starting and/or stopping times for sliding are out of bounds") # beyond the last, no data in window
 })
 
-test_that("`ref_time_values` + `align` that have some slide data, but generate the error due to ref. time being out of time range", {
+test_that("`ref_time_values` + `before` + `after` that have some slide data, but generate the error due to ref. time being out of time range", {
   expect_error(epi_slide(grouped, f, before=0L, after=2L, ref_time_values=as.Date("2020-01-01")), 
                "starting and/or stopping times for sliding are out of bounds") # before the first, but we'd expect there to be data in the window
   expect_error(epi_slide(grouped, f, before=2L, ref_time_values=as.Date("2020-01-01")+201L), 
