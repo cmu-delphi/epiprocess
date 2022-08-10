@@ -11,6 +11,8 @@ f = function(x, ...) dplyr::tibble(value=mean(x$value), count=length(x$value))
 
 ## --- These cases generate the error: ---
 test_that("`after` must be defined as a non-zero integer if `before` is missing", {
+  expect_error(epi_slide(edf, f, ref_time_values=as.Date("2020-01-01")),
+               "`before` cannot be missing when `after` is set to 0.")
   expect_error(epi_slide(edf, f, after = 0L, ref_time_values=as.Date("2020-01-01")),
                "`before` cannot be missing when `after` is set to 0.")
 })
