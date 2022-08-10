@@ -9,17 +9,21 @@ grouped = dplyr::bind_rows(
 
 f = function(x, ...) dplyr::tibble(value=mean(x$value), count=length(x$value))
 
-## --- These cases generate the error: ---
+## --- These cases generate errors (or not): ---
+test_that("`before` and `after` are both vectors of length 1", {
+  expect_error(epi_slide(grouped, f, before = c(0,1), after = 0, ref_time_values=as.Date("2020-01-01") + 3),
+               "`before` and `after` must be vectors of length 1.")
+  expect_error(epi_slide(grouped, f, before = 1, after = c(0,1), ref_time_values=as.Date("2020-01-01") + 3),
+               "`before` and `after` must be vectors of length 1.")
+})
+
 test_that("`after` must be defined as a non-zero integer if `before` is missing", {
   expect_error(epi_slide(grouped, f, ref_time_values=as.Date("2020-01-01")),
                "`before` cannot be missing when `after` is set to 0.")
   expect_error(epi_slide(grouped, f, after = 0L, ref_time_values=as.Date("2020-01-01")),
                "`before` cannot be missing when `after` is set to 0.")
-})
-
-test_that("Warn user against having a blank `before`",{
-  expect_warning(epi_slide(grouped, f, after = 1L, ref_time_values=as.Date("2020-01-01")+1L),
-                 regexp="`before` missing, `after` nonzero; assuming that left-aligned/leading\nwindow is desired and setting `before` = 0.")
+  expect_error(epi_slide(grouped, f, before = 0L, ref_time_values=as.Date("2020-01-01")+1L),
+               NA)
 })
 
 test_that("Both `before` and `after` must be nonnegative integers",{
@@ -27,9 +31,13 @@ test_that("Both `before` and `after` must be nonnegative integers",{
                "`before` and `after` must be at least 0.")
   expect_error(epi_slide(grouped, f, before = 2L, after = -1L, ref_time_values=as.Date("2020-01-01")+2L),
                "`before` and `after` must be at least 0.")
+  expect_error(epi_slide(grouped, f, before = "a", ref_time_values=as.Date("2020-01-01")+2L),
+               "`before` and `after` must be integers.")
+  expect_error(epi_slide(grouped, f, before = 1L, after = "a", ref_time_values=as.Date("2020-01-01")+2L),
+               "`before` and `after` must be integers.")
   expect_error(epi_slide(grouped, f, before = 0.5, ref_time_values=as.Date("2020-01-01")+2L),
                "`before` and `after` must be integers.")
-  expect_error(epi_slide(grouped, f, before = 1, after = 0.5, ref_time_values=as.Date("2020-01-01")+2L),
+  expect_error(epi_slide(grouped, f, before = 1L, after = 0.5, ref_time_values=as.Date("2020-01-01")+2L),
                "`before` and `after` must be integers.")
   # The before and after values can be numerics that are integerish
   expect_error(epi_slide(grouped, f, before = 1, after = 1, ref_time_values=as.Date("2020-01-01")+2L),NA)
@@ -47,6 +55,14 @@ test_that("`ref_time_values` + `align` that have some slide data, but generate t
                "starting and/or stopping times for sliding are out of bounds") # before the first, but we'd expect there to be data in the window
   expect_error(epi_slide(grouped, f, before=2L, ref_time_values=as.Date("2020-01-01")+201L), 
                "starting and/or stopping times for sliding are out of bounds") # beyond the last, but still with data in window
+})
+
+## --- These cases generate warnings (or not): ---
+test_that("Warn user against having a blank `before`",{
+  expect_warning(epi_slide(grouped, f, after = 1L, ref_time_values=as.Date("2020-01-01")+1L),
+                 regexp="`before` missing, `after` nonzero; assuming that left-aligned/leading\nwindow is desired and setting `before` = 0.")
+  expect_warning(epi_slide(grouped, f, before = 0L, after = 1L,
+                           ref_time_values=as.Date("2020-01-01")+1L), NA)
 })
 
 ## --- These cases doesn't generate the error: ---

@@ -22,16 +22,19 @@
 #'   interpreted as an expression for tidy evaluation. See details.  
 #' @param before A nonnegative integer specifying the number of time steps
 #'   before each of the `ref_time_values` to extract data from.
-#'   Set to 0 for a "left" (trailing) alignment for the sliding window, meaning
+#'   This must be a vector of length 1.
+#'   Set to 0 for a right-aligned/trailing sliding window, meaning
 #'   that no
 #'   `time_value` after the slide will be used for the sliding calculation.
 #'   It is mandatory to specify a `before` value, unless `after` is specified
-#'   as a non-zero value. In this case, `before` will be assumed to be 0.
+#'   as a non-zero value. In this case, `before` will be assumed to be 0, as it
+#'   assumes the user wants to do a left-aligned/leading sliding window.
 #'   However, this usage is discouraged and will thus produce a warning.
 #' @param after A nonnegative integer specifying the number of time steps after
 #'   each of the `ref_time_values` to extract data from.
-#'   Set to 0 for a "right" (leading) alignment for the sliding window, meaning
-#'   that no
+#'   This must be a vector of length 1. The default value for
+#'   this is 0. Set to 0 for a left-aligned/leading sliding
+#'   window, meaning that no
 #'   `time_value` before the slide will be used for the sliding calculation.
 #'   To specify this to be centrally aligned, set `before` and `after` to be
 #'   the same.
@@ -143,6 +146,11 @@ epi_slide = function(x, f, ..., before, after = 0, ref_time_values,
                                       unique(x$time_value)] 
   }
   
+  # We must ensure that both before and after are of length 1
+  if (length(after) != 1L || (!missing(before) && length(before) != 1L)) {
+    Abort("`before` and `after` must be vectors of length 1.")
+  }
+  
   # Before cannot be missing if after is set to 0. If after is set to a nonzero
   # number, then before must be set to 0
   if (missing(before)) {
@@ -159,7 +167,9 @@ epi_slide = function(x, f, ..., before, after = 0, ref_time_values,
     Abort("`before` and `after` must be at least 0.")
   }
   
-  if (floor(before) < ceiling(before) || floor(after) < ceiling(after)) {
+  if (!(is.numeric(before) && is.numeric(after))||
+      floor(before) < ceiling(before) ||
+      floor(after) < ceiling(after)) {
     Abort("`before` and `after` must be integers.")
   }
 

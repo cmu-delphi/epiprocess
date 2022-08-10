@@ -177,7 +177,7 @@ Explicit imputation for missingness (zero-filling in our case) can be important
 for protecting against bugs in all sorts of downstream tasks. For example, even
 something as simple as a 7-day trailing average is complicated by missingness.
 The function `epi_slide()` looks for all rows within a window of 7 days anchored
-on the right at the reference time point (when `after = 6`).
+on the right at the reference time point (when `before = 6`).
 But when some days in a given week are missing because they were censored
 because they had small case counts, taking an average of the observed case
 counts can be misleading and is unintentionally biased upwards. Meanwhile,

@@ -40,17 +40,20 @@ interpreted as an expression for tidy evaluation. See details.}
 
 \item{before}{A nonnegative integer specifying the number of time steps
 before each of the \code{ref_time_values} to extract data from.
-Set to 0 for a "left" (trailing) alignment for the sliding window, meaning
+This must be a vector of length 1.
+Set to 0 for a right-aligned/trailing sliding window, meaning
 that no
 \code{time_value} after the slide will be used for the sliding calculation.
 It is mandatory to specify a \code{before} value, unless \code{after} is specified
-as a non-zero value. In this case, \code{before} will be assumed to be 0.
+as a non-zero value. In this case, \code{before} will be assumed to be 0, as it
+assumes the user wants to do a left-aligned/leading sliding window.
 However, this usage is discouraged and will thus produce a warning.}
 
 \item{after}{A nonnegative integer specifying the number of time steps after
 each of the \code{ref_time_values} to extract data from.
-Set to 0 for a "right" (leading) alignment for the sliding window, meaning
-that no
+This must be a vector of length 1. The default value for
+this is 0. Set to 0 for a left-aligned/leading sliding
+window, meaning that no
 \code{time_value} before the slide will be used for the sliding calculation.
 To specify this to be centrally aligned, set \code{before} and \code{after} to be
 the same.}
