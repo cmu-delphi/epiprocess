@@ -17,7 +17,7 @@ test_that("`after` must be defined as a non-zero integer if `before` is missing"
 
 test_that("Warn user against having a blank `before`",{
   expect_warning(epi_slide(edf, f, after = 1L, ref_time_values=as.Date("2020-01-01")+1L),
-                 regexp="`before` is missing, but `after` is nonzero. `before` has been set to\n0.")
+                 regexp="`before` missing, `after` nonzero; assuming that left-aligned/leading\nwindow is desired and setting `before` = 0.")
 })
 
 test_that("Both `before` and `after` must be nonnegative integers",{

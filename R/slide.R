@@ -22,15 +22,19 @@
 #'   interpreted as an expression for tidy evaluation. See details.  
 #' @param before A nonnegative integer specifying the number of time steps
 #'   before each of the `ref_time_values` to extract data from.
-#'   Set to 0 for a "left" alignment for the sliding window, meaning that no
+#'   Set to 0 for a "left" (trailing) alignment for the sliding window, meaning
+#'   that no
 #'   `time_value` after the slide will be used for the sliding calculation.
 #'   It is mandatory to specify a `before` value, unless `after` is specified
 #'   as a non-zero value. In this case, `before` will be assumed to be 0.
 #'   However, this usage is discouraged and will thus produce a warning.
 #' @param after A nonnegative integer specifying the number of time steps after
 #'   each of the `ref_time_values` to extract data from.
-#'   Set to 0 for a "right" alignment for the sliding window, meaning that no
+#'   Set to 0 for a "right" (leading) alignment for the sliding window, meaning
+#'   that no
 #'   `time_value` before the slide will be used for the sliding calculation.
+#'   To specify this to be centrally aligned, set `before` and `after` to be
+#'   the same.
 #' @param ref_time_values Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
 #'   window. If missing, then this will be set to all unique time values in the
@@ -98,10 +102,17 @@
 #'   # rmv a nonessential var. to ensure new col is printed
 #'   dplyr::select(-death_rate_7d_av) 
 #'  
-#'  # slide a left-aligned 7-day average
+#'  # slide a 7-day leading average
 #'   jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), before = 0, after = 6) %>% 
+#'   # rmv a nonessential var. to ensure new col is printed
+#'   dplyr::select(-death_rate_7d_av)
+#'   
+#'  # slide a 7-day centre-aligned average
+#'   jhu_csse_daily_subset %>%
+#'   group_by(geo_value) %>%
+#'   epi_slide(cases_7dav = mean(cases), before = 3, after = 3) %>% 
 #'   # rmv a nonessential var. to ensure new col is printed
 #'   dplyr::select(-death_rate_7d_av) 
 #'  
@@ -138,7 +149,7 @@ epi_slide = function(x, f, ..., before, after = 0, ref_time_values,
     if (after == 0) {
       Abort("`before` cannot be missing when `after` is set to 0.")
     } else {
-      Warn("`before` is missing, but `after` is nonzero. `before` has been set to 0.")
+      Warn("`before` missing, `after` nonzero; assuming that left-aligned/leading window is desired and setting `before` = 0.")
       before = 0 
     }
   }
@@ -151,20 +162,17 @@ epi_slide = function(x, f, ..., before, after = 0, ref_time_values,
   if (floor(before) < ceiling(before) || floor(after) < ceiling(after)) {
     Abort("`before` and `after` must be integers.")
   }
-  
-  before_num = before
-  after_num = after
 
   # If a custom time step is specified, then redefine units 
   if (!missing(time_step)) {
-    before_num = time_step(before_num)
-    after_num = time_step(after_num)
+    before = time_step(before)
+    after = time_step(after)
   }
 
   # Now set up starts and stops for sliding/hopping
   time_range = range(unique(x$time_value))
-  starts = in_range(ref_time_values - before_num, time_range)
-  stops = in_range(ref_time_values + after_num, time_range)
+  starts = in_range(ref_time_values - before, time_range)
+  stops = in_range(ref_time_values + after, time_range)
   
   if( length(starts) == 0 || length(stops) == 0 ) { 
     Abort("The starting and/or stopping times for sliding are out of bounds with respect to the range of times in your data. Check your settings for ref_time_values and align (and before, if specified).")

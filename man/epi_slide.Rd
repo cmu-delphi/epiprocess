@@ -40,7 +40,8 @@ interpreted as an expression for tidy evaluation. See details.}
 
 \item{before}{A nonnegative integer specifying the number of time steps
 before each of the \code{ref_time_values} to extract data from.
-Set to 0 for a "left" alignment for the sliding window, meaning that no
+Set to 0 for a "left" (trailing) alignment for the sliding window, meaning
+that no
 \code{time_value} after the slide will be used for the sliding calculation.
 It is mandatory to specify a \code{before} value, unless \code{after} is specified
 as a non-zero value. In this case, \code{before} will be assumed to be 0.
@@ -48,8 +49,11 @@ However, this usage is discouraged and will thus produce a warning.}
 
 \item{after}{A nonnegative integer specifying the number of time steps after
 each of the \code{ref_time_values} to extract data from.
-Set to 0 for a "right" alignment for the sliding window, meaning that no
-\code{time_value} before the slide will be used for the sliding calculation.}
+Set to 0 for a "right" (leading) alignment for the sliding window, meaning
+that no
+\code{time_value} before the slide will be used for the sliding calculation.
+To specify this to be centrally aligned, set \code{before} and \code{after} to be
+the same.}
 
 \item{ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
@@ -128,10 +132,17 @@ through the \code{new_col_name} argument.
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av) 
  
- # slide a left-aligned 7-day average
+ # slide a 7-day leading average
   jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), before = 0, after = 6) \%>\% 
+  # rmv a nonessential var. to ensure new col is printed
+  dplyr::select(-death_rate_7d_av)
+  
+ # slide a 7-day centre-aligned average
+  jhu_csse_daily_subset \%>\%
+  group_by(geo_value) \%>\%
+  epi_slide(cases_7dav = mean(cases), before = 3, after = 3) \%>\% 
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av) 
  
