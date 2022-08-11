@@ -37,8 +37,7 @@ Imports:
     tidyr,
     tidyselect,
     tsibble,
-    utils,
-    vctrs
+    utils
 Suggests:
     covidcast,
     epidatr,
@@ -47,6 +46,7 @@ Suggests:
     outbreaks,
     rmarkdown,
     testthat (>= 3.0.0),
+    vctrs,
     waldo (>= 0.3.1),
     withr
 VignetteBuilder: 
