@@ -105,7 +105,7 @@ grouped_epi_archive =
         }
       },
       ungroup = function(...) {
-        if (missing(..1)) {
+        if (rlang::dots_n(...) == 0L) {
           private$ungrouped
         } else {
           exclude_vars = eval_select_names_from_dots(..., .data=private$ungrouped$DT)
