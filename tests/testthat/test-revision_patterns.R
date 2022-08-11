@@ -1,4 +1,3 @@
-library(testthat)
 library(dplyr)
 library(tidyr)
 library(zoo)
@@ -21,32 +20,73 @@ fake_df <- data.frame(time_value = c(as.Date("2022-01-03"), as.Date("2022-01-03"
   
   
 test_that("testing rows filling for missing lags", {
-  #Make sure all reference date have enough rows for updates
+  # Make sure all reference date have enough rows for updates
+  # When lag column is provided
   df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd, ref_lag)
   n_refds <- as.numeric(max_refd - min_refd)+1
   
   expect_equal(dim(df_new)[1], n_refds*(ref_lag+1))
   expect_equal(df_new %>% drop_na(), fake_df)
+
+  # When lag column is missing
+  fake_wolag <- fake_df %>%
+    mutate(issue_date = time_value + lag) %>%
+    select(-lag)
+  df_new_wolag <- fill_rows(fake_wolag, refd_col, min_refd = min_refd, max_refd = max_refd, ref_lag = ref_lag, issued_col = "issue_date")
+  n_refds <- as.numeric(max_refd - min_refd)+1
+
+  expect_equal(dim(df_new_wolag)[1], n_refds*(ref_lag+1))
+  expect_equal(df_new_wolag %>% drop_na() %>% select(-lag), fake_wolag)
+  expect_identical(
+    df_new_wolag %>% mutate(lag = as.double(lag)) %>% select(-issue_date),
+    df_new
+  )
+
+  # When all field names provided
+  fake_allfields <- fake_df %>%
+    mutate(issue_date = time_value + lag)
+  df_new_allfields <- fill_rows(fake_allfields, refd_col, lag_col, min_refd, max_refd, ref_lag, "issue_date")
+  n_refds <- as.numeric(max_refd - min_refd)+1
+
+  expect_equal(dim(df_new_allfields)[1], n_refds*(ref_lag+1))
+  expect_equal(df_new_allfields %>% drop_na(), fake_allfields)
+  expect_identical(df_new_allfields %>% select(-issue_date), df_new)
 })
 
 
-test_that("testing NA filling for missing udpates", {
-  #Make sure all the updates are valid integers
-  
+test_that("testing NA filling for missing updates", {
+  # Make sure all the updates are valid integers
   # Assuming the input data does not have enough rows for consecutive lags
   expect_error(fill_missing_updates(fake_df, value_col, refd_col, lag_col), 
                "Risk exists in forward fill")
   
-  # Assuming the input data is already prepared 
+  # Assuming the input data is already prepared and lag column is provided
   df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd, ref_lag)
   n_refds <- as.numeric(max_refd - min_refd)+1
-  backfill_df <- fill_missing_updates(df_new, value_col, refd_col, lag_col)
+  backfill_df_wlag <- fill_missing_updates(df_new, value_col, refd_col, lag_col)
 
-  expect_equal(dim(backfill_df)[1], n_refds*(ref_lag+1))
-  
+  expect_equal(dim(backfill_df_wlag)[1], n_refds*(ref_lag+1))
   for (d in seq(min_refd, max_refd, by="day")){
-    expect_true(all(diff(backfill_df[backfill_df[,refd_col]==d, "value_raw"])>=0 ))
+    expect_true(all(diff(backfill_df_wlag[backfill_df_wlag[,refd_col]==d, "value_raw"])>=0 ))
   }
+
+  # When all field names provided
+  df_new <- df_new %>%
+    mutate(issue_date = time_value + lag)
+  backfill_df_allfields <- fill_missing_updates(df_new, value_col, refd_col, lag_col, "issue_date")
+
+  expect_identical(backfill_df_wlag, backfill_df_allfields)
+
+  # When lag column is missing
+  df_new <- df_new %>%
+    select(-lag)
+  backfill_df_wolag <- fill_missing_updates(df_new, value_col, refd_col, issued_col = "issue_date")
+
+  # Derived lag column is `difftime` class so have to convert to compare values.
+  expect_identical(
+    backfill_df_wlag,
+    mutate(backfill_df_wolag, lag = as.double(lag))
+  )
 })
 
 
@@ -63,6 +103,12 @@ test_that("testing the calculation of 7-day moving average", {
   output <- backfill_df[backfill_df[[refd_col]] == as.Date("2022-01-07"), "value_raw"]
   expected <- colSums(pivot_df[, -1]) / 7
   expect_true(all(output == expected))
+
+  # Set custom issue date field name
+  backfill_df_setissue <- get_7dav(pivot_df, refd_col, "custom_issue_date_name")
+  expect_identical(
+    backfill_df, rename(backfill_df_setissue, issue_date = custom_issue_date_name)
+  )
 })
 
 test_that("testing the data shifting", {
@@ -96,4 +142,19 @@ test_that("testing adding 7 day avg and target", {
   
   expect_equal(dim(df_new)[2], 3 + 1 + 1 + 1 + 1 + 1)
   expect_equal(dim(df_new)[1], 7 * 8)
+
+  # When issue date, ref date, and lag cols are all provided
+  backfill_df <- mutate(backfill_df, issue_date = time_value + lag)
+  df_new_allfields <- add_7davs_and_target(backfill_df, "new_val_field", refd_col, lag_col, ref_lag, issued_col = "issue_date")
+  expect_identical(df_new, df_new_allfields)
+
+  # When issue date col is provided and lag col is not
+  backfill_df <- select(backfill_df, -lag)
+  df_new_wolag <- add_7davs_and_target(backfill_df, "new_val_field", refd_col = refd_col, ref_lag = ref_lag, issued_col = "issue_date")
+  
+  # Derived lag column is `difftime` class so have to convert to compare values.
+  expect_identical(
+    relocate(df_new, lag, .after = new_val_field),
+    mutate(df_new_wolag, lag = as.double(lag))
+  )
 })
