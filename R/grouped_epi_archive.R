@@ -8,6 +8,21 @@ eval_select_names_from_dots = function(..., .data) {
   names(tidyselect::eval_select(rlang::expr(c(...)), .data))
 }
 
+#' Get names of dots without forcing the dots
+#'
+#' For use in functions that use nonstandard evaluation (NSE) on the dots; we
+#' can't use the pattern `names(list(...))` in this case because it will attempt
+#' to force/(standard-)evaluate the dots, and we want to avoid attempted forcing of the
+#' dots if we're using NSE.
+#'
+#' @noRd
+nse_dots_names = function(...) {
+  names(rlang::call_match())
+}
+nse_dots_names2 = function(...) {
+  rlang::names2(rlang::call_match())
+}
+
 #' @export
 group_by_drop_default.grouped_epi_archive = function(.tbl) {
   .tbl$group_by_drop_default()
@@ -126,6 +141,17 @@ grouped_epi_archive =
                            groups = NULL,
                            as_list_col = FALSE, names_sep = "_",
                            all_rows = FALSE) {
+            if ("group_by" %in% nse_dots_names(...)) {
+              Abort("
+                The `group_by` argument to `slide` has been removed; please
+                use the `group_by` S3 method or `$group_by` R6 method before
+                the slide instead. (If you were instead trying to create a
+                column named `group_by`, this check is a false positive, but
+                you will still need to use a different column name here and
+                rename the resulting column after the slide.)
+              ")
+            }
+            
             # If missing, then set ref time values to be everything; else make
             # sure we intersect with observed time values 
             if (missing(ref_time_values)) {

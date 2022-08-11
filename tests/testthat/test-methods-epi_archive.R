@@ -98,7 +98,6 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
     epix_slide(x = ea %>% group_by("modulus"),
                f = ~ mean(.x$case_rate_7d_av),
                n = 3,
-               group_by = "modulus",
                ref_time_values = time_values,
                new_col_name = 'case_rate_3d_av'),
     reference_by_modulus
