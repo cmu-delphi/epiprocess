@@ -121,13 +121,22 @@ grouped_epi_archive =
       },
       ungroup = function(...) {
         if (rlang::dots_n(...) == 0L) {
+          # This way of checking for missing dots appears to have the same
+          # problems as the (undocumented special case?) `missing(...)` noted in
+          # https://stackoverflow.com/questions/25395446/how-to-detect-missing-dot-dot-dot-in-generic-function-argument,
+          # but `missing(..1)` doesn't work if there is a missing arg followed
+          # by nonmissing args within the dots.
+          #
+          # No dots = special behavior: remove all grouping vars and convert to
+          # an ungrouped class, as with `grouped_df`s.
           private$ungrouped
         } else {
           exclude_vars = eval_select_names_from_dots(..., .data=private$ungrouped$DT)
           vars = setdiff(private$vars, exclude_vars)
           # `vars` might be length 0 if the user's tidyselection removed all
-          # grouping vars. Opt here to keep the result as a grouped_epi_archive,
-          # for output class consistency when `...` is provided.
+          # grouping vars. Unlike with tibble, opt here to keep the result as a
+          # grouped_epi_archive, for output class consistency when `...` is
+          # provided.
           grouped_epi_archive$new(private$ungrouped, vars, private$drop)
         }
       },
