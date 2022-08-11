@@ -98,15 +98,32 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(ea8$additional_metadata,list(value=df$value))
   
   # epi_df
-  edf <- jhu_csse_daily_subset %>%
+  edf1 <- jhu_csse_daily_subset %>%
     select(geo_value,time_value,cases) %>%
     mutate(version = max(time_value), code = "USA")
   
-  ea9 <- as_epi_archive(edf, compactify=FALSE)
+  ea9 <- as_epi_archive(edf1, compactify=FALSE)
   expect_equal(key(ea9$DT),c("geo_value","time_value","version"))
   expect_equal(ea9$additional_metadata,list())
   
-  ea10 <- as_epi_archive(edf,other_keys="code", additional_metadata=list(value=df$value), compactify=FALSE)
+  ea10 <- as_epi_archive(edf1,other_keys="code", additional_metadata=list(value=df$value), compactify=FALSE)
   expect_equal(key(ea10$DT),c("geo_value","time_value","code","version"))
   expect_equal(ea10$additional_metadata,list(value=df$value))
+  
+  # Keyed epi_df
+  edf2 <- data.frame(geo_value = "al",
+                     time_value = rep(as.Date("2020-01-01") + 0:9,2),
+                     version = c(rep(as.Date("2020-01-25"),10),
+                                 rep(as.Date("2020-01-26"),10)),
+                     cases = 1:20,
+                     misc = "USA") %>%
+    as_epi_df(additional_metadata = list(other_keys = "misc"))
+  
+  ea11 <- as_epi_archive(edf2, compactify=FALSE)
+  expect_equal(key(ea11$DT),c("geo_value","time_value","version"))
+  expect_equal(ea11$additional_metadata,list())
+  
+  ea12 <- as_epi_archive(edf2,other_keys="misc", additional_metadata=list(value=df$misc), compactify=FALSE)
+  expect_equal(key(ea12$DT),c("geo_value","time_value","misc","version"))
+  expect_equal(ea12$additional_metadata,list(value=df$misc))
 })
