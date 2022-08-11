@@ -8,7 +8,7 @@ epix_slide(
   x,
   f,
   ...,
-  n = 7,
+  n,
   group_by,
   ref_time_values,
   time_step,
@@ -37,7 +37,7 @@ interpreted as an expression for tidy evaluation.}
 \item{n}{Number of time steps to use in the running window. For example, if
 \code{n = 7}, and one time step is one day, then to produce a value on January 7
 we apply the given function or formula to data in between January 1 and
-7. Default is 7.}
+7.}
 
 \item{group_by}{The variable(s) to group by before slide computation. If
 missing, then the keys in the underlying data table, excluding \code{time_value}
@@ -137,7 +137,7 @@ time_values <- seq(as.Date("2020-06-01"),
                       as.Date("2020-06-15"),
                       by = "1 day")
 epix_slide(x = archive_cases_dv_subset,
-           f = ~ mean(.x$case_rate),
+           f = ~ mean(.x$case_rate_7d_av),
            n = 3,
            group_by = geo_value,
            ref_time_values = time_values,

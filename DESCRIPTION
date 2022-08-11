@@ -41,16 +41,18 @@ Imports:
     vctrs
 Suggests:
     covidcast,
-    delphi.epidata,
+    epidatr,
     ggplot2,
     knitr,
     outbreaks,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    waldo (>= 0.3.1),
+    withr
 VignetteBuilder: 
     knitr
 Remotes:
-    dajmcdon/delphi.epidata,
+    cmu-delphi/epidatr,
     reconverse/outbreaks
 Config/testthat/edition: 3
 Encoding: UTF-8

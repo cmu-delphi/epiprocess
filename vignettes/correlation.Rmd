@@ -16,7 +16,7 @@ state-level COVID-19 case and death rates, smoothed using 7-day trailing
 averages.
 
 ```{r, message = FALSE, warning = FALSE}
-library(delphi.epidata)
+library(epidatr)
 library(epiprocess)
 library(dplyr)
 ```

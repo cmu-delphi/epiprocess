@@ -69,51 +69,24 @@ summary.epi_df = function(object, ...) {
   
   if (!is.data.frame(res)) return(res)
   
-  i_arg <- substitute(i) 
-  j_arg <- substitute(j) 
-  
   if (missing(i)) {
     i <- NULL
     i_arg <- NULL
-  } else if (is.null(i)) {
-    i <- integer()
-  }
+  } 
   
   if (missing(j)) {
     j <- NULL
     j_arg <- NULL
-  } else if (is.null(j)) {
-    j <- integer()
-  }
-  
-  # Ignore drop as an argument for counting
-  n_real_args <- nargs() - !missing(drop) 
-  
-  # Case when the number of args (excluding drop) is not 3 or more
-  if (n_real_args <= 2L) {
-    j <- i
-    i <- NULL
-    j_arg <- i_arg
-    i_arg <- NULL
-  }
+  } 
   
   cn <- names(res)
   nr <- vctrs::vec_size(x) 
   not_epi_df <- (!("time_value" %in% cn) || !("geo_value" %in% cn) || vctrs::vec_size(res) > nr || any(i > nr))
-
+  
   if (not_epi_df) return(tibble::as_tibble(res))
   
-  # Case when i is numeric and there are duplicate values in it
-  if (is.numeric(i) && vctrs::vec_duplicate_any(i) > 0) 
-    return(tibble::as_tibble(res))
-  
-  att_x = attr(x, "metadata")
-  new_epi_df(tibble::as_tibble(res), 
-             geo_type = att_x$geo_type, 
-             time_type = att_x$time_type, 
-             as_of = att_x$as_of,
-             additional_metadata = 
-               att_x[!(names(att_x)  %in% c("geo_type", "time_type", "as_of"))])
+  # Use reclass as safeguard (in case class & metadata are dropped)
+  reclass(res, attr(x, "metadata"))
 }
 
 #' `dplyr` verbs
