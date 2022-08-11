@@ -22,7 +22,7 @@ test_that("Test throwing of warning of duplicates",{
     expect_error()
 })
 
-test_that("Simple example of growth rate produces desired results",{
+test_that("Simple example of growth rate that produces desired results",{
   expect_equal(growth_rate(x=1:20,y=2^(1:20),h=1),
                c(rep(1,19),NaN))
 })
@@ -31,9 +31,7 @@ test_that("Running different methods won't fail",{
   expect_error(
     for (m in c("rel_change","linear_reg","smooth_spline","trend_filter")) {
       growth_rate(x=1:25,y=sin(0:24)+0:24+1,method=m,h=3)
-    },
-    NA
-  )
+    }, NA)
 })
 
 test_that("When using trend_filter, if `cv=FALSE`, then df must be an integer",{
@@ -41,8 +39,6 @@ test_that("When using trend_filter, if `cv=FALSE`, then df must be an integer",{
                            cv=FALSE,df=1.5,h=3),
                "If `cv = FALSE`, then `df` must be an integer.")
 })
-
-growth_rate(x=1:20,y=exp(1:20),h=5,method="linear_reg",log_scale = TRUE)
 
 test_that("log_scale works",{
   expect_equal(growth_rate(x=1:20,y=exp(1:20),h=5,method="linear_reg",log_scale = TRUE),
