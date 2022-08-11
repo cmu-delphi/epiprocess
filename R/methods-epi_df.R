@@ -71,17 +71,15 @@ summary.epi_df = function(object, ...) {
   
   if (missing(i)) {
     i <- NULL
-    i_arg <- NULL
   } 
   
   if (missing(j)) {
     j <- NULL
-    j_arg <- NULL
   } 
   
   cn <- names(res)
   
-  # Duplicate columns, Abort
+  # Duplicate key columns, Abort
   dup_col_names = cn[duplicated(cn)]
   if (length(dup_col_names) != 0) {
     Abort(paste0("Column name(s) ", 
@@ -89,8 +87,7 @@ summary.epi_df = function(object, ...) {
                        collapse = ", "), " must not be duplicated."))
   } 
   
-  # If not an epi_df (missing time_value or geo_value), return a tibble
-  not_epi_df <- (!("time_value" %in% cn) || !("geo_value" %in% cn))
+  not_epi_df <- !("time_value" %in% cn) || !("geo_value" %in% cn)
   
   if (not_epi_df) {
     attributes(res)$metadata <- NULL 
@@ -98,18 +95,12 @@ summary.epi_df = function(object, ...) {
   }
   
   # Use reclass as safeguard (in case class &/or metadata are dropped)
-  reclass(res, attr(x, "metadata"))
+  res <- reclass(res, attr(x, "metadata"))
   
-  # Amend additional metadata if some other_keys cols are dropped
-  
-  # Extract the other_keys colnames in the original epi_df that do not occur in the subset
-  only_in_orig = setdiff(unlist(attr(x, "metadata")$other_keys), 
-                         cn[!(cn %in% c("geo_value", "time_value"))]) 
-  
-  if (length(only_in_orig) != 0) {
-    # remove all other_keys elements in the original epi_df that do not occur in subset
-    attr(res, "metadata")$other_keys = 
-      attr(res, "metadata")$other_keys[! attr(res, "metadata")$other_keys %in% only_in_orig]
+  # Amend additional metadata if some other_keys cols are dropped in the subset
+  old_other_keys = attr(x, "metadata")$other_keys
+  if (length(setdiff(old_other_keys, cn)) > 0) {
+    attr(res, "metadata")$other_keys <- intersect(old_other_keys, cn) 
   }
   
   res
