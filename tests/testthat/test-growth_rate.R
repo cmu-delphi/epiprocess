@@ -54,6 +54,7 @@ test_that("na_rm works",{
   Y <- c(1:9,NA,NA,12:20)
   
   expect_false(NA %in% growth_rate(x=X,y=Y,na_rm = TRUE))
+  expect_equal(length(growth_rate(x=X,y=Y,na_rm = TRUE)),17)
   expect_equal(growth_rate(x=X,y=Y,na_rm = FALSE),
                # 1+NA gives an NA classified as a numeric
                rep(1+NA,20))
