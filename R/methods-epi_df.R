@@ -99,9 +99,7 @@ summary.epi_df = function(object, ...) {
   
   # Amend additional metadata if some other_keys cols are dropped in the subset
   old_other_keys = attr(x, "metadata")$other_keys
-  if (length(setdiff(old_other_keys, cn)) > 0) {
-    attr(res, "metadata")$other_keys <- intersect(old_other_keys, cn) 
-  }
+  attr(res, "metadata")$other_keys <- old_other_keys[old_other_keys %in% cn]
   
   res
 }
