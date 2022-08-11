@@ -480,7 +480,7 @@ epi_archive =
               tibble::as_tibble() %>% 
               dplyr::select(-.data$version) %>%
               as_epi_df(geo_type = self$geo_type,
-                        time_type = self$time_type,
+                       time_type = self$time_type,
                         as_of = max_version,
                         additional_metadata = c(self$additional_metadata,
                                                 other_keys = other_keys))
