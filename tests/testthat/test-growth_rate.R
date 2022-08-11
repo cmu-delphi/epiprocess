@@ -27,8 +27,6 @@ test_that("Simple example of growth rate produces desired results",{
                c(rep(1,19),NaN))
 })
 
-# Test each of the methods, log_scale settings, and na_rm settings
-
 test_that("Running different methods won't fail",{
   expect_error(
     for (m in c("rel_change","linear_reg","smooth_spline","trend_filter")) {
@@ -54,5 +52,9 @@ test_that("log_scale works",{
 test_that("na_rm works",{
   X <- c(1:10,NA,12:19,NA)
   Y <- c(1:9,NA,NA,12:20)
-  growth_rate(x=X,y=Y,na_rm = TRUE)
+  
+  expect_false(NA %in% growth_rate(x=X,y=Y,na_rm = TRUE))
+  expect_equal(growth_rate(x=X,y=Y,na_rm = FALSE),
+               # 1+NA gives an NA classified as a numeric
+               rep(1+NA,20))
 })

@@ -146,7 +146,7 @@ growth_rate = function(x = seq_along(y), y, x0 = x,
   
   # Remove NAs if we need to
   if (na_rm) {
-    o = !(is.na(x) & is.na(y))
+    o = !(is.na(x) | is.na(y))
     x = x[o]
     y = y[o]
   }
