@@ -341,6 +341,9 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
   .data$group_by(..., .add=.add, .drop=.drop)
 }
 
+# (`group_by_drop_default` on ungrouped `epi_archive`s is expected to dispatch
+# to `group_by_drop_default.default`.)
+
 #' Slide a function over variables in an `epi_archive` or `grouped_epi_archive`
 #'
 #' Slides a given function over variables in an `epi_archive` object. This
