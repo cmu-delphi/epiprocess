@@ -603,7 +603,8 @@ epi_archive =
                            as_list_col = FALSE, names_sep = "_",
                            all_rows = FALSE) {
             # For an "ungrouped" slide, treat all rows as belonging to one big
-            # group (group by 0 vars), like `dplyr::summarize`:
+            # group (group by 0 vars), like `dplyr::summarize`, and let the
+            # resulting `grouped_epi_archive` handle the slide:
             self$group_by()$slide(
               f, ...,
               n = n, ref_time_values = ref_time_values,
