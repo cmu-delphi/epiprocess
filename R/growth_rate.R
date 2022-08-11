@@ -44,7 +44,8 @@
 #' * "rel_change": uses (B/A - 1) / h, where B is the average of `y` over the
 #'   second half of a sliding window of bandwidth h centered at the reference
 #'   point `x0`, and A the average over the first half. This can be seen as
-#'   using a first-difference approximation to the derivative.
+#'   using a first-difference approximation to the derivative. This is the
+#'   default method if `method` is not specified.
 #' * "linear_reg": uses the slope from a linear regression of `y` on `x` over a
 #'   sliding window centered at the reference point `x0`, divided by the fitted
 #'   value from this linear regression at `x0`.

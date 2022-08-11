@@ -72,7 +72,8 @@ The following methods are available for estimating the growth rate:
 \item "rel_change": uses (B/A - 1) / h, where B is the average of \code{y} over the
 second half of a sliding window of bandwidth h centered at the reference
 point \code{x0}, and A the average over the first half. This can be seen as
-using a first-difference approximation to the derivative.
+using a first-difference approximation to the derivative. This is the
+default method if \code{method} is not specified.
 \item "linear_reg": uses the slope from a linear regression of \code{y} on \code{x} over a
 sliding window centered at the reference point \code{x0}, divided by the fitted
 value from this linear regression at \code{x0}.
