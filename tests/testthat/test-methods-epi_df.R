@@ -7,12 +7,14 @@ toy_epi_df <- tibble::tibble(
     length.out = 5
   ), times = 2),
   geo_value = rep(c("ca", "hi"), each = 5),
-  indicator_var = as.factor(rep(1:2, times = 5)), 
-) %>% as_epi_df(additional_metadata = list(other_keys = "indicator_var"))
+  indic_var1 = as.factor(rep(1:2, times = 5)), 
+  indic_var2 = as.factor(rep(letters[1:5], times = 2))
+) %>% as_epi_df(additional_metadata = 
+                  list(other_keys = c("indic_var1", "indic_var2")))
 
 att_toy = attr(toy_epi_df, "metadata")
 
-test_that("head and tail do not drop the epi_df class", {
+test_that("Head and tail do not drop the epi_df class", {
   att_head = attr(head(toy_epi_df), "metadata")
   att_tail = attr(tail(toy_epi_df), "metadata")
   
@@ -29,7 +31,7 @@ test_that("head and tail do not drop the epi_df class", {
 })
 
 
-test_that("subsetting drops or does not drop the epi_df class appropriately", {
+test_that("Subsetting drops & does not drop the epi_df class appropriately", {
   
   # Row subset - should be epi_df
   row_subset = toy_epi_df[1:2, ]
@@ -37,19 +39,11 @@ test_that("subsetting drops or does not drop the epi_df class appropriately", {
   
   expect_true(is_epi_df(row_subset))
   expect_equal(nrow(row_subset), 2L)
-  expect_equal(ncol(row_subset), 5L)
+  expect_equal(ncol(row_subset), 6L)
   expect_identical(att_row_subset$geo_type, att_toy$geo_type)
   expect_identical(att_row_subset$time_type, att_toy$time_type)
   expect_identical(att_row_subset$as_of, att_toy$as_of)
   expect_identical(att_row_subset$other_keys, att_toy$other_keys)
-  
-  # Col subset - shouldn't be an epi_df
-  col_subset = toy_epi_df[, 2:3]
-  
-  expect_false(is_epi_df(col_subset))
-  expect_true(tibble::is_tibble(col_subset))
-  expect_equal(nrow(col_subset), 10L)
-  expect_equal(ncol(col_subset), 2L)
   
   # Row and col single value - shouldn't be an epi_df
   row_col_subset1 = toy_epi_df[1,2]
@@ -57,6 +51,22 @@ test_that("subsetting drops or does not drop the epi_df class appropriately", {
   expect_true(tibble::is_tibble(row_col_subset1))
   expect_equal(nrow(row_col_subset1), 1L)
   expect_equal(ncol(row_col_subset1), 1L)
+  
+  # Col subset with no time_value - shouldn't be an epi_df
+  col_subset1 = toy_epi_df[, c(1,3)]
+  
+  expect_false(is_epi_df(col_subset1))
+  expect_true(tibble::is_tibble(col_subset1))
+  expect_equal(nrow(col_subset1), 10L)
+  expect_equal(ncol(col_subset1), 2L)
+  
+  # Col subset with no geo_value - shouldn't be an epi_df
+  col_subset2 = toy_epi_df[, 2:3]
+  
+  expect_false(is_epi_df(col_subset2))
+  expect_true(tibble::is_tibble(col_subset2))
+  expect_equal(nrow(col_subset2), 10L)
+  expect_equal(ncol(col_subset2), 2L)
   
   # Row and col subset that contains geo_value and time_value - should be epi_df
   row_col_subset2 = toy_epi_df[2:3,1:3]
@@ -68,6 +78,41 @@ test_that("subsetting drops or does not drop the epi_df class appropriately", {
   expect_identical(att_row_col_subset2$geo_type, att_toy$geo_type)
   expect_identical(att_row_col_subset2$time_type, att_toy$time_type)
   expect_identical(att_row_col_subset2$as_of, att_toy$as_of)
-  expect_identical(att_row_col_subset2$other_keys, att_toy$other_keys)
-  
+  expect_identical(att_row_col_subset2$other_keys, character(0))
 })
+
+test_that("When duplicate cols in subset should abort", {
+  expect_error(toy_epi_df[, c(2,2:3,4,4,4)], 
+               "Column name(s) time_value, y must not be duplicated.", fixed = T)
+  expect_error(toy_epi_df[1:4, c(1,2:4,1)], 
+               "Column name(s) geo_value must not be duplicated.", fixed = T)
+})
+
+test_that("Correct metadata when subset includes some of other_keys", {
+  # Only include other_var of indic_var1
+  only_indic_var1 = toy_epi_df[, 1:5]
+  att_only_indic_var1 = attr(only_indic_var1, "metadata")
+  
+  expect_true(is_epi_df(only_indic_var1))
+  expect_equal(nrow(only_indic_var1), 10L)
+  expect_equal(ncol(only_indic_var1), 5L)
+  expect_identical(att_only_indic_var1$geo_type, att_toy$geo_type)
+  expect_identical(att_only_indic_var1$time_type, att_toy$time_type)
+  expect_identical(att_only_indic_var1$as_of, att_toy$as_of)
+  expect_identical(att_only_indic_var1$other_keys, att_toy$other_keys[-2])
+  
+  # Only include other_var of indic_var2
+  only_indic_var2 = toy_epi_df[, c(1:4,6)]
+  att_only_indic_var2 = attr(only_indic_var2, "metadata")
+  
+  expect_true(is_epi_df(only_indic_var2))
+  expect_equal(nrow(only_indic_var2), 10L)
+  expect_equal(ncol(only_indic_var2), 5L)
+  expect_identical(att_only_indic_var2$geo_type, att_toy$geo_type)
+  expect_identical(att_only_indic_var2$time_type, att_toy$time_type)
+  expect_identical(att_only_indic_var2$as_of, att_toy$as_of)
+  expect_identical(att_only_indic_var2$other_keys, att_toy$other_keys[-1])
+  
+  # Including both original other_keys was already tested above
+})
+
