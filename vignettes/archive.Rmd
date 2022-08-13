@@ -26,7 +26,7 @@ on its [API documentation
 page](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
 
 ```{r, message = FALSE, warning = FALSE, eval=FALSE}
-library(delphi.epidata)
+library(epidatr)
 library(epiprocess)
 library(data.table)
 library(dplyr)
@@ -44,7 +44,7 @@ dv <- covidcast(
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-library(delphi.epidata)
+library(epidatr)
 library(epiprocess)
 library(data.table)
 library(dplyr)
@@ -63,15 +63,17 @@ has (at least) the following columns:
   `time_value` is January 14, 2022, then this row contains the measurements of
   the data for January 14, 2022 that were available one day later.
 
-As we can see from the above, the data frame returned by 
-`delphi.epidata::covidcast()` has the columns required for the `epi_archive` 
-format, with `issue` playing the role of `version`. We can now use 
-`as_epi_archive()` to bring it into `epi_archive` format.
+As we can see from the above, the data frame returned by
+`epidatr::covidcast()` has the columns required for the `epi_archive`
+format, with `issue` playing the role of `version`. We can now use
+`as_epi_archive()` to bring it into `epi_archive` format. For removal of
+redundant version updates in `as_epi_archive` using compactify, please refer
+to the compactify vignette.
 
 ```{r, eval=FALSE}
 x <- dv %>%
   select(geo_value, time_value, version = issue, percent_cli = value) %>%
-  as_epi_archive()
+  as_epi_archive(compactify=TRUE)
 
 class(x)
 print(x)
@@ -80,7 +82,7 @@ print(x)
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 x <- archive_cases_dv_subset$DT %>%
   select(geo_value, time_value, version , percent_cli)  %>%
-  as_epi_archive()
+  as_epi_archive(compactify=TRUE)
 
 class(x)
 print(x)
@@ -106,10 +108,10 @@ snapshot of data from the archive, as of a given version (also described below).
 key(x$DT)
 ```
  
-In general, last observation carried forward (LOCF) is used to data in between
-recorded versions. **A word of caution:** R6 objects, unlike most other objects
-in R, have reference semantics. An important consequence of this is that objects
-are not copied when modified.
+In general, the last version of each observation is carried forward (LOCF) to
+fill in data between recorded versions. **A word of caution:** R6 objects,
+unlike most other objects in R, have reference semantics. An important
+consequence of this is that objects are not copied when modified.
    
 ```{r}
 original_value <- x$DT$percent_cli[1]
@@ -123,7 +125,7 @@ x$DT$percent_cli[1] <- original_value
 To make a copy, we can use the `clone()` method for an R6 class, as in `y <-
 x$clone()`. You can read more about reference semantics in Hadley Wickham's
 [Advanced R](https://adv-r.hadley.nz/r6.html#r6-semantics) book.
- 
+
 ## Some details on metadata
 
 The following pieces of metadata are included as fields in an `epi_archive`
@@ -138,6 +140,15 @@ as in `x$geo_type` or `x$time_type`, etc. Just like `as_epi_df()`, the function
 `as_epi_archive()` attempts to guess metadata fields when an `epi_archive`
 object is instantiated, if they are not explicitly specified in the function
 call (as it did in the case above).
+
+Note that `compactify` is **NOT** metadata and is an argument passed when creating
+the dataset, without being stored in the end:
+
+```{r,message=FALSE}
+# `dt` here is taken from the tests
+as_epi_archive(archive_cases_dv_subset$DT,compactify=TRUE)$geo_type # "state"
+as_epi_archive(archive_cases_dv_subset$DT,compactify=TRUE)$compactify # NULL
+```
 
 ## Producing snapshots in `epi_df` form
 
@@ -162,7 +173,7 @@ date was June 1, 2021. From this we can infer that the doctor's visits signal
 was 2 days latent on June 1. Also, we can see that the metadata in the `epi_df`
 object has the version date recorded in the `as_of` field.
 
-Using the maximum of the `version` column in the underlying data table in an
+By default, using the maximum of the `version` column in the underlying data table in an
 `epi_archive` object itself generates a snapshot of the latest values of signal
 variables in the entire archive. The `epix_as_of()` function issues a warning in
 this case, since updates to the current version may still come in at a later 
@@ -215,25 +226,28 @@ quite as dramatically. Modeling the revision process, which is often called
 
 ## Merging `epi_archive` objects 
 
-Now we demonstrate how to merge the underlying data tables in two `epi_archive`
-objects together. The `epi_archive` class provides a method `merge()` precisely
-for this purpose. The wrapper function is called `epix_merge()`; as before, this
-is just offered as a matter of convenience/familiarity for some users. Below we
-merge the working `epi_archive` of versioned percentage CLI from outpatient
-visits to another one of versioned COVID-19 case reporting data, which we fetch
-the from the [COVIDcast
+Now we demonstrate how to merge two `epi_archive` objects together, e.g., so
+that grabbing data from multiple sources as of a particular version can be
+performed with a single `as_of` call. The `epi_archive` class provides a method
+`merge()` precisely for this purpose. The wrapper function is called
+`epix_merge()`; this wrapper avoids mutating its inputs, while `x$merge` will
+mutate `x`. Below we merge the working `epi_archive` of versioned percentage CLI
+from outpatient visits to another one of versioned COVID-19 case reporting data,
+which we fetch the from the [COVIDcast
 API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/), on the
 rate scale (counts per 100,000 people in the population).
 
-When merging archives, we typically want to perform a *full join*, otherwise we
-will be throwing out versioned data from one table or the other.  This is
-accomplished by setting `all = TRUE` in the call to `epix_merge()`. Furthermore,
-this function provides an option for filling `NA` values via LOCF by setting
-`locf = TRUE`. In general, unless two data tables have the exact same pattern of
-updates, we will get `NA` values in the signals after performing a full join.
-Because the original data archives are stored in LOCF (last observation carried
-forward) format in the first place, it generally makes sense to perform `NA`
-filling after merging using LOCF. Therefore `locf = TRUE` is the default.
+When merging archives, unless the archives have identical data release patterns,
+`NA`s can be introduced in the non-key variables for a few reasons:
+- to represent the "value" of an observation before its initial release (when we
+  need to pair it with additional observations from the other archive that have
+  been released)
+- to represent the "value" of an observation that has no recorded versions at
+  all (in the same sort of situation)
+- if requested via `sync="na"`, to represent potential update data that we do
+  not yet have access to (e.g., due to encountering issues while attempting to
+  download the currently available version data for one of the archives, but not
+  the other).
 
 ```{r, message = FALSE, warning = FALSE,eval=FALSE}
 y <- covidcast(
@@ -241,15 +255,15 @@ y <- covidcast(
   signals = "confirmed_7dav_incidence_prop",
   time_type = "day",
   geo_type = "state",
-  time_value = epirange(20200601, 20211201),
+  time_values = epirange(20200601, 20211201),
   geo_values = "ca,fl,ny,tx",
   issues = epirange(20200601, 20211201)
 ) %>%
   fetch_tbl() %>%
   select(geo_value, time_value, version = issue, case_rate_7d_av = value) %>%
-  as_epi_archive()
+  as_epi_archive(compactify=TRUE)
 
-epix_merge(x, y, all = TRUE)
+x$merge(y)
 print(x)
 head(x$DT)
 ```
@@ -260,9 +274,10 @@ print(x)
 head(x$DT)
 ```
 
-Importantly, as we can see, the way `epix_merge()` works is that it
-**overwrites** the data table in the first `epi_archive` object `x` by the
-merged data table.
+Importantly, see that `x$merge` mutated `x` to hold the result of the merge. We
+could also have used `xy = epix_merge(x,y)` to avoid mutating `x`. See the
+documentation for either for more detailed descriptions of what mutation,
+pointer aliasing, and pointer reseating is possible.
 
 ## Sliding version-aware computations
     
@@ -449,7 +464,7 @@ ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
   theme(legend.position = "none") 
 ```
 
-Each row displays the forecasts for a different location (CA and FL), and each
+Each row displays the forecasts for a different location (CA, FL, NY, and TX), and each
 column corresponds to whether properly-versioned data is used (`FALSE` means no,
 and `TRUE` means yes). We can see that the properly-versioned forecaster is, at
 some points in time, more problematic; for example, it massively overpredicts

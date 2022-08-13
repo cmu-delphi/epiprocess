@@ -39,7 +39,7 @@ For example, if
 \code{max_version_gap = 7}, and one time step is one day, then to produce a
 value on January 7
 we apply the given function or formula to data in between January 1 and
-7. Default is 7.}
+7.}
 
 \item{group_by}{The variable(s) to group by before slide computation. If
 missing, then the keys in the underlying data table, excluding \code{time_value}
