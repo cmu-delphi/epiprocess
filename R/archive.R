@@ -705,7 +705,7 @@ epi_archive =
 
               x = purrr::map_dfr(ref_time_values, function(t) {
                 self$as_of(t, min_time_value = t - before_num) %>%
-                  #tibble::as_tibble() %>% 
+                  tibble::as_tibble() %>% 
                   dplyr::group_by(!!!group_by) %>%
                   dplyr::group_modify(comp_one_grp,
                                       f = f, quo = quo,
