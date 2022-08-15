@@ -434,8 +434,8 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   else {
     x_latest %>% 
       group_by(geo_value) %>%
-      epi_slide(fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead), before = 119,
-                ref_time_values = fc_time_values) %>%
+      epi_slide(fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, time_value, ahead = ahead), before = 119,
+                ref_time_values = fc_versions) %>%
       mutate(target_date = time_value + ahead, as_of = FALSE) 
   }
 }
