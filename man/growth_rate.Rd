@@ -105,7 +105,7 @@ reference point is at most \code{h}. Note that the unit for this distance is
 implicitly defined by the \code{x} variable; for example, if \code{x} is a vector of
 \code{Date} objects, \code{h = 7}, and the reference point is January 7, then the
 sliding window contains all data in between January 1 and 14 (matching the
-behavior of \code{epi_slide()} with \code{n = 2 * h} and \code{align = "center"}).
+behavior of \code{epi_slide()} with \code{before = h - 1} and \code{after = h}).
 }
 
 \section{Additional Arguments}{

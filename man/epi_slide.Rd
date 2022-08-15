@@ -108,7 +108,11 @@ are unavailable at any given reference time value, then \code{epi_slide()} still
 attempts to perform the computation anyway (it does not require a complete
 window). The issue of what to do with partial computations (those run on
 incomplete windows) is therefore left up to the user, either through the
-specified function or formula \code{f}, or through post-processing.
+specified function or formula \code{f}, or through post-processing. For a
+centrally-aligned slide of \code{n} \code{time_value}s in a sliding window, set
+\code{before = (n-1)/2} and \code{after = (n-1)/2} when the number of \code{time_value}s
+in a sliding window is odd and  \code{before = n/2-1} and \code{after = n/2} when
+\code{n} is even.
 
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
 for example, as in:
@@ -148,11 +152,18 @@ through the \code{new_col_name} argument.
   epi_slide(cases_7dav = mean(cases), before = 3, after = 3) \%>\% 
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av) 
+  
+ # slide a 14-day centre-aligned average
+  jhu_csse_daily_subset \%>\%
+  group_by(geo_value) \%>\%
+  epi_slide(cases_7dav = mean(cases), before = 6, after = 7) \%>\% 
+  # rmv a nonessential var. to ensure new col is printed
+  dplyr::select(-death_rate_7d_av) 
  
  # nested new columns
- jhu_csse_daily_subset \%>\% 
- group_by(geo_value) \%>\%
- epi_slide(a = data.frame(cases_2dav = mean(cases), 
+  jhu_csse_daily_subset \%>\% 
+  group_by(geo_value) \%>\%
+  epi_slide(a = data.frame(cases_2dav = mean(cases), 
                           cases_2dma = mad(cases)),
-           before = 1, as_list_col = TRUE)
+            before = 1, as_list_col = TRUE)
 }
