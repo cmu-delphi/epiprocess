@@ -8,10 +8,9 @@ epi_slide(
   x,
   f,
   ...,
-  n,
-  ref_time_values,
-  align = c("right", "center", "left"),
   before,
+  after = 0,
+  ref_time_values,
   time_step,
   new_col_name = "slide_value",
   as_list_col = FALSE,
@@ -23,7 +22,8 @@ epi_slide(
 \item{x}{The \code{epi_df} object under consideration.}
 
 \item{f}{Function or formula to slide over variables in \code{x}. To "slide" means
-to apply a function or formula over a running window of \code{n} time steps
+to apply a function or formula over a running window of \code{before}
+and \code{after} time steps
 (where one time step is typically one day or one week; see details for more
 explanation). If a function, \code{f} should take \code{x}, an \code{epi_df} with the same
 names as the non-grouping columns, followed by \code{g} to refer to the one row
@@ -38,27 +38,30 @@ to the groupings that would be described by \code{g} if \code{f} was a function.
 via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
 interpreted as an expression for tidy evaluation. See details.}
 
-\item{n}{Number of time steps to use in the running window. For example, if
-\code{n = 7}, one time step is one day, and the alignment is "right", then to
-produce a value on January 7 we apply the given function or formula to data
-in between January 1 and 7.}
+\item{before}{A nonnegative integer specifying the number of time steps
+before each of the \code{ref_time_values} to extract data from.
+This must be a vector of length 1.
+Set to 0 for a right-aligned/trailing sliding window, meaning
+that no
+\code{time_value} after the slide will be used for the sliding calculation.
+It is mandatory to specify a \code{before} value, unless \code{after} is specified
+as a non-zero value. In this case, \code{before} will be assumed to be 0, as it
+assumes the user wants to do a left-aligned/leading sliding window.
+However, this usage is discouraged and will thus produce a warning.}
+
+\item{after}{A nonnegative integer specifying the number of time steps after
+each of the \code{ref_time_values} to extract data from.
+This must be a vector of length 1. The default value for
+this is 0. Set to 0 for a left-aligned/leading sliding
+window, meaning that no
+\code{time_value} before the slide will be used for the sliding calculation.
+To specify this to be centrally aligned, set \code{before} and \code{after} to be
+the same.}
 
 \item{ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
 window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.}
-
-\item{align}{One of "right", "center", or "left", indicating the alignment of
-the sliding window relative to the reference time point. If the alignment
-is "center" and \code{n} is even, then one more time point will be used after
-the reference time point than before. Default is "right".}
-
-\item{before}{Positive integer less than \code{n}, specifying the number of time
-points to use in the sliding window strictly before the reference time
-point. For example, setting \code{before = n-1} would be the same as setting
-\code{align = "right"}. The \code{before} argument allows for more flexible
-specification of alignment than the \code{align} parameter, and if specified,
-overrides \code{align}.}
 
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
@@ -93,14 +96,15 @@ examples.
 }
 \details{
 To "slide" means to apply a function or formula over a running
-window of \code{n} time steps, where the unit (the meaning of one time step) is
+window of \code{before} time steps before and \code{after} time steps after,
+where the unit (the meaning of one time step) is
 implicitly defined by the way the \code{time_value} column treats addition and
 subtraction; for example, if the time values are coded as \code{Date} objects,
 then one time step is one day, since \code{as.Date("2022-01-01") + 1} equals
 \code{as.Date("2022-01-02")}. Alternatively, the time step can be set explicitly
 using the \code{time_step} argument (which if specified would override the
-default choice based on \code{time_value} column). If less than \code{n} time steps
-are available at any given reference time value, then \code{epi_slide()} still
+default choice based on \code{time_value} column). If certain time steps
+are unavailable at any given reference time value, then \code{epi_slide()} still
 attempts to perform the computation anyway (it does not require a complete
 window). The issue of what to do with partial computations (those run on
 incomplete windows) is therefore left up to the user, either through the
@@ -109,12 +113,12 @@ specified function or formula \code{f}, or through post-processing.
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
 for example, as in:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, cases_7dav = mean(cases), before = 6)
 }\if{html}{\out{</div>}}
 
 which would be equivalent to:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, ...) mean(x$cases), n = 7,
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, ...) mean(x$cases), before = 6,
           new_col_name = "cases_7dav")
 }\if{html}{\out{</div>}}
 
@@ -127,16 +131,21 @@ through the \code{new_col_name} argument.
  # slide a 7-day trailing average formula on cases
   jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide(cases_7dav = mean(cases), n = 7, 
-            align = "right") \%>\% 
+  epi_slide(cases_7dav = mean(cases), before = 6) \%>\% 
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av) 
  
- # slide a left-aligned 7-day average
+ # slide a 7-day leading average
   jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide(cases_7dav = mean(cases), n = 7, 
-            align = "left") \%>\% 
+  epi_slide(cases_7dav = mean(cases), before = 0, after = 6) \%>\% 
+  # rmv a nonessential var. to ensure new col is printed
+  dplyr::select(-death_rate_7d_av)
+  
+ # slide a 7-day centre-aligned average
+  jhu_csse_daily_subset \%>\%
+  group_by(geo_value) \%>\%
+  epi_slide(cases_7dav = mean(cases), before = 3, after = 3) \%>\% 
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av) 
  
@@ -145,5 +154,5 @@ through the \code{new_col_name} argument.
  group_by(geo_value) \%>\%
  epi_slide(a = data.frame(cases_2dav = mean(cases), 
                           cases_2dma = mad(cases)),
-           n = 2, as_list_col = TRUE)
+           before = 1, as_list_col = TRUE)
 }

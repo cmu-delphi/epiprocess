@@ -451,7 +451,7 @@ epix_merge = function(x, y,
 #'            ref_versions = versions,
 #'            new_col_name = 'case_rate_3d_av')
 epix_slide = function(x, f, ..., max_version_gap, group_by, ref_versions,
-                      time_step, new_col_name = "slide_value",
+                      time_step, new_col_name = "devslide_value",
                       as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   return(x$slide(f, ...,

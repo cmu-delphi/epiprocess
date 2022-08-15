@@ -6,7 +6,8 @@
 #'
 #' @param x The `epi_df` object under consideration.
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
-#'   to apply a function or formula over a running window of `n` time steps
+#'   to apply a function or formula over a running window of `before`
+#'   and `after` time steps
 #'   (where one time step is typically one day or one week; see details for more
 #'   explanation). If a function, `f` should take `x`, an `epi_df` with the same 
 #'   names as the non-grouping columns, followed by `g` to refer to the one row 
@@ -19,24 +20,28 @@
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation. See details.  
-#' @param n Number of time steps to use in the running window. For example, if
-#'   `n = 7`, one time step is one day, and the alignment is "right", then to
-#'   produce a value on January 7 we apply the given function or formula to data
-#'   in between January 1 and 7.
+#' @param before A nonnegative integer specifying the number of time steps
+#'   before each of the `ref_time_values` to extract data from.
+#'   This must be a vector of length 1.
+#'   Set to 0 for a right-aligned/trailing sliding window, meaning
+#'   that no
+#'   `time_value` after the slide will be used for the sliding calculation.
+#'   It is mandatory to specify a `before` value, unless `after` is specified
+#'   as a non-zero value. In this case, `before` will be assumed to be 0, as it
+#'   assumes the user wants to do a left-aligned/leading sliding window.
+#'   However, this usage is discouraged and will thus produce a warning.
+#' @param after A nonnegative integer specifying the number of time steps after
+#'   each of the `ref_time_values` to extract data from.
+#'   This must be a vector of length 1. The default value for
+#'   this is 0. Set to 0 for a left-aligned/leading sliding
+#'   window, meaning that no
+#'   `time_value` before the slide will be used for the sliding calculation.
+#'   To specify this to be centrally aligned, set `before` and `after` to be
+#'   the same.
 #' @param ref_time_values Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
 #'   window. If missing, then this will be set to all unique time values in the
 #'   underlying data table, by default.
-#' @param align One of "right", "center", or "left", indicating the alignment of
-#'   the sliding window relative to the reference time point. If the alignment
-#'   is "center" and `n` is even, then one more time point will be used after
-#'   the reference time point than before. Default is "right".
-#' @param before Positive integer less than `n`, specifying the number of time
-#'   points to use in the sliding window strictly before the reference time
-#'   point. For example, setting `before = n-1` would be the same as setting
-#'   `align = "right"`. The `before` argument allows for more flexible
-#'   specification of alignment than the `align` parameter, and if specified,
-#'   overrides `align`. 
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
 #'   `time_value` column. This function must take a positive integer and return
@@ -60,14 +65,15 @@
 #'   according to the `new_col_name` argument. 
 #' 
 #' @details To "slide" means to apply a function or formula over a running
-#'   window of `n` time steps, where the unit (the meaning of one time step) is
+#'   window of `before` time steps before and `after` time steps after,
+#'   where the unit (the meaning of one time step) is
 #'   implicitly defined by the way the `time_value` column treats addition and
 #'   subtraction; for example, if the time values are coded as `Date` objects,
 #'   then one time step is one day, since `as.Date("2022-01-01") + 1` equals
 #'   `as.Date("2022-01-02")`. Alternatively, the time step can be set explicitly
 #'   using the `time_step` argument (which if specified would override the
-#'   default choice based on `time_value` column). If less than `n` time steps
-#'   are available at any given reference time value, then `epi_slide()` still
+#'   default choice based on `time_value` column). If certain time steps
+#'   are unavailable at any given reference time value, then `epi_slide()` still
 #'   attempts to perform the computation anyway (it does not require a complete
 #'   window). The issue of what to do with partial computations (those run on
 #'   incomplete windows) is therefore left up to the user, either through the
@@ -76,11 +82,11 @@
 #' If `f` is missing, then an expression for tidy evaluation can be specified,
 #'   for example, as in: 
 #'   ```
-#'   epi_slide(x, cases_7dav = mean(cases), n = 7)
+#'   epi_slide(x, cases_7dav = mean(cases), before = 6)
 #'   ```
 #'   which would be equivalent to:
 #'   ```
-#'   epi_slide(x, function(x, ...) mean(x$cases), n = 7,
+#'   epi_slide(x, function(x, ...) mean(x$cases), before = 6,
 #'             new_col_name = "cases_7dav")
 #'   ```
 #'   Thus, to be clear, when the computation is specified via an expression for
@@ -95,16 +101,21 @@
 #'  # slide a 7-day trailing average formula on cases
 #'   jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide(cases_7dav = mean(cases), n = 7, 
-#'             align = "right") %>% 
+#'   epi_slide(cases_7dav = mean(cases), before = 6) %>% 
 #'   # rmv a nonessential var. to ensure new col is printed
 #'   dplyr::select(-death_rate_7d_av) 
 #'  
-#'  # slide a left-aligned 7-day average
+#'  # slide a 7-day leading average
 #'   jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide(cases_7dav = mean(cases), n = 7, 
-#'             align = "left") %>% 
+#'   epi_slide(cases_7dav = mean(cases), before = 0, after = 6) %>% 
+#'   # rmv a nonessential var. to ensure new col is printed
+#'   dplyr::select(-death_rate_7d_av)
+#'   
+#'  # slide a 7-day centre-aligned average
+#'   jhu_csse_daily_subset %>%
+#'   group_by(geo_value) %>%
+#'   epi_slide(cases_7dav = mean(cases), before = 3, after = 3) %>% 
 #'   # rmv a nonessential var. to ensure new col is printed
 #'   dplyr::select(-death_rate_7d_av) 
 #'  
@@ -113,11 +124,12 @@
 #'  group_by(geo_value) %>%
 #'  epi_slide(a = data.frame(cases_2dav = mean(cases), 
 #'                           cases_2dma = mad(cases)),
-#'            n = 2, as_list_col = TRUE)
-epi_slide = function(x, f, ..., n, ref_time_values,
-                     align = c("right", "center", "left"), before, time_step, 
+#'            before = 1, as_list_col = TRUE)
+epi_slide = function(x, f, ..., before, after = 0, ref_time_values,
+                     time_step, 
                      new_col_name = "slide_value", as_list_col = FALSE,
                      names_sep = "_", all_rows = FALSE) { 
+ 
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
   
@@ -133,44 +145,45 @@ epi_slide = function(x, f, ..., n, ref_time_values,
     ref_time_values = ref_time_values[ref_time_values %in%
                                       unique(x$time_value)] 
   }
-              
-  # If before is missing, then use align to set up alignment
+  
+  # We must ensure that both before and after are of length 1
+  if (length(after) != 1L || (!missing(before) && length(before) != 1L)) {
+    Abort("`before` and `after` must be vectors of length 1.")
+  }
+  
+  # Before cannot be missing if after is set to 0. If after is set to a nonzero
+  # number, then before must be set to 0
   if (missing(before)) {
-    align = match.arg(align)
-    if (align == "right") {
-      before_num = n-1
-      after_num = 0
-    }
-    else if (align == "center") {
-      before_num = floor((n-1)/2)
-      after_num = ceiling((n-1)/2)
-    }
-    else {
-      before_num = 0
-      after_num = n-1
+    if (after == 0) {
+      Abort("`before` cannot be missing when `after` is set to 0.")
+    } else {
+      Warn("`before` missing, `after` nonzero; assuming that left-aligned/leading window is desired and setting `before` = 0.")
+      before = 0 
     }
   }
   
+  if (!(is.numeric(before) && is.numeric(after))||
+      floor(before) < ceiling(before) ||
+      floor(after) < ceiling(after)) {
+    Abort("`before` and `after` must be integers.")
+  }
+  
+  
   # Otherwise set up alignment based on passed before value
-  else {
-    if (before < 0 || before > n-1) {
-      Abort("`before` must be in between 0 and n-1`.")
-    }
-
-    before_num = before
-    after_num = n-1-before
+  if (before < 0 || after < 0) {
+    Abort("`before` and `after` must be at least 0.")
   }
 
   # If a custom time step is specified, then redefine units 
   if (!missing(time_step)) {
-    before_num = time_step(before_num)
-    after_num = time_step(after_num)
+    before = time_step(before)
+    after = time_step(after)
   }
 
   # Now set up starts and stops for sliding/hopping
   time_range = range(unique(x$time_value))
-  starts = in_range(ref_time_values - before_num, time_range)
-  stops = in_range(ref_time_values + after_num, time_range)
+  starts = in_range(ref_time_values - before, time_range)
+  stops = in_range(ref_time_values + after, time_range)
   
   if( length(starts) == 0 || length(stops) == 0 ) { 
     Abort("The starting and/or stopping times for sliding are out of bounds with respect to the range of times in your data. Check your settings for ref_time_values and align (and before, if specified).")

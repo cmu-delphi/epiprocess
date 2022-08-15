@@ -46,17 +46,17 @@ df <- tibble(
 # 2-day trailing average, per geo value
 df %>% 
   group_by(geo_value) %>%
-  epi_slide(x_2dav = mean(x), n = 2)
+  epi_slide(x_2dav = mean(x), before = 1)
 
 # 2-day trailing average, marginally 
 df %>% 
-  epi_slide(x_2dav = mean(x), n = 2)
+  epi_slide(x_2dav = mean(x), before = 1)
 ```
 
 ```{r, include = FALSE}
 # More checks (not included)
 df %>% 
-  epi_slide(x_2dav = mean(x), n = 2, ref_time_values = as.Date("2020-06-02"))
+  epi_slide(x_2dav = mean(x), before = 1, ref_time_values = as.Date("2020-06-02"))
 
 df %>% 
   mutate(version = time_value) %>% 
@@ -76,7 +76,7 @@ same result as the last one.
 
 ```{r}
 df %>% 
-  epi_slide(y_2dav = rep(mean(x), 3), n = 2)
+  epi_slide(y_2dav = rep(mean(x), 3), before = 1)
 ```
 
 However, if the output is an atomic vector (rather than a single value) and it
@@ -85,7 +85,7 @@ are trying to return 2 things for 3 states.
 
 ```{r, error = TRUE}
 df %>% 
-  epi_slide(x_2dav = rep(mean(x), 2), n = 2)
+  epi_slide(x_2dav = rep(mean(x), 2), before = 1)
 ```
 
 ## Multi-column outputs
@@ -101,7 +101,7 @@ object returned by `epi_slide()` has a list column containing the slide values.
 df2 <- df %>% 
   group_by(geo_value) %>%
   epi_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-            n = 2, as_list_col = TRUE)
+            before = 1, as_list_col = TRUE)
 
 class(df2$a)
 length(df2$a)
@@ -119,7 +119,7 @@ slide computation (here `x_2dav` and `x_2dma`) separated by "_".
 df %>% 
   group_by(geo_value) %>%
   epi_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-            n = 2, as_list_col = FALSE)
+            before = 1, as_list_col = FALSE)
 ```
 
 We can use `names_sep = NULL` (which gets passed to `tidyr::unnest()`) to drop
@@ -129,7 +129,7 @@ the prefix associated with list column name, in naming the unnested columns.
 df %>% 
   group_by(geo_value) %>%
   epi_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-            n = 2, as_list_col = FALSE, names_sep = NULL)
+            before = 1, as_list_col = FALSE, names_sep = NULL)
 ```
 
 Furthermore, `epi_slide()` will recycle the single row data frame as needed in
@@ -138,7 +138,7 @@ order to make the result size stable, just like the case for atomic values.
 ```{r}
 df %>% 
   epi_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-            n = 2, as_list_col = FALSE, names_sep = NULL)
+            before = 1, as_list_col = FALSE, names_sep = NULL)
 ```
 
 ```{r, include = FALSE}
@@ -146,7 +146,7 @@ df %>%
 df %>% 
   epi_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
             ref_time_values = as.Date("2020-06-02"),
-            n = 2, as_list_col = FALSE, names_sep = NULL)
+            before = 1, as_list_col = FALSE, names_sep = NULL)
 
 df %>% 
   mutate(version = time_value) %>% 
@@ -181,7 +181,7 @@ df %>%
                   filter(time_value == max(time_value)), 
                 interval = "prediction", level = 0.9)
       ))
-  }, n = 2, new_col_name = "fc", names_sep = NULL)
+  }, before = 1, new_col_name = "fc", names_sep = NULL)
 ```
 
 ## Version-aware forecasting, revisited
@@ -222,7 +222,7 @@ x <- y1 %>%
     version = issue,
     percent_cli = value
   ) %>%
-  as_epi_archive()
+  as_epi_archive(compactify=TRUE)
 
 # mutating merge operation:
 x$merge(y2 %>%
@@ -230,7 +230,7 @@ x$merge(y2 %>%
     version = issue,
     case_rate_7d_av = value
   ) %>%
-  as_epi_archive()
+  as_epi_archive(compactify=TRUE)
 )
 ```
 

@@ -12,7 +12,7 @@ epix_slide(
   group_by,
   ref_versions,
   time_step,
-  new_col_name = "slide_value",
+  new_col_name = "devslide_value",
   as_list_col = FALSE,
   names_sep = "_",
   all_rows = FALSE
