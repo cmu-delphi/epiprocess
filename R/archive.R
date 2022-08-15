@@ -583,7 +583,7 @@ epi_archive =
 #'   object. See the documentation for the wrapper function [`epix_slide()`] for
 #'   details. 
 #' @importFrom data.table key
-#' @importFrom rlang !! !!! enquo enquos is_quosure sym syms
+#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
           slide = function(f, ..., max_version_gap, group_by,
                            ref_versions, 
                            time_step, new_col_name = "slide_value",
