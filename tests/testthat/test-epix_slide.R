@@ -1,4 +1,5 @@
 library(dplyr)
+library(rlang)
 
 ea <- archive_cases_dv_subset$clone()
 
@@ -34,5 +35,13 @@ test_that("epix_slide works as intended",{
                               2^21+2^19+2^16+2^13,
                               2^22+2^21+2^19+2^17))
   
-  expect_identical(xx1,xx2)
+  expect_identical(xx1,xx2) # *
+  
+  xx3 <- x2$slide(f = ~ sum(.x$binary),
+                  max_version_gap = 5,
+                  group_by = "geo_value",
+                  ref_versions = versions,
+                  new_col_name = 'sum_binary')
+  
+  expect_identical(xx1,xx3) # This and * Imply xx2 and xx3 are identical
 })
