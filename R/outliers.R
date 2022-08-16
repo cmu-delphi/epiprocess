@@ -128,6 +128,11 @@ detect_outlr = function(x = seq_along(y), y,
 #'   `y`).
 #' @param y Signal values.
 #' @param n Number of time steps to use in the rolling window. Default is 21.
+#'   This value is centrally aligned. When `n` is an odd number, the
+#'   rolling range goes between `(n-1)/2` `time_value`s before to `(n-1)/2`
+#'   `time_value`s after. When `n` is even, then  the
+#'   rolling range goes between `n/2-1` `time_value`s before to `n/2`
+#'   `time_value`s after.
 #' @param log_transform Should a log transform be applied before running outlier
 #'   detection? Default is `FALSE`. If `TRUE`, and zeros are present, then the
 #'   log transform will be padded by 1.
