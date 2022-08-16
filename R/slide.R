@@ -21,23 +21,27 @@
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation. See details.  
 #' @param before A nonnegative integer specifying the number of time steps
-#'   before each of the `ref_time_values` to extract data from.
+#'   before the `ref_time_value` to use in the running window.
 #'   This must be a vector of length 1.
-#'   Set to 0 for a right-aligned/trailing sliding window, meaning
-#'   that no
+#'   Set to 0 for a right-aligned/trailing sliding window, meaning that no
 #'   `time_value` after the slide will be used for the sliding calculation.
 #'   It is mandatory to specify a `before` value, unless `after` is specified
 #'   as a non-zero value. In this case, `before` will be assumed to be 0, as it
 #'   assumes the user wants to do a left-aligned/leading sliding window.
 #'   However, this usage is discouraged and will thus produce a warning.
-#' @param after A nonnegative integer specifying the number of time steps after
-#'   each of the `ref_time_values` to extract data from.
-#'   This must be a vector of length 1. The default value for
-#'   this is 0. Set to 0 for a left-aligned/leading sliding
-#'   window, meaning that no
+#'   For example, if `before = 3`, and one time step is one day, then to produce
+#'   a value on January 7, we apply the given function or formula to data on
+#'   January 4 and later (with the latest date dependent on `after`).
+#' @param after  A nonnegative integer specifying the number of time steps
+#'   after the `ref_time_value` to use in the running window. This must be a
+#'   vector of length 1. The default value for this is 0. Set to 0 for a
+#'   left-aligned/leading sliding window, meaning that no
 #'   `time_value` before the slide will be used for the sliding calculation.
 #'   To specify this to be centrally aligned, set `before` and `after` to be
 #'   the same.
+#'   For example, if `after = 3`, and one time step is one day, then to produce
+#'   a value on January 7, we apply the given function or formula to data on
+#'   January 10 and earlier (with the earliest date dependent on `before`).
 #' @param ref_time_values Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
 #'   window. If missing, then this will be set to all unique time values in the
@@ -65,15 +69,17 @@
 #'   according to the `new_col_name` argument. 
 #' 
 #' @details To "slide" means to apply a function or formula over a running
-#'   window of `before` time steps before and `after` time steps after,
-#'   where the unit (the meaning of one time step) is
+#'   window of time steps where the window is entered at a reference time and
+#'   left and right endpoints are given by the `before` and `after` arguments.
+#'   The unit (the meaning of one time step) is
 #'   implicitly defined by the way the `time_value` column treats addition and
 #'   subtraction; for example, if the time values are coded as `Date` objects,
 #'   then one time step is one day, since `as.Date("2022-01-01") + 1` equals
 #'   `as.Date("2022-01-02")`. Alternatively, the time step can be set explicitly
 #'   using the `time_step` argument (which if specified would override the
-#'   default choice based on `time_value` column). If certain time steps
-#'   are unavailable at any given reference time value, then `epi_slide()` still
+#'   default choice based on `time_value` column). If there are not enough time
+#'   steps available to complete the window at any given reference time, then
+#'   `epi_slide()` still
 #'   attempts to perform the computation anyway (it does not require a complete
 #'   window). The issue of what to do with partial computations (those run on
 #'   incomplete windows) is therefore left up to the user, either through the
