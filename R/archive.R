@@ -671,7 +671,6 @@ epi_archive =
             
             # If f is not missing, then just go ahead, slide by group
             if (!missing(f)) {
-              notmiss <<- "notmissf"
               if (rlang::is_formula(f)) f = rlang::as_function(f)
               
               x = purrr::map_dfr(ref_time_values, function(t) {
@@ -690,7 +689,6 @@ epi_archive =
 
             # Else interpret ... as an expression for tidy evaluation
             else {
-              here <<- "else"
               quos = enquos(...)
               if (length(quos) == 0) {
                 Abort("If `f` is missing then a computation must be specified via `...`.")
@@ -728,7 +726,6 @@ epi_archive =
               y = unique(self$DT[, ..cols])
               x = dplyr::left_join(y, x, by = cols)
             }
-            test <<- x
             return(x)
           }
         )
