@@ -393,9 +393,14 @@
 <span>                ref_time_values <span class="op">=</span> <span class="va">fc_time_values</span>, group_by <span class="op">=</span> <span class="va">geo_value</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">z</span>, <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 5</span></span></span>
+<pre><code><span><span class="co">## An `epi_df` object, 10 x 5 with metadata:</span></span>
+<span><span class="co">## * geo_type  = state</span></span>
+<span><span class="co">## * time_type = day</span></span>
+<span><span class="co">## * as_of     = 2020-08-01</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 5</span></span></span>
 <span><span class="co">##    geo_value time_value fc_point fc_lower fc_upper</span></span>
-<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">##  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 1</span> ca        2020-08-01    21.0     19.1     23.0 </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 2</span> fl        2020-08-01    44.5     38.9     50.0 </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 3</span> ny        2020-08-01     3.10     2.89     3.31</span></span>
