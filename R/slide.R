@@ -6,10 +6,10 @@
 #'
 #' @param x The `epi_df` object under consideration.
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
-#'   to apply a function or formula over a running window of `before`
-#'   and `after` time steps
-#'   (where one time step is typically one day or one week; see details for more
-#'   explanation). If a function, `f` should take `x`, an `epi_df` with the same 
+#'   to apply a function or formula over a rolling window of time steps.
+#'   The window is determined by the `before` and `after` parameters described 
+#'   below. One time step is typically one day or one week; see details for more
+#'   explanation. If a function, `f` should take `x`, an `epi_df` with the same 
 #'   names as the non-grouping columns, followed by `g` to refer to the one row 
 #'   tibble with one column per grouping variable that identifies the group, 
 #'   and any number of named arguments (which will be taken from `...`). If a 
@@ -21,7 +21,7 @@
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation. See details.  
 #' @param before A nonnegative integer specifying the number of time steps
-#'   before the `ref_time_value` to use in the running window.
+#'   before the `ref_time_value` to use in the rolling window.
 #'   This must be a vector of length 1.
 #'   Set to 0 for a left-aligned/leading sliding window, meaning that no
 #'   `time_value` after the slide will be used for the sliding calculation.
@@ -33,7 +33,7 @@
 #'   a value on January 7, we apply the given function or formula to data on
 #'   January 4 and later (with the latest date dependent on `after`).
 #' @param after  A nonnegative integer specifying the number of time steps
-#'   after the `ref_time_value` to use in the running window. This must be a
+#'   after the `ref_time_value` to use in the rolling window. This must be a
 #'   vector of length 1. The default value for this is 0. Set to 0 for a
 #'   right-aligned/trailing sliding window, meaning that no
 #'   `time_value` before the slide will be used for the sliding calculation.
@@ -68,7 +68,7 @@
 #' @return An `epi_df` object given by appending a new column to `x`, named
 #'   according to the `new_col_name` argument. 
 #' 
-#' @details To "slide" means to apply a function or formula over a running
+#' @details To "slide" means to apply a function or formula over a rolling
 #'   window of time steps where the window is entered at a reference time and
 #'   left and right endpoints are given by the `before` and `after` arguments.
 #'   The unit (the meaning of one time step) is

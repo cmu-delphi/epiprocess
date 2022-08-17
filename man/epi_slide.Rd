@@ -22,10 +22,10 @@ epi_slide(
 \item{x}{The \code{epi_df} object under consideration.}
 
 \item{f}{Function or formula to slide over variables in \code{x}. To "slide" means
-to apply a function or formula over a running window of \code{before}
-and \code{after} time steps
-(where one time step is typically one day or one week; see details for more
-explanation). If a function, \code{f} should take \code{x}, an \code{epi_df} with the same
+to apply a function or formula over a rolling window of time steps.
+The window is determined by the \code{before} and \code{after} parameters described
+below. One time step is typically one day or one week; see details for more
+explanation. If a function, \code{f} should take \code{x}, an \code{epi_df} with the same
 names as the non-grouping columns, followed by \code{g} to refer to the one row
 tibble with one column per grouping variable that identifies the group,
 and any number of named arguments (which will be taken from \code{...}). If a
@@ -39,9 +39,9 @@ via \code{f}. Alternatively, if \code{f} is missing, then the current argument i
 interpreted as an expression for tidy evaluation. See details.}
 
 \item{before}{A nonnegative integer specifying the number of time steps
-before the \code{ref_time_value} to use in the running window.
+before the \code{ref_time_value} to use in the rolling window.
 This must be a vector of length 1.
-Set to 0 for a right-aligned/trailing sliding window, meaning that no
+Set to 0 for a left-aligned/leading sliding window, meaning that no
 \code{time_value} after the slide will be used for the sliding calculation.
 It is mandatory to specify a \code{before} value, unless \code{after} is specified
 as a non-zero value. In this case, \code{before} will be assumed to be 0, as it
@@ -52,9 +52,9 @@ a value on January 7, we apply the given function or formula to data on
 January 4 and later (with the latest date dependent on \code{after}).}
 
 \item{after}{A nonnegative integer specifying the number of time steps
-after the \code{ref_time_value} to use in the running window. This must be a
+after the \code{ref_time_value} to use in the rolling window. This must be a
 vector of length 1. The default value for this is 0. Set to 0 for a
-left-aligned/leading sliding window, meaning that no
+right-aligned/trailing sliding window, meaning that no
 \code{time_value} before the slide will be used for the sliding calculation.
 To specify this to be centrally aligned, set \code{before} and \code{after} to be
 the same.
@@ -99,7 +99,7 @@ Slides a given function over variables in an \code{epi_df} object. See the \href
 examples.
 }
 \details{
-To "slide" means to apply a function or formula over a running
+To "slide" means to apply a function or formula over a rolling
 window of time steps where the window is entered at a reference time and
 left and right endpoints are given by the \code{before} and \code{after} arguments.
 The unit (the meaning of one time step) is
