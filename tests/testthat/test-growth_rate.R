@@ -42,9 +42,7 @@ test_that("log_scale works",{
 })
 
 test_that("Running different methods with NA removal won't fail",{
-  for (m in methods) {
-    expect_false(NA %in% gr(method = m,x0=1:5))
-  }
+  for (m in methods) expect_false(NA %in% gr(method = m,x0=1:5)) 
 })
 
 test_that("na_rm works and is necessary when there are NA's",{
