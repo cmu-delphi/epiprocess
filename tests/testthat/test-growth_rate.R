@@ -1,5 +1,14 @@
 library(dplyr)
 
+X <- c(1:10,NA,10:20,NA)
+Y <- c(2^(1:9),NA,NA,2^(10:21))
+
+methods <- c("rel_change","linear_reg","smooth_spline","trend_filter")
+
+gr <- function(m = "rel_change",...) {
+  growth_rate(x=X,y=Y,method=m,h=3,...)
+}
+
 test_that("Test error throwing",{
   # Error cases
   expect_error(growth_rate(x=1:3,y=1:4),
@@ -29,7 +38,7 @@ test_that("Simple example of growth rate that produces desired results",{
 
 test_that("Running different methods won't fail",{
   expect_error(
-    for (m in c("rel_change","linear_reg","smooth_spline","trend_filter")) {
+    for (m in methods) {
       growth_rate(x=1:25,y=sin(0:24)+0:24+1,method=m,h=3)
     }, NA)
 })
@@ -45,10 +54,7 @@ test_that("log_scale works",{
                rep(1,20))
 })
 
-test_that("na_rm works",{
-  X <- c(1:10,NA,10:20,NA)
-  Y <- c(2^(1:9),NA,NA,2^(10:21))
-  
+test_that("na_rm works as is necessary when there are NA's",{
   expect_false(NA %in% growth_rate(x=X,y=Y,na_rm = TRUE))
   expect_equal(length(growth_rate(x=X,y=Y,na_rm = TRUE)),20)
   expect_equal(growth_rate(x=X,y=Y,na_rm = FALSE),
