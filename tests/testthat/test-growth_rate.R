@@ -46,12 +46,14 @@ test_that("log_scale works",{
 })
 
 test_that("na_rm works",{
-  X <- c(1:10,NA,12:19,NA)
-  Y <- c(1:9,NA,NA,12:20)
+  X <- c(1:10,NA,10:20,NA)
+  Y <- c(2^(1:9),NA,NA,2^(10:21))
   
   expect_false(NA %in% growth_rate(x=X,y=Y,na_rm = TRUE))
-  expect_equal(length(growth_rate(x=X,y=Y,na_rm = TRUE)),17)
+  expect_equal(length(growth_rate(x=X,y=Y,na_rm = TRUE)),20)
   expect_equal(growth_rate(x=X,y=Y,na_rm = FALSE),
                # 1+NA gives an NA classified as a numeric
-               rep(1+NA,20))
+               rep(1+NA,23))
+  expect_equal(growth_rate(x=X,y=Y,h=1,na_rm = TRUE),
+               c(rep(1,19),NaN))
 })
