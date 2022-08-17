@@ -23,7 +23,7 @@
 #' @param before A nonnegative integer specifying the number of time steps
 #'   before the `ref_time_value` to use in the running window.
 #'   This must be a vector of length 1.
-#'   Set to 0 for a right-aligned/trailing sliding window, meaning that no
+#'   Set to 0 for a left-aligned/leading sliding window, meaning that no
 #'   `time_value` after the slide will be used for the sliding calculation.
 #'   It is mandatory to specify a `before` value, unless `after` is specified
 #'   as a non-zero value. In this case, `before` will be assumed to be 0, as it
@@ -35,7 +35,7 @@
 #' @param after  A nonnegative integer specifying the number of time steps
 #'   after the `ref_time_value` to use in the running window. This must be a
 #'   vector of length 1. The default value for this is 0. Set to 0 for a
-#'   left-aligned/leading sliding window, meaning that no
+#'   right-aligned/trailing sliding window, meaning that no
 #'   `time_value` before the slide will be used for the sliding calculation.
 #'   To specify this to be centrally aligned, set `before` and `after` to be
 #'   the same.
