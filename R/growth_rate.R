@@ -73,7 +73,7 @@
 #'   implicitly defined by the `x` variable; for example, if `x` is a vector of
 #'   `Date` objects, `h = 7`, and the reference point is January 7, then the
 #'   sliding window contains all data in between January 1 and 14 (matching the
-#'   behavior of `epi_slide()` with `before = 6` and `after = 7`).
+#'   behavior of `epi_slide()` with `before = h-1` and `after = h`).
 #' 
 #' @section Additional Arguments:
 #' For the global methods, "smooth_spline" and "trend_filter", additional
@@ -104,12 +104,12 @@
 #' # COVID cases growth rate by state using default method relative change
 #' jhu_csse_daily_subset %>% 
 #'   group_by(geo_value) %>% 
-#'   mutate(cases_gr = growth_rate(x = time_value,  y = cases))
+#'   mutate(cases_gr = growth_rate(x = time_value, y = cases))
 #' 
 #' # Log scale, degree 4 polynomial and 6-fold cross validation
 #' jhu_csse_daily_subset %>% 
 #'   group_by(geo_value) %>% 
-#'   mutate(gr_poly = growth_rate( x = time_value, y = cases, log_scale = TRUE,  ord = 4,  k = 6))
+#'   mutate(gr_poly = growth_rate(x = time_value, y = cases, log_scale = TRUE, ord = 4, k = 6))
 
 growth_rate = function(x = seq_along(y), y, x0 = x,
                        method = c("rel_change", "linear_reg",
