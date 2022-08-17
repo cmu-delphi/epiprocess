@@ -26,7 +26,6 @@ Imports:
     fabletools,
     feasts,
     generics,
-    genlasso,
     lubridate,
     magrittr,
     purrr,
@@ -54,6 +53,7 @@ VignetteBuilder:
 Remotes:
     cmu-delphi/epidatr,
     reconverse/outbreaks
+    glmgen/genlasso
 Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
