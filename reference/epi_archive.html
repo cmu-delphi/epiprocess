@@ -160,14 +160,14 @@ are documented in the wrapper function <code><a href="epix_slide.html">epix_slid
 <div class="section">
 <h3 id="public-methods">Public methods<a class="anchor" aria-label="anchor" href="#public-methods"></a></h3>
 
-<ul><li><p><a href="#method-epi_archive-new"><code>epi_archive$new()</code></a></p></li>
-<li><p><a href="#method-epi_archive-print"><code>epi_archive$print()</code></a></p></li>
-<li><p><a href="#method-epi_archive-as_of"><code>epi_archive$as_of()</code></a></p></li>
-<li><p><a href="#method-epi_archive-fill_through_version"><code>epi_archive$fill_through_version()</code></a></p></li>
-<li><p><a href="#method-epi_archive-merge"><code>epi_archive$merge()</code></a></p></li>
-<li><p><a href="#method-epi_archive-slide"><code>epi_archive$slide()</code></a></p></li>
-<li><p><a href="#method-epi_archive-clone"><code>epi_archive$clone()</code></a></p></li>
-</ul></div><p></p><hr><a id="method-epi_archive-new"></a><div class="section">
+<ul><li><p><a href="#method-new"><code>epi_archive$new()</code></a></p></li>
+<li><p><a href="#method-print"><code>epi_archive$print()</code></a></p></li>
+<li><p><a href="#method-as_of"><code>epi_archive$as_of()</code></a></p></li>
+<li><p><a href="#method-fill_through_version"><code>epi_archive$fill_through_version()</code></a></p></li>
+<li><p><a href="#method-merge"><code>epi_archive$merge()</code></a></p></li>
+<li><p><a href="#method-slide"><code>epi_archive$slide()</code></a></p></li>
+<li><p><a href="#method-clone"><code>epi_archive$clone()</code></a></p></li>
+</ul></div><p></p><hr><a id="method-new"></a><div class="section">
 <h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
 <p>Creates a new <code>epi_archive</code> object.</p><div class="section">
 <h4 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a></h4>
@@ -253,7 +253,7 @@ and examples of parameter names.</p>
 <p>An <code>epi_archive</code> object.</p>
 </div>
 
-</div><p></p><hr><a id="method-epi_archive-print"></a><div class="section">
+</div><p></p><hr><a id="method-print"></a><div class="section">
 <h3 id="method-print-">Method <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code><a class="anchor" aria-label="anchor" href="#method-print-"></a></h3>
 
 <div class="section">
@@ -262,7 +262,7 @@ and examples of parameter names.</p>
 </div>
 
 
-</div><p></p><hr><a id="method-epi_archive-as_of"></a><div class="section">
+</div><p></p><hr><a id="method-as_of"></a><div class="section">
 <h3 id="method-as-of-">Method <code>as_of()</code><a class="anchor" aria-label="anchor" href="#method-as-of-"></a></h3>
 <p>Generates a snapshot in <code>epi_df</code> format as of a given version.
 See the documentation for the wrapper function <code><a href="epix_as_of.html">epix_as_of()</a></code> for details.</p><div class="section">
@@ -271,7 +271,7 @@ See the documentation for the wrapper function <code><a href="epix_as_of.html">e
 </div>
 
 
-</div><p></p><hr><a id="method-epi_archive-fill_through_version"></a><div class="section">
+</div><p></p><hr><a id="method-fill_through_version"></a><div class="section">
 <h3 id="method-fill-through-version-">Method <code>fill_through_version()</code><a class="anchor" aria-label="anchor" href="#method-fill-through-version-"></a></h3>
 <p>Fill in unobserved history using requested scheme by mutating
 <code>self</code> and potentially reseating its fields. See
@@ -294,7 +294,7 @@ version, which doesn't mutate the input archive but might alias its fields.</p><
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-epi_archive-merge"></a><div class="section">
+</div><p></p><hr><a id="method-merge"></a><div class="section">
 <h3 id="method-merge-">Method <code><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge()</a></code><a class="anchor" aria-label="anchor" href="#method-merge-"></a></h3>
 <p>Merges another <code>epi_archive</code> with the current one, mutating the
 current one by reseating its <code>DT</code> and several other fields, but avoiding
@@ -327,7 +327,7 @@ does not alias either archive's <code>DT</code>.</p><div class="section">
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-epi_archive-slide"></a><div class="section">
+</div><p></p><hr><a id="method-slide"></a><div class="section">
 <h3 id="method-slide-">Method <code>slide()</code><a class="anchor" aria-label="anchor" href="#method-slide-"></a></h3>
 <p>Slides a given function over variables in an <code>epi_archive</code>
 object. See the documentation for the wrapper function <code><a href="epix_slide.html">epix_slide()</a></code> for
@@ -348,7 +348,7 @@ details.</p><div class="section">
 </div>
 
 
-</div><p></p><hr><a id="method-epi_archive-clone"></a><div class="section">
+</div><p></p><hr><a id="method-clone"></a><div class="section">
 <h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
 <p>The objects of this class are cloneable with this method.</p><div class="section">
 <h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
