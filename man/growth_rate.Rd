@@ -105,7 +105,7 @@ reference point is at most \code{h}. Note that the unit for this distance is
 implicitly defined by the \code{x} variable; for example, if \code{x} is a vector of
 \code{Date} objects, \code{h = 7}, and the reference point is January 7, then the
 sliding window contains all data in between January 1 and 14 (matching the
-behavior of \code{epi_slide()} with \code{before = 6} and \code{after = 7}).
+behavior of \code{epi_slide()} with \code{before = h-1} and \code{after = h}).
 }
 
 \section{Additional Arguments}{
@@ -138,10 +138,10 @@ user.
 # COVID cases growth rate by state using default method relative change
 jhu_csse_daily_subset \%>\% 
   group_by(geo_value) \%>\% 
-  mutate(cases_gr = growth_rate(x = time_value,  y = cases))
+  mutate(cases_gr = growth_rate(x = time_value, y = cases))
 
 # Log scale, degree 4 polynomial and 6-fold cross validation
 jhu_csse_daily_subset \%>\% 
   group_by(geo_value) \%>\% 
-  mutate(gr_poly = growth_rate( x = time_value, y = cases, log_scale = TRUE,  ord = 4,  k = 6))
+  mutate(gr_poly = growth_rate(x = time_value, y = cases, log_scale = TRUE, ord = 4, k = 6))
 }
