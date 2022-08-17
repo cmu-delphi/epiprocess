@@ -26,6 +26,7 @@ Imports:
     fabletools,
     feasts,
     generics,
+    igraph,
     lubridate,
     magrittr,
     purrr,
