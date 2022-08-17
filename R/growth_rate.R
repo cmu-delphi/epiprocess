@@ -45,7 +45,7 @@
 #'   second half of a sliding window of bandwidth h centered at the reference
 #'   point `x0`, and A the average over the first half. This can be seen as
 #'   using a first-difference approximation to the derivative. This is the
-#'   default method if `method` is not specified.
+#'   default if `method` is not specified.
 #' * "linear_reg": uses the slope from a linear regression of `y` on `x` over a
 #'   sliding window centered at the reference point `x0`, divided by the fitted
 #'   value from this linear regression at `x0`.
@@ -146,7 +146,7 @@ growth_rate = function(x = seq_along(y), y, x0 = x,
   
   # Remove NAs if we need to
   if (na_rm) {
-    o = !(is.na(x) | is.na(y))
+    o = !is.na(x) & !is.na(y)
     x = x[o]
     y = y[o]
   }
