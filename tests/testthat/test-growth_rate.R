@@ -5,8 +5,8 @@ Y <- c(2^(1:9),NA,NA,2^(10:21))
 
 methods <- c("rel_change","linear_reg","smooth_spline","trend_filter")
 
-gr <- function(m = "rel_change",...) {
-  growth_rate(x=X,y=Y,method=m,h=3,...)
+gr <- function(method = "rel_change", h = 3, na_rm = TRUE, ...) {
+  growth_rate(x=X,y=Y,method=method,na_rm = na_rm, h = h,...)
 }
 
 test_that("Test error throwing",{
@@ -15,9 +15,9 @@ test_that("Test error throwing",{
                "`x` and `y` must have the same length.")
   expect_error(growth_rate(x=1:20,y=1:20,x0=21),
                "`x0` must be a subset of `x`.")
-  
-  # This should produce no error
-  expect_error(growth_rate(x=1:20,y=1:20,x0=c(1,3)),NA)
+  # Fails only when method = `"trend_filter"`
+  expect_error(gr(method = "trend_filter",cv=FALSE,df=1.5),
+               "If `cv = FALSE`, then `df` must be an integer.")
 })
 
 test_that("Test throwing of warning of duplicates",{
@@ -32,34 +32,27 @@ test_that("Test throwing of warning of duplicates",{
 })
 
 test_that("Simple example of growth rate that produces desired results",{
-  expect_equal(growth_rate(x=1:20,y=2^(1:20),h=1),
-               c(rep(1,19),NaN))
-})
-
-test_that("Running different methods won't fail",{
-  expect_error(
-    for (m in methods) {
-      growth_rate(x=1:25,y=sin(0:24)+0:24+1,method=m,h=3)
-    }, NA)
-})
-
-test_that("When using trend_filter, if `cv=FALSE`, then df must be an integer",{
-  expect_error(growth_rate(x=1:25,y=sin(0:24)+0:24+1,method="trend_filter",
-                           cv=FALSE,df=1.5,h=3),
-               "If `cv = FALSE`, then `df` must be an integer.")
+  expect_equal(growth_rate(x=1:20,y=2^(1:20),h=1), c(rep(1,19),NaN))
 })
 
 test_that("log_scale works",{
-  expect_equal(growth_rate(x=1:20,y=exp(1:20),h=5,method="linear_reg",log_scale = TRUE),
+  expect_equal(growth_rate(x=1:20,y=exp(1:20),h=5,
+                           method="linear_reg",log_scale = TRUE),
                rep(1,20))
 })
 
-test_that("na_rm works as is necessary when there are NA's",{
-  expect_false(NA %in% growth_rate(x=X,y=Y,na_rm = TRUE))
-  expect_equal(length(growth_rate(x=X,y=Y,na_rm = TRUE)),20)
-  expect_equal(growth_rate(x=X,y=Y,na_rm = FALSE),
+test_that("Running different methods with NA removal won't fail",{
+  for (m in methods) {
+    expect_false(NA %in% gr(method = m,x0=1:5))
+  }
+})
+
+test_that("na_rm works and is necessary when there are NA's",{
+  expect_false(NA %in% gr())
+  expect_equal(length(gr()),20)
+  expect_equal(gr(na_rm = FALSE),
                # 1+NA gives an NA classified as a numeric
                rep(1+NA,23))
-  expect_equal(growth_rate(x=X,y=Y,h=1,na_rm = TRUE),
-               c(rep(1,19),NaN))
+  expect_equal(gr(h=1), c(rep(1,19),NaN))
+  expect_error(gr(method = "smooth_spline"))
 })
