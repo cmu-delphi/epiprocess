@@ -277,9 +277,9 @@ details.
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$slide(
   f,
   ...,
-  max_version_gap,
+  before,
   group_by,
-  ref_versions,
+  ref_time_values,
   time_step,
   new_col_name = "slide_value",
   as_list_col = FALSE,

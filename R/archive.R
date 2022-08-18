@@ -584,24 +584,24 @@ epi_archive =
 #'   details. 
 #' @importFrom data.table key
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
-          slide = function(f, ..., max_version_gap, group_by,
-                           ref_versions, 
+          slide = function(f, ..., before, group_by,
+                           ref_time_values, 
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
                            all_rows = FALSE) { 
             # If missing, then set ref time values to be everything; else make
             # sure we intersect with observed time values 
-            if (missing(ref_versions)) {
-              ref_versions = unique(self$DT$version)
+            if (missing(ref_time_values)) {
+              ref_time_values = unique(self$DT$time_values)
             }
             else {
-              ref_versions = ref_versions[ref_versions %in%
+              ref_time_values = ref_time_values[ref_time_values %in%
                                                 unique(self$DT$time_value)]
             }
               
             # If a custom time step is specified, then redefine units 
-            before_num = max_version_gap-1
-            if (!missing(time_step)) before_num = time_step(max_version_gap-1)
+            before_num = before-1
+            if (!missing(time_step)) before_num = time_step(before-1)
             
             # What to group by? If missing, set according to internal keys;
             # otherwise, tidyselect.
@@ -620,7 +620,7 @@ epi_archive =
             # Computation for one group, one time value
             comp_one_grp = function(.data_group,
                                     f, ..., 
-                                    version,
+                                    ref_time_value,
                                     key_vars,
                                     new_col) {
               # Carry out the specified computation 
@@ -666,7 +666,7 @@ epi_archive =
  
               # Note that we've already recycled comp value to make size stable,
               # so tibble() will just recycle time value appropriately
-              return(tibble::tibble(version = version, 
+              return(tibble::tibble(time_value = ref_time_value, 
                                     !!new_col := comp_value))
             }
             
@@ -675,13 +675,14 @@ epi_archive =
               
               if (rlang::is_formula(f)) f = rlang::as_function(f)
               
-              x = purrr::map_dfr(ref_versions, function(t) {
-                self$as_of(t, min_time_value = t - before_num) %>%
+              x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
+                self$as_of(ref_time_value,
+                           min_time_value = ref_time_value - before_num) %>%
                   tibble::as_tibble() %>% 
                   dplyr::group_by(!!!group_by) %>%
                   dplyr::group_modify(comp_one_grp,
                                       f = f, ..., 
-                                      version = t,
+                                      ref_time_value = ref_time_value,
                                       key_vars = key_vars,
                                       new_col = new_col,
                                       .keep = TRUE) %>%
@@ -703,13 +704,13 @@ epi_archive =
               f = function(x, quo, ...) rlang::eval_tidy(quo, x)
               new_col = sym(names(rlang::quos_auto_name(quos)))
 
-              x = purrr::map_dfr(ref_versions, function(t) {
-                self$as_of(t, min_time_value = t - before_num) %>%
+              x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
+                self$as_of(t, min_time_value = ref_time_value - before_num) %>%
                   tibble::as_tibble() %>% 
                   dplyr::group_by(!!!group_by) %>%
                   dplyr::group_modify(comp_one_grp,
                                       f = f, quo = quo,
-                                      version = t,
+                                      ref_time_value = ref_time_value,
                                       key_vars = key_vars,
                                       new_col = new_col,
                                       .keep = TRUE) %>%

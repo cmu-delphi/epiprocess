@@ -8,9 +8,9 @@ epix_slide(
   x,
   f,
   ...,
-  max_version_gap,
+  before,
   group_by,
-  ref_versions,
+  ref_time_values,
   time_step,
   new_col_name = "devslide_value",
   as_list_col = FALSE,
@@ -34,9 +34,9 @@ sliding window of \code{n} time steps.}
 via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
 interpreted as an expression for tidy evaluation.}
 
-\item{max_version_gap}{Number of time steps to use in the running window.
+\item{before}{Number of time steps to use in the running window.
 For example, if
-\code{max_version_gap = 7}, and one time step is one day, then to produce a
+\code{before = 7}, and one time step is one day, then to produce a
 value on January 7
 we apply the given function or formula to data in between January 1 and
 7.}
@@ -46,7 +46,7 @@ missing, then the keys in the underlying data table, excluding \code{time_value}
 and \code{version}, will be used for grouping. To omit a grouping entirely, use
 \code{group_by = NULL}.}
 
-\item{ref_versions}{Time values for sliding computations, meaning, each
+\item{ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
 window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.}
@@ -119,12 +119,12 @@ version-aware sliding is necessary (as it its purpose).
 Finally, this is simply a wrapper around the \code{slide()} method of the
 \code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epix_slide(x, new_var = comp(old_var), max_version_gap = 120)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epix_slide(x, new_var = comp(old_var), before = 120)
 }\if{html}{\out{</div>}}
 
 is equivalent to:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{x$slide(new_var = comp(old_var), max_version_gap = 120)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{x$slide(new_var = comp(old_var), before = 120)
 }\if{html}{\out{</div>}}
 }
 \examples{
@@ -140,8 +140,8 @@ versions <- seq(as.Date("2020-06-01"),
                       by = "1 day")
 epix_slide(x = archive_cases_dv_subset,
            f = ~ mean(.x$case_rate_7d_av),
-           max_version_gap = 3,
+           before = 3,
            group_by = geo_value,
-           ref_versions = versions,
+           ref_time_values = versions,
            new_col_name = 'case_rate_3d_av')
 }

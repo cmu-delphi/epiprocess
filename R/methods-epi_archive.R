@@ -358,9 +358,9 @@ epix_merge = function(x, y,
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation.
-#' @param max_version_gap Number of time steps to use in the running window.
+#' @param before Number of time steps to use in the running window.
 #' For example, if
-#'   `max_version_gap = 7`, and one time step is one day, then to produce a
+#'   `before = 7`, and one time step is one day, then to produce a
 #'   value on January 7
 #'   we apply the given function or formula to data in between January 1 and
 #'   7.
@@ -368,7 +368,7 @@ epix_merge = function(x, y,
 #'   missing, then the keys in the underlying data table, excluding `time_value`
 #'   and `version`, will be used for grouping. To omit a grouping entirely, use
 #'   `group_by = NULL`.
-#' @param ref_versions Time values for sliding computations, meaning, each
+#' @param ref_time_values Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
 #'   window. If missing, then this will be set to all unique time values in the
 #'   underlying data table, by default.
@@ -424,11 +424,11 @@ epix_merge = function(x, y,
 #' Finally, this is simply a wrapper around the `slide()` method of the
 #'   `epi_archive` class, so if `x` is an `epi_archive` object, then:
 #'   ```
-#'   epix_slide(x, new_var = comp(old_var), max_version_gap = 120)
+#'   epix_slide(x, new_var = comp(old_var), before = 120)
 #'   ```
 #'   is equivalent to:
 #'   ```
-#'   x$slide(new_var = comp(old_var), max_version_gap = 120)
+#'   x$slide(new_var = comp(old_var), before = 120)
 #'   ```
 #'
 #' @importFrom rlang enquo
@@ -446,18 +446,18 @@ epix_merge = function(x, y,
 #'                       by = "1 day")
 #' epix_slide(x = archive_cases_dv_subset,
 #'            f = ~ mean(.x$case_rate_7d_av),
-#'            max_version_gap = 3,
+#'            before = 3,
 #'            group_by = geo_value,
-#'            ref_versions = versions,
+#'            ref_time_values = versions,
 #'            new_col_name = 'case_rate_3d_av')
-epix_slide = function(x, f, ..., max_version_gap, group_by, ref_versions,
+epix_slide = function(x, f, ..., before, group_by, ref_time_values,
                       time_step, new_col_name = "devslide_value",
                       as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   return(x$slide(f, ...,
-                 max_version_gap = max_version_gap,
+                 before = before,
                  group_by = {{group_by}},
-                 ref_versions = ref_versions,
+                 ref_time_values = ref_time_values,
                  time_step = time_step,
                  new_col_name = new_col_name,
                  as_list_col = as_list_col,

@@ -20,9 +20,9 @@ test_that("epix_slide works as intended",{
   
   xx1 <- epix_slide(x = x2,
                    f = ~ sum(.x$binary),
-                   max_version_gap = 5,
+                   before = 5,
                    group_by = geo_value,
-                   ref_versions = versions,
+                   ref_time_values = versions,
                    new_col_name = 'sum_binary')
   
   xx2 <- tibble(geo_value = rep("ca",7),
@@ -38,9 +38,9 @@ test_that("epix_slide works as intended",{
   expect_identical(xx1,xx2) # *
   
   xx3 <- x2$slide(f = ~ sum(.x$binary),
-                  max_version_gap = 5,
+                  before = 5,
                   group_by = "geo_value",
-                  ref_versions = versions,
+                  ref_time_values = versions,
                   new_col_name = 'sum_binary')
   
   expect_identical(xx1,xx3) # This and * Imply xx2 and xx3 are identical
