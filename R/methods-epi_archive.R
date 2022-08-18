@@ -358,10 +358,10 @@ epix_merge = function(x, y,
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation.
-#' @param n Number of time steps to use in the running window. For example, if
-#'   `n = 7`, and one time step is one day, then to produce a value on January 7
-#'   we apply the given function or formula to data in between January 1 and
-#'   7.
+#' @param before Number of time steps to use in the running window. For example,
+#'   if `before = 7`, and one time step is one day, then to produce a value on
+#'   January 7 we apply the given function or formula to data in between January
+#'   1 and 7.
 #' @param group_by The variable(s) to group by before slide computation. If
 #'   missing, then the keys in the underlying data table, excluding `time_value`
 #'   and `version`, will be used for grouping. To omit a grouping entirely, use
@@ -422,11 +422,11 @@ epix_merge = function(x, y,
 #' Finally, this is simply a wrapper around the `slide()` method of the
 #'   `epi_archive` class, so if `x` is an `epi_archive` object, then:
 #'   ```
-#'   epix_slide(x, new_var = comp(old_var), n = 120)
+#'   epix_slide(x, new_var = comp(old_var), before = 120)
 #'   ```
 #'   is equivalent to:
 #'   ```
-#'   x$slide(x, new_var = comp(old_var), n = 120)
+#'   x$slide(x, new_var = comp(old_var), before = 120)
 #'   ```
 #'
 #' @importFrom rlang enquo
@@ -444,15 +444,15 @@ epix_merge = function(x, y,
 #'                       by = "1 day")
 #' epix_slide(x = archive_cases_dv_subset,
 #'            f = ~ mean(.x$case_rate_7d_av),
-#'            n = 3,
+#'            before = 3,
 #'            group_by = geo_value,
 #'            ref_time_values = time_values,
 #'            new_col_name = 'case_rate_3d_av')
-epix_slide = function(x, f, ..., n, group_by, ref_time_values,
+epix_slide = function(x, f, ..., before, group_by, ref_time_values,
                       time_step, new_col_name = "slide_value",
                       as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
-  return(x$slide(f, ..., n = n,
+  return(x$slide(f, ..., before = before,
                  group_by = {{group_by}},
                  ref_time_values = ref_time_values,
                  time_step = time_step,

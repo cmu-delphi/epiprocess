@@ -35,7 +35,7 @@ via \code{f}. Alternatively, if \code{f} is missing, then the current argument i
 interpreted as an expression for tidy evaluation.}
 
 \item{n}{Number of time steps to use in the running window. For example, if
-\code{n = 7}, and one time step is one day, then to produce a value on January 7
+\code{before = 7}, and one time step is one day, then to produce a value on January 7
 we apply the given function or formula to data in between January 1 and
 7.}
 
