@@ -192,7 +192,7 @@ to demonstrate the last point in a more realistic setting. First, we fetch the
 versioned data and build the archive.
 
 ```{r, message = FALSE, warning = FALSE, eval =FALSE}
-library(delphi.epidata)
+library(epidatr)
 library(data.table)
 library(ggplot2)
 theme_set(theme_bw())

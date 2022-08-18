@@ -71,22 +71,37 @@ summary.epi_df = function(object, ...) {
   
   if (missing(i)) {
     i <- NULL
-    i_arg <- NULL
   } 
   
   if (missing(j)) {
     j <- NULL
-    j_arg <- NULL
   } 
   
   cn <- names(res)
-  nr <- vctrs::vec_size(x) 
-  not_epi_df <- (!("time_value" %in% cn) || !("geo_value" %in% cn) || vctrs::vec_size(res) > nr || any(i > nr))
   
-  if (not_epi_df) return(tibble::as_tibble(res))
+  # Duplicate columns, Abort
+  dup_col_names = cn[duplicated(cn)]
+  if (length(dup_col_names) != 0) {
+    Abort(paste0("Column name(s) ", 
+                 paste(unique(dup_col_names), 
+                       collapse = ", "), " must not be duplicated."))
+  } 
   
-  # Use reclass as safeguard (in case class & metadata are dropped)
-  reclass(res, attr(x, "metadata"))
+  not_epi_df <- !("time_value" %in% cn) || !("geo_value" %in% cn)
+  
+  if (not_epi_df) {
+    attributes(res)$metadata <- NULL 
+    return(tibble::as_tibble(res))
+  }
+  
+  # Use reclass as safeguard (in case class &/or metadata are dropped)
+  res <- reclass(res, attr(x, "metadata"))
+  
+  # Amend additional metadata if some other_keys cols are dropped in the subset
+  old_other_keys = attr(x, "metadata")$other_keys
+  attr(res, "metadata")$other_keys <- old_other_keys[old_other_keys %in% cn]
+  
+  res
 }
 
 #' `dplyr` verbs

@@ -37,23 +37,24 @@ Imports:
     tidyr,
     tidyselect,
     tsibble,
-    utils,
-    vctrs
+    utils
 Suggests:
     covidcast,
-    delphi.epidata,
+    epidatr,
     ggplot2,
     knitr,
     outbreaks,
     rmarkdown,
     testthat (>= 3.0.0),
+    vctrs,
     waldo (>= 0.3.1),
     withr
 VignetteBuilder: 
     knitr
 Remotes:
-    dajmcdon/delphi.epidata,
-    reconverse/outbreaks
+    cmu-delphi/epidatr,
+    reconverse/outbreaks,
+    glmgen/genlasso
 Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true

@@ -13,7 +13,7 @@ kinds of tasks with `epi_df` objects. We'll work with county-level reported
 COVID-19 cases in MA and VT.
 
 ```{r, message = FALSE, eval= FALSE, warning= FALSE}
-library(delphi.epidata)
+library(epidatr)
 library(covidcast)
 library(epiprocess)
 library(dplyr)
@@ -41,7 +41,7 @@ x <- covidcast(
 The data contains 16,212 rows and 5 columns.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-library(delphi.epidata)
+library(epidatr)
 library(covidcast)
 library(epiprocess)
 library(dplyr)
