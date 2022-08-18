@@ -8,7 +8,7 @@ epix_slide(
   x,
   f,
   ...,
-  n,
+  before,
   group_by,
   ref_time_values,
   time_step,
@@ -34,10 +34,10 @@ sliding window of \code{n} time steps.}
 via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
 interpreted as an expression for tidy evaluation.}
 
-\item{n}{Number of time steps to use in the running window. For example, if
-\code{before = 7}, and one time step is one day, then to produce a value on January 7
-we apply the given function or formula to data in between January 1 and
-7.}
+\item{before}{Number of time steps to use in the running window. For example,
+if \code{before = 7}, and one time step is one day, then to produce a value on
+January 7 we apply the given function or formula to data in between January
+1 and 7.}
 
 \item{group_by}{The variable(s) to group by before slide computation. If
 missing, then the keys in the underlying data table, excluding \code{time_value}
@@ -117,12 +117,12 @@ version-aware sliding is necessary (as it its purpose).
 Finally, this is simply a wrapper around the \code{slide()} method of the
 \code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epix_slide(x, new_var = comp(old_var), n = 120)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epix_slide(x, new_var = comp(old_var), before = 120)
 }\if{html}{\out{</div>}}
 
 is equivalent to:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{x$slide(x, new_var = comp(old_var), n = 120)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{x$slide(x, new_var = comp(old_var), before = 120)
 }\if{html}{\out{</div>}}
 }
 \examples{
@@ -138,7 +138,7 @@ time_values <- seq(as.Date("2020-06-01"),
                       by = "1 day")
 epix_slide(x = archive_cases_dv_subset,
            f = ~ mean(.x$case_rate_7d_av),
-           n = 3,
+           before = 3,
            group_by = geo_value,
            ref_time_values = time_values,
            new_col_name = 'case_rate_3d_av')

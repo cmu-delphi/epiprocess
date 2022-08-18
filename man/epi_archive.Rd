@@ -277,7 +277,7 @@ details.
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$slide(
   f,
   ...,
-  n,
+  before,
   group_by,
   ref_time_values,
   time_step,

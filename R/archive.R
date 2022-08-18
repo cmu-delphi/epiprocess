@@ -584,7 +584,7 @@ epi_archive =
 #'   details. 
 #' @importFrom data.table key
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
-          slide = function(f, ..., n, group_by, ref_time_values, 
+          slide = function(f, ..., before, group_by, ref_time_values, 
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
                            all_rows = FALSE) { 
@@ -599,8 +599,8 @@ epi_archive =
             }
               
             # If a custom time step is specified, then redefine units 
-            before_num = n-1
-            if (!missing(time_step)) before_num = time_step(n-1)
+            before_num = before-1
+            if (!missing(time_step)) before_num = time_step(before-1)
             
             # What to group by? If missing, set according to internal keys;
             # otherwise, tidyselect.
