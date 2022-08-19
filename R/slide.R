@@ -31,6 +31,8 @@
 #'   For example, if `before = 3`, and one time step is one day, then to produce
 #'   a value on January 7, we apply the given function or formula to data on
 #'   January 4 and later (with the latest date dependent on `after`).
+#'   A warning will be produced if `before` is not specified, but `after` is
+#'   also not specified or 0. Should this happen, `before` will be set to 0.
 #' @param after  A nonnegative integer specifying the number of time steps
 #'   after the `ref_time_value` to use in the rolling window. This must be a
 #'   vector of length 1. The default value for this is 0. Set to 0 for a
@@ -41,6 +43,8 @@
 #'   For example, if `after = 3`, and one time step is one day, then to produce
 #'   a value on January 7, we apply the given function or formula to data on
 #'   January 10 and earlier (with the earliest date dependent on `before`).
+#'   A warning will be produced if `after` is not specified, but `before` is
+#'   also not specified or 0. Should this happen, `after` will be set to 0.
 #' @param ref_time_values Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
 #'   window. If missing, then this will be set to all unique time values in the
@@ -141,11 +145,11 @@
 #'   epi_slide(a = data.frame(cases_2dav = mean(cases), 
 #'                           cases_2dma = mad(cases)),
 #'             before = 1, as_list_col = TRUE)
-epi_slide = function(x, f, ..., before, after = 0, ref_time_values,
+epi_slide = function(x, f, ..., before, after, ref_time_values,
                      time_step, 
                      new_col_name = "slide_value", as_list_col = FALSE,
                      names_sep = "_", all_rows = FALSE) { 
- 
+
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
   
@@ -163,26 +167,40 @@ epi_slide = function(x, f, ..., before, after = 0, ref_time_values,
   }
   
   # We must ensure that both before and after are of length 1
-  if (length(after) != 1L || (!missing(before) && length(before) != 1L)) {
+  if ((!missing(after) && length(after) != 1L) ||
+      (!missing(before) && length(before) != 1L)) {
     Abort("`before` and `after` must be vectors of length 1.")
   }
   
-  # Before cannot be missing if after is set to 0. If after is set to a nonzero
-  # number, then before must be set to 0
-  if (missing(before)) {
-    if (after == 0) {
-      Abort("`before` cannot be missing when `after` is set to 0.")
-    } else {
-      before = 0 
-    }
+  # Features that are warned due to likely being mistakes:
+  # `before` missing and `after` set to 0, and vice versa
+  # Both `before` and `after` missing
+  warn_before_after <- function(main_msg,set_msg) {
+    Warn(paste(main_msg,"Did you mean to set `before` or `after`?",set_msg))
   }
   
+  if (missing(before)) {
+    if (missing(after)) {
+      warn_before_after("`before` and `after` missing.",
+                        "`before` and `after` set to 0.")
+      after = 0
+    } else if (after == 0) {
+      warn_before_after("`before` missing and `after` set to 0.",
+                        "`before` set to 0.")
+    }
+    before = 0
+  } else if (missing(after)) {
+    if (before == 0) {
+      warn_before_after("`before` set to 0 and `after` missing.",
+                        "`after` set to 0.")
+    }
+    after = 0
+  }
   if (!(is.numeric(before) && is.numeric(after))||
       floor(before) < ceiling(before) ||
       floor(after) < ceiling(after)) {
     Abort("`before` and `after` must be integers.")
   }
-  
   
   # Otherwise set up alignment based on passed before value
   if (before < 0 || after < 0) {

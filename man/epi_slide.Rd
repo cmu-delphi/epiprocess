@@ -9,7 +9,7 @@ epi_slide(
   f,
   ...,
   before,
-  after = 0,
+  after,
   ref_time_values,
   time_step,
   new_col_name = "slide_value",
@@ -48,7 +48,9 @@ as a non-zero value. In this case, \code{before} will be assumed to be 0, as it
 assumes the user wants to do a left-aligned/leading sliding window.
 For example, if \code{before = 3}, and one time step is one day, then to produce
 a value on January 7, we apply the given function or formula to data on
-January 4 and later (with the latest date dependent on \code{after}).}
+January 4 and later (with the latest date dependent on \code{after}).
+A warning will be produced if \code{before} is not specified, but \code{after} is
+also not specified or 0. Should this happen, \code{before} will be set to 0.}
 
 \item{after}{A nonnegative integer specifying the number of time steps
 after the \code{ref_time_value} to use in the rolling window. This must be a
@@ -59,7 +61,9 @@ To specify this to be centrally aligned, set \code{before} and \code{after} to b
 the same.
 For example, if \code{after = 3}, and one time step is one day, then to produce
 a value on January 7, we apply the given function or formula to data on
-January 10 and earlier (with the earliest date dependent on \code{before}).}
+January 10 and earlier (with the earliest date dependent on \code{before}).
+A warning will be produced if \code{after} is not specified, but \code{before} is
+also not specified or 0. Should this happen, \code{after} will be set to 0.}
 
 \item{ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
