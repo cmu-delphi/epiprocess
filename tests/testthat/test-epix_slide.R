@@ -27,7 +27,7 @@ test_that("epix_slide works as intended",{
                 time_value = c(5,6),
                 sum_binary = c(2^7,
                                2^10+2^8)) %>%
-    as_epi_df()
+    as_epi_df(as_of = 1)
   
   expect_identical(xx1,xx2) # *
   
