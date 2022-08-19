@@ -426,7 +426,7 @@ epix_merge = function(x, y,
 #'   ```
 #'   is equivalent to:
 #'   ```
-#'   x$slide(x, new_var = comp(old_var), before = 120)
+#'   x$slide(new_var = comp(old_var), before = 120)
 #'   ```
 #'
 #' @importFrom rlang enquo
