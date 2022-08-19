@@ -17,13 +17,13 @@ test_that("epix_slide works as intended",{
                   binary = 2^(1:12)) %>%
     as_epi_archive()
   
-  time_values <- 2:5
+  time_values <- c(2,3:5)
   
   xx1 <- epix_slide(x = xx,
                     f = ~ sum(.xx$binary),
                     before = 3,
                     group_by = geo_value,
-                    ref_time_values = versions,
+                    ref_time_values = time_values,
                     new_col_name = "sum_binary")
   
   xx2 <- tibble(geo_value = rep("x",5),

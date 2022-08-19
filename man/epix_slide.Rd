@@ -122,7 +122,7 @@ Finally, this is simply a wrapper around the \code{slide()} method of the
 
 is equivalent to:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{x$slide(x, new_var = comp(old_var), before = 120)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{x$slide(new_var = comp(old_var), before = 120)
 }\if{html}{\out{</div>}}
 }
 \examples{
