@@ -673,12 +673,13 @@ epi_archive =
             if (!missing(f)) {
               if (rlang::is_formula(f)) f = rlang::as_function(f)
               
-              x = purrr::map_dfr(ref_time_values, function(t) {
-                self$as_of(t, min_time_value = t - before_num) %>%
+              x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
+                self$as_of(ref_time_value,
+                           min_time_value = ref_time_value - before_num) %>%
                   dplyr::group_by(!!!group_by) %>%
                   dplyr::group_modify(comp_one_grp,
                                       f = f, ..., 
-                                      time_value = t,
+                                      time_value = ref_time_value,
                                       key_vars = key_vars,
                                       new_col = new_col,
                                       .keep = TRUE) %>%
@@ -700,12 +701,13 @@ epi_archive =
               f = function(x, quo, ...) rlang::eval_tidy(quo, x)
               new_col = sym(names(rlang::quos_auto_name(quos)))
 
-              x = purrr::map_dfr(ref_time_values, function(t) {
-                self$as_of(t, min_time_value = t - before_num) %>%
+              x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
+                self$as_of(ref_time_value,
+                           min_time_value = ref_time_value - before_num) %>%
                   dplyr::group_by(!!!group_by) %>%
                   dplyr::group_modify(comp_one_grp,
                                       f = f, quo = quo,
-                                      time_value = t,
+                                      time_value = ref_time_value,
                                       key_vars = key_vars,
                                       new_col = new_col,
                                       .keep = TRUE) %>%
