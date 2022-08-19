@@ -219,17 +219,15 @@ epix_merge = function(x, y,
     y_DT = y$DT[y[["DT"]][["version"]] <= new_versions_end, names(y$DT), with=FALSE]
   } else Abort("unimplemented")
 
-  if (!identical(key(x$DT), key(x_DT)) || !identical(key(y$DT), key(y_DT))) {
-    Abort("preprocessing of data tables in merge changed the key unexpectedly",
-          internal=TRUE)
-  }
   # key(x_DT) should be the same as key(x$DT) and key(y_DT) should be the same
-  # as key(y$DT). If we want to break this function into parts it makes sense
-  # to use {x,y}_DT below, but this makes the error checks and messages look a
-  # little weird and rely on the key-matching assumption above.
+  # as key(y$DT). Below, we only use {x,y}_DT in the code (making it easier to
+  # split the code into separate functions if we wish), but still refer to
+  # {x,y}$DT in the error messages (further relying on this assumption).
   #
-  # Just go ahead and test the above assumption in case different versions of
-  # data.table or certain inputs cause different behavior:
+  # Check&ensure that the above assumption; if it didn't already hold, we likely
+  # have a bug in the preprocessing, a weird/invalid archive as input, and/or a
+  # data.table version with different semantics (which may break other parts of
+  # our code).
   x_DT_key_as_expected = identical(key(x$DT), key(x_DT))
   y_DT_key_as_expected = identical(key(y$DT), key(y_DT))
   if (!x_DT_key_as_expected || !y_DT_key_as_expected) {
@@ -242,7 +240,11 @@ epix_merge = function(x, y,
     setkeyv(x_DT, key(x$DT))
     setkeyv(y_DT, key(y$DT))
   }
-
+  # Without some sort of annotations of what various columns represent, we can't
+  # do something that makes sense when merging archives with mismatched keys.
+  # E.g., even if we assume extra keys represent demographic breakdowns, a
+  # sensible default treatment of count-type and rate-type value columns would
+  # differ.
   if (!identical(sort(key(x_DT)), sort(key(y_DT)))) {
     Abort("
             The archives must have the same set of key column names; if the
