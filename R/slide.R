@@ -28,7 +28,6 @@
 #'   It is mandatory to specify a `before` value, unless `after` is specified
 #'   as a non-zero value. In this case, `before` will be assumed to be 0, as it
 #'   assumes the user wants to do a left-aligned/leading sliding window.
-#'   However, this usage is discouraged and will thus produce a warning.
 #'   For example, if `before = 3`, and one time step is one day, then to produce
 #'   a value on January 7, we apply the given function or formula to data on
 #'   January 4 and later (with the latest date dependent on `after`).
@@ -174,7 +173,6 @@ epi_slide = function(x, f, ..., before, after = 0, ref_time_values,
     if (after == 0) {
       Abort("`before` cannot be missing when `after` is set to 0.")
     } else {
-      Warn("`before` missing, `after` nonzero; assuming that left-aligned/leading window is desired and setting `before` = 0.")
       before = 0 
     }
   }

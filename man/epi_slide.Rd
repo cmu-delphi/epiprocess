@@ -46,7 +46,6 @@ Set to 0 for a left-aligned/leading sliding window, meaning that no
 It is mandatory to specify a \code{before} value, unless \code{after} is specified
 as a non-zero value. In this case, \code{before} will be assumed to be 0, as it
 assumes the user wants to do a left-aligned/leading sliding window.
-However, this usage is discouraged and will thus produce a warning.
 For example, if \code{before = 3}, and one time step is one day, then to produce
 a value on January 7, we apply the given function or formula to data on
 January 4 and later (with the latest date dependent on \code{after}).}
