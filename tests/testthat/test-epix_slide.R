@@ -17,25 +17,23 @@ test_that("epix_slide works as intended",{
                   binary = 2^(1:12)) %>%
     as_epi_archive()
   
-  time_values <- c(2,3:5)
-  
   xx1 <- epix_slide(x = xx,
-                    f = ~ sum(.xx$binary),
+                    f = ~ sum(.x$binary),
                     before = 3,
                     group_by = geo_value,
-                    ref_time_values = time_values,
                     new_col_name = "sum_binary")
   
-  xx2 <- tibble(geo_value = rep("x",5),
-                time_value = as.Date("2020-06-01") + 1:5,
-                sum_binary = c(3))
+  xx2 <- tibble(geo_value = rep("x",2),
+                time_value = c(5,6),
+                sum_binary = c(2^7,
+                               2^10+2^8)) %>%
+    as_epi_df()
   
   expect_identical(xx1,xx2) # *
   
-  xx3 <- xx$slide(f = ~ sum(.xx$binary),
+  xx3 <- xx$slide(f = ~ sum(.x$binary),
                   before = 3,
                   group_by = "geo_value",
-                  ref_time_values = time_values,
                   new_col_name = 'sum_binary')
   
   expect_identical(xx1,xx3) # This and * Imply xx2 and xx3 are identical
