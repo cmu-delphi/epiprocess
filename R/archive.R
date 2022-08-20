@@ -599,8 +599,8 @@ epi_archive =
             }
               
             # If a custom time step is specified, then redefine units 
-            before_num = before-1
-            if (!missing(time_step)) before_num = time_step(before-1)
+            before_num = before
+            if (!missing(time_step)) before_num = time_step(before)
             
             # What to group by? If missing, set according to internal keys;
             # otherwise, tidyselect.

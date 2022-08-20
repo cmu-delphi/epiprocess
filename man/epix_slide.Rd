@@ -117,12 +117,12 @@ version-aware sliding is necessary (as it its purpose).
 Finally, this is simply a wrapper around the \code{slide()} method of the
 \code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epix_slide(x, new_var = comp(old_var), before = 120)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epix_slide(x, new_var = comp(old_var), before = 119)
 }\if{html}{\out{</div>}}
 
 is equivalent to:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{x$slide(new_var = comp(old_var), before = 120)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{x$slide(new_var = comp(old_var), before = 119)
 }\if{html}{\out{</div>}}
 }
 \examples{
@@ -138,7 +138,7 @@ time_values <- seq(as.Date("2020-06-01"),
                       by = "1 day")
 epix_slide(x = archive_cases_dv_subset,
            f = ~ mean(.x$case_rate_7d_av),
-           before = 3,
+           before = 2,
            group_by = geo_value,
            ref_time_values = time_values,
            new_col_name = 'case_rate_3d_av')

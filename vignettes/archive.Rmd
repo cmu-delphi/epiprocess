@@ -358,7 +358,7 @@ fc_time_values <- seq(as.Date("2020-08-01"),
                       by = "1 month")
 
 z <- epix_slide(x, fc = prob_arx(x = percent_cli, y = case_rate_7d_av),
-                before  = 120, ref_time_values = fc_time_values,
+                before  = 119, ref_time_values = fc_time_values,
                 group_by = geo_value)
 
 head(z, 10)
@@ -388,7 +388,7 @@ x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
-      epix_slide(fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead), before = 120,
+      epix_slide(fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead), before = 119,
                  ref_time_values = fc_time_values, group_by = geo_value) %>%
       mutate(target_date = time_value + ahead, as_of = TRUE) 
   }

@@ -17,7 +17,7 @@ test_that("epix_slide works as intended",{
   
   xx1 <- epix_slide(x = xx,
                     f = ~ sum(.x$binary),
-                    before = 3,
+                    before = 2,
                     group_by = geo_value,
                     new_col_name = "sum_binary")
   
@@ -32,7 +32,7 @@ test_that("epix_slide works as intended",{
   expect_identical(xx1,xx2) # *
   
   xx3 <- xx$slide(f = ~ sum(.x$binary),
-                  before = 3,
+                  before = 2,
                   group_by = "geo_value",
                   new_col_name = 'sum_binary')
   
