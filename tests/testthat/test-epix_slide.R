@@ -25,7 +25,7 @@ test_that("epix_slide works as intended",{
                 # 7 should also be there below; this is a bug on issue #153
                 time_value = c(4,5,6),
                 sum_binary = c(2^3+2^2,
-                               2^6+2^5,
+                               2^6+2^3,
                                2^10+2^9)) %>%
     as_epi_df(as_of = 1) # Also a bug (issue #213)
   
