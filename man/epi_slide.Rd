@@ -31,39 +31,30 @@ tibble with one column per grouping variable that identifies the group,
 and any number of named arguments (which will be taken from \code{...}). If a
 formula, \code{f} can operate directly on columns accessed via \code{.x$var}, as
 in \code{~ mean(.x$var)} to compute a mean of a column var over a sliding
-window of n time steps. As well, \code{.y} may be used in the formula to refer
+window. As well, \code{.y} may be used in the formula to refer
 to the groupings that would be described by \code{g} if \code{f} was a function.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
 interpreted as an expression for tidy evaluation. See details.}
 
-\item{before}{A nonnegative integer specifying the number of time steps
-before the \code{ref_time_value} to use in the rolling window.
-This must be a vector of length 1.
-Set to 0 for a left-aligned/leading sliding window, meaning that no
-\code{time_value} after the slide will be used for the sliding calculation.
-It is mandatory to specify a \code{before} value, unless \code{after} is specified
-as a non-zero value. In this case, \code{before} will be assumed to be 0, as it
-assumes the user wants to do a left-aligned/leading sliding window.
-For example, if \code{before = 3}, and one time step is one day, then to produce
-a value on January 7, we apply the given function or formula to data on
-January 4 and later (with the latest date dependent on \code{after}).
-A warning will be produced if \code{before} is not specified, but \code{after} is
-also not specified or 0. Should this happen, \code{before} will be set to 0.}
-
-\item{after}{A nonnegative integer specifying the number of time steps
-after the \code{ref_time_value} to use in the rolling window. This must be a
-vector of length 1. The default value for this is 0. Set to 0 for a
-right-aligned/trailing sliding window, meaning that no
-\code{time_value} before the slide will be used for the sliding calculation.
-To specify this to be centrally aligned, set \code{before} and \code{after} to be
-the same.
-For example, if \code{after = 3}, and one time step is one day, then to produce
-a value on January 7, we apply the given function or formula to data on
-January 10 and earlier (with the earliest date dependent on \code{before}).
-A warning will be produced if \code{after} is not specified, but \code{before} is
-also not specified or 0. Should this happen, \code{after} will be set to 0.}
+\item{before, after}{How far \code{before} and \code{after} each \code{ref_time_value} should
+the sliding window extend? At least one of these two arguments must be
+provided; the other's default will be 0. Any value provided for either
+argument must be a single, non-\code{NA}, non-negative,
+\link[=integer-compatible]{vctrs:vec_cast} number of time steps. Endpoints of the
+window are inclusive. Common settings:
+\itemize{
+\item For trailing/right-aligned windows from \code{ref_time_value - time_step(k)}
+to \code{ref_time_value}: either pass \code{before=k} by itself, or pass \verb{before=k, after=0}.
+\item For center-aligned windows from \code{ref_time_value - time_step(k)} to
+\code{ref_time_value + time_step(k)}: pass \verb{before=k, after=k}.
+\item For leading/left-aligned windows from \code{ref_time_value} to `ref_time_value
+\itemize{
+\item time_step(k)\verb{: either pass pass }after=k\verb{by itself, or pass}before=0,
+after=k\verb{.   See "Details:" about the definition of a time step, (non)treatment of   missing rows within the window, and avoiding warnings about   }before\code{&}after` settings for a certain uncommon use case.
+}
+}}
 
 \item{ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
@@ -72,7 +63,7 @@ underlying data table, by default.}
 
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
-\code{time_value} column. This function must take a positive integer and return
+\code{time_value} column. This function must take a non-negative integer and return
 an object of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this
 would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
@@ -123,6 +114,15 @@ centrally-aligned slide of \code{n} \code{time_value}s in a sliding window, set
 in a sliding window is odd and  \code{before = n/2-1} and \code{after = n/2} when
 \code{n} is even.
 
+Sometimes, we want to experiment with various trailing or leading window
+widths and compare the slide outputs. In the (uncommon) case where
+zero-width windows are considered, manually pass both the \code{before} and
+\code{after} arguments in order to prevent potential warnings. (E.g., \code{before=k}
+with \code{k=0} and \code{after} missing may produce a warning. To avoid warnings,
+use \verb{before=k, after=0} instead; otherwise, it looks too much like a
+leading window was intended, but the \code{after} argument was forgotten or
+misspelled.)
+
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
 for example, as in:
 
@@ -151,7 +151,7 @@ through the \code{new_col_name} argument.
  # slide a 7-day leading average
   jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide(cases_7dav = mean(cases), before = 0, after = 6) \%>\% 
+  epi_slide(cases_7dav = mean(cases), after = 6) \%>\%
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av)
   

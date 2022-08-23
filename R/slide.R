@@ -15,43 +15,35 @@
 #'   and any number of named arguments (which will be taken from `...`). If a 
 #'   formula, `f` can operate directly on columns accessed via `.x$var`, as 
 #'   in `~ mean(.x$var)` to compute a mean of a column var over a sliding 
-#'   window of n time steps. As well, `.y` may be used in the formula to refer 
+#'   window. As well, `.y` may be used in the formula to refer 
 #'   to the groupings that would be described by `g` if `f` was a function.
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation. See details.  
-#' @param before A nonnegative integer specifying the number of time steps
-#'   before the `ref_time_value` to use in the rolling window.
-#'   This must be a vector of length 1.
-#'   Set to 0 for a left-aligned/leading sliding window, meaning that no
-#'   `time_value` after the slide will be used for the sliding calculation.
-#'   It is mandatory to specify a `before` value, unless `after` is specified
-#'   as a non-zero value. In this case, `before` will be assumed to be 0, as it
-#'   assumes the user wants to do a left-aligned/leading sliding window.
-#'   For example, if `before = 3`, and one time step is one day, then to produce
-#'   a value on January 7, we apply the given function or formula to data on
-#'   January 4 and later (with the latest date dependent on `after`).
-#'   A warning will be produced if `before` is not specified, but `after` is
-#'   also not specified or 0. Should this happen, `before` will be set to 0.
-#' @param after  A nonnegative integer specifying the number of time steps
-#'   after the `ref_time_value` to use in the rolling window. This must be a
-#'   vector of length 1. The default value for this is 0. Set to 0 for a
-#'   right-aligned/trailing sliding window, meaning that no
-#'   `time_value` before the slide will be used for the sliding calculation.
-#'   To specify this to be centrally aligned, set `before` and `after` to be
-#'   the same.
-#'   For example, if `after = 3`, and one time step is one day, then to produce
-#'   a value on January 7, we apply the given function or formula to data on
-#'   January 10 and earlier (with the earliest date dependent on `before`).
-#'   A warning will be produced if `after` is not specified, but `before` is
-#'   also not specified or 0. Should this happen, `after` will be set to 0.
+#' @param before,after How far `before` and `after` each `ref_time_value` should
+#'   the sliding window extend? At least one of these two arguments must be
+#'   provided; the other's default will be 0. Any value provided for either
+#'   argument must be a single, non-`NA`, non-negative,
+#'   [vctrs:vec_cast][integer-compatible] number of time steps. Endpoints of the
+#'   window are inclusive. Common settings:
+#'   * For trailing/right-aligned windows from `ref_time_value - time_step(k)`
+#'     to `ref_time_value`: either pass `before=k` by itself, or pass `before=k,
+#'     after=0`.
+#'   * For center-aligned windows from `ref_time_value - time_step(k)` to
+#'     `ref_time_value + time_step(k)`: pass `before=k, after=k`.
+#'   * For leading/left-aligned windows from `ref_time_value` to `ref_time_value
+#'     + time_step(k)`: either pass pass `after=k` by itself, or pass `before=0,
+#'     after=k`.
+#'   See "Details:" about the definition of a time step, (non)treatment of
+#'   missing rows within the window, and avoiding warnings about
+#'   `before`&`after` settings for a certain uncommon use case.
 #' @param ref_time_values Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
 #'   window. If missing, then this will be set to all unique time values in the
 #'   underlying data table, by default.
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
-#'   `time_value` column. This function must take a positive integer and return
+#'   `time_value` column. This function must take a non-negative integer and return
 #'   an object of class `lubridate::period`. For example, we can use `time_step
 #'   = lubridate::hours` in order to set the time step to be one hour (this
 #'   would only be meaningful if `time_value` is of class `POSIXct`).
@@ -91,9 +83,18 @@
 #'   `before = (n-1)/2` and `after = (n-1)/2` when the number of `time_value`s
 #'   in a sliding window is odd and  `before = n/2-1` and `after = n/2` when
 #'   `n` is even.
-#' 
-#' If `f` is missing, then an expression for tidy evaluation can be specified,
-#'   for example, as in: 
+#'
+#'   Sometimes, we want to experiment with various trailing or leading window
+#'   widths and compare the slide outputs. In the (uncommon) case where
+#'   zero-width windows are considered, manually pass both the `before` and
+#'   `after` arguments in order to prevent potential warnings. (E.g., `before=k`
+#'   with `k=0` and `after` missing may produce a warning. To avoid warnings,
+#'   use `before=k, after=0` instead; otherwise, it looks too much like a
+#'   leading window was intended, but the `after` argument was forgotten or
+#'   misspelled.)
+#'
+#'   If `f` is missing, then an expression for tidy evaluation can be specified,
+#'   for example, as in:
 #'   ```
 #'   epi_slide(x, cases_7dav = mean(cases), before = 6)
 #'   ```
@@ -121,7 +122,7 @@
 #'  # slide a 7-day leading average
 #'   jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide(cases_7dav = mean(cases), before = 0, after = 6) %>% 
+#'   epi_slide(cases_7dav = mean(cases), after = 6) %>%
 #'   # rmv a nonessential var. to ensure new col is printed
 #'   dplyr::select(-death_rate_7d_av)
 #'   
@@ -166,51 +167,43 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
                                       unique(x$time_value)] 
   }
   
-  # We must ensure that both before and after are of length 1
-  if ((!missing(after) && length(after) != 1L) ||
-      (!missing(before) && length(before) != 1L)) {
-    Abort("`before` and `after` must be vectors of length 1.")
+  # Validate and pre-process `before`, `after`:
+  if (!missing(before)) {
+    before <- vctrs::vec_cast(before, integer())
+    if (length(before) != 1L || is.na(before) || before < 0L) {
+      Abort("`before` must be length-1, non-NA, non-negative")
+    }
   }
-  
-  # Features that are warned due to likely being mistakes:
-  # `before` missing and `after` set to 0, and vice versa
-  # Both `before` and `after` missing
-  warn_before_after <- function(main_msg,set_msg) {
-    Warn(paste(main_msg,"Did you mean to set `before` or `after`?",set_msg))
+  if (!missing(after)) {
+    after <- vctrs::vec_cast(after, integer())
+    if (length(after) != 1L || is.na(after) || after < 0L) {
+      Abort("`after` must be length-1, non-NA, non-negative")
+    }
   }
-  
   if (missing(before)) {
     if (missing(after)) {
-      warn_before_after("`before` and `after` missing.",
-                        "`before` and `after` set to 0.")
-      after = 0
-    } else if (after == 0) {
-      warn_before_after("`before` missing and `after` set to 0.",
-                        "`before` set to 0.")
+      Abort("Either or both of `before`, `after` must be provided.")
+    } else if (after == 0L) {
+      Warn("`before` missing, `after==0`; maybe this was intended to be some
+            non-zero-width trailing window, but since `before` appears to be
+            missing, it's interpreted as a zero-width window (`before=0,
+            after=0`).")
     }
-    before = 0
+    before <- 0L
   } else if (missing(after)) {
-    if (before == 0) {
-      warn_before_after("`before` set to 0 and `after` missing.",
-                        "`after` set to 0.")
+    if (before == 0L) {
+      Warn("`before==0`, `after` missing; maybe this was intended to be some
+            non-zero-width leading window, but since `after` appears to be
+            missing, it's interpreted as a zero-width window (`before=0,
+            after=0`).")
     }
-    after = 0
-  }
-  if (!(is.numeric(before) && is.numeric(after))||
-      floor(before) < ceiling(before) ||
-      floor(after) < ceiling(after)) {
-    Abort("`before` and `after` must be integers.")
-  }
-  
-  # Otherwise set up alignment based on passed before value
-  if (before < 0 || after < 0) {
-    Abort("`before` and `after` must be at least 0.")
+    after <- 0L
   }
 
-  # If a custom time step is specified, then redefine units 
+  # If a custom time step is specified, then redefine units
   if (!missing(time_step)) {
-    before = time_step(before)
-    after = time_step(after)
+    before <- time_step(before)
+    after <- time_step(after)
   }
 
   # Now set up starts and stops for sliding/hopping

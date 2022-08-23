@@ -14,41 +14,42 @@ f = function(x, ...) dplyr::tibble(value=mean(x$value), count=length(x$value))
 ## --- These cases generate errors (or not): ---
 test_that("`before` and `after` are both vectors of length 1", {
   expect_error(epi_slide(grouped, f, before = c(0,1), after = 0, ref_time_values = d+3),
-               "`before` and `after` must be vectors of length 1.")
+               "`before`.*length-1")
   expect_error(epi_slide(grouped, f, before = 1, after = c(0,1), ref_time_values = d+3),
-               "`before` and `after` must be vectors of length 1.")
+               "`after`.*length-1")
 })
 
-test_that("Test warnings for discouraged features", {
-  expect_warning(epi_slide(grouped, f, ref_time_values = d+1),
-                 "`before` and `after` missing. Did you mean to set `before` or\n`after`? `before` and `after` set to 0.")
+test_that("Test errors/warnings for discouraged features", {
+  expect_error(epi_slide(grouped, f, ref_time_values = d+1),
+               "Either or both of `before`, `after` must be provided.")
   expect_warning(epi_slide(grouped, f, before = 0L, ref_time_values = d+1),
-                 "`before` set to 0 and `after` missing. Did you mean to set `before`\nor `after`? `before` set to 0.")
+                 "`before==0`, `after` missing")
   expect_warning(epi_slide(grouped, f, after = 0L, ref_time_values = d+1),
-                 "`before` missing and `after` set to 0. Did you mean to set `before`\nor `after`? `after` set to 0.")
+                 "`before` missing, `after==0`")
+  # Below cases should raise no errors/warnings:
   expect_warning(epi_slide(grouped, f, before = 1L, ref_time_values = d+2),NA)
   expect_warning(epi_slide(grouped, f, after = 1L, ref_time_values = d+2),NA)
   expect_warning(epi_slide(grouped, f, before = 0L, after = 0L, ref_time_values = d+2),NA)
 })
 
-test_that("Both `before` and `after` must be nonnegative integers",{
+test_that("Both `before` and `after` must be non-NA, non-negative, integer-compatible",{
   expect_error(epi_slide(grouped, f, before = -1L, ref_time_values = d+2L),
-               "`before` and `after` must be at least 0.")
+               "`before`.*non-negative")
   expect_error(epi_slide(grouped, f, before = 2L, after = -1L, ref_time_values = d+2L),
-               "`before` and `after` must be at least 0.")
+               "`after`.*non-negative")
   expect_error(epi_slide(grouped, f, before = "a", ref_time_values = d+2L),
-               "`before` and `after` must be integers.")
+               regexp="before", class="vctrs_error_incompatible_type")
   expect_error(epi_slide(grouped, f, before = 1L, after = "a", ref_time_values = d+2L),
-               "`before` and `after` must be integers.")
+               regexp="after", class="vctrs_error_incompatible_type")
   expect_error(epi_slide(grouped, f, before = 0.5, ref_time_values = d+2L),
-               "`before` and `after` must be integers.")
+               regexp="before", class="vctrs_error_incompatible_type")
   expect_error(epi_slide(grouped, f, before = 1L, after = 0.5, ref_time_values = d+2L),
-               "`before` and `after` must be integers.")
+               regexp="after", class="vctrs_error_incompatible_type")
   expect_error(epi_slide(grouped, f, before = NA, after = 1L, ref_time_values = d+2L),
-               "`before` and `after` must be integers.")
+               "`before`.*non-NA")
   expect_error(epi_slide(grouped, f, before = 1L, after = NA, ref_time_values = d+2L),
-               "`before` and `after` must be integers.")
-  # The before and after values can be numerics that are integerish
+               "`after`.*non-NA")
+  # Non-integer-class but integer-compatible values are allowed:
   expect_error(epi_slide(grouped, f, before = 1, after = 1, ref_time_values = d+2L),NA)
 })
 
