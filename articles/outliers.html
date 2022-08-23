@@ -182,8 +182,7 @@
 <span><span class="co">## <span style="color: #949494;">#   stl_nonseasonal_upper &lt;dbl&gt;, stl_nonseasonal_replacement &lt;dbl&gt;,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   combined_lower &lt;dbl&gt;, combined_upper &lt;dbl&gt;, combined_replacement &lt;dbl&gt;, and</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   abbreviated variable names ¹​rm_replacement, ²​stl_seasonal_lower,</span></span></span>
-<span><span class="co">## <span style="color: #949494;">#   ³​stl_seasonal_upper, ⁴​stl_seasonal_replacement</span></span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ Use `colnames()` to see all variable names</span></span></span></code></pre>
+<span><span class="co">## <span style="color: #949494;">#   ³​stl_seasonal_upper, ⁴​stl_seasonal_replacement</span></span></span></code></pre>
 <p>To visualize the results, we first define a convenience function for plotting.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plot outlier detection bands and/or points identified as outliers</span></span>
@@ -264,8 +263,7 @@
 <span><span class="co">## <span style="color: #BCBCBC;"> 8</span> nj        2020-10-08  <span style="text-decoration: underline;">1</span>415            873.</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 9</span> fl        2020-10-10     0           <span style="text-decoration: underline;">2</span>660 </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">10</span> fl        2020-10-11  <span style="text-decoration: underline;">5</span>570           <span style="text-decoration: underline;">2</span>660 </span></span>
-<span><span class="co">## <span style="color: #949494;"># … with 12 more rows</span></span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ Use `print(n = ...)` to see more rows</span></span></span></code></pre>
+<span><span class="co">## <span style="color: #949494;"># … with 12 more rows</span></span></span></code></pre>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">y</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time_value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">cases</span><span class="op">)</span>, linetype <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
