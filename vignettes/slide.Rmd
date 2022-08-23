@@ -11,7 +11,7 @@ A central tool in the `epiprocess` package is `epi_slide()`, which is based on
 the powerful functionality provided in the 
 [`slider`](https://cran.r-project.org/web/packages/slider) package. In
 `epiprocess`, to "slide" means to apply a computation---represented as a
-function or formula---over a running window of `n` time steps. Suitable
+function or formula---over a sliding/rolling data window. Suitable
 groupings can always be achieved by a preliminary call to `group_by()`.
 
 By default, the meaning of one time step is inferred from the `time_value`
