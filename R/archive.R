@@ -599,8 +599,7 @@ epi_archive =
             }
               
             # If a custom time step is specified, then redefine units 
-            before_num = before
-            if (!missing(time_step)) before_num = time_step(before)
+            if (!missing(time_step)) before <- time_step(before)
             
             # What to group by? If missing, set according to internal keys;
             # otherwise, tidyselect.
@@ -675,7 +674,7 @@ epi_archive =
               
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
                 self$as_of(ref_time_value,
-                           min_time_value = ref_time_value - before_num) %>%
+                           min_time_value = ref_time_value - before) %>%
                   dplyr::group_by(!!!group_by) %>%
                   dplyr::group_modify(comp_one_grp,
                                       f = f, ..., 
@@ -703,7 +702,7 @@ epi_archive =
 
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
                 self$as_of(ref_time_value,
-                           min_time_value = ref_time_value - before_num) %>%
+                           min_time_value = ref_time_value - before) %>%
                   dplyr::group_by(!!!group_by) %>%
                   dplyr::group_modify(comp_one_grp,
                                       f = f, quo = quo,
