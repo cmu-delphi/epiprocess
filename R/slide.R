@@ -24,7 +24,7 @@
 #'   the sliding window extend? At least one of these two arguments must be
 #'   provided; the other's default will be 0. Any value provided for either
 #'   argument must be a single, non-`NA`, non-negative,
-#'   [vctrs:vec_cast][integer-compatible] number of time steps. Endpoints of the
+#'   [integer-compatible][vctrs::vec_cast] number of time steps. Endpoints of the
 #'   window are inclusive. Common settings:
 #'   * For trailing/right-aligned windows from `ref_time_value - time_step(k)`
 #'     to `ref_time_value`: either pass `before=k` by itself, or pass `before=k,

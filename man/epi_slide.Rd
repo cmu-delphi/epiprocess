@@ -42,7 +42,7 @@ interpreted as an expression for tidy evaluation. See details.}
 the sliding window extend? At least one of these two arguments must be
 provided; the other's default will be 0. Any value provided for either
 argument must be a single, non-\code{NA}, non-negative,
-\link[=integer-compatible]{vctrs:vec_cast} number of time steps. Endpoints of the
+\link[vctrs:vec_cast]{integer-compatible} number of time steps. Endpoints of the
 window are inclusive. Common settings:
 \itemize{
 \item For trailing/right-aligned windows from \code{ref_time_value - time_step(k)}
