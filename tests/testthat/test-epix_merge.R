@@ -121,9 +121,13 @@ local({
 })
 
 local({
-  x = as_epi_archive(tibble::tibble(geo_value=1L, time_value=1L, version=1L, x_value=10L))
-  y = as_epi_archive(tibble::tibble(geo_value=1L, time_value=1L, version=5L, y_value=20L))
-  print(epix_merge(x,y, sync = "na"))
+  x = as_epi_archive(
+    tibble::tibble(geo_value=1L, time_value=1L, version=1L, x_value=10L),
+    versions_end = 3L
+  )
+  y = as_epi_archive(
+    tibble::tibble(geo_value=1L, time_value=1L, version=5L, y_value=20L)
+  )
   test_that('epix_merge forbids on sync default or "forbid"', {
     expect_error(epix_merge(x,y),
                  class="epiprocess__epix_merge_unresolved_sync")
@@ -136,8 +140,10 @@ local({
       as_epi_archive(tibble::tribble(
         ~geo_value, ~time_value, ~version, ~x_value, ~y_value,
         1L, 1L, 1L, 10L, NA_integer_,         # x updated, y not observed yet
-        1L, 1L, 2L, NA_integer_, NA_integer_, # NA-ing out x, y not observed yet
+        1L, 1L, 4L, NA_integer_, NA_integer_, # NA-ing out x, y not observed yet
         1L, 1L, 5L, NA_integer_, 20L,         # x still NA, y updated
+        # (we should not have a y vals -> NA update here; version 5 should be
+        # the `versions_end` of the result)
         ), clobberable_versions_start=1L)
     )
   })
@@ -149,6 +155,16 @@ local({
         1L, 1L, 1L, 10L, NA_integer_,  # x updated, y not observed yet
         1L, 1L, 5L, 10L, 20L, # x LOCF'd, y updated
         ), clobberable_versions_start=1L)
+    )
+  })
+  test_that('epix_merge sync="truncate" works', {
+    expect_equal(
+      epix_merge(x,y, sync = "truncate"),
+      as_epi_archive(tibble::tribble(
+        ~geo_value, ~time_value, ~version, ~x_value, ~y_value,
+        1L, 1L, 1L, 10L, NA_integer_, # x updated, y not observed yet
+        # y's update beyond x's last update has been truncated
+        ), clobberable_versions_start=1L, versions_end=3L)
     )
   })
   x_no_conflict = as_epi_archive(tibble::tibble(geo_value=1L, time_value=1L, version=1L, x_value=10L))
@@ -175,6 +191,12 @@ local({
   test_that('epix_merge sync="locf" on no-conflict works', {
     expect_equal(
       epix_merge(x_no_conflict, y_no_conflict, sync = "locf"),
+      xy_no_conflict_expected
+    )
+  })
+  test_that('epix_merge sync="truncate" on no-conflict works', {
+    expect_equal(
+      epix_merge(x_no_conflict, y_no_conflict, sync = "truncate"),
       xy_no_conflict_expected
     )
   })
