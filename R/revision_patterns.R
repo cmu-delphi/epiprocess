@@ -87,12 +87,15 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col, issued_col) {
   pivot_df <- mutate(df, !!lag_col := lags) %>%
     arrange(across(all_of(lag_col))) %>%
     pivot_wider(id_cols=lag_col, names_from=refd_col, values_from=value_col)
-  if (any(diff(pivot_df[[lag_col]])!=1)){Abort("Risk exists in forward fill")}
+  
+  if (any(diff(pivot_df[[lag_col]])!=1)) {Abort("Risk exists in forward fill")}
+  
   pivot_df <- pivot_df %>% fill(everything(), .direction="down")
   pivot_df[is.na(pivot_df)] <- 0 # fill NAs with 0s
   backfill_df <- pivot_df %>%
     pivot_longer(-lag_col, values_to="value_raw", names_to=refd_col)
   backfill_df[[refd_col]] = as.Date(backfill_df[[refd_col]])
+  
   return (as.data.frame(backfill_df))
 }
 
@@ -119,6 +122,7 @@ get_7dav <- function(pivot_df, refd_col, issued_col = "issue_date"){
     pivot_longer(-refd_col, values_to="value_raw", names_to=issued_col)
   backfill_df[[refd_col]] = as.Date(backfill_df[[refd_col]])
   backfill_df[[issued_col]] = as.Date(backfill_df[[issued_col]])
+  
   return (as.data.frame(backfill_df))
 }
 
@@ -133,6 +137,7 @@ get_7dav <- function(pivot_df, refd_col, issued_col = "issue_date"){
 #' @export
 add_shift <- function(df, n_day, refd_col){
   df[, refd_col] <- as.Date(df[, refd_col]) + n_day
+  
   return (df)
 }
 
