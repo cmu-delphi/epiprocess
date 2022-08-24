@@ -186,7 +186,7 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag, issu
   avg_df <- get_7dav(pivot_df, refd_col, issued_col)
   # 7dav until yesterday
   avg_df <- add_shift(avg_df, 1, refd_col) %>%
-    rename(value_7dav = value_raw)
+    rename(value_7dav = .env$value_col)
   avg_df_prev7 <- add_shift(avg_df, 7, refd_col) %>%
     rename(value_prev_7dav = value_7dav)
 
