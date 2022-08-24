@@ -597,7 +597,20 @@ epi_archive =
               ref_time_values = ref_time_values[ref_time_values %in%
                                                 unique(self$DT$time_value)]
             }
-              
+
+            # Validate and pre-process `before`:
+            if (missing(before)) {
+              Abort("`before` is required (and must be passed by name);
+                     if you did not want to apply a sliding window but rather
+                     to map `as_of` and `f` across various `ref_time_values`,
+                     pass a large `before` value (e.g., if time steps are days,
+                     `before=365000`).")
+            }
+            before <- vctrs::vec_cast(before, integer())
+            if (length(before) != 1L || is.na(before) || before < 0L) {
+              Abort("`before` must be length-1, non-NA, non-negative")
+            }
+
             # If a custom time step is specified, then redefine units 
             if (!missing(time_step)) before <- time_step(before)
             

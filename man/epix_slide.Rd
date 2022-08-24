@@ -34,10 +34,21 @@ sliding window of \code{n} time steps.}
 via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
 interpreted as an expression for tidy evaluation.}
 
-\item{before}{Number of time steps to use in the running window. For example,
-if \code{before = 7}, and one time step is one day, then to produce a value on
-January 7 we apply the given function or formula to data in between January
-1 and 7.}
+\item{before}{How far \code{before} each \code{ref_time_value} should the sliding
+window extend? If provided, should be a single, non-NA,
+\link[vctrs:vec_cast]{integer-compatible} number of time steps. This window
+endpoint is inclusive. For example, if \code{before = 7}, and one time step is
+one day, then to produce a value for a \code{ref_time_value} of January 8, we
+apply the given function or formula to data (for each group present) with
+\code{time_value}s from January 1 onward, as they were reported on January 8.
+For typical disease surveillance sources, this will not include any data
+with a \code{time_value} of January 8, and, depending on the amount of reporting
+latency, may not include January 7 or even earlier \code{time_value}s. (If
+instead the archive were to hold nowcasts instead of regular surveillance
+data, then we would indeed expect data for \code{time_value} January 8. If it
+were to hold forecasts, then we would expect data for \code{time_value}s after
+January 8, and the sliding window would extend as far after each
+\code{ref_time_value} as needed to include all such \code{time_value}s.)}
 
 \item{group_by}{The variable(s) to group by before slide computation. If
 missing, then the keys in the underlying data table, excluding \code{time_value}
@@ -89,11 +100,15 @@ examples.
 }
 \details{
 Two key distinctions between inputs to the current function and
-\code{epi_slide()}:
+\code{\link[=epi_slide]{epi_slide()}}:
 \enumerate{
-\item \code{epix_slide()} uses windows that are \strong{always right-aligned} (in
-\code{epi_slide()}, custom alignments could be specified using the \code{align} or
-\code{before} arguments).
+\item \code{epix_slide()} doesn't accept an \code{after} argument; its windows extend
+from \code{before} time steps before a given \code{ref_time_value} through the last
+\code{time_value} available as of version \code{ref_time_value} (typically, this
+won't include \code{ref_time_value} itself, as observations about a particular
+time interval (e.g., day) are only published after that time interval ends);
+\code{epi_slide} windows extend from \code{before} time steps before a
+\code{ref_time_value} through \code{after} time steps after \code{ref_time_value}.
 \item \code{epix_slide()} uses a \code{group_by} to specify the grouping upfront (in
 \code{epi_slide()}, this would be accomplished by a preceding function call to
 \code{dplyr::group_by()}).
