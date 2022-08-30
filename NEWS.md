@@ -183,7 +183,9 @@
   named parameters that did not receive values from `epi_slide`'s `...`.
 * Added some examples throughout the package.
 * Using example data objects in vignettes also speeds up vignette compilation.
-* Cleanup:
+
+## Cleanup:
+
 * Set up gh-actions CI.
 * Added tests for `epi_df`s.
 
