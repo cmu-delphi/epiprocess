@@ -1,0 +1,69 @@
+/* The news/changelog in pkgdown 2.0.6 is squashed relative to 1.6.1, and
+   secondary headings are too prominent when using ## (but we can't change to
+   ### without impacting side navbar). Just trying a couple of bootswatches
+   didn't seem to help, and nice template packages might be limited for use by
+   particular own groups (e.g., tidytemplate).
+*/
+
+/* Current approach: add some spacing with CSS, and change ## -> ### in the .md
+   to get smaller fonts more easily.
+*/
+
+/* General structure: div.template-news wraps everything of interest regarding
+   the rendered NEWS.md. Within that, div.level2's wrap the each package version
+   + the changes for that version. (Within those,) h2.pkg-version's label the
+   versions.
+*/
+
+
+
+/* Matches the first-listed version's section. (This is written as a general
+   rule, but the adjacent sibling rule with override it for non-first versions'
+   sections. Using :first-child probably wouldn't work as a sibling
+   div.page-header precedes the first div.level2.) */
+div.template-news div.level2 {
+    margin-top: 1.5em;
+}
+
+/* Matches subsequent versions' sections. Places more vspace between these
+   sections than before the first section.
+*/
+div.template-news div.level2 + div.level2 {
+    margin-top: 2.5em;
+}
+
+/* Place some additional vspace after each version number heading; currently,
+   the immediately following content is always a secondary heading, which looks
+   weird with the default spacing.
+*/
+div.template-news h2.pkg-version {
+    margin-bottom: 0.5em;
+}
+
+/* Use `h4` styling for `h3`s (the ## headings); this is the only thing we need
+   .scss for, and we could really just copy-paste in the appropriate value if
+   needed: */
+div.template-news h3 {
+    @extend h4;
+}
+
+
+/* Original approach, to be removed at some later time: try adding hrules before
+   and after primary headings (version numbers). The initial "hrule" (actually a
+   border) after the "Source:" pointer has a different color from natural
+   hrules, so we need some custom CSS styling to get these colors to match and
+   look okay:
+ */
+
+/* .template-news .page-header { */
+/*     /\* 1px solid to match original *\/ */
+/*     /\* (original color was something like --bs-default which seemed to be set to */
+/*     --bs-gray-300) *\/ */
+/*     border-bottom: 1px solid var(--bs-secondary); */
+/* } */
+
+/* .template-news hr { */
+/*     height: 1px; /\* defensive *\/ */
+/*     background-color: var(--bs-secondary); */
+/*     opacity: 1; /\* counteracts a 0.25 setting somewhere *\/ */
+/* } */
