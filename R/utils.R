@@ -4,11 +4,11 @@ break_str = function(str, nchar = 79, init = "") {
   return(str)
 }
 
-#' Format chr holding variable/column/other names, with prefix&indent
+#' Line wrap `chr` holding variable/column/other names, with prefix&indent
 #'
 #' Helps pretty-print vectors of variable/column/slot/field names. Adds
 #' backticks, commas, prefixes, and indentation. Wraps lines, but won't insert
-#' line breaks in the middle of the names while doing so.
+#' line breaks in the middle of any name while doing so.
 #'
 #' @param nms Character vector: the variable names (potentially empty)
 #' @param initial Optional; single string: a prefix for the initial line in the
@@ -22,13 +22,12 @@ break_str = function(str, nchar = 79, init = "") {
 #' @param width Optional; single integer: desired maximum formatted line width.
 #'   The formatted output may not obey this setting if `common_prefix` plus
 #'   `initial` is long or the printing width is very narrow.
-#' @return Character vector; lines to be [`cat`]; to print, `cat` with a `"\n"`
-#'   after each entry.
+#' @return `chr`; to print, use [`base::writeLines`].
 #'
 #' @noRd
-format_varnames = function(nms,
-                           initial = "", common_prefix = "", none_str = "<none>",
-                           width = getOption("width", 80L)) {
+wrap_varnames = function(nms,
+                         initial = "", common_prefix = "", none_str = "<none>",
+                         width = getOption("width", 80L)) {
   if (!rlang::is_character(nms)) {
     Abort("`nms` must be a character vector")
   }
@@ -63,16 +62,7 @@ format_varnames = function(nms,
     }
   lines = paste0(c(full_initial, rep(full_prefix, times=length(unprefixed_lines)-1L)),
                  unprefixed_lines)
-}
-
-#' [`cat`] chr holding variable/column/other names, with prefix&indent
-#'
-#' @inheritParams format_varnames
-#'
-#' @noRd
-cat_varnames = function(nms, initial="", common_prefix="", none_str="<none>") {
-  lines = format_varnames(nms, initial=initial, common_prefix=common_prefix, none_str=none_str)
-  cat(paste(paste0(lines,"\n"), collapse=""))
+  lines
 }
 
 Abort = function(msg, ...) rlang::abort(break_str(msg, init = "Error: "), ...)

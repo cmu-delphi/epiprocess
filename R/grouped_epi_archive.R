@@ -81,7 +81,7 @@ grouped_epi_archive =
       },
       print = function(header=TRUE) {
         if (header) cat("A `grouped_epi_archive` object:\n")
-        cat_varnames(private$vars, initial="* Groups: ")
+        writeLines(wrap_varnames(private$vars, initial="* Groups: "))
         # If none of the grouping vars is a factor, then $drop doesn't seem
         # relevant, so try to be less verbose and don't message about it.
         #
