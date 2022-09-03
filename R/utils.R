@@ -4,32 +4,36 @@ break_str = function(str, nchar = 79, init = "") {
   return(str)
 }
 
-#' Line wrap `chr` holding variable/column/other names, with prefix&indent
+# Note: update `wrap_symbolics` and `wrap_varnames` (parameters, parameter
+# defaults, bodies) together.
+
+#' Line wrap list holding [symbolic][rlang::is_symbolic], with prefix&indent
 #'
-#' Helps pretty-print vectors of variable/column/slot/field names. Adds
-#' backticks, commas, prefixes, and indentation. Wraps lines, but won't insert
-#' line breaks in the middle of any name while doing so.
+#' Helps pretty-print these objects. Adds backticks, commas, prefixes, and
+#' indentation. Wraps lines, but won't insert line breaks in the middle of any
+#' name while doing so.
 #'
-#' @param nms Character vector: the variable names (potentially empty)
+#' @param symbolics List of [symbolic][rlang::is_symbolic] objects: the variable
+#'   names (potentially empty)
 #' @param initial Optional; single string: a prefix for the initial line in the
 #'   result; e.g., "Variable names: ". Defaults to "". Any non-initial lines
 #'   will be indented with whitespace matching the (estimated) visual width of
 #'   `initial`.
 #' @param common_prefix Optional; single string: a prefix for every line (will
 #'   appear before `initial`); e.g., "# ". Defaults to "".
-#' @param none_str Optional; single string: what to display in place of a
-#'   length-0 `nms` vector. Will be combined with `common_prefix` and `initial`.
+#' @param none_str Optional; single string: what to display when given
+#'   `length`-0 input. Will be combined with `common_prefix` and `initial`.
 #' @param width Optional; single integer: desired maximum formatted line width.
 #'   The formatted output may not obey this setting if `common_prefix` plus
 #'   `initial` is long or the printing width is very narrow.
 #' @return `chr`; to print, use [`base::writeLines`].
 #'
 #' @noRd
-wrap_varnames = function(nms,
-                         initial = "", common_prefix = "", none_str = "<none>",
-                         width = getOption("width", 80L)) {
-  if (!rlang::is_character(nms)) {
-    Abort("`nms` must be a character vector")
+wrap_symbolics = function(symbolics,
+                          initial = "", common_prefix = "", none_str = "<none>",
+                          width = getOption("width", 80L)) {
+  if (!all(purrr::map_lgl(symbolics, rlang::is_symbolic))) {
+    Abort("`symbolics` must be a list of symbolic objects")
   }
   if (!rlang::is_string(initial)) {
     Abort("`initial` must be a string")
@@ -48,21 +52,49 @@ wrap_varnames = function(nms,
   line_width_for_syms = max(width - full_initial_width,
                             minimum_reasonable_line_width_for_syms)
   unprefixed_lines =
-    if (length(nms) == 0L) {
+    if (length(symbolics) == 0L) {
       none_str
     } else {
       utils::capture.output(
         withr::with_options(list("width" = line_width_for_syms), {
-          # `rlang::syms` + `paste` takes care of backquotes. `cat` with
-          # `fill=TRUE` takes care of spacing + line wrapping exclusively between
-          # elements. We need to add commas appropriately.
-          cat(paste0(rlang::syms(nms), c(rep(",", times=length(nms)-1L), "")), fill=TRUE)
+          # `paste0` already takes care of necessary backquotes. `cat` with
+          # `fill=TRUE` takes care of spacing + line wrapping exclusively
+          # between elements. We need to add commas appropriately.
+          cat(paste0(symbolics, c(rep(",", times=length(symbolics)-1L), "")), fill=TRUE)
         })
       )
     }
   lines = paste0(c(full_initial, rep(full_prefix, times=length(unprefixed_lines)-1L)),
                  unprefixed_lines)
   lines
+}
+
+#' Line wrap `chr` holding variable/column/other names, with prefix&indent
+#'
+#' @param nms Character vector: the variable names (potentially empty)
+#' @inheritParams wrap_symbolics
+#' @return `chr`; to print, use [`base::writeLines`].
+#'
+#' @noRd
+wrap_varnames = function(nms,
+                         initial = "", common_prefix = "", none_str = "<none>",
+                         width = getOption("width", 80L)) {
+  # (Repeating parameter names and default args here for better autocomplete.
+  # Using `...` instead would require less upkeep, but have worse autocomplete.)
+  if (!rlang::is_character(nms)) {
+    Abort("`nms` must be a character vector")
+  }
+  wrap_symbolics(rlang::syms(nms), initial=initial, common_prefix=common_prefix, none_str=none_str, width=width)
+}
+
+#' Paste `chr` entries (lines) together with `"\n"` separators, trailing `"\n"`
+#'
+#' @param lines `chr`
+#' @return string
+#'
+#' @noRd
+paste_lines = function(lines) {
+  paste(paste0(lines,"\n"), collapse="")
 }
 
 Abort = function(msg, ...) rlang::abort(break_str(msg, init = "Error: "), ...)
