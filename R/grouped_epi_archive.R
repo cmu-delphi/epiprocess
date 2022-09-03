@@ -86,10 +86,11 @@ grouped_epi_archive =
         # relevant, so try to be less verbose and don't message about it.
         #
         # Below map-then-extract may look weird, but the more natural
-        # extract-then-map appears to trigger copies the extracted columns since
-        # we are working with a data.table (unless we go through `as.list`, but
-        # its current aliasing behavior is probably not something to rely on),
-        # while map functions currently appear to avoid column copies.
+        # extract-then-map appears to trigger copies of the extracted columns
+        # since we are working with a `data.table` (unless we go through
+        # `as.list`, but its current column-aliasing behavior is probably not
+        # something to rely too much on), while map functions currently appear
+        # to avoid column copies.
         if (any(purrr::map_lgl(private$ungrouped$DT, is.factor)[private$vars])) {
           cat(sprintf("* %s groups formed by factor levels that don't appear in the data",
                       if (private$drop) "Drops" else "Does not drop"))
@@ -114,7 +115,11 @@ grouped_epi_archive =
                 ',
                 class = "epiprocess__grouped_epi_archive_group_by_with_add_FALSE")
         } else {
-          vars_from_dots = eval_select_names_from_dots(..., .data=private$ungrouped$DT)
+          # `group_by` `...` computations are performed on ungrouped data (see
+          # `?dplyr::group_by`)
+          detailed_mutate = epix_detailed_restricted_mutate(private$ungrouped, ...)
+          out_ungrouped = detailed_mutate[["archive"]]
+          vars_from_dots = detailed_mutate[["request_names"]]
           vars = union(self$vars, vars_from_dots)
           grouped_epi_archive$new(self$ungrouped, vars, .drop)
         }

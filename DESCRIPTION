@@ -22,7 +22,7 @@ Description: This package introduces a common data structure for epidemiological
 License: MIT + file LICENSE
 Imports: 
     data.table,
-    dplyr,
+    dplyr (>= 1.0.0),
     fabletools,
     feasts,
     generics,

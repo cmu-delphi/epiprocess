@@ -336,13 +336,133 @@ epix_merge = function(x, y,
   ))
 }
 
-#' @export
-group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_drop_default(.data)) {
-  .data$group_by(..., .add=.add, .drop=.drop)
+# Helpers for `group_by`:
+
+#' Make non-testing mock to get [`dplyr::dplyr_col_modify`] input
+#'
+#' A workaround for `dplyr:::mutate_cols` not being exported and directly
+#' applying test mock libraries likely being impossible (due to mocking another
+#' package's S3 generic or method).
+#'
+#' Use solely with a single call to the [`dplyr::mutate`] function and then
+#' `destructure_col_modify_recorder_df`; other applicable operations from
+#' [dplyr::dplyr_extending] have not been implemented.
+#'
+#' @param parent_df the "parent class" data frame to wrap
+#' @return a `col_modify_recorder_df`
+#'
+#' @noRd
+new_col_modify_recorder_df = function(parent_df) {
+  if (!inherits(parent_df, "data.frame")) {
+    Abort('`parent_df` must inherit class `"data.frame"`',
+          internal=TRUE)
+  }
+  `class<-`(parent_df, c("col_modify_recorder_df", class(parent_df)))
 }
 
-# (`group_by_drop_default` on ungrouped `epi_archive`s is expected to dispatch
-# to `group_by_drop_default.default`.)
+#' Extract unchanged parent-class data frame from a `new_col_modify_recorder_df`
+#'
+#' @param col_modify_recorder_df an instance of a `col_modify_recorder_df`
+#' @return named list with elements `unchanged_parent_df`, `cols`; `cols` is the
+#'   input to [`dplyr::dplyr_col_modify`] that this class was designed to record
+#'
+#' @noRd
+destructure_col_modify_recorder_df = function(col_modify_recorder_df) {
+  if (!inherits(col_modify_recorder_df, "col_modify_recorder_df")) {
+    Abort('`col_modify_recorder_df` must inherit class `"col_modify_recorder_df"`',
+          internal=TRUE)
+  }
+  list(
+    unchanged_parent_df = col_modify_recorder_df %>%
+      `attr<-`("epiprocess::col_modify_recorder_df::cols", NULL) %>%
+      `class<-`(setdiff(class(.), "col_modify_recorder_df")),
+    cols = attr(col_modify_recorder_df,
+                "epiprocess::col_modify_recorder_df::cols", exact=TRUE)
+  )
+}
+
+#' `dplyr_col_modify` method that simply records the `cols` argument
+#'
+#' Must export S3 methods in R >= 4.0, even if they're only designed to be
+#' package internals:
+#' @export
+#' @noRd
+dplyr_col_modify.col_modify_recorder_df = function(data, cols) {
+  if (!is.null(attr(data, "epiprocess::col_modify_recorder_df::cols", exact=TRUE))) {
+    Abort("`col_modify_recorder_df` can only record `cols` once",
+          internal=TRUE)
+  }
+  attr(data, "epiprocess::col_modify_recorder_df::cols") <- cols
+  data
+}
+
+#' A more detailed but restricted `mutate` for use in `group_by.epi_archive`
+#'
+#' More detailed: provides the names of the "requested" columns in addition to
+#' the output expected from a regular `mutate` method.
+#'
+#' Restricted: doesn't allow replacing or removing key cols, where a sort is
+#' potentially required at best and what the output key should be is unclear at
+#' worst. (The originally expected restriction was that the `mutate` parameters
+#' not present in `group_by` would not be recognized, but the current
+#' implementation just lets `mutate` handle these even anyway, even if they're
+#' not part of the regular `group_by` parameters; these arguments would have to
+#' be passed by names with dot prefixes, so just hope that the user means to use
+#' them here if provided.)
+#'
+#' Don't export this without cleaning up language of "mutate" as in side effects
+#' vs. "mutate" as in `dplyr::mutate`.
+#' @noRd
+epix_detailed_restricted_mutate = function(.data, ...) {
+  # "Restricted" part was intended to be regarding extra params, but actually this
+  # implementation allows all params, but currently .
+  #
+  # avoid dtplyr, avoid copying (but introducing column-level aliasing)
+  in_tbl = tibble::as_tibble(as.list(.data$DT), .name_repair="minimal")
+  col_modify_cols =
+    destructure_col_modify_recorder_df(
+      mutate(new_col_modify_recorder_df(in_tbl), ...)
+    )[["cols"]]
+  invalidated_key_col_is =
+    which(purrr::map_lgl(key(.data$DT), function(key_colname) {
+      key_colname %in% names(col_modify_cols) &&
+        !rlang::is_reference(in_tbl[[key_colname]], col_modify_cols[[key_colname]])
+    }))
+  if (length(invalidated_key_col_is) != 0L) {
+    rlang::abort(paste_lines(c(
+      "Key columns must not be replaced or removed.",
+      wrap_varnames(key(.data$DT)[invalidated_key_col_is],
+                    initial="Flagged key cols: ")
+    )))
+  } else {
+    # TODO special-case when there are no changes?
+    out_DT = dplyr::dplyr_col_modify(in_tbl, col_modify_cols)
+    data.table::setattr(out_DT, "sorted", data.table::key(.data$DT))
+    data.table::setDT(out_DT, key=key(.data$DT))
+    out_archive = .data$clone()
+    out_archive$DT <- out_DT
+    request_names = names(col_modify_cols)
+    return(list(
+      archive = out_archive,
+      request_names = request_names
+    ))
+  }
+}
+
+#' `group_by` method for `epi_archive`s
+#'
+#' (`group_by_drop_default` on (ungrouped) `epi_archive`s is expected to dispatch
+#' to `group_by_drop_default.default`.)
+#'
+#' @export
+#' @noRd
+group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_drop_default(.data)) {
+  # `add` makes no difference; this is an ungrouped `epi_archive`.
+  detailed_mutate = epix_detailed_restricted_mutate(.data, ...)
+  grouped_epi_archive$new(detailed_mutate[["archive"]],
+                          detailed_mutate[["request_names"]],
+                          drop = .drop)
+}
 
 #' Slide a function over variables in an `epi_archive` or `grouped_epi_archive`
 #'

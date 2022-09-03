@@ -579,9 +579,7 @@ epi_archive =
           },
           #####
           group_by = function(..., .add = FALSE, .drop = dplyr::group_by_drop_default(self)) {
-            grouped_epi_archive$new(self,
-                                    eval_select_names_from_dots(..., .data=self$DT),
-                                    drop = .drop)
+            group_by.epi_archive(self, ..., .add=.add, .drop=.drop)
           },
           #' @description Slides a given function over variables in a `epi_archive`
           #'   object. See the documentation for the wrapper function [`epix_slide()`] for
