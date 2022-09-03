@@ -410,14 +410,29 @@ dplyr_col_modify.col_modify_recorder_df = function(data, cols) {
 #' be passed by names with dot prefixes, so just hope that the user means to use
 #' them here if provided.)
 #'
+#' This can introduce column-level aliasing in `data.table`s, which isn't really
+#' intended in the `data.table` user model but we can make it part of our user
+#' model (see
+#' https://stackoverflow.com/questions/45925482/make-a-shallow-copy-in-data-table
+#' and links).
+#'
 #' Don't export this without cleaning up language of "mutate" as in side effects
 #' vs. "mutate" as in `dplyr::mutate`.
 #' @noRd
 epix_detailed_restricted_mutate = function(.data, ...) {
-  # "Restricted" part was intended to be regarding extra params, but actually this
-  # implementation allows all params, but currently .
-  #
-  # avoid dtplyr, avoid copying (but introducing column-level aliasing)
+  # We don't want to directly use `dplyr::mutate` on the `$DT`, as:
+  # - this likely copies the entire table
+  # - `mutate` behavior, including the output class, changes depending on
+  #   whether `dtplyr` is loaded and would require post-processing
+  # - behavior with `dtplyr` isn't fully compatible
+  # - it doesn't give the desired details, and `rlang::exprs_auto_name` does not
+  #   appropriately handle the `= NULL` and `= <data.frame>` tidyeval cases
+  # Instead:
+  # - Use `as.list` to get a shallow copy (undocumented, but apparently
+  #   intended, behavior), then `as_tibble` (also shallow, given a list) to get
+  #   back to something that will use `dplyr`'s included `mutate` method(s),
+  #   then convert this using shallow operations into a `data.table`.
+  # - Use `col_modify_recorder_df` to get the desired details.
   in_tbl = tibble::as_tibble(as.list(.data$DT), .name_repair="minimal")
   col_modify_cols =
     destructure_col_modify_recorder_df(
@@ -435,8 +450,16 @@ epix_detailed_restricted_mutate = function(.data, ...) {
                     initial="Flagged key cols: ")
     )))
   } else {
-    # TODO special-case when there are no changes?
-    out_DT = dplyr::dplyr_col_modify(in_tbl, col_modify_cols)
+    # Have `dplyr` do the `dplyr_col_modify`, keeping the column-level-aliasing
+    # and must-copy-on-write-if-refcount-more-than-1 model, obtaining a tibble,
+    # then `setDT`-ing it in place to be a `data.table`. The key should still be
+    # valid (assuming that the user did not explicitly alter `key(.data$DT)` or
+    # the columns by reference somehow within `...` tidyeval-style computations,
+    # or trigger refcount-1 alterations due to still having >1 refcounts on the
+    # columns), so in between, set the "sorted" attribute accordingly to prevent
+    # attempted sorting (including potential extra copies) or sortedness
+    # checking, then `setDT`.
+    out_DT = dplyr::dplyr_col_modify(in_tbl, col_modify_cols) # tibble
     data.table::setattr(out_DT, "sorted", data.table::key(.data$DT))
     data.table::setDT(out_DT, key=key(.data$DT))
     out_archive = .data$clone()
@@ -446,6 +469,16 @@ epix_detailed_restricted_mutate = function(.data, ...) {
       archive = out_archive,
       request_names = request_names
     ))
+    # (We might also consider special-casing when `mutate` hands back something
+    # equivalent (in some sense) to the input (probably only encountered when
+    # we're dealing with `group_by`), and using just `$DT`, not a shallow copy,
+    # in the result, primarily in order to hedge against `as.list` or `setDT`
+    # changing their behavior and generating deep copies somehow. This could
+    # also prevent storage, and perhaps also generation, of shallow copies, but
+    # this seems unlikely to be a major gain unless it helps enable some
+    # in-place modifications of refcount-1 columns (although detecting this case
+    # seems to be common across `group_by` implementations; maybe there is
+    # something there).)
   }
 }
 
