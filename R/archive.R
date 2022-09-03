@@ -513,7 +513,7 @@ epi_archive =
                   next_version_tag = next_after(self$versions_end)
                   if (next_version_tag > fill_versions_end) {
                     Abort(sprintf(paste(
-                      "Apparent problem with `next_after` implementation:",
+                      "Apparent problem with `next_after` method:",
                       "archive contained observations through version %s",
                       "and the next possible version was supposed to be %s,",
                       "but this appeared to jump from a version < %3$s",

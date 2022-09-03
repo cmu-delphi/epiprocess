@@ -146,12 +146,13 @@ grouped_epi_archive =
                            all_rows = FALSE) {
             if ("group_by" %in% nse_dots_names(...)) {
               Abort("
-                The `group_by` argument to `slide` has been removed; please
-                use the `group_by` S3 method or `$group_by` R6 method before
-                the slide instead. (If you were instead trying to create a
-                column named `group_by`, this check is a false positive, but
-                you will still need to use a different column name here and
-                rename the resulting column after the slide.)
+                The `group_by` argument to `slide` has been removed; please use
+                the `group_by` S3 generic function or `$group_by` R6 method
+                before the slide instead. (If you were instead trying to pass a
+                `group_by` argument to `f` or create a column named `group_by`,
+                this check is a false positive, but you will still need to use a
+                different column name here and rename the resulting column after
+                the slide.)
               ")
             }
             
