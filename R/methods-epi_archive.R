@@ -384,7 +384,9 @@ destructure_col_modify_recorder_df = function(col_modify_recorder_df) {
 #' `dplyr_col_modify` method that simply records the `cols` argument
 #'
 #' Must export S3 methods in R >= 4.0, even if they're only designed to be
-#' package internals:
+#' package internals, and must import any corresponding upstream S3 generic
+#' functions:
+#' @importFrom dplyr dplyr_col_modify
 #' @export
 #' @noRd
 dplyr_col_modify.col_modify_recorder_df = function(data, cols) {
@@ -487,6 +489,7 @@ epix_detailed_restricted_mutate = function(.data, ...) {
 #' (`group_by_drop_default` on (ungrouped) `epi_archive`s is expected to dispatch
 #' to `group_by_drop_default.default`.)
 #'
+#' @importFrom dplyr group_by
 #' @export
 #' @noRd
 group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_drop_default(.data)) {
