@@ -397,8 +397,8 @@ epi_archive =
             self$clobberable_versions_start = clobberable_versions_start
             self$versions_end = versions_end
           },
-          print = function(header = TRUE) {
-            if (header) cat("An `epi_archive` object, with metadata:\n")
+          print = function(class = TRUE, methods = TRUE) {
+            if (class) cat("An `epi_archive` object, with metadata:\n")
             cat(sprintf("* %-9s = %s\n", "geo_type", self$geo_type))
             cat(sprintf("* %-9s = %s\n", "time_type", self$time_type))
             if (!is.null(self$additional_metadata)) { 
@@ -434,11 +434,11 @@ epi_archive =
               colnames(self$DT)) <= 4, paste(colnames(self$DT), collapse = ", "), 
               paste(paste(colnames(self$DT)[1:4], collapse = ", "), "and", 
               length(colnames(self$DT)[5:length(colnames(self$DT))]), "more columns")))))
-            cat("----------\n")
-            cat(sprintf("Public methods: %s\n",
-                        paste(names(epi_archive$public_methods),
-                              collapse = ", ")),"\n")
-
+            if (methods) {
+              cat("----------\n")
+              writeLines(wrap_varnames(initial = "Public R6 methods: ",
+                                       names(epi_archive$public_methods)))
+            }
           },
           #####
 #' @description Generates a snapshot in `epi_df` format as of a given version.

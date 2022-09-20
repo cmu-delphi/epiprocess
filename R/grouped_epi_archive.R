@@ -79,8 +79,8 @@ grouped_epi_archive =
         private$vars <- vars
         private$drop <- drop
       },
-      print = function(header=TRUE) {
-        if (header) cat("A `grouped_epi_archive` object:\n")
+      print = function(class = TRUE, methods = TRUE) {
+        if (class) cat("A `grouped_epi_archive` object:\n")
         writeLines(wrap_varnames(private$vars, initial="* Groups: "))
         # If none of the grouping vars is a factor, then $drop doesn't seem
         # relevant, so try to be less verbose and don't message about it.
@@ -96,7 +96,19 @@ grouped_epi_archive =
                       if (private$drop) "Drops" else "Does not drop"))
         }
         cat("It wraps an ungrouped `epi_archive`, with metadata:\n")
-        private$ungrouped$print(header=FALSE)
+        private$ungrouped$print(class = FALSE, methods = FALSE)
+        if (methods) {
+          cat("----------\n")
+          cat("Public `grouped_epi_archive` R6 methods:\n")
+          grouped_method_names = names(grouped_epi_archive$public_methods)
+          ungrouped_method_names = names(epi_archive$public_methods)
+          writeLines(wrap_varnames(initial = "• Specialized `epi_archive` methods: ",
+                                   intersect(grouped_method_names, ungrouped_method_names)))
+          writeLines(wrap_varnames(initial = "• Exclusive to `grouped_epi_archive`: ",
+                                   setdiff(grouped_method_names, ungrouped_method_names)))
+          writeLines(wrap_varnames(initial = "• `ungroup` to use: ",
+                                   setdiff(ungrouped_method_names, grouped_method_names)))
+        }
         # Return self invisibly for convenience in `$`-"pipe":
         invisible(self)
       },

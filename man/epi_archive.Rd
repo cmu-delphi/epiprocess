@@ -200,7 +200,7 @@ An \code{epi_archive} object.
 \if{latex}{\out{\hypertarget{method-epi_archive-print}{}}}
 \subsection{Method \code{print()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$print(header = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$print(class = TRUE, methods = TRUE)}\if{html}{\out{</div>}}
 }
 
 }
