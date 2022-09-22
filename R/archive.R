@@ -584,7 +584,6 @@ epi_archive =
           #' @description Slides a given function over variables in a `epi_archive`
           #'   object. See the documentation for the wrapper function [`epix_slide()`] for
           #'   details.
-          #' @importFrom lifecycle deprecated
           slide = function(f, ..., n, ref_time_values,
                            time_step, new_col_name = "slide_value",
                            # We give the `epi_archive` a trivial (0-group-var)
