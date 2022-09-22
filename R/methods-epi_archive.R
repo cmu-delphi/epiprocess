@@ -561,18 +561,16 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   column named according to the `new_col_name` argument, containing the slide
 #'   values.
 #'
-#' @details One key distinction between inputs to the current function and
-#'   `epi_slide()`:
+#' @details Two key distinctions between the current function and `epi_slide()`:
 #'   1. `epix_slide()` uses windows that are **always right-aligned** (in
 #'   `epi_slide()`, custom alignments could be specified using the `align` or
 #'   `before` arguments).
+#'   2. Note that the outputs are a similar but different: `epix_slide()`
+#'   returns only the grouping variables, `time_value`, and the new column(s)
+#'   from the slide computation `f`, whereas `epi_slide()` returns all original
+#'   variables plus the new columns from the slide computation.
 #' Apart from this, the interfaces between `epix_slide()` and `epi_slide()` are
 #'   the same.
-#'
-#' Note that the outputs are a similar but different: `epix_slide()` only
-#'   returns the grouping variables, `time_value`, and the new columns from
-#'   sliding, whereas `epi_slide()` returns all original variables plus the new
-#'   columns from sliding.
 #'
 #' Furthermore, the current function can be considerably slower than
 #'   `epi_slide()`, for two reasons: (1) it must repeatedly fetch

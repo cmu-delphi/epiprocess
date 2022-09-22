@@ -90,20 +90,18 @@ performed on \strong{data that would have been available as of t}. See the
 examples.
 }
 \details{
-One key distinction between inputs to the current function and
-\code{epi_slide()}:
+Two key distinctions between the current function and \code{epi_slide()}:
 \enumerate{
 \item \code{epix_slide()} uses windows that are \strong{always right-aligned} (in
 \code{epi_slide()}, custom alignments could be specified using the \code{align} or
 \code{before} arguments).
+\item Note that the outputs are a similar but different: \code{epix_slide()}
+returns only the grouping variables, \code{time_value}, and the new column(s)
+from the slide computation \code{f}, whereas \code{epi_slide()} returns all original
+variables plus the new columns from the slide computation.
 Apart from this, the interfaces between \code{epix_slide()} and \code{epi_slide()} are
 the same.
 }
-
-Note that the outputs are a similar but different: \code{epix_slide()} only
-returns the grouping variables, \code{time_value}, and the new columns from
-sliding, whereas \code{epi_slide()} returns all original variables plus the new
-columns from sliding.
 
 Furthermore, the current function can be considerably slower than
 \code{epi_slide()}, for two reasons: (1) it must repeatedly fetch
