@@ -69,20 +69,18 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
                         dplyr::mutate(modulus = seq_len(nrow(.)) %% 5L),
                       other_keys = "modulus",
                       compactify = TRUE)
-  reference_by_modulus =
-    ea %>%
+  reference_by_modulus = ea %>%
     group_by(modulus) %>%
     epix_slide(f = ~ mean(.x$case_rate_7d_av),
                n = 3,
                ref_time_values = time_values,
                new_col_name = 'case_rate_3d_av')
-    reference_by_neither =
-      ea %>%
-      group_by() %>%
-      epix_slide(f = ~ mean(.x$case_rate_7d_av),
-                 n = 3,
-                 ref_time_values = time_values,
-                 new_col_name = 'case_rate_3d_av')
+  reference_by_neither = ea %>%
+    group_by() %>%
+    epix_slide(f = ~ mean(.x$case_rate_7d_av),
+               n = 3,
+               ref_time_values = time_values,
+               new_col_name = 'case_rate_3d_av')
   # test the passing-something-that-must-be-enquosed behavior:
   expect_identical(
     ea$group_by(modulus)$slide(
