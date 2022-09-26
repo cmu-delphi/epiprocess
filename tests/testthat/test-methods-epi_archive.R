@@ -82,6 +82,8 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
                ref_time_values = time_values,
                new_col_name = 'case_rate_3d_av')
   # test the passing-something-that-must-be-enquosed behavior:
+  #
+  # (S3 group_by behavior for this case is the `reference_by_modulus`)
   expect_identical(
     ea$group_by(modulus)$slide(
       f = ~ mean(.x$case_rate_7d_av),
@@ -91,9 +93,9 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
     ),
     reference_by_modulus
   )
-  # test the passing-string-literal behavior:
+  # test the .data pronoun behavior:
   expect_identical(
-    epix_slide(x = ea %>% group_by("modulus"),
+    epix_slide(x = ea %>% group_by(.data$modulus),
                f = ~ mean(.x$case_rate_7d_av),
                n = 3,
                ref_time_values = time_values,
@@ -101,7 +103,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
     reference_by_modulus
   )
   expect_identical(
-    ea$group_by("modulus")$slide(
+    ea$group_by(.data$modulus)$slide(
       f = ~ mean(.x$case_rate_7d_av),
       n = 3,
       ref_time_values = time_values,
@@ -109,14 +111,9 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
     ),
     reference_by_modulus
   )
-  # Might also want to test the passing-string-var-without-all_of behavior, but
-  # make sure to set, trigger, then reset (or restore to old value) the
-  # tidyselect once-per-session message about the ambiguity
-  #
-  # test the passing-all-of-string-var behavior:
-  my_group_by = "modulus"
+  # test the passing across-all-of-string-literal behavior:
   expect_identical(
-    epix_slide(x = ea %>% group_by(tidyselect::all_of(my_group_by)),
+    epix_slide(x = ea %>% group_by(dplyr::across(all_of("modulus"))),
                f = ~ mean(.x$case_rate_7d_av),
                n = 3,
                ref_time_values = time_values,
@@ -124,7 +121,26 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
     reference_by_modulus
   )
   expect_identical(
-    ea$group_by(tidyselect::all_of(my_group_by))$slide(
+    ea$group_by(across(all_of("modulus")))$slide(
+      f = ~ mean(.x$case_rate_7d_av),
+      n = 3,
+      ref_time_values = time_values,
+      new_col_name = 'case_rate_3d_av'
+    ),
+    reference_by_modulus
+  )
+  # test the passing-across-all-of-string-var behavior:
+  my_group_by = "modulus"
+  expect_identical(
+    epix_slide(x = ea %>% group_by(dplyr::across(tidyselect::all_of(my_group_by))),
+               f = ~ mean(.x$case_rate_7d_av),
+               n = 3,
+               ref_time_values = time_values,
+               new_col_name = 'case_rate_3d_av'),
+    reference_by_modulus
+  )
+  expect_identical(
+    ea$group_by(dplyr::across(tidyselect::all_of(my_group_by)))$slide(
       f = ~ mean(.x$case_rate_7d_av),
       n = 3,
       ref_time_values = time_values,
