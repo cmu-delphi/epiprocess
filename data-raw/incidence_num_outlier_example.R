@@ -1,4 +1,4 @@
-library(delphi.epidata)
+library(epidatr)
 library(epiprocess)
 library(dplyr)
 library(tidyr)

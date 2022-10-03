@@ -156,7 +156,7 @@ grouped_epi_archive =
 #'   details.
 #' @importFrom data.table key
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
-          slide = function(f, ..., n, ref_time_values,
+          slide = function(f, ..., before, ref_time_values,
                            time_step, new_col_name = "slide_value",
                            groups = NULL,
                            as_list_col = FALSE, names_sep = "_",
@@ -183,9 +183,22 @@ grouped_epi_archive =
                                                 unique(private$ungrouped$DT$time_value)]
             }
             
+            # Validate and pre-process `before`:
+            if (missing(before)) {
+              Abort("`before` is required (and must be passed by name);
+                     if you did not want to apply a sliding window but rather
+                     to map `as_of` and `f` across various `ref_time_values`,
+                     pass a large `before` value (e.g., if time steps are days,
+                     `before=365000`).")
+            }
+            before <- vctrs::vec_cast(before, integer())
+            if (length(before) != 1L || is.na(before) || before < 0L) {
+              Abort("`before` must be length-1, non-NA, non-negative")
+            }
+
             # If a custom time step is specified, then redefine units 
-            before_num = n-1
-            if (!missing(time_step)) before_num = time_step(n-1)
+            
+            if (!missing(time_step)) before <- time_step(before)
             
             # Symbolize column name
             new_col = sym(new_col_name)
@@ -249,14 +262,13 @@ grouped_epi_archive =
             # If f is not missing, then just go ahead, slide by group
             if (!missing(f)) {
               if (rlang::is_formula(f)) f = rlang::as_function(f)
-              x = purrr::map_dfr(ref_time_values, function(t) {
-                private$ungrouped$as_of(t, min_time_value = t - before_num) %>%
-                  tibble::as_tibble() %>%
+              x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
+                private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before) %>%
                   dplyr::group_by(dplyr::across(tidyselect::all_of(private$vars)),
                                   .drop=private$drop) %>%
                   dplyr::summarize(comp_one_grp(dplyr::cur_data_all(),
                                                 f = f, ...,
-                                                time_value = t,
+                                                time_value = ref_time_value,
                                                 key_vars = key_vars,
                                                 new_col = new_col),
                                    .groups = groups)
@@ -277,13 +289,12 @@ grouped_epi_archive =
               f = function(x, quo, ...) rlang::eval_tidy(quo, x)
               new_col = sym(names(rlang::quos_auto_name(quos)))
 
-              x = purrr::map_dfr(ref_time_values, function(t) {
-                private$ungrouped$as_of(t, min_time_value = t - before_num) %>%
-                  tibble::as_tibble() %>% 
+              x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
+                private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before) %>%
                   dplyr::group_by(dplyr::across(tidyselect::all_of(private$vars))) %>%
                   dplyr::group_modify(comp_one_grp,
                                       f = f, quo = quo,
-                                      time_value = t,
+                                      time_value = ref_time_value,
                                       key_vars = key_vars,
                                       new_col = new_col,
                                       .keep = TRUE) %>%

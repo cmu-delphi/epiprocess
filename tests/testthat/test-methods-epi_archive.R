@@ -72,13 +72,13 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   reference_by_modulus = ea %>%
     group_by(modulus) %>%
     epix_slide(f = ~ mean(.x$case_rate_7d_av),
-               n = 3,
+               before = 2,
                ref_time_values = time_values,
                new_col_name = 'case_rate_3d_av')
   reference_by_neither = ea %>%
     group_by() %>%
     epix_slide(f = ~ mean(.x$case_rate_7d_av),
-               n = 3,
+               before = 2,
                ref_time_values = time_values,
                new_col_name = 'case_rate_3d_av')
   # test the passing-something-that-must-be-enquosed behavior:
@@ -87,7 +87,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   expect_identical(
     ea$group_by(modulus)$slide(
       f = ~ mean(.x$case_rate_7d_av),
-      n = 3,
+      before = 2,
       ref_time_values = time_values,
       new_col_name = 'case_rate_3d_av'
     ),
@@ -97,7 +97,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   expect_identical(
     epix_slide(x = ea %>% group_by(.data$modulus),
                f = ~ mean(.x$case_rate_7d_av),
-               n = 3,
+               before = 2,
                ref_time_values = time_values,
                new_col_name = 'case_rate_3d_av'),
     reference_by_modulus
@@ -105,7 +105,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   expect_identical(
     ea$group_by(.data$modulus)$slide(
       f = ~ mean(.x$case_rate_7d_av),
-      n = 3,
+      before = 2,
       ref_time_values = time_values,
       new_col_name = 'case_rate_3d_av'
     ),
@@ -115,7 +115,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   expect_identical(
     epix_slide(x = ea %>% group_by(dplyr::across(all_of("modulus"))),
                f = ~ mean(.x$case_rate_7d_av),
-               n = 3,
+               before = 2,
                ref_time_values = time_values,
                new_col_name = 'case_rate_3d_av'),
     reference_by_modulus
@@ -123,7 +123,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   expect_identical(
     ea$group_by(across(all_of("modulus")))$slide(
       f = ~ mean(.x$case_rate_7d_av),
-      n = 3,
+      before = 2,
       ref_time_values = time_values,
       new_col_name = 'case_rate_3d_av'
     ),
@@ -134,7 +134,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   expect_identical(
     epix_slide(x = ea %>% group_by(dplyr::across(tidyselect::all_of(my_group_by))),
                f = ~ mean(.x$case_rate_7d_av),
-               n = 3,
+               before = 2,
                ref_time_values = time_values,
                new_col_name = 'case_rate_3d_av'),
     reference_by_modulus
@@ -142,7 +142,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   expect_identical(
     ea$group_by(dplyr::across(tidyselect::all_of(my_group_by)))$slide(
       f = ~ mean(.x$case_rate_7d_av),
-      n = 3,
+      before = 2,
       ref_time_values = time_values,
       new_col_name = 'case_rate_3d_av'
     ),
@@ -152,7 +152,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   expect_identical(
     epix_slide(x = ea,
                f = ~ mean(.x$case_rate_7d_av),
-               n = 3,
+               before = 2,
                ref_time_values = time_values,
                new_col_name = 'case_rate_3d_av'),
     reference_by_neither
@@ -160,7 +160,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   expect_identical(
     ea$slide(
       f = ~ mean(.x$case_rate_7d_av),
-      n = 3,
+      before = 2,
       ref_time_values = time_values,
       new_col_name = 'case_rate_3d_av'
     ),

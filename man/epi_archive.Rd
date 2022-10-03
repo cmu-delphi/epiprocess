@@ -284,14 +284,14 @@ does not alias either archive's \code{DT}.
 \if{html}{\out{<a id="method-epi_archive-slide"></a>}}
 \if{latex}{\out{\hypertarget{method-epi_archive-slide}{}}}
 \subsection{Method \code{slide()}}{
-Slides a given function over variables in a \code{epi_archive}
+Slides a given function over variables in an \code{epi_archive}
 object. See the documentation for the wrapper function \code{\link[=epix_slide]{epix_slide()}} for
 details.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$slide(
   f,
   ...,
-  n,
+  before,
   ref_time_values,
   time_step,
   new_col_name = "slide_value",

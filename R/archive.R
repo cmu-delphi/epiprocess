@@ -581,10 +581,12 @@ epi_archive =
           group_by = function(..., .add = FALSE, .drop = dplyr::group_by_drop_default(self)) {
             group_by.epi_archive(self, ..., .add=.add, .drop=.drop)
           },
-          #' @description Slides a given function over variables in a `epi_archive`
-          #'   object. See the documentation for the wrapper function [`epix_slide()`] for
-          #'   details.
-          slide = function(f, ..., n, ref_time_values,
+#' @description Slides a given function over variables in an `epi_archive`
+#'   object. See the documentation for the wrapper function [`epix_slide()`] for
+#'   details. 
+#' @importFrom data.table key
+#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
+          slide = function(f, ..., before, ref_time_values, 
                            time_step, new_col_name = "slide_value",
                            # We give the `epi_archive` a trivial (0-group-var)
                            # grouping below, which is silently dropped in the
@@ -604,7 +606,7 @@ epi_archive =
             # resulting `grouped_epi_archive` handle the slide:
             self$group_by()$slide(
               f, ...,
-              n = n, ref_time_values = ref_time_values,
+              before = before, ref_time_values = ref_time_values,
               time_step = time_step, new_col_name = new_col_name,
               groups = groups,
               as_list_col = as_list_col, names_sep = names_sep,

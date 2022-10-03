@@ -26,7 +26,7 @@ on its [API documentation
 page](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
 
 ```{r, message = FALSE, warning = FALSE, eval=FALSE}
-library(delphi.epidata)
+library(epidatr)
 library(epiprocess)
 library(data.table)
 library(dplyr)
@@ -44,7 +44,7 @@ dv <- covidcast(
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-library(delphi.epidata)
+library(epidatr)
 library(epiprocess)
 library(data.table)
 library(dplyr)
@@ -64,7 +64,7 @@ has (at least) the following columns:
   the data for January 14, 2022 that were available one day later.
 
 As we can see from the above, the data frame returned by
-`delphi.epidata::covidcast()` has the columns required for the `epi_archive`
+`epidatr::covidcast()` has the columns required for the `epi_archive`
 format, with `issue` playing the role of `version`. We can now use
 `as_epi_archive()` to bring it into `epi_archive` format. For removal of
 redundant version updates in `as_epi_archive` using compactify, please refer
@@ -359,7 +359,7 @@ fc_time_values <- seq(as.Date("2020-08-01"),
 
 z <- x %>%
   group_by(geo_value) %>%
-  epix_slide(fc = prob_arx(x = percent_cli, y = case_rate_7d_av), n = 120,
+  epix_slide(fc = prob_arx(x = percent_cli, y = case_rate_7d_av), before = 119,
              ref_time_values = fc_time_values)
 
 head(z, 10)
@@ -390,7 +390,7 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
       group_by(geo_value) %>%
-      epix_slide(fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead), n = 120,
+      epix_slide(fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead), before = 119,
                  ref_time_values = fc_time_values) %>%
       mutate(target_date = time_value + ahead, as_of = TRUE) 
   }

@@ -24,3 +24,18 @@ test_that("new_epi_df works as intended", {
   expect_identical(attributes(epi_tib)$metadata$time_type, "day")
   expect_true(lubridate::is.POSIXt(attributes(epi_tib)$metadata$as_of))
 })
+
+test_that("as_epi_df errors when additional_metadata is not a list", {
+  # This is the 3rd example from as_epi_df
+  ex_input <- jhu_csse_county_level_subset %>%
+    dplyr::filter(time_value > "2021-12-01", state_name == "Massachusetts") %>%
+    dplyr::slice_tail(n = 6) %>%
+    tsibble::as_tsibble() %>%
+    dplyr::mutate(
+      state = rep("MA",6),
+      pol = rep(c("blue", "swing", "swing"), each = 2))
+  
+  expect_error(
+    as_epi_df(ex_input, additional_metadata = c(other_keys = "state", "pol")), 
+    "`additional_metadata` must be a list type.")
+})
