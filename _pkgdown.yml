@@ -6,7 +6,7 @@ url: https://cmu-delphi.github.io/epiprocess/
 home:
   links:
   - text: Get the epipredict R package
-    href: https://cmu-delphi.github.io/epiprocess/
+    href: https://cmu-delphi.github.io/epipredict/
   - text: Get the covidcast R package
     href: https://cmu-delphi.github.io/covidcast/covidcastR/
 

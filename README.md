@@ -45,10 +45,10 @@ The second main data structure in the package is called
 wrapped around a data table that stores the archive (version history) of some
 signal variables of interest.
 
-By convention, functions in the `epiprocess` package that operate on `epi_df`
-objects begin with `epix` (the "x" is meant to remind you of "archive"). These
-are just wrapper functions around the public methods for the `epi_archive` R6
-class. For example:
+By convention, functions in the `epiprocess` package that operate on
+`epi_archive` objects begin with `epix` (the "x" is meant to remind you of
+"archive"). These are just wrapper functions around the public methods for the
+`epi_archive` R6 class. For example:
 
 - `epix_as_of()`, for generating a snapshot in `epi_df` from the data archive,
   which represents the most up-to-date values of the signal variables, as of the
