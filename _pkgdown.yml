@@ -9,6 +9,8 @@ home:
     href: https://cmu-delphi.github.io/epipredict/
   - text: Get the covidcast R package
     href: https://cmu-delphi.github.io/covidcast/covidcastR/
+  - text: Get the epidatr R package
+    href: https://github.com/cmu-delphi/epidatr
 
 articles:
 - title: Using the package
