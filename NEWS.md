@@ -1,4 +1,8 @@
-# epiprocess 0.5.0.9999 (dev version)
+Note that `epiprocess` uses the [Semantic Versioning
+("semver")](https://semver.org/) scheme for all release versions, but not for
+development versions. A ".9999" suffix indicates a development version.
+
+# epiprocess 0.5.0.9999 (development version)
 
 ## Cleanup:
 
@@ -128,7 +132,8 @@
 
 * Removed dependency of some `epi_archive` tests on an example archive.
   object, and made them more understandable by reading without running.
-* Fixed `epi_df` tests relying on S3 implementation external to `epiprocess`.
+* Fixed `epi_df` tests relying on an S3 method for `epi_df` implemented
+  externally to `epiprocess`.
 * Added tests for `epi_archive` methods and wrapper functions.
 * Removed some dead code.
 * Made `.{Rbuild,git}ignore` files more comprehensive.
@@ -148,10 +153,10 @@
   characters to yield `"custom"`, not US `"nation"`.
 * Fixed `time_type` guessing to actually detect `Date`-class `time_value`s
   regularly spaced 7 days apart as `"week"`-type as intended.
-* Improved printing of `epi_df`s, `epi_archives`s
+* Improved printing of `epi_df`s, `epi_archives`s.
 * Fixed `as_of` to not cut off any (forecast-like) data with `time_value >
   max_version`.
-* Expanded `epi_df` docs include conversion from `tsibble`/`tbl_ts` objects,
+* Expanded `epi_df` docs to include conversion from `tsibble`/`tbl_ts` objects,
   usage of `other_keys`, and pre-processing objects not following the
   `geo_value`, `time_value` naming scheme.
 * Expanded `epi_slide` examples to show how to use an `f` argument with
@@ -213,7 +218,8 @@ Classes:
   * Convenience function: `is_epi_df`
 * `epi_archive`: R6 class for version (patch) data for geotemporal
   epidemiological time series data sets. Comes with S3 methods and regular
-  functions wrappers for those unfamiliar with R6 methods. Associated functions:
+  functions that wrap around this functionality for those unfamiliar with R6
+  methods. Associated functions:
   * `as_epi_archive`: prepares an `epi_archive` object from a data frame
     containing snapshots and/or patch data for every available version of
     the data set.

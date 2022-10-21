@@ -1,12 +1,13 @@
 /* The news/changelog in pkgdown 2.0.6 is squashed relative to 1.6.1, and
    secondary headings are too prominent when using ## (but we can't change to
    ### without impacting side navbar). Just trying a couple of bootswatches
-   didn't seem to help, and nice template packages might be limited for use by
-   particular own groups (e.g., tidytemplate).
+   didn't seem to help, and nice template packages might be restricted for use
+   by particular groups (e.g., tidytemplate has such a restriction).
 */
 
-/* Current approach: add some spacing with CSS, and change ## -> ### in the .md
-   to get smaller fonts more easily.
+/* Current approach: add some spacing with CSS, and have h3 extend h4 so that
+ ##'s (which use h3) will render with a bit smaller fonts, while still being
+ recognized/included by the page navigation / TOC feature.
 */
 
 /* General structure: div.template-news wraps everything of interest regarding
