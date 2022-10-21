@@ -1,8 +1,8 @@
+# epiprocess 0.5.0.9999 (development version)
+
 Note that `epiprocess` uses the [Semantic Versioning
 ("semver")](https://semver.org/) scheme for all release versions, but not for
 development versions. A ".9999" suffix indicates a development version.
-
-# epiprocess 0.5.0.9999 (development version)
 
 ## Cleanup:
 
