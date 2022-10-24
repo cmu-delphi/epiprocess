@@ -7,7 +7,7 @@ development versions. A ".9999" suffix indicates a development version.
 ## Cleanup:
 
 * Added a `NEWS.md` file to track changes to the package.
-* Fixed various small documentation issues ([#217](https://github.com/cmu-delphi/epiprocess/issues/217))
+* Fixed various small documentation issues ([#217](https://github.com/cmu-delphi/epiprocess/issues/217)).
 
 # epiprocess 0.5.0:
 
@@ -20,13 +20,13 @@ development versions. A ".9999" suffix indicates a development version.
 
 ## Improvements:
 
-* Fixed `epix_merge`, `<epi_archive>$merge` always raising error on `sync="truncate"`
+* Fixed `epix_merge`, `<epi_archive>$merge` always raising error on `sync="truncate"`.
 
 ## Cleanup:
 
-* Added `Remotes:` entry for `genlasso`, which was removed from CRAN
-* Added `as_epi_archive` tests
-* Added missing `epix_merge` test for `sync="truncate"`
+* Added `Remotes:` entry for `genlasso`, which was removed from CRAN.
+* Added `as_epi_archive` tests.
+* Added missing `epix_merge` test for `sync="truncate"`.
 
 # epiprocess 0.4.0:
 
@@ -69,7 +69,7 @@ development versions. A ".9999" suffix indicates a development version.
   * `epix_<method>` will not mutate input `epi_archive`s, but may alias them
     or alias their fields (which should not be a worry if a user sticks to
     these `epix_*` functions and "regular" R functions with
-    copy-on-write-like behavior, avoiding mutating functions `[.data.table`)
+    copy-on-write-like behavior, avoiding mutating functions `[.data.table`).
   * `x$<method>` may mutate `x`; if it mutates `x`, it will return `x`
     invisibly (where this makes sense), and, for each of its fields, may
     either mutate the object to which it refers or reseat the reference (but
@@ -110,7 +110,7 @@ development versions. A ".9999" suffix indicates a development version.
 * New function `epix_fill_through_version`, method
   `<epi_archive>$fill_through_version`: non-mutating & mutating way to
   ensure that an archive contains versions at least through some
-  `fill_versions_end`, extrapolating according to `how` if necessary
+  `fill_versions_end`, extrapolating according to `how` if necessary.
 * Example archive data object is now constructed on demand from its
   underlying data, so it will be based on the user's version of
   `epi_archive` rather than an outdated R6 implementation from whenever the
@@ -216,7 +216,7 @@ Classes:
   * `epi_cor` calculates Pearson, Kendall, or Spearman correlations
     between two (optionally time-shifted) variables in an `epi_df` within
     user-specified groups.
-  * Convenience function: `is_epi_df`
+  * Convenience function: `is_epi_df`.
 * `epi_archive`: R6 class for version (patch) data for geotemporal
   epidemiological time series data sets. Comes with S3 methods and regular
   functions that wrap around this functionality for those unfamiliar with R6
@@ -225,7 +225,7 @@ Classes:
     containing snapshots and/or patch data for every available version of
     the data set.
   * `as_of`: extracts a snapshot of the data set as of some requested
-    version, in `epi_df` format
+    version, in `epi_df` format.
   * `epix_slide`, `<epi_archive>$slide`: similar to `epi_slide`, but for
     `epi_archive`s; for each requested `ref_time_value` and group, applies
     a time window and user-specified computation to a snapshot of the data
@@ -233,7 +233,7 @@ Classes:
   * `epix_merge`, `<epi_archive>$merge`: like `merge` for `epi_archive`s,
     but allowing for the last version of each observation to be carried
     forward to fill in gaps in `x` or `y`.
-  * Convenience function: `is_epi_archive`
+  * Convenience function: `is_epi_archive`.
 
 Additional functions:
 * `growth_rate`: estimates growth rate of a time series using one of a few
@@ -241,7 +241,7 @@ Additional functions:
   smoothing splines, or trend filtering.
 * `detect_outlr`: applies one or more outlier detection methods to a given
   signal variable, and optionally aggregates the outputs to create a
-  consensus result
+  consensus result.
 * `detect_outlr_rm`: outlier detection function based on a
   rolling-median-based outlier detection function; one of the methods
   included in `detect_outlr`.
