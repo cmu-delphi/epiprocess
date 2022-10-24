@@ -145,15 +145,6 @@ as in `x$geo_type` or `x$time_type`, etc. Just like `as_epi_df()`, the function
 object is instantiated, if they are not explicitly specified in the function
 call (as it did in the case above).
 
-Note that `compactify` is **NOT** metadata and is an argument passed when creating
-the dataset, without being stored in the end:
-
-```{r,message=FALSE}
-# `dt` here is taken from the tests
-as_epi_archive(archive_cases_dv_subset$DT,compactify=TRUE)$geo_type # "state"
-as_epi_archive(archive_cases_dv_subset$DT,compactify=TRUE)$compactify # NULL
-```
-
 ## Producing snapshots in `epi_df` form
 
 A key method of an `epi_archive` class is `as_of()`, which generates a snapshot
