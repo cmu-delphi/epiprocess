@@ -36,11 +36,11 @@ repo:
 
 
 reference:
-- title: epi_df basics
+- title: "`epi_df` basics"
   desc: Details on `epi_df` format, and basic functionality.
 - contents:
   - matches("epi_df")
-- title: epi_*() functions
+- title: "`epi_*()` functions"
   desc: Functions that act on `epi_df` objects.
 - contents:
   - epi_slide
@@ -52,11 +52,11 @@ reference:
   - detect_outlr
   - detect_outlr_rm
   - detect_outlr_stl
-- title: epi_archive basics
+- title: "`epi_archive` basics"
   desc: Details on `epi_archive`, and basic functionality.
 - contents:
   - matches("archive")
-- title: epix_*() functions
+- title: "`epix_*()` functions"
   desc: Functions that act on an `epi_archive` object.
 - contents:
   - starts_with("epix")
