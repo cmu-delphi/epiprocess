@@ -146,9 +146,9 @@ library(purrr)
 lags = 0:35
 
 z <- map_dfr(lags, function(lag) {
-  epi_cor(x, case_rate, death_rate, cor_by = geo_value, dt1 = -lag) %>% 
-    mutate(lag = lag) 
-  })
+  epi_cor(x, case_rate, death_rate, cor_by = geo_value, dt1 = -lag) %>%
+  mutate(lag = .env$lag)
+})
 
 z %>%
   group_by(lag) %>%
