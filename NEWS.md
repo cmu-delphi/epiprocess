@@ -7,6 +7,7 @@ development versions. A ".9999" suffix indicates a development version.
 ## Cleanup:
 
 * Added a `NEWS.md` file to track changes to the package.
+* Fixed various small documentation issues ([#217](https://github.com/cmu-delphi/epiprocess/issues/217))
 
 # epiprocess 0.5.0:
 
