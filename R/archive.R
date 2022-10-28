@@ -477,7 +477,7 @@ epi_archive =
               unique(by = c("geo_value", "time_value", other_keys),
                      fromLast = TRUE) %>%
               tibble::as_tibble() %>% 
-              dplyr::select(-.data$version) %>%
+              dplyr::select(-"version") %>%
               as_epi_df(geo_type = self$geo_type,
                         time_type = self$time_type,
                         as_of = max_version,

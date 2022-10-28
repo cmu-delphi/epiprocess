@@ -12,7 +12,9 @@
 #' @export
 as_tsibble.epi_df = function(x, key, ...) {
   if (missing(key)) key = c("geo_value", attributes(x)$metadata$other_keys)
-  return(as_tsibble(tibble::as_tibble(x), key, index = "time_value", ...))
+  return(as_tsibble(tibble::as_tibble(x),
+                    key = tidyselect::all_of(key), index = "time_value",
+                    ...))
 }
 
 #' Base S3 methods for an `epi_df` object
