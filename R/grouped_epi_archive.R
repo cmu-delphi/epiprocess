@@ -1,11 +1,23 @@
 
-eval_select_names_from_dots = function(..., .data) {
-  # `?tidyselect::eval_select` tells us to use this form when we take
-  # in dots. It seems a bit peculiar, since the expr doesn't pack with
-  # it a way to get at the dots, but it looks like `eval_select` will
-  # assume the caller env (our `environment()`) when given an expr,
-  # and thus have access to the dots.
-  names(tidyselect::eval_select(rlang::expr(c(...)), .data))
+#' Get var names from select-only `tidy_select`ing `...` in `.data`
+#'
+#' Convenience function for performing a `tidy_select` on dots according to its
+#' docs, and taking the names (rather than the integer indices).
+#'
+#' @param ... tidyselect-syntax selection description
+#' @param .data named vector / data frame; context for the description / the
+#'   object to which the selections apply
+#' @return character vector containing names of entries/columns of
+#'   `names(.data)` denoting the selection
+#'
+#' @noRd
+eval_pure_select_names_from_dots = function(..., .data) {
+  # `?tidyselect::eval_select` tells us to use this form when we take in dots.
+  # It seems a bit peculiar, since the expr doesn't pack with it a way to get at
+  # the environment for the dots, but it looks like `eval_select` will assume
+  # the caller env (our `environment()`) when given an expr, and thus have
+  # access to the dots.
+  names(tidyselect::eval_select(rlang::expr(c(...)), .data, allow_rename=FALSE))
 }
 
 #' Get names of dots without forcing the dots
