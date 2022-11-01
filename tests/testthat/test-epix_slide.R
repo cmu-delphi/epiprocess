@@ -27,7 +27,8 @@ test_that("epix_slide works as intended",{
                 sum_binary = c(2^3+2^2,
                                2^6+2^3,
                                2^10+2^9)) %>%
-    as_epi_df(as_of = 1) # Also a bug (issue #213)
+    as_epi_df(as_of = 1) %>% # Also a bug (issue #213)
+    group_by(geo_value)
   
   expect_identical(xx1,xx2) # *
   

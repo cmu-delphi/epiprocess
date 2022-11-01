@@ -107,13 +107,14 @@ Two key distinctions between the current function and \code{epi_slide()}:
 from \code{before} time steps before a given \code{ref_time_value} through the last
 \code{time_value} available as of version \code{ref_time_value} (typically, this
 won't include \code{ref_time_value} itself, as observations about a particular
-time interval (e.g., day) are only published after that time interval ends);
-\code{epi_slide} windows extend from \code{before} time steps before a
+time interval (e.g., day) are only published after that time interval
+ends); \code{epi_slide} windows extend from \code{before} time steps before a
 \code{ref_time_value} through \code{after} time steps after \code{ref_time_value}.
 \item Note that the outputs are a similar but different: \code{epix_slide()}
-returns only the grouping variables, \code{time_value}, and the new column(s)
-from the slide computation \code{f}, whereas \code{epi_slide()} returns all original
-variables plus the new columns from the slide computation.
+returns a tibble containing only the grouping variables, \code{time_value}, and
+the new column(s) from the slide computation \code{f}, whereas \code{epi_slide()}
+returns an \code{epi_df} with all original variables plus the new columns from
+the slide computation.
 Apart from this, the interfaces between \code{epix_slide()} and \code{epi_slide()} are
 the same.
 }

@@ -4,9 +4,27 @@ Note that `epiprocess` uses the [Semantic Versioning
 ("semver")](https://semver.org/) scheme for all release versions, but not for
 development versions. A ".9999" suffix indicates a development version.
 
+## Breaking changes:
+
+* `epix_slide` now keeps any grouping of `x` in its results, matching
+  `epi_slide`. To obtain the old behavior, `dplyr::ungroup` the `epix_slide`
+  result immediately.
+
+## Potentially-breaking changes:
+
+* Fixed `[` on grouped `epi_df`s to maintain the grouping if possible when
+  dropping the `epi_df` class (e.g., when removing the `time_value` column).
+* Fixed `epi_df` operations to be more consistent about decaying into
+  non-`epi_df`s when the result of the operation doesn't make sense as an
+  `epi_df` (e.g., when removing the `time_value` column).
+* Changed `bind_rows` on grouped `epi_df`s to not drop the `epi_df` class. Like
+  with ungrouped `epi_df`s, the metadata of the result is still simply taken
+  from the first result, and may be inappropriate.
+
 ## Cleanup:
 
 * Added a `NEWS.md` file to track changes to the package.
+* Implemented `?dplyr::dplyr_extending` for `epi_df`s (#223).
 
 # epiprocess 0.5.0:
 

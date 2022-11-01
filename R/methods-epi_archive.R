@@ -595,15 +595,16 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   from `before` time steps before a given `ref_time_value` through the last
 #'   `time_value` available as of version `ref_time_value` (typically, this
 #'   won't include `ref_time_value` itself, as observations about a particular
-#'   time interval (e.g., day) are only published after that time interval ends);
-#'   `epi_slide` windows extend from `before` time steps before a
+#'   time interval (e.g., day) are only published after that time interval
+#'   ends); `epi_slide` windows extend from `before` time steps before a
 #'   `ref_time_value` through `after` time steps after `ref_time_value`.
 #'   2. Note that the outputs are a similar but different: `epix_slide()`
-#'   returns only the grouping variables, `time_value`, and the new column(s)
-#'   from the slide computation `f`, whereas `epi_slide()` returns all original
-#'   variables plus the new columns from the slide computation.
+#'   returns a tibble containing only the grouping variables, `time_value`, and
+#'   the new column(s) from the slide computation `f`, whereas `epi_slide()`
+#'   returns an `epi_df` with all original variables plus the new columns from
+#'   the slide computation.
 #' Apart from this, the interfaces between `epix_slide()` and `epi_slide()` are
-#'   the same.
+#' the same.
 #'
 #' Furthermore, the current function can be considerably slower than
 #'   `epi_slide()`, for two reasons: (1) it must repeatedly fetch

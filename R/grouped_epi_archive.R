@@ -215,24 +215,55 @@ grouped_epi_archive =
             # Symbolize column name
             new_col = sym(new_col_name)
 
-            # Key variable names, apart from time value and version
-            key_vars = setdiff(key(private$ungrouped$DT), c("time_value", "version"))
+            # Each computation is expected to output a data frame with either
+            # one element/row total or one element/row per encountered
+            # nongrouping, nontime, nonversion key value. These nongrouping,
+            # nontime, nonversion key columns can be seen as the "effective" key
+            # of the computation; the computation might return an object that
+            # reports a different key or no key, but the "effective" key should
+            # still be a valid unique key for the data, and is something that we
+            # could use even with `.keep = FALSE`.
+            comp_effective_key_vars =
+              setdiff(key(private$ungrouped$DT),
+                      c(private$vars, "time_value", "version"))
             
             # Computation for one group, one time value
-            comp_one_grp = function(.data_group,
+            comp_one_grp = function(.data_group, .group_key,
                                     f, ..., 
-                                    time_value,
-                                    key_vars,
+                                    ref_time_value,
+                                    comp_effective_key_vars,
                                     new_col) {
               # Carry out the specified computation 
-              comp_value = f(.data_group, ...)
+              comp_value = f(.data_group, .group_key, ...)
 
-              # Count the number of appearances of the reference time value.
-              # Note: ideally, we want to directly count occurrences of the ref
-              # time value but due to latency, this will often not appear in the
-              # data group. So we count the number of unique key values, outside 
-              # of the time value column
-              count = sum(!duplicated(.data_group[, key_vars]))
+              # Calculate the number of output elements/rows we expect the
+              # computation to output: one per distinct "effective computation
+              # key variable" value encountered in the input. Note: this mirrors
+              # how `epi_slide` does things if we're using unique keys, but can
+              # diverge if using nonunique keys. The `epi_slide` approach of
+              # counting occurrences of the `ref_time_value` in the `time_value`
+              # column, which helps lines up the computation results with
+              # corresponding rows of the input data, wouldn't quite apply here:
+              # we'd want to line up with rows (from the same group) with
+              # `version` matching the `ref_time_value`, but would still need to
+              # summarize these rows somehow and drop the `time_value` input
+              # column, but this summarization requires something like a
+              # to-be-unique output key to determine a sensible number of rows
+              # to output (and the contents of those rows).
+              count =
+                if (length(comp_effective_key_vars) != 0L) {
+                  sum(!duplicated(.data_group[, comp_effective_key_vars]))
+                } else {
+                  # Same idea as above, but accounting for `duplicated` not
+                  # working as we want on 0 columns. (Should be the same as if
+                  # we were counting distinct values of a column defined as
+                  # `rep(val, target_n_rows)`.)
+                  if (nrow(.data_group) == 0L) {
+                    0L
+                  } else {
+                    1L
+                  }
+                }
 
               # If we get back an atomic vector
               if (is.atomic(comp_value)) {
@@ -241,7 +272,7 @@ grouped_epi_archive =
                 }
                 # If not a singleton, should be the right length, else abort
                 else if (length(comp_value) != count) {
-                  Abort("If the slide computation returns an atomic vector, then it must have a single element, or else one element per appearance of the reference time value in the local window.")
+                  Abort('If the slide computation returns an atomic vector, then it must have either (a) a single element, or (b) one element per distinct combination of key variables, excluding the `time_value`, `version`, and grouping variables, that is present in the first argument to the computation.')
                 }
               }
 
@@ -256,7 +287,7 @@ grouped_epi_archive =
                 }
                 # Make into a list
                 else {
-                  comp_value = split(comp_value, 1:nrow(comp_value))
+                  comp_value = split(comp_value, seq_len(nrow(comp_value)))
                 }
               }
 
@@ -265,10 +296,9 @@ grouped_epi_archive =
                 Abort("The slide computation must return an atomic vector or a data frame.")
               }
  
-              # Note that we've already recycled comp value to make size stable,
-              # so tibble() will just recycle time value appropriately
-              return(tibble::tibble(time_value = time_value, 
-                                    !!new_col := comp_value))
+              # Label every result row with the `ref_time_value`:
+              return(tibble::tibble(time_value = rep(.env$ref_time_value, count),
+                                    !!new_col := .env$comp_value))
             }
             
             # If f is not missing, then just go ahead, slide by group
@@ -278,12 +308,12 @@ grouped_epi_archive =
                 private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before) %>%
                   dplyr::group_by(dplyr::across(tidyselect::all_of(private$vars)),
                                   .drop=private$drop) %>%
-                  dplyr::summarize(comp_one_grp(dplyr::cur_data_all(),
-                                                f = f, ...,
-                                                time_value = ref_time_value,
-                                                key_vars = key_vars,
-                                                new_col = new_col),
-                                   .groups = groups)
+                  dplyr::group_modify(comp_one_grp,
+                                      f = f, ...,
+                                      ref_time_value = ref_time_value,
+                                      comp_effective_key_vars = comp_effective_key_vars,
+                                      new_col = new_col,
+                                      .keep = TRUE)
               })
             }
 
@@ -303,14 +333,14 @@ grouped_epi_archive =
 
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
                 private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before) %>%
-                  dplyr::group_by(dplyr::across(tidyselect::all_of(private$vars))) %>%
+                  dplyr::group_by(dplyr::across(tidyselect::all_of(private$vars)),
+                                  .drop=private$drop) %>%
                   dplyr::group_modify(comp_one_grp,
                                       f = f, quo = quo,
-                                      time_value = ref_time_value,
-                                      key_vars = key_vars,
+                                      ref_time_value = ref_time_value,
+                                      comp_effective_key_vars = comp_effective_key_vars,
                                       new_col = new_col,
-                                      .keep = TRUE) %>%
-                  dplyr::ungroup()
+                                      .keep = TRUE)
               })
             }
             

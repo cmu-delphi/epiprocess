@@ -26,9 +26,11 @@ test_that("`ref_time_values` + `align` that have some slide data, but generate t
 ## --- These cases doesn't generate the error: ---
 test_that("these doesn't produce an error; the error appears only if the ref time values are out of the range for every group", {
   expect_identical(edf %>% group_by(geo_value) %>% epi_slide(f, n=3L, ref_time_values=as.Date("2020-01-01")+200L) %>% 
+                     dplyr::ungroup() %>%
                      dplyr::select("geo_value","slide_value_value"), 
                    dplyr::tibble(geo_value = "ak", slide_value_value = 199)) # out of range for one group
   expect_identical(edf %>% group_by(geo_value) %>% epi_slide(f, n=3L, ref_time_values=as.Date("2020-01-04")) %>% 
+                     dplyr::ungroup() %>%
                      dplyr::select("geo_value","slide_value_value"), 
                    dplyr::tibble(geo_value = c("ak", "al"), slide_value_value = c(2, -2))) # not out of range for either group
 })
