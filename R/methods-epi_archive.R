@@ -152,7 +152,7 @@ epix_fill_through_version = function(x, fill_versions_end,
 #' # vs. mutating x to hold the merge result:
 #' x$merge(y)
 #'
-#' @importFrom data.table key set
+#' @importFrom data.table key set setkeyv
 #' @export
 epix_merge = function(x, y,
                       sync = c("forbid","na","locf","truncate"),
@@ -215,18 +215,36 @@ epix_merge = function(x, y,
     y_DT = epix_fill_through_version(y, new_versions_end, sync)$DT
   } else if (sync == "truncate") {
     new_versions_end = min(x$versions_end, y$versions_end)
-    x_DT = x$DT[x[["DT"]][["version"]] <= new_versions_end, with=FALSE]
-    y_DT = y$DT[y[["DT"]][["version"]] <= new_versions_end, with=FALSE]
+    x_DT = x$DT[x[["DT"]][["version"]] <= new_versions_end, names(x$DT), with=FALSE]
+    y_DT = y$DT[y[["DT"]][["version"]] <= new_versions_end, names(y$DT), with=FALSE]
   } else Abort("unimplemented")
 
-  if (!identical(key(x$DT), key(x_DT)) || !identical(key(y$DT), key(y_DT))) {
-    Abort("preprocessing of data tables in merge changed the key unexpectedly",
-          internal=TRUE)
+  # key(x_DT) should be the same as key(x$DT) and key(y_DT) should be the same
+  # as key(y$DT). Below, we only use {x,y}_DT in the code (making it easier to
+  # split the code into separate functions if we wish), but still refer to
+  # {x,y}$DT in the error messages (further relying on this assumption).
+  #
+  # Check&ensure that the above assumption; if it didn't already hold, we likely
+  # have a bug in the preprocessing, a weird/invalid archive as input, and/or a
+  # data.table version with different semantics (which may break other parts of
+  # our code).
+  x_DT_key_as_expected = identical(key(x$DT), key(x_DT))
+  y_DT_key_as_expected = identical(key(y$DT), key(y_DT))
+  if (!x_DT_key_as_expected || !y_DT_key_as_expected) {
+    Warn("
+      `epiprocess` internal warning (please report): pre-processing for
+      epix_merge unexpectedly resulted in an intermediate data table (or
+      tables) with a different key than the corresponding input archive.
+      Manually setting intermediate data table keys to the expected values.
+    ", internal=TRUE)
+    setkeyv(x_DT, key(x$DT))
+    setkeyv(y_DT, key(y$DT))
   }
-  ## key(x_DT) should be the same as key(x$DT) and key(y_DT) should be the same
-  ## as key(y$DT). If we want to break this function into parts it makes sense
-  ## to use {x,y}_DT below, but this makes the error checks and messages look a
-  ## little weird and rely on the key-matching assumption above.
+  # Without some sort of annotations of what various columns represent, we can't
+  # do something that makes sense when merging archives with mismatched keys.
+  # E.g., even if we assume extra keys represent demographic breakdowns, a
+  # sensible default treatment of count-type and rate-type value columns would
+  # differ.
   if (!identical(sort(key(x_DT)), sort(key(y_DT)))) {
     Abort("
             The archives must have the same set of key column names; if the
