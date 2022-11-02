@@ -170,7 +170,6 @@ grouped_epi_archive =
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
           slide = function(f, ..., before, ref_time_values,
                            time_step, new_col_name = "slide_value",
-                           groups = NULL,
                            as_list_col = FALSE, names_sep = "_",
                            all_rows = FALSE) {
             if ("group_by" %in% nse_dots_names(...)) {

@@ -568,12 +568,6 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
-#' @param groups `r lifecycle::badge("experimental")` Optional; `.groups`
-#'   argument to [`dplyr::summarize`] used to control whether/how the slide
-#'   results are grouped before passing to the optional `as_list_col` and
-#'   `all_rows` steps; available choices as of dplyr 1.0.9 are `NULL` (default,
-#'   guessing what should be done), `"drop"`, `"keep"`, `"rowwise"`, and
-#'   `"drop_last"`.
 #' @param as_list_col Should the new column be stored as a list column? Default
 #'   is `FALSE`, in which case a list object returned by `f` would be unnested
 #'   (using `tidyr::unnest()`), and the names of the resulting columns are given
@@ -651,7 +645,6 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #' @export
 epix_slide = function(x, f, ..., before, ref_time_values,
                       time_step, new_col_name = "slide_value",
-                      groups = NULL,
                       as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
   if (!is_epi_archive(x, grouped_okay=TRUE)) {
     Abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
@@ -660,7 +653,6 @@ epix_slide = function(x, f, ..., before, ref_time_values,
                  ref_time_values = ref_time_values,
                  time_step = time_step,
                  new_col_name = new_col_name,
-                 groups = groups,
                  as_list_col = as_list_col,
                  names_sep = names_sep,
                  all_rows = all_rows

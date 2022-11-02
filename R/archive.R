@@ -588,17 +588,6 @@ epi_archive =
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
           slide = function(f, ..., before, ref_time_values, 
                            time_step, new_col_name = "slide_value",
-                           # We give the `epi_archive` a trivial (0-group-var)
-                           # grouping below, which is silently dropped in the
-                           # result using `groups=NULL` at time of writing. We
-                           # might want to ensure this by passing `groups =
-                           # "drop"` by default or removing this parameter
-                           # entirely, but that would necessitate some extra
-                           # work in `epix_slide`. Keep the interface&defaults
-                           # the same as `epix_slide` and grouped `$slide` for
-                           # now. Technically, this also provides extra
-                           # functionality, as it allows for `groups="rowwise"`.
-                           groups = NULL,
                            as_list_col = FALSE, names_sep = "_",
                            all_rows = FALSE) {
             # For an "ungrouped" slide, treat all rows as belonging to one big
@@ -608,7 +597,6 @@ epi_archive =
               f, ...,
               before = before, ref_time_values = ref_time_values,
               time_step = time_step, new_col_name = new_col_name,
-              groups = groups,
               as_list_col = as_list_col, names_sep = names_sep,
               all_rows = all_rows
             )
