@@ -584,19 +584,37 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   column named according to the `new_col_name` argument, containing the slide
 #'   values.
 #'
-#' @details Two key distinctions between the current function and `epi_slide()`:
-#'   1. `epix_slide()` doesn't accept an `after` argument; its windows extend
+#' @details A few key distinctions between the current function and `epi_slide()`:
+#'   1. In `f` functions for `epix_slide`, one should not assume that the input
+#'   data to contain any rows with `time_value` matching the computation's
+#'   `ref_time_value` (accessible via `attributes(<data>)$metadata$as_of`); for
+#'   typical epidemiological surveillance data, observations pertaining to a
+#'   particular time period (`time_value`) are first reported `as_of` some
+#'   instant after that time period has ended.
+#'   2. `epix_slide()` doesn't accept an `after` argument; its windows extend
 #'   from `before` time steps before a given `ref_time_value` through the last
 #'   `time_value` available as of version `ref_time_value` (typically, this
 #'   won't include `ref_time_value` itself, as observations about a particular
 #'   time interval (e.g., day) are only published after that time interval
 #'   ends); `epi_slide` windows extend from `before` time steps before a
 #'   `ref_time_value` through `after` time steps after `ref_time_value`.
-#'   2. Note that the outputs are a similar but different: `epix_slide()`
+#'   3. The output class and columns are similar but different: `epix_slide()`
 #'   returns a tibble containing only the grouping variables, `time_value`, and
 #'   the new column(s) from the slide computation `f`, whereas `epi_slide()`
 #'   returns an `epi_df` with all original variables plus the new columns from
 #'   the slide computation.
+#'   4. Unless grouping by `geo_value` and all `other_keys`, there will be
+#'   row-recyling behavior meant to resemble `epi_slide`'s results, based on the
+#'   distinct combinations of `geo_value`, `time_value`, and all `other_keys`
+#'   present in the version data with `time_value` matching one of the
+#'   `ref_time_values`. However, due to reporting latency or reporting dropping
+#'   in and out, this may not exactly match the behavior of "corresponding"
+#'   `epi_df`s.
+#'   5. Similar to the row recyling, while `all_rows=TRUE` is designed to mimic
+#'   `epi_slide` by completing based on distinct combinations of `geo_value`,
+#'   `time_value`, and all `other_keys` present in the version data with
+#'   `time_value` matching one of the `ref_time_values`, this can have unexpected
+#'   behaviors due reporting latency or reporting dropping in and out.
 #' Apart from this, the interfaces between `epix_slide()` and `epi_slide()` are
 #' the same.
 #'

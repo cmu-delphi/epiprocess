@@ -6,9 +6,23 @@ development versions. A ".9999" suffix indicates a development version.
 
 ## Breaking changes:
 
+* `epix_slide`'s `group_by` argument has been replaced by `dplyr::group_by` and
+  `dplyr::ungroup` S3 methods. The `group_by` method uses "data masking" (also
+  referred to as "tidy evaluation") rather than "tidy selection".
+  * Old syntax:
+    * `x %>% epix_slide(<other args>, group_by=c(col1, col2))`
+    * `x %>% epix_slide(<other args>, group_by=all_of(colname_vector))`
+  * New syntax:
+    * `x %>% group_by(col1, col2) %>% epix_slide(<other args>)`
+    * `x %>% group_by(across(all_of(colname_vector))) %>% epix_slide(<other args>)`
+* `epix_slide` no longer defaults to grouping by non-`time_value`, non-`version`
+  key columns, instead considering all data to be in one big group.
+  * To obtain the old behavior, precede each `epix_slide` call lacking a
+    `group_by` argument with an appropriate `group_by` call.
 * `epix_slide` now keeps any grouping of `x` in its results, matching
-  `epi_slide`. To obtain the old behavior, `dplyr::ungroup` the `epix_slide`
-  result immediately.
+  `epi_slide`.
+  * To obtain the old behavior, `dplyr::ungroup` the `epix_slide` result
+    immediately.
 
 ## Potentially-breaking changes:
 
@@ -20,6 +34,13 @@ development versions. A ".9999" suffix indicates a development version.
 * Changed `bind_rows` on grouped `epi_df`s to not drop the `epi_df` class. Like
   with ungrouped `epi_df`s, the metadata of the result is still simply taken
   from the first result, and may be inappropriate.
+
+## Improvements:
+
+* Added `dplyr::group_by` and `dplyr::ungroup` S3 methods for `epi_archive`
+  objects, plus corresponding `$group_by` and `$ungroup` R6 methods. The
+  `group_by` implementation supports the `.add` and `.drop` arguments, and
+  `ungroup` supports partial ungrouping with `...`.
 
 ## Cleanup:
 

@@ -148,6 +148,9 @@ grouped_epi_archive =
           grouped_epi_archive$new(self$ungrouped, vars, .drop)
         }
       },
+      groups = function() {
+        rlang::syms(private$vars)
+      },
       ungroup = function(...) {
         if (rlang::dots_n(...) == 0L) {
           # No dots = special behavior: remove all grouping vars and convert to
@@ -359,9 +362,22 @@ grouped_epi_archive =
     )
   )
 
+#' @importFrom dplyr group_by
 #' @export
 group_by.grouped_epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_drop_default(.data)) {
   .data$group_by(..., .add=.add, .drop=.drop)
+}
+
+#' @importFrom dplyr groups
+#' @export
+groups.grouped_epi_archive = function(x) {
+  x$groups()
+}
+
+#' @importFrom dplyr ungroup
+#' @export
+ungroup.grouped_epi_archive = function(x, ...) {
+  x$ungroup(x, ...)
 }
 
 #' @export
