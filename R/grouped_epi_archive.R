@@ -35,6 +35,8 @@ nse_dots_names2 = function(...) {
   rlang::names2(rlang::call_match())
 }
 
+#' @rdname group_by.epi_archive
+#'
 #' @export
 group_by_drop_default.grouped_epi_archive = function(.tbl) {
   .tbl$group_by_drop_default()
@@ -362,18 +364,24 @@ grouped_epi_archive =
     )
   )
 
+#' @rdname group_by.epi_archive
+#'
 #' @importFrom dplyr group_by
 #' @export
 group_by.grouped_epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_drop_default(.data)) {
   .data$group_by(..., .add=.add, .drop=.drop)
 }
 
+#' @rdname group_by.epi_archive
+#'
 #' @importFrom dplyr groups
 #' @export
 groups.grouped_epi_archive = function(x) {
   x$groups()
 }
 
+#' @rdname group_by.epi_archive
+#'
 #' @importFrom dplyr ungroup
 #' @export
 ungroup.grouped_epi_archive = function(x, ...) {

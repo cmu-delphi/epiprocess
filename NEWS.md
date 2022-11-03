@@ -33,7 +33,7 @@ development versions. A ".9999" suffix indicates a development version.
   `epi_df` (e.g., when removing the `time_value` column).
 * Changed `bind_rows` on grouped `epi_df`s to not drop the `epi_df` class. Like
   with ungrouped `epi_df`s, the metadata of the result is still simply taken
-  from the first result, and may be inappropriate.
+  from the first result, and may be inappropriate (#242).
 
 ## Improvements:
 

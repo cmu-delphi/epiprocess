@@ -502,14 +502,32 @@ epix_detailed_restricted_mutate = function(.data, ...) {
   }
 }
 
-#' `group_by` method for `epi_archive`s
+#' `group_by` and related methods for `epi_archive`, `grouped_epi_archive`
 #'
-#' (`group_by_drop_default` on (ungrouped) `epi_archive`s is expected to dispatch
-#' to `group_by_drop_default.default`.)
+#' @details
+#'
+#' To match `dplyr`, `group_by` allows "data masking" (also referred to as
+#' "tidy evaluation") expressions `...`, not just column names, in a way similar
+#' to `mutate`. Note that replacing or removing key columns with these
+#' expressions is disabled.
+#'
+#' Mutation and aliasing: `group_by` tries to use a shallow copy of the `DT`,
+#' introducing column-level aliasing between its input and its result. This
+#' doesn't follow the general model for most `data.table` operations, which
+#' seems to be that, given an nonaliased (i.e., unique) pointer to a
+#' `data.table` object, its pointers to its columns should also be nonaliased.
+#' If you mutate any of the columns of either the input or result, first ensure
+#' that it is fine if columns of the other are also mutated, but do not rely on
+#' such behavior to occur. Additionally, never perform mutation on the key
+#' columns at all (except for strictly increasing transformations), as this will
+#' invalidate sortedness assumptions about the rows.
+#'
+#' `group_by_drop_default` on (ungrouped) `epi_archive`s is expected to dispatch
+#' to `group_by_drop_default.default` (but there is a dedicated method for
+#' `grouped_epi_archive`s).
 #'
 #' @importFrom dplyr group_by
 #' @export
-#' @noRd
 group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_drop_default(.data)) {
   # `add` makes no difference; this is an ungrouped `epi_archive`.
   detailed_mutate = epix_detailed_restricted_mutate(.data, ...)
@@ -528,7 +546,7 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 #' examples.
 #'
-#' @param x An `epi_archive` object.
+#' @param x An `epi_archive` or `grouped_epi_archive` object.
 #' @param f Function or formula to slide over variables in `x`. To "slide" means
 #'   to apply a function or formula over a running window of `n` time steps
 #'   (where one time step is typically one day or one week). If a function, `f`
