@@ -146,8 +146,8 @@ grouped_epi_archive =
           detailed_mutate = epix_detailed_restricted_mutate(private$ungrouped, ...)
           out_ungrouped = detailed_mutate[["archive"]]
           vars_from_dots = detailed_mutate[["request_names"]]
-          vars = union(self$vars, vars_from_dots)
-          grouped_epi_archive$new(self$ungrouped, vars, .drop)
+          vars = union(private$vars, vars_from_dots)
+          grouped_epi_archive$new(private$ungrouped, vars, .drop)
         }
       },
       groups = function() {
