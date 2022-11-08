@@ -21,13 +21,13 @@ test_that("epix_slide works as intended",{
                before = 2,
                new_col_name = "sum_binary")
   
-  xx2 <- tibble(geo_value = rep("x",3),
-                # 7 should also be there below; this is a bug on issue #153
-                time_value = c(4,5,6),
+  xx2 <- tibble(geo_value = rep("x",4),
+                time_value = c(4,5,6,7),
                 sum_binary = c(2^3+2^2,
                                2^6+2^3,
-                               2^10+2^9)) %>%
-    as_epi_df(as_of = 1) %>% # Also a bug (issue #213)
+                               2^10+2^9,
+                               2^15+2^14)) %>%
+    as_epi_df(as_of = 4) %>% # Also a bug (issue #213)
     group_by(geo_value)
   
   expect_identical(xx1,xx2) # *

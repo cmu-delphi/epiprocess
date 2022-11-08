@@ -11,16 +11,16 @@ f = function(x, ...) dplyr::tibble(value=mean(x$value), count=length(x$value))
 ## --- These cases generate the error: ---
 test_that("`ref_time_values` + `align` that result in no slide data, generate the error", {
   expect_error(edf %>% group_by(geo_value) %>% epi_slide(f, n=3L, ref_time_values=as.Date("2020-01-01")), 
-               "starting and/or stopping times for sliding are out of bounds") # before the first, no data in the slide windows
+               "All `ref_time_values` must appear in") # before the first, no data in the slide windows
   expect_error(edf %>% group_by(geo_value) %>% epi_slide(f, n=3L, ref_time_values=as.Date("2020-01-01")+207L), 
-               "starting and/or stopping times for sliding are out of bounds") # beyond the last, no data in window
+               "All `ref_time_values` must appear in") # beyond the last, no data in window
 })
 
 test_that("`ref_time_values` + `align` that have some slide data, but generate the error due to ref. time being out of time range", {
   expect_error(edf %>% group_by(geo_value) %>% epi_slide(f, n=3L, ref_time_values=as.Date("2020-01-01"), align="left"), 
-               "starting and/or stopping times for sliding are out of bounds") # before the first, but we'd expect there to be data in the window
+               "All `ref_time_values` must appear in") # before the first, but we'd expect there to be data in the window
   expect_error(edf %>% group_by(geo_value) %>% epi_slide(f, n=3L, ref_time_values=as.Date("2020-01-01")+201L), 
-               "starting and/or stopping times for sliding are out of bounds") # beyond the last, but still with data in window
+               "All `ref_time_values` must appear in") # beyond the last, but still with data in window
 })
 
 ## --- These cases doesn't generate the error: ---

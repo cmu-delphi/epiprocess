@@ -84,12 +84,8 @@ test_that("as_of produces the same results with compactify=TRUE as with compacti
   # Row 22, an LOCF row corresponding to the latest version, is omitted in
   # ea_true
   latest_version = max(ea_false$DT$version)
-  expect_warning({
-    as_of_true  <- ea_true$as_of(latest_version)
-  }, class = "epiprocess__snapshot_as_of_clobberable_version")
-  expect_warning({
-    as_of_false <- ea_false$as_of(latest_version)
-  }, class = "epiprocess__snapshot_as_of_clobberable_version")
+  as_of_true  <- ea_true$as_of(latest_version)
+  as_of_false <- ea_false$as_of(latest_version)
   
   expect_identical(as_of_true,as_of_false)
 })

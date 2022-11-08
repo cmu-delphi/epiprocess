@@ -61,7 +61,7 @@ validate_version_bound = function(version_bound, x, na_ok,
   }
 }
 
-#' Default arg helper: `max(x$version)`, with error if `x` has 0 rows
+#' `max(x$version)`, with error if `x` has 0 rows
 #'
 #' Exported to make defaults more easily copyable.
 #'
@@ -233,15 +233,17 @@ epi_archive =
 #'   carried forward (LOCF) to interpolate between the version data provided,
 #'   rows that don't change these LOCF results can potentially be omitted to
 #'   save space while maintaining the same behavior (with the help of the
-#'   `clobberable_versions_start` and `versions_end` fields in some
-#'   edge cases). `TRUE` will remove these rows, `FALSE` will not, and missing
-#'   or `NULL` will remove these rows and issue a warning. Generally, this can
-#'   be set to `TRUE`, but if you directly inspect or edit the fields of the
-#'   `epi_archive` such as its `DT`, you will have to determine whether
-#'   `compactify=TRUE` will produce the desired results. If compactification
-#'   here is removing a large proportion of the rows, this may indicate a
-#'   potential for space, time, or bandwidth savings upstream the data pipeline,
-#'   e.g., when fetching, storing, or preparing the input data `x`
+#'   `clobberable_versions_start` and `versions_end` fields in some edge cases).
+#'   `TRUE` will remove these rows, `FALSE` will not, and missing or `NULL` will
+#'   remove these rows and issue a warning. Generally, this can be set to
+#'   `TRUE`, but if you directly inspect or edit the fields of the `epi_archive`
+#'   such as its `DT`, or rely on redundant updates to achieve a certain
+#'   behavior of the `ref_time_values` default in `epix_slide`, you will have to
+#'   determine whether `compactify=TRUE` will produce the desired results. If
+#'   compactification here is removing a large proportion of the rows, this may
+#'   indicate a potential for space, time, or bandwidth savings upstream the
+#'   data pipeline, e.g., by avoiding fetching, storing, or processing these
+#'   rows of `x`.
 #' @param clobberable_versions_start Optional; as in [`as_epi_archive`]
 #' @param versions_end Optional; as in [`as_epi_archive`]
 #' @return An `epi_archive` object.
@@ -308,7 +310,7 @@ epi_archive =
             # Apply defaults and conduct checks and apply defaults for
             # `clobberable_versions_start`, `versions_end`:
             if (missing(clobberable_versions_start)) {
-              clobberable_versions_start <- max_version_with_row_in(x)
+              clobberable_versions_start <- NA
             }
             if (missing(versions_end)) {
               versions_end <- max_version_with_row_in(x)
@@ -465,7 +467,7 @@ epi_archive =
               Abort("`max_version` must be at most `self$versions_end`.")
             }
             if (!is.na(self$clobberable_versions_start) && max_version >= self$clobberable_versions_start) {
-              Warn('Getting data as of some "clobberable" version that might be hotfixed, synced, or otherwise replaced later with different data using the same version tag.  Thus, the snapshot that we produce here might not be reproducible later. See `?epi_archive` for more info and `?epix_as_of` on how to muffle.',
+              Warn('Getting data as of some recent version which could still be overwritten (under routine circumstances) without assigning a new version number (a.k.a. "clobbered").  Thus, the snapshot that we produce here should not be expected to be reproducible later. See `?epi_archive` for more info and `?epix_as_of` on how to muffle.',
                    class="epiprocess__snapshot_as_of_clobberable_version")
             }
             
@@ -642,25 +644,18 @@ epi_archive =
 #'   same `class` and `typeof` as `x$version`, or an `NA` of any `class` and
 #'   `typeof`: specifically, either (a) the earliest version that could be
 #'   subject to "clobbering" (being overwritten with different update data, but
-#'   using the same version tag as the old update data), or (b) `NA`, to
+#'   using the *same* version tag as the old update data), or (b) `NA`, to
 #'   indicate that no versions are clobberable. There are a variety of reasons
-#'   why versions could be clobberable, such as upstream hotfixes to the latest
-#'   version, or delays in data synchronization that were mistaken for versions
-#'   with no updates; potential causes vary between different data pipelines.
-#'   The default value is `max_version_with_row_in(x)`; this default assumes
-#'   that (i) if a row in `x` (even one that `compactify` would consider
-#'   redundant) is present with version `ver`, then all previous versions must
-#'   be finalized and non-clobberable, although `ver` (and onward) might still
-#'   be modified, (ii) even if we have "observed" empty updates for some
-#'   versions beyond `max(x$version)` (as indicated by `versions_end`;
-#'   see below), we can't assume `max(x$version)` has been finalized, because we
-#'   might see a nonfinalized version + empty subsequent versions due to
-#'   upstream database replication delays in combination with the upstream
-#'   replicas using last-version-carried-forward to extrapolate that there were
-#'   no updates, (iii) "redundant" update rows that would be removed by
-#'   `compactify` are not redundant, and actually come from an explicit version
-#'   release that indicates that preceding versions are finalized. If `nrow(x)
-#'   == 0`, then this argument is mandatory.
+#'   why versions could be clobberable under routine circumstances, such as (a)
+#'   today's version of one/all of the columns being published after initially
+#'   being filled with `NA` or LOCF, (b) a buggy version of today's data being
+#'   published but then fixed and republished later in the day, or (c) data
+#'   pipeline delays (e.g., publisher uploading, periodic scraping, database
+#'   syncing, periodic fetching, etc.) that make events (a) or (b) reflected
+#'   later in the day (or even on a different day) than expected; potential
+#'   causes vary between different data pipelines. The default value is `NA`,
+#'   which doesn't consider any versions to be clobberable. Another setting that
+#'   may be appropriate for some pipelines is `max_version_with_row_in(x)`.
 #' @param versions_end Optional; length-1, same `class` and `typeof` as
 #'   `x$version`: what is the last version we have observed? The default is
 #'   `max_version_with_row_in(x)`, but values greater than this could also be
@@ -717,7 +712,7 @@ epi_archive =
 as_epi_archive = function(x, geo_type, time_type, other_keys,
                           additional_metadata = list(),
                           compactify = NULL,
-                          clobberable_versions_start = max_version_with_row_in(x),
+                          clobberable_versions_start = NA,
                           versions_end = max_version_with_row_in(x)) {
   epi_archive$new(x, geo_type, time_type, other_keys, additional_metadata,
                   compactify, clobberable_versions_start, versions_end)

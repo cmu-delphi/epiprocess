@@ -288,3 +288,153 @@ deprecated_quo_is_present = function(quo) {
     }
   }
 }
+
+##########
+
+#' Find the greatest common divisor of two numeric scalars
+#'
+#' Not expected to be used directly; output class isn't precise, and checks
+#' could be moved away into [`gcd_num`].
+#'
+#' An implementation of a least absolute remainder Euclidean algorithm (See,
+#' e.g., Moore, Thomas. "On the least absolute remainder Euclidean algorithm."
+#' The Fibonacci Quarterly (1992).)
+#'
+#' Notes on this implementation:
+#' * We allow positive or negative inputs, and don't require |a| > |b|.
+#' * `round` combines the job of truncating division and deciding between
+#'    positive and negative remainders.
+#' * We use some tolerance parameters and different checks to allow this to work
+#'   on floating-point numbers. Perhaps they could be altered or removed if we
+#'   are passed integers, but for simplicity, we always perform these checks.
+#'
+#' @param a Length 1, `is.numeric`; the first number
+#' @param b Length 1, `is.numeric`; the second number
+#' @param rrtol Optional, length 1, `is.numeric`, non-negative; the remainder
+#'   relative tolerance: consider a remainder from a division operation to be
+#'   zero if it is `abs(remainder/divisor) <= rrtol`. Could also be described as
+#'   a tolerance on the fractional part of the proper quotient. Default is 1e-6.
+#' @param pqlim Optional, length 1, `is.numeric`, non-negative; the proper
+#'   quotient limit: consider a divisor to be zero if `abs(dividend/divisor) >=
+#'   pqlim`.
+#' @param irtol Optional, length 1, `is.numeric`, non-negative; the iterand
+#'   relative tolerance: consider `a` and `b` to have no gcd if the absolute
+#'   value of an iterand (and consequently also any result that might be
+#'   subsequently produced, as absolute values of iterands are decreasing) is
+#'   `<= irtol * a` or `<= irtol * b`. Also can be seen as the reciprocal of a
+#'   limit on the number `k` needed to achieve `k * gcd_result ==
+#'   max(abs(a),abs(b))`.
+#' @return Length 1, `is.numeric`: the gcd. (Or an error.) Expected to be a
+#'   double unless `b` is the GCD and an integer, in which case it is expected
+#'   be an integer.
+#'
+#' @noRd
+gcd2num = function(a, b, rrtol=1e-6, pqlim=1e6, irtol=1e-6) {
+  if (!is.numeric(a) || length(a) != 1L) {
+    Abort("`a` must satisfy `is.numeric`, have `length` 1.")
+  }
+  if (!is.numeric(b) || length(b) != 1L) {
+    Abort("`b` must satisfy `is.numeric`, have `length` 1.")
+  }
+  if (!is.numeric(rrtol) || length(rrtol) != 1L || rrtol < 0) {
+    Abort("`rrtol` must satisfy `is.numeric`, have `length` 1, and be non-negative.")
+  }
+  if (!is.numeric(pqlim) || length(pqlim) != 1L || pqlim < 0) {
+    Abort("`pqlim` must satisfy `is.numeric`, have `length` 1, and be non-negative.")
+  }
+  if (!is.numeric(irtol) || length(irtol) != 1L || irtol < 0) {
+    Abort("`irtol` must satisfy `is.numeric`, have `length` 1, and be non-negative.")
+  }
+  if (is.na(a) || is.na(b) || a == 0 || b == 0 || abs(a/b) >= pqlim || abs(b/a) >= pqlim) {
+    Abort("`a` and/or `b` is either `NA` or exactly zero, or one is so much smaller than the other that it looks like it's supposed to be zero; see `pqlim` setting.")
+  }
+  iatol = irtol * max(a,b)
+  a_curr = a
+  b_curr = b
+  while (TRUE) {
+    # `b_curr` is the candidate GCD / iterand; check first if it seems too small:
+    if (abs(b_curr) <= iatol) {
+      Abort('No GCD found; remaining potential Gads are all too small relative to one/both of the original inputs; see `irtol` setting.')
+    }
+    remainder = a_curr - round(a_curr / b_curr) * b_curr
+    if (abs(remainder / b_curr) <= rrtol) {
+      # We consider `a_curr` divisible by `b_curr`; `b_curr` is the GCD or its negation
+      return (abs(b_curr))
+    }
+    a_curr <- b_curr
+    b_curr <- remainder
+  }
+}
+
+#' Find the greatest common divisor of all entries in a numeric vector
+#'
+#' @param dividends `is.numeric`, `length` > 0; the dividends for which to find
+#'   the greatest common divisor.
+#' @param ... should be empty; forces the following parameters to be passed by
+#'   name
+#' @inheritParams gcd2num
+#' @return Same [`vctrs::vec_ptype`] as `dividends`, `length` 1: the gcd. (Or an
+#'   error.)
+#'
+#' @noRd
+gcd_num = function(dividends, ..., rrtol=1e-6, pqlim=1e6, irtol=1e-6) {
+  if (!is.numeric(dividends) || length(dividends) == 0L) {
+    Abort("`dividends` must satisfy `is.numeric`, and have `length` > 0")
+  }
+  if (rlang::dots_n(...) != 0L) {
+    Abort("`...` should be empty; all dividends should go in a single `dividends` vector, and all tolerance&limit settings should be passed by name.")
+  }
+  # We expect a bunch of duplicate `dividends` for some applications.
+  # De-duplicate to reduce work. Sort by absolute value to attempt to reduce
+  # workload. Also take `abs` early on as another form of deduplication and to
+  # make the sort simpler. Use `na.last=FALSE` in the sort to preserve presence
+  # of `NA`s in order to get a better error message in this case.
+  optimized_dividends = sort(unique(abs(dividends)), na.last=FALSE)
+  # Note that taking the prime factorizations of a set of integers, and
+  # calculating the minimum power for each prime across all these
+  # factorizations, yields the prime factorization of the GCD of the set of
+  # integers. We could carry these parallel minimum operations out using
+  # `reduce`, so we see that calculating the GCD of a set of integers can be
+  # done via `reduce`. Note that we should always have "gcd_real"(reals) =
+  # gcd_int(reals / integerizing_divisor) * integerizing_divisor for *every*
+  # integerizing divisor that would make "gcd_int" applicable. There is a
+  # greatest integerizing divisor if there is a GCD at all, and this is the
+  # "gcd_real" itself, for which the "gcd_int" in the previous equation is 1;
+  # the set of valid integerizing divisors is the set of nonzero integer
+  # multiples of the greatest integerizing divisor. The gcd_real of X U Y is an
+  # integerizing factor for X U Y as well as X and Y individually, and we can
+  # see gcd_real(X U Y) = gcd_int(XUY / gcd(XUY)) * gcd(XUY) =
+  # gcd2int(gcd_int(X/gcd_real(XUY)), gcd_int(Y/gcd_real(XUY))) * gcd(XUY) =
+  # gcd2real(gcd_int(X/gcd_real(XUY))*gcd_real(XUY),
+  # gcd_int(Y/gcd_real(XUY))*gcd_real(XUY)) = gcd2real(gcd_real(X),
+  # gcd_real(Y)). So "gcd_real" should also be `reduce`-compatible.
+  numeric_gcd = purrr::reduce(optimized_dividends, gcd2num,
+                              rrtol=rrtol, pqlim=pqlim, irtol=irtol)
+  vctrs::vec_cast(numeric_gcd, dividends)
+}
+
+#' Use max valid period as guess for `period` of `ref_time_values`
+#'
+#' @param `ref_time_values` Vector containing time-interval-like or time-like
+#'   data, with at least two distinct values, [`diff`]-able (e.g., a
+#'   `time_value` or `version` column), and should have a sensible result from
+#'   adding `is.numeric` versions of its `diff` result (via `as.integer` if its
+#'   `typeof` is `"integer"`, otherwise via `as.numeric`).
+#' @param `ref_time_values_arg` Optional, string; name to give `ref_time_values`
+#'   in error messages. Defaults to quoting the expression the caller fed into
+#'   the `ref_time_values` argument.
+#' @return `is.numeric`, length 1; attempts to match `typeof(ref_time_values)`
+guess_period = function(ref_time_values, ref_time_values_arg = rlang::caller_arg(ref_time_values)) {
+  sorted_distinct_ref_time_values = sort(unique(ref_time_values))
+  if (length(sorted_distinct_ref_time_values) < 2L) {
+    Abort(sprintf("Not enough distinct values in `%s` to guess the period.", ref_time_values_arg))
+  }
+  skips = diff(sorted_distinct_ref_time_values)
+  decayed_skips =
+    if (typeof(skips) == "integer") {
+      as.integer(skips)
+    } else {
+      as.numeric(skips)
+    }
+  gcd_num(decayed_skips)
+}

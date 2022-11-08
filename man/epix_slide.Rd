@@ -12,14 +12,13 @@ epix_slide(
   ref_time_values,
   time_step,
   new_col_name = "slide_value",
-  groups = NULL,
   as_list_col = FALSE,
   names_sep = "_",
   all_rows = FALSE
 )
 }
 \arguments{
-\item{x}{An \code{epi_archive} object.}
+\item{x}{An \code{epi_archive} or \code{grouped_epi_archive} object.}
 
 \item{f}{Function or formula to slide over variables in \code{x}. To "slide" means
 to apply a function or formula over a running window of \code{n} time steps
@@ -50,10 +49,13 @@ were to hold forecasts, then we would expect data for \code{time_value}s after
 January 8, and the sliding window would extend as far after each
 \code{ref_time_value} as needed to include all such \code{time_value}s.)}
 
-\item{ref_time_values}{Time values for sliding computations, meaning, each
-element of this vector serves as the reference time point for one sliding
-window. If missing, then this will be set to all unique time values in the
-underlying data table, by default.}
+\item{ref_time_values}{Reference time values / versions for sliding
+computations; each element of this vector serves both as the anchor point
+for the \code{time_value} window for the computation and the \code{max_version}
+\code{as_of} which we fetch data in this window. If missing, then this will set
+to a regularly-spaced sequence of values set to cover the range of
+\code{version}s in the \code{DT} plus the \code{versions_end}; the spacing of values will
+be guessed (using the GCD of the skips between values).}
 
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
@@ -64,13 +66,6 @@ would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 \item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
-
-\item{groups}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} Optional; \code{.groups}
-argument to \code{\link[dplyr:summarise]{dplyr::summarize}} used to control whether/how the slide
-results are grouped before passing to the optional \code{as_list_col} and
-\code{all_rows} steps; available choices as of dplyr 1.0.9 are \code{NULL} (default,
-guessing what should be done), \code{"drop"}, \code{"keep"}, \code{"rowwise"}, and
-\code{"drop_last"}.}
 
 \item{as_list_col}{Should the new column be stored as a list column? Default
 is \code{FALSE}, in which case a list object returned by \code{f} would be unnested
@@ -101,8 +96,14 @@ performed on \strong{data that would have been available as of t}. See the
 examples.
 }
 \details{
-Two key distinctions between the current function and \code{epi_slide()}:
+A few key distinctions between the current function and \code{epi_slide()}:
 \enumerate{
+\item In \code{f} functions for \code{epix_slide}, one should not assume that the input
+data to contain any rows with \code{time_value} matching the computation's
+\code{ref_time_value} (accessible via \verb{attributes(<data>)$metadata$as_of}); for
+typical epidemiological surveillance data, observations pertaining to a
+particular time period (\code{time_value}) are first reported \code{as_of} some
+instant after that time period has ended.
 \item \code{epix_slide()} doesn't accept an \code{after} argument; its windows extend
 from \code{before} time steps before a given \code{ref_time_value} through the last
 \code{time_value} available as of version \code{ref_time_value} (typically, this
@@ -110,11 +111,26 @@ won't include \code{ref_time_value} itself, as observations about a particular
 time interval (e.g., day) are only published after that time interval
 ends); \code{epi_slide} windows extend from \code{before} time steps before a
 \code{ref_time_value} through \code{after} time steps after \code{ref_time_value}.
-\item Note that the outputs are a similar but different: \code{epix_slide()}
+\item The output class and columns are similar but different: \code{epix_slide()}
 returns a tibble containing only the grouping variables, \code{time_value}, and
 the new column(s) from the slide computation \code{f}, whereas \code{epi_slide()}
 returns an \code{epi_df} with all original variables plus the new columns from
 the slide computation.
+\item Unless grouping by \code{geo_value} and all \code{other_keys}, there will be
+row-recyling behavior meant to resemble \code{epi_slide}'s results, based on the
+distinct combinations of \code{geo_value}, \code{time_value}, and all \code{other_keys}
+present in the version data with \code{time_value} matching one of the
+\code{ref_time_values}. However, due to reporting latency or reporting dropping
+in and out, this may not exactly match the behavior of "corresponding"
+\code{epi_df}s.
+\item Similar to the row recyling, while \code{all_rows=TRUE} is designed to mimic
+\code{epi_slide} by completing based on distinct combinations of \code{geo_value},
+\code{time_value}, and all \code{other_keys} present in the version data with
+\code{time_value} matching one of the \code{ref_time_values}, this can have unexpected
+behaviors due reporting latency or reporting dropping in and out.
+\item The \code{ref_time_values} default for \code{epix_slide} is based on making an
+evenly-spaced sequence out of the \code{version}s in the \code{DT} plus the
+\code{versions_end}, rather than the \code{time_value}s.
 Apart from this, the interfaces between \code{epix_slide()} and \code{epi_slide()} are
 the same.
 }

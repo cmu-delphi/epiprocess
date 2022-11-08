@@ -23,6 +23,14 @@ development versions. A ".9999" suffix indicates a development version.
   `epi_slide`.
   * To obtain the old behavior, `dplyr::ungroup` the `epix_slide` result
     immediately.
+* `epix_slide` now guesses `ref_time_values` to be a regularly spaced sequence
+  covering all the `DT$version` values and `version_end`, rather than the
+  distinct `DT$time_value`s. To obtain the old behavior, pass in
+  `ref_time_values = unique(<ungrouped archive>$DT$time_value)`.
+* `epi_archive`'s `clobberable_versions_start`'s default is now `NA`, so there
+  will be no warnings by default about potential nonreproducibility. To obtain
+  the old behavior, pass in `clobberable_versions_start =
+  max_version_with_row_in(x)`.
 
 ## Potentially-breaking changes:
 
@@ -34,6 +42,8 @@ development versions. A ".9999" suffix indicates a development version.
 * Changed `bind_rows` on grouped `epi_df`s to not drop the `epi_df` class. Like
   with ungrouped `epi_df`s, the metadata of the result is still simply taken
   from the first result, and may be inappropriate (#242).
+* `epi_slide` and `epix_slide` now raise an error rather than silently filtering
+  out `ref_time_values` that don't meet their expectations.
 
 ## Improvements:
 

@@ -124,16 +124,23 @@ epi_slide = function(x, f, ..., n, ref_time_values,
   # Arrange by increasing time_value
   x = arrange(x, time_value)
   
-  # If missing, then set ref time values to be everything; else make sure we
-  # intersect with observed time values
   if (missing(ref_time_values)) {
     ref_time_values = unique(x$time_value)
-  } 
-  else {
-    ref_time_values = ref_time_values[ref_time_values %in%
-                                      unique(x$time_value)] 
   }
-              
+  # Some of the checks below are possible to fail on the above default; just go
+  # ahead and do the full validation & pre-processing even on the default:
+  if (length(ref_time_values) == 0L) {
+    Abort("`ref_time_values` must have at least one element.")
+  } else if (any(is.na(ref_time_values))) {
+    Abort("`ref_time_values` must not include `NA`.")
+  } else if (anyDuplicated(ref_time_values) != 0L) {
+    Abort("`ref_time_values` must not contain any duplicates; use `unique` if appropriate.")
+  } else if (!all(ref_time_values %in% unique(x$time_value))) {
+    Abort("All `ref_time_values` must appear in `x$time_value`.")
+  } else {
+    ref_time_values = sort(ref_time_values)
+  }
+
   # If before is missing, then use align to set up alignment
   if (missing(before)) {
     align = match.arg(align)

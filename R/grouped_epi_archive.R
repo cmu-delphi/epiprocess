@@ -189,14 +189,21 @@ grouped_epi_archive =
               ")
             }
             
-            # If missing, then set ref time values to be everything; else make
-            # sure we intersect with observed time values 
             if (missing(ref_time_values)) {
-              ref_time_values = unique(private$ungrouped$DT$time_value)
-            }
-            else {
-              ref_time_values = ref_time_values[ref_time_values %in%
-                                                unique(private$ungrouped$DT$time_value)]
+              versions_with_updates = c(private$ungrouped$DT$version, private$ungrouped$versions_end)
+              ref_time_values = tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
+            } else if (length(ref_time_values) == 0L) {
+              Abort("`ref_time_values` must have at least one element.")
+            } else if (any(is.na(ref_time_values))) {
+              Abort("`ref_time_values` must not include `NA`.")
+            } else if (anyDuplicated(ref_time_values) != 0L) {
+              Abort("`ref_time_values` must not contain any duplicates; use `unique` if appropriate.")
+            } else if (any(ref_time_values > private$ungrouped$versions_end)) {
+              Abort("All `ref_time_values` must be `<=` the `versions_end`.")
+            } else {
+              # Sort, for consistency with `epi_slide`, although the current
+              # implementation doesn't take advantage of it.
+              ref_time_values = sort(ref_time_values)
             }
             
             # Validate and pre-process `before`:

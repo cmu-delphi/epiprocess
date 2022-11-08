@@ -170,15 +170,17 @@ such as \code{as_of}? As these methods use the last version of each observation
 carried forward (LOCF) to interpolate between the version data provided,
 rows that don't change these LOCF results can potentially be omitted to
 save space while maintaining the same behavior (with the help of the
-\code{clobberable_versions_start} and \code{versions_end} fields in some
-edge cases). \code{TRUE} will remove these rows, \code{FALSE} will not, and missing
-or \code{NULL} will remove these rows and issue a warning. Generally, this can
-be set to \code{TRUE}, but if you directly inspect or edit the fields of the
-\code{epi_archive} such as its \code{DT}, you will have to determine whether
-\code{compactify=TRUE} will produce the desired results. If compactification
-here is removing a large proportion of the rows, this may indicate a
-potential for space, time, or bandwidth savings upstream the data pipeline,
-e.g., when fetching, storing, or preparing the input data \code{x}}
+\code{clobberable_versions_start} and \code{versions_end} fields in some edge cases).
+\code{TRUE} will remove these rows, \code{FALSE} will not, and missing or \code{NULL} will
+remove these rows and issue a warning. Generally, this can be set to
+\code{TRUE}, but if you directly inspect or edit the fields of the \code{epi_archive}
+such as its \code{DT}, or rely on redundant updates to achieve a certain
+behavior of the \code{ref_time_values} default in \code{epix_slide}, you will have to
+determine whether \code{compactify=TRUE} will produce the desired results. If
+compactification here is removing a large proportion of the rows, this may
+indicate a potential for space, time, or bandwidth savings upstream the
+data pipeline, e.g., by avoiding fetching, storing, or processing these
+rows of \code{x}.}
 
 \item{\code{clobberable_versions_start}}{Optional; as in \code{\link{as_epi_archive}}}
 
@@ -295,7 +297,6 @@ details.
   ref_time_values,
   time_step,
   new_col_name = "slide_value",
-  groups = NULL,
   as_list_col = FALSE,
   names_sep = "_",
   all_rows = FALSE

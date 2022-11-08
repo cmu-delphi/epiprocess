@@ -17,9 +17,15 @@ test_that("Errors are thrown due to bad as_of inputs",{
   expect_error(ea$as_of(c(as.Date("2020-01-01"), as.Date("2020-01-02"))))
 })
 
-test_that("Warning against max_version being same as edf's max version",{
-  expect_warning(ea$as_of(max_version = max(ea$DT$version)))
-  expect_warning(ea$as_of(max_version = min(ea$DT$version)),NA)
+test_that("Warning against max_version being clobberable",{
+  # none by default
+  expect_warning(regex = NA, ea$as_of(max_version = max(ea$DT$version)))
+  expect_warning(regex = NA, ea$as_of(max_version = min(ea$DT$version)))
+  # but with `clobberable_versions_start` non-`NA`, yes
+  ea_with_clobberable = ea$clone()
+  ea_with_clobberable$clobberable_versions_start = max(ea_with_clobberable$DT$version)
+  expect_warning(ea_with_clobberable$as_of(max_version = max(ea$DT$version)))
+  expect_warning(regex = NA, ea_with_clobberable$as_of(max_version = min(ea$DT$version)))
 })
 
 test_that("as_of properly grabs the data and doesn't mutate key",{

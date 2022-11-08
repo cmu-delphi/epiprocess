@@ -573,10 +573,13 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   were to hold forecasts, then we would expect data for `time_value`s after
 #'   January 8, and the sliding window would extend as far after each
 #'   `ref_time_value` as needed to include all such `time_value`s.)
-#' @param ref_time_values Time values for sliding computations, meaning, each
-#'   element of this vector serves as the reference time point for one sliding
-#'   window. If missing, then this will be set to all unique time values in the
-#'   underlying data table, by default.
+#' @param ref_time_values Reference time values / versions for sliding
+#'   computations; each element of this vector serves both as the anchor point
+#'   for the `time_value` window for the computation and the `max_version`
+#'   `as_of` which we fetch data in this window. If missing, then this will set
+#'   to a regularly-spaced sequence of values set to cover the range of
+#'   `version`s in the `DT` plus the `versions_end`; the spacing of values will
+#'   be guessed (using the GCD of the skips between values).
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
 #'   `time_value` column. This function must take a positive integer and return
@@ -633,6 +636,9 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   `time_value`, and all `other_keys` present in the version data with
 #'   `time_value` matching one of the `ref_time_values`, this can have unexpected
 #'   behaviors due reporting latency or reporting dropping in and out.
+#'   6. The `ref_time_values` default for `epix_slide` is based on making an
+#'   evenly-spaced sequence out of the `version`s in the `DT` plus the
+#'   `versions_end`, rather than the `time_value`s.
 #' Apart from this, the interfaces between `epix_slide()` and `epi_slide()` are
 #' the same.
 #'
