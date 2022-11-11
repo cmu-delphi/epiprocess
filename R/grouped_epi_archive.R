@@ -81,7 +81,7 @@ grouped_epi_archive =
                 epiprocess__DT_names = names(ungrouped$DT))
         }
         if ("version" %in% vars) {
-          Abort("`version` has a special interpretation and cannot be used as a grouping variable")
+          Abort("`version` has a special interpretation and cannot be used by itself as a grouping variable")
         }
         if (!rlang::is_bool(drop)) {
           Abort("`drop` must be a Boolean",
