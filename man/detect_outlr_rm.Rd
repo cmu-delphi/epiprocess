@@ -22,7 +22,11 @@ detect_outlr_rm(
 
 \item{y}{Signal values.}
 
-\item{n}{Number of time steps to use in the rolling window. Default is 21.}
+\item{n}{Number of time steps to use in the rolling window. Default is 21.
+This value is centrally aligned. When \code{n} is an odd number, the rolling
+window extends from \code{(n-1)/2} time steps before each design point to \code{(n-1)/2}
+time steps after. When \code{n} is even, then the rolling range extends from
+\code{n/2-1} time steps before to \code{n/2} time steps after.}
 
 \item{log_transform}{Should a log transform be applied before running outlier
 detection? Default is \code{FALSE}. If \code{TRUE}, and zeros are present, then the

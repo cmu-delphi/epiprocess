@@ -128,6 +128,10 @@ detect_outlr = function(x = seq_along(y), y,
 #'   `y`).
 #' @param y Signal values.
 #' @param n Number of time steps to use in the rolling window. Default is 21.
+#'   This value is centrally aligned. When `n` is an odd number, the rolling
+#'   window extends from `(n-1)/2` time steps before each design point to `(n-1)/2`
+#'   time steps after. When `n` is even, then the rolling range extends from
+#'   `n/2-1` time steps before to `n/2` time steps after.
 #' @param log_transform Should a log transform be applied before running outlier
 #'   detection? Default is `FALSE`. If `TRUE`, and zeros are present, then the
 #'   log transform will be padded by 1.
@@ -179,7 +183,7 @@ detect_outlr_rm = function(x = seq_along(y), y, n = 21,
 
   # Calculate lower and upper thresholds and replacement value
   z = z %>%
-    epi_slide(fitted = median(y), n = n, align = "center") %>%
+    epi_slide(fitted = median(y), before = floor((n-1)/2), after = ceiling((n-1)/2)) %>%
     dplyr::mutate(resid = y - fitted) %>%
     roll_iqr(n = n,
              detection_multiplier = detection_multiplier,
@@ -332,7 +336,7 @@ roll_iqr = function(z, n, detection_multiplier, min_radius,
   if (typeof(z$y) == "integer") as_type = as.integer
   else as_type = as.numeric
 
-  epi_slide(z, roll_iqr = stats::IQR(resid), n = n, align = "center") %>%
+  epi_slide(z, roll_iqr = stats::IQR(resid), before = floor((n-1)/2), after = ceiling((n-1)/2)) %>%
     dplyr::mutate(
       lower = pmax(min_lower,
                    fitted - pmax(min_radius, detection_multiplier * roll_iqr)),
