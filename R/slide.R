@@ -161,8 +161,10 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     ref_time_values = unique(x$time_value)
   }
   
-  # Some of the checks below are possible to fail on the above default; just go
-  # ahead and do the full validation & pre-processing even on the default:
+  # Some of these `ref_time_values` checks and processing steps also apply to
+  # the `ref_time_values` default; for simplicity, just apply all the steps
+  # regardless of whether we are working with a default or user-provided
+  # `ref_time_values`:
   if (length(ref_time_values) == 0L) {
     Abort("`ref_time_values` must have at least one element.")
   } else if (any(is.na(ref_time_values))) {

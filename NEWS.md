@@ -19,10 +19,8 @@ development versions. A ".9999" suffix indicates a development version.
   key columns, instead considering all data to be in one big group.
   * To obtain the old behavior, precede each `epix_slide` call lacking a
     `group_by` argument with an appropriate `group_by` call.
-* `epix_slide` now keeps any grouping of `x` in its results, matching
-  `epi_slide`.
-  * To obtain the old behavior, `dplyr::ungroup` the `epix_slide` result
-    immediately.
+* `epi_slide` and `epix_slide` now keep any grouping of `x` in their results.
+  * To obtain the old behavior, `dplyr::ungroup` the slide results immediately.
 * `epix_slide` now guesses `ref_time_values` to be a regularly spaced sequence
   covering all the `DT$version` values and `version_end`, rather than the
   distinct `DT$time_value`s. To obtain the old behavior, pass in
