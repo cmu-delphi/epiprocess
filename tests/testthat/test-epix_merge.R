@@ -58,7 +58,7 @@ test_that("epix_merge merges and carries forward updates properly", {
   )
   # We rely on testthat edition 3 expect_identical using waldo, not identical. See
   # test-epix_fill_through_version.R comments for details.
-  local_edition(3)
+  testthat::local_edition(3)
   expect_identical(xy, xy_expected)
 })
 

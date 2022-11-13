@@ -376,10 +376,21 @@ epix_merge = function(x, y,
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation.
-#' @param n Number of time steps to use in the running window. For example, if
-#'   `n = 7`, and one time step is one day, then to produce a value on January 7
-#'   we apply the given function or formula to data in between January 1 and
-#'   7.
+#' @param before How far `before` each `ref_time_value` should the sliding
+#'   window extend? If provided, should be a single, non-NA,
+#'   [integer-compatible][vctrs::vec_cast] number of time steps. This window
+#'   endpoint is inclusive. For example, if `before = 7`, and one time step is
+#'   one day, then to produce a value for a `ref_time_value` of January 8, we
+#'   apply the given function or formula to data (for each group present) with
+#'   `time_value`s from January 1 onward, as they were reported on January 8.
+#'   For typical disease surveillance sources, this will not include any data
+#'   with a `time_value` of January 8, and, depending on the amount of reporting
+#'   latency, may not include January 7 or even earlier `time_value`s. (If
+#'   instead the archive were to hold nowcasts instead of regular surveillance
+#'   data, then we would indeed expect data for `time_value` January 8. If it
+#'   were to hold forecasts, then we would expect data for `time_value`s after
+#'   January 8, and the sliding window would extend as far after each
+#'   `ref_time_value` as needed to include all such `time_value`s.)
 #' @param group_by The variable(s) to group by before slide computation. If
 #'   missing, then the keys in the underlying data table, excluding `time_value`
 #'   and `version`, will be used for grouping. To omit a grouping entirely, use
@@ -414,10 +425,14 @@ epix_merge = function(x, y,
 #'   values.
 #'
 #' @details Two key distinctions between inputs to the current function and
-#'   `epi_slide()`:
-#'   1. `epix_slide()` uses windows that are **always right-aligned** (in
-#'   `epi_slide()`, custom alignments could be specified using the `align` or
-#'   `before` arguments).
+#'   [`epi_slide()`]:
+#'   1. `epix_slide()` doesn't accept an `after` argument; its windows extend
+#'   from `before` time steps before a given `ref_time_value` through the last
+#'   `time_value` available as of version `ref_time_value` (typically, this
+#'   won't include `ref_time_value` itself, as observations about a particular
+#'   time interval (e.g., day) are only published after that time interval ends);
+#'   `epi_slide` windows extend from `before` time steps before a
+#'   `ref_time_value` through `after` time steps after `ref_time_value`.
 #'   2. `epix_slide()` uses a `group_by` to specify the grouping upfront (in
 #'   `epi_slide()`, this would be accomplished by a preceding function call to
 #'   `dplyr::group_by()`).
@@ -440,11 +455,11 @@ epix_merge = function(x, y,
 #' Finally, this is simply a wrapper around the `slide()` method of the
 #'   `epi_archive` class, so if `x` is an `epi_archive` object, then:
 #'   ```
-#'   epix_slide(x, new_var = comp(old_var), n = 120)
+#'   epix_slide(x, new_var = comp(old_var), before = 119)
 #'   ```
 #'   is equivalent to:
 #'   ```
-#'   x$slide(x, new_var = comp(old_var), n = 120)
+#'   x$slide(new_var = comp(old_var), before = 119)
 #'   ```
 #'
 #' @importFrom rlang enquo
@@ -462,15 +477,15 @@ epix_merge = function(x, y,
 #'                       by = "1 day")
 #' epix_slide(x = archive_cases_dv_subset,
 #'            f = ~ mean(.x$case_rate_7d_av),
-#'            n = 3,
+#'            before = 2,
 #'            group_by = geo_value,
 #'            ref_time_values = time_values,
 #'            new_col_name = 'case_rate_3d_av')
-epix_slide = function(x, f, ..., n, group_by, ref_time_values,
+epix_slide = function(x, f, ..., before, group_by, ref_time_values,
                       time_step, new_col_name = "slide_value",
                       as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
-  return(x$slide(f, ..., n = n,
+  return(x$slide(f, ..., before = before,
                  group_by = {{group_by}},
                  ref_time_values = ref_time_values,
                  time_step = time_step,
