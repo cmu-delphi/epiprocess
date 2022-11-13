@@ -8,10 +8,9 @@ epi_slide(
   x,
   f,
   ...,
-  n,
-  ref_time_values,
-  align = c("right", "center", "left"),
   before,
+  after,
+  ref_time_values,
   time_step,
   new_col_name = "slide_value",
   as_list_col = FALSE,
@@ -23,46 +22,48 @@ epi_slide(
 \item{x}{The \code{epi_df} object under consideration.}
 
 \item{f}{Function or formula to slide over variables in \code{x}. To "slide" means
-to apply a function or formula over a running window of \code{n} time steps
-(where one time step is typically one day or one week; see details for more
-explanation). If a function, \code{f} should take \code{x}, an \code{epi_df} with the same
+to apply a function or formula over a rolling window of time steps.
+The window is determined by the \code{before} and \code{after} parameters described
+below. One time step is typically one day or one week; see details for more
+explanation. If a function, \code{f} should take \code{x}, an \code{epi_df} with the same
 names as the non-grouping columns, followed by \code{g} to refer to the one row
 tibble with one column per grouping variable that identifies the group,
 and any number of named arguments (which will be taken from \code{...}). If a
 formula, \code{f} can operate directly on columns accessed via \code{.x$var}, as
 in \code{~ mean(.x$var)} to compute a mean of a column var over a sliding
-window of n time steps. As well, \code{.y} may be used in the formula to refer
+window. As well, \code{.y} may be used in the formula to refer
 to the groupings that would be described by \code{g} if \code{f} was a function.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
 interpreted as an expression for tidy evaluation. See details.}
 
-\item{n}{Number of time steps to use in the running window. For example, if
-\code{n = 7}, one time step is one day, and the alignment is "right", then to
-produce a value on January 7 we apply the given function or formula to data
-in between January 1 and 7.}
+\item{before, after}{How far \code{before} and \code{after} each \code{ref_time_value} should
+the sliding window extend? At least one of these two arguments must be
+provided; the other's default will be 0. Any value provided for either
+argument must be a single, non-\code{NA}, non-negative,
+\link[vctrs:vec_cast]{integer-compatible} number of time steps. Endpoints of the
+window are inclusive. Common settings:
+\itemize{
+\item For trailing/right-aligned windows from \code{ref_time_value - time_step(k)}
+to \code{ref_time_value}: either pass \code{before=k} by itself, or pass \verb{before=k, after=0}.
+\item For center-aligned windows from \code{ref_time_value - time_step(k)} to
+\code{ref_time_value + time_step(k)}: pass \verb{before=k, after=k}.
+\item For leading/left-aligned windows from \code{ref_time_value} to `ref_time_value
+\itemize{
+\item time_step(k)\verb{: either pass pass }after=k\verb{by itself, or pass}before=0,
+after=k\verb{.   See "Details:" about the definition of a time step, (non)treatment of   missing rows within the window, and avoiding warnings about   }before\code{&}after` settings for a certain uncommon use case.
+}
+}}
 
 \item{ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
 window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.}
 
-\item{align}{One of "right", "center", or "left", indicating the alignment of
-the sliding window relative to the reference time point. If the alignment
-is "center" and \code{n} is even, then one more time point will be used after
-the reference time point than before. Default is "right".}
-
-\item{before}{Positive integer less than \code{n}, specifying the number of time
-points to use in the sliding window strictly before the reference time
-point. For example, setting \code{before = n-1} would be the same as setting
-\code{align = "right"}. The \code{before} argument allows for more flexible
-specification of alignment than the \code{align} parameter, and if specified,
-overrides \code{align}.}
-
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
-\code{time_value} column. This function must take a positive integer and return
+\code{time_value} column. This function must take a non-negative integer and return
 an object of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this
 would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
@@ -92,29 +93,45 @@ Slides a given function over variables in an \code{epi_df} object. See the \href
 examples.
 }
 \details{
-To "slide" means to apply a function or formula over a running
-window of \code{n} time steps, where the unit (the meaning of one time step) is
+To "slide" means to apply a function or formula over a rolling
+window of time steps where the window is entered at a reference time and
+left and right endpoints are given by the \code{before} and \code{after} arguments.
+The unit (the meaning of one time step) is
 implicitly defined by the way the \code{time_value} column treats addition and
 subtraction; for example, if the time values are coded as \code{Date} objects,
 then one time step is one day, since \code{as.Date("2022-01-01") + 1} equals
 \code{as.Date("2022-01-02")}. Alternatively, the time step can be set explicitly
 using the \code{time_step} argument (which if specified would override the
-default choice based on \code{time_value} column). If less than \code{n} time steps
-are available at any given reference time value, then \code{epi_slide()} still
+default choice based on \code{time_value} column). If there are not enough time
+steps available to complete the window at any given reference time, then
+\code{epi_slide()} still
 attempts to perform the computation anyway (it does not require a complete
 window). The issue of what to do with partial computations (those run on
 incomplete windows) is therefore left up to the user, either through the
-specified function or formula \code{f}, or through post-processing.
+specified function or formula \code{f}, or through post-processing. For a
+centrally-aligned slide of \code{n} \code{time_value}s in a sliding window, set
+\code{before = (n-1)/2} and \code{after = (n-1)/2} when the number of \code{time_value}s
+in a sliding window is odd and  \code{before = n/2-1} and \code{after = n/2} when
+\code{n} is even.
+
+Sometimes, we want to experiment with various trailing or leading window
+widths and compare the slide outputs. In the (uncommon) case where
+zero-width windows are considered, manually pass both the \code{before} and
+\code{after} arguments in order to prevent potential warnings. (E.g., \code{before=k}
+with \code{k=0} and \code{after} missing may produce a warning. To avoid warnings,
+use \verb{before=k, after=0} instead; otherwise, it looks too much like a
+leading window was intended, but the \code{after} argument was forgotten or
+misspelled.)
 
 If \code{f} is missing, then an expression for tidy evaluation can be specified,
 for example, as in:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, cases_7dav = mean(cases), n = 7)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, cases_7dav = mean(cases), before = 6)
 }\if{html}{\out{</div>}}
 
 which would be equivalent to:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, ...) mean(x$cases), n = 7,
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, ...) mean(x$cases), before = 6,
           new_col_name = "cases_7dav")
 }\if{html}{\out{</div>}}
 
@@ -124,26 +141,38 @@ inferred from the given expression and overrides any name passed explicitly
 through the \code{new_col_name} argument.
 }
 \examples{
- # slide a 7-day trailing average formula on cases
-  jhu_csse_daily_subset \%>\%
+# slide a 7-day trailing average formula on cases
+jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide(cases_7dav = mean(cases), n = 7, 
-            align = "right") \%>\% 
+  epi_slide(cases_7dav = mean(cases), before = 6) \%>\% 
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av) 
- 
- # slide a left-aligned 7-day average
-  jhu_csse_daily_subset \%>\%
+
+# slide a 7-day leading average
+jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide(cases_7dav = mean(cases), n = 7, 
-            align = "left") \%>\% 
+  epi_slide(cases_7dav = mean(cases), after = 6) \%>\%
+  # rmv a nonessential var. to ensure new col is printed
+  dplyr::select(-death_rate_7d_av)
+
+# slide a 7-day centre-aligned average
+jhu_csse_daily_subset \%>\%
+  group_by(geo_value) \%>\%
+  epi_slide(cases_7dav = mean(cases), before = 3, after = 3) \%>\% 
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av) 
- 
- # nested new columns
- jhu_csse_daily_subset \%>\% 
- group_by(geo_value) \%>\%
- epi_slide(a = data.frame(cases_2dav = mean(cases), 
-                          cases_2dma = mad(cases)),
-           n = 2, as_list_col = TRUE)
+
+# slide a 14-day centre-aligned average
+jhu_csse_daily_subset \%>\%
+  group_by(geo_value) \%>\%
+  epi_slide(cases_7dav = mean(cases), before = 6, after = 7) \%>\% 
+  # rmv a nonessential var. to ensure new col is printed
+  dplyr::select(-death_rate_7d_av) 
+
+# nested new columns
+jhu_csse_daily_subset \%>\%
+  group_by(geo_value) \%>\%
+  epi_slide(a = data.frame(cases_2dav = mean(cases),
+                           cases_2dma = mad(cases)),
+            before = 1, as_list_col = TRUE)
 }

@@ -177,7 +177,7 @@ Explicit imputation for missingness (zero-filling in our case) can be important
 for protecting against bugs in all sorts of downstream tasks. For example, even
 something as simple as a 7-day trailing average is complicated by missingness.
 The function `epi_slide()` looks for all rows within a window of 7 days anchored
-on the right at the reference time point (when `n = 7` and `align = "right"`).
+on the right at the reference time point (when `before = 6`).
 But when some days in a given week are missing because they were censored
 because they had small case counts, taking an average of the observed case
 counts can be misleading and is unintentionally biased upwards. Meanwhile,
@@ -189,7 +189,7 @@ running `epi_slide()` on the zero-filled data brings these trailing averages
 xt %>% 
   as_epi_df() %>%
   group_by(geo_value) %>%
-  epi_slide(cases_7dav = mean(cases), n = 7) %>%
+  epi_slide(cases_7dav = mean(cases), before = 6) %>%
   filter(geo_value == "Plymouth, MA",
          abs(time_value - as.Date("2021-07-01")) <= 3) %>%
   print(n = 7)
@@ -197,7 +197,7 @@ xt %>%
 xt_filled %>% 
   as_epi_df() %>%
   group_by(geo_value) %>%
-  epi_slide(cases_7dav = mean(cases), n = 7) %>%
+  epi_slide(cases_7dav = mean(cases), before = 6) %>%
   filter(geo_value == "Plymouth, MA",
          abs(time_value - as.Date("2021-07-01")) <= 3) %>%
   print(n = 7)
