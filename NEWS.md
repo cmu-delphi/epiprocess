@@ -6,25 +6,38 @@ development versions. A ".9999" suffix indicates a development version.
 
 ## Breaking changes:
 
-* `epix_slide`'s `group_by` argument has been replaced by `dplyr::group_by` and
-  `dplyr::ungroup` S3 methods. The `group_by` method uses "data masking" (also
-  referred to as "tidy evaluation") rather than "tidy selection".
-  * Old syntax:
-    * `x %>% epix_slide(<other args>, group_by=c(col1, col2))`
-    * `x %>% epix_slide(<other args>, group_by=all_of(colname_vector))`
-  * New syntax:
-    * `x %>% group_by(col1, col2) %>% epix_slide(<other args>)`
-    * `x %>% group_by(across(all_of(colname_vector))) %>% epix_slide(<other args>)`
-* `epix_slide` no longer defaults to grouping by non-`time_value`, non-`version`
-  key columns, instead considering all data to be in one big group.
-  * To obtain the old behavior, precede each `epix_slide` call lacking a
-    `group_by` argument with an appropriate `group_by` call.
-* `epi_slide` and `epix_slide` now keep any grouping of `x` in their results.
-  * To obtain the old behavior, `dplyr::ungroup` the slide results immediately.
-* `epix_slide` now guesses `ref_time_values` to be a regularly spaced sequence
-  covering all the `DT$version` values and `version_end`, rather than the
-  distinct `DT$time_value`s. To obtain the old behavior, pass in
-  `ref_time_values = unique(<ungrouped archive>$DT$time_value)`.
+* Changes to both `epi_slide` and `epix_slide`:
+  * The `n`, `align`, and `before` arguments have been replaced by new `before`
+    and `after` arguments. To migrate to the new version, replace these
+    arguments in every `epi_slide` and `epix_slide` call. If you were only using
+    the `n` argument, then this means replacing `n = <n value>` with `before =
+    <n value> - 1`.
+    * `epi_slide`'s time windows now extend `before` time steps before and
+      `after` time steps after the corresponding `ref_time_values`. See
+      `?epi_slide` for details on matching old alignments.
+    * `epix_slide`'s time windows now extend `before` time steps before the
+      corresponding `ref_time_values` all the way through the latest data
+      available at the corresponding `ref_time_values`.
+  * Slide functions now keep any grouping of `x` in their results.
+    * To obtain the old behavior, `dplyr::ungroup` the slide results immediately.
+* Additional`epix_slide` changes:
+  * `epix_slide`'s `group_by` argument has been replaced by `dplyr::group_by` and
+    `dplyr::ungroup` S3 methods. The `group_by` method uses "data masking" (also
+    referred to as "tidy evaluation") rather than "tidy selection".
+    * Old syntax:
+      * `x %>% epix_slide(<other args>, group_by=c(col1, col2))`
+      * `x %>% epix_slide(<other args>, group_by=all_of(colname_vector))`
+    * New syntax:
+      * `x %>% group_by(col1, col2) %>% epix_slide(<other args>)`
+      * `x %>% group_by(across(all_of(colname_vector))) %>% epix_slide(<other args>)`
+  * `epix_slide` no longer defaults to grouping by non-`time_value`, non-`version`
+    key columns, instead considering all data to be in one big group.
+    * To obtain the old behavior, precede each `epix_slide` call lacking a
+      `group_by` argument with an appropriate `group_by` call.
+  * `epix_slide` now guesses `ref_time_values` to be a regularly spaced sequence
+    covering all the `DT$version` values and the `version_end`, rather than the
+    distinct `DT$time_value`s. To obtain the old behavior, pass in
+    `ref_time_values = unique(<ungrouped archive>$DT$time_value)`.
 * `epi_archive`'s `clobberable_versions_start`'s default is now `NA`, so there
   will be no warnings by default about potential nonreproducibility. To obtain
   the old behavior, pass in `clobberable_versions_start =
