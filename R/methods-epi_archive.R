@@ -547,14 +547,17 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #' examples.
 #'
 #' @param x An `epi_archive` or `grouped_epi_archive` object.
-#' @param f Function or formula to slide over variables in `x`. To "slide" means
-#'   to apply a function or formula over a running window of `n` time steps
-#'   (where one time step is typically one day or one week). If a function, `f`
-#'   must take `x`, a data frame with the same column names as the original
-#'   object; followed by any number of named arguments; and ending with
-#'   `...`. If a formula, `f` can operate directly on columns accessed via
-#'   `.x$var`, as in `~ mean(.x$var)` to compute a mean of a column `var` over a
-#'   sliding window of `n` time steps.
+#' @param f Function, formula, or missing; together with `...` specifies the
+#'   computation to slide. To "slide" means to apply a computation over a
+#'   sliding (a.k.a. "rolling") time window. The window is determined by the
+#'   `before` parameter described below. One time step is typically one day or
+#'   one week; see [`epi_slide`] details for more explanation. If a function,
+#'   `f` must take `x`, an `epi_df` with the same column names as the archive,
+#'   minus the `version` column; followed by any number of named arguments; and
+#'   ending with `...`. If a formula, `f` can operate directly on columns
+#'   accessed via `.x$var`, as in `~ mean(.x$var)` to compute a mean of a column
+#'   `var` over a sliding window of `n` time steps. If `f` is missing, then
+#'   `...` will specify the computation.
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation.
@@ -619,24 +622,29 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   time interval (e.g., day) are only published after that time interval
 #'   ends); `epi_slide` windows extend from `before` time steps before a
 #'   `ref_time_value` through `after` time steps after `ref_time_value`.
-#'   3. The output class and columns are similar but different: `epix_slide()`
+#'   3. The input class and columns are similar but different: `epix_slide`
+#'   keeps all columns and the `epi_df`-ness of the first input to the
+#'   computation; `epi_slide` only provides the grouping variables in the second
+#'   input, and will convert the first input into a regular tibble if the
+#'   grouping variables include the essential `geo_value` column.
+#'   4. The output class and columns are similar but different: `epix_slide()`
 #'   returns a tibble containing only the grouping variables, `time_value`, and
 #'   the new column(s) from the slide computation `f`, whereas `epi_slide()`
 #'   returns an `epi_df` with all original variables plus the new columns from
 #'   the slide computation.
-#'   4. Unless grouping by `geo_value` and all `other_keys`, there will be
+#'   5. Unless grouping by `geo_value` and all `other_keys`, there will be
 #'   row-recyling behavior meant to resemble `epi_slide`'s results, based on the
 #'   distinct combinations of `geo_value`, `time_value`, and all `other_keys`
 #'   present in the version data with `time_value` matching one of the
 #'   `ref_time_values`. However, due to reporting latency or reporting dropping
 #'   in and out, this may not exactly match the behavior of "corresponding"
 #'   `epi_df`s.
-#'   5. Similar to the row recyling, while `all_rows=TRUE` is designed to mimic
+#'   6. Similar to the row recyling, while `all_rows=TRUE` is designed to mimic
 #'   `epi_slide` by completing based on distinct combinations of `geo_value`,
 #'   `time_value`, and all `other_keys` present in the version data with
 #'   `time_value` matching one of the `ref_time_values`, this can have unexpected
 #'   behaviors due reporting latency or reporting dropping in and out.
-#'   6. The `ref_time_values` default for `epix_slide` is based on making an
+#'   7. The `ref_time_values` default for `epix_slide` is based on making an
 #'   evenly-spaced sequence out of the `version`s in the `DT` plus the
 #'   `versions_end`, rather than the `time_value`s.
 #' Apart from this, the interfaces between `epix_slide()` and `epi_slide()` are

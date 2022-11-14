@@ -21,18 +21,17 @@ epi_slide(
 \arguments{
 \item{x}{The \code{epi_df} object under consideration.}
 
-\item{f}{Function or formula to slide over variables in \code{x}. To "slide" means
-to apply a function or formula over a rolling window of time steps.
-The window is determined by the \code{before} and \code{after} parameters described
-below. One time step is typically one day or one week; see details for more
-explanation. If a function, \code{f} should take \code{x}, an \code{epi_df} with the same
-names as the non-grouping columns, followed by \code{g} to refer to the one row
-tibble with one column per grouping variable that identifies the group,
-and any number of named arguments (which will be taken from \code{...}). If a
-formula, \code{f} can operate directly on columns accessed via \code{.x$var}, as
-in \code{~ mean(.x$var)} to compute a mean of a column var over a sliding
-window. As well, \code{.y} may be used in the formula to refer
-to the groupings that would be described by \code{g} if \code{f} was a function.}
+\item{f}{Function, formula, or missing; together with \code{...} specifies the
+computation to slide. To "slide" means to apply a computation over a
+sliding (a.k.a. "rolling") time window. The window is determined by the
+\code{before} and \code{after} parameters described below. One time step is typically
+one day or one week; see details for more explanation. If a function, \code{f}
+must take \code{x}, a data frame with the same column names as the original
+object, minus any \link[dplyr:group_by]{grouping variables}; followed by any
+number of named arguments; and ending with \code{...}. If a formula, \code{f} can
+operate directly on columns accessed via \code{.x$var}, as in \code{~ mean(.x$var)}
+to compute a mean of a column \code{var} over a sliding window of \code{n} time
+steps. If \code{f} is missing, then \code{...} will specify the computation.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{f}. Alternatively, if \code{f} is missing, then the current argument is

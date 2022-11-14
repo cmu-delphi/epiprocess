@@ -5,18 +5,17 @@
 #' examples.
 #'
 #' @param x The `epi_df` object under consideration.
-#' @param f Function or formula to slide over variables in `x`. To "slide" means
-#'   to apply a function or formula over a rolling window of time steps.
-#'   The window is determined by the `before` and `after` parameters described 
-#'   below. One time step is typically one day or one week; see details for more
-#'   explanation. If a function, `f` should take `x`, an `epi_df` with the same 
-#'   names as the non-grouping columns, followed by `g` to refer to the one row 
-#'   tibble with one column per grouping variable that identifies the group, 
-#'   and any number of named arguments (which will be taken from `...`). If a 
-#'   formula, `f` can operate directly on columns accessed via `.x$var`, as 
-#'   in `~ mean(.x$var)` to compute a mean of a column var over a sliding 
-#'   window. As well, `.y` may be used in the formula to refer 
-#'   to the groupings that would be described by `g` if `f` was a function.
+#' @param f Function, formula, or missing; together with `...` specifies the
+#'   computation to slide. To "slide" means to apply a computation over a
+#'   sliding (a.k.a. "rolling") time window. The window is determined by the
+#'   `before` and `after` parameters described below. One time step is typically
+#'   one day or one week; see details for more explanation. If a function, `f`
+#'   must take `x`, a data frame with the same column names as the original
+#'   object, minus any [grouping variables][dplyr::group_by]; followed by any
+#'   number of named arguments; and ending with `...`. If a formula, `f` can
+#'   operate directly on columns accessed via `.x$var`, as in `~ mean(.x$var)`
+#'   to compute a mean of a column `var` over a sliding window of `n` time
+#'   steps. If `f` is missing, then `...` will specify the computation.
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the current argument is
 #'   interpreted as an expression for tidy evaluation. See details.  

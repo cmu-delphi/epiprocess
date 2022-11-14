@@ -20,14 +20,17 @@ epix_slide(
 \arguments{
 \item{x}{An \code{epi_archive} or \code{grouped_epi_archive} object.}
 
-\item{f}{Function or formula to slide over variables in \code{x}. To "slide" means
-to apply a function or formula over a running window of \code{n} time steps
-(where one time step is typically one day or one week). If a function, \code{f}
-must take \code{x}, a data frame with the same column names as the original
-object; followed by any number of named arguments; and ending with
-\code{...}. If a formula, \code{f} can operate directly on columns accessed via
-\code{.x$var}, as in \code{~ mean(.x$var)} to compute a mean of a column \code{var} over a
-sliding window of \code{n} time steps.}
+\item{f}{Function, formula, or missing; together with \code{...} specifies the
+computation to slide. To "slide" means to apply a computation over a
+sliding (a.k.a. "rolling") time window. The window is determined by the
+\code{before} parameter described below. One time step is typically one day or
+one week; see \code{\link{epi_slide}} details for more explanation. If a function,
+\code{f} must take \code{x}, an \code{epi_df} with the same column names as the archive,
+minus the \code{version} column; followed by any number of named arguments; and
+ending with \code{...}. If a formula, \code{f} can operate directly on columns
+accessed via \code{.x$var}, as in \code{~ mean(.x$var)} to compute a mean of a column
+\code{var} over a sliding window of \code{n} time steps. If \code{f} is missing, then
+\code{...} will specify the computation.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
@@ -111,6 +114,11 @@ won't include \code{ref_time_value} itself, as observations about a particular
 time interval (e.g., day) are only published after that time interval
 ends); \code{epi_slide} windows extend from \code{before} time steps before a
 \code{ref_time_value} through \code{after} time steps after \code{ref_time_value}.
+\item The input class and columns are similar but different: \code{epix_slide}
+keeps all columns and the \code{epi_df}-ness of the first input to the
+computation; \code{epi_slide} only provides the grouping variables in the second
+input, and will convert the first input into a regular tibble if the
+grouping variables include the essential \code{geo_value} column.
 \item The output class and columns are similar but different: \code{epix_slide()}
 returns a tibble containing only the grouping variables, \code{time_value}, and
 the new column(s) from the slide computation \code{f}, whereas \code{epi_slide()}
