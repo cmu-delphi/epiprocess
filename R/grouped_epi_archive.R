@@ -17,6 +17,9 @@ eval_pure_select_names_from_dots = function(..., .data) {
   # the environment for the dots, but it looks like `eval_select` will assume
   # the caller env (our `environment()`) when given an expr, and thus have
   # access to the dots.
+  #
+  # If we were allowing renaming, we'd need to be careful about which names (new
+  # vs. old vs. both) to return here.
   names(tidyselect::eval_select(rlang::expr(c(...)), .data, allow_rename=FALSE))
 }
 
@@ -159,13 +162,16 @@ grouped_epi_archive =
           # an ungrouped class, as with `grouped_df`s.
           private$ungrouped
         } else {
-          exclude_vars = eval_select_names_from_dots(..., .data=private$ungrouped$DT)
-          vars = setdiff(private$vars, exclude_vars)
+          exclude_vars = eval_pure_select_names_from_dots(..., .data=private$ungrouped$DT)
+          # (requiring a pure selection here is a little stricter than dplyr
+          # implementations, but passing a renaming selection into `ungroup`
+          # seems pretty weird.)
+          result_vars = private$vars[! private$vars %in% exclude_vars]
           # `vars` might be length 0 if the user's tidyselection removed all
           # grouping vars. Unlike with tibble, opt here to keep the result as a
           # grouped_epi_archive, for output class consistency when `...` is
           # provided.
-          grouped_epi_archive$new(private$ungrouped, vars, private$drop)
+          grouped_epi_archive$new(private$ungrouped, result_vars, private$drop)
         }
       },
 #' @description Slides a given function over variables in a `grouped_epi_archive`
