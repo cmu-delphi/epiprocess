@@ -62,6 +62,8 @@ development versions. A ".9999" suffix indicates a development version.
   objects, plus corresponding `$group_by` and `$ungroup` R6 methods. The
   `group_by` implementation supports the `.add` and `.drop` arguments, and
   `ungroup` supports partial ungrouping with `...`.
+* `as_epi_archive`, `epi_archive$new` now perform checks for the key uniqueness
+  requirement.
 
 ## Cleanup:
 

@@ -338,6 +338,12 @@ epi_archive =
             key_vars = c("geo_value", "time_value", other_keys, "version")
             DT = as.data.table(x, key = key_vars)
             if (!identical(key_vars, key(DT))) setkeyv(DT, cols = key_vars)
+
+            maybe_first_duplicate_key_row_index = anyDuplicated(DT, by=key(DT))
+            if (maybe_first_duplicate_key_row_index != 0L) {
+              Abort("`x` must have one row per unique combination of the key variables.  If you have additional key variables other than `geo_value`, `time_value`, and `version`, such as an age group column, please specify them in `other_keys`.  Otherwise, check for duplicate rows and/or conflicting values for the same measurement.",
+                    class = "epiprocess__epi_archive_requires_unique_key")
+            }
             
             # Checks to see if a value in a vector is LOCF
             is_locf <- function(vec) {
