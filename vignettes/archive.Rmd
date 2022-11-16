@@ -263,7 +263,7 @@ y <- covidcast(
   select(geo_value, time_value, version = issue, case_rate_7d_av = value) %>%
   as_epi_archive(compactify=TRUE)
 
-x$merge(y)
+x$merge(y, sync="locf", compactify=FALSE)
 print(x)
 head(x$DT)
 ```
@@ -354,7 +354,7 @@ forecast COVID-19 case rates 7 days into the future.
 
 ```{r}
 fc_time_values <- seq(as.Date("2020-08-01"), 
-                      as.Date("2021-12-01"), 
+                      as.Date("2021-11-30"), 
                       by = "1 month")
 
 z <- x %>%

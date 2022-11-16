@@ -222,7 +222,7 @@ x <- y1 %>%
     version = issue,
     percent_cli = value
   ) %>%
-  as_epi_archive(compactify=TRUE)
+  as_epi_archive(compactify=FALSE)
 
 # mutating merge operation:
 x$merge(y2 %>%
@@ -230,18 +230,20 @@ x$merge(y2 %>%
     version = issue,
     case_rate_7d_av = value
   ) %>%
-  as_epi_archive(compactify=TRUE)
+    as_epi_archive(compactify=FALSE),
+  sync = "locf",
+  compactify=FALSE
 )
 ```
 
-```{r, message = FALSE, warning = FALSE, echo =FALSE}
+```{r, message = FALSE, echo =FALSE}
 library(data.table)
 library(ggplot2)
 theme_set(theme_bw())
 
 x <- archive_cases_dv_subset$DT %>%
   filter(geo_value %in% c("ca","fl")) %>%
-  as_epi_archive()
+  as_epi_archive(compactify = FALSE)
 
 ```
 
@@ -345,7 +347,7 @@ data.
 # Latest snapshot of data, and forecast dates
 x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 fc_time_values <- seq(as.Date("2020-08-01"), 
-                      as.Date("2021-12-01"), 
+                      as.Date("2021-11-30"), 
                       by = "1 month")
 
 # Simple function to produce forecasts k weeks ahead

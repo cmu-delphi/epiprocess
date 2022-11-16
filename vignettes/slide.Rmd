@@ -43,7 +43,7 @@ x <- covidcast(
   time_type = "day",
   geo_type = "state",
   time_values = epirange(20200301, 20211231),
-  geo_values = "ca,fl,ny,tx"
+  geo_values = "ca,fl,ny,tx,ga,pa"
 ) %>%
   fetch_tbl() %>%
   select(geo_value, time_value, cases = value) %>%
