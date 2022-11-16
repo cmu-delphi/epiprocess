@@ -85,10 +85,12 @@ decay_epi_df = function(x) {
 # Implementing `dplyr_extending`: we have a few metadata attributes to consider:
 # `as_of` is an attribute doesn't depend on the rows or columns, `geo_type` and
 # `time_type` are scalar attributes dependent on columns, and `other_keys` acts
-# like an attribute vectorized over columns; `dplyr_extending` advice says to
-# implement `dplyr_reconstruct`, 1d `[`, `dplyr_col_modify`, and `names<-`, but
-# not `dplyr_row_slice`. We'll implement `[` to allow either 1d or 2d. We'll
-# also implement some other methods where we want to (try to) maintain an
+# like an attribute vectorized over columns; `dplyr_extending` advice at time of
+# writing says to implement `dplyr_reconstruct`, 1d `[`, `dplyr_col_modify`, and
+# `names<-`, but not `dplyr_row_slice`; however, we'll also implement
+# `dplyr_row_slice` anyway to prevent a `arrange` on grouped `epi_df`s from
+# dropping the `epi_df` class. We'll implement `[` to allow either 1d or 2d.
+# We'll also implement some other methods where we want to (try to) maintain an
 # `epi_df`.
 
 #' @param data tibble or `epi_df` (`dplyr` feeds in former, but we may
@@ -149,6 +151,12 @@ dplyr_reconstruct.epi_df = function(data, template) {
 #' @importFrom dplyr dplyr_col_modify
 #' @export
 dplyr_col_modify.epi_df = function(data, cols) {
+  dplyr::dplyr_reconstruct(NextMethod(), data)
+}
+
+#' @importFrom dplyr dplyr_row_slice
+#' @export
+dplyr_row_slice.epi_df = function(data, i, ...) {
   dplyr::dplyr_reconstruct(NextMethod(), data)
 }
 
