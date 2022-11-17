@@ -52,7 +52,8 @@ development versions. A ".9999" suffix indicates a development version.
   `epi_df` (e.g., when removing the `time_value` column).
 * Changed `bind_rows` on grouped `epi_df`s to not drop the `epi_df` class. Like
   with ungrouped `epi_df`s, the metadata of the result is still simply taken
-  from the first result, and may be inappropriate (#242).
+  from the first result, and may be inappropriate
+  ([#242](https://github.com/cmu-delphi/epiprocess/issues/242)).
 * `epi_slide` and `epix_slide` now raise an error rather than silently filtering
   out `ref_time_values` that don't meet their expectations.
 
@@ -63,12 +64,14 @@ development versions. A ".9999" suffix indicates a development version.
   `group_by` implementation supports the `.add` and `.drop` arguments, and
   `ungroup` supports partial ungrouping with `...`.
 * `as_epi_archive`, `epi_archive$new` now perform checks for the key uniqueness
-  requirement.
+  requirement (part of
+  [#154](https://github.com/cmu-delphi/epiprocess/issues/154)).
 
 ## Cleanup:
 
 * Added a `NEWS.md` file to track changes to the package.
-* Implemented `?dplyr::dplyr_extending` for `epi_df`s (#223).
+* Implemented `?dplyr::dplyr_extending` for `epi_df`s
+  ([#223](https://github.com/cmu-delphi/epiprocess/issues/223)).
 
 # epiprocess 0.5.0:
 
