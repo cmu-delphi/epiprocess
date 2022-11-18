@@ -504,6 +504,8 @@ epix_detailed_restricted_mutate = function(.data, ...) {
 
 #' `group_by` and related methods for `epi_archive`, `grouped_epi_archive`
 #'
+#' @aliases grouped_epi_archive
+#'
 #' @details
 #'
 #' To match `dplyr`, `group_by` allows "data masking" (also referred to as
@@ -546,21 +548,24 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 #' examples.
 #'
-#' @param x An `epi_archive` or `grouped_epi_archive` object.
+#' @param x An [`epi_archive`] or [`grouped_epi_archive`] object. If ungrouped,
+#'   all data in `x` will be treated as part of a single data group.
 #' @param f Function, formula, or missing; together with `...` specifies the
 #'   computation to slide. To "slide" means to apply a computation over a
-#'   sliding (a.k.a. "rolling") time window. The window is determined by the
-#'   `before` parameter described below. One time step is typically one day or
-#'   one week; see [`epi_slide`] details for more explanation. If a function,
-#'   `f` must take `x`, an `epi_df` with the same column names as the archive,
-#'   minus the `version` column; followed by any number of named arguments; and
-#'   ending with `...`. If a formula, `f` can operate directly on columns
-#'   accessed via `.x$var`, as in `~ mean(.x$var)` to compute a mean of a column
-#'   `var` over a sliding window of `n` time steps. If `f` is missing, then
-#'   `...` will specify the computation.
+#'   sliding (a.k.a. "rolling") time window for each data group. The window is
+#'   determined by the `before` parameter described below. One time step is
+#'   typically one day or one week; see [`epi_slide`] details for more
+#'   explanation. If a function, `f` must take `x`, an `epi_df` with the same
+#'   column names as the archive's `DT`, minus the `version` column; followed by
+#'   `g`, a one-row tibble containing the values of the grouping variables for
+#'   the associated group; followed by any number of named arguments. If a
+#'   formula, `f` can operate directly on columns accessed via `.x$var`, as in
+#'   `~ mean(.x$var)` to compute a mean of a column `var` for each
+#'   `ref_time_value`-group combination. If `f` is missing, then `...` will
+#'   specify the computation.
 #' @param ... Additional arguments to pass to the function or formula specified
-#'   via `f`. Alternatively, if `f` is missing, then the current argument is
-#'   interpreted as an expression for tidy evaluation.
+#'   via `f`. Alternatively, if `f` is missing, then `...` is interpreted as an
+#'   expression for tidy evaluation. See details of [`epi_slide`].
 #' @param before How far `before` each `ref_time_value` should the sliding
 #'   window extend? If provided, should be a single, non-NA,
 #'   [integer-compatible][vctrs::vec_cast] number of time steps. This window

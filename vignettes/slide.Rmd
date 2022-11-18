@@ -72,20 +72,22 @@ order to smooth the signal, by passing in a formula for the first argument of
 x %>% 
   group_by(geo_value) %>% 
   epi_slide(~ mean(.x$cases), before = 6) %>%
+  ungroup() %>%
   head(10)
 ```
 
-The formula specified has access to all columns present in the original `epi_df`
-object (and must refer to them with the prefix `.x$`). As we can see, the
-function `epi_slide()` returns an `epi_df` object with a new column appended
-that contains the results (from sliding), named `slide_value` as the default. We
-can of course change this post hoc, or we can instead specify a new name up
-front using the `new_col_name` argument:
+The formula specified has access to all non-grouping columns present in the
+original `epi_df` object (and must refer to them with the prefix `.x$`). As we
+can see, the function `epi_slide()` returns an `epi_df` object with a new column
+appended that contains the results (from sliding), named `slide_value` as the
+default. We can of course change this post hoc, or we can instead specify a new
+name up front using the `new_col_name` argument:
 
 ```{r}
 x <- x %>% 
   group_by(geo_value) %>%
-  epi_slide(~ mean(.x$cases), before = 6, new_col_name = "cases_7dav")
+  epi_slide(~ mean(.x$cases), before = 6, new_col_name = "cases_7dav") %>%
+  ungroup()
 
 head(x, 10)
 ```
@@ -93,15 +95,18 @@ head(x, 10)
 ## Slide with a function 
 
 We can also pass a function for the first argument in `epi_slide()`. In this
-case, the passed function must have the following argument structure: `x`, a
-data frame with the same column names as the original object; followed by any
-number of named arguments; and ending with `...` to capture additional
-arguments. Recreating the last example of a 7-day trailing average:
+case, the passed function must accept the following arguments: `x`, a data frame
+with the non-grouping columns of the original object, containing the time window
+data for one `ref_time_value`-group combination; followed by `g`, a one-row
+tibble containing the values of the grouping variables for the associated group;
+followed by any number of named arguments. Recreating the last example of a
+7-day trailing average:
 
 ```{r}
 x <- x %>% 
   group_by(geo_value) %>% 
-  epi_slide(function(x, ...) mean(x$cases), before = 6, new_col_name = "cases_7dav")
+  epi_slide(function(x, g) mean(x$cases), before = 6, new_col_name = "cases_7dav") %>%
+  ungroup()
 
 head(x, 10)
 ```
@@ -117,7 +122,8 @@ would in a call to `dplyr::mutate()`, or any of the `dplyr` verbs. For example:
 ```{r}
 x <- x %>% 
   group_by(geo_value) %>% 
-  epi_slide(cases_7dav = mean(cases), before = 6)
+  epi_slide(cases_7dav = mean(cases), before = 6) %>%
+  ungroup()
 
 head(x, 10)
 ```
@@ -211,6 +217,7 @@ x %>%
   group_by(geo_value) %>%
   epi_slide(fc = prob_ar(cases_7dav), before = 119, 
             ref_time_values = fc_time_values) %>%
+  ungroup() %>%
   head(10)
 ```
 
@@ -235,6 +242,7 @@ k_week_ahead <- function(x, ahead = 7) {
     group_by(geo_value) %>%
     epi_slide(fc = prob_ar(cases_7dav, ahead = ahead), before = 119,
               ref_time_values = fc_time_values, all_rows = TRUE) %>%
+    ungroup() %>%
     mutate(target_date = time_value + ahead) 
 }
 

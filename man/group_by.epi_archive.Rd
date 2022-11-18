@@ -6,6 +6,7 @@
 \alias{groups.grouped_epi_archive}
 \alias{ungroup.grouped_epi_archive}
 \alias{group_by.epi_archive}
+\alias{grouped_epi_archive}
 \title{\code{group_by} and related methods for \code{epi_archive}, \code{grouped_epi_archive}}
 \usage{
 \method{group_by_drop_default}{grouped_epi_archive}(.tbl)

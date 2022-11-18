@@ -18,23 +18,26 @@ epix_slide(
 )
 }
 \arguments{
-\item{x}{An \code{epi_archive} or \code{grouped_epi_archive} object.}
+\item{x}{An \code{\link{epi_archive}} or \code{\link{grouped_epi_archive}} object. If ungrouped,
+all data in \code{x} will be treated as part of a single data group.}
 
 \item{f}{Function, formula, or missing; together with \code{...} specifies the
 computation to slide. To "slide" means to apply a computation over a
-sliding (a.k.a. "rolling") time window. The window is determined by the
-\code{before} parameter described below. One time step is typically one day or
-one week; see \code{\link{epi_slide}} details for more explanation. If a function,
-\code{f} must take \code{x}, an \code{epi_df} with the same column names as the archive,
-minus the \code{version} column; followed by any number of named arguments; and
-ending with \code{...}. If a formula, \code{f} can operate directly on columns
-accessed via \code{.x$var}, as in \code{~ mean(.x$var)} to compute a mean of a column
-\code{var} over a sliding window of \code{n} time steps. If \code{f} is missing, then
-\code{...} will specify the computation.}
+sliding (a.k.a. "rolling") time window for each data group. The window is
+determined by the \code{before} parameter described below. One time step is
+typically one day or one week; see \code{\link{epi_slide}} details for more
+explanation. If a function, \code{f} must take \code{x}, an \code{epi_df} with the same
+column names as the archive's \code{DT}, minus the \code{version} column; followed by
+\code{g}, a one-row tibble containing the values of the grouping variables for
+the associated group; followed by any number of named arguments. If a
+formula, \code{f} can operate directly on columns accessed via \code{.x$var}, as in
+\code{~ mean(.x$var)} to compute a mean of a column \code{var} for each
+\code{ref_time_value}-group combination. If \code{f} is missing, then \code{...} will
+specify the computation.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
-via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
-interpreted as an expression for tidy evaluation.}
+via \code{f}. Alternatively, if \code{f} is missing, then \code{...} is interpreted as an
+expression for tidy evaluation. See details of \code{\link{epi_slide}}.}
 
 \item{before}{How far \code{before} each \code{ref_time_value} should the sliding
 window extend? If provided, should be a single, non-NA,

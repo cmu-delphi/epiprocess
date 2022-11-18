@@ -9,7 +9,7 @@ grouped = dplyr::bind_rows(
   as_epi_df() %>%
   group_by(geo_value)
 
-f = function(x, ...) dplyr::tibble(value=mean(x$value), count=length(x$value))
+f = function(x, g) dplyr::tibble(value=mean(x$value), count=length(x$value))
 
 ## --- These cases generate errors (or not): ---
 test_that("`before` and `after` are both vectors of length 1", {

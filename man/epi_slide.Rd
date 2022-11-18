@@ -19,41 +19,41 @@ epi_slide(
 )
 }
 \arguments{
-\item{x}{The \code{epi_df} object under consideration.}
+\item{x}{The \code{epi_df} object under consideration,
+\code{\link[=grouped]{dplyr::group_by}} or ungrouped. If ungrouped, all data in \code{x}
+will be treated as part of a single data group.}
 
 \item{f}{Function, formula, or missing; together with \code{...} specifies the
-computation to slide. To "slide" means to apply a computation over a
-sliding (a.k.a. "rolling") time window. The window is determined by the
-\code{before} and \code{after} parameters described below. One time step is typically
-one day or one week; see details for more explanation. If a function, \code{f}
-must take \code{x}, a data frame with the same column names as the original
-object, minus any \link[dplyr:group_by]{grouping variables}; followed by any
-number of named arguments; and ending with \code{...}. If a formula, \code{f} can
-operate directly on columns accessed via \code{.x$var}, as in \code{~ mean(.x$var)}
-to compute a mean of a column \code{var} over a sliding window of \code{n} time
-steps. If \code{f} is missing, then \code{...} will specify the computation.}
+computation to slide. To "slide" means to apply a computation within a
+sliding (a.k.a. "rolling") time window for each data group. The window is
+determined by the \code{before} and \code{after} parameters described below. One time
+step is typically one day or one week; see details for more explanation. If
+a function, \code{f} must take \code{x}, a data frame with the same column names as
+the original object, minus any grouping variables, containing the time
+window data for one \code{ref_time_value}-group combination; followed by \code{g}, a
+one-row tibble containing the values of the grouping variables for the
+associated group; followed by any number of named arguments. If a formula,
+\code{f} can operate directly on columns accessed via \code{.x$var}, as in \code{~ mean(.x$var)} to compute a mean of a column \code{var} for each
+\code{ref_time_value}-group combination. If \code{f} is missing, then \code{...} will
+specify the computation.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
-via \code{f}. Alternatively, if \code{f} is missing, then the current argument is
-interpreted as an expression for tidy evaluation. See details.}
+via \code{f}. Alternatively, if \code{f} is missing, then the \code{...} is interpreted as
+an expression for tidy evaluation. See details.}
 
 \item{before, after}{How far \code{before} and \code{after} each \code{ref_time_value} should
 the sliding window extend? At least one of these two arguments must be
 provided; the other's default will be 0. Any value provided for either
 argument must be a single, non-\code{NA}, non-negative,
-\link[vctrs:vec_cast]{integer-compatible} number of time steps. Endpoints of the
-window are inclusive. Common settings:
-\itemize{
-\item For trailing/right-aligned windows from \code{ref_time_value - time_step(k)}
-to \code{ref_time_value}: either pass \code{before=k} by itself, or pass \verb{before=k, after=0}.
-\item For center-aligned windows from \code{ref_time_value - time_step(k)} to
-\code{ref_time_value + time_step(k)}: pass \verb{before=k, after=k}.
-\item For leading/left-aligned windows from \code{ref_time_value} to `ref_time_value
-\itemize{
-\item time_step(k)\verb{: either pass pass }after=k\verb{by itself, or pass}before=0,
-after=k\verb{.   See "Details:" about the definition of a time step, (non)treatment of   missing rows within the window, and avoiding warnings about   }before\code{&}after` settings for a certain uncommon use case.
-}
-}}
+\link[vctrs:vec_cast]{integer-compatible} number of time steps. Endpoints of
+the window are inclusive. Common settings: * For trailing/right-aligned
+windows from \code{ref_time_value - time_step(k)} to \code{ref_time_value}: either
+pass \code{before=k} by itself, or pass \verb{before=k, after=0}. * For
+center-aligned windows from \code{ref_time_value - time_step(k)} to
+\code{ref_time_value + time_step(k)}: pass \verb{before=k, after=k}. * For
+leading/left-aligned windows from \code{ref_time_value} to \code{ref_time_value + time_step(k)}: either pass pass \code{after=k} by itself, or pass \verb{before=0, after=k}. See "Details:" about the definition of a time step,
+(non)treatment of missing rows within the window, and avoiding warnings
+about \code{before}&\code{after} settings for a certain uncommon use case.}
 
 \item{ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
@@ -62,9 +62,10 @@ underlying data table, by default.}
 
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
-\code{time_value} column. This function must take a non-negative integer and return
-an object of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this
-would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
+\code{time_value} column. This function must take a non-negative integer and
+return an object of class \code{lubridate::period}. For example, we can use
+\code{time_step = lubridate::hours} in order to set the time step to be one hour
+(this would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
 \item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
@@ -93,25 +94,24 @@ examples.
 }
 \details{
 To "slide" means to apply a function or formula over a rolling
-window of time steps where the window is entered at a reference time and
-left and right endpoints are given by the \code{before} and \code{after} arguments.
-The unit (the meaning of one time step) is
-implicitly defined by the way the \code{time_value} column treats addition and
-subtraction; for example, if the time values are coded as \code{Date} objects,
-then one time step is one day, since \code{as.Date("2022-01-01") + 1} equals
+window of time steps for each data group, where the window is entered at a
+reference time and left and right endpoints are given by the \code{before} and
+\code{after} arguments. The unit (the meaning of one time step) is implicitly
+defined by the way the \code{time_value} column treats addition and subtraction;
+for example, if the time values are coded as \code{Date} objects, then one time
+step is one day, since \code{as.Date("2022-01-01") + 1} equals
 \code{as.Date("2022-01-02")}. Alternatively, the time step can be set explicitly
 using the \code{time_step} argument (which if specified would override the
 default choice based on \code{time_value} column). If there are not enough time
 steps available to complete the window at any given reference time, then
-\code{epi_slide()} still
-attempts to perform the computation anyway (it does not require a complete
-window). The issue of what to do with partial computations (those run on
-incomplete windows) is therefore left up to the user, either through the
-specified function or formula \code{f}, or through post-processing. For a
-centrally-aligned slide of \code{n} \code{time_value}s in a sliding window, set
-\code{before = (n-1)/2} and \code{after = (n-1)/2} when the number of \code{time_value}s
-in a sliding window is odd and  \code{before = n/2-1} and \code{after = n/2} when
-\code{n} is even.
+\code{epi_slide()} still attempts to perform the computation anyway (it does not
+require a complete window). The issue of what to do with partial
+computations (those run on incomplete windows) is therefore left up to the
+user, either through the specified function or formula \code{f}, or through
+post-processing. For a centrally-aligned slide of \code{n} \code{time_value}s in a
+sliding window, set \code{before = (n-1)/2} and \code{after = (n-1)/2} when the
+number of \code{time_value}s in a sliding window is odd and \code{before = n/2-1} and
+\code{after = n/2} when \code{n} is even.
 
 Sometimes, we want to experiment with various trailing or leading window
 widths and compare the slide outputs. In the (uncommon) case where
@@ -130,7 +130,7 @@ for example, as in:
 
 which would be equivalent to:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, ...) mean(x$cases), before = 6,
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, g) mean(x$cases), before = 6,
           new_col_name = "cases_7dav")
 }\if{html}{\out{</div>}}
 

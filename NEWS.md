@@ -18,7 +18,8 @@ development versions. A ".9999" suffix indicates a development version.
     * `epix_slide`'s time windows now extend `before` time steps before the
       corresponding `ref_time_values` all the way through the latest data
       available at the corresponding `ref_time_values`.
-  * Slide functions now keep any grouping of `x` in their results.
+  * Slide functions now keep any grouping of `x` in their results, like
+    `mutate` and `group_modify`.
     * To obtain the old behavior, `dplyr::ungroup` the slide results immediately.
 * Additional`epix_slide` changes:
   * `epix_slide`'s `group_by` argument has been replaced by `dplyr::group_by` and

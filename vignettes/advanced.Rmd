@@ -46,7 +46,8 @@ df <- tibble(
 # 2-day trailing average, per geo value
 df %>% 
   group_by(geo_value) %>%
-  epi_slide(x_2dav = mean(x), before = 1)
+  epi_slide(x_2dav = mean(x), before = 1) %>%
+  ungroup()
 
 # 2-day trailing average, marginally 
 df %>% 

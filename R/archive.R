@@ -607,7 +607,13 @@ epi_archive =
               time_step = time_step, new_col_name = new_col_name,
               as_list_col = as_list_col, names_sep = names_sep,
               all_rows = all_rows
-            )
+            ) %>%
+              # We want a slide on ungrouped archives to output something
+              # ungrouped, rather than retaining the trivial (0-variable)
+              # grouping applied above. So we `ungroup()`. However, the current
+              # `dplyr` implementation automatically ignores/drops trivial
+              # groupings, so this is just a no-op for now.
+              ungroup()
           }
         )
       )

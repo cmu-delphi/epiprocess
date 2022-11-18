@@ -360,7 +360,8 @@ fc_time_values <- seq(as.Date("2020-08-01"),
 z <- x %>%
   group_by(geo_value) %>%
   epix_slide(fc = prob_arx(x = percent_cli, y = case_rate_7d_av), before = 119,
-             ref_time_values = fc_time_values)
+             ref_time_values = fc_time_values) %>%
+  ungroup()
 
 head(z, 10)
 ```
@@ -392,14 +393,16 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
       group_by(geo_value) %>%
       epix_slide(fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead), before = 119,
                  ref_time_values = fc_time_values) %>%
-      mutate(target_date = time_value + ahead, as_of = TRUE) 
+      mutate(target_date = time_value + ahead, as_of = TRUE) %>%
+      ungroup()
   }
   else {
     x_latest %>% 
       group_by(geo_value) %>%
       epi_slide(fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead), before = 119,
                 ref_time_values = fc_time_values) %>%
-      mutate(target_date = time_value + ahead, as_of = FALSE) 
+      mutate(target_date = time_value + ahead, as_of = FALSE) %>%
+      ungroup()
   }
 }
 
