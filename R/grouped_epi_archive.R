@@ -401,7 +401,7 @@ groups.grouped_epi_archive = function(x) {
 #' @importFrom dplyr ungroup
 #' @export
 ungroup.grouped_epi_archive = function(x, ...) {
-  x$ungroup(x, ...)
+  x$ungroup(...)
 }
 
 #' @export
