@@ -64,3 +64,18 @@ RoxygenNote: 7.2.1
 Depends: 
     R (>= 2.10)
 URL: https://cmu-delphi.github.io/epiprocess/
+Collate: 
+    'archive.R'
+    'correlation.R'
+    'data.R'
+    'epi_df.R'
+    'epiprocess.R'
+    'methods-epi_archive.R'
+    'grouped_epi_archive.R'
+    'growth_rate.R'
+    'methods-epi_df.R'
+    'outliers.R'
+    'reexports.R'
+    'slide.R'
+    'utils.R'
+    'utils_pipe.R'

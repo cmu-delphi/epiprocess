@@ -38,13 +38,6 @@ nse_dots_names2 = function(...) {
   rlang::names2(rlang::call_match())
 }
 
-#' @rdname group_by.epi_archive
-#'
-#' @export
-group_by_drop_default.grouped_epi_archive = function(.tbl) {
-  .tbl$group_by_drop_default()
-}
-
 #' @importFrom dplyr group_by_drop_default
 #' @noRd
 grouped_epi_archive =
@@ -132,9 +125,6 @@ grouped_epi_archive =
         # Return self invisibly for convenience in `$`-"pipe":
         invisible(self)
       },
-      group_by_drop_default = function() {
-        private$drop
-      },
       group_by = function(..., .add = FALSE, .drop = dplyr::group_by_drop_default(self)) {
         if (!rlang::is_bool(.add)) {
           Abort("`.add` must be a Boolean")
@@ -155,6 +145,9 @@ grouped_epi_archive =
           vars = union(private$vars, vars_from_dots)
           grouped_epi_archive$new(private$ungrouped, vars, .drop)
         }
+      },
+      group_by_drop_default = function() {
+        private$drop
       },
       groups = function() {
         rlang::syms(private$vars)
@@ -274,10 +267,11 @@ grouped_epi_archive =
                 if (length(comp_effective_key_vars) != 0L) {
                   sum(!duplicated(.data_group[, comp_effective_key_vars]))
                 } else {
-                  # Same idea as above, but accounting for `duplicated` not
-                  # working as we want on 0 columns. (Should be the same as if
-                  # we were counting distinct values of a column defined as
-                  # `rep(val, target_n_rows)`.)
+                  # Same idea as above, but accounting for `duplicated` working
+                  # differently (outputting `logical(0)`) on 0-column inputs
+                  # rather than matching the number of rows. (Instead, we use
+                  # the same count we would get if we were counting distinct
+                  # values of a column defined as `rep(val, target_n_rows)`.)
                   if (nrow(.data_group) == 0L) {
                     0L
                   } else {
@@ -380,6 +374,13 @@ grouped_epi_archive =
     )
   )
 
+# At time of writing, roxygen parses content in collation order, impacting the
+# presentation of .Rd files that document multiple functions (see
+# https://github.com/r-lib/roxygen2/pull/324). Use @include tags (determining
+# `Collate:`) and ordering of functions within each file in order to get the
+# desired ordering.
+
+#' @include methods-epi_archive.R
 #' @rdname group_by.epi_archive
 #'
 #' @importFrom dplyr group_by
@@ -388,6 +389,7 @@ group_by.grouped_epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::gro
   .data$group_by(..., .add=.add, .drop=.drop)
 }
 
+#' @include methods-epi_archive.R
 #' @rdname group_by.epi_archive
 #'
 #' @importFrom dplyr groups
@@ -396,6 +398,7 @@ groups.grouped_epi_archive = function(x) {
   x$groups()
 }
 
+#' @include methods-epi_archive.R
 #' @rdname group_by.epi_archive
 #'
 #' @importFrom dplyr ungroup
@@ -404,7 +407,18 @@ ungroup.grouped_epi_archive = function(x, ...) {
   x$ungroup(...)
 }
 
+#' @include methods-epi_archive.R
+#' @rdname group_by.epi_archive
+#'
 #' @export
 is_grouped_epi_archive = function(x) {
   inherits(x, "grouped_epi_archive")
+}
+
+#' @include methods-epi_archive.R
+#' @rdname group_by.epi_archive
+#'
+#' @export
+group_by_drop_default.grouped_epi_archive = function(.tbl) {
+  .tbl$group_by_drop_default()
 }

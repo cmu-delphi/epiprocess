@@ -504,7 +504,29 @@ epix_detailed_restricted_mutate = function(.data, ...) {
 
 #' `group_by` and related methods for `epi_archive`, `grouped_epi_archive`
 #'
-#' @aliases grouped_epi_archive
+#' @param .data An `epi_archive` or `grouped_epi_archive`
+#' @param ... Similar to [`dplyr::group_by`] (see "Details:" for edge cases);
+#' * In `group_by`: unquoted variable name(s) or other ["data
+#'   masking"][dplyr::dplyr_data_masking] expression(s). It's possible to use
+#'   [`dplyr::mutate`]-like syntax here to calculate new columns on which to
+#'   perform grouping, but note that, if you are regrouping an already-grouped
+#'   `.data` object, the calculations will be carried out ignoring such grouping
+#'   (same as [in \code{dplyr}][dplyr::group_by]).
+#' * In `ungroup`: either
+#'   * empty, in order to remove the grouping and output an `epi_archive`; or
+#'   * variable name(s) or other ["tidy-select"][dplyr::dplyr_tidy_select]
+#'     expression(s), in order to remove the matching variables from the list of
+#'     grouping variables, and output another `grouped_epi_archive`.
+#' @param .add Boolean. If `FALSE`, the default, the output will be grouped by
+#'   the variable selection from `...` only; if `TRUE`, the output will be
+#'   grouped by the current grouping variables plus the variable selection from
+#'   `...`.
+#' @param .drop As in [`dplyr::group_by`]; determines treatment of factor
+#'   columns.
+#' @param x a `grouped_epi_archive`, or, in `is_grouped_epi_archive`, any object
+#' @param .tbl An `epi_archive` or `grouped_epi_archive` (`epi_archive`
+#'   dispatches to the S3 default method, and `grouped_epi_archive` dispatches
+#'   its own S3 method)
 #'
 #' @details
 #'
@@ -512,6 +534,16 @@ epix_detailed_restricted_mutate = function(.data, ...) {
 #' "tidy evaluation") expressions `...`, not just column names, in a way similar
 #' to `mutate`. Note that replacing or removing key columns with these
 #' expressions is disabled.
+#'
+#' `archive %>% group_by()` and other expressions that group or regroup by zero
+#' columns (indicating that all rows should be treated as part of one large
+#' group) will output a `grouped_epi_archive`, in order to enable the use of
+#' `grouped_epi_archive` methods on the result. This is in slight contrast to
+#' the same operations on tibbles and grouped tibbles, which will *not* output a
+#' `grouped_df` in these circumstances.
+#'
+#' Using `group_by` with `.add=FALSE` to override the existing grouping is
+#' disabled; instead, `ungroup` first then `group_by`.
 #'
 #' Mutation and aliasing: `group_by` tries to use a shallow copy of the `DT`,
 #' introducing column-level aliasing between its input and its result. This
@@ -528,8 +560,72 @@ epix_detailed_restricted_mutate = function(.data, ...) {
 #' to `group_by_drop_default.default` (but there is a dedicated method for
 #' `grouped_epi_archive`s).
 #'
+#' @examples
+#'
+#' grouped_archive = archive_cases_dv_subset %>% group_by(geo_value)
+#'
+#' # `print` for metadata and method listing:
+#' grouped_archive %>% print()
+#'
+#' # The primary use for grouping is to perform a grouped `epix_slide`:
+#'
+#' archive_cases_dv_subset %>%
+#'   group_by(geo_value) %>%
+#'   epix_slide(f = ~ mean(.x$case_rate_7d_av),
+#'              before = 2,
+#'              ref_time_values = as.Date("2020-06-11") + 0:2,
+#'              new_col_name = 'case_rate_3d_av') %>%
+#'   ungroup()
+#'
+#' # -----------------------------------------------------------------
+#'
+#' # Advanced: some other features of dplyr grouping are implemented:
+#'
+#' library(dplyr)
+#' toy_archive =
+#'   tribble(
+#'     ~geo_value,  ~age_group,  ~time_value,     ~version, ~value,
+#'           "us",     "adult", "2000-01-01", "2000-01-02",    121,
+#'           "us", "pediatric", "2000-01-02", "2000-01-03",      5, # (addition)
+#'           "us",     "adult", "2000-01-01", "2000-01-03",    125, # (revision)
+#'           "us",     "adult", "2000-01-02", "2000-01-03",    130  # (addition)
+#'   ) %>%
+#'   mutate(age_group = ordered(age_group, c("pediatric", "adult")),
+#'          time_value = as.Date(time_value),
+#'          version = as.Date(version)) %>%
+#'   as_epi_archive(other_keys = "age_group")
+#'
+#' # The following are equivalent:
+#' toy_archive %>% group_by(geo_value, age_group)
+#' toy_archive %>% group_by(geo_value) %>% group_by(age_group, .add=TRUE)
+#' grouping_cols = c("geo_value", "age_group")
+#' toy_archive %>% group_by(across(all_of(grouping_cols)))
+#'
+#' # And these are equivalent:
+#' toy_archive %>% group_by(geo_value)
+#' toy_archive %>% group_by(geo_value, age_group) %>% ungroup(age_group)
+#'
+#' # To get the grouping variable names as a `list` of `name`s (a.k.a. symbols):
+#' toy_archive %>% group_by(geo_value) %>% groups()
+#'
+#' # `.drop = FALSE` is supported in a sense; `f` is called on 0-row inputs for
+#' # the missing groups identified by `dplyr`, but the row-recycling rules will
+#' # exclude the corresponding outputs of `f` from the output of the slide:
+#' all.equal(
+#'   toy_archive %>%
+#'     group_by(geo_value, age_group, .drop=FALSE) %>%
+#'     epix_slide(f = ~ sum(.x$value), before = 20) %>%
+#'     ungroup(),
+#'   toy_archive %>%
+#'     group_by(geo_value, age_group, .drop=TRUE) %>%
+#'     epix_slide(f = ~ sum(.x$value), before = 20) %>%
+#'     ungroup()
+#' )
+#'
 #' @importFrom dplyr group_by
 #' @export
+#'
+#' @aliases grouped_epi_archive
 group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_drop_default(.data)) {
   # `add` makes no difference; this is an ungrouped `epi_archive`.
   detailed_mutate = epix_detailed_restricted_mutate(.data, ...)
@@ -693,8 +789,8 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   epix_slide(f = ~ mean(.x$case_rate_7d_av),
 #'              before = 2,
 #'              ref_time_values = ref_time_values,
-#'              new_col_name = 'case_rate_3d_av',
-#'              groups = "drop")
+#'              new_col_name = 'case_rate_3d_av') %>%
+#'   ungroup()
 #'
 #' @importFrom rlang enquo
 #' @export
