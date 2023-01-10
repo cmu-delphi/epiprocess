@@ -428,7 +428,7 @@ epi_archive =
             cat(sprintf("* %-14s = %s\n", "last version with update",
                         max(self$DT$version)))
             if (is.na(self$clobberable_versions_start)) {
-              cat("No clobberable versions\n")
+              cat("* No clobberable versions\n")
             } else {
               cat(sprintf("* %-14s = %s\n", "clobberable versions start",
                           self$clobberable_versions_start))

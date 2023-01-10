@@ -109,8 +109,11 @@ grouped_epi_archive =
         # something to rely too much on), while map functions currently appear
         # to avoid column copies.
         if (any(purrr::map_lgl(private$ungrouped$DT, is.factor)[private$vars])) {
-          cat(sprintf("* %s groups formed by factor levels that don't appear in the data",
-                      if (private$drop) "Drops" else "Does not drop"))
+          cat(strwrap(init="* ", prefix="  ", sprintf(
+            "%s groups formed by factor levels that don't appear in the data",
+            if (private$drop) "Drops" else "Does not drop"
+          )))
+          cat("\n")
         }
         cat("It wraps an ungrouped `epi_archive`, with metadata:\n")
         private$ungrouped$print(class = FALSE, methods = FALSE)
