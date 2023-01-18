@@ -4,7 +4,7 @@
 \alias{epix_as_of}
 \title{Generate a snapshot from an \code{epi_archive} object}
 \usage{
-epix_as_of(x, max_version, min_time_value = -Inf)
+epix_as_of(x, max_version, min_time_value = -Inf, all_versions = FALSE)
 }
 \arguments{
 \item{x}{An \code{epi_archive} object}
@@ -18,6 +18,13 @@ of the specified \code{max_version} (and whose time values are at least
 \item{min_time_value}{Time value specifying the min time value to permit in
 the snapshot. Default is \code{-Inf}, which effectively means that there is no
 minimum considered.}
+
+\item{all_versions}{If \code{all_versions = TRUE}, then the output will be in
+\code{epi_archive} format, and contain rows in the specified \code{time_value} range
+having \code{version <= max_version}. The resulting object will cover a
+potentially narrower \code{version} and \code{time_value} range than \code{x}, depending
+on user-provided arguments. Otherwise, there will be one row in the output
+for the \code{max_version} of each \code{time_value}. Default is \code{FALSE}.}
 }
 \value{
 An \code{epi_df} object.

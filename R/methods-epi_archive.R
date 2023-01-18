@@ -14,6 +14,12 @@
 #' @param min_time_value Time value specifying the min time value to permit in
 #'   the snapshot. Default is `-Inf`, which effectively means that there is no
 #'   minimum considered.
+#' @param all_versions If `all_versions = TRUE`, then the output will be in
+#'   `epi_archive` format, and contain rows in the specified `time_value` range
+#'   having `version <= max_version`. The resulting object will cover a
+#'   potentially narrower `version` and `time_value` range than `x`, depending
+#'   on user-provided arguments. Otherwise, there will be one row in the output
+#'   for the `max_version` of each `time_value`. Default is `FALSE`.
 #' @return An `epi_df` object.
 #'
 #' @details This is simply a wrapper around the `as_of()` method of the
@@ -54,9 +60,9 @@
 #' }, epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning"))
 #' # Since R 4.0, there is a `globalCallingHandlers` function that can be used
 #' # to globally toggle these warnings.
-epix_as_of = function(x, max_version, min_time_value = -Inf) {
+epix_as_of = function(x, max_version, min_time_value = -Inf, all_versions = FALSE) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
-  return(x$as_of(max_version, min_time_value))
+  return(x$as_of(max_version, min_time_value, all_versions = all_versions))
 }
 
 #' `epi_archive` with unobserved history filled in (won't mutate, might alias)
@@ -704,6 +710,11 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   combination of grouping variables and unique time values in the underlying
 #'   data table. Otherwise, there will be one row in the output for each time
 #'   value in `x` that acts as a reference time value. Default is `FALSE`.
+#' @param all_versions If `all_versions = TRUE`, then `f` will be passed the
+#'   version history (all `version <= ref_time_value`) for rows having
+#'   `time_value` between `ref_time_value - before` and `ref_time_value`.
+#'   Otherwise, `f` will be passed only the most recent `version` for every
+#'   unique `time_value`. Default is `FALSE`.
 #' @return A tibble whose columns are: the grouping variables, `time_value`,
 #'   containing the reference time values for the slide computation, and a
 #'   column named according to the `new_col_name` argument, containing the slide
@@ -796,7 +807,8 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #' @export
 epix_slide = function(x, f, ..., before, ref_time_values,
                       time_step, new_col_name = "slide_value",
-                      as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
+                      as_list_col = FALSE, names_sep = "_",
+                      all_rows = FALSE, all_versions = FALSE) {
   if (!is_epi_archive(x, grouped_okay=TRUE)) {
     Abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
   }
@@ -806,6 +818,7 @@ epix_slide = function(x, f, ..., before, ref_time_values,
                  new_col_name = new_col_name,
                  as_list_col = as_list_col,
                  names_sep = names_sep,
-                 all_rows = all_rows
+                 all_rows = all_rows,
+                 all_versions = all_versions
                  ))
 }

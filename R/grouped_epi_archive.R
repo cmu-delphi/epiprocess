@@ -178,7 +178,7 @@ grouped_epi_archive =
           slide = function(f, ..., before, ref_time_values,
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
-                           all_rows = FALSE) {
+                           all_rows = FALSE, all_versions = FALSE) {
             if ("group_by" %in% nse_dots_names(...)) {
               Abort("
                 The `group_by` argument to `slide` has been removed; please use

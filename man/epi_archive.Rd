@@ -213,7 +213,7 @@ An \code{epi_archive} object.
 Generates a snapshot in \code{epi_df} format as of a given version.
 See the documentation for the wrapper function \code{\link[=epix_as_of]{epix_as_of()}} for details.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$as_of(max_version, min_time_value = -Inf)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$as_of(max_version, min_time_value = -Inf, all_versions = FALSE)}\if{html}{\out{</div>}}
 }
 
 }
@@ -299,7 +299,8 @@ details.
   new_col_name = "slide_value",
   as_list_col = FALSE,
   names_sep = "_",
-  all_rows = FALSE
+  all_rows = FALSE,
+  all_versions = FALSE
 )}\if{html}{\out{</div>}}
 }
 

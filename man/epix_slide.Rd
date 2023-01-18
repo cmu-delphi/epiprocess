@@ -14,7 +14,8 @@ epix_slide(
   new_col_name = "slide_value",
   as_list_col = FALSE,
   names_sep = "_",
-  all_rows = FALSE
+  all_rows = FALSE,
+  all_versions = FALSE
 )
 }
 \arguments{
@@ -86,6 +87,12 @@ from \code{new_col_name} entirely.}
 combination of grouping variables and unique time values in the underlying
 data table. Otherwise, there will be one row in the output for each time
 value in \code{x} that acts as a reference time value. Default is \code{FALSE}.}
+
+\item{all_versions}{If \code{all_versions = TRUE}, then \code{f} will be passed the
+version history (all \code{version <= ref_time_value}) for rows having
+\code{time_value} between \code{ref_time_value - before} and \code{ref_time_value}.
+Otherwise, \code{f} will be passed only the most recent \code{version} for every
+unique \code{time_value}. Default is \code{FALSE}.}
 }
 \value{
 A tibble whose columns are: the grouping variables, \code{time_value},
