@@ -478,6 +478,14 @@ epi_archive =
             }
             
             # Filter by version and return
+            if (all_versions) {
+              result = epix_truncate_versions_after(self, max_version)
+              # `self` has already been `clone`d in `epix_truncate_versions_after`
+              # so we can modify the new archive's DT directly.
+              result$DT = result$DT[time_value >= min_time_value, ]
+              return(result)
+            }
+
             return(
               # Make sure to use data.table ways of filtering and selecting
               self$DT[time_value >= min_time_value &

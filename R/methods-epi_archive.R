@@ -822,3 +822,36 @@ epix_slide = function(x, f, ..., before, ref_time_values,
                  all_versions = all_versions
                  ))
 }
+
+#' Filter an `epi_archive` object to keep only older versions
+#'
+#' Generates a filter `epi_archive` from an `epi_archive` object, keeping
+#' only rows with `version` falling on or before a specified date.
+#'
+#' @param x An `epi_archive` object
+#' @param max_version Time value specifying the max version to permit in the
+#'   filtered archive. That is, the output archive will comprise rows of the
+#'   current archive data having `version` less than or equal to the
+#'   specified `max_version`
+#' @return An `epi_archive` object.
+#'
+#' @export
+epix_truncate_versions_after = function(x, max_version) {
+  if (!is_epi_archive(x, grouped_okay=TRUE)) {
+    Abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
+  }
+  if (!identical(class(max_version), class(x$DT$version)) ||
+      !identical(typeof(max_version), typeof(x$DT$version))) {
+    Abort("`max_version` and `DT$version` must have same `class` and `typeof`.")
+  }
+
+  result = x$clone()
+  result$DT <- result$DT[result$DT$version <= max_version, colnames(result$DT), with=FALSE]
+  if (!is.na(result$clobberable_versions_start) &&
+        result$clobberable_versions_start > max_version) {
+    result$clobberable_versions_start <- NA
+  }
+  result$versions_end <- max_version
+
+  return(result)
+}
