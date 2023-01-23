@@ -246,23 +246,36 @@ grouped_epi_archive =
                                     ref_time_value,
                                     comp_effective_key_vars,
                                     new_col) {
+              if (all_versions) {
+                if (!is_epi_archive(x, grouped_okay=TRUE)) {
+                  Abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
+                }
+              }
+
               # Carry out the specified computation 
               comp_value = f(.data_group, .group_key, ...)
 
+              if (all_versions) {
+                # Extract data from archive so we can do length checks below
+                .data_group = .data_group$ungrouped$DT
+              }
+
               # Calculate the number of output elements/rows we expect the
               # computation to output: one per distinct "effective computation
-              # key variable" value encountered in the input. Note: this mirrors
-              # how `epi_slide` does things if we're using unique keys, but can
-              # diverge if using nonunique keys. The `epi_slide` approach of
-              # counting occurrences of the `ref_time_value` in the `time_value`
-              # column, which helps lines up the computation results with
-              # corresponding rows of the input data, wouldn't quite apply here:
-              # we'd want to line up with rows (from the same group) with
-              # `version` matching the `ref_time_value`, but would still need to
-              # summarize these rows somehow and drop the `time_value` input
-              # column, but this summarization requires something like a
-              # to-be-unique output key to determine a sensible number of rows
-              # to output (and the contents of those rows).
+              # key variable" value encountered in the input.
+              #
+              # Note: this mirrors how `epi_slide` does things if we're using
+              # unique keys, but can diverge if using nonunique keys. The
+              # `epi_slide` approach of counting occurrences of the
+              # `ref_time_value` in the `time_value` column, which helps lines
+              # up the computation results with corresponding rows of the
+              # input data, wouldn't quite apply here: we'd want to line up
+              # with rows (from the same group) with `version` matching the
+              # `ref_time_value`, but would still need to summarize these rows
+              # somehow and drop the `time_value` input column, but this
+              # summarization requires something like a to-be-unique output
+              # key to determine a sensible number of rows to output (and the
+              # contents of those rows).
               count =
                 if (length(comp_effective_key_vars) != 0L) {
                   sum(!duplicated(.data_group[, comp_effective_key_vars]))
@@ -318,17 +331,43 @@ grouped_epi_archive =
             # If f is not missing, then just go ahead, slide by group
             if (!missing(f)) {
               if (rlang::is_formula(f)) f = rlang::as_function(f)
-              x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
-                private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before) %>%
-                  dplyr::group_by(dplyr::across(tidyselect::all_of(private$vars)),
-                                  .drop=private$drop) %>%
-                  dplyr::group_modify(comp_one_grp,
-                                      f = f, ...,
-                                      ref_time_value = ref_time_value,
-                                      comp_effective_key_vars = comp_effective_key_vars,
-                                      new_col = new_col,
-                                      .keep = TRUE)
-              })
+                x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
+                  as_of_data = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
+
+                  if (all_versions) {
+                    # `as_of_data` is an archive.
+                    # copy+filter the DT and update versions_end per ref time value
+                    return(
+                      dplyr::group_by(as_of_data$ungrouped$DT, dplyr::across(tidyselect::all_of(private$vars)),
+                                      .drop=private$drop) %>%
+                      dplyr::group_modify(function(.data_group, ...) {
+                        as_of_data_group = as_of_data$clone()
+                        as_of_data_group$ungrouped$as_of = .data_group
+                        comp_one_grp(as_of_data_group, f = f, ...,
+                                          ref_time_value = ref_time_value,
+                                          comp_effective_key_vars = comp_effective_key_vars,
+                                          new_col = new_col
+                          )
+                      },
+                      f = f, ...,
+                      ref_time_value = ref_time_value,
+                      comp_effective_key_vars = comp_effective_key_vars,
+                      new_col = new_col,
+                      .keep = TRUE)
+                    )
+                  }
+
+                  return(
+                    dplyr::group_by(as_of_data, dplyr::across(tidyselect::all_of(private$vars)),
+                                    .drop=private$drop) %>%
+                    dplyr::group_modify(comp_one_grp,
+                                        f = f, ...,
+                                        ref_time_value = ref_time_value,
+                                        comp_effective_key_vars = comp_effective_key_vars,
+                                        new_col = new_col,
+                                        .keep = TRUE)
+                  )
+                })
             }
 
             # Else interpret ... as an expression for tidy evaluation
@@ -346,8 +385,33 @@ grouped_epi_archive =
               new_col = sym(names(rlang::quos_auto_name(quos)))
 
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
-                private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before) %>%
-                  dplyr::group_by(dplyr::across(tidyselect::all_of(private$vars)),
+                as_of_data = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
+
+                if (all_versions) {
+                  # `as_of_data` is an archive.
+                  # copy+filter the DT and update versions_end per ref time value
+                  return(
+                    dplyr::group_by(as_of_data$ungrouped$DT, dplyr::across(tidyselect::all_of(private$vars)),
+                                    .drop=private$drop) %>%
+                    dplyr::group_modify(function(.data_group, ...) {
+                      as_of_data_group = as_of_data$clone()
+                      as_of_data_group$ungrouped$as_of = .data_group
+                      comp_one_grp(as_of_data_group, f = f, quo = quo,
+                                        ref_time_value = ref_time_value,
+                                        comp_effective_key_vars = comp_effective_key_vars,
+                                        new_col = new_col
+                        )
+                    },
+                    f = f, quo = quo,
+                    ref_time_value = ref_time_value,
+                    comp_effective_key_vars = comp_effective_key_vars,
+                    new_col = new_col,
+                    .keep = TRUE)
+                  )
+                }
+
+                return(
+                  dplyr::group_by(as_of_data, dplyr::across(tidyselect::all_of(private$vars)),
                                   .drop=private$drop) %>%
                   dplyr::group_modify(comp_one_grp,
                                       f = f, quo = quo,
@@ -355,6 +419,7 @@ grouped_epi_archive =
                                       comp_effective_key_vars = comp_effective_key_vars,
                                       new_col = new_col,
                                       .keep = TRUE)
+                )
               })
             }
             
