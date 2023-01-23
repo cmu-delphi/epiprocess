@@ -246,18 +246,12 @@ grouped_epi_archive =
                                     ref_time_value,
                                     comp_effective_key_vars,
                                     new_col) {
-              if (all_versions) {
-                if (!is_epi_archive(x, grouped_okay=TRUE)) {
-                  Abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
-                }
-              }
-
               # Carry out the specified computation 
               comp_value = f(.data_group, .group_key, ...)
 
               if (all_versions) {
                 # Extract data from archive so we can do length checks below
-                .data_group = .data_group$ungrouped$DT
+                .data_group = .data_group$DT
               }
 
               # Calculate the number of output elements/rows we expect the
@@ -331,43 +325,37 @@ grouped_epi_archive =
             # If f is not missing, then just go ahead, slide by group
             if (!missing(f)) {
               if (rlang::is_formula(f)) f = rlang::as_function(f)
-                x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
-                  as_of_data = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
+              x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
+                as_of_data = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
 
-                  if (all_versions) {
-                    # `as_of_data` is an archive.
-                    # copy+filter the DT and update versions_end per ref time value
-                    return(
-                      dplyr::group_by(as_of_data$ungrouped$DT, dplyr::across(tidyselect::all_of(private$vars)),
-                                      .drop=private$drop) %>%
-                      dplyr::group_modify(function(.data_group, ...) {
-                        as_of_data_group = as_of_data$clone()
-                        as_of_data_group$ungrouped$as_of = .data_group
-                        comp_one_grp(as_of_data_group, f = f, ...,
-                                          ref_time_value = ref_time_value,
-                                          comp_effective_key_vars = comp_effective_key_vars,
-                                          new_col = new_col
-                          )
-                      },
-                      f = f, ...,
-                      ref_time_value = ref_time_value,
-                      comp_effective_key_vars = comp_effective_key_vars,
-                      new_col = new_col,
-                      .keep = TRUE)
+                group_modify_fn = comp_one_grp
+                if (all_versions) {
+                  as_of_archive = as_of_data
+                  as_of_data = as_of_data$DT
+
+                  # Convert each subgroup chunk to an archive before running the calculation.
+                  group_modify_fn = function(.data_group, ...) {
+                    as_of_data_group = as_of_archive$clone()
+                    as_of_data_group$DT = .data_group
+                    comp_one_grp(as_of_data_group, f = f, ...,
+                                 ref_time_value = ref_time_value,
+                                 comp_effective_key_vars = comp_effective_key_vars,
+                                 new_col = new_col
                     )
                   }
+                }
 
-                  return(
-                    dplyr::group_by(as_of_data, dplyr::across(tidyselect::all_of(private$vars)),
-                                    .drop=private$drop) %>%
-                    dplyr::group_modify(comp_one_grp,
+                return(
+                  dplyr::group_by(as_of_data, dplyr::across(tidyselect::all_of(private$vars)),
+                                  .drop=private$drop) %>%
+                    dplyr::group_modify(group_modify_fn,
                                         f = f, ...,
                                         ref_time_value = ref_time_value,
                                         comp_effective_key_vars = comp_effective_key_vars,
                                         new_col = new_col,
                                         .keep = TRUE)
-                  )
-                })
+                )
+              })
             }
 
             # Else interpret ... as an expression for tidy evaluation
@@ -387,38 +375,32 @@ grouped_epi_archive =
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
                 as_of_data = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
 
+                group_modify_fn = comp_one_grp
                 if (all_versions) {
-                  # `as_of_data` is an archive.
-                  # copy+filter the DT and update versions_end per ref time value
-                  return(
-                    dplyr::group_by(as_of_data$ungrouped$DT, dplyr::across(tidyselect::all_of(private$vars)),
-                                    .drop=private$drop) %>%
-                    dplyr::group_modify(function(.data_group, ...) {
-                      as_of_data_group = as_of_data$clone()
-                      as_of_data_group$ungrouped$as_of = .data_group
-                      comp_one_grp(as_of_data_group, f = f, quo = quo,
-                                        ref_time_value = ref_time_value,
-                                        comp_effective_key_vars = comp_effective_key_vars,
-                                        new_col = new_col
-                        )
-                    },
-                    f = f, quo = quo,
-                    ref_time_value = ref_time_value,
-                    comp_effective_key_vars = comp_effective_key_vars,
-                    new_col = new_col,
-                    .keep = TRUE)
-                  )
+                  as_of_archive = as_of_data
+                  as_of_data = as_of_data$DT
+
+                  # Convert each subgroup chunk to an archive before running the calculation.
+                  group_modify_fn = function(.data_group, ...) {
+                    as_of_data_group = as_of_archive$clone()
+                    as_of_data_group$DT = .data_group
+                    comp_one_grp(as_of_data_group, f = f, quo = quo,
+                                 ref_time_value = ref_time_value,
+                                 comp_effective_key_vars = comp_effective_key_vars,
+                                 new_col = new_col
+                    )
+                  }
                 }
 
                 return(
                   dplyr::group_by(as_of_data, dplyr::across(tidyselect::all_of(private$vars)),
                                   .drop=private$drop) %>%
-                  dplyr::group_modify(comp_one_grp,
-                                      f = f, quo = quo,
-                                      ref_time_value = ref_time_value,
-                                      comp_effective_key_vars = comp_effective_key_vars,
-                                      new_col = new_col,
-                                      .keep = TRUE)
+                    dplyr::group_modify(group_modify_fn,
+                                        f = f, quo = quo,
+                                        ref_time_value = ref_time_value,
+                                        comp_effective_key_vars = comp_effective_key_vars,
+                                        new_col = new_col,
+                                        .keep = TRUE)
                 )
               })
             }
