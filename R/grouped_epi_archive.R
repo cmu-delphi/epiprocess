@@ -250,7 +250,9 @@ grouped_epi_archive =
               comp_value = f(.data_group, .group_key, ...)
 
               if (all_versions) {
-                # Extract data from archive so we can do length checks below
+                # Extract data from archive so we can do length checks below. When
+                # `all_versions = TRUE`, `.data_group` will always be an ungrouped
+                # archive because of the preceding `as_of` step.
                 .data_group = .data_group$DT
               }
 
@@ -326,15 +328,21 @@ grouped_epi_archive =
             if (!missing(f)) {
               if (rlang::is_formula(f)) f = rlang::as_function(f)
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
+                # Creates ungrouped `epi_archive`
                 as_of_data = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
 
                 group_modify_fn = comp_one_grp
                 if (all_versions) {
                   as_of_archive = as_of_data
+                  # Make sure `as_of_data` is referencing the DT so we can call `group_by` later.
                   as_of_data = as_of_data$DT
 
                   # Convert each subgroup chunk to an archive before running the calculation.
-                  group_modify_fn = function(.data_group, ...) {
+                  group_modify_fn = function(.data_group, .group_key,
+                                    f, ...,
+                                    ref_time_value,
+                                    comp_effective_key_vars,
+                                    new_col) {
                     as_of_data_group = as_of_archive$clone()
                     as_of_data_group$DT = .data_group
                     comp_one_grp(as_of_data_group, f = f, ...,
@@ -373,15 +381,21 @@ grouped_epi_archive =
               new_col = sym(names(rlang::quos_auto_name(quos)))
 
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
+                # Creates ungrouped `epi_archive`
                 as_of_data = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
 
                 group_modify_fn = comp_one_grp
                 if (all_versions) {
                   as_of_archive = as_of_data
+                  # Make sure `as_of_data` is referencing the DT so we can call `group_by` later.
                   as_of_data = as_of_data$DT
 
                   # Convert each subgroup chunk to an archive before running the calculation.
-                  group_modify_fn = function(.data_group, ...) {
+                  group_modify_fn = function(.data_group, .group_key,
+                                    f, ...,
+                                    ref_time_value,
+                                    comp_effective_key_vars,
+                                    new_col) {
                     as_of_data_group = as_of_archive$clone()
                     as_of_data_group$DT = .data_group
                     comp_one_grp(as_of_data_group, f = f, quo = quo,
