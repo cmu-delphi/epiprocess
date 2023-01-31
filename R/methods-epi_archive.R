@@ -803,7 +803,7 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'              new_col_name = 'case_rate_3d_av') %>%
 #'   ungroup()
 #'
-#' @importFrom rlang enquo
+#' @importFrom rlang enquo !!!
 #' @export
 epix_slide = function(x, f, ..., before, ref_time_values,
                       time_step, new_col_name = "slide_value",
@@ -825,7 +825,7 @@ epix_slide = function(x, f, ..., before, ref_time_values,
 
 #' Filter an `epi_archive` object to keep only older versions
 #'
-#' Generates a filter `epi_archive` from an `epi_archive` object, keeping
+#' Generates a filtered `epi_archive` from an `epi_archive` object, keeping
 #' only rows with `version` falling on or before a specified date.
 #'
 #' @param x An `epi_archive` object
@@ -846,12 +846,23 @@ epix_truncate_versions_after = function(x, max_version) {
   }
 
   result = x$clone()
+
+  input_grouped = is_grouped_epi_archive(result)
+  if (input_grouped) {
+    result = result$ungrouped()
+  }
+
   result$DT <- result$DT[result$DT$version <= max_version, colnames(result$DT), with=FALSE]
   if (!is.na(result$clobberable_versions_start) &&
         result$clobberable_versions_start > max_version) {
     result$clobberable_versions_start <- NA
   }
   result$versions_end <- max_version
+
+  if (input_grouped) {
+    # Regroup filtered version
+    result = result$group(!!!x$groups())
+  }
 
   return(result)
 }
