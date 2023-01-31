@@ -837,19 +837,28 @@ epix_slide = function(x, f, ..., before, ref_time_values,
 #'
 #' @export
 epix_truncate_versions_after = function(x, max_version) {
-  if (!is_epi_archive(x, grouped_okay=TRUE)) {
-    Abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
-  }
-  if (!identical(class(max_version), class(x$DT$version)) ||
-      !identical(typeof(max_version), typeof(x$DT$version))) {
-    Abort("`max_version` and `DT$version` must have same `class` and `typeof`.")
-  }
-
   result = x$clone()
 
   input_grouped = is_grouped_epi_archive(result)
   if (input_grouped) {
-    result = result$ungrouped()
+    result = result$ungroup()
+  }
+
+  if (!is_epi_archive(x, grouped_okay=TRUE)) {
+    Abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
+  }
+  if (!identical(class(max_version), class(result$DT$version)) ||
+      !identical(typeof(max_version), typeof(result$DT$version))) {
+    Abort("`max_version` and `DT$version` must have same `class` and `typeof`.")
+  }
+  if (length(max_version) != 1) {
+    Abort("`max_version` cannot be a vector.")
+  }
+  if (is.na(max_version)) {
+    Abort("`max_version` must not be NA.")
+  }
+  if (max_version > result$versions_end) {
+    Abort("`max_version` must be at most `x$versions_end`.")
   }
 
   result$DT <- result$DT[result$DT$version <= max_version, colnames(result$DT), with=FALSE]
@@ -861,7 +870,7 @@ epix_truncate_versions_after = function(x, max_version) {
 
   if (input_grouped) {
     # Regroup filtered version
-    result = result$group(!!!x$groups())
+    result = result$group_by(!!!x$groups())
   }
 
   return(result)
