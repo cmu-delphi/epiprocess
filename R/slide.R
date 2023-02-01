@@ -4,9 +4,9 @@
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
 #' examples.
 #'
-#' @param x The `epi_df` object under consideration,
-#'   [`dplyr::group_by`][grouped] or ungrouped. If ungrouped, all data in `x`
-#'   will be treated as part of a single data group.
+#' @param x The `epi_df` object under consideration, [grouped][dplyr::group_by]
+#'   or ungrouped. If ungrouped, all data in `x` will be treated as part of a
+#'   single data group.
 #' @param f Function, formula, or missing; together with `...` specifies the
 #'   computation to slide. To "slide" means to apply a computation within a
 #'   sliding (a.k.a. "rolling") time window for each data group. The window is
