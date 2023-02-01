@@ -511,7 +511,7 @@ epix_detailed_restricted_mutate = function(.data, ...) {
 #'   [`dplyr::mutate`]-like syntax here to calculate new columns on which to
 #'   perform grouping, but note that, if you are regrouping an already-grouped
 #'   `.data` object, the calculations will be carried out ignoring such grouping
-#'   (same as [in \code{dplyr}][dplyr::group_by]).
+#'   (same as [in dplyr][dplyr::group_by]).
 #' * In `ungroup`: either
 #'   * empty, in order to remove the grouping and output an `epi_archive`; or
 #'   * variable name(s) or other ["tidy-select"][dplyr::dplyr_tidy_select]
