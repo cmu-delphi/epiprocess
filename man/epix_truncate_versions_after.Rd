@@ -15,7 +15,7 @@ current archive data having \code{version} less than or equal to the
 specified \code{max_version}}
 }
 \value{
-An \code{epi_archive} object.
+An \code{epi_archive} object
 }
 \description{
 Generates a filtered \code{epi_archive} from an \code{epi_archive} object, keeping

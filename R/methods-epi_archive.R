@@ -833,29 +833,52 @@ epix_slide = function(x, f, ..., before, ref_time_values,
 #'   filtered archive. That is, the output archive will comprise rows of the
 #'   current archive data having `version` less than or equal to the
 #'   specified `max_version`
-#' @return An `epi_archive` object.
+#' @return An `epi_archive` object
 #'
 #' @export
 epix_truncate_versions_after = function(x, max_version) {
-  result = x$clone()
-
-  input_grouped = is_grouped_epi_archive(result)
-  if (input_grouped) {
-    result = result$ungroup()
-  }
-
   if (!is_epi_archive(x, grouped_okay=TRUE)) {
     Abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
-  }
-  if (!identical(class(max_version), class(result$DT$version)) ||
-      !identical(typeof(max_version), typeof(result$DT$version))) {
-    Abort("`max_version` and `DT$version` must have same `class` and `typeof`.")
   }
   if (length(max_version) != 1) {
     Abort("`max_version` cannot be a vector.")
   }
   if (is.na(max_version)) {
     Abort("`max_version` must not be NA.")
+  }
+
+  UseMethod("epix_truncate_versions_after")
+}
+
+#' @export
+epix_truncate_versions_after.epi_archive = function(x, max_version) {
+  if (!identical(class(max_version), class(x$DT$version)) ||
+      !identical(typeof(max_version), typeof(x$DT$version))) {
+    Abort("`max_version` and `DT$version` must have same `class` and `typeof`.")
+  }
+  if (max_version > x$versions_end) {
+    Abort("`max_version` must be at most `x$versions_end`.")
+  }
+
+  result = x$clone()
+
+  result$DT <- result$DT[result$DT$version <= max_version, colnames(result$DT), with=FALSE]
+  if (!is.na(result$clobberable_versions_start) &&
+        result$clobberable_versions_start > max_version) {
+    result$clobberable_versions_start <- NA
+  }
+  result$versions_end <- max_version
+
+  return(result)
+}
+
+#' @export
+epix_truncate_versions_after.grouped_epi_archive = function(x, max_version) {
+  result = x$clone()$ungroup()
+
+  if (!identical(class(max_version), class(result$DT$version)) ||
+      !identical(typeof(max_version), typeof(result$DT$version))) {
+    Abort("`max_version` and `DT$version` must have same `class` and `typeof`.")
   }
   if (max_version > result$versions_end) {
     Abort("`max_version` must be at most `x$versions_end`.")
@@ -868,10 +891,6 @@ epix_truncate_versions_after = function(x, max_version) {
   }
   result$versions_end <- max_version
 
-  if (input_grouped) {
-    # Regroup filtered version
-    result = result$group_by(!!!x$groups())
-  }
-
-  return(result)
+  # Regroup filtered version
+  return(result$group_by(!!!x$groups()))
 }
