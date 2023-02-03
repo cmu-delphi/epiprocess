@@ -246,7 +246,7 @@ grouped_epi_archive =
                                     ref_time_value,
                                     comp_effective_key_vars,
                                     new_col) {
-              # Carry out the specified computation 
+              # Carry out the specified computation
               comp_value = f(.data_group, .group_key, ...)
 
               if (all_versions) {
@@ -345,7 +345,7 @@ grouped_epi_archive =
                                     new_col) {
                     as_of_data_group = as_of_archive$clone()
                     as_of_data_group$DT = .data_group
-                    comp_one_grp(as_of_data_group, f = f, ...,
+                    comp_one_grp(as_of_data_group, .group_key, f = f, ...,
                                  ref_time_value = ref_time_value,
                                  comp_effective_key_vars = comp_effective_key_vars,
                                  new_col = new_col
@@ -398,7 +398,7 @@ grouped_epi_archive =
                                     new_col) {
                     as_of_data_group = as_of_archive$clone()
                     as_of_data_group$DT = .data_group
-                    comp_one_grp(as_of_data_group, f = f, quo = quo,
+                    comp_one_grp(as_of_data_group, .group_key, f = f, quo = quo,
                                  ref_time_value = ref_time_value,
                                  comp_effective_key_vars = comp_effective_key_vars,
                                  new_col = new_col
