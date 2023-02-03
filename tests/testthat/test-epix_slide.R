@@ -178,3 +178,97 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
     reference_by_neither
   )
 })
+
+ea <- tibble::tribble(~version, ~time_value, ~binary,
+                     2,        1:1,          2^(1:1),
+                     3,        1:2,          2^(2:1),
+                     4,        1:3,          2^(3:1),
+                     5,        1:4,          2^(4:1),
+                     6,        1:5,          2^(5:1),
+                     7,        1:6,          2^(6:1)) %>%
+  tidyr::unnest(c(time_value,binary))
+
+ea$geo_value <- "x"
+ea <- as_epi_archive(ea)
+
+test_that("epix_slide with all_versions option has access to all older versions",{
+  slide_fn <- function(x, g) {
+    expect_true(is_epi_archive(x))
+    return(data.frame(n_versions = length(unique(x$DT$version)), n_row = nrow(x$DT)))
+  }
+
+  ea1 <- ea %>% group_by() %>%
+    epix_slide(f = slide_fn,
+               before = 10^3,
+               new_col_name = "out",
+               all_versions = TRUE)
+
+  expect_true(inherits(ea1, "tbl_df"))
+
+  ea2 <- tibble::tribble(
+      ~time_value, ~out_n_versions, ~out_n_row,
+             2,        1L,            sum(1:1),
+             3,        2L,            sum(1:2),
+             4,        3L,            sum(1:3),
+             5,        4L,            sum(1:4),
+             6,        5L,            sum(1:5),
+             7,        6L,            sum(1:6)
+    )
+
+  expect_identical(ea1,ea2) # *
+
+  ea3 <- (
+    ea
+    $group_by()
+    $slide(f = slide_fn,
+               before = 10^3,
+               new_col_name = "out",
+               all_versions = TRUE)
+  )
+
+  expect_identical(ea1,ea3) # This and * Imply ea2 and ea3 are identical
+})
+
+test_that("epix_slide `f` is passed an ungrouped `epi_archive`",{
+  slide_fn <- function(x, g) {
+    expect_true(is_epi_archive(x))
+    return(NA)
+  }
+
+  ea %>% group_by() %>%
+    epix_slide(f = slide_fn,
+               before = 1,
+               ref_time_values = 5,
+               new_col_name = "out",
+               all_versions = TRUE)
+})
+
+test_that("epix_slide with all_versions options works as intended",{
+  xx1 <- xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(f = ~ sum(.x$DT$binary),
+               before = 2,
+               new_col_name = "sum_binary",
+               all_versions = TRUE)
+
+  xx2 <- tibble(geo_value = rep("x",4),
+                time_value = c(4,5,6,7),
+                sum_binary = c(2^3+2^2,
+                               2^6+2^3,
+                               2^10+2^9+2^6,
+                               2^15+2^14+2^10)) %>%
+    group_by(geo_value)
+
+  expect_identical(xx1,xx2) # *
+
+  xx3 <- (
+    xx
+    $group_by(dplyr::across(dplyr::all_of("geo_value")))
+    $slide(f = ~ sum(.x$DT$binary),
+           before = 2,
+           new_col_name = 'sum_binary',
+           all_versions = TRUE)
+  )
+
+  expect_identical(xx1,xx3) # This and * Imply xx2 and xx3 are identical
+})
