@@ -874,23 +874,6 @@ epix_truncate_versions_after.epi_archive = function(x, max_version) {
 
 #' @export
 epix_truncate_versions_after.grouped_epi_archive = function(x, max_version) {
-  result = x$clone()$ungroup()
-
-  if (!identical(class(max_version), class(result$DT$version)) ||
-      !identical(typeof(max_version), typeof(result$DT$version))) {
-    Abort("`max_version` and `DT$version` must have same `class` and `typeof`.")
-  }
-  if (max_version > result$versions_end) {
-    Abort("`max_version` must be at most `x$versions_end`.")
-  }
-
-  result$DT <- result$DT[result$DT$version <= max_version, colnames(result$DT), with=FALSE]
-  if (!is.na(result$clobberable_versions_start) &&
-        result$clobberable_versions_start > max_version) {
-    result$clobberable_versions_start <- NA
-  }
-  result$versions_end <- max_version
-
-  # Regroup filtered version
+  result = epix_truncate_versions_after(x$clone()$ungroup(), max_version=max_version)
   return(result$group_by(!!!x$groups()))
 }
