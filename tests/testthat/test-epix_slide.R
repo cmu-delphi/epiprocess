@@ -193,7 +193,6 @@ ea <- as_epi_archive(ea)
 
 test_that("epix_slide with all_versions option has access to all older versions",{
   slide_fn <- function(x, g) {
-    expect_true(is_epi_archive(x))
     return(data.frame(n_versions = length(unique(x$DT$version)), n_row = nrow(x$DT)))
   }
 
@@ -243,7 +242,7 @@ test_that("epix_slide `f` is passed an ungrouped `epi_archive`",{
                all_versions = TRUE)
 })
 
-test_that("epix_slide with all_versions options works as intended",{
+test_that("epix_slide with all_versions option works as intended",{
   xx1 <- xx %>%
     group_by(.data$geo_value) %>%
     epix_slide(f = ~ sum(.x$DT$binary),
