@@ -170,6 +170,18 @@ grouped_epi_archive =
           grouped_epi_archive$new(private$ungrouped, result_vars, private$drop)
         }
       },
+#' @description Filter to keep only older versions by mutating the underlying
+#'   `epi_archive` using `$truncate_versions_after`. Returns the mutated
+#'   `grouped_epi_archive` [invisibly][base::invisible].
+#' @param x as in [`epix_truncate_versions_after`]
+#' @param max_version as in [`epix_truncate_versions_after`]
+      truncate_versions_after = function(max_version) {
+        # The grouping is irrelevant for this method; if we were to split into
+        # groups and recombine appropriately, we should get the same result as
+        # just leveraging the ungrouped method, so just do the latter:
+        private$ungrouped$truncate_versions_after(max_version)
+        return (invisible(self))
+      },
 #' @description Slides a given function over variables in a `grouped_epi_archive`
 #'   object. See the documentation for the wrapper function [`epix_slide()`] for
 #'   details.
@@ -482,4 +494,10 @@ is_grouped_epi_archive = function(x) {
 #' @export
 group_by_drop_default.grouped_epi_archive = function(.tbl) {
   .tbl$group_by_drop_default()
+}
+
+#' @export
+epix_truncate_versions_after.grouped_epi_archive = function(x, max_version) {
+  return ((x$clone()$truncate_versions_after(max_version)))
+  # ^ second set of parens drops invisibility
 }

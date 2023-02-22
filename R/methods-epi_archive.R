@@ -837,43 +837,11 @@ epix_slide = function(x, f, ..., before, ref_time_values,
 #'
 #' @export
 epix_truncate_versions_after = function(x, max_version) {
-  if (!is_epi_archive(x, grouped_okay=TRUE)) {
-    Abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
-  }
-  if (length(max_version) != 1) {
-    Abort("`max_version` cannot be a vector.")
-  }
-  if (is.na(max_version)) {
-    Abort("`max_version` must not be NA.")
-  }
-
   UseMethod("epix_truncate_versions_after")
 }
 
 #' @export
 epix_truncate_versions_after.epi_archive = function(x, max_version) {
-  if (!identical(class(max_version), class(x$DT$version)) ||
-      !identical(typeof(max_version), typeof(x$DT$version))) {
-    Abort("`max_version` and `DT$version` must have same `class` and `typeof`.")
-  }
-  if (max_version > x$versions_end) {
-    Abort("`max_version` must be at most `x$versions_end`.")
-  }
-
-  result = x$clone()
-
-  result$DT <- result$DT[result$DT$version <= max_version, colnames(result$DT), with=FALSE]
-  if (!is.na(result$clobberable_versions_start) &&
-        result$clobberable_versions_start > max_version) {
-    result$clobberable_versions_start <- NA
-  }
-  result$versions_end <- max_version
-
-  return(result)
-}
-
-#' @export
-epix_truncate_versions_after.grouped_epi_archive = function(x, max_version) {
-  result = epix_truncate_versions_after(x$clone()$ungroup(), max_version=max_version)
-  return(result$group_by(!!!x$groups()))
+  return ((x$clone()$truncate_versions_after(max_version)))
+  # ^ second set of parens drops invisibility
 }

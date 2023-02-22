@@ -567,6 +567,38 @@ epi_archive =
             return (invisible(self))
           },
           #####
+#' @description Filter to keep only older versions, mutating the archive by
+#'   potentially reseating but not mutating some fields. `DT` is likely, but not
+#'   guaranteed, to be copied. Returns the mutated archive
+#'   [invisibly][base::invisible].
+#' @param x as in [`epix_truncate_versions_after`]
+#' @param max_version as in [`epix_truncate_versions_after`]
+          truncate_versions_after = function(max_version) {
+            if (length(max_version) != 1) {
+              Abort("`max_version` cannot be a vector.")
+            }
+            if (is.na(max_version)) {
+              Abort("`max_version` must not be NA.")
+            }
+            if (!identical(class(max_version), class(self$DT$version)) ||
+                  !identical(typeof(max_version), typeof(self$DT$version))) {
+              Abort("`max_version` and `DT$version` must have same `class` and `typeof`.")
+            }
+            if (max_version > self$versions_end) {
+              Abort("`max_version` must be at most `self$versions_end`.")
+            }
+            self$DT <- self$DT[self$DT$version <= max_version, colnames(self$DT), with=FALSE]
+            # (^ this filter operation seems to always copy the DT, even if it
+            # keeps every entry; we don't guarantee this behavior in
+            # documentation, though, so we could change to alias in this case)
+            if (!is.na(self$clobberable_versions_start) &&
+                  self$clobberable_versions_start > max_version) {
+              self$clobberable_versions_start <- NA
+            }
+            self$versions_end <- max_version
+            return (invisible(self))
+          },
+          #####
 #' @description Merges another `epi_archive` with the current one, mutating the
 #'   current one by reseating its `DT` and several other fields, but avoiding
 #'   mutation of the old `DT`; returns the current archive
