@@ -185,7 +185,7 @@ grouped_epi_archive =
 #' @description Slides a given function over variables in a `grouped_epi_archive`
 #'   object. See the documentation for the wrapper function [`epix_slide()`] for
 #'   details.
-#' @importFrom data.table key
+#' @importFrom data.table key address setattr setDT
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
           slide = function(f, ..., before, ref_time_values,
                            time_step, new_col_name = "slide_value",
@@ -286,7 +286,13 @@ grouped_epi_archive =
               # contents of those rows).
               count =
                 if (length(comp_effective_key_vars) != 0L) {
-                  sum(!duplicated(.data_group[, comp_effective_key_vars]))
+                  comp_effective_key_vals_in_comp_input =
+                    if (is.data.table(.data_group)) {
+                      .data_group[, comp_effective_key_vars, with=FALSE]
+                    } else {
+                      .data_group[, comp_effective_key_vars]
+                    }
+                  sum(!duplicated(comp_effective_key_vals_in_comp_input))
                 } else {
                   # Same idea as above, but accounting for `duplicated` working
                   # differently (outputting `logical(0)`) on 0-column inputs
@@ -340,14 +346,32 @@ grouped_epi_archive =
             if (!missing(f)) {
               if (rlang::is_formula(f)) f = rlang::as_function(f)
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
-                # Creates ungrouped `epi_archive` when `all_versions` is TRUE
-                as_of_data = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
+                # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
+                # `epi_archive` if `all_versions` is `TRUE`:
+                as_of_raw = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
 
-                group_modify_fn = comp_one_grp
-                if (all_versions) {
-                  as_of_archive = as_of_data
-                  # Make sure `as_of_data` is referencing the DT so we can call `group_by` on it later.
-                  as_of_data = as_of_data$DT
+                # Set:
+                # * `as_of_df`, the data.frame/tibble/epi_df/etc. that we will
+                #    `group_modify` as the `.data` argument. Might or might not
+                #    include version column.
+                # * `group_modify_fn`, the corresponding `.f` argument
+                if (!all_versions) {
+                  as_of_df = as_of_raw
+                  group_modify_fn = comp_one_grp
+                } else {
+                  as_of_archive = as_of_raw
+                  # We essentially want to `group_modify` the archive, but don't
+                  # provide an implementation yet. Next best would be
+                  # `group_modify` on its `$DT`, but that has different behavior
+                  # based on whether or not `dtplyr` is loaded. Instead, go
+                  # through a , trying to avoid copies.
+                  if (address(as_of_archive$DT) == address(private$ungrouped$DT)) {
+                    # `as_of` aliased its the full `$DT`; copy before mutating:
+                    as_of_archive$DT <- copy(as_of_archive$DT)
+                  }
+                  dt_key = data.table::key(as_of_archive$DT)
+                  as_of_df = as_of_archive$DT
+                  data.table::setDF(as_of_df)
 
                   # Convert each subgroup chunk to an archive before running the calculation.
                   group_modify_fn = function(.data_group, .group_key,
@@ -355,9 +379,14 @@ grouped_epi_archive =
                                     ref_time_value,
                                     comp_effective_key_vars,
                                     new_col) {
-                    as_of_data_group = as_of_archive$clone()
-                    as_of_data_group$DT = .data_group
-                    comp_one_grp(as_of_data_group, .group_key, f = f, ...,
+                    # .data_group is coming from as_of_df as a tibble, but we
+                    # want to feed `comp_one_grp` an `epi_archive` backed by a
+                    # DT; convert and wrap:
+                    setattr(.data_group, "sorted", dt_key)
+                    data.table::setDT(.data_group, key=dt_key)
+                    .data_group_archive = as_of_archive$clone()
+                    .data_group_archive$DT = .data_group
+                    comp_one_grp(.data_group_archive, .group_key, f = f, ...,
                                  ref_time_value = ref_time_value,
                                  comp_effective_key_vars = comp_effective_key_vars,
                                  new_col = new_col
@@ -366,7 +395,7 @@ grouped_epi_archive =
                 }
 
                 return(
-                  dplyr::group_by(as_of_data, dplyr::across(tidyselect::all_of(private$vars)),
+                  dplyr::group_by(as_of_df, dplyr::across(tidyselect::all_of(private$vars)),
                                   .drop=private$drop) %>%
                     dplyr::group_modify(group_modify_fn,
                                         f = f, ...,
@@ -393,14 +422,32 @@ grouped_epi_archive =
               new_col = sym(names(rlang::quos_auto_name(quos)))
 
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
-                # Creates ungrouped `epi_archive`
-                as_of_data = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
+                # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
+                # `epi_archive` if `all_versions` is `TRUE`:
+                as_of_raw = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
 
-                group_modify_fn = comp_one_grp
-                if (all_versions) {
-                  as_of_archive = as_of_data
-                  # Make sure `as_of_data` is referencing the DT so we can call `group_by` later.
-                  as_of_data = as_of_data$DT
+                # Set:
+                # * `as_of_df`, the data.frame/tibble/epi_df/etc. that we will
+                #    `group_modify` as the `.data` argument. Might or might not
+                #    include version column.
+                # * `group_modify_fn`, the corresponding `.f` argument
+                if (!all_versions) {
+                  as_of_tbl = as_of_raw
+                  group_modify_fn = comp_one_grp
+                } else {
+                  as_of_archive = as_of_raw
+                  # We essentially want to `group_modify` the archive, but don't
+                  # provide an implementation yet. Next best would be
+                  # `group_modify` on its `$DT`, but that has different behavior
+                  # based on whether or not `dtplyr` is loaded. Instead, go
+                  # through a , trying to avoid copies.
+                  if (address(as_of_archive$DT) == address(private$ungrouped$DT)) {
+                    # `as_of` aliased its the full `$DT`; copy before mutating:
+                    as_of_archive$DT <- copy(as_of_archive$DT)
+                  }
+                  dt_key = data.table::key(as_of_archive$DT)
+                  as_of_df = as_of_archive$DT
+                  data.table::setDF(as_of_df)
 
                   # Convert each subgroup chunk to an archive before running the calculation.
                   group_modify_fn = function(.data_group, .group_key,
@@ -408,9 +455,14 @@ grouped_epi_archive =
                                     ref_time_value,
                                     comp_effective_key_vars,
                                     new_col) {
-                    as_of_data_group = as_of_archive$clone()
-                    as_of_data_group$DT = .data_group
-                    comp_one_grp(as_of_data_group, .group_key, f = f, quo = quo,
+                    # .data_group is coming from as_of_tbl as a tibble, but we
+                    # want to feed `comp_one_grp` an `epi_archive` backed by a
+                    # DT; convert and wrap:
+                    data.table::setattr(.data_group, "sorted", dt_key)
+                    data.table::setDT(.data_group, key=dt_key)
+                    .data_group_archive = as_of_archive$clone()
+                    .data_group_archive$DT = .data_group
+                    comp_one_grp(.data_group_archive, .group_key, f = f, quo = quo,
                                  ref_time_value = ref_time_value,
                                  comp_effective_key_vars = comp_effective_key_vars,
                                  new_col = new_col
@@ -419,7 +471,7 @@ grouped_epi_archive =
                 }
 
                 return(
-                  dplyr::group_by(as_of_data, dplyr::across(tidyselect::all_of(private$vars)),
+                  dplyr::group_by(as_of_df, dplyr::across(tidyselect::all_of(private$vars)),
                                   .drop=private$drop) %>%
                     dplyr::group_modify(group_modify_fn,
                                         f = f, quo = quo,

@@ -191,42 +191,100 @@ ea <- tibble::tribble(~version, ~time_value, ~binary,
 ea$geo_value <- "x"
 ea <- as_epi_archive(ea)
 
-test_that("epix_slide with all_versions option has access to all older versions",{
+test_that("epix_slide with all_versions option has access to all older versions", {
+  # Make sure we're using testthat edition 3, where `expect_identical` doesn't
+  # actually mean `base::identical` but something more content-based using
+  # `waldo` package:
+  testthat::local_edition(3)
+
   slide_fn <- function(x, g) {
-    return(data.frame(n_versions = length(unique(x$DT$version)), n_row = nrow(x$DT)))
+    return(tibble(n_versions = length(unique(x$DT$version)),
+                  n_row = nrow(x$DT),
+                  dt_class1 = class(x$DT)[[1L]],
+                  dt_key = list(key(x$DT))))
   }
 
-  ea1 <- ea %>% group_by() %>%
+  ea_orig_mirror = ea$clone(deep=TRUE)
+  ea_orig_mirror$DT <- data.table::copy(ea_orig_mirror$DT)
+
+  result1 <- ea %>% group_by() %>%
     epix_slide(f = slide_fn,
                before = 10^3,
-               new_col_name = "out",
+               names_sep = NULL,
                all_versions = TRUE)
 
-  expect_true(inherits(ea1, "tbl_df"))
+  expect_true(inherits(result1, "tbl_df"))
 
-  ea2 <- tibble::tribble(
-      ~time_value, ~out_n_versions, ~out_n_row,
-             2,        1L,            sum(1:1),
-             3,        2L,            sum(1:2),
-             4,        3L,            sum(1:3),
-             5,        4L,            sum(1:4),
-             6,        5L,            sum(1:5),
-             7,        6L,            sum(1:6)
+  result2 <- tibble::tribble(
+      ~time_value, ~n_versions,   ~n_row,    ~dt_class1,    ~dt_key,
+             2,        1L,      sum(1:1),  "data.table", key(ea$DT),
+             3,        2L,      sum(1:2),  "data.table", key(ea$DT),
+             4,        3L,      sum(1:3),  "data.table", key(ea$DT),
+             5,        4L,      sum(1:4),  "data.table", key(ea$DT),
+             6,        5L,      sum(1:5),  "data.table", key(ea$DT),
+             7,        6L,      sum(1:6),  "data.table", key(ea$DT),
     )
 
-  expect_identical(ea1,ea2) # *
+  expect_identical(result1,result2) # *
 
-  ea3 <- (
+  result3 <- (
     ea
     $group_by()
     $slide(f = slide_fn,
                before = 10^3,
-               new_col_name = "out",
+               names_sep = NULL,
                all_versions = TRUE)
   )
 
-  expect_identical(ea1,ea3) # This and * Imply ea2 and ea3 are identical
+  expect_identical(result1,result3) # This and * Imply result2 and result3 are identical
+
+  expect_identical(ea, ea_orig_mirror) # We shouldn't have mutated ea
 })
+
+test_that("as_of and epix_slide with long enough window are compatible", {
+  testthat::local_edition(3)
+
+  # For all_versions = FALSE:
+
+  f1 = function(x, g) {
+    tibble(
+      diff_mean = mean(diff(x$binary))
+    )
+  }
+  ref_time_value1 = 5
+
+  expect_identical(
+    ea$as_of(ref_time_value1) %>% f1() %>% mutate(time_value = ref_time_value1, .before=1L),
+    ea$slide(f1, before=1000L, ref_time_values=ref_time_value1, names_sep=NULL)
+  )
+
+  # For all_versions = TRUE:
+
+  f2 = function(x, g) {
+    x %>%
+      # extract time&version-lag-1 data:
+      epix_slide(
+        function(subx, subg) {
+          tibble(data = list(
+            subx %>%
+              filter(time_value == attr(subx, "metadata")$as_of - 1) %>%
+              rename(real_time_value = time_value, lag1 = binary)
+          ))
+        }, before = 1, names_sep = NULL
+      ) %>%
+      # assess as nowcast:
+      unnest(data) %>%
+      inner_join(x$as_of(x$versions_end), by = setdiff(key(x$DT), c("version"))) %>%
+      summarize(mean(abs(binary - lag1)))
+  }
+  ref_time_value2 = 5
+
+  expect_identical(
+    ea$as_of(ref_time_value2, all_versions=TRUE) %>% f2() %>% mutate(time_value = ref_time_value2, .before=1L),
+    ea$slide(f2, before=1000L, ref_time_values=ref_time_value2, all_versions=TRUE, names_sep=NULL)
+  )
+})
+
 
 test_that("epix_slide `f` is passed an ungrouped `epi_archive`",{
   slide_fn <- function(x, g) {
