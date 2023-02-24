@@ -185,7 +185,7 @@ grouped_epi_archive =
 #' @description Slides a given function over variables in a `grouped_epi_archive`
 #'   object. See the documentation for the wrapper function [`epix_slide()`] for
 #'   details.
-#' @importFrom data.table key address setattr setDT
+#' @importFrom data.table key address
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
           slide = function(f, ..., before, ref_time_values,
                            time_step, new_col_name = "slide_value",
@@ -382,7 +382,7 @@ grouped_epi_archive =
                     # .data_group is coming from as_of_df as a tibble, but we
                     # want to feed `comp_one_grp` an `epi_archive` backed by a
                     # DT; convert and wrap:
-                    setattr(.data_group, "sorted", dt_key)
+                    data.table::setattr(.data_group, "sorted", dt_key)
                     data.table::setDT(.data_group, key=dt_key)
                     .data_group_archive = as_of_archive$clone()
                     .data_group_archive$DT = .data_group

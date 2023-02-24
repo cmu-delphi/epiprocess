@@ -118,6 +118,7 @@ toy_epi_archive
 \item \href{#method-epi_archive-print}{\code{epi_archive$print()}}
 \item \href{#method-epi_archive-as_of}{\code{epi_archive$as_of()}}
 \item \href{#method-epi_archive-fill_through_version}{\code{epi_archive$fill_through_version()}}
+\item \href{#method-epi_archive-truncate_versions_after}{\code{epi_archive$truncate_versions_after()}}
 \item \href{#method-epi_archive-merge}{\code{epi_archive$merge()}}
 \item \href{#method-epi_archive-group_by}{\code{epi_archive$group_by()}}
 \item \href{#method-epi_archive-slide}{\code{epi_archive$slide()}}
@@ -235,6 +236,28 @@ version, which doesn't mutate the input archive but might alias its fields.
 \item{\code{fill_versions_end}}{as in \code{\link{epix_fill_through_version}}}
 
 \item{\code{how}}{as in \code{\link{epix_fill_through_version}}}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-epi_archive-truncate_versions_after"></a>}}
+\if{latex}{\out{\hypertarget{method-epi_archive-truncate_versions_after}{}}}
+\subsection{Method \code{truncate_versions_after()}}{
+Filter to keep only older versions, mutating the archive by
+potentially reseating but not mutating some fields. \code{DT} is likely, but not
+guaranteed, to be copied. Returns the mutated archive
+\link[base:invisible]{invisibly}.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$truncate_versions_after(max_version)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{max_version}}{as in \code{\link{epix_truncate_versions_after}}}
+
+\item{\code{x}}{as in \code{\link{epix_truncate_versions_after}}}
 }
 \if{html}{\out{</div>}}
 }
