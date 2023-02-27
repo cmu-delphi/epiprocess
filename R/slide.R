@@ -46,9 +46,10 @@
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
-#' @param as_list_col Should the new column be stored as a list column? Default
-#'   is `FALSE`, in which case a list object returned by `f` would be unnested 
-#'   (using `tidyr::unnest()`), and the names of the resulting columns are given
+#' @param as_list_col If the computations return data frames, should the slide
+#'   result hold these in a single list column or try to unnest them? Default is
+#'   `FALSE`, in which case a list object returned by `f` would be unnested
+#'   (using [`tidyr::unnest()`]), and the names of the resulting columns are given
 #'   by prepending `new_col_name` to the names of the list elements.
 #' @param names_sep String specifying the separator to use in `tidyr::unnest()`
 #'   when `as_list_col = FALSE`. Default is "_". Using `NULL` drops the prefix
