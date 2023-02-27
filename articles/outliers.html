@@ -8,10 +8,10 @@
 <meta name="description" content="epiprocess">
 <title>Detect and correct outliers in signals • epiprocess</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.1.3/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.1.3/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
+<link href="../deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
-<!-- bootstrap-toc --><script src="https://cdn.rawgit.com/afeld/bootstrap-toc/v1.0.1/dist/bootstrap-toc.min.js"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Detect and correct outliers in signals">
+<!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Detect and correct outliers in signals">
 <meta property="og:description" content="epiprocess">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -78,7 +78,8 @@
 
 
 
-<script src="outliers_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
+
+<div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Detect and correct outliers in signals</h1>
             
@@ -89,7 +90,14 @@
 
     
     
-<p>This vignette describes functionality for detecting and correcting outliers in signals in the <code><a href="../reference/detect_outlr.html">detect_outlr()</a></code> and <code>correct_outlr()</code> functions provided in the <code>epiprocess</code> package. These functions is designed to be modular and extendable, so that you can define your own outlier detection and correction routines and apply them to <code>epi_df</code> objects. We’ll demonstrate this using state-level daily reported COVID-19 case counts from FL and NJ.</p>
+<p>This vignette describes functionality for detecting and correcting
+outliers in signals in the <code><a href="../reference/detect_outlr.html">detect_outlr()</a></code> and
+<code>correct_outlr()</code> functions provided in the
+<code>epiprocess</code> package. These functions is designed to be
+modular and extendable, so that you can define your own outlier
+detection and correction routines and apply them to <code>epi_df</code>
+objects. We’ll demonstrate this using state-level daily reported
+COVID-19 case counts from FL and NJ.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cmu-delphi/epidatr" class="external-link">epidatr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a></span><span class="op">)</span></span>
@@ -120,19 +128,38 @@
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 counts"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="outliers_files/figure-html/unnamed-chunk-3-1.png" width="768"></p>
-<p>There are multiple outliers in these data that a modeler may want to detect and correct. We’ll discuss those two tasks in turn.</p>
+<p>There are multiple outliers in these data that a modeler may want to
+detect and correct. We’ll discuss those two tasks in turn.</p>
 <div class="section level2">
 <h2 id="outlier-detection">Outlier detection<a class="anchor" aria-label="anchor" href="#outlier-detection"></a>
 </h2>
-<p>The <code><a href="../reference/detect_outlr.html">detect_outlr()</a></code> function allows us to run multiple outlier detection methods on a given signal, and then (optionally) combine the results from those methods. Here, we’ll investigate outlier detection results from the following methods.</p>
+<p>The <code><a href="../reference/detect_outlr.html">detect_outlr()</a></code> function allows us to run multiple
+outlier detection methods on a given signal, and then (optionally)
+combine the results from those methods. Here, we’ll investigate outlier
+detection results from the following methods.</p>
 <ol style="list-style-type: decimal">
-<li>Detection based on a rolling median, using <code><a href="../reference/detect_outlr_rm.html">detect_outlr_rm()</a></code>, which computes a rolling median on with a default window size of <code>n</code> time points centered at the time point under consideration, and then computes thresholds based on a multiplier times a rolling IQR computed on the residuals.</li>
-<li>Detection based on a seasonal-trend decomposition using LOESS (STL), using <code><a href="../reference/detect_outlr_stl.html">detect_outlr_stl()</a></code>, which is similar to the rolling median method but replaces the rolling median with fitted values from STL.</li>
-<li>Detection based on an STL decomposition, but without seasonality term, which amounts to smoothing using LOESS.</li>
+<li>Detection based on a rolling median, using
+<code><a href="../reference/detect_outlr_rm.html">detect_outlr_rm()</a></code>, which computes a rolling median on with
+a default window size of <code>n</code> time points centered at the time
+point under consideration, and then computes thresholds based on a
+multiplier times a rolling IQR computed on the residuals.</li>
+<li>Detection based on a seasonal-trend decomposition using LOESS (STL),
+using <code><a href="../reference/detect_outlr_stl.html">detect_outlr_stl()</a></code>, which is similar to the rolling
+median method but replaces the rolling median with fitted values from
+STL.</li>
+<li>Detection based on an STL decomposition, but without seasonality
+term, which amounts to smoothing using LOESS.</li>
 </ol>
-<p>The outlier detection methods are specified using a <code>tibble</code> that is passed to <code><a href="../reference/detect_outlr.html">detect_outlr()</a></code>, with one row per method, and whose columms specify the outlier detection function, any input arguments (only nondefault values need to be supplied), and an abbreviated name for the method used in tracking results. Abbreviations “rm” and “stl” can be used for the built-in detection functions <code><a href="../reference/detect_outlr_rm.html">detect_outlr_rm()</a></code> and <code><a href="../reference/detect_outlr_stl.html">detect_outlr_stl()</a></code>, respectively.</p>
+<p>The outlier detection methods are specified using a
+<code>tibble</code> that is passed to <code><a href="../reference/detect_outlr.html">detect_outlr()</a></code>, with
+one row per method, and whose columms specify the outlier detection
+function, any input arguments (only nondefault values need to be
+supplied), and an abbreviated name for the method used in tracking
+results. Abbreviations “rm” and “stl” can be used for the built-in
+detection functions <code><a href="../reference/detect_outlr_rm.html">detect_outlr_rm()</a></code> and
+<code><a href="../reference/detect_outlr_stl.html">detect_outlr_stl()</a></code>, respectively.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">detection_methods</span> <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind.html" class="external-link">bind_rows</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">detection_methods</span> <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"rm"</span>,</span>
 <span>         args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>detect_negatives <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                          detection_multiplier <span class="op">=</span> <span class="fl">2.5</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -155,7 +182,11 @@
 <span><span class="co">## <span style="color: #BCBCBC;">1</span> rm     <span style="color: #949494;">&lt;named list [2]&gt;</span> rm             </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">2</span> stl    <span style="color: #949494;">&lt;named list [3]&gt;</span> stl_seasonal   </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">3</span> stl    <span style="color: #949494;">&lt;named list [3]&gt;</span> stl_nonseasonal</span></span></code></pre>
-<p>Additionally, we’ll form combined lower and upper thresholds, calculated as the median of the lower and upper thresholds from the methods at each time point. Note that using this combined median threshold is equivalent to using a majority vote across the base methods to determine whether a value is an outlier.</p>
+<p>Additionally, we’ll form combined lower and upper thresholds,
+calculated as the median of the lower and upper thresholds from the
+methods at each time point. Note that using this combined median
+threshold is equivalent to using a majority vote across the base methods
+to determine whether a value is an outlier.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -163,7 +194,7 @@
 <span>    x <span class="op">=</span> <span class="va">time_value</span>, y <span class="op">=</span> <span class="va">cases</span>,</span>
 <span>    methods <span class="op">=</span> <span class="va">detection_methods</span>,</span>
 <span>    combiner <span class="op">=</span> <span class="st">"median"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/nest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">outlier_info</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">outlier_info</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## An `epi_df` object, 6 x 15 with metadata:</span></span>
@@ -186,7 +217,8 @@
 <span><span class="co">## <span style="color: #949494;">#   combined_lower &lt;dbl&gt;, combined_upper &lt;dbl&gt;, combined_replacement &lt;dbl&gt;, and</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   abbreviated variable names ¹​rm_replacement, ²​stl_seasonal_lower,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   ³​stl_seasonal_upper, ⁴​stl_seasonal_replacement</span></span></span></code></pre>
-<p>To visualize the results, we first define a convenience function for plotting.</p>
+<p>To visualize the results, we first define a convenience function for
+plotting.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plot outlier detection bands and/or points identified as outliers</span></span>
 <span><span class="va">plot_outlr</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">signal</span>, <span class="va">method_abbr</span>, <span class="va">bands</span> <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">points</span> <span class="op">=</span> <span class="cn">TRUE</span>, </span>
@@ -224,7 +256,8 @@
 <span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>Now we produce plots for each state at a time, faceting by the detection method.</p>
+<p>Now we produce plots for each state at a time, faceting by the
+detection method.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">method_abbr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">detection_methods</span><span class="op">$</span><span class="va">abbr</span>, <span class="st">"combined"</span><span class="op">)</span></span>
 <span></span>
@@ -245,7 +278,11 @@
 <div class="section level2">
 <h2 id="outlier-correction">Outlier correction<a class="anchor" aria-label="anchor" href="#outlier-correction"></a>
 </h2>
-<p>Finally, in order to correct outliers, we can use the posited replacement values returned by each outlier detection method. Below we use the replacement value from the combined method, which is defined by the median of replacement values from the base methods at each time point.</p>
+<p>Finally, in order to correct outliers, we can use the posited
+replacement values returned by each outlier detection method. Below we
+use the replacement value from the combined method, which is defined by
+the median of replacement values from the base methods at each time
+point.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cases_corrected <span class="op">=</span> <span class="va">combined_replacement</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -276,13 +313,24 @@
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 counts"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="outliers_files/figure-html/unnamed-chunk-8-1.png" width="768"></p>
-<p>More advanced correction functionality will be coming at some point in the future.</p>
+<p>More advanced correction functionality will be coming at some point
+in the future.</p>
 </div>
 <div class="section level2">
 <h2 id="attribution">Attribution<a class="anchor" aria-label="anchor" href="#attribution"></a>
 </h2>
-<p>This document contains dataset that is a modified part of the <a href="https://github.com/CSSEGISandData/COVID-19" class="external-link">COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University</a> as <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html" class="external-link">republished in the COVIDcast Epidata API</a>. This data set is licensed under the terms of the <a href="https://creativecommons.org/licenses/by/4.0/" class="external-link">Creative Commons Attribution 4.0 International license</a> by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.</p>
-<p><a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html" class="external-link">From the COVIDcast Epidata API</a>: These signals are taken directly from the JHU CSSE <a href="https://github.com/CSSEGISandData/COVID-19" class="external-link">COVID-19 GitHub repository</a> without changes.</p>
+<p>This document contains a dataset that is a modified part of the <a href="https://github.com/CSSEGISandData/COVID-19" class="external-link">COVID-19 Data
+Repository by the Center for Systems Science and Engineering (CSSE) at
+Johns Hopkins University</a> as <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html" class="external-link">republished
+in the COVIDcast Epidata API</a>. This data set is licensed under the
+terms of the <a href="https://creativecommons.org/licenses/by/4.0/" class="external-link">Creative Commons
+Attribution 4.0 International license</a> by the Johns Hopkins
+University on behalf of its Center for Systems Science in Engineering.
+Copyright Johns Hopkins University 2020.</p>
+<p><a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html" class="external-link">From
+the COVIDcast Epidata API</a>: These signals are taken directly from the
+JHU CSSE <a href="https://github.com/CSSEGISandData/COVID-19" class="external-link">COVID-19
+GitHub repository</a> without changes.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>
@@ -297,7 +345,7 @@
 
 <div class="pkgdown-footer-right">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
     </footer>

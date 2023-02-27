@@ -8,10 +8,10 @@
 <meta name="description" content="epiprocess">
 <title>Aggregate signals over space and time • epiprocess</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.1.3/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.1.3/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
+<link href="../deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
-<!-- bootstrap-toc --><script src="https://cdn.rawgit.com/afeld/bootstrap-toc/v1.0.1/dist/bootstrap-toc.min.js"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Aggregate signals over space and time">
+<!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Aggregate signals over space and time">
 <meta property="og:description" content="epiprocess">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -78,7 +78,8 @@
 
 
 
-<script src="aggregation_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
+
+<div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Aggregate signals over space and time</h1>
             
@@ -89,7 +90,10 @@
 
     
     
-<p>Aggregation, both time-wise and geo-wise, are common tasks when working with epidemiological data sets. This vignette demonstrates how to carry out these kinds of tasks with <code>epi_df</code> objects. We’ll work with county-level reported COVID-19 cases in MA and VT.</p>
+<p>Aggregation, both time-wise and geo-wise, are common tasks when
+working with epidemiological data sets. This vignette demonstrates how
+to carry out these kinds of tasks with <code>epi_df</code> objects.
+We’ll work with county-level reported COVID-19 cases in MA and VT.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cmu-delphi/epidatr" class="external-link">epidatr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/covidcast/covidcastR/" class="external-link">covidcast</a></span><span class="op">)</span></span>
@@ -118,8 +122,22 @@
 <div class="section level2">
 <h2 id="converting-to-tsibble-format">Converting to <code>tsibble</code> format<a class="anchor" aria-label="anchor" href="#converting-to-tsibble-format"></a>
 </h2>
-<p>For manipulating and wrangling time series data, the <a href="https://tsibble.tidyverts.org/index.html" class="external-link"><code>tsibble</code></a> already provides a whole bunch of useful tools. A tsibble object (formerly, of class <code>tbl_ts</code>) is basically a tibble (data frame) but with two specially-marked columns: an <strong>index</strong> column representing the time variable (defining an order from past to present), and a <strong>key</strong> column identifying a unique observational unit for each time point. In fact, the key can be made up of any number of columns, not just a single one.</p>
-<p>In an <code>epi_df</code> object, the index variable is <code>time_value</code>, and the key variable is typically <code>geo_value</code> (though this need not always be the case: for example, if we have an age group variable as another column, then this could serve as a second key variable). The <code>epiprocess</code> package thus provides an implementation of <code><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble()</a></code> for <code>epi_df</code> objects, which sets these variables according to these defaults.</p>
+<p>For manipulating and wrangling time series data, the <a href="https://tsibble.tidyverts.org/index.html" class="external-link"><code>tsibble</code></a>
+already provides a whole bunch of useful tools. A tsibble object
+(formerly, of class <code>tbl_ts</code>) is basically a tibble (data
+frame) but with two specially-marked columns: an <strong>index</strong>
+column representing the time variable (defining an order from past to
+present), and a <strong>key</strong> column identifying a unique
+observational unit for each time point. In fact, the key can be made up
+of any number of columns, not just a single one.</p>
+<p>In an <code>epi_df</code> object, the index variable is
+<code>time_value</code>, and the key variable is typically
+<code>geo_value</code> (though this need not always be the case: for
+example, if we have an age group variable as another column, then this
+could serve as a second key variable). The <code>epiprocess</code>
+package thus provides an implementation of <code><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble()</a></code> for
+<code>epi_df</code> objects, which sets these variables according to
+these defaults.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tsibble.tidyverts.org" class="external-link">tsibble</a></span><span class="op">)</span></span>
 <span></span>
@@ -146,13 +164,18 @@
 <code class="sourceCode R"><span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/regular.html" class="external-link">interval</a></span><span class="op">(</span><span class="va">xt</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## &lt;interval[1]&gt;</span></span>
 <span><span class="co">## [1] 1D</span></span></code></pre>
-<p>We can also set the key variable(s) directly in a call to <code><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble()</a></code>. Similar to SQL keys, if the key does not uniquely identify each time point (that is, the key and index together do not not uniquely identify each row), then <code><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble()</a></code> throws an error:</p>
+<p>We can also set the key variable(s) directly in a call to
+<code><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble()</a></code>. Similar to SQL keys, if the key does not
+uniquely identify each time point (that is, the key and index together
+do not not uniquely identify each row), then <code><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble()</a></code>
+throws an error:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span><span class="va">x</span>, key <span class="op">=</span> <span class="st">"county_name"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;"> in `validate_tsibble()`:</span></span></span>
 <span><span class="co">## <span style="color: #BBBB00;">!</span> A valid tsibble must have distinct rows identified by key and index.</span></span>
 <span><span class="co">## <span style="color: #0000BB;">ℹ</span> Please use `duplicates()` to check the duplicated rows.</span></span></code></pre>
-<p>As we can see, there are duplicate county names between Massachusetts and Vermont, which caused the error.</p>
+<p>As we can see, there are duplicate county names between Massachusetts
+and Vermont, which caused the error.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/duplicates.html" class="external-link">duplicates</a></span><span class="op">(</span><span class="va">x</span>, key <span class="op">=</span> <span class="st">"county_name"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 5</span></span></span>
@@ -181,8 +204,16 @@
 <div class="section level2">
 <h2 id="detecting-and-filling-time-gaps">Detecting and filling time gaps<a class="anchor" aria-label="anchor" href="#detecting-and-filling-time-gaps"></a>
 </h2>
-<p>One of the major advantages of the <code>tsibble</code> package is its ability to handle <strong>implicit gaps</strong> in time series data. In other words, it can infer what time scale we’re interested in (say, daily data), and detect apparent gaps (say, when values are reported on January 1 and 3 but not January 2). We can subsequently use functionality to make these missing entries explicit, which will generally help avoid bugs in further downstream data processing tasks.</p>
-<p>Let’s first remove certain dates from our data set to create gaps:</p>
+<p>One of the major advantages of the <code>tsibble</code> package is
+its ability to handle <strong>implicit gaps</strong> in time series
+data. In other words, it can infer what time scale we’re interested in
+(say, daily data), and detect apparent gaps (say, when values are
+reported on January 1 and 3 but not January 2). We can subsequently use
+functionality to make these missing entries explicit, which will
+generally help avoid bugs in further downstream data processing
+tasks.</p>
+<p>Let’s first remove certain dates from our data set to create
+gaps:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># First make geo value more readable for tables, plots, etc.</span></span>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>            </span>
@@ -192,7 +223,9 @@
 <span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">xt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">cases</span> <span class="op">&gt;=</span> <span class="fl">3</span><span class="op">)</span> </span></code></pre></div>
-<p>The functions <code><a href="https://tsibble.tidyverts.org/reference/has_gaps.html" class="external-link">has_gaps()</a></code>, <code><a href="https://tsibble.tidyverts.org/reference/scan_gaps.html" class="external-link">scan_gaps()</a></code>, <code><a href="https://tsibble.tidyverts.org/reference/count_gaps.html" class="external-link">count_gaps()</a></code> in the <code>tsibble</code> package each provide useful summaries, in slightly different formats.</p>
+<p>The functions <code><a href="https://tsibble.tidyverts.org/reference/has_gaps.html" class="external-link">has_gaps()</a></code>, <code><a href="https://tsibble.tidyverts.org/reference/scan_gaps.html" class="external-link">scan_gaps()</a></code>,
+<code><a href="https://tsibble.tidyverts.org/reference/count_gaps.html" class="external-link">count_gaps()</a></code> in the <code>tsibble</code> package each
+provide useful summaries, in slightly different formats.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/has_gaps.html" class="external-link">has_gaps</a></span><span class="op">(</span><span class="va">xt</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 2</span></span></span>
@@ -218,6 +251,13 @@
 <span><span class="co">## <span style="color: #BCBCBC;">6</span> Addison, VT 2020-09-02</span></span></code></pre>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/count_gaps.html" class="external-link">count_gaps</a></span><span class="op">(</span><span class="va">xt</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in</span></span>
+<span><span class="co">## dplyr 1.1.0.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Please use `reframe()` instead.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> When switching from `summarise()` to `reframe()`, remember that `reframe()`</span></span>
+<span><span class="co">##   always returns an ungrouped data frame and adjust accordingly.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">tsibble</span> package.</span></span>
+<span><span class="co">##   Please report the issue at <span style="color: #0000BB; font-style: italic;">&lt;https://github.com/tidyverts/tsibble/issues&gt;</span>.</span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 4</span></span></span>
 <span><span class="co">##   geo_value   .from      .to           .n</span></span>
 <span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
@@ -228,7 +268,7 @@
 <span><span class="co">## <span style="color: #BCBCBC;">5</span> Addison, VT 2020-11-14 2020-11-18     5</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">6</span> Addison, VT 2020-11-20 2020-11-20     1</span></span></code></pre>
 <p>We can also visualize the patterns of missingness:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -242,8 +282,17 @@
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"County"</span>, y <span class="op">=</span> <span class="st">"Date"</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="aggregation_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
-<p>Using the <code><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html" class="external-link">fill_gaps()</a></code> function from <code>tsibble</code>, we can replace all gaps by an explicit value. The default is <code>NA</code>, but in the current case, where missingness is not at random but rather represents a small value that was censored (only a hypothetical with COVID-19 reports, but certainly a real phenomenon that occurs in other signals), it is better to replace it by zero, which is what we do here. (Other approaches, such as LOCF: last observation carried forward in time, could be accomplished by first filling with <code>NA</code> values and then following up with a second call to <code><a href="https://tidyr.tidyverse.org/reference/fill.html" class="external-link">tidyr::fill()</a></code>.)</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<p>Using the <code><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html" class="external-link">fill_gaps()</a></code> function from
+<code>tsibble</code>, we can replace all gaps by an explicit value. The
+default is <code>NA</code>, but in the current case, where missingness
+is not at random but rather represents a small value that was censored
+(only a hypothetical with COVID-19 reports, but certainly a real
+phenomenon that occurs in other signals), it is better to replace it by
+zero, which is what we do here. (Other approaches, such as LOCF: last
+observation carried forward in time, could be accomplished by first
+filling with <code>NA</code> values and then following up with a second
+call to <code><a href="https://tidyr.tidyverse.org/reference/fill.html" class="external-link">tidyr::fill()</a></code>.)</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html" class="external-link">fill_gaps</a></span><span class="op">(</span><span class="va">xt</span>, cases <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tsibble: 6 x 3 [1D]</span></span></span>
@@ -256,8 +305,12 @@
 <span><span class="co">## <span style="color: #BCBCBC;">4</span> Addison, VT 2020-08-30     0</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">5</span> Addison, VT 2020-08-31     0</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">6</span> Addison, VT 2020-09-01     0</span></span></code></pre>
-<p>Note that the time series for Addison, VT only starts on August 27, 2020, even though the original (uncensored) data set itself was drawn from a period that went back to June 6, 2020. By setting <code>.full = TRUE</code>, we can at zero-fill over the entire span of the observed (censored) data.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<p>Note that the time series for Addison, VT only starts on August 27,
+2020, even though the original (uncensored) data set itself was drawn
+from a period that went back to June 6, 2020. By setting
+<code>.full = TRUE</code>, we can at zero-fill over the entire span of
+the observed (censored) data.</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">xt_filled</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html" class="external-link">fill_gaps</a></span><span class="op">(</span><span class="va">xt</span>, cases <span class="op">=</span> <span class="fl">0</span>, .full <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> </span>
 <span>  </span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">xt_filled</span><span class="op">)</span></span></code></pre></div>
@@ -271,8 +324,20 @@
 <span><span class="co">## <span style="color: #BCBCBC;">4</span> Addison, VT 2020-06-04     0</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">5</span> Addison, VT 2020-06-05     0</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">6</span> Addison, VT 2020-06-06     0</span></span></code></pre>
-<p>Explicit imputation for missingness (zero-filling in our case) can be important for protecting against bugs in all sorts of downstream tasks. For example, even something as simple as a 7-day trailing average is complicated by missingness. The function <code><a href="../reference/epi_slide.html">epi_slide()</a></code> looks for all rows within a window of 7 days anchored on the right at the reference time point (when <code>n = 7</code> and <code>align = "right"</code>). But when some days in a given week are missing because they were censored because they had small case counts, taking an average of the observed case counts can be misleading and is unintentionally biased upwards. Meanwhile, running <code><a href="../reference/epi_slide.html">epi_slide()</a></code> on the zero-filled data brings these trailing averages (appropriately) downwards, as we can see inspecting Plymouth, MA around July 1, 2021.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<p>Explicit imputation for missingness (zero-filling in our case) can be
+important for protecting against bugs in all sorts of downstream tasks.
+For example, even something as simple as a 7-day trailing average is
+complicated by missingness. The function <code><a href="../reference/epi_slide.html">epi_slide()</a></code> looks
+for all rows within a window of 7 days anchored on the right at the
+reference time point (when <code>n = 7</code> and
+<code>align = "right"</code>). But when some days in a given week are
+missing because they were censored because they had small case counts,
+taking an average of the observed case counts can be misleading and is
+unintentionally biased upwards. Meanwhile, running
+<code><a href="../reference/epi_slide.html">epi_slide()</a></code> on the zero-filled data brings these trailing
+averages (appropriately) downwards, as we can see inspecting Plymouth,
+MA around July 1, 2021.</p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">xt</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -283,7 +348,7 @@
 <pre><code><span><span class="co">## An `epi_df` object, 4 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = custom</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2022-10-21 15:54:52</span></span>
+<span><span class="co">## * as_of     = 2023-02-27 22:36:58</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 4 × 4</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># Groups:   geo_value [1]</span></span></span>
@@ -293,7 +358,7 @@
 <span><span class="co">## <span style="color: #BCBCBC;">2</span> Plymouth, MA 2021-06-30     7       5   </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">3</span> Plymouth, MA 2021-07-01     6       5   </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">4</span> Plymouth, MA 2021-07-02     6       5.2</span></span></code></pre>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">xt_filled</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -304,7 +369,7 @@
 <pre><code><span><span class="co">## An `epi_df` object, 7 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = custom</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2022-10-21 15:54:53</span></span>
+<span><span class="co">## * as_of     = 2023-02-27 22:36:59</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 7 × 4</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># Groups:   geo_value [1]</span></span></span>
@@ -321,9 +386,21 @@
 <div class="section level2">
 <h2 id="aggregate-to-different-time-scales">Aggregate to different time scales<a class="anchor" aria-label="anchor" href="#aggregate-to-different-time-scales"></a>
 </h2>
-<p>Continuing on with useful <code>tsibble</code> functionality, we can aggregate to different time scales using <code><a href="https://tsibble.tidyverts.org/reference/index-by.html" class="external-link">index_by()</a></code> from <code>tsibble</code>, which modifies the index variable in the given object by applying a suitable time-coarsening transformation (say, moving from days to weeks, or weeks to months, and so on). The most common use case would be to follow up with a call to a <code>dplyr</code> verb like <code><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize()</a></code> in order to perform some kind of aggregation of our measured variables over the new index variable.</p>
-<p>Below, we use the functions <code><a href="https://tsibble.tidyverts.org/reference/year-week.html" class="external-link">yearweek()</a></code> and <code><a href="https://tsibble.tidyverts.org/reference/year-month.html" class="external-link">yearmonth()</a></code> that are provided in the <code>tsibble</code> package in order to aggregate to weekly and monthly resolutions. In the former call, we set <code>week_start = 7</code> to coincide with the CDC definition of an epiweek (epidemiological week).</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<p>Continuing on with useful <code>tsibble</code> functionality, we can
+aggregate to different time scales using <code><a href="https://tsibble.tidyverts.org/reference/index-by.html" class="external-link">index_by()</a></code> from
+<code>tsibble</code>, which modifies the index variable in the given
+object by applying a suitable time-coarsening transformation (say,
+moving from days to weeks, or weeks to months, and so on). The most
+common use case would be to follow up with a call to a
+<code>dplyr</code> verb like <code><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize()</a></code> in order to
+perform some kind of aggregation of our measured variables over the new
+index variable.</p>
+<p>Below, we use the functions <code><a href="https://tsibble.tidyverts.org/reference/year-week.html" class="external-link">yearweek()</a></code> and
+<code><a href="https://tsibble.tidyverts.org/reference/year-month.html" class="external-link">yearmonth()</a></code> that are provided in the <code>tsibble</code>
+package in order to aggregate to weekly and monthly resolutions. In the
+former call, we set <code>week_start = 7</code> to coincide with the CDC
+definition of an epiweek (epidemiological week).</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Aggregate to weekly</span></span>
 <span><span class="va">xt_filled_week</span> <span class="op">&lt;-</span> <span class="va">xt_filled</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://tsibble.tidyverts.org/reference/index-by.html" class="external-link">index_by</a></span><span class="op">(</span>epiweek <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/year-week.html" class="external-link">yearweek</a></span><span class="op">(</span><span class="va">.</span>, week_start <span class="op">=</span> <span class="fl">7</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -341,7 +418,7 @@
 <span><span class="co">## <span style="color: #BCBCBC;">4</span> Addison, VT 2020 W26     0</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">5</span> Addison, VT 2020 W27     0</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">6</span> Addison, VT 2020 W28     0</span></span></code></pre>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Aggregate to monthly</span></span>
 <span><span class="va">xt_filled_month</span> <span class="op">&lt;-</span> <span class="va">xt_filled_week</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://tsibble.tidyverts.org/reference/index-by.html" class="external-link">index_by</a></span><span class="op">(</span>month <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/year-month.html" class="external-link">yearmonth</a></span><span class="op">(</span><span class="va">.</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -368,8 +445,18 @@
 <div class="section level2">
 <h2 id="attribution">Attribution<a class="anchor" aria-label="anchor" href="#attribution"></a>
 </h2>
-<p>This document contains dataset that is a modified part of the <a href="https://github.com/CSSEGISandData/COVID-19" class="external-link">COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University</a> as <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html" class="external-link">republished in the COVIDcast Epidata API</a>. This data set is licensed under the terms of the <a href="https://creativecommons.org/licenses/by/4.0/" class="external-link">Creative Commons Attribution 4.0 International license</a> by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.</p>
-<p><a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html" class="external-link">From the COVIDcast Epidata API</a>: These signals are taken directly from the JHU CSSE <a href="https://github.com/CSSEGISandData/COVID-19" class="external-link">COVID-19 GitHub repository</a> without changes.</p>
+<p>This document contains a dataset that is a modified part of the <a href="https://github.com/CSSEGISandData/COVID-19" class="external-link">COVID-19 Data
+Repository by the Center for Systems Science and Engineering (CSSE) at
+Johns Hopkins University</a> as <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html" class="external-link">republished
+in the COVIDcast Epidata API</a>. This data set is licensed under the
+terms of the <a href="https://creativecommons.org/licenses/by/4.0/" class="external-link">Creative Commons
+Attribution 4.0 International license</a> by the Johns Hopkins
+University on behalf of its Center for Systems Science in Engineering.
+Copyright Johns Hopkins University 2020.</p>
+<p><a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html" class="external-link">From
+the COVIDcast Epidata API</a>: These signals are taken directly from the
+JHU CSSE <a href="https://github.com/CSSEGISandData/COVID-19" class="external-link">COVID-19
+GitHub repository</a> without changes.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>
@@ -384,7 +471,7 @@
 
 <div class="pkgdown-footer-right">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
     </footer>
