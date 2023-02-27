@@ -1,7 +1,7 @@
 # epiprocess
  
  <!-- badges: start -->
-  [![R-CMD-check](https://github.com/cmu-delphi/epiprocess/workflows/R-CMD-check/badge.svg)](https://github.com/cmu-delphi/epiprocess/actions)
+  [![R-CMD-check](https://github.com/cmu-delphi/epiprocess/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/cmu-delphi/epiprocess/actions/workflows/R-CMD-check.yaml)
   <!-- badges: end -->
 
 This package introduces a common data structure for epidemiological data sets
