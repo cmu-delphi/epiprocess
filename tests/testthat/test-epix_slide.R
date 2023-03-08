@@ -192,6 +192,7 @@ ea$geo_value <- "x"
 ea <- as_epi_archive(ea)
 
 test_that("epix_slide with all_versions option has access to all older versions", {
+  library(data.table)
   # Make sure we're using testthat edition 3, where `expect_identical` doesn't
   # actually mean `base::identical` but something more content-based using
   # `waldo` package:
@@ -205,7 +206,7 @@ test_that("epix_slide with all_versions option has access to all older versions"
   }
 
   ea_orig_mirror = ea$clone(deep=TRUE)
-  ea_orig_mirror$DT <- data.table::copy(ea_orig_mirror$DT)
+  ea_orig_mirror$DT <- copy(ea_orig_mirror$DT)
 
   result1 <- ea %>% group_by() %>%
     epix_slide(f = slide_fn,
@@ -242,6 +243,7 @@ test_that("epix_slide with all_versions option has access to all older versions"
 })
 
 test_that("as_of and epix_slide with long enough window are compatible", {
+  library(data.table)
   testthat::local_edition(3)
 
   # For all_versions = FALSE:
@@ -275,7 +277,7 @@ test_that("as_of and epix_slide with long enough window are compatible", {
       # assess as nowcast:
       unnest(data) %>%
       inner_join(x$as_of(x$versions_end), by = setdiff(key(x$DT), c("version"))) %>%
-      summarize(mean(abs(binary - lag1)))
+      summarize(mean_abs_delta = mean(abs(binary - lag1)))
   }
   ref_time_value2 = 5
 
@@ -283,8 +285,25 @@ test_that("as_of and epix_slide with long enough window are compatible", {
     ea$as_of(ref_time_value2, all_versions=TRUE) %>% f2() %>% mutate(time_value = ref_time_value2, .before=1L),
     ea$slide(f2, before=1000L, ref_time_values=ref_time_value2, all_versions=TRUE, names_sep=NULL)
   )
-})
 
+  # Test the same sort of thing when grouping by geo in an archive with multiple geos.
+  ea_multigeo = ea$clone()
+  ea_multigeo$DT <- rbind(ea_multigeo$DT,
+                          copy(ea_multigeo$DT)[,geo_value:="y"][,binary:=-binary][])
+  setkeyv(ea_multigeo$DT, key(ea$DT))
+
+  expect_identical(
+    ea_multigeo %>%
+      group_by(geo_value) %>%
+      epix_slide(f2, before=1000L, ref_time_values=ref_time_value2, all_versions=TRUE, names_sep=NULL) %>%
+      filter(geo_value == "x"),
+    ea %>% # using `ea` here is like filtering `ea_multigeo` to `geo_value=="x"`
+      epix_as_of(ref_time_value2, all_versions=TRUE) %>%
+      f2() %>%
+      transmute(geo_value = "x", time_value = ref_time_value2, mean_abs_delta) %>%
+      group_by(geo_value)
+  )
+})
 
 test_that("epix_slide `f` is passed an ungrouped `epi_archive`",{
   slide_fn <- function(x, g) {
