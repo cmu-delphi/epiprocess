@@ -58,6 +58,14 @@ development versions. A ".9999" suffix indicates a development version.
 * `epi_slide` and `epix_slide` now raise an error rather than silently filtering
   out `ref_time_values` that don't meet their expectations.
 
+## New features:
+
+* `epix_slide`, `<epi_archive>$slide` have a new parameter `all_versions`. With
+  `all_versions=TRUE`, `epix_slide` will pass a filtered `epi_archive` to each
+  computation rather than an `epi_df` snapshot. This enables, e.g., performing
+  pseudoprospective forecasts with a revision-aware forecaster using nested
+  `epix_slide` operations.
+
 ## Improvements:
 
 * Added `dplyr::group_by` and `dplyr::ungroup` S3 methods for `epi_archive`
