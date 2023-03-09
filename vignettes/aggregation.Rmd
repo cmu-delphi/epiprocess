@@ -190,6 +190,7 @@ xt %>%
   as_epi_df() %>%
   group_by(geo_value) %>%
   epi_slide(cases_7dav = mean(cases), before = 6) %>%
+  ungroup() %>%
   filter(geo_value == "Plymouth, MA",
          abs(time_value - as.Date("2021-07-01")) <= 3) %>%
   print(n = 7)
@@ -198,6 +199,7 @@ xt_filled %>%
   as_epi_df() %>%
   group_by(geo_value) %>%
   epi_slide(cases_7dav = mean(cases), before = 6) %>%
+  ungroup() %>%
   filter(geo_value == "Plymouth, MA",
          abs(time_value - as.Date("2021-07-01")) <= 3) %>%
   print(n = 7)
