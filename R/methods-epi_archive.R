@@ -14,6 +14,12 @@
 #' @param min_time_value Time value specifying the min time value to permit in
 #'   the snapshot. Default is `-Inf`, which effectively means that there is no
 #'   minimum considered.
+#' @param all_versions If `all_versions = TRUE`, then the output will be in
+#'   `epi_archive` format, and contain rows in the specified `time_value` range
+#'   having `version <= max_version`. The resulting object will cover a
+#'   potentially narrower `version` and `time_value` range than `x`, depending
+#'   on user-provided arguments. Otherwise, there will be one row in the output
+#'   for the `max_version` of each `time_value`. Default is `FALSE`.
 #' @return An `epi_df` object.
 #'
 #' @details This is simply a wrapper around the `as_of()` method of the
@@ -54,9 +60,9 @@
 #' }, epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning"))
 #' # Since R 4.0, there is a `globalCallingHandlers` function that can be used
 #' # to globally toggle these warnings.
-epix_as_of = function(x, max_version, min_time_value = -Inf) {
+epix_as_of = function(x, max_version, min_time_value = -Inf, all_versions = FALSE) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
-  return(x$as_of(max_version, min_time_value))
+  return(x$as_of(max_version, min_time_value, all_versions = all_versions))
 }
 
 #' `epi_archive` with unobserved history filled in (won't mutate, might alias)
@@ -704,6 +710,11 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   combination of grouping variables and unique time values in the underlying
 #'   data table. Otherwise, there will be one row in the output for each time
 #'   value in `x` that acts as a reference time value. Default is `FALSE`.
+#' @param all_versions If `all_versions = TRUE`, then `f` will be passed the
+#'   version history (all `version <= ref_time_value`) for rows having
+#'   `time_value` between `ref_time_value - before` and `ref_time_value`.
+#'   Otherwise, `f` will be passed only the most recent `version` for every
+#'   unique `time_value`. Default is `FALSE`.
 #' @return A tibble whose columns are: the grouping variables, `time_value`,
 #'   containing the reference time values for the slide computation, and a
 #'   column named according to the `new_col_name` argument, containing the slide
@@ -773,13 +784,7 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #' @examples
 #' library(dplyr)
 #'
-#' # these dates are reference time points for the 3 day average sliding window
-#' # The resulting epi_archive ends up including data averaged from:
-#' # 0 day which has no results, for 2020-06-01
-#' # 1 day, for 2020-06-02
-#' # 2 days, for the rest of the results
-#' # never 3 days due to data latency
-#'
+#' # Reference time points for which we want to compute slide values:
 #' ref_time_values <- seq(as.Date("2020-06-01"),
 #'                        as.Date("2020-06-15"),
 #'                        by = "1 day")
@@ -789,14 +794,52 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   epix_slide(f = ~ mean(.x$case_rate_7d_av),
 #'              before = 2,
 #'              ref_time_values = ref_time_values,
-#'              new_col_name = 'case_rate_3d_av') %>%
+#'              new_col_name = 'case_rate_7d_av_recent_av') %>%
 #'   ungroup()
+#' # We requested time windows that started 2 days before the corresponding time
+#' # values. The actual number of `time_value`s in each computation depends on
+#' # the reporting latency of the signal and `time_value` range covered by the
+#' # archive (2020-06-01 -- 2021-11-30 in this example).  In this case, we have
+#' # 0 `time_value`s, for ref time 2020-06-01 --> the result is automatically discarded
+#' # 1 `time_value`, for ref time 2020-06-02
+#' # 2 `time_value`s, for the rest of the results
+#' # never 3 `time_value`s, due to data latency
 #'
-#' @importFrom rlang enquo
+#'
+#'
+#' # --- Advanced: ---
+#'
+#' # `epix_slide` with `all_versions=FALSE` (the default) applies a
+#' # version-unaware computation to several versions of the data. We can also
+#' # use `all_versions=TRUE` to apply a version-*aware* computation to several
+#' # versions of the data. In this case, each computation should expect an
+#' # `epi_archive` containing the relevant version data:
+#'
+#' archive_cases_dv_subset %>%
+#'   group_by(geo_value) %>%
+#'   epix_slide(
+#'     function(x, g) {
+#'       tibble(
+#'         versions_end = max(x$versions_end),
+#'         time_range = if(nrow(x$DT) == 0L) {
+#'           "0 `time_value`s"
+#'         } else {
+#'           sprintf("%s -- %s", min(x$DT$time_value), max(x$DT$time_value))
+#'         },
+#'         class1 = class(x)[[1L]]
+#'       )
+#'     },
+#'     before = 2, all_versions = TRUE,
+#'     ref_time_values = ref_time_values, names_sep=NULL) %>%
+#'   ungroup() %>%
+#'   arrange(geo_value, time_value)
+#'
+#' @importFrom rlang enquo !!!
 #' @export
 epix_slide = function(x, f, ..., before, ref_time_values,
                       time_step, new_col_name = "slide_value",
-                      as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
+                      as_list_col = FALSE, names_sep = "_",
+                      all_rows = FALSE, all_versions = FALSE) {
   if (!is_epi_archive(x, grouped_okay=TRUE)) {
     Abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
   }
@@ -806,6 +849,30 @@ epix_slide = function(x, f, ..., before, ref_time_values,
                  new_col_name = new_col_name,
                  as_list_col = as_list_col,
                  names_sep = names_sep,
-                 all_rows = all_rows
+                 all_rows = all_rows,
+                 all_versions = all_versions
                  ))
+}
+
+#' Filter an `epi_archive` object to keep only older versions
+#'
+#' Generates a filtered `epi_archive` from an `epi_archive` object, keeping
+#' only rows with `version` falling on or before a specified date.
+#'
+#' @param x An `epi_archive` object
+#' @param max_version Time value specifying the max version to permit in the
+#'   filtered archive. That is, the output archive will comprise rows of the
+#'   current archive data having `version` less than or equal to the
+#'   specified `max_version`
+#' @return An `epi_archive` object
+#'
+#' @export
+epix_truncate_versions_after = function(x, max_version) {
+  UseMethod("epix_truncate_versions_after")
+}
+
+#' @export
+epix_truncate_versions_after.epi_archive = function(x, max_version) {
+  return ((x$clone()$truncate_versions_after(max_version)))
+  # ^ second set of parens drops invisibility
 }

@@ -452,7 +452,7 @@ epi_archive =
 #' @description Generates a snapshot in `epi_df` format as of a given version.
 #'   See the documentation for the wrapper function [`epix_as_of()`] for details.
 #' @importFrom data.table between key
-          as_of = function(max_version, min_time_value = -Inf) {
+          as_of = function(max_version, min_time_value = -Inf, all_versions = FALSE) {
             # Self max version and other keys
             other_keys = setdiff(key(self$DT),
                                  c("geo_value", "time_value", "version"))
@@ -472,12 +472,23 @@ epi_archive =
             if (max_version > self$versions_end) {
               Abort("`max_version` must be at most `self$versions_end`.")
             }
+            if (!rlang::is_bool(all_versions)) {
+              Abort("`all_versions` must be TRUE or FALSE.")
+            }
             if (!is.na(self$clobberable_versions_start) && max_version >= self$clobberable_versions_start) {
               Warn('Getting data as of some recent version which could still be overwritten (under routine circumstances) without assigning a new version number (a.k.a. "clobbered").  Thus, the snapshot that we produce here should not be expected to be reproducible later. See `?epi_archive` for more info and `?epix_as_of` on how to muffle.',
                    class="epiprocess__snapshot_as_of_clobberable_version")
             }
             
             # Filter by version and return
+            if (all_versions) {
+              result = epix_truncate_versions_after(self, max_version)
+              # `self` has already been `clone`d in `epix_truncate_versions_after`
+              # so we can modify the new archive's DT directly.
+              result$DT = result$DT[time_value >= min_time_value, ]
+              return(result)
+            }
+
             return(
               # Make sure to use data.table ways of filtering and selecting
               self$DT[time_value >= min_time_value &
@@ -559,6 +570,38 @@ epi_archive =
             return (invisible(self))
           },
           #####
+#' @description Filter to keep only older versions, mutating the archive by
+#'   potentially reseating but not mutating some fields. `DT` is likely, but not
+#'   guaranteed, to be copied. Returns the mutated archive
+#'   [invisibly][base::invisible].
+#' @param x as in [`epix_truncate_versions_after`]
+#' @param max_version as in [`epix_truncate_versions_after`]
+          truncate_versions_after = function(max_version) {
+            if (length(max_version) != 1) {
+              Abort("`max_version` cannot be a vector.")
+            }
+            if (is.na(max_version)) {
+              Abort("`max_version` must not be NA.")
+            }
+            if (!identical(class(max_version), class(self$DT$version)) ||
+                  !identical(typeof(max_version), typeof(self$DT$version))) {
+              Abort("`max_version` and `DT$version` must have same `class` and `typeof`.")
+            }
+            if (max_version > self$versions_end) {
+              Abort("`max_version` must be at most `self$versions_end`.")
+            }
+            self$DT <- self$DT[self$DT$version <= max_version, colnames(self$DT), with=FALSE]
+            # (^ this filter operation seems to always copy the DT, even if it
+            # keeps every entry; we don't guarantee this behavior in
+            # documentation, though, so we could change to alias in this case)
+            if (!is.na(self$clobberable_versions_start) &&
+                  self$clobberable_versions_start > max_version) {
+              self$clobberable_versions_start <- NA
+            }
+            self$versions_end <- max_version
+            return (invisible(self))
+          },
+          #####
 #' @description Merges another `epi_archive` with the current one, mutating the
 #'   current one by reseating its `DT` and several other fields, but avoiding
 #'   mutation of the old `DT`; returns the current archive
@@ -597,7 +640,7 @@ epi_archive =
           slide = function(f, ..., before, ref_time_values, 
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
-                           all_rows = FALSE) {
+                           all_rows = FALSE, all_versions = FALSE) {
             # For an "ungrouped" slide, treat all rows as belonging to one big
             # group (group by 0 vars), like `dplyr::summarize`, and let the
             # resulting `grouped_epi_archive` handle the slide:
@@ -606,7 +649,7 @@ epi_archive =
               before = before, ref_time_values = ref_time_values,
               time_step = time_step, new_col_name = new_col_name,
               as_list_col = as_list_col, names_sep = names_sep,
-              all_rows = all_rows
+              all_rows = all_rows, all_versions = all_versions
             ) %>%
               # We want a slide on ungrouped archives to output something
               # ungrouped, rather than retaining the trivial (0-variable)

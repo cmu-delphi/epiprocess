@@ -170,15 +170,27 @@ grouped_epi_archive =
           grouped_epi_archive$new(private$ungrouped, result_vars, private$drop)
         }
       },
+#' @description Filter to keep only older versions by mutating the underlying
+#'   `epi_archive` using `$truncate_versions_after`. Returns the mutated
+#'   `grouped_epi_archive` [invisibly][base::invisible].
+#' @param x as in [`epix_truncate_versions_after`]
+#' @param max_version as in [`epix_truncate_versions_after`]
+      truncate_versions_after = function(max_version) {
+        # The grouping is irrelevant for this method; if we were to split into
+        # groups and recombine appropriately, we should get the same result as
+        # just leveraging the ungrouped method, so just do the latter:
+        private$ungrouped$truncate_versions_after(max_version)
+        return (invisible(self))
+      },
 #' @description Slides a given function over variables in a `grouped_epi_archive`
 #'   object. See the documentation for the wrapper function [`epix_slide()`] for
 #'   details.
-#' @importFrom data.table key
+#' @importFrom data.table key address
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
           slide = function(f, ..., before, ref_time_values,
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
-                           all_rows = FALSE) {
+                           all_rows = FALSE, all_versions = FALSE) {
             if ("group_by" %in% nse_dots_names(...)) {
               Abort("
                 The `group_by` argument to `slide` has been removed; please use
@@ -218,7 +230,7 @@ grouped_epi_archive =
             }
             before <- vctrs::vec_cast(before, integer())
             if (length(before) != 1L || is.na(before) || before < 0L) {
-              Abort("`before` must be length-1, non-NA, non-negative")
+              Abort("`before` must be length-1, non-NA, non-negative.")
             }
 
             # If a custom time step is specified, then redefine units 
@@ -227,6 +239,20 @@ grouped_epi_archive =
             
             # Symbolize column name
             new_col = sym(new_col_name)
+
+            # Validate rest of parameters:
+            if (!rlang::is_bool(as_list_col)) {
+              Abort("`as_list_col` must be TRUE or FALSE.")
+            }
+            if (! (rlang::is_string(names_sep) || is.null(names_sep)) ) {
+              Abort("`names_sep` must be a (single) string or NULL.")
+            }
+            if (!rlang::is_bool(all_rows)) {
+              Abort("`all_rows` must be TRUE or FALSE.")
+            }
+            if (!rlang::is_bool(all_versions)) {
+              Abort("`all_versions` must be TRUE or FALSE.")
+            }
 
             # Each computation is expected to output a data frame with either
             # one element/row total or one element/row per encountered
@@ -246,26 +272,41 @@ grouped_epi_archive =
                                     ref_time_value,
                                     comp_effective_key_vars,
                                     new_col) {
-              # Carry out the specified computation 
+              # Carry out the specified computation
               comp_value = f(.data_group, .group_key, ...)
+
+              if (all_versions) {
+                # Extract data from archive so we can do length checks below. When
+                # `all_versions = TRUE`, `.data_group` will always be an ungrouped
+                # archive because of the preceding `as_of` step.
+                .data_group = .data_group$DT
+              }
 
               # Calculate the number of output elements/rows we expect the
               # computation to output: one per distinct "effective computation
-              # key variable" value encountered in the input. Note: this mirrors
-              # how `epi_slide` does things if we're using unique keys, but can
-              # diverge if using nonunique keys. The `epi_slide` approach of
-              # counting occurrences of the `ref_time_value` in the `time_value`
-              # column, which helps lines up the computation results with
-              # corresponding rows of the input data, wouldn't quite apply here:
-              # we'd want to line up with rows (from the same group) with
-              # `version` matching the `ref_time_value`, but would still need to
-              # summarize these rows somehow and drop the `time_value` input
-              # column, but this summarization requires something like a
-              # to-be-unique output key to determine a sensible number of rows
-              # to output (and the contents of those rows).
+              # key variable" value encountered in the input.
+              #
+              # Note: this mirrors how `epi_slide` does things if we're using
+              # unique keys, but can diverge if using nonunique keys. The
+              # `epi_slide` approach of counting occurrences of the
+              # `ref_time_value` in the `time_value` column, which helps lines
+              # up the computation results with corresponding rows of the
+              # input data, wouldn't quite apply here: we'd want to line up
+              # with rows (from the same group) with `version` matching the
+              # `ref_time_value`, but would still need to summarize these rows
+              # somehow and drop the `time_value` input column, but this
+              # summarization requires something like a to-be-unique output
+              # key to determine a sensible number of rows to output (and the
+              # contents of those rows).
               count =
                 if (length(comp_effective_key_vars) != 0L) {
-                  sum(!duplicated(.data_group[, comp_effective_key_vars]))
+                  comp_effective_key_vals_in_comp_input =
+                    if (data.table::is.data.table(.data_group)) {
+                      .data_group[, comp_effective_key_vars, with=FALSE]
+                    } else {
+                      .data_group[, comp_effective_key_vars]
+                    }
+                  sum(!duplicated(comp_effective_key_vals_in_comp_input))
                 } else {
                   # Same idea as above, but accounting for `duplicated` working
                   # differently (outputting `logical(0)`) on 0-column inputs
@@ -319,15 +360,64 @@ grouped_epi_archive =
             if (!missing(f)) {
               if (rlang::is_formula(f)) f = rlang::as_function(f)
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
-                private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before) %>%
-                  dplyr::group_by(dplyr::across(tidyselect::all_of(private$vars)),
+                # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
+                # `epi_archive` if `all_versions` is `TRUE`:
+                as_of_raw = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
+
+                # Set:
+                # * `as_of_df`, the data.frame/tibble/epi_df/etc. that we will
+                #    `group_modify` as the `.data` argument. Might or might not
+                #    include version column.
+                # * `group_modify_fn`, the corresponding `.f` argument
+                if (!all_versions) {
+                  as_of_df = as_of_raw
+                  group_modify_fn = comp_one_grp
+                } else {
+                  as_of_archive = as_of_raw
+                  # We essentially want to `group_modify` the archive, but don't
+                  # provide an implementation yet. Next best would be
+                  # `group_modify` on its `$DT`, but that has different behavior
+                  # based on whether or not `dtplyr` is loaded. Instead, go
+                  # through a , trying to avoid copies.
+                  if (address(as_of_archive$DT) == address(private$ungrouped$DT)) {
+                    # `as_of` aliased its the full `$DT`; copy before mutating:
+                    as_of_archive$DT <- copy(as_of_archive$DT)
+                  }
+                  dt_key = data.table::key(as_of_archive$DT)
+                  as_of_df = as_of_archive$DT
+                  data.table::setDF(as_of_df)
+
+                  # Convert each subgroup chunk to an archive before running the calculation.
+                  group_modify_fn = function(.data_group, .group_key,
+                                    f, ...,
+                                    ref_time_value,
+                                    comp_effective_key_vars,
+                                    new_col) {
+                    # .data_group is coming from as_of_df as a tibble, but we
+                    # want to feed `comp_one_grp` an `epi_archive` backed by a
+                    # DT; convert and wrap:
+                    data.table::setattr(.data_group, "sorted", dt_key)
+                    data.table::setDT(.data_group, key=dt_key)
+                    .data_group_archive = as_of_archive$clone()
+                    .data_group_archive$DT = .data_group
+                    comp_one_grp(.data_group_archive, .group_key, f = f, ...,
+                                 ref_time_value = ref_time_value,
+                                 comp_effective_key_vars = comp_effective_key_vars,
+                                 new_col = new_col
+                    )
+                  }
+                }
+
+                return(
+                  dplyr::group_by(as_of_df, dplyr::across(tidyselect::all_of(private$vars)),
                                   .drop=private$drop) %>%
-                  dplyr::group_modify(comp_one_grp,
-                                      f = f, ...,
-                                      ref_time_value = ref_time_value,
-                                      comp_effective_key_vars = comp_effective_key_vars,
-                                      new_col = new_col,
-                                      .keep = TRUE)
+                    dplyr::group_modify(group_modify_fn,
+                                        f = f, ...,
+                                        ref_time_value = ref_time_value,
+                                        comp_effective_key_vars = comp_effective_key_vars,
+                                        new_col = new_col,
+                                        .keep = TRUE)
+                )
               })
             }
 
@@ -346,15 +436,64 @@ grouped_epi_archive =
               new_col = sym(names(rlang::quos_auto_name(quos)))
 
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
-                private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before) %>%
-                  dplyr::group_by(dplyr::across(tidyselect::all_of(private$vars)),
+                # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
+                # `epi_archive` if `all_versions` is `TRUE`:
+                as_of_raw = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
+
+                # Set:
+                # * `as_of_df`, the data.frame/tibble/epi_df/etc. that we will
+                #    `group_modify` as the `.data` argument. Might or might not
+                #    include version column.
+                # * `group_modify_fn`, the corresponding `.f` argument
+                if (!all_versions) {
+                  as_of_df = as_of_raw
+                  group_modify_fn = comp_one_grp
+                } else {
+                  as_of_archive = as_of_raw
+                  # We essentially want to `group_modify` the archive, but don't
+                  # provide an implementation yet. Next best would be
+                  # `group_modify` on its `$DT`, but that has different behavior
+                  # based on whether or not `dtplyr` is loaded. Instead, go
+                  # through a , trying to avoid copies.
+                  if (address(as_of_archive$DT) == address(private$ungrouped$DT)) {
+                    # `as_of` aliased its the full `$DT`; copy before mutating:
+                    as_of_archive$DT <- copy(as_of_archive$DT)
+                  }
+                  dt_key = data.table::key(as_of_archive$DT)
+                  as_of_df = as_of_archive$DT
+                  data.table::setDF(as_of_df)
+
+                  # Convert each subgroup chunk to an archive before running the calculation.
+                  group_modify_fn = function(.data_group, .group_key,
+                                    f, ...,
+                                    ref_time_value,
+                                    comp_effective_key_vars,
+                                    new_col) {
+                    # .data_group is coming from as_of_df as a tibble, but we
+                    # want to feed `comp_one_grp` an `epi_archive` backed by a
+                    # DT; convert and wrap:
+                    data.table::setattr(.data_group, "sorted", dt_key)
+                    data.table::setDT(.data_group, key=dt_key)
+                    .data_group_archive = as_of_archive$clone()
+                    .data_group_archive$DT = .data_group
+                    comp_one_grp(.data_group_archive, .group_key, f = f, quo = quo,
+                                 ref_time_value = ref_time_value,
+                                 comp_effective_key_vars = comp_effective_key_vars,
+                                 new_col = new_col
+                    )
+                  }
+                }
+
+                return(
+                  dplyr::group_by(as_of_df, dplyr::across(tidyselect::all_of(private$vars)),
                                   .drop=private$drop) %>%
-                  dplyr::group_modify(comp_one_grp,
-                                      f = f, quo = quo,
-                                      ref_time_value = ref_time_value,
-                                      comp_effective_key_vars = comp_effective_key_vars,
-                                      new_col = new_col,
-                                      .keep = TRUE)
+                    dplyr::group_modify(group_modify_fn,
+                                        f = f, quo = quo,
+                                        ref_time_value = ref_time_value,
+                                        comp_effective_key_vars = comp_effective_key_vars,
+                                        new_col = new_col,
+                                        .keep = TRUE)
+                )
               })
             }
             
@@ -421,4 +560,10 @@ is_grouped_epi_archive = function(x) {
 #' @export
 group_by_drop_default.grouped_epi_archive = function(.tbl) {
   .tbl$group_by_drop_default()
+}
+
+#' @export
+epix_truncate_versions_after.grouped_epi_archive = function(x, max_version) {
+  return ((x$clone()$truncate_versions_after(max_version)))
+  # ^ second set of parens drops invisibility
 }

@@ -6,6 +6,7 @@ Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", role = "aut"),
     person("Rafael", "Catoia", role = "ctb"),
+    person("Nat", "DeFries", role = "ctb"),
     person("Daniel", "McDonald", role = "aut"),
     person("Rachel", "Lobay", role = "ctb"),
     person("Ken", "Mawer", role = "ctb"),
