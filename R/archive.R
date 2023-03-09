@@ -472,6 +472,9 @@ epi_archive =
             if (max_version > self$versions_end) {
               Abort("`max_version` must be at most `self$versions_end`.")
             }
+            if (!rlang::is_bool(all_versions)) {
+              Abort("`all_versions` must be TRUE or FALSE.")
+            }
             if (!is.na(self$clobberable_versions_start) && max_version >= self$clobberable_versions_start) {
               Warn('Getting data as of some recent version which could still be overwritten (under routine circumstances) without assigning a new version number (a.k.a. "clobbered").  Thus, the snapshot that we produce here should not be expected to be reproducible later. See `?epi_archive` for more info and `?epix_as_of` on how to muffle.',
                    class="epiprocess__snapshot_as_of_clobberable_version")

@@ -230,7 +230,7 @@ grouped_epi_archive =
             }
             before <- vctrs::vec_cast(before, integer())
             if (length(before) != 1L || is.na(before) || before < 0L) {
-              Abort("`before` must be length-1, non-NA, non-negative")
+              Abort("`before` must be length-1, non-NA, non-negative.")
             }
 
             # If a custom time step is specified, then redefine units 
@@ -239,6 +239,20 @@ grouped_epi_archive =
             
             # Symbolize column name
             new_col = sym(new_col_name)
+
+            # Validate rest of parameters:
+            if (!rlang::is_bool(as_list_col)) {
+              Abort("`as_list_col` must be TRUE or FALSE.")
+            }
+            if (! (rlang::is_string(names_sep) || is.null(names_sep)) ) {
+              Abort("`names_sep` must be a (single) string or NULL.")
+            }
+            if (!rlang::is_bool(all_rows)) {
+              Abort("`all_rows` must be TRUE or FALSE.")
+            }
+            if (!rlang::is_bool(all_versions)) {
+              Abort("`all_versions` must be TRUE or FALSE.")
+            }
 
             # Each computation is expected to output a data frame with either
             # one element/row total or one element/row per encountered
