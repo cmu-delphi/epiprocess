@@ -176,13 +176,7 @@ is equivalent to:
 \examples{
 library(dplyr)
 
-# these dates are reference time points for the 3 day average sliding window
-# The resulting epi_archive ends up including data averaged from:
-# 0 day which has no results, for 2020-06-01
-# 1 day, for 2020-06-02
-# 2 days, for the rest of the results
-# never 3 days due to data latency
-
+# Reference time points for which we want to compute slide values:
 ref_time_values <- seq(as.Date("2020-06-01"),
                        as.Date("2020-06-15"),
                        by = "1 day")
@@ -192,7 +186,44 @@ archive_cases_dv_subset \%>\%
   epix_slide(f = ~ mean(.x$case_rate_7d_av),
              before = 2,
              ref_time_values = ref_time_values,
-             new_col_name = 'case_rate_3d_av') \%>\%
+             new_col_name = 'case_rate_7d_av_recent_av') \%>\%
   ungroup()
+# We requested time windows that started 2 days before the corresponding time
+# values. The actual number of `time_value`s in each computation depends on
+# the reporting latency of the signal and `time_value` range covered by the
+# archive (2020-06-01 -- 2021-11-30 in this example).  In this case, we have
+# 0 `time_value`s, for ref time 2020-06-01 --> the result is automatically discarded
+# 1 `time_value`, for ref time 2020-06-02
+# 2 `time_value`s, for the rest of the results
+# never 3 `time_value`s, due to data latency
+
+
+
+# --- Advanced: ---
+
+# `epix_slide` with `all_versions=FALSE` (the default) applies a
+# version-unaware computation to several versions of the data. We can also
+# use `all_versions=TRUE` to apply a version-*aware* computation to several
+# versions of the data. In this case, each computation should expect an
+# `epi_archive` containing the relevant version data:
+
+archive_cases_dv_subset \%>\%
+  group_by(geo_value) \%>\%
+  epix_slide(
+    function(x, g) {
+      tibble(
+        versions_end = max(x$versions_end),
+        time_range = if(nrow(x$DT) == 0L) {
+          "0 `time_value`s"
+        } else {
+          sprintf("\%s -- \%s", min(x$DT$time_value), max(x$DT$time_value))
+        },
+        class1 = class(x)[[1L]]
+      )
+    },
+    before = 2, all_versions = TRUE,
+    ref_time_values = ref_time_values, names_sep=NULL) \%>\%
+  ungroup() \%>\%
+  arrange(geo_value, time_value)
 
 }

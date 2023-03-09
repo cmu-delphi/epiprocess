@@ -301,7 +301,7 @@ grouped_epi_archive =
               count =
                 if (length(comp_effective_key_vars) != 0L) {
                   comp_effective_key_vals_in_comp_input =
-                    if (is.data.table(.data_group)) {
+                    if (data.table::is.data.table(.data_group)) {
                       .data_group[, comp_effective_key_vars, with=FALSE]
                     } else {
                       .data_group[, comp_effective_key_vars]
@@ -446,7 +446,7 @@ grouped_epi_archive =
                 #    include version column.
                 # * `group_modify_fn`, the corresponding `.f` argument
                 if (!all_versions) {
-                  as_of_tbl = as_of_raw
+                  as_of_df = as_of_raw
                   group_modify_fn = comp_one_grp
                 } else {
                   as_of_archive = as_of_raw
@@ -469,7 +469,7 @@ grouped_epi_archive =
                                     ref_time_value,
                                     comp_effective_key_vars,
                                     new_col) {
-                    # .data_group is coming from as_of_tbl as a tibble, but we
+                    # .data_group is coming from as_of_df as a tibble, but we
                     # want to feed `comp_one_grp` an `epi_archive` backed by a
                     # DT; convert and wrap:
                     data.table::setattr(.data_group, "sorted", dt_key)

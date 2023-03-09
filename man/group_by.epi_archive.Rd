@@ -31,7 +31,7 @@ is_grouped_epi_archive(x)
 \code{\link[dplyr:mutate]{dplyr::mutate}}-like syntax here to calculate new columns on which to
 perform grouping, but note that, if you are regrouping an already-grouped
 \code{.data} object, the calculations will be carried out ignoring such grouping
-(same as \link[dplyr:group_by]{in \code{dplyr}}).
+(same as \link[dplyr:group_by]{in dplyr}).
 \item In \code{ungroup}: either
 \itemize{
 \item empty, in order to remove the grouping and output an \code{epi_archive}; or

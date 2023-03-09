@@ -20,7 +20,7 @@ epi_slide(
 }
 \arguments{
 \item{x}{The \code{epi_df} object under consideration,
-\code{\link[=grouped]{dplyr::group_by}} or ungrouped. If ungrouped, all data in \code{x}
+\link[dplyr:group_by]{grouped} or ungrouped. If ungrouped, all data in \code{x}
 will be treated as part of a single data group.}
 
 \item{f}{Function, formula, or missing; together with \code{...} specifies the
