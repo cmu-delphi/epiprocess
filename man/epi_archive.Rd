@@ -118,7 +118,9 @@ toy_epi_archive
 \item \href{#method-epi_archive-print}{\code{epi_archive$print()}}
 \item \href{#method-epi_archive-as_of}{\code{epi_archive$as_of()}}
 \item \href{#method-epi_archive-fill_through_version}{\code{epi_archive$fill_through_version()}}
+\item \href{#method-epi_archive-truncate_versions_after}{\code{epi_archive$truncate_versions_after()}}
 \item \href{#method-epi_archive-merge}{\code{epi_archive$merge()}}
+\item \href{#method-epi_archive-group_by}{\code{epi_archive$group_by()}}
 \item \href{#method-epi_archive-slide}{\code{epi_archive$slide()}}
 \item \href{#method-epi_archive-clone}{\code{epi_archive$clone()}}
 }
@@ -169,15 +171,17 @@ such as \code{as_of}? As these methods use the last version of each observation
 carried forward (LOCF) to interpolate between the version data provided,
 rows that don't change these LOCF results can potentially be omitted to
 save space while maintaining the same behavior (with the help of the
-\code{clobberable_versions_start} and \code{versions_end} fields in some
-edge cases). \code{TRUE} will remove these rows, \code{FALSE} will not, and missing
-or \code{NULL} will remove these rows and issue a warning. Generally, this can
-be set to \code{TRUE}, but if you directly inspect or edit the fields of the
-\code{epi_archive} such as its \code{DT}, you will have to determine whether
-\code{compactify=TRUE} will produce the desired results. If compactification
-here is removing a large proportion of the rows, this may indicate a
-potential for space, time, or bandwidth savings upstream the data pipeline,
-e.g., when fetching, storing, or preparing the input data \code{x}}
+\code{clobberable_versions_start} and \code{versions_end} fields in some edge cases).
+\code{TRUE} will remove these rows, \code{FALSE} will not, and missing or \code{NULL} will
+remove these rows and issue a warning. Generally, this can be set to
+\code{TRUE}, but if you directly inspect or edit the fields of the \code{epi_archive}
+such as its \code{DT}, or rely on redundant updates to achieve a certain
+behavior of the \code{ref_time_values} default in \code{epix_slide}, you will have to
+determine whether \code{compactify=TRUE} will produce the desired results. If
+compactification here is removing a large proportion of the rows, this may
+indicate a potential for space, time, or bandwidth savings upstream the
+data pipeline, e.g., by avoiding fetching, storing, or processing these
+rows of \code{x}.}
 
 \item{\code{clobberable_versions_start}}{Optional; as in \code{\link{as_epi_archive}}}
 
@@ -199,7 +203,7 @@ An \code{epi_archive} object.
 \if{latex}{\out{\hypertarget{method-epi_archive-print}{}}}
 \subsection{Method \code{print()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$print()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$print(class = TRUE, methods = TRUE)}\if{html}{\out{</div>}}
 }
 
 }
@@ -210,7 +214,7 @@ An \code{epi_archive} object.
 Generates a snapshot in \code{epi_df} format as of a given version.
 See the documentation for the wrapper function \code{\link[=epix_as_of]{epix_as_of()}} for details.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$as_of(max_version, min_time_value = -Inf)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$as_of(max_version, min_time_value = -Inf, all_versions = FALSE)}\if{html}{\out{</div>}}
 }
 
 }
@@ -232,6 +236,28 @@ version, which doesn't mutate the input archive but might alias its fields.
 \item{\code{fill_versions_end}}{as in \code{\link{epix_fill_through_version}}}
 
 \item{\code{how}}{as in \code{\link{epix_fill_through_version}}}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-epi_archive-truncate_versions_after"></a>}}
+\if{latex}{\out{\hypertarget{method-epi_archive-truncate_versions_after}{}}}
+\subsection{Method \code{truncate_versions_after()}}{
+Filter to keep only older versions, mutating the archive by
+potentially reseating but not mutating some fields. \code{DT} is likely, but not
+guaranteed, to be copied. Returns the mutated archive
+\link[base:invisible]{invisibly}.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$truncate_versions_after(max_version)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{max_version}}{as in \code{\link{epix_truncate_versions_after}}}
+
+\item{\code{x}}{as in \code{\link{epix_truncate_versions_after}}}
 }
 \if{html}{\out{</div>}}
 }
@@ -267,6 +293,19 @@ does not alias either archive's \code{DT}.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-epi_archive-group_by"></a>}}
+\if{latex}{\out{\hypertarget{method-epi_archive-group_by}{}}}
+\subsection{Method \code{group_by()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{epi_archive$group_by(
+  ...,
+  .add = FALSE,
+  .drop = dplyr::group_by_drop_default(self)
+)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-epi_archive-slide"></a>}}
 \if{latex}{\out{\hypertarget{method-epi_archive-slide}{}}}
 \subsection{Method \code{slide()}}{
@@ -278,13 +317,13 @@ details.
   f,
   ...,
   before,
-  group_by,
   ref_time_values,
   time_step,
   new_col_name = "slide_value",
   as_list_col = FALSE,
   names_sep = "_",
-  all_rows = FALSE
+  all_rows = FALSE,
+  all_versions = FALSE
 )}\if{html}{\out{</div>}}
 }
 

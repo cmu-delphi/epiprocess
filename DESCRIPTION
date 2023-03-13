@@ -6,6 +6,7 @@ Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", role = "aut"),
     person("Rafael", "Catoia", role = "ctb"),
+    person("Nat", "DeFries", role = "ctb"),
     person("Daniel", "McDonald", role = "aut"),
     person("Rachel", "Lobay", role = "ctb"),
     person("Ken", "Mawer", role = "ctb"),
@@ -22,11 +23,12 @@ Description: This package introduces a common data structure for epidemiological
 License: MIT + file LICENSE
 Imports: 
     data.table,
-    dplyr,
+    dplyr (>= 1.0.0),
     fabletools,
     feasts,
     generics,
     genlasso,
+    lifecycle (>= 1.0.1),
     lubridate,
     magrittr,
     purrr,
@@ -35,7 +37,7 @@ Imports:
     slider,
     tibble,
     tidyr,
-    tidyselect,
+    tidyselect (>= 1.2.0),
     tsibble,
     utils,
     vctrs
@@ -63,3 +65,18 @@ RoxygenNote: 7.2.1
 Depends: 
     R (>= 2.10)
 URL: https://cmu-delphi.github.io/epiprocess/
+Collate: 
+    'archive.R'
+    'correlation.R'
+    'data.R'
+    'epi_df.R'
+    'epiprocess.R'
+    'methods-epi_archive.R'
+    'grouped_epi_archive.R'
+    'growth_rate.R'
+    'methods-epi_df.R'
+    'outliers.R'
+    'reexports.R'
+    'slide.R'
+    'utils.R'
+    'utils_pipe.R'

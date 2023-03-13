@@ -4,9 +4,83 @@ Note that `epiprocess` uses the [Semantic Versioning
 ("semver")](https://semver.org/) scheme for all release versions, but not for
 development versions. A ".9999" suffix indicates a development version.
 
+## Breaking changes:
+
+* Changes to both `epi_slide` and `epix_slide`:
+  * The `n`, `align`, and `before` arguments have been replaced by new `before`
+    and `after` arguments. To migrate to the new version, replace these
+    arguments in every `epi_slide` and `epix_slide` call. If you were only using
+    the `n` argument, then this means replacing `n = <n value>` with `before =
+    <n value> - 1`.
+    * `epi_slide`'s time windows now extend `before` time steps before and
+      `after` time steps after the corresponding `ref_time_values`. See
+      `?epi_slide` for details on matching old alignments.
+    * `epix_slide`'s time windows now extend `before` time steps before the
+      corresponding `ref_time_values` all the way through the latest data
+      available at the corresponding `ref_time_values`.
+  * Slide functions now keep any grouping of `x` in their results, like
+    `mutate` and `group_modify`.
+    * To obtain the old behavior, `dplyr::ungroup` the slide results immediately.
+* Additional`epix_slide` changes:
+  * `epix_slide`'s `group_by` argument has been replaced by `dplyr::group_by` and
+    `dplyr::ungroup` S3 methods. The `group_by` method uses "data masking" (also
+    referred to as "tidy evaluation") rather than "tidy selection".
+    * Old syntax:
+      * `x %>% epix_slide(<other args>, group_by=c(col1, col2))`
+      * `x %>% epix_slide(<other args>, group_by=all_of(colname_vector))`
+    * New syntax:
+      * `x %>% group_by(col1, col2) %>% epix_slide(<other args>)`
+      * `x %>% group_by(across(all_of(colname_vector))) %>% epix_slide(<other args>)`
+  * `epix_slide` no longer defaults to grouping by non-`time_value`, non-`version`
+    key columns, instead considering all data to be in one big group.
+    * To obtain the old behavior, precede each `epix_slide` call lacking a
+      `group_by` argument with an appropriate `group_by` call.
+  * `epix_slide` now guesses `ref_time_values` to be a regularly spaced sequence
+    covering all the `DT$version` values and the `version_end`, rather than the
+    distinct `DT$time_value`s. To obtain the old behavior, pass in
+    `ref_time_values = unique(<ungrouped archive>$DT$time_value)`.
+* `epi_archive`'s `clobberable_versions_start`'s default is now `NA`, so there
+  will be no warnings by default about potential nonreproducibility. To obtain
+  the old behavior, pass in `clobberable_versions_start =
+  max_version_with_row_in(x)`.
+
+## Potentially-breaking changes:
+
+* Fixed `[` on grouped `epi_df`s to maintain the grouping if possible when
+  dropping the `epi_df` class (e.g., when removing the `time_value` column).
+* Fixed `epi_df` operations to be more consistent about decaying into
+  non-`epi_df`s when the result of the operation doesn't make sense as an
+  `epi_df` (e.g., when removing the `time_value` column).
+* Changed `bind_rows` on grouped `epi_df`s to not drop the `epi_df` class. Like
+  with ungrouped `epi_df`s, the metadata of the result is still simply taken
+  from the first result, and may be inappropriate
+  ([#242](https://github.com/cmu-delphi/epiprocess/issues/242)).
+* `epi_slide` and `epix_slide` now raise an error rather than silently filtering
+  out `ref_time_values` that don't meet their expectations.
+
+## New features:
+
+* `epix_slide`, `<epi_archive>$slide` have a new parameter `all_versions`. With
+  `all_versions=TRUE`, `epix_slide` will pass a filtered `epi_archive` to each
+  computation rather than an `epi_df` snapshot. This enables, e.g., performing
+  pseudoprospective forecasts with a revision-aware forecaster using nested
+  `epix_slide` operations.
+
+## Improvements:
+
+* Added `dplyr::group_by` and `dplyr::ungroup` S3 methods for `epi_archive`
+  objects, plus corresponding `$group_by` and `$ungroup` R6 methods. The
+  `group_by` implementation supports the `.add` and `.drop` arguments, and
+  `ungroup` supports partial ungrouping with `...`.
+* `as_epi_archive`, `epi_archive$new` now perform checks for the key uniqueness
+  requirement (part of
+  [#154](https://github.com/cmu-delphi/epiprocess/issues/154)).
+
 ## Cleanup:
 
 * Added a `NEWS.md` file to track changes to the package.
+* Implemented `?dplyr::dplyr_extending` for `epi_df`s
+  ([#223](https://github.com/cmu-delphi/epiprocess/issues/223)).
 
 # epiprocess 0.5.0:
 

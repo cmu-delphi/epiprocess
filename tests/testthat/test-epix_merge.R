@@ -123,10 +123,12 @@ local({
 local({
   x = as_epi_archive(
     tibble::tibble(geo_value=1L, time_value=1L, version=1L, x_value=10L),
+    clobberable_versions_start = 1L,
     versions_end = 3L
   )
   y = as_epi_archive(
-    tibble::tibble(geo_value=1L, time_value=1L, version=5L, y_value=20L)
+    tibble::tibble(geo_value=1L, time_value=1L, version=5L, y_value=20L),
+    clobberable_versions_start = 1L
   )
   test_that('epix_merge forbids on sync default or "forbid"', {
     expect_error(epix_merge(x,y),

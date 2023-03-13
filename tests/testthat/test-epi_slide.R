@@ -9,7 +9,7 @@ grouped = dplyr::bind_rows(
   as_epi_df() %>%
   group_by(geo_value)
 
-f = function(x, ...) dplyr::tibble(value=mean(x$value), count=length(x$value))
+f = function(x, g) dplyr::tibble(value=mean(x$value), count=length(x$value))
 
 ## --- These cases generate errors (or not): ---
 test_that("`before` and `after` are both vectors of length 1", {
@@ -55,16 +55,16 @@ test_that("Both `before` and `after` must be non-NA, non-negative, integer-compa
 
 test_that("`ref_time_values` + `before` + `after` that result in no slide data, generate the error", {
   expect_error(epi_slide(grouped, f, before=2L, ref_time_values = d), 
-               "starting and/or stopping times for sliding are out of bounds") # before the first, no data in the slide windows
+               "All `ref_time_values` must appear in `x\\$time_value`.") # before the first, no data in the slide windows
   expect_error(epi_slide(grouped, f, before=2L, ref_time_values = d+207L), 
-               "starting and/or stopping times for sliding are out of bounds") # beyond the last, no data in window
+               "All `ref_time_values` must appear in `x\\$time_value`.") # beyond the last, no data in window
 })
 
-test_that("`ref_time_values` + `before` + `after` that have some slide data, but generate the error due to ref. time being out of time range", {
+test_that("`ref_time_values` + `before` + `after` that have some slide data, but generate the error due to ref. time being out of time range (would also happen if they were in between `time_value`s)", {
   expect_error(epi_slide(grouped, f, before=0L, after=2L, ref_time_values = d), 
-               "starting and/or stopping times for sliding are out of bounds") # before the first, but we'd expect there to be data in the window
+               "All `ref_time_values` must appear in `x\\$time_value`.") # before the first, but we'd expect there to be data in the window
   expect_error(epi_slide(grouped, f, before=2L, ref_time_values = d+201L), 
-               "starting and/or stopping times for sliding are out of bounds") # beyond the last, but still with data in window
+               "All `ref_time_values` must appear in `x\\$time_value`.") # beyond the last, but still with data in window
 })
 
 ## --- These cases generate warnings (or not): ---
@@ -78,9 +78,11 @@ test_that("Warn user against having a blank `before`",{
 ## --- These cases doesn't generate the error: ---
 test_that("these doesn't produce an error; the error appears only if the ref time values are out of the range for every group", {
   expect_identical(epi_slide(grouped, f, before=2L, ref_time_values = d+200L) %>% 
+                     ungroup() %>%
                      dplyr::select("geo_value","slide_value_value"), 
                    dplyr::tibble(geo_value = "ak", slide_value_value = 199)) # out of range for one group
   expect_identical(epi_slide(grouped, f, before=2L, ref_time_values=d+3) %>% 
+                     ungroup() %>%
                      dplyr::select("geo_value","slide_value_value"), 
                    dplyr::tibble(geo_value = c("ak", "al"), slide_value_value = c(2, -2))) # not out of range for either group
 })

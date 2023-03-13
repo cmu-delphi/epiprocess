@@ -4,54 +4,56 @@
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
 #' examples.
 #'
-#' @param x The `epi_df` object under consideration.
-#' @param f Function or formula to slide over variables in `x`. To "slide" means
-#'   to apply a function or formula over a rolling window of time steps.
-#'   The window is determined by the `before` and `after` parameters described 
-#'   below. One time step is typically one day or one week; see details for more
-#'   explanation. If a function, `f` should take `x`, an `epi_df` with the same 
-#'   names as the non-grouping columns, followed by `g` to refer to the one row 
-#'   tibble with one column per grouping variable that identifies the group, 
-#'   and any number of named arguments (which will be taken from `...`). If a 
-#'   formula, `f` can operate directly on columns accessed via `.x$var`, as 
-#'   in `~ mean(.x$var)` to compute a mean of a column var over a sliding 
-#'   window. As well, `.y` may be used in the formula to refer 
-#'   to the groupings that would be described by `g` if `f` was a function.
+#' @param x The `epi_df` object under consideration, [grouped][dplyr::group_by]
+#'   or ungrouped. If ungrouped, all data in `x` will be treated as part of a
+#'   single data group.
+#' @param f Function, formula, or missing; together with `...` specifies the
+#'   computation to slide. To "slide" means to apply a computation within a
+#'   sliding (a.k.a. "rolling") time window for each data group. The window is
+#'   determined by the `before` and `after` parameters described below. One time
+#'   step is typically one day or one week; see details for more explanation. If
+#'   a function, `f` must take `x`, a data frame with the same column names as
+#'   the original object, minus any grouping variables, containing the time
+#'   window data for one `ref_time_value`-group combination; followed by `g`, a
+#'   one-row tibble containing the values of the grouping variables for the
+#'   associated group; followed by any number of named arguments. If a formula,
+#'   `f` can operate directly on columns accessed via `.x$var`, as in `~
+#'   mean(.x$var)` to compute a mean of a column `var` for each
+#'   `ref_time_value`-group combination. If `f` is missing, then `...` will
+#'   specify the computation.
 #' @param ... Additional arguments to pass to the function or formula specified
-#'   via `f`. Alternatively, if `f` is missing, then the current argument is
-#'   interpreted as an expression for tidy evaluation. See details.  
+#'   via `f`. Alternatively, if `f` is missing, then the `...` is interpreted as
+#'   an expression for tidy evaluation. See details.
 #' @param before,after How far `before` and `after` each `ref_time_value` should
 #'   the sliding window extend? At least one of these two arguments must be
 #'   provided; the other's default will be 0. Any value provided for either
 #'   argument must be a single, non-`NA`, non-negative,
-#'   [integer-compatible][vctrs::vec_cast] number of time steps. Endpoints of the
-#'   window are inclusive. Common settings:
-#'   * For trailing/right-aligned windows from `ref_time_value - time_step(k)`
-#'     to `ref_time_value`: either pass `before=k` by itself, or pass `before=k,
-#'     after=0`.
-#'   * For center-aligned windows from `ref_time_value - time_step(k)` to
-#'     `ref_time_value + time_step(k)`: pass `before=k, after=k`.
-#'   * For leading/left-aligned windows from `ref_time_value` to `ref_time_value
-#'     + time_step(k)`: either pass pass `after=k` by itself, or pass `before=0,
-#'     after=k`.
-#'   See "Details:" about the definition of a time step, (non)treatment of
-#'   missing rows within the window, and avoiding warnings about
-#'   `before`&`after` settings for a certain uncommon use case.
+#'   [integer-compatible][vctrs::vec_cast] number of time steps. Endpoints of
+#'   the window are inclusive. Common settings: * For trailing/right-aligned
+#'   windows from `ref_time_value - time_step(k)` to `ref_time_value`: either
+#'   pass `before=k` by itself, or pass `before=k, after=0`. * For
+#'   center-aligned windows from `ref_time_value - time_step(k)` to
+#'   `ref_time_value + time_step(k)`: pass `before=k, after=k`. * For
+#'   leading/left-aligned windows from `ref_time_value` to `ref_time_value +
+#'   time_step(k)`: either pass pass `after=k` by itself, or pass `before=0,
+#'   after=k`. See "Details:" about the definition of a time step,
+#'   (non)treatment of missing rows within the window, and avoiding warnings
+#'   about `before`&`after` settings for a certain uncommon use case.
 #' @param ref_time_values Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
 #'   window. If missing, then this will be set to all unique time values in the
 #'   underlying data table, by default.
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
-#'   `time_value` column. This function must take a non-negative integer and return
-#'   an object of class `lubridate::period`. For example, we can use `time_step
-#'   = lubridate::hours` in order to set the time step to be one hour (this
-#'   would only be meaningful if `time_value` is of class `POSIXct`).
+#'   `time_value` column. This function must take a non-negative integer and
+#'   return an object of class `lubridate::period`. For example, we can use
+#'   `time_step = lubridate::hours` in order to set the time step to be one hour
+#'   (this would only be meaningful if `time_value` is of class `POSIXct`).
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
 #' @param as_list_col Should the new column be stored as a list column? Default
-#'   is `FALSE`, in which case a list object returned by `f` would be unnested 
+#'   is `FALSE`, in which case a list object returned by `f` would be unnested
 #'   (using `tidyr::unnest()`), and the names of the resulting columns are given
 #'   by prepending `new_col_name` to the names of the list elements.
 #' @param names_sep String specifying the separator to use in `tidyr::unnest()`
@@ -61,28 +63,27 @@
 #'   the output; otherwise, there will be one row for each time value in `x`
 #'   that acts as a reference time value. Default is `FALSE`.
 #' @return An `epi_df` object given by appending a new column to `x`, named
-#'   according to the `new_col_name` argument. 
+#'   according to the `new_col_name` argument.
 #' 
 #' @details To "slide" means to apply a function or formula over a rolling
-#'   window of time steps where the window is entered at a reference time and
-#'   left and right endpoints are given by the `before` and `after` arguments.
-#'   The unit (the meaning of one time step) is
-#'   implicitly defined by the way the `time_value` column treats addition and
-#'   subtraction; for example, if the time values are coded as `Date` objects,
-#'   then one time step is one day, since `as.Date("2022-01-01") + 1` equals
+#'   window of time steps for each data group, where the window is entered at a
+#'   reference time and left and right endpoints are given by the `before` and
+#'   `after` arguments. The unit (the meaning of one time step) is implicitly
+#'   defined by the way the `time_value` column treats addition and subtraction;
+#'   for example, if the time values are coded as `Date` objects, then one time
+#'   step is one day, since `as.Date("2022-01-01") + 1` equals
 #'   `as.Date("2022-01-02")`. Alternatively, the time step can be set explicitly
 #'   using the `time_step` argument (which if specified would override the
 #'   default choice based on `time_value` column). If there are not enough time
 #'   steps available to complete the window at any given reference time, then
-#'   `epi_slide()` still
-#'   attempts to perform the computation anyway (it does not require a complete
-#'   window). The issue of what to do with partial computations (those run on
-#'   incomplete windows) is therefore left up to the user, either through the
-#'   specified function or formula `f`, or through post-processing. For a
-#'   centrally-aligned slide of `n` `time_value`s in a sliding window, set
-#'   `before = (n-1)/2` and `after = (n-1)/2` when the number of `time_value`s
-#'   in a sliding window is odd and  `before = n/2-1` and `after = n/2` when
-#'   `n` is even.
+#'   `epi_slide()` still attempts to perform the computation anyway (it does not
+#'   require a complete window). The issue of what to do with partial
+#'   computations (those run on incomplete windows) is therefore left up to the
+#'   user, either through the specified function or formula `f`, or through
+#'   post-processing. For a centrally-aligned slide of `n` `time_value`s in a
+#'   sliding window, set `before = (n-1)/2` and `after = (n-1)/2` when the
+#'   number of `time_value`s in a sliding window is odd and `before = n/2-1` and
+#'   `after = n/2` when `n` is even.
 #'
 #'   Sometimes, we want to experiment with various trailing or leading window
 #'   widths and compare the slide outputs. In the (uncommon) case where
@@ -100,7 +101,7 @@
 #'   ```
 #'   which would be equivalent to:
 #'   ```
-#'   epi_slide(x, function(x, ...) mean(x$cases), before = 6,
+#'   epi_slide(x, function(x, g) mean(x$cases), before = 6,
 #'             new_col_name = "cases_7dav")
 #'   ```
 #'   Thus, to be clear, when the computation is specified via an expression for
@@ -157,14 +158,24 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
   # Arrange by increasing time_value
   x = arrange(x, time_value)
   
-  # If missing, then set ref time values to be everything; else make sure we
-  # intersect with observed time values
   if (missing(ref_time_values)) {
     ref_time_values = unique(x$time_value)
-  } 
-  else {
-    ref_time_values = ref_time_values[ref_time_values %in%
-                                      unique(x$time_value)] 
+  }
+  
+  # Some of these `ref_time_values` checks and processing steps also apply to
+  # the `ref_time_values` default; for simplicity, just apply all the steps
+  # regardless of whether we are working with a default or user-provided
+  # `ref_time_values`:
+  if (length(ref_time_values) == 0L) {
+    Abort("`ref_time_values` must have at least one element.")
+  } else if (any(is.na(ref_time_values))) {
+    Abort("`ref_time_values` must not include `NA`.")
+  } else if (anyDuplicated(ref_time_values) != 0L) {
+    Abort("`ref_time_values` must not contain any duplicates; use `unique` if appropriate.")
+  } else if (!all(ref_time_values %in% unique(x$time_value))) {
+    Abort("All `ref_time_values` must appear in `x$time_value`.")
+  } else {
+    ref_time_values = sort(ref_time_values)
   }
   
   # Validate and pre-process `before`, `after`:

@@ -61,7 +61,7 @@ validate_version_bound = function(version_bound, x, na_ok,
   }
 }
 
-#' Default arg helper: `max(x$version)`, with error if `x` has 0 rows
+#' `max(x$version)`, with error if `x` has 0 rows
 #'
 #' Exported to make defaults more easily copyable.
 #'
@@ -233,15 +233,17 @@ epi_archive =
 #'   carried forward (LOCF) to interpolate between the version data provided,
 #'   rows that don't change these LOCF results can potentially be omitted to
 #'   save space while maintaining the same behavior (with the help of the
-#'   `clobberable_versions_start` and `versions_end` fields in some
-#'   edge cases). `TRUE` will remove these rows, `FALSE` will not, and missing
-#'   or `NULL` will remove these rows and issue a warning. Generally, this can
-#'   be set to `TRUE`, but if you directly inspect or edit the fields of the
-#'   `epi_archive` such as its `DT`, you will have to determine whether
-#'   `compactify=TRUE` will produce the desired results. If compactification
-#'   here is removing a large proportion of the rows, this may indicate a
-#'   potential for space, time, or bandwidth savings upstream the data pipeline,
-#'   e.g., when fetching, storing, or preparing the input data `x`
+#'   `clobberable_versions_start` and `versions_end` fields in some edge cases).
+#'   `TRUE` will remove these rows, `FALSE` will not, and missing or `NULL` will
+#'   remove these rows and issue a warning. Generally, this can be set to
+#'   `TRUE`, but if you directly inspect or edit the fields of the `epi_archive`
+#'   such as its `DT`, or rely on redundant updates to achieve a certain
+#'   behavior of the `ref_time_values` default in `epix_slide`, you will have to
+#'   determine whether `compactify=TRUE` will produce the desired results. If
+#'   compactification here is removing a large proportion of the rows, this may
+#'   indicate a potential for space, time, or bandwidth savings upstream the
+#'   data pipeline, e.g., by avoiding fetching, storing, or processing these
+#'   rows of `x`.
 #' @param clobberable_versions_start Optional; as in [`as_epi_archive`]
 #' @param versions_end Optional; as in [`as_epi_archive`]
 #' @return An `epi_archive` object.
@@ -308,7 +310,7 @@ epi_archive =
             # Apply defaults and conduct checks and apply defaults for
             # `clobberable_versions_start`, `versions_end`:
             if (missing(clobberable_versions_start)) {
-              clobberable_versions_start <- max_version_with_row_in(x)
+              clobberable_versions_start <- NA
             }
             if (missing(versions_end)) {
               versions_end <- max_version_with_row_in(x)
@@ -336,6 +338,12 @@ epi_archive =
             key_vars = c("geo_value", "time_value", other_keys, "version")
             DT = as.data.table(x, key = key_vars)
             if (!identical(key_vars, key(DT))) setkeyv(DT, cols = key_vars)
+
+            maybe_first_duplicate_key_row_index = anyDuplicated(DT, by=key(DT))
+            if (maybe_first_duplicate_key_row_index != 0L) {
+              Abort("`x` must have one row per unique combination of the key variables.  If you have additional key variables other than `geo_value`, `time_value`, and `version`, such as an age group column, please specify them in `other_keys`.  Otherwise, check for duplicate rows and/or conflicting values for the same measurement.",
+                    class = "epiprocess__epi_archive_requires_unique_key")
+            }
             
             # Checks to see if a value in a vector is LOCF
             is_locf <- function(vec) {
@@ -397,8 +405,8 @@ epi_archive =
             self$clobberable_versions_start = clobberable_versions_start
             self$versions_end = versions_end
           },
-          print = function() {
-            cat("An `epi_archive` object, with metadata:\n")
+          print = function(class = TRUE, methods = TRUE) {
+            if (class) cat("An `epi_archive` object, with metadata:\n")
             cat(sprintf("* %-9s = %s\n", "geo_type", self$geo_type))
             cat(sprintf("* %-9s = %s\n", "time_type", self$time_type))
             if (!is.null(self$additional_metadata)) { 
@@ -420,7 +428,7 @@ epi_archive =
             cat(sprintf("* %-14s = %s\n", "last version with update",
                         max(self$DT$version)))
             if (is.na(self$clobberable_versions_start)) {
-              cat("No clobberable versions\n")
+              cat("* No clobberable versions\n")
             } else {
               cat(sprintf("* %-14s = %s\n", "clobberable versions start",
                           self$clobberable_versions_start))
@@ -430,22 +438,21 @@ epi_archive =
             cat("----------\n")
             cat(sprintf("Data archive (stored in DT field): %i x %i\n", 
                         nrow(self$DT), ncol(self$DT)))
-            cat("----------\n")
             cat(sprintf("Columns in DT: %s\n", paste(ifelse(length(
               colnames(self$DT)) <= 4, paste(colnames(self$DT), collapse = ", "), 
               paste(paste(colnames(self$DT)[1:4], collapse = ", "), "and", 
               length(colnames(self$DT)[5:length(colnames(self$DT))]), "more columns")))))
-            cat("----------\n")
-            cat(sprintf("Public methods: %s\n",
-                        paste(names(epi_archive$public_methods),
-                              collapse = ", ")),"\n")
-
+            if (methods) {
+              cat("----------\n")
+              writeLines(wrap_varnames(initial = "Public R6 methods: ",
+                                       names(epi_archive$public_methods)))
+            }
           },
           #####
 #' @description Generates a snapshot in `epi_df` format as of a given version.
 #'   See the documentation for the wrapper function [`epix_as_of()`] for details.
 #' @importFrom data.table between key
-          as_of = function(max_version, min_time_value = -Inf) {
+          as_of = function(max_version, min_time_value = -Inf, all_versions = FALSE) {
             # Self max version and other keys
             other_keys = setdiff(key(self$DT),
                                  c("geo_value", "time_value", "version"))
@@ -465,12 +472,23 @@ epi_archive =
             if (max_version > self$versions_end) {
               Abort("`max_version` must be at most `self$versions_end`.")
             }
+            if (!rlang::is_bool(all_versions)) {
+              Abort("`all_versions` must be TRUE or FALSE.")
+            }
             if (!is.na(self$clobberable_versions_start) && max_version >= self$clobberable_versions_start) {
-              Warn('Getting data as of some "clobberable" version that might be hotfixed, synced, or otherwise replaced later with different data using the same version tag.  Thus, the snapshot that we produce here might not be reproducible later. See `?epi_archive` for more info and `?epix_as_of` on how to muffle.',
+              Warn('Getting data as of some recent version which could still be overwritten (under routine circumstances) without assigning a new version number (a.k.a. "clobbered").  Thus, the snapshot that we produce here should not be expected to be reproducible later. See `?epi_archive` for more info and `?epix_as_of` on how to muffle.',
                    class="epiprocess__snapshot_as_of_clobberable_version")
             }
             
             # Filter by version and return
+            if (all_versions) {
+              result = epix_truncate_versions_after(self, max_version)
+              # `self` has already been `clone`d in `epix_truncate_versions_after`
+              # so we can modify the new archive's DT directly.
+              result$DT = result$DT[time_value >= min_time_value, ]
+              return(result)
+            }
+
             return(
               # Make sure to use data.table ways of filtering and selecting
               self$DT[time_value >= min_time_value &
@@ -478,7 +496,7 @@ epi_archive =
               unique(by = c("geo_value", "time_value", other_keys),
                      fromLast = TRUE) %>%
               tibble::as_tibble() %>% 
-              dplyr::select(-.data$version) %>%
+              dplyr::select(-"version") %>%
               as_epi_df(geo_type = self$geo_type,
                         time_type = self$time_type,
                         as_of = max_version,
@@ -514,7 +532,7 @@ epi_archive =
                   next_version_tag = next_after(self$versions_end)
                   if (next_version_tag > fill_versions_end) {
                     Abort(sprintf(paste(
-                      "Apparent problem with `next_after` implementation:",
+                      "Apparent problem with `next_after` method:",
                       "archive contained observations through version %s",
                       "and the next possible version was supposed to be %s,",
                       "but this appeared to jump from a version < %3$s",
@@ -552,6 +570,38 @@ epi_archive =
             return (invisible(self))
           },
           #####
+#' @description Filter to keep only older versions, mutating the archive by
+#'   potentially reseating but not mutating some fields. `DT` is likely, but not
+#'   guaranteed, to be copied. Returns the mutated archive
+#'   [invisibly][base::invisible].
+#' @param x as in [`epix_truncate_versions_after`]
+#' @param max_version as in [`epix_truncate_versions_after`]
+          truncate_versions_after = function(max_version) {
+            if (length(max_version) != 1) {
+              Abort("`max_version` cannot be a vector.")
+            }
+            if (is.na(max_version)) {
+              Abort("`max_version` must not be NA.")
+            }
+            if (!identical(class(max_version), class(self$DT$version)) ||
+                  !identical(typeof(max_version), typeof(self$DT$version))) {
+              Abort("`max_version` and `DT$version` must have same `class` and `typeof`.")
+            }
+            if (max_version > self$versions_end) {
+              Abort("`max_version` must be at most `self$versions_end`.")
+            }
+            self$DT <- self$DT[self$DT$version <= max_version, colnames(self$DT), with=FALSE]
+            # (^ this filter operation seems to always copy the DT, even if it
+            # keeps every entry; we don't guarantee this behavior in
+            # documentation, though, so we could change to alias in this case)
+            if (!is.na(self$clobberable_versions_start) &&
+                  self$clobberable_versions_start > max_version) {
+              self$clobberable_versions_start <- NA
+            }
+            self$versions_end <- max_version
+            return (invisible(self))
+          },
+          #####
 #' @description Merges another `epi_archive` with the current one, mutating the
 #'   current one by reseating its `DT` and several other fields, but avoiding
 #'   mutation of the old `DT`; returns the current archive
@@ -579,170 +629,38 @@ epi_archive =
             return (invisible(self))
           },
           #####
+          group_by = function(..., .add = FALSE, .drop = dplyr::group_by_drop_default(self)) {
+            group_by.epi_archive(self, ..., .add=.add, .drop=.drop)
+          },
 #' @description Slides a given function over variables in an `epi_archive`
 #'   object. See the documentation for the wrapper function [`epix_slide()`] for
 #'   details. 
 #' @importFrom data.table key
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
-          slide = function(f, ..., before, group_by, ref_time_values, 
+          slide = function(f, ..., before, ref_time_values, 
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
-                           all_rows = FALSE) { 
-            # If missing, then set ref time values to be everything; else make
-            # sure we intersect with observed time values 
-            if (missing(ref_time_values)) {
-              ref_time_values = unique(self$DT$time_value)
-            }
-            else {
-              ref_time_values = ref_time_values[ref_time_values %in%
-                                                unique(self$DT$time_value)]
-            }
-
-            # Validate and pre-process `before`:
-            if (missing(before)) {
-              Abort("`before` is required (and must be passed by name);
-                     if you did not want to apply a sliding window but rather
-                     to map `as_of` and `f` across various `ref_time_values`,
-                     pass a large `before` value (e.g., if time steps are days,
-                     `before=365000`).")
-            }
-            before <- vctrs::vec_cast(before, integer())
-            if (length(before) != 1L || is.na(before) || before < 0L) {
-              Abort("`before` must be length-1, non-NA, non-negative")
-            }
-
-            # If a custom time step is specified, then redefine units 
-            if (!missing(time_step)) before <- time_step(before)
-            
-            # What to group by? If missing, set according to internal keys;
-            # otherwise, tidyselect.
-            if (quo_is_missing(enquo(group_by))) {
-              group_by <- syms(setdiff(key(self$DT), c("time_value", "version")))
-            } else {
-              group_by <- syms(names(eval_select(enquo(group_by), self$DT)))
-            }
-            
-            # Symbolize column name
-            new_col = sym(new_col_name)
-
-            # Key variable names, apart from time value and version
-            key_vars = setdiff(key(self$DT), c("time_value", "version"))
-            
-            # Computation for one group, one time value
-            comp_one_grp = function(.data_group,
-                                    f, ..., 
-                                    time_value,
-                                    key_vars,
-                                    new_col) {
-              # Carry out the specified computation 
-              comp_value = f(.data_group, ...)
-
-              # Count the number of appearances of the reference time value.
-              # Note: ideally, we want to directly count occurrences of the ref
-              # time value but due to latency, this will often not appear in the
-              # data group. So we count the number of unique key values, outside 
-              # of the time value column
-              count = sum(!duplicated(.data_group[, key_vars]))
-
-              # If we get back an atomic vector
-              if (is.atomic(comp_value)) {
-                if (length(comp_value) == 1) {
-                  comp_value = rep(comp_value, count)
-                }
-                # If not a singleton, should be the right length, else abort
-                else if (length(comp_value) != count) {
-                  Abort("If the slide computation returns an atomic vector, then it must have a single element, or else one element per appearance of the reference time value in the local window.")
-                }
-              }
-
-              # If we get back a data frame
-              else if (is.data.frame(comp_value)) {
-                if (nrow(comp_value) == 1) {
-                  comp_value = rep(list(comp_value), count)
-                }
-                # If not a single row, should be the right length, else abort
-                else if (nrow(comp_value) != count) {
-                  Abort("If the slide computation returns a data frame, then it must have a single row, or else one row per appearance of the reference time value in the local window.")
-                }
-                # Make into a list
-                else {
-                  comp_value = split(comp_value, 1:nrow(comp_value))
-                }
-              }
-
-              # If neither an atomic vector data frame, then abort
-              else {
-                Abort("The slide computation must return an atomic vector or a data frame.")
-              }
- 
-              # Note that we've already recycled comp value to make size stable,
-              # so tibble() will just recycle time value appropriately
-              return(tibble::tibble(time_value = time_value, 
-                                    !!new_col := comp_value))
-            }
-            
-            # If f is not missing, then just go ahead, slide by group
-            if (!missing(f)) {
-              if (rlang::is_formula(f)) f = rlang::as_function(f)
-              
-              x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
-                self$as_of(ref_time_value,
-                           min_time_value = ref_time_value - before) %>%
-                  dplyr::group_by(!!!group_by) %>%
-                  dplyr::group_modify(comp_one_grp,
-                                      f = f, ..., 
-                                      time_value = ref_time_value,
-                                      key_vars = key_vars,
-                                      new_col = new_col,
-                                      .keep = TRUE) %>%
-                  dplyr::ungroup()
-              })
-            }
-
-            # Else interpret ... as an expression for tidy evaluation
-            else {
-              quos = enquos(...)
-              if (length(quos) == 0) {
-                Abort("If `f` is missing then a computation must be specified via `...`.")
-              }
-              if (length(quos) > 1) {
-                Abort("If `f` is missing then only a single computation can be specified via `...`.")
-              }
-              
-              quo = quos[[1]]
-              f = function(x, quo, ...) rlang::eval_tidy(quo, x)
-              new_col = sym(names(rlang::quos_auto_name(quos)))
-
-              x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
-                self$as_of(ref_time_value,
-                           min_time_value = ref_time_value - before) %>%
-                  dplyr::group_by(!!!group_by) %>%
-                  dplyr::group_modify(comp_one_grp,
-                                      f = f, quo = quo,
-                                      time_value = ref_time_value,
-                                      key_vars = key_vars,
-                                      new_col = new_col,
-                                      .keep = TRUE) %>%
-                  dplyr::ungroup()
-              })
-            }
-            
-            # Unnest if we need to
-            if (!as_list_col) {
-              x = tidyr::unnest(x, !!new_col, names_sep = names_sep)
-            }
-            
-            # Join to get all rows, if we need to, then return
-            if (all_rows) {
-              cols = c(as.character(group_by), "time_value")
-              y = unique(self$DT[, ..cols])
-              x = dplyr::left_join(y, x, by = cols)
-            }
-            return(x)
+                           all_rows = FALSE, all_versions = FALSE) {
+            # For an "ungrouped" slide, treat all rows as belonging to one big
+            # group (group by 0 vars), like `dplyr::summarize`, and let the
+            # resulting `grouped_epi_archive` handle the slide:
+            self$group_by()$slide(
+              f, ...,
+              before = before, ref_time_values = ref_time_values,
+              time_step = time_step, new_col_name = new_col_name,
+              as_list_col = as_list_col, names_sep = names_sep,
+              all_rows = all_rows, all_versions = all_versions
+            ) %>%
+              # We want a slide on ungrouped archives to output something
+              # ungrouped, rather than retaining the trivial (0-variable)
+              # grouping applied above. So we `ungroup()`. However, the current
+              # `dplyr` implementation automatically ignores/drops trivial
+              # groupings, so this is just a no-op for now.
+              ungroup()
           }
         )
       )
-          
+
 #' Convert to `epi_archive` format
 #'
 #' Converts a data frame, data table, or tibble into an `epi_archive`
@@ -781,25 +699,18 @@ epi_archive =
 #'   same `class` and `typeof` as `x$version`, or an `NA` of any `class` and
 #'   `typeof`: specifically, either (a) the earliest version that could be
 #'   subject to "clobbering" (being overwritten with different update data, but
-#'   using the same version tag as the old update data), or (b) `NA`, to
+#'   using the *same* version tag as the old update data), or (b) `NA`, to
 #'   indicate that no versions are clobberable. There are a variety of reasons
-#'   why versions could be clobberable, such as upstream hotfixes to the latest
-#'   version, or delays in data synchronization that were mistaken for versions
-#'   with no updates; potential causes vary between different data pipelines.
-#'   The default value is `max_version_with_row_in(x)`; this default assumes
-#'   that (i) if a row in `x` (even one that `compactify` would consider
-#'   redundant) is present with version `ver`, then all previous versions must
-#'   be finalized and non-clobberable, although `ver` (and onward) might still
-#'   be modified, (ii) even if we have "observed" empty updates for some
-#'   versions beyond `max(x$version)` (as indicated by `versions_end`;
-#'   see below), we can't assume `max(x$version)` has been finalized, because we
-#'   might see a nonfinalized version + empty subsequent versions due to
-#'   upstream database replication delays in combination with the upstream
-#'   replicas using last-version-carried-forward to extrapolate that there were
-#'   no updates, (iii) "redundant" update rows that would be removed by
-#'   `compactify` are not redundant, and actually come from an explicit version
-#'   release that indicates that preceding versions are finalized. If `nrow(x)
-#'   == 0`, then this argument is mandatory.
+#'   why versions could be clobberable under routine circumstances, such as (a)
+#'   today's version of one/all of the columns being published after initially
+#'   being filled with `NA` or LOCF, (b) a buggy version of today's data being
+#'   published but then fixed and republished later in the day, or (c) data
+#'   pipeline delays (e.g., publisher uploading, periodic scraping, database
+#'   syncing, periodic fetching, etc.) that make events (a) or (b) reflected
+#'   later in the day (or even on a different day) than expected; potential
+#'   causes vary between different data pipelines. The default value is `NA`,
+#'   which doesn't consider any versions to be clobberable. Another setting that
+#'   may be appropriate for some pipelines is `max_version_with_row_in(x)`.
 #' @param versions_end Optional; length-1, same `class` and `typeof` as
 #'   `x$version`: what is the last version we have observed? The default is
 #'   `max_version_with_row_in(x)`, but values greater than this could also be
@@ -856,7 +767,7 @@ epi_archive =
 as_epi_archive = function(x, geo_type, time_type, other_keys,
                           additional_metadata = list(),
                           compactify = NULL,
-                          clobberable_versions_start = max_version_with_row_in(x),
+                          clobberable_versions_start = NA,
                           versions_end = max_version_with_row_in(x)) {
   epi_archive$new(x, geo_type, time_type, other_keys, additional_metadata,
                   compactify, clobberable_versions_start, versions_end)
@@ -865,12 +776,23 @@ as_epi_archive = function(x, geo_type, time_type, other_keys,
 #' Test for `epi_archive` format
 #'
 #' @param x An object.
+#' @param grouped_okay Optional; Boolean; should a `grouped_epi_archive` also
+#'   count? Default is `FALSE`.
 #' @return `TRUE` if the object inherits from `epi_archive`.
 #' 
 #' @export
 #' @examples
 #' is_epi_archive(jhu_csse_daily_subset) # FALSE (this is an epi_df, not epi_archive)
 #' is_epi_archive(archive_cases_dv_subset) # TRUE
-is_epi_archive = function(x) {
-  inherits(x, "epi_archive")
+#'
+#' # By default, grouped_epi_archives don't count as epi_archives, as they may
+#' # support a different set of operations from regular `epi_archives`. This
+#' # behavior can be controlled by `grouped_okay`.
+#' grouped_archive = archive_cases_dv_subset$group_by(geo_value)
+#' is_epi_archive(grouped_archive) # FALSE
+#' is_epi_archive(grouped_archive, grouped_okay=TRUE) # TRUE
+#'
+#' @seealso [`is_grouped_epi_archive`]
+is_epi_archive = function(x, grouped_okay=FALSE) {
+  inherits(x, "epi_archive") || grouped_okay && inherits(x, "grouped_epi_archive")
 }

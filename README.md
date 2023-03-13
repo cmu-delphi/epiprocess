@@ -50,9 +50,9 @@ objects begin with `epix` (the "x" is meant to remind you of "archive"). These
 are just wrapper functions around the public methods for the `epi_archive` R6
 class. For example:
 
-- `epix_as_of()`, for generating a snapshot in `epi_df` from the data archive,
-  which represents the most up-to-date values of the signal variables, as of the
-  specified version;
+- `epix_as_of()`, for generating a snapshot in `epi_df` format from the data
+  archive, which represents the most up-to-date values of the signal variables,
+  as of the specified version;
   
 - `epix_fill_through_version()`, for filling in some fake version data following
   simple rules, for use when downstream methods expect an archive that is more
