@@ -512,13 +512,13 @@ epix_detailed_restricted_mutate = function(.data, ...) {
 #'
 #' @param .data An `epi_archive` or `grouped_epi_archive`
 #' @param ... Similar to [`dplyr::group_by`] (see "Details:" for edge cases);
-#' * In `group_by`: unquoted variable name(s) or other ["data
-#'   masking"][dplyr::dplyr_data_masking] expression(s). It's possible to use
-#'   [`dplyr::mutate`]-like syntax here to calculate new columns on which to
+#' * For `group_by`: unquoted variable name(s) or other
+#'   ["data masking"][dplyr::dplyr_data_masking] expression(s). It's possible to
+#'   use [`dplyr::mutate`]-like syntax here to calculate new columns on which to
 #'   perform grouping, but note that, if you are regrouping an already-grouped
 #'   `.data` object, the calculations will be carried out ignoring such grouping
 #'   (same as [in dplyr][dplyr::group_by]).
-#' * In `ungroup`: either
+#' * For `ungroup`: either
 #'   * empty, in order to remove the grouping and output an `epi_archive`; or
 #'   * variable name(s) or other ["tidy-select"][dplyr::dplyr_tidy_select]
 #'     expression(s), in order to remove the matching variables from the list of
@@ -527,12 +527,13 @@ epix_detailed_restricted_mutate = function(.data, ...) {
 #'   the variable selection from `...` only; if `TRUE`, the output will be
 #'   grouped by the current grouping variables plus the variable selection from
 #'   `...`.
-#' @param .drop As in [`dplyr::group_by`]; determines treatment of factor
+#' @param .drop As described in [`dplyr::group_by`]; determines treatment of factor
 #'   columns.
-#' @param x a `grouped_epi_archive`, or, in `is_grouped_epi_archive`, any object
-#' @param .tbl An `epi_archive` or `grouped_epi_archive` (`epi_archive`
-#'   dispatches to the S3 default method, and `grouped_epi_archive` dispatches
-#'   its own S3 method)
+#' @param x For `groups` or `ungroup`: a `grouped_epi_archive`; for
+#'   `is_grouped_epi_archive`: any object
+#' @param .tbl (For `group_by_drop_default`:) an `epi_archive` or
+#'   `grouped_epi_archive` (`epi_archive` dispatches to the S3 default method;
+#'   `grouped_epi_archive` dispatches its own S3 method)
 #'
 #' @details
 #'
