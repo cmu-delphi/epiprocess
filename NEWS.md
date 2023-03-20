@@ -1,8 +1,10 @@
-# epiprocess 0.6.0
+# epiprocess 0.6.0.9999
 
 Note that `epiprocess` uses the [Semantic Versioning
 ("semver")](https://semver.org/) scheme for all release versions, but any
 inter-release development versions will include an additional ".9999" suffix.
+
+# epiprocess 0.6.0
 
 ## Breaking changes:
 
