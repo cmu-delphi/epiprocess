@@ -478,16 +478,17 @@ epix_detailed_restricted_mutate = function(.data, ...) {
   } else {
     # Have `dplyr` do the `dplyr_col_modify`, keeping the column-level-aliasing
     # and must-copy-on-write-if-refcount-more-than-1 model, obtaining a tibble,
-    # then `setDT`-ing it in place to be a `data.table`. The key should still be
-    # valid (assuming that the user did not explicitly alter `key(.data$DT)` or
-    # the columns by reference somehow within `...` tidyeval-style computations,
-    # or trigger refcount-1 alterations due to still having >1 refcounts on the
-    # columns), so in between, set the "sorted" attribute accordingly to prevent
-    # attempted sorting (including potential extra copies) or sortedness
-    # checking, then `setDT`.
-    out_DT = dplyr::dplyr_col_modify(in_tbl, col_modify_cols) # tibble
-    data.table::setattr(out_DT, "sorted", data.table::key(.data$DT))
-    data.table::setDT(out_DT, key=key(.data$DT))
+    # then convert it into a `data.table`. The key should still be valid
+    # (assuming that the user did not explicitly alter `key(.data$DT)` or the
+    # columns by reference somehow within `...` tidyeval-style computations, or
+    # trigger refcount-1 alterations due to still having >1 refcounts on the
+    # columns), set the "sorted" attribute accordingly to prevent attempted
+    # sorting (including potential extra copies) or sortedness checking, then
+    # `setDT` (rather than `as.data.table`, in order to prevent column copying
+    # to establish ownership according to `data.table`'s memory model).
+    out_DT = dplyr::dplyr_col_modify(in_tbl, col_modify_cols) %>%
+      data.table::setattr("sorted", data.table::key(.data$DT)) %>%
+      data.table::setDT(key=key(.data$DT))
     out_archive = .data$clone()
     out_archive$DT <- out_DT
     request_names = names(col_modify_cols)
@@ -527,8 +528,8 @@ epix_detailed_restricted_mutate = function(.data, ...) {
 #'   the variable selection from `...` only; if `TRUE`, the output will be
 #'   grouped by the current grouping variables plus the variable selection from
 #'   `...`.
-#' @param .drop As described in [`dplyr::group_by`]; determines treatment of factor
-#'   columns.
+#' @param .drop As described in [`dplyr::group_by`]; determines treatment of
+#'   factor columns.
 #' @param x For `groups` or `ungroup`: a `grouped_epi_archive`; for
 #'   `is_grouped_epi_archive`: any object
 #' @param .tbl (For `group_by_drop_default`:) an `epi_archive` or
@@ -615,19 +616,10 @@ epix_detailed_restricted_mutate = function(.data, ...) {
 #' # To get the grouping variable names as a `list` of `name`s (a.k.a. symbols):
 #' toy_archive %>% group_by(geo_value) %>% groups()
 #'
-#' # `.drop = FALSE` is supported in a sense; `f` is called on 0-row inputs for
-#' # the missing groups identified by `dplyr`, but the row-recycling rules will
-#' # exclude the corresponding outputs of `f` from the output of the slide:
-#' all.equal(
-#'   toy_archive %>%
-#'     group_by(geo_value, age_group, .drop=FALSE) %>%
-#'     epix_slide(f = ~ sum(.x$value), before = 20) %>%
-#'     ungroup(),
-#'   toy_archive %>%
-#'     group_by(geo_value, age_group, .drop=TRUE) %>%
-#'     epix_slide(f = ~ sum(.x$value), before = 20) %>%
-#'     ungroup()
-#' )
+#' toy_archive %>%
+#'   group_by(geo_value, age_group, .drop=FALSE) %>%
+#'   epix_slide(f = ~ sum(.x$value), before = 20) %>%
+#'   ungroup()
 #'
 #' @importFrom dplyr group_by
 #' @export
@@ -636,6 +628,20 @@ epix_detailed_restricted_mutate = function(.data, ...) {
 group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_drop_default(.data)) {
   # `add` makes no difference; this is an ungrouped `epi_archive`.
   detailed_mutate = epix_detailed_restricted_mutate(.data, ...)
+  if (!rlang::is_bool(.drop)) {
+    Abort("`.drop` must be TRUE or FALSE")
+  } else if (!.drop) {
+    grouping_cols = as.list(detailed_mutate[["archive"]][["DT"]])[detailed_mutate[["request_names"]]]
+    grouping_col_is_factor = purrr::map_lgl(grouping_cols, is.factor)
+    # ^ Use `as.list` to try to avoid any possibility of a deep copy.
+    if (!any(grouping_col_is_factor)) {
+      Warn("`.drop=FALSE` but there are no factor grouping columns; did you mean to convert one of the columns to a factor beforehand?",
+           class = "epiprocess__group_by_epi_archive_drop_FALSE_no_factors")
+    } else if (any(diff(grouping_col_is_factor) == -1L)) {
+      Warn("`.drop=FALSE` but there are one or more non-factor grouping columns listed after a factor grouping column; this may produce groups with `NA`s for these columns; see https://github.com/tidyverse/dplyr/issues/5369#issuecomment-683762553; depending on how you want completion to work, you might instead want to convert all grouping columns to factors beforehand, specify the non-factor grouping columns first, or use `.drop=TRUE` and add a call to `tidyr::complete`.",
+           class = "epiprocess__group_by_epi_archive_drop_FALSE_nonfactor_after_factor")
+    }
+  }
   grouped_epi_archive$new(detailed_mutate[["archive"]],
                           detailed_mutate[["request_names"]],
                           drop = .drop)

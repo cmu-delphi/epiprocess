@@ -47,8 +47,8 @@ the variable selection from \code{...} only; if \code{TRUE}, the output will be
 grouped by the current grouping variables plus the variable selection from
 \code{...}.}
 
-\item{.drop}{As described in \code{\link[dplyr:group_by]{dplyr::group_by}}; determines treatment of factor
-columns.}
+\item{.drop}{As described in \code{\link[dplyr:group_by]{dplyr::group_by}}; determines treatment of
+factor columns.}
 
 \item{x}{For \code{groups} or \code{ungroup}: a \code{grouped_epi_archive}; for
 \code{is_grouped_epi_archive}: any object}
@@ -139,18 +139,9 @@ toy_archive \%>\% group_by(geo_value, age_group) \%>\% ungroup(age_group)
 # To get the grouping variable names as a `list` of `name`s (a.k.a. symbols):
 toy_archive \%>\% group_by(geo_value) \%>\% groups()
 
-# `.drop = FALSE` is supported in a sense; `f` is called on 0-row inputs for
-# the missing groups identified by `dplyr`, but the row-recycling rules will
-# exclude the corresponding outputs of `f` from the output of the slide:
-all.equal(
-  toy_archive \%>\%
-    group_by(geo_value, age_group, .drop=FALSE) \%>\%
-    epix_slide(f = ~ sum(.x$value), before = 20) \%>\%
-    ungroup(),
-  toy_archive \%>\%
-    group_by(geo_value, age_group, .drop=TRUE) \%>\%
-    epix_slide(f = ~ sum(.x$value), before = 20) \%>\%
-    ungroup()
-)
+toy_archive \%>\%
+  group_by(geo_value, age_group, .drop=FALSE) \%>\%
+  epix_slide(f = ~ sum(.x$value), before = 20) \%>\%
+  ungroup()
 
 }
