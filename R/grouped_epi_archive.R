@@ -427,6 +427,18 @@ grouped_epi_archive =
               y = unique(private$ungrouped$DT[, ..cols])
               x = dplyr::left_join(y, x, by = cols)
             }
+
+            if (is_epi_df(x)) {
+              # The analogue of `epi_df`'s `as_of` metadata for an archive is
+              # `<archive>$versions_end`, at least in the current absence of
+              # separate fields/columns denoting the "archive version" with a
+              # different resolution, or from the perspective of a different
+              # stage of a data pipeline. The `as_of` that is automatically
+              # derived won't always match; override:
+
+              attr(x, "metadata")[["as_of"]] <- private$ungrouped$versions_end
+            }
+
             return(x)
           }
     )

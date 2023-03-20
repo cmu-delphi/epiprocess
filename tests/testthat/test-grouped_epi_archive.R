@@ -57,7 +57,7 @@ test_that("Grouping, regrouping, and ungrouping archives works as intended", {
                      mutate(age_group = ordered(age_group, c("pediatric", "adult")),
                             time_value = as.Date(time_value)) %>%
                      as_epi_df(geo_type = "nation", # bug; want "custom" from NA; issue #242
-                               as_of = as.Date("2000-01-02"), # bug; issue #213
+                               as_of = as.Date("2000-01-03"),
                                additional_metadata = list(other_keys = "age_group")) %>%
                      # put back in expected order; see issue #166:
                      select(age_group, geo_value, time_value, s))
@@ -73,7 +73,7 @@ test_that("Grouping, regrouping, and ungrouping archives works as intended", {
                            "us",     "adult", "2000-01-03", 255) %>%
                      mutate(age_group = ordered(age_group, c("pediatric", "adult")),
                             time_value = as.Date(time_value)) %>%
-                     as_epi_df(as_of = as.Date("2000-01-02"), # bug; issue 213
+                     as_epi_df(as_of = as.Date("2000-01-03"),
                                additional_metadata = list(other_keys = "age_group")) %>%
                      # put back in expected order; see issue #166:
                      select(geo_value, age_group, time_value, s))
