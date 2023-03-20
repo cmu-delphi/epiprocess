@@ -28,7 +28,7 @@ For this example, we have one chart using LOCF values, while another doesn't
 use them to illustrate LOCF. Notice how the head of the first dataset differs
 from the second from the third value included.
 
-```{r}
+```{r, message=FALSE}
 library(epiprocess)
 library(dplyr)
 

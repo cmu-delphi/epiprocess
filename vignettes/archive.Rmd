@@ -30,6 +30,8 @@ library(epidatr)
 library(epiprocess)
 library(data.table)
 library(dplyr)
+library(purrr)
+library(ggplot2)
 
 dv <- covidcast(
   data_source = "doctor-visits",
@@ -48,6 +50,8 @@ library(epidatr)
 library(epiprocess)
 library(data.table)
 library(dplyr)
+library(purrr)
+library(ggplot2)
 ```
 
 ## Getting data into `epi_archive` format
@@ -141,15 +145,6 @@ as in `x$geo_type` or `x$time_type`, etc. Just like `as_epi_df()`, the function
 object is instantiated, if they are not explicitly specified in the function
 call (as it did in the case above).
 
-Note that `compactify` is **NOT** metadata and is an argument passed when creating
-the dataset, without being stored in the end:
-
-```{r,message=FALSE}
-# `dt` here is taken from the tests
-as_epi_archive(archive_cases_dv_subset$DT,compactify=TRUE)$geo_type # "state"
-as_epi_archive(archive_cases_dv_subset$DT,compactify=TRUE)$compactify # NULL
-```
-
 ## Producing snapshots in `epi_df` form
 
 A key method of an `epi_archive` class is `as_of()`, which generates a snapshot
@@ -189,8 +184,6 @@ marked by dotted vertical lines, and draw the latest curve in black (from the
 latest snapshot `x_latest` that the archive can provide).
 
 ```{r, fig.width = 8, fig.height = 7}
-library(purrr)
-library(ggplot2)
 theme_set(theme_bw())
 
 self_max = max(x$DT$version)
@@ -203,7 +196,7 @@ snapshots <- map_dfr(versions, function(v) {
 
 ggplot(snapshots %>% filter(!latest),
             aes(x = time_value, y = percent_cli)) +  
-  geom_line(aes(color = factor(version))) + 
+  geom_line(aes(color = factor(version)), na.rm=TRUE) + 
   geom_vline(aes(color = factor(version), xintercept = version), lty = 2) +
   facet_wrap(~ geo_value, scales = "free_y", ncol = 1) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
@@ -211,7 +204,7 @@ ggplot(snapshots %>% filter(!latest),
   theme(legend.position = "none") +
   geom_line(data = snapshots %>% filter(latest),
                aes(x = time_value, y = percent_cli), 
-               inherit.aes = FALSE, color = "black")
+            inherit.aes = FALSE, color = "black", na.rm=TRUE)
 ```
 
 We can see some interesting and highly nontrivial revision behavior: at some
@@ -450,7 +443,7 @@ the vignettes in the current package are only meant to demo the slide
 functionality with some of the most basic forecasting methodology possible.
 
 ## Attribution
-This document contains dataset that is a modified part of the [COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) as [republished in the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html). This data set is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.
+This document contains a dataset that is a modified part of the [COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) as [republished in the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html). This data set is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.
 
 The `percent_cli` data is a modified part of the [COVIDcast Epidata API Doctor Visits data](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html). This dataset is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/). Copyright Delphi Research Group at Carnegie Mellon University 2020.
 

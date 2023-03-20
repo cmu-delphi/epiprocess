@@ -9,7 +9,7 @@ epix_fill_through_version(x, fill_versions_end, how = c("na", "locf"))
 \arguments{
 \item{x}{An \code{epi_archive}}
 
-\item{fill_versions_end}{Length-1, same class&type as \verb{\%s$version}: the
+\item{fill_versions_end}{Length-1, same class&type as \code{x$version}: the
 version through which to fill in missing version history; this will be the
 result's \verb{$versions_end} unless it already had a later
 \verb{$versions_end}.}
