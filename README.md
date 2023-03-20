@@ -1,7 +1,7 @@
 # epiprocess
  
  <!-- badges: start -->
-  [![R-CMD-check](https://github.com/cmu-delphi/epiprocess/workflows/R-CMD-check/badge.svg)](https://github.com/cmu-delphi/epiprocess/actions)
+  [![R-CMD-check](https://github.com/cmu-delphi/epiprocess/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/cmu-delphi/epiprocess/actions/workflows/R-CMD-check.yaml)
   <!-- badges: end -->
 
 This package introduces a common data structure for epidemiological data sets
@@ -45,10 +45,10 @@ The second main data structure in the package is called
 wrapped around a data table that stores the archive (version history) of some
 signal variables of interest.
 
-By convention, functions in the `epiprocess` package that operate on `epi_df`
-objects begin with `epix` (the "x" is meant to remind you of "archive"). These
-are just wrapper functions around the public methods for the `epi_archive` R6
-class. For example:
+By convention, functions in the `epiprocess` package that operate on
+`epi_archive` objects begin with `epix` (the "x" is meant to remind you of
+"archive"). These are just wrapper functions around the public methods for the
+`epi_archive` R6 class. For example:
 
 - `epix_as_of()`, for generating a snapshot in `epi_df` format from the data
   archive, which represents the most up-to-date values of the signal variables,
