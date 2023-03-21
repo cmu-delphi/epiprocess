@@ -198,14 +198,34 @@ archive_cases_dv_subset \%>\%
 # 2 `time_value`s, for the rest of the results
 # never 3 `time_value`s, due to data latency
 
-
+# Examining characteristics of the data passed to each computation with
+# `all_versions=FALSE`.
+archive_cases_dv_subset \%>\%
+ group_by(geo_value) \%>\%
+ epix_slide(
+   function(x, g) {
+     tibble(
+       time_range = if(nrow(x) == 0L) {
+         "0 `time_value`s"
+       } else {
+         sprintf("\%s -- \%s", min(x$time_value), max(x$time_value))
+       },
+       n = nrow(x),
+       class1 = class(x)[[1L]]
+     )
+   },
+   before = 5, all_versions = FALSE,
+   ref_time_values = ref_time_values, names_sep=NULL) \%>\%
+ ungroup() \%>\%
+ arrange(geo_value, time_value)
 
 # --- Advanced: ---
 
 # `epix_slide` with `all_versions=FALSE` (the default) applies a
 # version-unaware computation to several versions of the data. We can also
 # use `all_versions=TRUE` to apply a version-*aware* computation to several
-# versions of the data. In this case, each computation should expect an
+# versions of the data, again looking at characteristics of the data passed
+# to each computation. In this case, each computation should expect an
 # `epi_archive` containing the relevant version data:
 
 archive_cases_dv_subset \%>\%
@@ -213,16 +233,18 @@ archive_cases_dv_subset \%>\%
   epix_slide(
     function(x, g) {
       tibble(
+        versions_start = min(x$DT$version),
         versions_end = max(x$versions_end),
         time_range = if(nrow(x$DT) == 0L) {
           "0 `time_value`s"
         } else {
           sprintf("\%s -- \%s", min(x$DT$time_value), max(x$DT$time_value))
         },
+        n = nrow(x$DT),
         class1 = class(x)[[1L]]
       )
     },
-    before = 2, all_versions = TRUE,
+    before = 5, all_versions = TRUE,
     ref_time_values = ref_time_values, names_sep=NULL) \%>\%
   ungroup() \%>\%
   arrange(geo_value, time_value)
