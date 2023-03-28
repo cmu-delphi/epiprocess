@@ -126,27 +126,28 @@ time interval (e.g., day) are only published after that time interval
 ends); \code{epi_slide} windows extend from \code{before} time steps before a
 \code{ref_time_value} through \code{after} time steps after \code{ref_time_value}.
 \item The input class and columns are similar but different: \code{epix_slide}
-keeps all columns and the \code{epi_df}-ness of the first input to the
-computation; \code{epi_slide} only provides the grouping variables in the second
-input, and will convert the first input into a regular tibble if the
-grouping variables include the essential \code{geo_value} column.
+(with the default \code{all_versions=FALSE}) keeps all columns and the
+\code{epi_df}-ness of the first argument to each computation; \code{epi_slide} only
+provides the grouping variables in the second input, and will convert the
+first input into a regular tibble if the grouping variables include the
+essential \code{geo_value} column.
 \item The output class and columns are similar but different: \code{epix_slide()}
-returns a tibble containing only the grouping variables, \code{time_value}, and
-the new column(s) from the slide computation \code{f}, whereas \code{epi_slide()}
-returns an \code{epi_df} with all original variables plus the new columns from
-the slide computation.
-\item Unless grouping by \code{geo_value} and all \code{other_keys}, there will be
-row-recyling behavior meant to resemble \code{epi_slide}'s results, based on the
-distinct combinations of \code{geo_value}, \code{time_value}, and all \code{other_keys}
-present in the version data with \code{time_value} matching one of the
-\code{ref_time_values}. However, due to reporting latency or reporting dropping
-in and out, this may not exactly match the behavior of "corresponding"
-\code{epi_df}s.
+returns an \code{epi_df} or tibble containing only the grouping variables,
+\code{time_value}, and the new column(s) from the slide computations, whereas
+\code{epi_slide()} returns an \code{epi_df} with all original variables plus the new
+columns from the slide computations.
+\item There are no size stability checks or element/row recycling to maintain
+size stability in \code{epix_slide}, unlike in \code{epi_slide}. (\code{epix_slide} is
+roughly analogous to \code{\link[dplyr:reframe]{dplyr::reframe}} in \code{dplyr} 1.1.0
+or\code{\link[dplyr:summarise]{dplyr::summarize}} in \code{dplyr} 1.0.0, while \code{epi_slide} is roughly
+analogous to \code{dplyr::mutate} followed by \code{dplyr::arrange}) This is detailed
+in the "advanced" vignette.
 \item Similar to the row recyling, while \code{all_rows=TRUE} is designed to mimic
 \code{epi_slide} by completing based on distinct combinations of \code{geo_value},
 \code{time_value}, and all \code{other_keys} present in the version data with
-\code{time_value} matching one of the \code{ref_time_values}, this can have unexpected
-behaviors due reporting latency or reporting dropping in and out.
+\code{time_value} matching one of the \code{ref_time_values}, this can have
+unexpected behaviors due reporting latency or reporting dropping in and
+out.
 \item The \code{ref_time_values} default for \code{epix_slide} is based on making an
 evenly-spaced sequence out of the \code{version}s in the \code{DT} plus the
 \code{versions_end}, rather than the \code{time_value}s.

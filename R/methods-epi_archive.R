@@ -743,27 +743,28 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   ends); `epi_slide` windows extend from `before` time steps before a
 #'   `ref_time_value` through `after` time steps after `ref_time_value`.
 #'   3. The input class and columns are similar but different: `epix_slide`
-#'   keeps all columns and the `epi_df`-ness of the first input to the
-#'   computation; `epi_slide` only provides the grouping variables in the second
-#'   input, and will convert the first input into a regular tibble if the
-#'   grouping variables include the essential `geo_value` column.
+#'   (with the default `all_versions=FALSE`) keeps all columns and the
+#'   `epi_df`-ness of the first argument to each computation; `epi_slide` only
+#'   provides the grouping variables in the second input, and will convert the
+#'   first input into a regular tibble if the grouping variables include the
+#'   essential `geo_value` column.
 #'   4. The output class and columns are similar but different: `epix_slide()`
-#'   returns a tibble containing only the grouping variables, `time_value`, and
-#'   the new column(s) from the slide computation `f`, whereas `epi_slide()`
-#'   returns an `epi_df` with all original variables plus the new columns from
-#'   the slide computation.
-#'   5. Unless grouping by `geo_value` and all `other_keys`, there will be
-#'   row-recyling behavior meant to resemble `epi_slide`'s results, based on the
-#'   distinct combinations of `geo_value`, `time_value`, and all `other_keys`
-#'   present in the version data with `time_value` matching one of the
-#'   `ref_time_values`. However, due to reporting latency or reporting dropping
-#'   in and out, this may not exactly match the behavior of "corresponding"
-#'   `epi_df`s.
+#'   returns an `epi_df` or tibble containing only the grouping variables,
+#'   `time_value`, and the new column(s) from the slide computations, whereas
+#'   `epi_slide()` returns an `epi_df` with all original variables plus the new
+#'   columns from the slide computations.
+#'   5. There are no size stability checks or element/row recycling to maintain
+#'   size stability in `epix_slide`, unlike in `epi_slide`. (`epix_slide` is
+#'   roughly analogous to [`dplyr::reframe`] in `dplyr` 1.1.0
+#'   or[`dplyr::summarize`] in `dplyr` 1.0.0, while `epi_slide` is roughly
+#'   analogous to `dplyr::mutate` followed by `dplyr::arrange`) This is detailed
+#'   in the "advanced" vignette.
 #'   6. Similar to the row recyling, while `all_rows=TRUE` is designed to mimic
 #'   `epi_slide` by completing based on distinct combinations of `geo_value`,
 #'   `time_value`, and all `other_keys` present in the version data with
-#'   `time_value` matching one of the `ref_time_values`, this can have unexpected
-#'   behaviors due reporting latency or reporting dropping in and out.
+#'   `time_value` matching one of the `ref_time_values`, this can have
+#'   unexpected behaviors due reporting latency or reporting dropping in and
+#'   out.
 #'   7. The `ref_time_values` default for `epix_slide` is based on making an
 #'   evenly-spaced sequence out of the `version`s in the `DT` plus the
 #'   `versions_end`, rather than the `time_value`s.
