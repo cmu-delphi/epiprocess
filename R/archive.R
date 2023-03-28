@@ -640,7 +640,7 @@ epi_archive =
           slide = function(f, ..., before, ref_time_values, 
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
-                           all_rows = FALSE, all_versions = FALSE) {
+                           all_versions = FALSE) {
             # For an "ungrouped" slide, treat all rows as belonging to one big
             # group (group by 0 vars), like `dplyr::summarize`, and let the
             # resulting `grouped_epi_archive` handle the slide:
@@ -649,7 +649,7 @@ epi_archive =
               before = before, ref_time_values = ref_time_values,
               time_step = time_step, new_col_name = new_col_name,
               as_list_col = as_list_col, names_sep = names_sep,
-              all_rows = all_rows, all_versions = all_versions
+              all_versions = all_versions
             ) %>%
               # We want a slide on ungrouped archives to output something
               # ungrouped, rather than retaining the trivial (0-variable)

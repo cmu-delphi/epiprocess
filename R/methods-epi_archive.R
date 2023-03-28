@@ -714,15 +714,12 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #' @param names_sep String specifying the separator to use in `tidyr::unnest()`
 #'   when `as_list_col = FALSE`. Default is "_". Using `NULL` drops the prefix
 #'   from `new_col_name` entirely.
-#' @param all_rows If `all_rows = TRUE`, then the output will have one row per
-#'   combination of grouping variables and unique time values in the underlying
-#'   data table. Otherwise, there will be one row in the output for each time
-#'   value in `x` that acts as a reference time value. Default is `FALSE`.
-#' @param all_versions If `all_versions = TRUE`, then `f` will be passed the
-#'   version history (all `version <= ref_time_value`) for rows having
-#'   `time_value` between `ref_time_value - before` and `ref_time_value`.
-#'   Otherwise, `f` will be passed only the most recent `version` for every
-#'   unique `time_value`. Default is `FALSE`.
+#' @param all_versions (Not the same as `all_rows` parameter of `epi_slide`.) If
+#'   `all_versions = TRUE`, then `f` will be passed the version history (all
+#'   `version <= ref_time_value`) for rows having `time_value` between
+#'   `ref_time_value - before` and `ref_time_value`. Otherwise, `f` will be
+#'   passed only the most recent `version` for every unique `time_value`.
+#'   Default is `FALSE`.
 #' @return A tibble whose columns are: the grouping variables, `time_value`,
 #'   containing the reference time values for the slide computation, and a
 #'   column named according to the `new_col_name` argument, containing the slide
@@ -747,7 +744,9 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   `epi_df`-ness of the first argument to each computation; `epi_slide` only
 #'   provides the grouping variables in the second input, and will convert the
 #'   first input into a regular tibble if the grouping variables include the
-#'   essential `geo_value` column.
+#'   essential `geo_value` column. (With `all_versions=TRUE`, `epix_slide` will
+#'   will provide an `epi_archive` rather than an `epi-df` to each
+#'   computation.)
 #'   4. The output class and columns are similar but different: `epix_slide()`
 #'   returns an `epi_df` or tibble containing only the grouping variables,
 #'   `time_value`, and the new column(s) from the slide computations, whereas
@@ -759,17 +758,16 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   or[`dplyr::summarize`] in `dplyr` 1.0.0, while `epi_slide` is roughly
 #'   analogous to `dplyr::mutate` followed by `dplyr::arrange`) This is detailed
 #'   in the "advanced" vignette.
-#'   6. Similar to the row recyling, while `all_rows=TRUE` is designed to mimic
-#'   `epi_slide` by completing based on distinct combinations of `geo_value`,
-#'   `time_value`, and all `other_keys` present in the version data with
-#'   `time_value` matching one of the `ref_time_values`, this can have
-#'   unexpected behaviors due reporting latency or reporting dropping in and
-#'   out.
+#'   6. `all_rows` is not supported in `epix_slide`; since the slide
+#'   computations are allowed more flexibility in their outputs than in
+#'   `epi_slide`, we can't guess a good representation for missing computations
+#'   for excluded group-`ref_time_value` pairs.
 #'   7. The `ref_time_values` default for `epix_slide` is based on making an
 #'   evenly-spaced sequence out of the `version`s in the `DT` plus the
 #'   `versions_end`, rather than the `time_value`s.
-#' Apart from this, the interfaces between `epix_slide()` and `epi_slide()` are
-#' the same.
+#'
+#' Apart from the above distinctions, the interfaces between `epix_slide()` and
+#' `epi_slide()` are the same.
 #'
 #' Furthermore, the current function can be considerably slower than
 #'   `epi_slide()`, for two reasons: (1) it must repeatedly fetch
@@ -848,7 +846,7 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 epix_slide = function(x, f, ..., before, ref_time_values,
                       time_step, new_col_name = "slide_value",
                       as_list_col = FALSE, names_sep = "_",
-                      all_rows = FALSE, all_versions = FALSE) {
+                      all_versions = FALSE) {
   if (!is_epi_archive(x, grouped_okay=TRUE)) {
     Abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
   }
@@ -858,7 +856,6 @@ epix_slide = function(x, f, ..., before, ref_time_values,
                  new_col_name = new_col_name,
                  as_list_col = as_list_col,
                  names_sep = names_sep,
-                 all_rows = all_rows,
                  all_versions = all_versions
                  ))
 }

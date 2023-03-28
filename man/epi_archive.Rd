@@ -322,7 +322,6 @@ details.
   new_col_name = "slide_value",
   as_list_col = FALSE,
   names_sep = "_",
-  all_rows = FALSE,
   all_versions = FALSE
 )}\if{html}{\out{</div>}}
 }

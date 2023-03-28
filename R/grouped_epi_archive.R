@@ -190,7 +190,11 @@ grouped_epi_archive =
           slide = function(f, ..., before, ref_time_values,
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
-                           all_rows = FALSE, all_versions = FALSE) {
+                           all_versions = FALSE) {
+            # Perform some deprecated argument checks without using `<param> =
+            # deprecated()` in the function signature, because they are from
+            # early development versions and much more likely to be clutter than
+            # informative in the signature.
             if ("group_by" %in% nse_dots_names(...)) {
               Abort("
                 The `group_by` argument to `slide` has been removed; please use
@@ -200,7 +204,15 @@ grouped_epi_archive =
                 this check is a false positive, but you will still need to use a
                 different column name here and rename the resulting column after
                 the slide.)
-              ")
+              ", class = "epiprocess__epix_slide_group_by_parameter_deprecated")
+            }
+            if ("all_rows" %in% nse_dots_names(...)) {
+              Abort("
+                The `all_rows` argument has been removed from `epix_slide` (but
+                is still supported in `epi_slide`). Since `epix_slide` now
+                allows any number of rows out of slide computations, it's
+                unclear how `all_rows=TRUE` should fill in missing results.
+              ", class = "epiprocess__epix_slide_all_rows_parameter_deprecated")
             }
             
             if (missing(ref_time_values)) {
@@ -246,9 +258,6 @@ grouped_epi_archive =
             }
             if (! (rlang::is_string(names_sep) || is.null(names_sep)) ) {
               Abort("`names_sep` must be a (single) string or NULL.")
-            }
-            if (!rlang::is_bool(all_rows)) {
-              Abort("`all_rows` must be TRUE or FALSE.")
             }
             if (!rlang::is_bool(all_versions)) {
               Abort("`all_versions` must be TRUE or FALSE.")
@@ -419,13 +428,6 @@ grouped_epi_archive =
             # Unnest if we need to
             if (!as_list_col) {
               x = tidyr::unnest(x, !!new_col, names_sep = names_sep)
-            }
-            
-            # Join to get all rows, if we need to, then return
-            if (all_rows) {
-              cols = c(private$vars, "time_value")
-              y = unique(private$ungrouped$DT[, ..cols])
-              x = dplyr::left_join(y, x, by = cols)
             }
 
             if (is_epi_df(x)) {
