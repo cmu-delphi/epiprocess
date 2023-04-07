@@ -198,6 +198,7 @@ group_modify.epi_df = function(.data, .f, ..., .keep = FALSE) {
 #' @method summarise epi_df
 #' @rdname print.epi_df
 #' @param data The `epi_df` object.
+#' @importFrom dplyr summarise
 #' @export
 summarise.epi_df = function(.data, .f, ..., .keep = FALSE) {
   dplyr::dplyr_reconstruct(NextMethod(), .data)
