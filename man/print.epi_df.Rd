@@ -17,7 +17,7 @@
 
 \method{ungroup}{epi_df}(x, ...)
 
-\method{unnest}{epi_df}(.data, .f, ..., .keep = FALSE)
+\method{group_modify}{epi_df}(.data, .f, ..., .keep = FALSE)
 
 \method{unnest}{epi_df}(data, ...)
 }

@@ -187,7 +187,7 @@ ungroup.epi_df = function(x, ...) {
   reclass(x, metadata)
 }
 
-#' @method unnest epi_df
+#' @method group_modify epi_df
 #' @rdname print.epi_df
 #' @param data The `epi_df` object.
 #' @export
