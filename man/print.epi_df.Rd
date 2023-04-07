@@ -6,6 +6,7 @@
 \alias{group_by.epi_df}
 \alias{ungroup.epi_df}
 \alias{group_modify.epi_df}
+\alias{summarise.epi_df}
 \alias{unnest.epi_df}
 \title{Base S3 methods for an \code{epi_df} object}
 \usage{
@@ -18,6 +19,8 @@
 \method{ungroup}{epi_df}(x, ...)
 
 \method{group_modify}{epi_df}(.data, .f, ..., .keep = FALSE)
+
+\method{summarise}{epi_df}(.data, .f, ..., .keep = FALSE)
 
 \method{unnest}{epi_df}(data, ...)
 }
