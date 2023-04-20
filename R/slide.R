@@ -155,7 +155,24 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
-  
+
+  # Check that `f` takes enough args
+  if (!missing(f) && is.function(f)) {
+    # We need `args` here to work properly on primitive functions
+    arg_names = names(formals(args(f)))
+    if ("..." %in% arg_names) {
+      # Keep all arg names before `...`
+      dots_i <- which(arg_names == "...")
+      arg_names <- arg_names[seq_len(dots_i - 1)]
+    }
+    if (length(arg_names) < 2) {
+      Abort("`f` must take at least 2 arguments",
+          class="epiprocess__epi_slide__f_must_take_at_least_2_args",
+          epiprocess__f = f,
+          epiprocess__arg_names = arg_names)
+    }
+  }
+
   # Arrange by increasing time_value
   x = arrange(x, time_value)
   
