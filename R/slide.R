@@ -158,18 +158,26 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # Check that `f` takes enough args
   if (!missing(f) && is.function(f)) {
-    # We need `args` here to work properly on primitive functions
+    n_mandatory_f_args <- 2
     arg_names = names(formals(args(f)))
     if ("..." %in% arg_names) {
       # Keep all arg names before `...`
       dots_i <- which(arg_names == "...")
       arg_names <- arg_names[seq_len(dots_i - 1)]
-    }
-    if (length(arg_names) < 2) {
-      Abort("`f` must take at least 2 arguments",
-          class="epiprocess__epi_slide__f_must_take_at_least_2_args",
-          epiprocess__f = f,
-          epiprocess__arg_names = arg_names)
+
+      if (length(arg_names) < n_mandatory_f_args) {
+        Warn(sprintf("`f` only takes %s positional arguments before the `...` args, but %s were expected; this can lead to obtuse errors downstream", length(arg_names), n_mandatory_f_args),
+            class="epiprocess__epi_slide__f_needs_min_args_before_dots",
+            epiprocess__f = f,
+            epiprocess__arg_names = arg_names)
+      }
+    } else {
+      if (length(arg_names) < n_mandatory_f_args) {
+        Abort(sprintf("`f` must take at least %s arguments", n_mandatory_f_args),
+            class="epiprocess__epi_slide__f_needs_min_args",
+            epiprocess__f = f,
+            epiprocess__arg_names = arg_names)
+      }
     }
   }
 
