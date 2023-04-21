@@ -86,3 +86,31 @@ test_that("these doesn't produce an error; the error appears only if the ref tim
                      dplyr::select("geo_value","slide_value_value"), 
                    dplyr::tibble(geo_value = c("ak", "al"), slide_value_value = c(2, -2))) # not out of range for either group
 })
+
+test_that("epi_slide alerts if the provided f doesn't take enough args", {
+  f_xg = function(x, g) dplyr::tibble(value=mean(x$value), count=length(x$value))
+  f_xg_dots = function(x, g, ...) dplyr::tibble(value=mean(x$value), count=length(x$value))
+
+  expect_no_error(epi_slide(grouped, f_xg, before = 1L, ref_time_values = d+1))
+  expect_no_warning(epi_slide(grouped, f_xg, before = 1L, ref_time_values = d+1))
+  expect_no_error(epi_slide(grouped, f_xg_dots, before = 1L, ref_time_values = d+1))
+  expect_no_warning(epi_slide(grouped, f_xg_dots, before = 1L, ref_time_values = d+1))
+
+  f_x_dots = function(x, ...) dplyr::tibble(value=mean(x$value), count=length(x$value))
+  f_dots = function(...) dplyr::tibble(value=c(5), count=c(2))
+  f_x = function(x) dplyr::tibble(value=mean(x$value), count=length(x$value))
+  f = function() dplyr::tibble(value=c(5), count=c(2))
+
+  expect_warning(epi_slide(grouped, f_x_dots, before = 1L, ref_time_values = d+1),
+    regexp = "positional arguments before the `...` args",
+    class = "epiprocess__epi_slide__f_needs_min_args_before_dots")
+  expect_warning(epi_slide(grouped, f_dots, before = 1L, ref_time_values = d+1),
+    regexp = "positional arguments before the `...` args",
+    class = "epiprocess__epi_slide__f_needs_min_args_before_dots")
+  expect_error(epi_slide(grouped, f_x, before = 1L, ref_time_values = d+1),
+    regexp = "`f` must take at least",
+    class = "epiprocess__epi_slide__f_needs_min_args")
+  expect_error(epi_slide(grouped, f, before = 1L, ref_time_values = d+1),
+    regexp = "`f` must take at least",
+    class = "epiprocess__epi_slide__f_needs_min_args")
+})
