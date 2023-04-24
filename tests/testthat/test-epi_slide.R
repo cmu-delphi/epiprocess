@@ -91,10 +91,11 @@ test_that("epi_slide alerts if the provided f doesn't take enough args", {
   f_xg = function(x, g) dplyr::tibble(value=mean(x$value), count=length(x$value))
   f_xg_dots = function(x, g, ...) dplyr::tibble(value=mean(x$value), count=length(x$value))
 
-  expect_no_error(epi_slide(grouped, f_xg, before = 1L, ref_time_values = d+1))
-  expect_no_warning(epi_slide(grouped, f_xg, before = 1L, ref_time_values = d+1))
-  expect_no_error(epi_slide(grouped, f_xg_dots, before = 1L, ref_time_values = d+1))
-  expect_no_warning(epi_slide(grouped, f_xg_dots, before = 1L, ref_time_values = d+1))
+  # If `regexp` is NA, asserts that there should be no errors/messages.
+  expect_error(epi_slide(grouped, f_xg, before = 1L, ref_time_values = d+1), regexp = NA)
+  expect_warning(epi_slide(grouped, f_xg, before = 1L, ref_time_values = d+1), regexp = NA)
+  expect_error(epi_slide(grouped, f_xg_dots, before = 1L, ref_time_values = d+1), regexp = NA)
+  expect_warning(epi_slide(grouped, f_xg_dots, before = 1L, ref_time_values = d+1), regexp = NA)
 
   f_x_dots = function(x, ...) dplyr::tibble(value=mean(x$value), count=length(x$value))
   f_dots = function(...) dplyr::tibble(value=c(5), count=c(2))
