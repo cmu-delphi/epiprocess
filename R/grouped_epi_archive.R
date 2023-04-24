@@ -220,6 +220,11 @@ grouped_epi_archive =
               ref_time_values = sort(ref_time_values)
             }
             
+            # Check that `f` takes enough args
+            if (!missing(f) && is.function(f)) {
+              check_sufficient_f_args(f)
+            }
+
             # Validate and pre-process `before`:
             if (missing(before)) {
               Abort("`before` is required (and must be passed by name);
