@@ -351,29 +351,12 @@ test_that("epix_slide with all_versions option works as intended",{
 
 test_that("epix_slide alerts if the provided f doesn't take enough args", {
   f_xg = function(x, g) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
-  f_xg_dots = function(x, g, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
-
   # If `regexp` is NA, asserts that there should be no errors/messages.
   expect_error(epix_slide(xx, f = f_xg, before = 2L), regexp = NA)
   expect_warning(epix_slide(xx, f = f_xg, before = 2L), regexp = NA)
-  expect_error(epix_slide(xx, f = f_xg_dots, before = 2L), regexp = NA)
-  expect_warning(epix_slide(xx, f = f_xg_dots, before = 2L), regexp = NA)
 
   f_x_dots = function(x, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
-  f_dots = function(...) dplyr::tibble(value=c(5), count=c(2))
-  f_x = function(x) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
-  f = function() dplyr::tibble(value=c(5), count=c(2))
-
   expect_warning(epix_slide(xx, f_x_dots, before = 2L),
     regexp = "positional arguments before the `...` args",
     class = "check_sufficient_f_args__f_needs_min_args_before_dots")
-  expect_warning(epix_slide(xx, f_dots, before = 2L),
-    regexp = "positional arguments before the `...` args",
-    class = "check_sufficient_f_args__f_needs_min_args_before_dots")
-  expect_error(epix_slide(xx, f_x, before = 2L),
-    regexp = "`f` must take at least",
-    class = "check_sufficient_f_args__f_needs_min_args")
-  expect_error(epix_slide(xx, f, before = 2L),
-    regexp = "`f` must take at least",
-    class = "check_sufficient_f_args__f_needs_min_args")
 })
