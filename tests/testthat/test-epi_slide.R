@@ -104,14 +104,14 @@ test_that("epi_slide alerts if the provided f doesn't take enough args", {
 
   expect_warning(epi_slide(grouped, f_x_dots, before = 1L, ref_time_values = d+1),
     regexp = "positional arguments before the `...` args",
-    class = "epiprocess__epi_slide__f_needs_min_args_before_dots")
+    class = "check_sufficient_f_args__f_needs_min_args_before_dots")
   expect_warning(epi_slide(grouped, f_dots, before = 1L, ref_time_values = d+1),
     regexp = "positional arguments before the `...` args",
-    class = "epiprocess__epi_slide__f_needs_min_args_before_dots")
+    class = "check_sufficient_f_args__f_needs_min_args_before_dots")
   expect_error(epi_slide(grouped, f_x, before = 1L, ref_time_values = d+1),
     regexp = "`f` must take at least",
-    class = "epiprocess__epi_slide__f_needs_min_args")
+    class = "check_sufficient_f_args__f_needs_min_args")
   expect_error(epi_slide(grouped, f, before = 1L, ref_time_values = d+1),
     regexp = "`f` must take at least",
-    class = "epiprocess__epi_slide__f_needs_min_args")
+    class = "check_sufficient_f_args__f_needs_min_args")
 })
