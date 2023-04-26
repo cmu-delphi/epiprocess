@@ -222,7 +222,7 @@ grouped_epi_archive =
             
             # Check that `f` takes enough args
             if (!missing(f) && is.function(f)) {
-              check_sufficient_f_args(f)
+              check_sufficient_f_args(f, 3L)
             }
 
             # Validate and pre-process `before`:
@@ -278,7 +278,7 @@ grouped_epi_archive =
                                     comp_effective_key_vars,
                                     new_col) {
               # Carry out the specified computation
-              comp_value = f(.data_group, .group_key, ...)
+              comp_value = f(.data_group, .group_key, ref_time_value, ...)
 
               if (all_versions) {
                 # Extract data from archive so we can do length checks below. When
@@ -294,7 +294,7 @@ grouped_epi_archive =
               # Note: this mirrors how `epi_slide` does things if we're using
               # unique keys, but can diverge if using nonunique keys. The
               # `epi_slide` approach of counting occurrences of the
-              # `ref_time_value` in the `time_value` column, which helps lines
+              # `ref_time_value` in the `time_value` column, which helps line
               # up the computation results with corresponding rows of the
               # input data, wouldn't quite apply here: we'd want to line up
               # with rows (from the same group) with `version` matching the

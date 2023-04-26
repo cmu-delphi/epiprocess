@@ -104,10 +104,11 @@ Warn = function(msg, ...) rlang::warn(break_str(msg, init = "Warning: "), ...)
 #'
 #' @param f Function; specifies a computation to slide over an `epi_df` or
 #'  `epi_archive` in `epi_slide` or `epix_slide`.
+#' @param n_mandatory_f_args Integer; specifies the number of arguments `f`
+#'  is required to take before any `...` arg. Defaults to 2.
 #'
 #' @noRd
-check_sufficient_f_args <- function(f) {
-  n_mandatory_f_args <- 2
+check_sufficient_f_args <- function(f, n_mandatory_f_args = 2L) {
   arg_names = names(formals(args(f)))
   if ("..." %in% arg_names) {
     # Keep all arg names before `...`
