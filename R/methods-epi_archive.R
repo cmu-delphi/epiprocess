@@ -665,7 +665,8 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   If a formula, `f` can operate directly on columns accessed via `.x$var`,
 #'   as in `~ mean(.x$var)` to compute a mean of a column `var` for each
 #'   `ref_time_value`-group combination. If `f` is missing, then `...` will
-#'   specify the computation.
+#'   specify the computation. The reference time value can be accessed via
+#'   `ref_time_value` in a formula or in a computation defined in `...`.
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then `...` is interpreted as an
 #'   expression for tidy evaluation. See details of [`epi_slide`].
