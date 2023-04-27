@@ -186,7 +186,7 @@ grouped_epi_archive =
 #'   object. See the documentation for the wrapper function [`epix_slide()`] for
 #'   details.
 #' @importFrom data.table key address
-#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
+#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms child_env
           slide = function(f, ..., before, ref_time_values,
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
@@ -364,7 +364,9 @@ grouped_epi_archive =
             # If f is not missing, then just go ahead, slide by group
             if (!missing(f)) {
               if (rlang::is_formula(f)) f = rlang::as_function(f)
+              f_init_env <- environment(f)
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
+                environment(f) <- child_env(.parent = f_init_env, ref_time_value = ref_time_value)
                 # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
                 # `epi_archive` if `all_versions` is `TRUE`:
                 as_of_raw = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
@@ -437,10 +439,12 @@ grouped_epi_archive =
               }
               
               quo = quos[[1]]
-              f = function(x, quo, ...) rlang::eval_tidy(quo, x)
+              quo_init_env <- environment(quo)
               new_col = sym(names(rlang::quos_auto_name(quos)))
 
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
+                environment(quo) <- child_env(.parent = quo_init_env, ref_time_value = ref_time_value)
+                f = function(x, quo, ...) rlang::eval_tidy(quo, x)
                 # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
                 # `epi_archive` if `all_versions` is `TRUE`:
                 as_of_raw = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)

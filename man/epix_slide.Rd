@@ -28,11 +28,12 @@ sliding (a.k.a. "rolling") time window for each data group. The window is
 determined by the \code{before} parameter described below. One time step is
 typically one day or one week; see \code{\link{epi_slide}} details for more
 explanation. If a function, \code{f} must take \code{x}, an \code{epi_df} with the same
-column names as the archive's \code{DT}, minus the \code{version} column; followed by
-\code{g}, a one-row tibble containing the values of the grouping variables for
-the associated group; followed by any number of named arguments. If a
-formula, \code{f} can operate directly on columns accessed via \code{.x$var}, as in
-\code{~ mean(.x$var)} to compute a mean of a column \code{var} for each
+column names as the archive's \code{DT}, minus the \code{version} column; followed
+by \code{g}, a one-row tibble containing the values of the grouping variables
+for the associated group; followed by \code{t}, a Date containing the
+reference time value to use; followed by any number of named arguments.
+If a formula, \code{f} can operate directly on columns accessed via \code{.x$var},
+as in \code{~ mean(.x$var)} to compute a mean of a column \code{var} for each
 \code{ref_time_value}-group combination. If \code{f} is missing, then \code{...} will
 specify the computation.}
 
