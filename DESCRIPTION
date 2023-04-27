@@ -31,6 +31,7 @@ Imports:
     lifecycle (>= 1.0.1),
     lubridate,
     magrittr,
+    pillar,
     purrr,
     R6,
     rlang,
@@ -61,7 +62,7 @@ Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Depends: 
     R (>= 2.10)
 URL: https://cmu-delphi.github.io/epiprocess/
@@ -71,6 +72,7 @@ Collate:
     'data.R'
     'epi_df.R'
     'epiprocess.R'
+    'grouped_edf.R'
     'methods-epi_archive.R'
     'grouped_epi_archive.R'
     'growth_rate.R'

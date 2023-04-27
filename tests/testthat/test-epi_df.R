@@ -39,3 +39,39 @@ test_that("as_epi_df errors when additional_metadata is not a list", {
     as_epi_df(ex_input, additional_metadata = c(other_keys = "state", "pol")), 
     "`additional_metadata` must be a list type.")
 })
+
+# test_that("`reclass` `after_classes` works as intended", {
+#   edf = jhu_csse_county_level_subset
+#   tbl = tibble::as_tibble(edf)
+#   grouped_tbl = tbl %>% group_by(geo_value)
+#   metadata = attr(jhu_csse_county_level_subset, "metadata")
+#   # Simple default behavior:
+#   expect_identical(
+#     class(reclass(tbl, metadata)),
+#     c("epi_df", "tbl_df", "tbl", "data.frame")
+#   )
+#   # Behavior when we already have "epi_df" class:
+#   expect_identical(
+#     class(reclass(edf, metadata)),
+#     c("epi_df", "tbl_df", "tbl", "data.frame")
+#   )
+#   some_other_ordering = c("tbl_df", "epi_df", "tbl", "data.frame")
+#   expect_identical(
+#     class(reclass(`class<-`(edf, some_other_ordering), metadata)),
+#     some_other_ordering
+#   )
+#   # Controlling ordering moving from default to passing nondefault
+#   # `before_classes`:
+#   expect_identical(
+#     class(reclass(grouped_tbl, metadata)),
+#     c("epi_df", "grouped_df", "tbl_df", "tbl", "data.frame")
+#   )
+#   expect_identical(
+#     class(reclass(grouped_tbl, metadata, "grouped_df")),
+#     c("grouped_df", "epi_df", "tbl_df", "tbl", "data.frame")
+#   )
+#   expect_identical(
+#     class(reclass(tbl, metadata, "grouped_df")),
+#     c("epi_df", "tbl_df", "tbl", "data.frame")
+#   )
+# })
