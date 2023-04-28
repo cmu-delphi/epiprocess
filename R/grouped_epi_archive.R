@@ -363,7 +363,7 @@ grouped_epi_archive =
             
             # If f is not missing, then just go ahead, slide by group
             if (!missing(f)) {
-              if (rlang::is_formula(f)) f = rlang::as_function(f)
+              if (rlang::is_formula(f)) f = as_slide_computation(f)
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
                 # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
                 # `epi_archive` if `all_versions` is `TRUE`:

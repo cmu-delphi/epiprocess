@@ -131,6 +131,106 @@ check_sufficient_f_args <- function(f, n_mandatory_f_args = 2L) {
   }
 }
 
+#' Convert to function
+#'
+#' @description
+#' `as_function()` transforms a one-sided formula into a function.
+#' This powers the lambda syntax in packages like purrr.
+#'
+#' This is an extension of `rlang::as_function` that can create functions that
+#' take three arguments. The arugments can be accessed via the idiomatic
+#' `.x`, `.y`, etc and also by `slide`-specific names.
+#'
+#' @param x A function or formula.
+#'
+#'   If a **function**, it is used as is.
+#'
+#'   If a **formula**, e.g. `~ .x + 2`, it is converted to a function with up
+#'   to three arguments: `.x` (single argument), or `.x` and `.y`
+#'   (two arguments), or `.x`, `.y`, and `.z` (three arguments). The `.`
+#'   placeholder can be used instead of `.x`, `.group_key` can be used in
+#'   place of `.y`, and `.ref_time_value` can be used in place of `.z`. This
+#'   allows you to create very compact anonymous functions (lambdas) with up
+#'   to two inputs. Functions created from formulas have a special class. Use
+#'   `is_lambda()` to test for it.
+#'
+#'   If a **string**, the function is looked up in `env`. Note that
+#'   this interface is strictly for user convenience because of the
+#'   scoping issues involved. Package developers should avoid
+#'   supplying functions by name and instead supply them by value.
+#'
+#' @param env Environment in which to fetch the function in case `x`
+#'   is a string.
+#' @export
+#' @inheritParams rlang::args_dots_empty
+#' @inheritParams rlang::args_error_context
+#' @examples
+#' f <- as_slide_computation(~ .x + 1)
+#' f(10)
+#'
+#' g <- as_slide_computation(~ -1 * .)
+#' g(4)
+#'
+#' h <- as_slide_computation(~ .x - .group_key)
+#' h(6, 3)
+#'
+#' # Functions created from a formula have a special class:
+#' is_lambda(f)
+#' is_lambda(as_slide_computation(function() "foo"))
+#'
+#' @importFrom rlang check_dots_empty0 is_function is_quosure eval_tidy call2
+#'  quo_get_env new_function pairlist2 f_env is_environment missing_arg f_rhs
+#'  is_string quo_get_expr is_formula caller_arg caller_env
+as_slide_computation <- function(x,
+                        env = global_env(),
+                        ...,
+                        arg = caller_arg(x),
+                        call = caller_env()) {
+  check_dots_empty0(...)
+
+  if (is_function(x)) {
+    return(x)
+  }
+
+  if (is_quosure(x)) {
+    mask <- eval_tidy(call2(environment), env = quo_get_env(x))
+    fn <- new_function(pairlist2(... = ), quo_get_expr(x), mask)
+    return(fn)
+  }
+
+  if (is_formula(x)) {
+    if (length(x) > 2) {
+      rlang:::abort_coercion(
+        x,
+        x_type = "a two-sided formula",
+        to_type = "a function",
+        arg = arg,
+        call = call
+      )
+    }
+
+    env <- f_env(x)
+    if (!is_environment(env)) {
+      abort("Formula must carry an environment.", arg = arg, call = call)
+    }
+
+    args <- list(
+      ... = missing_arg(),
+      .x = quote(..1), .y = quote(..2), .z = quote(..3),
+      . = quote(..1), .group_key = quote(..2), .ref_time_value = quote(..3)
+    )
+    fn <- new_function(args, f_rhs(x), env)
+    fn <- structure(fn, class = c("rlang_lambda_function", "function"))
+    return(fn)
+  }
+
+  if (is_string(x)) {
+    return(get(x, envir = env, mode = "function"))
+  }
+
+  rlang:::abort_coercion(x, "a function", arg = arg, call = call)
+}
+
 ##########
 
 in_range = function(x, rng) pmin(pmax(x, rng[1]), rng[2])
