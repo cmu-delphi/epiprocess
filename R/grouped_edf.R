@@ -72,7 +72,8 @@ dplyr_reconstruct.grouped_edf = function(data, template) {
     template_class[! template_class %in% c("grouped_edf", "grouped_df")]
   )
   data <- dplyr_reconstruct(data, edf_template)
-  # `data` here is either `epi_df` or decayed
+  # `data` here is either `epi_df` or decayed. Now apply `grouped_df`
+  # reconstruction (remember S3 dispatch arg is `template`):
   result = NextMethod()
   # Assume that dplyr_reconstruct.grouped_df hasn't done anything that would
   # cause an epi_df to need to decay (but won't output an `epi_df` class ever).
@@ -144,6 +145,7 @@ group_modify.grouped_edf = function(.data, .f, ..., .keep = FALSE, keep = deprec
   dplyr_reconstruct(NextMethod(), .data)
 }
 
+#' @importFrom dplyr group_trim
 #' @export
 group_trim.grouped_edf = function(.tbl, .drop = group_by_drop_default(.tbl)) {
   dplyr_reconstruct(NextMethod(), .tbl)

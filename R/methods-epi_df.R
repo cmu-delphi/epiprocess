@@ -94,8 +94,6 @@ decay_epi_df = function(x) {
 #' @export
 #' @noRd
 dplyr_reconstruct.epi_df = function(data, template) {
-  # Start from a reconstruction for the backing S3 classes; this ensures that we
-  # keep any grouping that has been applied:
   res <- NextMethod()
   
   cn <- names(res)
@@ -167,6 +165,7 @@ dplyr_row_slice.epi_df = function(data, i, ...) {
 #' @param data The `epi_df` object.
 #' @export
 unnest.epi_df = function(data, ...) {
+  # XXX This should be updating `other_keys`, but isn't; issue #306.
   dplyr::dplyr_reconstruct(NextMethod(), data)
 }
 
