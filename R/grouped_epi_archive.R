@@ -430,16 +430,25 @@ grouped_epi_archive =
               x = tidyr::unnest(x, !!new_col, names_sep = names_sep)
             }
 
-            if (is_epi_df(x)) {
-              # The analogue of `epi_df`'s `as_of` metadata for an archive is
-              # `<archive>$versions_end`, at least in the current absence of
-              # separate fields/columns denoting the "archive version" with a
-              # different resolution, or from the perspective of a different
-              # stage of a data pipeline. The `as_of` that is automatically
-              # derived won't always match; override:
+            # if (is_epi_df(x)) {
+            #   # The analogue of `epi_df`'s `as_of` metadata for an archive is
+            #   # `<archive>$versions_end`, at least in the current absence of
+            #   # separate fields/columns denoting the "archive version" with a
+            #   # different resolution, or from the perspective of a different
+            #   # stage of a data pipeline. The `as_of` that is automatically
+            #   # derived won't always match; override:
+            #   attr(x, "metadata")[["as_of"]] <- private$ungrouped$versions_end
+            # }
 
-              attr(x, "metadata")[["as_of"]] <- private$ungrouped$versions_end
-            }
+            # XXX We need to work out when we want to return an `epi_df` and how
+            # to get appropriate keys (see #290, #223, #163). We'll probably
+            # need the commented-out code above if we ever output an `epi_df`.
+            # However, as a stopgap measure to have consistency when grouping by
+            # `geo_value` or not, and to prevent `epi_df` output with invalid
+            # `geo_type` or `other_keys`, always output a tibble.
+            #
+            # For consistency with `reframe`, this should always be ungrouped.
+            x <- as_tibble(x)
 
             return(x)
           }

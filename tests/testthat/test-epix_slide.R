@@ -26,9 +26,7 @@ test_that("epix_slide works as intended",{
                 sum_binary = c(2^3+2^2,
                                2^6+2^3,
                                2^10+2^9,
-                               2^15+2^14)) %>%
-    as_epi_df(as_of = 7) %>%
-    group_by(geo_value)
+                               2^15+2^14))
   
   expect_identical(xx1,xx2) # *
   
@@ -300,8 +298,7 @@ test_that("as_of and epix_slide with long enough window are compatible", {
     ea %>% # using `ea` here is like filtering `ea_multigeo` to `geo_value=="x"`
       epix_as_of(ref_time_value2, all_versions=TRUE) %>%
       f2() %>%
-      transmute(geo_value = "x", time_value = ref_time_value2, mean_abs_delta) %>%
-      group_by(geo_value)
+      transmute(geo_value = "x", time_value = ref_time_value2, mean_abs_delta)
   )
 })
 
@@ -332,8 +329,7 @@ test_that("epix_slide with all_versions option works as intended",{
                 sum_binary = c(2^3+2^2,
                                2^6+2^3,
                                2^10+2^9+2^6,
-                               2^15+2^14+2^10)) %>%
-    group_by(geo_value)
+                               2^15+2^14+2^10))
 
   expect_identical(xx1,xx2) # *
 
@@ -349,17 +345,22 @@ test_that("epix_slide with all_versions option works as intended",{
   expect_identical(xx1,xx3) # This and * Imply xx2 and xx3 are identical
 })
 
-test_that("`epix_slide` uses `versions_end` as a resulting `epi_df`'s `as_of`", {
-  ea_updated_stale = ea$clone()
-  ea_updated_stale$versions_end <- ea_updated_stale$versions_end + 3 # (dbl)
-  #
-  expect_identical(
-    ea_updated_stale %>%
-      group_by(geo_value) %>%
-      epix_slide(~ slice_head(.x, n = 1L), before = 10L) %>%
-      ungroup() %>%
-      attr("metadata") %>%
-      .$as_of,
-    10
-  )
-})
+# XXX currently, we're using a stopgap measure of having `epix_slide` always
+# output a tibble while we think about the class, columns, and attributes of
+# `epix_slide` output more carefully. We might bring this test back depending on
+# the decisions there:
+#
+# test_that("`epix_slide` uses `versions_end` as a resulting `epi_df`'s `as_of`", {
+#   ea_updated_stale = ea$clone()
+#   ea_updated_stale$versions_end <- ea_updated_stale$versions_end + 3 # (dbl)
+#   #
+#   expect_identical(
+#     ea_updated_stale %>%
+#       group_by(geo_value) %>%
+#       epix_slide(~ slice_head(.x, n = 1L), before = 10L) %>%
+#       ungroup() %>%
+#       attr("metadata") %>%
+#       .$as_of,
+#     10
+#   )
+# })

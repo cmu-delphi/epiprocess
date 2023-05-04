@@ -1,3 +1,14 @@
+#' Convert to tibble, dropping metadata
+#' @rdname print.epi_df
+#'
+#' @importFrom tibble as_tibble
+#' @export
+as_tibble.epi_df = function(x, ...) {
+  result = NextMethod()
+  attr(result, "metadata") <- NULL
+  return(result)
+}
+
 #' Convert to tsibble format
 #' 
 #' Converts an `epi_df` object into a tsibble, where the index is taken to be 

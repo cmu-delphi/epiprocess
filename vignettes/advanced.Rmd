@@ -21,6 +21,7 @@ During basic usage (e.g., when all optional arguments are set to their defaults)
   * outputs one row **for every row in `edf`** (recycling outputs from
     computations appropriately if there are multiple time series bundled
     together inside any group(s))
+  * keeps any grouping from `edf`
   * is roughly analogous to (the non-sliding) **`dplyr::mutate` followed by
     `dplyr::arrange(time_value, .by_group = TRUE)`**
 
@@ -29,8 +30,9 @@ During basic usage (e.g., when all optional arguments are set to their defaults)
   * keeps **grouping and `time_value`** columns of `ea`, adds computed
     column(s)
   * outputs one row **for element/row output from the computations**
-  * is roughly analogous to (the non-sliding) **`dplyr::reframe`** (or
-    `dplyr::summarize`, before the `dplyr` 1.1.0
+  * removes any grouping of `ea`
+  * is roughly analogous to (the non-sliding) **`dplyr::reframe`** (or, more
+    roughly, `dplyr::summarize` before the `dplyr` 1.1.0
     [update](https://www.tidyverse.org/blog/2023/02/dplyr-1-1-0-pick-reframe-arrange/#reframe))
 
 These differences in basic behavior make some common slide operations require less boilerplate:
@@ -105,16 +107,14 @@ edf %>%
   mutate(version = time_value) %>% 
   as_epi_archive() %>%
   group_by(geo_value) %>%
-  epix_slide(x_2dav = mean(x), before = 1, ref_time_values = as.Date("2020-06-02")) %>%
-  ungroup()
+  epix_slide(x_2dav = mean(x), before = 1, ref_time_values = as.Date("2020-06-02"))
 
 edf %>% 
   # pretend that observations about time_value t are reported in version t (nowcasts)
   mutate(version = time_value) %>% 
   as_epi_archive() %>%
   group_by(geo_value) %>%
-  epix_slide(~ mean(.x$x), before = 1, ref_time_values = as.Date("2020-06-02")) %>%
-  ungroup()
+  epix_slide(~ mean(.x$x), before = 1, ref_time_values = as.Date("2020-06-02"))
 ```
 
 When the slide computation returns an atomic vector (rather than a single value)
@@ -205,8 +205,7 @@ edf %>%
   group_by(geo_value) %>%
   epix_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
              ref_time_values = as.Date("2020-06-02"),
-             before = 1, as_list_col = FALSE, names_sep = NULL) %>%
-  ungroup()
+             before = 1, as_list_col = FALSE, names_sep = NULL)
 ```
 
 ## Multi-row outputs

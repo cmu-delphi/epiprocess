@@ -582,8 +582,7 @@ epix_detailed_restricted_mutate = function(.data, ...) {
 #'   epix_slide(f = ~ mean(.x$case_rate_7d_av),
 #'              before = 2,
 #'              ref_time_values = as.Date("2020-06-11") + 0:2,
-#'              new_col_name = 'case_rate_3d_av') %>%
-#'   ungroup()
+#'              new_col_name = 'case_rate_3d_av')
 #'
 #' # -----------------------------------------------------------------
 #'
@@ -618,8 +617,7 @@ epix_detailed_restricted_mutate = function(.data, ...) {
 #'
 #' toy_archive %>%
 #'   group_by(geo_value, age_group, .drop=FALSE) %>%
-#'   epix_slide(f = ~ sum(.x$value), before = 20) %>%
-#'   ungroup()
+#'   epix_slide(f = ~ sum(.x$value), before = 20)
 #'
 #' @importFrom dplyr group_by
 #' @export
@@ -748,10 +746,10 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   will provide an `epi_archive` rather than an `epi-df` to each
 #'   computation.)
 #'   4. The output class and columns are similar but different: `epix_slide()`
-#'   returns an `epi_df` or tibble containing only the grouping variables,
+#'   returns an ungrouped tibble containing only the grouping variables,
 #'   `time_value`, and the new column(s) from the slide computations, whereas
-#'   `epi_slide()` returns an `epi_df` with all original variables plus the new
-#'   columns from the slide computations.
+#'   `epi_slide()` returns an `epi_df`, retaining groupings, with all original
+#'   variables plus the new columns from the slide computations.
 #'   5. There are no size stability checks or element/row recycling to maintain
 #'   size stability in `epix_slide`, unlike in `epi_slide`. (`epix_slide` is
 #'   roughly analogous to [`dplyr::reframe`] in `dplyr` 1.1.0
@@ -801,8 +799,7 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   epix_slide(f = ~ mean(.x$case_rate_7d_av),
 #'              before = 2,
 #'              ref_time_values = ref_time_values,
-#'              new_col_name = 'case_rate_7d_av_recent_av') %>%
-#'   ungroup()
+#'              new_col_name = 'case_rate_7d_av_recent_av')
 #' # We requested time windows that started 2 days before the corresponding time
 #' # values. The actual number of `time_value`s in each computation depends on
 #' # the reporting latency of the signal and `time_value` range covered by the
@@ -838,7 +835,6 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'     },
 #'     before = 2, all_versions = TRUE,
 #'     ref_time_values = ref_time_values, names_sep=NULL) %>%
-#'   ungroup() %>%
 #'   arrange(geo_value, time_value)
 #'
 #' @importFrom rlang enquo !!!
