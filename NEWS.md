@@ -4,6 +4,15 @@ Note that `epiprocess` uses the [Semantic Versioning
 ("semver")](https://semver.org/) scheme for all release versions, but any
 inter-release development versions will include an additional ".9999" suffix.
 
+## Breaking changes:
+
+* `epix_slide` has been made more like `dplyr::reframe` (in `dplyr` 1.1.0 terms,
+  or, more roughly, `dplyr::summarize` pre-dplyr 1.1.0). It will no longer
+  perform element/row recycling for size stability, accepts slide computation
+  outputs containing any number of rows, no longer supports `all_rows`, and
+  always outputs an ungrouped tibble. Future versions will consider whether/when
+  to output an `epi_df` instead.
+
 # epiprocess 0.6.0
 
 ## Breaking changes:
