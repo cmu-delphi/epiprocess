@@ -178,16 +178,15 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
 })
 
 ea <- tibble::tribble(~version, ~time_value, ~binary,
-                     2,        1:1,          2^(1:1),
-                     3,        1:2,          2^(2:1),
-                     4,        1:3,          2^(3:1),
-                     5,        1:4,          2^(4:1),
-                     6,        1:5,          2^(5:1),
-                     7,        1:6,          2^(6:1)) %>%
-  tidyr::unnest(c(time_value,binary))
-
-ea$geo_value <- "x"
-ea <- as_epi_archive(ea)
+                             2,         1:1, 2^(1:1),
+                             3,         1:2, 2^(2:1),
+                             4,         1:3, 2^(3:1),
+                             5,         1:4, 2^(4:1),
+                             6,         1:5, 2^(5:1),
+                             7,         1:6, 2^(6:1)) %>%
+  tidyr::unnest(c(time_value,binary)) %>%
+  mutate(geo_value = "x") %>%
+  as_epi_archive()
 
 test_that("epix_slide with all_versions option has access to all older versions", {
   library(data.table)
@@ -362,5 +361,68 @@ test_that("epix_slide with all_versions option works as intended",{
 #       attr("metadata") %>%
 #       .$as_of,
 #     10
+#   )
+# })
+
+test_that("epix_slide works with 0-row computation outputs", {
+  epix_slide_empty = function(ea, ...) {
+    ea %>%
+      epix_slide(before = 5L, ..., function(x, g) {
+        tibble::tibble()
+      })
+  }
+  expect_identical(
+    ea %>%
+      epix_slide_empty(),
+    tibble::tibble(
+      time_value = ea$DT$version[integer(0)]
+    )
+  )
+  expect_identical(
+    ea %>%
+      group_by(geo_value) %>%
+      epix_slide_empty(),
+    tibble::tibble(
+      geo_value = ea$DT$geo_value[integer(0)],
+      time_value = ea$DT$version[integer(0)]
+    ) # %>%
+      # new_epi_df(geo_type = ea$geo_type, time_type = ea$time_type,
+      #            as_of = ea$versions_end)
+  )
+  # with `all_versions=TRUE`, we have something similar but never get an
+  # `epi_df`:
+  expect_identical(
+    ea %>%
+      epix_slide_empty(all_versions=TRUE),
+    tibble::tibble(
+      time_value = ea$DT$version[integer(0)]
+    )
+  )
+  expect_identical(
+    ea %>%
+      group_by(geo_value) %>%
+      epix_slide_empty(all_versions=TRUE),
+    tibble::tibble(
+      geo_value = ea$DT$geo_value[integer(0)],
+      time_value = ea$DT$version[integer(0)]
+    )
+  )
+})
+
+# test_that("epix_slide grouped by geo can produce `epi_df` output", {
+#   # This is a characterization test. Not sure we actually want this behavior;
+#   # https://github.com/cmu-delphi/epiprocess/pull/290#issuecomment-1489099157
+#   expect_identical(
+#     ea %>%
+#       group_by(geo_value) %>%
+#       epix_slide(before = 5L, function(x,g) {
+#         tibble::tibble(value = 42)
+#       }, names_sep = NULL),
+#     tibble::tibble(
+#       geo_value = "x",
+#       time_value = epix_slide_ref_time_values_default(ea),
+#       value = 42
+#     ) %>%
+#       new_epi_df(as_of = ea$versions_end)
 #   )
 # })

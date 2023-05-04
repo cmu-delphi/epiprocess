@@ -216,8 +216,7 @@ grouped_epi_archive =
             }
             
             if (missing(ref_time_values)) {
-              versions_with_updates = c(private$ungrouped$DT$version, private$ungrouped$versions_end)
-              ref_time_values = tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
+              ref_time_values = epix_slide_ref_time_values_default(private$ungrouped)
             } else if (length(ref_time_values) == 0L) {
               Abort("`ref_time_values` must have at least one element.")
             } else if (any(is.na(ref_time_values))) {
@@ -281,7 +280,7 @@ grouped_epi_archive =
               if (! (is.atomic(comp_value) || is.data.frame(comp_value))) {
                 Abort("The slide computation must return an atomic vector or a data frame.")
               }
-
+              
               # Label every result row with the `ref_time_value`:
               return(tibble::tibble(time_value = .env$ref_time_value,
                                     !!new_col := .env$comp_value))
@@ -305,11 +304,12 @@ grouped_epi_archive =
                   group_modify_fn = comp_one_grp
                 } else {
                   as_of_archive = as_of_raw
-                  # We essentially want to `group_modify` the archive, but don't
-                  # provide an implementation yet. Next best would be
-                  # `group_modify` on its `$DT`, but that has different behavior
-                  # based on whether or not `dtplyr` is loaded. Instead, go
-                  # through a , trying to avoid copies.
+                  # We essentially want to `group_modify` the archive, but
+                  #  haven't implemented this method yet. Next best would be
+                  #  `group_modify` on its `$DT`, but that has different
+                  #  behavior based on whether or not `dtplyr` is loaded.
+                  #  Instead, go through an ordinary data frame, trying to avoid
+                  #  copies.
                   if (address(as_of_archive$DT) == address(private$ungrouped$DT)) {
                     # `as_of` aliased its the full `$DT`; copy before mutating:
                     as_of_archive$DT <- copy(as_of_archive$DT)
@@ -317,7 +317,7 @@ grouped_epi_archive =
                   dt_key = data.table::key(as_of_archive$DT)
                   as_of_df = as_of_archive$DT
                   data.table::setDF(as_of_df)
-
+                  
                   # Convert each subgroup chunk to an archive before running the calculation.
                   group_modify_fn = function(.data_group, .group_key,
                                     f, ...,
@@ -336,7 +336,7 @@ grouped_epi_archive =
                     )
                   }
                 }
-
+                
                 return(
                   dplyr::group_by(as_of_df, dplyr::across(tidyselect::all_of(private$vars)),
                                   .drop=private$drop) %>%

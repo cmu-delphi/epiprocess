@@ -307,7 +307,7 @@ epi_archive =
               Abort("compactify must be boolean or null.")
             }
 
-            # Apply defaults and conduct checks and apply defaults for
+            # Apply defaults and conduct checks for
             # `clobberable_versions_start`, `versions_end`:
             if (missing(clobberable_versions_start)) {
               clobberable_versions_start <- NA

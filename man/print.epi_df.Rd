@@ -10,7 +10,7 @@
 \alias{unnest.epi_df}
 \title{Convert to tibble, dropping metadata}
 \usage{
-as_tibble.epi_df(x, ...)
+\method{as_tibble}{epi_df}(x, ...)
 
 \method{print}{epi_df}(x, ...)
 

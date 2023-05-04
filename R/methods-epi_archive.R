@@ -856,6 +856,15 @@ epix_slide = function(x, f, ..., before, ref_time_values,
                  ))
 }
 
+#' Default value for `ref_time_values` in an `epix_slide`
+#'
+#' @noRd
+epix_slide_ref_time_values_default = function(ea) {
+  versions_with_updates = c(ea$DT$version, ea$versions_end)
+  ref_time_values = tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
+  return (ref_time_values)
+}
+
 #' Filter an `epi_archive` object to keep only older versions
 #'
 #' Generates a filtered `epi_archive` from an `epi_archive` object, keeping
