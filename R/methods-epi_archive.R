@@ -657,15 +657,17 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   sliding (a.k.a. "rolling") time window for each data group. The window is
 #'   determined by the `before` parameter described below. One time step is
 #'   typically one day or one week; see [`epi_slide`] details for more
-#'   explanation. If a function, `f` must take `x`, an `epi_df` with the same
+#'   explanation. If a function, `f` must take an `epi_df` with the same
 #'   column names as the archive's `DT`, minus the `version` column; followed
-#'   by `g`, a one-row tibble containing the values of the grouping variables
-#'   for the associated group; followed by `t`, a Date containing the
-#'   reference time value to use; followed by any number of named arguments.
-#'   If a formula, `f` can operate directly on columns accessed via `.x$var`,
-#'   as in `~ mean(.x$var)` to compute a mean of a column `var` for each
-#'   `ref_time_value`-group combination. If `f` is missing, then `...` will
-#'   specify the computation.
+#'   by a one-row tibble containing the values of the grouping variables for
+#'   the associated group; followed by a Date containing the reference time
+#'   value to use; followed by any number of named arguments. If a formula,
+#'   `f` can operate directly on columns accessed via `.x$var` or `.`, as in
+#'   `~ mean (.x$var)` to compute a mean of a column `var` for each
+#'   `ref_time_value`-group combination. The group key can be accessed via
+#'   `.y` or `.group_key`, and the reference time value can be accessed via
+#'   `.z` or `.ref_time_value`. If `f` is missing, then `...` will specify
+#'   the computation.
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then `...` is interpreted as an
 #'   expression for tidy evaluation. See details of [`epi_slide`].
