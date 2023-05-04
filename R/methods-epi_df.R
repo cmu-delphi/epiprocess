@@ -17,23 +17,16 @@ as_tsibble.epi_df = function(x, key, ...) {
                     ...))
 }
 
-#' Base S3 methods for an `epi_df` object
-#'
-#' Print and summary functions for an `epi_df` object.
-#'
-#' @param x The `epi_df` object.
-#' @param ... Additional arguments passed to methods.
-#'
-#' @method print epi_df
+#' Basic S3 methods for an `epi_df` object
+#' @name basic_s3_for_epi_df
+NULL
+
+#' @importFrom pillar tbl_sum
+#' @rdname basic_s3_for_epi_df
 #' @export
-print.epi_df = function(x, ...) {
-  cat("An `epi_df` object,", prettyNum(nrow(x),","), "x",
-      prettyNum(ncol(x),","), "with metadata:\n")
-  cat(sprintf("* %-9s = %s\n", "geo_type", attributes(x)$metadata$geo_type))
-  cat(sprintf("* %-9s = %s\n", "time_type", attributes(x)$metadata$time_type))
-  cat(sprintf("* %-9s = %s\n", "as_of", attributes(x)$metadata$as_of))
-  cat("\n")
-  NextMethod()
+tbl_sum.epi_df = function(x, ...) {
+  c("An epi_df" = pillar::dim_desc(x),
+    purrr::map_chr(attr(x, "metadata"), toString))
 }
 
 #' Summarize `epi_df` object
@@ -46,7 +39,7 @@ print.epi_df = function(x, ...) {
 #'   Currently unused.
 #'
 #' @method summary epi_df
-#' @rdname print.epi_df
+#' @rdname basic_s3_for_epi_df
 #' @importFrom rlang .data
 #' @importFrom stats median
 #' @export
@@ -64,7 +57,7 @@ summary.epi_df = function(object, ...) {
                          dplyr::summarize(mean(.data$num)))))
 }
 
-#' Drop any `epi_df` metadata and class on a data frame
+#' Drop any `epi_df` metadata and `epi_df`/`grouped_edf` class on a data frame
 #'
 #' Useful in implementing `?dplyr_extending` when manipulations cause invariants
 #' of `epi_df`s to be violated and we need to return some other class. Note that
@@ -72,13 +65,13 @@ summary.epi_df = function(object, ...) {
 #' associated attributes, if present).
 #'
 #' @param x an `epi_df` or other data frame
-#' @return `x` with any metadata dropped and the `"epi_df"` class, if previously
-#'   present, dropped
+#' @return `x` with any metadata dropped and the `"epi_df"` and `"grouped_edf"`
+#'   classes, if previously present, dropped
 #'
 #' @noRd
 decay_epi_df = function(x) {
   attributes(x)$metadata <- NULL
-  class(x) <- class(x)[class(x) != "epi_df"]
+  class(x) <- class(x)[! class(x) %in% c("grouped_edf", "epi_df")]
   x
 }
 
@@ -101,8 +94,6 @@ decay_epi_df = function(x) {
 #' @export
 #' @noRd
 dplyr_reconstruct.epi_df = function(data, template) {
-  # Start from a reconstruction for the backing S3 classes; this ensures that we
-  # keep any grouping that has been applied:
   res <- NextMethod()
   
   cn <- names(res)
@@ -126,7 +117,7 @@ dplyr_reconstruct.epi_df = function(data, template) {
     return(decay_epi_df(res))
   }
   
-  res <- reclass(res, attr(template, "metadata"))
+  res <- reclass_epi_df(res, attr(template, "metadata"))
 
   # XXX we may want verify the `geo_type` and `time_type` here. If it's
   # significant overhead, we may also want to keep this less strict version
@@ -166,46 +157,61 @@ dplyr_row_slice.epi_df = function(data, i, ...) {
   old_other_keys = attributes(x)$metadata$other_keys
   result = NextMethod()
   attributes(x)$metadata$other_keys <- value[match(old_other_keys, old_names)]
-  dplyr::dplyr_reconstruct(result, result)
-}
-
-#' @method group_by epi_df
-#' @rdname print.epi_df
-#' @export
-group_by.epi_df = function(.data, ...) {
-  metadata = attributes(.data)$metadata
-  .data = NextMethod()
-  reclass(.data, metadata)
-}
-
-#' @method ungroup epi_df
-#' @rdname print.epi_df
-#' @export
-ungroup.epi_df = function(x, ...) {
-  metadata = attributes(x)$metadata
-  x = NextMethod()
-  reclass(x, metadata)
+  dplyr::dplyr_reconstruct(result, x)
 }
 
 #' @method unnest epi_df
-#' @rdname print.epi_df
-#' @param data The `epi_df` object.
-#' @export
-group_modify.epi_df = function(.data, .f, ..., .keep = FALSE) {
-  dplyr::dplyr_reconstruct(NextMethod(), .data)
-}
-
-#' @method unnest epi_df
-#' @rdname print.epi_df
+#' @rdname basic_s3_for_epi_df
 #' @param data The `epi_df` object.
 #' @export
 unnest.epi_df = function(data, ...) {
+  # XXX This should be updating `other_keys`, but isn't; issue #306.
   dplyr::dplyr_reconstruct(NextMethod(), data)
 }
 
-# Simple reclass function
-reclass = function(x, metadata) {
-  class(x) = unique(c("epi_df", class(x)))
-  attributes(x)$metadata = metadata
-  return(x)
+#' Reinterpretation of `x` as inheriting `subclass` if it doesn't already
+#'
+#' @param x an S3 object
+#' @param subclass string; S3 class name we want to ensure that the result will
+#'   [`base::inherit`]. We call this a "subclass" because we generally expect it
+#'   to be in the beginning or middle of a `class` vector, followed by some
+#'   other S3 class(es). If `x` already inherits this subclass, we return `x`
+#'   unchanged.
+#' @param potential_subsubclasses Optional; character vector: if `class(x)`
+#'   doesn't already include `subclass`, it should be added in the first
+#'   position after all of the `potential_subsubclasses` that appear in
+#'   `class(x)`. This lets us control the order of `subclass` relative to
+#'   "base"-like classes such as `"tbl_df"` and other wrapper classes like
+#'   `"grouped_df"`. Will be ignored if `subclass` is already in `class(x)`.
+#' @return object that inherits `subclass`
+as_inheriting = function(x, subclass, potential_subsubclasses=character(0L)) {
+  if(inherits(x, subclass)) {
+    return(x)
+  } else {
+    insertion_index =
+      max(0L, match(potential_subsubclasses, class(x)), na.rm = TRUE) + 1L
+    result = x
+    class(result) <- c(
+      class(x)[seq_len(insertion_index - 1L)],
+      subclass,
+      class(x)[insertion_index - 1L +
+                 seq_len(length(class(x)) - insertion_index + 1L)]
+    )
+    return(result)
+  }
 }
+
+#' Simple reclass function for `epi_df`
+#'
+#' @param x Object to reclass to `epi_df`
+#' @param metadata List; `epi_df` metadata to assign
+#' @param potential_subsubclasses As in [`as_inheriting`]
+#' @return An `epi_df`
+#'
+#' @noRd
+reclass_epi_df = function(x, metadata, potential_subsubclasses=character(0L)) {
+  result = as_inheriting(x, "epi_df", potential_subsubclasses)
+  attributes(result)$metadata = metadata
+  return(result)
+}
+
