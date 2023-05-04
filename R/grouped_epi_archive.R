@@ -443,12 +443,11 @@ grouped_epi_archive =
             # XXX We need to work out when we want to return an `epi_df` and how
             # to get appropriate keys (see #290, #223, #163). We'll probably
             # need the commented-out code above if we ever output an `epi_df`.
-            # However, as a stopgap measure to have consistency when grouping by
-            # `geo_value` or not, and to prevent `epi_df` output with invalid
-            # `geo_type` or `other_keys`, always output a tibble.
-            #
-            # For consistency with `reframe`, this should always be ungrouped.
-            x <- as_tibble(x)
+            # However, as a stopgap measure to have some more consistency across
+            # different ways of calling `epix_slide`, and to prevent `epi_df`
+            # output with invalid metadata, always output a (grouped or
+            # ungrouped) tibble.
+            x <- decay_epi_df(x)
 
             return(x)
           }

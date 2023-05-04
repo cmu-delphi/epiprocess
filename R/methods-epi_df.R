@@ -4,9 +4,7 @@
 #' @importFrom tibble as_tibble
 #' @export
 as_tibble.epi_df = function(x, ...) {
-  result = NextMethod()
-  attr(result, "metadata") <- NULL
-  return(result)
+  decay_epi_df(NextMethod())
 }
 
 #' Convert to tsibble format

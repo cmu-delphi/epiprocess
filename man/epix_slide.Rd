@@ -129,14 +129,16 @@ essential \code{geo_value} column. (With \code{all_versions=TRUE}, \code{epix_sl
 will provide an \code{epi_archive} rather than an \code{epi-df} to each
 computation.)
 \item The output class and columns are similar but different: \code{epix_slide()}
-returns an ungrouped tibble containing only the grouping variables,
-\code{time_value}, and the new column(s) from the slide computations, whereas
-\code{epi_slide()} returns an \code{epi_df}, retaining groupings, with all original
-variables plus the new columns from the slide computations.
+returns a tibble containing only the grouping variables, \code{time_value}, and
+the new column(s) from the slide computations, whereas \code{epi_slide()}
+returns an \code{epi_df} with all original variables plus the new columns from
+the slide computations. (Both will mirror the grouping or ungroupedness of
+their input, with one exception: \code{epi_archive}s can have trivial
+(zero-variable) groupings, but these will be dropped in \code{epix_slide}
+results as they are not supported by tibbles.)
 \item There are no size stability checks or element/row recycling to maintain
 size stability in \code{epix_slide}, unlike in \code{epi_slide}. (\code{epix_slide} is
-roughly analogous to \code{\link[dplyr:reframe]{dplyr::reframe}} in \code{dplyr} 1.1.0
-or\code{\link[dplyr:summarise]{dplyr::summarize}} in \code{dplyr} 1.0.0, while \code{epi_slide} is roughly
+roughly analogous to \code{\link[dplyr:group_map]{dplyr::group_modify}}, while \code{epi_slide} is roughly
 analogous to \code{dplyr::mutate} followed by \code{dplyr::arrange}) This is detailed
 in the "advanced" vignette.
 \item \code{all_rows} is not supported in \code{epix_slide}; since the slide
@@ -184,7 +186,8 @@ archive_cases_dv_subset \%>\%
   epix_slide(f = ~ mean(.x$case_rate_7d_av),
              before = 2,
              ref_time_values = ref_time_values,
-             new_col_name = 'case_rate_7d_av_recent_av')
+             new_col_name = 'case_rate_7d_av_recent_av') \%>\%
+  ungroup()
 # We requested time windows that started 2 days before the corresponding time
 # values. The actual number of `time_value`s in each computation depends on
 # the reporting latency of the signal and `time_value` range covered by the
@@ -220,6 +223,7 @@ archive_cases_dv_subset \%>\%
     },
     before = 2, all_versions = TRUE,
     ref_time_values = ref_time_values, names_sep=NULL) \%>\%
+  ungroup() \%>\%
   arrange(geo_value, time_value)
 
 }
