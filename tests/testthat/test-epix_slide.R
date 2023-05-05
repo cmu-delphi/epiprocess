@@ -198,7 +198,7 @@ test_that("epix_slide with all_versions option has access to all older versions"
   # `waldo` package:
   testthat::local_edition(3)
 
-  slide_fn <- function(x, g) {
+  slide_fn <- function(x, g, t) {
     return(tibble(n_versions = length(unique(x$DT$version)),
                   n_row = nrow(x$DT),
                   dt_class1 = class(x$DT)[[1L]],
@@ -248,7 +248,7 @@ test_that("as_of and epix_slide with long enough window are compatible", {
 
   # For all_versions = FALSE:
 
-  f1 = function(x, g) {
+  f1 = function(x, g, t) {
     tibble(
       diff_mean = mean(diff(x$binary))
     )
@@ -262,11 +262,11 @@ test_that("as_of and epix_slide with long enough window are compatible", {
 
   # For all_versions = TRUE:
 
-  f2 = function(x, g) {
+  f2 = function(x, g, t) {
     x %>%
       # extract time&version-lag-1 data:
       epix_slide(
-        function(subx, subg) {
+        function(subx, subg, t) {
           tibble(data = list(
             subx %>%
               filter(time_value == attr(subx, "metadata")$as_of - 1) %>%
@@ -306,7 +306,7 @@ test_that("as_of and epix_slide with long enough window are compatible", {
 })
 
 test_that("epix_slide `f` is passed an ungrouped `epi_archive`", {
-  slide_fn <- function(x, g) {
+  slide_fn <- function(x, g, t) {
     expect_true(is_epi_archive(x))
     return(NA)
   }
@@ -350,10 +350,10 @@ test_that("epix_slide with all_versions option works as intended", {
 })
 
 test_that("epix_slide alerts if the provided f doesn't take enough args", {
-  f_xg = function(x, g) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
+  f_xgt = function(x, g, t) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
   # If `regexp` is NA, asserts that there should be no errors/messages.
-  expect_error(epix_slide(xx, f = f_xg, before = 2L), regexp = NA)
-  expect_warning(epix_slide(xx, f = f_xg, before = 2L), regexp = NA)
+  expect_error(epix_slide(xx, f = f_xgt, before = 2L), regexp = NA)
+  expect_warning(epix_slide(xx, f = f_xgt, before = 2L), regexp = NA)
 
   f_x_dots = function(x, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
   expect_warning(epix_slide(xx, f_x_dots, before = 2L),
