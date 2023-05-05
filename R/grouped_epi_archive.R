@@ -115,11 +115,11 @@ grouped_epi_archive =
           cat("Public `grouped_epi_archive` R6 methods:\n")
           grouped_method_names = names(grouped_epi_archive$public_methods)
           ungrouped_method_names = names(epi_archive$public_methods)
-          writeLines(wrap_varnames(initial = "• Specialized `epi_archive` methods: ",
+          writeLines(wrap_varnames(initial = "\u2022 Specialized `epi_archive` methods: ",
                                    intersect(grouped_method_names, ungrouped_method_names)))
-          writeLines(wrap_varnames(initial = "• Exclusive to `grouped_epi_archive`: ",
+          writeLines(wrap_varnames(initial = "\u2022 Exclusive to `grouped_epi_archive`: ",
                                    setdiff(grouped_method_names, ungrouped_method_names)))
-          writeLines(wrap_varnames(initial = "• `ungroup` to use: ",
+          writeLines(wrap_varnames(initial = "\u2022 `ungroup` to use: ",
                                    setdiff(ungrouped_method_names, grouped_method_names)))
         }
         # Return self invisibly for convenience in `$`-"pipe":
