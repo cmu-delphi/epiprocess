@@ -280,6 +280,11 @@ grouped_epi_archive =
               if (! (is.atomic(comp_value) || is.data.frame(comp_value))) {
                 Abort("The slide computation must return an atomic vector or a data frame.")
               }
+              if (is.data.frame(comp_value)) {
+                # Wrap in a list so that we get a list-type col rather than a
+                # data.frame-type col when `as_list_col = TRUE`:
+                comp_value <- list(comp_value)
+              }
               
               # Label every result row with the `ref_time_value`:
               return(tibble::tibble(time_value = .env$ref_time_value,
