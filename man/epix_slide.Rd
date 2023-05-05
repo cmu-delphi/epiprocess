@@ -214,7 +214,7 @@ archive_cases_dv_subset \%>\%
 archive_cases_dv_subset \%>\%
   group_by(geo_value) \%>\%
   epix_slide(
-    function(x, g) {
+    function(x, gk, rtv) {
       tibble(
         versions_end = max(x$versions_end),
         time_range = if(nrow(x$DT) == 0L) {

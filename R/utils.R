@@ -153,7 +153,7 @@ check_sufficient_f_args <- function(f, n_mandatory_f_args = 2L) {
 #'   place of `.y`, and `.ref_time_value` can be used in place of `.z`. This
 #'   allows you to create very compact anonymous functions (lambdas) with up
 #'   to two inputs. Functions created from formulas have a special class. Use
-#'   `is_lambda()` to test for it.
+#'   `rlang::is_lambda()` to test for it.
 #'
 #'   If a **string**, the function is looked up in `env`. Note that
 #'   this interface is strictly for user convenience because of the
@@ -174,10 +174,6 @@ check_sufficient_f_args <- function(f, n_mandatory_f_args = 2L) {
 #'
 #' h <- as_slide_computation(~ .x - .group_key)
 #' h(6, 3)
-#'
-#' # Functions created from a formula have a special class:
-#' is_lambda(f)
-#' is_lambda(as_slide_computation(function() "foo"))
 #'
 #' @importFrom rlang check_dots_empty0 is_function is_quosure eval_tidy call2
 #'  quo_get_env new_function pairlist2 f_env is_environment missing_arg f_rhs

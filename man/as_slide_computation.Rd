@@ -24,7 +24,7 @@ placeholder can be used instead of \code{.x}, \code{.group_key} can be used in
 place of \code{.y}, and \code{.ref_time_value} can be used in place of \code{.z}. This
 allows you to create very compact anonymous functions (lambdas) with up
 to two inputs. Functions created from formulas have a special class. Use
-\code{is_lambda()} to test for it.
+\code{rlang::is_lambda()} to test for it.
 
 If a \strong{string}, the function is looked up in \code{env}. Note that
 this interface is strictly for user convenience because of the
@@ -46,12 +46,13 @@ mentioned in error messages as the source of the error. See the
 \code{call} argument of \code{\link[rlang:abort]{abort()}} for more information.}
 }
 \description{
-\code{as_function()} transforms a one-sided formula into a function.
+\code{as_slide_computation()} transforms a one-sided formula into a function.
 This powers the lambda syntax in packages like purrr.
 
 This is an extension of \code{rlang::as_function} that can create functions that
 take three arguments. The arugments can be accessed via the idiomatic
-\code{.x}, \code{.y}, etc and also by \code{slide}-specific names.
+\code{.x}, \code{.y}, etc, positional references (\code{..1}, \code{..2}, etc), and also by
+\code{slide}-specific names.
 }
 \examples{
 f <- as_slide_computation(~ .x + 1)
@@ -62,9 +63,5 @@ g(4)
 
 h <- as_slide_computation(~ .x - .group_key)
 h(6, 3)
-
-# Functions created from a formula have a special class:
-is_lambda(f)
-is_lambda(as_slide_computation(function() "foo"))
 
 }

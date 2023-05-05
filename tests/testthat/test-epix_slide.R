@@ -198,7 +198,7 @@ test_that("epix_slide with all_versions option has access to all older versions"
   # `waldo` package:
   testthat::local_edition(3)
 
-  slide_fn <- function(x, g, t) {
+  slide_fn <- function(x, gk, rtv) {
     return(tibble(n_versions = length(unique(x$DT$version)),
                   n_row = nrow(x$DT),
                   dt_class1 = class(x$DT)[[1L]],
@@ -248,7 +248,7 @@ test_that("as_of and epix_slide with long enough window are compatible", {
 
   # For all_versions = FALSE:
 
-  f1 = function(x, g, t) {
+  f1 = function(x, gk, rtv) {
     tibble(
       diff_mean = mean(diff(x$binary))
     )
@@ -262,11 +262,11 @@ test_that("as_of and epix_slide with long enough window are compatible", {
 
   # For all_versions = TRUE:
 
-  f2 = function(x, g, t) {
+  f2 = function(x, gk, rtv) {
     x %>%
       # extract time&version-lag-1 data:
       epix_slide(
-        function(subx, subg, t) {
+        function(subx, subgk, rtv) {
           tibble(data = list(
             subx %>%
               filter(time_value == attr(subx, "metadata")$as_of - 1) %>%
@@ -306,7 +306,7 @@ test_that("as_of and epix_slide with long enough window are compatible", {
 })
 
 test_that("epix_slide `f` is passed an ungrouped `epi_archive`", {
-  slide_fn <- function(x, g, t) {
+  slide_fn <- function(x, gk, rtv) {
     expect_true(is_epi_archive(x))
     return(NA)
   }
