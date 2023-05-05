@@ -9,10 +9,16 @@ inter-release development versions will include an additional ".9999" suffix.
 * `epix_slide` has been made more like `dplyr::group_modify`. It will no longer
   perform element/row recycling for size stability, accepts slide computation
   outputs containing any number of rows, and no longer supports `all_rows`.
+  * To keep the old behavior, manually perform row recycling within `f`
+    computations, and/or `left_join` a data frame representing the desired
+    output structure with the current `epix_slide()` result to obtain the
+    desired repetitions and completions expected with `all_rows = TRUE`.
 * `epix_slide` will only output grouped or ungrouped tibbles. Previously, it
   would sometimes output `epi_df`s, but not consistently, and not always with
   the metadata desired. Future versions will revisit this design, and consider
   more closely whether/when/how to output an `epi_df`.
+  * To keep the old behavior, convert the output of `epix_slide()` to `epi_df`
+    when desired and set the metadata appropriately.
 
 # epiprocess 0.6.0
 
