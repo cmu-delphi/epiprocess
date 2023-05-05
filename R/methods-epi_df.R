@@ -206,7 +206,9 @@ ungroup.epi_df = function(x, ...) {
 
 #' @method group_modify epi_df
 #' @rdname print.epi_df
-#' @param data The `epi_df` object.
+#' @param .data The `epi_df` object.
+#' @param .f function or formula; see [`dplyr::group_modify`]
+#' @param .keep Boolean; see [`dplyr::group_modify`]
 #' @export
 group_modify.epi_df = function(.data, .f, ..., .keep = FALSE) {
   dplyr::dplyr_reconstruct(NextMethod(), .data)
