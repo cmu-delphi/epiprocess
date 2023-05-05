@@ -1,9 +1,17 @@
-#' Convert to tibble, dropping metadata
-#' @rdname print.epi_df
+#' Convert to tibble
+#'
+#' Converts an `epi_df` object into a tibble, dropping metadata and any
+#' grouping.
+#'
+#' @param x an `epi_df`
+#' @param ... arguments to forward to `NextMethod()`
 #'
 #' @importFrom tibble as_tibble
 #' @export
 as_tibble.epi_df = function(x, ...) {
+  # Decaying drops the class and metadata. `as_tibble.grouped_df` drops the
+  # grouping and should be called by `NextMethod()` in the current design.
+  # See #223 for discussion of alternatives.
   decay_epi_df(NextMethod())
 }
 
