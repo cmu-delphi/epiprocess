@@ -137,3 +137,15 @@ test_that("check_sufficient_f_args alerts if the provided f doesn't take enough 
     regexp = "`f` must take at least",
     class = "check_sufficient_f_args__f_needs_min_args")
 })
+
+test_that("computation formula-derived functions take all argument types", {
+  # positional
+  expect_identical(as_slide_computation(~ ..2 + ..3)(1, 2, 3), 5)
+  expect_identical(as_slide_computation(~ ..1)(1, 2, 3), 1)
+  # Matching rlang, purr, dplyr usage
+  expect_identical(as_slide_computation(~ .x + .z)(1, 2, 3), 4)
+  expect_identical(as_slide_computation(~ .x + .y)(1, 2, 3), 3)
+  # named
+  expect_identical(as_slide_computation(~ . + .ref_time_value)(1, 2, 3), 4)
+  expect_identical(as_slide_computation(~ .group_key)(1, 2, 3), 2)
+})
