@@ -109,31 +109,31 @@ test_that("enlist works",{
   expect_true(inherits(my_list,"list"))
 })
 
-test_that("check_sufficient_f_args alerts if the provided f doesn't take enough args", {
+test_that("assert_sufficient_f_args alerts if the provided f doesn't take enough args", {
   f_xg = function(x, g) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
   f_xg_dots = function(x, g, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
 
   # If `regexp` is NA, asserts that there should be no errors/messages.
-  expect_error(check_sufficient_f_args(f_xg), regexp = NA)
-  expect_warning(check_sufficient_f_args(f_xg), regexp = NA)
-  expect_error(check_sufficient_f_args(f_xg_dots), regexp = NA)
-  expect_warning(check_sufficient_f_args(f_xg_dots), regexp = NA)
+  expect_error(assert_sufficient_f_args(f_xg), regexp = NA)
+  expect_warning(assert_sufficient_f_args(f_xg), regexp = NA)
+  expect_error(assert_sufficient_f_args(f_xg_dots), regexp = NA)
+  expect_warning(assert_sufficient_f_args(f_xg_dots), regexp = NA)
 
   f_x_dots = function(x, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
   f_dots = function(...) dplyr::tibble(value=c(5), count=c(2))
   f_x = function(x) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
   f = function() dplyr::tibble(value=c(5), count=c(2))
 
-  expect_warning(check_sufficient_f_args(f_x_dots),
+  expect_warning(assert_sufficient_f_args(f_x_dots),
     regexp = "positional arguments before the `...` args",
-    class = "check_sufficient_f_args__f_needs_min_args_before_dots")
-  expect_warning(check_sufficient_f_args(f_dots),
+    class = "epiprocess__check_sufficient_f_args__f_needs_min_args_before_dots")
+  expect_warning(assert_sufficient_f_args(f_dots),
     regexp = "positional arguments before the `...` args",
-    class = "check_sufficient_f_args__f_needs_min_args_before_dots")
-  expect_error(check_sufficient_f_args(f_x),
+    class = "epiprocess__check_sufficient_f_args__f_needs_min_args_before_dots")
+  expect_error(assert_sufficient_f_args(f_x),
     regexp = "`f` must take at least",
-    class = "check_sufficient_f_args__f_needs_min_args")
-  expect_error(check_sufficient_f_args(f),
+    class = "epiprocess__check_sufficient_f_args__f_needs_min_args")
+  expect_error(assert_sufficient_f_args(f),
     regexp = "`f` must take at least",
-    class = "check_sufficient_f_args__f_needs_min_args")
+    class = "epiprocess__check_sufficient_f_args__f_needs_min_args")
 })

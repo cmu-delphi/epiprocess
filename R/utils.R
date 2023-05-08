@@ -100,30 +100,30 @@ paste_lines = function(lines) {
 Abort = function(msg, ...) rlang::abort(break_str(msg, init = "Error: "), ...)
 Warn = function(msg, ...) rlang::warn(break_str(msg, init = "Warning: "), ...)
 
-#' Check that a sliding computation function takes enough args
+#' Assert that a sliding computation function takes enough args
 #'
 #' @param f Function; specifies a computation to slide over an `epi_df` or
 #'  `epi_archive` in `epi_slide` or `epix_slide`.
 #'
 #' @noRd
-check_sufficient_f_args <- function(f) {
+assert_sufficient_f_args <- function(f) {
   n_mandatory_f_args <- 2
   arg_names = names(formals(args(f)))
   if ("..." %in% arg_names) {
     # Keep all arg names before `...`
     dots_i <- which(arg_names == "...")
-    arg_names <- arg_names[seq_len(dots_i - 1)]
+    arg_names_before_dots <- arg_names[seq_len(dots_i - 1)]
 
-    if (length(arg_names) < n_mandatory_f_args) {
-      Warn(sprintf("`f` only takes %s positional arguments before the `...` args, but %s were expected; this can lead to obtuse errors downstream", length(arg_names), n_mandatory_f_args),
-          class="check_sufficient_f_args__f_needs_min_args_before_dots",
+    if (length(arg_names_before_dots) < n_mandatory_f_args) {
+      Warn(sprintf("`f` only takes %s positional arguments before the `...` args, but `epi[x]_slide` will call it with at least %s positional arguments; if `f` doesn't expect those arguments, it may produce confusing error messages", length(arg_names), n_mandatory_f_args),
+           class="epiprocess__check_sufficient_f_args__f_needs_min_args_before_dots",
           epiprocess__f = f,
-          epiprocess__arg_names = arg_names)
+          epiprocess__arg_names_before_dots = arg_names_before_dots)
     }
   } else {
     if (length(arg_names) < n_mandatory_f_args) {
       Abort(sprintf("`f` must take at least %s arguments", n_mandatory_f_args),
-          class="check_sufficient_f_args__f_needs_min_args",
+          class="epiprocess__check_sufficient_f_args__f_needs_min_args",
           epiprocess__f = f,
           epiprocess__arg_names = arg_names)
     }
