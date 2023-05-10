@@ -116,14 +116,14 @@ assert_sufficient_f_args <- function(f) {
 
     if (length(arg_names_before_dots) < n_mandatory_f_args) {
       Warn(sprintf("`f` only takes %s positional arguments before the `...` args, but `epi[x]_slide` will call it with at least %s positional arguments; if `f` doesn't expect those arguments, it may produce confusing error messages", length(arg_names), n_mandatory_f_args),
-           class="epiprocess__check_sufficient_f_args__f_needs_min_args_before_dots",
+           class="epiprocess__assert_sufficient_f_args__f_needs_min_args_before_dots",
           epiprocess__f = f,
           epiprocess__arg_names_before_dots = arg_names_before_dots)
     }
   } else {
     if (length(arg_names) < n_mandatory_f_args) {
       Abort(sprintf("`f` must take at least %s arguments", n_mandatory_f_args),
-          class="epiprocess__check_sufficient_f_args__f_needs_min_args",
+          class="epiprocess__assert_sufficient_f_args__f_needs_min_args",
           epiprocess__f = f,
           epiprocess__arg_names = arg_names)
     }

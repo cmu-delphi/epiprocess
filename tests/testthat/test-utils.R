@@ -126,14 +126,14 @@ test_that("assert_sufficient_f_args alerts if the provided f doesn't take enough
 
   expect_warning(assert_sufficient_f_args(f_x_dots),
     regexp = "positional arguments before the `...` args",
-    class = "epiprocess__check_sufficient_f_args__f_needs_min_args_before_dots")
+    class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_before_dots")
   expect_warning(assert_sufficient_f_args(f_dots),
     regexp = "positional arguments before the `...` args",
-    class = "epiprocess__check_sufficient_f_args__f_needs_min_args_before_dots")
+    class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_before_dots")
   expect_error(assert_sufficient_f_args(f_x),
     regexp = "`f` must take at least",
-    class = "epiprocess__check_sufficient_f_args__f_needs_min_args")
+    class = "epiprocess__assert_sufficient_f_args__f_needs_min_args")
   expect_error(assert_sufficient_f_args(f),
     regexp = "`f` must take at least",
-    class = "epiprocess__check_sufficient_f_args__f_needs_min_args")
+    class = "epiprocess__assert_sufficient_f_args__f_needs_min_args")
 })
