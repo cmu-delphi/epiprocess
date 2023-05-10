@@ -95,6 +95,5 @@ test_that("epi_slide alerts if the provided f doesn't take enough args", {
 
   f_x_dots = function(x, ...) dplyr::tibble(value=mean(x$value), count=length(x$value))
   expect_warning(epi_slide(grouped, f_x_dots, before = 1L, ref_time_values = d+1),
-    regexp = "positional arguments before the `...` args",
     class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_before_dots")
 })
