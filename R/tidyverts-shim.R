@@ -1,4 +1,3 @@
-# standins to remove dependencies on parts of tidyverts
 get_period <- function(x, ...) {
   UseMethod("get_period")
 }
@@ -42,7 +41,7 @@ get_period.Date <- function(x, ...) {
 }
 
 create_seasonal_period <- function(x, time_value, ...) {
-  if (is.null(x)) return(get_period(edf))
+  if (is.null(x)) return(get_period(time_value))
   if (is.character(x)) {
     xx <- lubridate::as.period(x)
     if (is.na(xx)) Abort(paste("Unknown period:", x))

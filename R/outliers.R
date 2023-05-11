@@ -323,15 +323,19 @@ roll_iqr = function(z, n, detection_multiplier, min_radius,
   if (typeof(z$y) == "integer") as_type = as.integer
   else as_type = as.numeric
 
-  epi_slide(z, roll_iqr = stats::IQR(resid), before = floor((n-1)/2), after = ceiling((n-1)/2)) %>%
+  z %>%
+    epi_slide(
+      roll_iqr = stats::IQR(resid), 
+      before = floor((n - 1) / 2), 
+      after = ceiling((n - 1) / 2)) %>%
     dplyr::mutate(
       lower = pmax(min_lower,
                    fitted - pmax(min_radius, detection_multiplier * roll_iqr)),
       upper = fitted + pmax(min_radius, detection_multiplier * roll_iqr),
       replacement = dplyr::case_when(
-      (y < lower) ~ as_type(fitted - replacement_multiplier * roll_iqr),
-      (y > upper) ~ as_type(fitted + replacement_multiplier * roll_iqr),
-      TRUE ~ y)) %>%
+        (y < lower) ~ as_type(fitted - replacement_multiplier * roll_iqr),
+        (y > upper) ~ as_type(fitted + replacement_multiplier * roll_iqr),
+        TRUE ~ y)) %>%
     dplyr::select(lower, upper, replacement) %>%
     tibble::as_tibble()
 }
