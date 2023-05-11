@@ -105,10 +105,14 @@ Warn = function(msg, ...) rlang::warn(break_str(msg, init = "Warning: "), ...)
 #' @param f Function; specifies a computation to slide over an `epi_df` or
 #'  `epi_archive` in `epi_slide` or `epix_slide`.
 #'
+#' @importFrom rlang is_missing
+#' @importFrom purrr map_lgl
+#'
 #' @noRd
 assert_sufficient_f_args <- function(f) {
   n_mandatory_f_args <- 2
-  arg_names = names(formals(args(f)))
+  args_f = formals(args(f))
+  arg_names = names(args_f)
   if ("..." %in% arg_names) {
     # Keep all arg names before `...`
     dots_i <- which(arg_names == "...")
@@ -127,6 +131,18 @@ assert_sufficient_f_args <- function(f) {
           epiprocess__f = f,
           epiprocess__arg_names = arg_names)
     }
+  }
+  # If `f` has fewer than n_mandatory_f_args before `...`, then we only need
+  # to check those args for defaults.
+  n_args_before_dots = min(
+    ifelse(exists("arg_names_before_dots"), length(arg_names_before_dots), n_mandatory_f_args),
+    n_mandatory_f_args
+  )
+  if ( any(map_lgl(args_f[seq(n_args_before_dots)], ~!is_missing(.x))) ) {
+      Abort(sprintf("Some of `f`'s first %s arguments use defaults that would be overridden when calling `f` to run the computation", n_args_before_dots),
+          class="epiprocess__assert_sufficient_f_args__required_args_contain_defaults",
+          epiprocess__f = f,
+          epiprocess__args_f = args_f)
   }
 }
 
