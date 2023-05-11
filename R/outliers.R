@@ -251,7 +251,7 @@ detect_outlr_rm = function(x = seq_along(y), y, n = 21,
 #' @examples
 #' # Detects outliers based on a seasonal-trend decomposition using LOESS
 #' incidence_num_outlier_example %>%
-#'   dplyr::select(geo_value,time_value,cases) %>%
+#'   dplyr::select(geo_value, time_value, cases) %>%
 #'   as_epi_df() %>%
 #'   group_by(geo_value) %>%
 #'   mutate(outlier_info  = detect_outlr_stl(
@@ -275,33 +275,22 @@ detect_outlr_stl = function(x = seq_along(y), y,
     offset = as.integer(any(y == 0))
     y = log(y + offset)
   }
-
-  # Make a tsibble for fabletools, setup and run STL
-  z_tsibble = tsibble::tsibble(x = x, y = y, index = x)
-
-  stl_formula = y ~ trend(window = n_trend) +
-    season(period = seasonal_period, window = n_seasonal)
-
-  stl_components = z_tsibble %>%
-    fabletools::model(feasts::STL(stl_formula, robust = TRUE)) %>%
-    generics::components() %>%
+  
+  frequency <- create_seasonal_period(seasonal_period, x)
+  
+  yts <- ts(y, frequency = frequency)
+  stl_comp <- stats::stl(yts, t.window = n_trend, s.window = n_seasonal,
+                         robust = TRUE)$time.series %>%
     tibble::as_tibble() %>%
-    dplyr::select(trend:remainder) %>%
-    dplyr::rename_with(~ "seasonal", tidyselect::starts_with("season")) %>%
     dplyr::rename(resid = remainder)
-
+  
   # Allocate the seasonal term from STL to either fitted or resid
   if (!is.null(seasonal_period)) {
-    stl_components = stl_components %>%
-      dplyr::mutate(
-        fitted = trend + seasonal)
+    stl_comp <- dplyr::mutate(stl_comp, fitted = trend + seasonal)
   } else {
-    stl_components = stl_components %>%
-      dplyr::mutate(
-        fitted = trend,
-        resid = seasonal + resid)
+    stl_comp <- dplyr::mutate(stl_comp, fitted = trend, resid = seasonal + resid)
   }
-
+  
   # Detect negatives if requested
   if (detect_negatives && !log_transform) min_lower = 0
   else min_lower = -Inf
@@ -311,9 +300,7 @@ detect_outlr_stl = function(x = seq_along(y), y,
 
   # Calculate lower and upper thresholds and replacement value
   z = z %>%
-    dplyr::mutate(
-      fitted = stl_components$fitted,
-      resid = stl_components$resid) %>%
+    dplyr::mutate(fitted = stl_comp$fitted, resid = stl_comp$resid) %>%
     roll_iqr(n = n_threshold,
              detection_multiplier = detection_multiplier,
              min_radius = min_radius,
@@ -348,3 +335,4 @@ roll_iqr = function(z, n, detection_multiplier, min_radius,
     dplyr::select(lower, upper, replacement) %>%
     tibble::as_tibble()
 }
+

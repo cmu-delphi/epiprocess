@@ -24,8 +24,6 @@ License: MIT + file LICENSE
 Imports: 
     data.table,
     dplyr (>= 1.0.0),
-    fabletools,
-    feasts,
     generics,
     genlasso,
     lifecycle (>= 1.0.1),
@@ -61,7 +59,7 @@ Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Depends: 
     R (>= 2.10)
 URL: https://cmu-delphi.github.io/epiprocess/
@@ -78,5 +76,6 @@ Collate:
     'outliers.R'
     'reexports.R'
     'slide.R'
+    'tidyverts-shim.R'
     'utils.R'
     'utils_pipe.R'
