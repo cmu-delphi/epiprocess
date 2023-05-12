@@ -305,6 +305,10 @@ forecaster_output = training_and_testing_edf %>%
       )
   )
 
+# FIXME this works for backcasting revisions to the most recent value available,
+# but will be predicting the wrong aheads if we were trying to forecast 14/7
+# days beyond the `forecast_date` (since we shifted `admissions`).
+
 
 library(ggplot2)
 training_and_testing_edf %>%
