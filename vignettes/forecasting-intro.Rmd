@@ -1,0 +1,215 @@
+```{r}
+# if (Sys.getenv("GITHUB_PAT") == "") {
+#   warning("If you have trouble with `renv` restoration, please set GITHUB_PAT in a `.Renviron` file (see `help(.Rprofile)` for the format and possible locations) and make sure it's .gitignore'd / not shared.")
+# }
+# # Initial setup to get `renv::restore()` to fetch the desired versions for
+# # this demo; doesn't need to be re-run as it's recorded in the `.Rprofile` and
+# # `renv.lock` files and `renv` directory. Instead, to initialize or
+# # synchronize these dependencies with the lockfile, just `renv::restore()`.
+# # Between these updates, the `.Rprofile` will take care of actually using the
+# # `renv` to source the dependencies.
+#
+# install.packages("renv")
+# renv::init()
+# renv::install("tidyverse")
+# renv::install("MMWRweek")
+# renv::install("reconverse/outbreaks")
+# renv::install("cmu-delphi/epidatr")
+# renv::install("cmu-delphi/epiprocess@953717fd2ad6317d130a8cabeaf3d6040aebb59a")
+# renv::install("cmu-delphi/epipredict")
+# renv::snapshot() # for this to record dependencies, we may need to actually
+#                  # use them below or put them in a DESCRIPTION file
+```
+
+Fetch data:
+```{r}
+library(tidyverse)
+library(magrittr)
+library(MMWRweek)
+library(epidatr)
+library(epiprocess)
+library(epipredict)
+
+# flusurv_analysis_issue = MMWRweek(as.Date("2023-04-05") - 7L) %>%
+#   {.$MMWRyear*100L + .$MMWRweek}
+# flusurv_issue_data_path = "flusurv_issue_data.rds"
+# if (!file.exists(flusurv_issue_data_path)) {
+#   flusurv_issue_data =
+#     flusurv("network_all",
+#             epiweeks=epirange(123401, 345601),
+#             issues=epirange(123401, flusurv_analysis_issue)) %>%
+#     fetch_tbl()
+#   saveRDS(flusurv_issue_data, flusurv_issue_data_path)
+#   writeLines("......", "LICENSE_flusurv_data.txt")
+# } else {
+#   flusurv_issue_data = readRDS(flusurv_issue_data)
+# }
+
+ga_hhs_analysis_issue = as.Date("2023-04-05") - 2L
+ga_hhs_issue_data_path = "ga_hhs_issue_data.rds"
+if (!file.exists(ga_hhs_issue_data_path)) {
+  ga_hhs_issue_data =
+    covidcast(
+      "ga_hhs", "confirmed_admissions_influenza_1d",
+      geo_type = "state", time_type = "day",
+      # TODO explain * in comments
+      geo_values = "ga", time_values = "*",
+      issues = "*"
+    ) %>%
+    fetch_tbl()
+  saveRDS(ga_hhs_issue_data, ga_hhs_issue_data_path)
+  writeLines(c("License: Public Domain US Government","Accessed via COVIDcast Epidata API"),
+             "LICENSE_ga_hhs_issue_data.txt")
+} else {
+  ga_hhs_issue_data = readRDS(ga_hhs_issue_data_path)
+}
+# TODO use, e.g., cachem.  And explain why caching.
+```
+
+Convert to `epi_archive` format:
+```{r}
+ga_hhs_archive = ga_hhs_issue_data %>%
+  select(geo_value, time_value, version = issue, admissions = value) %>%
+  as_epi_archive(compactify = TRUE)
+```
+
+Experiment with AR forecaster on latest data (as of the analysis issue):
+```{r}
+ga_hhs_latest_raw = ga_hhs_archive %>%
+  epix_as_of(.$versions_end)
+ga_hhs_latest_raw
+```
+(Note that this is in the `epi_df` format.)
+
+We forgot about the period in 2020 with a lot of NAs and a few low values (in a
+few states) in the HHS Protect data. We could adjust `time_values` above to
+something like `epirange(20201201, 34560101)` and regenerate the RDS to avoid.
+For now, let's just try filtering them out from the data objects as needed. Some
+NA filtering is automatic in epipredict; this is just an extra precaution that
+some atypical low values don't somehow make their way into the training set.
+
+```{r}
+hhs_start_time_value = as.Date("2020-12-01")
+
+ga_hhs_latest_processed = ga_hhs_latest_raw %>%
+  filter(time_value >= hhs_start_time_value)
+
+ga_hhs_latest_processed %>%
+  ggplot(aes(time_value, admissions)) %>%
+  `+`(geom_line())
+```
+
+Using a canned forecaster:
+```{r}
+fc_info = arx_forecaster(
+  ga_hhs_latest_processed,
+  outcome = "admissions",
+  predictors = c("admissions"),
+  args_list = arx_args_list(
+    ahead = 14L,
+    forecast_date = attr(edf, "metadata")[["as_of"]]
+    # Use defaults for everything else.
+  )
+)
+fc_info
+```
+TODO consider vignette for covid forecasts daily, another parallel for flu weekly, details on deadlines, etc.
+
+Extracting the forecast:
+```{r}
+fc_info %>%
+  extract2("predictions") %>%
+  mutate(.pred_distn = nested_quantiles(.pred_distn)) %>%
+  unnest(.pred_distn)
+```
+TODO spell out arx_forecaster model a little more
+
+Pseudo-prospective version-unaware forecasting:
+```{r}
+forecast_dates = ga_hhs_analysis_issue - c(14L, 7L, 0L)
+ga_hhs_archive %>%
+  epix_slide(
+    ref_time_values = forecast_dates,
+    before = 365000, # train on all past data
+    as_list_col = TRUE,
+    function(edf, gk) {
+      edf %>%
+        filter(time_value >= hhs_start_time_value) %>%
+        arx_forecaster(
+          outcome = "admissions",
+          predictors = c("admissions"),
+          args_list = arx_args_list(
+            ahead = 14L,
+            forecast_date = attr(edf, "metadata")[["as_of"]]
+            # Use defaults for everything else.
+          )
+        ) %>%
+        extract2("predictions") %>%
+        mutate(.pred_distn = nested_quantiles(.pred_distn)) %>%
+        unnest(.pred_distn)
+    }
+  ) %>%
+  select(-time_value) %>%
+  unnest(slide_value)
+```
+XXX arx_forecaster default to the 23 taus?
+
+Version-aware forecasting:
+```{r}
+forecast_date = ga_hhs_analysis_issue
+
+forecast_date_archive = ga_hhs_archive %>% epix_as_of(forecast_date, all_versions = TRUE)
+forecast_date_edf = forecast_date_archive %>% epix_as_of(.$versions_end)
+forecast_date_latency = as.integer(forecast_date - max(forecast_date_edf$time_value))
+
+training_and_testing_issues_start = max(min(forecast_date_archive$DT$version),
+                                        hhs_start_time_value + 14L)
+training_and_testing_issues = rev(seq(forecast_date, training_and_testing_issues_start, -7))
+
+version_aware_covariates =
+  ga_hhs_archive %>%
+  epix_slide(
+    ref_time_values = training_and_testing_issues,
+    before = forecast_date_latency + 14L, # include just enough to get the lags we want
+    names_sep = NULL,
+    function(edf, gk) {
+      ref_time_value = attr(edf, "metadata")$as_of
+      edf %>%
+        filter(time_value >= hhs_start_time_value) %>%
+        complete(geo_value, time_value = full_seq(c(time_value, ref_time_value), period=1L)) %>%
+        group_by(geo_value) %>%
+        mutate(x1 = lag(admissions, forecast_date_latency +  0L),
+               x2 = lag(admissions, forecast_date_latency +  7L),
+               x3 = lag(admissions, forecast_date_latency + 14L)) %>%
+        ungroup() %>%
+        filter(time_value == ref_time_value) %>%
+        select(geo_value, x1, x2, x3)
+    }
+  )
+
+full_join(version_aware_covariates, forecast_date_edf) %>%
+  as_epi_df(as_of = forecast_date) %>%
+  na.omit() %>%
+  arx_forecaster(
+  outcome = "admissions",
+  predictors = c("x1","x2","x3"),
+  args_list = arx_args_list(
+    lags = 0L,
+    ahead = 14L,
+    forecast_date = forecast_date,
+    # Use defaults for everything else.
+  )
+)
+```
+
+
+
+
+
+
+
+# other notes
+https://cmu-delphi.github.io/epipredict/articles/sliding.html
+- consider warnings with merge locf.  especially if more meaningful amounts like 5 days
+- explain [[1]] / explain `y` object.  port over the better names from derived vignette
+- k_week_ahead -> k_day_ahead

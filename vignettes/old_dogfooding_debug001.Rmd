@@ -1,0 +1,299 @@
+---
+title: Dogfooding `epiprocess` with some data debugging
+date: 2022-10-19
+output: html_document
+---
+
+TODO: compare how things look with slides on `dev` / in PRs
+
+This is an Rmd-ified version/retrospective of some data debugging for the influenza forecasts that went out yesterday.
+
+NOTE: Previously, I saw the primary use cases of `epi_archive` as performing
+      pseudoprospective forecasts and using version data to get more appropriate
+      training sets, but this might also rank up there.
+
+- TODO: evaluate how easy it is to do the former (vs. using `evalcast`). Consider
+  where the `weighted_interval_score` functions should live. Consider ways to
+  simplify querying&merging multiple data sources.
+- Nat is working on tools for the latter.
+
+```{r}
+library(epidatr)
+library(epiprocess) # installed a local version with `ref_time_values` filter removed; issue #153
+library(data.table)
+library(dplyr)
+library(ggplot2)
+```
+
+Fetch hhs data:
+```{r hhs_influenza_tbl, cache=TRUE}
+hhs_influenza_tbl = covidcast(
+  data_source = "hhs",
+  signals = "confirmed_admissions_influenza_1d",
+  time_type = "day",
+  geo_type = "state",
+  time_values = epirange(12340101, 34560101),
+  geo_values = "*",
+  issues = epirange(12340101, 34560101)
+) %>% fetch_tbl()
+
+hhs_influenza_archive = hhs_influenza_tbl %>%
+  rename(version = issue) %>%
+  as_epi_archive()
+```
+Notes:
+
+- `epirange(12340101, 34560101)` pattern: this is a range to cover all dates.
+
+  - MINOR:  Would look better as "*".  I think this is already an issue somewhere.
+  - MINOR: For reproducibility, 34560101 should probably be the date of the analysis or
+    the date before it. A couple awkward things here:
+
+    - `epidatr` / the API let me query version data it didn't have, and
+      repeating this query a week from now will include additional data. This is
+      definitely a bug for `as_of` queries, but for these `issues` queries, it
+      might be debatable.
+
+    - If using the date of the analysis, it's including version data which could
+      be overwritten later in the day, and the analysis might not match later
+      reproductions.
+
+      - Currently we have a (noisy, poorly worded) warning when using the
+        `epi_archive` data for those dates. But the warning wouldn't actually
+        apply to later reproductions when the version data in question has been
+        finalized (barring exceptional circumstances).
+      - We plan to change settings to remove this warning by default, and make
+        it up to the user to change internal archive settings to give a warning
+        if they want it.
+
+- Why a separate `tbl` object?  This is awkward and memory-inefficient.
+
+  - MEDIUM: there's no `filter` or comparable function in `epi_archive`. It
+    feels awkward to have to clone the archive, and overwrite / copy-and-mutate
+    the data table inside (or to extract the data table, filter, and convert
+    back to an `epi_archive`).
+  - MEDIUM: R6 annoyances during development, and for users that save archives
+    and update epiprocess: archive objects include their R6 code; if I load a
+    new version of epiprocess it only affects the S3 wrappers, not the R6
+    methods underneath. This leads to reloading the package appearing to have no
+    affect, and could lead to errors from incompatibilities between updated
+    wrappers and non-updated R6 methods.
+
+```{r}
+ref_time_values = hhs_influenza_archive$DT[as.POSIXlt(version)$wday==1L,unique(version)]
+```
+
+- MAJOR: I ran this on a Monday. I wanted the `ref_time_values` to include that
+  Monday. But `epix_slide` throws it out. I ran on a patched version of
+  epiprocess.
+
+```{r}
+slide_result =
+  hhs_influenza_archive %>%
+  epix_slide(function(edf, grp) {
+    edf %>%
+      mutate(version_lag = attr(., "metadata")$as_of - .data$time_value) %>%
+      group_by(version_lag) %>%
+      summarize(
+        n_zero = sum(!is.na(.data$value) & .data$value == 0L),
+        n_na = sum(is.na(.data$value)),
+        n_nonzero_nonna = n() - .data$n_zero - .data$n_na,
+        n = n(),
+        .groups = "drop"
+      ) %>%
+      {tibble(stats = list(.))}
+  }, n = 60L, group_by=c(), ref_time_values = ref_time_values)
+stats_on_specific_values =
+  slide_result %>%
+  group_by(time_value) %>%
+  slice_head(n = 1L) %>%
+  ungroup() %>%
+  unnest(slide_value_stats) %>%
+  group_by(version_lag) %>%
+  summarize(across(c(n_zero, n_na, n_nonzero_nonna, n), sum),
+            .groups = "drop") %>%
+  mutate(p_zero = .data$n_zero / .data$n,
+         p_na = .data$n_na / .data$n,
+         p_nonzero_nonna = .data$n_nonzero_nonna / .data$n)
+print(stats_on_specific_values, n=100L)
+```
+
+- MAJOR: I struggled to get the computation result in an accepted format. I
+  don't have a record of what all I tried, but some of it was failing to have
+  success with a list-type result. Some was a stupid mistake forgetting to
+  remove the `<column_name> = ` when moving from failing to use that form to
+  providing an `f` function/formula. Some was due to the row count requirement
+  on the computation results, discussed next.
+- MAJOR: computation result output requirements and slide output don't make
+  sense when we don't group by all non-version, non-time key columns. We require
+  the computation output to have either just one row, or one row per distinct
+  combination of the non-grouping, non-time, non-version key columns; however,
+  in the former case, we repeat that single row the latter number of times, but
+  don't attach those non-grouping key columns to the result.
+
+  - In this case, we didn't want that repeating behavior, thus the grouped slice
+    operation.
+  - In fact, we wanted a different number of rows than the expectation, thus the
+    unnesting.
+- MINOR: slide computation wasn't instantaneous. Thus I stored in a
+  `slide_result` object while I tried to figure out the rest of the operations
+  that would be required. (Plus retrying computing the slide result while trying
+  to figure out how to make things work.)
+- MINOR: missing an archive filter function here too, to speed up
+  experimentation / help debugging.
+
+
+```{r}
+hhs_influenza_archive %>%
+  epix_as_of(as.Date("2022-10-17")) %>%
+  filter(.data$geo_value == "nv") %>%
+  select(time_value, value) %>%
+  print(n=2000L)
+```
+- MINOR: missing an archive filter function here too.
+
+```{r}
+stats_on_deltas =
+  hhs_influenza_archive %>%
+  epix_slide(function(edf, grp) {
+    edf %>%
+      arrange(geo_value, time_value) %>%
+      mutate(no_change =
+               lag(.data$time_value) == .data$time_value - 1L &
+               lag(.data$value) == .data$value) %>%
+      group_by(version_lag = as.integer(attr(., "metadata")$as_of - .data$time_value)) %>%
+      summarize(
+        n_no_change = sum(!is.na(.data$no_change) & .data$no_change),
+        n_na_change = sum(is.na(.data$no_change)),
+        n = n(),
+        .groups = "drop"
+      ) %>%
+      {tibble(stats = list(.))}
+  }, n = 60L, group_by=c(), ref_time_values = ref_time_values) %>%
+  group_by(time_value) %>%
+  slice_head(n = 1L) %>%
+  ungroup() %>%
+  unnest(slide_value_stats) %>%
+  group_by(version_lag) %>%
+  summarize(across(starts_with("n"), sum),
+            .groups = "drop") %>%
+  mutate(across(starts_with("n_"), list(prop=~.x/n)))
+print(stats_on_deltas, n=100L)
+```
+
+```{r}
+hhs_influenza_tbl %>%
+  filter(geo_value == "nv") %>%
+  rename(version = issue) %>%
+  as_epi_archive() %>%
+  epix_slide(~ tibble(data=list(.x)), n = 100L,
+             # ref_time_values = seq(as.Date("2022-10-01"), as.Date("2022-10-17"), by="day")) %>%
+             ref_time_values = seq(as.Date("2021-01-01"), as.Date("2022-10-17"), by="day")) %>%
+  transmute(version=time_value, slide_value_data) %>%
+  unnest(slide_value_data) %>%
+  mutate(version_lag = as.integer(version - time_value)) %>%
+  # ggplot(aes(time_value, value, group=version, colour=version)) %>%
+  # `+`(geom_line()) %>%
+  # `+`(scale_colour_continuous(type = "viridis", trans = "date"))
+  # ggplot(aes(time_value, value)) %>%
+  # `+`(geom_line()) %>%
+  # `+`(scale_colour_continuous(type = "viridis")) %>%
+  # `+`(facet_wrap(~ version_lag))
+  filter(time_value >= as.Date("2022-09-01")) %>%
+  ggplot(aes(version, value)) %>%
+  `+`(geom_line()) %>%
+  `+`(scale_colour_continuous(type = "viridis")) %>%
+  `+`(facet_wrap(~ time_value))
+```
+
+- MEDIUM: the `ref_time_values` become the `time_value` column, but I was
+  outputting a (sensible) `time_value` column from the computation.  Munging the column names is a hassle.
+- MINOR: I don't like the `slide_value_`/any name prefix, and no prefix isn't even an option.
+- MINOR: again, missing an archive filter function
+
+Here, I wanted "revision sequences" for some observations in NV.
+```{r}
+hhs_influenza_tbl %>%
+  filter(geo_value == "nv") %>%
+  filter(issue >= as.Date("2022-10-10")) %>%
+  select(issue, time_value, value, lag) %>%
+  arrange(time_value, issue) %>%
+  group_by(time_value) %>%
+  mutate(diff_value = c(NA, diff(value))) %>%
+  ungroup()
+```
+- NOTE: this can't be done with an epi_archive's built-in functions. But I could
+  have just done `hhs_influenza_archive$DT` and used a data table; a separate
+  tibble wasn't required yet.
+
+Try to get a sense of the scale of available data in a couple of locations:
+```{r}
+hhs_influenza_archive %>%
+  epix_as_of(.$versions_end) %>%
+  group_by(geo_value) %>%
+  summarize(tibble(levels = (0:20)/20,
+                   quantiles = quantile(value, levels, na.rm=TRUE))) %>%
+  filter(geo_value %in% c("al", "ar")) %>%
+  print(n=50L)
+```
+
+Compute and plot 7-day sum data:
+```{r}
+hhs_influenza_archive %>%
+  epix_as_of(.$versions_end) %>%
+  filter(geo_value %in% c("al", "ar")) %>%
+  tidyr::complete(geo_value, time_value = tidyr::full_seq(time_value, 1L)) %>%
+  dplyr::group_by(geo_value) %>%
+  dplyr::mutate(value_7dsum = frollsum(value, 7L)) %>%
+  # ggplot(aes(time_value, value)) %>%
+  ggplot(aes(time_value, value_7dsum)) %>%
+  `+`(geom_line()) %>%
+  `+`(facet_wrap(~ geo_value))
+```
+
+- MEDIUM: I had to calculate the 7d sum myself; while this is simple, it's maybe
+  a little tedious, and might be error-prone if there are missing rows. There's
+  no 7d sum in the API. In the future we don't be able to fetch a 7d average
+  issue data either, so that's out for use with `epi_archive`s.
+
+```{r}
+# chng_influenza_tbl = covidcast(
+#   data_source = "chng",
+#   signals = "smoothed_adj_outpatient_flu",
+#   time_type = "day",
+#   geo_type = "state",
+#   time_values = epirange(12340101, 34560101),
+#   geo_values = "*",
+#   issues = epirange(12340101, 34560101)
+# ) %>% fetch_tbl()
+
+# chng_influenza_archive = chng_influenza_tbl %>%
+#   rename(version = issue) %>%
+#   as_epi_archive()
+```
+
+```{r}
+# chng_influenza_tbl %>%
+#   filter(geo_value == "nv") %>%
+#   rename(version = issue) %>%
+#   as_epi_archive() %>%
+#   epix_slide(~ tibble(data=list(.x)), n = 100L,
+#              ref_time_values = seq(as.Date("2022-05-01"), as.Date("2022-10-13"), by="day")) %>%
+#              # ref_time_values = seq(as.Date("2021-01-01"), as.Date("2022-10-17"), by="day")) %>%
+#   transmute(version=time_value, slide_value_data) %>%
+#   unnest(slide_value_data) %>%
+#   mutate(version_lag = as.integer(version - time_value)) %>%
+#   ggplot(aes(time_value, value, group=version, colour=version)) %>%
+#   `+`(geom_line()) %>%
+#   `+`(scale_colour_continuous(type = "viridis", trans = "date"))
+#   # ggplot(aes(time_value, value)) %>%
+#   # `+`(geom_line()) %>%
+#   # `+`(scale_colour_continuous(type = "viridis")) %>%
+#   # `+`(facet_wrap(~ version_lag))
+#   # filter(time_value >= as.Date("2022-09-01")) %>%
+#   # ggplot(aes(version, value)) %>%
+#   # `+`(geom_line()) %>%
+#   # `+`(scale_colour_continuous(type = "viridis")) %>%
+#   # `+`(facet_wrap(~ time_value))
+```
+
