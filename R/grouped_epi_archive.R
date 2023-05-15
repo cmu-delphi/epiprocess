@@ -437,9 +437,9 @@ grouped_epi_archive =
               }
               
               quo = quos[[1]]
-              f = function(x, group_key, ref_time_value, quo, ...) {
-                quo = quo_set_env(quo, env(group_key = group_key, ref_time_value = ref_time_value))
-                rlang::eval_tidy(quo, x)
+              f = function(.x, .group_key, .ref_time_value, quo, ...) {
+                quo = quo_set_env(quo, env())
+                rlang::eval_tidy(quo, .x)
               }
               new_col = sym(names(rlang::quos_auto_name(quos)))
 
