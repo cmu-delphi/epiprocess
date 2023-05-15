@@ -186,7 +186,8 @@ grouped_epi_archive =
 #'   object. See the documentation for the wrapper function [`epix_slide()`] for
 #'   details.
 #' @importFrom data.table key address
-#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms quo_set_env
+#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
+#'  quo_set_env env
           slide = function(f, ..., before, ref_time_values,
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
