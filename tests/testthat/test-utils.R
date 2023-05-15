@@ -143,6 +143,6 @@ test_that("assert_sufficient_f_args alerts if the provided f has defaults for th
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
   expect_error(assert_sufficient_f_args(f_xg_dots),
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
-  expect_error(assert_sufficient_f_args(f_x_dots),
+  expect_error(suppressWarnings(assert_sufficient_f_args(f_x_dots)),
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
 })
