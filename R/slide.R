@@ -158,7 +158,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # Check that `f` takes enough args
   if (!missing(f) && is.function(f)) {
-    assert_sufficient_f_args(f)
+    assert_sufficient_f_args(f, ...)
   }
 
   # Arrange by increasing time_value

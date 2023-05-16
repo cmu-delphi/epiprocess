@@ -21,7 +21,8 @@ Description: This package introduces a common data structure for epidemiological
     work with revisions to these data sets over time, and offers associated
     utilities to perform basic signal processing tasks.
 License: MIT + file LICENSE
-Imports: 
+Imports:
+    cli,
     data.table,
     dplyr (>= 1.0.0),
     fabletools,
@@ -48,7 +49,7 @@ Suggests:
     knitr,
     outbreaks,
     rmarkdown,
-    testthat (>= 3.0.0),
+    testthat (>= 3.1.5),
     waldo (>= 0.3.1),
     withr
 VignetteBuilder: 

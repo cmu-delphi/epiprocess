@@ -357,5 +357,5 @@ test_that("epix_slide alerts if the provided f doesn't take enough args", {
 
   f_x_dots = function(x, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
   expect_warning(epix_slide(xx, f_x_dots, before = 2L),
-    class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_before_dots")
+    class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots")
 })
