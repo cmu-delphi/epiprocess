@@ -132,6 +132,16 @@ test_that("assert_sufficient_f_args alerts if the provided f doesn't take enough
     class = "epiprocess__assert_sufficient_f_args__f_needs_min_args")
   expect_error(assert_sufficient_f_args(f),
     class = "epiprocess__assert_sufficient_f_args__f_needs_min_args")
+
+  f_xs_dots = function(x, setting="a", ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
+  f_xs = function(x, setting="a") dplyr::tibble(value=mean(x$binary), count=length(x$binary))
+  expect_warning(assert_sufficient_f_args(f_xs_dots, setting="b"),
+    class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots")
+  expect_error(assert_sufficient_f_args(f_xs, setting="b"),
+    class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_plus_forwarded")
+
+  expect_error(assert_sufficient_f_args(f_xg, "b"),
+    class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_plus_forwarded")
 })
 
 test_that("assert_sufficient_f_args alerts if the provided f has defaults for the required args", {
