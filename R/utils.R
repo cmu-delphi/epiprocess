@@ -127,12 +127,13 @@ assert_sufficient_f_args <- function(f, ...) {
   remaining_args_names = names(remaining_args)
   # note that this doesn't include unnamed args forwarded through `...`.
   dots_i <- which(remaining_args_names == "...") # integer(0) if no match
+  n_f_args_before_dots <- dots_i - 1L
   if (length(dots_i) != 0L) {
     # Keep all arg names before `...`
-    mandatory_args_mapped_names <- remaining_args_names[seq_len(dots_i - 1L)]
+    mandatory_args_mapped_names <- remaining_args_names[seq_len(n_f_args_before_dots)]
 
-    if (dots_i - 1L < n_mandatory_f_args) {
-      mandatory_f_args_in_f_dots = tail(mandatory_f_args_labels, dots_i - 1L)
+    if (n_f_args_before_dots < n_mandatory_f_args) {
+      mandatory_f_args_in_f_dots = tail(mandatory_f_args_labels, n_f_args_before_dots)
       Warn(sprintf("`f` might not have enough positional arguments before its `...`; in the current `epi[x]_slide` call, the %s will be included in `f`'s `...`; if `f` doesn't expect those arguments, it may produce confusing error messages", cli::ansi_collapse(mandatory_f_args_in_f_dots)),
            class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots",
            epiprocess__f = f,
@@ -155,9 +156,9 @@ assert_sufficient_f_args <- function(f, ...) {
   }
   # Check for args with defaults that are filled with mandatory positional
   # calling args. If `f` has fewer than n_mandatory_f_args before `...`, then we
-  # only need to check those args for defaults. Note that `dots_i - 1L` is
+  # only need to check those args for defaults. Note that `n_f_args_before_dots` is
   # length 0 if `f` doesn't accept `...`.
-  n_remaining_args_for_default_check = min(c(dots_i - 1L, n_mandatory_f_args))
+  n_remaining_args_for_default_check = min(c(n_f_args_before_dots, n_mandatory_f_args))
   default_check_args = remaining_args[seq_len(n_remaining_args_for_default_check)]
   default_check_args_names = names(default_check_args)
   has_default_replaced_by_mandatory = map_lgl(default_check_args, ~!is_missing(.x))
