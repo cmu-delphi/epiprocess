@@ -109,6 +109,7 @@ Warn = function(msg, ...) rlang::warn(break_str(msg, init = "Warning: "), ...)
 #'
 #' @importFrom rlang is_missing
 #' @importFrom purrr map_lgl
+#' @importFrom utils tail
 #'
 #' @noRd
 assert_sufficient_f_args <- function(f, ...) {
