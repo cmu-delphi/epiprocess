@@ -134,7 +134,8 @@ assert_sufficient_f_args <- function(f, ...) {
     mandatory_args_mapped_names <- remaining_args_names[seq_len(n_f_args_before_dots)]
 
     if (n_f_args_before_dots < n_mandatory_f_args) {
-      mandatory_f_args_in_f_dots = tail(mandatory_f_args_labels, -n_f_args_before_dots)
+      mandatory_f_args_in_f_dots =
+        tail(mandatory_f_args_labels, n_mandatory_f_args - n_f_args_before_dots)
       Warn(sprintf("`f` might not have enough positional arguments before its `...`; in the current `epi[x]_slide` call, the %s will be included in `f`'s `...`; if `f` doesn't expect those arguments, it may produce confusing error messages", cli::ansi_collapse(mandatory_f_args_in_f_dots)),
            class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots",
            epiprocess__f = f,
