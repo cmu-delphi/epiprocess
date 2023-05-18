@@ -158,11 +158,8 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # Check that `f` takes enough args
   if (!missing(f) && is.function(f)) {
-    check_sufficient_f_args(f)
+    check_sufficient_f_args(f, 3L)
   }
-
-  # Arrange by increasing time_value
-  x = arrange(x, time_value)
   
   if (missing(ref_time_values)) {
     ref_time_values = unique(x$time_value)
@@ -222,6 +219,24 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     before <- time_step(before)
     after <- time_step(after)
   }
+
+  # Set up a helper column and phony data rows to let us recover
+  # `ref_time_value`s later.
+  x$.real = TRUE
+  before_time_values = ref_time_values - before
+  before_time_values <- before_time_values[!(before_time_values %in% unique(x$time_value))]
+
+  # Create a new df with the same columns and attributes as `x`, but filled
+  # with `NA`s. Number of rows is based on the number of `before_time_values`
+  # we have.
+  before_time_values_df = x[rep(nrow(x) + 1, length(before_time_values)),]
+  before_time_values_df$time_value <- before_time_values
+  before_time_values_df$.real <- FALSE
+
+  x <- bind_rows(before_time_values_df, x)
+
+  # Arrange by increasing time_value
+  x = arrange(x, time_value)
 
   # Now set up starts and stops for sliding/hopping
   time_range = range(unique(x$time_value))
@@ -318,9 +333,14 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # If f is not missing, then just go ahead, slide by group
   if (!missing(f)) {
+    f_rtv_wrapper = function(x, g, ...) {
+      ref_time_value = min(x$time_value) + before
+      x <- filter(x, .real)
+      f(x, g, ref_time_value, ...)
+    }
     x = x %>%  
       group_modify(slide_one_grp,
-                   f = f, ...,
+                   f = f_rtv_wrapper, ...,
                    starts = starts,
                    stops = stops,
                    time_values = ref_time_values, 
@@ -340,7 +360,11 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     }
     
     quo = quos[[1]]
-    f = function(x, quo, ...) rlang::eval_tidy(quo, x)
+    f = function(x, quo, ...) {
+      ref_time_value = min(x$time_value) + before
+      x <- filter(x, .real)
+      rlang::eval_tidy(quo, x)
+    }
     new_col = sym(names(rlang::quos_auto_name(quos)))
     
     x = x %>%  
