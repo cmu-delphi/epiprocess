@@ -155,7 +155,12 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
-  
+
+  # Check that `f` takes enough args
+  if (!missing(f) && is.function(f)) {
+    assert_sufficient_f_args(f, ...)
+  }
+
   # Arrange by increasing time_value
   x = arrange(x, time_value)
   

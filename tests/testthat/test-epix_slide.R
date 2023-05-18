@@ -348,3 +348,14 @@ test_that("epix_slide with all_versions option works as intended",{
 
   expect_identical(xx1,xx3) # This and * Imply xx2 and xx3 are identical
 })
+
+test_that("epix_slide alerts if the provided f doesn't take enough args", {
+  f_xg = function(x, g) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
+  # If `regexp` is NA, asserts that there should be no errors/messages.
+  expect_error(epix_slide(xx, f = f_xg, before = 2L), regexp = NA)
+  expect_warning(epix_slide(xx, f = f_xg, before = 2L), regexp = NA)
+
+  f_x_dots = function(x, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
+  expect_warning(epix_slide(xx, f_x_dots, before = 2L),
+    class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots")
+})
