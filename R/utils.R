@@ -165,7 +165,7 @@ assert_sufficient_f_args <- function(f, ...) {
   has_default_replaced_by_mandatory = map_lgl(default_check_args, ~!is_missing(.x))
   if (any(has_default_replaced_by_mandatory)) {
     mandatory_args_replacing_defaults =
-      mandatory_f_args_labels[seq_len(sum(has_default_replaced_by_mandatory))]
+      mandatory_f_args_labels[has_default_replaced_by_mandatory]
     args_with_default_replaced_by_mandatory =
       rlang::syms(default_check_args_names[has_default_replaced_by_mandatory])
     cli::cli_abort("`epi[x]_slide` would pass the {mandatory_args_replacing_defaults} to `f`'s {args_with_default_replaced_by_mandatory} argument{?s}, which {?has a/have} default value{?s}; we suspect that `f` doesn't expect {?this arg/these args} at all and may produce confusing error messages.  Please add additional arguments to `f` or remove defaults as appropriate.",
