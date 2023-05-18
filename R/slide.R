@@ -111,7 +111,7 @@
 #'   through the `new_col_name` argument.
 #'   
 #' @importFrom lubridate days weeks
-#' @importFrom rlang .data .env !! enquo enquos sym
+#' @importFrom rlang .data .env !! enquo enquos sym quo_set_env env
 #' @export
 #' @examples 
 #' # slide a 7-day trailing average formula on cases
@@ -333,6 +333,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # If f is not missing, then just go ahead, slide by group
   if (!missing(f)) {
+    if (rlang::is_formula(f)) f = as_slide_computation(f)
     f_rtv_wrapper = function(x, g, ...) {
       ref_time_value = min(x$time_value) + before
       x <- filter(x, .real)
@@ -363,6 +364,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     f = function(x, quo, ...) {
       ref_time_value = min(x$time_value) + before
       x <- filter(x, .real)
+      quo = quo_set_env(quo, env())
       rlang::eval_tidy(quo, x)
     }
     new_col = sym(names(rlang::quos_auto_name(quos)))
