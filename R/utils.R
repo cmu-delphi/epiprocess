@@ -129,20 +129,23 @@ assert_sufficient_f_args <- function(f, ...) {
   # note that this doesn't include unnamed args forwarded through `...`.
   dots_i <- which(remaining_args_names == "...") # integer(0) if no match
   n_f_args_before_dots <- dots_i - 1L
-  if (length(dots_i) != 0L) {
+  if (length(dots_i) != 0L) { # `f` has a dots "arg"
     # Keep all arg names before `...`
     mandatory_args_mapped_names <- remaining_args_names[seq_len(n_f_args_before_dots)]
 
     if (n_f_args_before_dots < n_mandatory_f_args) {
       mandatory_f_args_in_f_dots =
         tail(mandatory_f_args_labels, n_mandatory_f_args - n_f_args_before_dots)
-      Warn(sprintf("`f` might not have enough positional arguments before its `...`; in the current `epi[x]_slide` call, the %s will be included in `f`'s `...`; if `f` doesn't expect those arguments, it may produce confusing error messages", cli::ansi_collapse(mandatory_f_args_in_f_dots)),
-           class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots",
-           epiprocess__f = f,
-           epiprocess__mandatory_f_args_in_f_dots = mandatory_f_args_in_f_dots)
+      cli::cli_warn(
+        "`f` might not have enough positional arguments before its `...`; in the current `epi[x]_slide` call, the {mandatory_f_args_in_f_dots} will be included in `f`'s `...`; if `f` doesn't expect those arguments, it may produce confusing error messages",
+        class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots",
+        epiprocess__f = f,
+        epiprocess__mandatory_f_args_in_f_dots = mandatory_f_args_in_f_dots
+      )
     }
-  } else {
+  } else { # `f` doesn't have a dots "arg"
     if (length(args_names) < n_mandatory_f_args + rlang::dots_n(...)) {
+      # `f` doesn't take enough args.
       if (rlang::dots_n(...) == 0L) {
         # common case; try for friendlier error message
         Abort(sprintf("`f` must take at least %s arguments", n_mandatory_f_args),
@@ -150,7 +153,7 @@ assert_sufficient_f_args <- function(f, ...) {
               epiprocess__f = f)
       } else {
         # less common; highlight that they are (accidentally?) using dots forwarding
-        Abort(sprintf("`f` must take at least %s arguments plus the %s arguments forwarded through `epi[x]_slide`'s `...`", n_mandatory_f_args, rlang::dots_n(...)),
+        Abort(sprintf("`f` must take at least %s arguments plus the %s arguments forwarded through `epi[x]_slide`'s `...`, or a named argument to `epi[x]_slide` was misspelled", n_mandatory_f_args, rlang::dots_n(...)),
               class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_plus_forwarded",
               epiprocess__f = f)
       }
@@ -165,8 +168,11 @@ assert_sufficient_f_args <- function(f, ...) {
   default_check_args_names = names(default_check_args)
   has_default_replaced_by_mandatory = map_lgl(default_check_args, ~!is_missing(.x))
   if (any(has_default_replaced_by_mandatory)) {
+    default_check_mandatory_args_labels =
+      mandatory_f_args_labels[seq_len(n_remaining_args_for_default_check)]
+    # ^ excludes any mandatory args absorbed by f's `...`'s:
     mandatory_args_replacing_defaults =
-      mandatory_f_args_labels[has_default_replaced_by_mandatory]
+      default_check_mandatory_args_labels[has_default_replaced_by_mandatory]
     args_with_default_replaced_by_mandatory =
       rlang::syms(default_check_args_names[has_default_replaced_by_mandatory])
     cli::cli_abort("`epi[x]_slide` would pass the {mandatory_args_replacing_defaults} to `f`'s {args_with_default_replaced_by_mandatory} argument{?s}, which {?has a/have} default value{?s}; we suspect that `f` doesn't expect {?this arg/these args} at all and may produce confusing error messages.  Please add additional arguments to `f` or remove defaults as appropriate.",
