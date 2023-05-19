@@ -220,17 +220,18 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     after <- time_step(after)
   }
 
-  # Set up a helper column and phony data rows to let us recover
-  # `ref_time_value`s later.
-  x$.real = TRUE
-  before_time_values = ref_time_values - before
-  before_time_values <- before_time_values[!(before_time_values %in% unique(x$time_value))]
+  inrange_time_values_not_in_x = ref_time_values - before
+  inrange_time_values_not_in_x <- inrange_time_values_not_in_x[!(inrange_time_values_not_in_x %in% unique(x$time_value))]
 
-  # Create a new df with the same columns and attributes as `x`, but filled
-  # with `NA`s. Number of rows is based on the number of `before_time_values`
-  # we have.
-  before_time_values_df = x[rep(nrow(x) + 1, length(before_time_values)),]
-  before_time_values_df$time_value <- before_time_values
+  # Do set up to let us recover `ref_time_value`s later.
+  # A helper column marking real observations.
+  x$.real = TRUE
+
+  # Create df containing phony data. Df has the same columns and attributes as
+  # `x`, but filled with `NA`s. Number of rows is equal to the number of
+  # `inrange_time_values_not_in_x` we have.
+  before_time_values_df = x[rep(nrow(x) + 1, length(inrange_time_values_not_in_x)),]
+  before_time_values_df$time_value <-inrange_time_values_not_in_x
   before_time_values_df$.real <- FALSE
 
   x <- bind_rows(before_time_values_df, x)
@@ -336,7 +337,8 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     if (rlang::is_formula(f)) f = as_slide_computation(f)
     f_rtv_wrapper = function(x, g, ...) {
       ref_time_value = min(x$time_value) + before
-      x <- filter(x, .real)
+      x <- filter(x, .real) %>%
+        select(-.real)
       f(x, g, ref_time_value, ...)
     }
     x = x %>%  
@@ -363,7 +365,8 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     quo = quos[[1]]
     f = function(x, quo, ...) {
       ref_time_value = min(x$time_value) + before
-      x <- filter(x, .real)
+      x <- filter(x, .real) %>%
+        select(-.real)
       quo = quo_set_env(quo, env())
       rlang::eval_tidy(quo, x)
     }
