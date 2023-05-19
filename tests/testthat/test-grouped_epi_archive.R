@@ -39,12 +39,12 @@ test_that("Grouping, regrouping, and ungrouping archives works as intended", {
   expect_error(toy_archive %>% group_by(.drop = "bogus"),
                regexp = "\\.drop.*TRUE or FALSE")
   expect_warning(toy_archive %>% group_by(.drop=FALSE),
-                 class="epiprocess__group_by_epi_archive_drop_FALSE_no_factors")
+                 class="epiprocess__group_by_epi_archive__drop_FALSE_no_factors")
   expect_warning(toy_archive %>% group_by(geo_value, .drop=FALSE),
-                 class="epiprocess__group_by_epi_archive_drop_FALSE_no_factors")
+                 class="epiprocess__group_by_epi_archive__drop_FALSE_no_factors")
   expect_warning(grouped_factor_then_nonfactor <-
                    toy_archive %>% group_by(age_group, geo_value, .drop=FALSE),
-                 class="epiprocess__group_by_epi_archive_drop_FALSE_nonfactor_after_factor")
+                 class="epiprocess__group_by_epi_archive__drop_FALSE_nonfactor_after_factor")
   expect_identical(grouped_factor_then_nonfactor %>%
                      epix_slide(before = 10, s = sum(value)),
                    tibble::tribble(

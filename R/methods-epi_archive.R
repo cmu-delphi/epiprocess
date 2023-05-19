@@ -637,10 +637,10 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
     # ^ Use `as.list` to try to avoid any possibility of a deep copy.
     if (!any(grouping_col_is_factor)) {
       Warn("`.drop=FALSE` but there are no factor grouping columns; did you mean to convert one of the columns to a factor beforehand?",
-           class = "epiprocess__group_by_epi_archive_drop_FALSE_no_factors")
+           class = "epiprocess__group_by_epi_archive__drop_FALSE_no_factors")
     } else if (any(diff(grouping_col_is_factor) == -1L)) {
       Warn("`.drop=FALSE` but there are one or more non-factor grouping columns listed after a factor grouping column; this may produce groups with `NA`s for these columns; see https://github.com/tidyverse/dplyr/issues/5369#issuecomment-683762553; depending on how you want completion to work, you might instead want to convert all grouping columns to factors beforehand, specify the non-factor grouping columns first, or use `.drop=TRUE` and add a call to `tidyr::complete`.",
-           class = "epiprocess__group_by_epi_archive_drop_FALSE_nonfactor_after_factor")
+           class = "epiprocess__group_by_epi_archive__drop_FALSE_nonfactor_after_factor")
     }
   }
   grouped_epi_archive$new(detailed_mutate[["archive"]],
