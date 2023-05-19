@@ -209,9 +209,8 @@ grouped_epi_archive =
             if ("all_rows" %in% nse_dots_names(...)) {
               Abort("
                 The `all_rows` argument has been removed from `epix_slide` (but
-                is still supported in `epi_slide`). Since `epix_slide` now
-                allows any number of rows out of slide computations, it's
-                unclear how `all_rows=TRUE` should fill in missing results.
+                is still supported in `epi_slide`). Add rows for excluded
+                results with a manual join instead.
               ", class = "epiprocess__epix_slide_all_rows_parameter_deprecated")
             }
             
