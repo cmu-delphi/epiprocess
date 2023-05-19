@@ -111,6 +111,7 @@
 #'   through the `new_col_name` argument.
 #'   
 #' @importFrom lubridate days weeks
+#' @importFrom dplyr bind_rows
 #' @importFrom rlang .data .env !! enquo enquos sym quo_set_env env
 #' @export
 #' @examples 

@@ -9,7 +9,7 @@ grouped = dplyr::bind_rows(
   as_epi_df() %>%
   group_by(geo_value)
 
-f = function(x, g) dplyr::tibble(value=mean(x$value), count=length(x$value))
+f = function(x, g, t) dplyr::tibble(value=mean(x$value), count=length(x$value))
 
 ## --- These cases generate errors (or not): ---
 test_that("`before` and `after` are both vectors of length 1", {
@@ -88,10 +88,10 @@ test_that("these doesn't produce an error; the error appears only if the ref tim
 })
 
 test_that("epi_slide alerts if the provided f doesn't take enough args", {
-  f_xg = function(x, g) dplyr::tibble(value=mean(x$value), count=length(x$value))
+  f_xgt = function(x, g, t) dplyr::tibble(value=mean(x$value), count=length(x$value))
   # If `regexp` is NA, asserts that there should be no errors/messages.
-  expect_error(epi_slide(grouped, f_xg, before = 1L, ref_time_values = d+1), regexp = NA)
-  expect_warning(epi_slide(grouped, f_xg, before = 1L, ref_time_values = d+1), regexp = NA)
+  expect_error(epi_slide(grouped, f_xgt, before = 1L, ref_time_values = d+1), regexp = NA)
+  expect_warning(epi_slide(grouped, f_xgt, before = 1L, ref_time_values = d+1), regexp = NA)
 
   f_x_dots = function(x, ...) dplyr::tibble(value=mean(x$value), count=length(x$value))
   expect_warning(epi_slide(grouped, f_x_dots, before = 1L, ref_time_values = d+1),
