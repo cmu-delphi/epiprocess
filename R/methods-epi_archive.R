@@ -630,7 +630,8 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
   detailed_mutate = epix_detailed_restricted_mutate(.data, ...)
   if (!rlang::is_bool(.drop)) {
     Abort("`.drop` must be TRUE or FALSE")
-  } else if (!.drop) {
+  }
+  if (!.drop) {
     grouping_cols = as.list(detailed_mutate[["archive"]][["DT"]])[detailed_mutate[["request_names"]]]
     grouping_col_is_factor = purrr::map_lgl(grouping_cols, is.factor)
     # ^ Use `as.list` to try to avoid any possibility of a deep copy.
