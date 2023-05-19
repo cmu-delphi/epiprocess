@@ -185,6 +185,8 @@ ref_time_values <- seq(as.Date("2020-06-01"),
                        as.Date("2020-06-15"),
                        by = "1 day")
 
+# A simple (but not very useful) example (see the archive vignette for a more
+# realistic one):
 archive_cases_dv_subset \%>\%
   group_by(geo_value) \%>\%
   epix_slide(f = ~ mean(.x$case_rate_7d_av),
@@ -196,19 +198,43 @@ archive_cases_dv_subset \%>\%
 # values. The actual number of `time_value`s in each computation depends on
 # the reporting latency of the signal and `time_value` range covered by the
 # archive (2020-06-01 -- 2021-11-30 in this example).  In this case, we have
-# 0 `time_value`s, for ref time 2020-06-01 --> the result is automatically discarded
-# 1 `time_value`, for ref time 2020-06-02
-# 2 `time_value`s, for the rest of the results
-# never 3 `time_value`s, due to data latency
+# * 0 `time_value`s, for ref time 2020-06-01 --> the result is automatically
+#                                                discarded
+# * 1 `time_value`, for ref time 2020-06-02
+# * 2 `time_value`s, for the rest of the results
+# * never the 3 `time_value`s we would get from `epi_slide`, since, because
+#   of data latency, we'll never have an observation
+#   `time_value == ref_time_value` as of `ref_time_value`.
+# The example below shows this type of behavior in more detail.
 
-
+# Examining characteristics of the data passed to each computation with
+# `all_versions=FALSE`.
+archive_cases_dv_subset \%>\%
+ group_by(geo_value) \%>\%
+ epix_slide(
+   function(x, gk, rtv) {
+     tibble(
+       time_range = if(nrow(x) == 0L) {
+         "0 `time_value`s"
+       } else {
+         sprintf("\%s -- \%s", min(x$time_value), max(x$time_value))
+       },
+       n = nrow(x),
+       class1 = class(x)[[1L]]
+     )
+   },
+   before = 5, all_versions = FALSE,
+   ref_time_values = ref_time_values, names_sep=NULL) \%>\%
+ ungroup() \%>\%
+ arrange(geo_value, time_value)
 
 # --- Advanced: ---
 
 # `epix_slide` with `all_versions=FALSE` (the default) applies a
 # version-unaware computation to several versions of the data. We can also
 # use `all_versions=TRUE` to apply a version-*aware* computation to several
-# versions of the data. In this case, each computation should expect an
+# versions of the data, again looking at characteristics of the data passed
+# to each computation. In this case, each computation should expect an
 # `epi_archive` containing the relevant version data:
 
 archive_cases_dv_subset \%>\%
@@ -216,18 +242,26 @@ archive_cases_dv_subset \%>\%
   epix_slide(
     function(x, gk, rtv) {
       tibble(
-        versions_end = max(x$versions_end),
+        versions_start = if (nrow(x$DT) == 0L) {
+          "NA (0 rows)"
+        } else {
+          toString(min(x$DT$version))
+        },
+        versions_end = x$versions_end,
         time_range = if(nrow(x$DT) == 0L) {
           "0 `time_value`s"
         } else {
           sprintf("\%s -- \%s", min(x$DT$time_value), max(x$DT$time_value))
         },
+        n = nrow(x$DT),
         class1 = class(x)[[1L]]
       )
     },
-    before = 2, all_versions = TRUE,
+    before = 5, all_versions = TRUE,
     ref_time_values = ref_time_values, names_sep=NULL) \%>\%
   ungroup() \%>\%
-  arrange(geo_value, time_value)
+  # Focus on one geo_value so we can better see the columns above:
+  filter(geo_value == "ca") \%>\%
+  select(-geo_value)
 
 }

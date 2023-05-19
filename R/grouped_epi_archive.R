@@ -222,7 +222,7 @@ grouped_epi_archive =
             
             # Check that `f` takes enough args
             if (!missing(f) && is.function(f)) {
-              check_sufficient_f_args(f, 3L)
+              assert_sufficient_f_args(f, ..., n_mandatory_f_args = 3L)
             }
 
             # Validate and pre-process `before`:
