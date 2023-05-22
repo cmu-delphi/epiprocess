@@ -258,7 +258,7 @@ detect_outlr_rm = function(x = seq_along(y), y, n = 21,
 #'     x = time_value, y = cases,
 #'     seasonal_period = 7 )) %>% # weekly seasonality for daily data
 #'   unnest(outlier_info)
-detect_outlr_stl = function(x = seq_along(y), y,
+detect_outlr_stl = function(epidf, y, 
                             n_trend = 21,
                             n_seasonal = 21,
                             n_threshold = 21,
@@ -269,6 +269,7 @@ detect_outlr_stl = function(x = seq_along(y), y,
                             min_radius = 0,
                             replacement_multiplier = 0) {
   # Transform if requested
+  time_type <- attr(epidf, "metadata")$time_type
   if (log_transform) {
     # Replace all negative values with 0
     y = pmax(0, y)
@@ -278,7 +279,7 @@ detect_outlr_stl = function(x = seq_along(y), y,
   
   frequency <- create_seasonal_period(seasonal_period, x)
   
-  yts <- ts(y, frequency = frequency)
+  yts <- stats::ts(y, frequency = frequency)
   stl_comp <- stats::stl(yts, t.window = n_trend, s.window = n_seasonal,
                          robust = TRUE)$time.series %>%
     tibble::as_tibble() %>%
