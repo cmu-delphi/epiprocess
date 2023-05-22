@@ -110,7 +110,6 @@
 #'   inferred from the given expression and overrides any name passed explicitly 
 #'   through the `new_col_name` argument.
 #'   
-#' @importFrom lubridate days weeks
 #' @importFrom rlang .data .env !! enquo enquos sym
 #' @export
 #' @examples 
