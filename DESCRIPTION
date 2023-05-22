@@ -75,6 +75,5 @@ Collate:
     'outliers.R'
     'reexports.R'
     'slide.R'
-    'tidyverts-shim.R'
     'utils.R'
     'utils_pipe.R'

@@ -218,6 +218,7 @@ detect_outlr_rm = function(x = seq_along(y), y, n = 21,
 #' @param seasonal_period Integer specifying period of seasonality. For example,
 #'   for daily data, a period 7 means weekly seasonality. The default is `NULL`,
 #'   meaning that no seasonal term will be included in the STL decomposition.
+#'   If specified, it must be strictly larger than 1.
 #' @param log_transform Should a log transform be applied before running outlier
 #'   detection? Default is `FALSE`. If `TRUE`, and zeros are present, then the
 #'   log transform will be padded by 1.
@@ -258,7 +259,7 @@ detect_outlr_rm = function(x = seq_along(y), y, n = 21,
 #'     x = time_value, y = cases,
 #'     seasonal_period = 7 )) %>% # weekly seasonality for daily data
 #'   unnest(outlier_info)
-detect_outlr_stl = function(epidf, y, 
+detect_outlr_stl = function(x = seq_along(y), y, 
                             n_trend = 21,
                             n_seasonal = 21,
                             n_threshold = 21,
@@ -268,8 +269,10 @@ detect_outlr_stl = function(epidf, y,
                             detection_multiplier = 2,
                             min_radius = 0,
                             replacement_multiplier = 0) {
+  if (dplyr::n_distinct(x) != length(y)) {
+    Abort("`x` contains duplicate values. (If being run on a column in an `epi_df`, did you group by relevant key variables?)")
+  }
   # Transform if requested
-  time_type <- attr(epidf, "metadata")$time_type
   if (log_transform) {
     # Replace all negative values with 0
     y = pmax(0, y)
@@ -277,9 +280,14 @@ detect_outlr_stl = function(epidf, y,
     y = log(y + offset)
   }
   
-  frequency <- create_seasonal_period(seasonal_period, x)
+  if (is.null(seasonal_period)) {
+    freq <-  7L
+  } else {
+    if (seasonal_period == 1L) Abort("`seasonal_period` must be `NULL` or > 1.")
+    freq <- seasonal_period
+  }
   
-  yts <- stats::ts(y, frequency = frequency)
+  yts <- stats::ts(y, frequency = freq)
   stl_comp <- stats::stl(yts, t.window = n_trend, s.window = n_seasonal,
                          robust = TRUE)$time.series %>%
     tibble::as_tibble() %>%
