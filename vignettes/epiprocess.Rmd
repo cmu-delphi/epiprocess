@@ -67,7 +67,7 @@ cases <- covidcast(
   geo_type = "state",
   time_values = epirange(20200301, 20220131),
   geo_values = "ca,fl,ny,tx"
-) %>% fetch_tbl()
+) %>% fetch()
 
 colnames(cases)
 ```
