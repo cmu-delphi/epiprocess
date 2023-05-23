@@ -111,7 +111,7 @@
 #'   through the `new_col_name` argument.
 #'   
 #' @importFrom lubridate days weeks
-#' @importFrom dplyr bind_rows
+#' @importFrom dplyr bind_rows group_vars filter select
 #' @importFrom rlang .data .env !! enquo enquos sym quo_set_env env
 #' @export
 #' @examples 
@@ -229,10 +229,17 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
   x$.real = TRUE
 
   # Create df containing phony data. Df has the same columns and attributes as
-  # `x`, but filled with `NA`s. Number of rows is equal to the number of
-  # `inrange_time_values_not_in_x` we have.
-  before_time_values_df = x[rep(nrow(x) + 1, length(inrange_time_values_not_in_x)),]
-  before_time_values_df$time_value <-inrange_time_values_not_in_x
+  # `x`, but filled with `NA`s aside from grouping columns. Number of rows is
+  # equal to the number of `inrange_time_values_not_in_x` we have * the
+  # number of unique levels seen in the grouping columns.
+  before_time_values_df = dplyr::cross_join(
+    # Get unique combinations of grouping columns seen in real data.
+    unique(x[, group_vars(x)]),
+    data.frame(time_value=inrange_time_values_not_in_x)
+  )
+  # Automatically fill in all other columns from `x` with `NA`s, and carry
+  # attributes over to new df.
+  before_time_values_df <- bind_rows(x[0,], before_time_values_df)
   before_time_values_df$.real <- FALSE
 
   x <- bind_rows(before_time_values_df, x)
@@ -388,5 +395,9 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
   if (!as_list_col) {
     x = unnest(x, !!new_col, names_sep = names_sep)
   }
+
+  # Drop helper column `.real`.
+  x = select(x, -.real)
+
   return(x)
 }
