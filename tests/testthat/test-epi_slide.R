@@ -107,7 +107,7 @@ test_that("epi_slide alerts if the provided f doesn't take enough args", {
     class = "check_sufficient_f_args__f_needs_min_args_before_dots")
 })
 
-test_that("basic epi_slide computation produces expected output", {
+test_that("basic grouped epi_slide computation produces expected output", {
   expected_output = dplyr::bind_rows(
     dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=cumsum(11:15)),
     dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=cumsum(-(1:5)))
@@ -125,6 +125,30 @@ test_that("basic epi_slide computation produces expected output", {
   # dots
   result3 <- epi_slide(small_x, slide_value = sum(value), before=50)
   expect_identical(result3, expected_output)
+})
+
+test_that("ungrouped epi_slide computation completes successfully", {
+  expect_error(
+    small_x %>%
+    ungroup() %>%
+    epi_slide(before = 2,
+      slide_value = sum(.x$value)),
+    regexp=NA
+  )
+})
+
+test_that("basic ungrouped epi_slide computation produces expected output", {
+  expected_output = dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=cumsum(11:15))
+  ) %>%
+    as_epi_df(as_of = d + 6)
+
+  result1 <- small_x %>%
+    ungroup() %>%
+    filter(geo_value == "ak") %>%
+    epi_slide(before = 50,
+              slide_value = sum(.x$value))
+  expect_identical(result1, expected_output)
 })
 
 test_that("epi_slide computation via formula can use ref_time_value", {
@@ -218,11 +242,11 @@ test_that("epi_slide computation via dots can use ref_time_value and group", {
 test_that("epi_slide computation via dots outputs the same result using col names and the data var", {
   expected_output <- small_x %>%
     epi_slide(before = 2,
-      sum_binary = max(time_value))
+      slide_value = max(time_value))
 
   result1 <- small_x %>%
     epi_slide(before = 2,
-      sum_binary = max(.x$time_value))
+      slide_value = max(.x$time_value))
 
   expect_identical(result1, expected_output)
 })

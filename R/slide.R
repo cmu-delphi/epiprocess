@@ -232,11 +232,14 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
   # `x`, but filled with `NA`s aside from grouping columns. Number of rows is
   # equal to the number of `inrange_time_values_not_in_x` we have * the
   # number of unique levels seen in the grouping columns.
-  before_time_values_df = dplyr::cross_join(
-    # Get unique combinations of grouping columns seen in real data.
-    unique(x[, group_vars(x)]),
-    data.frame(time_value=inrange_time_values_not_in_x)
-  )
+  before_time_values_df = data.frame(time_value=inrange_time_values_not_in_x)
+  if (length(group_vars(x)) != 0) {
+    before_time_values_df = dplyr::cross_join(
+      # Get unique combinations of grouping columns seen in real data.
+      unique(x[, group_vars(x)]),
+      before_time_values_df
+    )
+  }
   # Automatically fill in all other columns from `x` with `NA`s, and carry
   # attributes over to new df.
   before_time_values_df <- bind_rows(x[0,], before_time_values_df)
