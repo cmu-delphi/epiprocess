@@ -215,7 +215,7 @@ y1 <- covidcast(
   time_value = epirange(20200601, 20211201),
   geo_values = "ca,fl",
   issues = epirange(20200601, 20211201)
-) %>% fetch_tbl()
+) %>% fetch()
 
 y2 <- covidcast(
   data_source = "jhu-csse",
@@ -225,7 +225,7 @@ y2 <- covidcast(
   time_value = epirange(20200601, 20211201),
   geo_values = "ca,fl",
   issues = epirange(20200601, 20211201)
-) %>% fetch_tbl()
+) %>% fetch()
 
 x <- y1 %>%
   select(geo_value, time_value,
