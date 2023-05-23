@@ -371,12 +371,12 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     }
     
     quo = quos[[1]]
-    f = function(x, quo, ...) {
-      ref_time_value = min(x$time_value) + before
-      x <- filter(x, .real) %>%
+    f = function(.x, .group_key, quo, ...) {
+      .ref_time_value = min(.x$time_value) + before
+      .x <- filter(.x, .real) %>%
         select(-.real)
       quo = quo_set_env(quo, env())
-      rlang::eval_tidy(quo, x)
+      rlang::eval_tidy(quo, .x)
     }
     new_col = sym(names(rlang::quos_auto_name(quos)))
     
