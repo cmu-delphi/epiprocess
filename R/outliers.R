@@ -218,6 +218,7 @@ detect_outlr_rm = function(x = seq_along(y), y, n = 21,
 #' @param seasonal_period Integer specifying period of seasonality. For example,
 #'   for daily data, a period 7 means weekly seasonality. The default is `NULL`,
 #'   meaning that no seasonal term will be included in the STL decomposition.
+#'   If specified, it must be strictly larger than 1.
 #' @param log_transform Should a log transform be applied before running outlier
 #'   detection? Default is `FALSE`. If `TRUE`, and zeros are present, then the
 #'   log transform will be padded by 1.
@@ -251,14 +252,14 @@ detect_outlr_rm = function(x = seq_along(y), y, n = 21,
 #' @examples
 #' # Detects outliers based on a seasonal-trend decomposition using LOESS
 #' incidence_num_outlier_example %>%
-#'   dplyr::select(geo_value,time_value,cases) %>%
+#'   dplyr::select(geo_value, time_value, cases) %>%
 #'   as_epi_df() %>%
 #'   group_by(geo_value) %>%
 #'   mutate(outlier_info  = detect_outlr_stl(
 #'     x = time_value, y = cases,
 #'     seasonal_period = 7 )) %>% # weekly seasonality for daily data
 #'   unnest(outlier_info)
-detect_outlr_stl = function(x = seq_along(y), y,
+detect_outlr_stl = function(x = seq_along(y), y, 
                             n_trend = 21,
                             n_seasonal = 21,
                             n_threshold = 21,
@@ -268,6 +269,9 @@ detect_outlr_stl = function(x = seq_along(y), y,
                             detection_multiplier = 2,
                             min_radius = 0,
                             replacement_multiplier = 0) {
+  if (dplyr::n_distinct(x) != length(y)) {
+    Abort("`x` contains duplicate values. (If being run on a column in an `epi_df`, did you group by relevant key variables?)")
+  }
   # Transform if requested
   if (log_transform) {
     # Replace all negative values with 0
@@ -275,33 +279,27 @@ detect_outlr_stl = function(x = seq_along(y), y,
     offset = as.integer(any(y == 0))
     y = log(y + offset)
   }
-
-  # Make a tsibble for fabletools, setup and run STL
-  z_tsibble = tsibble::tsibble(x = x, y = y, index = x)
-
-  stl_formula = y ~ trend(window = n_trend) +
-    season(period = seasonal_period, window = n_seasonal)
-
-  stl_components = z_tsibble %>%
-    fabletools::model(feasts::STL(stl_formula, robust = TRUE)) %>%
-    generics::components() %>%
+  
+  if (is.null(seasonal_period)) {
+    freq <-  7L
+  } else {
+    if (seasonal_period == 1L) Abort("`seasonal_period` must be `NULL` or > 1.")
+    freq <- seasonal_period
+  }
+  
+  yts <- stats::ts(y, frequency = freq)
+  stl_comp <- stats::stl(yts, t.window = n_trend, s.window = n_seasonal,
+                         robust = TRUE)$time.series %>%
     tibble::as_tibble() %>%
-    dplyr::select(trend:remainder) %>%
-    dplyr::rename_with(~ "seasonal", tidyselect::starts_with("season")) %>%
     dplyr::rename(resid = remainder)
-
+  
   # Allocate the seasonal term from STL to either fitted or resid
   if (!is.null(seasonal_period)) {
-    stl_components = stl_components %>%
-      dplyr::mutate(
-        fitted = trend + seasonal)
+    stl_comp <- dplyr::mutate(stl_comp, fitted = trend + seasonal)
   } else {
-    stl_components = stl_components %>%
-      dplyr::mutate(
-        fitted = trend,
-        resid = seasonal + resid)
+    stl_comp <- dplyr::mutate(stl_comp, fitted = trend, resid = seasonal + resid)
   }
-
+  
   # Detect negatives if requested
   if (detect_negatives && !log_transform) min_lower = 0
   else min_lower = -Inf
@@ -311,9 +309,7 @@ detect_outlr_stl = function(x = seq_along(y), y,
 
   # Calculate lower and upper thresholds and replacement value
   z = z %>%
-    dplyr::mutate(
-      fitted = stl_components$fitted,
-      resid = stl_components$resid) %>%
+    dplyr::mutate(fitted = stl_comp$fitted, resid = stl_comp$resid) %>%
     roll_iqr(n = n_threshold,
              detection_multiplier = detection_multiplier,
              min_radius = min_radius,
@@ -336,15 +332,20 @@ roll_iqr = function(z, n, detection_multiplier, min_radius,
   if (typeof(z$y) == "integer") as_type = as.integer
   else as_type = as.numeric
 
-  epi_slide(z, roll_iqr = stats::IQR(resid), before = floor((n-1)/2), after = ceiling((n-1)/2)) %>%
+  z %>%
+    epi_slide(
+      roll_iqr = stats::IQR(resid), 
+      before = floor((n - 1) / 2), 
+      after = ceiling((n - 1) / 2)) %>%
     dplyr::mutate(
       lower = pmax(min_lower,
                    fitted - pmax(min_radius, detection_multiplier * roll_iqr)),
       upper = fitted + pmax(min_radius, detection_multiplier * roll_iqr),
       replacement = dplyr::case_when(
-      (y < lower) ~ as_type(fitted - replacement_multiplier * roll_iqr),
-      (y > upper) ~ as_type(fitted + replacement_multiplier * roll_iqr),
-      TRUE ~ y)) %>%
+        (y < lower) ~ as_type(fitted - replacement_multiplier * roll_iqr),
+        (y > upper) ~ as_type(fitted + replacement_multiplier * roll_iqr),
+        TRUE ~ y)) %>%
     dplyr::select(lower, upper, replacement) %>%
     tibble::as_tibble()
 }
+

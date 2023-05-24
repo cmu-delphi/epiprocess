@@ -36,7 +36,8 @@ outlier thresholds.}
 
 \item{seasonal_period}{Integer specifying period of seasonality. For example,
 for daily data, a period 7 means weekly seasonality. The default is \code{NULL},
-meaning that no seasonal term will be included in the STL decomposition.}
+meaning that no seasonal term will be included in the STL decomposition.
+If specified, it must be strictly larger than 1.}
 
 \item{log_transform}{Should a log transform be applied before running outlier
 detection? Default is \code{FALSE}. If \code{TRUE}, and zeros are present, then the
@@ -78,7 +79,7 @@ are exactly as in \code{detect_outlr_rm()}.
 \examples{
 # Detects outliers based on a seasonal-trend decomposition using LOESS
 incidence_num_outlier_example \%>\%
-  dplyr::select(geo_value,time_value,cases) \%>\%
+  dplyr::select(geo_value, time_value, cases) \%>\%
   as_epi_df() \%>\%
   group_by(geo_value) \%>\%
   mutate(outlier_info  = detect_outlr_stl(
