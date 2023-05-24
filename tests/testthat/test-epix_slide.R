@@ -40,6 +40,23 @@ test_that("epix_slide works as intended",{
   )
   
   expect_identical(xx1,xx3) # This and * Imply xx2 and xx3 are identical
+
+  # function interface
+  xx4 <- xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(f = function(x, g) {
+      tibble::tibble(sum_binary = sum(x$binary))
+    }, before = 2, names_sep = NULL)
+  
+  expect_identical(xx1,xx4)
+
+  # tidyeval interface
+  xx5 <- xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(sum_binary = sum(binary),
+               before = 2)
+  
+  expect_identical(xx1,xx5)
 })
 
 test_that("epix_slide works as intended with `as_list_col=TRUE`",{
@@ -268,6 +285,28 @@ test_that("epix_slide with all_versions option has access to all older versions"
   )
 
   expect_identical(result1,result3) # This and * Imply result2 and result3 are identical
+
+  # formula interface
+  result4 <- ea %>% group_by() %>%
+    epix_slide(f = ~ slide_fn(.x, .y),
+               before = 10^3,
+               names_sep = NULL,
+               all_versions = TRUE)
+
+  expect_identical(result1,result4) # This and * Imply result2 and result4 are identical
+
+  # tidyeval interface
+  result5 <- ea %>%
+    group_by() %>%
+    epix_slide(data = slide_fn(
+      .data$clone(), # hack to convert from pronoun back to archive
+      stop("slide_fn doesn't use group key, no need to prepare it")
+    ),
+    before = 10^3,
+    names_sep = NULL,
+    all_versions = TRUE)
+
+  expect_identical(result1,result5) # This and * Imply result2 and result5 are identical
 
   expect_identical(ea, ea_orig_mirror) # We shouldn't have mutated ea
 })
