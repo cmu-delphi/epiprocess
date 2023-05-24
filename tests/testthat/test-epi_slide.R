@@ -112,7 +112,8 @@ test_that("basic grouped epi_slide computation produces expected output", {
     dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=cumsum(11:15)),
     dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=cumsum(-(1:5)))
   ) %>%
-    group_by(geo_value)
+    group_by(geo_value) %>%
+    as_epi_df(as_of = d + 6)
   
   # formula
   result1 <- epi_slide(small_x, f = ~sum(.x$value), before=50)
@@ -156,7 +157,8 @@ test_that("epi_slide computation via formula can use ref_time_value", {
     dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=as.double(d + 1:5)),
     dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=as.double(d + 1:5))
   ) %>%
-    group_by(geo_value)
+    group_by(geo_value) %>%
+    as_epi_df(as_of = d + 6)
 
   result1 <- small_x %>%
     epi_slide(f = ~ .ref_time_value,
@@ -182,7 +184,8 @@ test_that("epi_slide computation via function can use ref_time_value", {
     dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=as.double(d + 1:5)),
     dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=as.double(d + 1:5))
   ) %>%
-    group_by(geo_value)
+    group_by(geo_value) %>%
+    as_epi_df(as_of = d + 6)
 
   result1 <- small_x %>%
     epi_slide(f = function(x, g, t) t,
@@ -197,7 +200,8 @@ test_that("epi_slide computation via dots can use ref_time_value and group", {
     dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=as.double(d + 1:5)),
     dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=as.double(d + 1:5))
   ) %>%
-    group_by(geo_value)
+    group_by(geo_value) %>%
+    as_epi_df(as_of = d + 6)
 
   result1 <- small_x %>%
     epi_slide(before = 50,
@@ -217,7 +221,8 @@ test_that("epi_slide computation via dots can use ref_time_value and group", {
     dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value="ak"),
     dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value="al")
   ) %>%
-    group_by(geo_value)
+    group_by(geo_value) %>%
+    as_epi_df(as_of = d + 6)
 
   result3 <- small_x %>%
     epi_slide(before = 2,
@@ -230,7 +235,8 @@ test_that("epi_slide computation via dots can use ref_time_value and group", {
     dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=1L),
     dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=1L)
   ) %>%
-    group_by(geo_value)
+    group_by(geo_value) %>%
+    as_epi_df(as_of = d + 6)
 
   result4 <- small_x %>%
     epi_slide(before = 2,
@@ -242,7 +248,8 @@ test_that("epi_slide computation via dots can use ref_time_value and group", {
 test_that("epi_slide computation via dots outputs the same result using col names and the data var", {
   expected_output <- small_x %>%
     epi_slide(before = 2,
-      slide_value = max(time_value))
+      slide_value = max(time_value)) %>%
+    as_epi_df(as_of = d + 6)
 
   result1 <- small_x %>%
     epi_slide(before = 2,
