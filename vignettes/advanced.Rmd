@@ -18,7 +18,7 @@ During basic usage (e.g., when all optional arguments are set to their defaults)
 * `epi_slide(edf, <computation>, .....)`:
 
   * keeps **all** columns of `edf`, adds computed column(s)
-  * outputs one row **for every row in `edf`** (recycling outputs from
+  * outputs **one row per row in `edf`** (recycling outputs from
     computations appropriately if there are multiple time series bundled
     together inside any group(s))
   * maintains the grouping or ungroupedness of `edf`
@@ -31,7 +31,8 @@ During basic usage (e.g., when all optional arguments are set to their defaults)
 
   * keeps **grouping and `time_value`** columns of `ea`, adds computed
     column(s)
-  * outputs one row **for every element/row output from the computations**
+  * outputs **any number of rows** (computations are allowed to output any
+    number of elements/rows, and no recycling is performed)
   * maintains the grouping or ungroupedness of `ea`, unless it was explicitly
     grouped by zero variables; this isn't supported by `grouped_df` and it will
     automatically turn into an ungrouped tibble
