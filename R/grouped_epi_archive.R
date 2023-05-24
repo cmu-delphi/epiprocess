@@ -386,7 +386,7 @@ grouped_epi_archive =
                   # provide an implementation yet. Next best would be
                   # `group_modify` on its `$DT`, but that has different behavior
                   # based on whether or not `dtplyr` is loaded. Instead, go
-                  # through a , trying to avoid copies.
+                  # through an ordinary data frame, trying to avoid copies.
                   if (address(as_of_archive$DT) == address(private$ungrouped$DT)) {
                     # `as_of` aliased its the full `$DT`; copy before mutating:
                     as_of_archive$DT <- copy(as_of_archive$DT)
@@ -399,7 +399,6 @@ grouped_epi_archive =
                   group_modify_fn = function(.data_group, .group_key,
                                     f, ...,
                                     ref_time_value,
-                                    comp_effective_key_vars,
                                     new_col) {
                     # .data_group is coming from as_of_df as a tibble, but we
                     # want to feed `comp_one_grp` an `epi_archive` backed by a
@@ -410,7 +409,6 @@ grouped_epi_archive =
                     .data_group_archive$DT = .data_group
                     comp_one_grp(.data_group_archive, .group_key, f = f, quo = quo,
                                  ref_time_value = ref_time_value,
-                                 comp_effective_key_vars = comp_effective_key_vars,
                                  new_col = new_col
                     )
                   }
