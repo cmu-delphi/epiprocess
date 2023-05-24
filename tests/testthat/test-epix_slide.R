@@ -60,27 +60,27 @@ test_that("epix_slide works as intended",{
 })
 
 test_that("epix_slide works as intended with `as_list_col=TRUE`",{
-  # Note Issue #261.
-  xx1 <- xx %>%
+  xx_dfrow1 <- xx %>%
     group_by(.data$geo_value) %>%
     epix_slide(f = ~ data.frame(bin_sum = sum(.x$binary)),
                before = 2,
-               as_list_col=TRUE)
+               as_list_col = TRUE)
   
-  xx2 <- tibble(geo_value = rep("x",4),
-                time_value = c(4,5,6,7),
-                slide_value =
-                  c(2^3+2^2,
-                    2^6+2^3,
-                    2^10+2^9,
-                    2^15+2^14) %>%
-                  purrr::map(~ data.frame(bin_sum = .x))
-                ) %>%
+  xx_dfrow2 <- tibble(
+    geo_value = rep("x",4),
+    time_value = c(4,5,6,7),
+    slide_value =
+      c(2^3+2^2,
+        2^6+2^3,
+        2^10+2^9,
+        2^15+2^14) %>%
+      purrr::map(~ data.frame(bin_sum = .x))
+  ) %>%
     group_by(geo_value)
   
-  expect_identical(xx1,xx2) # *
+  expect_identical(xx_dfrow1,xx_dfrow2) # *
   
-  xx3 <- (
+  xx_dfrow3 <- (
     xx
     $group_by(dplyr::across(dplyr::all_of("geo_value")))
     $slide(f = ~ data.frame(bin_sum = sum(.x$binary)),
@@ -88,7 +88,66 @@ test_that("epix_slide works as intended with `as_list_col=TRUE`",{
            as_list_col = TRUE)
   )
   
-  expect_identical(xx1,xx3) # This and * Imply xx2 and xx3 are identical
+  expect_identical(xx_dfrow1,xx_dfrow3) # This and * Imply xx_dfrow2 and xx_dfrow3 are identical
+  
+  xx_df1 <- xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(f = ~ data.frame(bin = .x$binary),
+               before = 2,
+               as_list_col = TRUE)
+  
+  xx_df2 <- tibble(
+    geo_value = rep("x",4),
+    time_value = c(4,5,6,7),
+    slide_value =
+      list(c(2^3,2^2),
+           c(2^6,2^3),
+           c(2^10,2^9),
+           c(2^15,2^14)) %>%
+      purrr::map(~ data.frame(bin = rev(.x)))
+  ) %>%
+    group_by(geo_value)
+  
+  expect_identical(xx_df1,xx_df2)
+
+  xx_scalar1 <- xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(f = ~ sum(.x$binary),
+               before = 2,
+               as_list_col = TRUE)
+  
+  xx_scalar2 <- tibble(
+    geo_value = rep("x",4),
+    time_value = c(4,5,6,7),
+    slide_value =
+      list(2^3+2^2,
+           2^6+2^3,
+           2^10+2^9,
+           2^15+2^14)
+  ) %>%
+    group_by(geo_value)
+  
+  expect_identical(xx_scalar1,xx_scalar2)
+  
+  xx_vec1 <- xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(f = ~ .x$binary,
+               before = 2,
+               as_list_col = TRUE)
+  
+  xx_vec2 <- tibble(
+    geo_value = rep("x",4),
+    time_value = c(4,5,6,7),
+    slide_value = 
+      list(c(2^3,2^2),
+           c(2^6,2^3),
+           c(2^10,2^9),
+           c(2^15,2^14)) %>%
+      purrr::map(rev)
+  ) %>%
+    group_by(geo_value)
+  
+  expect_identical(xx_vec1,xx_vec2)
 })
 
 test_that("epix_slide `before` validation works", {

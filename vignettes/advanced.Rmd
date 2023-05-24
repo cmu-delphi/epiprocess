@@ -50,17 +50,20 @@ When using more advanced features, more complex rules apply:
 
 * Generalization: `epi_slide(edf, ....., ref_time_values=my_ref_time_values)`
   will output one row for every row in `edf` with `time_value` appearing inside
-  `ref_time_values`, and is analogous to a `dplyr::mutate`&`dplyr::arrange`
+  `my_ref_time_values`, and is analogous to a `dplyr::mutate`&`dplyr::arrange`
   followed by `dplyr::filter` to those `ref_time_values`. We call this property
   **size stability**, and describe how it is achieved in the following sections.
   The default behavior described above is a special case of this general rule
   based on a default value of `ref_time_values`.
 * Exception/feature: `epi_slide(edf, ....., ref_time_values=my_ref_time_values,
-  all_rows=TRUE)` will not just output rows for the given `ref_time_values`, but
+  all_rows=TRUE)` will not just output rows for `my_ref_time_values`, but
   instead will output one row per row in `edf`.
-* Exception/feature: `epix_slide(ea, ....., as_list_col=TRUE)` will output one
-  row per computation that outputs a data frame, even when these data frames
-  have arbitrary numbers of rows.
+* Exception/feature: `epi_slide(edf, ....., as_list_col=TRUE)` will format the
+  output to add a single list-class computed column.
+* Exception/feature: `epix_slide(ea, ....., as_list_col=TRUE)` will format the
+  output to have one row per computation and a single list-class computed column
+  (in addition to the grouping variables and `time_value`), as if we had used
+  `tidyr::chop()` or `tidyr::nest()`.
 * Clarification: `ea %>% group_by(....., .drop=FALSE) %>%
   epix_slide(<computation>, .....)` will call the computation on any missing
   groups according to `dplyr`'s `.drop=FALSE` rules, resulting in additional

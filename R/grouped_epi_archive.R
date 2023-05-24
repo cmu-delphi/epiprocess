@@ -279,11 +279,12 @@ grouped_epi_archive =
               if (! (is.atomic(comp_value) || is.data.frame(comp_value))) {
                 Abort("The slide computation must return an atomic vector or a data frame.")
               }
-              if (is.data.frame(comp_value)) {
-                # Wrap in a list so that we get a list-type col rather than a
-                # data.frame-type col when `as_list_col = TRUE`:
-                comp_value <- list(comp_value)
-              }
+              # Wrap the computation output in a list and unchop/unnest later if
+              # `as_list_col = FALSE`. This approach means that we will get a
+              # list-class col rather than a data.frame-class col when
+              # `as_list_col = TRUE` and the computations outputs are data
+              # frames.
+              comp_value <- list(comp_value)
               
               # Label every result row with the `ref_time_value`:
               return(tibble::tibble(time_value = .env$ref_time_value,
@@ -426,8 +427,8 @@ grouped_epi_archive =
                 )
               })
             }
-            
-            # Unnest if we need to
+
+            # Unchop/unnest if we need to
             if (!as_list_col) {
               x = tidyr::unnest(x, !!new_col, names_sep = names_sep)
             }

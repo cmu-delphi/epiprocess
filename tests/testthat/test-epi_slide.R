@@ -86,3 +86,76 @@ test_that("these doesn't produce an error; the error appears only if the ref tim
                      dplyr::select("geo_value","slide_value_value"), 
                    dplyr::tibble(geo_value = c("ak", "al"), slide_value_value = c(2, -2))) # not out of range for either group
 })
+
+test_that("computation output formats x as_list_col", {
+  toy_edf = tibble::tribble(
+    ~geo_value, ~time_value, ~value    ,
+    "a"       , 1:10       , 2L^( 1:10),
+    "b"       , 1:10       , 2L^(11:20),
+    ) %>%
+    tidyr::unchop(c(time_value, value)) %>%
+    as_epi_df(as_of = 100)
+  # We'll try 7d sum with a few formats.
+  basic_result_from_size1 = tibble::tribble(
+    ~geo_value, ~time_value, ~value    , ~slide_value                                    ,
+    "a"       , 1:10       , 2L^( 1:10), data.table::frollsum(2L^(1:10) + 2L^(11:20), c(1:7,rep(7L, 3L)), adaptive=TRUE, na.rm=TRUE),
+    "b"       , 1:10       , 2L^(11:20), data.table::frollsum(2L^(1:10) + 2L^(11:20), c(1:7,rep(7L, 3L)), adaptive=TRUE, na.rm=TRUE),
+    ) %>%
+    tidyr::unchop(c(time_value, value, slide_value)) %>%
+    dplyr::arrange(time_value) %>%
+    as_epi_df(as_of = 100)
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value)),
+    basic_result_from_size1
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value), as_list_col = TRUE),
+    basic_result_from_size1 %>% dplyr::mutate(slide_value = as.list(slide_value))
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value))),
+    basic_result_from_size1 %>% rename(slide_value_value = slide_value)
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value)), as_list_col = TRUE),
+    basic_result_from_size1 %>%
+      mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x)))
+  )
+  # output naming functionality:
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value)),
+                          new_col_name = "result"),
+    basic_result_from_size1 %>% rename(result_value = slide_value)
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value_sum = sum(.x$value)),
+                          names_sep = NULL),
+    basic_result_from_size1 %>% rename(value_sum = slide_value)
+  )
+  # trying with non-size-1 computation outputs:
+  basic_result_from_size2 = tibble::tribble(
+    ~geo_value, ~time_value, ~value    , ~slide_value                                    ,
+    "a"       , 1:10       , 2L^( 1:10), data.table::frollsum(2L^(1:10) + 2L^(11:20), c(1:7,rep(7L, 3L)), adaptive=TRUE, na.rm=TRUE),
+    "b"       , 1:10       , 2L^(11:20), data.table::frollsum(2L^(1:10) + 2L^(11:20), c(1:7,rep(7L, 3L)), adaptive=TRUE, na.rm=TRUE) + 1L,
+    ) %>%
+    tidyr::unchop(c(time_value, value, slide_value)) %>%
+    dplyr::arrange(time_value) %>%
+    as_epi_df(as_of = 100)
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value) + 0:1),
+    basic_result_from_size2
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value) + 0:1, as_list_col = TRUE),
+    basic_result_from_size2 %>% dplyr::mutate(slide_value = as.list(slide_value))
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value) + 0:1)),
+    basic_result_from_size2 %>% rename(slide_value_value = slide_value)
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value) + 0:1), as_list_col = TRUE),
+    basic_result_from_size2 %>%
+      mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x)))
+  )
+})

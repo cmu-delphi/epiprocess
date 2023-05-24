@@ -20,6 +20,12 @@ inter-release development versions will include an additional ".9999" suffix.
   * To keep the old behavior, convert the output of `epix_slide()` to `epi_df`
     when desired and set the metadata appropriately.
 
+## Improvements:
+
+* `epi_slide` and `epix_slide` now support `as_list_col = TRUE` when the slide
+  computations output atomic vectors, and output a list column in "chopped"
+  format (see `tidyr::chop`).
+
 # epiprocess 0.6.0
 
 ## Breaking changes:
