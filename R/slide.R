@@ -348,8 +348,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     if (rlang::is_formula(f)) f = as_slide_computation(f)
     f_rtv_wrapper = function(x, g, ...) {
       ref_time_value = min(x$time_value) + before
-      x <- filter(x, .real) %>%
-        select(-.real)
+      x <- x[x$.real,]
       f(x, g, ref_time_value, ...)
     }
     x = x %>%  
@@ -376,8 +375,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     quo = quos[[1]]
     f = function(.x, .group_key, quo, ...) {
       .ref_time_value = min(.x$time_value) + before
-      .x <- filter(.x, .real) %>%
-        select(-.real)
+      .x <- .x[.x$.real,]
       quo = quo_set_env(quo, env())
       rlang::eval_tidy(quo, .x)
     }
@@ -400,7 +398,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
   }
 
   # Drop helper column `.real`.
-  x = select(x, -.real)
+  x$.real <- NULL
 
   return(x)
 }
