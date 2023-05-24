@@ -17,7 +17,7 @@ jhu_csse_county_level_subset <- covidcast(
   time_values = epirange(20200601, 20211231),
   geo_values = paste(y$geo_value, collapse = ",")
 ) %>%
-  fetch_tbl() %>%
+  fetch() %>%
   select(geo_value, time_value, cases = value) %>%
   full_join(y, by = "geo_value") %>%
   as_epi_df()
