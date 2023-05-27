@@ -83,8 +83,15 @@ when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the pre
 from \code{new_col_name} entirely.}
 
 \item{all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
-the output; otherwise, there will be one row for each time value in \code{x}
-that acts as a reference time value. Default is \code{FALSE}.}
+the output even with \code{ref_time_values} provided, with some type of missing
+value marker for the slide computation output column(s) for \code{time_value}s
+outside \code{ref_time_values}; otherwise, there will be one row for each row in
+\code{x} that had a \code{time_value} in \code{ref_time_values}. Default is \code{FALSE}. The
+missing value marker is the result of \code{vctrs::vec_cast}ing \code{NA} to the type
+of the slide computation output. If using \code{as_list_col = TRUE}, note that
+the missing marker is a \code{NULL} entry in the list column; for certain
+operations, you might want to replace these \code{NULL} entries with a different
+\code{NA} marker.}
 }
 \value{
 An \code{epi_df} object given by appending a new column to \code{x}, named

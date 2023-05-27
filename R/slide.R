@@ -62,8 +62,15 @@
 #'   when `as_list_col = FALSE`. Default is "_". Using `NULL` drops the prefix
 #'   from `new_col_name` entirely.
 #' @param all_rows If `all_rows = TRUE`, then all rows of `x` will be kept in
-#'   the output; otherwise, there will be one row for each time value in `x`
-#'   that acts as a reference time value. Default is `FALSE`.
+#'   the output even with `ref_time_values` provided, with some type of missing
+#'   value marker for the slide computation output column(s) for `time_value`s
+#'   outside `ref_time_values`; otherwise, there will be one row for each row in
+#'   `x` that had a `time_value` in `ref_time_values`. Default is `FALSE`. The
+#'   missing value marker is the result of `vctrs::vec_cast`ing `NA` to the type
+#'   of the slide computation output. If using `as_list_col = TRUE`, note that
+#'   the missing marker is a `NULL` entry in the list column; for certain
+#'   operations, you might want to replace these `NULL` entries with a different
+#'   `NA` marker.
 #' @return An `epi_df` object given by appending a new column to `x`, named
 #'   according to the `new_col_name` argument.
 #' 
@@ -306,10 +313,13 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     # If all rows, then pad slide values with NAs, else filter down data group
     if (all_rows) {
       orig_values = slide_values
-      slide_values = rep(NA, nrow(.data_group))
-      slide_values[o] = orig_values
+      slide_values = vctrs::vec_rep(vctrs::vec_cast(NA, orig_values), nrow(.data_group))
+      # ^ using vctrs::vec_init would be shorter but docs don't guarantee it
+      # fills with NA equivalent.
+      vctrs::vec_slice(slide_values, o) = orig_values
+    } else {
+      .data_group = filter(.data_group, o)
     }
-    else .data_group = filter(.data_group, o)
     return(mutate(.data_group, !!new_col := slide_values))
   }
 

@@ -2,14 +2,22 @@
 
 d <- as.Date("2020-01-01")
 
-grouped = dplyr::bind_rows(
+ungrouped = dplyr::bind_rows(
   dplyr::tibble(geo_value = "ak", time_value = d + 1:200, value=1:200),
   dplyr::tibble(geo_value = "al", time_value = d + 1:5, value=-(1:5))
 ) %>%
-  as_epi_df() %>%
+  as_epi_df()
+grouped = ungrouped %>%
   group_by(geo_value)
-
 f = function(x, g) dplyr::tibble(value=mean(x$value), count=length(x$value))
+
+toy_edf = tibble::tribble(
+  ~geo_value, ~time_value, ~value    ,
+  "a"       , 1:10       , 2L^( 1:10),
+  "b"       , 1:10       , 2L^(11:20),
+  ) %>%
+  tidyr::unchop(c(time_value, value)) %>%
+  as_epi_df(as_of = 100)
 
 ## --- These cases generate errors (or not): ---
 test_that("`before` and `after` are both vectors of length 1", {
@@ -88,13 +96,7 @@ test_that("these doesn't produce an error; the error appears only if the ref tim
 })
 
 test_that("computation output formats x as_list_col", {
-  toy_edf = tibble::tribble(
-    ~geo_value, ~time_value, ~value    ,
-    "a"       , 1:10       , 2L^( 1:10),
-    "b"       , 1:10       , 2L^(11:20),
-    ) %>%
-    tidyr::unchop(c(time_value, value)) %>%
-    as_epi_df(as_of = 100)
+  # See `toy_edf` definition at top of file.
   # We'll try 7d sum with a few formats.
   basic_result_from_size1 = tibble::tribble(
     ~geo_value, ~time_value, ~value    , ~slide_value                                    ,
@@ -169,4 +171,124 @@ test_that("epi_slide alerts if the provided f doesn't take enough args", {
   f_x_dots = function(x, ...) dplyr::tibble(value=mean(x$value), count=length(x$value))
   expect_warning(epi_slide(grouped, f_x_dots, before = 1L, ref_time_values = d+1),
     class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots")
+})
+
+test_that("`ref_time_values` + `all_rows = TRUE` works", {
+  # See `toy_edf` definition at top of file. We'll do variants of a slide
+  # returning the following:
+  basic_full_result = tibble::tribble(
+    ~geo_value, ~time_value, ~value    , ~slide_value                                    ,
+    "a"       , 1:10       , 2L^( 1:10), data.table::frollsum(2L^(1:10) + 2L^(11:20), c(1:7,rep(7L, 3L)), adaptive=TRUE, na.rm=TRUE),
+    "b"       , 1:10       , 2L^(11:20), data.table::frollsum(2L^(1:10) + 2L^(11:20), c(1:7,rep(7L, 3L)), adaptive=TRUE, na.rm=TRUE),
+    ) %>%
+    tidyr::unchop(c(time_value, value, slide_value)) %>%
+    dplyr::arrange(time_value) %>%
+    as_epi_df(as_of = 100)
+  # slide computations returning atomic vecs:
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value)),
+    basic_full_result
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value),
+                          ref_time_values = c(2L, 8L)),
+    basic_full_result %>% dplyr::filter(time_value %in% c(2L, 8L))
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value),
+                          ref_time_values = c(2L, 8L), all_rows = TRUE),
+    basic_full_result %>%
+      dplyr::mutate(slide_value = dplyr::if_else(time_value %in% c(2L, 8L),
+                                                 slide_value, NA_integer_))
+  )
+  # slide computations returning data frames:
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value))),
+    basic_full_result %>% dplyr::rename(slide_value_value = slide_value)
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value)),
+                          ref_time_values = c(2L, 8L)),
+    basic_full_result %>%
+      dplyr::filter(time_value %in% c(2L, 8L)) %>%
+      dplyr::rename(slide_value_value = slide_value)
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value)),
+                          ref_time_values = c(2L, 8L), all_rows = TRUE),
+    basic_full_result %>%
+      dplyr::mutate(slide_value = dplyr::if_else(time_value %in% c(2L, 8L),
+                                                 slide_value, NA_integer_)) %>%
+      dplyr::rename(slide_value_value = slide_value)
+  )
+  # slide computations returning data frames with `as_list_col=TRUE`:
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value)),
+                          as_list_col = TRUE),
+    basic_full_result %>%
+      dplyr::mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x)))
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value)),
+                          ref_time_values = c(2L, 8L),
+                          as_list_col = TRUE),
+    basic_full_result %>%
+      dplyr::mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x))) %>%
+      dplyr::filter(time_value %in% c(2L, 8L))
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value)),
+                          ref_time_values = c(2L, 8L), all_rows = TRUE,
+                          as_list_col = TRUE),
+    basic_full_result %>%
+      dplyr::mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x))) %>%
+      dplyr::mutate(slide_value = dplyr::if_else(time_value %in% c(2L, 8L),
+                                                 slide_value, list(NULL)))
+  )
+  # slide computations returning data frames, `as_list_col = TRUE`, `unnest`:
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value)),
+                          as_list_col = TRUE) %>%
+      unnest(slide_value, names_sep = "_"),
+    basic_full_result %>% dplyr::rename(slide_value_value = slide_value)
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value)),
+                          ref_time_values = c(2L, 8L),
+                          as_list_col = TRUE) %>%
+      unnest(slide_value, names_sep = "_"),
+    basic_full_result %>%
+      dplyr::filter(time_value %in% c(2L, 8L)) %>%
+      dplyr::rename(slide_value_value = slide_value)
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value)),
+                          ref_time_values = c(2L, 8L), all_rows = TRUE,
+                          as_list_col = TRUE) %>%
+      unnest(slide_value, names_sep = "_"),
+    basic_full_result %>%
+      # XXX unclear exactly what we want in this case. Current approach is
+      # compatible with `vctrs::vec_detect_missing` but breaks `tidyr::unnest`
+      # compatibility
+      dplyr::filter(time_value %in% c(2L, 8L)) %>%
+      dplyr::rename(slide_value_value = slide_value)
+  )
+  rework_nulls = function(slide_values_list) {
+    vctrs::vec_assign(
+      slide_values_list,
+      vctrs::vec_detect_missing(slide_values_list),
+      list(vctrs::vec_cast(NA, vctrs::vec_ptype_common(!!!slide_values_list)))
+    )
+  }
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value)),
+                          ref_time_values = c(2L, 8L), all_rows = TRUE,
+                          as_list_col = TRUE) %>%
+      mutate(slide_value = rework_nulls(slide_value)) %>%
+      unnest(slide_value, names_sep = "_"),
+    basic_full_result %>%
+      dplyr::mutate(slide_value = dplyr::if_else(time_value %in% c(2L, 8L),
+                                                 slide_value, NA_integer_)) %>%
+      dplyr::rename(slide_value_value = slide_value)
+  )
 })
