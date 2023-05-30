@@ -661,10 +661,10 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   column names as the archive's `DT`, minus the `version` column; followed
 #'   by a one-row tibble containing the values of the grouping variables for
 #'   the associated group; followed by a Date containing the reference time
-#'   value to use; followed by any number of named arguments. If a formula,
-#'   `f` can operate directly on columns accessed via `.x$var` or `.`, as in
+#'   value that was used; followed by any number of named arguments. If a formula,
+#'   `f` can operate directly on columns accessed via `.x$var` or `.$var`, as in
 #'   `~ mean (.x$var)` to compute a mean of a column `var` for each
-#'   `ref_time_value`-group combination. The group key can be accessed via
+#'   group-`ref_time_value` combination. The group key can be accessed via
 #'   `.y` or `.group_key`, and the reference time value can be accessed via
 #'   `.z` or `.ref_time_value`. If `f` is missing, then `...` will specify
 #'   the computation.
