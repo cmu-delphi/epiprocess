@@ -25,6 +25,8 @@ inter-release development versions will include an additional ".9999" suffix.
 * `epi_slide` and `epix_slide` now support `as_list_col = TRUE` when the slide
   computations output atomic vectors, and output a list column in "chopped"
   format (see `tidyr::chop`).
+* `epi_slide` now works properly with slide computations that output just a
+  `Date` vector, rather than converting `slide_value` to a numeric column.
 
 # epiprocess 0.6.0
 

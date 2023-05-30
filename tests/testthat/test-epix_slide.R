@@ -572,3 +572,15 @@ test_that("epix_slide alerts if the provided f doesn't take enough args", {
   expect_warning(epix_slide(xx, f_x_dots, before = 2L),
     class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots")
 })
+
+test_that("`epix_slide` doesn't decay date output", {
+  expect_true(
+    xx$DT %>%
+      as_tibble() %>%
+      mutate(across(c(time_value, version), ~ as.Date("2000-01-01") + .x - 1L)) %>%
+      as_epi_archive() %>%
+      epix_slide(before = 5L, ~ attr(.x, "metadata")$as_of) %>%
+      `[[`("slide_value") %>%
+      inherits("Date")
+  )
+})

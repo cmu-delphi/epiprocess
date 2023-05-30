@@ -292,3 +292,12 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
       dplyr::rename(slide_value_value = slide_value)
   )
 })
+
+test_that("`epi_slide` doesn't decay date output", {
+  expect_true(
+    ungrouped %>%
+      epi_slide(before = 5L, ~ as.Date("2020-01-01")) %>%
+      `[[`("slide_value") %>%
+      inherits("Date")
+  )
+})
