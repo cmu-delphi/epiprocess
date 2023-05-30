@@ -496,12 +496,12 @@ gcd_num = function(dividends, ..., rrtol=1e-6, pqlim=1e6, irtol=1e-6) {
 
 #' Use max valid period as guess for `period` of `ref_time_values`
 #'
-#' @param `ref_time_values` Vector containing time-interval-like or time-like
+#' @param ref_time_values Vector containing time-interval-like or time-like
 #'   data, with at least two distinct values, [`diff`]-able (e.g., a
 #'   `time_value` or `version` column), and should have a sensible result from
 #'   adding `is.numeric` versions of its `diff` result (via `as.integer` if its
 #'   `typeof` is `"integer"`, otherwise via `as.numeric`).
-#' @param `ref_time_values_arg` Optional, string; name to give `ref_time_values`
+#' @param ref_time_values_arg Optional, string; name to give `ref_time_values`
 #'   in error messages. Defaults to quoting the expression the caller fed into
 #'   the `ref_time_values` argument.
 #' @return `is.numeric`, length 1; attempts to match `typeof(ref_time_values)`

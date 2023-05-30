@@ -17,7 +17,7 @@
 
 \method{ungroup}{epi_df}(x, ...)
 
-\method{unnest}{epi_df}(.data, .f, ..., .keep = FALSE)
+\method{group_modify}{epi_df}(.data, .f, ..., .keep = FALSE)
 
 \method{unnest}{epi_df}(data, ...)
 }
@@ -28,6 +28,12 @@
 Currently unused.}
 
 \item{object}{The \code{epi_df} object.}
+
+\item{.data}{The \code{epi_df} object.}
+
+\item{.f}{function or formula; see \code{\link[dplyr:group_map]{dplyr::group_modify}}}
+
+\item{.keep}{Boolean; see \code{\link[dplyr:group_map]{dplyr::group_modify}}}
 
 \item{data}{The \code{epi_df} object.}
 }

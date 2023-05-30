@@ -115,11 +115,11 @@ grouped_epi_archive =
           cat("Public `grouped_epi_archive` R6 methods:\n")
           grouped_method_names = names(grouped_epi_archive$public_methods)
           ungrouped_method_names = names(epi_archive$public_methods)
-          writeLines(wrap_varnames(initial = "• Specialized `epi_archive` methods: ",
+          writeLines(wrap_varnames(initial = "\u2022 Specialized `epi_archive` methods: ",
                                    intersect(grouped_method_names, ungrouped_method_names)))
-          writeLines(wrap_varnames(initial = "• Exclusive to `grouped_epi_archive`: ",
+          writeLines(wrap_varnames(initial = "\u2022 Exclusive to `grouped_epi_archive`: ",
                                    setdiff(grouped_method_names, ungrouped_method_names)))
-          writeLines(wrap_varnames(initial = "• `ungroup` to use: ",
+          writeLines(wrap_varnames(initial = "\u2022 `ungroup` to use: ",
                                    setdiff(ungrouped_method_names, grouped_method_names)))
         }
         # Return self invisibly for convenience in `$`-"pipe":
@@ -190,7 +190,11 @@ grouped_epi_archive =
           slide = function(f, ..., before, ref_time_values,
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
-                           all_rows = FALSE, all_versions = FALSE) {
+                           all_versions = FALSE) {
+            # Perform some deprecated argument checks without using `<param> =
+            # deprecated()` in the function signature, because they are from
+            # early development versions and much more likely to be clutter than
+            # informative in the signature.
             if ("group_by" %in% nse_dots_names(...)) {
               Abort("
                 The `group_by` argument to `slide` has been removed; please use
@@ -200,12 +204,18 @@ grouped_epi_archive =
                 this check is a false positive, but you will still need to use a
                 different column name here and rename the resulting column after
                 the slide.)
-              ")
+              ", class = "epiprocess__epix_slide_group_by_parameter_deprecated")
+            }
+            if ("all_rows" %in% nse_dots_names(...)) {
+              Abort("
+                The `all_rows` argument has been removed from `epix_slide` (but
+                is still supported in `epi_slide`). Add rows for excluded
+                results with a manual join instead.
+              ", class = "epiprocess__epix_slide_all_rows_parameter_deprecated")
             }
             
             if (missing(ref_time_values)) {
-              versions_with_updates = c(private$ungrouped$DT$version, private$ungrouped$versions_end)
-              ref_time_values = tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
+              ref_time_values = epix_slide_ref_time_values_default(private$ungrouped)
             } else if (length(ref_time_values) == 0L) {
               Abort("`ref_time_values` must have at least one element.")
             } else if (any(is.na(ref_time_values))) {
@@ -252,30 +262,14 @@ grouped_epi_archive =
             if (! (rlang::is_string(names_sep) || is.null(names_sep)) ) {
               Abort("`names_sep` must be a (single) string or NULL.")
             }
-            if (!rlang::is_bool(all_rows)) {
-              Abort("`all_rows` must be TRUE or FALSE.")
-            }
             if (!rlang::is_bool(all_versions)) {
               Abort("`all_versions` must be TRUE or FALSE.")
             }
 
-            # Each computation is expected to output a data frame with either
-            # one element/row total or one element/row per encountered
-            # nongrouping, nontime, nonversion key value. These nongrouping,
-            # nontime, nonversion key columns can be seen as the "effective" key
-            # of the computation; the computation might return an object that
-            # reports a different key or no key, but the "effective" key should
-            # still be a valid unique key for the data, and is something that we
-            # could use even with `.keep = FALSE`.
-            comp_effective_key_vars =
-              setdiff(key(private$ungrouped$DT),
-                      c(private$vars, "time_value", "version"))
-            
             # Computation for one group, one time value
             comp_one_grp = function(.data_group, .group_key,
                                     f, ..., 
                                     ref_time_value,
-                                    comp_effective_key_vars,
                                     new_col) {
               # Carry out the specified computation
               comp_value = f(.data_group, .group_key, ...)
@@ -287,77 +281,18 @@ grouped_epi_archive =
                 .data_group = .data_group$DT
               }
 
-              # Calculate the number of output elements/rows we expect the
-              # computation to output: one per distinct "effective computation
-              # key variable" value encountered in the input.
-              #
-              # Note: this mirrors how `epi_slide` does things if we're using
-              # unique keys, but can diverge if using nonunique keys. The
-              # `epi_slide` approach of counting occurrences of the
-              # `ref_time_value` in the `time_value` column, which helps lines
-              # up the computation results with corresponding rows of the
-              # input data, wouldn't quite apply here: we'd want to line up
-              # with rows (from the same group) with `version` matching the
-              # `ref_time_value`, but would still need to summarize these rows
-              # somehow and drop the `time_value` input column, but this
-              # summarization requires something like a to-be-unique output
-              # key to determine a sensible number of rows to output (and the
-              # contents of those rows).
-              count =
-                if (length(comp_effective_key_vars) != 0L) {
-                  comp_effective_key_vals_in_comp_input =
-                    if (data.table::is.data.table(.data_group)) {
-                      .data_group[, comp_effective_key_vars, with=FALSE]
-                    } else {
-                      .data_group[, comp_effective_key_vars]
-                    }
-                  sum(!duplicated(comp_effective_key_vals_in_comp_input))
-                } else {
-                  # Same idea as above, but accounting for `duplicated` working
-                  # differently (outputting `logical(0)`) on 0-column inputs
-                  # rather than matching the number of rows. (Instead, we use
-                  # the same count we would get if we were counting distinct
-                  # values of a column defined as `rep(val, target_n_rows)`.)
-                  if (nrow(.data_group) == 0L) {
-                    0L
-                  } else {
-                    1L
-                  }
-                }
-
-              # If we get back an atomic vector
-              if (is.atomic(comp_value)) {
-                if (length(comp_value) == 1) {
-                  comp_value = rep(comp_value, count)
-                }
-                # If not a singleton, should be the right length, else abort
-                else if (length(comp_value) != count) {
-                  Abort('If the slide computation returns an atomic vector, then it must have either (a) a single element, or (b) one element per distinct combination of key variables, excluding the `time_value`, `version`, and grouping variables, that is present in the first argument to the computation.')
-                }
-              }
-
-              # If we get back a data frame
-              else if (is.data.frame(comp_value)) {
-                if (nrow(comp_value) == 1) {
-                  comp_value = rep(list(comp_value), count)
-                }
-                # If not a single row, should be the right length, else abort
-                else if (nrow(comp_value) != count) {
-                  Abort("If the slide computation returns a data frame, then it must have a single row, or else one row per appearance of the reference time value in the local window.")
-                }
-                # Make into a list
-                else {
-                  comp_value = split(comp_value, seq_len(nrow(comp_value)))
-                }
-              }
-
-              # If neither an atomic vector data frame, then abort
-              else {
+              if (! (is.atomic(comp_value) || is.data.frame(comp_value))) {
                 Abort("The slide computation must return an atomic vector or a data frame.")
               }
- 
+              # Wrap the computation output in a list and unchop/unnest later if
+              # `as_list_col = FALSE`. This approach means that we will get a
+              # list-class col rather than a data.frame-class col when
+              # `as_list_col = TRUE` and the computations outputs are data
+              # frames.
+              comp_value <- list(comp_value)
+              
               # Label every result row with the `ref_time_value`:
-              return(tibble::tibble(time_value = rep(.env$ref_time_value, count),
+              return(tibble::tibble(time_value = .env$ref_time_value,
                                     !!new_col := .env$comp_value))
             }
             
@@ -379,11 +314,12 @@ grouped_epi_archive =
                   group_modify_fn = comp_one_grp
                 } else {
                   as_of_archive = as_of_raw
-                  # We essentially want to `group_modify` the archive, but don't
-                  # provide an implementation yet. Next best would be
-                  # `group_modify` on its `$DT`, but that has different behavior
-                  # based on whether or not `dtplyr` is loaded. Instead, go
-                  # through a , trying to avoid copies.
+                  # We essentially want to `group_modify` the archive, but
+                  #  haven't implemented this method yet. Next best would be
+                  #  `group_modify` on its `$DT`, but that has different
+                  #  behavior based on whether or not `dtplyr` is loaded.
+                  #  Instead, go through an ordinary data frame, trying to avoid
+                  #  copies.
                   if (address(as_of_archive$DT) == address(private$ungrouped$DT)) {
                     # `as_of` aliased its the full `$DT`; copy before mutating:
                     as_of_archive$DT <- copy(as_of_archive$DT)
@@ -391,12 +327,11 @@ grouped_epi_archive =
                   dt_key = data.table::key(as_of_archive$DT)
                   as_of_df = as_of_archive$DT
                   data.table::setDF(as_of_df)
-
+                  
                   # Convert each subgroup chunk to an archive before running the calculation.
                   group_modify_fn = function(.data_group, .group_key,
                                     f, ...,
                                     ref_time_value,
-                                    comp_effective_key_vars,
                                     new_col) {
                     # .data_group is coming from as_of_df as a tibble, but we
                     # want to feed `comp_one_grp` an `epi_archive` backed by a
@@ -407,19 +342,17 @@ grouped_epi_archive =
                     .data_group_archive$DT = .data_group
                     comp_one_grp(.data_group_archive, .group_key, f = f, ...,
                                  ref_time_value = ref_time_value,
-                                 comp_effective_key_vars = comp_effective_key_vars,
                                  new_col = new_col
                     )
                   }
                 }
-
+                
                 return(
                   dplyr::group_by(as_of_df, dplyr::across(tidyselect::all_of(private$vars)),
                                   .drop=private$drop) %>%
                     dplyr::group_modify(group_modify_fn,
                                         f = f, ...,
                                         ref_time_value = ref_time_value,
-                                        comp_effective_key_vars = comp_effective_key_vars,
                                         new_col = new_col,
                                         .keep = TRUE)
                 )
@@ -459,7 +392,7 @@ grouped_epi_archive =
                   # provide an implementation yet. Next best would be
                   # `group_modify` on its `$DT`, but that has different behavior
                   # based on whether or not `dtplyr` is loaded. Instead, go
-                  # through a , trying to avoid copies.
+                  # through an ordinary data frame, trying to avoid copies.
                   if (address(as_of_archive$DT) == address(private$ungrouped$DT)) {
                     # `as_of` aliased its the full `$DT`; copy before mutating:
                     as_of_archive$DT <- copy(as_of_archive$DT)
@@ -472,7 +405,6 @@ grouped_epi_archive =
                   group_modify_fn = function(.data_group, .group_key,
                                     f, ...,
                                     ref_time_value,
-                                    comp_effective_key_vars,
                                     new_col) {
                     # .data_group is coming from as_of_df as a tibble, but we
                     # want to feed `comp_one_grp` an `epi_archive` backed by a
@@ -483,7 +415,6 @@ grouped_epi_archive =
                     .data_group_archive$DT = .data_group
                     comp_one_grp(.data_group_archive, .group_key, f = f, quo = quo,
                                  ref_time_value = ref_time_value,
-                                 comp_effective_key_vars = comp_effective_key_vars,
                                  new_col = new_col
                     )
                   }
@@ -501,18 +432,31 @@ grouped_epi_archive =
                 )
               })
             }
-            
-            # Unnest if we need to
+
+            # Unchop/unnest if we need to
             if (!as_list_col) {
               x = tidyr::unnest(x, !!new_col, names_sep = names_sep)
             }
-            
-            # Join to get all rows, if we need to, then return
-            if (all_rows) {
-              cols = c(private$vars, "time_value")
-              y = unique(private$ungrouped$DT[, ..cols])
-              x = dplyr::left_join(y, x, by = cols)
-            }
+
+            # if (is_epi_df(x)) {
+            #   # The analogue of `epi_df`'s `as_of` metadata for an archive is
+            #   # `<archive>$versions_end`, at least in the current absence of
+            #   # separate fields/columns denoting the "archive version" with a
+            #   # different resolution, or from the perspective of a different
+            #   # stage of a data pipeline. The `as_of` that is automatically
+            #   # derived won't always match; override:
+            #   attr(x, "metadata")[["as_of"]] <- private$ungrouped$versions_end
+            # }
+
+            # XXX We need to work out when we want to return an `epi_df` and how
+            # to get appropriate keys (see #290, #223, #163). We'll probably
+            # need the commented-out code above if we ever output an `epi_df`.
+            # However, as a stopgap measure to have some more consistency across
+            # different ways of calling `epix_slide`, and to prevent `epi_df`
+            # output with invalid metadata, always output a (grouped or
+            # ungrouped) tibble.
+            x <- decay_epi_df(x)
+
             return(x)
           }
     )
