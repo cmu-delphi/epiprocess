@@ -47,6 +47,13 @@ inter-release development versions will include an additional ".9999" suffix.
   * Slide functions now keep any grouping of `x` in their results, like
     `mutate` and `group_modify`.
     * To obtain the old behavior, `dplyr::ungroup` the slide results immediately.
+* Additional `epi_slide` changes:
+  * When using `as_list_col = TRUE` together with `ref_time_values` and
+    `all_rows=TRUE`, the marker for excluded computations is now a `NULL` entry
+    in the list column, rather than a `NA`; if you are using `tidyr::unnest()`
+    afterward and want to keep these missing data markers, you will need to
+    replace the `NULL` entries with `NA`s. Skipped computations are now more
+    uniformly detectable using `vctrs` methods.
 * Additional`epix_slide` changes:
   * `epix_slide`'s `group_by` argument has been replaced by `dplyr::group_by` and
     `dplyr::ungroup` S3 methods. The `group_by` method uses "data masking" (also
