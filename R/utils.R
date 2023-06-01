@@ -229,7 +229,7 @@ assert_sufficient_f_args <- function(f, ..., n_mandatory_f_args = 2L) {
 #'
 #' @importFrom rlang check_dots_empty0 is_function new_function f_env
 #'  is_environment missing_arg f_rhs is_string is_formula caller_arg
-#'  caller_env
+#'  caller_env global_env
 as_slide_computation <- function(x,
                         env = global_env(),
                         ...,
@@ -243,18 +243,19 @@ as_slide_computation <- function(x,
 
   if (is_formula(x)) {
     if (length(x) > 2) {
-      rlang:::abort_coercion(
-        x,
-        x_type = "a two-sided formula",
-        to_type = "a slide computation",
-        arg = arg,
-        call = call
-      )
+      Abort(sprintf("%s must be a one-sided formula", arg),
+              class = "epiprocess__as_slide_computation__formula_is_twosided",
+              epiprocess__x = x,
+              call = call)
     }
 
     env <- f_env(x)
     if (!is_environment(env)) {
-      abort("Formula must carry an environment.", arg = arg, call = call)
+      Abort("Formula must carry an environment.",
+              class = "epiprocess__as_slide_computation__formula_has_no_env",
+              epiprocess__x = x,
+              epiprocess__x_env = env,
+              arg = arg, call = call)
     }
 
     args <- list(
@@ -271,7 +272,12 @@ as_slide_computation <- function(x,
     return(get(x, envir = env, mode = "function"))
   }
 
-  rlang:::abort_coercion(x, "a slide computation", arg = arg, call = call)
+  Abort(sprintf("Can't convert a %s to a slide computation", class(x)),
+            class = "epiprocess__as_slide_computation__cant_convert_catchall",
+            epiprocess__x = x,
+            epiprocess__x_class = class(x),
+            arg = arg,
+            call = call)
 }
 
 ##########
