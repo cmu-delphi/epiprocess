@@ -423,13 +423,6 @@ test_that("epix_slide computation via dots can use ref_time_value and group", {
 
   expect_identical(xx1, xx_ref)
 
-  xx2 <- xx %>%
-    group_by(.data$geo_value) %>%
-    epix_slide(before = 2,
-      slide_value = .env$.ref_time_value)
-
-  expect_identical(xx2, xx_ref)
-
   # group_key
   xx_ref <- tibble(geo_value = rep("x",4),
                 time_value = c(4,5,6,7),

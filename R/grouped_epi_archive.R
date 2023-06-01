@@ -187,7 +187,6 @@ grouped_epi_archive =
 #'   details.
 #' @importFrom data.table key address
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
-#'  quo_set_env env
           slide = function(f, ..., before, ref_time_values,
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
@@ -439,8 +438,15 @@ grouped_epi_archive =
               
               quo = quos[[1]]
               f = function(.x, .group_key, .ref_time_value, quo, ...) {
-                quo = quo_set_env(quo, env())
-                rlang::eval_tidy(quo, .x)
+                data_parent_env = rlang::as_environment(.x)
+                data_env = env(data_parent_env,
+                               .x = .x, .group_key = .group_key,
+                               .ref_time_value = .ref_time_value)
+                # `as_data_mask()` appears to strip off ancestors. We'll need to
+                # do some more work with `new_data_mask()`:
+                data_mask = rlang::new_data_mask(data_env, top = data_parent_env)
+                data_mask$.data <- rlang::as_data_pronoun(.x)
+                rlang::eval_tidy(quo, data_mask)
               }
               new_col = sym(names(rlang::quos_auto_name(quos)))
 
