@@ -227,9 +227,9 @@ assert_sufficient_f_args <- function(f, ..., n_mandatory_f_args = 2L) {
 #' h <- as_slide_computation(~ .x - .group_key)
 #' h(6, 3)
 #'
-#' @importFrom rlang check_dots_empty0 is_function is_quosure eval_tidy call2
-#'  quo_get_env new_function pairlist2 f_env is_environment missing_arg f_rhs
-#'  is_string quo_get_expr is_formula caller_arg caller_env
+#' @importFrom rlang check_dots_empty0 is_function new_function f_env
+#'  is_environment missing_arg f_rhs is_string is_formula caller_arg
+#'  caller_env
 as_slide_computation <- function(x,
                         env = global_env(),
                         ...,
@@ -239,12 +239,6 @@ as_slide_computation <- function(x,
 
   if (is_function(x)) {
     return(x)
-  }
-
-  if (is_quosure(x)) {
-    mask <- eval_tidy(call2(environment), env = quo_get_env(x))
-    fn <- new_function(pairlist2(... = ), quo_get_expr(x), mask)
-    return(fn)
   }
 
   if (is_formula(x)) {
