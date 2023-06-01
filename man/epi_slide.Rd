@@ -30,7 +30,7 @@ determined by the \code{before} and \code{after} parameters described below. One
 step is typically one day or one week; see details for more explanation. If
 a function, \code{f} must take a data frame with the same column names as
 the original object, minus any grouping variables, containing the time
-window data for one \code{ref_time_value}-group combination; followed by a
+window data for one group-\code{ref_time_value} combination; followed by a
 one-row tibble containing the values of the grouping variables for the
 associated group; followed by any number of named arguments. If a formula,
 \code{f} can operate directly on columns accessed via \code{.x$var} or \code{.$var}, as

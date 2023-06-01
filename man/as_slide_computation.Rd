@@ -17,13 +17,13 @@ as_slide_computation(
 
 If a \strong{function}, it is used as is.
 
-If a \strong{formula}, e.g. \code{~ .x + 2}, it is converted to a function with up
+If a \strong{formula}, e.g. \code{~ mean(.x$cases)}, it is converted to a function with up
 to three arguments: \code{.x} (single argument), or \code{.x} and \code{.y}
 (two arguments), or \code{.x}, \code{.y}, and \code{.z} (three arguments). The \code{.}
 placeholder can be used instead of \code{.x}, \code{.group_key} can be used in
 place of \code{.y}, and \code{.ref_time_value} can be used in place of \code{.z}. This
 allows you to create very compact anonymous functions (lambdas) with up
-to two inputs. Functions created from formulas have a special class. Use
+to three inputs. Functions created from formulas have a special class. Use
 \code{rlang::is_lambda()} to test for it.
 
 If a \strong{string}, the function is looked up in \code{env}. Note that
@@ -50,7 +50,7 @@ mentioned in error messages as the source of the error. See the
 This powers the lambda syntax in packages like purrr.
 
 This is an extension of \code{rlang::as_function} that can create functions that
-take three arguments. The arugments can be accessed via the idiomatic
+take three arguments. The arguments can be accessed via the idiomatic
 \code{.x}, \code{.y}, etc, positional references (\code{..1}, \code{..2}, etc), and also by
 \code{slide}-specific names.
 }

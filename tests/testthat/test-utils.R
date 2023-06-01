@@ -196,3 +196,24 @@ test_that("computation formula-derived functions take all argument types", {
   expect_identical(as_slide_computation(~ . + .ref_time_value)(1, 2, 3), 4)
   expect_identical(as_slide_computation(~ .group_key)(1, 2, 3), 2)
 })
+
+test_that("as_slide_computation passes functions unaltered", {
+  f <- function(a, b, c) {a * b * c + 5}
+  expect_identical(as_slide_computation(f), f)
+})
+
+test_that("as_slide_computation raises errors as expected", {
+  # Formulas must be one-sided
+  expect_error(as_slide_computation(y ~ ..1),
+    class="epiprocess__as_slide_computation__formula_is_twosided")
+
+  # `f_env` must be an environment
+  formula_without_env <- stats::as.formula(~ ..1)
+  rlang::f_env(formula_without_env) <- 5
+  expect_error(as_slide_computation(formula_without_env),
+    class="epiprocess__as_slide_computation__formula_has_no_env")
+
+  # `f` must be a function, formula, or string
+  expect_error(as_slide_computation(5),
+    class="epiprocess__as_slide_computation__cant_convert_catchall")
+})
