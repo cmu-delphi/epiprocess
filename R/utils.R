@@ -252,7 +252,7 @@ as_slide_computation <- function(x,
       rlang:::abort_coercion(
         x,
         x_type = "a two-sided formula",
-        to_type = "a function",
+        to_type = "a slide computation",
         arg = arg,
         call = call
       )
@@ -269,7 +269,7 @@ as_slide_computation <- function(x,
       . = quote(..1), .group_key = quote(..2), .ref_time_value = quote(..3)
     )
     fn <- new_function(args, f_rhs(x), env)
-    fn <- structure(fn, class = c("rlang_lambda_function", "function"))
+    fn <- structure(fn, class = c("epiprocess_slide_computation", "function"))
     return(fn)
   }
 
@@ -277,7 +277,7 @@ as_slide_computation <- function(x,
     return(get(x, envir = env, mode = "function"))
   }
 
-  rlang:::abort_coercion(x, "a function", arg = arg, call = call)
+  rlang:::abort_coercion(x, "a slide computation", arg = arg, call = call)
 }
 
 ##########
