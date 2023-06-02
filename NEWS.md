@@ -4,6 +4,24 @@ Note that `epiprocess` uses the [Semantic Versioning
 ("semver")](https://semver.org/) scheme for all release versions, but any
 inter-release development versions will include an additional ".9999" suffix.
 
+## Breaking changes:
+
+* Changes to `epix_slide`:
+  * The `f` computation is now required to take at least three arguments. `f`
+    must take an `epi_df` with the same column names as the archive's `DT`,
+    minus the `version` column; followed by a one-row tibble containing the
+    values of the grouping variables for the associated group; followed by a
+    Date containing the reference time value that was used; followed by any
+    number of named arguments.
+
+## New features:
+
+* `epix_slide` `f` computations passed as functions or formulas now have
+  access to the reference time value. If `f` is a function, it is passed a
+  Date containing the reference time value as the third argument. If a
+  formula, `f` can access the reference time value via `.z` or
+  `.ref_time_value`.
+
 # epiprocess 0.6.0
 
 ## Breaking changes:
