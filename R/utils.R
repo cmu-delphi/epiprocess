@@ -214,7 +214,6 @@ assert_sufficient_f_args <- function(f, ..., n_mandatory_f_args = 2L) {
 #'
 #' @param env Environment in which to fetch the function in case `x`
 #'   is a string.
-#' @export
 #' @inheritParams rlang::args_dots_empty
 #' @inheritParams rlang::args_error_context
 #' @examples
