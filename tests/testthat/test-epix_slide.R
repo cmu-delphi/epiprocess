@@ -44,7 +44,7 @@ test_that("epix_slide works as intended", {
   # function interface
   xx4 <- xx %>%
     group_by(.data$geo_value) %>%
-    epix_slide(f = function(x, g) {
+    epix_slide(f = function(x, gk, rtv) {
       tibble::tibble(sum_binary = sum(x$binary))
     }, before = 2, names_sep = NULL)
   
@@ -500,7 +500,7 @@ test_that("epix_slide with all_versions option works as intended", {
 test_that("epix_slide works with 0-row computation outputs", {
   epix_slide_empty = function(ea, ...) {
     ea %>%
-      epix_slide(before = 5L, ..., function(x, g) {
+      epix_slide(before = 5L, ..., function(x, gk, rtv) {
         tibble::tibble()
       })
   }
