@@ -229,6 +229,8 @@ assert_sufficient_f_args <- function(f, ..., n_mandatory_f_args = 2L) {
 #' @importFrom rlang check_dots_empty0 is_function new_function f_env
 #'  is_environment missing_arg f_rhs is_string is_formula caller_arg
 #'  caller_env global_env
+#'
+#' @noRd
 as_slide_computation <- function(x,
                         env = global_env(),
                         ...,
