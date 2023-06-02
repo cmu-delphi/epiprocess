@@ -584,7 +584,6 @@ test_that("epix_slide computation can use ref_time_value", {
                 time_value = c(4,5,6,7),
                 slide_value = c(4,5,6,7)
                 ) %>%
-    as_epi_df(as_of = 4) %>% # Also a bug (issue #213)
     group_by(geo_value)
 
   expect_identical(xx1,xx_ref)
