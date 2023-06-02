@@ -56,7 +56,7 @@ reference:
   desc: Details on `epi_archive`, and basic functionality.
 - contents:
   - matches("archive")
-- title: `epix_*()` functions
+- title: "`epix_*()` functions"
   desc: Functions that act on an `epi_archive` and/or `grouped_epi_archive` object.
 - contents:
   - starts_with("epix")

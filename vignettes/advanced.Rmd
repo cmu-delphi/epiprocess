@@ -7,21 +7,71 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-In this vignette, we discuss how to use the sliding functionality in the 
-`epiprocess` package with computations that have advanced output structures.
+In this vignette, we discuss how to use the sliding functionality in the
+`epiprocess` package with less common grouping schemes or with computations that
+have advanced output structures.
+The output of a slide computation should either be an atomic value/vector, or a
+data frame. This data frame can have multiple columns, multiple rows, or both.
 
-In general, the functions `epi_slide()` and `epix_slide()` do what they can to
-ensure the result of a slide operation is *size stable*, meaning, it will return 
-something whose length is the same as the number of appearances of reference 
-time values for the slide computation in the given data frame/table (this 
-defaults to all time values, but can be some given subset when `ref_time_values` 
-is specified).
+During basic usage (e.g., when all optional arguments are set to their defaults):
 
-The output of a slide computation should either be an atomic value/vector, or a 
-data frame. This data frame can have multiple columns, multiple rows, or both. 
-Below we demonstrate some advanced use cases of sliding with these output 
-structures. We focus on `epi_slide()` for the most part, though the behavior we
-demonstrate also carries over to `epix_slide()`.
+* `epi_slide(edf, <computation>, .....)`:
+
+  * keeps **all** columns of `edf`, adds computed column(s)
+  * outputs **one row per row in `edf`** (recycling outputs from
+    computations appropriately if there are multiple time series bundled
+    together inside any group(s))
+  * maintains the grouping or ungroupedness of `edf`
+  * is roughly analogous to (the non-sliding) **`dplyr::mutate` followed by
+    `dplyr::arrange(time_value, .by_group = TRUE)`**
+  * outputs an **`epi_df`** if the required columns are present, otherwise a
+    tibble
+
+* `epix_slide(ea, <computation>, .....)`:
+
+  * keeps **grouping and `time_value`** columns of `ea`, adds computed
+    column(s)
+  * outputs **any number of rows** (computations are allowed to output any
+    number of elements/rows, and no recycling is performed)
+  * maintains the grouping or ungroupedness of `ea`, unless it was explicitly
+    grouped by zero variables; this isn't supported by `grouped_df` and it will
+    automatically turn into an ungrouped tibble
+  * is roughly analogous to (the non-sliding) **`dplyr::group_modify`**
+  * outputs a **tibble**
+
+These differences in basic behavior make some common slide operations require less boilerplate:
+* predictors and targets calculated with `epi_slide` are automatically lined up
+  with each other and with the signals from which they were calculated; and
+* computations for an `epix_slide` can output data frames with any number of
+  rows, containing models, forecasts, evaluations, etc., and will not be
+  recycled.
+
+When using more advanced features, more complex rules apply:
+
+* Generalization: `epi_slide(edf, ....., ref_time_values=my_ref_time_values)`
+  will output one row for every row in `edf` with `time_value` appearing inside
+  `my_ref_time_values`, and is analogous to a `dplyr::mutate`&`dplyr::arrange`
+  followed by `dplyr::filter` to those `ref_time_values`. We call this property
+  **size stability**, and describe how it is achieved in the following sections.
+  The default behavior described above is a special case of this general rule
+  based on a default value of `ref_time_values`.
+* Exception/feature: `epi_slide(edf, ....., ref_time_values=my_ref_time_values,
+  all_rows=TRUE)` will not just output rows for `my_ref_time_values`, but
+  instead will output one row per row in `edf`.
+* Exception/feature: `epi_slide(edf, ....., as_list_col=TRUE)` will format the
+  output to add a single list-class computed column.
+* Exception/feature: `epix_slide(ea, ....., as_list_col=TRUE)` will format the
+  output to have one row per computation and a single list-class computed column
+  (in addition to the grouping variables and `time_value`), as if we had used
+  `tidyr::chop()` or `tidyr::nest()`.
+* Clarification: `ea %>% group_by(....., .drop=FALSE) %>%
+  epix_slide(<computation>, .....)` will call the computation on any missing
+  groups according to `dplyr`'s `.drop=FALSE` rules, resulting in additional
+  output rows.
+
+Below we demonstrate some advanced use cases of sliding with different output
+structures. We focus on `epi_slide()` for the most part, though some of the
+behavior we demonstrate also carries over to `epix_slide()`.
 
 ## Recycling outputs
 
@@ -35,7 +85,7 @@ simple synthetic example.
 library(epiprocess)
 library(dplyr)
 
-df <- tibble(
+edf <- tibble(
   geo_value = rep(c("ca", "fl", "pa"), each = 3),
   time_value = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
                        by = "day"), length.out = length(geo_value)),
@@ -44,29 +94,31 @@ df <- tibble(
   as_epi_df()
 
 # 2-day trailing average, per geo value
-df %>% 
+edf %>% 
   group_by(geo_value) %>%
   epi_slide(x_2dav = mean(x), before = 1) %>%
   ungroup()
 
 # 2-day trailing average, marginally 
-df %>% 
+edf %>% 
   epi_slide(x_2dav = mean(x), before = 1)
 ```
 
 ```{r, include = FALSE}
 # More checks (not included)
-df %>% 
+edf %>% 
   epi_slide(x_2dav = mean(x), before = 1, ref_time_values = as.Date("2020-06-02"))
 
-df %>% 
+edf %>% 
+  # pretend that observations about time_value t are reported in version t (nowcasts)
   mutate(version = time_value) %>% 
   as_epi_archive() %>%
   group_by(geo_value) %>%
   epix_slide(x_2dav = mean(x), before = 1, ref_time_values = as.Date("2020-06-02")) %>%
   ungroup()
 
-df %>% 
+edf %>% 
+  # pretend that observations about time_value t are reported in version t (nowcasts)
   mutate(version = time_value) %>% 
   as_epi_archive() %>%
   group_by(geo_value) %>%
@@ -80,7 +132,7 @@ so, uses it to fill the new column. For example, this next computation gives the
 same result as the last one.
 
 ```{r}
-df %>% 
+edf %>% 
   epi_slide(y_2dav = rep(mean(x), 3), before = 1)
 ```
 
@@ -89,7 +141,7 @@ is *not* size stable, then `epi_slide()` throws an error. For example, below we
 are trying to return 2 things for 3 states.
 
 ```{r, error = TRUE}
-df %>% 
+edf %>% 
   epi_slide(x_2dav = rep(mean(x), 2), before = 1)
 ```
 
@@ -103,15 +155,15 @@ we set `as_list_col = TRUE` in the call to `epi_slide()`, the resulting `epi_df`
 object returned by `epi_slide()` has a list column containing the slide values.
 
 ```{r}
-df2 <- df %>% 
+edf2 <- edf %>% 
   group_by(geo_value) %>%
   epi_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
             before = 1, as_list_col = TRUE) %>%
   ungroup()
 
-class(df2$a)
-length(df2$a)
-df2$a[[2]]
+class(edf2$a)
+length(edf2$a)
+edf2$a[[2]]
 ```
 
 When we use `as_list_col = FALSE` (the default in `epi_slide()`), the function 
@@ -122,7 +174,7 @@ list column (here `a`) onto the column names of the output data frame from the
 slide computation (here `x_2dav` and `x_2dma`) separated by "_".
 
 ```{r}
-df %>% 
+edf %>% 
   group_by(geo_value) %>%
   epi_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
             before = 1, as_list_col = FALSE) %>%
@@ -133,7 +185,7 @@ We can use `names_sep = NULL` (which gets passed to `tidyr::unnest()`) to drop
 the prefix associated with list column name, in naming the unnested columns.
 
 ```{r}
-df %>% 
+edf %>% 
   group_by(geo_value) %>%
   epi_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
             before = 1, as_list_col = FALSE, names_sep = NULL) %>%
@@ -144,19 +196,19 @@ Furthermore, `epi_slide()` will recycle the single row data frame as needed in
 order to make the result size stable, just like the case for atomic values.
 
 ```{r}
-df %>% 
+edf %>% 
   epi_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
             before = 1, as_list_col = FALSE, names_sep = NULL)
 ```
 
 ```{r, include = FALSE}
 # More checks (not included)
-df %>% 
+edf %>% 
   epi_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
             ref_time_values = as.Date("2020-06-02"),
             before = 1, as_list_col = FALSE, names_sep = NULL)
 
-df %>% 
+edf %>% 
   mutate(version = time_value) %>% 
   as_epi_archive() %>%
   group_by(geo_value) %>%
@@ -174,32 +226,51 @@ Meaning, `epi_slide()` will check that the result is size stable, and if so,
 will fill the new column(s) in the resulting `epi_df` object appropriately.
 
 This can be convenient for modeling in the following sense: we can, for example,
-fit a sliding forecasting model by pooling data from different locations, and
-then return separate forecasts from this common model for each location. We use
-our synthetic example to demonstrate this idea abstractly but simply.
+fit a sliding, data-versioning-unaware nowcasting or forecasting model by
+pooling data from different locations, and then return separate forecasts from
+this common model for each location. We use our synthetic example to demonstrate
+this idea abstractly but simply by forecasting (actually, nowcasting) `y` from
+`x` by fitting a time-windowed linear model that pooling data across all
+locations.
 
 ```{r}
-df$y <- 2 * df$x + 0.05 * rnorm(length(df$x))
+edf$y <- 2 * edf$x + 0.05 * rnorm(length(edf$x))
 
-df %>%
+edf %>%
   epi_slide(function(d, ...) {
     obj <- lm(y ~ x, data = d)
     return(
       as.data.frame(
         predict(obj, newdata = d %>% 
-                  group_by(geo_value) %>%
-                  filter(time_value == max(time_value)), 
+                       group_by(geo_value) %>%
+                       filter(time_value == max(time_value)), 
                 interval = "prediction", level = 0.9)
       ))
   }, before = 1, new_col_name = "fc", names_sep = NULL)
 ```
 
+The above example focused on simplicity to show how to work with multi-row
+outputs. Note however, the following issues in this example:
+
+* The `lm` fitting data includes the testing instances, as no training-test split was performed.
+* Adding a simple training-test split would not factor in reporting latency properly.
+* Data revisions are not taken into account.
+
+All three of these factors contribute to unrealistic retrospective forecasts and
+overly optimistic retrospective performance evaluations. Instead, one should
+favor an `epix_slide` for more realistic "pseudoprospective" forecasts. Using
+`epix_slide` also makes it easier to express certain types of forecasts; while
+in `epi_slide`, forecasts for additional aheads or quantile levels would need to
+be expressed as additional columns, or nested inside list columns, `epix_slide`
+does not perform size stability checks or recycling, allowing computations to
+output any number of rows.
+
 ## Version-aware forecasting, revisited
 
-Finally, we revisit the COVID-19 forecasting example from the [archive 
+We revisit the COVID-19 forecasting example from the [archive
 vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) in order
-to demonstrate the last point in a more realistic setting. First, we fetch the
-versioned data and build the archive.
+to demonstrate the preceding points regarding forecast evaluation in a more
+realistic setting. First, we fetch the versioned data and build the archive.
 
 ```{r, message = FALSE, warning = FALSE, eval =FALSE}
 library(epidatr)
@@ -215,7 +286,7 @@ y1 <- covidcast(
   time_value = epirange(20200601, 20211201),
   geo_values = "ca,fl",
   issues = epirange(20200601, 20211201)
-) %>% fetch_tbl()
+) %>% fetch()
 
 y2 <- covidcast(
   data_source = "jhu-csse",
@@ -225,7 +296,7 @@ y2 <- covidcast(
   time_value = epirange(20200601, 20211201),
   geo_values = "ca,fl",
   issues = epirange(20200601, 20211201)
-) %>% fetch_tbl()
+) %>% fetch()
 
 x <- y1 %>%
   select(geo_value, time_value,

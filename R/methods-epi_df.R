@@ -1,3 +1,20 @@
+#' Convert to tibble
+#'
+#' Converts an `epi_df` object into a tibble, dropping metadata and any
+#' grouping.
+#'
+#' @param x an `epi_df`
+#' @param ... arguments to forward to `NextMethod()`
+#'
+#' @importFrom tibble as_tibble
+#' @export
+as_tibble.epi_df = function(x, ...) {
+  # Decaying drops the class and metadata. `as_tibble.grouped_df` drops the
+  # grouping and should be called by `NextMethod()` in the current design.
+  # See #223 for discussion of alternatives.
+  decay_epi_df(NextMethod())
+}
+
 #' Convert to tsibble format
 #' 
 #' Converts an `epi_df` object into a tsibble, where the index is taken to be 
@@ -187,9 +204,11 @@ ungroup.epi_df = function(x, ...) {
   reclass(x, metadata)
 }
 
-#' @method unnest epi_df
+#' @method group_modify epi_df
 #' @rdname print.epi_df
-#' @param data The `epi_df` object.
+#' @param .data The `epi_df` object.
+#' @param .f function or formula; see [`dplyr::group_modify`]
+#' @param .keep Boolean; see [`dplyr::group_modify`]
 #' @export
 group_modify.epi_df = function(.data, .f, ..., .keep = FALSE) {
   dplyr::dplyr_reconstruct(NextMethod(), .data)
