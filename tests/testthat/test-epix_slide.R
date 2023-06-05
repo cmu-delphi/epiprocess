@@ -682,3 +682,18 @@ test_that("`epix_slide` doesn't decay date output", {
       inherits("Date")
   )
 })
+
+test_that("`epix_slide` can access objects inside of helper functions", {
+  helper = function(archive_haystack, time_value_needle) {
+    archive_haystack %>% epix_slide(has_needle = time_value_needle %in% time_value, before = 365000L)
+  }
+  expect_error(
+    helper(archive_cases_dv_subset, as.Date("2021-01-01")),
+    NA
+  )
+
+  expect_error(
+    helper(xx, 3L),
+    NA
+  )
+})
