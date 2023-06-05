@@ -607,7 +607,6 @@ test_that("epix_slide computation via function can use ref_time_value", {
                 time_value = c(4,5,6,7),
                 slide_value = c(4,5,6,7)
                 ) %>%
-    as_epi_df(as_of = 4) %>% # Also a bug (issue #213)
     group_by(geo_value)
 
   xx1 <- xx %>%
@@ -624,7 +623,6 @@ test_that("epix_slide computation via dots can use ref_time_value and group", {
                 time_value = c(4,5,6,7),
                 slide_value = c(4,5,6,7)
                 ) %>%
-    as_epi_df(as_of = 4) %>% # Also a bug (issue #213)
     group_by(geo_value)
 
   xx1 <- xx %>%
@@ -639,7 +637,6 @@ test_that("epix_slide computation via dots can use ref_time_value and group", {
                 time_value = c(4,5,6,7),
                 slide_value = "x"
                 ) %>%
-    as_epi_df(as_of = 4) %>% # Also a bug (issue #213)
     group_by(geo_value)
 
   # Use group_key column
