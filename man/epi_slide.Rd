@@ -30,7 +30,7 @@ determined by the \code{before} and \code{after} parameters described below. One
 step is typically one day or one week; see details for more explanation. If
 a function, \code{f} must take a data frame with the same column names as
 the original object, minus any grouping variables, containing the time
-window data for one \code{ref_time_value}-group combination; followed by a
+window data for one group-\code{ref_time_value} combination; followed by a
 one-row tibble containing the values of the grouping variables for the
 associated group; followed by any number of named arguments. If a formula,
 \code{f} can operate directly on columns accessed via \code{.x$var} or \code{.$var}, as
@@ -72,19 +72,27 @@ return an object of class \code{lubridate::period}. For example, we can use
 contain the derivative values. Default is "slide_value"; note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
 
-\item{as_list_col}{If the computations return data frames, should the slide
-result hold these in a single list column or try to unnest them? Default is
-\code{FALSE}, in which case a list object returned by \code{f} would be unnested
-(using \code{\link[tidyr:nest]{tidyr::unnest()}}), and the names of the resulting columns are given
-by prepending \code{new_col_name} to the names of the list elements.}
+\item{as_list_col}{Should the slide results be held in a list column, or be
+\link[tidyr:chop]{unchopped}/\link[tidyr:nest]{unnested}? Default is \code{FALSE},
+in which case a list object returned by \code{f} would be unnested (using
+\code{\link[tidyr:nest]{tidyr::unnest()}}), and, if the slide computations output data frames,
+the names of the resulting columns are given by prepending \code{new_col_name}
+to the names of the list elements.}
 
 \item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
 when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
 from \code{new_col_name} entirely.}
 
 \item{all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
-the output; otherwise, there will be one row for each time value in \code{x}
-that acts as a reference time value. Default is \code{FALSE}.}
+the output even with \code{ref_time_values} provided, with some type of missing
+value marker for the slide computation output column(s) for \code{time_value}s
+outside \code{ref_time_values}; otherwise, there will be one row for each row in
+\code{x} that had a \code{time_value} in \code{ref_time_values}. Default is \code{FALSE}. The
+missing value marker is the result of \code{vctrs::vec_cast}ing \code{NA} to the type
+of the slide computation output. If using \code{as_list_col = TRUE}, note that
+the missing marker is a \code{NULL} entry in the list column; for certain
+operations, you might want to replace these \code{NULL} entries with a different
+\code{NA} marker.}
 }
 \value{
 An \code{epi_df} object given by appending a new column to \code{x}, named

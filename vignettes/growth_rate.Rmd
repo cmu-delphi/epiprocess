@@ -31,7 +31,7 @@ x <- covidcast(
   time_values = epirange(20200601, 20211231),
   geo_values = "ga,pa"
 ) %>%
-  fetch_tbl() %>%
+  fetch() %>%
   select(geo_value, time_value, cases = value) %>%
   arrange(geo_value, time_value) %>%
   as_epi_df()

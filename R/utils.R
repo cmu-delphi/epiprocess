@@ -100,34 +100,86 @@ paste_lines = function(lines) {
 Abort = function(msg, ...) rlang::abort(break_str(msg, init = "Error: "), ...)
 Warn = function(msg, ...) rlang::warn(break_str(msg, init = "Warning: "), ...)
 
-#' Check that a sliding computation function takes enough args
+#' Assert that a sliding computation function takes enough args
 #'
 #' @param f Function; specifies a computation to slide over an `epi_df` or
 #'  `epi_archive` in `epi_slide` or `epix_slide`.
+#' @param ... Dots that will be forwarded to `f` from the dots of `epi_slide` or
+#'   `epix_slide`.
 #' @param n_mandatory_f_args Integer; specifies the number of arguments `f`
 #'  is required to take before any `...` arg. Defaults to 2.
 #'
+#' @importFrom rlang is_missing
+#' @importFrom purrr map_lgl
+#' @importFrom utils tail
+#'
 #' @noRd
-check_sufficient_f_args <- function(f, n_mandatory_f_args = 2L) {
-  arg_names = names(formals(args(f)))
-  if ("..." %in% arg_names) {
+assert_sufficient_f_args <- function(f, ..., n_mandatory_f_args = 2L) {
+  mandatory_f_args_labels <- c("window data", "group key", "reference time value")[seq(n_mandatory_f_args)]
+  n_mandatory_f_args <- length(mandatory_f_args_labels)
+  args = formals(args(f))
+  args_names = names(args)
+  # Remove named arguments forwarded from `epi[x]_slide`'s `...`:
+  forwarded_dots_names = names(rlang::call_match(dots_expand = FALSE)[["..."]])
+  args_matched_in_dots =
+    # positional calling args will skip over args matched by named calling args
+    args_names %in% forwarded_dots_names &
+    # extreme edge case: `epi[x]_slide(<stuff>, dot = 1, `...` = 2)`
+    args_names != "..."
+  remaining_args = args[!args_matched_in_dots]
+  remaining_args_names = names(remaining_args)
+  # note that this doesn't include unnamed args forwarded through `...`.
+  dots_i <- which(remaining_args_names == "...") # integer(0) if no match
+  n_f_args_before_dots <- dots_i - 1L
+  if (length(dots_i) != 0L) { # `f` has a dots "arg"
     # Keep all arg names before `...`
-    dots_i <- which(arg_names == "...")
-    arg_names <- arg_names[seq_len(dots_i - 1)]
+    mandatory_args_mapped_names <- remaining_args_names[seq_len(n_f_args_before_dots)]
 
-    if (length(arg_names) < n_mandatory_f_args) {
-      Warn(sprintf("`f` only takes %s positional arguments before the `...` args, but %s were expected; this can lead to obtuse errors downstream", length(arg_names), n_mandatory_f_args),
-          class="check_sufficient_f_args__f_needs_min_args_before_dots",
-          epiprocess__f = f,
-          epiprocess__arg_names = arg_names)
+    if (n_f_args_before_dots < n_mandatory_f_args) {
+      mandatory_f_args_in_f_dots =
+        tail(mandatory_f_args_labels, n_mandatory_f_args - n_f_args_before_dots)
+      cli::cli_warn(
+        "`f` might not have enough positional arguments before its `...`; in the current `epi[x]_slide` call, the {mandatory_f_args_in_f_dots} will be included in `f`'s `...`; if `f` doesn't expect those arguments, it may produce confusing error messages",
+        class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots",
+        epiprocess__f = f,
+        epiprocess__mandatory_f_args_in_f_dots = mandatory_f_args_in_f_dots
+      )
     }
-  } else {
-    if (length(arg_names) < n_mandatory_f_args) {
-      Abort(sprintf("`f` must take at least %s arguments", n_mandatory_f_args),
-          class="check_sufficient_f_args__f_needs_min_args",
-          epiprocess__f = f,
-          epiprocess__arg_names = arg_names)
+  } else { # `f` doesn't have a dots "arg"
+    if (length(args_names) < n_mandatory_f_args + rlang::dots_n(...)) {
+      # `f` doesn't take enough args.
+      if (rlang::dots_n(...) == 0L) {
+        # common case; try for friendlier error message
+        Abort(sprintf("`f` must take at least %s arguments", n_mandatory_f_args),
+              class = "epiprocess__assert_sufficient_f_args__f_needs_min_args",
+              epiprocess__f = f)
+      } else {
+        # less common; highlight that they are (accidentally?) using dots forwarding
+        Abort(sprintf("`f` must take at least %s arguments plus the %s arguments forwarded through `epi[x]_slide`'s `...`, or a named argument to `epi[x]_slide` was misspelled", n_mandatory_f_args, rlang::dots_n(...)),
+              class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_plus_forwarded",
+              epiprocess__f = f)
+      }
     }
+  }
+  # Check for args with defaults that are filled with mandatory positional
+  # calling args. If `f` has fewer than n_mandatory_f_args before `...`, then we
+  # only need to check those args for defaults. Note that `n_f_args_before_dots` is
+  # length 0 if `f` doesn't accept `...`.
+  n_remaining_args_for_default_check = min(c(n_f_args_before_dots, n_mandatory_f_args))
+  default_check_args = remaining_args[seq_len(n_remaining_args_for_default_check)]
+  default_check_args_names = names(default_check_args)
+  has_default_replaced_by_mandatory = map_lgl(default_check_args, ~!is_missing(.x))
+  if (any(has_default_replaced_by_mandatory)) {
+    default_check_mandatory_args_labels =
+      mandatory_f_args_labels[seq_len(n_remaining_args_for_default_check)]
+    # ^ excludes any mandatory args absorbed by f's `...`'s:
+    mandatory_args_replacing_defaults =
+      default_check_mandatory_args_labels[has_default_replaced_by_mandatory]
+    args_with_default_replaced_by_mandatory =
+      rlang::syms(default_check_args_names[has_default_replaced_by_mandatory])
+    cli::cli_abort("`epi[x]_slide` would pass the {mandatory_args_replacing_defaults} to `f`'s {args_with_default_replaced_by_mandatory} argument{?s}, which {?has a/have} default value{?s}; we suspect that `f` doesn't expect {?this arg/these args} at all and may produce confusing error messages.  Please add additional arguments to `f` or remove defaults as appropriate.",
+                   class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults",
+                   epiprocess__f = f)
   }
 }
 
@@ -138,7 +190,7 @@ check_sufficient_f_args <- function(f, n_mandatory_f_args = 2L) {
 #' This powers the lambda syntax in packages like purrr.
 #'
 #' This is an extension of `rlang::as_function` that can create functions that
-#' take three arguments. The arugments can be accessed via the idiomatic
+#' take three arguments. The arguments can be accessed via the idiomatic
 #' `.x`, `.y`, etc, positional references (`..1`, `..2`, etc), and also by
 #' `slide`-specific names.
 #'
@@ -146,13 +198,13 @@ check_sufficient_f_args <- function(f, n_mandatory_f_args = 2L) {
 #'
 #'   If a **function**, it is used as is.
 #'
-#'   If a **formula**, e.g. `~ .x + 2`, it is converted to a function with up
+#'   If a **formula**, e.g. `~ mean(.x$cases)`, it is converted to a function with up
 #'   to three arguments: `.x` (single argument), or `.x` and `.y`
 #'   (two arguments), or `.x`, `.y`, and `.z` (three arguments). The `.`
 #'   placeholder can be used instead of `.x`, `.group_key` can be used in
 #'   place of `.y`, and `.ref_time_value` can be used in place of `.z`. This
 #'   allows you to create very compact anonymous functions (lambdas) with up
-#'   to two inputs. Functions created from formulas have a special class. Use
+#'   to three inputs. Functions created from formulas have a special class. Use
 #'   `rlang::is_lambda()` to test for it.
 #'
 #'   If a **string**, the function is looked up in `env`. Note that
@@ -162,7 +214,6 @@ check_sufficient_f_args <- function(f, n_mandatory_f_args = 2L) {
 #'
 #' @param env Environment in which to fetch the function in case `x`
 #'   is a string.
-#' @export
 #' @inheritParams rlang::args_dots_empty
 #' @inheritParams rlang::args_error_context
 #' @examples
@@ -175,9 +226,11 @@ check_sufficient_f_args <- function(f, n_mandatory_f_args = 2L) {
 #' h <- as_slide_computation(~ .x - .group_key)
 #' h(6, 3)
 #'
-#' @importFrom rlang check_dots_empty0 is_function is_quosure eval_tidy call2
-#'  quo_get_env new_function pairlist2 f_env is_environment missing_arg f_rhs
-#'  is_string quo_get_expr is_formula caller_arg caller_env
+#' @importFrom rlang check_dots_empty0 is_function new_function f_env
+#'  is_environment missing_arg f_rhs is_string is_formula caller_arg
+#'  caller_env global_env
+#'
+#' @noRd
 as_slide_computation <- function(x,
                         env = global_env(),
                         ...,
@@ -189,26 +242,21 @@ as_slide_computation <- function(x,
     return(x)
   }
 
-  if (is_quosure(x)) {
-    mask <- eval_tidy(call2(environment), env = quo_get_env(x))
-    fn <- new_function(pairlist2(... = ), quo_get_expr(x), mask)
-    return(fn)
-  }
-
   if (is_formula(x)) {
     if (length(x) > 2) {
-      rlang:::abort_coercion(
-        x,
-        x_type = "a two-sided formula",
-        to_type = "a function",
-        arg = arg,
-        call = call
-      )
+      Abort(sprintf("%s must be a one-sided formula", arg),
+              class = "epiprocess__as_slide_computation__formula_is_twosided",
+              epiprocess__x = x,
+              call = call)
     }
 
     env <- f_env(x)
     if (!is_environment(env)) {
-      abort("Formula must carry an environment.", arg = arg, call = call)
+      Abort("Formula must carry an environment.",
+              class = "epiprocess__as_slide_computation__formula_has_no_env",
+              epiprocess__x = x,
+              epiprocess__x_env = env,
+              arg = arg, call = call)
     }
 
     args <- list(
@@ -217,7 +265,7 @@ as_slide_computation <- function(x,
       . = quote(..1), .group_key = quote(..2), .ref_time_value = quote(..3)
     )
     fn <- new_function(args, f_rhs(x), env)
-    fn <- structure(fn, class = c("rlang_lambda_function", "function"))
+    fn <- structure(fn, class = c("epiprocess_slide_computation", "function"))
     return(fn)
   }
 
@@ -225,7 +273,12 @@ as_slide_computation <- function(x,
     return(get(x, envir = env, mode = "function"))
   }
 
-  rlang:::abort_coercion(x, "a function", arg = arg, call = call)
+  Abort(sprintf("Can't convert a %s to a slide computation", class(x)),
+            class = "epiprocess__as_slide_computation__cant_convert_catchall",
+            epiprocess__x = x,
+            epiprocess__x_class = class(x),
+            arg = arg,
+            call = call)
 }
 
 ##########
@@ -543,12 +596,12 @@ gcd_num = function(dividends, ..., rrtol=1e-6, pqlim=1e6, irtol=1e-6) {
 
 #' Use max valid period as guess for `period` of `ref_time_values`
 #'
-#' @param `ref_time_values` Vector containing time-interval-like or time-like
+#' @param ref_time_values Vector containing time-interval-like or time-like
 #'   data, with at least two distinct values, [`diff`]-able (e.g., a
 #'   `time_value` or `version` column), and should have a sensible result from
 #'   adding `is.numeric` versions of its `diff` result (via `as.integer` if its
 #'   `typeof` is `"integer"`, otherwise via `as.numeric`).
-#' @param `ref_time_values_arg` Optional, string; name to give `ref_time_values`
+#' @param ref_time_values_arg Optional, string; name to give `ref_time_values`
 #'   in error messages. Defaults to quoting the expression the caller fed into
 #'   the `ref_time_values` argument.
 #' @return `is.numeric`, length 1; attempts to match `typeof(ref_time_values)`

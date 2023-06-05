@@ -4,6 +4,45 @@ Note that `epiprocess` uses the [Semantic Versioning
 ("semver")](https://semver.org/) scheme for all release versions, but any
 inter-release development versions will include an additional ".9999" suffix.
 
+## Breaking changes:
+
+* Changes to `epix_slide`:
+  * The `f` computation is now required to take at least three arguments. `f`
+    must take an `epi_df` with the same column names as the archive's `DT`,
+    minus the `version` column; followed by a one-row tibble containing the
+    values of the grouping variables for the associated group; followed by a
+    Date containing the reference time value that was used; followed by any
+    number of named arguments.
+
+## New features:
+
+* `epix_slide` has been made more like `dplyr::group_modify`. It will no longer
+  perform element/row recycling for size stability, accepts slide computation
+  outputs containing any number of rows, and no longer supports `all_rows`.
+  * To keep the old behavior, manually perform row recycling within `f`
+    computations, and/or `left_join` a data frame representing the desired
+    output structure with the current `epix_slide()` result to obtain the
+    desired repetitions and completions expected with `all_rows = TRUE`.
+* `epix_slide` will only output grouped or ungrouped tibbles. Previously, it
+  would sometimes output `epi_df`s, but not consistently, and not always with
+  the metadata desired. Future versions will revisit this design, and consider
+  more closely whether/when/how to output an `epi_df`.
+  * To keep the old behavior, convert the output of `epix_slide()` to `epi_df`
+    when desired and set the metadata appropriately.
+* `epix_slide` `f` computations passed as functions or formulas now have
+  access to the reference time value. If `f` is a function, it is passed a
+  Date containing the reference time value as the third argument. If a
+  formula, `f` can access the reference time value via `.z` or
+  `.ref_time_value`.
+
+## Improvements:
+
+* `epi_slide` and `epix_slide` now support `as_list_col = TRUE` when the slide
+  computations output atomic vectors, and output a list column in "chopped"
+  format (see `tidyr::chop`).
+* `epi_slide` now works properly with slide computations that output just a
+  `Date` vector, rather than converting `slide_value` to a numeric column.
+
 # epiprocess 0.6.0
 
 ## Breaking changes:
@@ -23,6 +62,13 @@ inter-release development versions will include an additional ".9999" suffix.
   * Slide functions now keep any grouping of `x` in their results, like
     `mutate` and `group_modify`.
     * To obtain the old behavior, `dplyr::ungroup` the slide results immediately.
+* Additional `epi_slide` changes:
+  * When using `as_list_col = TRUE` together with `ref_time_values` and
+    `all_rows=TRUE`, the marker for excluded computations is now a `NULL` entry
+    in the list column, rather than a `NA`; if you are using `tidyr::unnest()`
+    afterward and want to keep these missing data markers, you will need to
+    replace the `NULL` entries with `NA`s. Skipped computations are now more
+    uniformly detectable using `vctrs` methods.
 * Additional`epix_slide` changes:
   * `epix_slide`'s `group_by` argument has been replaced by `dplyr::group_by` and
     `dplyr::ungroup` S3 methods. The `group_by` method uses "data masking" (also
