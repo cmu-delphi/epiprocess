@@ -108,6 +108,8 @@ test_that("epi_slide alerts if the provided f doesn't take enough args", {
 })
 
 test_that("basic grouped epi_slide computation produces expected output", {
+  # Also checks that we correctly remove extra rows and columns (`.real`) used
+  # to recover `ref_time_value`s.
   expected_output = dplyr::bind_rows(
     dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=cumsum(11:15)),
     dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=cumsum(-(1:5)))
@@ -150,6 +152,24 @@ test_that("basic ungrouped epi_slide computation produces expected output", {
     epi_slide(before = 50,
               slide_value = sum(.x$value))
   expect_identical(result1, expected_output)
+
+  # Ungrouped with multiple geos
+  expected_output = dplyr::bind_rows(
+    dplyr::tibble(
+      geo_value = "ak", time_value = d + 1:5, value=11:15, slide_value=cumsum(11:15) + cumsum(-(1:5)
+    )),
+    dplyr::tibble(
+      geo_value = "al", time_value = d + 1:5, value=-(1:5), slide_value=cumsum(11:15) + cumsum(-(1:5))
+    )
+  ) %>%
+    as_epi_df(as_of = d + 6) %>%
+    arrange(time_value)
+
+  result2 <- small_x %>%
+    ungroup() %>%
+    epi_slide(before = 50,
+              slide_value = sum(.x$value))
+  expect_identical(result2, expected_output)
 })
 
 test_that("epi_slide computation via formula can use ref_time_value", {
@@ -177,6 +197,20 @@ test_that("epi_slide computation via formula can use ref_time_value", {
                before = 50)
 
   expect_identical(result3, expected_output)
+
+  # Ungrouped with multiple geos
+  expected_output = dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=as.double(d + 1:5)),
+    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=as.double(d + 1:5))
+  ) %>%
+    as_epi_df(as_of = d + 6) %>%
+    arrange(time_value)
+
+  result4 <- small_x %>%
+    ungroup() %>%
+    epi_slide(f = ~ .ref_time_value,
+              before = 50)
+  expect_identical(result4, expected_output)
 })
 
 test_that("epi_slide computation via function can use ref_time_value", {
@@ -243,6 +277,20 @@ test_that("epi_slide computation via dots can use ref_time_value and group", {
         slide_value = nrow(.group_key))
 
   expect_identical(result4, expected_output)
+
+  # Ungrouped with multiple geos
+  expected_output = dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=as.double(d + 1:5)),
+    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=as.double(d + 1:5))
+  ) %>%
+    as_epi_df(as_of = d + 6) %>%
+    arrange(time_value)
+
+  result5 <- small_x %>%
+    ungroup() %>%
+    epi_slide(before = 50,
+              slide_value = .ref_time_value)
+  expect_identical(result5, expected_output)
 })
 
 test_that("epi_slide computation via dots outputs the same result using col names and the data var", {
