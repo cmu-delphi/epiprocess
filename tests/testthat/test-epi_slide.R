@@ -378,8 +378,8 @@ test_that("basic ungrouped epi_slide computation produces expected output", {
 
 test_that("epi_slide computation via formula can use ref_time_value", {
   expected_output = dplyr::bind_rows(
-    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=as.double(d + 1:5)),
-    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=as.double(d + 1:5))
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=d + 1:5),
+    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=d + 1:5)
   ) %>%
     group_by(geo_value) %>%
     as_epi_df(as_of = d + 6)
@@ -404,8 +404,8 @@ test_that("epi_slide computation via formula can use ref_time_value", {
 
   # Ungrouped with multiple geos
   expected_output = dplyr::bind_rows(
-    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=as.double(d + 1:5)),
-    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=as.double(d + 1:5))
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=d + 1:5),
+    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=d + 1:5)
   ) %>%
     as_epi_df(as_of = d + 6) %>%
     arrange(time_value)
@@ -419,8 +419,8 @@ test_that("epi_slide computation via formula can use ref_time_value", {
 
 test_that("epi_slide computation via function can use ref_time_value", {
   expected_output = dplyr::bind_rows(
-    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=as.double(d + 1:5)),
-    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=as.double(d + 1:5))
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=d + 1:5),
+    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=d + 1:5)
   ) %>%
     group_by(geo_value) %>%
     as_epi_df(as_of = d + 6)
@@ -435,8 +435,8 @@ test_that("epi_slide computation via function can use ref_time_value", {
 test_that("epi_slide computation via dots can use ref_time_value and group", {
   # ref_time_value
   expected_output = dplyr::bind_rows(
-    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=as.double(d + 1:5)),
-    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=as.double(d + 1:5))
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=d + 1:5),
+    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=d + 1:5)
   ) %>%
     group_by(geo_value) %>%
     as_epi_df(as_of = d + 6)
@@ -484,8 +484,8 @@ test_that("epi_slide computation via dots can use ref_time_value and group", {
 
   # Ungrouped with multiple geos
   expected_output = dplyr::bind_rows(
-    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=as.double(d + 1:5)),
-    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=as.double(d + 1:5))
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=d + 1:5),
+    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=d + 1:5)
   ) %>%
     as_epi_df(as_of = d + 6) %>%
     arrange(time_value)
