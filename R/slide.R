@@ -345,6 +345,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
       # fills with NA equivalent.
       vctrs::vec_slice(slide_values, o) = orig_values
     } else {
+      # This implicitly removes phony (`.real` == FALSE) observations.
       .data_group = filter(.data_group, o)
     }
     return(mutate(.data_group, !!new_col := slide_values))
@@ -402,6 +403,12 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
   # Unnest if we need to, and return
   if (!as_list_col) {
     x = unnest(x, !!new_col, names_sep = names_sep)
+  }
+
+  # Remove any remaining phony observations. When `all_rows` is TRUE, phony
+  # observations aren't necessarily removed in `slide_one_grp`.
+  if (all_rows) {
+    x <- x[x$.real,]
   }
 
   # Drop helper column `.real`.
