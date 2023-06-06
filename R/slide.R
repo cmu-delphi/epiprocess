@@ -14,7 +14,7 @@
 #'   step is typically one day or one week; see details for more explanation. If
 #'   a function, `f` must take a data frame with the same column names as
 #'   the original object, minus any grouping variables, containing the time
-#'   window data for one `ref_time_value`-group combination; followed by a
+#'   window data for one group-`ref_time_value` combination; followed by a
 #'   one-row tibble containing the values of the grouping variables for the
 #'   associated group; followed by any number of named arguments. If a formula,
 #'   `f` can operate directly on columns accessed via `.x$var` or `.$var`, as
@@ -52,17 +52,25 @@
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
-#' @param as_list_col If the computations return data frames, should the slide
-#'   result hold these in a single list column or try to unnest them? Default is
-#'   `FALSE`, in which case a list object returned by `f` would be unnested
-#'   (using [`tidyr::unnest()`]), and the names of the resulting columns are given
-#'   by prepending `new_col_name` to the names of the list elements.
+#' @param as_list_col Should the slide results be held in a list column, or be
+#'   [unchopped][tidyr::unchop]/[unnested][tidyr::unnest]? Default is `FALSE`,
+#'   in which case a list object returned by `f` would be unnested (using
+#'   [`tidyr::unnest()`]), and, if the slide computations output data frames,
+#'   the names of the resulting columns are given by prepending `new_col_name`
+#'   to the names of the list elements.
 #' @param names_sep String specifying the separator to use in `tidyr::unnest()`
 #'   when `as_list_col = FALSE`. Default is "_". Using `NULL` drops the prefix
 #'   from `new_col_name` entirely.
 #' @param all_rows If `all_rows = TRUE`, then all rows of `x` will be kept in
-#'   the output; otherwise, there will be one row for each time value in `x`
-#'   that acts as a reference time value. Default is `FALSE`.
+#'   the output even with `ref_time_values` provided, with some type of missing
+#'   value marker for the slide computation output column(s) for `time_value`s
+#'   outside `ref_time_values`; otherwise, there will be one row for each row in
+#'   `x` that had a `time_value` in `ref_time_values`. Default is `FALSE`. The
+#'   missing value marker is the result of `vctrs::vec_cast`ing `NA` to the type
+#'   of the slide computation output. If using `as_list_col = TRUE`, note that
+#'   the missing marker is a `NULL` entry in the list column; for certain
+#'   operations, you might want to replace these `NULL` entries with a different
+#'   `NA` marker.
 #' @return An `epi_df` object given by appending a new column to `x`, named
 #'   according to the `new_col_name` argument.
 #' 
@@ -159,7 +167,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # Check that `f` takes enough args
   if (!missing(f) && is.function(f)) {
-    check_sufficient_f_args(f, 3L)
+    assert_sufficient_f_args(f, ..., n_mandatory_f_args = 3L)
   }
   
   if (missing(ref_time_values)) {
@@ -280,11 +288,11 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     time_values = time_values[o] 
     
     # Compute the slide values 
-    slide_values = slider::hop_index(.x = .data_group,
-                                     .i = .data_group$time_value,
-                                     .f = f, ...,
-                                     .starts = starts,
-                                     .stops = stops)
+    slide_values_list = slider::hop_index(.x = .data_group,
+                                          .i = .data_group$time_value,
+                                          .f = f, ...,
+                                          .starts = starts,
+                                          .stops = stops)
 
     # Now figure out which rows in the data group are in the reference time
     # values; this will be useful for all sorts of checks that follow
@@ -297,49 +305,48 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
       dplyr::count(.data$time_value) %>%
       dplyr::pull(n)
 
-    # If they're all atomic vectors 
-    if (all(sapply(slide_values, is.atomic))) {
-      if (all(sapply(slide_values, length) == 1)) {
-        # Recycle to make size stable (one slide value per ref time value)
-        slide_values = rep(unlist(slide_values), times = counts)
-      }
-      else {
-        # Unlist, then check its length, and abort if not right
-        slide_values = unlist(slide_values)
-        if (length(slide_values) != num_ref_rows) {
-          Abort("If the slide computations return atomic vectors, then they must each have a single element, or else one element per appearance of the reference time value in the local window.")
-        }
-      }
-    }
-      
-    # If they're all data frames
-    else if (all(sapply(slide_values, is.data.frame))) {
-      if (all(sapply(slide_values, nrow) == 1)) {
-        # Recycle to make size stable (one slide value per ref time value)
-        slide_values = rep(slide_values, times = counts)
-      }
-      else {
-        # Split (each row on its own), check length, abort if not right
-        slide_df = dplyr::bind_rows(slide_values)
-        slide_values = split(slide_df, 1:nrow(slide_df))
-        if (length(slide_values) != num_ref_rows) {
-          Abort("If the slide computations return data frames, then they must each have a single row, or else one row per appearance of the reference time value in the local window.")
-        }
-      }
-    }
-      
-    # If neither all atomic vectors or all data frames, then abort 
-    else {
+    if (!all(purrr::map_lgl(slide_values_list, is.atomic)) &&
+          !all(purrr::map_lgl(slide_values_list, is.data.frame))) {
       Abort("The slide computations must return always atomic vectors or data frames (and not a mix of these two structures).")
-    }      
-    
+    }
+
+    # Unlist if appropriate:
+    slide_values =
+      if (as_list_col) {
+        slide_values_list
+      } else {
+        vctrs::list_unchop(slide_values_list)
+      }
+
+    if (all(purrr::map_int(slide_values_list, vctrs::vec_size) == 1L) &&
+          length(slide_values_list) != 0L) {
+      # Recycle to make size stable (one slide value per ref time value).
+      # (Length-0 case also could be handled here, but causes difficulties;
+      # leave it to the next branch, where it also belongs.)
+      slide_values = vctrs::vec_rep_each(slide_values, times = counts)
+    } else {
+      # Split and flatten if appropriate, perform a (loose) check on number of
+      # rows.
+      if (as_list_col) {
+        slide_values = purrr::list_flatten(purrr::map(
+          slide_values, ~ vctrs::vec_split(.x, seq_len(vctrs::vec_size(.x)))[["val"]]
+        ))
+      }
+      if (vctrs::vec_size(slide_values) != num_ref_rows) {
+        Abort("The slide computations must either (a) output a single element/row each, or (b) one element/row per appearance of the reference time value in the local window.")
+      }
+    }
+
     # If all rows, then pad slide values with NAs, else filter down data group
     if (all_rows) {
       orig_values = slide_values
-      slide_values = rep(NA, nrow(.data_group))
-      slide_values[o] = orig_values
+      slide_values = vctrs::vec_rep(vctrs::vec_cast(NA, orig_values), nrow(.data_group))
+      # ^ using vctrs::vec_init would be shorter but docs don't guarantee it
+      # fills with NA equivalent.
+      vctrs::vec_slice(slide_values, o) = orig_values
+    } else {
+      .data_group = filter(.data_group, o)
     }
-    else .data_group = filter(.data_group, o)
     return(mutate(.data_group, !!new_col := slide_values))
   }
 

@@ -10,13 +10,13 @@ guess_period(
 )
 }
 \arguments{
-\item{`ref_time_values`}{Vector containing time-interval-like or time-like
+\item{ref_time_values}{Vector containing time-interval-like or time-like
 data, with at least two distinct values, \code{\link{diff}}-able (e.g., a
 \code{time_value} or \code{version} column), and should have a sensible result from
 adding \code{is.numeric} versions of its \code{diff} result (via \code{as.integer} if its
 \code{typeof} is \code{"integer"}, otherwise via \code{as.numeric}).}
 
-\item{`ref_time_values_arg`}{Optional, string; name to give \code{ref_time_values}
+\item{ref_time_values_arg}{Optional, string; name to give \code{ref_time_values}
 in error messages. Defaults to quoting the expression the caller fed into
 the \code{ref_time_values} argument.}
 }

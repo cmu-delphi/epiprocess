@@ -41,7 +41,7 @@ dv <- covidcast(
   time_values = epirange(20200601, 20211201),
   geo_values = "ca,fl,ny,tx",
   issues = epirange(20200601, 20211201)
-) %>% fetch_tbl()
+) %>% fetch()
 
 ```
 
@@ -252,7 +252,7 @@ y <- covidcast(
   geo_values = "ca,fl,ny,tx",
   issues = epirange(20200601, 20211201)
 ) %>%
-  fetch_tbl() %>%
+  fetch() %>%
   select(geo_value, time_value, version = issue, case_rate_7d_av = value) %>%
   as_epi_archive(compactify=TRUE)
 

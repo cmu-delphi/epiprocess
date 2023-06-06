@@ -27,12 +27,13 @@ is_grouped_epi_archive(x)
 
 \item{...}{Similar to \code{\link[dplyr:group_by]{dplyr::group_by}} (see "Details:" for edge cases);
 \itemize{
-\item In \code{group_by}: unquoted variable name(s) or other \link[dplyr:dplyr_data_masking]{"data masking"} expression(s). It's possible to use
-\code{\link[dplyr:mutate]{dplyr::mutate}}-like syntax here to calculate new columns on which to
+\item For \code{group_by}: unquoted variable name(s) or other
+\link[dplyr:dplyr_data_masking]{"data masking"} expression(s). It's possible to
+use \code{\link[dplyr:mutate]{dplyr::mutate}}-like syntax here to calculate new columns on which to
 perform grouping, but note that, if you are regrouping an already-grouped
 \code{.data} object, the calculations will be carried out ignoring such grouping
 (same as \link[dplyr:group_by]{in dplyr}).
-\item In \code{ungroup}: either
+\item For \code{ungroup}: either
 \itemize{
 \item empty, in order to remove the grouping and output an \code{epi_archive}; or
 \item variable name(s) or other \link[dplyr:dplyr_tidy_select]{"tidy-select"}
@@ -46,14 +47,15 @@ the variable selection from \code{...} only; if \code{TRUE}, the output will be
 grouped by the current grouping variables plus the variable selection from
 \code{...}.}
 
-\item{.drop}{As in \code{\link[dplyr:group_by]{dplyr::group_by}}; determines treatment of factor
-columns.}
+\item{.drop}{As described in \code{\link[dplyr:group_by]{dplyr::group_by}}; determines treatment of
+factor columns.}
 
-\item{x}{a \code{grouped_epi_archive}, or, in \code{is_grouped_epi_archive}, any object}
+\item{x}{For \code{groups} or \code{ungroup}: a \code{grouped_epi_archive}; for
+\code{is_grouped_epi_archive}: any object}
 
-\item{.tbl}{An \code{epi_archive} or \code{grouped_epi_archive} (\code{epi_archive}
-dispatches to the S3 default method, and \code{grouped_epi_archive} dispatches
-its own S3 method)}
+\item{.tbl}{(For \code{group_by_drop_default}:) an \code{epi_archive} or
+\code{grouped_epi_archive} (\code{epi_archive} dispatches to the S3 default method;
+\code{grouped_epi_archive} dispatches its own S3 method)}
 }
 \description{
 \code{group_by} and related methods for \code{epi_archive}, \code{grouped_epi_archive}
@@ -137,18 +139,9 @@ toy_archive \%>\% group_by(geo_value, age_group) \%>\% ungroup(age_group)
 # To get the grouping variable names as a `list` of `name`s (a.k.a. symbols):
 toy_archive \%>\% group_by(geo_value) \%>\% groups()
 
-# `.drop = FALSE` is supported in a sense; `f` is called on 0-row inputs for
-# the missing groups identified by `dplyr`, but the row-recycling rules will
-# exclude the corresponding outputs of `f` from the output of the slide:
-all.equal(
-  toy_archive \%>\%
-    group_by(geo_value, age_group, .drop=FALSE) \%>\%
-    epix_slide(f = ~ sum(.x$value), before = 20) \%>\%
-    ungroup(),
-  toy_archive \%>\%
-    group_by(geo_value, age_group, .drop=TRUE) \%>\%
-    epix_slide(f = ~ sum(.x$value), before = 20) \%>\%
-    ungroup()
-)
+toy_archive \%>\%
+  group_by(geo_value, age_group, .drop=FALSE) \%>\%
+  epix_slide(f = ~ sum(.x$value), before = 20) \%>\%
+  ungroup()
 
 }
