@@ -357,6 +357,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     f_rtv_wrapper = function(x, g, ...) {
       ref_time_value = min(x$time_value) + before
       x <- x[x$.real,]
+      x$.real <- NULL
       f(x, g, ref_time_value, ...)
     }
     x = x %>%  
@@ -384,6 +385,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     f = function(.x, .group_key, quo, ...) {
       .ref_time_value = min(.x$time_value) + before
       .x <- .x[.x$.real,]
+      .x$.real <- NULL
       quo = quo_set_env(quo, env())
       rlang::eval_tidy(quo, .x)
     }
