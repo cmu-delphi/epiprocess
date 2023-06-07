@@ -120,7 +120,7 @@
 #'   
 #' @importFrom lubridate days weeks
 #' @importFrom dplyr bind_rows group_vars filter select
-#' @importFrom rlang .data .env !! enquo enquos sym quo_set_env env
+#' @importFrom rlang .data .env !! enquo enquos sym env
 #' @export
 #' @examples 
 #' # slide a 7-day trailing average formula on cases
@@ -386,8 +386,15 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
       .ref_time_value = min(.x$time_value) + before
       .x <- .x[.x$.real,]
       .x$.real <- NULL
-      quo = quo_set_env(quo, env())
-      rlang::eval_tidy(quo, .x)
+      data_parent_env = rlang::as_environment(.x)
+      data_env = env(data_parent_env,
+                     .x = .x, .group_key = .group_key,
+                     .ref_time_value = .ref_time_value)
+      # `as_data_mask()` appears to strip off ancestors. We'll need to
+      # do some more work with `new_data_mask()`:
+      data_mask = rlang::new_data_mask(data_env, top = data_parent_env)
+      data_mask$.data <- rlang::as_data_pronoun(.x)
+      rlang::eval_tidy(quo, data_mask)
     }
     new_col = sym(names(rlang::quos_auto_name(quos)))
     

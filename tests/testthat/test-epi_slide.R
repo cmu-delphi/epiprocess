@@ -447,11 +447,12 @@ test_that("epi_slide computation via dots can use ref_time_value and group", {
 
   expect_identical(result1, expected_output)
 
-  result2 <- small_x %>%
+  # `.{x,group_key,ref_time_value}` should be inaccessible from `.data` and
+  # `.env`.
+  expect_error(small_x %>%
     epi_slide(before = 50,
       slide_value = .env$.ref_time_value)
-
-  expect_identical(result2, expected_output)
+  )
 
   # group_key
   # Use group_key column
