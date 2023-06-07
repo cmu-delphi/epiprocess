@@ -510,3 +510,13 @@ test_that("epi_slide computation via dots outputs the same result using col name
 
   expect_identical(result1, expected_output)
 })
+
+test_that("`epi_slide` can access objects inside of helper functions", {
+  helper = function(archive_haystack, time_value_needle) {
+    archive_haystack %>% epi_slide(has_needle = time_value_needle %in% time_value, before = 365000L)
+  }
+  expect_error(
+    helper(small_x, as.Date("2021-01-01")),
+    NA
+  )
+})
