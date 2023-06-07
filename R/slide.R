@@ -229,8 +229,8 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     after <- time_step(after)
   }
 
-  inrange_time_values_not_in_x = ref_time_values - before
-  inrange_time_values_not_in_x <- inrange_time_values_not_in_x[!(inrange_time_values_not_in_x %in% unique(x$time_value))]
+  min_ref_time_values = ref_time_values - before
+  min_ref_time_values_not_in_x <- min_ref_time_values[!(min_ref_time_values %in% unique(x$time_value))]
 
   # Do set up to let us recover `ref_time_value`s later.
   # A helper column marking real observations.
@@ -238,9 +238,9 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # Create df containing phony data. Df has the same columns and attributes as
   # `x`, but filled with `NA`s aside from grouping columns. Number of rows is
-  # equal to the number of `inrange_time_values_not_in_x` we have * the
+  # equal to the number of `min_ref_time_values_not_in_x` we have * the
   # number of unique levels seen in the grouping columns.
-  before_time_values_df = data.frame(time_value=inrange_time_values_not_in_x)
+  before_time_values_df = data.frame(time_value=min_ref_time_values_not_in_x)
   if (length(group_vars(x)) != 0) {
     before_time_values_df = dplyr::cross_join(
       # Get unique combinations of grouping columns seen in real data.
