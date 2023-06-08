@@ -668,14 +668,14 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   explanation. If a function, `f` must take an `epi_df` with the same
 #'   column names as the archive's `DT`, minus the `version` column; followed
 #'   by a one-row tibble containing the values of the grouping variables for
-#'   the associated group; followed by a Date containing the reference time
-#'   value that was used; followed by any number of named arguments. If a formula,
-#'   `f` can operate directly on columns accessed via `.x$var` or `.$var`, as in
-#'   `~ mean (.x$var)` to compute a mean of a column `var` for each
+#'   the associated group; followed by a reference time value, usually as a
+#'   `Date` object; followed by any number of named arguments. If a formula,
+#'   `f` can operate directly on columns accessed via `.x$var` or `.$var`, as
+#'   in `~ mean (.x$var)` to compute a mean of a column `var` for each
 #'   group-`ref_time_value` combination. The group key can be accessed via
 #'   `.y` or `.group_key`, and the reference time value can be accessed via
-#'   `.z` or `.ref_time_value`. If `f` is missing, then `...` will specify
-#'   the computation.
+#'   `.z` or `.ref_time_value`. If `f` is missing, then `...` will specify the
+#'   computation.
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then `...` is interpreted as an
 #'   expression for tidy evaluation. See details of [`epi_slide`].

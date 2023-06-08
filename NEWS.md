@@ -11,8 +11,8 @@ inter-release development versions will include an additional ".9999" suffix.
     must take an `epi_df` with the same column names as the archive's `DT`,
     minus the `version` column; followed by a one-row tibble containing the
     values of the grouping variables for the associated group; followed by a
-    Date containing the reference time value that was used; followed by any
-    number of named arguments.
+    reference time value, usually as a `Date` object; followed by any number
+    of named arguments.
 
 ## New features:
 
