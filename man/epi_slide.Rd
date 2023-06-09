@@ -28,14 +28,15 @@ computation to slide. To "slide" means to apply a computation within a
 sliding (a.k.a. "rolling") time window for each data group. The window is
 determined by the \code{before} and \code{after} parameters described below. One time
 step is typically one day or one week; see details for more explanation. If
-a function, \code{f} must take \code{x}, a data frame with the same column names as
+a function, \code{f} must take a data frame with the same column names as
 the original object, minus any grouping variables, containing the time
-window data for one \code{ref_time_value}-group combination; followed by \code{g}, a
+window data for one group-\code{ref_time_value} combination; followed by a
 one-row tibble containing the values of the grouping variables for the
 associated group; followed by any number of named arguments. If a formula,
-\code{f} can operate directly on columns accessed via \code{.x$var}, as in \code{~ mean(.x$var)} to compute a mean of a column \code{var} for each
-\code{ref_time_value}-group combination. If \code{f} is missing, then \code{...} will
-specify the computation.}
+\code{f} can operate directly on columns accessed via \code{.x$var} or \code{.$var}, as
+in \code{~mean(.x$var)} to compute a mean of a column \code{var} for each
+\code{ref_time_value}-group combination. The group key can be accessed via \code{.y}.
+If \code{f} is missing, then \code{...} will specify the computation.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{f}. Alternatively, if \code{f} is missing, then the \code{...} is interpreted as

@@ -184,3 +184,36 @@ test_that("assert_sufficient_f_args alerts if the provided f has defaults for th
                regexp = "window data and group key to `f`'s x and setting argument",
                class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
 })
+
+test_that("computation formula-derived functions take all argument types", {
+  # positional
+  expect_identical(as_slide_computation(~ ..2 + ..3)(1, 2, 3), 5)
+  expect_identical(as_slide_computation(~ ..1)(1, 2, 3), 1)
+  # Matching rlang, purr, dplyr usage
+  expect_identical(as_slide_computation(~ .x + .z)(1, 2, 3), 4)
+  expect_identical(as_slide_computation(~ .x + .y)(1, 2, 3), 3)
+  # named
+  expect_identical(as_slide_computation(~ . + .ref_time_value)(1, 2, 3), 4)
+  expect_identical(as_slide_computation(~ .group_key)(1, 2, 3), 2)
+})
+
+test_that("as_slide_computation passes functions unaltered", {
+  f <- function(a, b, c) {a * b * c + 5}
+  expect_identical(as_slide_computation(f), f)
+})
+
+test_that("as_slide_computation raises errors as expected", {
+  # Formulas must be one-sided
+  expect_error(as_slide_computation(y ~ ..1),
+    class="epiprocess__as_slide_computation__formula_is_twosided")
+
+  # `f_env` must be an environment
+  formula_without_env <- stats::as.formula(~ ..1)
+  rlang::f_env(formula_without_env) <- 5
+  expect_error(as_slide_computation(formula_without_env),
+    class="epiprocess__as_slide_computation__formula_has_no_env")
+
+  # `f` must be a function, formula, or string
+  expect_error(as_slide_computation(5),
+    class="epiprocess__as_slide_computation__cant_convert_catchall")
+})

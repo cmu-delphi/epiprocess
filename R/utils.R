@@ -103,17 +103,19 @@ Warn = function(msg, ...) rlang::warn(break_str(msg, init = "Warning: "), ...)
 #' Assert that a sliding computation function takes enough args
 #'
 #' @param f Function; specifies a computation to slide over an `epi_df` or
-#'   `epi_archive` in `epi_slide` or `epix_slide`.
+#'  `epi_archive` in `epi_slide` or `epix_slide`.
 #' @param ... Dots that will be forwarded to `f` from the dots of `epi_slide` or
 #'   `epix_slide`.
+#' @param n_mandatory_f_args Integer; specifies the number of arguments `f`
+#'  is required to take before any `...` arg. Defaults to 2.
 #'
 #' @importFrom rlang is_missing
 #' @importFrom purrr map_lgl
 #' @importFrom utils tail
 #'
 #' @noRd
-assert_sufficient_f_args <- function(f, ...) {
-  mandatory_f_args_labels <- c("window data", "group key")
+assert_sufficient_f_args <- function(f, ..., n_mandatory_f_args = 2L) {
+  mandatory_f_args_labels <- c("window data", "group key", "reference time value")[seq(n_mandatory_f_args)]
   n_mandatory_f_args <- length(mandatory_f_args_labels)
   args = formals(args(f))
   args_names = names(args)
@@ -179,6 +181,109 @@ assert_sufficient_f_args <- function(f, ...) {
                    class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults",
                    epiprocess__f = f)
   }
+}
+
+#' Convert to function
+#'
+#' @description
+#' `as_slide_computation()` transforms a one-sided formula into a function.
+#' This powers the lambda syntax in packages like purrr.
+#'
+#' This code and documentation borrows heavily from [`rlang::as_function`]
+#' (https://github.com/r-lib/rlang/blob/c55f6027928d3104ed449e591e8a225fcaf55e13/R/fn.R#L343-L427).
+#'
+#' This code extends `rlang::as_function` to create functions that take three
+#' arguments. The arguments can be accessed via the idiomatic `.x`, `.y`,
+#' etc, positional references (`..1`, `..2`, etc), and also by `epi
+#' [x]_slide`-specific names.
+#'
+#' @source https://github.com/r-lib/rlang/blob/c55f6027928d3104ed449e591e8a225fcaf55e13/R/fn.R#L343-L427
+#'
+#' @param x A function or formula.
+#'
+#'   If a **function**, it is used as is.
+#'
+#'   If a **formula**, e.g. `~ mean(.x$cases)`, it is converted to a function with up
+#'   to three arguments: `.x` (single argument), or `.x` and `.y`
+#'   (two arguments), or `.x`, `.y`, and `.z` (three arguments). The `.`
+#'   placeholder can be used instead of `.x`, `.group_key` can be used in
+#'   place of `.y`, and `.ref_time_value` can be used in place of `.z`. This
+#'   allows you to create very compact anonymous functions (lambdas) with up
+#'   to three inputs. Functions created from formulas have a special class. Use
+#'   `rlang::is_lambda()` to test for it.
+#'
+#'   If a **string**, the function is looked up in `env`. Note that
+#'   this interface is strictly for user convenience because of the
+#'   scoping issues involved. Package developers should avoid
+#'   supplying functions by name and instead supply them by value.
+#'
+#' @param env Environment in which to fetch the function in case `x`
+#'   is a string.
+#' @inheritParams rlang::args_dots_empty
+#' @inheritParams rlang::args_error_context
+#' @examples
+#' f <- as_slide_computation(~ .x + 1)
+#' f(10)
+#'
+#' g <- as_slide_computation(~ -1 * .)
+#' g(4)
+#'
+#' h <- as_slide_computation(~ .x - .group_key)
+#' h(6, 3)
+#'
+#' @importFrom rlang check_dots_empty0 is_function new_function f_env
+#'  is_environment missing_arg f_rhs is_string is_formula caller_arg
+#'  caller_env global_env
+#'
+#' @noRd
+as_slide_computation <- function(x,
+                        env = global_env(),
+                        ...,
+                        arg = caller_arg(x),
+                        call = caller_env()) {
+  check_dots_empty0(...)
+
+  if (is_function(x)) {
+    return(x)
+  }
+
+  if (is_formula(x)) {
+    if (length(x) > 2) {
+      Abort(sprintf("%s must be a one-sided formula", arg),
+              class = "epiprocess__as_slide_computation__formula_is_twosided",
+              epiprocess__x = x,
+              call = call)
+    }
+
+    env <- f_env(x)
+    if (!is_environment(env)) {
+      Abort("Formula must carry an environment.",
+              class = "epiprocess__as_slide_computation__formula_has_no_env",
+              epiprocess__x = x,
+              epiprocess__x_env = env,
+              arg = arg, call = call)
+    }
+
+    args <- list(
+      ... = missing_arg(),
+      .x = quote(..1), .y = quote(..2), .z = quote(..3),
+      . = quote(..1), .group_key = quote(..2), .ref_time_value = quote(..3)
+    )
+    fn <- new_function(args, f_rhs(x), env)
+    fn <- structure(fn, class = c("epiprocess_slide_computation", "function"))
+    return(fn)
+  }
+
+  if (is_string(x)) {
+    return(get(x, envir = env, mode = "function"))
+  }
+
+  Abort(sprintf("Can't convert a %s to a slide computation", class(x)),
+            class = "epiprocess__as_slide_computation__cant_convert_catchall",
+            epiprocess__x = x,
+            epiprocess__x_class = class(x),
+            arg = arg,
+            call = call)
 }
 
 ##########

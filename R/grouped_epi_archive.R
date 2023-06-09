@@ -232,7 +232,7 @@ grouped_epi_archive =
             
             # Check that `f` takes enough args
             if (!missing(f) && is.function(f)) {
-              assert_sufficient_f_args(f, ...)
+              assert_sufficient_f_args(f, ..., n_mandatory_f_args = 3L)
             }
 
             # Validate and pre-process `before`:
@@ -272,7 +272,7 @@ grouped_epi_archive =
                                     ref_time_value,
                                     new_col) {
               # Carry out the specified computation
-              comp_value = f(.data_group, .group_key, ...)
+              comp_value = f(.data_group, .group_key, ref_time_value, ...)
 
               if (all_versions) {
                 # Extract data from archive so we can do length checks below. When
@@ -298,7 +298,7 @@ grouped_epi_archive =
             
             # If f is not missing, then just go ahead, slide by group
             if (!missing(f)) {
-              if (rlang::is_formula(f)) f = rlang::as_function(f)
+              if (rlang::is_formula(f)) f = as_slide_computation(f)
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
                 # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
                 # `epi_archive` if `all_versions` is `TRUE`:

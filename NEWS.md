@@ -6,6 +6,16 @@ inter-release development versions will include an additional ".9999" suffix.
 
 ## Breaking changes:
 
+* Changes to `epix_slide`:
+  * The `f` computation is now required to take at least three arguments. `f`
+    must take an `epi_df` with the same column names as the archive's `DT`,
+    minus the `version` column; followed by a one-row tibble containing the
+    values of the grouping variables for the associated group; followed by a
+    reference time value, usually as a `Date` object; followed by any number
+    of named arguments.
+
+## New features:
+
 * `epix_slide` has been made more like `dplyr::group_modify`. It will no longer
   perform element/row recycling for size stability, accepts slide computation
   outputs containing any number of rows, and no longer supports `all_rows`.
@@ -19,6 +29,11 @@ inter-release development versions will include an additional ".9999" suffix.
   more closely whether/when/how to output an `epi_df`.
   * To keep the old behavior, convert the output of `epix_slide()` to `epi_df`
     when desired and set the metadata appropriately.
+* `epix_slide` `f` computations passed as functions or formulas now have
+  access to the reference time value. If `f` is a function, it is passed a
+  Date containing the reference time value as the third argument. If a
+  formula, `f` can access the reference time value via `.z` or
+  `.ref_time_value`.
 
 ## Improvements:
 

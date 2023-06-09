@@ -12,15 +12,15 @@
 #'   sliding (a.k.a. "rolling") time window for each data group. The window is
 #'   determined by the `before` and `after` parameters described below. One time
 #'   step is typically one day or one week; see details for more explanation. If
-#'   a function, `f` must take `x`, a data frame with the same column names as
+#'   a function, `f` must take a data frame with the same column names as
 #'   the original object, minus any grouping variables, containing the time
-#'   window data for one `ref_time_value`-group combination; followed by `g`, a
+#'   window data for one group-`ref_time_value` combination; followed by a
 #'   one-row tibble containing the values of the grouping variables for the
 #'   associated group; followed by any number of named arguments. If a formula,
-#'   `f` can operate directly on columns accessed via `.x$var`, as in `~
-#'   mean(.x$var)` to compute a mean of a column `var` for each
-#'   `ref_time_value`-group combination. If `f` is missing, then `...` will
-#'   specify the computation.
+#'   `f` can operate directly on columns accessed via `.x$var` or `.$var`, as
+#'   in `~mean(.x$var)` to compute a mean of a column `var` for each
+#'   `ref_time_value`-group combination. The group key can be accessed via `.y`.
+#'   If `f` is missing, then `...` will specify the computation.
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the `...` is interpreted as
 #'   an expression for tidy evaluation. See details.

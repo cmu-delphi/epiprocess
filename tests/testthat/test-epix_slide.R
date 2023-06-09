@@ -1,6 +1,6 @@
 library(dplyr)
 
-test_that("epix_slide only works on an epi_archive",{
+test_that("epix_slide only works on an epi_archive", {
   expect_error(epix_slide(data.frame(x=1)))
 })
 
@@ -14,7 +14,7 @@ x <- tibble::tribble(~version, ~time_value, ~binary,
 xx <- bind_cols(geo_value = rep("x",15), x) %>%
   as_epi_archive()
 
-test_that("epix_slide works as intended",{
+test_that("epix_slide works as intended", {
   xx1 <- xx %>%
     group_by(.data$geo_value) %>%
     epix_slide(f = ~ sum(.x$binary),
@@ -39,12 +39,12 @@ test_that("epix_slide works as intended",{
            new_col_name = 'sum_binary')
   )
   
-  expect_identical(xx1,xx3) # This and * Imply xx2 and xx3 are identical
+  expect_identical(xx1,xx3) # This and * imply xx2 and xx3 are identical
 
   # function interface
   xx4 <- xx %>%
     group_by(.data$geo_value) %>%
-    epix_slide(f = function(x, g) {
+    epix_slide(f = function(x, gk, rtv) {
       tibble::tibble(sum_binary = sum(x$binary))
     }, before = 2, names_sep = NULL)
   
@@ -304,7 +304,7 @@ test_that("epix_slide with all_versions option has access to all older versions"
   # `waldo` package:
   testthat::local_edition(3)
 
-  slide_fn <- function(x, g) {
+  slide_fn <- function(x, gk, rtv) {
     return(tibble(n_versions = length(unique(x$DT$version)),
                   n_row = nrow(x$DT),
                   dt_class1 = class(x$DT)[[1L]],
@@ -376,7 +376,7 @@ test_that("as_of and epix_slide with long enough window are compatible", {
 
   # For all_versions = FALSE:
 
-  f1 = function(x, g) {
+  f1 = function(x, gk, rtv) {
     tibble(
       diff_mean = mean(diff(x$binary))
     )
@@ -390,11 +390,11 @@ test_that("as_of and epix_slide with long enough window are compatible", {
 
   # For all_versions = TRUE:
 
-  f2 = function(x, g) {
+  f2 = function(x, gk, rtv) {
     x %>%
       # extract time&version-lag-1 data:
       epix_slide(
-        function(subx, subg) {
+        function(subx, subgk, rtv) {
           tibble(data = list(
             subx %>%
               filter(time_value == attr(subx, "metadata")$as_of - 1) %>%
@@ -434,7 +434,7 @@ test_that("as_of and epix_slide with long enough window are compatible", {
 })
 
 test_that("epix_slide `f` is passed an ungrouped `epi_archive` when `all_versions=TRUE`",{
-  slide_fn <- function(x, g) {
+  slide_fn <- function(x, gk, rtv) {
     expect_true(is_epi_archive(x))
     return(NA)
   }
@@ -447,7 +447,7 @@ test_that("epix_slide `f` is passed an ungrouped `epi_archive` when `all_version
                all_versions = TRUE)
 })
 
-test_that("epix_slide with all_versions option works as intended",{
+test_that("epix_slide with all_versions option works as intended", {
   xx1 <- xx %>%
     group_by(.data$geo_value) %>%
     epix_slide(f = ~ sum(.x$DT$binary),
@@ -500,7 +500,7 @@ test_that("epix_slide with all_versions option works as intended",{
 test_that("epix_slide works with 0-row computation outputs", {
   epix_slide_empty = function(ea, ...) {
     ea %>%
-      epix_slide(before = 5L, ..., function(x, g) {
+      epix_slide(before = 5L, ..., function(x, gk, rtv) {
         tibble::tibble()
       })
   }
@@ -563,14 +563,64 @@ test_that("epix_slide works with 0-row computation outputs", {
 # })
 
 test_that("epix_slide alerts if the provided f doesn't take enough args", {
-  f_xg = function(x, g) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
+  f_xgt = function(x, g, t) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
   # If `regexp` is NA, asserts that there should be no errors/messages.
-  expect_error(epix_slide(xx, f = f_xg, before = 2L), regexp = NA)
-  expect_warning(epix_slide(xx, f = f_xg, before = 2L), regexp = NA)
+  expect_error(epix_slide(xx, f = f_xgt, before = 2L), regexp = NA)
+  expect_warning(epix_slide(xx, f = f_xgt, before = 2L), regexp = NA)
 
   f_x_dots = function(x, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
   expect_warning(epix_slide(xx, f_x_dots, before = 2L),
     class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots")
+})
+
+test_that("epix_slide computation can use ref_time_value", {
+  # Formula
+  xx1 <- xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(f = ~ .ref_time_value,
+               before = 2)
+
+  xx_ref <- tibble(geo_value = rep("x",4),
+                time_value = c(4,5,6,7),
+                slide_value = c(4,5,6,7)
+                ) %>%
+    group_by(geo_value)
+
+  expect_identical(xx1,xx_ref)
+
+  xx2 <- xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(f = ~ .z,
+               before = 2)
+
+  expect_identical(xx2,xx_ref)
+
+  xx3 <- xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(f = ~ ..3,
+               before = 2)
+
+  expect_identical(xx3,xx_ref)
+
+  # Function
+  xx4 <- xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(f = function(x, g, t) t,
+               before = 2)
+
+  expect_identical(xx4,xx_ref)
+
+  # Dots
+  expect_error(xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(before = 2,
+      slide_value = ref_time_value),
+    "object 'ref_time_value' not found")
+expect_error(xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(before = 2,
+      slide_value = .env$ref_time_value),
+    "object 'ref_time_value' not found")
 })
 
 test_that("`epix_slide` doesn't decay date output", {
