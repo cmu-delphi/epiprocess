@@ -107,12 +107,13 @@ latency_stats = function(window_data, group_key, ref_time_value) {
       nominal_latency = as.integer(ref_time_value - max(time_value)),
       na_latency = n_bools_true_at_tail(is_na) + nominal_latency,
       na0_latency = n_bools_true_at_tail(is_na0) + nominal_latency,
+      # FIXME this still looks buggy; why don't we have the same all-geo event lines as in the above?
       na_dup_latency =
         # (don't count NAs before the first copy of the last non-na)
-        sum(cumsum(is_na_same[rev(cumsum(rev(!is_na_same))) == 0L]) != 0L) - 1L,
+        sum(cumsum(is_na_same[rev(cumsum(rev(!is_na_same))) == 0L]) != 0L) - 1L + nominal_latency,
       na0dup_latency =
         # (don't count NAs and 0s before the first copy of the last non-na0)
-        sum(cumsum(is_na0same[rev(cumsum(rev(!is_na0same))) == 0L]) != 0L) - 1L
+        sum(cumsum(is_na0same[rev(cumsum(rev(!is_na0same))) == 0L]) != 0L) - 1L + nominal_latency
     )
 }
 
@@ -222,7 +223,7 @@ ggplotly(plt)
 ## Plotting individual time series snapshots of interest
 
 There's a time span of high latency according to some definitions, e.g., for DE as of 2023-05-11; let's see what the time series looked like as of that version:
-```{r}
+```{r, out.width = "100%"}
 plt =
   hhs_flu_hosp_archive %>%
   epix_as_of(as.Date("2023-05-11"),
@@ -234,19 +235,52 @@ plt =
   geom_point()
 ggplotly(plt)
 ```
-We can see at later time values that the number of admissions alternates between 0 most days and 1 other days.  In some definitions of latency, we consider all but the first 1
+We can see at later time values that the number of admissions alternates between 0 most days and 1 other days.  In some definitions of latency, we consider all but the first 1 in these sections to be "latent".
+
+There's also some interesting patterns where latency appears to decrease in AS, then suddenly jump up; let's visualize some snapshots here:
+```{r}
+  hhs_flu_hosp_archive %>%
+  epix_slide(
+    ~ .x %>% filter(geo_value == "as") %>% rename(atv = time_value),
+    before = 27L, # don't calculate latency more than this far back
+    names_sep = NULL # don't add "slide_value_" colname prefixes
+  ) %>%
+  rename(version = time_value, time_value = atv) %>%
+  filter(version %in% as.Date(c("2023-03-20", "2023-04-02", "2023-04-03"))) %>%
+  ggplot(aes(time_value, admissions, colour = version)) +
+  geom_line()
+```
+
+Let's check some counts instead:
+```{r}
+hhs_flu_hosp_archive %>%
+  epix_slide(
+    ~ .x %>%
+      filter(geo_value == "as") %>%
+      complete(time_value = full_seq(time_value, period = 1L)) %>%
+      rename(atv = time_value),
+    before = 27L, # don't calculate latency more than this far back
+    names_sep = NULL # don't add "slide_value_" colname prefixes
+  ) %>%
+  rename(version = time_value, time_value = atv) %>%
+  filter(version %in% as.Date(c("2023-03-20", "2023-04-02", "2023-04-03"))) %>%
+  count(version)
+```
 
 ## Some summary statistics related to the nonmissing latency:
 
-```{r, fig.width = 7, fig.height = 5}
-hhs_flu_hosp_latency_by_version_geo %>%
+```{r, out.width = "100%"}
+plt =
+  hhs_flu_hosp_latency_by_version_geo %>%
   ggplot(aes(na_latency)) +
   geom_histogram(binwidth = 1L)
+ggplotly(plt)
 ```
 
 Over time:
-```{r, fig.width = 7, fig.height = 5}
-hhs_flu_hosp_latency_by_version_geo %>%
+```{r, out.width = "100%"}
+plt =
+  hhs_flu_hosp_latency_by_version_geo %>%
   group_by(version) %>%
   summarize(mean_na_latency = mean(na_latency)) %>%
   ggplot(aes(version, mean_na_latency)) +
@@ -254,6 +288,7 @@ hhs_flu_hosp_latency_by_version_geo %>%
   expand_limits(y=0) +
   xlab("Version") +
   ylab("Mean Nonmissing Latency Across Locations")
+ggplotly(plt)
 ```
 
 # Revision statistics
