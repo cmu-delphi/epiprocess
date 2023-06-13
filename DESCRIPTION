@@ -49,6 +49,7 @@ Suggests:
     ggplot2,
     knitr,
     outbreaks,
+    plotly,
     rmarkdown,
     testthat (>= 3.1.5),
     waldo (>= 0.3.1),
