@@ -121,6 +121,19 @@ hhs_flu_hosp_latency_by_version_geo %>%
   xlab("Version") +
   ylab("Mean Nominal Latency Across Locations")
 ```
+
+```{r}
+hhs_flu_hosp_latency_by_version_geo %>%
+  mutate(nominal_latency = case_when(nominal_latency <= 2 ~ NA, TRUE ~ nominal_latency)) %>%
+  ggplot(aes(time_value, geo_value, fill = nominal_latency)) +
+  geom_raster() +
+  scale_fill_viridis_c(na.value = NA) +
+  theme_bw() +
+  scale_x_date(date_labels = "%b %Y") +
+  xlab("Version") +
+  ylab("HHS Flu Hospitalization Nominal Latency")
+```
+
 How accurate is `k`-day-old data on average?
 ```{r}
 max_analysis_lag = 30L
