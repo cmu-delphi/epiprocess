@@ -20,7 +20,7 @@ library(ggplot2)
 # we've already observed. For better reproducibility, that issue should be at
 # least two days ago (from today), to incorporate any "hotfixes" to that data
 # and allow up to a day for database replication delays:
-hhs_flu_hosp_analysis_issue = as.Date("2023-05-31") - 2L
+hhs_flu_hosp_analysis_issue = as.Date("2023-06-13") - 2L
 
 # We'll query version data for this data set from the Delphi Epidata API using
 # epidatr, caching the result so that we can re-run this chunk repeatedly a bit
@@ -57,7 +57,18 @@ hhs_flu_hosp_archive = hhs_flu_hosp_issue_data %>%
   as_epi_archive(compactify = TRUE)
 ```
 
-What is the distribution of latency across all locations and versions?
+There are several notions of latency, some of which include:
+- "Nominal latency": the difference between the max `time_value` available for
+  some location, as of some version
+- "Nonmissing latency": also considers explicitly-recorded `NA`s and any skipped
+  `time_value`s as latent
+- "Nonmissing nonduplicate latency": considers `NA`s, skipped `time_value`s, and
+  duplications of the most recent non-`NA` value to be latent
+- "Nonmissing nonzero nonduplicate latency": considers `NA`s, skipped
+  `time_value`s, zeros, and duplications of the most recent non-`NA`, nonzero
+  value to be latent
+
+We'll calculate all the above definitions of latency using `epix_slide()`:
 ```{r, fig.width=7, fig.height=5}
 n_bools_true_at_tail = function(x) {
   sum(cumprod(rev(x)))
@@ -96,15 +107,18 @@ latency_stats = function(window_data, group_key, ref_time_value) {
     )
 }
 
-hhs_flu_hosp_latency_by_version_geo <-
+hhs_flu_hosp_latency_by_version_geo =
   hhs_flu_hosp_archive %>%
   epix_slide(
     latency_stats,
-    before = 27L, # don't count latency more than this far back
+    before = 27L, # don't calculate latency more than this far back
     names_sep = NULL # don't add "slide_value_" colname prefixes
   ) %>%
   rename(version = time_value)
+```
 
+Some summary statistics related to the "nominal latency":
+```{r}
 hhs_flu_hosp_latency_by_version_geo %>%
   ggplot(aes(nominal_latency)) +
   geom_histogram(binwidth = 1L)
@@ -122,6 +136,7 @@ hhs_flu_hosp_latency_by_version_geo %>%
   ylab("Mean Nominal Latency Across Locations")
 ```
 
+Finer-grained visualizations of different notions of latency:
 ```{r}
 hhs_flu_hosp_latency_by_version_geo %>%
   mutate(nominal_latency = case_when(
