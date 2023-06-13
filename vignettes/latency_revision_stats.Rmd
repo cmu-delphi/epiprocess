@@ -1,0 +1,194 @@
+---
+title: Calculating latency and revision statistics
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Calculating latency and revision statistics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Load data
+
+```{r}
+library(epidatr)
+library(epiprocess)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# For reproducibility, we'll work with data reporting through some fixed issue
+# we've already observed. For better reproducibility, that issue should be at
+# least two days ago (from today), to incorporate any "hotfixes" to that data
+# and allow up to a day for database replication delays:
+hhs_flu_hosp_analysis_issue = as.Date("2023-05-31") - 2L
+
+# We'll query version data for this data set from the Delphi Epidata API using
+# epidatr, caching the result so that we can re-run this chunk repeatedly a bit
+# faster, while offline, and without placing undue load on the API servers.
+hhs_flu_hosp_issue_data_path = "hhs_flu_hosp_issue_data.rds"
+if (!file.exists(hhs_flu_hosp_issue_data_path)) {
+  cat("Fetching.\n")
+  hhs_flu_hosp_issue_data =
+    covidcast(
+      data_source = "hhs", signals = "confirmed_admissions_influenza_1d",
+      geo_type = "state", time_type = "day",
+      geo_values = "*",
+      # all `time_value`s:
+      time_values = "*",
+      # all issues through the analysis issue
+      issues = epirange(12340101, hhs_flu_hosp_analysis_issue)
+    ) %>%
+    fetch()
+  saveRDS(hhs_flu_hosp_issue_data, hhs_flu_hosp_issue_data_path)
+  writeLines(c("License: Public Domain US Government",
+               "Accessed via COVIDcast Epidata API"),
+             "LICENSE_hhs_flu_hosp_issue_data.txt")
+} else {
+  cat("Using cache.\n")
+  hhs_flu_hosp_issue_data = readRDS(hhs_flu_hosp_issue_data_path)
+}
+
+# Remove some data from a mostly-NA/0/low regime, and put version data into
+# the `epi_archive` format:
+hhs_flu_hosp_start_time_value = as.Date("2020-12-01")
+hhs_flu_hosp_archive = hhs_flu_hosp_issue_data %>%
+  filter(time_value >= hhs_flu_hosp_start_time_value) %>%
+  select(geo_value, time_value, version = issue, admissions = value) %>%
+  as_epi_archive(compactify = TRUE)
+```
+
+What is the distribution of latency across all locations and versions?
+```{r, fig.width=7, fig.height=5}
+n_bools_true_at_tail = function(x) {
+  sum(cumprod(rev(x)))
+}
+
+last_or_na = function(x) {
+  if (length(x) != 0L) {
+    x[[length(x)]]
+  } else {
+    vctrs::vec_cast(NA, x)
+  }
+}
+
+latency_stats = function(window_data, group_key, ref_time_value) {
+  window_data %>%
+    group_by(geo_value) %>%
+    complete(time_value = full_seq(time_value, period = 1L)) %>%
+    ungroup() %>%
+    mutate(
+      is_na = is.na(admissions),
+      is_na0 = is_na | admissions == 0L
+    ) %>%
+    group_by(geo_value) %>%
+    mutate(
+      is_na_same = is_na0 |
+        admissions == last_or_na(admissions[!is_na]),
+      is_na0same = is_na0 |
+        admissions == last_or_na(admissions[!is_na0])
+    ) %>%
+    summarize(
+      nominal_latency = as.integer(ref_time_value - max(time_value)),
+      na_latency = n_bools_true_at_tail(is_na) + nominal_latency,
+      na0_latency =  n_bools_true_at_tail(is_na0) + nominal_latency,
+      na_dup_latency =  n_bools_true_at_tail(is_na_same) - 1L + nominal_latency,
+      na0dup_latency =  n_bools_true_at_tail(is_na0same) - 1L + nominal_latency
+    )
+}
+
+hhs_flu_hosp_latency_by_version_geo <-
+  hhs_flu_hosp_archive %>%
+  epix_slide(
+    latency_stats,
+    before = 27L, # don't count latency more than this far back
+    names_sep = NULL # don't add "slide_value_" colname prefixes
+  ) %>%
+  rename(version = time_value)
+
+hhs_flu_hosp_latency_by_version_geo %>%
+  ggplot(aes(nominal_latency)) +
+  geom_histogram(binwidth = 1L)
+```
+
+Over time:
+```{r, fig.width = 7, fig.height = 5}
+hhs_flu_hosp_latency_by_version_geo %>%
+  group_by(version) %>%
+  summarize(mean_nominal_latency = mean(nominal_latency)) %>%
+  ggplot(aes(version, mean_nominal_latency)) +
+  geom_line() +
+  expand_limits(y=0) +
+  xlab("Version") +
+  ylab("Mean Nominal Latency Across Locations")
+```
+How accurate is `k`-day-old data on average?
+```{r}
+max_analysis_lag = 30L
+
+hhs_flu_hosp_version_lag_data =
+  hhs_flu_hosp_archive %>%
+  epix_slide(
+    ~ .x,
+    before = max_analysis_lag,
+    as_list_col = TRUE
+  ) %>%
+  rename(version = time_value) %>%
+  unnest(slide_value) %>%
+  mutate(version_lag = as.integer(version - time_value))
+
+hhs_flu_hosp_latest_snapshot =
+  hhs_flu_hosp_archive %>%
+  epix_as_of(.$versions_end)
+
+left_join(hhs_flu_hosp_version_lag_data,
+          hhs_flu_hosp_latest_snapshot %>%
+            filter(time_value <= hhs_flu_hosp_analysis_issue - max_analysis_lag * 2L),
+          by = c("geo_value", "time_value"),
+          suffix = c("_lagged", "_latest")) %>%
+  tidyr::drop_na(c(admissions_lagged, admissions_latest)) %>%
+  group_by(version_lag) %>%
+  summarize(MAPE1 = 100*mean(abs((admissions_latest - admissions_lagged)/(admissions_latest + 1)))) %>%
+  ggplot(aes(version_lag, MAPE1)) +
+  geom_line()
+
+left_join(hhs_flu_hosp_version_lag_data,
+          hhs_flu_hosp_latest_snapshot %>%
+            filter(time_value <= hhs_flu_hosp_analysis_issue - max_analysis_lag * 2L),
+          by = c("geo_value", "time_value"),
+          suffix = c("_lagged", "_latest")) %>%
+  tidyr::drop_na(c(admissions_lagged, admissions_latest)) %>%
+  group_by(version_lag) %>%
+  summarize(MdAPE1 = 100*median(abs((admissions_latest - admissions_lagged)/(admissions_latest + 1)))) %>%
+  ggplot(aes(version_lag, MdAPE1)) +
+  geom_line()
+
+left_join(hhs_flu_hosp_version_lag_data,
+          hhs_flu_hosp_latest_snapshot %>%
+            filter(time_value <= hhs_flu_hosp_analysis_issue - max_analysis_lag * 2L),
+          by = c("geo_value", "time_value"),
+          suffix = c("_lagged", "_latest")) %>%
+  tidyr::drop_na(c(admissions_lagged, admissions_latest)) %>%
+  group_by(version_lag) %>%
+  summarize(Q3APE1 = 100*quantile(abs((admissions_latest - admissions_lagged)/(admissions_latest + 1)), 0.75)) %>%
+  ggplot(aes(version_lag, Q3APE1)) +
+  geom_line()
+
+left_join(hhs_flu_hosp_version_lag_data,
+          hhs_flu_hosp_latest_snapshot %>%
+            filter(time_value <= hhs_flu_hosp_analysis_issue - max_analysis_lag * 2L),
+          by = c("geo_value", "time_value"),
+          suffix = c("_lagged", "_latest")) %>%
+  tidyr::drop_na(c(admissions_lagged, admissions_latest)) %>%
+  group_by(version_lag) %>%
+  reframe(
+    tau = (1:9)/10,
+    QtauAPE1 = 100*quantile(abs((admissions_latest - admissions_lagged)/(admissions_latest + 1)), tau)
+  ) %>%
+  mutate(tau = as.factor(format(tau, digits = 3))) %>%
+  ggplot(aes(version_lag, QtauAPE1, colour = tau, group = tau, label = tau)) +
+  geom_line() +
+  scale_colour_discrete(
+    guide = guide_legend(reverse = TRUE,
+                         override.aes = list(label = ""))
+  )
+```
