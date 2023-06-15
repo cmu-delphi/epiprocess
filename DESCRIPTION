@@ -53,7 +53,8 @@ Suggests:
     rmarkdown,
     testthat (>= 3.1.5),
     waldo (>= 0.3.1),
-    withr
+    withr,
+    yaml
 VignetteBuilder: 
     knitr
 Remotes:
