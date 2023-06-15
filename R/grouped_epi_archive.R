@@ -371,14 +371,18 @@ grouped_epi_archive =
               
               quo = quos[[1]]
               f = function(.x, .group_key, .ref_time_value, quo, ...) {
-                data_parent_env = rlang::as_environment(.x)
-                data_env = env(data_parent_env,
-                               .x = .x, .group_key = .group_key,
-                               .ref_time_value = .ref_time_value)
-                # `as_data_mask()` appears to strip off ancestors. We'll need to
-                # do some more work with `new_data_mask()`:
-                data_mask = rlang::new_data_mask(data_env, top = data_parent_env)
-                data_mask$.data <- rlang::as_data_pronoun(.x)
+                # Convert to environment to standardize between tibble and R6
+                # based inputs. In both cases, we should get a simple
+                # environment with the empty environment as its parent.
+                data_env = rlang::as_environment(.x)
+                data_mask = rlang::new_data_mask(bottom = data_env, top = data_env)
+                data_mask$.data <- rlang::as_data_pronoun(data_mask)
+                # We'll also install `.x` directly, not as an
+                # `rlang_data_pronoun`, so that we can, e.g., use more dplyr and
+                # epiprocess operations.
+                data_mask$.x = .x
+                data_mask$.group_key = .group_key
+                data_mask$.ref_time_value = .ref_time_value
                 rlang::eval_tidy(quo, data_mask)
               }
               new_col = sym(names(rlang::quos_auto_name(quos)))

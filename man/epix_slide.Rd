@@ -42,7 +42,10 @@ reference time value can be accessed via \code{.ref_time_value}.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{f}. Alternatively, if \code{f} is missing, then \code{...} is interpreted as an
-expression for tidy evaluation. See details of \code{\link{epi_slide}}.}
+expression for tidy evaluation; in addition to referring to columns
+directly by name, the expression has access to a \code{.data} and \code{.env}
+pronouns as in \code{dplyr} verbs, and can also refer to the \code{.group_key} and
+\code{.ref_time_value}. See details of \code{\link{epi_slide}}.}
 
 \item{before}{How far \code{before} each \code{ref_time_value} should the sliding
 window extend? If provided, should be a single, non-NA,
@@ -79,9 +82,9 @@ contain the derivative values. Default is "slide_value"; note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
 
 \item{as_list_col}{Should the slide results be held in a list column, or be
-\link[tidyr:chop]{unchopped}/\link[tidyr:nest]{unnested}? Default is \code{FALSE},
+\link[tidyr:chop]{unchopped}/\link[tidyr:unnest]{unnested}? Default is \code{FALSE},
 in which case a list object returned by \code{f} would be unnested (using
-\code{\link[tidyr:nest]{tidyr::unnest()}}), and, if the slide computations output data frames,
+\code{\link[tidyr:unnest]{tidyr::unnest()}}), and, if the slide computations output data frames,
 the names of the resulting columns are given by prepending \code{new_col_name}
 to the names of the list elements.}
 
