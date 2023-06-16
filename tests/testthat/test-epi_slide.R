@@ -9,7 +9,16 @@ ungrouped = dplyr::bind_rows(
   as_epi_df()
 grouped = ungrouped %>%
   group_by(geo_value)
-f = function(x, g) dplyr::tibble(value=mean(x$value), count=length(x$value))
+
+small_x = dplyr::bind_rows(
+  dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value=11:15),
+  dplyr::tibble(geo_value = "al", time_value = d + 1:5, value=-(1:5))
+) %>%
+  as_epi_df(as_of = d + 6) %>%
+  group_by(geo_value)
+
+
+f = function(x, g, t) dplyr::tibble(value=mean(x$value), count=length(x$value))
 
 toy_edf = tibble::tribble(
   ~geo_value, ~time_value, ~value    ,
@@ -163,10 +172,10 @@ test_that("computation output formats x as_list_col", {
 })
 
 test_that("epi_slide alerts if the provided f doesn't take enough args", {
-  f_xg = function(x, g) dplyr::tibble(value=mean(x$value), count=length(x$value))
+  f_xgt = function(x, g, t) dplyr::tibble(value=mean(x$value), count=length(x$value))
   # If `regexp` is NA, asserts that there should be no errors/messages.
-  expect_error(epi_slide(grouped, f_xg, before = 1L, ref_time_values = d+1), regexp = NA)
-  expect_warning(epi_slide(grouped, f_xg, before = 1L, ref_time_values = d+1), regexp = NA)
+  expect_error(epi_slide(grouped, f_xgt, before = 1L, ref_time_values = d+1), regexp = NA)
+  expect_warning(epi_slide(grouped, f_xgt, before = 1L, ref_time_values = d+1), regexp = NA)
 
   f_x_dots = function(x, ...) dplyr::tibble(value=mean(x$value), count=length(x$value))
   expect_warning(epi_slide(grouped, f_x_dots, before = 1L, ref_time_values = d+1),
@@ -299,5 +308,215 @@ test_that("`epi_slide` doesn't decay date output", {
       epi_slide(before = 5L, ~ as.Date("2020-01-01")) %>%
       `[[`("slide_value") %>%
       inherits("Date")
+  )
+})
+
+test_that("basic grouped epi_slide computation produces expected output", {
+  # Also checks that we correctly remove extra rows and columns (`.real`) used
+  # to recover `ref_time_value`s.
+  expected_output = dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=cumsum(11:15)),
+    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=cumsum(-(1:5)))
+  ) %>%
+    group_by(geo_value) %>%
+    as_epi_df(as_of = d + 6)
+
+  # formula
+  result1 <- epi_slide(small_x, f = ~sum(.x$value), before=50)
+  expect_identical(result1, expected_output)
+
+  # function
+  result2 <- epi_slide(small_x, f = function(x, g, t) sum(x$value), before=50)
+  expect_identical(result2, expected_output)
+
+  # dots
+  result3 <- epi_slide(small_x, slide_value = sum(value), before=50)
+  expect_identical(result3, expected_output)
+})
+
+test_that("ungrouped epi_slide computation completes successfully", {
+  expect_error(
+    small_x %>%
+    ungroup() %>%
+    epi_slide(before = 2,
+      slide_value = sum(.x$value)),
+    regexp=NA
+  )
+})
+
+test_that("basic ungrouped epi_slide computation produces expected output", {
+  expected_output = dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=cumsum(11:15))
+  ) %>%
+    as_epi_df(as_of = d + 6)
+
+  result1 <- small_x %>%
+    ungroup() %>%
+    filter(geo_value == "ak") %>%
+    epi_slide(before = 50,
+              slide_value = sum(.x$value))
+  expect_identical(result1, expected_output)
+
+  # Ungrouped with multiple geos
+  expected_output = dplyr::bind_rows(
+    dplyr::tibble(
+      geo_value = "ak", time_value = d + 1:5, value=11:15, slide_value=cumsum(11:15) + cumsum(-(1:5)
+    )),
+    dplyr::tibble(
+      geo_value = "al", time_value = d + 1:5, value=-(1:5), slide_value=cumsum(11:15) + cumsum(-(1:5))
+    )
+  ) %>%
+    as_epi_df(as_of = d + 6) %>%
+    arrange(time_value)
+
+  result2 <- small_x %>%
+    ungroup() %>%
+    epi_slide(before = 50,
+              slide_value = sum(.x$value))
+  expect_identical(result2, expected_output)
+})
+
+test_that("epi_slide computation via formula can use ref_time_value", {
+  expected_output = dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=d + 1:5),
+    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=d + 1:5)
+  ) %>%
+    group_by(geo_value) %>%
+    as_epi_df(as_of = d + 6)
+
+  result1 <- small_x %>%
+    epi_slide(f = ~ .ref_time_value,
+               before = 50)
+
+  expect_identical(result1, expected_output)
+
+  result2 <- small_x %>%
+    epi_slide(f = ~ .z,
+               before = 50)
+
+  expect_identical(result2, expected_output)
+
+  result3 <- small_x %>%
+    epi_slide(f = ~ ..3,
+               before = 50)
+
+  expect_identical(result3, expected_output)
+
+  # Ungrouped with multiple geos
+  expected_output = dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=d + 1:5),
+    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=d + 1:5)
+  ) %>%
+    as_epi_df(as_of = d + 6) %>%
+    arrange(time_value)
+
+  result4 <- small_x %>%
+    ungroup() %>%
+    epi_slide(f = ~ .ref_time_value,
+              before = 50)
+  expect_identical(result4, expected_output)
+})
+
+test_that("epi_slide computation via function can use ref_time_value", {
+  expected_output = dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=d + 1:5),
+    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=d + 1:5)
+  ) %>%
+    group_by(geo_value) %>%
+    as_epi_df(as_of = d + 6)
+
+  result1 <- small_x %>%
+    epi_slide(f = function(x, g, t) t,
+               before = 2)
+
+  expect_identical(result1, expected_output)
+})
+
+test_that("epi_slide computation via dots can use ref_time_value and group", {
+  # ref_time_value
+  expected_output = dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=d + 1:5),
+    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=d + 1:5)
+  ) %>%
+    group_by(geo_value) %>%
+    as_epi_df(as_of = d + 6)
+
+  result1 <- small_x %>%
+    epi_slide(before = 50,
+      slide_value = .ref_time_value)
+
+  expect_identical(result1, expected_output)
+
+  # `.{x,group_key,ref_time_value}` should be inaccessible from `.data` and
+  # `.env`.
+  expect_error(small_x %>%
+    epi_slide(before = 50,
+      slide_value = .env$.ref_time_value)
+  )
+
+  # group_key
+  # Use group_key column
+  expected_output = dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value="ak"),
+    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value="al")
+  ) %>%
+    group_by(geo_value) %>%
+    as_epi_df(as_of = d + 6)
+
+  result3 <- small_x %>%
+    epi_slide(before = 2,
+      slide_value = .group_key$geo_value)
+
+  expect_identical(result3, expected_output)
+
+  # Use entire group_key object
+  expected_output = dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=1L),
+    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=1L)
+  ) %>%
+    group_by(geo_value) %>%
+    as_epi_df(as_of = d + 6)
+
+  result4 <- small_x %>%
+    epi_slide(before = 2,
+        slide_value = nrow(.group_key))
+
+  expect_identical(result4, expected_output)
+
+  # Ungrouped with multiple geos
+  expected_output = dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value=d + 1:5),
+    dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value=d + 1:5)
+  ) %>%
+    as_epi_df(as_of = d + 6) %>%
+    arrange(time_value)
+
+  result5 <- small_x %>%
+    ungroup() %>%
+    epi_slide(before = 50,
+              slide_value = .ref_time_value)
+  expect_identical(result5, expected_output)
+})
+
+test_that("epi_slide computation via dots outputs the same result using col names and the data var", {
+  expected_output <- small_x %>%
+    epi_slide(before = 2,
+      slide_value = max(time_value)) %>%
+    as_epi_df(as_of = d + 6)
+
+  result1 <- small_x %>%
+    epi_slide(before = 2,
+      slide_value = max(.x$time_value))
+
+  expect_identical(result1, expected_output)
+})
+
+test_that("`epi_slide` can access objects inside of helper functions", {
+  helper = function(archive_haystack, time_value_needle) {
+    archive_haystack %>% epi_slide(has_needle = time_value_needle %in% time_value, before = 365000L)
+  }
+  expect_error(
+    helper(small_x, as.Date("2021-01-01")),
+    NA
   )
 })

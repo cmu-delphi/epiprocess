@@ -23,7 +23,10 @@
 #'   If `f` is missing, then `...` will specify the computation.
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the `...` is interpreted as
-#'   an expression for tidy evaluation. See details.
+#'   an expression for tidy evaluation; in addition to referring to columns
+#'   directly by name, the expression has access to `.data` and `.env` pronouns
+#'   as in `dplyr` verbs, and can also refer to `.x`, `.group_key`, and
+#'   `.ref_time_value`. See details.
 #' @param before,after How far `before` and `after` each `ref_time_value` should
 #'   the sliding window extend? At least one of these two arguments must be
 #'   provided; the other's default will be 0. Any value provided for either
@@ -119,7 +122,8 @@
 #'   through the `new_col_name` argument.
 #'   
 #' @importFrom lubridate days weeks
-#' @importFrom rlang .data .env !! enquo enquos sym
+#' @importFrom dplyr bind_rows group_vars filter select
+#' @importFrom rlang .data .env !! enquo enquos sym env
 #' @export
 #' @examples 
 #' # slide a 7-day trailing average formula on cases
@@ -166,11 +170,8 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # Check that `f` takes enough args
   if (!missing(f) && is.function(f)) {
-    assert_sufficient_f_args(f, ...)
+    assert_sufficient_f_args(f, ..., n_mandatory_f_args = 3L)
   }
-
-  # Arrange by increasing time_value
-  x = arrange(x, time_value)
   
   if (missing(ref_time_values)) {
     ref_time_values = unique(x$time_value)
@@ -231,6 +232,35 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     after <- time_step(after)
   }
 
+  min_ref_time_values = ref_time_values - before
+  min_ref_time_values_not_in_x <- min_ref_time_values[!(min_ref_time_values %in% unique(x$time_value))]
+
+  # Do set up to let us recover `ref_time_value`s later.
+  # A helper column marking real observations.
+  x$.real = TRUE
+
+  # Create df containing phony data. Df has the same columns and attributes as
+  # `x`, but filled with `NA`s aside from grouping columns. Number of rows is
+  # equal to the number of `min_ref_time_values_not_in_x` we have * the
+  # number of unique levels seen in the grouping columns.
+  before_time_values_df = data.frame(time_value=min_ref_time_values_not_in_x)
+  if (length(group_vars(x)) != 0) {
+    before_time_values_df = dplyr::cross_join(
+      # Get unique combinations of grouping columns seen in real data.
+      unique(x[, group_vars(x)]),
+      before_time_values_df
+    )
+  }
+  # Automatically fill in all other columns from `x` with `NA`s, and carry
+  # attributes over to new df.
+  before_time_values_df <- bind_rows(x[0,], before_time_values_df)
+  before_time_values_df$.real <- FALSE
+
+  x <- bind_rows(before_time_values_df, x)
+
+  # Arrange by increasing time_value
+  x = arrange(x, time_value)
+
   # Now set up starts and stops for sliding/hopping
   time_range = range(unique(x$time_value))
   starts = in_range(ref_time_values - before, time_range)
@@ -272,7 +302,9 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     o = .data_group$time_value %in% time_values
     num_ref_rows = sum(o)
     
-    # Count the number of appearances of each reference time value
+    # Count the number of appearances of each reference time value (these
+    # appearances should all be real for now, but if we allow ref time values
+    # outside of .data_group's time values):
     counts = .data_group %>%
       dplyr::filter(.data$time_value %in% time_values) %>%
       dplyr::count(.data$time_value) %>%
@@ -282,7 +314,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
           !all(purrr::map_lgl(slide_values_list, is.data.frame))) {
       Abort("The slide computations must return always atomic vectors or data frames (and not a mix of these two structures).")
     }
-    
+
     # Unlist if appropriate:
     slide_values =
       if (as_list_col) {
@@ -318,6 +350,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
       # fills with NA equivalent.
       vctrs::vec_slice(slide_values, o) = orig_values
     } else {
+      # This implicitly removes phony (`.real` == FALSE) observations.
       .data_group = filter(.data_group, o)
     }
     return(mutate(.data_group, !!new_col := slide_values))
@@ -325,9 +358,16 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # If f is not missing, then just go ahead, slide by group
   if (!missing(f)) {
+    if (rlang::is_formula(f)) f = as_slide_computation(f)
+    f_rtv_wrapper = function(x, g, ...) {
+      ref_time_value = min(x$time_value) + before
+      x <- x[x$.real,]
+      x$.real <- NULL
+      f(x, g, ref_time_value, ...)
+    }
     x = x %>%  
       group_modify(slide_one_grp,
-                   f = f, ...,
+                   f = f_rtv_wrapper, ...,
                    starts = starts,
                    stops = stops,
                    time_values = ref_time_values, 
@@ -347,7 +387,18 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     }
     
     quo = quos[[1]]
-    f = function(x, quo, ...) rlang::eval_tidy(quo, x)
+    f = function(.x, .group_key, quo, ...) {
+      .ref_time_value = min(.x$time_value) + before
+      .x <- .x[.x$.real,]
+      .x$.real <- NULL
+      data_mask = rlang::as_data_mask(.x)
+      # We'll also install `.x` directly, not as an `rlang_data_pronoun`, so
+      # that we can, e.g., use more dplyr and epiprocess operations.
+      data_mask$.x = .x
+      data_mask$.group_key = .group_key
+      data_mask$.ref_time_value = .ref_time_value
+      rlang::eval_tidy(quo, data_mask)
+    }
     new_col = sym(names(rlang::quos_auto_name(quos)))
     
     x = x %>%  
@@ -365,5 +416,15 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
   if (!as_list_col) {
     x = unnest(x, !!new_col, names_sep = names_sep)
   }
+
+  # Remove any remaining phony observations. When `all_rows` is TRUE, phony
+  # observations aren't necessarily removed in `slide_one_grp`.
+  if (all_rows) {
+    x <- x[x$.real,]
+  }
+
+  # Drop helper column `.real`.
+  x$.real <- NULL
+
   return(x)
 }
