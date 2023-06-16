@@ -189,10 +189,15 @@ assert_sufficient_f_args <- function(f, ..., n_mandatory_f_args = 2L) {
 #' `as_slide_computation()` transforms a one-sided formula into a function.
 #' This powers the lambda syntax in packages like purrr.
 #'
-#' This is an extension of `rlang::as_function` that can create functions that
-#' take three arguments. The arguments can be accessed via the idiomatic
-#' `.x`, `.y`, etc, positional references (`..1`, `..2`, etc), and also by
-#' `slide`-specific names.
+#' This code and documentation borrows heavily from [`rlang::as_function`]
+#' (https://github.com/r-lib/rlang/blob/c55f6027928d3104ed449e591e8a225fcaf55e13/R/fn.R#L343-L427).
+#'
+#' This code extends `rlang::as_function` to create functions that take three
+#' arguments. The arguments can be accessed via the idiomatic `.x`, `.y`,
+#' etc, positional references (`..1`, `..2`, etc), and also by `epi
+#' [x]_slide`-specific names.
+#'
+#' @source https://github.com/r-lib/rlang/blob/c55f6027928d3104ed449e591e8a225fcaf55e13/R/fn.R#L343-L427
 #'
 #' @param x A function or formula.
 #'

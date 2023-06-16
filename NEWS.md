@@ -10,10 +10,10 @@ inter-release development versions will include an additional ".9999" suffix.
   * If `f` is a function, it is now required to take at least three arguments.
     `f` must take an `epi_df` with the same column names as the archive's `DT`,
     minus the `version` column; followed by a one-row tibble containing the
-    values of the grouping variables for the associated group; followed by *a
-    time value (usually a `Date`) containing the reference time value that was
-    used. Optionally, it can take any number of additional arguments, which will
-    be forwarded through `epi[x]_slide`'s `...` args.
+    values of the grouping variables for the associated group; followed by a
+    reference time value, usually as a `Date` object. Optionally, it can take
+    any number of additional arguments after that, and forward values for those
+    arguments through `epi[x]_slide`'s `...` args.
     * To make your existing slide computations work, add a third argument to
       your `f` function to accept this new input: e.g., change `f = function(x,
       g, <any other arguments>) { <body> }` to `f = function(x, g, rt, <any

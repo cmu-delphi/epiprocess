@@ -29,16 +29,14 @@ typically one day or one week; see \code{\link{epi_slide}} details for more
 explanation. If a function, \code{f} must take an \code{epi_df} with the same
 column names as the archive's \code{DT}, minus the \code{version} column; followed
 by a one-row tibble containing the values of the grouping variables for
-the associated group; followed by a Date containing the reference time
-value that was used; followed by any number of named arguments. If a formula,
+the associated group; followed by a reference time value, usually as a
+\code{Date} object; followed by any number of named arguments. If a formula,
 \code{f} can operate directly on columns accessed via \code{.x$var} or \code{.$var}, as
 in \code{~ mean (.x$var)} to compute a mean of a column \code{var} for each
 group-\code{ref_time_value} combination. The group key can be accessed via
 \code{.y} or \code{.group_key}, and the reference time value can be accessed via
 \code{.z} or \code{.ref_time_value}. If \code{f} is missing, then \code{...} will specify the
-computation. In this case, the computation can reference columns via the
-column name directly or via \code{.x$var}, as in \code{mean(var)} or \code{mean (.x$var)}. The group key can be accessed via \code{.group_key}, and the
-reference time value can be accessed via \code{.ref_time_value}.}
+computation.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{f}. Alternatively, if \code{f} is missing, then \code{...} is interpreted as an
