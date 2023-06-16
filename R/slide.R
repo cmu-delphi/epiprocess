@@ -23,7 +23,10 @@
 #'   If `f` is missing, then `...` will specify the computation.
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the `...` is interpreted as
-#'   an expression for tidy evaluation. See details.
+#'   an expression for tidy evaluation; in addition to referring to columns
+#'   directly by name, the expression has access to `.data` and `.env` pronouns
+#'   as in `dplyr` verbs, and can also refer to `.x`, `.group_key`, and
+#'   `.ref_time_value`. See details.
 #' @param before,after How far `before` and `after` each `ref_time_value` should
 #'   the sliding window extend? At least one of these two arguments must be
 #'   provided; the other's default will be 0. Any value provided for either
