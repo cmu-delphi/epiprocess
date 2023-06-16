@@ -299,7 +299,9 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     o = .data_group$time_value %in% time_values
     num_ref_rows = sum(o)
     
-    # Count the number of appearances of each reference time value
+    # Count the number of appearances of each reference time value (these
+    # appearances should all be real for now, but if we allow ref time values
+    # outside of .data_group's time values):
     counts = .data_group %>%
       dplyr::filter(.data$time_value %in% time_values) %>%
       dplyr::count(.data$time_value) %>%
@@ -386,14 +388,12 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
       .ref_time_value = min(.x$time_value) + before
       .x <- .x[.x$.real,]
       .x$.real <- NULL
-      data_parent_env = rlang::as_environment(.x)
-      data_env = env(data_parent_env,
-                     .x = .x, .group_key = .group_key,
-                     .ref_time_value = .ref_time_value)
-      # `as_data_mask()` appears to strip off ancestors. We'll need to
-      # do some more work with `new_data_mask()`:
-      data_mask = rlang::new_data_mask(data_env, top = data_parent_env)
-      data_mask$.data <- rlang::as_data_pronoun(.x)
+      data_mask = rlang::as_data_mask(.x)
+      # We'll also install `.x` directly, not as an `rlang_data_pronoun`, so
+      # that we can, e.g., use more dplyr and epiprocess operations.
+      data_mask$.x = .x
+      data_mask$.group_key = .group_key
+      data_mask$.ref_time_value = .ref_time_value
       rlang::eval_tidy(quo, data_mask)
     }
     new_col = sym(names(rlang::quos_auto_name(quos)))
