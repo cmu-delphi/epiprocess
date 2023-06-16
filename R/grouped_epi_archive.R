@@ -186,7 +186,7 @@ grouped_epi_archive =
 #'   object. See the documentation for the wrapper function [`epix_slide()`] for
 #'   details.
 #' @importFrom data.table key address
-#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
+#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms env
           slide = function(f, ..., before, ref_time_values,
                            time_step, new_col_name = "slide_value",
                            as_list_col = FALSE, names_sep = "_",
@@ -370,7 +370,21 @@ grouped_epi_archive =
               }
               
               quo = quos[[1]]
-              f = function(x, quo, ...) rlang::eval_tidy(quo, x)
+              f = function(.x, .group_key, .ref_time_value, quo, ...) {
+                # Convert to environment to standardize between tibble and R6
+                # based inputs. In both cases, we should get a simple
+                # environment with the empty environment as its parent.
+                data_env = rlang::as_environment(.x)
+                data_mask = rlang::new_data_mask(bottom = data_env, top = data_env)
+                data_mask$.data <- rlang::as_data_pronoun(data_mask)
+                # We'll also install `.x` directly, not as an
+                # `rlang_data_pronoun`, so that we can, e.g., use more dplyr and
+                # epiprocess operations.
+                data_mask$.x = .x
+                data_mask$.group_key = .group_key
+                data_mask$.ref_time_value = .ref_time_value
+                rlang::eval_tidy(quo, data_mask)
+              }
               new_col = sym(names(rlang::quos_auto_name(quos)))
 
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {

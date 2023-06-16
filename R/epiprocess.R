@@ -7,3 +7,4 @@
 #' @docType package
 #' @name epiprocess
 NULL
+utils::globalVariables(c(".x", ".group_key", ".ref_time_value"))

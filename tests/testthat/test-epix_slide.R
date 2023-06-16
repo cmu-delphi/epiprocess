@@ -573,54 +573,102 @@ test_that("epix_slide alerts if the provided f doesn't take enough args", {
     class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots")
 })
 
-test_that("epix_slide computation can use ref_time_value", {
-  # Formula
-  xx1 <- xx %>%
-    group_by(.data$geo_value) %>%
-    epix_slide(f = ~ .ref_time_value,
-               before = 2)
-
+test_that("epix_slide computation via formula can use ref_time_value", {
   xx_ref <- tibble(geo_value = rep("x",4),
                 time_value = c(4,5,6,7),
                 slide_value = c(4,5,6,7)
                 ) %>%
     group_by(geo_value)
 
-  expect_identical(xx1,xx_ref)
+  xx1 <- xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(f = ~ .ref_time_value,
+               before = 2)
+
+  expect_identical(xx1, xx_ref)
 
   xx2 <- xx %>%
     group_by(.data$geo_value) %>%
     epix_slide(f = ~ .z,
                before = 2)
 
-  expect_identical(xx2,xx_ref)
+  expect_identical(xx2, xx_ref)
 
   xx3 <- xx %>%
     group_by(.data$geo_value) %>%
     epix_slide(f = ~ ..3,
                before = 2)
 
-  expect_identical(xx3,xx_ref)
+  expect_identical(xx3, xx_ref)
+})
 
-  # Function
-  xx4 <- xx %>%
+test_that("epix_slide computation via function can use ref_time_value", {
+  xx_ref <- tibble(geo_value = rep("x",4),
+                time_value = c(4,5,6,7),
+                slide_value = c(4,5,6,7)
+                ) %>%
+    group_by(geo_value)
+
+  xx1 <- xx %>%
     group_by(.data$geo_value) %>%
     epix_slide(f = function(x, g, t) t,
                before = 2)
 
-  expect_identical(xx4,xx_ref)
+  expect_identical(xx1, xx_ref)
+})
 
-  # Dots
-  expect_error(xx %>%
+test_that("epix_slide computation via dots can use ref_time_value and group", {
+  # ref_time_value
+  xx_ref <- tibble(geo_value = rep("x",4),
+                time_value = c(4,5,6,7),
+                slide_value = c(4,5,6,7)
+                ) %>%
+    group_by(geo_value)
+
+  xx1 <- xx %>%
     group_by(.data$geo_value) %>%
     epix_slide(before = 2,
-      slide_value = ref_time_value),
-    "object 'ref_time_value' not found")
-expect_error(xx %>%
+      slide_value = .ref_time_value)
+
+  expect_identical(xx1, xx_ref)
+
+  # group_key
+  xx_ref <- tibble(geo_value = rep("x",4),
+                time_value = c(4,5,6,7),
+                slide_value = "x"
+                ) %>%
+    group_by(geo_value)
+
+  # Use group_key column
+  xx3 <- xx %>%
     group_by(.data$geo_value) %>%
     epix_slide(before = 2,
-      slide_value = .env$ref_time_value),
-    "object 'ref_time_value' not found")
+      slide_value = .group_key$geo_value)
+
+  expect_identical(xx3, xx_ref)
+
+  # Use entire group_key object
+  expect_error(
+    xx %>%
+      group_by(.data$geo_value) %>%
+      epix_slide(before = 2,
+        slide_value = nrow(.group_key)),
+    NA
+  )
+})
+
+test_that("epix_slide computation via dots outputs the same result using col names and the data var", {
+  xx_ref <- xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(before = 2,
+      sum_binary = sum(time_value))
+
+  xx1 <- xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(before = 2,
+      sum_binary = sum(.x$time_value))
+
+  expect_identical(xx1, xx_ref)
 })
 
 test_that("`epix_slide` doesn't decay date output", {
@@ -632,5 +680,20 @@ test_that("`epix_slide` doesn't decay date output", {
       epix_slide(before = 5L, ~ attr(.x, "metadata")$as_of) %>%
       `[[`("slide_value") %>%
       inherits("Date")
+  )
+})
+
+test_that("`epix_slide` can access objects inside of helper functions", {
+  helper = function(archive_haystack, time_value_needle) {
+    archive_haystack %>% epix_slide(has_needle = time_value_needle %in% time_value, before = 365000L)
+  }
+  expect_error(
+    helper(archive_cases_dv_subset, as.Date("2021-01-01")),
+    NA
+  )
+
+  expect_error(
+    helper(xx, 3L),
+    NA
   )
 })
