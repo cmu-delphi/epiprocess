@@ -679,8 +679,8 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then `...` is interpreted as an
 #'   expression for tidy evaluation; in addition to referring to columns
-#'   directly by name, the expression has access to a `.data` and `.env`
-#'   pronouns as in `dplyr` verbs, and can also refer to the `.group_key` and
+#'   directly by name, the expression has access to `.data` and `.env` pronouns
+#'   as in `dplyr` verbs, and can also refer to the `.group_key` and
 #'   `.ref_time_value`. See details of [`epi_slide`].
 #' @param before How far `before` each `ref_time_value` should the sliding
 #'   window extend? If provided, should be a single, non-NA,
