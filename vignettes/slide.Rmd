@@ -92,20 +92,35 @@ x <- x %>%
 head(x, 10)
 ```
 
+Some other information is available in additional variables:
+
+* `.group_key` is a one-row tibble containing the values of the grouping
+  variables for the associated group
+* `.ref_time_value` is the reference time value the time window was based on
+
+Like in `group_modify()`, there are alternative names for these variables as
+well: `.` can be used instead of `.x`, `.y` instead of `.group_key`, and `.z`
+instead of `.ref_time_value`.
+
 ## Slide with a function 
 
 We can also pass a function for the first argument in `epi_slide()`. In this
-case, the passed function must accept the following arguments: `x`, a data frame
-with the non-grouping columns of the original object, containing the time window
-data for one `ref_time_value`-group combination; followed by `g`, a one-row
-tibble containing the values of the grouping variables for the associated group;
-followed by any number of named arguments. Recreating the last example of a
-7-day trailing average:
+case, the passed function must accept the following arguments:
+
+In this case, the passed function `f` must accept the following arguments: a
+data frame with the same column names as the original object, minus any grouping
+variables, containing the time window data for one group-`ref_time_value`
+combination; followed by a one-row tibble containing the values of the grouping
+variables for the associated group; followed by the associated `ref_time_value`.
+It can accept additional arguments; `epi_slide()` will forward any `...` args it
+receives to `f`.
+
+Recreating the last example of a 7-day trailing average:
 
 ```{r}
 x <- x %>% 
   group_by(geo_value) %>% 
-  epi_slide(function(x, g) mean(x$cases), before = 6, new_col_name = "cases_7dav") %>%
+  epi_slide(function(x, gk, rtv) mean(x$cases), before = 6, new_col_name = "cases_7dav") %>%
   ungroup()
 
 head(x, 10)
@@ -127,6 +142,8 @@ x <- x %>%
 
 head(x, 10)
 ```
+In addition to referring to individual columns by name, you can refer to the
+time window data as an `epi_df` or `tibble` using `.x`.  Similarly, the other arguments of the function format are available through the magic names `.group_key` and `.ref_time_value`, and the tidyverse "pronouns" `.data` and `.env` can also be used.
 
 As a simple sanity check, we visualize the 7-day trailing averages computed on
 top of the original counts:
