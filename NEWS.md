@@ -1,4 +1,4 @@
-# epiprocess 0.6.0.9999
+# epiprocess 0.7.0
 
 Note that `epiprocess` uses the [Semantic Versioning
 ("semver")](https://semver.org/) scheme for all release versions, but any
