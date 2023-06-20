@@ -2,7 +2,7 @@
 % Please edit documentation in R/archive.R
 \name{max_version_with_row_in}
 \alias{max_version_with_row_in}
-\title{Default arg helper: \code{max(x$version)}, with error if \code{x} has 0 rows}
+\title{\code{max(x$version)}, with error if \code{x} has 0 rows}
 \usage{
 max_version_with_row_in(x)
 }

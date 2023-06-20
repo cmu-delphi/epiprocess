@@ -2,7 +2,7 @@
 title: Get started with `epiprocess`
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Get started with epiprocess}
+  %\VignetteIndexEntry{Get started with `epiprocess`}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
@@ -67,7 +67,7 @@ cases <- covidcast(
   geo_type = "state",
   time_values = epirange(20200301, 20220131),
   geo_values = "ca,fl,ny,tx"
-) %>% fetch_tbl()
+) %>% fetch()
 
 colnames(cases)
 ```

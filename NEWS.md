@@ -1,12 +1,144 @@
-# epiprocess 0.5.0.9999 (development version)
+# epiprocess 0.7.0
 
 Note that `epiprocess` uses the [Semantic Versioning
-("semver")](https://semver.org/) scheme for all release versions, but not for
-development versions. A ".9999" suffix indicates a development version.
+("semver")](https://semver.org/) scheme for all release versions, but any
+inter-release development versions will include an additional ".9999" suffix.
+
+## Breaking changes:
+
+* Changes to `epi_slide` and `epix_slide`:
+  * If `f` is a function, it is now required to take at least three arguments.
+    `f` must take an `epi_df` with the same column names as the archive's `DT`,
+    minus the `version` column; followed by a one-row tibble containing the
+    values of the grouping variables for the associated group; followed by a
+    reference time value, usually as a `Date` object. Optionally, it can take
+    any number of additional arguments after that, and forward values for those
+    arguments through `epi[x]_slide`'s `...` args.
+    * To make your existing slide computations work, add a third argument to
+      your `f` function to accept this new input: e.g., change `f = function(x,
+      g, <any other arguments>) { <body> }` to `f = function(x, g, rt, <any
+      other arguments>) { <body> }`.
+
+## New features:
+
+* `epi_slide` and `epix_slide` also make the window data, group key and reference
+  time value available to slide computations specified as formulas or tidy
+  evaluation expressions, in additional or completely new ways.
+  * If `f` is a formula, it can now access the reference time value via `.z` or
+    `.ref_time_value`.
+  * If `f` is missing, the tidy evaluation expression in `...` can now refer to
+    the window data as an `epi_df` or `tibble` with `.x`, the group key with
+    `.group_key`, and the reference time value with `.ref_time_value`. The usual
+    `.data` and `.env` pronouns also work, but`pick()` and `cur_data()` are not;
+    work off of `.x` instead.
+* `epix_slide` has been made more like `dplyr::group_modify`. It will no longer
+  perform element/row recycling for size stability, accepts slide computation
+  outputs containing any number of rows, and no longer supports `all_rows`.
+  * To keep the old behavior, manually perform row recycling within `f`
+    computations, and/or `left_join` a data frame representing the desired
+    output structure with the current `epix_slide()` result to obtain the
+    desired repetitions and completions expected with `all_rows = TRUE`.
+* `epix_slide` will only output grouped or ungrouped tibbles. Previously, it
+  would sometimes output `epi_df`s, but not consistently, and not always with
+  the metadata desired. Future versions will revisit this design, and consider
+  more closely whether/when/how to output an `epi_df`.
+  * To keep the old behavior, convert the output of `epix_slide()` to `epi_df`
+    when desired and set the metadata appropriately.
+
+## Improvements:
+
+* `epi_slide` and `epix_slide` now support `as_list_col = TRUE` when the slide
+  computations output atomic vectors, and output a list column in "chopped"
+  format (see `tidyr::chop`).
+* `epi_slide` now works properly with slide computations that output just a
+  `Date` vector, rather than converting `slide_value` to a numeric column.
+
+# epiprocess 0.6.0
+
+## Breaking changes:
+
+* Changes to both `epi_slide` and `epix_slide`:
+  * The `n`, `align`, and `before` arguments have been replaced by new `before`
+    and `after` arguments. To migrate to the new version, replace these
+    arguments in every `epi_slide` and `epix_slide` call. If you were only using
+    the `n` argument, then this means replacing `n = <n value>` with `before =
+    <n value> - 1`.
+    * `epi_slide`'s time windows now extend `before` time steps before and
+      `after` time steps after the corresponding `ref_time_values`. See
+      `?epi_slide` for details on matching old alignments.
+    * `epix_slide`'s time windows now extend `before` time steps before the
+      corresponding `ref_time_values` all the way through the latest data
+      available at the corresponding `ref_time_values`.
+  * Slide functions now keep any grouping of `x` in their results, like
+    `mutate` and `group_modify`.
+    * To obtain the old behavior, `dplyr::ungroup` the slide results immediately.
+* Additional `epi_slide` changes:
+  * When using `as_list_col = TRUE` together with `ref_time_values` and
+    `all_rows=TRUE`, the marker for excluded computations is now a `NULL` entry
+    in the list column, rather than a `NA`; if you are using `tidyr::unnest()`
+    afterward and want to keep these missing data markers, you will need to
+    replace the `NULL` entries with `NA`s. Skipped computations are now more
+    uniformly detectable using `vctrs` methods.
+* Additional`epix_slide` changes:
+  * `epix_slide`'s `group_by` argument has been replaced by `dplyr::group_by` and
+    `dplyr::ungroup` S3 methods. The `group_by` method uses "data masking" (also
+    referred to as "tidy evaluation") rather than "tidy selection".
+    * Old syntax:
+      * `x %>% epix_slide(<other args>, group_by=c(col1, col2))`
+      * `x %>% epix_slide(<other args>, group_by=all_of(colname_vector))`
+    * New syntax:
+      * `x %>% group_by(col1, col2) %>% epix_slide(<other args>)`
+      * `x %>% group_by(across(all_of(colname_vector))) %>% epix_slide(<other args>)`
+  * `epix_slide` no longer defaults to grouping by non-`time_value`, non-`version`
+    key columns, instead considering all data to be in one big group.
+    * To obtain the old behavior, precede each `epix_slide` call lacking a
+      `group_by` argument with an appropriate `group_by` call.
+  * `epix_slide` now guesses `ref_time_values` to be a regularly spaced sequence
+    covering all the `DT$version` values and the `version_end`, rather than the
+    distinct `DT$time_value`s. To obtain the old behavior, pass in
+    `ref_time_values = unique(<ungrouped archive>$DT$time_value)`.
+* `epi_archive`'s `clobberable_versions_start`'s default is now `NA`, so there
+  will be no warnings by default about potential nonreproducibility. To obtain
+  the old behavior, pass in `clobberable_versions_start =
+  max_version_with_row_in(x)`.
+
+## Potentially-breaking changes:
+
+* Fixed `[` on grouped `epi_df`s to maintain the grouping if possible when
+  dropping the `epi_df` class (e.g., when removing the `time_value` column).
+* Fixed `epi_df` operations to be more consistent about decaying into
+  non-`epi_df`s when the result of the operation doesn't make sense as an
+  `epi_df` (e.g., when removing the `time_value` column).
+* Changed `bind_rows` on grouped `epi_df`s to not drop the `epi_df` class. Like
+  with ungrouped `epi_df`s, the metadata of the result is still simply taken
+  from the first result, and may be inappropriate
+  ([#242](https://github.com/cmu-delphi/epiprocess/issues/242)).
+* `epi_slide` and `epix_slide` now raise an error rather than silently filtering
+  out `ref_time_values` that don't meet their expectations.
+
+## New features:
+
+* `epix_slide`, `<epi_archive>$slide` have a new parameter `all_versions`. With
+  `all_versions=TRUE`, `epix_slide` will pass a filtered `epi_archive` to each
+  computation rather than an `epi_df` snapshot. This enables, e.g., performing
+  pseudoprospective forecasts with a revision-aware forecaster using nested
+  `epix_slide` operations.
+
+## Improvements:
+
+* Added `dplyr::group_by` and `dplyr::ungroup` S3 methods for `epi_archive`
+  objects, plus corresponding `$group_by` and `$ungroup` R6 methods. The
+  `group_by` implementation supports the `.add` and `.drop` arguments, and
+  `ungroup` supports partial ungrouping with `...`.
+* `as_epi_archive`, `epi_archive$new` now perform checks for the key uniqueness
+  requirement (part of
+  [#154](https://github.com/cmu-delphi/epiprocess/issues/154)).
 
 ## Cleanup:
 
 * Added a `NEWS.md` file to track changes to the package.
+* Implemented `?dplyr::dplyr_extending` for `epi_df`s
+  ([#223](https://github.com/cmu-delphi/epiprocess/issues/223)).
 * Fixed various small documentation issues ([#217](https://github.com/cmu-delphi/epiprocess/issues/217)).
 
 # epiprocess 0.5.0:

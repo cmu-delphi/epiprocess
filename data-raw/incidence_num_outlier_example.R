@@ -12,7 +12,7 @@ incidence_num_outlier_example <- covidcast(
   geo_values = "fl,nj",
   as_of = 20211028
 ) %>%
-  fetch_tbl() %>%
+  fetch() %>%
   select(geo_value, time_value, cases = value) %>%
   as_epi_df()
 

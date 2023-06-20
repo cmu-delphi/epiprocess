@@ -4,10 +4,13 @@
 \alias{is_epi_archive}
 \title{Test for \code{epi_archive} format}
 \usage{
-is_epi_archive(x)
+is_epi_archive(x, grouped_okay = FALSE)
 }
 \arguments{
 \item{x}{An object.}
+
+\item{grouped_okay}{Optional; Boolean; should a \code{grouped_epi_archive} also
+count? Default is \code{FALSE}.}
 }
 \value{
 \code{TRUE} if the object inherits from \code{epi_archive}.
@@ -18,4 +21,15 @@ Test for \code{epi_archive} format
 \examples{
 is_epi_archive(jhu_csse_daily_subset) # FALSE (this is an epi_df, not epi_archive)
 is_epi_archive(archive_cases_dv_subset) # TRUE
+
+# By default, grouped_epi_archives don't count as epi_archives, as they may
+# support a different set of operations from regular `epi_archives`. This
+# behavior can be controlled by `grouped_okay`.
+grouped_archive = archive_cases_dv_subset$group_by(geo_value)
+is_epi_archive(grouped_archive) # FALSE
+is_epi_archive(grouped_archive, grouped_okay=TRUE) # TRUE
+
+}
+\seealso{
+\code{\link{is_grouped_epi_archive}}
 }

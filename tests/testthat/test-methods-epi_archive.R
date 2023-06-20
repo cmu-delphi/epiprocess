@@ -2,6 +2,21 @@ library(dplyr)
 
 ea <- archive_cases_dv_subset$clone()
 
+ea2_data <- tibble::tribble(
+    ~geo_value, ~time_value,      ~version, ~cases,
+          "ca", "2020-06-01", "2020-06-01",      1,
+          "ca", "2020-06-01", "2020-06-02",      2,
+    #
+          "ca", "2020-06-02", "2020-06-02",      0,
+          "ca", "2020-06-02", "2020-06-03",      1,
+          "ca", "2020-06-02", "2020-06-04",      2,
+    #
+          "ca", "2020-06-03", "2020-06-03",      1,
+    #
+          "ca", "2020-06-04", "2020-06-04",      4,
+    ) %>%
+    dplyr::mutate(dplyr::across(c(time_value, version), as.Date))
+
 # epix_as_of tests
 test_that("epix_as_of behaves identically to as_of method",{
   expect_identical(epix_as_of(ea,max_version = min(ea$DT$version)),
@@ -17,29 +32,22 @@ test_that("Errors are thrown due to bad as_of inputs",{
   expect_error(ea$as_of(c(as.Date("2020-01-01"), as.Date("2020-01-02"))))
 })
 
-test_that("Warning against max_version being same as edf's max version",{
-  expect_warning(ea$as_of(max_version = max(ea$DT$version)))
-  expect_warning(ea$as_of(max_version = min(ea$DT$version)),NA)
+test_that("Warning against max_version being clobberable",{
+  # none by default
+  expect_warning(regexp = NA, ea$as_of(max_version = max(ea$DT$version)))
+  expect_warning(regexp = NA, ea$as_of(max_version = min(ea$DT$version)))
+  # but with `clobberable_versions_start` non-`NA`, yes
+  ea_with_clobberable = ea$clone()
+  ea_with_clobberable$clobberable_versions_start = max(ea_with_clobberable$DT$version)
+  expect_warning(ea_with_clobberable$as_of(max_version = max(ea$DT$version)))
+  expect_warning(regexp = NA, ea_with_clobberable$as_of(max_version = min(ea$DT$version)))
 })
 
 test_that("as_of properly grabs the data and doesn't mutate key",{
 
   d <- as.Date("2020-06-01")
 
-  ea2 = tibble::tribble(
-    ~geo_value, ~time_value,      ~version, ~cases,
-          "ca", "2020-06-01", "2020-06-01",      1,
-          "ca", "2020-06-01", "2020-06-02",      2,
-    #
-          "ca", "2020-06-02", "2020-06-02",      0,
-          "ca", "2020-06-02", "2020-06-03",      1,
-          "ca", "2020-06-02", "2020-06-04",      2,
-    #
-          "ca", "2020-06-03", "2020-06-03",      1,
-    #
-          "ca", "2020-06-04", "2020-06-04",      4,
-    ) %>%
-    dplyr::mutate(dplyr::across(c(time_value, version), as.Date)) %>%
+  ea2 = ea2_data %>%
     as_epi_archive()
 
   old_key = data.table::key(ea2$DT)
@@ -57,102 +65,74 @@ test_that("as_of properly grabs the data and doesn't mutate key",{
   expect_equal(data.table::key(ea2$DT), old_key)
 })
 
-test_that("quosure passing issue in epix_slide is resolved + other potential issues", {
-  # (First part adapted from @examples)
-  time_values <- seq(as.Date("2020-06-01"),
-                     as.Date("2020-06-02"),
-                     by = "1 day")
-  # We only have one non-version, non-time key in the example archive. Add
-  # another so that we don't accidentally pass tests due to accidentally
-  # matching the default grouping.
-  ea = as_epi_archive(archive_cases_dv_subset$DT %>%
-                        dplyr::mutate(modulus = seq_len(nrow(.)) %% 5L),
-                      other_keys = "modulus",
-                      compactify = TRUE)
-  reference_by_modulus = epix_slide(x = ea,
-                                      f = ~ mean(.x$case_rate_7d_av),
-                                      n = 3,
-                                      group_by = modulus,
-                                      ref_time_values = time_values,
-                                      new_col_name = 'case_rate_3d_av')
-  reference_by_both = epix_slide(x = ea,
-                                 f = ~ mean(.x$case_rate_7d_av),
-                                 n = 3,
-                                 group_by = c(geo_value, modulus),
-                                 ref_time_values = time_values,
-                                 new_col_name = 'case_rate_3d_av')
-  # test the passing-something-that-must-be-enquosed behavior:
-  expect_identical(
-    ea$slide(
-      f = ~ mean(.x$case_rate_7d_av),
-      n = 3,
-      group_by = modulus,
-      ref_time_values = time_values,
-      new_col_name = 'case_rate_3d_av'
-    ),
-    reference_by_modulus
-  )
-  # test the passing-string-literal behavior:
-  expect_identical(
-    epix_slide(x = ea,
-               f = ~ mean(.x$case_rate_7d_av),
-               n = 3,
-               group_by = "modulus",
-               ref_time_values = time_values,
-               new_col_name = 'case_rate_3d_av'),
-    reference_by_modulus
-  )
-  expect_identical(
-    ea$slide(
-      f = ~ mean(.x$case_rate_7d_av),
-      n = 3,
-      group_by = "modulus",
-      ref_time_values = time_values,
-      new_col_name = 'case_rate_3d_av'
-    ),
-    reference_by_modulus
-  )
-  # Might also want to test the passing-string-var-without-all_of behavior, but
-  # make sure to set, trigger, then reset (or restore to old value) the
-  # tidyselect once-per-session message about the ambiguity
-  #
-  # test the passing-all-of-string-var behavior:
-  my_group_by = "modulus"
-  expect_identical(
-    epix_slide(x = ea,
-               f = ~ mean(.x$case_rate_7d_av),
-               n = 3,
-               group_by = tidyselect::all_of(my_group_by),
-               ref_time_values = time_values,
-               new_col_name = 'case_rate_3d_av'),
-    reference_by_modulus
-  )
-  expect_identical(
-    ea$slide(
-      f = ~ mean(.x$case_rate_7d_av),
-      n = 3,
-      group_by = tidyselect::all_of(my_group_by),
-      ref_time_values = time_values,
-      new_col_name = 'case_rate_3d_av'
-    ),
-    reference_by_modulus
-  )
-  # test the default behavior (default in this case should just be "geo_value"):
-  expect_identical(
-    epix_slide(x = ea,
-               f = ~ mean(.x$case_rate_7d_av),
-               n = 3,
-               ref_time_values = time_values,
-               new_col_name = 'case_rate_3d_av'),
-    reference_by_both
-  )
-  expect_identical(
-    ea$slide(
-      f = ~ mean(.x$case_rate_7d_av),
-      n = 3,
-      ref_time_values = time_values,
-      new_col_name = 'case_rate_3d_av'
-    ),
-    reference_by_both
-  )
+test_that("Errors are thrown due to bad epix_truncate_versions_after inputs",{
+  # x must be an archive
+  expect_error(epix_truncate_versions_after(data.frame(), as.Date("2020-01-01")))
+  # max_version cannot be of string class rather than date class
+  expect_error(epix_truncate_versions_after(ea, "2020-01-01"))
+  # max_version cannot be a vector
+  expect_error(epix_truncate_versions_after(ea, c(as.Date("2020-01-01"), as.Date("2020-01-02"))))
+  # max_version cannot be missing
+  expect_error(epix_truncate_versions_after(ea, as.Date(NA)))
+  # max_version cannot be after latest version in archive
+  expect_error(epix_truncate_versions_after(ea, as.Date("2025-01-01")))
+})
+
+test_that("epix_truncate_version_after properly grabs the data and doesn't mutate key", {
+
+  ea2 = ea2_data %>%
+    as_epi_archive()
+
+  old_key = data.table::key(ea2$DT)
+
+  ea_as_of <- ea2 %>%
+    epix_truncate_versions_after(max_version = as.Date("2020-06-02"))
+
+  ea_expected <- ea2_data[1:3,] %>%
+    as_epi_archive()
+
+  expect_equal(ea_as_of, ea_expected, ignore_attr=c(".internal.selfref", "sorted"))
+  expect_equal(data.table::key(ea2$DT), old_key)
+})
+
+test_that("epix_truncate_version_after doesn't filter if max_verion at latest version", {
+
+  ea2 = ea2_data %>%
+    as_epi_archive()
+
+  ea_expected <- ea2$clone()
+
+  ea_as_of <- ea2 %>%
+    epix_truncate_versions_after(max_version = as.Date("2020-06-04"))
+  expect_equal(ea_as_of, ea_expected, ignore_attr=c(".internal.selfref", "sorted"))
+})
+
+test_that("epix_truncate_version_after returns the same grouping type as input epi_archive", {
+
+  ea2 = ea2_data %>%
+    as_epi_archive()
+
+  ea_as_of <- ea2 %>%
+    epix_truncate_versions_after(max_version = as.Date("2020-06-04"))
+  expect_true(is_epi_archive(ea_as_of, grouped_okay=FALSE))
+
+  ea2_grouped = ea2$group_by(geo_value)
+
+  ea_as_of <- ea2_grouped %>%
+    epix_truncate_versions_after(max_version = as.Date("2020-06-04"))
+  expect_true(is_grouped_epi_archive(ea_as_of))
+})
+
+
+test_that("epix_truncate_version_after returns the same groups as input grouped_epi_archive", {
+
+  ea2 = ea2_data %>%
+    as_epi_archive()
+  ea2 = ea2$group_by(geo_value)
+
+  ea_expected <- ea2$clone()
+
+  ea_as_of <- ea2 %>%
+    epix_truncate_versions_after(max_version = as.Date("2020-06-04"))
+  expect_equal(ea_as_of$groups(), ea_expected$groups())
 })

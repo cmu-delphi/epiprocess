@@ -14,6 +14,12 @@
 #' @param min_time_value Time value specifying the min time value to permit in
 #'   the snapshot. Default is `-Inf`, which effectively means that there is no
 #'   minimum considered.
+#' @param all_versions If `all_versions = TRUE`, then the output will be in
+#'   `epi_archive` format, and contain rows in the specified `time_value` range
+#'   having `version <= max_version`. The resulting object will cover a
+#'   potentially narrower `version` and `time_value` range than `x`, depending
+#'   on user-provided arguments. Otherwise, there will be one row in the output
+#'   for the `max_version` of each `time_value`. Default is `FALSE`.
 #' @return An `epi_df` object.
 #'
 #' @details This is simply a wrapper around the `as_of()` method of the
@@ -54,9 +60,9 @@
 #' }, epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning"))
 #' # Since R 4.0, there is a `globalCallingHandlers` function that can be used
 #' # to globally toggle these warnings.
-epix_as_of = function(x, max_version, min_time_value = -Inf) {
+epix_as_of = function(x, max_version, min_time_value = -Inf, all_versions = FALSE) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
-  return(x$as_of(max_version, min_time_value))
+  return(x$as_of(max_version, min_time_value, all_versions = all_versions))
 }
 
 #' `epi_archive` with unobserved history filled in (won't mutate, might alias)
@@ -354,7 +360,295 @@ epix_merge = function(x, y,
   ))
 }
 
-#' Slide a function over variables in an `epi_archive` object
+# Helpers for `group_by`:
+
+#' Make non-testing mock to get [`dplyr::dplyr_col_modify`] input
+#'
+#' A workaround for `dplyr:::mutate_cols` not being exported and directly
+#' applying test mock libraries likely being impossible (due to mocking another
+#' package's S3 generic or method).
+#'
+#' Use solely with a single call to the [`dplyr::mutate`] function and then
+#' `destructure_col_modify_recorder_df`; other applicable operations from
+#' [dplyr::dplyr_extending] have not been implemented.
+#'
+#' @param parent_df the "parent class" data frame to wrap
+#' @return a `col_modify_recorder_df`
+#'
+#' @noRd
+new_col_modify_recorder_df = function(parent_df) {
+  if (!inherits(parent_df, "data.frame")) {
+    Abort('`parent_df` must inherit class `"data.frame"`',
+          internal=TRUE)
+  }
+  `class<-`(parent_df, c("col_modify_recorder_df", class(parent_df)))
+}
+
+#' Extract unchanged parent-class data frame from a `new_col_modify_recorder_df`
+#'
+#' @param col_modify_recorder_df an instance of a `col_modify_recorder_df`
+#' @return named list with elements `unchanged_parent_df`, `cols`; `cols` is the
+#'   input to [`dplyr::dplyr_col_modify`] that this class was designed to record
+#'
+#' @noRd
+destructure_col_modify_recorder_df = function(col_modify_recorder_df) {
+  if (!inherits(col_modify_recorder_df, "col_modify_recorder_df")) {
+    Abort('`col_modify_recorder_df` must inherit class `"col_modify_recorder_df"`',
+          internal=TRUE)
+  }
+  list(
+    unchanged_parent_df = col_modify_recorder_df %>%
+      `attr<-`("epiprocess::col_modify_recorder_df::cols", NULL) %>%
+      `class<-`(setdiff(class(.), "col_modify_recorder_df")),
+    cols = attr(col_modify_recorder_df,
+                "epiprocess::col_modify_recorder_df::cols", exact=TRUE)
+  )
+}
+
+#' `dplyr_col_modify` method that simply records the `cols` argument
+#'
+#' Must export S3 methods in R >= 4.0, even if they're only designed to be
+#' package internals, and must import any corresponding upstream S3 generic
+#' functions:
+#' @importFrom dplyr dplyr_col_modify
+#' @export
+#' @noRd
+dplyr_col_modify.col_modify_recorder_df = function(data, cols) {
+  if (!is.null(attr(data, "epiprocess::col_modify_recorder_df::cols", exact=TRUE))) {
+    Abort("`col_modify_recorder_df` can only record `cols` once",
+          internal=TRUE)
+  }
+  attr(data, "epiprocess::col_modify_recorder_df::cols") <- cols
+  data
+}
+
+#' A more detailed but restricted `mutate` for use in `group_by.epi_archive`
+#'
+#' More detailed: provides the names of the "requested" columns in addition to
+#' the output expected from a regular `mutate` method.
+#'
+#' Restricted: doesn't allow replacing or removing key cols, where a sort is
+#' potentially required at best and what the output key should be is unclear at
+#' worst. (The originally expected restriction was that the `mutate` parameters
+#' not present in `group_by` would not be recognized, but the current
+#' implementation just lets `mutate` handle these even anyway, even if they're
+#' not part of the regular `group_by` parameters; these arguments would have to
+#' be passed by names with dot prefixes, so just hope that the user means to use
+#' them here if provided.)
+#'
+#' This can introduce column-level aliasing in `data.table`s, which isn't really
+#' intended in the `data.table` user model but we can make it part of our user
+#' model (see
+#' https://stackoverflow.com/questions/45925482/make-a-shallow-copy-in-data-table
+#' and links).
+#'
+#' Don't export this without cleaning up language of "mutate" as in side effects
+#' vs. "mutate" as in `dplyr::mutate`.
+#' @noRd
+epix_detailed_restricted_mutate = function(.data, ...) {
+  # We don't want to directly use `dplyr::mutate` on the `$DT`, as:
+  # - this likely copies the entire table
+  # - `mutate` behavior, including the output class, changes depending on
+  #   whether `dtplyr` is loaded and would require post-processing
+  # - behavior with `dtplyr` isn't fully compatible
+  # - it doesn't give the desired details, and `rlang::exprs_auto_name` does not
+  #   appropriately handle the `= NULL` and `= <data.frame>` tidyeval cases
+  # Instead:
+  # - Use `as.list` to get a shallow copy (undocumented, but apparently
+  #   intended, behavior), then `as_tibble` (also shallow, given a list) to get
+  #   back to something that will use `dplyr`'s included `mutate` method(s),
+  #   then convert this using shallow operations into a `data.table`.
+  # - Use `col_modify_recorder_df` to get the desired details.
+  in_tbl = tibble::as_tibble(as.list(.data$DT), .name_repair="minimal")
+  col_modify_cols =
+    destructure_col_modify_recorder_df(
+      mutate(new_col_modify_recorder_df(in_tbl), ...)
+    )[["cols"]]
+  invalidated_key_col_is =
+    which(purrr::map_lgl(key(.data$DT), function(key_colname) {
+      key_colname %in% names(col_modify_cols) &&
+        !rlang::is_reference(in_tbl[[key_colname]], col_modify_cols[[key_colname]])
+    }))
+  if (length(invalidated_key_col_is) != 0L) {
+    rlang::abort(paste_lines(c(
+      "Key columns must not be replaced or removed.",
+      wrap_varnames(key(.data$DT)[invalidated_key_col_is],
+                    initial="Flagged key cols: ")
+    )))
+  } else {
+    # Have `dplyr` do the `dplyr_col_modify`, keeping the column-level-aliasing
+    # and must-copy-on-write-if-refcount-more-than-1 model, obtaining a tibble,
+    # then convert it into a `data.table`. The key should still be valid
+    # (assuming that the user did not explicitly alter `key(.data$DT)` or the
+    # columns by reference somehow within `...` tidyeval-style computations, or
+    # trigger refcount-1 alterations due to still having >1 refcounts on the
+    # columns), set the "sorted" attribute accordingly to prevent attempted
+    # sorting (including potential extra copies) or sortedness checking, then
+    # `setDT` (rather than `as.data.table`, in order to prevent column copying
+    # to establish ownership according to `data.table`'s memory model).
+    out_DT = dplyr::dplyr_col_modify(in_tbl, col_modify_cols) %>%
+      data.table::setattr("sorted", data.table::key(.data$DT)) %>%
+      data.table::setDT(key=key(.data$DT))
+    out_archive = .data$clone()
+    out_archive$DT <- out_DT
+    request_names = names(col_modify_cols)
+    return(list(
+      archive = out_archive,
+      request_names = request_names
+    ))
+    # (We might also consider special-casing when `mutate` hands back something
+    # equivalent (in some sense) to the input (probably only encountered when
+    # we're dealing with `group_by`), and using just `$DT`, not a shallow copy,
+    # in the result, primarily in order to hedge against `as.list` or `setDT`
+    # changing their behavior and generating deep copies somehow. This could
+    # also prevent storage, and perhaps also generation, of shallow copies, but
+    # this seems unlikely to be a major gain unless it helps enable some
+    # in-place modifications of refcount-1 columns (although detecting this case
+    # seems to be common across `group_by` implementations; maybe there is
+    # something there).)
+  }
+}
+
+#' `group_by` and related methods for `epi_archive`, `grouped_epi_archive`
+#'
+#' @param .data An `epi_archive` or `grouped_epi_archive`
+#' @param ... Similar to [`dplyr::group_by`] (see "Details:" for edge cases);
+#' * For `group_by`: unquoted variable name(s) or other
+#'   ["data masking"][dplyr::dplyr_data_masking] expression(s). It's possible to
+#'   use [`dplyr::mutate`]-like syntax here to calculate new columns on which to
+#'   perform grouping, but note that, if you are regrouping an already-grouped
+#'   `.data` object, the calculations will be carried out ignoring such grouping
+#'   (same as [in dplyr][dplyr::group_by]).
+#' * For `ungroup`: either
+#'   * empty, in order to remove the grouping and output an `epi_archive`; or
+#'   * variable name(s) or other ["tidy-select"][dplyr::dplyr_tidy_select]
+#'     expression(s), in order to remove the matching variables from the list of
+#'     grouping variables, and output another `grouped_epi_archive`.
+#' @param .add Boolean. If `FALSE`, the default, the output will be grouped by
+#'   the variable selection from `...` only; if `TRUE`, the output will be
+#'   grouped by the current grouping variables plus the variable selection from
+#'   `...`.
+#' @param .drop As described in [`dplyr::group_by`]; determines treatment of
+#'   factor columns.
+#' @param x For `groups` or `ungroup`: a `grouped_epi_archive`; for
+#'   `is_grouped_epi_archive`: any object
+#' @param .tbl (For `group_by_drop_default`:) an `epi_archive` or
+#'   `grouped_epi_archive` (`epi_archive` dispatches to the S3 default method;
+#'   `grouped_epi_archive` dispatches its own S3 method)
+#'
+#' @details
+#'
+#' To match `dplyr`, `group_by` allows "data masking" (also referred to as
+#' "tidy evaluation") expressions `...`, not just column names, in a way similar
+#' to `mutate`. Note that replacing or removing key columns with these
+#' expressions is disabled.
+#'
+#' `archive %>% group_by()` and other expressions that group or regroup by zero
+#' columns (indicating that all rows should be treated as part of one large
+#' group) will output a `grouped_epi_archive`, in order to enable the use of
+#' `grouped_epi_archive` methods on the result. This is in slight contrast to
+#' the same operations on tibbles and grouped tibbles, which will *not* output a
+#' `grouped_df` in these circumstances.
+#'
+#' Using `group_by` with `.add=FALSE` to override the existing grouping is
+#' disabled; instead, `ungroup` first then `group_by`.
+#'
+#' Mutation and aliasing: `group_by` tries to use a shallow copy of the `DT`,
+#' introducing column-level aliasing between its input and its result. This
+#' doesn't follow the general model for most `data.table` operations, which
+#' seems to be that, given an nonaliased (i.e., unique) pointer to a
+#' `data.table` object, its pointers to its columns should also be nonaliased.
+#' If you mutate any of the columns of either the input or result, first ensure
+#' that it is fine if columns of the other are also mutated, but do not rely on
+#' such behavior to occur. Additionally, never perform mutation on the key
+#' columns at all (except for strictly increasing transformations), as this will
+#' invalidate sortedness assumptions about the rows.
+#'
+#' `group_by_drop_default` on (ungrouped) `epi_archive`s is expected to dispatch
+#' to `group_by_drop_default.default` (but there is a dedicated method for
+#' `grouped_epi_archive`s).
+#'
+#' @examples
+#'
+#' grouped_archive = archive_cases_dv_subset %>% group_by(geo_value)
+#'
+#' # `print` for metadata and method listing:
+#' grouped_archive %>% print()
+#'
+#' # The primary use for grouping is to perform a grouped `epix_slide`:
+#'
+#' archive_cases_dv_subset %>%
+#'   group_by(geo_value) %>%
+#'   epix_slide(f = ~ mean(.x$case_rate_7d_av),
+#'              before = 2,
+#'              ref_time_values = as.Date("2020-06-11") + 0:2,
+#'              new_col_name = 'case_rate_3d_av') %>%
+#'   ungroup()
+#'
+#' # -----------------------------------------------------------------
+#'
+#' # Advanced: some other features of dplyr grouping are implemented:
+#'
+#' library(dplyr)
+#' toy_archive =
+#'   tribble(
+#'     ~geo_value,  ~age_group,  ~time_value,     ~version, ~value,
+#'           "us",     "adult", "2000-01-01", "2000-01-02",    121,
+#'           "us", "pediatric", "2000-01-02", "2000-01-03",      5, # (addition)
+#'           "us",     "adult", "2000-01-01", "2000-01-03",    125, # (revision)
+#'           "us",     "adult", "2000-01-02", "2000-01-03",    130  # (addition)
+#'   ) %>%
+#'   mutate(age_group = ordered(age_group, c("pediatric", "adult")),
+#'          time_value = as.Date(time_value),
+#'          version = as.Date(version)) %>%
+#'   as_epi_archive(other_keys = "age_group")
+#'
+#' # The following are equivalent:
+#' toy_archive %>% group_by(geo_value, age_group)
+#' toy_archive %>% group_by(geo_value) %>% group_by(age_group, .add=TRUE)
+#' grouping_cols = c("geo_value", "age_group")
+#' toy_archive %>% group_by(across(all_of(grouping_cols)))
+#'
+#' # And these are equivalent:
+#' toy_archive %>% group_by(geo_value)
+#' toy_archive %>% group_by(geo_value, age_group) %>% ungroup(age_group)
+#'
+#' # To get the grouping variable names as a `list` of `name`s (a.k.a. symbols):
+#' toy_archive %>% group_by(geo_value) %>% groups()
+#'
+#' toy_archive %>%
+#'   group_by(geo_value, age_group, .drop=FALSE) %>%
+#'   epix_slide(f = ~ sum(.x$value), before = 20) %>%
+#'   ungroup()
+#'
+#' @importFrom dplyr group_by
+#' @export
+#'
+#' @aliases grouped_epi_archive
+group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_drop_default(.data)) {
+  # `add` makes no difference; this is an ungrouped `epi_archive`.
+  detailed_mutate = epix_detailed_restricted_mutate(.data, ...)
+  if (!rlang::is_bool(.drop)) {
+    Abort("`.drop` must be TRUE or FALSE")
+  }
+  if (!.drop) {
+    grouping_cols = as.list(detailed_mutate[["archive"]][["DT"]])[detailed_mutate[["request_names"]]]
+    grouping_col_is_factor = purrr::map_lgl(grouping_cols, is.factor)
+    # ^ Use `as.list` to try to avoid any possibility of a deep copy.
+    if (!any(grouping_col_is_factor)) {
+      Warn("`.drop=FALSE` but there are no factor grouping columns; did you mean to convert one of the columns to a factor beforehand?",
+           class = "epiprocess__group_by_epi_archive__drop_FALSE_no_factors")
+    } else if (any(diff(grouping_col_is_factor) == -1L)) {
+      Warn("`.drop=FALSE` but there are one or more non-factor grouping columns listed after a factor grouping column; this may produce groups with `NA`s for these columns; see https://github.com/tidyverse/dplyr/issues/5369#issuecomment-683762553; depending on how you want completion to work, you might instead want to convert all grouping columns to factors beforehand, specify the non-factor grouping columns first, or use `.drop=TRUE` and add a call to `tidyr::complete`.",
+           class = "epiprocess__group_by_epi_archive__drop_FALSE_nonfactor_after_factor")
+    }
+  }
+  grouped_epi_archive$new(detailed_mutate[["archive"]],
+                          detailed_mutate[["request_names"]],
+                          drop = .drop)
+}
+
+#' Slide a function over variables in an `epi_archive` or `grouped_epi_archive`
 #'
 #' Slides a given function over variables in an `epi_archive` object. This
 #' behaves similarly to `epi_slide()`, with the key exception that it is
@@ -364,30 +658,52 @@ epix_merge = function(x, y,
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 #' examples.
 #'
-#' @param x An `epi_archive` object.
-#' @param f Function or formula to slide over variables in `x`. To "slide" means
-#'   to apply a function or formula over a running window of `n` time steps
-#'   (where one time step is typically one day or one week). If a function, `f`
-#'   must take `x`, a data frame with the same column names as the original
-#'   object; followed by any number of named arguments; and ending with
-#'   `...`. If a formula, `f` can operate directly on columns accessed via
-#'   `.x$var`, as in `~ mean(.x$var)` to compute a mean of a column `var` over a
-#'   sliding window of `n` time steps.
+#' @param x An [`epi_archive`] or [`grouped_epi_archive`] object. If ungrouped,
+#'   all data in `x` will be treated as part of a single data group.
+#' @param f Function, formula, or missing; together with `...` specifies the
+#'   computation to slide. To "slide" means to apply a computation over a
+#'   sliding (a.k.a. "rolling") time window for each data group. The window is
+#'   determined by the `before` parameter described below. One time step is
+#'   typically one day or one week; see [`epi_slide`] details for more
+#'   explanation. If a function, `f` must take an `epi_df` with the same
+#'   column names as the archive's `DT`, minus the `version` column; followed
+#'   by a one-row tibble containing the values of the grouping variables for
+#'   the associated group; followed by a reference time value, usually as a
+#'   `Date` object; followed by any number of named arguments. If a formula,
+#'   `f` can operate directly on columns accessed via `.x$var` or `.$var`, as
+#'   in `~ mean (.x$var)` to compute a mean of a column `var` for each
+#'   group-`ref_time_value` combination. The group key can be accessed via
+#'   `.y` or `.group_key`, and the reference time value can be accessed via
+#'   `.z` or `.ref_time_value`. If `f` is missing, then `...` will specify the
+#'   computation.
 #' @param ... Additional arguments to pass to the function or formula specified
-#'   via `f`. Alternatively, if `f` is missing, then the current argument is
-#'   interpreted as an expression for tidy evaluation.
-#' @param n Number of time steps to use in the running window. For example, if
-#'   `n = 7`, and one time step is one day, then to produce a value on January 7
-#'   we apply the given function or formula to data in between January 1 and
-#'   7.
-#' @param group_by The variable(s) to group by before slide computation. If
-#'   missing, then the keys in the underlying data table, excluding `time_value`
-#'   and `version`, will be used for grouping. To omit a grouping entirely, use
-#'   `group_by = NULL`.
-#' @param ref_time_values Time values for sliding computations, meaning, each
-#'   element of this vector serves as the reference time point for one sliding
-#'   window. If missing, then this will be set to all unique time values in the
-#'   underlying data table, by default.
+#'   via `f`. Alternatively, if `f` is missing, then `...` is interpreted as an
+#'   expression for tidy evaluation; in addition to referring to columns
+#'   directly by name, the expression has access to `.data` and `.env` pronouns
+#'   as in `dplyr` verbs, and can also refer to the `.group_key` and
+#'   `.ref_time_value`. See details of [`epi_slide`].
+#' @param before How far `before` each `ref_time_value` should the sliding
+#'   window extend? If provided, should be a single, non-NA,
+#'   [integer-compatible][vctrs::vec_cast] number of time steps. This window
+#'   endpoint is inclusive. For example, if `before = 7`, and one time step is
+#'   one day, then to produce a value for a `ref_time_value` of January 8, we
+#'   apply the given function or formula to data (for each group present) with
+#'   `time_value`s from January 1 onward, as they were reported on January 8.
+#'   For typical disease surveillance sources, this will not include any data
+#'   with a `time_value` of January 8, and, depending on the amount of reporting
+#'   latency, may not include January 7 or even earlier `time_value`s. (If
+#'   instead the archive were to hold nowcasts instead of regular surveillance
+#'   data, then we would indeed expect data for `time_value` January 8. If it
+#'   were to hold forecasts, then we would expect data for `time_value`s after
+#'   January 8, and the sliding window would extend as far after each
+#'   `ref_time_value` as needed to include all such `time_value`s.)
+#' @param ref_time_values Reference time values / versions for sliding
+#'   computations; each element of this vector serves both as the anchor point
+#'   for the `time_value` window for the computation and the `max_version`
+#'   `as_of` which we fetch data in this window. If missing, then this will set
+#'   to a regularly-spaced sequence of values set to cover the range of
+#'   `version`s in the `DT` plus the `versions_end`; the spacing of values will
+#'   be guessed (using the GCD of the skips between values).
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
 #'   `time_value` column. This function must take a positive integer and return
@@ -397,38 +713,71 @@ epix_merge = function(x, y,
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
-#' @param as_list_col If the computations return data frames, should the slide
-#'   result hold these in a single list column or try to unnest them? Default is
-#'   `FALSE`, in which case a list object returned by `f` would be unnested
-#'   (using [`tidyr::unnest()`]), and the names of the resulting columns are given
-#'   by prepending `new_col_name` to the names of the list elements.
+#' @param as_list_col Should the slide results be held in a list column, or be
+#'   [unchopped][tidyr::unchop]/[unnested][tidyr::unnest]? Default is `FALSE`,
+#'   in which case a list object returned by `f` would be unnested (using
+#'   [`tidyr::unnest()`]), and, if the slide computations output data frames,
+#'   the names of the resulting columns are given by prepending `new_col_name`
+#'   to the names of the list elements.
 #' @param names_sep String specifying the separator to use in `tidyr::unnest()`
 #'   when `as_list_col = FALSE`. Default is "_". Using `NULL` drops the prefix
 #'   from `new_col_name` entirely.
-#' @param all_rows If `all_rows = TRUE`, then the output will have one row per
-#'   combination of grouping variables and unique time values in the underlying
-#'   data table. Otherwise, there will be one row in the output for each time
-#'   value in `x` that acts as a reference time value. Default is `FALSE`.
+#' @param all_versions (Not the same as `all_rows` parameter of `epi_slide`.) If
+#'   `all_versions = TRUE`, then `f` will be passed the version history (all
+#'   `version <= ref_time_value`) for rows having `time_value` between
+#'   `ref_time_value - before` and `ref_time_value`. Otherwise, `f` will be
+#'   passed only the most recent `version` for every unique `time_value`.
+#'   Default is `FALSE`.
 #' @return A tibble whose columns are: the grouping variables, `time_value`,
 #'   containing the reference time values for the slide computation, and a
 #'   column named according to the `new_col_name` argument, containing the slide
 #'   values.
 #'
-#' @details Two key distinctions between inputs to the current function and
-#'   `epi_slide()`:
-#'   1. `epix_slide()` uses windows that are **always right-aligned** (in
-#'   `epi_slide()`, custom alignments could be specified using the `align` or
-#'   `before` arguments).
-#'   2. `epix_slide()` uses a `group_by` to specify the grouping upfront (in
-#'   `epi_slide()`, this would be accomplished by a preceding function call to
-#'   `dplyr::group_by()`).
-#' Apart from this, the interfaces between `epix_slide()` and `epi_slide()` are
-#'   the same.
+#' @details A few key distinctions between the current function and `epi_slide()`:
+#'   1. In `f` functions for `epix_slide`, one should not assume that the input
+#'   data to contain any rows with `time_value` matching the computation's
+#'   `ref_time_value` (accessible via `attributes(<data>)$metadata$as_of`); for
+#'   typical epidemiological surveillance data, observations pertaining to a
+#'   particular time period (`time_value`) are first reported `as_of` some
+#'   instant after that time period has ended.
+#'   2. `epix_slide()` doesn't accept an `after` argument; its windows extend
+#'   from `before` time steps before a given `ref_time_value` through the last
+#'   `time_value` available as of version `ref_time_value` (typically, this
+#'   won't include `ref_time_value` itself, as observations about a particular
+#'   time interval (e.g., day) are only published after that time interval
+#'   ends); `epi_slide` windows extend from `before` time steps before a
+#'   `ref_time_value` through `after` time steps after `ref_time_value`.
+#'   3. The input class and columns are similar but different: `epix_slide`
+#'   (with the default `all_versions=FALSE`) keeps all columns and the
+#'   `epi_df`-ness of the first argument to each computation; `epi_slide` only
+#'   provides the grouping variables in the second input, and will convert the
+#'   first input into a regular tibble if the grouping variables include the
+#'   essential `geo_value` column. (With `all_versions=TRUE`, `epix_slide` will
+#'   will provide an `epi_archive` rather than an `epi-df` to each
+#'   computation.)
+#'   4. The output class and columns are similar but different: `epix_slide()`
+#'   returns a tibble containing only the grouping variables, `time_value`, and
+#'   the new column(s) from the slide computations, whereas `epi_slide()`
+#'   returns an `epi_df` with all original variables plus the new columns from
+#'   the slide computations. (Both will mirror the grouping or ungroupedness of
+#'   their input, with one exception: `epi_archive`s can have trivial
+#'   (zero-variable) groupings, but these will be dropped in `epix_slide`
+#'   results as they are not supported by tibbles.)
+#'   5. There are no size stability checks or element/row recycling to maintain
+#'   size stability in `epix_slide`, unlike in `epi_slide`. (`epix_slide` is
+#'   roughly analogous to [`dplyr::group_modify`], while `epi_slide` is roughly
+#'   analogous to `dplyr::mutate` followed by `dplyr::arrange`) This is detailed
+#'   in the "advanced" vignette.
+#'   6. `all_rows` is not supported in `epix_slide`; since the slide
+#'   computations are allowed more flexibility in their outputs than in
+#'   `epi_slide`, we can't guess a good representation for missing computations
+#'   for excluded group-`ref_time_value` pairs.
+#'   7. The `ref_time_values` default for `epix_slide` is based on making an
+#'   evenly-spaced sequence out of the `version`s in the `DT` plus the
+#'   `versions_end`, rather than the `time_value`s.
 #'
-#' Note that the outputs are a similar but different: `epix_slide()` only
-#'   returns the grouping variables, `time_value`, and the new columns from
-#'   sliding, whereas `epi_slide()` returns all original variables plus the new
-#'   columns from sliding.
+#' Apart from the above distinctions, the interfaces between `epix_slide()` and
+#' `epi_slide()` are the same.
 #'
 #' Furthermore, the current function can be considerably slower than
 #'   `epi_slide()`, for two reasons: (1) it must repeatedly fetch
@@ -439,46 +788,150 @@ epix_merge = function(x, y,
 #'   version-aware sliding is necessary (as it its purpose).
 #'
 #' Finally, this is simply a wrapper around the `slide()` method of the
-#'   `epi_archive` class, so if `x` is an `epi_archive` object, then:
+#'   `epi_archive` and `grouped_epi_archive` classes, so if `x` is an
+#'   object of either of these classes, then:
 #'   ```
-#'   epix_slide(x, new_var = comp(old_var), n = 120)
+#'   epix_slide(x, new_var = comp(old_var), before = 119)
 #'   ```
 #'   is equivalent to:
 #'   ```
-#'   x$slide(x, new_var = comp(old_var), n = 120)
+#'   x$slide(new_var = comp(old_var), before = 119)
 #'   ```
 #'
-#' @importFrom rlang enquo
-#' @export
 #' @examples
-#' # these dates are reference time points for the 3 day average sliding window
-#' # The resulting epi_archive ends up including data averaged from:
-#' # 0 day which has no results, for 2020-06-01
-#' # 1 day, for 2020-06-02
-#' # 2 days, for the rest of the results
-#' # never 3 days dur to data latency
-#' 
-#' time_values <- seq(as.Date("2020-06-01"),
-#'                       as.Date("2020-06-15"),
-#'                       by = "1 day")
-#' epix_slide(x = archive_cases_dv_subset,
-#'            f = ~ mean(.x$case_rate_7d_av),
-#'            n = 3,
-#'            group_by = geo_value,
-#'            ref_time_values = time_values,
-#'            new_col_name = 'case_rate_3d_av')
-epix_slide = function(x, f, ..., n, group_by, ref_time_values,
+#' library(dplyr)
+#'
+#' # Reference time points for which we want to compute slide values:
+#' ref_time_values <- seq(as.Date("2020-06-01"),
+#'                        as.Date("2020-06-15"),
+#'                        by = "1 day")
+#'
+#' # A simple (but not very useful) example (see the archive vignette for a more
+#' # realistic one):
+#' archive_cases_dv_subset %>%
+#'   group_by(geo_value) %>%
+#'   epix_slide(f = ~ mean(.x$case_rate_7d_av),
+#'              before = 2,
+#'              ref_time_values = ref_time_values,
+#'              new_col_name = 'case_rate_7d_av_recent_av') %>%
+#'   ungroup()
+#' # We requested time windows that started 2 days before the corresponding time
+#' # values. The actual number of `time_value`s in each computation depends on
+#' # the reporting latency of the signal and `time_value` range covered by the
+#' # archive (2020-06-01 -- 2021-11-30 in this example).  In this case, we have
+#' # * 0 `time_value`s, for ref time 2020-06-01 --> the result is automatically
+#' #                                                discarded
+#' # * 1 `time_value`, for ref time 2020-06-02
+#' # * 2 `time_value`s, for the rest of the results
+#' # * never the 3 `time_value`s we would get from `epi_slide`, since, because
+#' #   of data latency, we'll never have an observation
+#' #   `time_value == ref_time_value` as of `ref_time_value`.
+#' # The example below shows this type of behavior in more detail.
+#'
+#' # Examining characteristics of the data passed to each computation with
+#' # `all_versions=FALSE`.
+#' archive_cases_dv_subset %>%
+#'  group_by(geo_value) %>%
+#'  epix_slide(
+#'    function(x, gk, rtv) {
+#'      tibble(
+#'        time_range = if(nrow(x) == 0L) {
+#'          "0 `time_value`s"
+#'        } else {
+#'          sprintf("%s -- %s", min(x$time_value), max(x$time_value))
+#'        },
+#'        n = nrow(x),
+#'        class1 = class(x)[[1L]]
+#'      )
+#'    },
+#'    before = 5, all_versions = FALSE,
+#'    ref_time_values = ref_time_values, names_sep=NULL) %>%
+#'  ungroup() %>%
+#'  arrange(geo_value, time_value)
+#'
+#' # --- Advanced: ---
+#'
+#' # `epix_slide` with `all_versions=FALSE` (the default) applies a
+#' # version-unaware computation to several versions of the data. We can also
+#' # use `all_versions=TRUE` to apply a version-*aware* computation to several
+#' # versions of the data, again looking at characteristics of the data passed
+#' # to each computation. In this case, each computation should expect an
+#' # `epi_archive` containing the relevant version data:
+#'
+#' archive_cases_dv_subset %>%
+#'   group_by(geo_value) %>%
+#'   epix_slide(
+#'     function(x, gk, rtv) {
+#'       tibble(
+#'         versions_start = if (nrow(x$DT) == 0L) {
+#'           "NA (0 rows)"
+#'         } else {
+#'           toString(min(x$DT$version))
+#'         },
+#'         versions_end = x$versions_end,
+#'         time_range = if(nrow(x$DT) == 0L) {
+#'           "0 `time_value`s"
+#'         } else {
+#'           sprintf("%s -- %s", min(x$DT$time_value), max(x$DT$time_value))
+#'         },
+#'         n = nrow(x$DT),
+#'         class1 = class(x)[[1L]]
+#'       )
+#'     },
+#'     before = 5, all_versions = TRUE,
+#'     ref_time_values = ref_time_values, names_sep=NULL) %>%
+#'   ungroup() %>%
+#'   # Focus on one geo_value so we can better see the columns above:
+#'   filter(geo_value == "ca") %>%
+#'   select(-geo_value)
+#'
+#' @importFrom rlang enquo !!!
+#' @export
+epix_slide = function(x, f, ..., before, ref_time_values,
                       time_step, new_col_name = "slide_value",
-                      as_list_col = FALSE, names_sep = "_", all_rows = FALSE) {
-  if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
-  return(x$slide(f, ..., n = n,
-                 group_by = {{group_by}},
+                      as_list_col = FALSE, names_sep = "_",
+                      all_versions = FALSE) {
+  if (!is_epi_archive(x, grouped_okay=TRUE)) {
+    Abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
+  }
+  return(x$slide(f, ..., before = before,
                  ref_time_values = ref_time_values,
                  time_step = time_step,
                  new_col_name = new_col_name,
                  as_list_col = as_list_col,
                  names_sep = names_sep,
-                 all_rows = all_rows))
+                 all_versions = all_versions
+                 ))
 }
 
+#' Default value for `ref_time_values` in an `epix_slide`
+#'
+#' @noRd
+epix_slide_ref_time_values_default = function(ea) {
+  versions_with_updates = c(ea$DT$version, ea$versions_end)
+  ref_time_values = tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
+  return (ref_time_values)
+}
 
+#' Filter an `epi_archive` object to keep only older versions
+#'
+#' Generates a filtered `epi_archive` from an `epi_archive` object, keeping
+#' only rows with `version` falling on or before a specified date.
+#'
+#' @param x An `epi_archive` object
+#' @param max_version Time value specifying the max version to permit in the
+#'   filtered archive. That is, the output archive will comprise rows of the
+#'   current archive data having `version` less than or equal to the
+#'   specified `max_version`
+#' @return An `epi_archive` object
+#'
+#' @export
+epix_truncate_versions_after = function(x, max_version) {
+  UseMethod("epix_truncate_versions_after")
+}
+
+#' @export
+epix_truncate_versions_after.epi_archive = function(x, max_version) {
+  return ((x$clone()$truncate_versions_after(max_version)))
+  # ^ second set of parens drops invisibility
+}

@@ -159,7 +159,7 @@ new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
   
   # Reorder columns (geo_value, time_value, ...)
   if(sum(dim(x)) != 0){
-    x = dplyr::relocate(x, .data$geo_value, .data$time_value)
+    x = dplyr::relocate(x, "geo_value", "time_value")
   }
   
   # Apply epi_df class, attach metadata, and return

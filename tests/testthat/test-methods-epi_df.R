@@ -116,3 +116,11 @@ test_that("Correct metadata when subset includes some of other_keys", {
   # Including both original other_keys was already tested above
 })
 
+test_that("Metadata and grouping are dropped by `as_tibble`", {
+  grouped_converted = toy_epi_df %>%
+    group_by(geo_value) %>%
+    as_tibble()
+  expect_true(
+    !any(c("metadata", "groups") %in% names(attributes(grouped_converted)))
+  )
+})
