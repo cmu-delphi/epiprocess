@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9999</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,11 +61,103 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.5.0.9999" id="epiprocess-0509999-development-version">epiprocess 0.5.0.9999 (development version)<a class="anchor" aria-label="anchor" href="#epiprocess-0509999-development-version"></a></h2>
-<p>Note that <code>epiprocess</code> uses the <a href="https://semver.org/" class="external-link">Semantic Versioning (“semver”)</a> scheme for all release versions, but not for development versions. A “.9999” suffix indicates a development version.</p>
+<h2 class="pkg-version" data-toc-text="0.7.0" id="epiprocess-070">epiprocess 0.7.0<a class="anchor" aria-label="anchor" href="#epiprocess-070"></a></h2>
+<p>Note that <code>epiprocess</code> uses the <a href="https://semver.org/" class="external-link">Semantic Versioning (“semver”)</a> scheme for all release versions, but any inter-release development versions will include an additional “.9999” suffix.</p>
 <div class="section level3">
-<h3 id="cleanup-0-5-0-9999">Cleanup:<a class="anchor" aria-label="anchor" href="#cleanup-0-5-0-9999"></a></h3>
+<h3 id="breaking-changes-0-7-0">Breaking changes:<a class="anchor" aria-label="anchor" href="#breaking-changes-0-7-0"></a></h3>
+<ul><li>Changes to <code>epi_slide</code> and <code>epix_slide</code>:
+<ul><li>If <code>f</code> is a function, it is now required to take at least three arguments. <code>f</code> must take an <code>epi_df</code> with the same column names as the archive’s <code>DT</code>, minus the <code>version</code> column; followed by a one-row tibble containing the values of the grouping variables for the associated group; followed by a reference time value, usually as a <code>Date</code> object. Optionally, it can take any number of additional arguments after that, and forward values for those arguments through <code>epi[x]_slide</code>’s <code>...</code> args.
+<ul><li>To make your existing slide computations work, add a third argument to your <code>f</code> function to accept this new input: e.g., change <code>f = function(x,   g, &lt;any other arguments&gt;) { &lt;body&gt; }</code> to <code>f = function(x, g, rt, &lt;any   other arguments&gt;) { &lt;body&gt; }</code>.</li>
+</ul></li>
+</ul></li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-0-7-0">New features:<a class="anchor" aria-label="anchor" href="#new-features-0-7-0"></a></h3>
+<ul><li>
+<code>epi_slide</code> and <code>epix_slide</code> also make the window data, group key and reference time value available to slide computations specified as formulas or tidy evaluation expressions, in additional or completely new ways.
+<ul><li>If <code>f</code> is a formula, it can now access the reference time value via <code>.z</code> or <code>.ref_time_value</code>.</li>
+<li>If <code>f</code> is missing, the tidy evaluation expression in <code>...</code> can now refer to the window data as an <code>epi_df</code> or <code>tibble</code> with <code>.x</code>, the group key with <code>.group_key</code>, and the reference time value with <code>.ref_time_value</code>. The usual <code>.data</code> and <code>.env</code> pronouns also work, but<code><a href="https://dplyr.tidyverse.org/reference/pick.html" class="external-link">pick()</a></code> and <code><a href="https://dplyr.tidyverse.org/reference/deprec-context.html" class="external-link">cur_data()</a></code> are not; work off of <code>.x</code> instead.</li>
+</ul></li>
+<li>
+<code>epix_slide</code> has been made more like <code><a href="https://dplyr.tidyverse.org/reference/group_map.html" class="external-link">dplyr::group_modify</a></code>. It will no longer perform element/row recycling for size stability, accepts slide computation outputs containing any number of rows, and no longer supports <code>all_rows</code>.
+<ul><li>To keep the old behavior, manually perform row recycling within <code>f</code> computations, and/or <code>left_join</code> a data frame representing the desired output structure with the current <code><a href="../reference/epix_slide.html">epix_slide()</a></code> result to obtain the desired repetitions and completions expected with <code>all_rows = TRUE</code>.</li>
+</ul></li>
+<li>
+<code>epix_slide</code> will only output grouped or ungrouped tibbles. Previously, it would sometimes output <code>epi_df</code>s, but not consistently, and not always with the metadata desired. Future versions will revisit this design, and consider more closely whether/when/how to output an <code>epi_df</code>.
+<ul><li>To keep the old behavior, convert the output of <code><a href="../reference/epix_slide.html">epix_slide()</a></code> to <code>epi_df</code> when desired and set the metadata appropriately.</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
+<h3 id="improvements-0-7-0">Improvements:<a class="anchor" aria-label="anchor" href="#improvements-0-7-0"></a></h3>
+<ul><li>
+<code>epi_slide</code> and <code>epix_slide</code> now support <code>as_list_col = TRUE</code> when the slide computations output atomic vectors, and output a list column in “chopped” format (see <code><a href="https://tidyr.tidyverse.org/reference/chop.html" class="external-link">tidyr::chop</a></code>).</li>
+<li>
+<code>epi_slide</code> now works properly with slide computations that output just a <code>Date</code> vector, rather than converting <code>slide_value</code> to a numeric column.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.0" id="epiprocess-060">epiprocess 0.6.0<a class="anchor" aria-label="anchor" href="#epiprocess-060"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-0-6-0">Breaking changes:<a class="anchor" aria-label="anchor" href="#breaking-changes-0-6-0"></a></h3>
+<ul><li>Changes to both <code>epi_slide</code> and <code>epix_slide</code>:
+<ul><li>The <code>n</code>, <code>align</code>, and <code>before</code> arguments have been replaced by new <code>before</code> and <code>after</code> arguments. To migrate to the new version, replace these arguments in every <code>epi_slide</code> and <code>epix_slide</code> call. If you were only using the <code>n</code> argument, then this means replacing <code>n = &lt;n value&gt;</code> with <code>before =   &lt;n value&gt; - 1</code>.
+<ul><li>
+<code>epi_slide</code>’s time windows now extend <code>before</code> time steps before and <code>after</code> time steps after the corresponding <code>ref_time_values</code>. See <code><a href="../reference/epi_slide.html">?epi_slide</a></code> for details on matching old alignments.</li>
+<li>
+<code>epix_slide</code>’s time windows now extend <code>before</code> time steps before the corresponding <code>ref_time_values</code> all the way through the latest data available at the corresponding <code>ref_time_values</code>.</li>
+</ul></li>
+<li>Slide functions now keep any grouping of <code>x</code> in their results, like <code>mutate</code> and <code>group_modify</code>.
+<ul><li>To obtain the old behavior, <code><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">dplyr::ungroup</a></code> the slide results immediately.</li>
+</ul></li>
+</ul></li>
+<li>Additional <code>epi_slide</code> changes:
+<ul><li>When using <code>as_list_col = TRUE</code> together with <code>ref_time_values</code> and <code>all_rows=TRUE</code>, the marker for excluded computations is now a <code>NULL</code> entry in the list column, rather than a <code>NA</code>; if you are using <code><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">tidyr::unnest()</a></code> afterward and want to keep these missing data markers, you will need to replace the <code>NULL</code> entries with <code>NA</code>s. Skipped computations are now more uniformly detectable using <code>vctrs</code> methods.</li>
+</ul></li>
+<li>Additional<code>epix_slide</code> changes:
+<ul><li>
+<code>epix_slide</code>’s <code>group_by</code> argument has been replaced by <code><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">dplyr::group_by</a></code> and <code><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">dplyr::ungroup</a></code> S3 methods. The <code>group_by</code> method uses “data masking” (also referred to as “tidy evaluation”) rather than “tidy selection”.
+<ul><li>Old syntax:
+<ul><li><code>x %&gt;% epix_slide(&lt;other args&gt;, group_by=c(col1, col2))</code></li>
+<li><code>x %&gt;% epix_slide(&lt;other args&gt;, group_by=all_of(colname_vector))</code></li>
+</ul></li>
+<li>New syntax:
+<ul><li><code>x %&gt;% group_by(col1, col2) %&gt;% epix_slide(&lt;other args&gt;)</code></li>
+<li><code>x %&gt;% group_by(across(all_of(colname_vector))) %&gt;% epix_slide(&lt;other args&gt;)</code></li>
+</ul></li>
+</ul></li>
+<li>
+<code>epix_slide</code> no longer defaults to grouping by non-<code>time_value</code>, non-<code>version</code> key columns, instead considering all data to be in one big group.
+<ul><li>To obtain the old behavior, precede each <code>epix_slide</code> call lacking a <code>group_by</code> argument with an appropriate <code>group_by</code> call.</li>
+</ul></li>
+<li>
+<code>epix_slide</code> now guesses <code>ref_time_values</code> to be a regularly spaced sequence covering all the <code>DT$version</code> values and the <code>version_end</code>, rather than the distinct <code>DT$time_value</code>s. To obtain the old behavior, pass in <code>ref_time_values = unique(&lt;ungrouped archive&gt;$DT$time_value)</code>.</li>
+</ul></li>
+<li>
+<code>epi_archive</code>’s <code>clobberable_versions_start</code>’s default is now <code>NA</code>, so there will be no warnings by default about potential nonreproducibility. To obtain the old behavior, pass in <code>clobberable_versions_start =   max_version_with_row_in(x)</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="potentially-breaking-changes-0-6-0">Potentially-breaking changes:<a class="anchor" aria-label="anchor" href="#potentially-breaking-changes-0-6-0"></a></h3>
+<ul><li>Fixed <code>[</code> on grouped <code>epi_df</code>s to maintain the grouping if possible when dropping the <code>epi_df</code> class (e.g., when removing the <code>time_value</code> column).</li>
+<li>Fixed <code>epi_df</code> operations to be more consistent about decaying into non-<code>epi_df</code>s when the result of the operation doesn’t make sense as an <code>epi_df</code> (e.g., when removing the <code>time_value</code> column).</li>
+<li>Changed <code>bind_rows</code> on grouped <code>epi_df</code>s to not drop the <code>epi_df</code> class. Like with ungrouped <code>epi_df</code>s, the metadata of the result is still simply taken from the first result, and may be inappropriate (<a href="https://github.com/cmu-delphi/epiprocess/issues/242" class="external-link">#242</a>).</li>
+<li>
+<code>epi_slide</code> and <code>epix_slide</code> now raise an error rather than silently filtering out <code>ref_time_values</code> that don’t meet their expectations.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-0-6-0">New features:<a class="anchor" aria-label="anchor" href="#new-features-0-6-0"></a></h3>
+<ul><li>
+<code>epix_slide</code>, <code>&lt;epi_archive&gt;$slide</code> have a new parameter <code>all_versions</code>. With <code>all_versions=TRUE</code>, <code>epix_slide</code> will pass a filtered <code>epi_archive</code> to each computation rather than an <code>epi_df</code> snapshot. This enables, e.g., performing pseudoprospective forecasts with a revision-aware forecaster using nested <code>epix_slide</code> operations.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="improvements-0-6-0">Improvements:<a class="anchor" aria-label="anchor" href="#improvements-0-6-0"></a></h3>
+<ul><li>Added <code><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">dplyr::group_by</a></code> and <code><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">dplyr::ungroup</a></code> S3 methods for <code>epi_archive</code> objects, plus corresponding <code>$group_by</code> and <code>$ungroup</code> R6 methods. The <code>group_by</code> implementation supports the <code>.add</code> and <code>.drop</code> arguments, and <code>ungroup</code> supports partial ungrouping with <code>...</code>.</li>
+<li>
+<code>as_epi_archive</code>, <code>epi_archive$new</code> now perform checks for the key uniqueness requirement (part of <a href="https://github.com/cmu-delphi/epiprocess/issues/154" class="external-link">#154</a>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="cleanup-0-6-0">Cleanup:<a class="anchor" aria-label="anchor" href="#cleanup-0-6-0"></a></h3>
 <ul><li>Added a <code>NEWS.md</code> file to track changes to the package.</li>
+<li>Implemented <code><a href="https://dplyr.tidyverse.org/reference/dplyr_extending.html" class="external-link">?dplyr::dplyr_extending</a></code> for <code>epi_df</code>s (<a href="https://github.com/cmu-delphi/epiprocess/issues/223" class="external-link">#223</a>).</li>
 <li>Fixed various small documentation issues (<a href="https://github.com/cmu-delphi/epiprocess/issues/217" class="external-link">#217</a>).</li>
 </ul></div>
 </div>

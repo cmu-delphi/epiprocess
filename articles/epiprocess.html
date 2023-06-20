@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9999</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -147,7 +147,7 @@ API</a>.</p>
 <span>  geo_type <span class="op">=</span> <span class="st">"state"</span>,</span>
 <span>  time_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200301</span>, <span class="fl">20220131</span><span class="op">)</span>,</span>
 <span>  geo_values <span class="op">=</span> <span class="st">"ca,fl,ny,tx"</span></span>
-<span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/fetch_tbl.html" class="external-link">fetch_tbl</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/epidata_call.html" class="external-link">fetch</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##  [1] "geo_value"           "signal"              "source"             </span></span>
@@ -174,7 +174,7 @@ to bring the data frame into <code>epi_df</code> format.</p>
 <pre><code><span><span class="co">## An `epi_df` x, with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2023-02-24</span></span>
+<span><span class="co">## * as_of     = 2023-03-10</span></span>
 <span><span class="co">## ----------</span></span>
 <span><span class="co">## * min time value              = 2020-03-01</span></span>
 <span><span class="co">## * max time value              = 2022-01-31</span></span>
@@ -184,7 +184,7 @@ to bring the data frame into <code>epi_df</code> format.</p>
 <pre><code><span><span class="co">## An `epi_df` object, 6 x 3 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2023-02-24</span></span>
+<span><span class="co">## * as_of     = 2023-03-10</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 3</span></span></span>
 <span><span class="co">##   geo_value time_value total_cases</span></span>
@@ -204,7 +204,7 @@ to bring the data frame into <code>epi_df</code> format.</p>
 <span><span class="co">## [1] "day"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $as_of</span></span>
-<span><span class="co">## [1] "2023-02-24"</span></span></code></pre>
+<span><span class="co">## [1] "2023-03-10"</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="some-details-on-metadata">Some details on metadata<a class="anchor" aria-label="anchor" href="#some-details-on-metadata"></a>
@@ -258,7 +258,7 @@ and <code>time_value</code> columns, respectively, but inferring the
 <span><span class="co">## [1] "day"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $as_of</span></span>
-<span><span class="co">## [1] "2023-02-24"</span></span></code></pre>
+<span><span class="co">## [1] "2023-03-10"</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="using-additional-key-columns-in-epi_df">Using additional key columns in <code>epi_df</code><a class="anchor" aria-label="anchor" href="#using-additional-key-columns-in-epi_df"></a>
@@ -312,7 +312,7 @@ then <code><a href="../reference/as_epi_df.html">as_epi_df()</a></code> throws a
 <span>                       by <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span><span class="op">)</span>, <span class="co"># misnamed</span></span>
 <span>  value <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.01</span> <span class="op">*</span> <span class="fu">withr</span><span class="fu">::</span><span class="fu"><a href="https://withr.r-lib.org/reference/with_rng_version.html" class="external-link">with_rng_version</a></span><span class="op">(</span><span class="st">"3.0.0"</span>, <span class="fu">withr</span><span class="fu">::</span><span class="fu"><a href="https://withr.r-lib.org/reference/with_seed.html" class="external-link">with_seed</a></span><span class="op">(</span><span class="fl">42</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span><span class="op">)</span> </span></code></pre></div>
-<pre><code><span><span class="co">## Error in NextMethod(): object 'geo_value' not found</span></span></code></pre>
+<pre><code><span><span class="co">## Error in eval(expr, envir, enclos): object 'geo_value' not found</span></span></code></pre>
 <p>The columns can be renamed to match <code>epi_df</code> format. In
 the example below, notice there is also an additional key
 <code>pol</code>.</p>
@@ -394,7 +394,7 @@ case state name abbreviations are what we would expect if this were a
 <span><span class="co">## [1] "day"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $as_of</span></span>
-<span><span class="co">## [1] "2022-05-23 21:35:45 UTC"</span></span>
+<span><span class="co">## [1] "2023-06-20 15:42:31 UTC"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $other_keys</span></span>
 <span><span class="co">## [1] "state" "pol"</span></span></code></pre>
@@ -442,7 +442,7 @@ package:</p>
 <pre><code><span><span class="co">## An `epi_df` object, 6 x 6 with metadata:</span></span>
 <span><span class="co">## * geo_type  = nation</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2023-02-27 22:38:51</span></span>
+<span><span class="co">## * as_of     = 2023-06-20 15:42:32.80827</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
 <span><span class="co">##   geo_value time_value cases_travel cases_household cases_healthcare cases_other</span></span>

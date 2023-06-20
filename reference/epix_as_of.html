@@ -14,7 +14,7 @@ examples."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/m
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9999</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,7 +73,7 @@ examples.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">epix_as_of</span><span class="op">(</span><span class="va">x</span>, <span class="va">max_version</span>, min_time_value <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">epix_as_of</span><span class="op">(</span><span class="va">x</span>, <span class="va">max_version</span>, min_time_value <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, all_versions <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -94,6 +94,15 @@ of the specified <code>max_version</code> (and whose time values are at least
 <dd><p>Time value specifying the min time value to permit in
 the snapshot. Default is <code>-Inf</code>, which effectively means that there is no
 minimum considered.</p></dd>
+
+
+<dt>all_versions</dt>
+<dd><p>If <code>all_versions = TRUE</code>, then the output will be in
+<code>epi_archive</code> format, and contain rows in the specified <code>time_value</code> range
+having <code>version &lt;= max_version</code>. The resulting object will cover a
+potentially narrower <code>version</code> and <code>time_value</code> range than <code>x</code>, depending
+on user-provided arguments. Otherwise, there will be one row in the output
+for the <code>max_version</code> of each <code>time_value</code>. Default is <code>FALSE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -116,10 +125,6 @@ minimum considered.</p></dd>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># warning message of data latency shown</span></span></span>
 <span class="r-in"><span><span class="fu">epix_as_of</span><span class="op">(</span>x <span class="op">=</span> <span class="va">archive_cases_dv_subset</span>,</span></span>
 <span class="r-in"><span>           max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Getting data as of some "clobberable" version that might be hotfixed,</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> synced, or otherwise replaced later with different data using the same version</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> tag.  Thus, the snapshot that we produce here might not be reproducible later.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> See `?epi_archive` for more info and `?epix_as_of` on how to muffle.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 2,192 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
@@ -138,7 +143,7 @@ minimum considered.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-06-08        3.04            6.67</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-06-09        2.97            6.81</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-06-10        2.99            7.13</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 2,182 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2,182 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span> <span class="co"># 2020-06-02 -- 2021-12-01</span></span></span>
@@ -164,7 +169,7 @@ minimum considered.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-06-08        1.90            6.90</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-06-09       <span style="color: #BB0000;">NA</span>               7.02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-06-10       <span style="color: #BB0000;">NA</span>               7.36</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 34 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 34 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># When fetching a snapshot as of the latest version with update data in the</span></span></span>
 <span class="r-in"><span><span class="co"># archive, a warning is issued by default, as this update data might not yet</span></span></span>
@@ -196,7 +201,7 @@ minimum considered.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-06-08        3.04            6.67</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-06-09        2.97            6.81</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-06-10        2.99            7.13</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 2,182 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2,182 more rows</span></span>
 <span class="r-in"><span><span class="co"># Since R 4.0, there is a `globalCallingHandlers` function that can be used</span></span></span>
 <span class="r-in"><span><span class="co"># to globally toggle these warnings.</span></span></span>
 </code></pre></div>

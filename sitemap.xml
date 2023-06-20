@@ -58,6 +58,9 @@
     <loc>https://cmu-delphi.github.io/epiprocess/reference/as_epi_df.html</loc>
   </url>
   <url>
+    <loc>https://cmu-delphi.github.io/epiprocess/reference/as_tibble.epi_df.html</loc>
+  </url>
+  <url>
     <loc>https://cmu-delphi.github.io/epiprocess/reference/as_tsibble.epi_df.html</loc>
   </url>
   <url>
@@ -97,7 +100,16 @@
     <loc>https://cmu-delphi.github.io/epiprocess/reference/epix_slide.html</loc>
   </url>
   <url>
+    <loc>https://cmu-delphi.github.io/epiprocess/reference/epix_truncate_versions_after.html</loc>
+  </url>
+  <url>
+    <loc>https://cmu-delphi.github.io/epiprocess/reference/group_by.epi_archive.html</loc>
+  </url>
+  <url>
     <loc>https://cmu-delphi.github.io/epiprocess/reference/growth_rate.html</loc>
+  </url>
+  <url>
+    <loc>https://cmu-delphi.github.io/epiprocess/reference/guess_period.html</loc>
   </url>
   <url>
     <loc>https://cmu-delphi.github.io/epiprocess/reference/incidence_num_outlier_example.html</loc>

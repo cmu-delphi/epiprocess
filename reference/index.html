@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9999</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,6 +77,11 @@
         <dd>Convert to <code>epi_df</code> format</dd>
       </dl><dl><dt>
           
+          <code><a href="as_tibble.epi_df.html">as_tibble(<i>&lt;epi_df&gt;</i>)</a></code> 
+        </dt>
+        <dd>Convert to tibble</dd>
+      </dl><dl><dt>
+          
           <code><a href="as_tsibble.epi_df.html">as_tsibble(<i>&lt;epi_df&gt;</i>)</a></code> 
         </dt>
         <dd>Convert to tsibble format</dd>
@@ -97,7 +102,7 @@
         <dd>Creates an <code>epi_df</code> object</dd>
       </dl><dl><dt>
           
-          <code><a href="print.epi_df.html">print(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">summary(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">arrange(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">filter(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">group_by(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">group_modify(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">mutate(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">relocate(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">rename(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">slice(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">ungroup(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">unnest(<i>&lt;epi_df&gt;</i>)</a></code> 
+          <code><a href="print.epi_df.html">print(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">summary(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">group_by(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">ungroup(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">group_modify(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">unnest(<i>&lt;epi_df&gt;</i>)</a></code> 
         </dt>
         <dd>Base S3 methods for an <code>epi_df</code> object</dd>
       </dl></div><div class="section level2">
@@ -180,13 +185,18 @@
         <dd><code>epi_archive</code> object</dd>
       </dl><dl><dt>
           
+          <code><a href="group_by.epi_archive.html">group_by(<i>&lt;epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">groups(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">ungroup(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">is_grouped_epi_archive()</a></code> <code><a href="group_by.epi_archive.html">group_by_drop_default(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> 
+        </dt>
+        <dd><code>group_by</code> and related methods for <code>epi_archive</code>, <code>grouped_epi_archive</code></dd>
+      </dl><dl><dt>
+          
           <code><a href="is_epi_archive.html">is_epi_archive()</a></code> 
         </dt>
         <dd>Test for <code>epi_archive</code> format</dd>
       </dl></div><div class="section level2">
       <h2 id="-epix-functions"><code>epix_*()</code> functions<a class="anchor" aria-label="anchor" href="#-epix-functions"></a></h2>
       
-      <p class="section-desc"></p><p>Functions that act on an <code>epi_archive</code> object.</p>
+      <p class="section-desc"></p><p>Functions that act on an <code>epi_archive</code> and/or <code>grouped_epi_archive</code> object.</p>
 
       
     </div><div id="" class="section level2">
@@ -213,7 +223,17 @@
           
           <code><a href="epix_slide.html">epix_slide()</a></code> 
         </dt>
-        <dd>Slide a function over variables in an <code>epi_archive</code> object</dd>
+        <dd>Slide a function over variables in an <code>epi_archive</code> or <code>grouped_epi_archive</code></dd>
+      </dl><dl><dt>
+          
+          <code><a href="epix_truncate_versions_after.html">epix_truncate_versions_after()</a></code> 
+        </dt>
+        <dd>Filter an <code>epi_archive</code> object to keep only older versions</dd>
+      </dl><dl><dt>
+          
+          <code><a href="group_by.epi_archive.html">group_by(<i>&lt;epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">groups(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">ungroup(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">is_grouped_epi_archive()</a></code> <code><a href="group_by.epi_archive.html">group_by_drop_default(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> 
+        </dt>
+        <dd><code>group_by</code> and related methods for <code>epi_archive</code>, <code>grouped_epi_archive</code></dd>
       </dl></div><div class="section level2">
       <h2 id="example-data">Example data<a class="anchor" aria-label="anchor" href="#example-data"></a></h2>
       

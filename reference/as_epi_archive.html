@@ -14,7 +14,7 @@ examples."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/m
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9999</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,7 @@ examples.</p>
 <span>  <span class="va">other_keys</span>,</span>
 <span>  additional_metadata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  compactify <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  clobberable_versions_start <span class="op">=</span> <span class="fu"><a href="max_version_with_row_in.html">max_version_with_row_in</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>,</span>
+<span>  clobberable_versions_start <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  versions_end <span class="op">=</span> <span class="fu"><a href="max_version_with_row_in.html">max_version_with_row_in</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -137,24 +137,18 @@ e.g., when fetching, storing, or preparing the input data <code>x</code></p></dd
 same <code>class</code> and <code>typeof</code> as <code>x$version</code>, or an <code>NA</code> of any <code>class</code> and
 <code>typeof</code>: specifically, either (a) the earliest version that could be
 subject to "clobbering" (being overwritten with different update data, but
-using the same version tag as the old update data), or (b) <code>NA</code>, to
+using the <em>same</em> version tag as the old update data), or (b) <code>NA</code>, to
 indicate that no versions are clobberable. There are a variety of reasons
-why versions could be clobberable, such as upstream hotfixes to the latest
-version, or delays in data synchronization that were mistaken for versions
-with no updates; potential causes vary between different data pipelines.
-The default value is <code>max_version_with_row_in(x)</code>; this default assumes
-that (i) if a row in <code>x</code> (even one that <code>compactify</code> would consider
-redundant) is present with version <code>ver</code>, then all previous versions must
-be finalized and non-clobberable, although <code>ver</code> (and onward) might still
-be modified, (ii) even if we have "observed" empty updates for some
-versions beyond <code>max(x$version)</code> (as indicated by <code>versions_end</code>;
-see below), we can't assume <code>max(x$version)</code> has been finalized, because we
-might see a nonfinalized version + empty subsequent versions due to
-upstream database replication delays in combination with the upstream
-replicas using last-version-carried-forward to extrapolate that there were
-no updates, (iii) "redundant" update rows that would be removed by
-<code>compactify</code> are not redundant, and actually come from an explicit version
-release that indicates that preceding versions are finalized. If <code>nrow(x) == 0</code>, then this argument is mandatory.</p></dd>
+why versions could be clobberable under routine circumstances, such as (a)
+today's version of one/all of the columns being published after initially
+being filled with <code>NA</code> or LOCF, (b) a buggy version of today's data being
+published but then fixed and republished later in the day, or (c) data
+pipeline delays (e.g., publisher uploading, periodic scraping, database
+syncing, periodic fetching, etc.) that make events (a) or (b) reflected
+later in the day (or even on a different day) than expected; potential
+causes vary between different data pipelines. The default value is <code>NA</code>,
+which doesn't consider any versions to be clobberable. Another setting that
+may be appropriate for some pipelines is <code>max_version_with_row_in(x)</code>.</p></dd>
 
 
 <dt>versions_end</dt>
@@ -206,15 +200,14 @@ class, so for example:</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * max time value = 2020-01-05</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * first version with update = 2020-01-02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * last version with update = 2020-01-06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * clobberable versions start = 2020-01-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * No clobberable versions</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * versions end   = 2020-01-06</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data archive (stored in DT field): 10 x 4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Columns in DT: geo_value, time_value, version, value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Public methods: initialize, print, as_of, fill_through_version, merge, slide, clone</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Public R6 methods: initialize, print, as_of, fill_through_version, </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    truncate_versions_after, merge, group_by, slide, clone</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Ex. with an additional key for county</span></span></span>
 <span class="r-in"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span> <span class="op">(</span>geo_value  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="fl">2</span>, <span class="st">"ca"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="fl">2</span>, <span class="st">"fl"</span><span class="op">)</span><span class="op">)</span>,</span></span>

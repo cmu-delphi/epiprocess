@@ -16,7 +16,7 @@ interest."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/m
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9999</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -167,7 +167,9 @@ are documented in the wrapper function <code><a href="epix_slide.html">epix_slid
 <li><p><a href="#method-epi_archive-print"><code>epi_archive$print()</code></a></p></li>
 <li><p><a href="#method-epi_archive-as_of"><code>epi_archive$as_of()</code></a></p></li>
 <li><p><a href="#method-epi_archive-fill_through_version"><code>epi_archive$fill_through_version()</code></a></p></li>
+<li><p><a href="#method-epi_archive-truncate_versions_after"><code>epi_archive$truncate_versions_after()</code></a></p></li>
 <li><p><a href="#method-epi_archive-merge"><code>epi_archive$merge()</code></a></p></li>
+<li><p><a href="#method-epi_archive-group_by"><code>epi_archive$group_by()</code></a></p></li>
 <li><p><a href="#method-epi_archive-slide"><code>epi_archive$slide()</code></a></p></li>
 <li><p><a href="#method-epi_archive-clone"><code>epi_archive$clone()</code></a></p></li>
 </ul></div><p></p><hr><a id="method-epi_archive-new"></a><div class="section">
@@ -224,15 +226,17 @@ such as <code>as_of</code>? As these methods use the last version of each observ
 carried forward (LOCF) to interpolate between the version data provided,
 rows that don't change these LOCF results can potentially be omitted to
 save space while maintaining the same behavior (with the help of the
-<code>clobberable_versions_start</code> and <code>versions_end</code> fields in some
-edge cases). <code>TRUE</code> will remove these rows, <code>FALSE</code> will not, and missing
-or <code>NULL</code> will remove these rows and issue a warning. Generally, this can
-be set to <code>TRUE</code>, but if you directly inspect or edit the fields of the
-<code>epi_archive</code> such as its <code>DT</code>, you will have to determine whether
-<code>compactify=TRUE</code> will produce the desired results. If compactification
-here is removing a large proportion of the rows, this may indicate a
-potential for space, time, or bandwidth savings upstream the data pipeline,
-e.g., when fetching, storing, or preparing the input data <code>x</code></p></dd>
+<code>clobberable_versions_start</code> and <code>versions_end</code> fields in some edge cases).
+<code>TRUE</code> will remove these rows, <code>FALSE</code> will not, and missing or <code>NULL</code> will
+remove these rows and issue a warning. Generally, this can be set to
+<code>TRUE</code>, but if you directly inspect or edit the fields of the <code>epi_archive</code>
+such as its <code>DT</code>, or rely on redundant updates to achieve a certain
+behavior of the <code>ref_time_values</code> default in <code>epix_slide</code>, you will have to
+determine whether <code>compactify=TRUE</code> will produce the desired results. If
+compactification here is removing a large proportion of the rows, this may
+indicate a potential for space, time, or bandwidth savings upstream the
+data pipeline, e.g., by avoiding fetching, storing, or processing these
+rows of <code>x</code>.</p></dd>
 
 
 <dt><code>clobberable_versions_start</code></dt>
@@ -261,7 +265,7 @@ and examples of parameter names.</p>
 
 <div class="section">
 <h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">print</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">print</span><span class="op">(</span>class <span class="op">=</span> <span class="cn">TRUE</span>, methods <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 
@@ -270,7 +274,7 @@ and examples of parameter names.</p>
 <p>Generates a snapshot in <code>epi_df</code> format as of a given version.
 See the documentation for the wrapper function <code><a href="epix_as_of.html">epix_as_of()</a></code> for details.</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">as_of</span><span class="op">(</span><span class="va">max_version</span>, min_time_value <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">as_of</span><span class="op">(</span><span class="va">max_version</span>, min_time_value <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, all_versions <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 
@@ -297,6 +301,29 @@ version, which doesn't mutate the input archive but might alias its fields.</p><
 </dl><p></p></div>
 </div>
 
+</div><p></p><hr><a id="method-epi_archive-truncate_versions_after"></a><div class="section">
+<h3 id="method-truncate-versions-after-">Method <code>truncate_versions_after()</code><a class="anchor" aria-label="anchor" href="#method-truncate-versions-after-"></a></h3>
+<p>Filter to keep only older versions, mutating the archive by
+potentially reseating but not mutating some fields. <code>DT</code> is likely, but not
+guaranteed, to be copied. Returns the mutated archive
+<a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisibly</a>.</p><div class="section">
+<h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">truncate_versions_after</span><span class="op">(</span><span class="va">max_version</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div>
+
+<div class="section">
+<h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>max_version</code></dt>
+<dd><p>as in <code><a href="epix_truncate_versions_after.html">epix_truncate_versions_after</a></code></p></dd>
+
+
+<dt><code>x</code></dt>
+<dd><p>as in <code><a href="epix_truncate_versions_after.html">epix_truncate_versions_after</a></code></p></dd>
+
+
+</dl><p></p></div>
+</div>
+
 </div><p></p><hr><a id="method-epi_archive-merge"></a><div class="section">
 <h3 id="method-merge-">Method <code><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge()</a></code><a class="anchor" aria-label="anchor" href="#method-merge-"></a></h3>
 <p>Merges another <code>epi_archive</code> with the current one, mutating the
@@ -305,7 +332,7 @@ mutation of the old <code>DT</code>; returns the current archive
 <a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisibly</a>. See <code><a href="epix_merge.html">epix_merge</a></code> for a full description
 of the non-R6-method version, which does not mutate either archive, and
 does not alias either archive's <code>DT</code>.</p><div class="section">
-<h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
+<h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">merge</span><span class="op">(</span></span>
 <span>  <span class="va">y</span>,</span>
 <span>  sync <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"forbid"</span>, <span class="st">"na"</span>, <span class="st">"locf"</span>, <span class="st">"truncate"</span><span class="op">)</span>,</span>
@@ -314,7 +341,7 @@ does not alias either archive's <code>DT</code>.</p><div class="section">
 </div>
 
 <div class="section">
-<h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
+<h4 id="arguments-3">Arguments<a class="anchor" aria-label="anchor" href="#arguments-3"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>y</code></dt>
 <dd><p>as in <code><a href="epix_merge.html">epix_merge</a></code></p></dd>
 
@@ -330,23 +357,35 @@ does not alias either archive's <code>DT</code>.</p><div class="section">
 </dl><p></p></div>
 </div>
 
+</div><p></p><hr><a id="method-epi_archive-group_by"></a><div class="section">
+<h3 id="method-group-by-">Method <code><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by()</a></code><a class="anchor" aria-label="anchor" href="#method-group-by-"></a></h3>
+
+<div class="section">
+<h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">group_by</span><span class="op">(</span></span>
+<span>  <span class="va">...</span>,</span>
+<span>  .add <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  .drop <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by_drop_default.html" class="external-link">group_by_drop_default</a></span><span class="op">(</span><span class="va">self</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div>
+
+
 </div><p></p><hr><a id="method-epi_archive-slide"></a><div class="section">
 <h3 id="method-slide-">Method <code>slide()</code><a class="anchor" aria-label="anchor" href="#method-slide-"></a></h3>
 <p>Slides a given function over variables in an <code>epi_archive</code>
 object. See the documentation for the wrapper function <code><a href="epix_slide.html">epix_slide()</a></code> for
 details.</p><div class="section">
-<h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
+<h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">slide</span><span class="op">(</span></span>
 <span>  <span class="va">f</span>,</span>
 <span>  <span class="va">...</span>,</span>
-<span>  <span class="va">n</span>,</span>
-<span>  <span class="va">group_by</span>,</span>
+<span>  <span class="va">before</span>,</span>
 <span>  <span class="va">ref_time_values</span>,</span>
 <span>  <span class="va">time_step</span>,</span>
 <span>  new_col_name <span class="op">=</span> <span class="st">"slide_value"</span>,</span>
 <span>  as_list_col <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  names_sep <span class="op">=</span> <span class="st">"_"</span>,</span>
-<span>  all_rows <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  all_versions <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -354,12 +393,12 @@ details.</p><div class="section">
 </div><p></p><hr><a id="method-epi_archive-clone"></a><div class="section">
 <h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
 <p>The objects of this class are cloneable with this method.</p><div class="section">
-<h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
+<h4 id="usage-8">Usage<a class="anchor" aria-label="anchor" href="#usage-8"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span>deep <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-3">Arguments<a class="anchor" aria-label="anchor" href="#arguments-3"></a></h4>
+<h4 id="arguments-4">Arguments<a class="anchor" aria-label="anchor" href="#arguments-4"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
 
@@ -393,15 +432,14 @@ details.</p><div class="section">
 <span class="r-out co"><span class="r-pr">#&gt;</span> * max time value = 2020-01-05</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * first version with update = 2020-01-02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * last version with update = 2020-01-06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * clobberable versions start = 2020-01-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * No clobberable versions</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * versions end   = 2020-01-06</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data archive (stored in DT field): 10 x 4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Columns in DT: geo_value, time_value, version, value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Public methods: initialize, print, as_of, fill_through_version, merge, slide, clone</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Public R6 methods: initialize, print, as_of, fill_through_version, </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    truncate_versions_after, merge, group_by, slide, clone</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

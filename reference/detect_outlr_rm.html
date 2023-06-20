@@ -12,7 +12,7 @@ terms of multiples of the rolling interquartile range (IQR)."><!-- mathjax --><s
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9999</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -95,7 +95,11 @@ terms of multiples of the rolling interquartile range (IQR).</p>
 
 
 <dt>n</dt>
-<dd><p>Number of time steps to use in the rolling window. Default is 21.</p></dd>
+<dd><p>Number of time steps to use in the rolling window. Default is 21.
+This value is centrally aligned. When <code>n</code> is an odd number, the rolling
+window extends from <code>(n-1)/2</code> time steps before each design point to <code>(n-1)/2</code>
+time steps after. When <code>n</code> is even, then the rolling range extends from
+<code>n/2-1</code> time steps before to <code>n/2</code> time steps after.</p></dd>
 
 
 <dt>log_transform</dt>
@@ -149,7 +153,7 @@ Default is 0.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 730 x 6 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2022-05-21 22:17:14</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2022-05-21 22:17:14.962335</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 730 × 6</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># Groups:   geo_value [2]</span></span>
@@ -165,7 +169,7 @@ Default is 0.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> nj        2020-06-04   478  174.  790.         478</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> fl        2020-06-05  <span style="text-decoration: underline;">1</span>305  553  <span style="text-decoration: underline;">2</span>081         <span style="text-decoration: underline;">1</span>305</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> nj        2020-06-05   825  118.  838.         825</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 720 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 720 more rows</span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

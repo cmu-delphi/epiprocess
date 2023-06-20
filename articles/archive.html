@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9999</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -125,7 +125,7 @@ documentation page</a>.</p>
 <span>  time_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20211201</span><span class="op">)</span>,</span>
 <span>  geo_values <span class="op">=</span> <span class="st">"ca,fl,ny,tx"</span>,</span>
 <span>  issues <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20211201</span><span class="op">)</span></span>
-<span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/fetch_tbl.html" class="external-link">fetch_tbl</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/epidata_call.html" class="external-link">fetch</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="getting-data-into-epi_archive-format">Getting data into <code>epi_archive</code> format<a class="anchor" aria-label="anchor" href="#getting-data-into-epi_archive-format"></a>
 </h2>
@@ -171,15 +171,14 @@ compactify vignette.</p>
 <span><span class="co">## * max time value = 2021-11-30</span></span>
 <span><span class="co">## * first version with update = 2020-06-02</span></span>
 <span><span class="co">## * last version with update = 2021-12-01</span></span>
-<span><span class="co">## * clobberable versions start = 2021-12-01</span></span>
+<span><span class="co">## * No clobberable versions</span></span>
 <span><span class="co">## * versions end   = 2021-12-01</span></span>
 <span><span class="co">## ----------</span></span>
 <span><span class="co">## Data archive (stored in DT field): 119316 x 4</span></span>
-<span><span class="co">## ----------</span></span>
 <span><span class="co">## Columns in DT: geo_value, time_value, version, percent_cli</span></span>
 <span><span class="co">## ----------</span></span>
-<span><span class="co">## Public methods: initialize, print, as_of, fill_through_version, merge, slide, clone</span></span>
-<span><span class="co">## </span></span></code></pre>
+<span><span class="co">## Public R6 methods: initialize, print, as_of, fill_through_version, </span></span>
+<span><span class="co">##                    truncate_versions_after, merge, group_by, slide, clone</span></span></code></pre>
 <p>An <code>epi_archive</code> is special kind of class called an R6
 class. Its primary field is a data table <code>DT</code>, which is of
 class <code>data.table</code> (from the <code>data.table</code>
@@ -315,16 +314,12 @@ a later point in time, due to various reasons, such as synchronization
 issues.</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x_latest</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span><span class="op">(</span><span class="va">x</span>, max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning: Getting data as of some "clobberable" version that might be hotfixed,</span></span>
-<span><span class="co">## synced, or otherwise replaced later with different data using the same version</span></span>
-<span><span class="co">## tag.  Thus, the snapshot that we produce here might not be reproducible later.</span></span>
-<span><span class="co">## See `?epi_archive` for more info and `?epix_as_of` on how to muffle.</span></span></code></pre>
 <p>Below, we pull several snapshots from the archive, spaced one month
 apart. We overlay the corresponding signal curves as colored lines, with
 the version dates marked by dotted vertical lines, and draw the latest
 curve in black (from the latest snapshot <code>x_latest</code> that the
 archive can provide).</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">self_max</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span></span>
@@ -383,7 +378,7 @@ versions at all (in the same sort of situation) - if requested via
 not yet have access to (e.g., due to encountering issues while
 attempting to download the currently available version data for one of
 the archives, but not the other).</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/covidcast.html" class="external-link">covidcast</a></span><span class="op">(</span></span>
 <span>  data_source <span class="op">=</span> <span class="st">"jhu-csse"</span>,</span>
 <span>  signals <span class="op">=</span> <span class="st">"confirmed_7dav_incidence_prop"</span>,</span>
@@ -393,11 +388,11 @@ the archives, but not the other).</p>
 <span>  geo_values <span class="op">=</span> <span class="st">"ca,fl,ny,tx"</span>,</span>
 <span>  issues <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20211201</span><span class="op">)</span></span>
 <span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/fetch_tbl.html" class="external-link">fetch_tbl</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/epidata_call.html" class="external-link">fetch</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, version <span class="op">=</span> <span class="va">issue</span>, case_rate_7d_av <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/as_epi_archive.html">as_epi_archive</a></span><span class="op">(</span>compactify<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">x</span><span class="op">$</span><span class="fu">merge</span><span class="op">(</span><span class="va">y</span><span class="op">)</span></span>
+<span><span class="va">x</span><span class="op">$</span><span class="fu">merge</span><span class="op">(</span><span class="va">y</span>, sync<span class="op">=</span><span class="st">"locf"</span>, compactify<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## An `epi_archive` object, with metadata:</span></span>
@@ -408,15 +403,14 @@ the archives, but not the other).</p>
 <span><span class="co">## * max time value = 2021-11-30</span></span>
 <span><span class="co">## * first version with update = 2020-06-02</span></span>
 <span><span class="co">## * last version with update = 2021-12-01</span></span>
-<span><span class="co">## * clobberable versions start = 2021-12-01</span></span>
+<span><span class="co">## * No clobberable versions</span></span>
 <span><span class="co">## * versions end   = 2021-12-01</span></span>
 <span><span class="co">## ----------</span></span>
 <span><span class="co">## Data archive (stored in DT field): 129638 x 5</span></span>
-<span><span class="co">## ----------</span></span>
 <span><span class="co">## Columns in DT: geo_value, time_value, version, percent_cli and 1 more columns</span></span>
 <span><span class="co">## ----------</span></span>
-<span><span class="co">## Public methods: initialize, print, as_of, fill_through_version, merge, slide, clone</span></span>
-<span><span class="co">## </span></span></code></pre>
+<span><span class="co">## Public R6 methods: initialize, print, as_of, fill_through_version, </span></span>
+<span><span class="co">##                    truncate_versions_after, merge, group_by, slide, clone</span></span></code></pre>
 <pre><code><span><span class="co">##    geo_value time_value    version percent_cli case_rate_7d_av</span></span>
 <span><span class="co">## 1:        ca 2020-06-01 2020-06-02          NA        6.628329</span></span>
 <span><span class="co">## 2:        ca 2020-06-01 2020-06-06    2.140116        6.628329</span></span>
@@ -452,7 +446,7 @@ rates, as well as current and past values of the outpatient CLI signal
 from medical claims. We’ll extend the <code>prob_ar()</code> function
 from the slide vignette to accomodate exogenous variables in the
 autoregressive model, which is often referred to as an ARX model.</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prob_arx</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">lags</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">7</span>, <span class="fl">14</span><span class="op">)</span>, <span class="va">ahead</span> <span class="op">=</span> <span class="fl">7</span>, <span class="va">min_train_window</span> <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>                     <span class="va">lower_level</span> <span class="op">=</span> <span class="fl">0.05</span>, <span class="va">upper_level</span> <span class="op">=</span> <span class="fl">0.95</span>, <span class="va">symmetrize</span> <span class="op">=</span> <span class="cn">TRUE</span>, </span>
 <span>                     <span class="va">intercept</span> <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">nonneg</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span>   </span>
@@ -503,23 +497,21 @@ autoregressive model, which is often referred to as an ARX model.</p>
 <p>Next we slide this forecaster over the working
 <code>epi_archive</code> object, in order to forecast COVID-19 case
 rates 7 days into the future.</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fc_time_values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-08-01"</span><span class="op">)</span>, </span>
-<span>                      <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2021-12-01"</span><span class="op">)</span>, </span>
+<span>                      <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2021-11-30"</span><span class="op">)</span>, </span>
 <span>                      by <span class="op">=</span> <span class="st">"1 month"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span><span class="op">(</span><span class="va">x</span>, fc <span class="op">=</span> <span class="fu">prob_arx</span><span class="op">(</span>x <span class="op">=</span> <span class="va">percent_cli</span>, y <span class="op">=</span> <span class="va">case_rate_7d_av</span><span class="op">)</span>, n <span class="op">=</span> <span class="fl">120</span>, </span>
-<span>                ref_time_values <span class="op">=</span> <span class="va">fc_time_values</span>, group_by <span class="op">=</span> <span class="va">geo_value</span><span class="op">)</span></span>
+<span><span class="va">z</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span><span class="op">(</span>fc <span class="op">=</span> <span class="fu">prob_arx</span><span class="op">(</span>x <span class="op">=</span> <span class="va">percent_cli</span>, y <span class="op">=</span> <span class="va">case_rate_7d_av</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">119</span>,</span>
+<span>             ref_time_values <span class="op">=</span> <span class="va">fc_time_values</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">z</span>, <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## An `epi_df` object, 10 x 5 with metadata:</span></span>
-<span><span class="co">## * geo_type  = state</span></span>
-<span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2020-08-01</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 5</span></span></span>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 5</span></span></span>
 <span><span class="co">##    geo_value time_value fc_point fc_lower fc_upper</span></span>
-<span><span class="co">##  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 1</span> ca        2020-08-01    21.0     19.1     23.0 </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 2</span> fl        2020-08-01    44.5     38.9     50.0 </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 3</span> ny        2020-08-01     3.10     2.89     3.31</span></span>
@@ -546,27 +538,29 @@ even apart from the version-aware aspect. You can read the documentation
 for <code><a href="../reference/epix_slide.html">epix_slide()</a></code> for details.</p>
 <p>We finish off by comparing version-aware and -unaware forecasts at
 various points in time and forecast horizons. The former comes from
-applying <code><a href="../reference/epix_slide.html">epix_slide()</a></code> to the <code>epi_archive</code>
-object <code>x</code>, and the latter from applying
-<code><a href="../reference/epi_slide.html">epi_slide()</a></code> to the latest snapshot of the data
-<code>x_latest</code>.</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+using <code><a href="../reference/epix_slide.html">epix_slide()</a></code> with the <code>epi_archive</code> object
+<code>x</code>, and the latter from applying <code><a href="../reference/epi_slide.html">epi_slide()</a></code> to
+the latest snapshot of the data <code>x_latest</code>.</p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x_latest</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span><span class="op">(</span><span class="va">x</span>, max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Simple function to produce forecasts k weeks ahead</span></span>
 <span><span class="va">k_week_ahead</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">ahead</span> <span class="op">=</span> <span class="fl">7</span>, <span class="va">as_of</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="va">as_of</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>      <span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span><span class="op">(</span>fc <span class="op">=</span> <span class="fu">prob_arx</span><span class="op">(</span><span class="va">percent_cli</span>, <span class="va">case_rate_7d_av</span>, ahead <span class="op">=</span> <span class="va">ahead</span><span class="op">)</span>, n <span class="op">=</span> <span class="fl">120</span>,</span>
-<span>                 ref_time_values <span class="op">=</span> <span class="va">fc_time_values</span>, group_by <span class="op">=</span> <span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>target_date <span class="op">=</span> <span class="va">time_value</span> <span class="op">+</span> <span class="va">ahead</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> </span>
+<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>      <span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span><span class="op">(</span>fc <span class="op">=</span> <span class="fu">prob_arx</span><span class="op">(</span><span class="va">percent_cli</span>, <span class="va">case_rate_7d_av</span>, ahead <span class="op">=</span> <span class="va">ahead</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">119</span>,</span>
+<span>                 ref_time_values <span class="op">=</span> <span class="va">fc_time_values</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>target_date <span class="op">=</span> <span class="va">time_value</span> <span class="op">+</span> <span class="va">ahead</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="op">}</span></span>
 <span>  <span class="kw">else</span> <span class="op">{</span></span>
 <span>    <span class="va">x_latest</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>      <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span>fc <span class="op">=</span> <span class="fu">prob_arx</span><span class="op">(</span><span class="va">percent_cli</span>, <span class="va">case_rate_7d_av</span>, ahead <span class="op">=</span> <span class="va">ahead</span><span class="op">)</span>, n <span class="op">=</span> <span class="fl">120</span>,</span>
+<span>      <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span>fc <span class="op">=</span> <span class="fu">prob_arx</span><span class="op">(</span><span class="va">percent_cli</span>, <span class="va">case_rate_7d_av</span>, ahead <span class="op">=</span> <span class="va">ahead</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">119</span>,</span>
 <span>                ref_time_values <span class="op">=</span> <span class="va">fc_time_values</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>target_date <span class="op">=</span> <span class="va">time_value</span> <span class="op">+</span> <span class="va">ahead</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> </span>
+<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>target_date <span class="op">=</span> <span class="va">time_value</span> <span class="op">+</span> <span class="va">ahead</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="op">}</span></span>
 <span><span class="op">}</span></span>
 <span></span>

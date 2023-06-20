@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9999</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -113,7 +113,7 @@ average.</p>
 <span>  time_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20211231</span><span class="op">)</span>,</span>
 <span>  geo_values <span class="op">=</span> <span class="st">"ga,pa"</span></span>
 <span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/fetch_tbl.html" class="external-link">fetch_tbl</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/epidatr/man/epidata_call.html" class="external-link">fetch</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, cases <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
@@ -176,7 +176,7 @@ adjacent weeks. We can wrap <code><a href="../reference/growth_rate.html">growth
 <pre><code><span><span class="co">## An `epi_df` object, 10 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2022-05-23 20:17:07</span></span>
+<span><span class="co">## * as_of     = 2022-05-23 20:17:07.044666</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># Groups:   geo_value [1]</span></span></span>
