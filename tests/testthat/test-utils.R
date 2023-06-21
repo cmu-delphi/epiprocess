@@ -110,14 +110,14 @@ test_that("enlist works",{
 })
 
 test_that("assert_sufficient_f_args alerts if the provided f doesn't take enough args", {
-  f_xg = function(x, g) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
-  f_xg_dots = function(x, g, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
+  f_xgt = function(x, g, t) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
+  f_xgt_dots = function(x, g, t, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
 
   # If `regexp` is NA, asserts that there should be no errors/messages.
-  expect_error(assert_sufficient_f_args(f_xg), regexp = NA)
-  expect_warning(assert_sufficient_f_args(f_xg), regexp = NA)
-  expect_error(assert_sufficient_f_args(f_xg_dots), regexp = NA)
-  expect_warning(assert_sufficient_f_args(f_xg_dots), regexp = NA)
+  expect_error(assert_sufficient_f_args(f_xgt), regexp = NA)
+  expect_warning(assert_sufficient_f_args(f_xgt), regexp = NA)
+  expect_error(assert_sufficient_f_args(f_xgt_dots), regexp = NA)
+  expect_warning(assert_sufficient_f_args(f_xgt_dots), regexp = NA)
 
   f_x_dots = function(x, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
   f_dots = function(...) dplyr::tibble(value=c(5), count=c(2))
@@ -125,10 +125,10 @@ test_that("assert_sufficient_f_args alerts if the provided f doesn't take enough
   f = function() dplyr::tibble(value=c(5), count=c(2))
 
   expect_warning(assert_sufficient_f_args(f_x_dots),
-    regexp = ", the group key will be included",
+    regexp = ", the group key and reference time value will be included",
     class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots")
   expect_warning(assert_sufficient_f_args(f_dots),
-    regexp = ", the window data and group key will be included",
+    regexp = ", the window data, group key, and reference time value will be included",
     class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots")
   expect_error(assert_sufficient_f_args(f_x),
     class = "epiprocess__assert_sufficient_f_args__f_needs_min_args")
@@ -142,39 +142,39 @@ test_that("assert_sufficient_f_args alerts if the provided f doesn't take enough
   expect_error(assert_sufficient_f_args(f_xs, setting="b"),
     class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_plus_forwarded")
 
-  expect_error(assert_sufficient_f_args(f_xg, "b"),
+  expect_error(assert_sufficient_f_args(f_xgt, "b"),
     class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_plus_forwarded")
 })
 
 test_that("assert_sufficient_f_args alerts if the provided f has defaults for the required args", {
-  f_xg = function(x, g=1) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
-  f_xg_dots = function(x=1, g, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
+  f_xgt = function(x, g=1, t) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
+  f_xgt_dots = function(x=1, g, t, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
   f_x_dots = function(x=1, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
 
-  expect_error(assert_sufficient_f_args(f_xg),
+  expect_error(assert_sufficient_f_args(f_xgt),
     regexp = "pass the group key to `f`'s g argument,",
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
-  expect_error(assert_sufficient_f_args(f_xg_dots),
+  expect_error(assert_sufficient_f_args(f_xgt_dots),
     regexp = "pass the window data to `f`'s x argument,",
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
   expect_error(suppressWarnings(assert_sufficient_f_args(f_x_dots)),
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
 
-  f_xsg = function(x, setting="a", g) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
-  f_xsg_dots = function(x, setting="a", g, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
+  f_xsgt = function(x, setting="a", g, t) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
+  f_xsgt_dots = function(x, setting="a", g, t, ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
   f_xs_dots = function(x=1, setting="a", ...) dplyr::tibble(value=mean(x$binary), count=length(x$binary))
 
   # forwarding named dots should prevent some complaints:
-  expect_no_error(assert_sufficient_f_args(f_xsg, setting = "b"))
-  expect_no_error(assert_sufficient_f_args(f_xsg_dots, setting = "b"))
+  expect_no_error(assert_sufficient_f_args(f_xsgt, setting = "b"))
+  expect_no_error(assert_sufficient_f_args(f_xsgt_dots, setting = "b"))
   expect_error(suppressWarnings(assert_sufficient_f_args(f_xs_dots, setting = "b")),
     regexp = "window data to `f`'s x argument",
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
 
   # forwarding unnamed dots should not:
-  expect_error(assert_sufficient_f_args(f_xsg, "b"),
+  expect_error(assert_sufficient_f_args(f_xsgt, "b"),
                class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
-  expect_error(assert_sufficient_f_args(f_xsg_dots, "b"),
+  expect_error(assert_sufficient_f_args(f_xsgt_dots, "b"),
                class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
   expect_error(assert_sufficient_f_args(f_xs_dots, "b"),
                class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
