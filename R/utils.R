@@ -106,16 +106,14 @@ Warn = function(msg, ...) rlang::warn(break_str(msg, init = "Warning: "), ...)
 #'  `epi_archive` in `epi_slide` or `epix_slide`.
 #' @param ... Dots that will be forwarded to `f` from the dots of `epi_slide` or
 #'   `epix_slide`.
-#' @param n_mandatory_f_args Integer; specifies the number of arguments `f`
-#'  is required to take before any `...` arg. Defaults to 2.
 #'
 #' @importFrom rlang is_missing
 #' @importFrom purrr map_lgl
 #' @importFrom utils tail
 #'
 #' @noRd
-assert_sufficient_f_args <- function(f, ..., n_mandatory_f_args = 2L) {
-  mandatory_f_args_labels <- c("window data", "group key", "reference time value")[seq(n_mandatory_f_args)]
+assert_sufficient_f_args <- function(f, ...) {
+  mandatory_f_args_labels <- c("window data", "group key", "reference time value")
   n_mandatory_f_args <- length(mandatory_f_args_labels)
   args = formals(args(f))
   args_names = names(args)

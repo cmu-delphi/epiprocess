@@ -170,7 +170,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # Check that `f` takes enough args
   if (!missing(f) && is.function(f)) {
-    assert_sufficient_f_args(f, ..., n_mandatory_f_args = 3L)
+    assert_sufficient_f_args(f, ...)
   }
   
   if (missing(ref_time_values)) {
