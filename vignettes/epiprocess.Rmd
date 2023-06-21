@@ -300,10 +300,7 @@ x <- outbreaks::ebola_sierraleone_2014 %>%
       "Western"
   )) %>%
   group_by(geo_value = province, time_value = date_of_onset) %>%
-  summarise(
-    cases = sum(if_else(status == "confirmed", 1, 0)),
-    .groups = "drop"
-  ) %>%
+  summarise(cases = sum(status == "confirmed"), .groups = "drop") %>%
   complete(geo_value,
     time_value = full_seq(time_value, period = 1),
     fill = list(cases = 0)
