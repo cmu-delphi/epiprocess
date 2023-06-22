@@ -669,6 +669,13 @@ test_that("epix_slide computation via dots outputs the same result using col nam
       sum_binary = sum(.x$time_value))
 
   expect_identical(xx1, xx_ref)
+
+  xx2 <- xx %>%
+    group_by(.data$geo_value) %>%
+    epix_slide(before = 2,
+      sum_binary = sum(.data$time_value))
+
+  expect_identical(xx2, xx_ref)
 })
 
 test_that("`epix_slide` doesn't decay date output", {

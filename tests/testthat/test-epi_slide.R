@@ -509,6 +509,12 @@ test_that("epi_slide computation via dots outputs the same result using col name
       slide_value = max(.x$time_value))
 
   expect_identical(result1, expected_output)
+
+  result2 <- small_x %>%
+    epi_slide(before = 2,
+      slide_value = max(.data$time_value))
+
+  expect_identical(result2, expected_output)
 })
 
 test_that("`epi_slide` can access objects inside of helper functions", {
