@@ -386,7 +386,10 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
       .ref_time_value = min(.x$time_value) + before
       .x <- .x[.x$.real,]
       .x$.real <- NULL
-      data_mask = rlang::as_data_mask(.x)
+
+      data_env = rlang::as_environment(.x)
+      data_mask = rlang::new_data_mask(bottom = data_env, top = data_env)
+      data_mask$.data <- rlang::as_data_pronoun(data_mask)
       # We'll also install `.x` directly, not as an `rlang_data_pronoun`, so
       # that we can, e.g., use more dplyr and epiprocess operations.
       data_mask$.x = .x
