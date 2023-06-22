@@ -229,11 +229,6 @@ grouped_epi_archive =
               # implementation doesn't take advantage of it.
               ref_time_values = sort(ref_time_values)
             }
-            
-            # Check that `f` takes enough args
-            if (!missing(f) && is.function(f)) {
-              assert_sufficient_f_args(f, ...)
-            }
 
             # Validate and pre-process `before`:
             if (missing(before)) {
@@ -298,7 +293,7 @@ grouped_epi_archive =
             
             # If f is not missing, then just go ahead, slide by group
             if (!missing(f)) {
-              if (rlang::is_formula(f)) f = as_slide_computation(f)
+              f = as_slide_computation(f, ...)
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
                 # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
                 # `epi_archive` if `all_versions` is `TRUE`:

@@ -167,11 +167,6 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
-
-  # Check that `f` takes enough args
-  if (!missing(f) && is.function(f)) {
-    assert_sufficient_f_args(f, ...)
-  }
   
   if (missing(ref_time_values)) {
     ref_time_values = unique(x$time_value)
@@ -358,7 +353,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # If f is not missing, then just go ahead, slide by group
   if (!missing(f)) {
-    if (rlang::is_formula(f)) f = as_slide_computation(f)
+    f = as_slide_computation(f, ...)
     f_rtv_wrapper = function(x, g, ...) {
       ref_time_value = min(x$time_value) + before
       x <- x[x$.real,]

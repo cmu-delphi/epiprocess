@@ -239,9 +239,9 @@ as_slide_computation <- function(x,
                         ...,
                         arg = caller_arg(x),
                         call = caller_env()) {
-  check_dots_empty0(...)
-
   if (is_function(x)) {
+    # Check that `f` takes enough args
+    assert_sufficient_f_args(x, ...)
     return(x)
   }
 
