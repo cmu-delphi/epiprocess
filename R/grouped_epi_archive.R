@@ -293,7 +293,7 @@ grouped_epi_archive =
             
             # If f is not missing, then just go ahead, slide by group
             if (!missing(f)) {
-              f = as_slide_computation(f, ...)
+              f = as_slide_computation(f, calc_ref_time_value = FALSE, ...)
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
                 # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
                 # `epi_archive` if `all_versions` is `TRUE`:
@@ -365,21 +365,7 @@ grouped_epi_archive =
               }
               
               quo = quos[[1]]
-              f = function(.x, .group_key, .ref_time_value, quo, ...) {
-                # Convert to environment to standardize between tibble and R6
-                # based inputs. In both cases, we should get a simple
-                # environment with the empty environment as its parent.
-                data_env = rlang::as_environment(.x)
-                data_mask = rlang::new_data_mask(bottom = data_env, top = data_env)
-                data_mask$.data <- rlang::as_data_pronoun(data_mask)
-                # We'll also install `.x` directly, not as an
-                # `rlang_data_pronoun`, so that we can, e.g., use more dplyr and
-                # epiprocess operations.
-                data_mask$.x = .x
-                data_mask$.group_key = .group_key
-                data_mask$.ref_time_value = .ref_time_value
-                rlang::eval_tidy(quo, data_mask)
-              }
+              f = as_slide_computation(quo, calc_ref_time_value = FALSE, ...)
               new_col = sym(names(rlang::quos_auto_name(quos)))
 
               x = purrr::map_dfr(ref_time_values, function(ref_time_value) {

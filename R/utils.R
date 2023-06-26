@@ -215,6 +215,15 @@ assert_sufficient_f_args <- function(f, ...) {
 #'   scoping issues involved. Package developers should avoid
 #'   supplying functions by name and instead supply them by value.
 #'
+#' @param calc_ref_time_value Boolean indicating whether the computation
+#'  function should include a step to calculate `ref_time_value` based on the
+#'  contents of the group data `.x`. This is used in `epi_slide`. When this
+#'  flag is `FALSE`, as is the default, the resulting computation takes the
+#'  three standard arguments, group data, group key(s), and reference time
+#'  value, plus any extra arguments. When this flag is `TRUE`, the resulting
+#'  computation only takes two of the standard arguments, group data and
+#'  group key(s), plus any extra arguments. The `ref_time_value` argument is
+#'  unnecessary since its value is being calculated within the computation.
 #' @param env Environment in which to fetch the function in case `x`
 #'   is a string.
 #' @inheritParams rlang::args_dots_empty
@@ -235,45 +244,95 @@ assert_sufficient_f_args <- function(f, ...) {
 #'
 #' @noRd
 as_slide_computation <- function(x,
+                        calc_ref_time_value = FALSE,
+                        before,
                         env = global_env(),
                         ...,
                         arg = caller_arg(x),
                         call = caller_env()) {
-  if (is_function(x)) {
-    # Check that `f` takes enough args
-    assert_sufficient_f_args(x, ...)
-    return(x)
+  # A quosure is a type of formula, so be careful with `if` logic here.
+  if (is_quosure(x)) {
+    if (calc_ref_time_value) {
+      f_wrapper = function(.x, .group_key, quo, ...) {
+        .ref_time_value = min(.x$time_value) + before
+        .x <- .x[.x$.real,]
+        .x$.real <- NULL
+
+        data_env = rlang::as_environment(.x)
+        data_mask = rlang::new_data_mask(bottom = data_env, top = data_env)
+        data_mask$.data <- rlang::as_data_pronoun(data_mask)
+        # We'll also install `.x` directly, not as an `rlang_data_pronoun`, so
+        # that we can, e.g., use more dplyr and epiprocess operations.
+        data_mask$.x = .x
+        data_mask$.group_key = .group_key
+        data_mask$.ref_time_value = .ref_time_value
+        rlang::eval_tidy(quo, data_mask)
+      }
+      return(f_wrapper)
+    }
+
+    f_wrapper = function(.x, .group_key, .ref_time_value, quo, ...) {
+      # Convert to environment to standardize between tibble and R6
+      # based inputs. In both cases, we should get a simple
+      # environment with the empty environment as its parent.
+      data_env = rlang::as_environment(.x)
+      data_mask = rlang::new_data_mask(bottom = data_env, top = data_env)
+      data_mask$.data <- rlang::as_data_pronoun(data_mask)
+      # We'll also install `.x` directly, not as an
+      # `rlang_data_pronoun`, so that we can, e.g., use more dplyr and
+      # epiprocess operations.
+      data_mask$.x = .x
+      data_mask$.group_key = .group_key
+      data_mask$.ref_time_value = .ref_time_value
+      rlang::eval_tidy(quo, data_mask)
+    }
+    return(f_wrapper)
   }
 
-  if (is_formula(x)) {
-    if (length(x) > 2) {
-      Abort(sprintf("%s must be a one-sided formula", arg),
-              class = "epiprocess__as_slide_computation__formula_is_twosided",
-              epiprocess__x = x,
-              call = call)
+  if (is_function(x) || is_formula(x)) {
+    if (is_function(x)) {
+      # Check that `f` takes enough args
+      assert_sufficient_f_args(x, ...)
+      fn <- x
     }
 
-    env <- f_env(x)
-    if (!is_environment(env)) {
-      Abort("Formula must carry an environment.",
-              class = "epiprocess__as_slide_computation__formula_has_no_env",
-              epiprocess__x = x,
-              epiprocess__x_env = env,
-              arg = arg, call = call)
+    if (is_formula(x)) {
+      if (length(x) > 2) {
+        Abort(sprintf("%s must be a one-sided formula", arg),
+                class = "epiprocess__as_slide_computation__formula_is_twosided",
+                epiprocess__x = x,
+                call = call)
+      }
+
+      env <- f_env(x)
+      if (!is_environment(env)) {
+        Abort("Formula must carry an environment.",
+                class = "epiprocess__as_slide_computation__formula_has_no_env",
+                epiprocess__x = x,
+                epiprocess__x_env = env,
+                arg = arg, call = call)
+      }
+
+      args <- list(
+        ... = missing_arg(),
+        .x = quote(..1), .y = quote(..2), .z = quote(..3),
+        . = quote(..1), .group_key = quote(..2), .ref_time_value = quote(..3)
+      )
+      fn <- new_function(args, f_rhs(x), env)
+      fn <- structure(fn, class = c("epiprocess_slide_computation", "function"))
     }
 
-    args <- list(
-      ... = missing_arg(),
-      .x = quote(..1), .y = quote(..2), .z = quote(..3),
-      . = quote(..1), .group_key = quote(..2), .ref_time_value = quote(..3)
-    )
-    fn <- new_function(args, f_rhs(x), env)
-    fn <- structure(fn, class = c("epiprocess_slide_computation", "function"))
+    if (calc_ref_time_value) {
+      f_wrapper = function(.x, .group_key, ...) {
+        .ref_time_value = min(.x$time_value) + before
+        .x <- .x[.x$.real,]
+        .x$.real <- NULL
+        fn(.x, .group_key, .ref_time_value, ...)
+      }
+      return(f_wrapper)
+    }
+
     return(fn)
-  }
-
-  if (is_string(x)) {
-    return(get(x, envir = env, mode = "function"))
   }
 
   Abort(sprintf("Can't convert a %s to a slide computation", class(x)),

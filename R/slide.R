@@ -353,24 +353,18 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # If f is not missing, then just go ahead, slide by group
   if (!missing(f)) {
-    f = as_slide_computation(f, ...)
-    f_rtv_wrapper = function(x, g, ...) {
-      ref_time_value = min(x$time_value) + before
-      x <- x[x$.real,]
-      x$.real <- NULL
-      f(x, g, ref_time_value, ...)
-    }
-    x = x %>%  
+    f = as_slide_computation(f, calc_ref_time_value = TRUE, before = before, ...)
+    x = x %>%
       group_modify(slide_one_grp,
-                   f = f_rtv_wrapper, ...,
+                   f = f, ...,
                    starts = starts,
                    stops = stops,
-                   time_values = ref_time_values, 
+                   time_values = ref_time_values,
                    all_rows = all_rows,
                    new_col = new_col,
                    .keep = FALSE)
   }
-  
+
   # Else interpret ... as an expression for tidy evaluation
   else {
     quos = enquos(...)
@@ -382,29 +376,15 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     }
     
     quo = quos[[1]]
-    f = function(.x, .group_key, quo, ...) {
-      .ref_time_value = min(.x$time_value) + before
-      .x <- .x[.x$.real,]
-      .x$.real <- NULL
-
-      data_env = rlang::as_environment(.x)
-      data_mask = rlang::new_data_mask(bottom = data_env, top = data_env)
-      data_mask$.data <- rlang::as_data_pronoun(data_mask)
-      # We'll also install `.x` directly, not as an `rlang_data_pronoun`, so
-      # that we can, e.g., use more dplyr and epiprocess operations.
-      data_mask$.x = .x
-      data_mask$.group_key = .group_key
-      data_mask$.ref_time_value = .ref_time_value
-      rlang::eval_tidy(quo, data_mask)
-    }
     new_col = sym(names(rlang::quos_auto_name(quos)))
-    
-    x = x %>%  
+
+    f = as_slide_computation(quo, calc_ref_time_value = TRUE, before = before, ...)
+    x = x %>%
       group_modify(slide_one_grp,
                    f = f, quo = quo,
                    starts = starts,
                    stops = stops,
-                   time_values = ref_time_values, 
+                   time_values = ref_time_values,
                    all_rows = all_rows,
                    new_col = new_col,
                    .keep = FALSE)
