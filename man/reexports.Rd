@@ -23,7 +23,7 @@ below to see their documentation.
 \describe{
   \item{dplyr}{\code{\link[dplyr]{arrange}}, \code{\link[dplyr]{filter}}, \code{\link[dplyr]{group_by}}, \code{\link[dplyr:group_map]{group_modify}}, \code{\link[dplyr]{mutate}}, \code{\link[dplyr]{relocate}}, \code{\link[dplyr]{rename}}, \code{\link[dplyr]{slice}}, \code{\link[dplyr:group_by]{ungroup}}}
 
-  \item{tidyr}{\code{\link[tidyr]{unnest}}}
+  \item{tidyr}{\code{\link[tidyr:nest]{unnest}}}
 
   \item{tsibble}{\code{\link[tsibble:as-tsibble]{as_tsibble}}}
 }}

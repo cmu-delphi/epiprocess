@@ -80,9 +80,9 @@ contain the derivative values. Default is "slide_value"; note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
 
 \item{as_list_col}{Should the slide results be held in a list column, or be
-\link[tidyr:chop]{unchopped}/\link[tidyr:unnest]{unnested}? Default is \code{FALSE},
+\link[tidyr:chop]{unchopped}/\link[tidyr:nest]{unnested}? Default is \code{FALSE},
 in which case a list object returned by \code{f} would be unnested (using
-\code{\link[tidyr:unnest]{tidyr::unnest()}}), and, if the slide computations output data frames,
+\code{\link[tidyr:nest]{tidyr::unnest()}}), and, if the slide computations output data frames,
 the names of the resulting columns are given by prepending \code{new_col_name}
 to the names of the list elements.}
 
