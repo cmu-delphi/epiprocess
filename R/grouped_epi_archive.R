@@ -292,7 +292,7 @@ grouped_epi_archive =
                                     !!new_col := .env$comp_value))
             }
             
-            # Interpret ... as an expression for tidy evaluation
+            # If `f` is missing, interpret ... as an expression for tidy evaluation
             if (missing(f)) {
               quos = enquos(...)
               if (length(quos) == 0) {

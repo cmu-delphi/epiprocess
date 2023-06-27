@@ -351,7 +351,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     return(mutate(.data_group, !!new_col := slide_values))
   }
 
-  # Interpret ... as an expression for tidy evaluation
+  # If `f` is missing, interpret ... as an expression for tidy evaluation
   if (missing(f)) {
     quos = enquos(...)
     if (length(quos) == 0) {

@@ -215,6 +215,11 @@ assert_sufficient_f_args <- function(f, ...) {
 #'   scoping issues involved. Package developers should avoid
 #'   supplying functions by name and instead supply them by value.
 #'
+#' @param before how far `before` each `ref_time_value` the sliding window
+#'  should extend, as specified in the parent `epi[x]_slide` call Must be a
+#'  single, non-`NA`, non-negative,[integer-compatible]
+#'  [vctrs::vec_cast] number of time steps. Used only when
+#'  `calc_ref_time_value` is `TRUE`
 #' @param calc_ref_time_value Boolean indicating whether the computation
 #'  function should include a step to calculate `ref_time_value` based on the
 #'  contents of the group data `.x`. This is used in `epi_slide`. When this
@@ -244,8 +249,8 @@ assert_sufficient_f_args <- function(f, ...) {
 #'
 #' @noRd
 as_slide_computation <- function(x,
-                        calc_ref_time_value = FALSE,
                         before,
+                        calc_ref_time_value = FALSE,
                         env = global_env(),
                         ...,
                         arg = caller_arg(x),
@@ -261,8 +266,7 @@ as_slide_computation <- function(x,
         data_env = rlang::as_environment(.x)
         data_mask = rlang::new_data_mask(bottom = data_env, top = data_env)
         data_mask$.data <- rlang::as_data_pronoun(data_mask)
-        # We'll also install `.x` directly, not as an `rlang_data_pronoun`, so
-        # that we can, e.g., use more dplyr and epiprocess operations.
+        # Also install `.x` directly.
         data_mask$.x = .x
         data_mask$.group_key = .group_key
         data_mask$.ref_time_value = .ref_time_value
