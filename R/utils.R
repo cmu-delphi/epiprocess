@@ -253,7 +253,7 @@ as_slide_computation <- function(x,
   # A quosure is a type of formula, so be careful with `if` logic here.
   if (is_quosure(x)) {
     if (calc_ref_time_value) {
-      f_wrapper = function(.x, .group_key, quo, ...) {
+      f_wrapper = function(.x, .group_key, ...) {
         .ref_time_value = min(.x$time_value) + before
         .x <- .x[.x$.real,]
         .x$.real <- NULL
@@ -266,25 +266,24 @@ as_slide_computation <- function(x,
         data_mask$.x = .x
         data_mask$.group_key = .group_key
         data_mask$.ref_time_value = .ref_time_value
-        rlang::eval_tidy(quo, data_mask)
+        rlang::eval_tidy(x, data_mask)
       }
       return(f_wrapper)
     }
 
-    f_wrapper = function(.x, .group_key, .ref_time_value, quo, ...) {
+    f_wrapper = function(.x, .group_key, .ref_time_value, ...) {
       # Convert to environment to standardize between tibble and R6
       # based inputs. In both cases, we should get a simple
       # environment with the empty environment as its parent.
       data_env = rlang::as_environment(.x)
       data_mask = rlang::new_data_mask(bottom = data_env, top = data_env)
       data_mask$.data <- rlang::as_data_pronoun(data_mask)
-      # We'll also install `.x` directly, not as an
-      # `rlang_data_pronoun`, so that we can, e.g., use more dplyr and
-      # epiprocess operations.
+      # We'll also install `.x` directly, not as an `rlang_data_pronoun`, so
+      # that we can, e.g., use more dplyr and epiprocess operations.
       data_mask$.x = .x
       data_mask$.group_key = .group_key
       data_mask$.ref_time_value = .ref_time_value
-      rlang::eval_tidy(quo, data_mask)
+      rlang::eval_tidy(x, data_mask)
     }
     return(f_wrapper)
   }

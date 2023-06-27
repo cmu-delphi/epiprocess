@@ -123,7 +123,7 @@
 #'   
 #' @importFrom lubridate days weeks
 #' @importFrom dplyr bind_rows group_vars filter select
-#' @importFrom rlang .data .env !! enquo enquos sym env
+#' @importFrom rlang .data .env !! enquo enquos sym env missing_arg
 #' @export
 #' @examples 
 #' # slide a 7-day trailing average formula on cases
@@ -351,22 +351,8 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     return(mutate(.data_group, !!new_col := slide_values))
   }
 
-  # If f is not missing, then just go ahead, slide by group
-  if (!missing(f)) {
-    f = as_slide_computation(f, calc_ref_time_value = TRUE, before = before, ...)
-    x = x %>%
-      group_modify(slide_one_grp,
-                   f = f, ...,
-                   starts = starts,
-                   stops = stops,
-                   time_values = ref_time_values,
-                   all_rows = all_rows,
-                   new_col = new_col,
-                   .keep = FALSE)
-  }
-
-  # Else interpret ... as an expression for tidy evaluation
-  else {
+  # Interpret ... as an expression for tidy evaluation
+  if (missing(f)) {
     quos = enquos(...)
     if (length(quos) == 0) {
       Abort("If `f` is missing then a computation must be specified via `...`.")
@@ -375,20 +361,21 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
       Abort("If `f` is missing then only a single computation can be specified via `...`.")
     }
     
-    quo = quos[[1]]
+    f = quos[[1]]
     new_col = sym(names(rlang::quos_auto_name(quos)))
-
-    f = as_slide_computation(quo, calc_ref_time_value = TRUE, before = before, ...)
-    x = x %>%
-      group_modify(slide_one_grp,
-                   f = f, quo = quo,
-                   starts = starts,
-                   stops = stops,
-                   time_values = ref_time_values,
-                   all_rows = all_rows,
-                   new_col = new_col,
-                   .keep = FALSE)
+    ... = missing_arg()
   }
+
+  f = as_slide_computation(f, calc_ref_time_value = TRUE, before = before, ...)
+  x = x %>%
+    group_modify(slide_one_grp,
+                 f = f, ...,
+                 starts = starts,
+                 stops = stops,
+                 time_values = ref_time_values,
+                 all_rows = all_rows,
+                 new_col = new_col,
+                 .keep = FALSE)
   
   # Unnest if we need to, and return
   if (!as_list_col) {
