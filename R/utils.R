@@ -255,7 +255,8 @@ as_slide_computation <- function(x,
                         ...,
                         arg = caller_arg(x),
                         call = caller_env()) {
-  # A quosure is a type of formula, so be careful with `if` logic here.
+  # A quosure is a type of formula, so be careful with the order and contents
+  # of the conditional logic here.
   if (is_quosure(x)) {
     if (calc_ref_time_value) {
       f_wrapper = function(.x, .group_key, ...) {
