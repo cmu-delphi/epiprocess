@@ -235,7 +235,9 @@ assert_sufficient_f_args <- function(f, ...) {
 #'  computation only takes two of the standard arguments, group data and
 #'  group key(s), plus any extra arguments. The `ref_time_value` argument is
 #'  unnecessary since its value is being calculated within the computation.
-#' @inheritParams rlang::args_dots_empty
+#' @param ... Additional arguments to pass to the function or formula
+#'  specified via `x`. If `x` is a quosure, any arguments passed via `...`
+#'  will be ignored.
 #' @inheritParams rlang::args_error_context
 #' @examples
 #' f <- as_slide_computation(~ .x + 1)
@@ -247,9 +249,8 @@ assert_sufficient_f_args <- function(f, ...) {
 #' h <- as_slide_computation(~ .x - .group_key)
 #' h(6, 3)
 #'
-#' @importFrom rlang check_dots_empty0 is_function new_function f_env
-#'  is_environment missing_arg f_rhs is_string is_formula caller_arg
-#'  caller_env global_env
+#' @importFrom rlang is_function new_function f_env is_environment missing_arg
+#'  f_rhs is_formula caller_arg caller_env
 #'
 #' @noRd
 as_slide_computation <- function(x,
