@@ -222,10 +222,10 @@ assert_sufficient_f_args <- function(f, ...) {
 #'   depending on the `cal_ref_time_value` setting.
 #'
 #' @param before how far `before` each `ref_time_value` the sliding window
-#'  should extend, as specified in the parent `epi[x]_slide` call Must be a
+#'  should extend, as specified in the parent `epi[x]_slide` call. Must be a
 #'  single, non-`NA`, non-negative,[integer-compatible]
 #'  [vctrs::vec_cast] number of time steps. Used only when
-#'  `calc_ref_time_value` is `TRUE`
+#'  `calc_ref_time_value` is `TRUE`.
 #' @param calc_ref_time_value Boolean indicating whether the computation
 #'  function should include a step to calculate `ref_time_value` based on the
 #'  contents of the group data `.x`. This is used in `epi_slide`. When this
