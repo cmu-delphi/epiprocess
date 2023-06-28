@@ -202,9 +202,9 @@ assert_sufficient_f_args <- function(f, ...) {
 #'
 #'   If a **function** and `calc_ref_time_value` is `FALSE`, the function is
 #'   returned as-is, with no modifications. If `calc_ref_time_value` is
-#'   `TRUE`, a wrapper function is returned. The wrapper calculates
-#'   `ref_time_value` based on the input data and passes it to the original
-#'   function.
+#'   `TRUE`, a function wrapping the original function is returned. The
+#'   wrapper calculates `.ref_time_value` based on the input data and passes
+#'   it to the original function.
 #'
 #'   If a **formula**, e.g. `~ mean(.x$cases)`, it is converted to a function
 #'   with up to three arguments: `.x` (single argument), or `.x` and `.y`
@@ -218,10 +218,10 @@ assert_sufficient_f_args <- function(f, ...) {
 #'   If a **quosure**, in the case that `f` was not provided to the parent
 #'   `epi[x]_slide` call and the `...` is interpreted as an expression for
 #'   tidy evaluation, it is evaluated within a wrapper function. The wrapper
-#'   sets up object access via a data mask. `ref_time_value` is calculated
+#'   sets up object access via a data mask. `.ref_time_value` is calculated
 #'   depending on the `cal_ref_time_value` setting.
 #'
-#' @param before how far `before` each `ref_time_value` the sliding window
+#' @param before How far `before` each `ref_time_value` the sliding window
 #'  should extend, as specified in the parent `epi[x]_slide` call. Must be a
 #'  single, non-`NA`, non-negative,[integer-compatible]
 #'  [vctrs::vec_cast] number of time steps. Used only when
