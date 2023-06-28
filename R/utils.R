@@ -181,39 +181,45 @@ assert_sufficient_f_args <- function(f, ...) {
   }
 }
 
-#' Convert to function
+#' Generate a `epi[x]_slide` computation function from a function, formula, or quosure
 #'
-#' @description
-#' `as_slide_computation()` transforms a one-sided formula into a function.
-#' This powers the lambda syntax in packages like purrr.
+#' @description `as_slide_computation()` transforms a one-sided formula or a
+#'  quosure into a function; functions are returned as-is or with light
+#'  modifications to calculate `ref_time_value`.
 #'
 #' This code and documentation borrows heavily from [`rlang::as_function`]
 #' (https://github.com/r-lib/rlang/blob/c55f6027928d3104ed449e591e8a225fcaf55e13/R/fn.R#L343-L427).
 #'
 #' This code extends `rlang::as_function` to create functions that take three
-#' arguments. The arguments can be accessed via the idiomatic `.x`, `.y`,
-#' etc, positional references (`..1`, `..2`, etc), and also by `epi
-#' [x]_slide`-specific names.
+#' arguments. The arguments can be accessed via the idiomatic `.`, `.x`, and
+#' `.y`, extended to include `.z`; positional references `..1` and `..2`,
+#' extended to include `..3`; and also by `epi[x]_slide`-specific names
+#' `.group_key` and `.ref_time_value`.
 #'
 #' @source https://github.com/r-lib/rlang/blob/c55f6027928d3104ed449e591e8a225fcaf55e13/R/fn.R#L343-L427
 #'
-#' @param x A function or formula.
+#' @param x A function, one-sided formula, or quosure.
 #'
-#'   If a **function**, it is used as is.
+#'   If a **function** and `calc_ref_time_value` is `FALSE`, the function is
+#'   returned as-is, with no modifications. If `calc_ref_time_value` is
+#'   `TRUE`, a wrapper function is returned. The wrapper calculates
+#'   `ref_time_value` based on the input data and passes it to the original
+#'   function.
 #'
-#'   If a **formula**, e.g. `~ mean(.x$cases)`, it is converted to a function with up
-#'   to three arguments: `.x` (single argument), or `.x` and `.y`
+#'   If a **formula**, e.g. `~ mean(.x$cases)`, it is converted to a function
+#'   with up to three arguments: `.x` (single argument), or `.x` and `.y`
 #'   (two arguments), or `.x`, `.y`, and `.z` (three arguments). The `.`
 #'   placeholder can be used instead of `.x`, `.group_key` can be used in
 #'   place of `.y`, and `.ref_time_value` can be used in place of `.z`. This
 #'   allows you to create very compact anonymous functions (lambdas) with up
-#'   to three inputs. Functions created from formulas have a special class. Use
-#'   `rlang::is_lambda()` to test for it.
+#'   to three inputs. Functions created from formulas have a special class.
+#'   Use `rlang::is_lambda()` to test for it.
 #'
-#'   If a **string**, the function is looked up in `env`. Note that
-#'   this interface is strictly for user convenience because of the
-#'   scoping issues involved. Package developers should avoid
-#'   supplying functions by name and instead supply them by value.
+#'   If a **quosure**, in the case that `f` was not provided to the parent
+#'   `epi[x]_slide` call and the `...` is interpreted as an expression for
+#'   tidy evaluation, it is evaluated within a wrapper function. The wrapper
+#'   sets up object access via a data mask. `ref_time_value` is calculated
+#'   depending on the `cal_ref_time_value` setting.
 #'
 #' @param before how far `before` each `ref_time_value` the sliding window
 #'  should extend, as specified in the parent `epi[x]_slide` call Must be a
