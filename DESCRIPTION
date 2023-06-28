@@ -16,13 +16,15 @@ Authors@R: c(
     person("Dmitry", "Shemetov", role = "ctb"),
     person("Ryan", "Tibshirani", , "ryantibs@cmu.edu", role = c("aut", "cre")),
     person("Lionel", "Henry", role = "ctb", comment = "Author of included rlang fragments"),
-    person("Hadley", "Wickham", role = "ctb", comment = "Author of included rlang fragments")
+    person("Hadley", "Wickham", role = "ctb", comment = "Author of included rlang fragments"),
+    person("Posit", role = "cph", comment = "Copyright holder of included rlang fragments")
   )
 Description: This package introduces a common data structure for epidemiological
     data reported by location and time, provides another data structure to
     work with revisions to these data sets over time, and offers associated
     utilities to perform basic signal processing tasks.
 License: MIT + file LICENSE
+Copyright: file COPYRIGHTS
 Imports:
     cli,
     data.table,
