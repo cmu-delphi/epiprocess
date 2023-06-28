@@ -235,8 +235,6 @@ assert_sufficient_f_args <- function(f, ...) {
 #'  computation only takes two of the standard arguments, group data and
 #'  group key(s), plus any extra arguments. The `ref_time_value` argument is
 #'  unnecessary since its value is being calculated within the computation.
-#' @param env Environment in which to fetch the function in case `x`
-#'   is a string.
 #' @inheritParams rlang::args_dots_empty
 #' @inheritParams rlang::args_error_context
 #' @examples
@@ -257,7 +255,6 @@ assert_sufficient_f_args <- function(f, ...) {
 as_slide_computation <- function(x,
                         before,
                         calc_ref_time_value = FALSE,
-                        env = global_env(),
                         ...,
                         arg = caller_arg(x),
                         call = caller_env()) {
