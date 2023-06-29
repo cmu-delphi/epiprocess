@@ -307,7 +307,7 @@ grouped_epi_archive =
               ... = missing_arg()
             }
 
-            f = as_slide_computation(f, calc_ref_time_value = FALSE, ...)
+            f = as_slide_computation(f, ...)
             x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
               # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
               # `epi_archive` if `all_versions` is `TRUE`:

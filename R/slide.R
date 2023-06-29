@@ -366,10 +366,18 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     ... = missing_arg()
   }
 
-  f = as_slide_computation(f, calc_ref_time_value = TRUE, before = before, ...)
+  f = as_slide_computation(f, ...)
+  # Create a wrapper that calculates and passes `.ref_time_value` to the
+  # computation.
+  f_wrapper = function(.x, .group_key, ...) {
+    .ref_time_value = min(.x$time_value) + before
+    .x <- .x[.x$.real,]
+    .x$.real <- NULL
+    f(.x, .group_key, .ref_time_value, ...)
+  }
   x = x %>%
     group_modify(slide_one_grp,
-                 f = f, ...,
+                 f = f_wrapper, ...,
                  starts = starts,
                  stops = stops,
                  time_values = ref_time_values,

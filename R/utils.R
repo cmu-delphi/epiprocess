@@ -200,11 +200,8 @@ assert_sufficient_f_args <- function(f, ...) {
 #'
 #' @param .f A function, one-sided formula, or quosure.
 #'
-#'   If a **function** and `calc_ref_time_value` is `FALSE`, the function is
-#'   returned as-is, with no modifications. If `calc_ref_time_value` is
-#'   `TRUE`, a function wrapping the original function is returned. The
-#'   wrapper calculates `.ref_time_value` based on the input data and passes
-#'   it to the original function.
+#'   If a **function**, the function is returned as-is, with no
+#'   modifications.
 #'
 #'   If a **formula**, e.g. `~ mean(.x$cases)`, it is converted to a function
 #'   with up to three arguments: `.x` (single argument), or `.x` and `.y`
@@ -218,23 +215,8 @@ assert_sufficient_f_args <- function(f, ...) {
 #'   If a **quosure**, in the case that `f` was not provided to the parent
 #'   `epi[x]_slide` call and the `...` is interpreted as an expression for
 #'   tidy evaluation, it is evaluated within a wrapper function. The wrapper
-#'   sets up object access via a data mask. `.ref_time_value` is calculated
-#'   depending on the `cal_ref_time_value` setting.
+#'   sets up object access via a data mask.
 #'
-#' @param before How far `before` each `ref_time_value` the sliding window
-#'  should extend, as specified in the parent `epi[x]_slide` call. Must be a
-#'  single, non-`NA`, non-negative,[integer-compatible]
-#'  [vctrs::vec_cast] number of time steps. Used only when
-#'  `calc_ref_time_value` is `TRUE`.
-#' @param calc_ref_time_value Boolean indicating whether the computation
-#'  function should include a step to calculate `ref_time_value` based on the
-#'  contents of the group data `.x`. This is used in `epi_slide`. When this
-#'  flag is `FALSE`, as is the default, the resulting computation takes the
-#'  three standard arguments, group data, group key(s), and reference time
-#'  value, plus any extra arguments. When this flag is `TRUE`, the resulting
-#'  computation only takes two of the standard arguments, group data and
-#'  group key(s), plus any extra arguments. The `ref_time_value` argument is
-#'  unnecessary since its value is being calculated within the computation.
 #' @param ... Additional arguments to pass to the function or formula
 #'  specified via `x`. If `x` is a quosure, any arguments passed via `...`
 #'  will be ignored.
@@ -254,33 +236,13 @@ assert_sufficient_f_args <- function(f, ...) {
 #'
 #' @noRd
 as_slide_computation <- function(.f,
-                        before,
-                        calc_ref_time_value = FALSE,
                         ...,
                         arg = caller_arg(.f),
                         call = caller_env()) {
   # A quosure is a type of formula, so be careful with the order and contents
   # of the conditional logic here.
   if (is_quosure(.f)) {
-    if (calc_ref_time_value) {
-      f_wrapper = function(.x, .group_key, ...) {
-        .ref_time_value = min(.x$time_value) + before
-        .x <- .x[.x$.real,]
-        .x$.real <- NULL
-
-        data_env = rlang::as_environment(.x)
-        data_mask = rlang::new_data_mask(bottom = data_env, top = data_env)
-        data_mask$.data <- rlang::as_data_pronoun(data_mask)
-        # Also install `.x` directly.
-        data_mask$.x = .x
-        data_mask$.group_key = .group_key
-        data_mask$.ref_time_value = .ref_time_value
-        rlang::eval_tidy(.f, data_mask)
-      }
-      return(f_wrapper)
-    }
-
-    f_wrapper = function(.x, .group_key, .ref_time_value, ...) {
+    fn = function(.x, .group_key, .ref_time_value, ...) {
       # Convert to environment to standardize between tibble and R6
       # based inputs. In both cases, we should get a simple
       # environment with the empty environment as its parent.
@@ -294,51 +256,40 @@ as_slide_computation <- function(.f,
       data_mask$.ref_time_value = .ref_time_value
       rlang::eval_tidy(.f, data_mask)
     }
-    return(f_wrapper)
+
+    return(fn)
   }
 
-  if (is_function(.f) || is_formula(.f)) {
-    if (is_function(.f)) {
-      # Check that `f` takes enough args
-      assert_sufficient_f_args(.f, ...)
-      fn <- .f
+  if (is_function(.f)) {
+    # Check that `f` takes enough args
+    assert_sufficient_f_args(.f, ...)
+    return(.f)
+  }
+
+  if (is_formula(.f)) {
+    if (length(.f) > 2) {
+      Abort(sprintf("%s must be a one-sided formula", arg),
+              class = "epiprocess__as_slide_computation__formula_is_twosided",
+              epiprocess__f = .f,
+              call = call)
     }
 
-    if (is_formula(.f)) {
-      if (length(.f) > 2) {
-        Abort(sprintf("%s must be a one-sided formula", arg),
-                class = "epiprocess__as_slide_computation__formula_is_twosided",
-                epiprocess__f = .f,
-                call = call)
-      }
-
-      env <- f_env(.f)
-      if (!is_environment(env)) {
-        Abort("Formula must carry an environment.",
-                class = "epiprocess__as_slide_computation__formula_has_no_env",
-                epiprocess__f = .f,
-                epiprocess__f_env = env,
-                arg = arg, call = call)
-      }
-
-      args <- list(
-        ... = missing_arg(),
-        .x = quote(..1), .y = quote(..2), .z = quote(..3),
-        . = quote(..1), .group_key = quote(..2), .ref_time_value = quote(..3)
-      )
-      fn <- new_function(args, f_rhs(.f), env)
-      fn <- structure(fn, class = c("epiprocess_slide_computation", "function"))
+    env <- f_env(.f)
+    if (!is_environment(env)) {
+      Abort("Formula must carry an environment.",
+              class = "epiprocess__as_slide_computation__formula_has_no_env",
+              epiprocess__f = .f,
+              epiprocess__f_env = env,
+              arg = arg, call = call)
     }
 
-    if (calc_ref_time_value) {
-      f_wrapper = function(.x, .group_key, ...) {
-        .ref_time_value = min(.x$time_value) + before
-        .x <- .x[.x$.real,]
-        .x$.real <- NULL
-        fn(.x, .group_key, .ref_time_value, ...)
-      }
-      return(f_wrapper)
-    }
+    args <- list(
+      ... = missing_arg(),
+      .x = quote(..1), .y = quote(..2), .z = quote(..3),
+      . = quote(..1), .group_key = quote(..2), .ref_time_value = quote(..3)
+    )
+    fn <- new_function(args, f_rhs(.f), env)
+    fn <- structure(fn, class = c("epiprocess_slide_computation", "function"))
 
     return(fn)
   }
