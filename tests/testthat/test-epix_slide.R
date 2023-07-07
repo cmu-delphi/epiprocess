@@ -183,7 +183,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   # We only have one non-version, non-time key in the example archive. Add
   # another so that we don't accidentally pass tests due to accidentally
   # matching the default grouping.
-  ea = as_epi_archive(archive_cases_dv_subset$DT %>%
+  ea = as_epi_archive(archive_cases_dv_subset_dt$DT %>%
                         dplyr::mutate(modulus = seq_len(nrow(.)) %% 5L),
                       other_keys = "modulus",
                       compactify = TRUE)
@@ -688,7 +688,7 @@ test_that("`epix_slide` can access objects inside of helper functions", {
     archive_haystack %>% epix_slide(has_needle = time_value_needle %in% time_value, before = 365000L)
   }
   expect_error(
-    helper(archive_cases_dv_subset, as.Date("2021-01-01")),
+    helper(archive_cases_dv_subset_dt, as.Date("2021-01-01")),
     NA
   )
 

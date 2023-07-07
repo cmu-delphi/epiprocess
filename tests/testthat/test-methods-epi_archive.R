@@ -1,6 +1,6 @@
 library(dplyr)
 
-ea <- archive_cases_dv_subset$clone()
+ea <- archive_cases_dv_subset_dt$clone()
 
 ea2_data <- tibble::tribble(
     ~geo_value, ~time_value,      ~version, ~cases,

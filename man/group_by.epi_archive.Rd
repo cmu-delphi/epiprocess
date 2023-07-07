@@ -93,14 +93,14 @@ to \code{group_by_drop_default.default} (but there is a dedicated method for
 }
 \examples{
 
-grouped_archive = archive_cases_dv_subset \%>\% group_by(geo_value)
+grouped_archive = archive_cases_dv_subset_dt \%>\% group_by(geo_value)
 
 # `print` for metadata and method listing:
 grouped_archive \%>\% print()
 
 # The primary use for grouping is to perform a grouped `epix_slide`:
 
-archive_cases_dv_subset \%>\%
+archive_cases_dv_subset_dt \%>\%
   group_by(geo_value) \%>\%
   epix_slide(f = ~ mean(.x$case_rate_7d_av),
              before = 2,

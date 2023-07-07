@@ -32,7 +32,7 @@ from the second from the third value included.
 library(epiprocess)
 library(dplyr)
 
-dt <- archive_cases_dv_subset$DT
+dt <- archive_cases_dv_subset_dt$DT
 
 locf_omitted <- as_epi_archive(dt)
 locf_included <- as_epi_archive(dt,compactify = FALSE)

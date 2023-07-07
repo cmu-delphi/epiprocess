@@ -41,8 +41,8 @@ The data has 1,158 rows and 3 columns.
 
 
 ```{r, echo=FALSE}
-data(jhu_csse_daily_subset)
-x <- jhu_csse_daily_subset %>%
+data(cases_deaths_subset)
+x <- cases_deaths_subset %>%
   select(geo_value, time_value, cases = cases_7d_av) %>%
   filter(geo_value %in% c("pa","ga") & time_value >= "2020-06-01") %>%
   arrange(geo_value, time_value) %>%

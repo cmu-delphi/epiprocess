@@ -6,17 +6,17 @@ test_that("epi_cor throws an error for a non-epi_df for its first argument",{
 })
 
 test_that("epi_cor requires two var arguments, var1 and var2",{
-  expect_error(epi_cor(archive_cases_dv_subset$DT,var2=1))
-  expect_error(epi_cor(archive_cases_dv_subset$DT,var1=1))
+  expect_error(epi_cor(archive_cases_dv_subset_dt$DT,var2=1))
+  expect_error(epi_cor(archive_cases_dv_subset_dt$DT,var1=1))
 })
 
 test_that("epi_cor functions as intended",{
-  expect_equal(epi_cor(x = jhu_csse_daily_subset, 
+  expect_equal(epi_cor(x = cases_deaths_subset,
                var1 = case_rate_7d_av, 
                var2 = death_rate_7d_av, 
                cor_by = geo_value, 
                dt1 = -2)[1],
-               tibble(geo_value = unique(jhu_csse_daily_subset$geo_value))
+               tibble(geo_value = unique(cases_deaths_subset$geo_value))
   )
   
   edf <- as_epi_df(data.frame(geo_value=rep("asdf",20),

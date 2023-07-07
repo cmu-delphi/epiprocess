@@ -76,9 +76,9 @@ contain the derivative values. Default is "slide_value"; note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
 
 \item{as_list_col}{Should the slide results be held in a list column, or be
-\link[tidyr:chop]{unchopped}/\link[tidyr:unnest]{unnested}? Default is \code{FALSE},
+\link[tidyr:chop]{unchopped}/\link[tidyr:nest]{unnested}? Default is \code{FALSE},
 in which case a list object returned by \code{f} would be unnested (using
-\code{\link[tidyr:unnest]{tidyr::unnest()}}), and, if the slide computations output data frames,
+\code{\link[tidyr:nest]{tidyr::unnest()}}), and, if the slide computations output data frames,
 the names of the resulting columns are given by prepending \code{new_col_name}
 to the names of the list elements.}
 
@@ -154,35 +154,35 @@ through the \code{new_col_name} argument.
 }
 \examples{
 # slide a 7-day trailing average formula on cases
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), before = 6) \%>\% 
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av) 
 
 # slide a 7-day leading average
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), after = 6) \%>\%
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av)
 
 # slide a 7-day centre-aligned average
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), before = 3, after = 3) \%>\% 
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av) 
 
 # slide a 14-day centre-aligned average
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), before = 6, after = 7) \%>\% 
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av) 
 
 # nested new columns
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(a = data.frame(cases_2dav = mean(cases),
                            cases_2dma = mad(cases)),

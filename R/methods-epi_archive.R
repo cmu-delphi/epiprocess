@@ -35,15 +35,15 @@
 #' @export
 #' @examples
 #' # warning message of data latency shown
-#' epix_as_of(x = archive_cases_dv_subset,
-#'            max_version = max(archive_cases_dv_subset$DT$version))
+#' epix_as_of(x = archive_cases_dv_subset_dt,
+#'            max_version = max(archive_cases_dv_subset_dt$DT$version))
 #' 
 #' @export 
 #' @examples
 #'
-#' range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
+#' range(archive_cases_dv_subset_dt$DT$version) # 2020-06-02 -- 2021-12-01
 #'
-#' epix_as_of(x = archive_cases_dv_subset,
+#' epix_as_of(x = archive_cases_dv_subset_dt,
 #'            max_version = as.Date("2020-06-12"))
 #'
 #' # When fetching a snapshot as of the latest version with update data in the
@@ -55,8 +55,8 @@
 #' # subject to change, but previous versions should be finalized). We can
 #' # muffle such warnings with the following pattern:
 #' withCallingHandlers({
-#'   epix_as_of(x = archive_cases_dv_subset,
-#'              max_version = max(archive_cases_dv_subset$DT$version))
+#'   epix_as_of(x = archive_cases_dv_subset_dt,
+#'              max_version = max(archive_cases_dv_subset_dt$DT$version))
 #' }, epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning"))
 #' # Since R 4.0, there is a `globalCallingHandlers` function that can be used
 #' # to globally toggle these warnings.
@@ -147,10 +147,10 @@ epix_fill_through_version = function(x, fill_versions_end,
 #'
 #' @examples
 #' # create two example epi_archive datasets
-#' x <- archive_cases_dv_subset$DT %>%
+#' x <- archive_cases_dv_subset_dt$DT %>%
 #'   dplyr::select(geo_value,time_value,version,case_rate_7d_av) %>%
 #'   as_epi_archive(compactify=TRUE)
-#' y <- archive_cases_dv_subset$DT %>%
+#' y <- archive_cases_dv_subset_dt$DT %>%
 #'   dplyr::select(geo_value,time_value,version,percent_cli) %>%
 #'   as_epi_archive(compactify=TRUE)
 #' # merge results stored in a third object:
@@ -570,14 +570,14 @@ epix_detailed_restricted_mutate = function(.data, ...) {
 #'
 #' @examples
 #'
-#' grouped_archive = archive_cases_dv_subset %>% group_by(geo_value)
+#' grouped_archive = archive_cases_dv_subset_dt %>% group_by(geo_value)
 #'
 #' # `print` for metadata and method listing:
 #' grouped_archive %>% print()
 #'
 #' # The primary use for grouping is to perform a grouped `epix_slide`:
 #'
-#' archive_cases_dv_subset %>%
+#' archive_cases_dv_subset_dt %>%
 #'   group_by(geo_value) %>%
 #'   epix_slide(f = ~ mean(.x$case_rate_7d_av),
 #'              before = 2,
@@ -808,7 +808,7 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'
 #' # A simple (but not very useful) example (see the archive vignette for a more
 #' # realistic one):
-#' archive_cases_dv_subset %>%
+#' archive_cases_dv_subset_dt %>%
 #'   group_by(geo_value) %>%
 #'   epix_slide(f = ~ mean(.x$case_rate_7d_av),
 #'              before = 2,
@@ -830,7 +830,7 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'
 #' # Examining characteristics of the data passed to each computation with
 #' # `all_versions=FALSE`.
-#' archive_cases_dv_subset %>%
+#' archive_cases_dv_subset_dt %>%
 #'  group_by(geo_value) %>%
 #'  epix_slide(
 #'    function(x, gk, rtv) {
@@ -858,7 +858,7 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #' # to each computation. In this case, each computation should expect an
 #' # `epi_archive` containing the relevant version data:
 #'
-#' archive_cases_dv_subset %>%
+#' archive_cases_dv_subset_dt %>%
 #'   group_by(geo_value) %>%
 #'   epix_slide(
 #'     function(x, gk, rtv) {

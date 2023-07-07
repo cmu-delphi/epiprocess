@@ -244,7 +244,7 @@ new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
 #' 
 #' # Adding additional keys to an `epi_df` object
 #' 
-#' ex3_input <- jhu_csse_county_level_subset %>%
+#' ex3_input <- covid_incidence_county_subset %>%
 #'   dplyr::filter(time_value > "2021-12-01", state_name == "Massachusetts") %>%
 #'   dplyr::slice_tail(n = 6) 
 #' 

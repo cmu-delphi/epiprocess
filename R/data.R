@@ -116,4 +116,4 @@ delayed_assign_with_unregister_awareness = function(x, value,
 # binding may have been created with the same name as the package promise, and
 # this binding will stick around even when the package is reloaded, and will
 # need to be `rm`-d to easily access the refreshed package promise.
-delayed_assign_with_unregister_awareness("archive_cases_dv_subset", as_epi_archive(archive_cases_dv_subset_dt, compactify=FALSE))
+delayed_assign_with_unregister_awareness("archive_cases_dv_subset_dt", as_epi_archive(archive_cases_dv_subset_dt, compactify=FALSE))
