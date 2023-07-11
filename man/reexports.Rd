@@ -14,11 +14,6 @@
 \alias{rename}
 \alias{slice}
 \alias{unnest}
-\alias{cases_deaths_subset}
-\alias{archive_cases_dv_subset_dt}
-\alias{covid_incidence_county_subset}
-\alias{covid_incidence_outliers}
-\alias{jhu_confirmed_cumulative_num}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -28,9 +23,7 @@ below to see their documentation.
 \describe{
   \item{dplyr}{\code{\link[dplyr]{arrange}}, \code{\link[dplyr]{filter}}, \code{\link[dplyr]{group_by}}, \code{\link[dplyr:group_map]{group_modify}}, \code{\link[dplyr]{mutate}}, \code{\link[dplyr]{relocate}}, \code{\link[dplyr]{rename}}, \code{\link[dplyr]{slice}}, \code{\link[dplyr:group_by]{ungroup}}}
 
-  \item{epidatasets}{\code{\link[epidatasets]{archive_cases_dv_subset_dt}}, \code{\link[epidatasets]{cases_deaths_subset}}, \code{\link[epidatasets]{covid_incidence_county_subset}}, \code{\link[epidatasets]{covid_incidence_outliers}}, \code{\link[epidatasets]{jhu_confirmed_cumulative_num}}}
-
-  \item{tidyr}{\code{\link[tidyr:nest]{unnest}}}
+  \item{tidyr}{\code{\link[tidyr]{unnest}}}
 
   \item{tsibble}{\code{\link[tsibble:as-tsibble]{as_tsibble}}}
 }}

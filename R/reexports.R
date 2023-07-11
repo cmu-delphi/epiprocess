@@ -57,22 +57,87 @@ tidyr::unnest
 
 # epidatasets -------------------------------------------------------------------
 
-#' @importFrom epidatasets cases_deaths_subset
+#' @inherit epidatasets::cases_deaths_subset
+#' @examples
+#'  # Since this is a re-exported dataset, it cannot be loaded using
+#'  # the `data()` function. `data()` looks for a file of the same name
+#'  # in the `data/` directory, which doesn't exist in this package.
+#'  # works
+#'  epiprocess::cases_deaths_subset
+#'
+#'  # works
+#'  library(epiprocess)
+#'  cases_deaths_subset
+#'
+#'  # fails
+#'  data(cases_deaths_subset, package = "epiprocess")
 #' @export
-epidatasets::cases_deaths_subset
+cases_deaths_subset <- epidatasets::cases_deaths_subset
 
-#' @importFrom epidatasets archive_cases_dv_subset_dt
+#' @inherit epidatasets::archive_cases_dv_subset_dt
+#' @examples
+#'  # Since this is a re-exported dataset, it cannot be loaded using
+#'  # the `data()` function. `data()` looks for a file of the same name
+#'  # in the `data/` directory, which doesn't exist in this package.
+#'  # works
+#'  epiprocess::archive_cases_dv_subset_dt
+#'
+#'  # works
+#'  library(epiprocess)
+#'  archive_cases_dv_subset_dt
+#'
+#'  # fails
+#'  data(archive_cases_dv_subset_dt, package = "epiprocess")
 #' @export
-epidatasets::archive_cases_dv_subset_dt
+archive_cases_dv_subset_dt <- epidatasets::archive_cases_dv_subset_dt
 
-#' @importFrom epidatasets covid_incidence_county_subset
+#' @inherit epidatasets::covid_incidence_county_subset
+#' @examples
+#'  # Since this is a re-exported dataset, it cannot be loaded using
+#'  # the `data()` function. `data()` looks for a file of the same name
+#'  # in the `data/` directory, which doesn't exist in this package.
+#'  # works
+#'  epiprocess::covid_incidence_county_subset
+#'
+#'  # works
+#'  library(epiprocess)
+#'  covid_incidence_county_subset
+#'
+#'  # fails
+#'  data(covid_incidence_county_subset, package = "epiprocess")
 #' @export
-epidatasets::covid_incidence_county_subset
+covid_incidence_county_subset <- epidatasets::covid_incidence_county_subset
 
-#' @importFrom epidatasets covid_incidence_outliers
+#' @inherit epidatasets::covid_incidence_outliers
+#' @examples
+#'  # Since this is a re-exported dataset, it cannot be loaded using
+#'  # the `data()` function. `data()` looks for a file of the same name
+#'  # in the `data/` directory, which doesn't exist in this package.
+#'  # works
+#'  epiprocess::covid_incidence_outliers
+#'
+#'  # works
+#'  library(epiprocess)
+#'  covid_incidence_outliers
+#'
+#'  # fails
+#'  data(covid_incidence_outliers, package = "epiprocess")
 #' @export
-epidatasets::covid_incidence_outliers
+covid_incidence_outliers <- epidatasets::covid_incidence_outliers
 
-#' @importFrom epidatasets jhu_confirmed_cumulative_num
+#' @inherit epidatasets::jhu_confirmed_cumulative_num
+#' @examples
+#'  # Since this is a re-exported dataset, it cannot be loaded using
+#'  # the `data()` function. `data()` looks for a file of the same name
+#'  # in the `data/` directory, which doesn't exist in this package.
+#'  # works
+#'  epiprocess::jhu_confirmed_cumulative_num
+#'
+#'  # works
+#'  library(epiprocess)
+#'  jhu_confirmed_cumulative_num
+#'
+#'  # fails
+#'  data(jhu_confirmed_cumulative_num, package = "epiprocess")
 #' @export
-epidatasets::jhu_confirmed_cumulative_num
+jhu_confirmed_cumulative_num <- epidatasets::jhu_confirmed_cumulative_num
