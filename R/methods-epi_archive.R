@@ -411,6 +411,8 @@ epix_merge = function(x, y,
 #' epix_rbind(first_merge, second_merge)
 #'
 #' @importFrom data.table key set setkeyv
+#' @importFrom purrr map map_vec reduce
+#' @importFrom dplyr setdiff union intersect group_by ungroup distinct arrange fill
 #' @export
 epix_rbind <- function(..., sync = c("forbid", "na", "locf"), force_distinct = FALSE, compactify = TRUE) {
   # things not currently supported that may be warranted:
@@ -421,7 +423,7 @@ epix_rbind <- function(..., sync = c("forbid", "na", "locf"), force_distinct = F
   if (any(map_vec(archives, function(x) {
     !inherits(x, "epi_archive")
   }))) {
-    abort("all must be of class `epi_archive`.")
+    Abort("all must be of class `epi_archive`.")
   }
 
   sync <- rlang::arg_match(sync)
@@ -430,14 +432,14 @@ epix_rbind <- function(..., sync = c("forbid", "na", "locf"), force_distinct = F
   if (any(map_vec(archives, function(x) {
     !identical(x$geo_type, geo_type)
   }))) {
-    abort("all must have the same `$geo_type`")
+    Abort("all must have the same `$geo_type`")
   }
 
   time_type <- archives[[1]]$time_type
   if (any(map_vec(archives, function(x) {
     !identical(x$time_type, time_type)
   }))) {
-    abort("all must have the same `$time_type`")
+    Abort("all must have the same `$time_type`")
   }
 
   for (x in archives) {
@@ -471,7 +473,7 @@ epix_rbind <- function(..., sync = c("forbid", "na", "locf"), force_distinct = F
   new_key <- keys[[1]]
   for (ii in seq_along(DTs)) {
     if (!identical(keys[[ii]], key(archives[[ii]]$DT))) {
-      warn("
+      Warn("
       `epiprocess` internal warning (please report): pre-processing for
       epix_merge unexpectedly resulted in an intermediate data table (or
       tables) with a different key than the corresponding input archive.
@@ -487,7 +489,7 @@ epix_rbind <- function(..., sync = c("forbid", "na", "locf"), force_distinct = F
       # sensible default treatment of count-type and rate-type value columns would
       # differ.
       if (!identical(sort(key(DTs[[ii]])), sort(key(DTs[[1]])))) {
-        abort("
+        Abort("
             The archives must have the same set of key column names; if the
             key columns represent the same things, just with different
             names, please retry after manually renaming to match; if they
@@ -500,7 +502,7 @@ epix_rbind <- function(..., sync = c("forbid", "na", "locf"), force_distinct = F
     }
   }
 
-  non_by_colnames <- reduce(map(DTs, function(DT) setdiff(names(DT), new_key)), dplyr::union)
+  non_by_colnames <- reduce(map(DTs, function(DT) setdiff(names(DT), new_key)), union)
   # find the shared (geo_values, time_values) which requires:
   # first define a function to get the unique pairs in a given archive
   unique_geo_times <- function(x) {
@@ -516,7 +518,7 @@ epix_rbind <- function(..., sync = c("forbid", "na", "locf"), force_distinct = F
     )
   }
 
-  shared_geo_time_values <- reduce(map(DTs, unique_geo_times), dplyr::intersect)
+  shared_geo_time_values <- reduce(map(DTs, unique_geo_times), intersect)
   # there are no difference between the methods if there's no overlap
   if (nrow(shared_geo_time_values) == 0) {
     DT <- reduce(DTs, rbind)
