@@ -389,11 +389,11 @@ epix_merge = function(x, y,
 #' # create two example epi_archive datasets where using rbind alone would
 #' # work incorrectly
 #' x1 <- archive_cases_dv_subset$DT %>%
-#'   dplyr::select(geo_value, time_value, version, percent_cli) %>%
+#'   dplyr::select(geo_value,time_value,version,case_rate_7d_av) %>%
 #'   filter(time_value < "2021-06-01") %>%
 #'   as_epi_archive(compactify = TRUE)
 #' x2 <- archive_cases_dv_subset$DT %>%
-#'   dplyr::select(geo_value, time_value, version, percent_cli) %>%
+#'   dplyr::select(geo_value,time_value,version,case_rate_7d_av) %>%
 #'   filter(time_value >= "2021-06-01") %>%
 #'   as_epi_archive(compactify = TRUE)
 #' y1 <- archive_cases_dv_subset$DT %>%
