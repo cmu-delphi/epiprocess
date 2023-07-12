@@ -16,18 +16,12 @@ epix_merge(
 
 \item{sync}{Optional; \code{"forbid"}, \code{"na"}, \code{"locf"}, or \code{"truncate"}; in the
 case that \code{x$versions_end} doesn't match \code{y$versions_end}, what do we do?:
-\code{"forbid"}: emit an error; "na": use \code{max(x$versions_end, y$versions_end)}
-as the result's \code{versions_end}, but ensure that, if we request a snapshot
-as of a version after \code{min(x$versions_end, y$versions_end)}, the
-observation columns from the less up-to-date archive will be all NAs (i.e.,
-imagine there was an update immediately after its \code{versions_end} which
-revised all observations to be \code{NA}); \code{"locf"}: use \code{max(x$versions_end, y$versions_end)} as the result's \code{versions_end}, allowing the last version
-of each observation to be carried forward to extrapolate unavailable
-versions for the less up-to-date input archive (i.e., imagining that in the
-less up-to-date archive's data set remained unchanged between its actual
-\code{versions_end} and the other archive's \code{versions_end}); or \code{"truncate"}:
-use \code{min(x$versions_end, y$versions_end)} as the result's \code{versions_end},
-and discard any rows containing update rows for later versions.}
+\itemize{
+\item \code{"forbid"}: emit an error;
+\item "na": use \code{max(x$versions_end, y$versions_end)} as the result's \code{versions_end}, but ensure that, if we request a snapshot as of a version after \code{min(x$versions_end, y$versions_end)}, the observation columns from the less up-to-date archive will be all NAs (i.e., imagine there was an update immediately after its \code{versions_end} which revised all observations to be \code{NA});
+\item \code{"locf"}: use \code{max(x$versions_end, y$versions_end)} as the result's \code{versions_end}, allowing the last version of each observation to be carried forward to extrapolate unavailable versions for the less up-to-date input archive (i.e., imagining that in the less up-to-date archive's data set remained unchanged between its actual \code{versions_end} and the other archive's \code{versions_end}); or
+\item \code{"truncate"}: use \code{min(x$versions_end, y$versions_end)} as the result's \code{versions_end}, and discard any rows containing update rows for later versions.
+}}
 
 \item{compactify}{Optional; \code{TRUE}, \code{FALSE}, or \code{NULL}; should the result be
 compactified? See \code{\link{as_epi_archive}} for an explanation of what this means.

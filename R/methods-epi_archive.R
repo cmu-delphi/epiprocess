@@ -368,15 +368,14 @@ epix_merge = function(x, y,
 #' @param ... list of `epi_archive` objects to append in order.
 #' @param sync Optional; `"forbid"`, `"na"`, or `"locf"`; in the case that later
 #'   versions contain `NA`'s, what do we do?
-#'   \itemize{
-#'   \item `"forbid"`: emit an error if there are any shared time values between
+#'   - `"forbid"`: emit an error if there are any shared time values between
 #'                     different archives;
-#'   \item `"na"`: All `NA` values are treated as actual data, and thus are
+#'   - `"na"`: All `NA` values are treated as actual data, and thus are
 #'                 maintained (up to archival compression).
-#'   \item `"locf"`: for every shared time value, use earlier versions of
+#'   - `"locf"`: for every shared time value, use earlier versions of
 #'                   earlier archives to overwrite any `NA`'s found in later
 #'                   versions of later archives.
-#'   }
+#'
 #' @param compactify Optional; `TRUE`, `FALSE`, or `NULL`; should the result be
 #'   compactified? See [`as_epi_archive`] for an explanation of what this means.
 #'   Default here is `TRUE`.
@@ -501,7 +500,7 @@ epix_rbind <- function(..., sync = c("forbid", "na", "locf"), force_distinct = F
     }
   }
 
-  non_by_colnames <- reduce(map(DTs, function(DT) setdiff(names(DT), new_key)), union)
+  non_by_colnames <- reduce(map(DTs, function(DT) setdiff(names(DT), new_key)), dplyr::union)
   # find the shared (geo_values, time_values) which requires:
   # first define a function to get the unique pairs in a given archive
   unique_geo_times <- function(x) {
@@ -510,14 +509,14 @@ epix_rbind <- function(..., sync = c("forbid", "na", "locf"), force_distinct = F
       distinct()
   }
 
-  other_keys <- setdiff(new_key, c("geo_value", "time_value", "version"))
+  other_keys <- dplyr::setdiff(new_key, c("geo_value", "time_value", "version"))
   if (length(other_keys) != 0) {
-    abort("epix_rbind does not currently support additional keys",
+    Abort("epix_rbind does not currently support additional keys",
       class = "epiprocess__epxi_rbind_unsupported"
     )
   }
 
-  shared_geo_time_values <- reduce(map(DTs, unique_geo_times), intersect)
+  shared_geo_time_values <- reduce(map(DTs, unique_geo_times), dplyr::intersect)
   # there are no difference between the methods if there's no overlap
   if (nrow(shared_geo_time_values) == 0) {
     DT <- reduce(DTs, rbind)
@@ -525,7 +524,7 @@ epix_rbind <- function(..., sync = c("forbid", "na", "locf"), force_distinct = F
       DT <- distinct(possibly_redundant, geo_value, time_value, version, .keep_all = TRUE)
     }
   } else if (sync == "forbid") {
-    abort(paste(
+    Abort(paste(
       "There are shared time values with different versions;",
       "either deal with those separately, or specify how to",
       "handle `NA` values (either `NA` or `locf`)."
@@ -533,10 +532,10 @@ epix_rbind <- function(..., sync = c("forbid", "na", "locf"), force_distinct = F
   } else if (sync == "na") {
     # doesn't really care if there are repeated time_values, simply:
     # binds the results together
-    possibly_redundant <- reduce(DTs, rbind)
+    DT <- reduce(DTs, rbind)
     # remove any redundant keys
     if (force_distinct) {
-      DT <- distinct(possibly_redundant, geo_value, time_value, version, .keep_all = TRUE)
+      DT <- distinct(DT, geo_value, time_value, version, .keep_all = TRUE)
     }
     # and return an archive (which sorts)
   } else if (sync == "locf") {
@@ -677,7 +676,7 @@ epix_detailed_restricted_mutate = function(.data, ...) {
         !rlang::is_reference(in_tbl[[key_colname]], col_modify_cols[[key_colname]])
     }))
   if (length(invalidated_key_col_is) != 0L) {
-    rlang::abort(paste_lines(c(
+    rlang::Abort(paste_lines(c(
       "Key columns must not be replaced or removed.",
       wrap_varnames(key(.data$DT)[invalidated_key_col_is],
                     initial="Flagged key cols: ")
