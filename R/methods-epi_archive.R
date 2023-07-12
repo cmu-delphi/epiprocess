@@ -412,7 +412,8 @@ epix_merge = function(x, y,
 #'
 #' @importFrom data.table key set setkeyv
 #' @importFrom purrr map map_vec reduce
-#' @importFrom dplyr setdiff union intersect group_by ungroup distinct arrange fill
+#' @importFrom dplyr setdiff union intersect group_by ungroup distinct arrange
+#' @importFrom tidyr fill
 #' @export
 epix_rbind <- function(..., sync = c("forbid", "na", "locf"), force_distinct = FALSE, compactify = TRUE) {
   # things not currently supported that may be warranted:
