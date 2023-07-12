@@ -3,7 +3,7 @@
 \docType{data}
 \name{cases_deaths_subset}
 \alias{cases_deaths_subset}
-\title{Subset of JHU daily state cases and deaths}
+\title{Subset of JHU daily state COVID-19 cases and deaths from 4 states}
 \format{
 An object of class \code{epi_df} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 4026 rows and 6 columns.
 }
@@ -26,7 +26,7 @@ calculating moving averages of the preceding 7 days, so the signal for
 June 7 is the average of the underlying data for June 1 through 7,
 inclusive.
 \item Furthermore, the data has been limited to a very small number of rows,
-the signal names slightly altered, and formatted into a tibble.
+formatted into a tibble, and the signal names slightly altered.
 }
 }
 \usage{
@@ -39,6 +39,25 @@ Systems Science and Engineering at Johns Hopkins University.
 This example data ranges from Mar 1, 2020 to Dec 31, 2021, and is limited to
 California, Florida, Texas, New York, Georgia, and Pennsylvania.
 }
+\section{Data dictionary}{
+
+
+A tibble with columns:
+\describe{
+\item{geo_value}{the geographic value associated with each row
+of measurements.}
+\item{time_value}{the time value associated with each row of measurements.}
+\item{case_rate_7d_av}{7-day average signal of number of new
+confirmed COVID-19 cases per 100,000 population, daily}
+\item{death_rate_7d_av}{7-day average signal of number of new confirmed
+deaths due to COVID-19 per 100,000 population, daily}
+\item{cases}{Number of new confirmed COVID-19 cases, daily}
+\item{cases_7d_av}{7-day average signal of number of new confirmed
+COVID-19 cases, daily}
+}
+
+}
+
 \examples{
  # Since this is a re-exported dataset, it cannot be loaded using
  # the `data()` function. `data()` looks for a file of the same name
