@@ -375,7 +375,8 @@ epix_merge = function(x, y,
 #'   - `"locf"`: for every shared time value, use earlier versions of
 #'                   earlier archives to overwrite any `NA`'s found in later
 #'                   versions of later archives.
-#'
+#' @param force_distinct Optional; `TRUE`, `FALSE`, or `NULL`; should the keys
+#'   be forced to be distinct?
 #' @param compactify Optional; `TRUE`, `FALSE`, or `NULL`; should the result be
 #'   compactified? See [`as_epi_archive`] for an explanation of what this means.
 #'   Default here is `TRUE`.
@@ -679,7 +680,7 @@ epix_detailed_restricted_mutate = function(.data, ...) {
         !rlang::is_reference(in_tbl[[key_colname]], col_modify_cols[[key_colname]])
     }))
   if (length(invalidated_key_col_is) != 0L) {
-    rlang::Abort(paste_lines(c(
+    rlang::abort(paste_lines(c(
       "Key columns must not be replaced or removed.",
       wrap_varnames(key(.data$DT)[invalidated_key_col_is],
                     initial="Flagged key cols: ")

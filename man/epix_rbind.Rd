@@ -26,6 +26,9 @@ earlier archives to overwrite any \code{NA}'s found in later
 versions of later archives.
 }}
 
+\item{force_distinct}{Optional; \code{TRUE}, \code{FALSE}, or \code{NULL}; should the keys
+be forced to be distinct?}
+
 \item{compactify}{Optional; \code{TRUE}, \code{FALSE}, or \code{NULL}; should the result be
 compactified? See \code{\link{as_epi_archive}} for an explanation of what this means.
 Default here is \code{TRUE}.}
