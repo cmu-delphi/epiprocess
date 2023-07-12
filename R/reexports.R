@@ -58,6 +58,7 @@ tidyr::unnest
 # epidatasets -------------------------------------------------------------------
 
 #' @inherit epidatasets::cases_deaths_subset
+#' @inheritSection epidatasets::cases_deaths_subset Data dictionary
 #' @examples
 #'  # Since this is a re-exported dataset, it cannot be loaded using
 #'  # the `data()` function. `data()` looks for a file of the same name
@@ -75,6 +76,7 @@ tidyr::unnest
 cases_deaths_subset <- epidatasets::cases_deaths_subset
 
 #' @inherit epidatasets::archive_cases_dv_subset_dt
+#' @inheritSection epidatasets::archive_cases_dv_subset_dt Data dictionary
 #' @examples
 #'  # Since this is a re-exported dataset, it cannot be loaded using
 #'  # the `data()` function. `data()` looks for a file of the same name
@@ -92,6 +94,7 @@ cases_deaths_subset <- epidatasets::cases_deaths_subset
 archive_cases_dv_subset_dt <- epidatasets::archive_cases_dv_subset_dt
 
 #' @inherit epidatasets::covid_incidence_county_subset
+#' @inheritSection epidatasets::covid_incidence_county_subset Data dictionary
 #' @examples
 #'  # Since this is a re-exported dataset, it cannot be loaded using
 #'  # the `data()` function. `data()` looks for a file of the same name
@@ -109,6 +112,7 @@ archive_cases_dv_subset_dt <- epidatasets::archive_cases_dv_subset_dt
 covid_incidence_county_subset <- epidatasets::covid_incidence_county_subset
 
 #' @inherit epidatasets::covid_incidence_outliers
+#' @inheritSection epidatasets::covid_incidence_outliers Data dictionary
 #' @examples
 #'  # Since this is a re-exported dataset, it cannot be loaded using
 #'  # the `data()` function. `data()` looks for a file of the same name
@@ -126,6 +130,7 @@ covid_incidence_county_subset <- epidatasets::covid_incidence_county_subset
 covid_incidence_outliers <- epidatasets::covid_incidence_outliers
 
 #' @inherit epidatasets::jhu_confirmed_cumulative_num
+#' @inheritSection epidatasets::jhu_confirmed_cumulative_num Data dictionary
 #' @examples
 #'  # Since this is a re-exported dataset, it cannot be loaded using
 #'  # the `data()` function. `data()` looks for a file of the same name
