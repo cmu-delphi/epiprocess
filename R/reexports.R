@@ -57,7 +57,7 @@ tidyr::unnest
 
 # epidatasets -------------------------------------------------------------------
 
-#' @inherit epidatasets::cases_deaths_subset
+#' @inherit epidatasets::cases_deaths_subset description source references title
 #' @inheritSection epidatasets::cases_deaths_subset Data dictionary
 #' @examples
 #'  # Since this is a re-exported dataset, it cannot be loaded using
@@ -75,7 +75,7 @@ tidyr::unnest
 #' @export
 cases_deaths_subset <- epidatasets::cases_deaths_subset
 
-#' @inherit epidatasets::archive_cases_dv_subset_dt
+#' @inherit epidatasets::archive_cases_dv_subset_dt description source references title
 #' @inheritSection epidatasets::archive_cases_dv_subset_dt Data dictionary
 #' @examples
 #'  # Since this is a re-exported dataset, it cannot be loaded using
@@ -93,7 +93,7 @@ cases_deaths_subset <- epidatasets::cases_deaths_subset
 #' @export
 archive_cases_dv_subset_dt <- epidatasets::archive_cases_dv_subset_dt
 
-#' @inherit epidatasets::covid_incidence_county_subset
+#' @inherit epidatasets::covid_incidence_county_subset description source references title
 #' @inheritSection epidatasets::covid_incidence_county_subset Data dictionary
 #' @examples
 #'  # Since this is a re-exported dataset, it cannot be loaded using
@@ -111,7 +111,7 @@ archive_cases_dv_subset_dt <- epidatasets::archive_cases_dv_subset_dt
 #' @export
 covid_incidence_county_subset <- epidatasets::covid_incidence_county_subset
 
-#' @inherit epidatasets::covid_incidence_outliers
+#' @inherit epidatasets::covid_incidence_outliers description source references title
 #' @inheritSection epidatasets::covid_incidence_outliers Data dictionary
 #' @examples
 #'  # Since this is a re-exported dataset, it cannot be loaded using
@@ -129,7 +129,7 @@ covid_incidence_county_subset <- epidatasets::covid_incidence_county_subset
 #' @export
 covid_incidence_outliers <- epidatasets::covid_incidence_outliers
 
-#' @inherit epidatasets::jhu_confirmed_cumulative_num
+#' @inherit epidatasets::jhu_confirmed_cumulative_num description source references title
 #' @inheritSection epidatasets::jhu_confirmed_cumulative_num Data dictionary
 #' @examples
 #'  # Since this is a re-exported dataset, it cannot be loaded using
