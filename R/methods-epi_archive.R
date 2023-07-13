@@ -474,23 +474,13 @@ epix_rbind <- function(..., sync = c("forbid", "na", "locf"), force_distinct = F
   keys <- map(DTs, key)
   new_key <- keys[[1]]
   for (ii in seq_along(DTs)) {
-    if (!identical(keys[[ii]], key(archives[[ii]]$DT))) {
-      Warn("
-      `epiprocess` internal warning (please report): pre-processing for
-      epix_merge unexpectedly resulted in an intermediate data table (or
-      tables) with a different key than the corresponding input archive.
-      Manually setting intermediate data table keys to the expected values.
-    ", internal = TRUE)
-      setkeyv(DTs[[ii]], key(archives[[ii]]$DT))
-      keys[[ii]] <- key(archives[[ii]]$DT)
-    }
     if (!identical(keys[[ii]], new_key)) {
       # Without some sort of annotations of what various columns represent, we can't
       # do something that makes sense when rbinding archives with mismatched keys.
       # E.g., even if we assume extra keys represent demographic breakdowns, a
       # sensible default treatment of count-type and rate-type value columns would
       # differ.
-      if (!identical(sort(key(DTs[[ii]])), sort(key(DTs[[1]])))) {
+      if (!identical(sort(key(DTs[[ii]])), sort(new_key))) {
         Abort("
             The archives must have the same set of key column names; if the
             key columns represent the same things, just with different
@@ -516,7 +506,7 @@ epix_rbind <- function(..., sync = c("forbid", "na", "locf"), force_distinct = F
   other_keys <- dplyr::setdiff(new_key, c("geo_value", "time_value", "version"))
   if (length(other_keys) != 0) {
     Abort("epix_rbind does not currently support additional keys",
-      class = "epiprocess__epxi_rbind_unsupported"
+      class = "epiprocess__epix_rbind_unsupported"
     )
   }
 
