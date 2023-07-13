@@ -525,7 +525,7 @@ epix_rbind <- function(..., sync = c("forbid", "na", "locf"), force_distinct = F
   if (nrow(shared_geo_time_values) == 0) {
     DT <- reduce(DTs, rbind)
     if (force_distinct) {
-      DT <- distinct(possibly_redundant, geo_value, time_value, version, .keep_all = TRUE)
+      DT <- distinct(DT, geo_value, time_value, version, .keep_all = TRUE)
     }
   } else if (sync == "forbid") {
     Abort(paste(
