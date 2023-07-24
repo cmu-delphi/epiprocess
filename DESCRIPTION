@@ -24,7 +24,7 @@ Description: This package introduces a common data structure for epidemiological
     work with revisions to these data sets over time, and offers associated
     utilities to perform basic signal processing tasks.
 License: MIT + file LICENSE
-Copyright: file COPYRIGHTS
+Copyright: file inst/COPYRIGHTS
 Imports:
     cli,
     data.table,

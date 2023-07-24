@@ -1,7 +1,7 @@
 Copyright for most of the included code is held by the Delphi group.
 
 Posit is the copyright holder for `rlang` fragments included in the
-`as_slide_computation` function in `utils.R` under the following license.
+`as_slide_computation` function and documentation in `utils.R` under the following license.
 
 # MIT License
 

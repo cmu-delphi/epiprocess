@@ -193,11 +193,11 @@ assert_sufficient_f_args <- function(f, ...) {
 #' extended to include `..3`; and also by `epi[x]_slide`-specific names
 #' `.group_key` and `.ref_time_value`.
 #'
-#' @source #' This code and documentation are based on the [`as_function`]
+#' @source This code and documentation are based on [`as_function`]
 #'  (https://github.com/r-lib/rlang/blob/c55f6027928d3104ed449e591e8a225fcaf55e13/R/fn.R#L343-L427)
 #'  function from Hadley Wickham's `rlang` package.
 #'
-#'  Below is the orginal license for the `rlang` package.
+#'  Below is the original license for the `rlang` package.
 #'
 #'
 #'  # MIT License
