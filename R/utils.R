@@ -198,7 +198,7 @@ assert_sufficient_f_args <- function(f, ...) {
 #'
 #' @source https://github.com/r-lib/rlang/blob/c55f6027928d3104ed449e591e8a225fcaf55e13/R/fn.R#L343-L427
 #'
-#' @param .f A function, one-sided formula, or quosure.
+#' @param f A function, one-sided formula, or quosure.
 #'
 #'   If a **function**, the function is returned as-is, with no
 #'   modifications.
@@ -220,7 +220,6 @@ assert_sufficient_f_args <- function(f, ...) {
 #' @param ... Additional arguments to pass to the function or formula
 #'  specified via `x`. If `x` is a quosure, any arguments passed via `...`
 #'  will be ignored.
-#' @inheritParams rlang::args_error_context
 #' @examples
 #' f <- as_slide_computation(~ .x + 1)
 #' f(10)
@@ -235,13 +234,13 @@ assert_sufficient_f_args <- function(f, ...) {
 #'  f_rhs is_formula caller_arg caller_env
 #'
 #' @noRd
-as_slide_computation <- function(.f,
-                        ...,
-                        arg = caller_arg(.f),
-                        call = caller_env()) {
+as_slide_computation <- function(f, ...) {
+  arg = caller_arg(f)
+  call = caller_env()
+
   # A quosure is a type of formula, so be careful with the order and contents
   # of the conditional logic here.
-  if (is_quosure(.f)) {
+  if (is_quosure(f)) {
     fn = function(.x, .group_key, .ref_time_value, ...) {
       # Convert to environment to standardize between tibble and R6
       # based inputs. In both cases, we should get a simple
@@ -254,31 +253,31 @@ as_slide_computation <- function(.f,
       data_mask$.x = .x
       data_mask$.group_key = .group_key
       data_mask$.ref_time_value = .ref_time_value
-      rlang::eval_tidy(.f, data_mask)
+      rlang::eval_tidy(f, data_mask)
     }
 
     return(fn)
   }
 
-  if (is_function(.f)) {
+  if (is_function(f)) {
     # Check that `f` takes enough args
-    assert_sufficient_f_args(.f, ...)
-    return(.f)
+    assert_sufficient_f_args(f, ...)
+    return(f)
   }
 
-  if (is_formula(.f)) {
-    if (length(.f) > 2) {
+  if (is_formula(f)) {
+    if (length(f) > 2) {
       Abort(sprintf("%s must be a one-sided formula", arg),
               class = "epiprocess__as_slide_computation__formula_is_twosided",
-              epiprocess__f = .f,
+              epiprocess__f = f,
               call = call)
     }
 
-    env <- f_env(.f)
+    env <- f_env(f)
     if (!is_environment(env)) {
       Abort("Formula must carry an environment.",
               class = "epiprocess__as_slide_computation__formula_has_no_env",
-              epiprocess__f = .f,
+              epiprocess__f = f,
               epiprocess__f_env = env,
               arg = arg, call = call)
     }
@@ -288,16 +287,16 @@ as_slide_computation <- function(.f,
       .x = quote(..1), .y = quote(..2), .z = quote(..3),
       . = quote(..1), .group_key = quote(..2), .ref_time_value = quote(..3)
     )
-    fn <- new_function(args, f_rhs(.f), env)
+    fn <- new_function(args, f_rhs(f), env)
     fn <- structure(fn, class = c("epiprocess_slide_computation", "function"))
 
     return(fn)
   }
 
-  Abort(sprintf("Can't convert a %s to a slide computation", class(.f)),
+  Abort(sprintf("Can't convert a %s to a slide computation", class(f)),
             class = "epiprocess__as_slide_computation__cant_convert_catchall",
-            epiprocess__f = .f,
-            epiprocess__f_class = class(.f),
+            epiprocess__f = f,
+            epiprocess__f_class = class(f),
             arg = arg,
             call = call)
 }
