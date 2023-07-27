@@ -168,7 +168,7 @@ test_that("assert_sufficient_f_args alerts if the provided f has defaults for th
   expect_no_error(assert_sufficient_f_args(f_xsgt, setting = "b"))
   expect_no_error(assert_sufficient_f_args(f_xsgt_dots, setting = "b"))
   expect_error(suppressWarnings(assert_sufficient_f_args(f_xs_dots, setting = "b")),
-    regexp = "window data to `f`'s x argument",
+    regexp = "pass the window data to `f`'s x argument",
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
 
   # forwarding unnamed dots should not:
@@ -176,12 +176,8 @@ test_that("assert_sufficient_f_args alerts if the provided f has defaults for th
                class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
   expect_error(assert_sufficient_f_args(f_xsgt_dots, "b"),
                class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
-  expect_error(assert_sufficient_f_args(f_xs_dots, "b"),
-               class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
-
-  # forwarding no dots should produce a different error message in some cases:
-  expect_error(assert_sufficient_f_args(f_xs_dots),
-               regexp = "window data and group key to `f`'s x and setting argument",
+  expect_error(suppressWarnings(assert_sufficient_f_args(f_xs_dots, "b")),
+               regexp = "pass the window data and group key to `f`'s x and setting argument",
                class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
 })
 
