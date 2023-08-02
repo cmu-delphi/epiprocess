@@ -293,7 +293,7 @@ as_slide_computation <- function(f, ...) {
     return(fn)
   }
 
-  Abort(sprintf("Can't convert a %s to a slide computation", class(f)),
+  Abort(sprintf("Can't convert an object of class %s to a slide computation", paste(collapse=" ", deparse(class(f)))),
             class = "epiprocess__as_slide_computation__cant_convert_catchall",
             epiprocess__f = f,
             epiprocess__f_class = class(f),
