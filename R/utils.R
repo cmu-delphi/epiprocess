@@ -210,7 +210,7 @@ assert_sufficient_f_args <- function(f, ...) {
 #'   place of `.y`, and `.ref_time_value` can be used in place of `.z`. This
 #'   allows you to create very compact anonymous functions (lambdas) with up
 #'   to three inputs. Functions created from formulas have a special class.
-#'   Use `rlang::is_lambda()` to test for it.
+#'   Use `inherits(fn, "epiprocess_slide_computation")` to test for it.
 #'
 #'   If a **quosure**, in the case that `f` was not provided to the parent
 #'   `epi[x]_slide` call and the `...` is interpreted as an expression for
