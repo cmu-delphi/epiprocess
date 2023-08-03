@@ -241,7 +241,7 @@ as_slide_computation <- function(f, ...) {
   # A quosure is a type of formula, so be careful with the order and contents
   # of the conditional logic here.
   if (is_quosure(f)) {
-    fn = function(.x, .group_key, .ref_time_value, ...) {
+    fn = function(.x, .group_key, .ref_time_value) {
       # Convert to environment to standardize between tibble and R6
       # based inputs. In both cases, we should get a simple
       # environment with the empty environment as its parent.
