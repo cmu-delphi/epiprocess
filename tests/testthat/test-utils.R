@@ -207,6 +207,10 @@ test_that("as_slide_computation raises errors as expected", {
   expect_error(as_slide_computation(y ~ ..1),
     class="epiprocess__as_slide_computation__formula_is_twosided")
 
+  # Formulas can't be paired with ...
+  expect_error(as_slide_computation(~ ..1, method = "fn"),
+               class="epiprocess__as_slide_computation__formula_with_dots")
+
   # `f_env` must be an environment
   formula_without_env <- stats::as.formula(~ ..1)
   rlang::f_env(formula_without_env) <- 5

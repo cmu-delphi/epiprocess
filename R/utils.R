@@ -272,6 +272,12 @@ as_slide_computation <- function(f, ...) {
               epiprocess__f = f,
               call = call)
     }
+    if (rlang::dots_n(...) > 0L) {
+      Abort("No arguments can be passed via `...` when `f` is a formula, or there are unrecognized/misspelled parameter names.",
+            class = "epiprocess__as_slide_computation__formula_with_dots",
+            epiprocess__f = f,
+            epiprocess__enquos_dots = enquos(...))
+    }
 
     env <- f_env(f)
     if (!is_environment(env)) {
