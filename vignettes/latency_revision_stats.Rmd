@@ -21,15 +21,15 @@ library(plotly)
 # we've already observed. For better reproducibility, that issue should be at
 # least two days ago (from today), to incorporate any "hotfixes" to that data
 # and allow up to a day for database replication delays:
-hhs_flu_hosp_analysis_issue = as.Date("2023-06-13") - 2L
+hhs_influenza_hosp_analysis_issue = as.Date("2023-06-28") - 2L
 
 # We'll query version data for this data set from the Delphi Epidata API using
 # epidatr, caching the result so that we can re-run this chunk repeatedly a bit
 # faster, while offline, and without placing undue load on the API servers.
-hhs_flu_hosp_issue_data_path = "hhs_flu_hosp_issue_data.rds"
-if (!file.exists(hhs_flu_hosp_issue_data_path)) {
+hhs_influenza_hosp_issue_data_path = "hhs_influenza_hosp_issue_data.rds"
+if (!file.exists(hhs_influenza_hosp_issue_data_path)) {
   cat("Fetching.\n")
-  hhs_flu_hosp_issue_data =
+  hhs_influenza_hosp_issue_data =
     covidcast(
       data_source = "hhs", signals = "confirmed_admissions_influenza_1d",
       geo_type = "state", time_type = "day",
@@ -92,11 +92,11 @@ There are several notions of latency, some of which include:
 
 We'll calculate all the above definitions of latency using `epix_slide()`:
 ```{r latency-stats, cache=TRUE}
-n_bools_true_at_tail = function(x) {
+n_true_at_tail = function(x) {
   match(FALSE, rev(x), nomatch = length(x) + 1L) - 1L
 }
 
-last_or_na = function(x) {
+last_elt_or_na = function(x) {
   if (length(x) != 0L) {
     x[[length(x)]]
   } else {
@@ -104,7 +104,16 @@ last_or_na = function(x) {
   }
 }
 
+cumsum_from_tail = function(x) {
+  rev(cumsum(rev(x)))
+}
+
 latency_stats = function(window_data, group_key, ref_time_value) {
+  if (nrow(window_data) == 0L) {
+    # assume that this is from an early version that references a time range we
+    # excluded
+    return (tibble::tibble())
+  }
   window_data %>%
     group_by(geo_value) %>%
     complete(time_value = full_seq(time_value, period = 1L)) %>%
@@ -116,26 +125,25 @@ latency_stats = function(window_data, group_key, ref_time_value) {
     group_by(geo_value) %>%
     mutate(
       is_na_same = is_na |
-        admissions == last_or_na(admissions[!is_na]),
+        admissions == last_elt_or_na(admissions[!is_na]),
       is_na0same = is_na0 |
-        admissions == last_or_na(admissions[!is_na0])
+        admissions == last_elt_or_na(admissions[!is_na0])
     ) %>%
     summarize(
       nominal_latency = as.integer(ref_time_value - max(time_value)),
-      na_latency = n_bools_true_at_tail(is_na) + nominal_latency,
-      na0_latency = n_bools_true_at_tail(is_na0) + nominal_latency,
-      # FIXME this still looks buggy; why don't we have the same all-geo event lines as in the above?
+      na_latency = n_true_at_tail(is_na) + nominal_latency,
+      na0_latency = n_true_at_tail(is_na0) + nominal_latency,
       na_dup_latency =
         # (don't count NAs before the first copy of the last non-na)
-        sum(cumsum(is_na_same[rev(cumsum(rev(!is_na_same))) == 0L]) != 0L) - 1L + nominal_latency,
+        sum(cumsum(!is_na[cumsum_from_tail(!is_na_same) == 0L]) != 0L) - 1L + nominal_latency,
       na0dup_latency =
         # (don't count NAs and 0s before the first copy of the last non-na0)
-        sum(cumsum(is_na0same[rev(cumsum(rev(!is_na0same))) == 0L]) != 0L) - 1L + nominal_latency
+        sum(cumsum(!is_na0[cumsum_from_tail(!is_na0same) == 0L]) != 0L) - 1L + nominal_latency
     )
 }
 
-hhs_flu_hosp_latency_by_version_geo =
-  hhs_flu_hosp_archive %>%
+hhs_influenza_hosp_latency_by_version_geo =
+  hhs_influenza_hosp_archive %>%
   epix_slide(
     latency_stats,
     before = 27L, # don't calculate latency more than this far back
