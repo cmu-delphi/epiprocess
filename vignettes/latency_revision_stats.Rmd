@@ -37,30 +37,47 @@ if (!file.exists(hhs_flu_hosp_issue_data_path)) {
       # all `time_value`s:
       time_values = "*",
       # all issues through the analysis issue
-      issues = epirange(12340101, hhs_flu_hosp_analysis_issue)
+      issues = epirange(12340101, hhs_influenza_hosp_analysis_issue)
     ) %>%
     fetch()
-  saveRDS(hhs_flu_hosp_issue_data, hhs_flu_hosp_issue_data_path)
+  saveRDS(hhs_influenza_hosp_issue_data, hhs_influenza_hosp_issue_data_path)
   writeLines(c("License: Public Domain US Government",
                "Accessed via COVIDcast Epidata API"),
-             "LICENSE_hhs_flu_hosp_issue_data.txt")
+             "LICENSE_hhs_influenza_hosp_issue_data.txt")
 } else {
   cat("Using cache.\n")
-  hhs_flu_hosp_issue_data = readRDS(hhs_flu_hosp_issue_data_path)
+  hhs_influenza_hosp_issue_data = readRDS(hhs_influenza_hosp_issue_data_path)
 }
 
-# Remove some data from a mostly-NA/0/low regime, and put version data into
-# the `epi_archive` format:
-hhs_flu_hosp_start_time_value = as.Date("2020-12-01")
-hhs_flu_hosp_archive = hhs_flu_hosp_issue_data %>%
-  filter(time_value >= hhs_flu_hosp_start_time_value) %>%
+# Use the compactification feature to see when values changed in the data set,
+# not just re-reporting of the same values. (The Delphi Epidata API already
+# compactifies much of the issue data, but not all of it.)
+hhs_influenza_hosp_issue_data %>%
   select(geo_value, time_value, version = issue, admissions = value) %>%
+  as_epi_archive(compactify = TRUE) %>%
+  .$DT %>%
+  `[`(, .N, by = version) %>%
+  print(topn = 20L)
+
+# It looks like more regular reporting started around version 2021-09-21, with
+# 2021-09-21 being a little different as well. It's currently not easy to filter
+# diff-based issue data correctly based on the version, so let's just filter out
+# some this reporting based on time values that we expect would be included. We
+# might also consider one of the mandatory reporting start dates. We're working
+# on ways to filter both version and time values more easily from an archive
+# object directly.
+hhs_influenza_hosp_start_time_value = as.Date("2021-09-21")
+hhs_influenza_hosp_archive = hhs_influenza_hosp_issue_data %>%
+  filter(time_value >= hhs_influenza_hosp_start_time_value) %>%
+  select(geo_value, time_value, version = issue, admissions = value) %>%
+  mutate(geo_value = factor(geo_value, epidatasets::state_census %>% arrange(pop) %>% pull(abbr))) %>%
   as_epi_archive(compactify = TRUE)
 ```
 
 # Latency statistics
 
 There are several notions of latency, some of which include:
+
 - "Nominal latency": the difference between the max `time_value` available for
   some location, as of some version
 - "Nonmissing latency": also considers explicitly-recorded `NA`s and any skipped
@@ -130,9 +147,11 @@ hhs_flu_hosp_latency_by_version_geo =
 ## Finer-grained visualizations of different notions of latency
 
 Nominal latency, where it is over 2 days:
-```{r, out.width = "60em", out.height="60em"}
+```{r, out.width = "100%", out.height="60em"}
+class(hhs_influenza_hosp_latency_by_version_geo$geo_value)
+sessioninfo::session_info()
 plt =
-  hhs_flu_hosp_latency_by_version_geo %>%
+  hhs_influenza_hosp_latency_by_version_geo %>%
   mutate(nominal_latency = case_when(
     nominal_latency <= 2 ~ NA,
     TRUE ~ nominal_latency
@@ -143,14 +162,14 @@ plt =
   theme_bw() +
   scale_x_date(date_labels = "%b %Y") +
   xlab("Version") +
-  ylab("HHS Flu Hospitalization Nominal Latency")
+  ylab("HHS Influenza Hospitalization Nominal Latency")
 ggplotly(plt)
 ```
 
 Nonmissing latency, where it is over 2 days:
 ```{r, out.width = "60em", out.height="60em"}
 plt =
-  hhs_flu_hosp_latency_by_version_geo %>%
+  hhs_influenza_hosp_latency_by_version_geo %>%
   mutate(na_latency = case_when(
     na_latency <= 2 ~ NA,
     TRUE ~ na_latency
@@ -161,14 +180,14 @@ plt =
   theme_bw() +
   scale_x_date(date_labels = "%b %Y") +
   xlab("Version") +
-  ylab("HHS Flu Hospitalization Nonmissing Latency")
+  ylab("HHS Influenza Hospitalization Nonmissing Latency")
 ggplotly(plt)
 ```
 
 Nonmissing nonzero latency, where it is over 2 days:
 ```{r, out.width = "60em", out.height="60em"}
 plt =
-  hhs_flu_hosp_latency_by_version_geo %>%
+  hhs_influenza_hosp_latency_by_version_geo %>%
   mutate(na0_latency = case_when(
     na0_latency <= 2 ~ NA,
     TRUE ~ na0_latency
@@ -179,7 +198,7 @@ plt =
   theme_bw() +
   scale_x_date(date_labels = "%b %Y") +
   xlab("Version") +
-  ylab("HHS Flu Hospitalization Nonmissing Nonzero Latency")
+  ylab("HHS Influenza Hospitalization Nonmissing Nonzero Latency")
 ggplotly(plt)
 ```
 
@@ -187,7 +206,7 @@ ggplotly(plt)
 Nonmissing nonduplicate latency, where it is over **3** days:
 ```{r, out.width = "60em", out.height="60em"}
 plt =
-  hhs_flu_hosp_latency_by_version_geo %>%
+  hhs_influenza_hosp_latency_by_version_geo %>%
   mutate(na_dup_latency = case_when(
     na_dup_latency <= 3 ~ NA,
     TRUE ~ na_dup_latency
@@ -198,14 +217,14 @@ plt =
   theme_bw() +
   scale_x_date(date_labels = "%b %Y") +
   xlab("Version") +
-  ylab("HHS Flu Hospitalization Nonmissing Nonduplicate Latency")
+  ylab("HHS Influenza Hospitalization Nonmissing Nonduplicate Latency")
 ggplotly(plt)
 ```
 
 Nonmissing nonzero nonduplicate latency, where it is over **3** days:
 ```{r, out.width = "60em", out.height="60em"}
 plt =
-  hhs_flu_hosp_latency_by_version_geo %>%
+  hhs_influenza_hosp_latency_by_version_geo %>%
   mutate(na0dup_latency = case_when(
     na0dup_latency <= 3 ~ NA,
     TRUE ~ na0dup_latency
@@ -216,7 +235,7 @@ plt =
   theme_bw() +
   scale_x_date(date_labels = "%b %Y") +
   xlab("Version") +
-  ylab("HHS Flu Hospitalization Nonmissing Nonzero Nonduplicate Latency")
+  ylab("HHS Influenza Hospitalization Nonmissing Nonzero Nonduplicate Latency")
 ggplotly(plt)
 ```
 
@@ -225,7 +244,7 @@ ggplotly(plt)
 There's a time span of high latency according to some definitions, e.g., for DE as of 2023-05-11; let's see what the time series looked like as of that version:
 ```{r, out.width = "100%"}
 plt =
-  hhs_flu_hosp_archive %>%
+  hhs_influenza_hosp_archive %>%
   epix_as_of(as.Date("2023-05-11"),
              # plot just a year of data:
              min_time_value = as.Date("2022-05-12")) %>%
@@ -239,7 +258,8 @@ We can see at later time values that the number of admissions alternates between
 
 There's also some interesting patterns where latency appears to decrease in AS, then suddenly jump up; let's visualize some snapshots here:
 ```{r}
-  hhs_flu_hosp_archive %>%
+plt =
+  hhs_influenza_hosp_archive %>%
   epix_slide(
     ~ .x %>% filter(geo_value == "as") %>% rename(atv = time_value),
     before = 27L, # don't calculate latency more than this far back
@@ -249,11 +269,12 @@ There's also some interesting patterns where latency appears to decrease in AS, 
   filter(version %in% as.Date(c("2023-03-20", "2023-04-02", "2023-04-03"))) %>%
   ggplot(aes(time_value, admissions, colour = version)) +
   geom_line()
+ggplotly(plt)
 ```
 
 Let's check some counts instead:
 ```{r}
-hhs_flu_hosp_archive %>%
+hhs_influenza_hosp_archive %>%
   epix_slide(
     ~ .x %>%
       filter(geo_value == "as") %>%
@@ -271,7 +292,7 @@ hhs_flu_hosp_archive %>%
 
 ```{r, out.width = "100%"}
 plt =
-  hhs_flu_hosp_latency_by_version_geo %>%
+  hhs_influenza_hosp_latency_by_version_geo %>%
   ggplot(aes(na_latency)) +
   geom_histogram(binwidth = 1L)
 ggplotly(plt)
@@ -280,7 +301,7 @@ ggplotly(plt)
 Over time:
 ```{r, out.width = "100%"}
 plt =
-  hhs_flu_hosp_latency_by_version_geo %>%
+  hhs_influenza_hosp_latency_by_version_geo %>%
   group_by(version) %>%
   summarize(mean_na_latency = mean(na_latency)) %>%
   ggplot(aes(version, mean_na_latency)) +
@@ -297,8 +318,8 @@ How accurate is `k`-day-old data on average?
 ```{r, fig.width = 7, fig.height = 5}
 max_analysis_lag = 30L
 
-hhs_flu_hosp_version_lag_data =
-  hhs_flu_hosp_archive %>%
+hhs_influenza_hosp_version_lag_data =
+  hhs_influenza_hosp_archive %>%
   epix_slide(
     ~ .x,
     before = max_analysis_lag,
@@ -308,13 +329,14 @@ hhs_flu_hosp_version_lag_data =
   unnest(slide_value) %>%
   mutate(version_lag = as.integer(version - time_value))
 
-hhs_flu_hosp_latest_snapshot =
-  hhs_flu_hosp_archive %>%
+hhs_influenza_hosp_latest_snapshot =
+  hhs_influenza_hosp_archive %>%
   epix_as_of(.$versions_end)
 
-left_join(hhs_flu_hosp_version_lag_data,
-          hhs_flu_hosp_latest_snapshot %>%
-            filter(time_value <= hhs_flu_hosp_analysis_issue - max_analysis_lag * 2L),
+plt =
+  left_join(hhs_influenza_hosp_version_lag_data,
+          hhs_influenza_hosp_latest_snapshot %>%
+            filter(time_value <= hhs_influenza_hosp_analysis_issue - max_analysis_lag * 2L),
           by = c("geo_value", "time_value"),
           suffix = c("_lagged", "_latest")) %>%
   tidyr::drop_na(c(admissions_lagged, admissions_latest)) %>%
@@ -322,10 +344,11 @@ left_join(hhs_flu_hosp_version_lag_data,
   summarize(MAPE1 = 100*mean(abs((admissions_latest - admissions_lagged)/(admissions_latest + 1)))) %>%
   ggplot(aes(version_lag, MAPE1)) +
   geom_line()
+ggplotly(plt)
 
-left_join(hhs_flu_hosp_version_lag_data,
-          hhs_flu_hosp_latest_snapshot %>%
-            filter(time_value <= hhs_flu_hosp_analysis_issue - max_analysis_lag * 2L),
+left_join(hhs_influenza_hosp_version_lag_data,
+          hhs_influenza_hosp_latest_snapshot %>%
+            filter(time_value <= hhs_influenza_hosp_analysis_issue - max_analysis_lag * 2L),
           by = c("geo_value", "time_value"),
           suffix = c("_lagged", "_latest")) %>%
   tidyr::drop_na(c(admissions_lagged, admissions_latest)) %>%
@@ -334,9 +357,9 @@ left_join(hhs_flu_hosp_version_lag_data,
   ggplot(aes(version_lag, MdAPE1)) +
   geom_line()
 
-left_join(hhs_flu_hosp_version_lag_data,
-          hhs_flu_hosp_latest_snapshot %>%
-            filter(time_value <= hhs_flu_hosp_analysis_issue - max_analysis_lag * 2L),
+left_join(hhs_influenza_hosp_version_lag_data,
+          hhs_influenza_hosp_latest_snapshot %>%
+            filter(time_value <= hhs_influenza_hosp_analysis_issue - max_analysis_lag * 2L),
           by = c("geo_value", "time_value"),
           suffix = c("_lagged", "_latest")) %>%
   tidyr::drop_na(c(admissions_lagged, admissions_latest)) %>%
@@ -345,9 +368,9 @@ left_join(hhs_flu_hosp_version_lag_data,
   ggplot(aes(version_lag, Q3APE1)) +
   geom_line()
 
-left_join(hhs_flu_hosp_version_lag_data,
-          hhs_flu_hosp_latest_snapshot %>%
-            filter(time_value <= hhs_flu_hosp_analysis_issue - max_analysis_lag * 2L),
+left_join(hhs_influenza_hosp_version_lag_data,
+          hhs_influenza_hosp_latest_snapshot %>%
+            filter(time_value <= hhs_influenza_hosp_analysis_issue - max_analysis_lag * 2L),
           by = c("geo_value", "time_value"),
           suffix = c("_lagged", "_latest")) %>%
   tidyr::drop_na(c(admissions_lagged, admissions_latest)) %>%
