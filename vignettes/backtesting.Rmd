@@ -73,7 +73,10 @@ series with potentially different reporting latencies.
 
 First, we'll construct a synthetic data set with a single location where one
 particular lag of a predictor is extremely useful, while all the others are not,
-and show how ignoring latency can hurt forecast accuracy.
+and show how ignoring latency can hurt forecast accuracy. We'll assume for
+simplicity that there are no data revisions, and that data about a particular
+`time_value` is always published promptly at midnight on `time_value +
+fixed_latency`.
 
 ```{r}
 library(dplyr)
@@ -92,6 +95,7 @@ target_ahead = 14L
 fixed_latency = 3L
 nrow_simulated = 100L + great_lag_setting + target_ahead
 
+# Generate the data in both formats:
 edf = tibble(
   geo_value = rep("nc", nrow_simulated),
   time_value = as.Date("2021-01-01") + seq(0L, nrow_simulated - 1L),
@@ -106,9 +110,14 @@ edf = tibble(
 ea = edf %>%
   mutate(version = time_value + fixed_latency) %>%
   as_epi_archive()
+```
 
-latency_unaware_predictions = function(group_data, group_key) {
-  group_data %>%
+Our first forecaster will predict `target_ahead` ahead of the latest available
+`time_value` for each `geo_value`, rather than the `forecast_date` (though with
+some reservations/warnings):
+```{r}
+latency_unaware_predictions = function(window_data, group_key, ref_time_value) {
+  window_data %>%
     arx_forecaster(
       "outcome", "predictor",
       args_list = arx_args_list(
@@ -117,28 +126,41 @@ latency_unaware_predictions = function(group_data, group_key) {
       )
     ) %>%
     `[[`("predictions") %>%
-    rename(max_time_value = time_value)
+    rename(
+      guessed_forecast_date = forecast_date#,
+      # max_time_value = time_value
+    )
 }
+```
 
+`epix_slide()` lets us simulate making a forecast based on any previous or
+current version of the data; we'll use it here to make a forecast as of the
+last version available in this artificial data set.
+```{r}
 actual_forecast_date = ea$versions_end
 
 ea %>%
+  # no grouping --- training will pool across locations
   epix_slide(
     ref_time_values = actual_forecast_date,
     before = 36500L, # use an extremely large time window = no time windowing
     f = latency_unaware_predictions,
     names_sep = NULL # don't prefix output column names
-  )
+  ) %>%
+  select(ref_time_value = time_value,
+         # max_time_value,
+         guessed_forecast_date,
+         everything())
 
 cat("Actual forecast date:", toString(actual_forecast_date), "\n")
 ```
 
-TODO finish
+<!-- TODO finish -->
 
-TODO what effect this has in reality
+<!-- TODO what effect this has in reality -->
 
-TODO also give example where this reproduces real-time errors for systems that
-are more rigid and calculate from real `forecast_date` but encounter something not there
+<!-- TODO also give example where this reproduces real-time errors for systems that -->
+<!-- are more rigid and calculate from real `forecast_date` but encounter something not there -->
 
 # latency issue: mixed latency
 
@@ -160,11 +182,11 @@ ga_hhs_analysis_issue = as.Date("2023-04-05") - 2L
 # Fetch issue data using `epidatr`; cache the response for politeness, and also
 # note the data license for the requested signal.
 # TODO try cachem
-ga_hhs_issue_data_path = "ga_hhs_issue_data.rds"
+ga_hhs_issue_data_path = "ga_hhs_covid_issue_data.rds"
 if (!file.exists(ga_hhs_issue_data_path)) {
   ga_hhs_issue_data =
     covidcast(
-      data_source = "hhs", signal = "confirmed_admissions_influenza_1d",
+      data_source = "hhs", signal = "confirmed_admissions_covid_1d",
       geo_type = "state", time_type = "day",
       geo_values = "ga",
       # all `time_value`s:
@@ -172,7 +194,7 @@ if (!file.exists(ga_hhs_issue_data_path)) {
       # all issues through the analysis issue
       issues = epirange(12340101, ga_hhs_analysis_issue)
     ) %>%
-    fetch_tbl()
+    fetch()
   saveRDS(ga_hhs_issue_data, ga_hhs_issue_data_path)
   writeLines(c("License: Public Domain US Government",
                "Accessed via COVIDcast Epidata API"),
@@ -181,9 +203,15 @@ if (!file.exists(ga_hhs_issue_data_path)) {
   ga_hhs_issue_data = readRDS(ga_hhs_issue_data_path)
 }
 
-# Remove some data from a mostly-NA/0/low regime, and put version data into
-# the `epi_archive` format:
-hhs_start_time_value = as.Date("2020-12-01")
+# It looks like more regular reporting started around version 2021-09-21, with
+# 2021-09-21 being a little different as well. It's currently not easy to filter
+# diff-based issue data correctly based on the version, so let's just filter out
+# some this reporting based on time values that we expect would be included. We
+# might also consider one of the mandatory reporting start dates. We're working
+# on ways to filter both version and time values more easily from an archive
+# object directly.
+# hhs_start_time_value = as.Date("2021-09-21") # flu, approx
+hhs_start_time_value = as.Date("2020-12-01") # covid, approx
 ga_hhs_archive = ga_hhs_issue_data %>%
   filter(time_value >= hhs_start_time_value) %>%
   select(geo_value, time_value, version = issue, admissions = value) %>%
@@ -192,7 +220,11 @@ ga_hhs_archive = ga_hhs_issue_data %>%
 # We'll experiment with a pseudoprospective forecast as of a single past
 # `forecast_date`. Later, we can apply this to many `forecast_date`s using an
 # `epix_slide()`.
-forecast_date = ga_hhs_analysis_issue - 7L
+# forecast_date = ga_hhs_analysis_issue - 7L
+# forecast_date = ga_hhs_analysis_issue - 90L
+forecast_date = ga_hhs_analysis_issue - 100L
+# forecast_date = ga_hhs_analysis_issue - 120L
+# forecast_date = ga_hhs_analysis_issue - 150L
 
 # Get what the archive would have looked like as of the `forecast_date`:
 forecast_date_archive = ga_hhs_archive %>%
@@ -239,12 +271,11 @@ version_aware_predictors =
     # For performance purposes, apply a time window that includes just enough
     # `time_value`s that we can extract our predictors:
     before = max(predictor_lags_rel_fcst_date),
-    function(edf, gk) {
+    function(edf, gk, ref_time_value) {
       # * `edf` is a time-windowed snapshot.
       # * `gk` is the "group key". If we were performing a grouped slide, this
       #   could potentially be helpful.  We won't need it here.
-      ref_time_value = attr(edf, "metadata")$as_of
-      # `ref_time_value` is our training/actual `forecast_date`.
+      #   `ref_time_value` is our training/actual `forecast_date`.
       edf %>%
         # We must make sure that there are no gaps in the `time_value`s to make
         # `dplyr::lag` work properly. Additionally, we will extend the
@@ -270,7 +301,13 @@ version_aware_predictors =
         select(geo_value, x1, x2, x3)
     },
     names_sep = NULL # don't prefix the output column names
-  )
+  ) %>%
+  # suppose our aheads are relative to max t (so we can show a nowcast)
+  #
+  # XXX this works for backcasting revisions to the most recent value available,
+  # but will be predicting the wrong aheads if we were trying to forecast 14/7
+  # days beyond the `forecast_date` (since we shifted `admissions`).
+  mutate(time_value = time_value - forecast_date_latency)
 
 # Combine the version-aware predictors with the latest available version, from
 # which we'll calculate targets as of the `forecast_date`. By predicting
@@ -291,30 +328,74 @@ training_and_testing_edf =
 # considering `time_value` will work differently than they would on daily data.
 # This isn't the case with `epipredict` below.)
 
-# Use `epipredict` canned forecaster `arx_forecaster`.
-forecaster_output = training_and_testing_edf %>%
-  arx_forecaster(
-    outcome = "admissions",
-    predictors = c("x1", "x2", "x3"),
-    args_list = arx_args_list(
-      lags = 0L, # the lags are already baked into x1, x2, x3
-      # ahead = 14L,
-      # ahead = 7L,
-      ahead = 0L,
-      # Use defaults for everything else.
+  # # ahead = 14L,
+  # # ahead = 7L,
+  # # ahead = 0L,
+  # ahead = 0,
+aheads = c(0L, 7L, 14L, 21L, 28L)
+
+# can't use intermediate aheads due to way that join was set up
+# can't use negative aheads directly yet
+
+forecaster_outputs = map(aheads, function(ahead) {
+  training_and_testing_edf %>%
+    arx_forecaster(
+      outcome = "admissions",
+      predictors = c("x1", "x2", "x3"),
+      args_list = arx_args_list(
+        lags = 0L, # the lags are already baked into x1, x2, x3
+        ahead = ahead
+        # Use defaults for everything else.
       )
-  )
-
-# FIXME this works for backcasting revisions to the most recent value available,
-# but will be predicting the wrong aheads if we were trying to forecast 14/7
-# days beyond the `forecast_date` (since we shifted `admissions`).
-
+    ) %>%
+    {
+      .$predictions <- .$predictions %>%
+        mutate(forecast_date = .env$forecast_date)
+      .
+    }
+})
 
 library(ggplot2)
+ga_hhs_archive %>%
+  epix_as_of(.$versions_end) %>%
+  ggplot(aes(time_value, admissions)) %>%
+  `+`(geom_point()) %>%
+  `+`(geom_point(
+    data = ga_hhs_archive %>%
+      epix_as_of(forecast_date),
+    colour = "blue",
+    shape = 4L
+  )) %>%
+  `+`(geom_point(
+    data = ga_hhs_archive %>%
+      epix_as_of(forecast_date) %>%
+      filter(as.integer(forecast_date - time_value) %in% predictor_lags_rel_fcst_date),
+    colour = "blue",
+    shape = 3L, size = 5
+  )) %>%
+  `+`(xlim(c(forecast_date - 100L, forecast_date + max(aheads)))) %>%
+  `+`(geom_point(
+    inherit.aes = FALSE,
+    aes(x = target_date, y = .pred),
+    forecaster_outputs %>%
+      map_dfr("predictions"),
+    colour = "red"
+  )) %>%
+  `+`(geom_ribbon(
+    inherit.aes = FALSE,
+    aes(x = target_date, ymin = `0.05`, ymax = `0.95`),
+    forecaster_outputs %>%
+      map_dfr("predictions") %>%
+      pivot_quantiles(.pred_distn),
+    fill = "red", alpha = 0.4
+  ))
+
 training_and_testing_edf %>%
   ggplot(aes(x1, admissions)) %>%
-  `+`(geom_point()) %>%
-  `+`(geom_jitter()) %>%
+  # `+`(geom_point()) %>%
+  # `+`(geom_jitter()) %>%
+  `+`(geom_bin2d(binwidth = diff(range(training_and_testing_edf$admissions))/30)) %>%
+  `+`(scale_fill_continuous(type = "viridis")) %>%
   `+`(geom_abline(slope = 1, intercept = 0, linetype="dotted"))
 
 training_and_testing_edf %>%
@@ -322,11 +403,21 @@ training_and_testing_edf %>%
   with(sum(admissions) / sum(x1))
 # Generally initial observations are revised downward.
 
-# Our fit coefficients:
-forecaster_output$epi_workflow %>%
-  parsnip::extract_fit_engine()
+# Our fit coefficients for the first of the `aheads`:
+aheads[[1L]]
+forecaster_outputs[[1L]]$epi_workflow %>%
+  parsnip::extract_fit_engine() %>%
+  coef()
 
-# Actual backcasts are in `forecaster_output$predictions`
+# Our fit coefficients for the last of the `aheads`:
+aheads[[length(aheads)]]
+forecaster_outputs[[length(aheads)]]$epi_workflow %>%
+  parsnip::extract_fit_engine() %>%
+  coef()
 ```
+
+Modeling ideas: we probably should have used 7dav features, or some "slope"
+features, or lags that cover a longer window. Removing the intercept might also
+make sense.
 
 # pseudoprospective version-aware forecasting
