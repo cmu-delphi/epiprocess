@@ -123,7 +123,7 @@
 #'   
 #' @importFrom lubridate days weeks
 #' @importFrom dplyr bind_rows group_vars filter select
-#' @importFrom rlang .data .env !! enquo enquos sym env
+#' @importFrom rlang .data .env !! enquo enquos sym env missing_arg
 #' @export
 #' @examples 
 #' # slide a 7-day trailing average formula on cases
@@ -167,11 +167,6 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
-
-  # Check that `f` takes enough args
-  if (!missing(f) && is.function(f)) {
-    assert_sufficient_f_args(f, ...)
-  }
   
   if (missing(ref_time_values)) {
     ref_time_values = unique(x$time_value)
@@ -356,28 +351,8 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     return(mutate(.data_group, !!new_col := slide_values))
   }
 
-  # If f is not missing, then just go ahead, slide by group
-  if (!missing(f)) {
-    if (rlang::is_formula(f)) f = as_slide_computation(f)
-    f_rtv_wrapper = function(x, g, ...) {
-      ref_time_value = min(x$time_value) + before
-      x <- x[x$.real,]
-      x$.real <- NULL
-      f(x, g, ref_time_value, ...)
-    }
-    x = x %>%  
-      group_modify(slide_one_grp,
-                   f = f_rtv_wrapper, ...,
-                   starts = starts,
-                   stops = stops,
-                   time_values = ref_time_values, 
-                   all_rows = all_rows,
-                   new_col = new_col,
-                   .keep = FALSE)
-  }
-  
-  # Else interpret ... as an expression for tidy evaluation
-  else {
+  # If `f` is missing, interpret ... as an expression for tidy evaluation
+  if (missing(f)) {
     quos = enquos(...)
     if (length(quos) == 0) {
       Abort("If `f` is missing then a computation must be specified via `...`.")
@@ -386,31 +361,29 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
       Abort("If `f` is missing then only a single computation can be specified via `...`.")
     }
     
-    quo = quos[[1]]
-    f = function(.x, .group_key, quo, ...) {
-      .ref_time_value = min(.x$time_value) + before
-      .x <- .x[.x$.real,]
-      .x$.real <- NULL
-      data_mask = rlang::as_data_mask(.x)
-      # We'll also install `.x` directly, not as an `rlang_data_pronoun`, so
-      # that we can, e.g., use more dplyr and epiprocess operations.
-      data_mask$.x = .x
-      data_mask$.group_key = .group_key
-      data_mask$.ref_time_value = .ref_time_value
-      rlang::eval_tidy(quo, data_mask)
-    }
+    f = quos[[1]]
     new_col = sym(names(rlang::quos_auto_name(quos)))
-    
-    x = x %>%  
-      group_modify(slide_one_grp,
-                   f = f, quo = quo,
-                   starts = starts,
-                   stops = stops,
-                   time_values = ref_time_values, 
-                   all_rows = all_rows,
-                   new_col = new_col,
-                   .keep = FALSE)
+    ... = missing_arg() # magic value that passes zero args as dots in calls below
   }
+
+  f = as_slide_computation(f, ...)
+  # Create a wrapper that calculates and passes `.ref_time_value` to the
+  # computation.
+  f_wrapper = function(.x, .group_key, ...) {
+    .ref_time_value = min(.x$time_value) + before
+    .x <- .x[.x$.real,]
+    .x$.real <- NULL
+    f(.x, .group_key, .ref_time_value, ...)
+  }
+  x = x %>%
+    group_modify(slide_one_grp,
+                 f = f_wrapper, ...,
+                 starts = starts,
+                 stops = stops,
+                 time_values = ref_time_values,
+                 all_rows = all_rows,
+                 new_col = new_col,
+                 .keep = FALSE)
   
   # Unnest if we need to, and return
   if (!as_list_col) {

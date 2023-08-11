@@ -176,9 +176,23 @@ test_that("assert_sufficient_f_args alerts if the provided f has defaults for th
                class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
   expect_error(assert_sufficient_f_args(f_xsgt_dots, "b"),
                class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
-  expect_error(suppressWarnings(assert_sufficient_f_args(f_xs_dots, "b")),
-               regexp = "pass the window data and group key to `f`'s x and setting argument",
-               class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults")
+  expect_error(
+    expect_warning(
+      assert_sufficient_f_args(f_xs_dots, "b"),
+      class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
+    ),
+    class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults"
+  )
+
+  # forwarding no dots should produce a different error message in some cases:
+  expect_error(
+    expect_warning(
+      assert_sufficient_f_args(f_xs_dots),
+      class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
+    ),
+    regexp = "window data and group key to `f`'s x and setting argument",
+    class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults"
+  )
 })
 
 test_that("computation formula-derived functions take all argument types", {
@@ -202,6 +216,10 @@ test_that("as_slide_computation raises errors as expected", {
   # Formulas must be one-sided
   expect_error(as_slide_computation(y ~ ..1),
     class="epiprocess__as_slide_computation__formula_is_twosided")
+
+  # Formulas can't be paired with ...
+  expect_error(as_slide_computation(~ ..1, method = "fn"),
+               class="epiprocess__as_slide_computation__formula_with_dots")
 
   # `f_env` must be an environment
   formula_without_env <- stats::as.formula(~ ..1)

@@ -181,44 +181,45 @@ assert_sufficient_f_args <- function(f, ...) {
   }
 }
 
-#' Convert to function
+#' Generate a `epi[x]_slide` computation function from a function, formula, or quosure
 #'
-#' @description
-#' `as_slide_computation()` transforms a one-sided formula into a function.
-#' This powers the lambda syntax in packages like purrr.
+#' @description `as_slide_computation()` transforms a one-sided formula or a
+#'  quosure into a function; functions are returned as-is or with light
+#'  modifications to calculate `ref_time_value`.
 #'
 #' This code and documentation borrows heavily from [`rlang::as_function`]
 #' (https://github.com/r-lib/rlang/blob/c55f6027928d3104ed449e591e8a225fcaf55e13/R/fn.R#L343-L427).
 #'
 #' This code extends `rlang::as_function` to create functions that take three
-#' arguments. The arguments can be accessed via the idiomatic `.x`, `.y`,
-#' etc, positional references (`..1`, `..2`, etc), and also by `epi
-#' [x]_slide`-specific names.
+#' arguments. The arguments can be accessed via the idiomatic `.`, `.x`, and
+#' `.y`, extended to include `.z`; positional references `..1` and `..2`,
+#' extended to include `..3`; and also by `epi[x]_slide`-specific names
+#' `.group_key` and `.ref_time_value`.
 #'
 #' @source https://github.com/r-lib/rlang/blob/c55f6027928d3104ed449e591e8a225fcaf55e13/R/fn.R#L343-L427
 #'
-#' @param x A function or formula.
+#' @param f A function, one-sided formula, or quosure.
 #'
-#'   If a **function**, it is used as is.
+#'   If a **function**, the function is returned as-is, with no
+#'   modifications.
 #'
-#'   If a **formula**, e.g. `~ mean(.x$cases)`, it is converted to a function with up
-#'   to three arguments: `.x` (single argument), or `.x` and `.y`
+#'   If a **formula**, e.g. `~ mean(.x$cases)`, it is converted to a function
+#'   with up to three arguments: `.x` (single argument), or `.x` and `.y`
 #'   (two arguments), or `.x`, `.y`, and `.z` (three arguments). The `.`
 #'   placeholder can be used instead of `.x`, `.group_key` can be used in
 #'   place of `.y`, and `.ref_time_value` can be used in place of `.z`. This
 #'   allows you to create very compact anonymous functions (lambdas) with up
-#'   to three inputs. Functions created from formulas have a special class. Use
-#'   `rlang::is_lambda()` to test for it.
+#'   to three inputs. Functions created from formulas have a special class.
+#'   Use `inherits(fn, "epiprocess_slide_computation")` to test for it.
 #'
-#'   If a **string**, the function is looked up in `env`. Note that
-#'   this interface is strictly for user convenience because of the
-#'   scoping issues involved. Package developers should avoid
-#'   supplying functions by name and instead supply them by value.
+#'   If a **quosure**, in the case that `f` was not provided to the parent
+#'   `epi[x]_slide` call and the `...` is interpreted as an expression for
+#'   tidy evaluation, it is evaluated within a wrapper function. The wrapper
+#'   sets up object access via a data mask.
 #'
-#' @param env Environment in which to fetch the function in case `x`
-#'   is a string.
-#' @inheritParams rlang::args_dots_empty
-#' @inheritParams rlang::args_error_context
+#' @param ... Additional arguments to pass to the function or formula
+#'  specified via `x`. If `x` is a quosure, any arguments passed via `...`
+#'  will be ignored.
 #' @examples
 #' f <- as_slide_computation(~ .x + 1)
 #' f(10)
@@ -229,36 +230,61 @@ assert_sufficient_f_args <- function(f, ...) {
 #' h <- as_slide_computation(~ .x - .group_key)
 #' h(6, 3)
 #'
-#' @importFrom rlang check_dots_empty0 is_function new_function f_env
-#'  is_environment missing_arg f_rhs is_string is_formula caller_arg
-#'  caller_env global_env
+#' @importFrom rlang is_function new_function f_env is_environment missing_arg
+#'  f_rhs is_formula caller_arg caller_env
 #'
 #' @noRd
-as_slide_computation <- function(x,
-                        env = global_env(),
-                        ...,
-                        arg = caller_arg(x),
-                        call = caller_env()) {
-  check_dots_empty0(...)
+as_slide_computation <- function(f, ...) {
+  arg = caller_arg(f)
+  call = caller_env()
 
-  if (is_function(x)) {
-    return(x)
-  }
-
-  if (is_formula(x)) {
-    if (length(x) > 2) {
-      Abort(sprintf("%s must be a one-sided formula", arg),
-              class = "epiprocess__as_slide_computation__formula_is_twosided",
-              epiprocess__x = x,
-              call = call)
+  # A quosure is a type of formula, so be careful with the order and contents
+  # of the conditional logic here.
+  if (is_quosure(f)) {
+    fn = function(.x, .group_key, .ref_time_value) {
+      # Convert to environment to standardize between tibble and R6
+      # based inputs. In both cases, we should get a simple
+      # environment with the empty environment as its parent.
+      data_env = rlang::as_environment(.x)
+      data_mask = rlang::new_data_mask(bottom = data_env, top = data_env)
+      data_mask$.data <- rlang::as_data_pronoun(data_mask)
+      # We'll also install `.x` directly, not as an `rlang_data_pronoun`, so
+      # that we can, e.g., use more dplyr and epiprocess operations.
+      data_mask$.x = .x
+      data_mask$.group_key = .group_key
+      data_mask$.ref_time_value = .ref_time_value
+      rlang::eval_tidy(f, data_mask)
     }
 
-    env <- f_env(x)
+    return(fn)
+  }
+
+  if (is_function(f)) {
+    # Check that `f` takes enough args
+    assert_sufficient_f_args(f, ...)
+    return(f)
+  }
+
+  if (is_formula(f)) {
+    if (length(f) > 2) {
+      Abort(sprintf("%s must be a one-sided formula", arg),
+              class = "epiprocess__as_slide_computation__formula_is_twosided",
+              epiprocess__f = f,
+              call = call)
+    }
+    if (rlang::dots_n(...) > 0L) {
+      Abort("No arguments can be passed via `...` when `f` is a formula, or there are unrecognized/misspelled parameter names.",
+            class = "epiprocess__as_slide_computation__formula_with_dots",
+            epiprocess__f = f,
+            epiprocess__enquos_dots = enquos(...))
+    }
+
+    env <- f_env(f)
     if (!is_environment(env)) {
       Abort("Formula must carry an environment.",
               class = "epiprocess__as_slide_computation__formula_has_no_env",
-              epiprocess__x = x,
-              epiprocess__x_env = env,
+              epiprocess__f = f,
+              epiprocess__f_env = env,
               arg = arg, call = call)
     }
 
@@ -267,19 +293,16 @@ as_slide_computation <- function(x,
       .x = quote(..1), .y = quote(..2), .z = quote(..3),
       . = quote(..1), .group_key = quote(..2), .ref_time_value = quote(..3)
     )
-    fn <- new_function(args, f_rhs(x), env)
+    fn <- new_function(args, f_rhs(f), env)
     fn <- structure(fn, class = c("epiprocess_slide_computation", "function"))
+
     return(fn)
   }
 
-  if (is_string(x)) {
-    return(get(x, envir = env, mode = "function"))
-  }
-
-  Abort(sprintf("Can't convert a %s to a slide computation", class(x)),
+  Abort(sprintf("Can't convert an object of class %s to a slide computation", paste(collapse=" ", deparse(class(f)))),
             class = "epiprocess__as_slide_computation__cant_convert_catchall",
-            epiprocess__x = x,
-            epiprocess__x_class = class(x),
+            epiprocess__f = f,
+            epiprocess__f_class = class(f),
             arg = arg,
             call = call)
 }
