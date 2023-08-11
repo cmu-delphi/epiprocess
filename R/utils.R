@@ -187,16 +187,57 @@ assert_sufficient_f_args <- function(f, ...) {
 #'  quosure into a function; functions are returned as-is or with light
 #'  modifications to calculate `ref_time_value`.
 #'
-#' This code and documentation borrows heavily from [`rlang::as_function`]
-#' (https://github.com/r-lib/rlang/blob/c55f6027928d3104ed449e591e8a225fcaf55e13/R/fn.R#L343-L427).
-#'
 #' This code extends `rlang::as_function` to create functions that take three
 #' arguments. The arguments can be accessed via the idiomatic `.`, `.x`, and
 #' `.y`, extended to include `.z`; positional references `..1` and `..2`,
 #' extended to include `..3`; and also by `epi[x]_slide`-specific names
 #' `.group_key` and `.ref_time_value`.
 #'
-#' @source https://github.com/r-lib/rlang/blob/c55f6027928d3104ed449e591e8a225fcaf55e13/R/fn.R#L343-L427
+#' @source This code and documentation are based on
+#'  [`as_function`](https://github.com/r-lib/rlang/blob/c55f6027928d3104ed449e591e8a225fcaf55e13/R/fn.R#L343-L427)
+#'  from Hadley Wickham's `rlang` package.
+#'
+#'  Below is the original license for the `rlang` package.
+#'
+#'
+#'  MIT License
+#'
+#'  Copyright (c) 2020 rlang authors
+#'
+#'  Permission is hereby granted, free of charge, to any person obtaining a copy
+#'  of this software and associated documentation files (the "Software"), to deal
+#'  in the Software without restriction, including without limitation the rights
+#'  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#'  copies of the Software, and to permit persons to whom the Software is
+#'  furnished to do so, subject to the following conditions:
+#'
+#'  The above copyright notice and this permission notice shall be included in all
+#'  copies or substantial portions of the Software.
+#'
+#'  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#'  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#'  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#'  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#'  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#'  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#'  SOFTWARE.
+#'
+#'
+#'  Portions of the original code used in this adaptation:
+#'    1. Much of the documentation and examples
+#'    2. The general flow of the function, including branching conditions
+#'    3. Error conditions and wording
+#'    4. The chunk converting a formula into a function, see
+#'    https://github.com/r-lib/rlang/blob/c55f6027928d3104ed449e591e8a225fcaf55e13/R/fn.R#L411-L418
+#'
+#'  Changes made include:
+#'    1. Updates to documentation due to new functionality
+#'    2. The removal of function-as-string processing logic and helper arg
+#'    `env`
+#'    3. The addition of an output function wrapper that defines a data mask
+#'    for evaluating quosures
+#'    4. Calling an argument-checking function
+#'    5. Replacing rlang error functions with internal error functions
 #'
 #' @param f A function, one-sided formula, or quosure.
 #'
