@@ -209,20 +209,20 @@ synthetic example.</p>
 <pre><code><span><span class="co">## An `epi_df` object, 9 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2023-07-27 18:04:22.885608</span></span>
+<span><span class="co">## * as_of     = 2023-08-11 17:09:57.281032</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 9 × 4</span></span></span>
 <span><span class="co">##   geo_value time_value     x x_2dav</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01 0.982  0.982</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01 0.996  0.996</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">2</span> ca        2020-06-02 1.99   1.49 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> ca        2020-06-03 3.00   2.49 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> fl        2020-06-01 3.99   3.99 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-02 5.00   4.50 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> fl        2020-06-03 5.98   5.49 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">7</span> pa        2020-06-01 7.00   7.00 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">8</span> pa        2020-06-02 8.00   7.50 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">9</span> pa        2020-06-03 9.01   8.51</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> ca        2020-06-03 3.00   2.50 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span> fl        2020-06-01 4.01   4.01 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-02 5.01   4.51 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">6</span> fl        2020-06-03 5.97   5.49 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">7</span> pa        2020-06-01 7.02   7.02 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">8</span> pa        2020-06-02 8.00   7.51 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">9</span> pa        2020-06-03 9.00   8.50</span></span></code></pre>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># 2-day trailing average, marginally </span></span>
 <span><span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
@@ -230,20 +230,20 @@ synthetic example.</p>
 <pre><code><span><span class="co">## An `epi_df` object, 9 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2023-07-27 18:04:22.885608</span></span>
+<span><span class="co">## * as_of     = 2023-08-11 17:09:57.281032</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 9 × 4</span></span></span>
 <span><span class="co">##   geo_value time_value     x x_2dav</span></span>
 <span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01 0.982   3.99</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> fl        2020-06-01 3.99    3.99</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> pa        2020-06-01 7.00    3.99</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> ca        2020-06-02 1.99    4.49</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-02 5.00    4.49</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> pa        2020-06-02 8.00    4.49</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01 0.996   4.01</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> fl        2020-06-01 4.01    4.01</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> pa        2020-06-01 7.02    4.01</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span> ca        2020-06-02 1.99    4.50</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-02 5.01    4.50</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">6</span> pa        2020-06-02 8.00    4.50</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">7</span> ca        2020-06-03 3.00    5.50</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">8</span> fl        2020-06-03 5.98    5.50</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">9</span> pa        2020-06-03 9.01    5.50</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;">8</span> fl        2020-06-03 5.97    5.50</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">9</span> pa        2020-06-03 9.00    5.50</span></span></code></pre>
 <p>When the slide computation returns an atomic vector (rather than a
 single value) <code><a href="../reference/epi_slide.html">epi_slide()</a></code> checks whether its return length
 ensures size stability, and if so, uses it to fill the new column. For
@@ -255,20 +255,20 @@ one.</p>
 <pre><code><span><span class="co">## An `epi_df` object, 9 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2023-07-27 18:04:22.885608</span></span>
+<span><span class="co">## * as_of     = 2023-08-11 17:09:57.281032</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 9 × 4</span></span></span>
 <span><span class="co">##   geo_value time_value     x y_2dav</span></span>
 <span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01 0.982   3.99</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> fl        2020-06-01 3.99    3.99</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> pa        2020-06-01 7.00    3.99</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> ca        2020-06-02 1.99    4.49</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-02 5.00    4.49</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> pa        2020-06-02 8.00    4.49</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01 0.996   4.01</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> fl        2020-06-01 4.01    4.01</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> pa        2020-06-01 7.02    4.01</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span> ca        2020-06-02 1.99    4.50</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-02 5.01    4.50</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">6</span> pa        2020-06-02 8.00    4.50</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">7</span> ca        2020-06-03 3.00    5.50</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">8</span> fl        2020-06-03 5.98    5.50</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">9</span> pa        2020-06-03 9.01    5.50</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;">8</span> fl        2020-06-03 5.97    5.50</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">9</span> pa        2020-06-03 9.00    5.50</span></span></code></pre>
 <p>However, if the output is an atomic vector (rather than a single
 value) and it is <em>not</em> size stable, then <code><a href="../reference/epi_slide.html">epi_slide()</a></code>
 throws an error. For example, below we are trying to return 2 things for
@@ -306,7 +306,7 @@ slide values.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edf2</span><span class="op">$</span><span class="va">a</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">##     x_2dav    x_2dma</span></span>
-<span><span class="co">## 1 1.486728 0.7481953</span></span></code></pre>
+<span><span class="co">## 1 1.493763 0.7383897</span></span></code></pre>
 <p>When we use <code>as_list_col = FALSE</code> (the default in
 <code><a href="../reference/epi_slide.html">epi_slide()</a></code>), the function unnests (in the sense of
 <code><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">tidyr::unnest()</a></code>) the list column <code>a</code>, so that
@@ -325,20 +325,20 @@ by “_“.</p>
 <pre><code><span><span class="co">## An `epi_df` object, 9 x 5 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2023-07-27 18:04:22.885608</span></span>
+<span><span class="co">## * as_of     = 2023-08-11 17:09:57.281032</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 9 × 5</span></span></span>
 <span><span class="co">##   geo_value time_value     x a_x_2dav a_x_2dma</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01 0.982    0.982    0    </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> ca        2020-06-02 1.99     1.49     0.748</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> ca        2020-06-03 3.00     2.49     0.745</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> fl        2020-06-01 3.99     3.99     0    </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-02 5.00     4.50     0.753</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> fl        2020-06-03 5.98     5.49     0.724</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">7</span> pa        2020-06-01 7.00     7.00     0    </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">8</span> pa        2020-06-02 8.00     7.50     0.743</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">9</span> pa        2020-06-03 9.01     8.51     0.747</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01 0.996    0.996    0    </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> ca        2020-06-02 1.99     1.49     0.738</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> ca        2020-06-03 3.00     2.50     0.750</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span> fl        2020-06-01 4.01     4.01     0    </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-02 5.01     4.51     0.741</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">6</span> fl        2020-06-03 5.97     5.49     0.715</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">7</span> pa        2020-06-01 7.02     7.02     0    </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">8</span> pa        2020-06-02 8.00     7.51     0.729</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">9</span> pa        2020-06-03 9.00     8.50     0.745</span></span></code></pre>
 <p>We can use <code>names_sep = NULL</code> (which gets passed to
 <code><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">tidyr::unnest()</a></code>) to drop the prefix associated with list
 column name, in naming the unnested columns.</p>
@@ -351,20 +351,20 @@ column name, in naming the unnested columns.</p>
 <pre><code><span><span class="co">## An `epi_df` object, 9 x 5 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2023-07-27 18:04:22.885608</span></span>
+<span><span class="co">## * as_of     = 2023-08-11 17:09:57.281032</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 9 × 5</span></span></span>
 <span><span class="co">##   geo_value time_value     x x_2dav x_2dma</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01 0.982  0.982  0    </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> ca        2020-06-02 1.99   1.49   0.748</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> ca        2020-06-03 3.00   2.49   0.745</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> fl        2020-06-01 3.99   3.99   0    </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-02 5.00   4.50   0.753</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> fl        2020-06-03 5.98   5.49   0.724</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">7</span> pa        2020-06-01 7.00   7.00   0    </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">8</span> pa        2020-06-02 8.00   7.50   0.743</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">9</span> pa        2020-06-03 9.01   8.51   0.747</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01 0.996  0.996  0    </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> ca        2020-06-02 1.99   1.49   0.738</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> ca        2020-06-03 3.00   2.50   0.750</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span> fl        2020-06-01 4.01   4.01   0    </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-02 5.01   4.51   0.741</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">6</span> fl        2020-06-03 5.97   5.49   0.715</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">7</span> pa        2020-06-01 7.02   7.02   0    </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">8</span> pa        2020-06-02 8.00   7.51   0.729</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">9</span> pa        2020-06-03 9.00   8.50   0.745</span></span></code></pre>
 <p>Furthermore, <code><a href="../reference/epi_slide.html">epi_slide()</a></code> will recycle the single row
 data frame as needed in order to make the result size stable, just like
 the case for atomic values.</p>
@@ -375,20 +375,20 @@ the case for atomic values.</p>
 <pre><code><span><span class="co">## An `epi_df` object, 9 x 5 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2023-07-27 18:04:22.885608</span></span>
+<span><span class="co">## * as_of     = 2023-08-11 17:09:57.281032</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 9 × 5</span></span></span>
 <span><span class="co">##   geo_value time_value     x x_2dav x_2dma</span></span>
 <span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01 0.982   3.99   4.46</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> fl        2020-06-01 3.99    3.99   4.46</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> pa        2020-06-01 7.00    3.99   4.46</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> ca        2020-06-02 1.99    4.49   3.71</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-02 5.00    4.49   3.71</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> pa        2020-06-02 8.00    4.49   3.71</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">7</span> ca        2020-06-03 3.00    5.50   3.71</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">8</span> fl        2020-06-03 5.98    5.50   3.71</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">9</span> pa        2020-06-03 9.01    5.50   3.71</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01 0.996   4.01   4.46</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> fl        2020-06-01 4.01    4.01   4.46</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> pa        2020-06-01 7.02    4.01   4.46</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span> ca        2020-06-02 1.99    4.50   3.72</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-02 5.01    4.50   3.72</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">6</span> pa        2020-06-02 8.00    4.50   3.72</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">7</span> ca        2020-06-03 3.00    5.50   3.70</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">8</span> fl        2020-06-03 5.97    5.50   3.70</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">9</span> pa        2020-06-03 9.00    5.50   3.70</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="multi-row-outputs">Multi-row outputs<a class="anchor" aria-label="anchor" href="#multi-row-outputs"></a>
@@ -427,20 +427,20 @@ locations.</p>
 <pre><code><span><span class="co">## An `epi_df` object, 9 x 7 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2023-07-27 18:04:22.885608</span></span>
+<span><span class="co">## * as_of     = 2023-08-11 17:09:57.281032</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 9 × 7</span></span></span>
-<span><span class="co">##   geo_value time_value     x     y   fit   lwr   upr</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01 0.982  1.92  1.93  1.77  2.08</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> fl        2020-06-01 3.99   7.97  7.96  7.83  8.09</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> pa        2020-06-01 7.00  14.0  14.0  13.8  14.2 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> ca        2020-06-02 1.99   3.89  3.94  3.86  4.02</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-02 5.00  10.0  10.0   9.92 10.1 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> pa        2020-06-02 8.00  16.0  16.0  15.9  16.1 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">7</span> ca        2020-06-03 3.00   5.98  5.97  5.81  6.14</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">8</span> fl        2020-06-03 5.98  12.1  12.0  11.8  12.1 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">9</span> pa        2020-06-03 9.01  18.0  18.1  17.9  18.3</span></span></code></pre>
+<span><span class="co">##   geo_value time_value     x     y   fit    lwr   upr</span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> ca        2020-06-01 0.996  1.95  1.90  0.948  2.86</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> fl        2020-06-01 4.01   7.90  7.99  7.18   8.80</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> pa        2020-06-01 7.02  14.1  14.1  13.1   15.0 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span> ca        2020-06-02 1.99   3.96  3.94  3.78   4.11</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-02 5.01  10.0  10.0   9.85  10.2 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">6</span> pa        2020-06-02 8.00  16.0  16.0  15.8   16.2 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">7</span> ca        2020-06-03 3.00   6.04  6.02  5.94   6.10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">8</span> fl        2020-06-03 5.97  12.0  12.0  11.9   12.0 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">9</span> pa        2020-06-03 9.00  18.0  18.0  17.9   18.1</span></span></code></pre>
 <p>The above example focused on simplicity to show how to work with
 multi-row outputs. Note however, the following issues in this
 example:</p>
