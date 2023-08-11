@@ -21,7 +21,7 @@ library(plotly)
 # we've already observed. For better reproducibility, that issue should be at
 # least two days ago (from today), to incorporate any "hotfixes" to that data
 # and allow up to a day for database replication delays:
-hhs_influenza_hosp_analysis_issue = as.Date("2023-06-28") - 2L
+hhs_influenza_hosp_analysis_issue = as.Date("2023-08-11") - 2L
 
 # We'll query version data for this data set from the Delphi Epidata API using
 # epidatr, caching the result so that we can re-run this chunk repeatedly a bit
