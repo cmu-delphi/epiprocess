@@ -156,8 +156,6 @@ hhs_influenza_hosp_latency_by_version_geo =
 
 Nominal latency, where it is over 2 days:
 ```{r, out.width = "100%", out.height="60em"}
-class(hhs_influenza_hosp_latency_by_version_geo$geo_value)
-sessioninfo::session_info()
 plt =
   hhs_influenza_hosp_latency_by_version_geo %>%
   mutate(nominal_latency = case_when(
