@@ -90,7 +90,14 @@ There are several notions of latency, some of which include:
   `time_value`s, zeros, and duplications of the most recent non-`NA`, nonzero
   value to be latent
 
-We'll calculate all the above definitions of latency using `epix_slide()`:
+These definitions are nonexhaustive, and knowledge about underlying reporting
+mechanisms in a data sources are can help inform what an appropriate definition
+of latency is. In epidemiological surveillance data sets, there will always be
+some degree of nominal latency. In the current data set, some repeated values
+also reflect data latency, and there may be other types of latency as well.
+We'll plot all the above definitions of latency to investigate.
+
+We'll calculate all of the above definitions of latency using `epix_slide()`:
 ```{r latency-stats, cache=TRUE}
 n_true_at_tail = function(x) {
   match(FALSE, rev(x), nomatch = length(x) + 1L) - 1L
