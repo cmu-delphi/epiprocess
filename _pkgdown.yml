@@ -1,14 +1,25 @@
 template:
   bootstrap: 5
+  bootswatch: cosmo
+  bslib:
+    font_scale: 1.0
+    primary: '#C41230'
+    link-color: '#C41230'
+    navbar-bg: '#C41230'
+    navbar-fg: '#f8f8f8'
+
+navbar:
+  bg: '#C41230'
+  fg: '#f8f8f8'
   
 url: https://cmu-delphi.github.io/epiprocess/
 
 home:
   links:
+  - text: Introduction to Delphi's Tooling Work
+    href: https://cmu-delphi.github.io/delphi-tooling-book/
   - text: Get the epipredict R package
     href: https://cmu-delphi.github.io/epipredict/
-  - text: Get the covidcast R package
-    href: https://cmu-delphi.github.io/covidcast/covidcastR/
   - text: Get the epidatr R package
     href: https://github.com/cmu-delphi/epidatr
 
