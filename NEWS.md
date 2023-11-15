@@ -1,8 +1,14 @@
-# epiprocess 0.7.0
+# epiprocess 0.7.0.9999
 
 Note that `epiprocess` uses the [Semantic Versioning
 ("semver")](https://semver.org/) scheme for all release versions, but any
 inter-release development versions will include an additional ".9999" suffix.
+
+## Improvements
+* Clarified "Get started" example of getting Ebola line list data into
+  `epi_df` format.
+
+# epiprocess 0.7.0
 
 ## Breaking changes:
 
@@ -152,7 +158,7 @@ inter-release development versions will include an additional ".9999" suffix.
 
 ## Improvements:
 
-* Fixed `epix_merge`, `<epi_archive>$merge` always raising error on `sync="truncate"`.
+* Fixed `epix_merge`, `<epi_archive>$merge` always raising error on `sync="truncate"`
 
 ## Cleanup:
 
