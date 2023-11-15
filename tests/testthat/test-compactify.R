@@ -2,7 +2,7 @@ library(epiprocess)
 library(data.table)
 library(dplyr)
 
-dt <- archive_cases_dv_subset$DT
+dt <- archive_cases_dv_subset_dt$DT
 dt <- filter(dt,geo_value == "ca") %>%
   filter(version <= "2020-06-15") %>%
   select(-case_rate_7d_av)

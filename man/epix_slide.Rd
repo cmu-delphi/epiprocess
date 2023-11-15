@@ -190,7 +190,7 @@ ref_time_values <- seq(as.Date("2020-06-01"),
 
 # A simple (but not very useful) example (see the archive vignette for a more
 # realistic one):
-archive_cases_dv_subset \%>\%
+archive_cases_dv_subset_dt \%>\%
   group_by(geo_value) \%>\%
   epix_slide(f = ~ mean(.x$case_rate_7d_av),
              before = 2,
@@ -212,7 +212,7 @@ archive_cases_dv_subset \%>\%
 
 # Examining characteristics of the data passed to each computation with
 # `all_versions=FALSE`.
-archive_cases_dv_subset \%>\%
+archive_cases_dv_subset_dt \%>\%
  group_by(geo_value) \%>\%
  epix_slide(
    function(x, gk, rtv) {
@@ -240,7 +240,7 @@ archive_cases_dv_subset \%>\%
 # to each computation. In this case, each computation should expect an
 # `epi_archive` containing the relevant version data:
 
-archive_cases_dv_subset \%>\%
+archive_cases_dv_subset_dt \%>\%
   group_by(geo_value) \%>\%
   epix_slide(
     function(x, gk, rtv) {

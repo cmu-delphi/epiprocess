@@ -29,6 +29,7 @@ Imports:
     cli,
     data.table,
     dplyr (>= 1.0.0),
+    epidatasets,
     fabletools,
     feasts,
     generics,
@@ -59,6 +60,7 @@ Suggests:
 VignetteBuilder: 
     knitr
 Remotes:
+    cmu-delphi/epidatasets,
     cmu-delphi/epidatr,
     reconverse/outbreaks,
     glmgen/genlasso

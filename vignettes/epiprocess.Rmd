@@ -193,7 +193,7 @@ In the above examples, all the keys are added to objects that are not `epi_df` o
 We use a toy data set included in `epiprocess` prepared using the `covidcast` library and are filtering to a single state for simplicity.
 
 ```{r}
-ex3 <- jhu_csse_county_level_subset %>%
+ex3 <- covid_incidence_county_subset %>%
   filter(time_value > "2021-12-01", state_name == "Massachusetts") %>%
   slice_tail(n = 6) 
   

@@ -84,7 +84,7 @@ print(x)
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-x <- archive_cases_dv_subset$DT %>%
+x <- archive_cases_dv_subset_dt$DT %>%
   select(geo_value, time_value, version , percent_cli)  %>%
   as_epi_archive(compactify=TRUE)
 
@@ -262,7 +262,7 @@ head(x$DT)
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-x <- archive_cases_dv_subset
+x <- archive_cases_dv_subset_dt
 print(x)
 head(x$DT)
 ```

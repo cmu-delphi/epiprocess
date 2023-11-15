@@ -322,7 +322,7 @@ library(data.table)
 library(ggplot2)
 theme_set(theme_bw())
 
-x <- archive_cases_dv_subset$DT %>%
+x <- archive_cases_dv_subset_dt$DT %>%
   filter(geo_value %in% c("ca","fl")) %>%
   as_epi_archive(compactify = FALSE)
 
