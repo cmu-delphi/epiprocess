@@ -4,7 +4,7 @@ Note that `epiprocess` uses the [Semantic Versioning
 ("semver")](https://semver.org/) scheme for all release versions, but any
 inter-release development versions will include an additional ".9999" suffix.
 
-## Breaking changes:
+## Breaking changes
 
 * Changes to `epi_slide` and `epix_slide`:
   * If `f` is a function, it is now required to take at least three arguments.
@@ -19,7 +19,7 @@ inter-release development versions will include an additional ".9999" suffix.
       g, <any other arguments>) { <body> }` to `f = function(x, g, rt, <any
       other arguments>) { <body> }`.
 
-## New features:
+## New features
 
 * `epi_slide` and `epix_slide` also make the window data, group key and reference
   time value available to slide computations specified as formulas or tidy
@@ -45,7 +45,7 @@ inter-release development versions will include an additional ".9999" suffix.
   * To keep the old behavior, convert the output of `epix_slide()` to `epi_df`
     when desired and set the metadata appropriately.
 
-## Improvements:
+## Improvements
 
 * `epi_slide` and `epix_slide` now support `as_list_col = TRUE` when the slide
   computations output atomic vectors, and output a list column in "chopped"
@@ -55,7 +55,7 @@ inter-release development versions will include an additional ".9999" suffix.
 
 # epiprocess 0.6.0
 
-## Breaking changes:
+## Breaking changes
 
 * Changes to both `epi_slide` and `epix_slide`:
   * The `n`, `align`, and `before` arguments have been replaced by new `before`
@@ -102,7 +102,7 @@ inter-release development versions will include an additional ".9999" suffix.
   the old behavior, pass in `clobberable_versions_start =
   max_version_with_row_in(x)`.
 
-## Potentially-breaking changes:
+## Potentially-breaking changes
 
 * Fixed `[` on grouped `epi_df`s to maintain the grouping if possible when
   dropping the `epi_df` class (e.g., when removing the `time_value` column).
@@ -116,7 +116,7 @@ inter-release development versions will include an additional ".9999" suffix.
 * `epi_slide` and `epix_slide` now raise an error rather than silently filtering
   out `ref_time_values` that don't meet their expectations.
 
-## New features:
+## New features
 
 * `epix_slide`, `<epi_archive>$slide` have a new parameter `all_versions`. With
   `all_versions=TRUE`, `epix_slide` will pass a filtered `epi_archive` to each
@@ -124,7 +124,7 @@ inter-release development versions will include an additional ".9999" suffix.
   pseudoprospective forecasts with a revision-aware forecaster using nested
   `epix_slide` operations.
 
-## Improvements:
+## Improvements
 
 * Added `dplyr::group_by` and `dplyr::ungroup` S3 methods for `epi_archive`
   objects, plus corresponding `$group_by` and `$ungroup` R6 methods. The
@@ -134,35 +134,35 @@ inter-release development versions will include an additional ".9999" suffix.
   requirement (part of
   [#154](https://github.com/cmu-delphi/epiprocess/issues/154)).
 
-## Cleanup:
+## Cleanup
 
 * Added a `NEWS.md` file to track changes to the package.
 * Implemented `?dplyr::dplyr_extending` for `epi_df`s
   ([#223](https://github.com/cmu-delphi/epiprocess/issues/223)).
 * Fixed various small documentation issues ([#217](https://github.com/cmu-delphi/epiprocess/issues/217)).
 
-# epiprocess 0.5.0:
+# epiprocess 0.5.0
 
-## Potentially-breaking changes:
+## Potentially-breaking changes
 
 * `epix_slide`, `<epi_archive>$slide` now feed `f` an `epi_df` rather than
   converting to a tibble/`tbl_df` first, allowing use of `epi_df` methods and
   metadata, and often yielding `epi_df`s out of the slide as a result. To obtain
   the old behavior, convert to a tibble within `f`.
 
-## Improvements:
+## Improvements
 
 * Fixed `epix_merge`, `<epi_archive>$merge` always raising error on `sync="truncate"`.
 
-## Cleanup:
+## Cleanup
 
 * Added `Remotes:` entry for `genlasso`, which was removed from CRAN.
 * Added `as_epi_archive` tests.
 * Added missing `epix_merge` test for `sync="truncate"`.
 
-# epiprocess 0.4.0:
+# epiprocess 0.4.0
 
-## Potentially-breaking changes:
+## Potentially-breaking changes
 
 * Fixed `[.epi_df` to not reorder columns, which was incompatible with
   downstream packages.
@@ -177,20 +177,20 @@ inter-release development versions will include an additional ".9999" suffix.
 * Fixed `[.epi_df` to drop metadata if decaying to a tibble (due to removal
   of essential columns).
 
-## Improvements:
+## Improvements
 
 * Added check that `epi_df` `additional_metadata` is list.
 * Fixed some incorrect `as_epi_df` examples.
 
-## Cleanup:
+## Cleanup
 
 * Applied rename of upstream package in examples: `delphi.epidata` ->
   `epidatr`.
 * Rounded out `[.epi_df` tests.
 
-# epiprocess 0.3.0:
+# epiprocess 0.3.0
 
-## Breaking changes:
+## Breaking changes
 
 * `as_epi_archive`, `epi_archive$new`:
   * Compactification (see below) by default may change results if working
@@ -223,7 +223,7 @@ inter-release development versions will include an additional ".9999" suffix.
     reporting latency, `n=7` will *not* yield 7 days of data in a typical
     daily-reporting surveillance data source, as one might have assumed).
 
-## New features:
+## New features
 
 * `as_epi_archive`, `epi_archive$new`:
   * New `compactify` parameter allows removal of rows that are redundant for the
@@ -248,20 +248,20 @@ inter-release development versions will include an additional ".9999" suffix.
   `epi_archive` rather than an outdated R6 implementation from whenever the
   data object was generated.
 
-# epiprocess 0.2.0:
+# epiprocess 0.2.0
 
-## Breaking changes:
+## Breaking changes
 
 * Removed default `n=7` argument to `epix_slide`.
 
-## Improvements:
+## Improvements
 
 * Ignore `NA`s when printing `time_value` range for an `epi_archive`.
 * Fixed misleading column naming in `epix_slide` example.
 * Trimmed down `epi_slide` examples.
 * Synced out-of-date docs.
 
-## Cleanup:
+## Cleanup
 
 * Removed dependency of some `epi_archive` tests on an example archive.
   object, and made them more understandable by reading without running.
@@ -271,16 +271,16 @@ inter-release development versions will include an additional ".9999" suffix.
 * Removed some dead code.
 * Made `.{Rbuild,git}ignore` files more comprehensive.
 
-# epiprocess 0.1.2:
+# epiprocess 0.1.2
 
-## New features:
+## New features
 
 * New `new_epi_df` function is similar to `as_epi_df`, but (i) recalculates,
   overwrites, and/or drops most metadata of `x` if it has any, (ii) may
   still reorder the columns of `x` even if it's already an `epi_df`, and
   (iii) treats `x` as optional, constructing an empty `epi_df` by default.
 
-## Improvements:
+## Improvements
 
 * Fixed `geo_type` guessing on alphabetical strings with more than 2
   characters to yield `"custom"`, not US `"nation"`.
@@ -300,20 +300,20 @@ inter-release development versions will include an additional ".9999" suffix.
 * Improved `as_epi_archive` and `epi_archive$new`/`$initialize`
   documentation, including constructing a toy archive.
 
-## Cleanup:
+## Cleanup
 
 * Added tests for `epi_slide`, `epi_cor`, and internal utility functions.
 * Fixed currently-unused internal utility functions `MiddleL`, `MiddleR` to
   yield correct results on odd-length vectors.
 
-# epiprocess 0.1.1:
+# epiprocess 0.1.1
 
-## New features:
+## New features
 
 * New example data objects allow one to quickly experiment with `epi_df`s
   and `epi_archives` without relying/waiting on an API to fetch data.
 
-## Improvements:
+## Improvements
 
 * Improved `epi_slide` error messaging.
 * Fixed description of the appropriate parameters for an `f` argument to
@@ -322,61 +322,60 @@ inter-release development versions will include an additional ".9999" suffix.
 * Added some examples throughout the package.
 * Using example data objects in vignettes also speeds up vignette compilation.
 
-## Cleanup:
+## Cleanup
 
 * Set up gh-actions CI.
 * Added tests for `epi_df`s.
 
 # epiprocess 0.1.0
 
-## Implemented core functionality, vignettes:
+## Implemented core functionality, vignettes
 
-Classes:
-* `epi_df`: specialized `tbl_df` for geotemporal epidemiological time
-  series data, with optional metadata recording other key columns (e.g.,
-  demographic breakdowns) and `as_of` what time/version this data was
-  current/published. Associated functions:
-  * `as_epi_df` converts to an `epi_df`, guessing the `geo_type`,
-    `time_type`, `other_keys`, and `as_of` if not specified.
-  * `as_epi_df.tbl_ts` and `as_tsibble.epi_df` automatically set
-    `other_keys` and `key`&`index`, respectively.
-  * `epi_slide` applies a user-supplied computation to a sliding/rolling
-    time window and user-specified groups, adding the results as new
-    columns, and recycling/broadcasting results to keep the result size
-    stable. Allows computation to be provided as a function, `purrr`-style
-    formula, or tidyeval dots. Uses `slider` underneath for efficiency.
-  * `epi_cor` calculates Pearson, Kendall, or Spearman correlations
-    between two (optionally time-shifted) variables in an `epi_df` within
-    user-specified groups.
-  * Convenience function: `is_epi_df`.
-* `epi_archive`: R6 class for version (patch) data for geotemporal
-  epidemiological time series data sets. Comes with S3 methods and regular
-  functions that wrap around this functionality for those unfamiliar with R6
-  methods. Associated functions:
-  * `as_epi_archive`: prepares an `epi_archive` object from a data frame
-    containing snapshots and/or patch data for every available version of
-    the data set.
-  * `as_of`: extracts a snapshot of the data set as of some requested
-    version, in `epi_df` format.
-  * `epix_slide`, `<epi_archive>$slide`: similar to `epi_slide`, but for
-    `epi_archive`s; for each requested `ref_time_value` and group, applies
-    a time window and user-specified computation to a snapshot of the data
-    as of `ref_time_value`.
-  * `epix_merge`, `<epi_archive>$merge`: like `merge` for `epi_archive`s,
-    but allowing for the last version of each observation to be carried
-    forward to fill in gaps in `x` or `y`.
-  * Convenience function: `is_epi_archive`.
-
-Additional functions:
-* `growth_rate`: estimates growth rate of a time series using one of a few
-  built-in `method`s based on relative change, linear regression,
-  smoothing splines, or trend filtering.
-* `detect_outlr`: applies one or more outlier detection methods to a given
-  signal variable, and optionally aggregates the outputs to create a
-  consensus result.
-* `detect_outlr_rm`: outlier detection function based on a
-  rolling-median-based outlier detection function; one of the methods
-  included in `detect_outlr`.
-* `detect_outlr_stl`: outlier detection function based on a seasonal-trend
-  decomposition using LOESS (STL); one of the methods included in
-  `detect_outlr`.
+* Classes:
+  * `epi_df`: specialized `tbl_df` for geotemporal epidemiological time
+    series data, with optional metadata recording other key columns (e.g.,
+    demographic breakdowns) and `as_of` what time/version this data was
+    current/published. Associated functions:
+    * `as_epi_df` converts to an `epi_df`, guessing the `geo_type`,
+      `time_type`, `other_keys`, and `as_of` if not specified.
+    * `as_epi_df.tbl_ts` and `as_tsibble.epi_df` automatically set
+      `other_keys` and `key`&`index`, respectively.
+    * `epi_slide` applies a user-supplied computation to a sliding/rolling
+      time window and user-specified groups, adding the results as new
+      columns, and recycling/broadcasting results to keep the result size
+      stable. Allows computation to be provided as a function, `purrr`-style
+      formula, or tidyeval dots. Uses `slider` underneath for efficiency.
+    * `epi_cor` calculates Pearson, Kendall, or Spearman correlations
+      between two (optionally time-shifted) variables in an `epi_df` within
+      user-specified groups.
+    * Convenience function: `is_epi_df`.
+  * `epi_archive`: R6 class for version (patch) data for geotemporal
+    epidemiological time series data sets. Comes with S3 methods and regular
+    functions that wrap around this functionality for those unfamiliar with R6
+    methods. Associated functions:
+    * `as_epi_archive`: prepares an `epi_archive` object from a data frame
+      containing snapshots and/or patch data for every available version of
+      the data set.
+    * `as_of`: extracts a snapshot of the data set as of some requested
+      version, in `epi_df` format.
+    * `epix_slide`, `<epi_archive>$slide`: similar to `epi_slide`, but for
+      `epi_archive`s; for each requested `ref_time_value` and group, applies
+      a time window and user-specified computation to a snapshot of the data
+      as of `ref_time_value`.
+    * `epix_merge`, `<epi_archive>$merge`: like `merge` for `epi_archive`s,
+      but allowing for the last version of each observation to be carried
+      forward to fill in gaps in `x` or `y`.
+    * Convenience function: `is_epi_archive`.
+* Additional functions:
+  * `growth_rate`: estimates growth rate of a time series using one of a few
+    built-in `method`s based on relative change, linear regression,
+    smoothing splines, or trend filtering.
+  * `detect_outlr`: applies one or more outlier detection methods to a given
+    signal variable, and optionally aggregates the outputs to create a
+    consensus result.
+  * `detect_outlr_rm`: outlier detection function based on a
+    rolling-median-based outlier detection function; one of the methods
+    included in `detect_outlr`.
+  * `detect_outlr_stl`: outlier detection function based on a seasonal-trend
+    decomposition using LOESS (STL); one of the methods included in
+    `detect_outlr`.
