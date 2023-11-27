@@ -127,3 +127,25 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(key(ea12$DT),c("geo_value","time_value","misc","version"))
   expect_equal(ea12$additional_metadata,list(value=df$misc))
 })
+
+test_that("`epi_archive` rejects nonunique keys", {
+  toy_update_tbl =
+    tibble::tribble(
+      ~geo_value,  ~age_group,  ~time_value,     ~version, ~value,
+            "us",     "adult", "2000-01-01", "2000-01-02",    121,
+            "us",     "adult", "2000-01-01", "2000-01-03",    125, # (revision)
+            "us",     "adult", "2000-01-02", "2000-01-03",    130,
+            "us", "pediatric", "2000-01-01", "2000-01-02",      5
+    ) %>%
+    mutate(age_group = ordered(age_group, c("pediatric", "adult")),
+           time_value = as.Date(time_value),
+           version = as.Date(version))
+  expect_error(
+    as_epi_archive(toy_update_tbl),
+    class = "epiprocess__epi_archive_requires_unique_key"
+  )
+  expect_error(
+    regexp = NA,
+    as_epi_archive(toy_update_tbl, other_keys = "age_group"),
+  )
+})

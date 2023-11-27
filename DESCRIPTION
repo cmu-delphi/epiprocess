@@ -1,11 +1,12 @@
 Type: Package
 Package: epiprocess
 Title: Tools for basic signal processing in epidemiology
-Version: 0.5.0.9999
+Version: 0.7.0
 Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", role = "aut"),
     person("Rafael", "Catoia", role = "ctb"),
+    person("Nat", "DeFries", role = "ctb"),
     person("Daniel", "McDonald", role = "aut"),
     person("Rachel", "Lobay", role = "ctb"),
     person("Ken", "Mawer", role = "ctb"),
@@ -13,20 +14,26 @@ Authors@R: c(
     person("Quang", "Nguyen", role = "ctb"),
     person("Evan", "Ray", role = "aut"),
     person("Dmitry", "Shemetov", role = "ctb"),
-    person("Ryan", "Tibshirani", , "ryantibs@cmu.edu", role = c("aut", "cre"))
+    person("Ryan", "Tibshirani", , "ryantibs@cmu.edu", role = c("aut", "cre")),
+    person("Lionel", "Henry", role = "ctb", comment = "Author of included rlang fragments"),
+    person("Hadley", "Wickham", role = "ctb", comment = "Author of included rlang fragments"),
+    person("Posit", role = "cph", comment = "Copyright holder of included rlang fragments")
   )
 Description: This package introduces a common data structure for epidemiological
     data reported by location and time, provides another data structure to
     work with revisions to these data sets over time, and offers associated
     utilities to perform basic signal processing tasks.
 License: MIT + file LICENSE
-Imports: 
+Copyright: file inst/COPYRIGHTS
+Imports:
+    cli,
     data.table,
-    dplyr,
+    dplyr (>= 1.0.0),
     fabletools,
     feasts,
     generics,
     genlasso,
+    lifecycle (>= 1.0.1),
     lubridate,
     magrittr,
     purrr,
@@ -35,9 +42,10 @@ Imports:
     slider,
     tibble,
     tidyr,
-    tidyselect,
+    tidyselect (>= 1.2.0),
     tsibble,
-    utils
+    utils,
+    vctrs
 Suggests:
     covidcast,
     epidatr,
@@ -45,8 +53,7 @@ Suggests:
     knitr,
     outbreaks,
     rmarkdown,
-    testthat (>= 3.0.0),
-    vctrs,
+    testthat (>= 3.1.5),
     waldo (>= 0.3.1),
     withr
 VignetteBuilder: 
@@ -59,7 +66,22 @@ Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Depends: 
     R (>= 2.10)
 URL: https://cmu-delphi.github.io/epiprocess/
+Collate: 
+    'archive.R'
+    'correlation.R'
+    'data.R'
+    'epi_df.R'
+    'epiprocess.R'
+    'methods-epi_archive.R'
+    'grouped_epi_archive.R'
+    'growth_rate.R'
+    'methods-epi_df.R'
+    'outliers.R'
+    'reexports.R'
+    'slide.R'
+    'utils.R'
+    'utils_pipe.R'
