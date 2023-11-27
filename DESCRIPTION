@@ -33,6 +33,7 @@ Imports:
     feasts,
     generics,
     genlasso,
+    ggplot2,
     lifecycle (>= 1.0.1),
     lubridate,
     magrittr,
@@ -49,7 +50,6 @@ Imports:
 Suggests:
     covidcast,
     epidatr,
-    ggplot2,
     knitr,
     outbreaks,
     rmarkdown,
@@ -72,9 +72,11 @@ Depends:
 URL: https://cmu-delphi.github.io/epiprocess/
 Collate: 
     'archive.R'
+    'autoplot.R'
     'correlation.R'
     'data.R'
     'epi_df.R'
+    'epi_keys.R'
     'epiprocess.R'
     'methods-epi_archive.R'
     'grouped_epi_archive.R'
@@ -83,5 +85,6 @@ Collate:
     'outliers.R'
     'reexports.R'
     'slide.R'
+    'utils-arg.R'
     'utils.R'
     'utils_pipe.R'
