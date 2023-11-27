@@ -66,10 +66,13 @@ reference:
   - archive_cases_dv_subset
   - incidence_num_outlier_example
   - contains("jhu_csse")
+- title: Basic automatic plotting
+  contents:
+  - autoplot.epi_df
 - title: internal
   contents:
   - epiprocess
   - max_version_with_row_in
   - next_after
   - guess_period
-
+  - epi_keys
