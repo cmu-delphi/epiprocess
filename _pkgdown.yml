@@ -15,7 +15,7 @@ home:
   links:
   - text: View the Delphi tooling book
     href: https://cmu-delphi.github.io/delphi-tooling-book/
-  - text: Get epidatasets R package
+  - text: Get the epidatasets R package
     href: https://cmu-delphi.github.io/epidatasets/
   - text: Get the epidatr R package
     href: https://github.com/cmu-delphi/epidatr
