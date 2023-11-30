@@ -8,7 +8,7 @@ vignette: >
 ---
 
 A central tool in the `epiprocess` package is `epi_slide()`, which is based on
-the powerful functionality provided in the 
+the powerful functionality provided in the
 [`slider`](https://cran.r-project.org/web/packages/slider) package. In
 `epiprocess`, to "slide" means to apply a computation---represented as a
 function or formula---over a sliding/rolling data window. Suitable
@@ -37,15 +37,14 @@ library(dplyr)
 
 The data is fetched with the following query:
 ```{r, message = FALSE, eval=F}
-x <- covidcast(
-  data_source = "jhu-csse",
+x <- pub_covidcast(
+  source = "jhu-csse",
   signals = "confirmed_incidence_num",
-  time_type = "day",
   geo_type = "state",
+  time_type = "day",
+  geo_values = "ca,fl,ny,tx,ga,pa",
   time_values = epirange(20200301, 20211231),
-  geo_values = "ca,fl,ny,tx,ga,pa"
 ) %>%
-  fetch() %>%
   select(geo_value, time_value, cases = value) %>%
   arrange(geo_value, time_value) %>%
   as_epi_df()
@@ -69,8 +68,8 @@ order to smooth the signal, by passing in a formula for the first argument of
 `epi_slide()`. To do this computation per state, we first call `group_by()`.
 
 ```{r}
-x %>% 
-  group_by(geo_value) %>% 
+x %>%
+  group_by(geo_value) %>%
   epi_slide(~ mean(.x$cases), before = 6) %>%
   ungroup() %>%
   head(10)
@@ -84,7 +83,7 @@ default. We can of course change this post hoc, or we can instead specify a new
 name up front using the `new_col_name` argument:
 
 ```{r}
-x <- x %>% 
+x <- x %>%
   group_by(geo_value) %>%
   epi_slide(~ mean(.x$cases), before = 6, new_col_name = "cases_7dav") %>%
   ungroup()
@@ -102,7 +101,7 @@ Like in `group_modify()`, there are alternative names for these variables as
 well: `.` can be used instead of `.x`, `.y` instead of `.group_key`, and `.z`
 instead of `.ref_time_value`.
 
-## Slide with a function 
+## Slide with a function
 
 We can also pass a function for the first argument in `epi_slide()`. In this
 case, the passed function must accept the following arguments:
@@ -118,8 +117,8 @@ receives to `f`.
 Recreating the last example of a 7-day trailing average:
 
 ```{r}
-x <- x %>% 
-  group_by(geo_value) %>% 
+x <- x %>%
+  group_by(geo_value) %>%
   epi_slide(function(x, gk, rtv) mean(x$cases), before = 6, new_col_name = "cases_7dav") %>%
   ungroup()
 
@@ -135,8 +134,8 @@ to a computation in which we can access any columns of `x` by name, just as we
 would in a call to `dplyr::mutate()`, or any of the `dplyr` verbs. For example:
 
 ```{r}
-x <- x %>% 
-  group_by(geo_value) %>% 
+x <- x %>%
+  group_by(geo_value) %>%
   epi_slide(cases_7dav = mean(cases), before = 6) %>%
   ungroup()
 
@@ -155,13 +154,13 @@ theme_set(theme_bw())
 ggplot(x, aes(x = time_value)) +
   geom_col(aes(y = cases, fill = geo_value), alpha = 0.5, show.legend = FALSE) +
   geom_line(aes(y = cases_7dav, col = geo_value), show.legend = FALSE) +
-  facet_wrap(~ geo_value, scales = "free_y") +
+  facet_wrap(~geo_value, scales = "free_y") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Reported COVID-19 cases")
 ```
 
-As we can see from the top right panel, it looks like Texas moved to weekly 
-reporting of COVID-19 cases in summer of 2021.  
+As we can see from the top right panel, it looks like Texas moved to weekly
+reporting of COVID-19 cases in summer of 2021.
 
 ## Running a local forecaster
 
@@ -183,57 +182,60 @@ units of the `time_value` column; so, days, in the working `epi_df` being
 considered in this vignette).
 
 ```{r}
-prob_ar <- function(y, lags = c(0, 7, 14), ahead = 6, min_train_window = 20, 
+prob_ar <- function(y, lags = c(0, 7, 14), ahead = 6, min_train_window = 20,
                     lower_level = 0.05, upper_level = 0.95, symmetrize = TRUE,
-                    intercept = FALSE, nonneg = TRUE) {   
+                    intercept = FALSE, nonneg = TRUE) {
   # Return NA if insufficient training data
   if (length(y) < min_train_window + max(lags) + ahead) {
     return(data.frame(point = NA, lower = NA, upper = NA))
   }
-  
+
   # Build features and response for the AR model
   dat <- do.call(
-    data.frame, 
+    data.frame,
     purrr::map(lags, function(j) lag(y, n = j))
   )
-  names(dat) = paste0("x", 1:ncol(dat))
-  if (intercept) dat$x0 = rep(1, nrow(dat))
-  dat$y <- lead(y, n = ahead) 
-  
+  names(dat) <- paste0("x", 1:ncol(dat))
+  if (intercept) dat$x0 <- rep(1, nrow(dat))
+  dat$y <- lead(y, n = ahead)
+
   # Now fit the AR model and make a prediction
   obj <- lm(y ~ . + 0, data = dat)
   point <- predict(obj, newdata = tail(dat, 1))
-  
-  # Compute a band 
+
+  # Compute a band
   r <- residuals(obj)
   s <- ifelse(symmetrize, -1, NA) # Should the residuals be symmetrized?
   q <- quantile(c(r, s * r), probs = c(lower_level, upper_level), na.rm = TRUE)
   lower <- point + q[1]
   upper <- point + q[2]
-  
+
   # Clip at zero if we need to, then return
-  if (nonneg) { 
-    point = max(point, 0) 
-    lower = max(lower, 0) 
-    upper = max(upper, 0) 
+  if (nonneg) {
+    point <- max(point, 0)
+    lower <- max(lower, 0)
+    upper <- max(upper, 0)
   }
   return(data.frame(point = point, lower = lower, upper = upper))
 }
 ```
 
-We go ahead and slide this AR forecaster over the working `epi_df` of COVID-19 
-cases. Note that we actually model the `cases_7dav` column, to operate on the 
+We go ahead and slide this AR forecaster over the working `epi_df` of COVID-19
+cases. Note that we actually model the `cases_7dav` column, to operate on the
 scale of smoothed COVID-19 cases. This is clearly equivalent, up to a constant,
 to modeling weekly sums of COVID-19 cases.
 
 ```{r}
-fc_time_values <- seq(as.Date("2020-06-01"), 
-                      as.Date("2021-12-01"), 
-                      by = "1 months")
-x %>% 
+fc_time_values <- seq(as.Date("2020-06-01"),
+  as.Date("2021-12-01"),
+  by = "1 months"
+)
+x %>%
   group_by(geo_value) %>%
-  epi_slide(fc = prob_ar(cases_7dav), before = 119, 
-            ref_time_values = fc_time_values) %>%
+  epi_slide(
+    fc = prob_ar(cases_7dav), before = 119,
+    ref_time_values = fc_time_values
+  ) %>%
   ungroup() %>%
   head(10)
 ```
@@ -243,42 +245,51 @@ sliding computation (here, compute a forecast) at a specific subset of reference
 time values. We get out three columns `fc_point`, `fc_lower`, and `fc_upper`
 that correspond to the point forecast, and the lower and upper endpoints of the
 95\% prediction band, respectively. (If instead we had set `as_list_col = TRUE`
-in the call to `epi_slide()`, then we would have gotten a list column `fc`, 
+in the call to `epi_slide()`, then we would have gotten a list column `fc`,
 where each element of `fc` is a data frame with named columns `point`, `lower`,
 and `upper`.)
 
 To finish off, we plot the forecasts at some times (spaced out by a few months)
-over the last year, at multiple horizons: 7, 14, 21, and 28 days ahead. To do 
-so, we encapsulate the process of generating forecasts into a simple function, 
+over the last year, at multiple horizons: 7, 14, 21, and 28 days ahead. To do
+so, we encapsulate the process of generating forecasts into a simple function,
 so that we can call it a few times.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
 # Note the use of all_rows = TRUE (keeps all original rows in the output)
 k_week_ahead <- function(x, ahead = 7) {
-  x %>% 
+  x %>%
     group_by(geo_value) %>%
-    epi_slide(fc = prob_ar(cases_7dav, ahead = ahead), before = 119,
-              ref_time_values = fc_time_values, all_rows = TRUE) %>%
+    epi_slide(
+      fc = prob_ar(cases_7dav, ahead = ahead), before = 119,
+      ref_time_values = fc_time_values, all_rows = TRUE
+    ) %>%
     ungroup() %>%
-    mutate(target_date = time_value + ahead) 
+    mutate(target_date = time_value + ahead)
 }
 
 # First generate the forecasts, and bind them together
-z <- bind_rows(k_week_ahead(x, ahead = 7),
-               k_week_ahead(x, ahead = 14),
-               k_week_ahead(x, ahead = 21),
-               k_week_ahead(x, ahead = 28))
+z <- bind_rows(
+  k_week_ahead(x, ahead = 7),
+  k_week_ahead(x, ahead = 14),
+  k_week_ahead(x, ahead = 21),
+  k_week_ahead(x, ahead = 28)
+)
 
-# Now plot them, on top of actual COVID-19 case counts 
+# Now plot them, on top of actual COVID-19 case counts
 ggplot(z) +
-  geom_line(aes(x = time_value, y = cases_7dav), color = "gray50") + 
-  geom_ribbon(aes(x = target_date, ymin = fc_lower, ymax = fc_upper,
-                  group = time_value), fill = 6, alpha = 0.4) + 
-  geom_line(aes(x = target_date, y = fc_point, group = time_value)) + 
-  geom_point(aes(x = target_date, y = fc_point, group = time_value), 
-             size = 0.5) + 
-  geom_vline(data = tibble(x = fc_time_values), aes(xintercept = x), 
-             linetype = 2, alpha = 0.5) +
+  geom_line(aes(x = time_value, y = cases_7dav), color = "gray50") +
+  geom_ribbon(aes(
+    x = target_date, ymin = fc_lower, ymax = fc_upper,
+    group = time_value
+  ), fill = 6, alpha = 0.4) +
+  geom_line(aes(x = target_date, y = fc_point, group = time_value)) +
+  geom_point(aes(x = target_date, y = fc_point, group = time_value),
+    size = 0.5
+  ) +
+  geom_vline(
+    data = tibble(x = fc_time_values), aes(xintercept = x),
+    linetype = 2, alpha = 0.5
+  ) +
   facet_wrap(vars(geo_value), scales = "free_y") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Reported COVID-19 cases")
@@ -290,7 +301,7 @@ spotty. At various points in time, we can see that its forecasts are volatile
 too narrow), or both at the same time. This is only meant as a simple demo and
 not entirely unexpected given the way the AR model is set up. The
 [`epipredict`](https://cmu-delphi.github.io/epipredict) package, which is a
-companion package to `epiprocess`, offers a suite of predictive modeling tools 
+companion package to `epiprocess`, offers a suite of predictive modeling tools
 that can improve on some of the shortcomings of the above simple AR model.
 
 Second, the AR forecaster here is using finalized data, meaning, it uses the
@@ -304,13 +315,13 @@ therein. Fortunately, the `epiprocess` package provides a data structure called
 `epi_archive` that can be used to store all data revisions, and furthermore, an
 `epi_archive` object knows how to slide computations in the correct
 version-aware sense (for the computation at each reference time $t$, it uses
-only data that would have been available as of $t$). We will revisit this 
-example in the [archive 
+only data that would have been available as of $t$). We will revisit this
+example in the [archive
 vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html).
 
 ## Attribution
 This document contains a dataset that is a modified part of the [COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) as [republished in the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html). This data set is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.
 
-[From the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html): 
- These signals are taken directly from the JHU CSSE [COVID-19 GitHub repository](https://github.com/CSSEGISandData/COVID-19) without changes. 
+[From the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html):
+ These signals are taken directly from the JHU CSSE [COVID-19 GitHub repository](https://github.com/CSSEGISandData/COVID-19) without changes.
 
