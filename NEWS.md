@@ -2,7 +2,7 @@
 
 Note that `epiprocess` uses the [Semantic Versioning
 ("semver")](https://semver.org/) scheme for all release versions, but any
-inter-release development versions will include an additional ".9000" suffix.
+inter-release development versions will include an additional ".9999" suffix.
 
 ## Breaking changes:
 
