@@ -21,9 +21,9 @@ inter-release development versions will include an additional ".9999" suffix.
 
 ## New features:
 
-* `epi_slide` and `epix_slide` also make the window data, group key and reference
-  time value available to slide computations specified as formulas or tidy
-  evaluation expressions, in additional or completely new ways.
+* `epi_slide` and `epix_slide` also make the window data, group key and
+  reference time value available to slide computations specified as formulas or
+  tidy evaluation expressions, in additional or completely new ways.
   * If `f` is a formula, it can now access the reference time value via `.z` or
     `.ref_time_value`.
   * If `f` is missing, the tidy evaluation expression in `...` can now refer to
@@ -52,6 +52,10 @@ inter-release development versions will include an additional ".9999" suffix.
   format (see `tidyr::chop`).
 * `epi_slide` now works properly with slide computations that output just a
   `Date` vector, rather than converting `slide_value` to a numeric column.
+* Fix `?archive_cases_dv_subset` information regarding modifications of upstream
+  data by @brookslogan in (#299).
+* Update to use updated `epidatr` (`fetch_tbl` -> `fetch`) by @brookslogan in
+  (#319).
 
 # epiprocess 0.6.0
 
