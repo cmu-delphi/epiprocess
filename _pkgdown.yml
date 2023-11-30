@@ -13,12 +13,14 @@ url: https://cmu-delphi.github.io/epiprocess/
 
 home:
   links:
-  - text: Get the epipredict R package
-    href: https://cmu-delphi.github.io/epipredict/
-  - text: Get the covidcast R package
-    href: https://cmu-delphi.github.io/covidcast/covidcastR/
+  - text: View the Delphi tooling book
+    href: https://cmu-delphi.github.io/delphi-tooling-book/
+  - text: Get epidatasets R package
+    href: https://cmu-delphi.github.io/epidatasets/
   - text: Get the epidatr R package
     href: https://github.com/cmu-delphi/epidatr
+  - text: Get the epipredict R package
+    href: https://cmu-delphi.github.io/epipredict/
 
 articles:
 - title: Using the package
