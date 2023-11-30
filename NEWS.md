@@ -52,10 +52,10 @@ inter-release development versions will include an additional ".9000" suffix.
   format (see `tidyr::chop`).
 * `epi_slide` now works properly with slide computations that output just a
   `Date` vector, rather than converting `slide_value` to a numeric column.
-* Fix `?archive_cases_dv_subset` regarding modifications of upstream by
-  @brookslogan in (#299)
-* Update to use latest `epidatr` (`fetch_tbl` -> `fetch`) by @brookslogan in
-  (#319)
+* Fix `?archive_cases_dv_subset` information regarding modifications of upstream
+  data by @brookslogan in (#299).
+* Update to use updated `epidatr` (`fetch_tbl` -> `fetch`) by @brookslogan in
+  (#319).
 
 # epiprocess 0.6.0
 
