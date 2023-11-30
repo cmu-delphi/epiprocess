@@ -1,6 +1,14 @@
 template:
   bootstrap: 5
-  
+
+development:
+  mode: auto
+
+# Colors from epipredict & epidatr, including Carnegie Red https://www.cmu.edu/brand/brand-guidelines/visual-identity/colors.html
+navbar:
+  bg: '#C41230'
+  fg: '#f8f8f8'
+
 url: https://cmu-delphi.github.io/epiprocess/
 
 home:
