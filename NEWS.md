@@ -2,7 +2,7 @@
 
 Note that `epiprocess` uses the [Semantic Versioning
 ("semver")](https://semver.org/) scheme for all release versions, but any
-inter-release development versions will include an additional ".9999" suffix.
+inter-release development versions will include an additional ".9000" suffix.
 
 ## Breaking changes:
 
@@ -21,9 +21,9 @@ inter-release development versions will include an additional ".9999" suffix.
 
 ## New features:
 
-* `epi_slide` and `epix_slide` also make the window data, group key and reference
-  time value available to slide computations specified as formulas or tidy
-  evaluation expressions, in additional or completely new ways.
+* `epi_slide` and `epix_slide` also make the window data, group key and
+  reference time value available to slide computations specified as formulas or
+  tidy evaluation expressions, in additional or completely new ways.
   * If `f` is a formula, it can now access the reference time value via `.z` or
     `.ref_time_value`.
   * If `f` is missing, the tidy evaluation expression in `...` can now refer to
@@ -52,6 +52,10 @@ inter-release development versions will include an additional ".9999" suffix.
   format (see `tidyr::chop`).
 * `epi_slide` now works properly with slide computations that output just a
   `Date` vector, rather than converting `slide_value` to a numeric column.
+* Fix `?archive_cases_dv_subset` regarding modifications of upstream by
+  @brookslogan in (#299)
+* Update to use latest `epidatr` (`fetch_tbl` -> `fetch`) by @brookslogan in
+  (#319)
 
 # epiprocess 0.6.0
 
