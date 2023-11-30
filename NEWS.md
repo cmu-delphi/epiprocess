@@ -1,3 +1,10 @@
+
+# epiprocess 0.7.0.9999
+
+## Improvements
+
+* Updated vignettes for compatibility with epidatr 1.0.0 in PR #377.
+
 # epiprocess 0.7.0
 
 Note that `epiprocess` uses the [Semantic Versioning
