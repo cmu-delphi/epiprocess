@@ -278,7 +278,7 @@ library(data.table)
 library(ggplot2)
 theme_set(theme_bw())
 
-y1 <- covidcast(
+y1 <- pub_covidcast(
   source = "doctor-visits",
   signals = "smoothed_adj_cli",
   geo_type = "state",
