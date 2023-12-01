@@ -159,6 +159,7 @@ new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
   
   # Reorder columns (geo_value, time_value, ...)
   if(sum(dim(x)) != 0){
+    # TODO: relocate is slow. How to put geo_value and time_value at the beginning?
     x = dplyr::relocate(x, "geo_value", "time_value")
   }
   

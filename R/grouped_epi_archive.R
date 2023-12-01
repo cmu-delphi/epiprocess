@@ -185,7 +185,7 @@ grouped_epi_archive =
 #' @description Slides a given function over variables in a `grouped_epi_archive`
 #'   object. See the documentation for the wrapper function [`epix_slide()`] for
 #'   details.
-#' @importFrom data.table key address
+#' @importFrom data.table key address rbindlist
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
 #'  env missing_arg
           slide = function(f, ..., before, ref_time_values,
@@ -308,7 +308,7 @@ grouped_epi_archive =
             }
 
             f = as_slide_computation(f, ...)
-            x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
+            x = lapply(ref_time_values, function(ref_time_value) {
               # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
               # `epi_archive` if `all_versions` is `TRUE`:
               as_of_raw = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
@@ -365,7 +365,7 @@ grouped_epi_archive =
                                       new_col = new_col,
                                       .keep = TRUE)
               )
-            })
+            }) %>% rbindlist()
 
             # Unchop/unnest if we need to
             if (!as_list_col) {
