@@ -357,8 +357,7 @@ grouped_epi_archive =
               }
 
               return(
-                # TODO: looks like across and maybe all_of are slow
-                dplyr::group_by(as_of_df, dplyr::across(tidyselect::all_of(private$vars)),
+                dplyr::group_by(as_of_df, !!!syms(private$vars),
                                 .drop=private$drop) %>%
                   dplyr::group_modify(group_modify_fn,
                                       f = f, ...,
