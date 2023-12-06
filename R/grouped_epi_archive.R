@@ -185,8 +185,9 @@ grouped_epi_archive =
 #' @description Slides a given function over variables in a `grouped_epi_archive`
 #'   object. See the documentation for the wrapper function [`epix_slide()`] for
 #'   details.
-#' @importFrom data.table key address rbindlist
+#' @importFrom data.table key address rbindlist setDF
 #' @importFrom tibble as_tibble
+#' @importFrom dplyr group_by groups
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
 #'  env missing_arg
           slide = function(f, ..., before, ref_time_values,
@@ -368,7 +369,10 @@ grouped_epi_archive =
                                       new_col = new_col,
                                       .keep = TRUE)
               )
-            }) %>% rbindlist()
+            })
+            x <- rbindlist(x) %>% setDF() %>% as_tibble() %>%
+              # Reconstruct groups
+              group_by(!!!groups(x[[1L]]))
 
             # Unchop/unnest if we need to
             if (!as_list_col) {
