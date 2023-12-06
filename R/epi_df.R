@@ -111,8 +111,6 @@ NULL
 #' @param ... Additional arguments passed to methods.
 #' @return An `epi_df` object.
 #' 
-#' @importFrom data.table setcolorder
-#'
 #' @export
 new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
                       additional_metadata = list(), ...) {
@@ -161,8 +159,11 @@ new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
   
   # Reorder columns (geo_value, time_value, ...)
   if(sum(dim(x)) != 0){
-    # Moves columns in place
-    setcolorder(x, c("geo_value", "time_value"))
+    cols_to_put_first <- colnames(x) %in% c("geo_value", "time_value")
+    x <- x[, c(
+      which(cols_to_put_first),
+      which(!cols_to_put_first)
+    )]
   }
   
   # Apply epi_df class, attach metadata, and return
