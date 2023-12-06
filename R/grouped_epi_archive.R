@@ -372,7 +372,7 @@ grouped_epi_archive =
             })
             x <- rbindlist(x) %>% setDF() %>% as_tibble() %>%
               # Reconstruct groups
-              group_by(!!!groups(x[[1L]]), .drop = attr(attr(x[[1L]], "groups"), ".drop"))
+              group_by(!!!syms(private$vars), .drop=private$drop)
 
             # Unchop/unnest if we need to
             if (!as_list_col) {
