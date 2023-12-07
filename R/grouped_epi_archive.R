@@ -282,9 +282,9 @@ grouped_epi_archive =
               if (! (is.atomic(comp_value) || is.data.frame(comp_value))) {
                 Abort("The slide computation must return an atomic vector or a data frame.")
               }
-              # Convert from data.frame to tibble for speed.
+
               # Label every result row with the `ref_time_value`
-              res <- as_tibble(data.frame(time_value = ref_time_value))
+              res <- list(time_value = ref_time_value)
 
               # Wrap the computation output in a list and unchop/unnest later if
               # `as_list_col = FALSE`. This approach means that we will get a
@@ -292,8 +292,9 @@ grouped_epi_archive =
               # `as_list_col = TRUE` and the computations outputs are data
               # frames.
               res[[new_col]] <- list(comp_value)
-              
-              return(res)
+
+              # Convert the list to a tibble all at once for speed.
+              return(as_tibble(res))
             }
             
             # If `f` is missing, interpret ... as an expression for tidy evaluation
