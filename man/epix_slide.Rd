@@ -179,6 +179,13 @@ is equivalent to:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{x$slide(new_var = comp(old_var), before = 119)
 }\if{html}{\out{</div>}}
+
+Mutation and aliasing: \code{epix_slide} and \verb{$slide} will not mutate the input
+archives, but may in some edge cases alias parts of the inputs, so copy the
+outputs if needed before using mutating operations like \code{data.table}'s \verb{:=}
+operator. Currently, the only situation where there is potentially aliasing
+is of the \code{DT} in edge cases with \code{all_versions = TRUE}, but this may change
+in the future.
 }
 \examples{
 library(dplyr)

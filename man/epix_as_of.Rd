@@ -45,6 +45,13 @@ is equivalent to:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{x$as_of(max_version = v)
 }\if{html}{\out{</div>}}
+
+Mutation and aliasing: \code{epix_as_of} and \verb{$as_of} will not mutate the input
+archives, but may in some edge cases alias parts of the inputs, so copy the
+outputs if needed before using mutating operations like \code{data.table}'s \verb{:=}
+operator. Currently, the only situation where there is potentially aliasing
+is of the \code{DT} in edge cases with \code{all_versions = TRUE}, but this may change
+in the future.
 }
 \examples{
 # warning message of data latency shown
@@ -71,4 +78,5 @@ withCallingHandlers({
 }, epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning"))
 # Since R 4.0, there is a `globalCallingHandlers` function that can be used
 # to globally toggle these warnings.
+
 }
