@@ -180,12 +180,13 @@ is equivalent to:
 \if{html}{\out{<div class="sourceCode">}}\preformatted{x$slide(new_var = comp(old_var), before = 119)
 }\if{html}{\out{</div>}}
 
-Mutation and aliasing: \code{epix_slide} and \verb{$slide} will not mutate the input
-archives, but may in some edge cases alias parts of the inputs, so copy the
-outputs if needed before using mutating operations like \code{data.table}'s \verb{:=}
-operator. Currently, there should not be any aliasing encountered except for
-potentially aliasing of columns in edges cases with \code{all_versions = TRUE},
-but this may change in the future.
+Mutation and aliasing: \code{epix_slide} and \verb{$slide} will not perform in-place
+mutation of the input archives on their own. In some edge cases the inputs it
+feeds to the slide computations may alias parts of the input archive, so copy
+the slide computation inputs if needed before using mutating operations like
+\code{data.table}'s \verb{:=} operator. Similarly, in some edge cases, the output of
+the slide operation may alias parts of the input archive, so similarly, make
+sure to clone and/or copy appropriately before using in-place mutation.
 }
 \examples{
 library(dplyr)
