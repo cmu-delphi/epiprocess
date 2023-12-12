@@ -183,8 +183,9 @@ is equivalent to:
 Mutation and aliasing: \code{epix_slide} and \verb{$slide} will not mutate the input
 archives, but may in some edge cases alias parts of the inputs, so copy the
 outputs if needed before using mutating operations like \code{data.table}'s \verb{:=}
-operator. Currently, there should not be any aliasing encountered, but this
-may change in the future.
+operator. Currently, there should not be any aliasing encountered except for
+potentially aliasing of columns in edges cases with \code{all_versions = TRUE},
+but this may change in the future.
 }
 \examples{
 library(dplyr)
