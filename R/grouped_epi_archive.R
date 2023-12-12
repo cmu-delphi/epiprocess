@@ -336,6 +336,13 @@ grouped_epi_archive =
                 # copies.
                 if (address(as_of_archive$DT) == address(private$ungrouped$DT)) {
                   # `as_of` aliased its the full `$DT`; copy before mutating:
+                  #
+                  # Note: this step is probably unneeded; we're fine with
+                  # aliasing of the DT or its columns: vanilla operations aren't
+                  # going to mutate them in-place if they are aliases, and we're
+                  # not performing mutation (unlike the situation with
+                  # `fill_through_version` where we do mutate a `DT` and don't
+                  # want aliasing).
                   as_of_archive$DT <- copy(as_of_archive$DT)
                 }
                 dt_key = data.table::key(as_of_archive$DT)

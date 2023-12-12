@@ -805,12 +805,13 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   x$slide(new_var = comp(old_var), before = 119)
 #'   ```
 #'
-#' Mutation and aliasing: `epix_slide` and `$slide` will not mutate the input
-#' archives, but may in some edge cases alias parts of the inputs, so copy the
-#' outputs if needed before using mutating operations like `data.table`'s `:=`
-#' operator. Currently, there should not be any aliasing encountered except for
-#' potentially aliasing of columns in edges cases with `all_versions = TRUE`,
-#' but this may change in the future.
+#' Mutation and aliasing: `epix_slide` and `$slide` will not perform in-place
+#' mutation of the input archives on their own. In some edge cases the inputs it
+#' feeds to the slide computations may alias parts of the input archive, so copy
+#' the slide computation inputs if needed before using mutating operations like
+#' `data.table`'s `:=` operator. Similarly, in some edge cases, the output of
+#' the slide operation may alias parts of the input archive, so similarly, make
+#' sure to clone and/or copy appropriately before using in-place mutation.
 #'
 #' @examples
 #' library(dplyr)
