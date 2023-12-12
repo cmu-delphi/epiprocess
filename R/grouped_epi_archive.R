@@ -369,16 +369,18 @@ grouped_epi_archive =
               }
 
               return(
-                dplyr::group_by(as_of_df, !!!syms(private$vars),
-                                .drop=private$drop) %>%
-                  dplyr::group_modify(group_modify_fn,
-                                      f = f, ...,
-                                      ref_time_value = ref_time_value,
-                                      new_col = new_col,
-                                      .keep = TRUE)
+                  dplyr::group_modify(
+                    dplyr::group_by(as_of_df, !!!syms(private$vars), .drop=private$drop),
+                    group_modify_fn,
+                    f = f, ...,
+                    ref_time_value = ref_time_value,
+                    new_col = new_col,
+                    .keep = TRUE
+                  )
               )
             })
-            x <- rbindlist(x) %>% setDF() %>% as_tibble() %>%
+            # Combine output into a single tibble
+            x <- as_tibble(setDF(rbindlist(x))) %>%
               # Reconstruct groups
               group_by(!!!syms(private$vars), .drop=private$drop)
 
