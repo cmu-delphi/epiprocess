@@ -808,9 +808,8 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #' Mutation and aliasing: `epix_slide` and `$slide` will not mutate the input
 #' archives, but may in some edge cases alias parts of the inputs, so copy the
 #' outputs if needed before using mutating operations like `data.table`'s `:=`
-#' operator. Currently, the only situation where there is potentially aliasing
-#' is of the `DT` in edge cases with `all_versions = TRUE`, but this may change
-#' in the future.
+#' operator. Currently, there should not be any aliasing encountered, but this
+#' may change in the future.
 #'
 #' @examples
 #' library(dplyr)
