@@ -380,9 +380,9 @@ grouped_epi_archive =
               )
             })
             # Combine output into a single tibble
-            x <- as_tibble(setDF(rbindlist(x))) %>%
-              # Reconstruct groups
-              group_by(!!!syms(private$vars), .drop=private$drop)
+            x <- as_tibble(setDF(rbindlist(x)))
+            # Reconstruct groups
+            x <- group_by(x, !!!syms(private$vars), .drop=private$drop)
 
             # Unchop/unnest if we need to
             if (!as_list_col) {
