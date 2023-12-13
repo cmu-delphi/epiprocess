@@ -186,7 +186,7 @@ grouped_epi_archive =
 #'   object. See the documentation for the wrapper function [`epix_slide()`] for
 #'   details.
 #' @importFrom data.table key address rbindlist setDF
-#' @importFrom tibble as_tibble new_tibble
+#' @importFrom tibble as_tibble new_tibble validate_tibble
 #' @importFrom dplyr group_by groups
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
 #'  env missing_arg
@@ -294,7 +294,7 @@ grouped_epi_archive =
               res[[new_col]] <- list(comp_value)
 
               # Convert the list to a tibble all at once for speed.
-              return(new_tibble(res))
+              return(validate_tibble(new_tibble(res)))
             }
             
             # If `f` is missing, interpret ... as an expression for tidy evaluation
