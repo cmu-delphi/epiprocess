@@ -300,8 +300,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     # Count the number of appearances of each reference time value (these
     # appearances should all be real for now, but if we allow ref time values
     # outside of .data_group's time values):
-    counts = .data_group %>%
-      dplyr::filter(.data$time_value %in% time_values) %>%
+    counts =  dplyr::filter(.data_group, .data$time_value %in% time_values) %>%
       dplyr::count(.data$time_value) %>%
       dplyr::pull(n)
 
@@ -375,8 +374,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     .x$.real <- NULL
     f(.x, .group_key, .ref_time_value, ...)
   }
-  x = x %>%
-    group_modify(slide_one_grp,
+  x = group_modify(x, slide_one_grp,
                  f = f_wrapper, ...,
                  starts = starts,
                  stops = stops,

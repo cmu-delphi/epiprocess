@@ -32,13 +32,18 @@
 #'   x$as_of(max_version = v)
 #'   ```
 #'
-#' @export
+#' Mutation and aliasing: `epix_as_of` and `$as_of` will not mutate the input
+#' archives, but may in some edge cases alias parts of the inputs, so copy the
+#' outputs if needed before using mutating operations like `data.table`'s `:=`
+#' operator. Currently, the only situation where there is potentially aliasing
+#' is of the `DT` in edge cases with `all_versions = TRUE`, but this may change
+#' in the future.
+#'
 #' @examples
 #' # warning message of data latency shown
 #' epix_as_of(x = archive_cases_dv_subset,
 #'            max_version = max(archive_cases_dv_subset$DT$version))
 #' 
-#' @export 
 #' @examples
 #'
 #' range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
@@ -60,6 +65,8 @@
 #' }, epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning"))
 #' # Since R 4.0, there is a `globalCallingHandlers` function that can be used
 #' # to globally toggle these warnings.
+#'
+#' @export
 epix_as_of = function(x, max_version, min_time_value = -Inf, all_versions = FALSE) {
   if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
   return(x$as_of(max_version, min_time_value, all_versions = all_versions))
@@ -797,6 +804,14 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'   ```
 #'   x$slide(new_var = comp(old_var), before = 119)
 #'   ```
+#'
+#' Mutation and aliasing: `epix_slide` and `$slide` will not perform in-place
+#' mutation of the input archives on their own. In some edge cases the inputs it
+#' feeds to the slide computations may alias parts of the input archive, so copy
+#' the slide computation inputs if needed before using mutating operations like
+#' `data.table`'s `:=` operator. Similarly, in some edge cases, the output of
+#' the slide operation may alias parts of the input archive, so similarly, make
+#' sure to clone and/or copy appropriately before using in-place mutation.
 #'
 #' @examples
 #' library(dplyr)

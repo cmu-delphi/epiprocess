@@ -185,7 +185,9 @@ grouped_epi_archive =
 #' @description Slides a given function over variables in a `grouped_epi_archive`
 #'   object. See the documentation for the wrapper function [`epix_slide()`] for
 #'   details.
-#' @importFrom data.table key address
+#' @importFrom data.table key address rbindlist setDF
+#' @importFrom tibble as_tibble new_tibble validate_tibble
+#' @importFrom dplyr group_by groups
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
 #'  env missing_arg
           slide = function(f, ..., before, ref_time_values,
@@ -280,16 +282,19 @@ grouped_epi_archive =
               if (! (is.atomic(comp_value) || is.data.frame(comp_value))) {
                 Abort("The slide computation must return an atomic vector or a data frame.")
               }
+
+              # Label every result row with the `ref_time_value`
+              res <- list(time_value = ref_time_value)
+
               # Wrap the computation output in a list and unchop/unnest later if
               # `as_list_col = FALSE`. This approach means that we will get a
               # list-class col rather than a data.frame-class col when
               # `as_list_col = TRUE` and the computations outputs are data
               # frames.
-              comp_value <- list(comp_value)
-              
-              # Label every result row with the `ref_time_value`:
-              return(tibble::tibble(time_value = .env$ref_time_value,
-                                    !!new_col := .env$comp_value))
+              res[[new_col]] <- list(comp_value)
+
+              # Convert the list to a tibble all at once for speed.
+              return(validate_tibble(new_tibble(res)))
             }
             
             # If `f` is missing, interpret ... as an expression for tidy evaluation
@@ -308,7 +313,7 @@ grouped_epi_archive =
             }
 
             f = as_slide_computation(f, ...)
-            x = purrr::map_dfr(ref_time_values, function(ref_time_value) {
+            x = lapply(ref_time_values, function(ref_time_value) {
               # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
               # `epi_archive` if `all_versions` is `TRUE`:
               as_of_raw = private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
@@ -331,6 +336,13 @@ grouped_epi_archive =
                 # copies.
                 if (address(as_of_archive$DT) == address(private$ungrouped$DT)) {
                   # `as_of` aliased its the full `$DT`; copy before mutating:
+                  #
+                  # Note: this step is probably unneeded; we're fine with
+                  # aliasing of the DT or its columns: vanilla operations aren't
+                  # going to mutate them in-place if they are aliases, and we're
+                  # not performing mutation (unlike the situation with
+                  # `fill_through_version` where we do mutate a `DT` and don't
+                  # want aliasing).
                   as_of_archive$DT <- copy(as_of_archive$DT)
                 }
                 dt_key = data.table::key(as_of_archive$DT)
@@ -357,15 +369,20 @@ grouped_epi_archive =
               }
 
               return(
-                dplyr::group_by(as_of_df, dplyr::across(tidyselect::all_of(private$vars)),
-                                .drop=private$drop) %>%
-                  dplyr::group_modify(group_modify_fn,
-                                      f = f, ...,
-                                      ref_time_value = ref_time_value,
-                                      new_col = new_col,
-                                      .keep = TRUE)
+                  dplyr::group_modify(
+                    dplyr::group_by(as_of_df, !!!syms(private$vars), .drop=private$drop),
+                    group_modify_fn,
+                    f = f, ...,
+                    ref_time_value = ref_time_value,
+                    new_col = new_col,
+                    .keep = TRUE
+                  )
               )
             })
+            # Combine output into a single tibble
+            x <- as_tibble(setDF(rbindlist(x)))
+            # Reconstruct groups
+            x <- group_by(x, !!!syms(private$vars), .drop=private$drop)
 
             # Unchop/unnest if we need to
             if (!as_list_col) {

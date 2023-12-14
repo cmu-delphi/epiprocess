@@ -495,7 +495,10 @@ epi_archive =
                         version <= max_version, ] %>%
               unique(by = c("geo_value", "time_value", other_keys),
                      fromLast = TRUE) %>%
-              tibble::as_tibble() %>% 
+              tibble::as_tibble() %>%
+              # (`as_tibble` should de-alias the DT and its columns in any edge
+              # cases where they are aliased. We don't say we guarantee this
+              # though.)
               dplyr::select(-"version") %>%
               as_epi_df(geo_type = self$geo_type,
                         time_type = self$time_type,
