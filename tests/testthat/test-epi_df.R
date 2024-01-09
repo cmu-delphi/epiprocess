@@ -36,6 +36,22 @@ test_that("as_epi_df errors when additional_metadata is not a list", {
       pol = rep(c("blue", "swing", "swing"), each = 2))
   
   expect_error(
-    as_epi_df(ex_input, additional_metadata = c(other_keys = "state", "pol")), 
-    "`additional_metadata` must be a list type.")
+    as_epi_df(ex_input, additional_metadata = c(other_keys = "state", "pol")),
+    "`additional_metadata` must be a list type."
+  )
+})
+
+
+test_that("grouped epi_df maintains type for select", {
+  tib <- tibble::tibble(
+    x = 1:10, y = 1:10,
+    time_value = rep(seq(as.Date("2020-01-01"), by = 1, length.out = 5), times = 2),
+    geo_value = rep(c("ca", "hi"), each = 5)
+  )
+
+  epi_tib <- epiprocess::new_epi_df(tib)
+  epi_tib
+  grouped_epi <- epi_tib %>% group_by(geo_value)
+  selected_df <- grouped_epi %>% select(-y)
+  expect_true("epi_df" %in% class(selected_df))
 })
