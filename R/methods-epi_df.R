@@ -179,11 +179,13 @@ dplyr_row_slice.epi_df = function(data, i, ...) {
 
 #' @export
 `names<-.epi_df` = function(x, value) {
-  old_names = names(x)
-  old_other_keys = attr(x, "metadata")[["other_keys"]]
-  result = NextMethod()
+  old_names <- names(x)
+  old_metadata <- attr(x, "metadata")
+  old_other_keys <- old_metadata[["other_keys"]]
   new_other_keys <- value[match(old_other_keys, old_names)]
-  attr(result, "metadata")[["other_keys"]] <- new_other_keys
+  new_metadata <- old_metadata
+  new_metadata[["other_keys"]] <- new_other_keys
+  result <- reclass(NextMethod(), new_metadata)
   # decay to non-`epi_df` if needed:
   dplyr::dplyr_reconstruct(result, result)
 }
