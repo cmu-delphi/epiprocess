@@ -357,15 +357,23 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     new_col = sym(names(rlang::quos_auto_name(quos)))
     ... = missing_arg() # magic value that passes zero args as dots in calls below
   }
-
   phony_group_info <- dplyr::group_data(before_time_values_df)
 
   f = as_slide_computation(f, ...)
   # Create a wrapper that calculates and passes `.ref_time_value` to the
   # computation.
   f_wrapper = function(.x, .group_key, ...) {
-    phony_ii <- dplyr::left_join(.group_key, phony_group_info, by = dplyr::group_vars(.x))$.rows[[1]]
-    .ref_time_value = min(c(.x$time_value, before_time_values_df$time_value[phony_ii])) + before
+    phony_ii <- which(
+      Reduce(
+        `||`, lapply(names(.group_key), function(name) {
+          .group_key[[name]] == phony_group_info[[name]]
+        })
+      )
+    )
+    .ref_time_value = min(c(
+      .x$time_value,
+      before_time_values_df$time_value[phony_group_info[phony_ii,][[".rows"]][[1]]]
+    )) + before
     f(.x, .group_key, .ref_time_value, ...)
   }
   x = group_modify(x, slide_one_grp,
