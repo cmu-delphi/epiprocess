@@ -370,10 +370,10 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
         })
       )
     )
-    .ref_time_value = min(c(
-      .x$time_value,
-      before_time_values_df$time_value[phony_group_info[phony_ii,][[".rows"]][[1]]]
-    )) + before
+    .ref_time_value = min(
+      min(.x$time_value),
+      min(before_time_values_df$time_value[phony_group_info$.rows[[phony_ii]]])
+    ) + before
     f(.x, .group_key, .ref_time_value, ...)
   }
   x = group_modify(x, slide_one_grp,
