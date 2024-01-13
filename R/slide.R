@@ -370,8 +370,8 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
   f_wrapper = function(.x, .group_key, ...) {
     phony_ii <- phony_row_map[[Reduce(paste0, .group_key)]]
     .ref_time_value = min(
-      min(.x$time_value),
-      min(before_time_values_df$time_value[phony_ii])
+      .x$time_value,
+      before_time_values_df$time_value[phony_ii]
     ) + before
     f(.x, .group_key, .ref_time_value, ...)
   }
