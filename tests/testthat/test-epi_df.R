@@ -59,19 +59,20 @@ epi_tib <- epiprocess::new_epi_df(tib)
 test_that("grouped epi_df maintains type for select", {
   grouped_epi <- epi_tib %>% group_by(geo_value)
   selected_df <- grouped_epi %>% select(-y)
-  expect_true("epi_df" %in% class(selected_df))
+  expect_true(inherits(selected_df, "epi_df"))
   # make sure that the attributes are right
   epi_attr <- attributes(selected_df)
   expect_identical(epi_attr$names, c("geo_value", "time_value", "x"))
   expect_identical(epi_attr$row.names, seq(1, 10))
   expect_identical(epi_attr$groups, attributes(grouped_epi)$groups)
   expect_identical(epi_attr$metadata, attributes(epi_tib)$metadata)
+  expect_identical(selected_df, epi_tib %>% select(-y) %>% group_by(geo_value))
 })
 
 test_that("grouped epi_df drops type when dropping keys", {
   grouped_epi <- epi_tib %>% group_by(geo_value)
   selected_df <- grouped_epi %>% select(geo_value)
-  expect_true(!("epi_df" %in% class(selected_df)))
+  expect_true(!inherits(selected_df, "epi_df"))
 })
 
 test_that("grouped epi_df handles extra keys correctly", {
@@ -91,8 +92,7 @@ test_that("grouped epi_df handles extra keys correctly", {
   attributes(epi_tib)
   grouped_epi <- epi_tib %>% group_by(geo_value)
   selected_df <- grouped_epi %>% select(-extra_key)
-  selected_df
-  expect_true("epi_df" %in% class(selected_df))
+  expect_true(inherits(selected_df, "epi_df"))
   # make sure that the attributes are right
   old_attr <- attributes(epi_tib)
   epi_attr <- attributes(selected_df)
@@ -100,8 +100,7 @@ test_that("grouped epi_df handles extra keys correctly", {
   expect_identical(epi_attr$row.names, seq(1, 10))
   expect_identical(epi_attr$groups, attributes(grouped_epi)$groups)
   expect_identical(epi_attr$metadata, list(
-    geo_type = "state", time_type =
-      "day",
+    geo_type = "state", time_type = "day",
     as_of = old_attr$metadata$as_of,
     other_keys = character(0)
   ))
