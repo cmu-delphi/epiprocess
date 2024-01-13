@@ -182,13 +182,8 @@ dplyr_row_slice.epi_df = function(data, i, ...) {
   old_names = names(x)
   old_other_keys = attr(x, "metadata")[["other_keys"]]
   result = NextMethod()
-  new_other_keys_almost <- value[match(old_other_keys, old_names)]
-  attr(result, "metadata")[["other_keys"]] <-
-    # patch until we require `other_keys` to be `chr`; match NULL-ness of input `other_keys`:
-    # if (length(new_other_keys_almost) == 0L) NULL
-    # if (is.null(old_other_keys)) NULL
-    # else new_other_keys_almost
-    new_other_keys_almost
+  new_other_keys <- value[match(old_other_keys, old_names)]
+  attr(result, "metadata")[["other_keys"]] <- new_other_keys
   # decay to non-`epi_df` if needed:
   dplyr::dplyr_reconstruct(result, result)
 }
