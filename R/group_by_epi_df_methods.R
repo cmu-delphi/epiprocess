@@ -2,7 +2,8 @@
 #' @export
 select.epi_df <- function(.data, ...) {
   selected <- NextMethod(.data)
-  return (dplyr_reconstruct(selected, .data))
+  might_decay <- reclass(selected, attr(selected, "metadata"))
+  return(dplyr_reconstruct(might_decay, might_decay))
 }
 
 # others to consider:
