@@ -124,3 +124,17 @@ test_that("Metadata and grouping are dropped by `as_tibble`", {
     !any(c("metadata", "groups") %in% names(attributes(grouped_converted)))
   )
 })
+
+test_that("Renaming columns gives appropriate colnames and metadata", {
+  edf <- tibble::tibble(geo_value = 1, time_value = 1, age = 1, value = 1) %>%
+    as_epi_df(additional_metadata = list(other_keys = "age"))
+  renamed_edf1 <- edf %>%
+    `[`(c("geo_value", "time_value", "age", "value")) %>%
+    `names<-`(c("geo_value", "time_value", "age_group", "value"))
+  expect_identical(names(renamed_edf1), c("geo_value", "time_value", "age_group", "value"))
+  expect_identical(attr(renamed_edf1, "metadata")$other_keys, c("age_group"))
+  renamed_edf2 <- edf %>%
+    as_epi_df(additional_metadata = list(other_keys = "age")) %>%
+    select(geo_value, time_value, age_group = age, value)
+  expect_identical(renamed_edf1, renamed_edf2)
+})

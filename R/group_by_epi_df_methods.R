@@ -2,7 +2,7 @@
 #' @export
 select.epi_df <- function(.data, ...) {
   selected <- NextMethod(.data)
-  return(dplyr_reconstruct(selected, .data))
+  return (dplyr_reconstruct(selected, .data))
 }
 
 # others to consider:
