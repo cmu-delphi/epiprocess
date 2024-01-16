@@ -358,10 +358,12 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     ... = missing_arg() # magic value that passes zero args as dots in calls below
   }
 
-  phony_group_info <- dplyr::group_data(before_time_values_df)
-  phony_row_map <- phony_group_info$.rows
-  names(phony_row_map) <- purrr::pmap_chr(
-    as.list(phony_group_info[, dplyr::group_vars(before_time_values_df)]),
+  min_before_time_values_df <- summarize(
+    before_time_values_df, min_ref_date = min(time_value)
+  )
+  min_before_time_values_map <- min_before_time_values_df$min_ref_date
+  names(min_before_time_values_map) <- purrr::pmap_chr(
+    as.list(min_before_time_values_df[, dplyr::group_vars(before_time_values_df)]),
     function(...) {
       rlang::hash(list(...))
     }
@@ -371,10 +373,10 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
   # Create a wrapper that calculates and passes `.ref_time_value` to the
   # computation.
   f_wrapper = function(.x, .group_key, ...) {
-    phony_ii <- phony_row_map[[rlang::hash(as.list(.group_key))]]
+    min_phony_ref_date <- min_before_time_values_map[[rlang::hash(as.list(.group_key))]]
     .ref_time_value = min(
       .x$time_value,
-      before_time_values_df$time_value[phony_ii]
+      min_phony_ref_date
     ) + before
     f(.x, .group_key, .ref_time_value, ...)
   }
