@@ -123,15 +123,15 @@
 #'   
 #' @importFrom lubridate days weeks
 #' @importFrom dplyr bind_rows group_vars filter select left_join group_vars
-#' @importFrom rlang .data .env !! enquo enquos sym env missing_arg
+#' @importFrom rlang .data .env !! enquo enquos sym env missing_arg hash
 #' @export
-#' @examples 
+#' @examples
 #' # slide a 7-day trailing average formula on cases
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide(cases_7dav = mean(cases), before = 6) %>% 
+#'   epi_slide(cases_7dav = mean(cases), before = 6) %>%
 #'   # rmv a nonessential var. to ensure new col is printed
-#'   dplyr::select(-death_rate_7d_av) 
+#'   dplyr::select(-death_rate_7d_av)
 #'
 #' # slide a 7-day leading average
 #' jhu_csse_daily_subset %>%
@@ -143,16 +143,16 @@
 #' # slide a 7-day centre-aligned average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide(cases_7dav = mean(cases), before = 3, after = 3) %>% 
+#'   epi_slide(cases_7dav = mean(cases), before = 3, after = 3) %>%
 #'   # rmv a nonessential var. to ensure new col is printed
-#'   dplyr::select(-death_rate_7d_av) 
+#'   dplyr::select(-death_rate_7d_av)
 #'
 #' # slide a 14-day centre-aligned average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide(cases_7dav = mean(cases), before = 6, after = 7) %>% 
+#'   epi_slide(cases_7dav = mean(cases), before = 6, after = 7) %>%
 #'   # rmv a nonessential var. to ensure new col is printed
-#'   dplyr::select(-death_rate_7d_av) 
+#'   dplyr::select(-death_rate_7d_av)
 #'
 #' # nested new columns
 #' jhu_csse_daily_subset %>%
@@ -161,17 +161,17 @@
 #'                            cases_2dma = mad(cases)),
 #'             before = 1, as_list_col = TRUE)
 epi_slide = function(x, f, ..., before, after, ref_time_values,
-                     time_step, 
+                     time_step,
                      new_col_name = "slide_value", as_list_col = FALSE,
-                     names_sep = "_", all_rows = FALSE) { 
+                     names_sep = "_", all_rows = FALSE) {
 
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
-  
+
   if (missing(ref_time_values)) {
     ref_time_values = unique(x$time_value)
   }
-  
+
   # Some of these `ref_time_values` checks and processing steps also apply to
   # the `ref_time_values` default; for simplicity, just apply all the steps
   # regardless of whether we are working with a default or user-provided
@@ -187,7 +187,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
   } else {
     ref_time_values = sort(ref_time_values)
   }
-  
+
   # Validate and pre-process `before`, `after`:
   if (!missing(before)) {
     before <- vctrs::vec_cast(before, integer())
@@ -254,8 +254,8 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
   time_range = range(unique(c(x$time_value, before_time_values_df$time_value)))
   starts = in_range(ref_time_values - before, time_range)
   stops = in_range(ref_time_values + after, time_range)
-  
-  if( length(starts) == 0 || length(stops) == 0 ) { 
+
+  if( length(starts) == 0 || length(stops) == 0 ) {
     Abort("The starting and/or stopping times for sliding are out of bounds with respect to the range of times in your data. Check your settings for ref_time_values and align (and before, if specified).")
   }
 
@@ -264,7 +264,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   # Computation for one group, all time values
   slide_one_grp = function(.data_group,
-                           f, ...,  
+                           f, ...,
                            starts,
                            stops,
                            time_values,
@@ -277,9 +277,9 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     o = time_values %in% .data_group$time_value
     starts = starts[o]
     stops = stops[o]
-    time_values = time_values[o] 
-    
-    # Compute the slide values 
+    time_values = time_values[o]
+
+    # Compute the slide values
     slide_values_list = slider::hop_index(.x = .data_group,
                                           .i = .data_group$time_value,
                                           .f = f, ...,
@@ -290,7 +290,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     # values; this will be useful for all sorts of checks that follow
     o = .data_group$time_value %in% time_values
     num_ref_rows = sum(o)
-    
+
     # Count the number of appearances of each reference time value (these
     # appearances should all be real for now, but if we allow ref time values
     # outside of .data_group's time values):
@@ -352,7 +352,7 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     if (length(quos) > 1) {
       Abort("If `f` is missing then only a single computation can be specified via `...`.")
     }
-    
+
     f = quos[[1]]
     new_col = sym(names(rlang::quos_auto_name(quos)))
     ... = missing_arg() # magic value that passes zero args as dots in calls below
@@ -360,15 +360,15 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   phony_group_info <- dplyr::group_data(before_time_values_df)
   phony_row_map <- phony_group_info$.rows
-  # `deparse` more robust
-  # names(phony_row_map) <- deparse(Reduce(c, phony_group_info[, dplyr::group_vars(before_time_values_df)])) ?
-  names(phony_row_map) <- Reduce(paste0, phony_group_info[, dplyr::group_vars(before_time_values_df)])
+  # Reduce-paste is a lot faster but seems a little janky
+  # names(phony_row_map) <- Reduce(paste0, phony_group_info[, dplyr::group_vars(before_time_values_df)])
+  names(phony_row_map) <- apply(phony_group_info[, dplyr::group_vars(before_time_values_df)], MARGIN = 1, rlang::hash)
 
   f = as_slide_computation(f, ...)
   # Create a wrapper that calculates and passes `.ref_time_value` to the
   # computation.
   f_wrapper = function(.x, .group_key, ...) {
-    phony_ii <- phony_row_map[[Reduce(paste0, .group_key)]]
+    phony_ii <- phony_row_map[[apply(.group_key, MARGIN = 1, rlang::hash)]]
     .ref_time_value = min(
       .x$time_value,
       before_time_values_df$time_value[phony_ii]
