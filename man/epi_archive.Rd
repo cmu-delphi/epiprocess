@@ -115,21 +115,22 @@ toy_epi_archive
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
 \item{\code{DT}}{(\code{data.table})\cr
-the compressed datatable}
+the (optionally compactified) datatable}
 
-\item{\code{geo_type}}{(\code{character()})\cr
+\item{\code{geo_type}}{(string)\cr
 the resolution of the geographic label (e.g. state)}
 
-\item{\code{time_type}}{(\code{character()})\cr
+\item{\code{time_type}}{(string)\cr
 the resolution of the time column (e.g. day)}
 
-\item{\code{additional_metadata}}{(\code{list()})\cr
+\item{\code{additional_metadata}}{(named list)\cr
 any extra fields, such as \code{other_keys}}
 
-\item{\code{clobberable_versions_start}}{(\code{Date()})\cr
-the earliest date that new data should overwrite existing data}
+\item{\code{clobberable_versions_start}}{(length-1 of same type&class as \code{version} column, or \code{NA})\cr
+the earliest version number that might be rewritten in the future without assigning a new version
+date/number, or \code{NA} if this won't happen}
 
-\item{\code{versions_end}}{(\code{Date()})\cr
+\item{\code{versions_end}}{(length-1 of same type&class as \code{version} column)\cr
 the latest version observed}
 }
 \if{html}{\out{</div>}}
@@ -215,7 +216,7 @@ rows of \code{x}.}
 \subsection{Details}{
 Refer to the documentation for \code{\link[=as_epi_archive]{as_epi_archive()}} for more information
 and examples of parameter names.
-print archive
+Print information about an archive
 }
 
 \subsection{Returns}{
@@ -233,9 +234,10 @@ An \code{epi_archive} object.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{class}}{print the class label}
+\item{\code{class}}{Boolean; whether to print the class label header}
 
-\item{\code{methods}}{print all available methods of the archive}
+\item{\code{methods}}{Boolean; whether to print all available methods of
+the archive}
 }
 \if{html}{\out{</div>}}
 }
@@ -253,17 +255,17 @@ See the documentation for the wrapper function \code{\link[=epix_as_of]{epix_as_
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{max_version}}{Time value specifying the max version to permit in the
+\item{\code{max_version}}{Version specifying the max version to permit in the
 snapshot. That is, the snapshot will comprise the unique rows of the
 current archive data that represent the most up-to-date signal values, as
-of the specified \code{max_version} (and whose time values are at least
-\code{min_time_value}.)}
+of the specified \code{max_version} (and whose \code{time_value}s are at least
+\code{min_time_value}).}
 
-\item{\code{min_time_value}}{Time value specifying the min time value to permit in
+\item{\code{min_time_value}}{Time value specifying the min \code{time_value} to permit in
 the snapshot. Default is \code{-Inf}, which effectively means that there is no
 minimum considered.}
 
-\item{\code{all_versions}}{If \code{all_versions = TRUE}, then the output will be in
+\item{\code{all_versions}}{Boolean; If \code{all_versions = TRUE}, then the output will be in
 \code{epi_archive} format, and contain rows in the specified \code{time_value} range
 having \code{version <= max_version}. The resulting object will cover a
 potentially narrower \code{version} and \code{time_value} range than \code{x}, depending

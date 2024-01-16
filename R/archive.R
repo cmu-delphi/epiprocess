@@ -217,21 +217,22 @@ epi_archive <-
     #####
     public = list(
       #' @field DT (`data.table`)\cr
-      #' the compressed datatable
+      #' the (optionally compactified) datatable
       DT = NULL,
-      #' @field geo_type (`character()`)\cr
+      #' @field geo_type (string)\cr
       #' the resolution of the geographic label (e.g. state)
       geo_type = NULL,
-      #' @field time_type (`character()`)\cr
+      #' @field time_type (string)\cr
       #' the resolution of the time column (e.g. day)
       time_type = NULL,
-      #' @field additional_metadata (`list()`)\cr
+      #' @field additional_metadata (named list)\cr
       #' any extra fields, such as `other_keys`
       additional_metadata = NULL,
-      #' @field clobberable_versions_start (`Date()`)\cr
-      #' the earliest date that new data should overwrite existing data
+      #' @field clobberable_versions_start (length-1 of same type&class as `version` column, or `NA`)\cr
+      #' the earliest version number that might be rewritten in the future without assigning a new version
+      #' date/number, or `NA` if this won't happen
       clobberable_versions_start = NULL,
-      #' @field versions_end (`Date()`)\cr
+      #' @field versions_end (length-1 of same type&class as `version` column)\cr
       #' the latest version observed
       versions_end = NULL,
       #' @description Creates a new `epi_archive` object.
@@ -438,6 +439,10 @@ epi_archive <-
         self$clobberable_versions_start <- clobberable_versions_start
         self$versions_end <- versions_end
       },
+      #' Print information about an archive
+      #' @param class Boolean; whether to print the class label header
+      #' @param methods Boolean; whether to print all available methods of
+      #'   the archive
       print = function(class = TRUE, methods = TRUE) {
         if (class) cat("An `epi_archive` object, with metadata:\n")
         cat(sprintf("* %-9s = %s\n", "geo_type", self$geo_type))
@@ -500,6 +505,21 @@ epi_archive <-
       #####
       #' @description Generates a snapshot in `epi_df` format as of a given version.
       #'   See the documentation for the wrapper function [`epix_as_of()`] for details.
+      #' @param x An `epi_archive` object
+      #' @param max_version Version specifying the max version to permit in the
+      #'   snapshot. That is, the snapshot will comprise the unique rows of the
+      #'   current archive data that represent the most up-to-date signal values, as
+      #'   of the specified `max_version` (and whose `time_value`s are at least
+      #'   `min_time_value`).
+      #' @param min_time_value Time value specifying the min `time_value` to permit in
+      #'   the snapshot. Default is `-Inf`, which effectively means that there is no
+      #'   minimum considered.
+      #' @param all_versions Boolean; If `all_versions = TRUE`, then the output will be in
+      #'   `epi_archive` format, and contain rows in the specified `time_value` range
+      #'   having `version <= max_version`. The resulting object will cover a
+      #'   potentially narrower `version` and `time_value` range than `x`, depending
+      #'   on user-provided arguments. Otherwise, there will be one row in the output
+      #'   for the `max_version` of each `time_value`. Default is `FALSE`.
       #' @importFrom data.table between key
       as_of = function(max_version, min_time_value = -Inf, all_versions = FALSE) {
         # Self max version and other keys
