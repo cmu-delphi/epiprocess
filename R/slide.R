@@ -358,10 +358,14 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     ... = missing_arg() # magic value that passes zero args as dots in calls below
   }
 
+  # Pre-dalculate min ref_time_value for each group, instead of doing so in
+  # `f_wrapper`.
   min_before_time_values_df <- summarize(
     before_time_values_df, min_ref_date = min(time_value)
   )
-  min_before_time_values_map <- min_before_time_values_df$min_ref_date
+  # Turn by-group ref_time_value into a named list for fast and easy
+  # retrieval. Names are hashed lists of group key names and values.
+  min_before_time_values_map <- as.list(min_before_time_values_df$min_ref_date)
   names(min_before_time_values_map) <- purrr::pmap_chr(
     as.list(min_before_time_values_df[, dplyr::group_vars(before_time_values_df)]),
     function(...) {
@@ -373,11 +377,10 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
   # Create a wrapper that calculates and passes `.ref_time_value` to the
   # computation.
   f_wrapper = function(.x, .group_key, ...) {
+    # Hash current group key using the same approach as above so that we can
+    # access pre-calculated by-group min ref_time_values.
     min_phony_ref_date <- min_before_time_values_map[[rlang::hash(as.list(.group_key))]]
-    .ref_time_value = min(
-      .x$time_value,
-      min_phony_ref_date
-    ) + before
+    .ref_time_value = min(.x$time_value, min_phony_ref_date ) + before
     f(.x, .group_key, .ref_time_value, ...)
   }
   x = group_modify(x, slide_one_grp,
