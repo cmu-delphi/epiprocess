@@ -360,15 +360,18 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
   phony_group_info <- dplyr::group_data(before_time_values_df)
   phony_row_map <- phony_group_info$.rows
-  # Reduce-paste is a lot faster but seems a little janky
-  # names(phony_row_map) <- Reduce(paste0, phony_group_info[, dplyr::group_vars(before_time_values_df)])
-  names(phony_row_map) <- apply(phony_group_info[, dplyr::group_vars(before_time_values_df)], MARGIN = 1, rlang::hash)
+  names(phony_row_map) <- purrr::pmap_chr(
+    as.list(phony_group_info[, dplyr::group_vars(before_time_values_df)]),
+    function(...) {
+      rlang::hash(list(...))
+    }
+  )
 
   f = as_slide_computation(f, ...)
   # Create a wrapper that calculates and passes `.ref_time_value` to the
   # computation.
   f_wrapper = function(.x, .group_key, ...) {
-    phony_ii <- phony_row_map[[apply(.group_key, MARGIN = 1, rlang::hash)]]
+    phony_ii <- phony_row_map[[rlang::hash(as.list(.group_key))]]
     .ref_time_value = min(
       .x$time_value,
       before_time_values_df$time_value[phony_ii]
