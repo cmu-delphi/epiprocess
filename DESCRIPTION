@@ -76,6 +76,7 @@ Collate:
     'data.R'
     'epi_df.R'
     'epiprocess.R'
+    'group_by_epi_df_methods.R'
     'methods-epi_archive.R'
     'grouped_epi_archive.R'
     'growth_rate.R'
