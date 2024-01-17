@@ -247,7 +247,8 @@ the archive}
 \if{latex}{\out{\hypertarget{method-epi_archive-as_of}{}}}
 \subsection{Method \code{as_of()}}{
 Generates a snapshot in \code{epi_df} format as of a given version.
-See the documentation for the wrapper function \code{\link[=epix_as_of]{epix_as_of()}} for details.
+See the documentation for the wrapper function \code{\link[=epix_as_of]{epix_as_of()}} for
+details. The parameter descriptions below are copied from there
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$as_of(max_version, min_time_value = -Inf, all_versions = FALSE)}\if{html}{\out{</div>}}
 }
@@ -389,7 +390,7 @@ with \code{.drop = FALSE}. See \code{\link[=group_by_drop_default]{group_by_drop
 \subsection{Method \code{slide()}}{
 Slides a given function over variables in an \code{epi_archive}
 object. See the documentation for the wrapper function \code{\link[=epix_slide]{epix_slide()}} for
-details.
+details. The parameter descriptions below are copied from there
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$slide(
   f,
