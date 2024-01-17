@@ -356,8 +356,9 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
   f_wrapper_factory <- function(starts) {
     # Use `i` to advance through list of start dates.
     i <- 1L
+    starts <- starts + before
     f_wrapper <- function(.x, .group_key, ...) {
-      .ref_time_value <- starts[[i]] + before
+      .ref_time_value <- starts[[i]]
       i <<- i + 1L
       f(.x, .group_key, .ref_time_value, ...)
     }
