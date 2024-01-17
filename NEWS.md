@@ -1,4 +1,10 @@
-# epiprocess 0.7.0.9000
+# epiprocess 0.7.1.9999
+
+* Patch `select` for grouped `epi_df`s PR #390
+* switched `other_keys` default from `NULL` to `character(0)` PR #390
+* minor doc updates PR #393
+
+# epiprocess 0.7.0.9999
 
 ## Improvements
 
