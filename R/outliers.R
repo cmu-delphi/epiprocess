@@ -46,38 +46,54 @@
 #' @export
 #' @importFrom dplyr select
 #' @examples
-#'  detection_methods = dplyr::bind_rows(
-#'    dplyr::tibble(method = "rm",
-#'           args = list(list(detect_negatives = TRUE,
-#'                            detection_multiplier = 2.5)),
-#'           abbr = "rm"),
-#'    dplyr::tibble(method = "stl",
-#'           args = list(list(detect_negatives = TRUE,
-#'                            detection_multiplier = 2.5,
-#'                            seasonal_period = 7)),
-#'           abbr = "stl_seasonal"),
-#'    dplyr::tibble(method = "stl",
-#'           args = list(list(detect_negatives = TRUE,
-#'                            detection_multiplier = 2.5,
-#'                            seasonal_period = NULL)),
-#'           abbr = "stl_nonseasonal"))
+#' detection_methods <- dplyr::bind_rows(
+#'   dplyr::tibble(
+#'     method = "rm",
+#'     args = list(list(
+#'       detect_negatives = TRUE,
+#'       detection_multiplier = 2.5
+#'     )),
+#'     abbr = "rm"
+#'   ),
+#'   dplyr::tibble(
+#'     method = "stl",
+#'     args = list(list(
+#'       detect_negatives = TRUE,
+#'       detection_multiplier = 2.5,
+#'       seasonal_period = 7
+#'     )),
+#'     abbr = "stl_seasonal"
+#'   ),
+#'   dplyr::tibble(
+#'     method = "stl",
+#'     args = list(list(
+#'       detect_negatives = TRUE,
+#'       detection_multiplier = 2.5,
+#'       seasonal_period = NULL
+#'     )),
+#'     abbr = "stl_nonseasonal"
+#'   )
+#' )
 #'
-#'  x <- incidence_num_outlier_example %>%
-#'    dplyr::select(geo_value,time_value,cases) %>%
-#'    as_epi_df() %>%
-#'    group_by(geo_value) %>%
-#'    mutate(outlier_info  = detect_outlr(
-#'      x = time_value, y = cases,
-#'      methods = detection_methods,
-#'      combiner = "median")) %>%
-#'    unnest(outlier_info)
-detect_outlr = function(x = seq_along(y), y,
-                        methods = tibble::tibble(method = "rm",
-                                         args = list(list()),
-                                         abbr = "rm"),
-                        combiner = c("median", "mean", "none")) {
+#' x <- incidence_num_outlier_example %>%
+#'   dplyr::select(geo_value, time_value, cases) %>%
+#'   as_epi_df() %>%
+#'   group_by(geo_value) %>%
+#'   mutate(outlier_info = detect_outlr(
+#'     x = time_value, y = cases,
+#'     methods = detection_methods,
+#'     combiner = "median"
+#'   )) %>%
+#'   unnest(outlier_info)
+detect_outlr <- function(x = seq_along(y), y,
+                         methods = tibble::tibble(
+                           method = "rm",
+                           args = list(list()),
+                           abbr = "rm"
+                         ),
+                         combiner = c("median", "mean", "none")) {
   # Validate combiner
-  combiner = match.arg(combiner)
+  combiner <- match.arg(combiner)
 
   # Validate that x contains all distinct values
   if (any(duplicated(x))) {
@@ -85,32 +101,33 @@ detect_outlr = function(x = seq_along(y), y,
   }
 
   # Run all outlier detection methods
-  results = purrr::pmap_dfc(methods, function(method, args, abbr) {
-    if (is.character(method)) method = paste0("detect_outlr_", method)
+  results <- purrr::pmap_dfc(methods, function(method, args, abbr) {
+    if (is.character(method)) method <- paste0("detect_outlr_", method)
 
     # Call the method
-    results = do.call(method, args = c(list("x" = x, "y" = y), args))
+    results <- do.call(method, args = c(list("x" = x, "y" = y), args))
 
-   # Validate the output
+    # Validate the output
     if (!is.data.frame(results) ||
-        !all(c("lower", "upper", "replacement") %in% colnames(results))) {
+      !all(c("lower", "upper", "replacement") %in% colnames(results))) {
       Abort("Outlier detection method must return a data frame with columns `lower`, `upper`, and `replacement`.")
     }
 
     # Update column names with model abbreviation
-    colnames(results) = paste(abbr, colnames(results), sep = "_")
+    colnames(results) <- paste(abbr, colnames(results), sep = "_")
     return(results)
   })
 
   # Combine information about detected outliers
   if (combiner != "none") {
-    if (combiner == "mean") combine_fun = mean
-    else if (combiner == "median") combine_fun = median
+    if (combiner == "mean") {
+      combine_fun <- mean
+    } else if (combiner == "median") combine_fun <- median
 
     for (target in c("lower", "upper", "replacement")) {
-      results[[paste0("combined_", target)]] = apply(
+      results[[paste0("combined_", target)]] <- apply(
         results %>%
-        dplyr::select(dplyr::ends_with(target)), 1, combine_fun
+          dplyr::select(dplyr::ends_with(target)), 1, combine_fun
       )
     }
   }
@@ -154,48 +171,54 @@ detect_outlr = function(x = seq_along(y), y,
 #' @examples
 #' # Detect outliers based on a rolling median
 #' incidence_num_outlier_example %>%
-#'   dplyr::select(geo_value,time_value,cases) %>%
+#'   dplyr::select(geo_value, time_value, cases) %>%
 #'   as_epi_df() %>%
 #'   group_by(geo_value) %>%
-#'   mutate(outlier_info  = detect_outlr_rm(
-#'     x = time_value, y = cases)) %>%
+#'   mutate(outlier_info = detect_outlr_rm(
+#'     x = time_value, y = cases
+#'   )) %>%
 #'   unnest(outlier_info)
-detect_outlr_rm = function(x = seq_along(y), y, n = 21,
-                           log_transform = FALSE,
-                           detect_negatives = FALSE,
-                           detection_multiplier = 2,
-                           min_radius = 0,
-                           replacement_multiplier = 0) {
+detect_outlr_rm <- function(x = seq_along(y), y, n = 21,
+                            log_transform = FALSE,
+                            detect_negatives = FALSE,
+                            detection_multiplier = 2,
+                            min_radius = 0,
+                            replacement_multiplier = 0) {
   # Transform if requested
   if (log_transform) {
     # Replace all negative values with 0
-    y = pmax(0, y)
-    offset = as.integer(any(y == 0))
-    y = log(y + offset)
+    y <- pmax(0, y)
+    offset <- as.integer(any(y == 0))
+    y <- log(y + offset)
   }
 
   # Detect negatives if requested
-  if (detect_negatives && !log_transform) min_lower = 0
-  else min_lower = -Inf
+  if (detect_negatives && !log_transform) {
+    min_lower <- 0
+  } else {
+    min_lower <- -Inf
+  }
 
   # Make an epi_df for easy sliding
-  z = as_epi_df(tibble::tibble(geo_value = 0, time_value = x, y = y))
+  z <- as_epi_df(tibble::tibble(geo_value = 0, time_value = x, y = y))
 
   # Calculate lower and upper thresholds and replacement value
-  z = z %>%
-    epi_slide(fitted = median(y), before = floor((n-1)/2), after = ceiling((n-1)/2)) %>%
+  z <- z %>%
+    epi_slide(fitted = median(y), before = floor((n - 1) / 2), after = ceiling((n - 1) / 2)) %>%
     dplyr::mutate(resid = y - fitted) %>%
-    roll_iqr(n = n,
-             detection_multiplier = detection_multiplier,
-             min_radius = min_radius,
-             replacement_multiplier = replacement_multiplier,
-             min_lower = min_lower)
+    roll_iqr(
+      n = n,
+      detection_multiplier = detection_multiplier,
+      min_radius = min_radius,
+      replacement_multiplier = replacement_multiplier,
+      min_lower = min_lower
+    )
 
   # Undo log transformation if necessary
   if (log_transform) {
-    z$lower = exp(z$lower) - offset
-    z$upper = exp(z$upper) - offset
-    z$replacement = exp(z$replacement) - offset
+    z$lower <- exp(z$lower) - offset
+    z$upper <- exp(z$upper) - offset
+    z$replacement <- exp(z$replacement) - offset
   }
 
   return(z)
@@ -251,100 +274,116 @@ detect_outlr_rm = function(x = seq_along(y), y, n = 21,
 #' @examples
 #' # Detects outliers based on a seasonal-trend decomposition using LOESS
 #' incidence_num_outlier_example %>%
-#'   dplyr::select(geo_value,time_value,cases) %>%
+#'   dplyr::select(geo_value, time_value, cases) %>%
 #'   as_epi_df() %>%
 #'   group_by(geo_value) %>%
-#'   mutate(outlier_info  = detect_outlr_stl(
+#'   mutate(outlier_info = detect_outlr_stl(
 #'     x = time_value, y = cases,
-#'     seasonal_period = 7 )) %>% # weekly seasonality for daily data
+#'     seasonal_period = 7
+#'   )) %>% # weekly seasonality for daily data
 #'   unnest(outlier_info)
-detect_outlr_stl = function(x = seq_along(y), y,
-                            n_trend = 21,
-                            n_seasonal = 21,
-                            n_threshold = 21,
-                            seasonal_period = NULL,
-                            log_transform = FALSE,
-                            detect_negatives = FALSE,
-                            detection_multiplier = 2,
-                            min_radius = 0,
-                            replacement_multiplier = 0) {
+detect_outlr_stl <- function(x = seq_along(y), y,
+                             n_trend = 21,
+                             n_seasonal = 21,
+                             n_threshold = 21,
+                             seasonal_period = NULL,
+                             log_transform = FALSE,
+                             detect_negatives = FALSE,
+                             detection_multiplier = 2,
+                             min_radius = 0,
+                             replacement_multiplier = 0) {
   # Transform if requested
   if (log_transform) {
     # Replace all negative values with 0
-    y = pmax(0, y)
-    offset = as.integer(any(y == 0))
-    y = log(y + offset)
+    y <- pmax(0, y)
+    offset <- as.integer(any(y == 0))
+    y <- log(y + offset)
   }
 
   # Make a tsibble for fabletools, setup and run STL
-  z_tsibble = tsibble::tsibble(x = x, y = y, index = x)
+  z_tsibble <- tsibble::tsibble(x = x, y = y, index = x)
 
-  stl_formula = y ~ trend(window = n_trend) +
+  stl_formula <- y ~ trend(window = n_trend) +
     season(period = seasonal_period, window = n_seasonal)
 
-  stl_components = z_tsibble %>%
+  stl_components <- z_tsibble %>%
     fabletools::model(feasts::STL(stl_formula, robust = TRUE)) %>%
     generics::components() %>%
     tibble::as_tibble() %>%
     dplyr::select(trend:remainder) %>%
-    dplyr::rename_with(~ "seasonal", tidyselect::starts_with("season")) %>%
+    dplyr::rename_with(~"seasonal", tidyselect::starts_with("season")) %>%
     dplyr::rename(resid = remainder)
 
   # Allocate the seasonal term from STL to either fitted or resid
   if (!is.null(seasonal_period)) {
-    stl_components = stl_components %>%
+    stl_components <- stl_components %>%
       dplyr::mutate(
-        fitted = trend + seasonal)
+        fitted = trend + seasonal
+      )
   } else {
-    stl_components = stl_components %>%
+    stl_components <- stl_components %>%
       dplyr::mutate(
         fitted = trend,
-        resid = seasonal + resid)
+        resid = seasonal + resid
+      )
   }
 
   # Detect negatives if requested
-  if (detect_negatives && !log_transform) min_lower = 0
-  else min_lower = -Inf
+  if (detect_negatives && !log_transform) {
+    min_lower <- 0
+  } else {
+    min_lower <- -Inf
+  }
 
   # Make an epi_df for easy sliding
-  z = as_epi_df(tibble::tibble(geo_value = 0, time_value = x, y = y))
+  z <- as_epi_df(tibble::tibble(geo_value = 0, time_value = x, y = y))
 
   # Calculate lower and upper thresholds and replacement value
-  z = z %>%
+  z <- z %>%
     dplyr::mutate(
       fitted = stl_components$fitted,
-      resid = stl_components$resid) %>%
-    roll_iqr(n = n_threshold,
-             detection_multiplier = detection_multiplier,
-             min_radius = min_radius,
-             replacement_multiplier = replacement_multiplier,
-             min_lower = min_lower)
+      resid = stl_components$resid
+    ) %>%
+    roll_iqr(
+      n = n_threshold,
+      detection_multiplier = detection_multiplier,
+      min_radius = min_radius,
+      replacement_multiplier = replacement_multiplier,
+      min_lower = min_lower
+    )
 
   # Undo log transformation if necessary
   if (log_transform) {
-    z$lower = exp(z$lower) - offset
-    z$upper = exp(z$upper) - offset
-    z$replacement = exp(z$replacement) - offset
+    z$lower <- exp(z$lower) - offset
+    z$upper <- exp(z$upper) - offset
+    z$replacement <- exp(z$replacement) - offset
   }
 
   return(z)
 }
 
 # Common function for rolling IQR, using fitted and resid variables
-roll_iqr = function(z, n, detection_multiplier, min_radius,
-                    replacement_multiplier, min_lower) {
-  if (typeof(z$y) == "integer") as_type = as.integer
-  else as_type = as.numeric
+roll_iqr <- function(z, n, detection_multiplier, min_radius,
+                     replacement_multiplier, min_lower) {
+  if (typeof(z$y) == "integer") {
+    as_type <- as.integer
+  } else {
+    as_type <- as.numeric
+  }
 
-  epi_slide(z, roll_iqr = stats::IQR(resid), before = floor((n-1)/2), after = ceiling((n-1)/2)) %>%
+  epi_slide(z, roll_iqr = stats::IQR(resid), before = floor((n - 1) / 2), after = ceiling((n - 1) / 2)) %>%
     dplyr::mutate(
-      lower = pmax(min_lower,
-                   fitted - pmax(min_radius, detection_multiplier * roll_iqr)),
+      lower = pmax(
+        min_lower,
+        fitted - pmax(min_radius, detection_multiplier * roll_iqr)
+      ),
       upper = fitted + pmax(min_radius, detection_multiplier * roll_iqr),
       replacement = dplyr::case_when(
-      (y < lower) ~ as_type(fitted - replacement_multiplier * roll_iqr),
-      (y > upper) ~ as_type(fitted + replacement_multiplier * roll_iqr),
-      TRUE ~ y)) %>%
+        (y < lower) ~ as_type(fitted - replacement_multiplier * roll_iqr),
+        (y > upper) ~ as_type(fitted + replacement_multiplier * roll_iqr),
+        TRUE ~ y
+      )
+    ) %>%
     dplyr::select(lower, upper, replacement) %>%
     tibble::as_tibble()
 }

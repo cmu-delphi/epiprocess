@@ -88,7 +88,8 @@ library(dplyr)
 edf <- tibble(
   geo_value = rep(c("ca", "fl", "pa"), each = 3),
   time_value = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
-                       by = "day"), length.out = length(geo_value)),
+    by = "day"
+  ), length.out = length(geo_value)),
   x = 1:length(geo_value) + 0.01 * rnorm(length(geo_value)),
 ) %>%
   as_epi_df()
@@ -157,8 +158,10 @@ object returned by `epi_slide()` has a list column containing the slide values.
 ```{r}
 edf2 <- edf %>%
   group_by(geo_value) %>%
-  epi_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-            before = 1, as_list_col = TRUE) %>%
+  epi_slide(
+    a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
+    before = 1, as_list_col = TRUE
+  ) %>%
   ungroup()
 
 class(edf2$a)
@@ -176,8 +179,10 @@ slide computation (here `x_2dav` and `x_2dma`) separated by "_".
 ```{r}
 edf %>%
   group_by(geo_value) %>%
-  epi_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-            before = 1, as_list_col = FALSE) %>%
+  epi_slide(
+    a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
+    before = 1, as_list_col = FALSE
+  ) %>%
   ungroup()
 ```
 
@@ -187,8 +192,10 @@ the prefix associated with list column name, in naming the unnested columns.
 ```{r}
 edf %>%
   group_by(geo_value) %>%
-  epi_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-            before = 1, as_list_col = FALSE, names_sep = NULL) %>%
+  epi_slide(
+    a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
+    before = 1, as_list_col = FALSE, names_sep = NULL
+  ) %>%
   ungroup()
 ```
 
@@ -197,24 +204,30 @@ order to make the result size stable, just like the case for atomic values.
 
 ```{r}
 edf %>%
-  epi_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-            before = 1, as_list_col = FALSE, names_sep = NULL)
+  epi_slide(
+    a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
+    before = 1, as_list_col = FALSE, names_sep = NULL
+  )
 ```
 
 ```{r, include = FALSE}
 # More checks (not included)
 edf %>%
-  epi_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-            ref_time_values = as.Date("2020-06-02"),
-            before = 1, as_list_col = FALSE, names_sep = NULL)
+  epi_slide(
+    a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
+    ref_time_values = as.Date("2020-06-02"),
+    before = 1, as_list_col = FALSE, names_sep = NULL
+  )
 
 edf %>%
   mutate(version = time_value) %>%
   as_epi_archive() %>%
   group_by(geo_value) %>%
-  epix_slide(a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-             ref_time_values = as.Date("2020-06-02"),
-             before = 1, as_list_col = FALSE, names_sep = NULL) %>%
+  epix_slide(
+    a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
+    ref_time_values = as.Date("2020-06-02"),
+    before = 1, as_list_col = FALSE, names_sep = NULL
+  ) %>%
   ungroup()
 ```
 
@@ -241,11 +254,14 @@ edf %>%
     obj <- lm(y ~ x, data = d)
     return(
       as.data.frame(
-        predict(obj, newdata = d %>%
-                       group_by(geo_value) %>%
-                       filter(time_value == max(time_value)),
-                interval = "prediction", level = 0.9)
-      ))
+        predict(obj,
+          newdata = d %>%
+            group_by(geo_value) %>%
+            filter(time_value == max(time_value)),
+          interval = "prediction", level = 0.9
+        )
+      )
+    )
   }, before = 1, new_col_name = "fc", names_sep = NULL)
 ```
 
@@ -303,17 +319,18 @@ x <- y1 %>%
     version = issue,
     percent_cli = value
   ) %>%
-  as_epi_archive(compactify=FALSE)
+  as_epi_archive(compactify = FALSE)
 
 # mutating merge operation:
-x$merge(y2 %>%
-  select(geo_value, time_value,
-    version = issue,
-    case_rate_7d_av = value
-  ) %>%
-    as_epi_archive(compactify=FALSE),
+x$merge(
+  y2 %>%
+    select(geo_value, time_value,
+      version = issue,
+      case_rate_7d_av = value
+    ) %>%
+    as_epi_archive(compactify = FALSE),
   sync = "locf",
-  compactify=FALSE
+  compactify = FALSE
 )
 ```
 
@@ -323,9 +340,8 @@ library(ggplot2)
 theme_set(theme_bw())
 
 x <- archive_cases_dv_subset$DT %>%
-  filter(geo_value %in% c("ca","fl")) %>%
+  filter(geo_value %in% c("ca", "fl")) %>%
   as_epi_archive(compactify = FALSE)
-
 ```
 
 Next, we extend the ARX function to handle multiple geo values, since in the
@@ -347,28 +363,35 @@ prob_arx_args <- function(lags = c(0, 7, 14),
                           symmetrize = TRUE,
                           intercept = FALSE,
                           nonneg = TRUE) {
-  return(list(lags = lags,
-              ahead = ahead,
-              min_train_window = min_train_window,
-              lower_level = lower_level,
-              upper_level = upper_level,
-              symmetrize = symmetrize,
-              intercept = intercept,
-              nonneg = nonneg))
+  return(list(
+    lags = lags,
+    ahead = ahead,
+    min_train_window = min_train_window,
+    lower_level = lower_level,
+    upper_level = upper_level,
+    symmetrize = symmetrize,
+    intercept = intercept,
+    nonneg = nonneg
+  ))
 }
 
 prob_arx <- function(x, y, geo_value, time_value, args = prob_arx_args()) {
   # Return NA if insufficient training data
   if (length(y) < args$min_train_window + max(args$lags) + args$ahead) {
-    return(data.frame(geo_value = unique(geo_value), # Return geo value!
-                      point = NA, lower = NA, upper = NA))
+    return(data.frame(
+      geo_value = unique(geo_value), # Return geo value!
+      point = NA, lower = NA, upper = NA
+    ))
   }
 
   # Set up x, y, lags list
-  if (!missing(x)) x <- data.frame(x, y)
-  else x <- data.frame(y)
+  if (!missing(x)) {
+    x <- data.frame(x, y)
+  } else {
+    x <- data.frame(y)
+  }
   if (!is.list(args$lags)) args$lags <- list(args$lags)
-  args$lags = rep(args$lags, length.out = ncol(x))
+  args$lags <- rep(args$lags, length.out = ncol(x))
 
   # Build features and response for the AR model, and then fit it
   dat <-
@@ -377,19 +400,24 @@ prob_arx <- function(x, y, geo_value, time_value, args = prob_arx_args()) {
     mutate(name = paste0("x", 1:nrow(.))) %>%
     # One list element for each lagged feature
     pmap(function(i, lag, name) {
-      tibble(geo_value = geo_value,
-             time_value = time_value + lag, # Shift back
-             !!name := x[,i])
+      tibble(
+        geo_value = geo_value,
+        time_value = time_value + lag, # Shift back
+        !!name := x[, i]
+      )
     }) %>%
     # One list element for the response vector
     c(list(
-      tibble(geo_value = geo_value,
-             time_value = time_value - args$ahead, # Shift forward
-             y = y))) %>%
+      tibble(
+        geo_value = geo_value,
+        time_value = time_value - args$ahead, # Shift forward
+        y = y
+      )
+    )) %>%
     # Combine them together into one data frame
     reduce(full_join, by = c("geo_value", "time_value")) %>%
     arrange(time_value)
-  if (args$intercept) dat$x0 = rep(1, nrow(dat))
+  if (args$intercept) dat$x0 <- rep(1, nrow(dat))
   obj <- lm(y ~ . + 0, data = select(dat, -geo_value, -time_value))
 
   # Use LOCF to fill NAs in the latest feature values (do this by geo value)
@@ -398,10 +426,10 @@ prob_arx <- function(x, y, geo_value, time_value, args = prob_arx_args()) {
   dat[, (cols) := nafill(.SD, type = "locf"), .SDcols = cols, by = "geo_value"]
 
   # Make predictions
-  test_time_value = max(time_value)
+  test_time_value <- max(time_value)
   point <- predict(obj, newdata = dat %>%
-                     dplyr::group_by(geo_value) %>%
-                     dplyr::filter(time_value == test_time_value))
+    dplyr::group_by(geo_value) %>%
+    dplyr::filter(time_value == test_time_value))
 
   # Compute bands
   r <- residuals(obj)
@@ -412,12 +440,14 @@ prob_arx <- function(x, y, geo_value, time_value, args = prob_arx_args()) {
 
   # Clip at zero if we need to, then return
   if (args$nonneg) {
-    point = pmax(point, 0)
-    lower = pmax(lower, 0)
-    upper = pmax(upper, 0)
+    point <- pmax(point, 0)
+    lower <- pmax(lower, 0)
+    upper <- pmax(upper, 0)
   }
-  return(data.frame(geo_value = unique(geo_value), # Return geo value!
-                    point = point, lower = lower, upper = upper))
+  return(data.frame(
+    geo_value = unique(geo_value), # Return geo value!
+    point = point, lower = lower, upper = upper
+  ))
 }
 ```
 
@@ -428,44 +458,57 @@ data.
 # Latest snapshot of data, and forecast dates
 x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 fc_time_values <- seq(as.Date("2020-08-01"),
-                      as.Date("2021-11-30"),
-                      by = "1 month")
+  as.Date("2021-11-30"),
+  by = "1 month"
+)
 
 # Simple function to produce forecasts k weeks ahead
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
-      epix_slide(fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, time_value,
-                               args = prob_arx_args(ahead = ahead)),
-                 before = 119, ref_time_values = fc_time_values) %>%
-      mutate(target_date = time_value + ahead, as_of = TRUE,
-             geo_value = fc_geo_value)
-  }
-  else {
+      epix_slide(
+        fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, time_value,
+          args = prob_arx_args(ahead = ahead)
+        ),
+        before = 119, ref_time_values = fc_time_values
+      ) %>%
+      mutate(
+        target_date = time_value + ahead, as_of = TRUE,
+        geo_value = fc_geo_value
+      )
+  } else {
     x_latest %>%
-      epi_slide(fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, time_value,
-                              args = prob_arx_args(ahead = ahead)),
-                before = 119, ref_time_values = fc_time_values) %>%
+      epi_slide(
+        fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, time_value,
+          args = prob_arx_args(ahead = ahead)
+        ),
+        before = 119, ref_time_values = fc_time_values
+      ) %>%
       mutate(target_date = time_value + ahead, as_of = FALSE)
   }
 }
 
 # Generate the forecasts, and bind them together
-fc <- bind_rows(k_week_ahead(x, ahead = 7, as_of = TRUE),
-                k_week_ahead(x, ahead = 14, as_of = TRUE),
-                k_week_ahead(x, ahead = 21, as_of = TRUE),
-                k_week_ahead(x, ahead = 28, as_of = TRUE),
-                k_week_ahead(x, ahead = 7, as_of = FALSE),
-                k_week_ahead(x, ahead = 14, as_of = FALSE),
-                k_week_ahead(x, ahead = 21, as_of = FALSE),
-                k_week_ahead(x, ahead = 28, as_of = FALSE))
+fc <- bind_rows(
+  k_week_ahead(x, ahead = 7, as_of = TRUE),
+  k_week_ahead(x, ahead = 14, as_of = TRUE),
+  k_week_ahead(x, ahead = 21, as_of = TRUE),
+  k_week_ahead(x, ahead = 28, as_of = TRUE),
+  k_week_ahead(x, ahead = 7, as_of = FALSE),
+  k_week_ahead(x, ahead = 14, as_of = FALSE),
+  k_week_ahead(x, ahead = 21, as_of = FALSE),
+  k_week_ahead(x, ahead = 28, as_of = FALSE)
+)
 
 # Plot them, on top of latest COVID-19 case rates
 ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
   geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), alpha = 0.4) +
-  geom_line(data = x_latest, aes(x = time_value, y = case_rate_7d_av),
-               inherit.aes = FALSE, color = "gray50") +
-  geom_line(aes(y = fc_point)) + geom_point(aes(y = fc_point), size = 0.5) +
+  geom_line(
+    data = x_latest, aes(x = time_value, y = case_rate_7d_av),
+    inherit.aes = FALSE, color = "gray50"
+  ) +
+  geom_line(aes(y = fc_point)) +
+  geom_point(aes(y = fc_point), size = 0.5) +
   geom_vline(aes(xintercept = time_value), linetype = 2, alpha = 0.5) +
   facet_grid(vars(geo_value), vars(as_of), scales = "free") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
