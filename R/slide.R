@@ -230,37 +230,15 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     after <- time_step(after)
   }
 
+  # Do set up to let us recover `ref_time_value`s later.
   min_ref_time_values <- ref_time_values - before
   min_ref_time_values_not_in_x <- min_ref_time_values[!(min_ref_time_values %in% unique(x$time_value))]
-
-  # Do set up to let us recover `ref_time_value`s later.
-  # A helper column marking real observations.
-  x$.real <- TRUE
-
-  # Create df containing phony data. Df has the same columns and attributes as
-  # `x`, but filled with `NA`s aside from grouping columns. Number of rows is
-  # equal to the number of `min_ref_time_values_not_in_x` we have * the
-  # number of unique levels seen in the grouping columns.
-  before_time_values_df <- data.frame(time_value = min_ref_time_values_not_in_x)
-  if (length(group_vars(x)) != 0) {
-    before_time_values_df <- dplyr::cross_join(
-      # Get unique combinations of grouping columns seen in real data.
-      unique(x[, group_vars(x)]),
-      before_time_values_df
-    )
-  }
-  # Automatically fill in all other columns from `x` with `NA`s, and carry
-  # attributes over to new df.
-  before_time_values_df <- bind_rows(x[0, ], before_time_values_df)
-  before_time_values_df$.real <- FALSE
-
-  x <- bind_rows(before_time_values_df, x)
 
   # Arrange by increasing time_value
   x <- arrange(x, time_value)
 
   # Now set up starts and stops for sliding/hopping
-  time_range <- range(unique(x$time_value))
+  time_range <- range(unique(c(x$time_value, min_ref_time_values_not_in_x)))
   starts <- in_range(ref_time_values - before, time_range)
   stops <- in_range(ref_time_values + after, time_range)
 
@@ -273,7 +251,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 
   # Computation for one group, all time values
   slide_one_grp <- function(.data_group,
-                            f, ...,
+                            f_factory, ...,
                             starts,
                             stops,
                             time_values,
@@ -287,6 +265,8 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     starts <- starts[o]
     stops <- stops[o]
     time_values <- time_values[o]
+
+    f <- f_factory(starts)
 
     # Compute the slide values
     slide_values_list <- slider::hop_index(
@@ -349,7 +329,6 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
       # fills with NA equivalent.
       vctrs::vec_slice(slide_values, o) <- orig_values
     } else {
-      # This implicitly removes phony (`.real` == FALSE) observations.
       .data_group <- filter(.data_group, o)
     }
     return(mutate(.data_group, !!new_col := slide_values))
@@ -372,15 +351,20 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 
   f <- as_slide_computation(f, ...)
   # Create a wrapper that calculates and passes `.ref_time_value` to the
-  # computation.
-  f_wrapper <- function(.x, .group_key, ...) {
-    .ref_time_value <- min(.x$time_value) + before
-    .x <- .x[.x$.real, ]
-    .x$.real <- NULL
-    f(.x, .group_key, .ref_time_value, ...)
+  # computation. `i` is contained in the `f_wrapper_factory` environment such
+  # that when called within `slide_one_grp` `i` is reset for every group.
+  f_wrapper_factory <- function(starts) {
+    # Use `i` to advance through list of start dates.
+    i <- 1L
+    f_wrapper <- function(.x, .group_key, ...) {
+      .ref_time_value <- starts[[i]] + before
+      i <<- i + 1L
+      f(.x, .group_key, .ref_time_value, ...)
+    }
+    return(f_wrapper)
   }
   x <- group_modify(x, slide_one_grp,
-    f = f_wrapper, ...,
+    f_factory = f_wrapper_factory, ...,
     starts = starts,
     stops = stops,
     time_values = ref_time_values,
@@ -393,15 +377,6 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
   if (!as_list_col) {
     x <- unnest(x, !!new_col, names_sep = names_sep)
   }
-
-  # Remove any remaining phony observations. When `all_rows` is TRUE, phony
-  # observations aren't necessarily removed in `slide_one_grp`.
-  if (all_rows) {
-    x <- x[x$.real, ]
-  }
-
-  # Drop helper column `.real`.
-  x$.real <- NULL
 
   return(x)
 }

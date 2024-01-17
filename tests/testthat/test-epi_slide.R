@@ -626,3 +626,47 @@ test_that("`epi_slide` can access objects inside of helper functions", {
     NA
   )
 })
+
+test_that("epi_slide basic behavior is correct when groups have non-overlapping date ranges", {
+  small_x_misaligned_dates <- dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15),
+    dplyr::tibble(geo_value = "al", time_value = d + 151:155, value = -(1:5))
+  ) %>%
+    as_epi_df(as_of = d + 6) %>%
+    group_by(geo_value)
+
+  expected_output <- dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value = cumsum(11:15)),
+    dplyr::tibble(geo_value = "al", time_value = d + 151:155, value = -(1:5), slide_value = cumsum(-(1:5)))
+  ) %>%
+    group_by(geo_value) %>%
+    as_epi_df(as_of = d + 6)
+
+  result1 <- epi_slide(small_x_misaligned_dates, f = ~ sum(.x$value), before = 50)
+  expect_identical(result1, expected_output)
+})
+
+
+test_that("epi_slide gets correct ref_time_value when groups have non-overlapping date ranges", {
+  small_x_misaligned_dates <- dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15),
+    dplyr::tibble(geo_value = "al", time_value = d + 151:155, value = -(1:5))
+  ) %>%
+    as_epi_df(as_of = d + 6) %>%
+    group_by(geo_value)
+
+  expected_output <- dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value = d + 1:5),
+    dplyr::tibble(geo_value = "al", time_value = d + 151:155, value = -(1:5), slide_value = d + 151:155)
+  ) %>%
+    group_by(geo_value) %>%
+    as_epi_df(as_of = d + 6)
+
+  result1 <- small_x_misaligned_dates %>%
+    epi_slide(
+      before = 50,
+      slide_value = .ref_time_value
+    )
+
+  expect_identical(result1, expected_output)
+})
