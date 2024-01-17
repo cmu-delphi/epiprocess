@@ -504,7 +504,8 @@ epi_archive <-
       },
       #####
       #' @description Generates a snapshot in `epi_df` format as of a given version.
-      #'   See the documentation for the wrapper function [`epix_as_of()`] for details.
+      #'   See the documentation for the wrapper function [`epix_as_of()`] for
+      #'   details. The parameter descriptions below are copied from there
       #' @param x An `epi_archive` object
       #' @param max_version Version specifying the max version to permit in the
       #'   snapshot. That is, the snapshot will comprise the unique rows of the
@@ -728,7 +729,7 @@ epi_archive <-
       },
       #' @description Slides a given function over variables in an `epi_archive`
       #'   object. See the documentation for the wrapper function [`epix_slide()`] for
-      #'   details.
+      #'   details. The parameter descriptions below are copied from there
       #' @importFrom data.table key
       #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
       #' @param f Function, formula, or missing; together with `...` specifies the
@@ -828,7 +829,7 @@ epi_archive <-
 #' Converts a data frame, data table, or tibble into an `epi_archive`
 #' object. See the [archive
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
-#' examples.
+#' examples. The parameter descriptions below are copied from there
 #'
 #' @param x A data frame, data table, or tibble, with columns `geo_value`,
 #'   `time_value`, `version`, and then any additional number of columns.
