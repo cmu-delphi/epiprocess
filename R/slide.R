@@ -504,6 +504,69 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
                      time_step,
                      new_col_name = "slide_value", as_list_col = FALSE,
                      names_sep = "_", all_rows = FALSE) {
+  # Check we have an `epi_df` object
+  if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
+
+  if (missing(ref_time_values)) {
+    ref_time_values <- unique(x$time_value)
+  }
+
+  # Some of these `ref_time_values` checks and processing steps also apply to
+  # the `ref_time_values` default; for simplicity, just apply all the steps
+  # regardless of whether we are working with a default or user-provided
+  # `ref_time_values`:
+  if (length(ref_time_values) == 0L) {
+    Abort("`ref_time_values` must have at least one element.")
+  } else if (any(is.na(ref_time_values))) {
+    Abort("`ref_time_values` must not include `NA`.")
+  } else if (anyDuplicated(ref_time_values) != 0L) {
+    Abort("`ref_time_values` must not contain any duplicates; use `unique` if appropriate.")
+  } else if (!all(ref_time_values %in% unique(x$time_value))) {
+    Abort("All `ref_time_values` must appear in `x$time_value`.")
+  } else {
+    ref_time_values <- sort(ref_time_values)
+  }
+
+  # Validate and pre-process `before`, `after`:
+  if (!missing(before)) {
+    before <- vctrs::vec_cast(before, integer())
+    if (length(before) != 1L || is.na(before) || before < 0L) {
+      Abort("`before` must be length-1, non-NA, non-negative")
+    }
+  }
+  if (!missing(after)) {
+    after <- vctrs::vec_cast(after, integer())
+    if (length(after) != 1L || is.na(after) || after < 0L) {
+      Abort("`after` must be length-1, non-NA, non-negative")
+    }
+  }
+  if (missing(before)) {
+    if (missing(after)) {
+      Abort("Either or both of `before`, `after` must be provided.")
+    } else if (after == 0L) {
+      Warn("`before` missing, `after==0`; maybe this was intended to be some
+            non-zero-width trailing window, but since `before` appears to be
+            missing, it's interpreted as a zero-width window (`before=0,
+            after=0`).")
+    }
+    before <- 0L
+  } else if (missing(after)) {
+    if (before == 0L) {
+      Warn("`before==0`, `after` missing; maybe this was intended to be some
+            non-zero-width leading window, but since `after` appears to be
+            missing, it's interpreted as a zero-width window (`before=0,
+            after=0`).")
+    }
+    after <- 0L
+  }
+
+  # If a custom time step is specified, then redefine units
+  if (!missing(time_step)) {
+    before <- time_step(before)
+    after <- time_step(after)
+  }
+
+  # time_step can be any of `c("days", "weeks", "months", "quarters", "years")`
   all_dates <- seq(min(x$time_value), max(x$time_value), by = time_step)
 
   pad_early_dates <- c()
