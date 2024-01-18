@@ -502,8 +502,11 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
                      new_col_name = "slide_value", as_list_col = FALSE,
                      names_sep = "_", all_rows = FALSE) {
   all_dates <- seq(min(x$time_value), max(x$time_value), by = time_step)
+  pad_early_dates <- all_dates[1L] - before:1
+  pad_late_dates <- all_dates[1L] + 1:after
 
   ## TODO: need to deal with `after`
+  # `frollmean` is 1-indexed, so adjust our `before` and `after` params.
   m <- before + 1L
 
   if (is.null(names_sep)) {
@@ -515,13 +518,12 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
   result <- mutate(x, .real = TRUE) %>%
     group_by(geo_value) %>%
     group_modify(~{
-      pad_early_dates <- all_dates[1L] - (m - 1):1
 
       # `setdiff` causes date formatting to change. Re-class these as dates.
       missing_dates <- as.Date(setdiff(all_dates, .x$time_value), origin = "1970-01-01")
       .x <- bind_rows(
         .x,
-        tibble(time_value = c(pad_early_dates, missing_dates), .real = FALSE)
+        tibble(time_value = c(pad_early_dates, missing_dates, pad_late_dates), .real = FALSE)
       ) %>%
         arrange(time_value)
       .x[, c(result_col_name)] <- data.table::frollmean(.x[, c(col_name)], n = m, ...)
