@@ -16,7 +16,7 @@ interest."><meta name="robots" content="noindex"><!-- mathjax --><script src="ht
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.0.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.1.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -158,6 +158,41 @@ sliding computation at any given reference time point t is performed on
 are documented in the wrapper function <code><a href="epix_slide.html">epix_slide()</a></code>.</p>
     </div>
     <div class="section level2">
+    <h2 id="public-fields">Public fields<a class="anchor" aria-label="anchor" href="#public-fields"></a></h2>
+    <p></p><div class="r6-fields"><dl><dt><code>DT</code></dt>
+<dd><p>(<code>data.table</code>)<br>
+the (optionally compactified) datatable</p></dd>
+
+
+<dt><code>geo_type</code></dt>
+<dd><p>(string)<br>
+the resolution of the geographic label (e.g. state)</p></dd>
+
+
+<dt><code>time_type</code></dt>
+<dd><p>(string)<br>
+the resolution of the time column (e.g. day)</p></dd>
+
+
+<dt><code>additional_metadata</code></dt>
+<dd><p>(named list)<br>
+any extra fields, such as <code>other_keys</code></p></dd>
+
+
+<dt><code>clobberable_versions_start</code></dt>
+<dd><p>(length-1 of same type&amp;class as <code>version</code> column, or <code>NA</code>)<br>
+the earliest version number that might be rewritten in the future without assigning a new version
+date/number, or <code>NA</code> if this won't happen</p></dd>
+
+
+<dt><code>versions_end</code></dt>
+<dd><p>(length-1 of same type&amp;class as <code>version</code> column)<br>
+the latest version observed</p></dd>
+
+
+</dl><p></p></div>
+    </div>
+    <div class="section level2">
     <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
     
 <div class="section">
@@ -252,7 +287,8 @@ rows of <code>x</code>.</p></dd>
 <div class="section">
 <h4 id="details-1">Details<a class="anchor" aria-label="anchor" href="#details-1"></a></h4>
 <p>Refer to the documentation for <code><a href="as_epi_archive.html">as_epi_archive()</a></code> for more information
-and examples of parameter names.</p>
+and examples of parameter names.
+Print information about an archive</p>
 </div>
 
 <div class="section">
@@ -268,15 +304,60 @@ and examples of parameter names.</p>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">print</span><span class="op">(</span>class <span class="op">=</span> <span class="cn">TRUE</span>, methods <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
+<div class="section">
+<h4 id="arguments-1">Arguments<a class="anchor" aria-label="anchor" href="#arguments-1"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>class</code></dt>
+<dd><p>Boolean; whether to print the class label header</p></dd>
+
+
+<dt><code>methods</code></dt>
+<dd><p>Boolean; whether to print all available methods of
+the archive</p></dd>
+
+
+</dl><p></p></div>
+</div>
 
 </div><p></p><hr><a id="method-epi_archive-as_of"></a><div class="section">
 <h3 id="method-as-of-">Method <code>as_of()</code><a class="anchor" aria-label="anchor" href="#method-as-of-"></a></h3>
 <p>Generates a snapshot in <code>epi_df</code> format as of a given version.
-See the documentation for the wrapper function <code><a href="epix_as_of.html">epix_as_of()</a></code> for details.</p><div class="section">
+See the documentation for the wrapper function <code><a href="epix_as_of.html">epix_as_of()</a></code> for
+details. The parameter descriptions below are copied from there</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">as_of</span><span class="op">(</span><span class="va">max_version</span>, min_time_value <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, all_versions <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
+<div class="section">
+<h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>max_version</code></dt>
+<dd><p>Version specifying the max version to permit in the
+snapshot. That is, the snapshot will comprise the unique rows of the
+current archive data that represent the most up-to-date signal values, as
+of the specified <code>max_version</code> (and whose <code>time_value</code>s are at least
+<code>min_time_value</code>).</p></dd>
+
+
+<dt><code>min_time_value</code></dt>
+<dd><p>Time value specifying the min <code>time_value</code> to permit in
+the snapshot. Default is <code>-Inf</code>, which effectively means that there is no
+minimum considered.</p></dd>
+
+
+<dt><code>all_versions</code></dt>
+<dd><p>Boolean; If <code>all_versions = TRUE</code>, then the output will be in
+<code>epi_archive</code> format, and contain rows in the specified <code>time_value</code> range
+having <code>version &lt;= max_version</code>. The resulting object will cover a
+potentially narrower <code>version</code> and <code>time_value</code> range than <code>x</code>, depending
+on user-provided arguments. Otherwise, there will be one row in the output
+for the <code>max_version</code> of each <code>time_value</code>. Default is <code>FALSE</code>.</p></dd>
+
+
+<dt><code>x</code></dt>
+<dd><p>An <code>epi_archive</code> object</p></dd>
+
+
+</dl><p></p></div>
+</div>
 
 </div><p></p><hr><a id="method-epi_archive-fill_through_version"></a><div class="section">
 <h3 id="method-fill-through-version-">Method <code>fill_through_version()</code><a class="anchor" aria-label="anchor" href="#method-fill-through-version-"></a></h3>
@@ -289,7 +370,7 @@ version, which doesn't mutate the input archive but might alias its fields.</p><
 </div>
 
 <div class="section">
-<h4 id="arguments-1">Arguments<a class="anchor" aria-label="anchor" href="#arguments-1"></a></h4>
+<h4 id="arguments-3">Arguments<a class="anchor" aria-label="anchor" href="#arguments-3"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>fill_versions_end</code></dt>
 <dd><p>as in <code><a href="epix_fill_through_version.html">epix_fill_through_version</a></code></p></dd>
 
@@ -312,7 +393,7 @@ guaranteed, to be copied. Returns the mutated archive
 </div>
 
 <div class="section">
-<h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
+<h4 id="arguments-4">Arguments<a class="anchor" aria-label="anchor" href="#arguments-4"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>max_version</code></dt>
 <dd><p>as in <code><a href="epix_truncate_versions_after.html">epix_truncate_versions_after</a></code></p></dd>
 
@@ -341,7 +422,7 @@ does not alias either archive's <code>DT</code>.</p><div class="section">
 </div>
 
 <div class="section">
-<h4 id="arguments-3">Arguments<a class="anchor" aria-label="anchor" href="#arguments-3"></a></h4>
+<h4 id="arguments-5">Arguments<a class="anchor" aria-label="anchor" href="#arguments-5"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>y</code></dt>
 <dd><p>as in <code><a href="epix_merge.html">epix_merge</a></code></p></dd>
 
@@ -351,7 +432,8 @@ does not alias either archive's <code>DT</code>.</p><div class="section">
 
 
 <dt><code>compactify</code></dt>
-<dd><p>as in <code><a href="epix_merge.html">epix_merge</a></code></p></dd>
+<dd><p>as in <code><a href="epix_merge.html">epix_merge</a></code>
+group an epi_archive</p></dd>
 
 
 </dl><p></p></div>
@@ -359,8 +441,7 @@ does not alias either archive's <code>DT</code>.</p><div class="section">
 
 </div><p></p><hr><a id="method-epi_archive-group_by"></a><div class="section">
 <h3 id="method-group-by-">Method <code><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by()</a></code><a class="anchor" aria-label="anchor" href="#method-group-by-"></a></h3>
-
-<div class="section">
+<p>group an epi_archive</p><div class="section">
 <h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">group_by</span><span class="op">(</span></span>
 <span>  <span class="va">...</span>,</span>
@@ -369,12 +450,34 @@ does not alias either archive's <code>DT</code>.</p><div class="section">
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
+<div class="section">
+<h4 id="arguments-6">Arguments<a class="anchor" aria-label="anchor" href="#arguments-6"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>...</code></dt>
+<dd><p>variables or computations to group by. Computations are always
+done on the ungrouped data frame. To perform computations on the grouped
+data, you need to use a separate <code><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate()</a></code> step before the
+<code><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by()</a></code></p></dd>
+
+
+<dt><code>.add</code></dt>
+<dd><p>When <code>FALSE</code>, the default, <code><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by()</a></code> will override existing
+groups. To add to the existing groups, use <code>.add = TRUE</code>.</p></dd>
+
+
+<dt><code>.drop</code></dt>
+<dd><p>Drop groups formed by factor levels that don't appear in the
+data. The default is <code>TRUE</code> except when <code>.data</code> has been previously grouped
+with <code>.drop = FALSE</code>. See <code>group_by_drop_default()</code> for details.</p></dd>
+
+
+</dl><p></p></div>
+</div>
 
 </div><p></p><hr><a id="method-epi_archive-slide"></a><div class="section">
 <h3 id="method-slide-">Method <code>slide()</code><a class="anchor" aria-label="anchor" href="#method-slide-"></a></h3>
 <p>Slides a given function over variables in an <code>epi_archive</code>
 object. See the documentation for the wrapper function <code><a href="epix_slide.html">epix_slide()</a></code> for
-details.</p><div class="section">
+details. The parameter descriptions below are copied from there</p><div class="section">
 <h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">epi_archive</span><span class="op">$</span><span class="fu">slide</span><span class="op">(</span></span>
 <span>  <span class="va">f</span>,</span>
@@ -389,6 +492,104 @@ details.</p><div class="section">
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
+<div class="section">
+<h4 id="arguments-7">Arguments<a class="anchor" aria-label="anchor" href="#arguments-7"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>f</code></dt>
+<dd><p>Function, formula, or missing; together with <code>...</code> specifies the
+computation to slide. To "slide" means to apply a computation over a
+sliding (a.k.a. "rolling") time window for each data group. The window is
+determined by the <code>before</code> parameter described below. One time step is
+typically one day or one week; see <code><a href="epi_slide.html">epi_slide</a></code> details for more
+explanation. If a function, <code>f</code> must take an <code>epi_df</code> with the same
+column names as the archive's <code>DT</code>, minus the <code>version</code> column; followed
+by a one-row tibble containing the values of the grouping variables for
+the associated group; followed by a reference time value, usually as a
+<code>Date</code> object; followed by any number of named arguments. If a formula,
+<code>f</code> can operate directly on columns accessed via <code>.x$var</code> or <code>.$var</code>, as
+in <code>~ mean (.x$var)</code> to compute a mean of a column <code>var</code> for each
+group-<code>ref_time_value</code> combination. The group key can be accessed via
+<code>.y</code> or <code>.group_key</code>, and the reference time value can be accessed via
+<code>.z</code> or <code>.ref_time_value</code>. If <code>f</code> is missing, then <code>...</code> will specify the
+computation.</p></dd>
+
+
+<dt><code>...</code></dt>
+<dd><p>Additional arguments to pass to the function or formula specified
+via <code>f</code>. Alternatively, if <code>f</code> is missing, then <code>...</code> is interpreted as an
+expression for tidy evaluation; in addition to referring to columns
+directly by name, the expression has access to <code>.data</code> and <code>.env</code> pronouns
+as in <code>dplyr</code> verbs, and can also refer to the <code>.group_key</code> and
+<code>.ref_time_value</code>. See details of <code><a href="epi_slide.html">epi_slide</a></code>.</p></dd>
+
+
+<dt><code>before</code></dt>
+<dd><p>How far <code>before</code> each <code>ref_time_value</code> should the sliding
+window extend? If provided, should be a single, non-NA,
+<a href="https://vctrs.r-lib.org/reference/vec_cast.html" class="external-link">integer-compatible</a> number of time steps. This window
+endpoint is inclusive. For example, if <code>before = 7</code>, and one time step is
+one day, then to produce a value for a <code>ref_time_value</code> of January 8, we
+apply the given function or formula to data (for each group present) with
+<code>time_value</code>s from January 1 onward, as they were reported on January 8.
+For typical disease surveillance sources, this will not include any data
+with a <code>time_value</code> of January 8, and, depending on the amount of reporting
+latency, may not include January 7 or even earlier <code>time_value</code>s. (If
+instead the archive were to hold nowcasts instead of regular surveillance
+data, then we would indeed expect data for <code>time_value</code> January 8. If it
+were to hold forecasts, then we would expect data for <code>time_value</code>s after
+January 8, and the sliding window would extend as far after each
+<code>ref_time_value</code> as needed to include all such <code>time_value</code>s.)</p></dd>
+
+
+<dt><code>ref_time_values</code></dt>
+<dd><p>Reference time values / versions for sliding
+computations; each element of this vector serves both as the anchor point
+for the <code>time_value</code> window for the computation and the <code>max_version</code>
+<code>as_of</code> which we fetch data in this window. If missing, then this will set
+to a regularly-spaced sequence of values set to cover the range of
+<code>version</code>s in the <code>DT</code> plus the <code>versions_end</code>; the spacing of values will
+be guessed (using the GCD of the skips between values).</p></dd>
+
+
+<dt><code>time_step</code></dt>
+<dd><p>Optional function used to define the meaning of one time
+step, which if specified, overrides the default choice based on the
+<code>time_value</code> column. This function must take a positive integer and return
+an object of class <code><a href="https://lubridate.tidyverse.org/reference/period.html" class="external-link">lubridate::period</a></code>. For example, we can use <code>time_step = lubridate::hours</code> in order to set the time step to be one hour (this
+would only be meaningful if <code>time_value</code> is of class <code>POSIXct</code>).</p></dd>
+
+
+<dt><code>new_col_name</code></dt>
+<dd><p>String indicating the name of the new column that will
+contain the derivative values. Default is "slide_value"; note that setting
+<code>new_col_name</code> equal to an existing column name will overwrite this column.</p></dd>
+
+
+<dt><code>as_list_col</code></dt>
+<dd><p>Should the slide results be held in a list column, or be
+<a href="https://tidyr.tidyverse.org/reference/chop.html" class="external-link">unchopped</a>/<a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnested</a>? Default is <code>FALSE</code>,
+in which case a list object returned by <code>f</code> would be unnested (using
+<code><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">tidyr::unnest()</a></code>), and, if the slide computations output data frames,
+the names of the resulting columns are given by prepending <code>new_col_name</code>
+to the names of the list elements.</p></dd>
+
+
+<dt><code>names_sep</code></dt>
+<dd><p>String specifying the separator to use in <code><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">tidyr::unnest()</a></code>
+when <code>as_list_col = FALSE</code>. Default is "_". Using <code>NULL</code> drops the prefix
+from <code>new_col_name</code> entirely.</p></dd>
+
+
+<dt><code>all_versions</code></dt>
+<dd><p>(Not the same as <code>all_rows</code> parameter of <code>epi_slide</code>.) If
+<code>all_versions = TRUE</code>, then <code>f</code> will be passed the version history (all
+<code>version &lt;= ref_time_value</code>) for rows having <code>time_value</code> between
+<code>ref_time_value - before</code> and <code>ref_time_value</code>. Otherwise, <code>f</code> will be
+passed only the most recent <code>version</code> for every unique <code>time_value</code>.
+Default is <code>FALSE</code>.</p></dd>
+
+
+</dl><p></p></div>
+</div>
 
 </div><p></p><hr><a id="method-epi_archive-clone"></a><div class="section">
 <h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
@@ -398,7 +599,7 @@ details.</p><div class="section">
 </div>
 
 <div class="section">
-<h4 id="arguments-4">Arguments<a class="anchor" aria-label="anchor" href="#arguments-4"></a></h4>
+<h4 id="arguments-8">Arguments<a class="anchor" aria-label="anchor" href="#arguments-8"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
 

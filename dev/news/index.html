@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.0.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.1.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,15 +61,28 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.7.0.9000" id="epiprocess-0709000">epiprocess 0.7.0.9000<a class="anchor" aria-label="anchor" href="#epiprocess-0709000"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.7.1.9999" id="epiprocess-0719999">epiprocess 0.7.1.9999<a class="anchor" aria-label="anchor" href="#epiprocess-0719999"></a></h2>
+<p>Note that <code>epiprocess</code> uses the <a href="https://semver.org/" class="external-link">Semantic Versioning (“semver”)</a> scheme for all release versions, but any inter-release development versions will include an additional “.9999” suffix. Pre-1.0.0 numbering scheme: when making changes to a development version 0.x.y.9999, we will increment y when merging PRs, and will have increment x (and reset y) on release.</p>
 <div class="section level3">
-<h3 id="improvements-0-7-0-9000">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-7-0-9000"></a></h3>
+<h3 id="breaking-changes-0-7-1-9999">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-7-1-9999"></a></h3>
+<ul><li>Switched <code>epi_df</code>’s <code>other_keys</code> default from <code>NULL</code> to <code>character(0)</code>; PR <a href="https://github.com/cmu-delphi/epiprocess/issues390" class="external-link">#390</a></li>
+</ul></div>
+<div class="section level3">
+<h3 id="improvements-0-7-1-9999">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-7-1-9999"></a></h3>
+<ul><li>
+<code>select</code> on grouped <code>epi_df</code>s now only drops <code>epi_df</code>ness if it makes sense; PR <a href="https://github.com/cmu-delphi/epiprocess/issues390" class="external-link">#390</a></li>
+<li>Minor documentation updates; PR <a href="https://github.com/cmu-delphi/epiprocess/issues393" class="external-link">#393</a></li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.7.0.9999" id="epiprocess-0709999">epiprocess 0.7.0.9999<a class="anchor" aria-label="anchor" href="#epiprocess-0709999"></a></h2>
+<div class="section level3">
+<h3 id="improvements-0-7-0-9999">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-7-0-9999"></a></h3>
 <ul><li>Updated vignettes for compatibility with epidatr 1.0.0 in PR <a href="https://github.com/cmu-delphi/epiprocess/issues377" class="external-link">#377</a>.</li>
 </ul></div>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.7.0" id="epiprocess-070">epiprocess 0.7.0<a class="anchor" aria-label="anchor" href="#epiprocess-070"></a></h2>
-<p>Note that <code>epiprocess</code> uses the <a href="https://semver.org/" class="external-link">Semantic Versioning (“semver”)</a> scheme for all release versions, but any inter-release development versions will include an additional “.9999” suffix.</p>
 <div class="section level3">
 <h3 id="breaking-changes-0-7-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-7-0"></a></h3>
 <ul><li>Changes to <code>epi_slide</code> and <code>epix_slide</code>:
