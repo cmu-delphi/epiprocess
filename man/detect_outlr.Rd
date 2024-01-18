@@ -64,29 +64,43 @@ For convenience, the outlier detection method can be specified (in the
 STL decomposition.
 }
 \examples{
- detection_methods = dplyr::bind_rows(
-   dplyr::tibble(method = "rm",
-          args = list(list(detect_negatives = TRUE,
-                           detection_multiplier = 2.5)),
-          abbr = "rm"),
-   dplyr::tibble(method = "stl",
-          args = list(list(detect_negatives = TRUE,
-                           detection_multiplier = 2.5,
-                           seasonal_period = 7)),
-          abbr = "stl_seasonal"),
-   dplyr::tibble(method = "stl",
-          args = list(list(detect_negatives = TRUE,
-                           detection_multiplier = 2.5,
-                           seasonal_period = NULL)),
-          abbr = "stl_nonseasonal"))
+detection_methods <- dplyr::bind_rows(
+  dplyr::tibble(
+    method = "rm",
+    args = list(list(
+      detect_negatives = TRUE,
+      detection_multiplier = 2.5
+    )),
+    abbr = "rm"
+  ),
+  dplyr::tibble(
+    method = "stl",
+    args = list(list(
+      detect_negatives = TRUE,
+      detection_multiplier = 2.5,
+      seasonal_period = 7
+    )),
+    abbr = "stl_seasonal"
+  ),
+  dplyr::tibble(
+    method = "stl",
+    args = list(list(
+      detect_negatives = TRUE,
+      detection_multiplier = 2.5,
+      seasonal_period = NULL
+    )),
+    abbr = "stl_nonseasonal"
+  )
+)
 
- x <- incidence_num_outlier_example \%>\%
-   dplyr::select(geo_value,time_value,cases) \%>\%
-   as_epi_df() \%>\%
-   group_by(geo_value) \%>\%
-   mutate(outlier_info  = detect_outlr(
-     x = time_value, y = cases,
-     methods = detection_methods,
-     combiner = "median")) \%>\%
-   unnest(outlier_info)
+x <- incidence_num_outlier_example \%>\%
+  dplyr::select(geo_value, time_value, cases) \%>\%
+  as_epi_df() \%>\%
+  group_by(geo_value) \%>\%
+  mutate(outlier_info = detect_outlr(
+    x = time_value, y = cases,
+    methods = detection_methods,
+    combiner = "median"
+  )) \%>\%
+  unnest(outlier_info)
 }
