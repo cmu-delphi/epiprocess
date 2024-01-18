@@ -3,27 +3,29 @@ library(dplyr)
 ea <- archive_cases_dv_subset$clone()
 
 ea2_data <- tibble::tribble(
-    ~geo_value, ~time_value,      ~version, ~cases,
-          "ca", "2020-06-01", "2020-06-01",      1,
-          "ca", "2020-06-01", "2020-06-02",      2,
-    #
-          "ca", "2020-06-02", "2020-06-02",      0,
-          "ca", "2020-06-02", "2020-06-03",      1,
-          "ca", "2020-06-02", "2020-06-04",      2,
-    #
-          "ca", "2020-06-03", "2020-06-03",      1,
-    #
-          "ca", "2020-06-04", "2020-06-04",      4,
-    ) %>%
-    dplyr::mutate(dplyr::across(c(time_value, version), as.Date))
+  ~geo_value, ~time_value, ~version, ~cases,
+  "ca", "2020-06-01", "2020-06-01", 1,
+  "ca", "2020-06-01", "2020-06-02", 2,
+  #
+  "ca", "2020-06-02", "2020-06-02", 0,
+  "ca", "2020-06-02", "2020-06-03", 1,
+  "ca", "2020-06-02", "2020-06-04", 2,
+  #
+  "ca", "2020-06-03", "2020-06-03", 1,
+  #
+  "ca", "2020-06-04", "2020-06-04", 4,
+) %>%
+  dplyr::mutate(dplyr::across(c(time_value, version), as.Date))
 
 # epix_as_of tests
-test_that("epix_as_of behaves identically to as_of method",{
-  expect_identical(epix_as_of(ea,max_version = min(ea$DT$version)),
-                   ea$as_of(max_version = min(ea$DT$version)))
+test_that("epix_as_of behaves identically to as_of method", {
+  expect_identical(
+    epix_as_of(ea, max_version = min(ea$DT$version)),
+    ea$as_of(max_version = min(ea$DT$version))
+  )
 })
 
-test_that("Errors are thrown due to bad as_of inputs",{
+test_that("Errors are thrown due to bad as_of inputs", {
   # max_version cannot be of string class rather than date class
   expect_error(ea$as_of("2020-01-01"))
   # max_version cannot be later than latest version
@@ -32,25 +34,24 @@ test_that("Errors are thrown due to bad as_of inputs",{
   expect_error(ea$as_of(c(as.Date("2020-01-01"), as.Date("2020-01-02"))))
 })
 
-test_that("Warning against max_version being clobberable",{
+test_that("Warning against max_version being clobberable", {
   # none by default
   expect_warning(regexp = NA, ea$as_of(max_version = max(ea$DT$version)))
   expect_warning(regexp = NA, ea$as_of(max_version = min(ea$DT$version)))
   # but with `clobberable_versions_start` non-`NA`, yes
-  ea_with_clobberable = ea$clone()
-  ea_with_clobberable$clobberable_versions_start = max(ea_with_clobberable$DT$version)
+  ea_with_clobberable <- ea$clone()
+  ea_with_clobberable$clobberable_versions_start <- max(ea_with_clobberable$DT$version)
   expect_warning(ea_with_clobberable$as_of(max_version = max(ea$DT$version)))
   expect_warning(regexp = NA, ea_with_clobberable$as_of(max_version = min(ea$DT$version)))
 })
 
-test_that("as_of properly grabs the data and doesn't mutate key",{
-
+test_that("as_of properly grabs the data and doesn't mutate key", {
   d <- as.Date("2020-06-01")
 
-  ea2 = ea2_data %>%
+  ea2 <- ea2_data %>%
     as_epi_archive()
 
-  old_key = data.table::key(ea2$DT)
+  old_key <- data.table::key(ea2$DT)
 
   edf_as_of <- ea2 %>%
     epix_as_of(max_version = as.Date("2020-06-03"))
@@ -58,14 +59,14 @@ test_that("as_of properly grabs the data and doesn't mutate key",{
   edf_expected <- as_epi_df(tibble(
     geo_value = "ca",
     time_value = d + 0:2,
-    cases = c(2,1,1)
+    cases = c(2, 1, 1)
   ), as_of = as.Date("2020-06-03"))
 
-  expect_equal(edf_as_of, edf_expected, ignore_attr=c(".internal.selfref", "sorted"))
+  expect_equal(edf_as_of, edf_expected, ignore_attr = c(".internal.selfref", "sorted"))
   expect_equal(data.table::key(ea2$DT), old_key)
 })
 
-test_that("Errors are thrown due to bad epix_truncate_versions_after inputs",{
+test_that("Errors are thrown due to bad epix_truncate_versions_after inputs", {
   # x must be an archive
   expect_error(epix_truncate_versions_after(data.frame(), as.Date("2020-01-01")))
   # max_version cannot be of string class rather than date class
@@ -79,44 +80,41 @@ test_that("Errors are thrown due to bad epix_truncate_versions_after inputs",{
 })
 
 test_that("epix_truncate_version_after properly grabs the data and doesn't mutate key", {
-
-  ea2 = ea2_data %>%
+  ea2 <- ea2_data %>%
     as_epi_archive()
 
-  old_key = data.table::key(ea2$DT)
+  old_key <- data.table::key(ea2$DT)
 
   ea_as_of <- ea2 %>%
     epix_truncate_versions_after(max_version = as.Date("2020-06-02"))
 
-  ea_expected <- ea2_data[1:3,] %>%
+  ea_expected <- ea2_data[1:3, ] %>%
     as_epi_archive()
 
-  expect_equal(ea_as_of, ea_expected, ignore_attr=c(".internal.selfref", "sorted"))
+  expect_equal(ea_as_of, ea_expected, ignore_attr = c(".internal.selfref", "sorted"))
   expect_equal(data.table::key(ea2$DT), old_key)
 })
 
 test_that("epix_truncate_version_after doesn't filter if max_verion at latest version", {
-
-  ea2 = ea2_data %>%
+  ea2 <- ea2_data %>%
     as_epi_archive()
 
   ea_expected <- ea2$clone()
 
   ea_as_of <- ea2 %>%
     epix_truncate_versions_after(max_version = as.Date("2020-06-04"))
-  expect_equal(ea_as_of, ea_expected, ignore_attr=c(".internal.selfref", "sorted"))
+  expect_equal(ea_as_of, ea_expected, ignore_attr = c(".internal.selfref", "sorted"))
 })
 
 test_that("epix_truncate_version_after returns the same grouping type as input epi_archive", {
-
-  ea2 = ea2_data %>%
+  ea2 <- ea2_data %>%
     as_epi_archive()
 
   ea_as_of <- ea2 %>%
     epix_truncate_versions_after(max_version = as.Date("2020-06-04"))
-  expect_true(is_epi_archive(ea_as_of, grouped_okay=FALSE))
+  expect_true(is_epi_archive(ea_as_of, grouped_okay = FALSE))
 
-  ea2_grouped = ea2$group_by(geo_value)
+  ea2_grouped <- ea2$group_by(geo_value)
 
   ea_as_of <- ea2_grouped %>%
     epix_truncate_versions_after(max_version = as.Date("2020-06-04"))
@@ -125,10 +123,9 @@ test_that("epix_truncate_version_after returns the same grouping type as input e
 
 
 test_that("epix_truncate_version_after returns the same groups as input grouped_epi_archive", {
-
-  ea2 = ea2_data %>%
+  ea2 <- ea2_data %>%
     as_epi_archive()
-  ea2 = ea2$group_by(geo_value)
+  ea2 <- ea2$group_by(geo_value)
 
   ea_expected <- ea2$clone()
 

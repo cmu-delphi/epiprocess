@@ -43,7 +43,7 @@ The data has 1,158 rows and 3 columns.
 data(jhu_csse_daily_subset)
 x <- jhu_csse_daily_subset %>%
   select(geo_value, time_value, cases = cases_7d_av) %>%
-  filter(geo_value %in% c("pa","ga") & time_value >= "2020-06-01") %>%
+  filter(geo_value %in% c("pa", "ga") & time_value >= "2020-06-01") %>%
   arrange(geo_value, time_value) %>%
   as_epi_df()
 ```
@@ -104,16 +104,20 @@ red) and below -1% (in blue), faceting by geo value.
 library(ggplot2)
 theme_set(theme_bw())
 
-upper = 0.01
-lower = -0.01
+upper <- 0.01
+lower <- -0.01
 
 ggplot(x, aes(x = time_value, y = cases)) +
-  geom_tile(data = x %>% filter(cases_gr1 >= upper),
-            aes(x = time_value, y = 0, width = 7, height = Inf),
-            fill = 2, alpha = 0.08) +
-  geom_tile(data = x %>% filter(cases_gr1 <= lower),
-            aes(x = time_value, y = 0, width = 7, height = Inf),
-            fill = 4, alpha = 0.08) +
+  geom_tile(
+    data = x %>% filter(cases_gr1 >= upper),
+    aes(x = time_value, y = 0, width = 7, height = Inf),
+    fill = 2, alpha = 0.08
+  ) +
+  geom_tile(
+    data = x %>% filter(cases_gr1 <= lower),
+    aes(x = time_value, y = 0, width = 7, height = Inf),
+    fill = 4, alpha = 0.08
+  ) +
   geom_line() +
   facet_wrap(vars(geo_value), scales = "free_y") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
@@ -128,7 +132,7 @@ ggplot(x, aes(x = time_value, y = cases_gr1)) +
   geom_line(aes(col = geo_value)) +
   geom_hline(yintercept = upper, linetype = 2, col = 2) +
   geom_hline(yintercept = lower, linetype = 2, col = 4) +
-  scale_color_manual(values = c(3,6)) +
+  scale_color_manual(values = c(3, 6)) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Growth rate", col = "State")
 ```
@@ -154,15 +158,18 @@ x <- x %>%
   mutate(cases_gr2 = growth_rate(time_value, cases, method = "linear_reg"))
 
 x %>%
-  pivot_longer(cols = starts_with("cases_gr"),
-               names_to = "method",
-               values_to = "gr") %>%
+  pivot_longer(
+    cols = starts_with("cases_gr"),
+    names_to = "method",
+    values_to = "gr"
+  ) %>%
   mutate(method = recode(method,
-                         cases_gr1 = "rel_change",
-                         cases_gr2 = "linear_reg")) %>%
+    cases_gr1 = "rel_change",
+    cases_gr2 = "linear_reg"
+  )) %>%
   ggplot(aes(x = time_value, y = gr)) +
   geom_line(aes(col = method)) +
-  scale_color_manual(values = c(2,4)) +
+  scale_color_manual(values = c(2, 4)) +
   facet_wrap(vars(geo_value), scales = "free_y", ncol = 1) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Growth rate", col = "Method")
@@ -183,20 +190,25 @@ details.)
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 7}
 x <- x %>%
   group_by(geo_value) %>%
-  mutate(cases_gr3 = growth_rate(time_value, cases, method = "smooth_spline"),
-         cases_gr4 = growth_rate(time_value, cases, method = "trend_filter"))
+  mutate(
+    cases_gr3 = growth_rate(time_value, cases, method = "smooth_spline"),
+    cases_gr4 = growth_rate(time_value, cases, method = "trend_filter")
+  )
 
 x %>%
   select(geo_value, time_value, cases_gr3, cases_gr4) %>%
-  pivot_longer(cols = starts_with("cases_gr"),
-               names_to = "method",
-               values_to = "gr") %>%
+  pivot_longer(
+    cols = starts_with("cases_gr"),
+    names_to = "method",
+    values_to = "gr"
+  ) %>%
   mutate(method = recode(method,
-                         cases_gr3 = "smooth_spline",
-                         cases_gr4 = "trend_filter")) %>%
+    cases_gr3 = "smooth_spline",
+    cases_gr4 = "trend_filter"
+  )) %>%
   ggplot(aes(x = time_value, y = gr)) +
   geom_line(aes(col = method)) +
-  scale_color_manual(values = c(3,6)) +
+  scale_color_manual(values = c(3, 6)) +
   facet_wrap(vars(geo_value), scales = "free_y", ncol = 1) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Growth rate", col = "Method")
@@ -227,41 +239,57 @@ the call to `growth_rate()`.
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 7}
 x <- x %>%
   group_by(geo_value) %>%
-  mutate(cases_gr5 = growth_rate(time_value, cases, method = "rel_change",
-                                 log_scale = TRUE),
-         cases_gr6 = growth_rate(time_value, cases, method = "linear_reg",
-                                 log_scale = TRUE),
-         cases_gr7 = growth_rate(time_value, cases, method = "smooth_spline",
-                                 log_scale = TRUE),
-         cases_gr8 = growth_rate(time_value, cases, method = "trend_filter",
-                                 log_scale = TRUE))
+  mutate(
+    cases_gr5 = growth_rate(time_value, cases,
+      method = "rel_change",
+      log_scale = TRUE
+    ),
+    cases_gr6 = growth_rate(time_value, cases,
+      method = "linear_reg",
+      log_scale = TRUE
+    ),
+    cases_gr7 = growth_rate(time_value, cases,
+      method = "smooth_spline",
+      log_scale = TRUE
+    ),
+    cases_gr8 = growth_rate(time_value, cases,
+      method = "trend_filter",
+      log_scale = TRUE
+    )
+  )
 
 x %>%
   select(geo_value, time_value, cases_gr5, cases_gr6) %>%
-  pivot_longer(cols = starts_with("cases_gr"),
-               names_to = "method",
-               values_to = "gr") %>%
+  pivot_longer(
+    cols = starts_with("cases_gr"),
+    names_to = "method",
+    values_to = "gr"
+  ) %>%
   mutate(method = recode(method,
-                         cases_gr5 = "rel_change_log",
-                         cases_gr6 = "linear_reg_log")) %>%
+    cases_gr5 = "rel_change_log",
+    cases_gr6 = "linear_reg_log"
+  )) %>%
   ggplot(aes(x = time_value, y = gr)) +
   geom_line(aes(col = method)) +
-  scale_color_manual(values = c(2,4)) +
+  scale_color_manual(values = c(2, 4)) +
   facet_wrap(vars(geo_value), scales = "free_y", ncol = 1) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Growth rate", col = "Method")
 
 x %>%
   select(geo_value, time_value, cases_gr7, cases_gr8) %>%
-  pivot_longer(cols = starts_with("cases_gr"),
-               names_to = "method",
-               values_to = "gr") %>%
+  pivot_longer(
+    cols = starts_with("cases_gr"),
+    names_to = "method",
+    values_to = "gr"
+  ) %>%
   mutate(method = recode(method,
-                         cases_gr7 = "smooth_spline_log",
-                         cases_gr8 = "trend_filter_log")) %>%
+    cases_gr7 = "smooth_spline_log",
+    cases_gr8 = "trend_filter_log"
+  )) %>%
   ggplot(aes(x = time_value, y = gr)) +
   geom_line(aes(col = method)) +
-  scale_color_manual(values = c(3,6)) +
+  scale_color_manual(values = c(3, 6)) +
   facet_wrap(vars(geo_value), scales = "free_y", ncol = 1) +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Growth rate", col = "Method")
