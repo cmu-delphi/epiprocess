@@ -23,8 +23,13 @@ epi_slide_mean(
 or ungrouped. If ungrouped, all data in \code{x} will be treated as part of a
 single data group.}
 
-\item{...}{Additional arguments to pass to \code{data.table::frollmean}. \code{na.rm}
-and \code{algo} are important to consider.}
+\item{col_name}{A character vector of the names of one or more columns for
+which to calculate the rolling mean.}
+
+\item{...}{Additional arguments to pass to \code{data.table::frollmean}, for
+example, \code{na.rm} and \code{algo}. \code{data.table::frollmean} is automatically
+passed the data \code{x} to operate on, the window size \code{n}, and the alignment
+\code{align}. Providing these args via \code{...} will cause an error.}
 
 \item{before, after}{How far \code{before} and \code{after} each \code{ref_time_value} should
 the sliding window extend? At least one of these two arguments must be

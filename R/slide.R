@@ -383,8 +383,12 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' @param x The `epi_df` object under consideration, [grouped][dplyr::group_by]
 #'   or ungrouped. If ungrouped, all data in `x` will be treated as part of a
 #'   single data group.
-#' @param ... Additional arguments to pass to `data.table::frollmean`. `na.rm`
-#'   and `algo` are important to consider.
+#' @param col_name A character vector of the names of one or more columns for
+#'   which to calculate the rolling mean.
+#' @param ... Additional arguments to pass to `data.table::frollmean`, for
+#'   example, `na.rm` and `algo`. `data.table::frollmean` is automatically
+#'   passed the data `x` to operate on, the window size `n`, and the alignment
+#'   `align`. Providing these args via `...` will cause an error.
 #' @param before,after How far `before` and `after` each `ref_time_value` should
 #'   the sliding window extend? At least one of these two arguments must be
 #'   provided; the other's default will be 0. Any value provided for either
@@ -464,9 +468,8 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   leading window was intended, but the `after` argument was forgotten or
 #'   misspelled.)
 #'
-#' @importFrom lubridate days weeks
-#' @importFrom dplyr bind_rows group_vars filter select
-#' @importFrom rlang .data .env !! enquo enquos sym env missing_arg
+#' @importFrom dplyr bind_rows mutate %>% arrange tibble
+#' @importFrom purrr map
 #' @importFrom data.table frollmean
 #' @export
 #' @examples
@@ -502,12 +505,19 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
                      new_col_name = "slide_value", as_list_col = FALSE,
                      names_sep = "_", all_rows = FALSE) {
   all_dates <- seq(min(x$time_value), max(x$time_value), by = time_step)
-  pad_early_dates <- all_dates[1L] - before:1
-  pad_late_dates <- all_dates[1L] + 1:after
 
-  ## TODO: need to deal with `after`
-  # `frollmean` is 1-indexed, so adjust our `before` and `after` params.
-  m <- before + 1L
+  pad_early_dates <- c()
+  pad_late_dates <- c()
+  if (before != 0) {
+    pad_early_dates <- all_dates[1L] - before:1
+  }
+  if (after != 0) {
+    pad_late_dates <- all_dates[length(all_dates)] + 1:after
+  }
+
+  # `frollmean` is 1-indexed, so create a new window width based on our
+  # `before` and `after` params.
+  m <- before + after + 1L
 
   if (is.null(names_sep)) {
     result_col_name <- new_col_name
@@ -515,23 +525,43 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
     result_col_name <- paste(new_col_name, col_name, sep = names_sep)
   }
 
-  result <- mutate(x, .real = TRUE) %>%
-    group_by(geo_value) %>%
-    group_modify(~{
+  slide_one_grp <- function(.data_group, .group_key, ...) {
+    # `setdiff` causes date formatting to change. Re-class these as dates.
+    missing_dates <- as.Date(setdiff(all_dates, .data_group$time_value), origin = "1970-01-01")
 
-      # `setdiff` causes date formatting to change. Re-class these as dates.
-      missing_dates <- as.Date(setdiff(all_dates, .x$time_value), origin = "1970-01-01")
-      .x <- bind_rows(
-        .x,
-        tibble(time_value = c(pad_early_dates, missing_dates, pad_late_dates), .real = FALSE)
-      ) %>%
-        arrange(time_value)
-      .x[, c(result_col_name)] <- data.table::frollmean(.x[, c(col_name)], n = m, ...)
-      .x
+    # `frollmean` requires a full window to compute a result. Add NA values
+    # to beginning and end of the group so that we get results for the
+    # first `before` and last `after` elements.
+    .data_group <- bind_rows(
+      .data_group,
+      tibble(time_value = c(missing_dates, pad_early_dates, pad_late_dates), .real = FALSE)
+    ) %>%
+      arrange(time_value)
+
+    roll_output <- data.table::frollmean(
+      x = .data_group[, col_name], n = m, align = "right", ...
+    )
+
+    if (after >= 1) {
+      # Right-aligned `frollmean` results' `ref_time_value`s will be `after` timesteps
+      # ahead of where they should be. Shift results to the left by `after` timesteps.
+      .data_group[, result_col_name] <- purrr::map(roll_output, function(.x) {
+          c(.x[(after + 1L):length(.x)], rep(NA, after))
+        }
+      )
+    } else {
+      .data_group[, result_col_name] <- roll_output
     }
-  )
+
+    return(.data_group)
+  }
+
+  result <- mutate(x, .real = TRUE) %>%
+    group_modify(slide_one_grp, ..., .keep = FALSE)
+
   result <- result[result$.real, ]
   result$.real <- NULL
+
   ungroup(result)
 }
 
