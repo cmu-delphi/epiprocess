@@ -4,9 +4,9 @@
 # Created with usethis + edited to run on PRs to dev, use API key.
 on:
   push:
-    branches: [main, dev]
+    branches: dev
   pull_request:
-    branches: [main, dev]
+    branches: dev
   release:
     types: [published]
   workflow_dispatch:
@@ -40,7 +40,7 @@ jobs:
       - name: Build site
         env:
           DELPHI_EPIDATA_KEY: ${{ secrets.SECRET_EPIPROCESS_GHACTIONS_DELPHI_EPIDATA_KEY }}
-        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE, override=list(PKGDOWN_DEV_MODE="devel"))
         shell: Rscript {0}
 
       - name: Deploy to GitHub pages 🚀

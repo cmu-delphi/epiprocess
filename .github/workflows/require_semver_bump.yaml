@@ -1,0 +1,18 @@
+name: semver-check
+
+on:
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: rayepps/require-semver-bump@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          file: DESCRIPTION
+          pattern: >
+            Version:\s(.+?)
