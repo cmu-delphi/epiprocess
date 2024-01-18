@@ -111,6 +111,29 @@ toy_epi_archive <- tib \%>\% epi_archive$new(geo_type = "state",
                                            time_type = "day")
 toy_epi_archive 
 }
+\section{Public fields}{
+\if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{DT}}{(\code{data.table})\cr
+the compressed datatable}
+
+\item{\code{geo_type}}{(\code{character()})\cr
+the resolution of the geographic label (e.g. state)}
+
+\item{\code{time_type}}{(\code{character()})\cr
+the resolution of the time column (e.g. day)}
+
+\item{\code{additional_metadata}}{(\code{list()})\cr
+any extra fields, such as \code{other_keys}}
+
+\item{\code{clobberable_versions_start}}{(\code{Date()})\cr
+the earliest date that new data should overwrite existing data}
+
+\item{\code{versions_end}}{(\code{Date()})\cr
+the latest version observed}
+}
+\if{html}{\out{</div>}}
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -192,6 +215,7 @@ rows of \code{x}.}
 \subsection{Details}{
 Refer to the documentation for \code{\link[=as_epi_archive]{as_epi_archive()}} for more information
 and examples of parameter names.
+print archive
 }
 
 \subsection{Returns}{
@@ -206,6 +230,15 @@ An \code{epi_archive} object.
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$print(class = TRUE, methods = TRUE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{class}}{print the class label}
+
+\item{\code{methods}}{print all available methods of the archive}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-epi_archive-as_of"></a>}}
@@ -217,6 +250,30 @@ See the documentation for the wrapper function \code{\link[=epix_as_of]{epix_as_
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$as_of(max_version, min_time_value = -Inf, all_versions = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{max_version}}{Time value specifying the max version to permit in the
+snapshot. That is, the snapshot will comprise the unique rows of the
+current archive data that represent the most up-to-date signal values, as
+of the specified \code{max_version} (and whose time values are at least
+\code{min_time_value}.)}
+
+\item{\code{min_time_value}}{Time value specifying the min time value to permit in
+the snapshot. Default is \code{-Inf}, which effectively means that there is no
+minimum considered.}
+
+\item{\code{all_versions}}{If \code{all_versions = TRUE}, then the output will be in
+\code{epi_archive} format, and contain rows in the specified \code{time_value} range
+having \code{version <= max_version}. The resulting object will cover a
+potentially narrower \code{version} and \code{time_value} range than \code{x}, depending
+on user-provided arguments. Otherwise, there will be one row in the output
+for the \code{max_version} of each \code{time_value}. Default is \code{FALSE}.}
+
+\item{\code{x}}{An \code{epi_archive} object}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-epi_archive-fill_through_version"></a>}}
@@ -287,7 +344,8 @@ does not alias either archive's \code{DT}.
 
 \item{\code{sync}}{as in \code{\link{epix_merge}}}
 
-\item{\code{compactify}}{as in \code{\link{epix_merge}}}
+\item{\code{compactify}}{as in \code{\link{epix_merge}}
+group an epi_archive}
 }
 \if{html}{\out{</div>}}
 }
@@ -296,6 +354,7 @@ does not alias either archive's \code{DT}.
 \if{html}{\out{<a id="method-epi_archive-group_by"></a>}}
 \if{latex}{\out{\hypertarget{method-epi_archive-group_by}{}}}
 \subsection{Method \code{group_by()}}{
+group an epi_archive
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{epi_archive$group_by(
   ...,
@@ -304,6 +363,23 @@ does not alias either archive's \code{DT}.
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{variables or computations to group by. Computations are always
+done on the ungrouped data frame. To perform computations on the grouped
+data, you need to use a separate \code{\link[=mutate]{mutate()}} step before the
+\code{\link[=group_by]{group_by()}}}
+
+\item{\code{.add}}{When \code{FALSE}, the default, \code{\link[=group_by]{group_by()}} will override existing
+groups. To add to the existing groups, use \code{.add = TRUE}.}
+
+\item{\code{.drop}}{Drop groups formed by factor levels that don't appear in the
+data. The default is \code{TRUE} except when \code{.data} has been previously grouped
+with \code{.drop = FALSE}. See \code{\link[=group_by_drop_default]{group_by_drop_default()}} for details.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-epi_archive-slide"></a>}}
@@ -326,6 +402,87 @@ details.
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{f}}{Function, formula, or missing; together with \code{...} specifies the
+computation to slide. To "slide" means to apply a computation over a
+sliding (a.k.a. "rolling") time window for each data group. The window is
+determined by the \code{before} parameter described below. One time step is
+typically one day or one week; see \code{\link{epi_slide}} details for more
+explanation. If a function, \code{f} must take an \code{epi_df} with the same
+column names as the archive's \code{DT}, minus the \code{version} column; followed
+by a one-row tibble containing the values of the grouping variables for
+the associated group; followed by a reference time value, usually as a
+\code{Date} object; followed by any number of named arguments. If a formula,
+\code{f} can operate directly on columns accessed via \code{.x$var} or \code{.$var}, as
+in \code{~ mean (.x$var)} to compute a mean of a column \code{var} for each
+group-\code{ref_time_value} combination. The group key can be accessed via
+\code{.y} or \code{.group_key}, and the reference time value can be accessed via
+\code{.z} or \code{.ref_time_value}. If \code{f} is missing, then \code{...} will specify the
+computation.}
+
+\item{\code{...}}{Additional arguments to pass to the function or formula specified
+via \code{f}. Alternatively, if \code{f} is missing, then \code{...} is interpreted as an
+expression for tidy evaluation; in addition to referring to columns
+directly by name, the expression has access to \code{.data} and \code{.env} pronouns
+as in \code{dplyr} verbs, and can also refer to the \code{.group_key} and
+\code{.ref_time_value}. See details of \code{\link{epi_slide}}.}
+
+\item{\code{before}}{How far \code{before} each \code{ref_time_value} should the sliding
+window extend? If provided, should be a single, non-NA,
+\link[vctrs:vec_cast]{integer-compatible} number of time steps. This window
+endpoint is inclusive. For example, if \code{before = 7}, and one time step is
+one day, then to produce a value for a \code{ref_time_value} of January 8, we
+apply the given function or formula to data (for each group present) with
+\code{time_value}s from January 1 onward, as they were reported on January 8.
+For typical disease surveillance sources, this will not include any data
+with a \code{time_value} of January 8, and, depending on the amount of reporting
+latency, may not include January 7 or even earlier \code{time_value}s. (If
+instead the archive were to hold nowcasts instead of regular surveillance
+data, then we would indeed expect data for \code{time_value} January 8. If it
+were to hold forecasts, then we would expect data for \code{time_value}s after
+January 8, and the sliding window would extend as far after each
+\code{ref_time_value} as needed to include all such \code{time_value}s.)}
+
+\item{\code{ref_time_values}}{Reference time values / versions for sliding
+computations; each element of this vector serves both as the anchor point
+for the \code{time_value} window for the computation and the \code{max_version}
+\code{as_of} which we fetch data in this window. If missing, then this will set
+to a regularly-spaced sequence of values set to cover the range of
+\code{version}s in the \code{DT} plus the \code{versions_end}; the spacing of values will
+be guessed (using the GCD of the skips between values).}
+
+\item{\code{time_step}}{Optional function used to define the meaning of one time
+step, which if specified, overrides the default choice based on the
+\code{time_value} column. This function must take a positive integer and return
+an object of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this
+would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
+
+\item{\code{new_col_name}}{String indicating the name of the new column that will
+contain the derivative values. Default is "slide_value"; note that setting
+\code{new_col_name} equal to an existing column name will overwrite this column.}
+
+\item{\code{as_list_col}}{Should the slide results be held in a list column, or be
+\link[tidyr:chop]{unchopped}/\link[tidyr:unnest]{unnested}? Default is \code{FALSE},
+in which case a list object returned by \code{f} would be unnested (using
+\code{\link[tidyr:unnest]{tidyr::unnest()}}), and, if the slide computations output data frames,
+the names of the resulting columns are given by prepending \code{new_col_name}
+to the names of the list elements.}
+
+\item{\code{names_sep}}{String specifying the separator to use in \code{tidyr::unnest()}
+when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
+from \code{new_col_name} entirely.}
+
+\item{\code{all_versions}}{(Not the same as \code{all_rows} parameter of \code{epi_slide}.) If
+\code{all_versions = TRUE}, then \code{f} will be passed the version history (all
+\code{version <= ref_time_value}) for rows having \code{time_value} between
+\code{ref_time_value - before} and \code{ref_time_value}. Otherwise, \code{f} will be
+passed only the most recent \code{version} for every unique \code{time_value}.
+Default is \code{FALSE}.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-epi_archive-clone"></a>}}
