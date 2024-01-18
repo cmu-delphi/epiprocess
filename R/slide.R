@@ -561,23 +561,78 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
     after <- 0L
   }
 
-  # If a custom time step is specified, then redefine units
-  # if (!missing(time_step)) {
-  #   before <- time_step(before)
-  #   after <- time_step(after)
-  # }
-
-  # time_step can be any of `c("days", "weeks", "months", "quarters", "years")`
-  all_dates <- seq(min(x$time_value), max(x$time_value), by = time_step)
-
   pad_early_dates <- c()
   pad_late_dates <- c()
-  if (before != 0) {
-    pad_early_dates <- all_dates[1L] - before:1
+
+  # If dates are one of tsibble-provided classes, can step by numeric. `tsibble`
+  # defines a step of 1 to automatically be the quantum (smallest resolvable
+  # unit) of the date class(so one step = 1 quarter for `yearquarter`).
+  #
+  # `tsibble` classes apparently can't be added to in different units, so even
+  # if `time_step` is provided by the user, use a unit step.
+  if (inherits(x$time_value, c("yearquarter", "yearweek", "yearmonth")) ||
+    is.numeric(x$time_value)) {
+    all_dates <- seq(min(x$time_value), max(x$time_value), by = 1L)
+
+    if (before != 0) {
+      pad_early_dates <- Start(all_dates) - before:1
+    }
+    if (after != 0) {
+      pad_late_dates <- End(all_dates) + 1:after
+    }
+  } else if (missing(time_step)) {
+    # Guess at what `by` could be based on epi_df `time_type`.
+    ttype <- attributes(x)$metadata$time_type
+    by <- dplyr::case_when(
+      ttype == "day" ~ "days",
+      ttype == "week" ~ "weeks",
+      ttype == "yearweek" ~ "weeks",
+      ttype == "yearmonth" ~ "months",
+      ttype == "yearquarter" ~ "quarters",
+      ttype == "year" ~ "years",
+      TRUE ~ NA # "custom", "day-time"
+    )
+
+    if (is.na(by)) {
+      Abort(
+        c(
+          "`frollmean` requires a full window to compute a result, but
+          `time_type` associated with the epi_df was not mappable to period
+          type valid for creating a date sequence.",
+          "i" = c("The input data's `time_type` was probably `custom` or `day-time`.
+          These require also passing a `time_step` function.")
+        )
+      )
+    }
+
+    # time_step can be any of `c("days", "weeks", "months", "quarters", "years")`
+    all_dates <- seq(min(x$time_value), max(x$time_value), by = by)
+
+    if (before != 0) {
+      pad_early_dates <- Start(all_dates) - before:1
+    }
+    if (after != 0) {
+      pad_late_dates <- End(all_dates) + 1:after
+    }
+  } else {
+    # A custom time step is specified
+    all_dates <- c()
+    curr <- min(x$time_value)
+    while (curr <= max(x$time_value)) {
+      all_dates <- append(all_dates, curr)
+      curr <- curr + time_step(1)
+    }
+    # t_elapsed <- max(x$time_value) - min(x$time_value)
+    # all_dates <- min(x$time_value) + time_step(0:t_elapsed)
+
+    if (before != 0) {
+      pad_early_dates <- Start(all_dates) - time_step(before:1)
+    }
+    if (after != 0) {
+      pad_late_dates <- End(all_dates) + time_step(1:after)
+    }
   }
-  if (after != 0) {
-    pad_late_dates <- all_dates[length(all_dates)] + 1:after
-  }
+
 
   # `frollmean` is 1-indexed, so create a new window width based on our
   # `before` and `after` params.
@@ -590,8 +645,7 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
   }
 
   slide_one_grp <- function(.data_group, .group_key, ...) {
-    # `setdiff` causes date formatting to change. Re-class these as dates.
-    missing_dates <- as.Date(setdiff(all_dates, .data_group$time_value), origin = "1970-01-01")
+    missing_dates <- all_dates[!(all_dates %in% .data_group$time_value)]
 
     # `frollmean` requires a full window to compute a result. Add NA values
     # to beginning and end of the group so that we get results for the
