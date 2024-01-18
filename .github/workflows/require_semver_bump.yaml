@@ -15,4 +15,4 @@ jobs:
         with:
           file: DESCRIPTION
           pattern: >
-            Version:\s(.+?\..+?\..+?.*)
+            Version:\s(.+?\..+?\..+?)
