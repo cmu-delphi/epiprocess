@@ -216,11 +216,24 @@ epi_archive <-
     classname = "epi_archive",
     #####
     public = list(
+      #' @field DT (`data.table`)\cr
+      #' the (optionally compactified) datatable
       DT = NULL,
+      #' @field geo_type (string)\cr
+      #' the resolution of the geographic label (e.g. state)
       geo_type = NULL,
+      #' @field time_type (string)\cr
+      #' the resolution of the time column (e.g. day)
       time_type = NULL,
+      #' @field additional_metadata (named list)\cr
+      #' any extra fields, such as `other_keys`
       additional_metadata = NULL,
+      #' @field clobberable_versions_start (length-1 of same type&class as `version` column, or `NA`)\cr
+      #' the earliest version number that might be rewritten in the future without assigning a new version
+      #' date/number, or `NA` if this won't happen
       clobberable_versions_start = NULL,
+      #' @field versions_end (length-1 of same type&class as `version` column)\cr
+      #' the latest version observed
       versions_end = NULL,
       #' @description Creates a new `epi_archive` object.
       #' @param x A data frame, data table, or tibble, with columns `geo_value`,
@@ -426,6 +439,10 @@ epi_archive <-
         self$clobberable_versions_start <- clobberable_versions_start
         self$versions_end <- versions_end
       },
+      #' Print information about an archive
+      #' @param class Boolean; whether to print the class label header
+      #' @param methods Boolean; whether to print all available methods of
+      #'   the archive
       print = function(class = TRUE, methods = TRUE) {
         if (class) cat("An `epi_archive` object, with metadata:\n")
         cat(sprintf("* %-9s = %s\n", "geo_type", self$geo_type))
@@ -487,7 +504,23 @@ epi_archive <-
       },
       #####
       #' @description Generates a snapshot in `epi_df` format as of a given version.
-      #'   See the documentation for the wrapper function [`epix_as_of()`] for details.
+      #'   See the documentation for the wrapper function [`epix_as_of()`] for
+      #'   details. The parameter descriptions below are copied from there
+      #' @param x An `epi_archive` object
+      #' @param max_version Version specifying the max version to permit in the
+      #'   snapshot. That is, the snapshot will comprise the unique rows of the
+      #'   current archive data that represent the most up-to-date signal values, as
+      #'   of the specified `max_version` (and whose `time_value`s are at least
+      #'   `min_time_value`).
+      #' @param min_time_value Time value specifying the min `time_value` to permit in
+      #'   the snapshot. Default is `-Inf`, which effectively means that there is no
+      #'   minimum considered.
+      #' @param all_versions Boolean; If `all_versions = TRUE`, then the output will be in
+      #'   `epi_archive` format, and contain rows in the specified `time_value` range
+      #'   having `version <= max_version`. The resulting object will cover a
+      #'   potentially narrower `version` and `time_value` range than `x`, depending
+      #'   on user-provided arguments. Otherwise, there will be one row in the output
+      #'   for the `max_version` of each `time_value`. Default is `FALSE`.
       #' @importFrom data.table between key
       as_of = function(max_version, min_time_value = -Inf, all_versions = FALSE) {
         # Self max version and other keys
@@ -679,15 +712,94 @@ epi_archive <-
 
         return(invisible(self))
       },
-      #####
+      #' group an epi_archive
+      #' @description
+      #' group an epi_archive
+      #' @param ... variables or computations to group by. Computations are always
+      #'   done on the ungrouped data frame. To perform computations on the grouped
+      #'   data, you need to use a separate [`mutate()`] step before the
+      #'   [`group_by()`]
+      #' @param .add When `FALSE`, the default, [`group_by()`] will override existing
+      #'   groups. To add to the existing groups, use `.add = TRUE`.
+      #' @param .drop Drop groups formed by factor levels that don't appear in the
+      #'   data. The default is `TRUE` except when `.data` has been previously grouped
+      #'   with `.drop = FALSE`. See [`group_by_drop_default()`] for details.
       group_by = function(..., .add = FALSE, .drop = dplyr::group_by_drop_default(self)) {
         group_by.epi_archive(self, ..., .add = .add, .drop = .drop)
       },
       #' @description Slides a given function over variables in an `epi_archive`
       #'   object. See the documentation for the wrapper function [`epix_slide()`] for
-      #'   details.
+      #'   details. The parameter descriptions below are copied from there
       #' @importFrom data.table key
       #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
+      #' @param f Function, formula, or missing; together with `...` specifies the
+      #'   computation to slide. To "slide" means to apply a computation over a
+      #'   sliding (a.k.a. "rolling") time window for each data group. The window is
+      #'   determined by the `before` parameter described below. One time step is
+      #'   typically one day or one week; see [`epi_slide`] details for more
+      #'   explanation. If a function, `f` must take an `epi_df` with the same
+      #'   column names as the archive's `DT`, minus the `version` column; followed
+      #'   by a one-row tibble containing the values of the grouping variables for
+      #'   the associated group; followed by a reference time value, usually as a
+      #'   `Date` object; followed by any number of named arguments. If a formula,
+      #'   `f` can operate directly on columns accessed via `.x$var` or `.$var`, as
+      #'   in `~ mean (.x$var)` to compute a mean of a column `var` for each
+      #'   group-`ref_time_value` combination. The group key can be accessed via
+      #'   `.y` or `.group_key`, and the reference time value can be accessed via
+      #'   `.z` or `.ref_time_value`. If `f` is missing, then `...` will specify the
+      #'   computation.
+      #' @param ... Additional arguments to pass to the function or formula specified
+      #'   via `f`. Alternatively, if `f` is missing, then `...` is interpreted as an
+      #'   expression for tidy evaluation; in addition to referring to columns
+      #'   directly by name, the expression has access to `.data` and `.env` pronouns
+      #'   as in `dplyr` verbs, and can also refer to the `.group_key` and
+      #'   `.ref_time_value`. See details of [`epi_slide`].
+      #' @param before How far `before` each `ref_time_value` should the sliding
+      #'   window extend? If provided, should be a single, non-NA,
+      #'   [integer-compatible][vctrs::vec_cast] number of time steps. This window
+      #'   endpoint is inclusive. For example, if `before = 7`, and one time step is
+      #'   one day, then to produce a value for a `ref_time_value` of January 8, we
+      #'   apply the given function or formula to data (for each group present) with
+      #'   `time_value`s from January 1 onward, as they were reported on January 8.
+      #'   For typical disease surveillance sources, this will not include any data
+      #'   with a `time_value` of January 8, and, depending on the amount of reporting
+      #'   latency, may not include January 7 or even earlier `time_value`s. (If
+      #'   instead the archive were to hold nowcasts instead of regular surveillance
+      #'   data, then we would indeed expect data for `time_value` January 8. If it
+      #'   were to hold forecasts, then we would expect data for `time_value`s after
+      #'   January 8, and the sliding window would extend as far after each
+      #'   `ref_time_value` as needed to include all such `time_value`s.)
+      #' @param ref_time_values Reference time values / versions for sliding
+      #'   computations; each element of this vector serves both as the anchor point
+      #'   for the `time_value` window for the computation and the `max_version`
+      #'   `as_of` which we fetch data in this window. If missing, then this will set
+      #'   to a regularly-spaced sequence of values set to cover the range of
+      #'   `version`s in the `DT` plus the `versions_end`; the spacing of values will
+      #'   be guessed (using the GCD of the skips between values).
+      #' @param time_step Optional function used to define the meaning of one time
+      #'   step, which if specified, overrides the default choice based on the
+      #'   `time_value` column. This function must take a positive integer and return
+      #'   an object of class `lubridate::period`. For example, we can use `time_step
+      #'   = lubridate::hours` in order to set the time step to be one hour (this
+      #'   would only be meaningful if `time_value` is of class `POSIXct`).
+      #' @param new_col_name String indicating the name of the new column that will
+      #'   contain the derivative values. Default is "slide_value"; note that setting
+      #'   `new_col_name` equal to an existing column name will overwrite this column.
+      #' @param as_list_col Should the slide results be held in a list column, or be
+      #'   [unchopped][tidyr::unchop]/[unnested][tidyr::unnest]? Default is `FALSE`,
+      #'   in which case a list object returned by `f` would be unnested (using
+      #'   [`tidyr::unnest()`]), and, if the slide computations output data frames,
+      #'   the names of the resulting columns are given by prepending `new_col_name`
+      #'   to the names of the list elements.
+      #' @param names_sep String specifying the separator to use in `tidyr::unnest()`
+      #'   when `as_list_col = FALSE`. Default is "_". Using `NULL` drops the prefix
+      #'   from `new_col_name` entirely.
+      #' @param all_versions (Not the same as `all_rows` parameter of `epi_slide`.) If
+      #'   `all_versions = TRUE`, then `f` will be passed the version history (all
+      #'   `version <= ref_time_value`) for rows having `time_value` between
+      #'   `ref_time_value - before` and `ref_time_value`. Otherwise, `f` will be
+      #'   passed only the most recent `version` for every unique `time_value`.
+      #'   Default is `FALSE`.
       slide = function(f, ..., before, ref_time_values,
                        time_step, new_col_name = "slide_value",
                        as_list_col = FALSE, names_sep = "_",
@@ -717,7 +829,7 @@ epi_archive <-
 #' Converts a data frame, data table, or tibble into an `epi_archive`
 #' object. See the [archive
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
-#' examples.
+#' examples. The parameter descriptions below are copied from there
 #'
 #' @param x A data frame, data table, or tibble, with columns `geo_value`,
 #'   `time_value`, `version`, and then any additional number of columns.
