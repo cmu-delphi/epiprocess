@@ -230,17 +230,12 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     after <- time_step(after)
   }
 
-  # Do set up to let us recover `ref_time_value`s later.
-  min_ref_time_values <- ref_time_values - before
-  min_ref_time_values_not_in_x <- min_ref_time_values[!(min_ref_time_values %in% unique(x$time_value))]
-
   # Arrange by increasing time_value
   x <- arrange(x, time_value)
 
   # Now set up starts and stops for sliding/hopping
-  time_range <- range(unique(c(x$time_value, min_ref_time_values_not_in_x)))
-  starts <- in_range(ref_time_values - before, time_range)
-  stops <- in_range(ref_time_values + after, time_range)
+  starts <- ref_time_values - before
+  stops <- ref_time_values + after
 
   if (length(starts) == 0 || length(stops) == 0) {
     Abort("The starting and/or stopping times for sliding are out of bounds with respect to the range of times in your data. Check your settings for ref_time_values and align (and before, if specified).")
@@ -251,7 +246,8 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 
   # Computation for one group, all time values
   slide_one_grp <- function(.data_group,
-                            f_factory, ...,
+                            f_factory,
+                            ..., # group key + any "real" ... args
                             starts,
                             stops,
                             time_values,
@@ -260,13 +256,13 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     # Figure out which reference time values appear in the data group in the
     # first place (we need to do this because it could differ based on the
     # group, hence the setup/checks for the reference time values based on all
-    # the data could still be off)
+    # the data could still be off):
     o <- time_values %in% .data_group$time_value
     starts <- starts[o]
     stops <- stops[o]
     time_values <- time_values[o]
 
-    f <- f_factory(starts)
+    f <- f_factory(time_values)
 
     # Compute the slide values
     slide_values_list <- slider::hop_index(
@@ -353,12 +349,11 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
   # Create a wrapper that calculates and passes `.ref_time_value` to the
   # computation. `i` is contained in the `f_wrapper_factory` environment such
   # that when called within `slide_one_grp` `i` is reset for every group.
-  f_wrapper_factory <- function(starts) {
+  f_wrapper_factory <- function(kept_ref_time_values) {
     # Use `i` to advance through list of start dates.
     i <- 1L
-    starts <- starts + before
     f_wrapper <- function(.x, .group_key, ...) {
-      .ref_time_value <- starts[[i]]
+      .ref_time_value <- kept_ref_time_values[[i]]
       i <<- i + 1L
       f(.x, .group_key, .ref_time_value, ...)
     }
