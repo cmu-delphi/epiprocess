@@ -283,7 +283,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     # Count the number of appearances of each kept reference time value.
     counts <- dplyr::filter(.data_group, .data$time_value %in% kept_ref_time_values) %>%
       dplyr::count(.data$time_value) %>%
-      dplyr::pull(n)
+      `[[`("n")
 
     if (!all(purrr::map_lgl(slide_values_list, is.atomic)) &&
       !all(purrr::map_lgl(slide_values_list, is.data.frame))) {
