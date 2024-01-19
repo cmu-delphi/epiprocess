@@ -43,12 +43,17 @@ share the same color line.}
 \item{.max_facets}{Cut down of the number of facets displayed. Especially
 useful for testing when there are many \code{geo_value}'s or keys.}
 }
+\value{
+A ggplot object
+}
 \description{
 Automatically plot an epi_df
 }
 \examples{
 autoplot(jhu_csse_daily_subset, cases, death_rate_7d_av)
 autoplot(jhu_csse_daily_subset, case_rate_7d_av, .facet_by = "geo_value")
-autoplot(jhu_csse_daily_subset, case_rate_7d_av, .color_by = "none", 
-  .facet_by = "geo_value")
+autoplot(jhu_csse_daily_subset, case_rate_7d_av,
+  .color_by = "none",
+  .facet_by = "geo_value"
+)
 }

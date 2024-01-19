@@ -22,7 +22,7 @@
 #' @param .max_facets Cut down of the number of facets displayed. Especially
 #'   useful for testing when there are many `geo_value`'s or keys.
 #'
-#' @return
+#' @return A ggplot object
 #' @export
 #'
 #' @examples
@@ -45,12 +45,12 @@ autoplot.epi_df <- function(
   if (is.finite(.max_facets)) arg_is_int(.max_facets)
   arg_is_chr_scalar(.base_color)
 
-  ek <- epi_keys(object)
-  mv <- setdiff(names(object), ek)
-  ek <- kill_time_value(ek)
+  key_cols <- key_colnames(object)
+  non_key_cols <- setdiff(names(object), key_cols)
+  geo_and_other_keys <- kill_time_value(key_cols)
 
   # --- check for numeric variables
-  allowed <- purrr::map_lgl(object[mv], is.numeric)
+  allowed <- purrr::map_lgl(object[non_key_cols], is.numeric)
   if (length(allowed) == 0) {
     cli::cli_abort("No numeric variables were available to plot automatically.")
   }
@@ -77,7 +77,7 @@ autoplot.epi_df <- function(
 
   # --- create a viable df to plot
   pos <- tidyselect::eval_select(
-    rlang::expr(c("time_value", ek, names(vars))), object
+    rlang::expr(c("time_value", geo_and_other_keys, names(vars))), object
   )
   if (length(vars) > 1) {
     object <- tidyr::pivot_longer(
@@ -88,9 +88,9 @@ autoplot.epi_df <- function(
   } else {
     object <- dplyr::rename(object[pos], .response := !!names(vars))
   }
-  all_keys <- rlang::syms(as.list(ek))
-  other_keys <- rlang::syms(as.list(setdiff(ek, "geo_value")))
-  all_avail <- rlang::syms(as.list(c(ek, ".response_name")))
+  all_keys <- rlang::syms(as.list(geo_and_other_keys))
+  other_keys <- rlang::syms(as.list(setdiff(geo_and_other_keys, "geo_value")))
+  all_avail <- rlang::syms(as.list(c(geo_and_other_keys, ".response_name")))
 
   object <- object %>%
     dplyr::mutate(
