@@ -246,8 +246,9 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 
   # Computation for one group, all time values
   slide_one_grp <- function(.data_group,
+                            .group_key, # see `?group_modify`
+                            ..., # `...` to `epi_slide` forwarded here
                             f_factory,
-                            ..., # group key + any "real" ... args
                             starts,
                             stops,
                             ref_time_values,
@@ -268,9 +269,10 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     slide_values_list <- slider::hop_index(
       .x = .data_group,
       .i = .data_group$time_value,
-      .f = f, ...,
       .starts = starts,
-      .stops = stops
+      .stops = stops,
+      .f = f,
+      .group_key, ...
     )
 
     # Now figure out which rows in the data group are in the reference time
@@ -358,7 +360,8 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     return(f_wrapper)
   }
   x <- group_modify(x, slide_one_grp,
-    f_factory = f_wrapper_factory, ...,
+    ...,
+    f_factory = f_wrapper_factory,
     starts = starts,
     stops = stops,
     ref_time_values = ref_time_values,
