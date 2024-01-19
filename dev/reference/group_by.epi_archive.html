@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.1.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.2.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -161,7 +161,7 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">grouped_archive</span> <span class="op">=</span> <span class="va">archive_cases_dv_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">grouped_archive</span> <span class="op">&lt;-</span> <span class="va">archive_cases_dv_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># `print` for metadata and method listing:</span></span></span>
 <span class="r-in"><span><span class="va">grouped_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="op">)</span></span></span>
@@ -191,10 +191,12 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">archive_cases_dv_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="epix_slide.html">epix_slide</a></span><span class="op">(</span>f <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">.x</span><span class="op">$</span><span class="va">case_rate_7d_av</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>             before <span class="op">=</span> <span class="fl">2</span>,</span></span>
-<span class="r-in"><span>             ref_time_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-11"</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0</span><span class="op">:</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>             new_col_name <span class="op">=</span> <span class="st">'case_rate_3d_av'</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="epix_slide.html">epix_slide</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    f <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">.x</span><span class="op">$</span><span class="va">case_rate_7d_av</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    before <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span>    ref_time_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-11"</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0</span><span class="op">:</span><span class="fl">2</span>,</span></span>
+<span class="r-in"><span>    new_col_name <span class="op">=</span> <span class="st">"case_rate_3d_av"</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 12 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value case_rate_3d_av</span>
@@ -217,17 +219,19 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-in"><span><span class="co"># Advanced: some other features of dplyr grouping are implemented:</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">toy_archive</span> <span class="op">=</span></span></span>
+<span class="r-in"><span><span class="va">toy_archive</span> <span class="op">&lt;-</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://tibble.tidyverse.org/reference/tribble.html" class="external-link">tribble</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="op">~</span><span class="va">geo_value</span>,  <span class="op">~</span><span class="va">age_group</span>,  <span class="op">~</span><span class="va">time_value</span>,     <span class="op">~</span><span class="va">version</span>, <span class="op">~</span><span class="va">value</span>,</span></span>
-<span class="r-in"><span>          <span class="st">"us"</span>,     <span class="st">"adult"</span>, <span class="st">"2000-01-01"</span>, <span class="st">"2000-01-02"</span>,    <span class="fl">121</span>,</span></span>
-<span class="r-in"><span>          <span class="st">"us"</span>, <span class="st">"pediatric"</span>, <span class="st">"2000-01-02"</span>, <span class="st">"2000-01-03"</span>,      <span class="fl">5</span>, <span class="co"># (addition)</span></span></span>
-<span class="r-in"><span>          <span class="st">"us"</span>,     <span class="st">"adult"</span>, <span class="st">"2000-01-01"</span>, <span class="st">"2000-01-03"</span>,    <span class="fl">125</span>, <span class="co"># (revision)</span></span></span>
-<span class="r-in"><span>          <span class="st">"us"</span>,     <span class="st">"adult"</span>, <span class="st">"2000-01-02"</span>, <span class="st">"2000-01-03"</span>,    <span class="fl">130</span>  <span class="co"># (addition)</span></span></span>
+<span class="r-in"><span>    <span class="op">~</span><span class="va">geo_value</span>, <span class="op">~</span><span class="va">age_group</span>, <span class="op">~</span><span class="va">time_value</span>, <span class="op">~</span><span class="va">version</span>, <span class="op">~</span><span class="va">value</span>,</span></span>
+<span class="r-in"><span>    <span class="st">"us"</span>, <span class="st">"adult"</span>, <span class="st">"2000-01-01"</span>, <span class="st">"2000-01-02"</span>, <span class="fl">121</span>,</span></span>
+<span class="r-in"><span>    <span class="st">"us"</span>, <span class="st">"pediatric"</span>, <span class="st">"2000-01-02"</span>, <span class="st">"2000-01-03"</span>, <span class="fl">5</span>, <span class="co"># (addition)</span></span></span>
+<span class="r-in"><span>    <span class="st">"us"</span>, <span class="st">"adult"</span>, <span class="st">"2000-01-01"</span>, <span class="st">"2000-01-03"</span>, <span class="fl">125</span>, <span class="co"># (revision)</span></span></span>
+<span class="r-in"><span>    <span class="st">"us"</span>, <span class="st">"adult"</span>, <span class="st">"2000-01-02"</span>, <span class="st">"2000-01-03"</span>, <span class="fl">130</span> <span class="co"># (addition)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>age_group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">ordered</a></span><span class="op">(</span><span class="va">age_group</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pediatric"</span>, <span class="st">"adult"</span><span class="op">)</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>         time_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="va">time_value</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>         version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="va">version</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    age_group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">ordered</a></span><span class="op">(</span><span class="va">age_group</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pediatric"</span>, <span class="st">"adult"</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    time_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="va">time_value</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="va">version</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="as_epi_archive.html">as_epi_archive</a></span><span class="op">(</span>other_keys <span class="op">=</span> <span class="st">"age_group"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The following are equivalent:</span></span></span>
@@ -254,7 +258,9 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                      truncate_versions_after, slide, clone</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Exclusive to `grouped_epi_archive`: group_by_drop_default, groups, ungroup</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • `ungroup` to use: as_of, fill_through_version, merge</span>
-<span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">age_group</span>, .add<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">age_group</span>, .add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A `grouped_epi_archive` object:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value, age_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Drops groups formed by factor levels that don't appear in the data</span>
@@ -277,7 +283,7 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                      truncate_versions_after, slide, clone</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Exclusive to `grouped_epi_archive`: group_by_drop_default, groups, ungroup</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • `ungroup` to use: as_of, fill_through_version, merge</span>
-<span class="r-in"><span><span class="va">grouping_cols</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"geo_value"</span>, <span class="st">"age_group"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">grouping_cols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"geo_value"</span>, <span class="st">"age_group"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/across.html" class="external-link">across</a></span><span class="op">(</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/all_of.html" class="external-link">all_of</a></span><span class="op">(</span><span class="va">grouping_cols</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A `grouped_epi_archive` object:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value, age_group</span>
@@ -325,7 +331,9 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                      truncate_versions_after, slide, clone</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Exclusive to `grouped_epi_archive`: group_by_drop_default, groups, ungroup</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • `ungroup` to use: as_of, fill_through_version, merge</span>
-<span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">age_group</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="va">age_group</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">age_group</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="va">age_group</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A `grouped_epi_archive` object:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
@@ -349,13 +357,15 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> • `ungroup` to use: as_of, fill_through_version, merge</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># To get the grouping variable names as a `list` of `name`s (a.k.a. symbols):</span></span></span>
-<span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_data.html" class="external-link">groups</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_data.html" class="external-link">groups</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> geo_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">age_group</span>, .drop<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">age_group</span>, .drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="epix_slide.html">epix_slide</a></span><span class="op">(</span>f <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">.x</span><span class="op">$</span><span class="va">value</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">20</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 4</span></span>

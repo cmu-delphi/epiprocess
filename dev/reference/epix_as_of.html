@@ -14,7 +14,7 @@ examples."><meta name="robots" content="noindex"><!-- mathjax --><script src="ht
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.1.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.2.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -129,8 +129,10 @@ in the future.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># warning message of data latency shown</span></span></span>
-<span class="r-in"><span><span class="fu">epix_as_of</span><span class="op">(</span>x <span class="op">=</span> <span class="va">archive_cases_dv_subset</span>,</span></span>
-<span class="r-in"><span>           max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">epix_as_of</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  x <span class="op">=</span> <span class="va">archive_cases_dv_subset</span>,</span></span>
+<span class="r-in"><span>  max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 2,192 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
@@ -155,8 +157,10 @@ in the future.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span> <span class="co"># 2020-06-02 -- 2021-12-01</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "2020-06-02" "2021-12-01"</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">epix_as_of</span><span class="op">(</span>x <span class="op">=</span> <span class="va">archive_cases_dv_subset</span>,</span></span>
-<span class="r-in"><span>           max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-12"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">epix_as_of</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  x <span class="op">=</span> <span class="va">archive_cases_dv_subset</span>,</span></span>
+<span class="r-in"><span>  max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-12"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 44 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
@@ -185,10 +189,15 @@ in the future.</p>
 <span class="r-in"><span><span class="co"># based on database queries, the latest available update might still be</span></span></span>
 <span class="r-in"><span><span class="co"># subject to change, but previous versions should be finalized). We can</span></span></span>
 <span class="r-in"><span><span class="co"># muffle such warnings with the following pattern:</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">withCallingHandlers</a></span><span class="op">(</span><span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="fu">epix_as_of</span><span class="op">(</span>x <span class="op">=</span> <span class="va">archive_cases_dv_subset</span>,</span></span>
-<span class="r-in"><span>             max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span>, epiprocess__snapshot_as_of_clobberable_version <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">wrn</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">invokeRestart</a></span><span class="op">(</span><span class="st">"muffleWarning"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">withCallingHandlers</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="fu">epix_as_of</span><span class="op">(</span></span></span>
+<span class="r-in"><span>      x <span class="op">=</span> <span class="va">archive_cases_dv_subset</span>,</span></span>
+<span class="r-in"><span>      max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">}</span>,</span></span>
+<span class="r-in"><span>  epiprocess__snapshot_as_of_clobberable_version <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">wrn</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">invokeRestart</a></span><span class="op">(</span><span class="st">"muffleWarning"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 2,192 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>

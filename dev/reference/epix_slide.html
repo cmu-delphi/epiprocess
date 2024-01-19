@@ -20,7 +20,7 @@ examples."><meta name="robots" content="noindex"><!-- mathjax --><script src="ht
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.1.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.2.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -287,17 +287,20 @@ sure to clone and/or copy appropriately before using in-place mutation.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Reference time points for which we want to compute slide values:</span></span></span>
 <span class="r-in"><span><span class="va">ref_time_values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-01"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                       <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-15"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                       by <span class="op">=</span> <span class="st">"1 day"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-15"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  by <span class="op">=</span> <span class="st">"1 day"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A simple (but not very useful) example (see the archive vignette for a more</span></span></span>
 <span class="r-in"><span><span class="co"># realistic one):</span></span></span>
 <span class="r-in"><span><span class="va">archive_cases_dv_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu">epix_slide</span><span class="op">(</span>f <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">.x</span><span class="op">$</span><span class="va">case_rate_7d_av</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>             before <span class="op">=</span> <span class="fl">2</span>,</span></span>
-<span class="r-in"><span>             ref_time_values <span class="op">=</span> <span class="va">ref_time_values</span>,</span></span>
-<span class="r-in"><span>             new_col_name <span class="op">=</span> <span class="st">'case_rate_7d_av_recent_av'</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu">epix_slide</span><span class="op">(</span></span></span>
+<span class="r-in"><span>    f <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">.x</span><span class="op">$</span><span class="va">case_rate_7d_av</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    before <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span>    ref_time_values <span class="op">=</span> <span class="va">ref_time_values</span>,</span></span>
+<span class="r-in"><span>    new_col_name <span class="op">=</span> <span class="st">"case_rate_7d_av_recent_av"</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 57 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value case_rate_7d_av_recent_av</span>
@@ -329,23 +332,24 @@ sure to clone and/or copy appropriately before using in-place mutation.</p>
 <span class="r-in"><span><span class="co"># Examining characteristics of the data passed to each computation with</span></span></span>
 <span class="r-in"><span><span class="co"># `all_versions=FALSE`.</span></span></span>
 <span class="r-in"><span><span class="va">archive_cases_dv_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span> <span class="fu">epix_slide</span><span class="op">(</span></span></span>
-<span class="r-in"><span>   <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">gk</span>, <span class="va">rtv</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>     <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>       time_range <span class="op">=</span> <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0L</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>         <span class="st">"0 `time_value`s"</span></span></span>
-<span class="r-in"><span>       <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>         <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%s -- %s"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">time_value</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">time_value</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>       <span class="op">}</span>,</span></span>
-<span class="r-in"><span>       n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>       class1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">[[</span><span class="fl">1L</span><span class="op">]</span><span class="op">]</span></span></span>
-<span class="r-in"><span>     <span class="op">)</span></span></span>
-<span class="r-in"><span>   <span class="op">}</span>,</span></span>
-<span class="r-in"><span>   before <span class="op">=</span> <span class="fl">5</span>, all_versions <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
-<span class="r-in"><span>   ref_time_values <span class="op">=</span> <span class="va">ref_time_values</span>, names_sep<span class="op">=</span><span class="cn">NULL</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu">epix_slide</span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">gk</span>, <span class="va">rtv</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>      <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>        time_range <span class="op">=</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0L</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>          <span class="st">"0 `time_value`s"</span></span></span>
+<span class="r-in"><span>        <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>          <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%s -- %s"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">time_value</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">time_value</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>        <span class="op">}</span>,</span></span>
+<span class="r-in"><span>        n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>        class1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">[[</span><span class="fl">1L</span><span class="op">]</span><span class="op">]</span></span></span>
+<span class="r-in"><span>      <span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="op">}</span>,</span></span>
+<span class="r-in"><span>    before <span class="op">=</span> <span class="fl">5</span>, all_versions <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
+<span class="r-in"><span>    ref_time_values <span class="op">=</span> <span class="va">ref_time_values</span>, names_sep <span class="op">=</span> <span class="cn">NULL</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 57 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value time_range                   n class1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span>
@@ -381,7 +385,7 @@ sure to clone and/or copy appropriately before using in-place mutation.</p>
 <span class="r-in"><span>          <span class="fu"><a href="https://rdrr.io/r/base/toString.html" class="external-link">toString</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span>        <span class="op">}</span>,</span></span>
 <span class="r-in"><span>        versions_end <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">versions_end</span>,</span></span>
-<span class="r-in"><span>        time_range <span class="op">=</span> <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0L</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>        time_range <span class="op">=</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0L</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>          <span class="st">"0 `time_value`s"</span></span></span>
 <span class="r-in"><span>        <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>          <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%s -- %s"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">time_value</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">time_value</span><span class="op">)</span><span class="op">)</span></span></span>
@@ -391,7 +395,8 @@ sure to clone and/or copy appropriately before using in-place mutation.</p>
 <span class="r-in"><span>      <span class="op">)</span></span></span>
 <span class="r-in"><span>    <span class="op">}</span>,</span></span>
 <span class="r-in"><span>    before <span class="op">=</span> <span class="fl">5</span>, all_versions <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>    ref_time_values <span class="op">=</span> <span class="va">ref_time_values</span>, names_sep<span class="op">=</span><span class="cn">NULL</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>    ref_time_values <span class="op">=</span> <span class="va">ref_time_values</span>, names_sep <span class="op">=</span> <span class="cn">NULL</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="co"># Focus on one geo_value so we can better see the columns above:</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">geo_value</span> <span class="op">==</span> <span class="st">"ca"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>

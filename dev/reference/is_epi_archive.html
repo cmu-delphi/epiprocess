@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.1.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.2.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -102,10 +102,10 @@ count? Default is <code>FALSE</code>.</p></dd>
 <span class="r-in"><span><span class="co"># By default, grouped_epi_archives don't count as epi_archives, as they may</span></span></span>
 <span class="r-in"><span><span class="co"># support a different set of operations from regular `epi_archives`. This</span></span></span>
 <span class="r-in"><span><span class="co"># behavior can be controlled by `grouped_okay`.</span></span></span>
-<span class="r-in"><span><span class="va">grouped_archive</span> <span class="op">=</span> <span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="fu">group_by</span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">grouped_archive</span> <span class="op">&lt;-</span> <span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="fu">group_by</span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">is_epi_archive</span><span class="op">(</span><span class="va">grouped_archive</span><span class="op">)</span> <span class="co"># FALSE</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
-<span class="r-in"><span><span class="fu">is_epi_archive</span><span class="op">(</span><span class="va">grouped_archive</span>, grouped_okay<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span> <span class="co"># TRUE</span></span></span>
+<span class="r-in"><span><span class="fu">is_epi_archive</span><span class="op">(</span><span class="va">grouped_archive</span>, grouped_okay <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># TRUE</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

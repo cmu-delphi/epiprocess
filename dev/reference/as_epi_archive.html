@@ -14,7 +14,7 @@ examples. The parameter descriptions below are copied from there"><meta name="ro
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.1.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.2.9999</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -182,16 +182,20 @@ class, so for example:</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Simple ex. with necessary keys</span></span></span>
 <span class="r-in"><span><span class="va">tib</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  geo_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ca"</span>, <span class="st">"hi"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  time_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-01-01"</span><span class="op">)</span>, </span></span>
-<span class="r-in"><span>                       by <span class="op">=</span> <span class="fl">1</span>, length.out <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>, times <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-01-02"</span><span class="op">)</span>, </span></span>
-<span class="r-in"><span>                    by <span class="op">=</span> <span class="fl">1</span>, length.out <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>, times <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  time_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-01-01"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    by <span class="op">=</span> <span class="fl">1</span>, length.out <span class="op">=</span> <span class="fl">5</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span>, times <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-01-02"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    by <span class="op">=</span> <span class="fl">1</span>, length.out <span class="op">=</span> <span class="fl">5</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span>, times <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">10</span>, mean <span class="op">=</span> <span class="fl">2</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">toy_epi_archive</span> <span class="op">&lt;-</span> <span class="va">tib</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu">as_epi_archive</span><span class="op">(</span>geo_type <span class="op">=</span> <span class="st">"state"</span>, </span></span>
-<span class="r-in"><span>                                          time_type <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">toy_epi_archive</span> </span></span>
+<span class="r-in"><span><span class="va">toy_epi_archive</span> <span class="op">&lt;-</span> <span class="va">tib</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu">as_epi_archive</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  geo_type <span class="op">=</span> <span class="st">"state"</span>,</span></span>
+<span class="r-in"><span>  time_type <span class="op">=</span> <span class="st">"day"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy_epi_archive</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_archive` object, with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
@@ -210,22 +214,30 @@ class, so for example:</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    truncate_versions_after, merge, group_by, slide, clone</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Ex. with an additional key for county</span></span></span>
-<span class="r-in"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span> <span class="op">(</span>geo_value  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="fl">2</span>, <span class="st">"ca"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="fl">2</span>, <span class="st">"fl"</span><span class="op">)</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                 county <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span>, <span class="fl">2</span>, <span class="fl">5</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                 time_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2020-06-01"</span>,</span></span>
-<span class="r-in"><span>                                <span class="st">"2020-06-02"</span>,</span></span>
-<span class="r-in"><span>                                <span class="st">"2020-06-01"</span>,</span></span>
-<span class="r-in"><span>                                <span class="st">"2020-06-02"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                 version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2020-06-02"</span>,</span></span>
-<span class="r-in"><span>                             <span class="st">"2020-06-03"</span>,</span></span>
-<span class="r-in"><span>                             <span class="st">"2020-06-02"</span>,</span></span>
-<span class="r-in"><span>                             <span class="st">"2020-06-03"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                 cases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                 cases_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.01</span>, <span class="fl">0.02</span>, <span class="fl">0.01</span>, <span class="fl">0.05</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  geo_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="fl">2</span>, <span class="st">"ca"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="fl">2</span>, <span class="st">"fl"</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  county <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span>, <span class="fl">2</span>, <span class="fl">5</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  time_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="st">"2020-06-01"</span>,</span></span>
+<span class="r-in"><span>    <span class="st">"2020-06-02"</span>,</span></span>
+<span class="r-in"><span>    <span class="st">"2020-06-01"</span>,</span></span>
+<span class="r-in"><span>    <span class="st">"2020-06-02"</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span>,</span></span>
+<span class="r-in"><span>  version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="st">"2020-06-02"</span>,</span></span>
+<span class="r-in"><span>    <span class="st">"2020-06-03"</span>,</span></span>
+<span class="r-in"><span>    <span class="st">"2020-06-02"</span>,</span></span>
+<span class="r-in"><span>    <span class="st">"2020-06-03"</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span>,</span></span>
+<span class="r-in"><span>  cases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  cases_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.01</span>, <span class="fl">0.02</span>, <span class="fl">0.01</span>, <span class="fl">0.05</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu">as_epi_archive</span><span class="op">(</span>geo_type <span class="op">=</span> <span class="st">"state"</span>,</span></span>
-<span class="r-in"><span>                           time_type <span class="op">=</span> <span class="st">"day"</span>,</span></span>
-<span class="r-in"><span>                           other_keys <span class="op">=</span> <span class="st">"county"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu">as_epi_archive</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  geo_type <span class="op">=</span> <span class="st">"state"</span>,</span></span>
+<span class="r-in"><span>  time_type <span class="op">=</span> <span class="st">"day"</span>,</span></span>
+<span class="r-in"><span>  other_keys <span class="op">=</span> <span class="st">"county"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
