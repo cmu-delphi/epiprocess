@@ -3,6 +3,9 @@
 ## Improvements
 
 * Updated vignettes for compatibility with epidatr 1.0.0 in PR #377.
+* `epi_slide` computations are now 2-4 times faster after changing how
+  reference time values, made accessible within sliding functions, are
+  calculated (#397).
 
 # epiprocess 0.7.0
 
