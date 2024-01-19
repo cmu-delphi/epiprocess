@@ -35,7 +35,7 @@ library(dplyr)
 dt <- archive_cases_dv_subset$DT
 
 locf_omitted <- as_epi_archive(dt)
-locf_included <- as_epi_archive(dt,compactify = FALSE)
+locf_included <- as_epi_archive(dt, compactify = FALSE)
 
 head(locf_omitted$DT)
 head(locf_included$DT)
@@ -46,10 +46,10 @@ LOCF-redundant values can mar the performance of dataset operations. As the colu
 `percent_cli` column for comparing performance.
 
 ```{r}
-dt2 <- select(dt,-percent_cli)
+dt2 <- select(dt, -percent_cli)
 
-locf_included_2 <- as_epi_archive(dt2,compactify=FALSE)
-locf_omitted_2 <- as_epi_archive(dt2,compactify=TRUE)
+locf_included_2 <- as_epi_archive(dt2, compactify = FALSE)
+locf_omitted_2 <- as_epi_archive(dt2, compactify = TRUE)
 ```
 
 In this example, a huge proportion of the original version update data were
@@ -70,13 +70,13 @@ the LOCF values are omitted.
 # Performance of filtering
 iterate_filter <- function(my_ea) {
   for (i in 1:1000) {
-    filter(my_ea$DT,version >= as.Date("2020-01-01") + i)
+    filter(my_ea$DT, version >= as.Date("2020-01-01") + i)
   }
 }
 
 elapsed_time <- function(fx) c(system.time(fx))[[3]]
 
-speed_test <- function(f,name) {
+speed_test <- function(f, name) {
   data.frame(
     operation = name,
     locf = elapsed_time(f(locf_included_2)),
@@ -84,8 +84,7 @@ speed_test <- function(f,name) {
   )
 }
 
-speeds <- speed_test(iterate_filter,"filter_1000x")
-
+speeds <- speed_test(iterate_filter, "filter_1000x")
 ```
 
 We would also like to measure the speed of `epi_archive` methods.
@@ -98,22 +97,22 @@ iterate_as_of <- function(my_ea) {
   }
 }
 
-speeds <- rbind(speeds, speed_test(iterate_as_of,"as_of_1000x"))
+speeds <- rbind(speeds, speed_test(iterate_as_of, "as_of_1000x"))
 
 # Performance of slide
 slide_median <- function(my_ea) {
-    my_ea$slide(median = median(case_rate_7d_av), before = 7)
+  my_ea$slide(median = median(case_rate_7d_av), before = 7)
 }
 
-speeds <- rbind(speeds, speed_test(slide_median,"slide_median"))
+speeds <- rbind(speeds, speed_test(slide_median, "slide_median"))
 ```
 Here is a detailed performance comparison:
 
 ```{r}
-speeds_tidy <- tidyr::gather(speeds,key="is_locf",value="time_in_s",locf,no_locf)
+speeds_tidy <- tidyr::gather(speeds, key = "is_locf", value = "time_in_s", locf, no_locf)
 
 library(ggplot2)
 
 ggplot(speeds_tidy) +
-  geom_bar(aes(x=is_locf,y=time_in_s,fill=operation),stat = "identity")
+  geom_bar(aes(x = is_locf, y = time_in_s, fill = operation), stat = "identity")
 ```

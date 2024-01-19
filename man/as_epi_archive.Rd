@@ -81,7 +81,7 @@ An \code{epi_archive} object.
 \description{
 Converts a data frame, data table, or tibble into an \code{epi_archive}
 object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{archive vignette} for
-examples.
+examples. The parameter descriptions below are copied from there
 }
 \details{
 This simply a wrapper around the \code{new()} method of the \code{epi_archive}

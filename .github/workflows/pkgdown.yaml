@@ -4,9 +4,9 @@
 # Created with usethis + edited to run on PRs to dev, use API key.
 on:
   push:
-    branches: [main, master]
+    branches: [main, dev]
   pull_request:
-    branches: [main, master, dev]
+    branches: [main, dev]
   release:
     types: [published]
   workflow_dispatch:

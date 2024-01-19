@@ -87,7 +87,7 @@ NULL
 
 #' Creates an `epi_df` object
 #'
-#' Creates a new `epi_df` object. By default, builds an empty tibble with the 
+#' Creates a new `epi_df` object. By default, builds an empty tibble with the
 #' correct metadata for an `epi_df` object (ie. `geo_type`, `time_type`, and `as_of`).
 #' Refer to the below info. about the arguments for more details.
 #'
@@ -107,64 +107,76 @@ NULL
 #'   `epi_df` object. The metadata will have `geo_type`, `time_type`, and
 #'   `as_of` fields; named entries from the passed list will be included as
 #'   well. If your tibble has additional keys, be sure to specify them as a
-#'   character vector in the `other_keys` component of `additional_metadata`. 
+#'   character vector in the `other_keys` component of `additional_metadata`.
 #' @param ... Additional arguments passed to methods.
 #' @return An `epi_df` object.
-#' 
+#'
 #' @export
-new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
-                      additional_metadata = list(), ...) {
+new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
+                       additional_metadata = list(), ...) {
   # Check that we have a data frame
   if (!is.data.frame(x)) {
     Abort("`x` must be a data frame.")
   }
-    
+
   if (!is.list(additional_metadata)) {
     Abort("`additional_metadata` must be a list type.")
+  }
+  if (is.null(additional_metadata[["other_keys"]])) {
+    additional_metadata[["other_keys"]] <- character(0L)
   }
 
   # If geo type is missing, then try to guess it
   if (missing(geo_type)) {
-    geo_type = guess_geo_type(x$geo_value)
+    geo_type <- guess_geo_type(x$geo_value)
   }
-  
+
   # If time type is missing, then try to guess it
   if (missing(time_type)) {
-    time_type = guess_time_type(x$time_value)
+    time_type <- guess_time_type(x$time_value)
   }
-  
+
   # If as_of is missing, then try to guess it
   if (missing(as_of)) {
     # First check the metadata for an as_of field
     if ("metadata" %in% names(attributes(x)) &&
-        "as_of" %in% names(attributes(x)$metadata)) {
-      as_of = attributes(x)$metadata$as_of
+      "as_of" %in% names(attributes(x)$metadata)) {
+      as_of <- attributes(x)$metadata$as_of
     }
-    
+
     # Next check for as_of, issue, or version columns
-    else if ("as_of" %in% names(x)) as_of = max(x$as_of)
-    else if ("issue" %in% names(x)) as_of = max(x$issue)
-    else if ("version" %in% names(x)) as_of = max(x$version)
-    
-    # If we got here then we failed
-    else as_of = Sys.time() # Use the current day-time
+    else if ("as_of" %in% names(x)) {
+      as_of <- max(x$as_of)
+    } else if ("issue" %in% names(x)) {
+      as_of <- max(x$issue)
+    } else if ("version" %in% names(x)) {
+      as_of <- max(x$version)
+    } # If we got here then we failed
+    else {
+      as_of <- Sys.time()
+    } # Use the current day-time
   }
-  
+
   # Define metadata fields
-  metadata = list()
-  metadata$geo_type = geo_type
-  metadata$time_type = time_type
-  metadata$as_of = as_of
-  metadata = c(metadata, additional_metadata)
-  
+  metadata <- list()
+  metadata$geo_type <- geo_type
+  metadata$time_type <- time_type
+  metadata$as_of <- as_of
+  metadata <- c(metadata, additional_metadata)
+
   # Reorder columns (geo_value, time_value, ...)
-  if(sum(dim(x)) != 0){
-    x = dplyr::relocate(x, "geo_value", "time_value")
+  if (sum(dim(x)) != 0) {
+    cols_to_put_first <- c("geo_value", "time_value")
+    x <- x[, c(
+      cols_to_put_first,
+      # All other columns
+      names(x)[!(names(x) %in% cols_to_put_first)]
+    )]
   }
-  
+
   # Apply epi_df class, attach metadata, and return
-  class(x) = c("epi_df", class(x))
-  attributes(x)$metadata = metadata
+  class(x) <- c("epi_df", class(x))
+  attributes(x)$metadata <- metadata
   return(x)
 }
 
@@ -196,77 +208,85 @@ new_epi_df = function(x = tibble::tibble(), geo_type, time_type, as_of,
 #' @return An `epi_df` object.
 #'
 #' @export
-#' @examples 
+#' @examples
 #' # Convert a `tsibble` that has county code as an extra key
 #' # Notice that county code should be a character string to preserve any leading zeroes
-#' 
+#'
 #' ex1_input <- tibble::tibble(
 #'   geo_value = rep(c("ca", "fl", "pa"), each = 3),
-#'   county_code = c("06059","06061","06067",
-#'                   "12111","12113","12117",
-#'                   "42101", "42103","42105"),
+#'   county_code = c(
+#'     "06059", "06061", "06067",
+#'     "12111", "12113", "12117",
+#'     "42101", "42103", "42105"
+#'   ),
 #'   time_value = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
-#'                        by = "day"), length.out = length(geo_value)),
+#'     by = "day"
+#'   ), length.out = length(geo_value)),
 #'   value = 1:length(geo_value) + 0.01 * rnorm(length(geo_value))
-#' ) %>% 
+#' ) %>%
 #'   tsibble::as_tsibble(index = time_value, key = c(geo_value, county_code))
-#' 
+#'
 #' # The `other_keys` metadata (`"county_code"` in this case) is automatically
 #' # inferred from the `tsibble`'s `key`:
 #' ex1 <- as_epi_df(x = ex1_input, geo_type = "state", time_type = "day", as_of = "2020-06-03")
-#' attr(ex1,"metadata")[["other_keys"]]
-#' 
-#' 
-#' 
+#' attr(ex1, "metadata")[["other_keys"]]
+#'
+#'
+#'
 #' # Dealing with misspecified column names:
 #' # Geographical and temporal information must be provided in columns named
 #' # `geo_value` and `time_value`; if we start from a data frame with a
 #' # different format, it must be converted to use `geo_value` and `time_value`
 #' # before calling `as_epi_df`.
-#' 
+#'
 #' ex2_input <- tibble::tibble(
 #'   state = rep(c("ca", "fl", "pa"), each = 3), # misnamed
 #'   pol = rep(c("blue", "swing", "swing"), each = 3), # extra key
 #'   reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
-#'                           by = "day"), length.out = length(state)), # misnamed
+#'     by = "day"
+#'   ), length.out = length(state)), # misnamed
 #'   value = 1:length(state) + 0.01 * rnorm(length(state))
-#' ) 
-#' 
+#' )
+#'
 #' print(ex2_input)
-#' 
-#' ex2 <- ex2_input %>% dplyr::rename(geo_value = state, time_value = reported_date) %>%
-#'   as_epi_df(geo_type = "state", as_of = "2020-06-03", 
-#'             additional_metadata = list(other_keys = "pol")) 
-#' 
-#' attr(ex2,"metadata")
-#' 
-#' 
-#' 
+#'
+#' ex2 <- ex2_input %>%
+#'   dplyr::rename(geo_value = state, time_value = reported_date) %>%
+#'   as_epi_df(
+#'     geo_type = "state", as_of = "2020-06-03",
+#'     additional_metadata = list(other_keys = "pol")
+#'   )
+#'
+#' attr(ex2, "metadata")
+#'
+#'
+#'
 #' # Adding additional keys to an `epi_df` object
-#' 
+#'
 #' ex3_input <- jhu_csse_county_level_subset %>%
 #'   dplyr::filter(time_value > "2021-12-01", state_name == "Massachusetts") %>%
-#'   dplyr::slice_tail(n = 6) 
-#' 
-#' ex3 <- ex3_input %>% 
+#'   dplyr::slice_tail(n = 6)
+#'
+#' ex3 <- ex3_input %>%
 #'   tsibble::as_tsibble() %>% # needed to add the additional metadata
 #'   # add 2 extra keys
 #'   dplyr::mutate(
-#'     state = rep("MA",6),
-#'     pol = rep(c("blue", "swing", "swing"), each = 2)) %>% 
-#'   # the 2 extra keys we added have to be specified in the other_keys 
+#'     state = rep("MA", 6),
+#'     pol = rep(c("blue", "swing", "swing"), each = 2)
+#'   ) %>%
+#'   # the 2 extra keys we added have to be specified in the other_keys
 #'   # component of additional_metadata.
 #'   as_epi_df(additional_metadata = list(other_keys = c("state", "pol")))
-#' 
-#' attr(ex3,"metadata")
-as_epi_df = function(x, ...) {
+#'
+#' attr(ex3, "metadata")
+as_epi_df <- function(x, ...) {
   UseMethod("as_epi_df")
 }
 
 #' @method as_epi_df epi_df
 #' @describeIn as_epi_df Simply returns the `epi_df` object unchanged.
 #' @export
-as_epi_df.epi_df = function(x, ...) {
+as_epi_df.epi_df <- function(x, ...) {
   return(x)
 }
 
@@ -280,8 +300,8 @@ as_epi_df.epi_df = function(x, ...) {
 #'   be used.
 #' @importFrom rlang .data
 #' @export
-as_epi_df.tbl_df = function(x, geo_type, time_type, as_of,
-                            additional_metadata = list(), ...) {
+as_epi_df.tbl_df <- function(x, geo_type, time_type, as_of,
+                             additional_metadata = list(), ...) {
   # Check that we have geo_value and time_value columns
   if (!("geo_value" %in% names(x))) {
     Abort("`x` must contain a `geo_value` column.")
@@ -289,18 +309,22 @@ as_epi_df.tbl_df = function(x, geo_type, time_type, as_of,
   if (!("time_value" %in% names(x))) {
     Abort("`x` must contain a `time_value` column.")
   }
-  
-  new_epi_df(x, geo_type, time_type, as_of,
-             additional_metadata, ...)
+
+  new_epi_df(
+    x, geo_type, time_type, as_of,
+    additional_metadata, ...
+  )
 }
 
 #' @method as_epi_df data.frame
 #' @describeIn as_epi_df Works analogously to `as_epi_df.tbl_df()`.
 #' @export
-as_epi_df.data.frame = function(x, geo_type, time_type, as_of,
-                                additional_metadata = list(), ...) {
-  as_epi_df.tbl_df(tibble::as_tibble(x), geo_type, time_type, as_of,
-                   additional_metadata, ...)
+as_epi_df.data.frame <- function(x, geo_type, time_type, as_of,
+                                 additional_metadata = list(), ...) {
+  as_epi_df.tbl_df(
+    tibble::as_tibble(x), geo_type, time_type, as_of,
+    additional_metadata, ...
+  )
 }
 
 #' @method as_epi_df tbl_ts
@@ -309,23 +333,26 @@ as_epi_df.data.frame = function(x, geo_type, time_type, as_of,
 #'   "geo_value") are added to the metadata of the returned object, under the
 #'   `other_keys` field.
 #' @export
-as_epi_df.tbl_ts = function(x, geo_type, time_type, as_of,
-                            additional_metadata = list(), ...) {
-  tsibble_other_keys = setdiff(tsibble::key_vars(x), "geo_value")
+as_epi_df.tbl_ts <- function(x, geo_type, time_type, as_of,
+                             additional_metadata = list(), ...) {
+  tsibble_other_keys <- setdiff(tsibble::key_vars(x), "geo_value")
   if (length(tsibble_other_keys) != 0) {
-    additional_metadata$other_keys = unique(
-      c(additional_metadata$other_keys, tsibble_other_keys))
+    additional_metadata$other_keys <- unique(
+      c(additional_metadata$other_keys, tsibble_other_keys)
+    )
   }
-  as_epi_df.tbl_df(tibble::as_tibble(x), geo_type, time_type, as_of,
-                   additional_metadata, ...)
+  as_epi_df.tbl_df(
+    tibble::as_tibble(x), geo_type, time_type, as_of,
+    additional_metadata, ...
+  )
 }
 
 #' Test for `epi_df` format
 #'
 #' @param x An object.
 #' @return `TRUE` if the object inherits from `epi_df`.
-#' 
+#'
 #' @export
-is_epi_df = function(x) {
+is_epi_df <- function(x) {
   inherits(x, "epi_df")
 }

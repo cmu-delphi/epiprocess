@@ -76,7 +76,7 @@
 #'   `NA` marker.
 #' @return An `epi_df` object given by appending a new column to `x`, named
 #'   according to the `new_col_name` argument.
-#' 
+#'
 #' @details To "slide" means to apply a function or formula over a rolling
 #'   window of time steps for each data group, where the window is entered at a
 #'   reference time and left and right endpoints are given by the `before` and
@@ -117,21 +117,21 @@
 #'             new_col_name = "cases_7dav")
 #'   ```
 #'   Thus, to be clear, when the computation is specified via an expression for
-#'   tidy evaluation (first example, above), then the name for the new column is 
-#'   inferred from the given expression and overrides any name passed explicitly 
+#'   tidy evaluation (first example, above), then the name for the new column is
+#'   inferred from the given expression and overrides any name passed explicitly
 #'   through the `new_col_name` argument.
-#'   
+#'
 #' @importFrom lubridate days weeks
 #' @importFrom dplyr bind_rows group_vars filter select
 #' @importFrom rlang .data .env !! enquo enquos sym env missing_arg
 #' @export
-#' @examples 
+#' @examples
 #' # slide a 7-day trailing average formula on cases
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide(cases_7dav = mean(cases), before = 6) %>% 
+#'   epi_slide(cases_7dav = mean(cases), before = 6) %>%
 #'   # rmv a nonessential var. to ensure new col is printed
-#'   dplyr::select(-death_rate_7d_av) 
+#'   dplyr::select(-death_rate_7d_av)
 #'
 #' # slide a 7-day leading average
 #' jhu_csse_daily_subset %>%
@@ -143,35 +143,38 @@
 #' # slide a 7-day centre-aligned average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide(cases_7dav = mean(cases), before = 3, after = 3) %>% 
+#'   epi_slide(cases_7dav = mean(cases), before = 3, after = 3) %>%
 #'   # rmv a nonessential var. to ensure new col is printed
-#'   dplyr::select(-death_rate_7d_av) 
+#'   dplyr::select(-death_rate_7d_av)
 #'
 #' # slide a 14-day centre-aligned average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide(cases_7dav = mean(cases), before = 6, after = 7) %>% 
+#'   epi_slide(cases_7dav = mean(cases), before = 6, after = 7) %>%
 #'   # rmv a nonessential var. to ensure new col is printed
-#'   dplyr::select(-death_rate_7d_av) 
+#'   dplyr::select(-death_rate_7d_av)
 #'
 #' # nested new columns
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide(a = data.frame(cases_2dav = mean(cases),
-#'                            cases_2dma = mad(cases)),
-#'             before = 1, as_list_col = TRUE)
-epi_slide = function(x, f, ..., before, after, ref_time_values,
-                     time_step, 
-                     new_col_name = "slide_value", as_list_col = FALSE,
-                     names_sep = "_", all_rows = FALSE) { 
-
+#'   epi_slide(
+#'     a = data.frame(
+#'       cases_2dav = mean(cases),
+#'       cases_2dma = mad(cases)
+#'     ),
+#'     before = 1, as_list_col = TRUE
+#'   )
+epi_slide <- function(x, f, ..., before, after, ref_time_values,
+                      time_step,
+                      new_col_name = "slide_value", as_list_col = FALSE,
+                      names_sep = "_", all_rows = FALSE) {
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
-  
+
   if (missing(ref_time_values)) {
-    ref_time_values = unique(x$time_value)
+    ref_time_values <- unique(x$time_value)
   }
-  
+
   # Some of these `ref_time_values` checks and processing steps also apply to
   # the `ref_time_values` default; for simplicity, just apply all the steps
   # regardless of whether we are working with a default or user-provided
@@ -185,9 +188,9 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
   } else if (!all(ref_time_values %in% unique(x$time_value))) {
     Abort("All `ref_time_values` must appear in `x$time_value`.")
   } else {
-    ref_time_values = sort(ref_time_values)
+    ref_time_values <- sort(ref_time_values)
   }
-  
+
   # Validate and pre-process `before`, `after`:
   if (!missing(before)) {
     before <- vctrs::vec_cast(before, integer())
@@ -227,20 +230,20 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
     after <- time_step(after)
   }
 
-  min_ref_time_values = ref_time_values - before
+  min_ref_time_values <- ref_time_values - before
   min_ref_time_values_not_in_x <- min_ref_time_values[!(min_ref_time_values %in% unique(x$time_value))]
 
   # Do set up to let us recover `ref_time_value`s later.
   # A helper column marking real observations.
-  x$.real = TRUE
+  x$.real <- TRUE
 
   # Create df containing phony data. Df has the same columns and attributes as
   # `x`, but filled with `NA`s aside from grouping columns. Number of rows is
   # equal to the number of `min_ref_time_values_not_in_x` we have * the
   # number of unique levels seen in the grouping columns.
-  before_time_values_df = data.frame(time_value=min_ref_time_values_not_in_x)
+  before_time_values_df <- data.frame(time_value = min_ref_time_values_not_in_x)
   if (length(group_vars(x)) != 0) {
-    before_time_values_df = dplyr::cross_join(
+    before_time_values_df <- dplyr::cross_join(
       # Get unique combinations of grouping columns seen in real data.
       unique(x[, group_vars(x)]),
       before_time_values_df
@@ -248,70 +251,71 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
   }
   # Automatically fill in all other columns from `x` with `NA`s, and carry
   # attributes over to new df.
-  before_time_values_df <- bind_rows(x[0,], before_time_values_df)
+  before_time_values_df <- bind_rows(x[0, ], before_time_values_df)
   before_time_values_df$.real <- FALSE
 
   x <- bind_rows(before_time_values_df, x)
 
   # Arrange by increasing time_value
-  x = arrange(x, time_value)
+  x <- arrange(x, time_value)
 
   # Now set up starts and stops for sliding/hopping
-  time_range = range(unique(x$time_value))
-  starts = in_range(ref_time_values - before, time_range)
-  stops = in_range(ref_time_values + after, time_range)
-  
-  if( length(starts) == 0 || length(stops) == 0 ) { 
+  time_range <- range(unique(x$time_value))
+  starts <- in_range(ref_time_values - before, time_range)
+  stops <- in_range(ref_time_values + after, time_range)
+
+  if (length(starts) == 0 || length(stops) == 0) {
     Abort("The starting and/or stopping times for sliding are out of bounds with respect to the range of times in your data. Check your settings for ref_time_values and align (and before, if specified).")
   }
 
   # Symbolize new column name
-  new_col = sym(new_col_name)
+  new_col <- sym(new_col_name)
 
   # Computation for one group, all time values
-  slide_one_grp = function(.data_group,
-                           f, ...,  
-                           starts,
-                           stops,
-                           time_values,
-                           all_rows,
-                           new_col) {
+  slide_one_grp <- function(.data_group,
+                            f, ...,
+                            starts,
+                            stops,
+                            time_values,
+                            all_rows,
+                            new_col) {
     # Figure out which reference time values appear in the data group in the
     # first place (we need to do this because it could differ based on the
     # group, hence the setup/checks for the reference time values based on all
     # the data could still be off)
-    o = time_values %in% .data_group$time_value
-    starts = starts[o]
-    stops = stops[o]
-    time_values = time_values[o] 
-    
-    # Compute the slide values 
-    slide_values_list = slider::hop_index(.x = .data_group,
-                                          .i = .data_group$time_value,
-                                          .f = f, ...,
-                                          .starts = starts,
-                                          .stops = stops)
+    o <- time_values %in% .data_group$time_value
+    starts <- starts[o]
+    stops <- stops[o]
+    time_values <- time_values[o]
+
+    # Compute the slide values
+    slide_values_list <- slider::hop_index(
+      .x = .data_group,
+      .i = .data_group$time_value,
+      .f = f, ...,
+      .starts = starts,
+      .stops = stops
+    )
 
     # Now figure out which rows in the data group are in the reference time
     # values; this will be useful for all sorts of checks that follow
-    o = .data_group$time_value %in% time_values
-    num_ref_rows = sum(o)
-    
+    o <- .data_group$time_value %in% time_values
+    num_ref_rows <- sum(o)
+
     # Count the number of appearances of each reference time value (these
     # appearances should all be real for now, but if we allow ref time values
     # outside of .data_group's time values):
-    counts = .data_group %>%
-      dplyr::filter(.data$time_value %in% time_values) %>%
+    counts <- dplyr::filter(.data_group, .data$time_value %in% time_values) %>%
       dplyr::count(.data$time_value) %>%
       dplyr::pull(n)
 
     if (!all(purrr::map_lgl(slide_values_list, is.atomic)) &&
-          !all(purrr::map_lgl(slide_values_list, is.data.frame))) {
+      !all(purrr::map_lgl(slide_values_list, is.data.frame))) {
       Abort("The slide computations must return always atomic vectors or data frames (and not a mix of these two structures).")
     }
 
     # Unlist if appropriate:
-    slide_values =
+    slide_values <-
       if (as_list_col) {
         slide_values_list
       } else {
@@ -319,16 +323,16 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
       }
 
     if (all(purrr::map_int(slide_values_list, vctrs::vec_size) == 1L) &&
-          length(slide_values_list) != 0L) {
+      length(slide_values_list) != 0L) {
       # Recycle to make size stable (one slide value per ref time value).
       # (Length-0 case also could be handled here, but causes difficulties;
       # leave it to the next branch, where it also belongs.)
-      slide_values = vctrs::vec_rep_each(slide_values, times = counts)
+      slide_values <- vctrs::vec_rep_each(slide_values, times = counts)
     } else {
       # Split and flatten if appropriate, perform a (loose) check on number of
       # rows.
       if (as_list_col) {
-        slide_values = purrr::list_flatten(purrr::map(
+        slide_values <- purrr::list_flatten(purrr::map(
           slide_values, ~ vctrs::vec_split(.x, seq_len(vctrs::vec_size(.x)))[["val"]]
         ))
       }
@@ -339,61 +343,61 @@ epi_slide = function(x, f, ..., before, after, ref_time_values,
 
     # If all rows, then pad slide values with NAs, else filter down data group
     if (all_rows) {
-      orig_values = slide_values
-      slide_values = vctrs::vec_rep(vctrs::vec_cast(NA, orig_values), nrow(.data_group))
+      orig_values <- slide_values
+      slide_values <- vctrs::vec_rep(vctrs::vec_cast(NA, orig_values), nrow(.data_group))
       # ^ using vctrs::vec_init would be shorter but docs don't guarantee it
       # fills with NA equivalent.
-      vctrs::vec_slice(slide_values, o) = orig_values
+      vctrs::vec_slice(slide_values, o) <- orig_values
     } else {
       # This implicitly removes phony (`.real` == FALSE) observations.
-      .data_group = filter(.data_group, o)
+      .data_group <- filter(.data_group, o)
     }
     return(mutate(.data_group, !!new_col := slide_values))
   }
 
   # If `f` is missing, interpret ... as an expression for tidy evaluation
   if (missing(f)) {
-    quos = enquos(...)
+    quos <- enquos(...)
     if (length(quos) == 0) {
       Abort("If `f` is missing then a computation must be specified via `...`.")
     }
     if (length(quos) > 1) {
       Abort("If `f` is missing then only a single computation can be specified via `...`.")
     }
-    
-    f = quos[[1]]
-    new_col = sym(names(rlang::quos_auto_name(quos)))
-    ... = missing_arg() # magic value that passes zero args as dots in calls below
+
+    f <- quos[[1]]
+    new_col <- sym(names(rlang::quos_auto_name(quos)))
+    ... <- missing_arg() # magic value that passes zero args as dots in calls below
   }
 
-  f = as_slide_computation(f, ...)
+  f <- as_slide_computation(f, ...)
   # Create a wrapper that calculates and passes `.ref_time_value` to the
   # computation.
-  f_wrapper = function(.x, .group_key, ...) {
-    .ref_time_value = min(.x$time_value) + before
-    .x <- .x[.x$.real,]
+  f_wrapper <- function(.x, .group_key, ...) {
+    .ref_time_value <- min(.x$time_value) + before
+    .x <- .x[.x$.real, ]
     .x$.real <- NULL
     f(.x, .group_key, .ref_time_value, ...)
   }
-  x = x %>%
-    group_modify(slide_one_grp,
-                 f = f_wrapper, ...,
-                 starts = starts,
-                 stops = stops,
-                 time_values = ref_time_values,
-                 all_rows = all_rows,
-                 new_col = new_col,
-                 .keep = FALSE)
-  
+  x <- group_modify(x, slide_one_grp,
+    f = f_wrapper, ...,
+    starts = starts,
+    stops = stops,
+    time_values = ref_time_values,
+    all_rows = all_rows,
+    new_col = new_col,
+    .keep = FALSE
+  )
+
   # Unnest if we need to, and return
   if (!as_list_col) {
-    x = unnest(x, !!new_col, names_sep = names_sep)
+    x <- unnest(x, !!new_col, names_sep = names_sep)
   }
 
   # Remove any remaining phony observations. When `all_rows` is TRUE, phony
   # observations aren't necessarily removed in `slide_one_grp`.
   if (all_rows) {
-    x <- x[x$.real,]
+    x <- x[x$.real, ]
   }
 
   # Drop helper column `.real`.

@@ -5,13 +5,13 @@ vignette: >
   %\VignetteIndexEntry{Get started with `epiprocess`}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
-editor_options: 
+editor_options:
   chunk_output_type: console
 ---
 
 This package introduces a common data structure for epidemiological data sets
 measured over space and time, and offers associated utilities to perform basic
-signal processing tasks. 
+signal processing tasks.
 
 ## Installing
 
@@ -19,7 +19,7 @@ This package is not on CRAN yet, so it can be installed using the
 [`devtools`](https://devtools.r-lib.org) package:
 
 ```{r, eval = FALSE}
-devtools::install_github("cmu-delphi/epiprocess", ref = "main")	
+devtools::install_github("cmu-delphi/epiprocess", ref = "main")
 ```
 
 Building the vignettes, such as this getting started guide, takes a significant
@@ -27,13 +27,15 @@ amount of time. They are not included in the package by default. If you want to
 include vignettes, then use this modified command:
 
 ```{r, eval = FALSE}
-devtools::install_github("cmu-delphi/epiprocess", ref = "main",
-                         build_vignettes = TRUE, dependencies = TRUE)
+devtools::install_github("cmu-delphi/epiprocess",
+  ref = "main",
+  build_vignettes = TRUE, dependencies = TRUE
+)
 ```
 
 ## Getting data into `epi_df` format
 
-We'll start by showing how to get data into 
+We'll start by showing how to get data into
 <code><a href="../reference/epi_df.html">epi_df</a></code> format, which is just
 a tibble with a bit of special structure, and is the format assumed by all of
 the functions in the `epiprocess` package. An `epi_df` object has (at least) the
@@ -60,28 +62,29 @@ library(epiprocess)
 library(dplyr)
 library(withr)
 
-cases <- covidcast(
-  data_source = "jhu-csse",
+cases <- pub_covidcast(
+  source = "jhu-csse",
   signals = "confirmed_cumulative_num",
-  time_type = "day",
   geo_type = "state",
+  time_type = "day",
+  geo_values = "ca,fl,ny,tx",
   time_values = epirange(20200301, 20220131),
-  geo_values = "ca,fl,ny,tx"
-) %>% fetch()
+)
 
 colnames(cases)
 ```
 
-As we can see, a data frame returned by `epidatr::covidcast()` has the
+As we can see, a data frame returned by `epidatr::pub_covidcast()` has the
 columns required for an `epi_df` object (along with many others). We can use
 `as_epi_df()`, with specification of some relevant metadata, to bring the data
 frame into `epi_df` format.
 
 ```{r, message = FALSE}
-x <- as_epi_df(cases, 
-               geo_type = "state",
-               time_type = "day",
-               as_of = max(cases$issue)) %>%
+x <- as_epi_df(cases,
+  geo_type = "state",
+  time_type = "day",
+  as_of = max(cases$issue)
+) %>%
   select(geo_value, time_value, total_cases = value)
 
 class(x)
@@ -93,7 +96,7 @@ attributes(x)$metadata
 ## Some details on metadata
 
 In general, an `epi_df` object has the following fields in its metadata:
- 
+
 * `geo_type`: the type for the geo values.
 * `time_type`: the type for the time values.
 * `as_of`: the time value at which the given data were available.
@@ -115,10 +118,10 @@ data set. See the [archive
 vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 more.
 
-If any of the `geo_type`, `time_type`, or `as_of` arguments are missing in a 
+If any of the `geo_type`, `time_type`, or `as_of` arguments are missing in a
 call to `as_epi_df()`, then this function will try to infer them from the passed
 object. Usually, `geo_type` and `time_type` can be inferred from the `geo_value`
-and `time_value` columns, respectively, but inferring the `as_of` field is not 
+and `time_value` columns, respectively, but inferring the `as_of` field is not
 as easy. See the documentation for `as_epi_df()` more details.
 
 ```{r}
@@ -135,13 +138,16 @@ In the following examples we will show how to create an `epi_df` with additional
 ```{r}
 ex1 <- tibble(
   geo_value = rep(c("ca", "fl", "pa"), each = 3),
-  county_code = c("06059","06061","06067",
-             "12111","12113","12117",
-             "42101","42103","42105"),
+  county_code = c(
+    "06059", "06061", "06067",
+    "12111", "12113", "12117",
+    "42101", "42103", "42105"
+  ),
   time_value = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
-                       by = "day"), length.out = length(geo_value)),
+    by = "day"
+  ), length.out = length(geo_value)),
   value = 1:length(geo_value) + 0.01 * withr::with_rng_version("3.0.0", withr::with_seed(42, length(geo_value)))
-  ) %>% 
+) %>%
   as_tsibble(index = time_value, key = c(geo_value, county_code))
 
 ex1 <- as_epi_df(x = ex1, geo_type = "state", time_type = "day", as_of = "2020-06-03")
@@ -149,11 +155,11 @@ ex1 <- as_epi_df(x = ex1, geo_type = "state", time_type = "day", as_of = "2020-0
 
 The metadata now includes `county_code` as an extra key.
 ```{r}
-attr(ex1,"metadata")
+attr(ex1, "metadata")
 ```
 
 
-### Dealing with misspecified column names 
+### Dealing with misspecified column names
 
 `epi_df` requires there to be columns `geo_value` and `time_value`, if they do not exist then `as_epi_df()` throws an error.
 ```{r, error = TRUE}
@@ -161,56 +167,62 @@ data.frame(
   state = rep(c("ca", "fl", "pa"), each = 3), # misnamed
   pol = rep(c("blue", "swing", "swing"), each = 3), # extra key
   reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
-                       by = "day"), length.out = length(geo_value)), # misnamed
+    by = "day"
+  ), length.out = length(geo_value)), # misnamed
   value = 1:length(geo_value) + 0.01 * withr::with_rng_version("3.0.0", withr::with_seed(42, length(geo_value)))
-) %>% as_epi_df() 
+) %>% as_epi_df()
 ```
 
-The columns can be renamed to match `epi_df` format. In the example below, notice there is also an additional key `pol`. 
+The columns can be renamed to match `epi_df` format. In the example below, notice there is also an additional key `pol`.
 ```{r}
 ex2 <- tibble(
   state = rep(c("ca", "fl", "pa"), each = 3), # misnamed
   pol = rep(c("blue", "swing", "swing"), each = 3), # extra key
   reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
-                          by = "day"), length.out = length(state)), # misnamed
+    by = "day"
+  ), length.out = length(state)), # misnamed
   value = 1:length(state) + 0.01 * withr::with_rng_version("3.0.0", withr::with_seed(42, length(state)))
 ) %>% data.frame()
 
-head(ex2) 
+head(ex2)
 
-ex2 <- ex2 %>% rename(geo_value = state, time_value = reported_date) %>%
-  as_epi_df(geo_type = "state", as_of = "2020-06-03", 
-            additional_metadata = list(other_keys = "pol"))
+ex2 <- ex2 %>%
+  rename(geo_value = state, time_value = reported_date) %>%
+  as_epi_df(
+    geo_type = "state", as_of = "2020-06-03",
+    additional_metadata = list(other_keys = "pol")
+  )
 
-attr(ex2,"metadata")
+attr(ex2, "metadata")
 ```
 
 
 ### Adding additional keys to an `epi_df` object
 
-In the above examples, all the keys are added to objects that are not `epi_df` objects. We illustrate how to add keys to an `epi_df` object. 
+In the above examples, all the keys are added to objects that are not `epi_df` objects. We illustrate how to add keys to an `epi_df` object.
 
 We use a toy data set included in `epiprocess` prepared using the `covidcast` library and are filtering to a single state for simplicity.
 
 ```{r}
 ex3 <- jhu_csse_county_level_subset %>%
   filter(time_value > "2021-12-01", state_name == "Massachusetts") %>%
-  slice_tail(n = 6) 
-  
-attr(ex3,"metadata") # geo_type is county currently
+  slice_tail(n = 6)
+
+attr(ex3, "metadata") # geo_type is county currently
 ```
 
-Now we add `state` (MA) and `pol` as new columns to the data and as new keys to the metadata. Reminder that lower case state name abbreviations are what we would expect if this were a `geo_value` column. 
+Now we add `state` (MA) and `pol` as new columns to the data and as new keys to the metadata. Reminder that lower case state name abbreviations are what we would expect if this were a `geo_value` column.
 
 ```{r}
-ex3 <- ex3 %>% 
+ex3 <- ex3 %>%
   as_tibble() %>% # needed to add the additional metadata
   mutate(
-    state = rep(tolower("MA"),6),
-    pol = rep(c("blue", "swing", "swing"), each = 2)) %>%
+    state = rep(tolower("MA"), 6),
+    pol = rep(c("blue", "swing", "swing"), each = 2)
+  ) %>%
   as_epi_df(additional_metadata = list(other_keys = c("state", "pol")))
 
-attr(ex3,"metadata")
+attr(ex3, "metadata")
 ```
 
 Note that the two additional keys we added, `state` and `pol`, are specified as a character vector in the `other_keys` component of the `additional_metadata` list. They must be specified in this manner so that downstream actions on the `epi_df`, like model fitting and prediction, can recognize and use these keys.
@@ -229,15 +241,15 @@ like plotting, which is pretty easy to do `ggplot2`.
 library(ggplot2)
 theme_set(theme_bw())
 
-ggplot(x, aes(x = time_value, y = total_cases, color = geo_value)) + 
+ggplot(x, aes(x = time_value, y = total_cases, color = geo_value)) +
   geom_line() +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Cumulative COVID-19 cases", color = "State")
 ```
 
-As a last couple examples, we'll look at some more data sets just to show how 
-we might get them into `epi_df` format. Data on daily new (not cumulative) SARS 
-cases in Canada in 2003, from the 
+As a last couple examples, we'll look at some more data sets just to show how
+we might get them into `epi_df` format. Data on daily new (not cumulative) SARS
+cases in Canada in 2003, from the
 [outbreaks](https://github.com/reconverse/outbreaks) package:
 
 ```{r}
@@ -249,12 +261,12 @@ x <- outbreaks::sars_canada_2003 %>%
 head(x)
 
 library(tidyr)
-x <- x %>% 
+x <- x %>%
   pivot_longer(starts_with("cases"), names_to = "type") %>%
   mutate(type = substring(type, 7))
 
-yrange <- range(x %>% group_by(time_value) %>% 
-                  summarize(value = sum(value)) %>% pull(value))
+yrange <- range(x %>% group_by(time_value) %>%
+  summarize(value = sum(value)) %>% pull(value))
 
 ggplot(x, aes(x = time_value, y = value)) +
   geom_col(aes(fill = type)) +
@@ -271,22 +283,29 @@ x <- outbreaks::ebola_sierraleone_2014 %>%
     cases = ifelse(status == "confirmed", 1, 0),
     province = case_when(
       district %in% c("Kailahun", "Kenema", "Kono") ~ "Eastern",
-      district %in% c("Bombali", "Kambia", "Koinadugu",
-                      "Port Loko", "Tonkolili") ~ "Northern",
+      district %in% c(
+        "Bombali", "Kambia", "Koinadugu",
+        "Port Loko", "Tonkolili"
+      ) ~ "Northern",
       district %in% c("Bo", "Bonthe", "Moyamba", "Pujehun") ~ "Sourthern",
-      district %in% c("Western Rural", "Western Urban") ~ "Western")) %>% 
-  select(geo_value = province,
-         time_value = date_of_onset,
-         cases) %>% filter(cases==1) %>%
-  group_by(geo_value, time_value) %>% 
+      district %in% c("Western Rural", "Western Urban") ~ "Western"
+    )
+  ) %>%
+  select(
+    geo_value = province,
+    time_value = date_of_onset,
+    cases
+  ) %>%
+  filter(cases == 1) %>%
+  group_by(geo_value, time_value) %>%
   summarise(cases = sum(cases)) %>%
-  as_epi_df(geo_type="province")
+  as_epi_df(geo_type = "province")
 
-ggplot(x, aes(x = time_value, y = cases)) + 
-  geom_col(aes(fill = geo_value), show.legend = FALSE) + 
-  facet_wrap(~ geo_value, scales = "free_y") +
+ggplot(x, aes(x = time_value, y = cases)) +
+  geom_col(aes(fill = geo_value), show.legend = FALSE) +
+  facet_wrap(~geo_value, scales = "free_y") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
-  labs(x = "Date", y = "Confirmed cases of Ebola in Sierra Leone") 
+  labs(x = "Date", y = "Confirmed cases of Ebola in Sierra Leone")
 ```
 
 
@@ -294,6 +313,6 @@ ggplot(x, aes(x = time_value, y = cases)) +
 ## Attribution
 This document contains a dataset that is a modified part of the [COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) as [republished in the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html). This data set is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.
 
-[From the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html): 
- These signals are taken directly from the JHU CSSE [COVID-19 GitHub repository](https://github.com/CSSEGISandData/COVID-19) without changes. 
+[From the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html):
+ These signals are taken directly from the JHU CSSE [COVID-19 GitHub repository](https://github.com/CSSEGISandData/COVID-19) without changes.
 
