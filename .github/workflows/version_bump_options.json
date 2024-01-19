@@ -5,6 +5,7 @@
   "rules": [
     {
       "trigger": "commit",
+      "branch": "dev",
       "bump": "build"
     },
     {
