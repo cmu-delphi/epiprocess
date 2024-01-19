@@ -55,14 +55,18 @@ in the future.
 }
 \examples{
 # warning message of data latency shown
-epix_as_of(x = archive_cases_dv_subset,
-           max_version = max(archive_cases_dv_subset$DT$version))
+epix_as_of(
+  x = archive_cases_dv_subset,
+  max_version = max(archive_cases_dv_subset$DT$version)
+)
 
 
 range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
 
-epix_as_of(x = archive_cases_dv_subset,
-           max_version = as.Date("2020-06-12"))
+epix_as_of(
+  x = archive_cases_dv_subset,
+  max_version = as.Date("2020-06-12")
+)
 
 # When fetching a snapshot as of the latest version with update data in the
 # archive, a warning is issued by default, as this update data might not yet
@@ -72,10 +76,15 @@ epix_as_of(x = archive_cases_dv_subset,
 # based on database queries, the latest available update might still be
 # subject to change, but previous versions should be finalized). We can
 # muffle such warnings with the following pattern:
-withCallingHandlers({
-  epix_as_of(x = archive_cases_dv_subset,
-             max_version = max(archive_cases_dv_subset$DT$version))
-}, epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning"))
+withCallingHandlers(
+  {
+    epix_as_of(
+      x = archive_cases_dv_subset,
+      max_version = max(archive_cases_dv_subset$DT$version)
+    )
+  },
+  epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning")
+)
 # Since R 4.0, there is a `globalCallingHandlers` function that can be used
 # to globally toggle these warnings.
 

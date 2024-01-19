@@ -193,17 +193,20 @@ library(dplyr)
 
 # Reference time points for which we want to compute slide values:
 ref_time_values <- seq(as.Date("2020-06-01"),
-                       as.Date("2020-06-15"),
-                       by = "1 day")
+  as.Date("2020-06-15"),
+  by = "1 day"
+)
 
 # A simple (but not very useful) example (see the archive vignette for a more
 # realistic one):
 archive_cases_dv_subset \%>\%
   group_by(geo_value) \%>\%
-  epix_slide(f = ~ mean(.x$case_rate_7d_av),
-             before = 2,
-             ref_time_values = ref_time_values,
-             new_col_name = 'case_rate_7d_av_recent_av') \%>\%
+  epix_slide(
+    f = ~ mean(.x$case_rate_7d_av),
+    before = 2,
+    ref_time_values = ref_time_values,
+    new_col_name = "case_rate_7d_av_recent_av"
+  ) \%>\%
   ungroup()
 # We requested time windows that started 2 days before the corresponding time
 # values. The actual number of `time_value`s in each computation depends on
@@ -221,23 +224,24 @@ archive_cases_dv_subset \%>\%
 # Examining characteristics of the data passed to each computation with
 # `all_versions=FALSE`.
 archive_cases_dv_subset \%>\%
- group_by(geo_value) \%>\%
- epix_slide(
-   function(x, gk, rtv) {
-     tibble(
-       time_range = if(nrow(x) == 0L) {
-         "0 `time_value`s"
-       } else {
-         sprintf("\%s -- \%s", min(x$time_value), max(x$time_value))
-       },
-       n = nrow(x),
-       class1 = class(x)[[1L]]
-     )
-   },
-   before = 5, all_versions = FALSE,
-   ref_time_values = ref_time_values, names_sep=NULL) \%>\%
- ungroup() \%>\%
- arrange(geo_value, time_value)
+  group_by(geo_value) \%>\%
+  epix_slide(
+    function(x, gk, rtv) {
+      tibble(
+        time_range = if (nrow(x) == 0L) {
+          "0 `time_value`s"
+        } else {
+          sprintf("\%s -- \%s", min(x$time_value), max(x$time_value))
+        },
+        n = nrow(x),
+        class1 = class(x)[[1L]]
+      )
+    },
+    before = 5, all_versions = FALSE,
+    ref_time_values = ref_time_values, names_sep = NULL
+  ) \%>\%
+  ungroup() \%>\%
+  arrange(geo_value, time_value)
 
 # --- Advanced: ---
 
@@ -259,7 +263,7 @@ archive_cases_dv_subset \%>\%
           toString(min(x$DT$version))
         },
         versions_end = x$versions_end,
-        time_range = if(nrow(x$DT) == 0L) {
+        time_range = if (nrow(x$DT) == 0L) {
           "0 `time_value`s"
         } else {
           sprintf("\%s -- \%s", min(x$DT$time_value), max(x$DT$time_value))
@@ -269,7 +273,8 @@ archive_cases_dv_subset \%>\%
       )
     },
     before = 5, all_versions = TRUE,
-    ref_time_values = ref_time_values, names_sep=NULL) \%>\%
+    ref_time_values = ref_time_values, names_sep = NULL
+  ) \%>\%
   ungroup() \%>\%
   # Focus on one geo_value so we can better see the columns above:
   filter(geo_value == "ca") \%>\%

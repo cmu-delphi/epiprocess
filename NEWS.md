@@ -1,4 +1,12 @@
-# epiprocess 0.7.1
+# epiprocess 0.7.2.9999
+
+## Improvements
+
+* `epi_slide` computations are now 2-4 times faster after changing how
+  reference time values, made accessible within sliding functions, are
+  calculated (#397).
+
+# epiprocess 0.7.1.9999
 
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.7.x will indicate PR's.
 

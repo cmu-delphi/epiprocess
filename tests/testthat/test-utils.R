@@ -7,12 +7,6 @@ test_that("Abort and Warn work", {
   expect_warning(Warn("warn"))
 })
 
-test_that("in_range works", {
-  expect_equal(in_range(1, c(2, 4)), 2)
-  expect_equal(in_range(3, c(2, 4)), 3)
-  expect_equal(in_range(5, c(2, 4)), 4)
-})
-
 test_that("new summarizing functions work", {
   x <- c(3, 4, 5, 9, NA)
   expect_equal(Min(x), 3)

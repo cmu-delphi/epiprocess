@@ -361,10 +361,6 @@ as_slide_computation <- function(f, ...) {
 
 ##########
 
-in_range <- function(x, rng) pmin(pmax(x, rng[1]), rng[2])
-
-##########
-
 Min <- function(x) min(x, na.rm = TRUE)
 Max <- function(x) max(x, na.rm = TRUE)
 Sum <- function(x) sum(x, na.rm = TRUE)
