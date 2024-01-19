@@ -28,8 +28,10 @@
 #' @examples
 #' autoplot(jhu_csse_daily_subset, cases, death_rate_7d_av)
 #' autoplot(jhu_csse_daily_subset, case_rate_7d_av, .facet_by = "geo_value")
-#' autoplot(jhu_csse_daily_subset, case_rate_7d_av, .color_by = "none", 
-#'   .facet_by = "geo_value")
+#' autoplot(jhu_csse_daily_subset, case_rate_7d_av,
+#'   .color_by = "none",
+#'   .facet_by = "geo_value"
+#' )
 autoplot.epi_df <- function(
     object, ...,
     .color_by = c("all_keys", "geo_value", "other_keys", ".response", "all", "none"),
@@ -38,15 +40,15 @@ autoplot.epi_df <- function(
     .max_facets = Inf) {
   .color_by <- match.arg(.color_by)
   .facet_by <- match.arg(.facet_by)
-  
+
   arg_is_scalar(.max_facets)
   if (is.finite(.max_facets)) arg_is_int(.max_facets)
   arg_is_chr_scalar(.base_color)
-  
+
   ek <- epi_keys(object)
   mv <- setdiff(names(object), ek)
   ek <- kill_time_value(ek)
-  
+
   # --- check for numeric variables
   allowed <- purrr::map_lgl(object[mv], is.numeric)
   if (length(allowed) == 0) {
@@ -72,7 +74,7 @@ autoplot.epi_df <- function(
       vars <- vars[ok]
     }
   }
-  
+
   # --- create a viable df to plot
   pos <- tidyselect::eval_select(
     rlang::expr(c("time_value", ek, names(vars))), object
@@ -89,25 +91,25 @@ autoplot.epi_df <- function(
   all_keys <- rlang::syms(as.list(ek))
   other_keys <- rlang::syms(as.list(setdiff(ek, "geo_value")))
   all_avail <- rlang::syms(as.list(c(ek, ".response_name")))
-  
+
   object <- object %>%
     dplyr::mutate(
       .colours = switch(.color_by,
-                        all_keys = interaction(!!!all_keys, sep = "/"),
-                        geo_value = geo_value,
-                        other_keys = interaction(!!!other_keys, sep = "/"),
-                        all = interaction(!!!all_avail, sep = "/"),
-                        NULL
+        all_keys = interaction(!!!all_keys, sep = "/"),
+        geo_value = geo_value,
+        other_keys = interaction(!!!other_keys, sep = "/"),
+        all = interaction(!!!all_avail, sep = "/"),
+        NULL
       ),
       .facets = switch(.facet_by,
-                       all_keys = interaction(!!!all_keys, sep = "/"),
-                       geo_value = as.factor(geo_value),
-                       other_keys = interaction(!!!other_keys, sep = "/"),
-                       all = interaction(!!!all_avail, sep = "/"),
-                       NULL
+        all_keys = interaction(!!!all_keys, sep = "/"),
+        geo_value = as.factor(geo_value),
+        other_keys = interaction(!!!other_keys, sep = "/"),
+        all = interaction(!!!all_avail, sep = "/"),
+        NULL
       )
     )
-  
+
   if (.max_facets < Inf && ".facets" %in% names(object)) {
     n_facets <- nlevels(object$.facets)
     if (n_facets > .max_facets) {
@@ -119,10 +121,10 @@ autoplot.epi_df <- function(
       }
     }
   }
-  
+
   p <- ggplot2::ggplot(object, ggplot2::aes(x = .data$time_value)) +
     ggplot2::theme_bw()
-  
+
   if (".colours" %in% names(object)) {
     p <- p + ggplot2::geom_line(
       ggplot2::aes(y = .data$.response, colour = .data$.colours),
@@ -139,7 +141,7 @@ autoplot.epi_df <- function(
     p <- p +
       ggplot2::geom_line(ggplot2::aes(y = .data$.response), color = .base_color)
   }
-  
+
   if (".facets" %in% names(object)) {
     p <- p + ggplot2::facet_wrap(~.facets, scales = "free_y") +
       ggplot2::ylab(names(vars))

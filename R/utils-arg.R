@@ -2,7 +2,7 @@ handle_arg_list <- function(..., tests) {
   values <- list(...)
   names <- eval(substitute(alist(...)))
   names <- purrr::map(names, deparse)
-  
+
   purrr::walk2(names, values, tests)
 }
 
@@ -60,4 +60,3 @@ arg_is_chr_scalar <- function(..., allow_null = FALSE, allow_na = FALSE) {
   arg_is_chr(..., allow_null = allow_null, allow_na = allow_na)
   arg_is_scalar(..., allow_null = allow_null, allow_na = allow_na)
 }
-

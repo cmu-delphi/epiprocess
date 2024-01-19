@@ -481,7 +481,7 @@ quiet <- function(x) {
 ##########
 
 # Create an auto-named list
-enlist = function(...) {
+enlist <- function(...) {
   # converted to thin wrapper around
   rlang::dots_list(
     ...,
