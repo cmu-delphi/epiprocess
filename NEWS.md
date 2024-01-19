@@ -1,3 +1,11 @@
+# epiprocess 0.7.2.9999
+
+## Improvements
+
+* `epi_slide` computations are now 2-4 times faster after changing how
+  reference time values, made accessible within sliding functions, are
+  calculated (#397).
+
 # epiprocess 0.7.1.9999
 
 Note that `epiprocess` uses the [Semantic Versioning
