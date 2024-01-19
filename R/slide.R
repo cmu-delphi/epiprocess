@@ -230,64 +230,56 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     after <- time_step(after)
   }
 
-  # Do set up to let us recover `ref_time_value`s later.
-  min_ref_time_values <- ref_time_values - before
-  min_ref_time_values_not_in_x <- min_ref_time_values[!(min_ref_time_values %in% unique(x$time_value))]
-
   # Arrange by increasing time_value
   x <- arrange(x, time_value)
 
   # Now set up starts and stops for sliding/hopping
-  time_range <- range(unique(c(x$time_value, min_ref_time_values_not_in_x)))
-  starts <- in_range(ref_time_values - before, time_range)
-  stops <- in_range(ref_time_values + after, time_range)
-
-  if (length(starts) == 0 || length(stops) == 0) {
-    Abort("The starting and/or stopping times for sliding are out of bounds with respect to the range of times in your data. Check your settings for ref_time_values and align (and before, if specified).")
-  }
+  starts <- ref_time_values - before
+  stops <- ref_time_values + after
 
   # Symbolize new column name
   new_col <- sym(new_col_name)
 
   # Computation for one group, all time values
   slide_one_grp <- function(.data_group,
-                            f_factory, ...,
+                            .group_key, # see `?group_modify`
+                            ..., # `...` to `epi_slide` forwarded here
+                            f_factory,
                             starts,
                             stops,
-                            time_values,
+                            ref_time_values,
                             all_rows,
                             new_col) {
     # Figure out which reference time values appear in the data group in the
     # first place (we need to do this because it could differ based on the
     # group, hence the setup/checks for the reference time values based on all
-    # the data could still be off)
-    o <- time_values %in% .data_group$time_value
+    # the data could still be off):
+    o <- ref_time_values %in% .data_group$time_value
     starts <- starts[o]
     stops <- stops[o]
-    time_values <- time_values[o]
+    kept_ref_time_values <- ref_time_values[o]
 
-    f <- f_factory(starts)
+    f <- f_factory(kept_ref_time_values)
 
     # Compute the slide values
     slide_values_list <- slider::hop_index(
       .x = .data_group,
       .i = .data_group$time_value,
-      .f = f, ...,
       .starts = starts,
-      .stops = stops
+      .stops = stops,
+      .f = f,
+      .group_key, ...
     )
 
     # Now figure out which rows in the data group are in the reference time
     # values; this will be useful for all sorts of checks that follow
-    o <- .data_group$time_value %in% time_values
+    o <- .data_group$time_value %in% kept_ref_time_values
     num_ref_rows <- sum(o)
 
-    # Count the number of appearances of each reference time value (these
-    # appearances should all be real for now, but if we allow ref time values
-    # outside of .data_group's time values):
-    counts <- dplyr::filter(.data_group, .data$time_value %in% time_values) %>%
+    # Count the number of appearances of each kept reference time value.
+    counts <- dplyr::filter(.data_group, .data$time_value %in% kept_ref_time_values) %>%
       dplyr::count(.data$time_value) %>%
-      dplyr::pull(n)
+      `[[`("n")
 
     if (!all(purrr::map_lgl(slide_values_list, is.atomic)) &&
       !all(purrr::map_lgl(slide_values_list, is.data.frame))) {
@@ -353,22 +345,22 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
   # Create a wrapper that calculates and passes `.ref_time_value` to the
   # computation. `i` is contained in the `f_wrapper_factory` environment such
   # that when called within `slide_one_grp` `i` is reset for every group.
-  f_wrapper_factory <- function(starts) {
+  f_wrapper_factory <- function(kept_ref_time_values) {
     # Use `i` to advance through list of start dates.
     i <- 1L
-    starts <- starts + before
     f_wrapper <- function(.x, .group_key, ...) {
-      .ref_time_value <- starts[[i]]
+      .ref_time_value <- kept_ref_time_values[[i]]
       i <<- i + 1L
       f(.x, .group_key, .ref_time_value, ...)
     }
     return(f_wrapper)
   }
   x <- group_modify(x, slide_one_grp,
-    f_factory = f_wrapper_factory, ...,
+    ...,
+    f_factory = f_wrapper_factory,
     starts = starts,
     stops = stops,
-    time_values = ref_time_values,
+    ref_time_values = ref_time_values,
     all_rows = all_rows,
     new_col = new_col,
     .keep = FALSE
