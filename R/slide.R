@@ -250,19 +250,19 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
                             ..., # group key + any "real" ... args
                             starts,
                             stops,
-                            time_values,
+                            ref_time_values,
                             all_rows,
                             new_col) {
     # Figure out which reference time values appear in the data group in the
     # first place (we need to do this because it could differ based on the
     # group, hence the setup/checks for the reference time values based on all
     # the data could still be off):
-    o <- time_values %in% .data_group$time_value
+    o <- ref_time_values %in% .data_group$time_value
     starts <- starts[o]
     stops <- stops[o]
-    time_values <- time_values[o]
+    kept_ref_time_values <- ref_time_values[o]
 
-    f <- f_factory(time_values)
+    f <- f_factory(kept_ref_time_values)
 
     # Compute the slide values
     slide_values_list <- slider::hop_index(
@@ -275,13 +275,11 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 
     # Now figure out which rows in the data group are in the reference time
     # values; this will be useful for all sorts of checks that follow
-    o <- .data_group$time_value %in% time_values
+    o <- .data_group$time_value %in% kept_ref_time_values
     num_ref_rows <- sum(o)
 
-    # Count the number of appearances of each reference time value (these
-    # appearances should all be real for now, but if we allow ref time values
-    # outside of .data_group's time values):
-    counts <- dplyr::filter(.data_group, .data$time_value %in% time_values) %>%
+    # Count the number of appearances of each kept reference time value.
+    counts <- dplyr::filter(.data_group, .data$time_value %in% kept_ref_time_values) %>%
       dplyr::count(.data$time_value) %>%
       dplyr::pull(n)
 
@@ -363,7 +361,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     f_factory = f_wrapper_factory, ...,
     starts = starts,
     stops = stops,
-    time_values = ref_time_values,
+    ref_time_values = ref_time_values,
     all_rows = all_rows,
     new_col = new_col,
     .keep = FALSE
