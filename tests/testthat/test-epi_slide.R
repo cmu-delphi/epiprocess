@@ -381,8 +381,6 @@ test_that("`epi_slide` doesn't decay date output", {
 })
 
 test_that("basic grouped epi_slide computation produces expected output", {
-  # Also checks that we correctly remove extra rows and columns (`.real`) used
-  # to recover `ref_time_value`s.
   expected_output <- dplyr::bind_rows(
     dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15, slide_value = cumsum(11:15)),
     dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = -(1:5), slide_value = cumsum(-(1:5)))
