@@ -507,7 +507,8 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
 
-  if (missing(ref_time_values)) {
+  user_provided_rtvs <- !missing(ref_time_values)
+  if (!user_provided_rtvs) {
     ref_time_values <- unique(x$time_value)
   }
 
@@ -561,10 +562,10 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
   }
 
   # If a custom time step is specified, then redefine units
-  if (!missing(time_step)) {
-    before <- time_step(before)
-    after <- time_step(after)
-  }
+  # if (!missing(time_step)) {
+  #   before <- time_step(before)
+  #   after <- time_step(after)
+  # }
 
   # time_step can be any of `c("days", "weeks", "months", "quarters", "years")`
   all_dates <- seq(min(x$time_value), max(x$time_value), by = time_step)
@@ -576,6 +577,22 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
   }
   if (after != 0) {
     pad_late_dates <- all_dates[length(all_dates)] + 1:after
+  }
+
+  if (user_provided_rtvs) {
+    # To reduce computational effort, filter down to only data required for
+    # range within provided ref time values. We don't check if the ref time
+    # value sequence is complete. Because `data.table::frollmean` requires a
+    # completed date sequence to correctly calculate the rolling average,
+    # filtering down to requested ref time values + before and after date
+    # padding would be complicated and likely not worth the upfront effort
+    # given the speed of `frollmean` compared to R filtering.
+    subset_ref_time_values <- seq(
+      min(ref_time_values) - length(pad_early_dates),
+      max(ref_time_values) + length(pad_late_dates),
+      by = time_step
+    )
+    x <- x[x$time_value %in% subset_ref_time_values, ]
   }
 
   # `frollmean` is 1-indexed, so create a new window width based on our
@@ -624,6 +641,10 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
 
   result <- result[result$.real, ]
   result$.real <- NULL
+
+  if (user_provided_rtvs) {
+    result <- result[time_value %in% ref_time_values, ]
+  }
 
   ungroup(result)
 }
