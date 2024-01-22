@@ -579,7 +579,7 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
     pad_late_dates <- all_dates[length(all_dates)] + 1:after
   }
 
-  if (user_provided_rtvs) {
+  if (user_provided_rtvs && !all_rows) {
     # To reduce computational effort, filter down to only data required for
     # range within provided ref time values. We don't check if the ref time
     # value sequence is complete. Because `data.table::frollmean` requires a
@@ -642,8 +642,16 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
   result <- result[result$.real, ]
   result$.real <- NULL
 
-  if (user_provided_rtvs) {
-    result <- result[time_value %in% ref_time_values, ]
+  if (all_rows) {
+    result[!(result$time_value %in% ref_time_values), result_col_name] <- NA
+  } else if (user_provided_rtvs) {
+    result <- result[result$time_value %in% ref_time_values, ]
+  }
+
+  if (!is_epi_df(result)) {
+    # `all_rows` and `as_list_col` handling strip epi_df format and metadata.
+    # Restore them.
+    result <- bind_rows(x[c(),], result)
   }
 
   ungroup(result)
