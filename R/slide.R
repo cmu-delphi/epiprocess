@@ -507,6 +507,10 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
 
+  if (as_list_col) {
+    Warn("`as_list_col` is not supported for `epi_slide_mean`. This setting will be ignored")
+  }
+
   user_provided_rtvs <- !missing(ref_time_values)
   if (!user_provided_rtvs) {
     ref_time_values <- unique(x$time_value)
