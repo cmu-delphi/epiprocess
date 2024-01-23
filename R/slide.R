@@ -579,22 +579,6 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
     pad_late_dates <- all_dates[length(all_dates)] + 1:after
   }
 
-  if (user_provided_rtvs && !all_rows) {
-    # To reduce computational effort, filter down to only data required for
-    # range within provided ref time values. We don't check if the ref time
-    # value sequence is complete. Because `data.table::frollmean` requires a
-    # completed date sequence to correctly calculate the rolling average,
-    # filtering down to requested ref time values + before and after date
-    # padding would be complicated and likely not worth the upfront effort
-    # given the speed of `frollmean` compared to R filtering.
-    subset_ref_time_values <- seq(
-      min(ref_time_values) - length(pad_early_dates),
-      max(ref_time_values) + length(pad_late_dates),
-      by = time_step
-    )
-    x <- x[x$time_value %in% subset_ref_time_values, ]
-  }
-
   # `frollmean` is 1-indexed, so create a new window width based on our
   # `before` and `after` params.
   m <- before + after + 1L
