@@ -507,10 +507,6 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
   # Check we have an `epi_df` object
   if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
 
-  if (as_list_col) {
-    Warn("`as_list_col` is not supported for `epi_slide_mean`. This setting will be ignored")
-  }
-
   user_provided_rtvs <- !missing(ref_time_values)
   if (!user_provided_rtvs) {
     ref_time_values <- unique(x$time_value)
@@ -634,6 +630,16 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
     result[!(result$time_value %in% ref_time_values), result_col_name] <- NA
   } else if (user_provided_rtvs) {
     result <- result[result$time_value %in% ref_time_values, ]
+  }
+
+  if (as_list_col) {
+    result[, result_col_name] <- purrr::map(result_col_name,
+      function(.x) {
+         tmp <- result[[.x]]
+         tmp[is.na(tmp)] <- list(NULL)
+         as.list(tmp)
+      }
+    )
   }
 
   if (!is_epi_df(result)) {
