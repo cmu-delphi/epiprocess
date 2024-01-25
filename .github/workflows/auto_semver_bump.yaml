@@ -13,6 +13,8 @@ jobs:
     steps:
       # Checkout action is required
       - uses: actions/checkout@v2
+        with:
+          ssh-key: ${{ secrets.SEMVER_BUMPER_KEY }}
       - uses: actions/setup-node@v1
         with:
           node-version: "12"
@@ -20,4 +22,5 @@ jobs:
         uses: michmich112/version-bumper@master
         with:
           options-file: "./.github/version_bump_options.json"
+          ssh-key: ${{ secrets.SEMVER_BUMPER_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
