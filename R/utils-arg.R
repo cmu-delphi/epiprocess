@@ -24,6 +24,17 @@ arg_is_scalar <- function(..., allow_null = FALSE, allow_na = FALSE) {
   )
 }
 
+arg_is_numeric <- function(..., allow_null = FALSE) {
+  handle_arg_list(
+    ...,
+    tests = function(name, value) {
+      if (!(is.numeric(value) | (is.null(value) & allow_null))) {
+        cli::cli_abort("All {.val {name}} must numeric.")
+      }
+    }
+  )
+}
+
 arg_is_int <- function(..., allow_null = FALSE) {
   arg_is_numeric(..., allow_null = allow_null)
   handle_arg_list(
