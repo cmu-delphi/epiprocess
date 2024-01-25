@@ -10,6 +10,6 @@ Please:
 
 ### Changelog (if not put in NEWS.md)
 
-### Magic GitHub syntax to resolve Issues on merge
+### Magic GitHub syntax to mark associated Issue(s) as resolved when this is merged into the default branch
 
 - Resolves #{issue number}
