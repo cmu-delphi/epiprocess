@@ -1,6 +1,7 @@
 ### Checklist
 
 Please:
+- [ ] Make sure this PR is against "dev", not "main".
 - [ ] Request a review from one of the current epiprocess main reviewers:
       brookslogan, nmdefries.
 - [ ] Describe changes made in NEWS.md or under the "Changelog" heading, making
