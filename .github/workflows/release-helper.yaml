@@ -11,21 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: dev
+          fetch-depth: 0
           ssh-key: ${{ secrets.CMU_DELPHI_DEPLOY_MACHINE_SSH }}
       - name: Reset dev branch
         run: |
           git fetch origin main:main
-          git reset --hard main
-      - name: Create pull request into dev
-        uses: peter-evans/create-pull-request@v3
-        with:
-          branch: bot/sync-main-dev
-          commit-message: "chore: sync main-dev"
-          base: dev
-          title: "chore: sync main->dev"
-          labels: chore
-          body: |
-            Syncing Main->Dev.
+          git merge main
+          git push

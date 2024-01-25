@@ -14,13 +14,6 @@
       "branch": "main",
       "tag": true,
       "reset": "build"
-    },
-    {
-      "trigger": "commit",
-      "bump": "major",
-      "branch": "release",
-      "tag": true,
-      "reset": ["minor", "build"]
     }
   ]
 }
