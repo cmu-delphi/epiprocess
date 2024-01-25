@@ -1,0 +1,19 @@
+{
+  "scheme": "semantic",
+  "versionFile": "./DESCRIPTION",
+  "files": [],
+  "rules": [
+    {
+      "trigger": "commit",
+      "branch": "dev",
+      "bump": "build"
+    },
+    {
+      "trigger": "commit",
+      "bump": "minor",
+      "branch": "main",
+      "tag": true,
+      "reset": "build"
+    }
+  ]
+}

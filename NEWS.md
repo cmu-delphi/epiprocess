@@ -8,12 +8,7 @@
 
 # epiprocess 0.7.1.9999
 
-Note that `epiprocess` uses the [Semantic Versioning
-("semver")](https://semver.org/) scheme for all release versions, but any
-inter-release development versions will include an additional ".9999" suffix.
-Pre-1.0.0 numbering scheme: when making changes to a development version
-0.x.y.9999, we will increment y when merging PRs, and will have increment x (and
-reset y) on release.
+Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.7.x will indicate PR's.
 
 ## Breaking changes
 
@@ -24,7 +19,7 @@ reset y) on release.
 * `select` on grouped `epi_df`s now only drops `epi_df`ness if it makes sense; PR #390
 * Minor documentation updates; PR #393
 
-# epiprocess 0.7.0.9999
+# epiprocess 0.7.0
 
 ## Improvements
 
