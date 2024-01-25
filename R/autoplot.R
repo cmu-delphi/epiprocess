@@ -58,7 +58,7 @@ autoplot.epi_df <- function(
   # --- check for numeric variables
   allowed <- purrr::map_lgl(object[non_key_cols], is.numeric)
   allowed <- allowed[allowed]
-  if (length(allowed) == 0) {
+  if (length(allowed) == 0 && rlang::dots_n(...) == 0L) {
     cli::cli_abort("No numeric variables were available to plot automatically.",
       class = "epiprocess__no_numeric_vars_available")
   }
