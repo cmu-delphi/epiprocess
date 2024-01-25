@@ -32,6 +32,12 @@
 #'   .color_by = "none",
 #'   .facet_by = "geo_value"
 #' )
+#' autoplot(jhu_csse_daily_subset, case_rate_7d_av, .color_by = "none", 
+#'   .base_color = "red", .facet_by = "geo_value")
+#' 
+#' # .base_color specification won't have any effect due .color_by default
+#' autoplot(jhu_csse_daily_subset, case_rate_7d_av,
+#'   .base_color = "red", .facet_by = "geo_value") 
 autoplot.epi_df <- function(
     object, ...,
     .color_by = c("all_keys", "geo_value", "other_keys", ".response", "all", "none"),
@@ -51,6 +57,7 @@ autoplot.epi_df <- function(
 
   # --- check for numeric variables
   allowed <- purrr::map_lgl(object[non_key_cols], is.numeric)
+  allowed <- allowed[allowed]
   if (length(allowed) == 0) {
     cli::cli_abort("No numeric variables were available to plot automatically.")
   }
