@@ -14,3 +14,5 @@ Please:
 ### Magic GitHub syntax to mark associated Issue(s) as resolved when this is merged into the default branch
 
 - Resolves #{issue number}
+
+### Context / Other notes
