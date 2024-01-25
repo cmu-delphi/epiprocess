@@ -38,7 +38,3 @@ kill_time_value <- function(v) {
   arg_is_chr(v)
   v[v != "time_value"]
 }
-
-key_colnames_only <- function(x, ...) {
-  kill_time_value(key_colnames(x, ...))
-}
