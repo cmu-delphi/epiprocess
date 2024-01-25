@@ -59,25 +59,29 @@ autoplot.epi_df <- function(
   allowed <- purrr::map_lgl(object[non_key_cols], is.numeric)
   allowed <- allowed[allowed]
   if (length(allowed) == 0) {
-    cli::cli_abort("No numeric variables were available to plot automatically.")
+    cli::cli_abort("No numeric variables were available to plot automatically.",
+      class = "epiprocess__no_numeric_vars_available")
   }
   vars <- tidyselect::eval_select(rlang::expr(c(...)), object)
   if (rlang::is_empty(vars)) { # find them automatically if unspecified
     vars <- tidyselect::eval_select(names(allowed)[1], object)
     cli::cli_warn(
-      "Plot variable was unspecified. Automatically selecting {.var {names(allowed)[1]}}."
+      "Plot variable was unspecified. Automatically selecting {.var {names(allowed)[1]}}.",
+      class = "epiprocess__unspecified_plot_var"
     )
   } else { # if variables were specified, ensure that they are numeric
     ok <- names(vars) %in% names(allowed)
     if (!any(ok)) {
       cli::cli_abort(
-        "None of the requested variables {.var {names(vars)}} are numeric."
+        "None of the requested variables {.var {names(vars)}} are numeric.",
+        class = "epiprocess__all_requested_vars_not_numeric"
       )
     } else if (!all(ok)) {
       cli::cli_warn(c(
         "Only the requested variables {.var {names(vars)[ok]}} are numeric.",
         i = "`autoplot()` cannot display {.var {names(vars)[!ok]}}."
-      ))
+      ),
+      class = "epiprocess__some_requested_vars_not_numeric")
       vars <- vars[ok]
     }
   }
