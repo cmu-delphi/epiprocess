@@ -88,7 +88,7 @@ autoplot.epi_df <- function(
 
   # --- create a viable df to plot
   pos <- tidyselect::eval_select(
-    rlang::expr(c("time_value", geo_and_other_keys, names(vars))), object
+    rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), names(vars))), object
   )
   if (length(vars) > 1) {
     object <- tidyr::pivot_longer(
