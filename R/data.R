@@ -28,15 +28,15 @@
 #'   in Engineering. Copyright Johns Hopkins University 2020.
 #'
 #' Modifications:
-#' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{From the COVIDcast Epidata API}:
-#'   These signals are taken directly from the JHU CSSE
-#'   \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 GitHub repository}
-#'   without changes. The 7-day average signals are computed by Delphi by
-#'   calculating moving averages of the preceding 7 days, so the signal for
-#'   June 7 is the average of the underlying data for June 1 through 7,
-#'   inclusive.
-#' * Furthermore, the data has been limited to a very small number of rows,
-#'   the signal names slightly altered, and formatted into a tibble.
+#' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{From
+#'   the COVIDcast Epidata API}: The case signal is taken directly from the JHU
+#'   CSSE \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 GitHub
+#'   repository}. The rate signals were computed by Delphi using Census
+#'   population data. The 7-day average signals were computed by Delphi by
+#'   calculating moving averages of the preceding 7 days, so the signal for June
+#'   7 is the average of the underlying data for June 1 through 7, inclusive.
+#' * Furthermore, the data has been limited to a very small number of rows, the
+#'   signal names slightly altered, and formatted into a tibble.
 "jhu_csse_daily_subset"
 
 
