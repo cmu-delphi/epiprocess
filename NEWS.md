@@ -1,14 +1,19 @@
-# epiprocess 0.7.2.9999
+# epiprocess
+
+Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicate PR's.
+
+# epiprocess 0.8
 
 ## Improvements
 
 * `epi_slide` computations are now 2-4 times faster after changing how
   reference time values, made accessible within sliding functions, are
   calculated (#397).
+* regenerated the `jhu_csse_daily_subset` dataset with the latest versions of
+  the data from the API
+* changed approach to versioning, see DEVELOPMENT.md for details
 
 # epiprocess 0.7.1.9999
-
-Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.7.x will indicate PR's.
 
 ## Breaking changes
 
@@ -24,8 +29,6 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.7.x will indicat
 ## Improvements
 
 * Updated vignettes for compatibility with epidatr 1.0.0 in PR #377.
-
-# epiprocess 0.7.0
 
 ## Breaking changes
 

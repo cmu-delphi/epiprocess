@@ -35,25 +35,22 @@ R -e 'devtools::document()'
 python -m http.server -d docs
 ```
 
-For `pkgdown` to correctly generate both public (`main`) and `dev` documentation sites, the package version in `DESCRIPTION` on `dev` must have four components, and be of the format `x.x.x.9000`. The package version on `main` must be in the format `x.x.x`.
+## Versioning
 
-The documentation website is updated on push or pull request to the `main` and `dev` branches.
+Please follow the guidelines in the PR template document (reproduced here):
+
+-   [ ] Make sure this PR is against "dev", not "main".
+-   [ ] Request a review from one of the current epiprocess main reviewers:
+        brookslogan, nmdefries.
+-   [ ] Makes sure to bump the version number in `DESCRIPTION` and `NEWS.md`.
+        Always increment the patch version number (the third number), unless you are
+        making a release PR from dev to main, in which case increment the minor
+        version number (the second number).
+-   [ ] Describe changes made in NEWS.md, making sure breaking changes
+        (backwards-incompatible changes to the documented interface) are noted.
+        Collect the changes under the next release number (e.g. if you are on
+        0.7.2, then write your changes under the 0.8 heading).
 
 ## Release process
 
-### Manual
-
 TBD
-
-### Automated (currently unavailable)
-
-The release consists of multiple steps which can be all done via the GitHub website:
-
-1. Go to [create_release GitHub Action](https://github.com/cmu-delphi/epidatr/actions/workflows/create_release.yml) and click the `Run workflow` button. Enter the next version number or one of the magic keywords (patch, minor, major) and hit the green `Run workflow` button.
-2. The action will prepare a new release and will end up with a new [Pull Request](https://github.com/cmu-delphi/epidatr/pulls)
-3. Let the code owner review the PR and its changes and let the CI check whether everything builds successfully
-4. Once approved and merged, another GitHub action job starts which automatically will
-   1. create a git tag
-   2. create another [Pull Request](https://github.com/cmu-delphi/epidatr/pulls) to merge the changes back to the `dev` branch
-   3. create a [GitHub release](https://github.com/cmu-delphi/epidatr/releases) with automatically derived release notes
-5. Release to CRAN
