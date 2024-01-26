@@ -2,8 +2,10 @@
 # also see the options file for configuration
 name: Manage versions
 
-# not actually on all pushes, see the options file
-on: [push]
+on:
+  push:
+    branches: [dev, main]
+  workflow_dispatch:
 
 jobs:
   bump:
@@ -18,8 +20,19 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: "12"
-      - name: Bump Versions
-        uses: michmich112/version-bumper@master
-        with:
-          options-file: "./.github/version_bump_options.json"
-          github-token: ${{ secrets.DMITRY_PAT }}
+      - name: Change version number
+        id: version
+        run: |
+          python -m pip install bump2version
+          if [[ "${{ GITHUB_EVENT_NAME }}" == "pull_request"* ]]; then
+            branch=$(echo "${{ GITHUB_BASE_REF }}")
+          else
+            branch=$(echo "${{ GITHUB_REF_NAME }}")
+          fi
+          if [[ $branch == "main" ]]; then
+            version="minor"
+          else
+            version="patch"
+          fi
+          bump2version $version --commit --message "Bump version: {current_version} → {new_version}" --allow-dirty
+          git push
