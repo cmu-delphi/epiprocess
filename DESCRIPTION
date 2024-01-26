@@ -26,6 +26,7 @@ Description: This package introduces a common data structure for epidemiological
 License: MIT + file LICENSE
 Copyright: file inst/COPYRIGHTS
 Imports:
+    checkmate,
     cli,
     data.table,
     dplyr (>= 1.0.0),
@@ -86,6 +87,5 @@ Collate:
     'outliers.R'
     'reexports.R'
     'slide.R'
-    'utils-arg.R'
     'utils.R'
     'utils_pipe.R'

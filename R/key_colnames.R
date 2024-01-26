@@ -15,9 +15,10 @@ key_colnames.default <- function(x, ...) {
   character(0L)
 }
 
+#' @importFrom checkmate assert_character
 #' @export
 key_colnames.data.frame <- function(x, other_keys = character(0L), ...) {
-  arg_is_chr(other_keys, allow_empty = TRUE)
+  assert_character(other_keys)
   nm <- c("time_value", "geo_value", other_keys)
   intersect(nm, colnames(x))
 }
@@ -34,7 +35,8 @@ key_colnames.epi_archive <- function(x, ...) {
   c("time_value", "geo_value", other_keys)
 }
 
+#' @importFrom checkmate assert_character
 kill_time_value <- function(v) {
-  arg_is_chr(v)
+  assert_character(v)
   v[v != "time_value"]
 }
