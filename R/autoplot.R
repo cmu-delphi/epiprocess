@@ -25,8 +25,6 @@
 #' @return A ggplot object
 #' @export
 #'
-#' @importFrom checkmate assert assert_int anyInfinite assert_character
-#'
 #' @examples
 #' autoplot(jhu_csse_daily_subset, cases, death_rate_7d_av)
 #' autoplot(jhu_csse_daily_subset, case_rate_7d_av, .facet_by = "geo_value")

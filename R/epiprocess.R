@@ -4,6 +4,7 @@
 #' measured over space and time, and offers associated utilities to perform
 #' basic signal processing tasks.
 #'
+#' @importFrom checkmate assert assert_character assert_int anyInfinite
 #' @docType package
 #' @name epiprocess
 NULL
