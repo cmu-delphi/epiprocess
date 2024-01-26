@@ -45,7 +45,7 @@ arg_is_int <- function(..., allow_null = FALSE) {
   handle_arg_list(
     ...,
     tests = function(name, value) {
-      if (!(all(value %% 1 == 0) | (is.null(value) & allow_null))) {
+      if (!( (all(value %% 1 == 0) && all(value > 0)) | (is.null(value) & allow_null))) {
         cli::cli_abort("All {.val {name}} must be whole positive number(s).",
           class = "epiprocess__some_decimal_or_negative_elements"
         )
