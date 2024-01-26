@@ -25,10 +25,10 @@ jobs:
         id: version
         run: |
           python -m pip install bump2version
-          if [[ "${{ GITHUB_EVENT_NAME }}" == "pull_request"* ]]; then
-            branch=$(echo "${{ GITHUB_BASE_REF }}")
+          if [[ "${{ github.event_name }}" == "pull_request"* ]]; then
+            branch=$(echo "${{ github.base_ref }}")
           else
-            branch=$(echo "${{ GITHUB_REF_NAME }}")
+            branch=$(echo "${{ github.ref_name }}")
           fi
           if [[ $branch == "main" ]]; then
             version="minor"

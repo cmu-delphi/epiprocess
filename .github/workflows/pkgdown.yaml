@@ -41,10 +41,10 @@ jobs:
         env:
           DELPHI_EPIDATA_KEY: ${{ secrets.SECRET_EPIPROCESS_GHACTIONS_DELPHI_EPIDATA_KEY }}
         run: |
-          if (startsWith("${{ GITHUB_EVENT_NAME }}", "pull_request")) {
-              mode <- ifelse("${{ GITHUB_BASE_REF }}" == "main", "release", "devel")
+          if (startsWith("${{ github.event_name }}", "pull_request")) {
+              mode <- ifelse("${{ github.base_ref }}" == "main", "release", "devel")
           } else {
-              mode <- ifelse("${{ GITHUB_REF_NAME }}" == "main", "release", "devel")
+              mode <- ifelse("${{ github.ref_name }}" == "main", "release", "devel")
           }
           pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE, override=list(PKGDOWN_DEV_MODE=mode))
         shell: Rscript {0}
