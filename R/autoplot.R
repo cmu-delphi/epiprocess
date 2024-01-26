@@ -32,12 +32,12 @@
 #'   .color_by = "none",
 #'   .facet_by = "geo_value"
 #' )
-#' autoplot(jhu_csse_daily_subset, case_rate_7d_av, .color_by = "none", 
+#' autoplot(jhu_csse_daily_subset, case_rate_7d_av, .color_by = "none",
 #'   .base_color = "red", .facet_by = "geo_value")
-#' 
+#'
 #' # .base_color specification won't have any effect due .color_by default
 #' autoplot(jhu_csse_daily_subset, case_rate_7d_av,
-#'   .base_color = "red", .facet_by = "geo_value") 
+#'   .base_color = "red", .facet_by = "geo_value")
 autoplot.epi_df <- function(
     object, ...,
     .color_by = c("all_keys", "geo_value", "other_keys", ".response", "all", "none"),
@@ -47,9 +47,8 @@ autoplot.epi_df <- function(
   .color_by <- match.arg(.color_by)
   .facet_by <- match.arg(.facet_by)
 
-  arg_is_scalar(.max_facets)
-  if (is.finite(.max_facets)) arg_is_int(.max_facets)
-  arg_is_chr_scalar(.base_color)
+  assert(anyInfinite(.max_facets), assert_int(.max_facets), combine = "or")
+  assert_character(.base_color, len = 1)
 
   key_cols <- key_colnames(object)
   non_key_cols <- setdiff(names(object), key_cols)
