@@ -147,7 +147,7 @@ per state, we first call <code><a href="https://dplyr.tidyverse.org/reference/gr
 <pre><code><span><span class="co">## An `epi_df` object, 10 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2022-05-23 20:17:07.044666</span></span>
+<span><span class="co">## * as_of     = 2024-01-26 17:27:32.755949</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
 <span><span class="co">##    geo_value time_value cases slide_value</span></span>
@@ -180,7 +180,7 @@ post hoc, or we can instead specify a new name up front using the
 <pre><code><span><span class="co">## An `epi_df` object, 10 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2022-05-23 20:17:07.044666</span></span>
+<span><span class="co">## * as_of     = 2024-01-26 17:27:32.755949</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
 <span><span class="co">##    geo_value time_value cases cases_7dav</span></span>
@@ -235,7 +235,7 @@ receives to <code>f</code>.</p>
 <pre><code><span><span class="co">## An `epi_df` object, 10 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2022-05-23 20:17:07.044666</span></span>
+<span><span class="co">## * as_of     = 2024-01-26 17:27:32.755949</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
 <span><span class="co">##    geo_value time_value cases cases_7dav</span></span>
@@ -271,7 +271,7 @@ of the <code>dplyr</code> verbs. For example:</p>
 <pre><code><span><span class="co">## An `epi_df` object, 10 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2022-05-23 20:17:07.044666</span></span>
+<span><span class="co">## * as_of     = 2024-01-26 17:27:32.755949</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
 <span><span class="co">##    geo_value time_value cases cases_7dav</span></span>
@@ -386,21 +386,21 @@ modeling weekly sums of COVID-19 cases.</p>
 <pre><code><span><span class="co">## An `epi_df` object, 10 x 7 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2022-05-23 20:17:07.044666</span></span>
+<span><span class="co">## * as_of     = 2024-01-26 17:27:32.755949</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 7</span></span></span>
 <span><span class="co">##    geo_value time_value cases cases_7dav fc_point fc_lower fc_upper</span></span>
 <span><span class="co">##  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> ca        2020-06-01  <span style="text-decoration: underline;">2</span>439      <span style="text-decoration: underline;">2</span>655.    <span style="text-decoration: underline;">2</span>932.    <span style="text-decoration: underline;">2</span>518.    <span style="text-decoration: underline;">3</span>347.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> ca        2020-07-01  <span style="text-decoration: underline;">7</span>347      <span style="text-decoration: underline;">6</span>722.    <span style="text-decoration: underline;">7</span>888.    <span style="text-decoration: underline;">7</span>313.    <span style="text-decoration: underline;">8</span>463.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> ca        2020-08-01  <span style="text-decoration: underline;">8</span>614      <span style="text-decoration: underline;">8</span>283.    <span style="text-decoration: underline;">7</span>168.    <span style="text-decoration: underline;">6</span>144.    <span style="text-decoration: underline;">8</span>191.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> ca        2020-09-01  <span style="text-decoration: underline;">4</span>247      <span style="text-decoration: underline;">4</span>704.    <span style="text-decoration: underline;">4</span>126.    <span style="text-decoration: underline;">2</span>301.    <span style="text-decoration: underline;">5</span>951.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> ca        2020-10-01  <span style="text-decoration: underline;">3</span>505      <span style="text-decoration: underline;">3</span>361.    <span style="text-decoration: underline;">3</span>257.    <span style="text-decoration: underline;">1</span>428.    <span style="text-decoration: underline;">5</span>085.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> ca        2020-11-01  <span style="text-decoration: underline;">4</span>211      <span style="text-decoration: underline;">4</span>442.    <span style="text-decoration: underline;">3</span>841.    <span style="text-decoration: underline;">2</span>260.    <span style="text-decoration: underline;">5</span>422.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> ca        2020-12-01 <span style="text-decoration: underline;">23</span>637     <span style="text-decoration: underline;">15</span>698.   <span style="text-decoration: underline;">17</span>710.   <span style="text-decoration: underline;">16</span>093.   <span style="text-decoration: underline;">19</span>326.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> ca        2021-01-01 <span style="text-decoration: underline;">50</span>251     <span style="text-decoration: underline;">41</span>114.   <span style="text-decoration: underline;">45</span>562.   <span style="text-decoration: underline;">38</span>447.   <span style="text-decoration: underline;">52</span>677.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> ca        2021-02-01 <span style="text-decoration: underline;">13</span>112     <span style="text-decoration: underline;">17</span>961    <span style="text-decoration: underline;">15</span>272.    <span style="text-decoration: underline;">6</span>727.   <span style="text-decoration: underline;">23</span>816.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> ca        2021-03-01  <span style="text-decoration: underline;">3</span>030      <span style="text-decoration: underline;">5</span>212.    <span style="text-decoration: underline;">4</span>484.       0    <span style="text-decoration: underline;">12</span>987.</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> ca        2020-06-01  <span style="text-decoration: underline;">2</span>437      <span style="text-decoration: underline;">2</span>694     <span style="text-decoration: underline;">2</span>973.    <span style="text-decoration: underline;">2</span>566.    <span style="text-decoration: underline;">3</span>380.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> ca        2020-07-01  <span style="text-decoration: underline;">7</span>346      <span style="text-decoration: underline;">6</span>722     <span style="text-decoration: underline;">7</span>892.    <span style="text-decoration: underline;">7</span>321.    <span style="text-decoration: underline;">8</span>462.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> ca        2020-08-01  <span style="text-decoration: underline;">8</span>616      <span style="text-decoration: underline;">8</span>284.    <span style="text-decoration: underline;">7</span>188.    <span style="text-decoration: underline;">6</span>153.    <span style="text-decoration: underline;">8</span>223.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> ca        2020-09-01  <span style="text-decoration: underline;">4</span>248      <span style="text-decoration: underline;">4</span>707.    <span style="text-decoration: underline;">4</span>133.    <span style="text-decoration: underline;">2</span>329.    <span style="text-decoration: underline;">5</span>937.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> ca        2020-10-01  <span style="text-decoration: underline;">3</span>504      <span style="text-decoration: underline;">3</span>360.    <span style="text-decoration: underline;">3</span>257.    <span style="text-decoration: underline;">1</span>449.    <span style="text-decoration: underline;">5</span>064.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> ca        2020-11-01  <span style="text-decoration: underline;">4</span>210      <span style="text-decoration: underline;">4</span>441.    <span style="text-decoration: underline;">3</span>840.    <span style="text-decoration: underline;">2</span>258.    <span style="text-decoration: underline;">5</span>422.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> ca        2020-12-01 <span style="text-decoration: underline;">23</span>626     <span style="text-decoration: underline;">15</span>690    <span style="text-decoration: underline;">17</span>699.   <span style="text-decoration: underline;">16</span>082.   <span style="text-decoration: underline;">19</span>316.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> ca        2021-01-01 <span style="text-decoration: underline;">50</span>251     <span style="text-decoration: underline;">41</span>097.   <span style="text-decoration: underline;">45</span>534.   <span style="text-decoration: underline;">38</span>417.   <span style="text-decoration: underline;">52</span>650.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> ca        2021-02-01 <span style="text-decoration: underline;">13</span>098     <span style="text-decoration: underline;">17</span>952.   <span style="text-decoration: underline;">15</span>266.    <span style="text-decoration: underline;">6</span>725.   <span style="text-decoration: underline;">23</span>808.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> ca        2021-03-01  <span style="text-decoration: underline;">3</span>031      <span style="text-decoration: underline;">5</span>209     <span style="text-decoration: underline;">4</span>482.       0    <span style="text-decoration: underline;">12</span>982.</span></span></code></pre>
 <p>Note that here we have utilized an argument
 <code>ref_time_values</code> to perform the sliding computation (here,
 compute a forecast) at a specific subset of reference time values. We
