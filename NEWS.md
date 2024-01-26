@@ -12,17 +12,12 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 * regenerated the `jhu_csse_daily_subset` dataset with the latest versions of
   the data from the API
 * changed approach to versioning, see DEVELOPMENT.md for details
-
-# epiprocess 0.7.1.9999
+* `select` on grouped `epi_df`s now only drops `epi_df`ness if it makes sense; PR #390
+* Minor documentation updates; PR #393
 
 ## Breaking changes
 
 * Switched `epi_df`'s `other_keys` default from `NULL` to `character(0)`; PR #390
-
-## Improvements
-
-* `select` on grouped `epi_df`s now only drops `epi_df`ness if it makes sense; PR #390
-* Minor documentation updates; PR #393
 
 # epiprocess 0.7.0
 
