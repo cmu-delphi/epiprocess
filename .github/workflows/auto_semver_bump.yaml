@@ -17,9 +17,10 @@ jobs:
       - uses: actions/checkout@v3.5.2
         with:
           token: ${{ secrets.DMITRY_PAT }}
-      - uses: actions/setup-node@v1
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
         with:
-          node-version: "12"
+          python-version: 3.8
       - name: Change version number
         id: version
         run: |
