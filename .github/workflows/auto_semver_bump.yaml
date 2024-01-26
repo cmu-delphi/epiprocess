@@ -4,7 +4,7 @@ name: Manage versions
 
 on:
   push:
-    branches: [dev, main]
+    # branches: [dev, main]
   workflow_dispatch:
 
 jobs:
