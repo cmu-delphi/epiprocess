@@ -445,13 +445,10 @@ epi_archive <-
       #'   the archive
       print = function(class = TRUE, methods = TRUE) {
         if (class) cat("An `epi_archive` object, with metadata:\n")
-        cat(sprintf("* %-9s = %s\n", "geo_type", self$geo_type))
-        cat(sprintf("* %-9s = %s\n", "time_type", self$time_type))
-        if (!is.null(self$additional_metadata)) {
-          sapply(self$additional_metadata, function(m) {
-            cat(sprintf("* %-9s = %s\n", names(m), m))
-          })
-        }
+        cat(sprintf("* %-14s = %s\n", "non-standard DT keys", paste(
+          setdiff(key(self$DT), c("geo_value", "time_value", "version")),
+          collapse = ", "
+        )))
         cat("----------\n")
         if (length(self$DT$time_value) == 0 || all(is.na(self$DT$time_value))) {
           min_time <- max_time <- NA
@@ -459,19 +456,16 @@ epi_archive <-
           min_time <- Min(self$DT$time_value)
           max_time <- Max(self$DT$time_value)
         }
-        cat(sprintf("* %-14s = %s\n", "min time value", min_time))
-        cat(sprintf("* %-14s = %s\n", "max time value", max_time))
+        cat(sprintf("* %-14s = %s\n", "min/max time values", paste(
+          c(min_time, max_time),
+          collapse = " / "
+          )))
         cat(sprintf(
-          "* %-14s = %s\n", "first version with update",
-          min(self$DT$version)
-        ))
-        cat(sprintf(
-          "* %-14s = %s\n", "last version with update",
-          max(self$DT$version)
-        ))
-        if (is.na(self$clobberable_versions_start)) {
-          cat("* No clobberable versions\n")
-        } else {
+          "* %-14s = %s\n", "first/last version with update", paste(
+            c(min(self$DT$version), max(self$DT$version)),
+            collapse = " / "
+          )))
+        if (!is.na(self$clobberable_versions_start)) {
           cat(sprintf(
             "* %-14s = %s\n", "clobberable versions start",
             self$clobberable_versions_start
@@ -481,19 +475,6 @@ epi_archive <-
           "* %-14s = %s\n", "versions end",
           self$versions_end
         ))
-        cat("----------\n")
-        cat(sprintf(
-          "Data archive (stored in DT field): %i x %i\n",
-          nrow(self$DT), ncol(self$DT)
-        ))
-        cat(sprintf("Columns in DT: %s\n", paste(ifelse(length(
-          colnames(self$DT)
-        ) <= 4, paste(colnames(self$DT), collapse = ", "),
-        paste(
-          paste(colnames(self$DT)[1:4], collapse = ", "), "and",
-          length(colnames(self$DT)[5:length(colnames(self$DT))]), "more columns"
-        )
-        ))))
         if (methods) {
           cat("----------\n")
           writeLines(wrap_varnames(
@@ -501,6 +482,11 @@ epi_archive <-
             names(epi_archive$public_methods)
           ))
         }
+        cat("----------\n")
+        cat(sprintf(
+          "A preview of the table: %s rows x %s columns\n",
+          nrow(self$DT), ncol(self$DT)))
+        return(invisible(self$DT %>% print))
       },
       #####
       #' @description Generates a snapshot in `epi_df` format as of a given version.
