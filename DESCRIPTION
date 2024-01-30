@@ -1,7 +1,7 @@
 Type: Package
 Package: epiprocess
 Title: Tools for basic signal processing in epidemiology
-Version: 0.7.2
+Version: 0.7.3
 Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", role = "aut"),
@@ -56,7 +56,7 @@ Suggests:
     testthat (>= 3.1.5),
     waldo (>= 0.3.1),
     withr
-VignetteBuilder: 
+VignetteBuilder:
     knitr
 Remotes:
     cmu-delphi/epidatr,
@@ -67,10 +67,10 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
-Depends: 
+Depends:
     R (>= 2.10)
 URL: https://cmu-delphi.github.io/epiprocess/
-Collate: 
+Collate:
     'archive.R'
     'correlation.R'
     'data.R'
