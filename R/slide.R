@@ -471,6 +471,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' @importFrom dplyr bind_rows mutate %>% arrange tibble
 #' @importFrom purrr map
 #' @importFrom data.table frollmean
+#' @importFrom lubridate as.period
 #' @export
 #' @examples
 #' # slide a 7-day trailing average formula on cases
@@ -566,7 +567,7 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
 
   # If dates are one of tsibble-provided classes, can step by numeric. `tsibble`
   # defines a step of 1 to automatically be the quantum (smallest resolvable
-  # unit) of the date class(so one step = 1 quarter for `yearquarter`).
+  # unit) of the date class. For example, one step = 1 quarter for `yearquarter`.
   #
   # `tsibble` classes apparently can't be added to in different units, so even
   # if `time_step` is provided by the user, use a unit step.
@@ -581,16 +582,16 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
       pad_late_dates <- End(all_dates) + 1:after
     }
   } else if (missing(time_step)) {
-    # Guess at what `by` could be based on epi_df `time_type`.
+    # Guess what `by` should be based on the epi_df's `time_type`.
     ttype <- attributes(x)$metadata$time_type
-    by <- dplyr::case_when(
-      ttype == "day" ~ "days",
-      ttype == "week" ~ "weeks",
-      ttype == "yearweek" ~ "weeks",
-      ttype == "yearmonth" ~ "months",
-      ttype == "yearquarter" ~ "quarters",
-      ttype == "year" ~ "years",
-      TRUE ~ NA # "custom", "day-time"
+    by <- switch(ttype,
+      day = "days",
+      week = "weeks",
+      yearweek = "weeks",
+      yearmonth = "months",
+      yearquarter = "quarters",
+      year = "years",
+      NA # default value for "custom", "day-time"
     )
 
     if (is.na(by)) {
@@ -605,7 +606,7 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
       )
     }
 
-    # time_step can be any of `c("days", "weeks", "months", "quarters", "years")`
+    # Time_step can be any of `c("days", "weeks", "months", "quarters", "years")`
     all_dates <- seq(min(x$time_value), max(x$time_value), by = by)
 
     if (before != 0) {
@@ -616,14 +617,15 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
     }
   } else {
     # A custom time step is specified
-    all_dates <- c()
-    curr <- min(x$time_value)
-    while (curr <= max(x$time_value)) {
-      all_dates <- append(all_dates, curr)
-      curr <- curr + time_step(1)
-    }
-    # t_elapsed <- max(x$time_value) - min(x$time_value)
-    # all_dates <- min(x$time_value) + time_step(0:t_elapsed)
+
+    # Calculate the number of `time_step`s required to go between min and max time
+    # values. This is roundabout because difftime objects, lubridate::period objects,
+    # and Dates are hard to convert to the same time scale and add.
+    t_elapsed_s <- difftime(max(x$time_value), min(x$time_value), units = "secs")
+    step_size_s <- lubridate::as.period(time_step(1), unit = "secs")
+    n_steps <- ceiling(as.numeric(t_elapsed_s) / as.numeric(step_size_s))
+
+    all_dates <- min(x$time_value) + time_step(0:n_steps)
 
     if (before != 0) {
       pad_early_dates <- Start(all_dates) - time_step(before:1)
