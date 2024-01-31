@@ -192,3 +192,6 @@ jhu_csse_daily_subset \%>\%
     before = 1, as_list_col = TRUE
   )
 }
+\seealso{
+\code{\link{epi_slide_mean}}
+}

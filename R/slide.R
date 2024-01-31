@@ -125,6 +125,7 @@
 #' @importFrom dplyr bind_rows group_vars filter select
 #' @importFrom rlang .data .env !! enquo enquos sym env missing_arg
 #' @export
+#' @seealso [`epi_slide_mean`]
 #' @examples
 #' # slide a 7-day trailing average formula on cases
 #' jhu_csse_daily_subset %>%
@@ -473,6 +474,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' @importFrom data.table frollmean
 #' @importFrom lubridate as.period
 #' @export
+#' @seealso [`epi_slide`]
 #' @examples
 #' # slide a 7-day trailing average formula on cases
 #' jhu_csse_daily_subset %>%

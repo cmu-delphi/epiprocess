@@ -158,3 +158,6 @@ jhu_csse_daily_subset \%>\%
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av)
 }
+\seealso{
+\code{\link{epi_slide}}
+}
