@@ -668,13 +668,33 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
     ) %>%
       arrange(time_value)
 
+    # If a group contains duplicate time values, `frollmean` will still only
+    # use the last `k` obs. It isn't looking at dates, it just goes in row
+    # order. So if the computation is aggregating across multiple obs for the
+    # same date, `epi_slide_mean` will produce incorrect results; `epi_slide`
+    # should be used instead.
+    if (anyDuplicated(.data_group$time_value) > 0) {
+      Abort(c(
+          "group contains duplicate time values. Using `epi_slide_mean` on this
+            group will result in incorrect results",
+          "i" = "Please change the grouping structure of the input data so that
+            each group has non-duplicate time values",
+          "i" = "Use `epi_slide` to aggregate across groups"
+        ),
+        class = "epiprocess__epi_slide_mean__duplicate_time_values",
+        epiprocess__data_group = .data_group,
+        epiprocess__group_key = .group_key
+      )
+    }
+
     roll_output <- data.table::frollmean(
       x = .data_group[, col_name], n = m, align = "right", ...
     )
 
     if (after >= 1) {
-      # Right-aligned `frollmean` results' `ref_time_value`s will be `after` timesteps
-      # ahead of where they should be. Shift results to the left by `after` timesteps.
+      # Right-aligned `frollmean` results' `ref_time_value`s will be `after`
+      # timesteps ahead of where they should be. Shift results to the left by
+      # `after` timesteps.
       .data_group[, result_col_name] <- purrr::map(roll_output, function(.x) {
           c(.x[(after + 1L):length(.x)], rep(NA, after))
         }
