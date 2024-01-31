@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -125,7 +125,9 @@ dataset differs from the second from the third value included.</p>
 <span><span class="va">locf_omitted</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="va">dt</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning: Found rows that appear redundant based on last (version of each) observation</span></span>
 <span><span class="co">## carried forward; these rows have been removed to "compactify" and save space:</span></span>
+<span><span class="co">## Key: &lt;geo_value, time_value, version&gt;</span></span>
 <span><span class="co">##       geo_value time_value    version percent_cli case_rate_7d_av</span></span>
+<span><span class="co">##          &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;           &lt;num&gt;</span></span>
 <span><span class="co">##    1:        ca 2020-06-01 2020-06-07    2.140116        6.628329</span></span>
 <span><span class="co">##    2:        ca 2020-06-01 2020-06-23    2.498918        6.628329</span></span>
 <span><span class="co">##    3:        ca 2020-06-01 2020-07-23    2.698157        6.603020</span></span>
@@ -142,7 +144,9 @@ dataset differs from the second from the third value included.</p>
 <code class="sourceCode R"><span><span class="va">locf_included</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="va">dt</span>, compactify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">locf_omitted</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##    geo_value time_value    version percent_cli case_rate_7d_av</span></span>
+<pre><code><span><span class="co">## Key: &lt;geo_value, time_value, version&gt;</span></span>
+<span><span class="co">##    geo_value time_value    version percent_cli case_rate_7d_av</span></span>
+<span><span class="co">##       &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;           &lt;num&gt;</span></span>
 <span><span class="co">## 1:        ca 2020-06-01 2020-06-02          NA        6.628329</span></span>
 <span><span class="co">## 2:        ca 2020-06-01 2020-06-06    2.140116        6.628329</span></span>
 <span><span class="co">## 3:        ca 2020-06-01 2020-06-08    2.140379        6.628329</span></span>
@@ -151,7 +155,9 @@ dataset differs from the second from the third value included.</p>
 <span><span class="co">## 6:        ca 2020-06-01 2020-06-11    2.197207        6.628329</span></span></code></pre>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">locf_included</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##    geo_value time_value    version percent_cli case_rate_7d_av</span></span>
+<pre><code><span><span class="co">## Key: &lt;geo_value, time_value, version&gt;</span></span>
+<span><span class="co">##    geo_value time_value    version percent_cli case_rate_7d_av</span></span>
+<span><span class="co">##       &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;           &lt;num&gt;</span></span>
 <span><span class="co">## 1:        ca 2020-06-01 2020-06-02          NA        6.628329</span></span>
 <span><span class="co">## 2:        ca 2020-06-01 2020-06-06    2.140116        6.628329</span></span>
 <span><span class="co">## 3:        ca 2020-06-01 2020-06-07    2.140116        6.628329</span></span>

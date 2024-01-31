@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -163,22 +163,20 @@ compactify vignette.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "epi_archive" "R6"</span></span></code></pre>
-<pre><code><span><span class="co">## An `epi_archive` object, with metadata:</span></span>
-<span><span class="co">## * geo_type  = state</span></span>
-<span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## ----------</span></span>
-<span><span class="co">## * min time value = 2020-06-01</span></span>
-<span><span class="co">## * max time value = 2021-11-30</span></span>
-<span><span class="co">## * first version with update = 2020-06-02</span></span>
-<span><span class="co">## * last version with update = 2021-12-01</span></span>
-<span><span class="co">## * No clobberable versions</span></span>
-<span><span class="co">## * versions end   = 2021-12-01</span></span>
-<span><span class="co">## ----------</span></span>
-<span><span class="co">## Data archive (stored in DT field): 119316 x 4</span></span>
-<span><span class="co">## Columns in DT: geo_value, time_value, version, percent_cli</span></span>
-<span><span class="co">## ----------</span></span>
-<span><span class="co">## Public R6 methods: initialize, print, as_of, fill_through_version, </span></span>
-<span><span class="co">##                    truncate_versions_after, merge, group_by, slide, clone</span></span></code></pre>
+<pre><code><span><span class="co">## Key: &lt;geo_value, time_value, version&gt;</span></span>
+<span><span class="co">##         geo_value time_value    version percent_cli</span></span>
+<span><span class="co">##            &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;</span></span>
+<span><span class="co">##      1:        ca 2020-06-01 2020-06-02          NA</span></span>
+<span><span class="co">##      2:        ca 2020-06-01 2020-06-06    2.140116</span></span>
+<span><span class="co">##      3:        ca 2020-06-01 2020-06-08    2.140379</span></span>
+<span><span class="co">##      4:        ca 2020-06-01 2020-06-09    2.114430</span></span>
+<span><span class="co">##      5:        ca 2020-06-01 2020-06-10    2.133677</span></span>
+<span><span class="co">##     ---                                            </span></span>
+<span><span class="co">## 119312:        tx 2021-11-26 2021-11-29    1.858596</span></span>
+<span><span class="co">## 119313:        tx 2021-11-27 2021-11-28          NA</span></span>
+<span><span class="co">## 119314:        tx 2021-11-28 2021-11-29          NA</span></span>
+<span><span class="co">## 119315:        tx 2021-11-29 2021-11-30          NA</span></span>
+<span><span class="co">## 119316:        tx 2021-11-30 2021-12-01          NA</span></span></code></pre>
 <p>An <code>epi_archive</code> is special kind of class called an R6
 class. Its primary field is a data table <code>DT</code>, which is of
 class <code>data.table</code> (from the <code>data.table</code>
@@ -190,7 +188,9 @@ additional columns.</p>
 <pre><code><span><span class="co">## [1] "data.table" "data.frame"</span></span></code></pre>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##    geo_value time_value    version percent_cli</span></span>
+<pre><code><span><span class="co">## Key: &lt;geo_value, time_value, version&gt;</span></span>
+<span><span class="co">##    geo_value time_value    version percent_cli</span></span>
+<span><span class="co">##       &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;</span></span>
 <span><span class="co">## 1:        ca 2020-06-01 2020-06-02          NA</span></span>
 <span><span class="co">## 2:        ca 2020-06-01 2020-06-06    2.140116</span></span>
 <span><span class="co">## 3:        ca 2020-06-01 2020-06-08    2.140379</span></span>
@@ -217,7 +217,9 @@ are not copied when modified.</p>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="co"># This DOES NOT make a copy of x</span></span>
 <span><span class="va">y</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">percent_cli</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">y</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##    geo_value time_value    version percent_cli</span></span>
+<pre><code><span><span class="co">## Key: &lt;geo_value, time_value, version&gt;</span></span>
+<span><span class="co">##    geo_value time_value    version percent_cli</span></span>
+<span><span class="co">##       &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;</span></span>
 <span><span class="co">## 1:        ca 2020-06-01 2020-06-02    0.000000</span></span>
 <span><span class="co">## 2:        ca 2020-06-01 2020-06-06    2.140116</span></span>
 <span><span class="co">## 3:        ca 2020-06-01 2020-06-08    2.140379</span></span>
@@ -226,7 +228,9 @@ are not copied when modified.</p>
 <span><span class="co">## 6:        ca 2020-06-01 2020-06-11    2.197207</span></span></code></pre>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##    geo_value time_value    version percent_cli</span></span>
+<pre><code><span><span class="co">## Key: &lt;geo_value, time_value, version&gt;</span></span>
+<span><span class="co">##    geo_value time_value    version percent_cli</span></span>
+<span><span class="co">##       &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;</span></span>
 <span><span class="co">## 1:        ca 2020-06-01 2020-06-02    0.000000</span></span>
 <span><span class="co">## 2:        ca 2020-06-01 2020-06-06    2.140116</span></span>
 <span><span class="co">## 3:        ca 2020-06-01 2020-06-08    2.140379</span></span>
@@ -398,23 +402,23 @@ the archives, but not the other).</p>
 <span><span class="va">x</span><span class="op">$</span><span class="fu">merge</span><span class="op">(</span><span class="va">y</span>, sync <span class="op">=</span> <span class="st">"locf"</span>, compactify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## An `epi_archive` object, with metadata:</span></span>
-<span><span class="co">## * geo_type  = state</span></span>
-<span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## ----------</span></span>
-<span><span class="co">## * min time value = 2020-06-01</span></span>
-<span><span class="co">## * max time value = 2021-11-30</span></span>
-<span><span class="co">## * first version with update = 2020-06-02</span></span>
-<span><span class="co">## * last version with update = 2021-12-01</span></span>
-<span><span class="co">## * No clobberable versions</span></span>
-<span><span class="co">## * versions end   = 2021-12-01</span></span>
-<span><span class="co">## ----------</span></span>
-<span><span class="co">## Data archive (stored in DT field): 129638 x 5</span></span>
-<span><span class="co">## Columns in DT: geo_value, time_value, version, percent_cli and 1 more columns</span></span>
-<span><span class="co">## ----------</span></span>
-<span><span class="co">## Public R6 methods: initialize, print, as_of, fill_through_version, </span></span>
-<span><span class="co">##                    truncate_versions_after, merge, group_by, slide, clone</span></span></code></pre>
-<pre><code><span><span class="co">##    geo_value time_value    version percent_cli case_rate_7d_av</span></span>
+<pre><code><span><span class="co">## Key: &lt;geo_value, time_value, version&gt;</span></span>
+<span><span class="co">##         geo_value time_value    version percent_cli case_rate_7d_av</span></span>
+<span><span class="co">##            &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;           &lt;num&gt;</span></span>
+<span><span class="co">##      1:        ca 2020-06-01 2020-06-02          NA        6.628329</span></span>
+<span><span class="co">##      2:        ca 2020-06-01 2020-06-06    2.140116        6.628329</span></span>
+<span><span class="co">##      3:        ca 2020-06-01 2020-06-07    2.140116        6.628329</span></span>
+<span><span class="co">##      4:        ca 2020-06-01 2020-06-08    2.140379        6.628329</span></span>
+<span><span class="co">##      5:        ca 2020-06-01 2020-06-09    2.114430        6.628329</span></span>
+<span><span class="co">##     ---                                                            </span></span>
+<span><span class="co">## 129634:        tx 2021-11-26 2021-11-29    1.858596        7.957657</span></span>
+<span><span class="co">## 129635:        tx 2021-11-27 2021-11-28          NA        7.174299</span></span>
+<span><span class="co">## 129636:        tx 2021-11-28 2021-11-29          NA        6.834681</span></span>
+<span><span class="co">## 129637:        tx 2021-11-29 2021-11-30          NA        8.841247</span></span>
+<span><span class="co">## 129638:        tx 2021-11-30 2021-12-01          NA        9.566218</span></span></code></pre>
+<pre><code><span><span class="co">## Key: &lt;geo_value, time_value, version&gt;</span></span>
+<span><span class="co">##    geo_value time_value    version percent_cli case_rate_7d_av</span></span>
+<span><span class="co">##       &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;           &lt;num&gt;</span></span>
 <span><span class="co">## 1:        ca 2020-06-01 2020-06-02          NA        6.628329</span></span>
 <span><span class="co">## 2:        ca 2020-06-01 2020-06-06    2.140116        6.628329</span></span>
 <span><span class="co">## 3:        ca 2020-06-01 2020-06-07    2.140116        6.628329</span></span>

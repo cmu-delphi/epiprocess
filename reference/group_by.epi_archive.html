@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -168,18 +168,24 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> A `grouped_epi_archive` object:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * min time value = 2020-06-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * max time value = 2021-11-30</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * first version with update = 2020-06-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * last version with update = 2021-12-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * No clobberable versions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * versions end   = 2021-12-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data archive (stored in DT field): 129638 x 5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Columns in DT: geo_value, time_value, version, percent_cli and 1 more columns</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-06-01 / 2021-11-30</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2020-06-02 / 2021-12-01</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2021-12-01</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (129638 rows x 5 columns):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, version&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         geo_value time_value    version percent_cli case_rate_7d_av</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;           &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      1:        ca 2020-06-01 2020-06-02          NA        6.628329</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      2:        ca 2020-06-01 2020-06-06    2.140116        6.628329</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      3:        ca 2020-06-01 2020-06-07    2.140116        6.628329</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      4:        ca 2020-06-01 2020-06-08    2.140379        6.628329</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      5:        ca 2020-06-01 2020-06-09    2.114430        6.628329</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     ---                                                            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 129634:        tx 2021-11-26 2021-11-29    1.858596        7.957657</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 129635:        tx 2021-11-27 2021-11-28          NA        7.174299</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 129636:        tx 2021-11-28 2021-11-29          NA        6.834681</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 129637:        tx 2021-11-29 2021-11-30          NA        8.841247</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 129638:        tx 2021-11-30 2021-12-01          NA        9.566218</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Public `grouped_epi_archive` R6 methods:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Specialized `epi_archive` methods: initialize, print, group_by, </span>
@@ -240,18 +246,18 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value, age_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Drops groups formed by factor levels that don't appear in the data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = nation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * min time value = 2000-01-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * max time value = 2000-01-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * first version with update = 2000-01-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * last version with update = 2000-01-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * No clobberable versions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * versions end   = 2000-01-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data archive (stored in DT field): 4 x 5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Columns in DT: geo_value, age_group, time_value, version and 1 more columns</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (4 rows x 5 columns):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, age_group, version&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value age_group time_value    version value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;char&gt;     &lt;ord&gt;     &lt;Date&gt;     &lt;Date&gt; &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:        us     adult 2000-01-01 2000-01-02   121</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:        us     adult 2000-01-01 2000-01-03   125</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:        us pediatric 2000-01-02 2000-01-03     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:        us     adult 2000-01-02 2000-01-03   130</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Public `grouped_epi_archive` R6 methods:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Specialized `epi_archive` methods: initialize, print, group_by, </span>
@@ -265,18 +271,18 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value, age_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Drops groups formed by factor levels that don't appear in the data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = nation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * min time value = 2000-01-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * max time value = 2000-01-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * first version with update = 2000-01-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * last version with update = 2000-01-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * No clobberable versions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * versions end   = 2000-01-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data archive (stored in DT field): 4 x 5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Columns in DT: geo_value, age_group, time_value, version and 1 more columns</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (4 rows x 5 columns):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, age_group, version&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value age_group time_value    version value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;char&gt;     &lt;ord&gt;     &lt;Date&gt;     &lt;Date&gt; &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:        us     adult 2000-01-01 2000-01-02   121</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:        us     adult 2000-01-01 2000-01-03   125</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:        us pediatric 2000-01-02 2000-01-03     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:        us     adult 2000-01-02 2000-01-03   130</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Public `grouped_epi_archive` R6 methods:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Specialized `epi_archive` methods: initialize, print, group_by, </span>
@@ -289,18 +295,18 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value, age_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Drops groups formed by factor levels that don't appear in the data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = nation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * min time value = 2000-01-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * max time value = 2000-01-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * first version with update = 2000-01-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * last version with update = 2000-01-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * No clobberable versions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * versions end   = 2000-01-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data archive (stored in DT field): 4 x 5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Columns in DT: geo_value, age_group, time_value, version and 1 more columns</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (4 rows x 5 columns):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, age_group, version&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value age_group time_value    version value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;char&gt;     &lt;ord&gt;     &lt;Date&gt;     &lt;Date&gt; &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:        us     adult 2000-01-01 2000-01-02   121</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:        us     adult 2000-01-01 2000-01-03   125</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:        us pediatric 2000-01-02 2000-01-03     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:        us     adult 2000-01-02 2000-01-03   130</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Public `grouped_epi_archive` R6 methods:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Specialized `epi_archive` methods: initialize, print, group_by, </span>
@@ -313,18 +319,18 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> A `grouped_epi_archive` object:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = nation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * min time value = 2000-01-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * max time value = 2000-01-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * first version with update = 2000-01-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * last version with update = 2000-01-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * No clobberable versions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * versions end   = 2000-01-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data archive (stored in DT field): 4 x 5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Columns in DT: geo_value, age_group, time_value, version and 1 more columns</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (4 rows x 5 columns):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, age_group, version&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value age_group time_value    version value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;char&gt;     &lt;ord&gt;     &lt;Date&gt;     &lt;Date&gt; &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:        us     adult 2000-01-01 2000-01-02   121</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:        us     adult 2000-01-01 2000-01-03   125</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:        us pediatric 2000-01-02 2000-01-03     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:        us     adult 2000-01-02 2000-01-03   130</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Public `grouped_epi_archive` R6 methods:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Specialized `epi_archive` methods: initialize, print, group_by, </span>
@@ -337,18 +343,18 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> A `grouped_epi_archive` object:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = nation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * min time value = 2000-01-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * max time value = 2000-01-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * first version with update = 2000-01-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * last version with update = 2000-01-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * No clobberable versions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * versions end   = 2000-01-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data archive (stored in DT field): 4 x 5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Columns in DT: geo_value, age_group, time_value, version and 1 more columns</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (4 rows x 5 columns):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, age_group, version&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value age_group time_value    version value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;char&gt;     &lt;ord&gt;     &lt;Date&gt;     &lt;Date&gt; &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:        us     adult 2000-01-01 2000-01-02   121</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:        us     adult 2000-01-01 2000-01-03   125</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:        us pediatric 2000-01-02 2000-01-03     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:        us     adult 2000-01-02 2000-01-03   130</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Public `grouped_epi_archive` R6 methods:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Specialized `epi_archive` methods: initialize, print, group_by, </span>
