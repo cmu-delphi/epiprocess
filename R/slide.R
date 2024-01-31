@@ -714,6 +714,6 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
     result <- bind_rows(x[c(),], result)
   }
 
-  ungroup(result)
+  return(result)
 }
 
