@@ -14,8 +14,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 * changed approach to versioning, see DEVELOPMENT.md for details
 * `select` on grouped `epi_df`s now only drops `epi_df`ness if it makes sense; PR #390
 * Minor documentation updates; PR #393
-* Improved `epi_archive` print method. Now an S3 method and shows a snippet of
-  the underlying `DT` (#341).
+* Improved `epi_archive` print method. Compactified metadata and shows a snippet
+  of the underlying `DT` (#341).
 
 ## Breaking changes
 
