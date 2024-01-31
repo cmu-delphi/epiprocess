@@ -43,12 +43,12 @@ test_that("original `delayedAssign` works as expected on good promises", {
 })
 
 test_that("`delayed_assign_with_unregister_awareness` doesn't wrap a buggy promise if not unregistering", {
-  delayed_assign_with_unregister_awareness("x", Abort("msg", class = "original_error_class"))
+  delayed_assign_with_unregister_awareness("x", cli_abort("msg", class = "original_error_class"))
   expect_error(force(x), class = "original_error_class")
 })
 
 test_that("`delayed_assign_with_unregister_awareness` doesn't wrap a buggy promise if not unregistering", {
-  delayed_assign_with_unregister_awareness("x", Abort("msg", class = "original_error_class"))
+  delayed_assign_with_unregister_awareness("x", cli_abort("msg", class = "original_error_class"))
   # Take advantage of a false positive / hedge against package renaming: make
   # our own `unregister` function to trigger the special error message.
   unregister <- function(y) y

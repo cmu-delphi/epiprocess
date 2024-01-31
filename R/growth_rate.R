@@ -118,10 +118,8 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
                         h = 7, log_scale = FALSE,
                         dup_rm = FALSE, na_rm = FALSE, ...) {
   # Check x, y, x0
-  if (length(x) != length(y)) Abort("`x` and `y` must have the same length.")
-  if (!all(x0 %in% x)) Abort("`x0` must be a subset of `x`.")
-
-  # Check the method
+  if (length(x) != length(y)) cli_abort("`x` and `y` must have the same length.")
+  if (!all(x0 %in% x)) cli_abort("`x0` must be a subset of `x`.")
   method <- match.arg(method)
 
   # Arrange in increasing order of x
@@ -137,7 +135,7 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
   if (dup_rm) {
     o <- !duplicated(x)
     if (any(!o)) {
-      Warn("`x` contains duplicate values. (If being run on a column in an `epi_df`, did you group by relevant key variables?)")
+      cli_warn("`x` contains duplicate values. (If being run on a column in an `epi_df`, did you group by relevant key variables?)")
     }
     x <- x[o]
     y <- y[o]
@@ -238,7 +236,7 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
       # Check cv and df combo
       if (is.numeric(df)) cv <- FALSE
       if (!cv && !(is.numeric(df) && df == round(df))) {
-        Abort("If `cv = FALSE`, then `df` must be an integer.")
+        cli_abort("If `cv = FALSE`, then `df` must be an integer.")
       }
 
       # Compute trend filtering path

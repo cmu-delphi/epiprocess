@@ -2,7 +2,7 @@ library(dplyr)
 
 test_that("first input must be a data.frame", {
   expect_error(as_epi_archive(c(1, 2, 3), compactify = FALSE),
-    regexp = "`x` must be a data frame."
+    regexp = "Must be of type 'data.frame'."
   )
 })
 
@@ -10,13 +10,13 @@ dt <- archive_cases_dv_subset$DT
 
 test_that("data.frame must contain geo_value, time_value and version columns", {
   expect_error(as_epi_archive(select(dt, -geo_value), compactify = FALSE),
-    regexp = "`x` must contain a `geo_value` column."
+    regexp = "Columns `geo_value`, `time_value`, and `version` must be present in `x`."
   )
   expect_error(as_epi_archive(select(dt, -time_value), compactify = FALSE),
-    regexp = "`x` must contain a `time_value` column."
+    regexp = "Columns `geo_value`, `time_value`, and `version` must be present in `x`."
   )
   expect_error(as_epi_archive(select(dt, -version), compactify = FALSE),
-    regexp = "`x` must contain a `version` column."
+    regexp = "Columns `geo_value`, `time_value`, and `version` must be present in `x`."
   )
 })
 
@@ -41,10 +41,10 @@ test_that("other_keys cannot contain names geo_value, time_value or version", {
 
 test_that("Warning thrown when other_metadata contains overlapping names with geo_type or time_type fields", {
   expect_warning(as_epi_archive(dt, additional_metadata = list(geo_type = 1), compactify = FALSE),
-    regexp = "`additional_metadata` names overlap with existing metadata fields\n\"geo_type\", \"time_type\"."
+    regexp = "`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\"."
   )
   expect_warning(as_epi_archive(dt, additional_metadata = list(time_type = 1), compactify = FALSE),
-    regexp = "`additional_metadata` names overlap with existing metadata fields\n\"geo_type\", \"time_type\"."
+    regexp = "`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\"."
   )
 })
 
