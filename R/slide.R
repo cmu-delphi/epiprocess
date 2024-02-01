@@ -612,7 +612,9 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
           type valid for creating a date sequence.",
           "i" = c("The input data's `time_type` was probably `custom` or `day-time`.
           These require also passing a `time_step` function.")
-        )
+        ),
+        class = "epiprocess__epi_slide_mean__unmappable_time_type",
+        epiprocess__time_type = ttype,
       )
     }
 

@@ -923,10 +923,34 @@ test_that("results for different time_types match between epi_slide and epi_slid
   )
   not_dates <- c("a", "b", "c", "d", "e", "f")
 
-  test_time_type_mean <- function (dates, before = 6L, after = 0L, ...) {
-    set.seed(0)
-    rand_vals <- rnorm(n_obs)
+  set.seed(0)
+  rand_vals <- rnorm(n_obs)
 
+  ref_epi_data <- epiprocess::as_epi_df(rbind(tibble(
+    geo_value = "al",
+    time_value = days,
+    a = 1:n_obs,
+    b = rand_vals
+  ), tibble(
+    geo_value = "ca",
+    time_value = days,
+    a = n_obs:1,
+    b = rand_vals + 10
+  ), tibble(
+    geo_value = "fl",
+    time_value = days,
+    a = n_obs:1,
+    b = rand_vals * 2
+  ))) %>%
+    group_by(geo_value)
+
+  ref_result <- epi_slide(ref_epi_data, ~ data.frame(
+      slide_value_a = mean(.x$a, rm.na = TRUE),
+      slide_value_b = mean(.x$b, rm.na = TRUE)
+    ),
+    before = before, after = after, names_sep = NULL)
+
+  test_time_type_mean <- function (dates, before = 6L, after = 0L, ...) {
     # Three states, with 2 variables. a is linear, going up in one state and down in the other
     # b is just random. date 10 is missing
     epi_data <- epiprocess::as_epi_df(rbind(tibble(
@@ -957,30 +981,6 @@ test_that("results for different time_types match between epi_slide and epi_slid
       before = before, after = after, ...)
     expect_identical(result2, result2)
 
-    ref_epi_data <- epiprocess::as_epi_df(rbind(tibble(
-      geo_value = "al",
-      time_value = days,
-      a = 1:n_obs,
-      b = rand_vals
-    ), tibble(
-      geo_value = "ca",
-      time_value = days,
-      a = n_obs:1,
-      b = rand_vals + 10
-    ), tibble(
-      geo_value = "fl",
-      time_value = days,
-      a = n_obs:1,
-      b = rand_vals * 2
-    ))) %>%
-      group_by(geo_value)
-
-    ref_result <- epi_slide(ref_epi_data, ~ data.frame(
-        slide_value_a = mean(.x$a, rm.na = TRUE),
-        slide_value_b = mean(.x$b, rm.na = TRUE)
-      ),
-      before = before, after = after, names_sep = NULL)
-
     # All fields except dates
     expect_identical(select(ref_result, -time_value), select(result1, -time_value))
     expect_identical(select(ref_result, -time_value), select(result2, -time_value))
@@ -994,4 +994,41 @@ test_that("results for different time_types match between epi_slide and epi_slid
   test_time_type_mean(day_times_minute, time_step = lubridate::minutes)
   test_time_type_mean(day_times_hour, time_step = lubridate::hours)
   test_time_type_mean(weeks, time_step = lubridate::weeks)
+})
+
+test_that("results for different time_types match between epi_slide and epi_slide_mean", {
+  n_obs <- 6
+  k <- 1:n_obs
+
+  day_times_minute <- lubridate::ydm_h("2022-01-01-15") + lubridate::minutes(k) # needs time_step = lubridate::minutes
+  day_times_hour <- lubridate::ydm_h("2022-01-01-15") + lubridate::hours(k) # needs time_step = lubridate::hours
+  weeks <- as.Date("2022-01-01") + 7 * k # needs time_step = lubridate::weeks
+
+  # Not supported
+  custom_dates <- c(
+    "January 1, 2022", "January 2, 2022", "January 3, 2022",
+    "January 4, 2022", "January 5, 2022", "January 6, 2022"
+  )
+  not_dates <- c("a", "b", "c", "d", "e", "f")
+
+  test_time_type_mean <- function (dates, before = 6L, after = 0L, ...) {
+    epi_data <- epiprocess::as_epi_df(tibble(
+      geo_value = "al",
+      time_value = dates,
+      a = 1:n_obs
+    ))
+
+    expect_error(epi_slide_mean(epi_data,
+      col_name = c("a", "b"),
+      before = before, after = after, ...),
+      class = "epiprocess__epi_slide_mean__unmappable_time_type"
+    )
+
+  }
+
+  test_time_type_mean(custom_dates)
+  test_time_type_mean(not_dates)
+  test_time_type_mean(day_times_minute)
+  test_time_type_mean(day_times_hour)
+  test_time_type_mean(weeks)
 })
