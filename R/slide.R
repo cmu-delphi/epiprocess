@@ -614,7 +614,7 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
           These require also passing a `time_step` function.")
         ),
         class = "epiprocess__epi_slide_mean__unmappable_time_type",
-        epiprocess__time_type = ttype,
+        epiprocess__time_type = ttype
       )
     }
 
