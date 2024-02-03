@@ -1,8 +1,6 @@
 template:
     bootstrap: 5
 
-development:
-    mode: auto
 
 # Colors from epipredict & epidatr, including Carnegie Red https://www.cmu.edu/brand/brand-guidelines/visual-identity/colors.html
 navbar:
