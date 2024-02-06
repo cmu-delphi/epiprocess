@@ -168,7 +168,8 @@
 epi_slide <- function(x, f, ..., before, after, ref_time_values,
                       time_step,
                       new_col_name = "slide_value", as_list_col = FALSE,
-                      names_sep = "_", all_rows = FALSE) {
+                      names_sep = "_", all_rows = FALSE,
+                      autocomplete_windows = TRUE, complete_value = NA) {
   assert_class(x, "epi_df")
 
   if (missing(ref_time_values)) {
@@ -243,8 +244,8 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
                             new_col) {
     # Figure out which reference time values appear in the data group in the
     # first place (we need to do this because it could differ based on the
-    # group, hence the setup/checks for the reference time values based on all
-    # the data could still be off):
+    # group, and reference time values found above are based on all of the
+    # data):
     o <- ref_time_values %in% .data_group$time_value
     starts <- starts[o]
     stops <- stops[o]
@@ -263,7 +264,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     )
 
     # Now figure out which rows in the data group are in the reference time
-    # values; this will be useful for all sorts of checks that follow
+    # values; this will be used for checks below.
     o <- .data_group$time_value %in% kept_ref_time_values
     num_ref_rows <- sum(o)
 
@@ -337,7 +338,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
   # computation. `i` is contained in the `f_wrapper_factory` environment such
   # that when called within `slide_one_grp` `i` is reset for every group.
   f_wrapper_factory <- function(kept_ref_time_values) {
-    # Use `i` to advance through list of start dates.
+    # Use `i` to advance through list of reference dates.
     i <- 1L
     f_wrapper <- function(.x, .group_key, ...) {
       .ref_time_value <- kept_ref_time_values[[i]]
