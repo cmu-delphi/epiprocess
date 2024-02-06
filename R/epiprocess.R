@@ -5,7 +5,6 @@
 #' basic signal processing tasks.
 #'
 #' @importFrom checkmate assert assert_character assert_int anyInfinite
-#' @docType package
 #' @name epiprocess
-NULL
+"_PACKAGE"
 utils::globalVariables(c(".x", ".group_key", ".ref_time_value"))
