@@ -2,10 +2,44 @@
 % Please edit documentation in R/epiprocess.R
 \docType{package}
 \name{epiprocess}
+\alias{epiprocess-package}
 \alias{epiprocess}
 \title{epiprocess: Tools for basic signal processing in epidemiology}
 \description{
 This package introduces a common data structure for epidemiological data sets
 measured over space and time, and offers associated utilities to perform
 basic signal processing tasks.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://cmu-delphi.github.io/epiprocess/}
+}
+
+}
+\author{
+\strong{Maintainer}: Ryan Tibshirani \email{ryantibs@cmu.edu}
+
+Authors:
+\itemize{
+  \item Logan Brooks
+  \item Daniel McDonald
+  \item Evan Ray
+}
+
+Other contributors:
+\itemize{
+  \item Jacob Bien [contributor]
+  \item Rafael Catoia [contributor]
+  \item Nat DeFries [contributor]
+  \item Rachel Lobay [contributor]
+  \item Ken Mawer [contributor]
+  \item Chloe You [contributor]
+  \item Quang Nguyen [contributor]
+  \item Dmitry Shemetov [contributor]
+  \item Lionel Henry (Author of included rlang fragments) [contributor]
+  \item Hadley Wickham (Author of included rlang fragments) [contributor]
+  \item Posit (Copyright holder of included rlang fragments) [copyright holder]
+}
+
 }

@@ -14,6 +14,7 @@
 \alias{rename}
 \alias{slice}
 \alias{unnest}
+\alias{autoplot}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -22,6 +23,8 @@ below to see their documentation.
 
 \describe{
   \item{dplyr}{\code{\link[dplyr]{arrange}}, \code{\link[dplyr]{filter}}, \code{\link[dplyr]{group_by}}, \code{\link[dplyr:group_map]{group_modify}}, \code{\link[dplyr]{mutate}}, \code{\link[dplyr]{relocate}}, \code{\link[dplyr]{rename}}, \code{\link[dplyr]{slice}}, \code{\link[dplyr:group_by]{ungroup}}}
+
+  \item{ggplot2}{\code{\link[ggplot2]{autoplot}}}
 
   \item{tidyr}{\code{\link[tidyr]{unnest}}}
 
