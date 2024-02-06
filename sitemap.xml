@@ -70,6 +70,9 @@
     <loc>https://cmu-delphi.github.io/epiprocess/reference/as_tsibble.epi_df.html</loc>
   </url>
   <url>
+    <loc>https://cmu-delphi.github.io/epiprocess/reference/autoplot.epi_df.html</loc>
+  </url>
+  <url>
     <loc>https://cmu-delphi.github.io/epiprocess/reference/detect_outlr.html</loc>
   </url>
   <url>
@@ -134,6 +137,9 @@
   </url>
   <url>
     <loc>https://cmu-delphi.github.io/epiprocess/reference/jhu_csse_daily_subset.html</loc>
+  </url>
+  <url>
+    <loc>https://cmu-delphi.github.io/epiprocess/reference/key_colnames.html</loc>
   </url>
   <url>
     <loc>https://cmu-delphi.github.io/epiprocess/reference/max_version_with_row_in.html</loc>
