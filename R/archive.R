@@ -443,64 +443,26 @@ epi_archive <-
       #' @param class Boolean; whether to print the class label header
       #' @param methods Boolean; whether to print all available methods of
       #'   the archive
+      #' @importFrom cli cli_inform
       print = function(class = TRUE, methods = TRUE) {
-        if (class) cat("An `epi_archive` object, with metadata:\n")
-        cat(sprintf("* %-9s = %s\n", "geo_type", self$geo_type))
-        cat(sprintf("* %-9s = %s\n", "time_type", self$time_type))
-        if (!is.null(self$additional_metadata)) {
-          sapply(self$additional_metadata, function(m) {
-            cat(sprintf("* %-9s = %s\n", names(m), m))
-          })
-        }
-        cat("----------\n")
-        if (length(self$DT$time_value) == 0 || all(is.na(self$DT$time_value))) {
-          min_time <- max_time <- NA
-        } else {
-          min_time <- Min(self$DT$time_value)
-          max_time <- Max(self$DT$time_value)
-        }
-        cat(sprintf("* %-14s = %s\n", "min time value", min_time))
-        cat(sprintf("* %-14s = %s\n", "max time value", max_time))
-        cat(sprintf(
-          "* %-14s = %s\n", "first version with update",
-          min(self$DT$version)
-        ))
-        cat(sprintf(
-          "* %-14s = %s\n", "last version with update",
-          max(self$DT$version)
-        ))
-        if (is.na(self$clobberable_versions_start)) {
-          cat("* No clobberable versions\n")
-        } else {
-          cat(sprintf(
-            "* %-14s = %s\n", "clobberable versions start",
-            self$clobberable_versions_start
-          ))
-        }
-        cat(sprintf(
-          "* %-14s = %s\n", "versions end",
-          self$versions_end
-        ))
-        cat("----------\n")
-        cat(sprintf(
-          "Data archive (stored in DT field): %i x %i\n",
-          nrow(self$DT), ncol(self$DT)
-        ))
-        cat(sprintf("Columns in DT: %s\n", paste(ifelse(length(
-          colnames(self$DT)
-        ) <= 4, paste(colnames(self$DT), collapse = ", "),
-        paste(
-          paste(colnames(self$DT)[1:4], collapse = ", "), "and",
-          length(colnames(self$DT)[5:length(colnames(self$DT))]), "more columns"
+        cli_inform(
+          c(
+            ">" = if (class) {"An `epi_archive` object, with metadata:"},
+            "i" = if (length(setdiff(key(self$DT), c('geo_value', 'time_value', 'version'))) > 0) {
+              "Non-standard DT keys: {setdiff(key(self$DT), c('geo_value', 'time_value', 'version'))}"
+            },
+            "i" = "Min/max time values: {min(self$DT$time_value)} / {max(self$DT$time_value)}",
+            "i" = "First/last version with update: {min(self$DT$version)} / {max(self$DT$version)}",
+            "i" = if (!is.na(self$clobberable_versions_start)) {
+              "Clobberable versions start: {self$clobberable_versions_start}"
+            },
+            "i" = "Versions end: {self$versions_end}",
+            "i" = if (methods) {"Public R6 methods: {names(epi_archive$public_methods)}"},
+            "i" = "A preview of the table ({nrow(self$DT)} rows x {ncol(self$DT)} columns):"
+          )
         )
-        ))))
-        if (methods) {
-          cat("----------\n")
-          writeLines(wrap_varnames(
-            initial = "Public R6 methods: ",
-            names(epi_archive$public_methods)
-          ))
-        }
+
+        return(invisible(self$DT %>% print))
       },
       #####
       #' @description Generates a snapshot in `epi_df` format as of a given version.

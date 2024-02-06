@@ -478,13 +478,13 @@ quiet <- function(x) {
 
 # Create an auto-named list
 enlist <- function(...) {
-  x <- list(...)
-  n <- as.character(sys.call())[-1]
-  if (!is.null(n0 <- names(x))) {
-    n[n0 != ""] <- n0[n0 != ""]
-  }
-  names(x) <- n
-  return(x)
+  # converted to thin wrapper around
+  rlang::dots_list(
+    ...,
+    .homonyms = "error",
+    .named = TRUE,
+    .check_assign = TRUE
+  )
 }
 
 # Variable assignment from a list. NOT USED. Something is broken, this doesn't

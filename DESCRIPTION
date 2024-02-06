@@ -1,7 +1,7 @@
 Type: Package
 Package: epiprocess
 Title: Tools for basic signal processing in epidemiology
-Version: 0.7.2.9999
+Version: 0.7.3
 Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", role = "aut"),
@@ -26,6 +26,7 @@ Description: This package introduces a common data structure for epidemiological
 License: MIT + file LICENSE
 Copyright: file inst/COPYRIGHTS
 Imports:
+    checkmate,
     cli,
     data.table,
     dplyr (>= 1.0.0),
@@ -33,6 +34,7 @@ Imports:
     feasts,
     generics,
     genlasso,
+    ggplot2,
     lifecycle (>= 1.0.1),
     lubridate,
     magrittr,
@@ -49,14 +51,13 @@ Imports:
 Suggests:
     covidcast,
     epidatr,
-    ggplot2,
     knitr,
     outbreaks,
     rmarkdown,
     testthat (>= 3.1.5),
     waldo (>= 0.3.1),
     withr
-VignetteBuilder: 
+VignetteBuilder:
     knitr
 Remotes:
     cmu-delphi/epidatr,
@@ -66,12 +67,13 @@ Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
-Depends: 
+RoxygenNote: 7.3.1
+Depends:
     R (>= 2.10)
 URL: https://cmu-delphi.github.io/epiprocess/
-Collate: 
+Collate:
     'archive.R'
+    'autoplot.R'
     'correlation.R'
     'data.R'
     'epi_df.R'
@@ -80,6 +82,7 @@ Collate:
     'methods-epi_archive.R'
     'grouped_epi_archive.R'
     'growth_rate.R'
+    'key_colnames.R'
     'methods-epi_df.R'
     'outliers.R'
     'reexports.R'
