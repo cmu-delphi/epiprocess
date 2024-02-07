@@ -573,15 +573,6 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
     after <- 0L
   }
 
-  if (length(new_col_name) != 1L && length(new_col_name) != length(col_name)) {
-    Abort(
-      "`new_col_name` must be either length 1 or the same length as `col_name`.",
-      class = "epiprocess__epi_slide_mean__new_col_name_inappropriate_length",
-      epiprocess__new_col_name = new_col_name,
-      epiprocess__col_name = col_name
-    )
-  }
-
   pad_early_dates <- c()
   pad_late_dates <- c()
 
@@ -658,14 +649,29 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
     }
   }
 
-
   # `frollmean` is 1-indexed, so create a new window width based on our
   # `before` and `after` params.
   m <- before + after + 1L
 
-  if (is.null(names_sep)) {
+  if (is.null(names_sep) && !as_list_col) {
+    if (length(new_col_name) != length(col_name)) {
+      Abort(
+        "`new_col_name` must be the same length as `col_name` when `names_sep` is NULL.",
+        class = "epiprocess__epi_slide_mean__col_name_length_mismatch",
+        epiprocess__new_col_name = new_col_name,
+        epiprocess__col_name = col_name
+      )
+    }
     result_col_name <- new_col_name
   } else {
+    if (length(new_col_name) != 1L && length(new_col_name) != length(col_name)) {
+      Abort(
+        "`new_col_name` must be either length 1 or the same length as `col_name`.",
+        class = "epiprocess__epi_slide_mean__col_name_length_mismatch_and_not_one",
+        epiprocess__new_col_name = new_col_name,
+        epiprocess__col_name = col_name
+      )
+    }
     result_col_name <- paste(new_col_name, col_name, sep = names_sep)
   }
 
