@@ -227,13 +227,20 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 
   if (autocomplete_windows) {
     # Make a complete date sequence between min(x$time_value) and max
-    # (x$time_value), plus pad values.
+    # (x$time_value), plus pad values. We need to include pad dates in
+    # the complete date sequence so that the first and last n - 1
+    # ref_time_values have a complete window to use.
     date_seq_list <- full_date_seq(x, before, after, time_step)
     all_dates <- c(
       date_seq_list$pad_early_dates,
       date_seq_list$all_dates,
       date_seq_list$pad_late_dates
     )
+
+    # A helper column marking real observations.
+    x$.real <- TRUE
+    # Fill the `.real` column with `FALSE` for added rows.
+    fill$.real <- FALSE
 
     key_cols <- kill_time_value(key_colnames(x))
 
@@ -401,6 +408,12 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
   # Unnest if we need to, and return
   if (!as_list_col) {
     x <- unnest(x, !!new_col, names_sep = names_sep)
+  }
+
+  # Remove any remaining phony observations.
+  if (autocomplete_windows) {
+    .x <- .x[.x$.real, ]
+    .x$.real <- NULL
   }
 
   return(x)
