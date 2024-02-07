@@ -74,6 +74,15 @@
 #'   the missing marker is a `NULL` entry in the list column; for certain
 #'   operations, you might want to replace these `NULL` entries with a different
 #'   `NA` marker.
+#' @param autocomplete_windows Should input data be completed so that each
+#'  window that the computation is applied to is guaranteed to have `before +
+#'  after + 1` (`n`) observations per epikey combination? Defaults to `TRUE`.
+#'  Turning this off makes it very easy to write an erroneous 7-day average
+#'  or 7-day sum. For example, if we `slide` the natural sum over ungrouped
+#'  data with `m` epikey combinations, we get the sum of less than `n * m`
+#'  things for the first `n - 1` time_values and wherever there's a gap in
+#'  availability (e.g. a missing geo for one or more dates).
+#' @param fill as in [`tidyr::complete`].
 #' @return An `epi_df` object given by appending a new column to `x`, named
 #'   according to the `new_col_name` argument.
 #'
@@ -169,7 +178,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
                       time_step,
                       new_col_name = "slide_value", as_list_col = FALSE,
                       names_sep = "_", all_rows = FALSE,
-                      autocomplete_windows = TRUE, complete_value = NA) {
+                      autocomplete_windows = TRUE, fill = list()) {
   assert_class(x, "epi_df")
 
   if (missing(ref_time_values)) {
@@ -214,6 +223,37 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
             after=0`).")
     }
     after <- 0L
+  }
+
+  if (autocomplete_windows) {
+    # Make a complete date sequence between min(x$time_value) and max
+    # (x$time_value), plus pad values.
+    date_seq_list <- full_date_seq(x, before, after, time_step)
+    all_dates <- c(
+      date_seq_list$pad_early_dates,
+      date_seq_list$all_dates,
+      date_seq_list$pad_late_dates
+    )
+
+    key_cols <- kill_time_value(key_colnames(x))
+
+    # `complete` strips epi_df format and metadata. Restore them.
+    x <- bind_rows(
+      x[c(),],
+      # Add in rows for each present key column combination for all dates.
+      #  - This happens within each group if the data is grouped. This
+      #    doesn't change the impact of completion because we apply the
+      #    computation by group as well.
+      #  - If a geo first appears halfway through the dataset, it will be
+      #    completed all the way back to the beginning of the data.
+      tidyr::complete(x,
+        expand(x, nesting(!!key_cols), data.frame(time_value = all_dates)),
+        # `complete` checks that fill types match existing column types.
+        fill = fill,
+        # Existing missings will be replaced by `fill`, too.
+        explicit = TRUE
+      )
+    )
   }
 
   # If a custom time step is specified, then redefine units
