@@ -473,6 +473,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' @importFrom purrr map
 #' @importFrom data.table frollmean
 #' @importFrom lubridate as.period
+#' @importFrom checkmate assert_function
 #' @export
 #' @seealso [`epi_slide`]
 #' @examples
@@ -627,7 +628,7 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
       )
     }
 
-    # Time_step can be any of `c("days", "weeks", "months", "quarters", "years")`
+    # `seq` `by` arg can be any of `c("days", "weeks", "months", "quarters", "years")`.
     all_dates <- seq(min(x$time_value), max(x$time_value), by = by)
 
     if (before != 0) {
@@ -637,7 +638,8 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
       pad_late_dates <- End(all_dates) + 1:after
     }
   } else {
-    # A custom time step is specified
+    # A custom time step is specified.
+    assert_function(time_step)
 
     # Calculate the number of `time_step`s required to go between min and max time
     # values. This is roundabout because difftime objects, lubridate::period objects,
