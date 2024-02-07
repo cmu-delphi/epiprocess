@@ -572,6 +572,15 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
     after <- 0L
   }
 
+  if (length(new_col_name) != 1L && length(new_col_name) != length(col_name)) {
+    Abort(
+      "`new_col_name` must be either length 1 or the same length as `col_name`.",
+      class = "epiprocess__epi_slide_mean__new_col_name_inappropriate_length",
+      epiprocess__new_col_name = new_col_name,
+      epiprocess__col_name = col_name
+    )
+  }
+
   pad_early_dates <- c()
   pad_late_dates <- c()
 
