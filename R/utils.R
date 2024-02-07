@@ -1,9 +1,3 @@
-break_str <- function(str, nchar = 79, init = "") {
-  str <- paste(strwrap(str, nchar, initial = init), collapse = "\n")
-  str[1] <- substring(str, nchar(init) + 1)
-  return(str)
-}
-
 # Note: update `wrap_symbolics` and `wrap_varnames` (parameters, parameter
 # defaults, bodies) together.
 
@@ -33,17 +27,13 @@ wrap_symbolics <- function(symbolics,
                            initial = "", common_prefix = "", none_str = "<none>",
                            width = getOption("width", 80L)) {
   if (!all(purrr::map_lgl(symbolics, rlang::is_symbolic))) {
-    Abort("`symbolics` must be a list of symbolic objects")
+    cli_abort("`symbolics` must be a list of symbolic objects")
   }
-  if (!rlang::is_string(initial)) {
-    Abort("`initial` must be a string")
-  }
-  if (!rlang::is_string(common_prefix)) {
-    Abort("`common_prefix` must be a string")
-  }
-  if (!rlang::is_string(none_str)) {
-    Abort("`none_str` must be a string")
-  }
+  assert_character(initial, len = 1L)
+  assert_character(common_prefix, len = 1L)
+  assert_character(none_str, len = 1L)
+  assert_int(width, lower = 1L)
+
   prefix <- strrep(" ", nchar(initial, type = "width"))
   full_initial <- paste0(common_prefix, initial)
   full_prefix <- paste0(common_prefix, prefix)
@@ -85,9 +75,7 @@ wrap_varnames <- function(nms,
                           width = getOption("width", 80L)) {
   # (Repeating parameter names and default args here for better autocomplete.
   # Using `...` instead would require less upkeep, but have worse autocomplete.)
-  if (!rlang::is_character(nms)) {
-    Abort("`nms` must be a character vector")
-  }
+  assert_character(nms)
   wrap_symbolics(rlang::syms(nms), initial = initial, common_prefix = common_prefix, none_str = none_str, width = width)
 }
 
@@ -101,8 +89,6 @@ paste_lines <- function(lines) {
   paste(paste0(lines, "\n"), collapse = "")
 }
 
-Abort <- function(msg, ...) rlang::abort(break_str(msg, init = "Error: "), ...)
-Warn <- function(msg, ...) rlang::warn(break_str(msg, init = "Warning: "), ...)
 
 #' Assert that a sliding computation function takes enough args
 #'
@@ -140,8 +126,12 @@ assert_sufficient_f_args <- function(f, ...) {
     if (n_f_args_before_dots < n_mandatory_f_args) {
       mandatory_f_args_in_f_dots <-
         tail(mandatory_f_args_labels, n_mandatory_f_args - n_f_args_before_dots)
+
       cli::cli_warn(
-        "`f` might not have enough positional arguments before its `...`; in the current `epi[x]_slide` call, the {mandatory_f_args_in_f_dots} will be included in `f`'s `...`; if `f` doesn't expect those arguments, it may produce confusing error messages",
+        "`f` might not have enough positional arguments before its `...`; in
+        the current `epi[x]_slide` call, the {mandatory_f_args_in_f_dots} will
+        be included in `f`'s `...`; if `f` doesn't expect those arguments, it
+        may produce confusing error messages",
         class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots",
         epiprocess__f = f,
         epiprocess__mandatory_f_args_in_f_dots = mandatory_f_args_in_f_dots
@@ -152,13 +142,16 @@ assert_sufficient_f_args <- function(f, ...) {
       # `f` doesn't take enough args.
       if (rlang::dots_n(...) == 0L) {
         # common case; try for friendlier error message
-        Abort(sprintf("`f` must take at least %s arguments", n_mandatory_f_args),
+        cli_abort(sprintf("`f` must take at least %s arguments", n_mandatory_f_args),
           class = "epiprocess__assert_sufficient_f_args__f_needs_min_args",
           epiprocess__f = f
         )
       } else {
         # less common; highlight that they are (accidentally?) using dots forwarding
-        Abort(sprintf("`f` must take at least %s arguments plus the %s arguments forwarded through `epi[x]_slide`'s `...`, or a named argument to `epi[x]_slide` was misspelled", n_mandatory_f_args, rlang::dots_n(...)),
+        cli_abort(
+          "`f` must take at least {n_mandatory_f_args} arguments plus the
+          {rlang::dots_n(...)} arguments forwarded through `epi[x]_slide`'s
+          `...`, or a named argument to `epi[x]_slide` was misspelled",
           class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_plus_forwarded",
           epiprocess__f = f
         )
@@ -181,7 +174,13 @@ assert_sufficient_f_args <- function(f, ...) {
       default_check_mandatory_args_labels[has_default_replaced_by_mandatory]
     args_with_default_replaced_by_mandatory <-
       rlang::syms(default_check_args_names[has_default_replaced_by_mandatory])
-    cli::cli_abort("`epi[x]_slide` would pass the {mandatory_args_replacing_defaults} to `f`'s {args_with_default_replaced_by_mandatory} argument{?s}, which {?has a/have} default value{?s}; we suspect that `f` doesn't expect {?this arg/these args} at all and may produce confusing error messages.  Please add additional arguments to `f` or remove defaults as appropriate.",
+    cli::cli_abort(
+      "`epi[x]_slide` would pass the {mandatory_args_replacing_defaults} to
+      `f`'s {args_with_default_replaced_by_mandatory} argument{?s}, which
+      {?has a/have} default value{?s}; we suspect that `f` doesn't expect
+      {?this arg/these args} at all and may produce confusing error messages.
+      Please add additional arguments to `f` or remove defaults as
+      appropriate.",
       class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults",
       epiprocess__f = f
     )
@@ -315,14 +314,16 @@ as_slide_computation <- function(f, ...) {
 
   if (is_formula(f)) {
     if (length(f) > 2) {
-      Abort(sprintf("%s must be a one-sided formula", arg),
+      cli_abort(sprintf("%s must be a one-sided formula", arg),
         class = "epiprocess__as_slide_computation__formula_is_twosided",
         epiprocess__f = f,
         call = call
       )
     }
     if (rlang::dots_n(...) > 0L) {
-      Abort("No arguments can be passed via `...` when `f` is a formula, or there are unrecognized/misspelled parameter names.",
+      cli_abort(
+        "No arguments can be passed via `...` when `f` is a formula, or there
+        are unrecognized/misspelled parameter names.",
         class = "epiprocess__as_slide_computation__formula_with_dots",
         epiprocess__f = f,
         epiprocess__enquos_dots = enquos(...)
@@ -331,7 +332,7 @@ as_slide_computation <- function(f, ...) {
 
     env <- f_env(f)
     if (!is_environment(env)) {
-      Abort("Formula must carry an environment.",
+      cli_abort("Formula must carry an environment.",
         class = "epiprocess__as_slide_computation__formula_has_no_env",
         epiprocess__f = f,
         epiprocess__f_env = env,
@@ -350,7 +351,8 @@ as_slide_computation <- function(f, ...) {
     return(fn)
   }
 
-  Abort(sprintf("Can't convert an object of class %s to a slide computation", paste(collapse = " ", deparse(class(f)))),
+  cli_abort(
+    sprintf("Can't convert an object of class %s to a slide computation", paste(collapse = " ", deparse(class(f)))),
     class = "epiprocess__as_slide_computation__cant_convert_catchall",
     epiprocess__f = f,
     epiprocess__f_class = class(f),
@@ -546,7 +548,7 @@ list2var <- function(x) {
 #' @noRd
 deprecated_quo_is_present <- function(quo) {
   if (!rlang::is_quosure(quo)) {
-    Abort("`quo` must be a quosure; `enquo` the arg first",
+    cli_abort("`quo` must be a quosure; `enquo` the arg first",
       internal = TRUE
     )
   } else if (rlang::quo_is_missing(quo)) {
@@ -603,23 +605,13 @@ deprecated_quo_is_present <- function(quo) {
 #'
 #' @noRd
 gcd2num <- function(a, b, rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
-  if (!is.numeric(a) || length(a) != 1L) {
-    Abort("`a` must satisfy `is.numeric`, have `length` 1.")
-  }
-  if (!is.numeric(b) || length(b) != 1L) {
-    Abort("`b` must satisfy `is.numeric`, have `length` 1.")
-  }
-  if (!is.numeric(rrtol) || length(rrtol) != 1L || rrtol < 0) {
-    Abort("`rrtol` must satisfy `is.numeric`, have `length` 1, and be non-negative.")
-  }
-  if (!is.numeric(pqlim) || length(pqlim) != 1L || pqlim < 0) {
-    Abort("`pqlim` must satisfy `is.numeric`, have `length` 1, and be non-negative.")
-  }
-  if (!is.numeric(irtol) || length(irtol) != 1L || irtol < 0) {
-    Abort("`irtol` must satisfy `is.numeric`, have `length` 1, and be non-negative.")
-  }
+  assert_numeric(a, len = 1L)
+  assert_numeric(b, len = 1L)
+  assert_numeric(rrtol, len = 1L, lower = 0)
+  assert_numeric(pqlim, len = 1L, lower = 0)
+  assert_numeric(irtol, len = 1L, lower = 0)
   if (is.na(a) || is.na(b) || a == 0 || b == 0 || abs(a / b) >= pqlim || abs(b / a) >= pqlim) {
-    Abort("`a` and/or `b` is either `NA` or exactly zero, or one is so much smaller than the other that it looks like it's supposed to be zero; see `pqlim` setting.")
+    cli_abort("`a` and/or `b` is either `NA` or exactly zero, or one is so much smaller than the other that it looks like it's supposed to be zero; see `pqlim` setting.")
   }
   iatol <- irtol * max(a, b)
   a_curr <- a
@@ -627,7 +619,7 @@ gcd2num <- function(a, b, rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
   while (TRUE) {
     # `b_curr` is the candidate GCD / iterand; check first if it seems too small:
     if (abs(b_curr) <= iatol) {
-      Abort("No GCD found; remaining potential Gads are all too small relative to one/both of the original inputs; see `irtol` setting.")
+      cli_abort("No GCD found; remaining potential Gads are all too small relative to one/both of the original inputs; see `irtol` setting.")
     }
     remainder <- a_curr - round(a_curr / b_curr) * b_curr
     if (abs(remainder / b_curr) <= rrtol) {
@@ -652,10 +644,10 @@ gcd2num <- function(a, b, rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
 #' @noRd
 gcd_num <- function(dividends, ..., rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
   if (!is.numeric(dividends) || length(dividends) == 0L) {
-    Abort("`dividends` must satisfy `is.numeric`, and have `length` > 0")
+    cli_abort("`dividends` must satisfy `is.numeric`, and have `length` > 0")
   }
   if (rlang::dots_n(...) != 0L) {
-    Abort("`...` should be empty; all dividends should go in a single `dividends` vector, and all tolerance&limit settings should be passed by name.")
+    cli_abort("`...` should be empty; all dividends should go in a single `dividends` vector, and all tolerance&limit settings should be passed by name.")
   }
   # We expect a bunch of duplicate `dividends` for some applications.
   # De-duplicate to reduce work. Sort by absolute value to attempt to reduce
@@ -701,7 +693,7 @@ gcd_num <- function(dividends, ..., rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
 guess_period <- function(ref_time_values, ref_time_values_arg = rlang::caller_arg(ref_time_values)) {
   sorted_distinct_ref_time_values <- sort(unique(ref_time_values))
   if (length(sorted_distinct_ref_time_values) < 2L) {
-    Abort(sprintf("Not enough distinct values in `%s` to guess the period.", ref_time_values_arg))
+    cli_abort(sprintf("Not enough distinct values in `%s` to guess the period.", ref_time_values_arg))
   }
   skips <- diff(sorted_distinct_ref_time_values)
   decayed_skips <-

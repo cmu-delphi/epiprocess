@@ -39,7 +39,7 @@ test_that("Grouping, regrouping, and ungrouping archives works as intended", {
 
   # Test `.drop` behavior:
   expect_error(toy_archive %>% group_by(.drop = "bogus"),
-    regexp = "\\.drop.*TRUE or FALSE"
+    regexp = "Must be of type 'logical', not 'character'"
   )
   expect_warning(toy_archive %>% group_by(.drop = FALSE),
     class = "epiprocess__group_by_epi_archive__drop_FALSE_no_factors"

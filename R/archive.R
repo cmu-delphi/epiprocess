@@ -14,7 +14,7 @@
 #' @param version_bound the version bound to validate
 #' @param x a data frame containing a version column with which to check
 #'   compatibility
-#' @param na_ok Boolean; is `NULL` an acceptable "bound"? (If so, `NULL` will
+#' @param na_ok Boolean; is `NA` an acceptable "bound"? (If so, `NA` will
 #'   have a special context-dependent meaning.)
 #' @param version_bound_arg optional string; what to call the version bound in
 #'   error messages
@@ -22,47 +22,31 @@
 #' @section Side effects: raises an error if version bound appears invalid
 #'
 #' @noRd
-validate_version_bound <- function(version_bound, x, na_ok,
+validate_version_bound <- function(version_bound, x, na_ok = FALSE,
                                    version_bound_arg = rlang::caller_arg(version_bound),
                                    x_arg = rlang::caller_arg(version_bound)) {
-  # We might want some (optional?) validation here to detect internal bugs.
-  if (length(version_bound) != 1L) {
-    # Check for length-1-ness fairly early so we don't have to worry as much
-    # about our `if`s receiving non-length-1 "Boolean"s.
-    Abort(
-      sprintf(
-        "`version_bound` must have length 1, but instead was length %d",
-        length(version_bound)
-      ),
-      class = sprintf("epiprocess__%s_is_not_length_1", version_bound_arg)
+  if (is.null(version_bound)) {
+    cli_abort(
+      "{version_bound_arg} cannot be NULL"
     )
-  } else if (is.na(version_bound)) {
-    # Check for NA before class&type, as any-class&type NA should be fine for
-    # our purposes, and some version classes&types might not have their own NA
-    # value to pass in.
-    if (na_ok) {
-      # Looks like a valid version bound; exit without error.
-      return(invisible(NULL))
-    } else {
-      Abort(sprintf(
-        "`%s` must not satisfy `is.na` (NAs are not allowed for this kind of version bound)",
-        version_bound_arg
-      ), class = sprintf("epiprocess__%s_is_na", version_bound_arg))
-    }
-  } else if (!identical(class(version_bound), class(x[["version"]])) ||
-    !identical(typeof(version_bound), typeof(x[["version"]]))) {
-    Abort(sprintf(
-      "`class(%1$s)` must be identical to `class(%2$s)` and `typeof(%1$s)` must be identical to `typeof(%2$s)`",
-      version_bound_arg,
-      # '{x_arg}[["version"]]' except adding parentheses if needed:
-      rlang::expr_deparse(rlang::new_call(
-        quote(`[[`), rlang::pairlist2(rlang::parse_expr(x_arg), "version")
-      ))
-    ), class = sprintf("epiprocess__%s_has_invalid_class_or_typeof", version_bound_arg))
-  } else {
-    # Looks like a valid version bound; exit without error.
+  }
+  if (na_ok && is.na(version_bound)) {
     return(invisible(NULL))
   }
+  if (!test_set_equal(class(version_bound), class(x[["version"]]))) {
+    cli_abort(
+      "{version_bound_arg} must have the same classes as x$version,
+        which is {class(x$version)}",
+    )
+  }
+  if (!test_set_equal(typeof(version_bound), typeof(x[["version"]]))) {
+    cli_abort(
+      "{version_bound_arg} must have the same types as x$version,
+        which is {typeof(x$version)}",
+    )
+  }
+
+  return(invisible(NULL))
 }
 
 #' `max(x$version)`, with error if `x` has 0 rows
@@ -77,13 +61,18 @@ validate_version_bound <- function(version_bound, x, na_ok,
 #' @export
 max_version_with_row_in <- function(x) {
   if (nrow(x) == 0L) {
-    Abort(sprintf("`nrow(x)==0L`, representing a data set history with no row up through the latest observed version, but we don't have a sensible guess at what version that is, or whether any of the empty versions might be clobbered in the future; if we use `x` to form an `epi_archive`, then `clobberable_versions_start` and `versions_end` must be manually specified."),
+    cli_abort(
+      "`nrow(x)==0L`, representing a data set history with no row up through the
+       latest observed version, but we don't have a sensible guess at what version
+       that is, or whether any of the empty versions might be clobbered in the
+       future; if we use `x` to form an `epi_archive`, then
+       `clobberable_versions_start` and `versions_end` must be manually specified.",
       class = "epiprocess__max_version_cannot_be_used"
     )
   } else {
     version_col <- purrr::pluck(x, "version") # error not NULL if doesn't exist
     if (anyNA(version_col)) {
-      Abort("version values cannot be NA",
+      cli_abort("version values cannot be NA",
         class = "epiprocess__version_values_must_not_be_na"
       )
     } else {
@@ -278,25 +267,14 @@ epi_archive <-
       initialize = function(x, geo_type, time_type, other_keys,
                             additional_metadata, compactify,
                             clobberable_versions_start, versions_end) {
-        # Check that we have a data frame
-        if (!is.data.frame(x)) {
-          Abort("`x` must be a data frame.")
-        }
-
-        # Check that we have geo_value, time_value, version columns
-        if (!("geo_value" %in% names(x))) {
-          Abort("`x` must contain a `geo_value` column.")
-        }
-        if (!("time_value" %in% names(x))) {
-          Abort("`x` must contain a `time_value` column.")
-        }
-        if (!("version" %in% names(x))) {
-          Abort("`x` must contain a `version` column.")
-        }
-        if (anyNA(x$version)) {
-          Abort("`x$version` must not contain `NA`s",
-            class = "epiprocess__version_values_must_not_be_na"
+        assert_data_frame(x)
+        if (!test_subset(c("geo_value", "time_value", "version"), names(x))) {
+          cli_abort(
+            "Columns `geo_value`, `time_value`, and `version` must be present in `x`."
           )
+        }
+        if (anyMissing(x$version)) {
+          cli_abort("Column `version` must not contain missing values.")
         }
 
         # If geo type is missing, then try to guess it
@@ -312,24 +290,21 @@ epi_archive <-
         # Finish off with small checks on keys variables and metadata
         if (missing(other_keys)) other_keys <- NULL
         if (missing(additional_metadata)) additional_metadata <- list()
-        if (!all(other_keys %in% names(x))) {
-          Abort("`other_keys` must be contained in the column names of `x`.")
+        if (!test_subset(other_keys, names(x))) {
+          cli_abort("`other_keys` must be contained in the column names of `x`.")
         }
         if (any(c("geo_value", "time_value", "version") %in% other_keys)) {
-          Abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
+          cli_abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
         }
-        if (any(names(additional_metadata) %in%
-          c("geo_type", "time_type"))) {
-          Warn("`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\".")
+        if (any(names(additional_metadata) %in% c("geo_type", "time_type"))) {
+          cli_warn("`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\".")
         }
 
         # Conduct checks and apply defaults for `compactify`
         if (missing(compactify)) {
           compactify <- NULL
-        } else if (!rlang::is_bool(compactify) &&
-          !rlang::is_null(compactify)) {
-          Abort("compactify must be boolean or null.")
         }
+        assert_logical(compactify, len = 1, null.ok = TRUE)
 
         # Apply defaults and conduct checks for
         # `clobberable_versions_start`, `versions_end`:
@@ -342,7 +317,7 @@ epi_archive <-
         validate_version_bound(clobberable_versions_start, x, na_ok = TRUE)
         validate_version_bound(versions_end, x, na_ok = FALSE)
         if (nrow(x) > 0L && versions_end < max(x[["version"]])) {
-          Abort(
+          cli_abort(
             sprintf(
               "`versions_end` was %s, but `x` contained
                              updates for a later version or versions, up through %s",
@@ -352,7 +327,7 @@ epi_archive <-
           )
         }
         if (!is.na(clobberable_versions_start) && clobberable_versions_start > versions_end) {
-          Abort(
+          cli_abort(
             sprintf(
               "`versions_end` was %s, but a `clobberable_versions_start`
                              of %s indicated that there were later observed versions",
@@ -373,7 +348,11 @@ epi_archive <-
 
         maybe_first_duplicate_key_row_index <- anyDuplicated(DT, by = key(DT))
         if (maybe_first_duplicate_key_row_index != 0L) {
-          Abort("`x` must have one row per unique combination of the key variables.  If you have additional key variables other than `geo_value`, `time_value`, and `version`, such as an age group column, please specify them in `other_keys`.  Otherwise, check for duplicate rows and/or conflicting values for the same measurement.",
+          cli_abort("`x` must have one row per unique combination of the key variables. If you
+            have additional key variables other than `geo_value`, `time_value`, and
+            `version`, such as an age group column, please specify them in `other_keys`.
+            Otherwise, check for duplicate rows and/or conflicting values for the same
+            measurement.",
             class = "epiprocess__epi_archive_requires_unique_key"
           )
         }
@@ -410,24 +389,22 @@ epi_archive <-
 
         # Warns about redundant rows
         if (is.null(compactify) && nrow(elim) > 0) {
-          warning_intro <- break_str(paste(
-            "Found rows that appear redundant based on",
-            "last (version of each) observation carried forward;",
-            'these rows have been removed to "compactify" and save space:'
-          ))
-
+          warning_intro <- cli::format_inline(
+            "Found rows that appear redundant based on
+            last (version of each) observation carried forward;
+            these rows have been removed to 'compactify' and save space:",
+            keep_whitespace = FALSE
+          )
           warning_data <- paste(collapse = "\n", capture.output(print(elim, topn = 3L, nrows = 7L)))
-
-          warning_outro <- break_str(paste(
-            "Built-in `epi_archive` functionality should be unaffected,",
-            "but results may change if you work directly with its fields (such as `DT`).",
-            "See `?as_epi_archive` for details.",
-            "To silence this warning but keep compactification,",
-            "you can pass `compactify=TRUE` when constructing the archive."
-          ))
-
+          warning_outro <- cli::format_inline(
+            "Built-in `epi_archive` functionality should be unaffected,
+            but results may change if you work directly with its fields (such as `DT`).
+            See `?as_epi_archive` for details.
+            To silence this warning but keep compactification,
+            you can pass `compactify=TRUE` when constructing the archive.",
+            keep_whitespace = FALSE
+          )
           warning_message <- paste(sep = "\n", warning_intro, warning_data, warning_outro)
-
           rlang::warn(warning_message, class = "epiprocess__compactify_default_removed_rows")
         }
 
@@ -447,8 +424,8 @@ epi_archive <-
       print = function(class = TRUE, methods = TRUE) {
         cli_inform(
           c(
-            ">" = if (class) {"An `epi_archive` object, with metadata:"},
-            "i" = if (length(setdiff(key(self$DT), c('geo_value', 'time_value', 'version'))) > 0) {
+            ">" = if (class) "An `epi_archive` object, with metadata:",
+            "i" = if (length(setdiff(key(self$DT), c("geo_value", "time_value", "version"))) > 0) {
               "Non-standard DT keys: {setdiff(key(self$DT), c('geo_value', 'time_value', 'version'))}"
             },
             "i" = "Min/max time values: {min(self$DT$time_value)} / {max(self$DT$time_value)}",
@@ -457,12 +434,12 @@ epi_archive <-
               "Clobberable versions start: {self$clobberable_versions_start}"
             },
             "i" = "Versions end: {self$versions_end}",
-            "i" = if (methods) {"Public R6 methods: {names(epi_archive$public_methods)}"},
+            "i" = if (methods) "Public R6 methods: {names(epi_archive$public_methods)}",
             "i" = "A preview of the table ({nrow(self$DT)} rows x {ncol(self$DT)} columns):"
           )
         )
 
-        return(invisible(self$DT %>% print))
+        return(invisible(self$DT %>% print()))
       },
       #####
       #' @description Generates a snapshot in `epi_df` format as of a given version.
@@ -493,24 +470,28 @@ epi_archive <-
         if (length(other_keys) == 0) other_keys <- NULL
 
         # Check a few things on max_version
-        if (!identical(class(max_version), class(self$DT$version)) ||
-          !identical(typeof(max_version), typeof(self$DT$version))) {
-          Abort("`max_version` and `DT$version` must have same `class` and `typeof`.")
+        if (!test_set_equal(class(max_version), class(self$DT$version))) {
+          cli_abort(
+            "`max_version` must have the same classes as `self$DT$version`."
+          )
         }
-        if (length(max_version) != 1) {
-          Abort("`max_version` cannot be a vector.")
+        if (!test_set_equal(typeof(max_version), typeof(self$DT$version))) {
+          cli_abort(
+            "`max_version` must have the same types as `self$DT$version`."
+          )
         }
-        if (is.na(max_version)) {
-          Abort("`max_version` must not be NA.")
-        }
+        assert_scalar(max_version, na.ok = FALSE)
         if (max_version > self$versions_end) {
-          Abort("`max_version` must be at most `self$versions_end`.")
+          cli_abort("`max_version` must be at most `self$versions_end`.")
         }
-        if (!rlang::is_bool(all_versions)) {
-          Abort("`all_versions` must be TRUE or FALSE.")
-        }
+        assert_logical(all_versions, len = 1)
         if (!is.na(self$clobberable_versions_start) && max_version >= self$clobberable_versions_start) {
-          Warn('Getting data as of some recent version which could still be overwritten (under routine circumstances) without assigning a new version number (a.k.a. "clobbered").  Thus, the snapshot that we produce here should not be expected to be reproducible later. See `?epi_archive` for more info and `?epix_as_of` on how to muffle.',
+          cli_warn(
+            'Getting data as of some recent version which could still be
+            overwritten (under routine circumstances) without assigning a new
+            version number (a.k.a. "clobbered").  Thus, the snapshot that we
+            produce here should not be expected to be reproducible later. See
+            `?epi_archive` for more info and `?epix_as_of` on how to muffle.',
             class = "epiprocess__snapshot_as_of_clobberable_version"
           )
         }
@@ -526,8 +507,7 @@ epi_archive <-
 
         return(
           # Make sure to use data.table ways of filtering and selecting
-          self$DT[time_value >= min_time_value &
-            version <= max_version, ] %>%
+          self$DT[time_value >= min_time_value & version <= max_version, ] %>%
             unique(
               by = c("geo_value", "time_value", other_keys),
               fromLast = TRUE
@@ -573,7 +553,7 @@ epi_archive <-
               nonkey_cols <- setdiff(names(self$DT), key(self$DT))
               next_version_tag <- next_after(self$versions_end)
               if (next_version_tag > fill_versions_end) {
-                Abort(sprintf(paste(
+                cli_abort(sprintf(paste(
                   "Apparent problem with `next_after` method:",
                   "archive contained observations through version %s",
                   "and the next possible version was supposed to be %s,",
@@ -621,25 +601,21 @@ epi_archive <-
       #' @param x as in [`epix_truncate_versions_after`]
       #' @param max_version as in [`epix_truncate_versions_after`]
       truncate_versions_after = function(max_version) {
-        if (length(max_version) != 1) {
-          Abort("`max_version` cannot be a vector.")
+        if (!test_set_equal(class(max_version), class(self$DT$version))) {
+          cli_abort("`max_version` must have the same classes as `self$DT$version`.")
         }
-        if (is.na(max_version)) {
-          Abort("`max_version` must not be NA.")
+        if (!test_set_equal(typeof(max_version), typeof(self$DT$version))) {
+          cli_abort("`max_version` must have the same types as `self$DT$version`.")
         }
-        if (!identical(class(max_version), class(self$DT$version)) ||
-          !identical(typeof(max_version), typeof(self$DT$version))) {
-          Abort("`max_version` and `DT$version` must have same `class` and `typeof`.")
-        }
+        assert_scalar(max_version, na.ok = FALSE)
         if (max_version > self$versions_end) {
-          Abort("`max_version` must be at most `self$versions_end`.")
+          cli_abort("`max_version` must be at most `self$versions_end`.")
         }
         self$DT <- self$DT[self$DT$version <= max_version, colnames(self$DT), with = FALSE]
         # (^ this filter operation seems to always copy the DT, even if it
         # keeps every entry; we don't guarantee this behavior in
         # documentation, though, so we could change to alias in this case)
-        if (!is.na(self$clobberable_versions_start) &&
-          self$clobberable_versions_start > max_version) {
+        if (!is.na(self$clobberable_versions_start) && self$clobberable_versions_start > max_version) {
           self$clobberable_versions_start <- NA
         }
         self$versions_end <- max_version
@@ -662,7 +638,7 @@ epi_archive <-
         )
 
         if (length(epi_archive$private_fields) != 0L) {
-          Abort("expected no private fields in epi_archive",
+          cli_abort("expected no private fields in epi_archive",
             internal = TRUE
           )
         }

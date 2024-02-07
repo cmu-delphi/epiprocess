@@ -1,12 +1,3 @@
-test_that("break_string works properly", {
-  expect_equal(break_str("A dog is here", 6), "A dog\nis\nhere")
-})
-
-test_that("Abort and Warn work", {
-  expect_error(Abort("abort"))
-  expect_warning(Warn("warn"))
-})
-
 test_that("new summarizing functions work", {
   x <- c(3, 4, 5, 9, NA)
   expect_equal(Min(x), 3)

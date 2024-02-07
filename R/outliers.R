@@ -97,7 +97,7 @@ detect_outlr <- function(x = seq_along(y), y,
 
   # Validate that x contains all distinct values
   if (any(duplicated(x))) {
-    Abort("`x` cannot contain duplicate values. (If being run on a column in an `epi_df`, did you group by relevant key variables?)")
+    cli_abort("`x` cannot contain duplicate values. (If being run on a column in an `epi_df`, did you group by relevant key variables?)")
   }
 
   # Run all outlier detection methods
@@ -108,10 +108,10 @@ detect_outlr <- function(x = seq_along(y), y,
     results <- do.call(method, args = c(list("x" = x, "y" = y), args))
 
     # Validate the output
-    if (!is.data.frame(results) ||
-      !all(c("lower", "upper", "replacement") %in% colnames(results))) {
-      Abort("Outlier detection method must return a data frame with columns `lower`, `upper`, and `replacement`.")
-    }
+    assert_data_frame(results)
+    if (!test_subset(c("lower", "upper", "replacement"), colnames(results))) cli_abort(
+      "Columns `lower`, `upper`, and `replacement` must be present in the output of the outlier detection method."
+    )
 
     # Update column names with model abbreviation
     colnames(results) <- paste(abbr, colnames(results), sep = "_")
