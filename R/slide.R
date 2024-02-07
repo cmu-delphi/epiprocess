@@ -281,23 +281,22 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 
     key_cols_no_time <- kill_time_value(key_cols)
 
-    # `complete` strips epi_df format and metadata. Restore them.
-    x <- bind_rows(
-      x[c(),],
-      # Add in rows for each present key column combination for all dates.
-      #  - This happens within each group if the data is grouped. This
-      #    doesn't change the impact of completion because we apply the
-      #    computation by group as well.
-      #  - If a geo first appears halfway through the dataset, it will be
-      #    completed all the way back to the beginning of the data.
-      tidyr::complete(x,
+    # Add in rows for each present key column combination for all dates.
+    #  - This happens within each group if the data is grouped. This
+    #    doesn't change the impact of completion because we apply the
+    #    computation by group as well.
+    #  - If a geo first appears halfway through the dataset, it will be
+    #    completed all the way back to the beginning of the data.
+    x <- tidyr::complete(x,
         expand(x, nesting(!!key_cols_no_time), data.frame(time_value = all_dates)),
         # `complete` checks that fill types match existing column types.
         fill = fill,
         # Existing missings will be replaced by `fill`, too.
         explicit = TRUE
       )
-    )
+
+    # `complete` strips epi_df format and metadata. Restore them.
+    x <- reclass(x, attributes(x)$metadata)
   }
 
   # If a custom time step is specified, then redefine units
