@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.4</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -123,8 +123,7 @@ dataset differs from the second from the third value included.</p>
 <span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span></span>
 <span></span>
 <span><span class="va">locf_omitted</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="va">dt</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning: Found rows that appear redundant based on last (version of each) observation</span></span>
-<span><span class="co">## carried forward; these rows have been removed to "compactify" and save space:</span></span>
+<pre><code><span><span class="co">## Warning: Found rows that appear redundant based on last (version of each) observation carried forward; these rows have been removed to 'compactify' and save space:</span></span>
 <span><span class="co">## Key: &lt;geo_value, time_value, version&gt;</span></span>
 <span><span class="co">##       geo_value time_value    version percent_cli case_rate_7d_av</span></span>
 <span><span class="co">##          &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;           &lt;num&gt;</span></span>
@@ -135,11 +134,7 @@ dataset differs from the second from the third value included.</p>
 <span><span class="co">## 4793:        tx 2021-10-18 2021-10-22          NA       23.819450</span></span>
 <span><span class="co">## 4794:        tx 2021-10-19 2021-10-22          NA       24.705959</span></span>
 <span><span class="co">## 4795:        tx 2021-10-20 2021-10-22          NA       16.464639</span></span>
-<span><span class="co">## Built-in `epi_archive` functionality should be unaffected, but results may</span></span>
-<span><span class="co">## change if you work directly with its fields (such as `DT`). See</span></span>
-<span><span class="co">## `?as_epi_archive` for details. To silence this warning but keep</span></span>
-<span><span class="co">## compactification, you can pass `compactify=TRUE` when constructing the</span></span>
-<span><span class="co">## archive.</span></span></code></pre>
+<span><span class="co">## Built-in `epi_archive` functionality should be unaffected, but results may change if you work directly with its fields (such as `DT`). See `?as_epi_archive` for details. To silence this warning but keep compactification, you can pass `compactify=TRUE` when constructing the archive.</span></span></code></pre>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">locf_included</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="va">dt</span>, compactify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
