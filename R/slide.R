@@ -733,7 +733,7 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
   if (!is_epi_df(result)) {
     # `all_rows` and `as_list_col` handling strip epi_df format and metadata.
     # Restore them.
-    result <- bind_rows(x[c(),], result)
+    result <- reclass(result, attributes(x)$metadata)
   }
 
   return(result)
