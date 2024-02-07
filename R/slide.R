@@ -255,6 +255,14 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
       )
     }
 
+    key_cols <- key_colnames(x)
+    maybe_first_duplicate_key_row_index <- anyDuplicated(x, by = key_cols)
+    if (maybe_first_duplicate_key_row_index != 0L) {
+      Abort("`x` must have one row per unique combination of the key variables to use window completion. If you have additional key variables other than `geo_value`, `time_value`, and `version`, such as an age group column, please specify them in `other_keys`.  Otherwise, check for duplicate rows and/or conflicting values for the same measurement.",
+        class = "epiprocess__epi_slide__epi_df_requires_unique_key_for_completion"
+      )
+    }
+
     # Make a complete date sequence between min(x$time_value) and max
     # (x$time_value), plus pad values. We need to include pad dates in
     # the complete date sequence so that the first and last n - 1
@@ -268,10 +276,10 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 
     # A helper column marking real observations.
     x$.real <- TRUE
-    # Fill the `.real` column with `FALSE` for added rows.
+    # Fill the `.real` column with `FALSE` for rows added during completion.
     fill$.real <- FALSE
 
-    key_cols <- kill_time_value(key_colnames(x))
+    key_cols_no_time <- kill_time_value(key_cols)
 
     # `complete` strips epi_df format and metadata. Restore them.
     x <- bind_rows(
@@ -283,7 +291,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
       #  - If a geo first appears halfway through the dataset, it will be
       #    completed all the way back to the beginning of the data.
       tidyr::complete(x,
-        expand(x, nesting(!!key_cols), data.frame(time_value = all_dates)),
+        expand(x, nesting(!!key_cols_no_time), data.frame(time_value = all_dates)),
         # `complete` checks that fill types match existing column types.
         fill = fill,
         # Existing missings will be replaced by `fill`, too.
