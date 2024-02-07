@@ -133,6 +133,8 @@
 #' @importFrom lubridate days weeks
 #' @importFrom dplyr bind_rows group_vars filter select
 #' @importFrom rlang .data .env !! enquo enquos sym env missing_arg
+#' @importFrom tidyr complete nesting expand
+#' @importFrom checkmate assert_list
 #' @export
 #' @seealso [`epi_slide_mean`]
 #' @examples
@@ -181,6 +183,17 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
                       autocomplete_windows = TRUE, fill = list()) {
   assert_class(x, "epi_df")
 
+  if (!autocomplete_windows) {
+    Warn(
+      c(
+        "Turning off `autocomplete_windows` makes it very easy to write an
+         erroneous 7-day average or 7-day sum that uses less than the expected
+         `n` observations per window."
+      ),
+      class = "epiprocess__epi_slide__autocomplete_off"
+    )
+  }
+
   if (missing(ref_time_values)) {
     ref_time_values <- unique(x$time_value)
   } else {
@@ -226,6 +239,22 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
   }
 
   if (autocomplete_windows) {
+    assert_list(fill, names = "unique")
+    fill_vars_not_in_x <- !(names(fill) %in% colnames(x))
+    if (any(fill_vars_not_in_x)) {
+      Warn(
+        c(
+          "Some names provided in `fill` do not correspond to column names in
+           the input data. Any columns not specified in `fill` will be
+           completed with missing values (`NA`) by default."
+        ),
+        class = "epiprocess__epi_slide__fill_vars_not_in_x",
+        epiprocess__fill = fill,
+        epiprocess__colnames_x = colnames(x),
+        epiprocess__fill_vars_not_in_x = fill_vars_not_in_x
+      )
+    }
+
     # Make a complete date sequence between min(x$time_value) and max
     # (x$time_value), plus pad values. We need to include pad dates in
     # the complete date sequence so that the first and last n - 1
