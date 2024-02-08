@@ -739,14 +739,23 @@ full_date_seq <- function(x, before, after, time_step) {
       )
     }
 
-    # `seq` `by` arg can be any of `c("days", "weeks", "months", "quarters", "years")`.
+    # `seq.Date` `by` arg can be any of `c("days", "weeks", "months", "quarters", "years")`.
     all_dates <- seq(min(x$time_value), max(x$time_value), by = by)
 
     if (before != 0) {
-      pad_early_dates <- Start(all_dates) - before:1
+      # Use `seq.Date` here to avoid having to map `epi_df` `time_type` to
+      # `time_step` functions.
+      #
+      # The first element `seq.Date` returns is always equal to the provided
+      # `from` date (`from + 0`). The full return value is equivalent to
+      # `from + 0:n`. In our case, we `from + 1:n`, so drop the first
+      # element.
+      #
+      # Adding "-1" to the `by` arg makes `seq.Date` go backwards in time.
+      pad_early_dates <- sort(seq(Start(all_dates), by = paste("-1", by), length.out = before + 1)[-1])
     }
     if (after != 0) {
-      pad_late_dates <- End(all_dates) + 1:after
+      pad_late_dates <- seq(End(all_dates), by = by, length.out = after + 1)[-1]
     }
   } else {
     # A custom time step is specified.

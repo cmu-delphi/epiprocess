@@ -961,7 +961,7 @@ test_that("results for different `before`s and `after`s match between epi_slide 
 set.seed(0)
 rand_vals <- rnorm(n_obs)
 
-generate_special_date_data <- function(date_seq) {
+generate_special_date_data <- function(date_seq, ...) {
   epiprocess::as_epi_df(rbind(tibble(
     geo_value = "al",
     time_value = date_seq,
@@ -977,7 +977,7 @@ generate_special_date_data <- function(date_seq) {
     time_value = date_seq,
     a = length(date_seq):1,
     b = rand_vals * 2
-  )))
+  )), ...)
 }
 
 test_that("results for different time_types match between epi_slide and epi_slide_mean", {
@@ -1188,6 +1188,17 @@ test_that("helper `full_date_seq` returns expected date values", {
     full_date_seq(
       generate_special_date_data(weeks), before = before, after = after,
       time_step = lubridate::weeks
+    ),
+    list(
+      all_dates = as.Date(c("2022-01-01", "2022-01-08", "2022-01-15", "2022-01-22", "2022-01-29", "2022-02-05", "2022-02-12")),
+      pad_early_dates = as.Date(c("2021-12-18", "2021-12-25")),
+      pad_late_dates = as.Date(c("2022-02-19"))
+    )
+  )
+  # Check the middle branch (`if (missing(time_step))`) of `full_date_seq`.
+  expect_identical(
+    full_date_seq(
+      generate_special_date_data(weeks, time_type = "week"), before = before, after = after
     ),
     list(
       all_dates = as.Date(c("2022-01-01", "2022-01-08", "2022-01-15", "2022-01-22", "2022-01-29", "2022-02-05", "2022-02-12")),
