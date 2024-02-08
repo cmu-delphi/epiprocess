@@ -245,8 +245,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
       Warn(
         c(
           "Some names provided in `fill` do not correspond to column names in
-           the input data. Any columns not specified in `fill` will be
-           completed with missing values (`NA`) by default."
+           the input data. These will be ignored."
         ),
         class = "epiprocess__epi_slide__fill_vars_not_in_x",
         epiprocess__fill = fill,
