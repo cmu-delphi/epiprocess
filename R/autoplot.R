@@ -32,12 +32,15 @@
 #'   .color_by = "none",
 #'   .facet_by = "geo_value"
 #' )
-#' autoplot(jhu_csse_daily_subset, case_rate_7d_av, .color_by = "none",
-#'   .base_color = "red", .facet_by = "geo_value")
+#' autoplot(jhu_csse_daily_subset, case_rate_7d_av,
+#'   .color_by = "none",
+#'   .base_color = "red", .facet_by = "geo_value"
+#' )
 #'
 #' # .base_color specification won't have any effect due .color_by default
 #' autoplot(jhu_csse_daily_subset, case_rate_7d_av,
-#'   .base_color = "red", .facet_by = "geo_value")
+#'   .base_color = "red", .facet_by = "geo_value"
+#' )
 autoplot.epi_df <- function(
     object, ...,
     .color_by = c("all_keys", "geo_value", "other_keys", ".response", "all", "none"),
@@ -59,7 +62,8 @@ autoplot.epi_df <- function(
   allowed <- allowed[allowed]
   if (length(allowed) == 0 && rlang::dots_n(...) == 0L) {
     cli::cli_abort("No numeric variables were available to plot automatically.",
-      class = "epiprocess__no_numeric_vars_available")
+      class = "epiprocess__no_numeric_vars_available"
+    )
   }
   vars <- tidyselect::eval_select(rlang::expr(c(...)), object)
   if (rlang::is_empty(vars)) { # find them automatically if unspecified
@@ -76,11 +80,13 @@ autoplot.epi_df <- function(
         class = "epiprocess__all_requested_vars_not_numeric"
       )
     } else if (!all(ok)) {
-      cli::cli_warn(c(
-        "Only the requested variables {.var {names(vars)[ok]}} are numeric.",
-        i = "`autoplot()` cannot display {.var {names(vars)[!ok]}}."
-      ),
-      class = "epiprocess__some_requested_vars_not_numeric")
+      cli::cli_warn(
+        c(
+          "Only the requested variables {.var {names(vars)[ok]}} are numeric.",
+          i = "`autoplot()` cannot display {.var {names(vars)[!ok]}}."
+        ),
+        class = "epiprocess__some_requested_vars_not_numeric"
+      )
       vars <- vars[ok]
     }
   }

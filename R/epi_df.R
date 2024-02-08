@@ -297,9 +297,11 @@ as_epi_df.epi_df <- function(x, ...) {
 #' @export
 as_epi_df.tbl_df <- function(x, geo_type, time_type, as_of,
                              additional_metadata = list(), ...) {
-  if (!test_subset(c("geo_value", "time_value"), names(x))) cli_abort(
-    "Columns `geo_value` and `time_value` must be present in `x`."
-  )
+  if (!test_subset(c("geo_value", "time_value"), names(x))) {
+    cli_abort(
+      "Columns `geo_value` and `time_value` must be present in `x`."
+    )
+  }
 
   new_epi_df(
     x, geo_type, time_type, as_of,
