@@ -16,10 +16,11 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - Minor documentation updates; PR #393
 - Improved `epi_archive` print method. Compactified metadata and shows a snippet
   of the underlying `DT` (#341).
-- Added `autoplot` method for `epi_df` objects, which creates a ggplot2 plot of
+- Added `autoplot` method for `epi_df` objects, which creates a `ggplot2` plot of
   the `epi_df` (#382).
 - Refactored internals to use `cli` for warnings/errors and `checkmate` for
   argument checking (#413).
+- Fix logic to auto-assign `ep_df` `time_type` to `week` (#416).
 
 ## Breaking changes
 
