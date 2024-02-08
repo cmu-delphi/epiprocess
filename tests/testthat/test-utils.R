@@ -89,6 +89,13 @@ test_that("guess_time_type works for different types", {
   expect_equal(guess_time_type(not_ymd3), "custom")
   expect_equal(guess_time_type(not_a_date), "custom")
 })
+3
+test_that("guess_time_type works with gaps", {
+  days_gaps <- as.Date("2022-01-01") + c(0, 1, 3, 4, 8, 8 + 7)
+  weeks_gaps <- as.Date("2022-01-01") + 7 * c(0, 1, 3, 4, 8, 8 + 7)
+  expect_equal(guess_time_type(days_gaps), "day")
+  expect_equal(guess_time_type(weeks_gaps), "week")
+})
 
 test_that("enlist works", {
   my_list <- enlist(x = 1, y = 2, z = 3)

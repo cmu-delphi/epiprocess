@@ -109,9 +109,11 @@ detect_outlr <- function(x = seq_along(y), y,
 
     # Validate the output
     assert_data_frame(results)
-    if (!test_subset(c("lower", "upper", "replacement"), colnames(results))) cli_abort(
-      "Columns `lower`, `upper`, and `replacement` must be present in the output of the outlier detection method."
-    )
+    if (!test_subset(c("lower", "upper", "replacement"), colnames(results))) {
+      cli_abort(
+        "Columns `lower`, `upper`, and `replacement` must be present in the output of the outlier detection method."
+      )
+    }
 
     # Update column names with model abbreviation
     colnames(results) <- paste(abbr, colnames(results), sep = "_")

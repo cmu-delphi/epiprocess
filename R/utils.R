@@ -444,7 +444,13 @@ guess_time_type <- function(time_value) {
     return("day-time")
   } # Else, if a Date class, then use "week" or "day" depending on gaps
   else if (inherits(time_value, "Date")) {
-    return(ifelse(all(diff(sort(time_value)) == 7), "week", "day"))
+    # Convert to numeric so we can use the modulo operator.
+    unique_time_gaps <- as.numeric(diff(sort(unique(time_value))))
+    # We need to check the modulus of `unique_time_gaps` in case there are
+    # missing dates. Gaps in a weekly date sequence will cause some diffs to
+    # be larger than 7 days. If we just check if `diffs == 7`, it will fail
+    # unless the weekly date sequence is already complete.
+    return(ifelse(all(unique_time_gaps %% 7 == 0), "week", "day"))
   }
 
   # Else, check whether it's one of the tsibble classes
