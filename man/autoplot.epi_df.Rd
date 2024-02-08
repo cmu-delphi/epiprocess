@@ -56,10 +56,13 @@ autoplot(jhu_csse_daily_subset, case_rate_7d_av,
   .color_by = "none",
   .facet_by = "geo_value"
 )
-autoplot(jhu_csse_daily_subset, case_rate_7d_av, .color_by = "none",
-  .base_color = "red", .facet_by = "geo_value")
+autoplot(jhu_csse_daily_subset, case_rate_7d_av,
+  .color_by = "none",
+  .base_color = "red", .facet_by = "geo_value"
+)
 
 # .base_color specification won't have any effect due .color_by default
 autoplot(jhu_csse_daily_subset, case_rate_7d_av,
-  .base_color = "red", .facet_by = "geo_value")
+  .base_color = "red", .facet_by = "geo_value"
+)
 }

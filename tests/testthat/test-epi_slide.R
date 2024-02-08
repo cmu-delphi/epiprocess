@@ -58,11 +58,11 @@ test_that("`before` and `after` are both vectors of length 1", {
 
   expect_error(
     epi_slide_mean(grouped, col_name = "value", before = c(0, 1), after = 0, ref_time_values = d + 3),
-    "`before`.*length-1"
+    "Assertion on 'before' failed: Must have length 1"
   )
   expect_error(
     epi_slide_mean(grouped, col_name = "value", before = 1, after = c(0, 1), ref_time_values = d + 3),
-    "`after`.*length-1"
+    "Assertion on 'after' failed: Must have length 1"
   )
 })
 
@@ -140,11 +140,11 @@ test_that("Both `before` and `after` must be non-NA, non-negative, integer-compa
 
   expect_error(
     epi_slide_mean(grouped, col_name = "value", before = -1L, ref_time_values = d + 2L),
-    "`before`.*non-negative"
+    "Assertion on 'before' failed: Element 1 is not >= 0"
   )
   expect_error(
     epi_slide_mean(grouped, col_name = "value", before = 2L, after = -1L, ref_time_values = d + 2L),
-    "`after`.*non-negative"
+    "Assertion on 'after' failed: Element 1 is not >= 0"
   )
   expect_error(epi_slide_mean(grouped, col_name = "value", before = "a", ref_time_values = d + 2L),
     regexp = "before", class = "vctrs_error_incompatible_type"
@@ -160,11 +160,11 @@ test_that("Both `before` and `after` must be non-NA, non-negative, integer-compa
   )
   expect_error(
     epi_slide_mean(grouped, col_name = "value", before = NA, after = 1L, ref_time_values = d + 2L),
-    "`before`.*non-NA"
+    "Assertion on 'before' failed: May not be NA"
   )
   expect_error(
     epi_slide_mean(grouped, col_name = "value", before = 1L, after = NA, ref_time_values = d + 2L),
-    "`after`.*non-NA"
+    "Assertion on 'after' failed: May not be NA"
   )
 
   # Non-integer-class but integer-compatible values are allowed:
@@ -187,11 +187,11 @@ test_that("`ref_time_values` + `before` + `after` that result in no slide data, 
 
   expect_error(
     epi_slide_mean(grouped, col_name = "value", before = 2L, ref_time_values = d),
-    "All `ref_time_values` must appear in `x\\$time_value`."
+    "`ref_time_values` must be a unique subset of the time values in `x`."
   ) # before the first, no data in the slide windows
   expect_error(
     epi_slide_mean(grouped, col_name = "value", before = 2L, ref_time_values = d + 207L),
-    "All `ref_time_values` must appear in `x\\$time_value`."
+    "`ref_time_values` must be a unique subset of the time values in `x`."
   ) # beyond the last, no data in window
 })
 
@@ -207,11 +207,11 @@ test_that("`ref_time_values` + `before` + `after` that have some slide data, but
 
   expect_error(
     epi_slide_mean(grouped, "value", before = 0L, after = 2L, ref_time_values = d),
-    "All `ref_time_values` must appear in `x\\$time_value`."
+    "`ref_time_values` must be a unique subset of the time values in `x`."
   ) # before the first, but we'd expect there to be data in the window
   expect_error(
     epi_slide_mean(grouped, "value", before = 2L, ref_time_values = d + 201L),
-    "All `ref_time_values` must appear in `x\\$time_value`."
+    "`ref_time_values` must be a unique subset of the time values in `x`."
   ) # beyond the last, but still with data in window
 })
 
@@ -958,33 +958,33 @@ test_that("results for different `before`s and `after`s match between epi_slide 
   test_time_type_mean(days, rand_vals, before = 0, after = 1)
 })
 
-set.seed(0)
-rand_vals <- rnorm(n_obs)
-
-generate_special_date_data <- function(date_seq, ...) {
-  epiprocess::as_epi_df(rbind(tibble(
-    geo_value = "al",
-    time_value = date_seq,
-    a = 1:length(date_seq),
-    b = rand_vals
-  ), tibble(
-    geo_value = "ca",
-    time_value = date_seq,
-    a = length(date_seq):1,
-    b = rand_vals + 10
-  ), tibble(
-    geo_value = "fl",
-    time_value = date_seq,
-    a = length(date_seq):1,
-    b = rand_vals * 2
-  )), ...)
-}
-
 test_that("results for different time_types match between epi_slide and epi_slide_mean", {
   n <- 6L # Max date index
   m <- 1L # Number of missing dates
   n_obs <- n + 1L - m # Number of obs created
   k <- c(0L:(n-(m + 1L)), n) # Date indices
+
+  set.seed(0)
+  rand_vals <- rnorm(n_obs)
+
+  generate_special_date_data <- function(date_seq, ...) {
+    epiprocess::as_epi_df(rbind(tibble(
+      geo_value = "al",
+      time_value = date_seq,
+      a = 1:length(date_seq),
+      b = rand_vals
+    ), tibble(
+      geo_value = "ca",
+      time_value = date_seq,
+      a = length(date_seq):1,
+      b = rand_vals + 10
+    ), tibble(
+      geo_value = "fl",
+      time_value = date_seq,
+      a = length(date_seq):1,
+      b = rand_vals * 2
+    )), ...)
+  }
 
   # Basic time type
   days <- as.Date("2022-01-01") + k
@@ -1094,6 +1094,28 @@ test_that("helper `full_date_seq` returns expected date values", {
   m <- 1L # Number of missing dates
   n_obs <- n + 1L - m # Number of obs created
   k <- c(0L:(n-(m + 1L)), n) # Date indices
+
+  set.seed(0)
+  rand_vals <- rnorm(n_obs)
+
+  generate_special_date_data <- function(date_seq, ...) {
+    epiprocess::as_epi_df(rbind(tibble(
+      geo_value = "al",
+      time_value = date_seq,
+      a = 1:length(date_seq),
+      b = rand_vals
+    ), tibble(
+      geo_value = "ca",
+      time_value = date_seq,
+      a = length(date_seq):1,
+      b = rand_vals + 10
+    ), tibble(
+      geo_value = "fl",
+      time_value = date_seq,
+      a = length(date_seq):1,
+      b = rand_vals * 2
+    )), ...)
+  }
 
   # Basic time type
   days <- as.Date("2022-01-01") + k
