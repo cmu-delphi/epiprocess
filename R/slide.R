@@ -807,7 +807,7 @@ full_date_seq <- function(x, before, after, time_step) {
     if (is.na(by)) {
       Abort(
         c(
-          "`frollmean` requires a full window to compute a result, but
+          "Current settings require a full window to compute a `slide` result, but
           `time_type` associated with the epi_df was not mappable to period
           type valid for creating a date sequence.",
           "i" = c("The input data's `time_type` was probably `custom` or `day-time`.
