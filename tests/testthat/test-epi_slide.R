@@ -49,11 +49,11 @@ basic_result_from_size1_mean <- tibble::tribble(
 test_that("`before` and `after` are both vectors of length 1", {
   expect_error(
     epi_slide(grouped, f, before = c(0, 1), after = 0, ref_time_values = d + 3),
-    "`before`.*length-1"
+    "Assertion on 'before' failed: Must have length 1"
   )
   expect_error(
     epi_slide(grouped, f, before = 1, after = c(0, 1), ref_time_values = d + 3),
-    "`after`.*length-1"
+    "Assertion on 'after' failed: Must have length 1"
   )
 
   expect_error(
@@ -111,11 +111,11 @@ test_that("Test errors/warnings for discouraged features", {
 test_that("Both `before` and `after` must be non-NA, non-negative, integer-compatible", {
   expect_error(
     epi_slide(grouped, f, before = -1L, ref_time_values = d + 2L),
-    "`before`.*non-negative"
+    "Assertion on 'before' failed: Element 1 is not >= 0"
   )
   expect_error(
     epi_slide(grouped, f, before = 2L, after = -1L, ref_time_values = d + 2L),
-    "`after`.*non-negative"
+    "Assertion on 'after' failed: Element 1 is not >= 0"
   )
   expect_error(epi_slide(grouped, f, before = "a", ref_time_values = d + 2L),
     regexp = "before", class = "vctrs_error_incompatible_type"
@@ -131,11 +131,11 @@ test_that("Both `before` and `after` must be non-NA, non-negative, integer-compa
   )
   expect_error(
     epi_slide(grouped, f, before = NA, after = 1L, ref_time_values = d + 2L),
-    "`before`.*non-NA"
+    "Assertion on 'before' failed: May not be NA"
   )
   expect_error(
     epi_slide(grouped, f, before = 1L, after = NA, ref_time_values = d + 2L),
-    "`after`.*non-NA"
+    "Assertion on 'after' failed: May not be NA"
   )
 
   expect_error(
@@ -178,11 +178,11 @@ test_that("Both `before` and `after` must be non-NA, non-negative, integer-compa
 test_that("`ref_time_values` + `before` + `after` that result in no slide data, generate the error", {
   expect_error(
     epi_slide(grouped, f, before = 2L, ref_time_values = d),
-    "All `ref_time_values` must appear in `x\\$time_value`."
+    "`ref_time_values` must be a unique subset of the time values in `x`."
   ) # before the first, no data in the slide windows
   expect_error(
     epi_slide(grouped, f, before = 2L, ref_time_values = d + 207L),
-    "All `ref_time_values` must appear in `x\\$time_value`."
+    "`ref_time_values` must be a unique subset of the time values in `x`."
   ) # beyond the last, no data in window
 
   expect_error(
@@ -198,11 +198,11 @@ test_that("`ref_time_values` + `before` + `after` that result in no slide data, 
 test_that("`ref_time_values` + `before` + `after` that have some slide data, but generate the error due to ref. time being out of time range (would also happen if they were in between `time_value`s)", {
   expect_error(
     epi_slide(grouped, f, before = 0L, after = 2L, ref_time_values = d),
-    "All `ref_time_values` must appear in `x\\$time_value`."
+    "`ref_time_values` must be a unique subset of the time values in `x`."
   ) # before the first, but we'd expect there to be data in the window
   expect_error(
     epi_slide(grouped, f, before = 2L, ref_time_values = d + 201L),
-    "All `ref_time_values` must appear in `x\\$time_value`."
+    "`ref_time_values` must be a unique subset of the time values in `x`."
   ) # beyond the last, but still with data in window
 
   expect_error(

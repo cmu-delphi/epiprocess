@@ -169,47 +169,37 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
                       time_step,
                       new_col_name = "slide_value", as_list_col = FALSE,
                       names_sep = "_", all_rows = FALSE) {
-  # Check we have an `epi_df` object
-  if (!inherits(x, "epi_df")) Abort("`x` must be of class `epi_df`.")
+  assert_class(x, "epi_df")
 
   if (missing(ref_time_values)) {
     ref_time_values <- unique(x$time_value)
-  }
-
-  # Some of these `ref_time_values` checks and processing steps also apply to
-  # the `ref_time_values` default; for simplicity, just apply all the steps
-  # regardless of whether we are working with a default or user-provided
-  # `ref_time_values`:
-  if (length(ref_time_values) == 0L) {
-    Abort("`ref_time_values` must have at least one element.")
-  } else if (any(is.na(ref_time_values))) {
-    Abort("`ref_time_values` must not include `NA`.")
-  } else if (anyDuplicated(ref_time_values) != 0L) {
-    Abort("`ref_time_values` must not contain any duplicates; use `unique` if appropriate.")
-  } else if (!all(ref_time_values %in% unique(x$time_value))) {
-    Abort("All `ref_time_values` must appear in `x$time_value`.")
   } else {
-    ref_time_values <- sort(ref_time_values)
+    assert_numeric(ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
+    if (!test_subset(ref_time_values, unique(x$time_value))) {
+      cli_abort(
+        "`ref_time_values` must be a unique subset of the time values in `x`."
+      )
+    }
+    if (anyDuplicated(ref_time_values) != 0L) {
+      cli_abort("`ref_time_values` must not contain any duplicates; use `unique` if appropriate.")
+    }
   }
+  ref_time_values <- sort(ref_time_values)
 
   # Validate and pre-process `before`, `after`:
   if (!missing(before)) {
     before <- vctrs::vec_cast(before, integer())
-    if (length(before) != 1L || is.na(before) || before < 0L) {
-      Abort("`before` must be length-1, non-NA, non-negative")
-    }
+    assert_int(before, lower = 0, null.ok = FALSE, na.ok = FALSE)
   }
   if (!missing(after)) {
     after <- vctrs::vec_cast(after, integer())
-    if (length(after) != 1L || is.na(after) || after < 0L) {
-      Abort("`after` must be length-1, non-NA, non-negative")
-    }
+    assert_int(after, lower = 0, null.ok = FALSE, na.ok = FALSE)
   }
   if (missing(before)) {
     if (missing(after)) {
-      Abort("Either or both of `before`, `after` must be provided.")
+      cli_abort("Either or both of `before`, `after` must be provided.")
     } else if (after == 0L) {
-      Warn("`before` missing, `after==0`; maybe this was intended to be some
+      cli_warn("`before` missing, `after==0`; maybe this was intended to be some
             non-zero-width trailing window, but since `before` appears to be
             missing, it's interpreted as a zero-width window (`before=0,
             after=0`).")
@@ -217,7 +207,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     before <- 0L
   } else if (missing(after)) {
     if (before == 0L) {
-      Warn("`before==0`, `after` missing; maybe this was intended to be some
+      cli_warn("`before==0`, `after` missing; maybe this was intended to be some
             non-zero-width leading window, but since `after` appears to be
             missing, it's interpreted as a zero-width window (`before=0,
             after=0`).")
@@ -284,7 +274,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 
     if (!all(purrr::map_lgl(slide_values_list, is.atomic)) &&
       !all(purrr::map_lgl(slide_values_list, is.data.frame))) {
-      Abort("The slide computations must return always atomic vectors or data frames (and not a mix of these two structures).")
+      cli_abort("The slide computations must return always atomic vectors or data frames (and not a mix of these two structures).")
     }
 
     # Unlist if appropriate:
@@ -310,7 +300,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
         ))
       }
       if (vctrs::vec_size(slide_values) != num_ref_rows) {
-        Abort("The slide computations must either (a) output a single element/row each, or (b) one element/row per appearance of the reference time value in the local window.")
+        cli_abort("The slide computations must either (a) output a single element/row each, or (b) one element/row per appearance of the reference time value in the local window.")
       }
     }
 
@@ -331,10 +321,10 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
   if (missing(f)) {
     quos <- enquos(...)
     if (length(quos) == 0) {
-      Abort("If `f` is missing then a computation must be specified via `...`.")
+      cli_abort("If `f` is missing then a computation must be specified via `...`.")
     }
     if (length(quos) > 1) {
-      Abort("If `f` is missing then only a single computation can be specified via `...`.")
+      cli_abort("If `f` is missing then only a single computation can be specified via `...`.")
     }
 
     f <- quos[[1]]

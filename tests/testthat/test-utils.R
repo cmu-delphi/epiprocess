@@ -1,12 +1,3 @@
-test_that("break_string works properly", {
-  expect_equal(break_str("A dog is here", 6), "A dog\nis\nhere")
-})
-
-test_that("Abort and Warn work", {
-  expect_error(Abort("abort"))
-  expect_warning(Warn("warn"))
-})
-
 test_that("new summarizing functions work", {
   x <- c(3, 4, 5, 9, NA)
   expect_equal(Min(x), 3)
@@ -97,6 +88,13 @@ test_that("guess_time_type works for different types", {
   expect_equal(guess_time_type(not_ymd2), "custom")
   expect_equal(guess_time_type(not_ymd3), "custom")
   expect_equal(guess_time_type(not_a_date), "custom")
+})
+3
+test_that("guess_time_type works with gaps", {
+  days_gaps <- as.Date("2022-01-01") + c(0, 1, 3, 4, 8, 8 + 7)
+  weeks_gaps <- as.Date("2022-01-01") + 7 * c(0, 1, 3, 4, 8, 8 + 7)
+  expect_equal(guess_time_type(days_gaps), "day")
+  expect_equal(guess_time_type(weeks_gaps), "week")
 })
 
 test_that("enlist works", {

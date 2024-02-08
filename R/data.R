@@ -144,7 +144,7 @@ delayed_assign_with_unregister_awareness <- function(x, value,
         # all.)
         rlang::eval_bare(rlang::quo_get_expr(value_quosure), rlang::quo_get_env(value_quosure)),
         error = function(err) {
-          Abort(
+          cli_abort(
             paste(
               "An error was raised while attempting to evaluate a promise",
               "(prepared with `delayed_assign_with_unregister_awareness`)",

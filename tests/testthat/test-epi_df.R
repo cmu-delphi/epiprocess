@@ -42,7 +42,7 @@ test_that("as_epi_df errors when additional_metadata is not a list", {
 
   expect_error(
     as_epi_df(ex_input, additional_metadata = c(other_keys = "state", "pol")),
-    "`additional_metadata` must be a list type."
+    "Must be of type 'list', not 'character'."
   )
 })
 

@@ -129,10 +129,10 @@ dplyr_reconstruct.epi_df <- function(data, template) {
 
   cn <- names(res)
 
-  # Duplicate columns, Abort
+  # Duplicate columns, cli_abort
   dup_col_names <- cn[duplicated(cn)]
   if (length(dup_col_names) != 0) {
-    Abort(paste0(
+    cli_abort(paste0(
       "Column name(s) ",
       paste(unique(dup_col_names),
         collapse = ", "

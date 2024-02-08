@@ -187,11 +187,11 @@ test_that("epix_slide `before` validation works", {
   )
   expect_error(
     xx$slide(f = ~ sum(.x$binary), before = NA),
-    "`before`.*NA"
+    "Assertion on 'before' failed: May not be NA"
   )
   expect_error(
     xx$slide(f = ~ sum(.x$binary), before = -1),
-    "`before`.*negative"
+    "Assertion on 'before' failed: Element 1 is not >= 0"
   )
   expect_error(xx$slide(f = ~ sum(.x$binary), before = 1.5),
     regexp = "before",

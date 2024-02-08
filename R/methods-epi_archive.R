@@ -77,7 +77,7 @@
 #'
 #' @export
 epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FALSE) {
-  if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
+  assert_class(x, "epi_archive")
   return(x$as_of(max_version, min_time_value, all_versions = all_versions))
 }
 
@@ -113,7 +113,7 @@ epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FAL
 #' @return An `epi_archive`
 epix_fill_through_version <- function(x, fill_versions_end,
                                       how = c("na", "locf")) {
-  if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
+  assert_class(x, "epi_archive")
   # Enclosing parentheses drop the invisibility flag. See description above of
   # potential mutation and aliasing behavior.
   (x$clone()$fill_through_version(fill_versions_end, how = how))
@@ -179,31 +179,25 @@ epix_fill_through_version <- function(x, fill_versions_end,
 epix_merge <- function(x, y,
                        sync = c("forbid", "na", "locf", "truncate"),
                        compactify = TRUE) {
-  if (!inherits(x, "epi_archive")) {
-    Abort("`x` must be of class `epi_archive`.")
-  }
-
-  if (!inherits(y, "epi_archive")) {
-    Abort("`y` must be of class `epi_archive`.")
-  }
-
+  assert_class(x, "epi_archive")
+  assert_class(y, "epi_archive")
   sync <- rlang::arg_match(sync)
 
   if (!identical(x$geo_type, y$geo_type)) {
-    Abort("`x` and `y` must have the same `$geo_type`")
+    cli_abort("`x` and `y` must have the same `$geo_type`")
   }
 
   if (!identical(x$time_type, y$time_type)) {
-    Abort("`x` and `y` must have the same `$time_type`")
+    cli_abort("`x` and `y` must have the same `$time_type`")
   }
 
   if (length(x$additional_metadata) != 0L) {
-    Warn("x$additional_metadata won't appear in merge result",
+    cli_warn("x$additional_metadata won't appear in merge result",
       class = "epiprocess__epix_merge_ignores_additional_metadata"
     )
   }
   if (length(y$additional_metadata) != 0L) {
-    Warn("y$additional_metadata won't appear in merge result",
+    cli_warn("y$additional_metadata won't appear in merge result",
       class = "epiprocess__epix_merge_ignores_additional_metadata"
     )
   }
@@ -222,7 +216,7 @@ epix_merge <- function(x, y,
   # partially-mutated `x` on failure.
   if (sync == "forbid") {
     if (!identical(x$versions_end, y$versions_end)) {
-      Abort(paste(
+      cli_abort(paste(
         "`x` and `y` were not equally up to date version-wise:",
         "`x$versions_end` was not identical to `y$versions_end`;",
         "either ensure that `x` and `y` are equally up to date before merging,",
@@ -242,7 +236,7 @@ epix_merge <- function(x, y,
     x_DT <- x$DT[x[["DT"]][["version"]] <= new_versions_end, names(x$DT), with = FALSE]
     y_DT <- y$DT[y[["DT"]][["version"]] <= new_versions_end, names(y$DT), with = FALSE]
   } else {
-    Abort("unimplemented")
+    cli_abort("unimplemented")
   }
 
   # key(x_DT) should be the same as key(x$DT) and key(y_DT) should be the same
@@ -257,7 +251,7 @@ epix_merge <- function(x, y,
   x_DT_key_as_expected <- identical(key(x$DT), key(x_DT))
   y_DT_key_as_expected <- identical(key(y$DT), key(y_DT))
   if (!x_DT_key_as_expected || !y_DT_key_as_expected) {
-    Warn("
+    cli_warn("
       `epiprocess` internal warning (please report): pre-processing for
       epix_merge unexpectedly resulted in an intermediate data table (or
       tables) with a different key than the corresponding input archive.
@@ -272,7 +266,7 @@ epix_merge <- function(x, y,
   # sensible default treatment of count-type and rate-type value columns would
   # differ.
   if (!identical(sort(key(x_DT)), sort(key(y_DT)))) {
-    Abort("
+    cli_abort("
             The archives must have the same set of key column names; if the
             key columns represent the same things, just with different
             names, please retry after manually renaming to match; if they
@@ -289,14 +283,14 @@ epix_merge <- function(x, y,
   #                 version carried forward via rolling joins
   by <- key(x_DT) # = some perm of key(y_DT)
   if (!all(c("geo_value", "time_value", "version") %in% key(x_DT))) {
-    Abort('Invalid `by`; `by` is currently set to the common `key` of
+    cli_abort('Invalid `by`; `by` is currently set to the common `key` of
            the two archives, and is expected to contain
            "geo_value", "time_value", and "version".',
       class = "epiprocess__epi_archive_must_have_required_key_cols"
     )
   }
   if (length(by) < 1L || utils::tail(by, 1L) != "version") {
-    Abort('Invalid `by`; `by` is currently set to the common `key` of
+    cli_abort('Invalid `by`; `by` is currently set to the common `key` of
            the two archives, and is expected to have a "version" as
            the last key col.',
       class = "epiprocess__epi_archive_must_have_version_at_end_of_key"
@@ -305,7 +299,7 @@ epix_merge <- function(x, y,
   x_nonby_colnames <- setdiff(names(x_DT), by)
   y_nonby_colnames <- setdiff(names(y_DT), by)
   if (length(intersect(x_nonby_colnames, y_nonby_colnames)) != 0L) {
-    Abort("
+    cli_abort("
             `x` and `y` DTs have overlapping non-by column names;
             this is currently not supported; please manually fix up first:
             any overlapping columns that can are key-like should be
@@ -314,7 +308,7 @@ epix_merge <- function(x, y,
   }
   x_by_vals <- x_DT[, by, with = FALSE]
   if (anyDuplicated(x_by_vals) != 0L) {
-    Abort("
+    cli_abort("
             The `by` columns must uniquely determine rows of `x$DT`;
             the `by` is currently set to the common `key` of the two
             archives, so this can be resolved by adding key-like columns
@@ -323,7 +317,7 @@ epix_merge <- function(x, y,
   }
   y_by_vals <- y_DT[, by, with = FALSE]
   if (anyDuplicated(y_by_vals) != 0L) {
-    Abort("
+    cli_abort("
             The `by` columns must uniquely determine rows of `y$DT`;
             the `by` is currently set to the common `key` of the two
             archives, so this can be resolved by adding key-like columns
@@ -409,11 +403,7 @@ epix_merge <- function(x, y,
 #'
 #' @noRd
 new_col_modify_recorder_df <- function(parent_df) {
-  if (!inherits(parent_df, "data.frame")) {
-    Abort('`parent_df` must inherit class `"data.frame"`',
-      internal = TRUE
-    )
-  }
+  assert_class(parent_df, "data.frame")
   `class<-`(parent_df, c("col_modify_recorder_df", class(parent_df)))
 }
 
@@ -425,11 +415,7 @@ new_col_modify_recorder_df <- function(parent_df) {
 #'
 #' @noRd
 destructure_col_modify_recorder_df <- function(col_modify_recorder_df) {
-  if (!inherits(col_modify_recorder_df, "col_modify_recorder_df")) {
-    Abort('`col_modify_recorder_df` must inherit class `"col_modify_recorder_df"`',
-      internal = TRUE
-    )
-  }
+  assert_class(col_modify_recorder_df, "col_modify_recorder_df")
   list(
     unchanged_parent_df = col_modify_recorder_df %>%
       `attr<-`("epiprocess::col_modify_recorder_df::cols", NULL) %>%
@@ -451,7 +437,7 @@ destructure_col_modify_recorder_df <- function(col_modify_recorder_df) {
 #' @noRd
 dplyr_col_modify.col_modify_recorder_df <- function(data, cols) {
   if (!is.null(attr(data, "epiprocess::col_modify_recorder_df::cols", exact = TRUE))) {
-    Abort("`col_modify_recorder_df` can only record `cols` once",
+    cli_abort("`col_modify_recorder_df` can only record `cols` once",
       internal = TRUE
     )
   }
@@ -676,19 +662,17 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 group_by.epi_archive <- function(.data, ..., .add = FALSE, .drop = dplyr::group_by_drop_default(.data)) {
   # `add` makes no difference; this is an ungrouped `epi_archive`.
   detailed_mutate <- epix_detailed_restricted_mutate(.data, ...)
-  if (!rlang::is_bool(.drop)) {
-    Abort("`.drop` must be TRUE or FALSE")
-  }
+  assert_logical(.drop)
   if (!.drop) {
     grouping_cols <- as.list(detailed_mutate[["archive"]][["DT"]])[detailed_mutate[["request_names"]]]
     grouping_col_is_factor <- purrr::map_lgl(grouping_cols, is.factor)
     # ^ Use `as.list` to try to avoid any possibility of a deep copy.
     if (!any(grouping_col_is_factor)) {
-      Warn("`.drop=FALSE` but there are no factor grouping columns; did you mean to convert one of the columns to a factor beforehand?",
+      cli_warn("`.drop=FALSE` but there are no factor grouping columns; did you mean to convert one of the columns to a factor beforehand?",
         class = "epiprocess__group_by_epi_archive__drop_FALSE_no_factors"
       )
     } else if (any(diff(grouping_col_is_factor) == -1L)) {
-      Warn("`.drop=FALSE` but there are one or more non-factor grouping columns listed after a factor grouping column; this may produce groups with `NA`s for these columns; see https://github.com/tidyverse/dplyr/issues/5369#issuecomment-683762553; depending on how you want completion to work, you might instead want to convert all grouping columns to factors beforehand, specify the non-factor grouping columns first, or use `.drop=TRUE` and add a call to `tidyr::complete`.",
+      cli_warn("`.drop=FALSE` but there are one or more non-factor grouping columns listed after a factor grouping column; this may produce groups with `NA`s for these columns; see https://github.com/tidyverse/dplyr/issues/5369#issuecomment-683762553; depending on how you want completion to work, you might instead want to convert all grouping columns to factors beforehand, specify the non-factor grouping columns first, or use `.drop=TRUE` and add a call to `tidyr::complete`.",
         class = "epiprocess__group_by_epi_archive__drop_FALSE_nonfactor_after_factor"
       )
     }
@@ -956,7 +940,7 @@ epix_slide <- function(x, f, ..., before, ref_time_values,
                        as_list_col = FALSE, names_sep = "_",
                        all_versions = FALSE) {
   if (!is_epi_archive(x, grouped_okay = TRUE)) {
-    Abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
+    cli_abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
   }
   return(x$slide(f, ...,
     before = before,

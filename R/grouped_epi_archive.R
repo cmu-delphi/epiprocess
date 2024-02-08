@@ -53,41 +53,24 @@ grouped_epi_archive <-
     public = list(
       initialize = function(ungrouped, vars, drop) {
         if (inherits(ungrouped, "grouped_epi_archive")) {
-          Abort("`ungrouped` must not already be grouped (neither automatic regrouping nor nested grouping is supported).  Either use `group_by` with `.add=TRUE`, or `ungroup` first.",
+          cli_abort("`ungrouped` must not already be grouped (neither automatic regrouping nor nested grouping is supported).  Either use `group_by` with `.add=TRUE`, or `ungroup` first.",
             class = "epiprocess__grouped_epi_archive__ungrouped_arg_is_already_grouped",
             epiprocess__ungrouped_class = class(ungrouped),
             epiprocess__ungrouped_groups = groups(ungrouped)
           )
         }
-        if (!inherits(ungrouped, "epi_archive")) {
-          Abort("`ungrouped` must be an epi_archive",
-            class = "epiprocess__grouped_epi_archive__ungrouped_arg_is_not_epi_archive",
-            epiprocess__ungrouped_class = class(ungrouped)
-          )
-        }
-        if (!is.character(vars)) {
-          Abort("`vars` must be a character vector (any tidyselection should have already occurred in a helper method).",
-            class = "epiprocess__grouped_epi_archive__vars_is_not_chr",
-            epiprocess__vars_class = class(vars),
-            epiprocess__vars_type = typeof(vars)
-          )
-        }
-        if (!all(vars %in% names(ungrouped$DT))) {
-          Abort("`vars` must be selected from the names of columns of `ungrouped$DT`",
-            class = "epiprocess__grouped_epi_archive__vars_contains_invalid_entries",
-            epiprocess__vars = vars,
-            epiprocess__DT_names = names(ungrouped$DT)
+        assert_class(ungrouped, "epi_archive")
+        assert_character(vars)
+        if (!test_subset(vars, names(ungrouped$DT))) {
+          cli_abort(
+            "All grouping variables `vars` must be present in the data.",
           )
         }
         if ("version" %in% vars) {
-          Abort("`version` has a special interpretation and cannot be used by itself as a grouping variable")
+          cli_abort("`version` has a special interpretation and cannot be used by itself as a grouping variable")
         }
-        if (!rlang::is_bool(drop)) {
-          Abort("`drop` must be a Boolean",
-            class = "epiprocess__grouped_epi_archive__drop_is_not_bool",
-            epiprocess__drop = drop
-          )
-        }
+        assert_logical(drop, len = 1)
+
         # -----
         private$ungrouped <- ungrouped
         private$vars <- vars
@@ -136,11 +119,9 @@ grouped_epi_archive <-
         invisible(self)
       },
       group_by = function(..., .add = FALSE, .drop = dplyr::group_by_drop_default(self)) {
-        if (!rlang::is_bool(.add)) {
-          Abort("`.add` must be a Boolean")
-        }
+        assert_logical(.add, len = 1)
         if (!.add) {
-          Abort('`group_by` on a `grouped_epi_archive` with `.add=FALSE` is forbidden
+          cli_abort('`group_by` on a `grouped_epi_archive` with `.add=FALSE` is forbidden
                  (neither automatic regrouping nor nested grouping is supported).
                  If you want to "regroup", replacing the existing grouping vars, `ungroup` first and then `group_by`.
                  If you want to add to the existing grouping vars, call `group_by` specifying `.add=TRUE`.
@@ -210,7 +191,7 @@ grouped_epi_archive <-
         # early development versions and much more likely to be clutter than
         # informative in the signature.
         if ("group_by" %in% nse_dots_names(...)) {
-          Abort("
+          cli_abort("
                 The `group_by` argument to `slide` has been removed; please use
                 the `group_by` S3 generic function or `$group_by` R6 method
                 before the slide instead. (If you were instead trying to pass a
@@ -221,7 +202,7 @@ grouped_epi_archive <-
               ", class = "epiprocess__epix_slide_group_by_parameter_deprecated")
         }
         if ("all_rows" %in% nse_dots_names(...)) {
-          Abort("
+          cli_abort("
                 The `all_rows` argument has been removed from `epix_slide` (but
                 is still supported in `epi_slide`). Add rows for excluded
                 results with a manual join instead.
@@ -230,15 +211,14 @@ grouped_epi_archive <-
 
         if (missing(ref_time_values)) {
           ref_time_values <- epix_slide_ref_time_values_default(private$ungrouped)
-        } else if (length(ref_time_values) == 0L) {
-          Abort("`ref_time_values` must have at least one element.")
-        } else if (any(is.na(ref_time_values))) {
-          Abort("`ref_time_values` must not include `NA`.")
-        } else if (anyDuplicated(ref_time_values) != 0L) {
-          Abort("`ref_time_values` must not contain any duplicates; use `unique` if appropriate.")
-        } else if (any(ref_time_values > private$ungrouped$versions_end)) {
-          Abort("All `ref_time_values` must be `<=` the `versions_end`.")
         } else {
+          assert_numeric(ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
+          if (any(ref_time_values > private$ungrouped$versions_end)) {
+            cli_abort("Some `ref_time_values` are greater than the latest version in the archive.")
+          }
+          if (anyDuplicated(ref_time_values) != 0L) {
+            cli_abort("Some `ref_time_values` are duplicated.")
+          }
           # Sort, for consistency with `epi_slide`, although the current
           # implementation doesn't take advantage of it.
           ref_time_values <- sort(ref_time_values)
@@ -246,16 +226,14 @@ grouped_epi_archive <-
 
         # Validate and pre-process `before`:
         if (missing(before)) {
-          Abort("`before` is required (and must be passed by name);
+          cli_abort("`before` is required (and must be passed by name);
                      if you did not want to apply a sliding window but rather
                      to map `as_of` and `f` across various `ref_time_values`,
                      pass a large `before` value (e.g., if time steps are days,
                      `before=365000`).")
         }
         before <- vctrs::vec_cast(before, integer())
-        if (length(before) != 1L || is.na(before) || before < 0L) {
-          Abort("`before` must be length-1, non-NA, non-negative.")
-        }
+        assert_int(before, lower = 0L, null.ok = FALSE, na.ok = FALSE)
 
         # If a custom time step is specified, then redefine units
 
@@ -265,15 +243,9 @@ grouped_epi_archive <-
         new_col <- sym(new_col_name)
 
         # Validate rest of parameters:
-        if (!rlang::is_bool(as_list_col)) {
-          Abort("`as_list_col` must be TRUE or FALSE.")
-        }
-        if (!(rlang::is_string(names_sep) || is.null(names_sep))) {
-          Abort("`names_sep` must be a (single) string or NULL.")
-        }
-        if (!rlang::is_bool(all_versions)) {
-          Abort("`all_versions` must be TRUE or FALSE.")
-        }
+        assert_logical(as_list_col, len = 1L)
+        assert_logical(all_versions, len = 1L)
+        assert_character(names_sep, len = 1L, null.ok = TRUE)
 
         # Computation for one group, one time value
         comp_one_grp <- function(.data_group, .group_key,
@@ -290,9 +262,7 @@ grouped_epi_archive <-
             .data_group <- .data_group$DT
           }
 
-          if (!(is.atomic(comp_value) || is.data.frame(comp_value))) {
-            Abort("The slide computation must return an atomic vector or a data frame.")
-          }
+          assert(check_atomic(comp_value, any.missing = TRUE), check_data_frame(comp_value), combine = "or", .var.name = vname(comp_value))
 
           # Label every result row with the `ref_time_value`
           res <- list(time_value = ref_time_value)
@@ -312,10 +282,10 @@ grouped_epi_archive <-
         if (missing(f)) {
           quos <- enquos(...)
           if (length(quos) == 0) {
-            Abort("If `f` is missing then a computation must be specified via `...`.")
+            cli_abort("If `f` is missing then a computation must be specified via `...`.")
           }
           if (length(quos) > 1) {
-            Abort("If `f` is missing then only a single computation can be specified via `...`.")
+            cli_abort("If `f` is missing then only a single computation can be specified via `...`.")
           }
 
           f <- quos[[1]]

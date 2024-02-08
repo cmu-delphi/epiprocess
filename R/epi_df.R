@@ -114,14 +114,9 @@ NULL
 #' @export
 new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
                        additional_metadata = list(), ...) {
-  # Check that we have a data frame
-  if (!is.data.frame(x)) {
-    Abort("`x` must be a data frame.")
-  }
+  assert_data_frame(x)
+  assert_list(additional_metadata)
 
-  if (!is.list(additional_metadata)) {
-    Abort("`additional_metadata` must be a list type.")
-  }
   if (is.null(additional_metadata[["other_keys"]])) {
     additional_metadata[["other_keys"]] <- character(0L)
   }
@@ -302,12 +297,10 @@ as_epi_df.epi_df <- function(x, ...) {
 #' @export
 as_epi_df.tbl_df <- function(x, geo_type, time_type, as_of,
                              additional_metadata = list(), ...) {
-  # Check that we have geo_value and time_value columns
-  if (!("geo_value" %in% names(x))) {
-    Abort("`x` must contain a `geo_value` column.")
-  }
-  if (!("time_value" %in% names(x))) {
-    Abort("`x` must contain a `time_value` column.")
+  if (!test_subset(c("geo_value", "time_value"), names(x))) {
+    cli_abort(
+      "Columns `geo_value` and `time_value` must be present in `x`."
+    )
   }
 
   new_epi_df(
