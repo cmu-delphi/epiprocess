@@ -958,11 +958,33 @@ test_that("results for different `before`s and `after`s match between epi_slide 
   test_time_type_mean(days, rand_vals, before = 0, after = 1)
 })
 
+set.seed(0)
+rand_vals <- rnorm(n_obs)
+
+generate_special_date_data <- function(date_seq) {
+  epiprocess::as_epi_df(rbind(tibble(
+    geo_value = "al",
+    time_value = date_seq,
+    a = 1:length(date_seq),
+    b = rand_vals
+  ), tibble(
+    geo_value = "ca",
+    time_value = date_seq,
+    a = length(date_seq):1,
+    b = rand_vals + 10
+  ), tibble(
+    geo_value = "fl",
+    time_value = date_seq,
+    a = length(date_seq):1,
+    b = rand_vals * 2
+  )))
+}
+
 test_that("results for different time_types match between epi_slide and epi_slide_mean", {
-  n <- 6 # Max date index
-  m <- 1 # Number of missing dates
-  n_obs <- n + 1 - m # Number of obs created
-  k <- c(0:(n-(m + 1)), n) # Date indices
+  n <- 6L # Max date index
+  m <- 1L # Number of missing dates
+  n_obs <- n + 1L - m # Number of obs created
+  k <- c(0L:(n-(m + 1L)), n) # Date indices
 
   # Basic time type
   days <- as.Date("2022-01-01") + k
@@ -970,13 +992,13 @@ test_that("results for different time_types match between epi_slide and epi_slid
   # Require lubridate::period function to be passed as `time_step`
   day_times_minute <- lubridate::ydm_h("2022-01-01-15") + lubridate::minutes(k) # needs time_step = lubridate::minutes
   day_times_hour <- lubridate::ydm_h("2022-01-01-15") + lubridate::hours(k) # needs time_step = lubridate::hours
-  weeks <- as.Date("2022-01-01") + 7 * k # needs time_step = lubridate::weeks
+  weeks <- as.Date("2022-01-01") + 7L * k # needs time_step = lubridate::weeks
 
   # Don't require a `time_step` fn
-  yearweeks <- tsibble::yearweek(10 + k)
-  yearmonths <- tsibble::yearmonth(10 + k)
-  yearquarters <- tsibble::yearquarter(10 + k)
-  years <- 2000 + k # does NOT need time_step = lubridate::years because dates are numeric, not a special date format
+  yearweeks <- tsibble::yearweek(10L + k)
+  yearmonths <- tsibble::yearmonth(10L + k)
+  yearquarters <- tsibble::yearquarter(10L + k)
+  years <- 2000L + k # does NOT need time_step = lubridate::years because dates are numeric, not a special date format
 
   # Not supported
   custom_dates <- c(
@@ -985,25 +1007,7 @@ test_that("results for different time_types match between epi_slide and epi_slid
   )
   not_dates <- c("a", "b", "c", "d", "e", "f")
 
-  set.seed(0)
-  rand_vals <- rnorm(n_obs)
-
-  ref_epi_data <- epiprocess::as_epi_df(rbind(tibble(
-    geo_value = "al",
-    time_value = days,
-    a = 1:n_obs,
-    b = rand_vals
-  ), tibble(
-    geo_value = "ca",
-    time_value = days,
-    a = n_obs:1,
-    b = rand_vals + 10
-  ), tibble(
-    geo_value = "fl",
-    time_value = days,
-    a = n_obs:1,
-    b = rand_vals * 2
-  ))) %>%
+  ref_epi_data <- generate_special_date_data(days) %>%
     group_by(geo_value)
 
   ref_result <- epi_slide(ref_epi_data, ~ data.frame(
@@ -1015,22 +1019,7 @@ test_that("results for different time_types match between epi_slide and epi_slid
   test_time_type_mean <- function (dates, before = 6L, after = 0L, ...) {
     # Three states, with 2 variables. a is linear, going up in one state and down in the other
     # b is just random. date 10 is missing
-    epi_data <- epiprocess::as_epi_df(rbind(tibble(
-      geo_value = "al",
-      time_value = dates,
-      a = 1:n_obs,
-      b = rand_vals
-    ), tibble(
-      geo_value = "ca",
-      time_value = dates,
-      a = n_obs:1,
-      b = rand_vals + 10
-    ), tibble(
-      geo_value = "fl",
-      time_value = dates,
-      a = n_obs:1,
-      b = rand_vals * 2
-    ))) %>%
+    epi_data <- generate_special_date_data(dates) %>%
       group_by(geo_value)
 
     result1 <- epi_slide(epi_data, ~ data.frame(
@@ -1098,4 +1087,112 @@ test_that("special time_types without time_step fail in epi_slide_mean", {
   # guess_time_type thinks this is "day" type, and the default step size is 1
   # day.
   # test_time_type_mean(weeks)
+})
+
+test_that("helper `full_date_seq` returns expected date values", {
+  n <- 6L # Max date index
+  m <- 1L # Number of missing dates
+  n_obs <- n + 1L - m # Number of obs created
+  k <- c(0L:(n-(m + 1L)), n) # Date indices
+
+  # Basic time type
+  days <- as.Date("2022-01-01") + k
+
+  # Require lubridate::period function to be passed as `time_step`
+  day_times_minute <- lubridate::ydm_h("2022-01-01-15") + lubridate::minutes(k) # needs time_step = lubridate::minutes
+  day_times_hour <- lubridate::ydm_h("2022-01-01-15") + lubridate::hours(k) # needs time_step = lubridate::hours
+  weeks <- as.Date("2022-01-01") + 7L * k # needs time_step = lubridate::weeks
+
+  # Don't require a `time_step` fn
+  yearweeks <- tsibble::yearweek(10L + k)
+  yearmonths <- tsibble::yearmonth(10L + k)
+  yearquarters <- tsibble::yearquarter(10L + k)
+  years <- 2000L + k # does NOT need time_step = lubridate::years because dates are numeric, not a special date format
+
+  before <- 2L
+  after <- 1L
+
+  expect_identical(
+    full_date_seq(
+      generate_special_date_data(days), before = before, after = after
+    ),
+    list(
+      all_dates = as.Date(c("2022-01-01", "2022-01-02", "2022-01-03", "2022-01-04", "2022-01-05", "2022-01-06", "2022-01-07")),
+      pad_early_dates = as.Date(c("2021-12-30", "2021-12-31")),
+      pad_late_dates = as.Date(c("2022-01-08"))
+    )
+  )
+  expect_identical(
+    full_date_seq(
+      generate_special_date_data(yearweeks), before = before, after = after
+    ),
+    list(
+      all_dates = tsibble::yearweek(10:16),
+      pad_early_dates = tsibble::yearweek(8:9),
+      pad_late_dates = tsibble::yearweek(17)
+    )
+  )
+  expect_identical(
+    full_date_seq(
+      generate_special_date_data(yearmonths), before = before, after = after
+    ),
+    list(
+      all_dates = tsibble::yearmonth(10:16),
+      pad_early_dates = tsibble::yearmonth(8:9),
+      pad_late_dates = tsibble::yearmonth(17)
+    )
+  )
+  expect_identical(
+    full_date_seq(
+      generate_special_date_data(yearquarters), before = before, after = after
+    ),
+    list(
+      all_dates = tsibble::yearquarter(10:16),
+      pad_early_dates = tsibble::yearquarter(8:9),
+      pad_late_dates = tsibble::yearquarter(17)
+    )
+  )
+  expect_identical(
+    full_date_seq(
+      generate_special_date_data(years), before = before, after = after
+    ),
+    list(
+      all_dates = 2000L:2006L,
+      pad_early_dates = 1998L:1999L,
+      pad_late_dates = 2007L
+    )
+  )
+  expect_identical(
+    full_date_seq(
+      generate_special_date_data(day_times_minute), before = before, after = after,
+      time_step = lubridate::minutes
+    ),
+    list(
+      all_dates = lubridate::ydm_h("2022-01-01-15") + lubridate::minutes(0:6),
+      pad_early_dates = lubridate::ydm_h("2022-01-01-15") - lubridate::minutes(2:1),
+      pad_late_dates = lubridate::ydm_h("2022-01-01-15") + lubridate::minutes(7)
+    )
+  )
+  expect_identical(
+    full_date_seq(
+      generate_special_date_data(day_times_hour), before = before, after = after,
+      time_step = lubridate::hours
+    ),
+    list(
+      all_dates = lubridate::ydm_h("2022-01-01-15") + lubridate::hours(0:6),
+      pad_early_dates = lubridate::ydm_h("2022-01-01-15") - lubridate::hours(2:1),
+      pad_late_dates = lubridate::ydm_h("2022-01-01-15") + lubridate::hours(7)
+    )
+  )
+  expect_identical(
+    full_date_seq(
+      generate_special_date_data(weeks), before = before, after = after,
+      time_step = lubridate::weeks
+    ),
+    list(
+      all_dates = as.Date(c("2022-01-01", "2022-01-08", "2022-01-15", "2022-01-22", "2022-01-29", "2022-02-05", "2022-02-12")),
+      pad_early_dates = as.Date(c("2021-12-18", "2021-12-25")),
+      pad_late_dates = as.Date(c("2022-02-19"))
+    )
+  )
 })

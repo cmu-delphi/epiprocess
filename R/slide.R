@@ -573,81 +573,11 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
     after <- 0L
   }
 
-  pad_early_dates <- c()
-  pad_late_dates <- c()
-
-  # If dates are one of tsibble-provided classes, can step by numeric. `tsibble`
-  # defines a step of 1 to automatically be the quantum (smallest resolvable
-  # unit) of the date class. For example, one step = 1 quarter for `yearquarter`.
-  #
-  # `tsibble` classes apparently can't be added to in different units, so even
-  # if `time_step` is provided by the user, use a unit step.
-  if (inherits(x$time_value, c("yearquarter", "yearweek", "yearmonth")) ||
-    is.numeric(x$time_value)) {
-    all_dates <- seq(min(x$time_value), max(x$time_value), by = 1L)
-
-    if (before != 0) {
-      pad_early_dates <- Start(all_dates) - before:1
-    }
-    if (after != 0) {
-      pad_late_dates <- End(all_dates) + 1:after
-    }
-  } else if (missing(time_step)) {
-    # Guess what `by` should be based on the epi_df's `time_type`.
-    ttype <- attributes(x)$metadata$time_type
-    by <- switch(ttype,
-      day = "days",
-      week = "weeks",
-      yearweek = "weeks",
-      yearmonth = "months",
-      yearquarter = "quarters",
-      year = "years",
-      NA # default value for "custom", "day-time"
-    )
-
-    if (is.na(by)) {
-      Abort(
-        c(
-          "`frollmean` requires a full window to compute a result, but
-          `time_type` associated with the epi_df was not mappable to period
-          type valid for creating a date sequence.",
-          "i" = c("The input data's `time_type` was probably `custom` or `day-time`.
-          These require also passing a `time_step` function.")
-        ),
-        class = "epiprocess__epi_slide_mean__unmappable_time_type",
-        epiprocess__time_type = ttype
-      )
-    }
-
-    # `seq` `by` arg can be any of `c("days", "weeks", "months", "quarters", "years")`.
-    all_dates <- seq(min(x$time_value), max(x$time_value), by = by)
-
-    if (before != 0) {
-      pad_early_dates <- Start(all_dates) - before:1
-    }
-    if (after != 0) {
-      pad_late_dates <- End(all_dates) + 1:after
-    }
-  } else {
-    # A custom time step is specified.
-    assert_function(time_step)
-
-    # Calculate the number of `time_step`s required to go between min and max time
-    # values. This is roundabout because difftime objects, lubridate::period objects,
-    # and Dates are hard to convert to the same time scale and add.
-    t_elapsed_s <- difftime(max(x$time_value), min(x$time_value), units = "secs")
-    step_size_s <- lubridate::as.period(time_step(1), unit = "secs")
-    n_steps <- ceiling(as.numeric(t_elapsed_s) / as.numeric(step_size_s))
-
-    all_dates <- min(x$time_value) + time_step(0:n_steps)
-
-    if (before != 0) {
-      pad_early_dates <- Start(all_dates) - time_step(before:1)
-    }
-    if (after != 0) {
-      pad_late_dates <- End(all_dates) + time_step(1:after)
-    }
-  }
+  # Make a complete date sequence between min(x$time_value) and max(x$time_value).
+  date_seq_list <- full_date_seq(x, before, after, time_step)
+  all_dates <- date_seq_list$all_dates
+  pad_early_dates <- date_seq_list$pad_early_dates
+  pad_late_dates <- date_seq_list$pad_late_dates
 
   # `frollmean` is 1-indexed, so create a new window width based on our
   # `before` and `after` params.
@@ -756,3 +686,92 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
   return(result)
 }
 
+#' Make a complete date sequence between min(x$time_value) and max
+#' (x$time_value). Produce lists of dates before min(x$time_value) and after
+#' max(x$time_value) for padding initial and final windows to size `n`.
+#'
+#' @importFrom checkmate assert_function
+#' @noRd
+full_date_seq <- function(x, before, after, time_step) {
+  pad_early_dates <- c()
+  pad_late_dates <- c()
+
+  # If dates are one of tsibble-provided classes, can step by numeric. `tsibble`
+  # defines a step of 1 to automatically be the quantum (smallest resolvable
+  # unit) of the date class. For example, one step = 1 quarter for `yearquarter`.
+  #
+  # `tsibble` classes apparently can't be added to in different units, so even
+  # if `time_step` is provided by the user, use a unit step.
+  if (inherits(x$time_value, c("yearquarter", "yearweek", "yearmonth")) ||
+    is.numeric(x$time_value)) {
+    all_dates <- seq(min(x$time_value), max(x$time_value), by = 1L)
+
+    if (before != 0) {
+      pad_early_dates <- Start(all_dates) - before:1
+    }
+    if (after != 0) {
+      pad_late_dates <- End(all_dates) + 1:after
+    }
+  } else if (missing(time_step)) {
+    # Guess what `by` should be based on the epi_df's `time_type`.
+    ttype <- attributes(x)$metadata$time_type
+    by <- switch(ttype,
+      day = "days",
+      week = "weeks",
+      yearweek = "weeks",
+      yearmonth = "months",
+      yearquarter = "quarters",
+      year = "years",
+      NA # default value for "custom", "day-time"
+    )
+
+    if (is.na(by)) {
+      Abort(
+        c(
+          "`frollmean` requires a full window to compute a result, but
+          `time_type` associated with the epi_df was not mappable to period
+          type valid for creating a date sequence.",
+          "i" = c("The input data's `time_type` was probably `custom` or `day-time`.
+          These require also passing a `time_step` function.")
+        ),
+        class = "epiprocess__epi_slide_mean__unmappable_time_type",
+        epiprocess__time_type = ttype
+      )
+    }
+
+    # `seq` `by` arg can be any of `c("days", "weeks", "months", "quarters", "years")`.
+    all_dates <- seq(min(x$time_value), max(x$time_value), by = by)
+
+    if (before != 0) {
+      pad_early_dates <- Start(all_dates) - before:1
+    }
+    if (after != 0) {
+      pad_late_dates <- End(all_dates) + 1:after
+    }
+  } else {
+    # A custom time step is specified.
+    assert_function(time_step)
+
+    # Calculate the number of `time_step`s required to go between min and max time
+    # values. This is roundabout because difftime objects, lubridate::period objects,
+    # and Dates are hard to convert to the same time scale and add.
+    t_elapsed_s <- difftime(max(x$time_value), min(x$time_value), units = "secs")
+    step_size_s <- lubridate::as.period(time_step(1), unit = "secs")
+    n_steps <- ceiling(as.numeric(t_elapsed_s) / as.numeric(step_size_s))
+
+    all_dates <- min(x$time_value) + time_step(0:n_steps)
+
+    if (before != 0) {
+      pad_early_dates <- Start(all_dates) - time_step(before:1)
+    }
+    if (after != 0) {
+      pad_late_dates <- End(all_dates) + time_step(1:after)
+    }
+  }
+
+  return(list(
+    all_dates = all_dates,
+    pad_early_dates = pad_early_dates,
+    pad_late_dates = pad_late_dates
+  ))
+}
