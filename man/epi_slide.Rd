@@ -15,7 +15,9 @@ epi_slide(
   new_col_name = "slide_value",
   as_list_col = FALSE,
   names_sep = "_",
-  all_rows = FALSE
+  all_rows = FALSE,
+  autocomplete_windows = TRUE,
+  fill = list()
 )
 }
 \arguments{
@@ -96,6 +98,16 @@ of the slide computation output. If using \code{as_list_col = TRUE}, note that
 the missing marker is a \code{NULL} entry in the list column; for certain
 operations, you might want to replace these \code{NULL} entries with a different
 \code{NA} marker.}
+
+\item{autocomplete_windows}{Should input data be completed so that each
+window that the computation is applied to is guaranteed to have \code{before + after + 1} (\code{n}) observations per epikey combination? Defaults to \code{TRUE}.
+Turning this off makes it very easy to write an erroneous 7-day average
+or 7-day sum. For example, if we \code{slide} the natural sum over ungrouped
+data with \code{m} epikey combinations, we get the sum of less than \code{n * m}
+things for the first \code{n - 1} time_values and wherever there's a gap in
+availability (e.g. a missing geo for one or more dates).}
+
+\item{fill}{as in \code{\link[tidyr:complete]{tidyr::complete}}.}
 }
 \value{
 An \code{epi_df} object given by appending a new column to \code{x}, named

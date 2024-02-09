@@ -74,6 +74,15 @@
 #'   the missing marker is a `NULL` entry in the list column; for certain
 #'   operations, you might want to replace these `NULL` entries with a different
 #'   `NA` marker.
+#' @param autocomplete_windows Should input data be completed so that each
+#'  window that the computation is applied to is guaranteed to have `before +
+#'  after + 1` (`n`) observations per epikey combination? Defaults to `TRUE`.
+#'  Turning this off makes it very easy to write an erroneous 7-day average
+#'  or 7-day sum. For example, if we `slide` the natural sum over ungrouped
+#'  data with `m` epikey combinations, we get the sum of less than `n * m`
+#'  things for the first `n - 1` time_values and wherever there's a gap in
+#'  availability (e.g. a missing geo for one or more dates).
+#' @param fill as in [`tidyr::complete`].
 #' @return An `epi_df` object given by appending a new column to `x`, named
 #'   according to the `new_col_name` argument.
 #'
@@ -124,6 +133,8 @@
 #' @importFrom lubridate days weeks
 #' @importFrom dplyr bind_rows group_vars filter select
 #' @importFrom rlang .data .env !! enquo enquos sym env missing_arg
+#' @importFrom tidyr complete nesting expand
+#' @importFrom checkmate assert_list
 #' @export
 #' @seealso [`epi_slide_mean`]
 #' @examples
@@ -168,8 +179,20 @@
 epi_slide <- function(x, f, ..., before, after, ref_time_values,
                       time_step,
                       new_col_name = "slide_value", as_list_col = FALSE,
-                      names_sep = "_", all_rows = FALSE) {
+                      names_sep = "_", all_rows = FALSE,
+                      autocomplete_windows = TRUE, fill = list()) {
   assert_class(x, "epi_df")
+
+  if (!autocomplete_windows) {
+    Warn(
+      c(
+        "Turning off `autocomplete_windows` makes it very easy to write an
+         erroneous 7-day average or 7-day sum that uses less than the expected
+         `n` observations per window."
+      ),
+      class = "epiprocess__epi_slide__autocomplete_off"
+    )
+  }
 
   if (missing(ref_time_values)) {
     ref_time_values <- unique(x$time_value)
@@ -215,6 +238,66 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     after <- 0L
   }
 
+  if (autocomplete_windows) {
+    assert_list(fill, names = "unique")
+    fill_vars_not_in_x <- !(names(fill) %in% colnames(x))
+    if (any(fill_vars_not_in_x)) {
+      Warn(
+        c(
+          "Some names provided in `fill` do not correspond to column names in
+           the input data. These will be ignored."
+        ),
+        class = "epiprocess__epi_slide__fill_vars_not_in_x",
+        epiprocess__fill = fill,
+        epiprocess__colnames_x = colnames(x),
+        epiprocess__fill_vars_not_in_x = fill_vars_not_in_x
+      )
+    }
+
+    key_cols <- key_colnames(x)
+    maybe_first_duplicate_key_row_index <- anyDuplicated(x, by = key_cols)
+    if (maybe_first_duplicate_key_row_index != 0L) {
+      Abort("`x` must have one row per unique combination of the key variables to use window completion. If you have additional key variables other than `geo_value`, `time_value`, and `version`, such as an age group column, please specify them in `other_keys`.  Otherwise, check for duplicate rows and/or conflicting values for the same measurement.",
+        class = "epiprocess__epi_slide__epi_df_requires_unique_key_for_completion"
+      )
+    }
+
+    # Make a complete date sequence between min(x$time_value) and max
+    # (x$time_value), plus pad values. We need to include pad dates in
+    # the complete date sequence so that the first and last n - 1
+    # ref_time_values have a complete window to use.
+    date_seq_list <- full_date_seq(x, before, after, time_step)
+    all_dates <- c(
+      date_seq_list$pad_early_dates,
+      date_seq_list$all_dates,
+      date_seq_list$pad_late_dates
+    )
+
+    # A helper column marking real observations.
+    x$.real <- TRUE
+    # Fill the `.real` column with `FALSE` for rows added during completion.
+    fill$.real <- FALSE
+
+    key_cols_no_time <- kill_time_value(key_cols)
+
+    # Add in rows for each present key column combination for all dates.
+    #  - This happens within each group if the data is grouped. This
+    #    doesn't change the impact of completion because we apply the
+    #    computation by group as well.
+    #  - If a geo first appears halfway through the dataset, it will be
+    #    completed all the way back to the beginning of the data.
+    x <- tidyr::complete(x,
+        expand(x, nesting(!!key_cols_no_time), data.frame(time_value = all_dates)),
+        # `complete` checks that fill types match existing column types.
+        fill = fill,
+        # Existing missings will be replaced by `fill`, too.
+        explicit = TRUE
+      )
+
+    # `complete` strips epi_df format and metadata. Restore them.
+    x <- reclass(x, attributes(x)$metadata)
+  }
+
   # If a custom time step is specified, then redefine units
   if (!missing(time_step)) {
     before <- time_step(before)
@@ -243,8 +326,8 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
                             new_col) {
     # Figure out which reference time values appear in the data group in the
     # first place (we need to do this because it could differ based on the
-    # group, hence the setup/checks for the reference time values based on all
-    # the data could still be off):
+    # group, and reference time values found above are based on all of the
+    # data):
     o <- ref_time_values %in% .data_group$time_value
     starts <- starts[o]
     stops <- stops[o]
@@ -263,7 +346,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     )
 
     # Now figure out which rows in the data group are in the reference time
-    # values; this will be useful for all sorts of checks that follow
+    # values; this will be used for checks below.
     o <- .data_group$time_value %in% kept_ref_time_values
     num_ref_rows <- sum(o)
 
@@ -337,7 +420,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
   # computation. `i` is contained in the `f_wrapper_factory` environment such
   # that when called within `slide_one_grp` `i` is reset for every group.
   f_wrapper_factory <- function(kept_ref_time_values) {
-    # Use `i` to advance through list of start dates.
+    # Use `i` to advance through list of reference dates.
     i <- 1L
     f_wrapper <- function(.x, .group_key, ...) {
       .ref_time_value <- kept_ref_time_values[[i]]
@@ -360,6 +443,12 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
   # Unnest if we need to, and return
   if (!as_list_col) {
     x <- unnest(x, !!new_col, names_sep = names_sep)
+  }
+
+  # Remove any remaining phony observations.
+  if (autocomplete_windows) {
+    .x <- .x[.x$.real, ]
+    .x$.real <- NULL
   }
 
   return(x)
@@ -708,7 +797,7 @@ full_date_seq <- function(x, before, after, time_step) {
     if (is.na(by)) {
      cli_abort(
         c(
-          "`frollmean` requires a full window to compute a result, but
+          "Current settings require a full window to compute a `slide` result, but
           `time_type` associated with the epi_df was not mappable to period
           type valid for creating a date sequence.",
           "i" = c("The input data's `time_type` was probably `custom` or `day-time`.
