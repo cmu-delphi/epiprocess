@@ -1045,6 +1045,15 @@ test_that("results for different time_types match between epi_slide and epi_slid
   test_time_type_mean(day_times_minute, time_step = lubridate::minutes)
   test_time_type_mean(day_times_hour, time_step = lubridate::hours)
   test_time_type_mean(weeks, time_step = lubridate::weeks)
+
+  # `epi_slide_mean` can also handle `weeks` without `time_step` being
+  # provided, but `epi_slide` can't
+  epi_data <- generate_special_date_data(weeks) %>%
+    group_by(geo_value)
+  result2 <- epi_slide_mean(epi_data,
+    col_name = c("a", "b"), na.rm = TRUE,
+    before = before, after = after, ...)
+  expect_identical(select(ref_result, -time_value), select(result2, -time_value))
 })
 
 test_that("special time_types without time_step fail in epi_slide_mean", {
@@ -1053,7 +1062,6 @@ test_that("special time_types without time_step fail in epi_slide_mean", {
 
   day_times_minute <- lubridate::ydm_h("2022-01-01-15") + lubridate::minutes(k) # needs time_step = lubridate::minutes
   day_times_hour <- lubridate::ydm_h("2022-01-01-15") + lubridate::hours(k) # needs time_step = lubridate::hours
-  weeks <- as.Date("2022-01-01") + 7 * k # needs time_step = lubridate::weeks
 
   # Not supported
   custom_dates <- c(
@@ -1082,11 +1090,6 @@ test_that("special time_types without time_step fail in epi_slide_mean", {
   test_time_type_mean(not_dates)
   test_time_type_mean(day_times_minute)
   test_time_type_mean(day_times_hour)
-  # Currently doesn't throw the expected error, and returns an incorrect
-  # result. This is because since the weekdates are stored as Dates ->
-  # guess_time_type thinks this is "day" type, and the default step size is 1
-  # day.
-  # test_time_type_mean(weeks)
 })
 
 test_that("helper `full_date_seq` returns expected date values", {
