@@ -514,9 +514,6 @@ epi_archive <-
               fromLast = TRUE
             ) %>%
             tibble::as_tibble() %>%
-            # (`as_tibble` should de-alias the DT and its columns in any edge
-            # cases where they are aliased. We don't say we guarantee this
-            # though.)
             dplyr::select(-"version") %>%
             as_epi_df(
               geo_type = self$geo_type,
