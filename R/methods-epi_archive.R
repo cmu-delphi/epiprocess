@@ -470,9 +470,8 @@ dplyr_col_modify.col_modify_recorder_df <- function(data, cols) {
 #' @noRd
 epix_detailed_restricted_mutate <- function(.data, ...) {
   # We don't want to directly use `dplyr::mutate` on the `$DT`, as:
-  # - this likely copies the entire table
   # - `mutate` behavior, including the output class, changes depending on
-  #   whether `dtplyr` is loaded and would require post-processing
+  #   whether `dtplyr` < 1.3.0 is loaded and would require post-processing
   # - behavior with `dtplyr` isn't fully compatible
   # - it doesn't give the desired details, and `rlang::exprs_auto_name` does not
   #   appropriately handle the `= NULL` and `= <data.frame>` tidyeval cases
