@@ -1,12 +1,13 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 #
-# Created with usethis + edited to run on PRs to dev, use API key.
+# Edits from above workflow: also check pkgdown for PRs to `dev` branch, and
+# update the documentation web site on pushes to `dev` branch.
 on:
   push:
-    branches: [dev, main]
+    branches: [main, dev]
   pull_request:
-    branches: [dev, main]
+    branches: [main, dev]
   release:
     types: [published]
   workflow_dispatch:
@@ -15,7 +16,6 @@ name: pkgdown
 
 jobs:
   pkgdown:
-    # only build docs on the main repository and not forks
     if: github.repository_owner == 'cmu-delphi'
     runs-on: ubuntu-latest
     # Only restrict concurrency for non-PR jobs
@@ -23,6 +23,7 @@ jobs:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      DELPHI_EPIDATA_KEY: ${{ secrets.SECRET_EPIPROCESS_GHACTIONS_DELPHI_EPIDATA_KEY }}
     steps:
       - uses: actions/checkout@v3
 
@@ -34,19 +35,29 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgdown, local::.
+          extra-packages: any::pkgdown, local::., any::cli
           needs: website
 
       - name: Build site
-        env:
-          DELPHI_EPIDATA_KEY: ${{ secrets.SECRET_EPIPROCESS_GHACTIONS_DELPHI_EPIDATA_KEY }}
         run: |
-          if (startsWith("${{ github.event_name }}", "pull_request")) {
-              mode <- ifelse("${{ github.base_ref }}" == "main", "release", "devel")
+          override <- if (startsWith("${{ github.event_name }}", "pull_request")) {
+              if ("${{ github.base_ref }}" == "main") {
+                list(development = list(mode = "release", version_label = "light"))
+              } else {
+                list(development = list(mode = "devel", version_label = "success"))
+              }
           } else {
-              mode <- ifelse("${{ github.ref_name }}" == "main", "release", "devel")
+              if ("${{ github.ref_name }}" == "main") {
+                list(development = list(mode = "release", version_label = "light"))
+              } else {
+                list(development = list(mode = "devel", version_label = "success"))
+              }
           }
-          pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE, override=list(PKGDOWN_DEV_MODE=mode))
+          pkg <- pkgdown::as_pkgdown(".", override = override)
+          cli::cli_rule("Cleaning files from old site...")
+          pkgdown::clean_site(pkg)
+          pkgdown::build_site(pkg, preview = FALSE, install = FALSE, new_process = FALSE)
+          pkgdown:::build_github_pages(pkg)
         shell: Rscript {0}
 
       - name: Deploy to GitHub pages 🚀
