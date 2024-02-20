@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.5</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,8 +72,9 @@
 <code>select</code> on grouped <code>epi_df</code>s now only drops <code>epi_df</code>ness if it makes sense; PR <a href="https://github.com/cmu-delphi/epiprocess/issues390" class="external-link">#390</a></li>
 <li>Minor documentation updates; PR <a href="https://github.com/cmu-delphi/epiprocess/issues393" class="external-link">#393</a></li>
 <li>Improved <code>epi_archive</code> print method. Compactified metadata and shows a snippet of the underlying <code>DT</code> (<a href="https://github.com/cmu-delphi/epiprocess/issues341" class="external-link">#341</a>).</li>
-<li>Added <code>autoplot</code> method for <code>epi_df</code> objects, which creates a ggplot2 plot of the <code>epi_df</code> (<a href="https://github.com/cmu-delphi/epiprocess/issues382" class="external-link">#382</a>).</li>
+<li>Added <code>autoplot</code> method for <code>epi_df</code> objects, which creates a <code>ggplot2</code> plot of the <code>epi_df</code> (<a href="https://github.com/cmu-delphi/epiprocess/issues382" class="external-link">#382</a>).</li>
 <li>Refactored internals to use <code>cli</code> for warnings/errors and <code>checkmate</code> for argument checking (<a href="https://github.com/cmu-delphi/epiprocess/issues413" class="external-link">#413</a>).</li>
+<li>Fix logic to auto-assign <code>ep_df</code> <code>time_type</code> to <code>week</code> (<a href="https://github.com/cmu-delphi/epiprocess/issues416" class="external-link">#416</a>).</li>
 </ul></div>
 <div class="section level3">
 <h3 id="breaking-changes-0-8">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-8"></a></h3>
