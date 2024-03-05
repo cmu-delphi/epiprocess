@@ -399,21 +399,21 @@ argument <code>log_scale = TRUE</code> in the call to
 that the former curves appear less volatile and match the linear
 regression estimates much more closely. In particular, when
 <code>rel_change</code> has upward spikes, <code>rel_change_log</code>
-has less pronounced spikes. Why does this occur? The estimate of <span class="math inline">\(g'(t)\)</span> here can be expressed as <span class="math inline">\(\mathbb E[\log(B)-\log(A)]/h = \mathbb
-E[\log(1+hR)]/h\)</span>, where <span class="math inline">\(R =
-((B-A)/h) / A\)</span>, and the expectation refers to averaging over the
-<span class="math inline">\(h\)</span> observations in each window.
-Consider the following two relevant inequalities, both due to concavity
-of the logarithm function:</p>
+has less pronounced spikes. Why does this occur? The estimate of <span class="math inline">\(g'(t)\)</span> here can be expressed as <span class="math inline">\(\mathbb
+E[\log(B)-\log(A)]/h = \mathbb E[\log(1+hR)]/h\)</span>, where <span class="math inline">\(R = ((B-A)/h) / A\)</span>, and the expectation
+refers to averaging over the <span class="math inline">\(h\)</span>
+observations in each window. Consider the following two relevant
+inequalities, both due to concavity of the logarithm function:</p>
 <p><span class="math display">\[
 \mathbb E[\log(1+hR)]/h \leq \log(1+h\mathbb E[R])/h \leq \mathbb E[R].
 \]</span></p>
 <p>The first inequality is Jensen’s; the second inequality is because
 the tangent line of a concave function lies above it. Finally, we
-observe that <span class="math inline">\(\mathbb E[R] \approx ((\bar
-B-\bar A)/h) / \bar A\)</span>, which the <code>rel_change</code>
-estimate. This explains why the <code>rel_change_log</code> curve often
-lies below the <code>rel_change</code> curve.</p>
+observe that <span class="math inline">\(\mathbb
+E[R] \approx ((\bar B-\bar A)/h) / \bar A\)</span>, which the
+<code>rel_change</code> estimate. This explains why the
+<code>rel_change_log</code> curve often lies below the
+<code>rel_change</code> curve.</p>
 <!-- Whether or not a log transform is used should likely be informed by the
 working model for noise. *todo: write something intelligent here?* -->
 </div>
