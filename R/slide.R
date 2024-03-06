@@ -591,14 +591,14 @@ epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
   }
 
   slide_one_grp <- function(.data_group, .group_key, ...) {
-    missing_dates <- all_dates[!(all_dates %in% .data_group$time_value)]
+    missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
 
     # `frollmean` requires a full window to compute a result. Add NA values
     # to beginning and end of the group so that we get results for the
     # first `before` and last `after` elements.
     .data_group <- bind_rows(
       .data_group,
-      tibble(time_value = c(missing_dates, pad_early_dates, pad_late_dates), .real = FALSE)
+      tibble(time_value = c(missing_times, pad_early_dates, pad_late_dates), .real = FALSE)
     ) %>%
       arrange(time_value)
 
