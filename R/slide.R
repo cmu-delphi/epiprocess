@@ -513,6 +513,13 @@ epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
                      names_sep = "_", all_rows = FALSE) {
   assert_class(x, "epi_df")
 
+  if (as_list_col) {
+    cli::cli_abort(
+      "`as_list_col` is not supported for `epi_slide_mean`",
+      class = "epiproces__epi_slide_mean__list_not_supported"
+    )
+  }
+
   user_provided_rtvs <- !missing(ref_time_values)
   if (!user_provided_rtvs) {
     ref_time_values <- unique(x$time_value)
@@ -650,16 +657,6 @@ epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
     result[!(result$time_value %in% ref_time_values), result_col_names] <- NA
   } else if (user_provided_rtvs) {
     result <- result[result$time_value %in% ref_time_values, ]
-  }
-
-  if (as_list_col) {
-    result[, result_col_names] <- purrr::map(result_col_names,
-      function(.x) {
-         tmp <- result[[.x]]
-         tmp[is.na(tmp)] <- list(NULL)
-         as.list(tmp)
-      }
-    )
   }
 
   if (!is_epi_df(result)) {
