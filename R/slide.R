@@ -376,7 +376,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' @param x The `epi_df` object under consideration, [grouped][dplyr::group_by]
 #'   or ungrouped. If ungrouped, all data in `x` will be treated as part of a
 #'   single data group.
-#' @param col_name A character vector of the names of one or more columns for
+#' @param col_names A character vector of the names of one or more columns for
 #'   which to calculate the rolling mean.
 #' @param ... Additional arguments to pass to `data.table::frollmean`, for
 #'   example, `na.rm` and `algo`. `data.table::frollmean` is automatically
@@ -409,18 +409,18 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   return an object of class `lubridate::period`. For example, we can use
 #'   `time_step = lubridate::hours` in order to set the time step to be one hour
 #'   (this would only be meaningful if `time_value` is of class `POSIXct`).
-#' @param new_col_name String indicating the name of the new column that will
+#' @param new_col_names String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
-#'   `new_col_name` equal to an existing column name will overwrite this column.
+#'   `new_col_names` equal to an existing column name will overwrite this column.
 #' @param as_list_col Should the slide results be held in a list column, or be
 #'   [unchopped][tidyr::unchop]/[unnested][tidyr::unnest]? Default is `FALSE`,
 #'   in which case a list object returned by `f` would be unnested (using
 #'   [`tidyr::unnest()`]), and, if the slide computations output data frames,
-#'   the names of the resulting columns are given by prepending `new_col_name`
+#'   the names of the resulting columns are given by prepending `new_col_names`
 #'   to the names of the list elements.
 #' @param names_sep String specifying the separator to use in `tidyr::unnest()`
 #'   when `as_list_col = FALSE`. Default is "_". Using `NULL` drops the prefix
-#'   from `new_col_name` entirely.
+#'   from `new_col_names` entirely.
 #' @param all_rows If `all_rows = TRUE`, then all rows of `x` will be kept in
 #'   the output even with `ref_time_values` provided, with some type of missing
 #'   value marker for the slide computation output column(s) for `time_value`s
@@ -431,8 +431,9 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   the missing marker is a `NULL` entry in the list column; for certain
 #'   operations, you might want to replace these `NULL` entries with a different
 #'   `NA` marker.
-#' @return An `epi_df` object given by appending a new column to `x`, named
-#'   according to the `new_col_name` argument.
+#' @return An `epi_df` object given by appending one or more new columns to
+#'  `x`, depending on the `col_names` argument, named according to the
+#'  `new_col_names` argument.
 #'
 #' @details To "slide" means to apply a function or formula over a rolling
 #'   window of time steps for each data group, where the window is entered at a
@@ -474,7 +475,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' # slide a 7-day trailing average formula on cases
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean("cases", new_col_name = "cases_7dav", names_sep = NULL, before = 6) %>%
+#'   epi_slide_mean("cases", new_col_names = "cases_7dav", names_sep = NULL, before = 6) %>%
 #'   # rmv a nonessential var. to ensure new col is printed
 #'   dplyr::select(-death_rate_7d_av)
 #'
@@ -482,33 +483,33 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' # and accuracy, and to allow partially-missing windows.
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean("cases", new_col_name = "cases_7dav", names_sep = NULL, before = 6,
+#'   epi_slide_mean("cases", new_col_names = "cases_7dav", names_sep = NULL, before = 6,
 #'     na.rm = TRUE, algo = "exact", hasNA = TRUE) %>%
 #'   dplyr::select(-death_rate_7d_av)
 #'
 #' # slide a 7-day leading average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean("cases", new_col_name = "cases_7dav", names_sep = NULL, after = 6) %>%
+#'   epi_slide_mean("cases", new_col_names = "cases_7dav", names_sep = NULL, after = 6) %>%
 #'   # rmv a nonessential var. to ensure new col is printed
 #'   dplyr::select(-death_rate_7d_av)
 #'
 #' # slide a 7-day centre-aligned average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean("cases", new_col_name = "cases_7dav", names_sep = NULL, before = 3, after = 3) %>%
+#'   epi_slide_mean("cases", new_col_names = "cases_7dav", names_sep = NULL, before = 3, after = 3) %>%
 #'   # rmv a nonessential var. to ensure new col is printed
 #'   dplyr::select(-death_rate_7d_av)
 #'
 #' # slide a 14-day centre-aligned average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean("cases", new_col_name = "cases_14dav", names_sep = NULL, before = 6, after = 7) %>%
+#'   epi_slide_mean("cases", new_col_names = "cases_14dav", names_sep = NULL, before = 6, after = 7) %>%
 #'   # rmv a nonessential var. to ensure new col is printed
 #'   dplyr::select(-death_rate_7d_av)
-epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
+epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
                      time_step,
-                     new_col_name = "slide_value", as_list_col = FALSE,
+                     new_col_names = "slide_value", as_list_col = FALSE,
                      names_sep = "_", all_rows = FALSE) {
   assert_class(x, "epi_df")
 
@@ -568,25 +569,25 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
   m <- before + after + 1L
 
   if (is.null(names_sep) && !as_list_col) {
-    if (length(new_col_name) != length(col_name)) {
+    if (length(new_col_names) != length(col_names)) {
      cli_abort(
-        "`new_col_name` must be the same length as `col_name` when `names_sep` is NULL.",
-        class = "epiprocess__epi_slide_mean__col_name_length_mismatch",
-        epiprocess__new_col_name = new_col_name,
-        epiprocess__col_name = col_name
+        "`new_col_names` must be the same length as `col_names` when `names_sep` is NULL.",
+        class = "epiprocess__epi_slide_mean__col_names_length_mismatch",
+        epiprocess__new_col_names = new_col_names,
+        epiprocess__col_names = col_names
       )
     }
-    result_col_name <- new_col_name
+    result_col_names <- new_col_names
   } else {
-    if (length(new_col_name) != 1L && length(new_col_name) != length(col_name)) {
+    if (length(new_col_names) != 1L && length(new_col_names) != length(col_names)) {
      cli_abort(
-        "`new_col_name` must be either length 1 or the same length as `col_name`.",
-        class = "epiprocess__epi_slide_mean__col_name_length_mismatch_and_not_one",
-        epiprocess__new_col_name = new_col_name,
-        epiprocess__col_name = col_name
+        "`new_col_names` must be either length 1 or the same length as `col_names`.",
+        class = "epiprocess__epi_slide_mean__col_names_length_mismatch_and_not_one",
+        epiprocess__new_col_names = new_col_names,
+        epiprocess__col_names = col_names
       )
     }
-    result_col_name <- paste(new_col_name, col_name, sep = names_sep)
+    result_col_names <- paste(new_col_names, col_names, sep = names_sep)
   }
 
   slide_one_grp <- function(.data_group, .group_key, ...) {
@@ -621,19 +622,19 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
     }
 
     roll_output <- data.table::frollmean(
-      x = .data_group[, col_name], n = m, align = "right", ...
+      x = .data_group[, col_names], n = m, align = "right", ...
     )
 
     if (after >= 1) {
       # Right-aligned `frollmean` results' `ref_time_value`s will be `after`
       # timesteps ahead of where they should be. Shift results to the left by
       # `after` timesteps.
-      .data_group[, result_col_name] <- purrr::map(roll_output, function(.x) {
+      .data_group[, result_col_names] <- purrr::map(roll_output, function(.x) {
           c(.x[(after + 1L):length(.x)], rep(NA, after))
         }
       )
     } else {
-      .data_group[, result_col_name] <- roll_output
+      .data_group[, result_col_names] <- roll_output
     }
 
     return(.data_group)
@@ -646,13 +647,13 @@ epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
   result$.real <- NULL
 
   if (all_rows) {
-    result[!(result$time_value %in% ref_time_values), result_col_name] <- NA
+    result[!(result$time_value %in% ref_time_values), result_col_names] <- NA
   } else if (user_provided_rtvs) {
     result <- result[result$time_value %in% ref_time_values, ]
   }
 
   if (as_list_col) {
-    result[, result_col_name] <- purrr::map(result_col_name,
+    result[, result_col_names] <- purrr::map(result_col_names,
       function(.x) {
          tmp <- result[[.x]]
          tmp[is.na(tmp)] <- list(NULL)
