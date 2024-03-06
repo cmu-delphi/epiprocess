@@ -15,7 +15,7 @@ on:
         "**.[rR]nw",
         "**.[rR]profile",
       ]
-    workflow_dispatch:
+  workflow_dispatch:
 
 name: Style
 
