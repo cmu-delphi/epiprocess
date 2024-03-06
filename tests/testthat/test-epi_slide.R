@@ -1230,3 +1230,20 @@ test_that("helper `full_date_seq` returns expected date values", {
     )
   )
 })
+
+test_that("`epi_slide_mean` errors when passed `time_values` with closer than expected spacing", {
+  time_df <- tibble(
+      geo_value = 1,
+      value = c(0:7, 3.5, 10, 20),
+      # Adding the value 3.5 creates a time that has fractional seconds, which
+      # doesn't follow the expected 1-second spacing of the `time_values`.
+      # This leads to `frollmean` using obs spanning less than the expected
+      # time frame for some computation windows.
+      time_value = Sys.time() + value
+    ) %>%
+      as_epi_df()
+    expect_error(
+      epi_slide_mean(time_df, "value", before = 6L, time_step = lubridate::seconds),
+      class = "epiprocess__epi_slide_mean__unexpected_row_number"
+    )
+})

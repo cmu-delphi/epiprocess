@@ -628,7 +628,7 @@ epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
     # order. So if the computation is aggregating across multiple obs for the
     # same date, `epi_slide_mean` will produce incorrect results; `epi_slide`
     # should be used instead.
-    if (anyDuplicated(.data_group$time_value) > 0) {
+    if (anyDuplicated(.data_group$time_value) != 0L) {
       cli_abort(c(
           "group contains duplicate time values. Using `epi_slide_mean` on this
             group will result in incorrect results",
@@ -637,6 +637,17 @@ epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
           "i" = "Use `epi_slide` to aggregate across groups"
         ),
         class = "epiprocess__epi_slide_mean__duplicate_time_values",
+        epiprocess__data_group = .data_group,
+        epiprocess__group_key = .group_key
+      )
+    }
+    if (nrow(.data_group) != length(c(all_dates, pad_early_dates, pad_late_dates))) {
+      cli_abort(c(
+          "group contains an unexpected number of rows",
+          "i" = c("Input data may contain `time_values` closer together than the
+             expected `time_step` size")
+        ),
+        class = "epiprocess__epi_slide_mean__unexpected_row_number",
         epiprocess__data_group = .data_group,
         epiprocess__group_key = .group_key
       )
@@ -728,8 +739,8 @@ full_date_seq <- function(x, before, after, time_step) {
     if (is.na(by)) {
      cli_abort(
         c(
-          "`frollmean` requires a full window to compute a result, but
-          `time_type` associated with the epi_df was not mappable to period
+          "`frollmean` requires a full window to compute a result, but the
+          `time_type` associated with the epi_df was not mappable to a period
           type valid for creating a date sequence.",
           "i" = c("The input data's `time_type` was probably `custom` or `day-time`.
           These require also passing a `time_step` function.")
