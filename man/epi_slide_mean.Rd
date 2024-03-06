@@ -6,13 +6,13 @@
 \usage{
 epi_slide_mean(
   x,
-  col_name,
+  col_names,
   ...,
   before,
   after,
   ref_time_values,
   time_step,
-  new_col_name = "slide_value",
+  new_col_names = "slide_value",
   as_list_col = FALSE,
   names_sep = "_",
   all_rows = FALSE
@@ -23,7 +23,7 @@ epi_slide_mean(
 or ungrouped. If ungrouped, all data in \code{x} will be treated as part of a
 single data group.}
 
-\item{col_name}{A character vector of the names of one or more columns for
+\item{col_names}{A character vector of the names of one or more columns for
 which to calculate the rolling mean.}
 
 \item{...}{Additional arguments to pass to \code{data.table::frollmean}, for
@@ -62,20 +62,20 @@ return an object of class \code{lubridate::period}. For example, we can use
 \code{time_step = lubridate::hours} in order to set the time step to be one hour
 (this would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
-\item{new_col_name}{String indicating the name of the new column that will
+\item{new_col_names}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting
-\code{new_col_name} equal to an existing column name will overwrite this column.}
+\code{new_col_names} equal to an existing column name will overwrite this column.}
 
 \item{as_list_col}{Should the slide results be held in a list column, or be
 \link[tidyr:chop]{unchopped}/\link[tidyr:unnest]{unnested}? Default is \code{FALSE},
 in which case a list object returned by \code{f} would be unnested (using
 \code{\link[tidyr:unnest]{tidyr::unnest()}}), and, if the slide computations output data frames,
-the names of the resulting columns are given by prepending \code{new_col_name}
+the names of the resulting columns are given by prepending \code{new_col_names}
 to the names of the list elements.}
 
 \item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
 when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
-from \code{new_col_name} entirely.}
+from \code{new_col_names} entirely.}
 
 \item{all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
 the output even with \code{ref_time_values} provided, with some type of missing
@@ -89,8 +89,9 @@ operations, you might want to replace these \code{NULL} entries with a different
 \code{NA} marker.}
 }
 \value{
-An \code{epi_df} object given by appending a new column to \code{x}, named
-according to the \code{new_col_name} argument.
+An \code{epi_df} object given by appending one or more new columns to
+\code{x}, depending on the \code{col_names} argument, named according to the
+\code{new_col_names} argument.
 }
 \description{
 Slides an n-timestep mean over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
@@ -130,38 +131,45 @@ misspelled.)
 # slide a 7-day trailing average formula on cases
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean("cases", new_col_name = "cases_7dav", names_sep = NULL, before = 6) \%>\%
-  # rmv a nonessential var. to ensure new col is printed
-  dplyr::select(-death_rate_7d_av)
+  epi_slide_mean("cases", new_col_names = "cases_7dav", names_sep = NULL, before = 6) \%>\%
+  # Remove a nonessential var. to ensure new col is printed
+  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  ungroup()
 
 # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
 # and accuracy, and to allow partially-missing windows.
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean("cases", new_col_name = "cases_7dav", names_sep = NULL, before = 6,
-    na.rm = TRUE, algo = "exact", hasNA = TRUE) \%>\%
-  dplyr::select(-death_rate_7d_av)
+  epi_slide_mean("cases", new_col_names = "cases_7dav", names_sep = NULL, before = 6,
+    # `frollmean` options
+    na.rm = TRUE, algo = "exact", hasNA = TRUE
+  ) \%>\%
+  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  ungroup()
 
 # slide a 7-day leading average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean("cases", new_col_name = "cases_7dav", names_sep = NULL, after = 6) \%>\%
-  # rmv a nonessential var. to ensure new col is printed
-  dplyr::select(-death_rate_7d_av)
+  epi_slide_mean("cases", new_col_names = "cases_7dav", names_sep = NULL, after = 6) \%>\%
+  # Remove a nonessential var. to ensure new col is printed
+  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  ungroup()
 
 # slide a 7-day centre-aligned average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean("cases", new_col_name = "cases_7dav", names_sep = NULL, before = 3, after = 3) \%>\%
-  # rmv a nonessential var. to ensure new col is printed
-  dplyr::select(-death_rate_7d_av)
+  epi_slide_mean("cases", new_col_names = "cases_7dav", names_sep = NULL, before = 3, after = 3) \%>\%
+  # Remove a nonessential var. to ensure new col is printed
+  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  ungroup()
 
 # slide a 14-day centre-aligned average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean("cases", new_col_name = "cases_14dav", names_sep = NULL, before = 6, after = 7) \%>\%
-  # rmv a nonessential var. to ensure new col is printed
-  dplyr::select(-death_rate_7d_av)
+  epi_slide_mean("cases", new_col_names = "cases_14dav", names_sep = NULL, before = 6, after = 7) \%>\%
+  # Remove a nonessential var. to ensure new col is printed
+  dplyr::select(geo_value, time_value, cases, cases_14dav) \%>\%
+  ungroup()
 }
 \seealso{
 \code{\link{epi_slide}}

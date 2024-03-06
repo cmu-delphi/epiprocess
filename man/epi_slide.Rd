@@ -159,32 +159,38 @@ through the \code{new_col_name} argument.
 }
 \examples{
 # slide a 7-day trailing average formula on cases
+# This and other simple sliding means are much faster to do using
+# the `epi_slide_mean` function instead.
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), before = 6) \%>\%
-  # rmv a nonessential var. to ensure new col is printed
-  dplyr::select(-death_rate_7d_av)
+  # Remove a nonessential var. to ensure new col is printed
+  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  ungroup()
 
 # slide a 7-day leading average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), after = 6) \%>\%
-  # rmv a nonessential var. to ensure new col is printed
-  dplyr::select(-death_rate_7d_av)
+  # Remove a nonessential var. to ensure new col is printed
+  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  ungroup()
 
 # slide a 7-day centre-aligned average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), before = 3, after = 3) \%>\%
-  # rmv a nonessential var. to ensure new col is printed
-  dplyr::select(-death_rate_7d_av)
+  # Remove a nonessential var. to ensure new col is printed
+  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  ungroup()
 
 # slide a 14-day centre-aligned average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide(cases_7dav = mean(cases), before = 6, after = 7) \%>\%
-  # rmv a nonessential var. to ensure new col is printed
-  dplyr::select(-death_rate_7d_av)
+  epi_slide(cases_14dav = mean(cases), before = 6, after = 7) \%>\%
+  # Remove a nonessential var. to ensure new col is printed
+  dplyr::select(geo_value, time_value, cases, cases_14dav) \%>\%
+  ungroup()
 
 # nested new columns
 jhu_csse_daily_subset \%>\%
@@ -195,7 +201,8 @@ jhu_csse_daily_subset \%>\%
       cases_2dma = mad(cases)
     ),
     before = 1, as_list_col = TRUE
-  )
+  ) \%>\%
+  ungroup()
 }
 \seealso{
 \code{\link{epi_slide_mean}}
