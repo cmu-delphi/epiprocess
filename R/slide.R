@@ -32,16 +32,18 @@
 #'   provided; the other's default will be 0. Any value provided for either
 #'   argument must be a single, non-`NA`, non-negative,
 #'   [integer-compatible][vctrs::vec_cast] number of time steps. Endpoints of
-#'   the window are inclusive. Common settings: * For trailing/right-aligned
-#'   windows from `ref_time_value - time_step(k)` to `ref_time_value`: either
-#'   pass `before=k` by itself, or pass `before=k, after=0`. * For
-#'   center-aligned windows from `ref_time_value - time_step(k)` to
-#'   `ref_time_value + time_step(k)`: pass `before=k, after=k`. * For
-#'   leading/left-aligned windows from `ref_time_value` to `ref_time_value +
-#'   time_step(k)`: either pass pass `after=k` by itself, or pass `before=0,
-#'   after=k`. See "Details:" about the definition of a time step,
-#'   (non)treatment of missing rows within the window, and avoiding warnings
-#'   about `before`&`after` settings for a certain uncommon use case.
+#'   the window are inclusive. Common settings:
+#'   * For trailing/right-aligned windows from `ref_time_value - time_step
+#'     (k)` to `ref_time_value`: either pass `before=k` by itself, or pass
+#'     `before=k, after=0`.
+#'   * For center-aligned windows from `ref_time_value - time_step(k)` to
+#'     `ref_time_value + time_step(k)`: pass `before=k, after=k`.
+#'   * For leading/left-aligned windows from `ref_time_value` to
+#'     `ref_time_value + time_step(k)`: either pass pass `after=k` by itself,
+#'     or pass `before=0, after=k`.
+#'   See "Details:" about the definition of a time step,(non)treatment of
+#'   missing rows within the window, and avoiding warnings about
+#'   `before`&`after` settings for a certain uncommon use case.
 #' @param ref_time_values Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
 #'   window. If missing, then this will be set to all unique time values in the
@@ -385,16 +387,18 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   provided; the other's default will be 0. Any value provided for either
 #'   argument must be a single, non-`NA`, non-negative,
 #'   [integer-compatible][vctrs::vec_cast] number of time steps. Endpoints of
-#'   the window are inclusive. Common settings: * For trailing/right-aligned
-#'   windows from `ref_time_value - time_step(k)` to `ref_time_value`: either
-#'   pass `before=k` by itself, or pass `before=k, after=0`. * For
-#'   center-aligned windows from `ref_time_value - time_step(k)` to
-#'   `ref_time_value + time_step(k)`: pass `before=k, after=k`. * For
-#'   leading/left-aligned windows from `ref_time_value` to `ref_time_value +
-#'   time_step(k)`: either pass pass `after=k` by itself, or pass `before=0,
-#'   after=k`. See "Details:" about the definition of a time step,
-#'   (non)treatment of missing rows within the window, and avoiding warnings
-#'   about `before`&`after` settings for a certain uncommon use case.
+#'   the window are inclusive. Common settings:
+#'   * For trailing/right-aligned windows from `ref_time_value - time_step
+#'     (k)` to `ref_time_value`: either pass `before=k` by itself, or pass
+#'     `before=k, after=0`.
+#'   * For center-aligned windows from `ref_time_value - time_step(k)` to
+#'     `ref_time_value + time_step(k)`: pass `before=k, after=k`.
+#'   * For leading/left-aligned windows from `ref_time_value` to
+#'     `ref_time_value + time_step(k)`: either pass pass `after=k` by itself,
+#'     or pass `before=0, after=k`.
+#'   See "Details:" about the definition of a time step,(non)treatment of
+#'   missing rows within the window, and avoiding warnings about
+#'   `before`&`after` settings for a certain uncommon use case.
 #' @param ref_time_values Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
 #'   window. If missing, then this will be set to all unique time values in the

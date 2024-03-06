@@ -36,14 +36,19 @@ the sliding window extend? At least one of these two arguments must be
 provided; the other's default will be 0. Any value provided for either
 argument must be a single, non-\code{NA}, non-negative,
 \link[vctrs:vec_cast]{integer-compatible} number of time steps. Endpoints of
-the window are inclusive. Common settings: * For trailing/right-aligned
-windows from \code{ref_time_value - time_step(k)} to \code{ref_time_value}: either
-pass \code{before=k} by itself, or pass \verb{before=k, after=0}. * For
-center-aligned windows from \code{ref_time_value - time_step(k)} to
-\code{ref_time_value + time_step(k)}: pass \verb{before=k, after=k}. * For
-leading/left-aligned windows from \code{ref_time_value} to \code{ref_time_value + time_step(k)}: either pass pass \code{after=k} by itself, or pass \verb{before=0, after=k}. See "Details:" about the definition of a time step,
-(non)treatment of missing rows within the window, and avoiding warnings
-about \code{before}&\code{after} settings for a certain uncommon use case.}
+the window are inclusive. Common settings:
+\itemize{
+\item For trailing/right-aligned windows from \code{ref_time_value - time_step (k)} to \code{ref_time_value}: either pass \code{before=k} by itself, or pass
+\verb{before=k, after=0}.
+\item For center-aligned windows from \code{ref_time_value - time_step(k)} to
+\code{ref_time_value + time_step(k)}: pass \verb{before=k, after=k}.
+\item For leading/left-aligned windows from \code{ref_time_value} to
+\code{ref_time_value + time_step(k)}: either pass pass \code{after=k} by itself,
+or pass \verb{before=0, after=k}.
+See "Details:" about the definition of a time step,(non)treatment of
+missing rows within the window, and avoiding warnings about
+\code{before}&\code{after} settings for a certain uncommon use case.
+}}
 
 \item{ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
@@ -88,7 +93,7 @@ An \code{epi_df} object given by appending a new column to \code{x}, named
 according to the \code{new_col_name} argument.
 }
 \description{
-Slides a n-timestep mean over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
+Slides an n-timestep mean over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
 examples.
 }
 \details{
@@ -154,7 +159,7 @@ jhu_csse_daily_subset \%>\%
 # slide a 14-day centre-aligned average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean("cases", new_col_name = "cases_7dav", names_sep = NULL, before = 6, after = 7) \%>\%
+  epi_slide_mean("cases", new_col_name = "cases_14dav", names_sep = NULL, before = 6, after = 7) \%>\%
   # rmv a nonessential var. to ensure new col is printed
   dplyr::select(-death_rate_7d_av)
 }
