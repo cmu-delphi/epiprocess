@@ -1050,7 +1050,7 @@ test_that("results for different time_types match between epi_slide and epi_slid
     group_by(geo_value)
   result2 <- epi_slide_mean(epi_data,
     col_names = c("a", "b"), na.rm = TRUE,
-    before = before, after = after, ...)
+    before = 6L, after = 0L)
   expect_identical(select(ref_result, -time_value), select(result2, -time_value))
 })
 
