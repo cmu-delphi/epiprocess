@@ -303,15 +303,13 @@ test_that("computation output formats x as_list_col", {
       slide_value_value = slide_value
     ) %>% select(-slide_value)
   )
-  expect_identical(
+  expect_error(
     toy_edf %>% filter(
       geo_value == "a"
     ) %>% epi_slide_mean(
       "value", before = 6L, as_list_col = TRUE, na.rm = TRUE
     ),
-    basic_result_from_size1_mean %>% dplyr::mutate(
-      slide_value_value = as.list(slide_value)
-    ) %>% select(-slide_value)
+    class = "epiproces__epi_slide_mean__list_not_supported"
   )
   # `epi_slide_mean` doesn't return dataframe columns
 })
