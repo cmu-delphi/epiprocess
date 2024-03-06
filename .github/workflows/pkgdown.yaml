@@ -1,8 +1,10 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 #
-# Edits from above workflow: also check pkgdown for PRs to `dev` branch, and
-# update the documentation web site on pushes to `dev` branch.
+# Modifications:
+#   * workflow_dispatch added to allow manual triggering of the workflow
+#   * trigger branches changed
+#   * API key secrets.SECRET_EPIPROCESS_GHACTIONS_DELPHI_EPIDATA_KEY
 on:
   push:
     branches: [main, dev]

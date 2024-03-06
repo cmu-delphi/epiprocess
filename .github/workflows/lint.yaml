@@ -1,5 +1,10 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+#
+# Modifications:
+#   * workflow_dispatch added to allow manual triggering of the workflow
+#   * trigger branches changed
+#   * API key secrets.DELPHI_GITHUB_ACTIONS_EPIDATA_API_KEY
 on:
   push:
     branches: [main, dev]
