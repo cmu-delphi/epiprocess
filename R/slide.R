@@ -686,6 +686,10 @@ epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
 #' (x$time_value). Produce lists of dates before min(x$time_value) and after
 #' max(x$time_value) for padding initial and final windows to size `n`.
 #'
+#' `before` and `after` inputs here should be raw (numeric) values;
+#' `time_step` function should NOT have been applied. `full_date_seq` applies
+#' `time_step` as needed.
+#'
 #' @importFrom checkmate assert_function
 #' @noRd
 full_date_seq <- function(x, before, after, time_step) {
