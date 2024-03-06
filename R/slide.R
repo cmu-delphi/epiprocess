@@ -367,7 +367,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 
 #' Optimized slide function for performing rolling averages on an `epi_df` object
 #'
-#' Slides a n-timestep mean over variables in an `epi_df` object. See the [slide
+#' Slides an n-timestep mean over variables in an `epi_df` object. See the [slide
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
 #' examples.
 #'
@@ -499,7 +499,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' # slide a 14-day centre-aligned average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean("cases", new_col_name = "cases_7dav", names_sep = NULL, before = 6, after = 7) %>%
+#'   epi_slide_mean("cases", new_col_name = "cases_14dav", names_sep = NULL, before = 6, after = 7) %>%
 #'   # rmv a nonessential var. to ensure new col is printed
 #'   dplyr::select(-death_rate_7d_av)
 epi_slide_mean = function(x, col_name, ..., before, after, ref_time_values,
