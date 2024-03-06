@@ -57,11 +57,11 @@ test_that("`before` and `after` are both vectors of length 1", {
   )
 
   expect_error(
-    epi_slide_mean(grouped, col_name = "value", before = c(0, 1), after = 0, ref_time_values = d + 3),
+    epi_slide_mean(grouped, col_names = "value", before = c(0, 1), after = 0, ref_time_values = d + 3),
     "Assertion on 'before' failed: Must have length 1"
   )
   expect_error(
-    epi_slide_mean(grouped, col_name = "value", before = 1, after = c(0, 1), ref_time_values = d + 3),
+    epi_slide_mean(grouped, col_names = "value", before = 1, after = c(0, 1), ref_time_values = d + 3),
     "Assertion on 'after' failed: Must have length 1"
   )
 })
@@ -81,15 +81,15 @@ test_that("Test errors/warnings for discouraged features", {
   )
 
   expect_error(
-    epi_slide_mean(grouped, col_name = "value", ref_time_values = d + 1),
+    epi_slide_mean(grouped, col_names = "value", ref_time_values = d + 1),
     "Either or both of `before`, `after` must be provided."
   )
   expect_warning(
-    epi_slide_mean(grouped, col_name = "value", before = 0L, ref_time_values = d + 1),
+    epi_slide_mean(grouped, col_names = "value", before = 0L, ref_time_values = d + 1),
     "`before==0`, `after` missing"
   )
   expect_warning(
-    epi_slide_mean(grouped, col_name = "value", after = 0L, ref_time_values = d + 1),
+    epi_slide_mean(grouped, col_names = "value", after = 0L, ref_time_values = d + 1),
     "`before` missing, `after==0`"
   )
 
@@ -98,9 +98,9 @@ test_that("Test errors/warnings for discouraged features", {
   expect_no_warning(ref2 <- epi_slide(grouped, f, after = 1L, ref_time_values = d + 2))
   expect_no_warning(ref3 <- epi_slide(grouped, f, before = 0L, after = 0L, ref_time_values = d + 2))
 
-  expect_no_warning(opt1 <- epi_slide_mean(grouped, col_name = "value", before = 1L, ref_time_values = d + 2, na.rm = TRUE))
-  expect_no_warning(opt2 <- epi_slide_mean(grouped, col_name = "value", after = 1L, ref_time_values = d + 2, na.rm = TRUE))
-  expect_no_warning(opt3 <- epi_slide_mean(grouped, col_name = "value", before = 0L, after = 0L, ref_time_values = d + 2, na.rm = TRUE))
+  expect_no_warning(opt1 <- epi_slide_mean(grouped, col_names = "value", before = 1L, ref_time_values = d + 2, na.rm = TRUE))
+  expect_no_warning(opt2 <- epi_slide_mean(grouped, col_names = "value", after = 1L, ref_time_values = d + 2, na.rm = TRUE))
+  expect_no_warning(opt3 <- epi_slide_mean(grouped, col_names = "value", before = 0L, after = 0L, ref_time_values = d + 2, na.rm = TRUE))
 
   # Results from epi_slide and epi_slide_mean should match
   expect_identical(select(ref1, -slide_value_count), opt1)
@@ -139,37 +139,37 @@ test_that("Both `before` and `after` must be non-NA, non-negative, integer-compa
   )
 
   expect_error(
-    epi_slide_mean(grouped, col_name = "value", before = -1L, ref_time_values = d + 2L),
+    epi_slide_mean(grouped, col_names = "value", before = -1L, ref_time_values = d + 2L),
     "Assertion on 'before' failed: Element 1 is not >= 0"
   )
   expect_error(
-    epi_slide_mean(grouped, col_name = "value", before = 2L, after = -1L, ref_time_values = d + 2L),
+    epi_slide_mean(grouped, col_names = "value", before = 2L, after = -1L, ref_time_values = d + 2L),
     "Assertion on 'after' failed: Element 1 is not >= 0"
   )
-  expect_error(epi_slide_mean(grouped, col_name = "value", before = "a", ref_time_values = d + 2L),
+  expect_error(epi_slide_mean(grouped, col_names = "value", before = "a", ref_time_values = d + 2L),
     regexp = "before", class = "vctrs_error_incompatible_type"
   )
-  expect_error(epi_slide_mean(grouped, col_name = "value", before = 1L, after = "a", ref_time_values = d + 2L),
+  expect_error(epi_slide_mean(grouped, col_names = "value", before = 1L, after = "a", ref_time_values = d + 2L),
     regexp = "after", class = "vctrs_error_incompatible_type"
   )
-  expect_error(epi_slide_mean(grouped, col_name = "value", before = 0.5, ref_time_values = d + 2L),
+  expect_error(epi_slide_mean(grouped, col_names = "value", before = 0.5, ref_time_values = d + 2L),
     regexp = "before", class = "vctrs_error_incompatible_type"
   )
-  expect_error(epi_slide_mean(grouped, col_name = "value", before = 1L, after = 0.5, ref_time_values = d + 2L),
+  expect_error(epi_slide_mean(grouped, col_names = "value", before = 1L, after = 0.5, ref_time_values = d + 2L),
     regexp = "after", class = "vctrs_error_incompatible_type"
   )
   expect_error(
-    epi_slide_mean(grouped, col_name = "value", before = NA, after = 1L, ref_time_values = d + 2L),
+    epi_slide_mean(grouped, col_names = "value", before = NA, after = 1L, ref_time_values = d + 2L),
     "Assertion on 'before' failed: May not be NA"
   )
   expect_error(
-    epi_slide_mean(grouped, col_name = "value", before = 1L, after = NA, ref_time_values = d + 2L),
+    epi_slide_mean(grouped, col_names = "value", before = 1L, after = NA, ref_time_values = d + 2L),
     "Assertion on 'after' failed: May not be NA"
   )
 
   # Non-integer-class but integer-compatible values are allowed:
   expect_no_error(ref <- epi_slide(grouped, f, before = 1, after = 1, ref_time_values = d + 2L))
-  expect_no_error(opt <- epi_slide_mean(grouped, col_name = "value", before = 1, after = 1, ref_time_values = d + 2L, na.rm = TRUE))
+  expect_no_error(opt <- epi_slide_mean(grouped, col_names = "value", before = 1, after = 1, ref_time_values = d + 2L, na.rm = TRUE))
 
   # Results from epi_slide and epi_slide_mean should match
   expect_identical(select(ref, -slide_value_count), opt)
@@ -186,11 +186,11 @@ test_that("`ref_time_values` + `before` + `after` that result in no slide data, 
   ) # beyond the last, no data in window
 
   expect_error(
-    epi_slide_mean(grouped, col_name = "value", before = 2L, ref_time_values = d),
+    epi_slide_mean(grouped, col_names = "value", before = 2L, ref_time_values = d),
     "`ref_time_values` must be a unique subset of the time values in `x`."
   ) # before the first, no data in the slide windows
   expect_error(
-    epi_slide_mean(grouped, col_name = "value", before = 2L, ref_time_values = d + 207L),
+    epi_slide_mean(grouped, col_names = "value", before = 2L, ref_time_values = d + 207L),
     "`ref_time_values` must be a unique subset of the time values in `x`."
   ) # beyond the last, no data in window
 })
@@ -928,7 +928,7 @@ test_that("results for different `before`s and `after`s match between epi_slide 
       ),
       before = before, after = after, names_sep = NULL, ...)
     result2 <- epi_slide_mean(epi_data,
-      col_name = c("a", "b"), na.rm = TRUE,
+      col_names = c("a", "b"), na.rm = TRUE,
       before = before, after = after, ...)
     expect_identical(result1, result2)
   }
@@ -1028,7 +1028,7 @@ test_that("results for different time_types match between epi_slide and epi_slid
       ),
       before = before, after = after, names_sep = NULL, ...)
     result2 <- epi_slide_mean(epi_data,
-      col_name = c("a", "b"), na.rm = TRUE,
+      col_names = c("a", "b"), na.rm = TRUE,
       before = before, after = after, ...)
     expect_identical(result1, result2)
 
@@ -1051,7 +1051,7 @@ test_that("results for different time_types match between epi_slide and epi_slid
   epi_data <- generate_special_date_data(weeks) %>%
     group_by(geo_value)
   result2 <- epi_slide_mean(epi_data,
-    col_name = c("a", "b"), na.rm = TRUE,
+    col_names = c("a", "b"), na.rm = TRUE,
     before = before, after = after, ...)
   expect_identical(select(ref_result, -time_value), select(result2, -time_value))
 })
@@ -1078,7 +1078,7 @@ test_that("special time_types without time_step fail in epi_slide_mean", {
     ))
 
     expect_error(
-      epi_slide_mean(epi_data, col_name = "a",
+      epi_slide_mean(epi_data, col_names = "a",
         before = before, after = after
       ),
       class = "epiprocess__epi_slide_mean__unmappable_time_type"
