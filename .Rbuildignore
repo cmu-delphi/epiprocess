@@ -12,3 +12,7 @@
 ^pkgdown$
 ^doc$
 ^Meta$
+^.bumpversion.cfg$
+^.git-blame-ignore-revs$
+^.lintr$
+^DEVELOPMENT.md$
