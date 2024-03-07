@@ -42,16 +42,21 @@ jobs:
           needs: website
 
       - name: Build site
+        # - target_ref gets the ref from a different variable, depending on the event
+        # - override allows us to set the pkgdown mode and version_label
+        #   - mode: release is the standard build mode, devel places the site in /dev
+        #   - version_label: 'light' and 'success' are CSS labels for Bootswatch: Cosmo
+        #                    https://bootswatch.com/cosmo/
+        # - we use pkgdown:::build_github_pages to build the site because of an issue in pkgdown
+        #   https://github.com/r-lib/pkgdown/issues/2257
         run: |
-          target_ref <- if (startsWith("${{ github.event_name }}", "pull_request")) {
-            "${{ github.base_ref }}"
-          } else {
-            "${{ github.ref }}"
-          }
+          target_ref <- ${{ github.event_name == 'pull_request' && github.base_ref || github.ref }}
           override <- if (target_ref == "main") {
             list(development = list(mode = "release", version_label = "light"))
-          } else {
+          } else if (target_ref == "dev") {
             list(development = list(mode = "devel", version_label = "success"))
+          } else {
+            stop("Unexpected target_ref: ", target_ref)
           }
           pkg <- pkgdown::as_pkgdown(".", override = override)
           cli::cli_rule("Cleaning files from old site...")
