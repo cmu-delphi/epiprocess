@@ -45,7 +45,8 @@ jobs:
         shell: Rscript {0}
 
       - name: Build README.md from README.Rmd
-        run: Rscript -e 'devtools::build_readme()'
+        # Run only if README.Rmd is found
+        run: Rscript -e 'if (file.exists("README.Rmd")) devtools::build_readme()'
 
       - name: Commit and push changes
         run: |
