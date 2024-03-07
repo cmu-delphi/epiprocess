@@ -359,22 +359,8 @@ as_slide_computation <- function(f, ...) {
   )
 }
 
-##########
-
-Min <- function(x) min(x, na.rm = TRUE)
-Max <- function(x) max(x, na.rm = TRUE)
-Sum <- function(x) sum(x, na.rm = TRUE)
-Mean <- function(x) mean(x, na.rm = TRUE)
-Median <- function(x) median(x, na.rm = TRUE)
-
-##########
-
-Start <- function(x) x[1]
-End <- function(x) x[length(x)]
-MiddleL <- function(x) x[floor((length(x) + 1) / 2)]
-MiddleR <- function(x) x[ceiling((length(x) + 1) / 2)]
-ExtendL <- function(x) c(Start(x), x)
-ExtendR <- function(x) c(x, End(x))
+min_na_rm <- function(x) min(x, na.rm = TRUE)
+extend_r <- function(x) c(x, x[length(x)])
 
 guess_geo_type <- function(geo_value) {
   if (is.character(geo_value)) {

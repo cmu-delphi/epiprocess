@@ -207,7 +207,7 @@ epix_merge <- function(x, y,
     if (all(is.na(c(x$clobberable_versions_start, y$clobberable_versions_start)))) {
       NA # (any type of NA is fine here)
     } else {
-      Min(c(x$clobberable_versions_start, y$clobberable_versions_start))
+      min_na_rm(c(x$clobberable_versions_start, y$clobberable_versions_start))
     }
 
   # The actual merge below may not succeed 100% of the time, so do this

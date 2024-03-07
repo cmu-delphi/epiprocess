@@ -249,7 +249,7 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
 
       # Estimate growth rate and return
       f <- genlasso::coef.genlasso(obj, df = df)$beta
-      d <- ExtendR(diff(f) / diff(x))
+      d <- extend_r(diff(f) / diff(x))
       if (log_scale) {
         return(d[i0])
       } else {

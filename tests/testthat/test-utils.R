@@ -1,22 +1,11 @@
 test_that("new summarizing functions work", {
   x <- c(3, 4, 5, 9, NA)
-  expect_equal(Min(x), 3)
-  expect_equal(Max(x), 9)
-  expect_equal(Sum(x), 21)
-  expect_equal(Mean(x), 5.25)
-  expect_equal(Median(x), 4.5)
+  expect_equal(min_na_rm(x), 3)
 })
 
 test_that("Other capital letter functions work", {
   x <- c(1, 2, 3, 4, 5)
-  expect_equal(Start(x), 1)
-  expect_equal(End(x), 5)
-  expect_equal(MiddleL(x), 3)
-  expect_equal(MiddleR(x), 3)
-  expect_equal(MiddleL(x[-5]), 2)
-  expect_equal(MiddleR(x[-5]), 3)
-  expect_equal(ExtendL(x), c(1, 1, 2, 3, 4, 5))
-  expect_equal(ExtendR(x), c(1, 2, 3, 4, 5, 5))
+  expect_equal(extend_r(x), c(1, 2, 3, 4, 5, 5))
 })
 
 test_that("guess_geo_type tests for different types of geo_value's", {
