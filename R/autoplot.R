@@ -102,7 +102,7 @@ autoplot.epi_df <- function(
       names_to = ".response_name"
     )
   } else {
-    object <- dplyr::rename(object[pos], .response := !!names(vars))
+    object <- dplyr::rename(object[pos], .response := !!names(vars)) # nolint: object_usage_linter
   }
   all_keys <- rlang::syms(as.list(geo_and_other_keys))
   other_keys <- rlang::syms(as.list(setdiff(geo_and_other_keys, "geo_value")))

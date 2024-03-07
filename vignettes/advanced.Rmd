@@ -395,7 +395,7 @@ prob_arx <- function(x, y, geo_value, time_value, args = prob_arx_args()) {
   dat <-
     tibble(i = seq_len(ncol(x)), lag = args$lags) %>%
     unnest(lag) %>%
-    mutate(name = paste0("x", seq_len(nrow(.)))) %>%
+    mutate(name = paste0("x", seq_len(nrow(.)))) %>%  # nolint: object_usage_linter
     # One list element for each lagged feature
     pmap(function(i, lag, name) {
       tibble(

@@ -338,7 +338,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 
     f <- quos[[1]]
     new_col <- sym(names(rlang::quos_auto_name(quos)))
-    ... <- missing_arg() # magic value that passes zero args as dots in calls below
+    ... <- missing_arg() # magic value that passes zero args as dots in calls below # nolint: object_usage_linter
   }
 
   f <- as_slide_computation(f, ...)
