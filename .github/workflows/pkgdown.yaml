@@ -50,7 +50,7 @@ jobs:
         # - we use pkgdown:::build_github_pages to build the site because of an issue in pkgdown
         #   https://github.com/r-lib/pkgdown/issues/2257
         run: |
-          target_ref <- ${{ github.event_name == 'pull_request' && github.base_ref || github.ref }}
+          target_ref <- "${{ github.event_name == 'pull_request' && github.base_ref || github.ref }}"
           override <- if (target_ref == "main") {
             list(development = list(mode = "release", version_label = "light"))
           } else if (target_ref == "dev") {
