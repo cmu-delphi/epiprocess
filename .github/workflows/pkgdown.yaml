@@ -43,18 +43,15 @@ jobs:
 
       - name: Build site
         run: |
-          override <- if (startsWith("${{ github.event_name }}", "pull_request")) {
-              if ("${{ github.base_ref }}" == "main") {
-                list(development = list(mode = "release", version_label = "light"))
-              } else {
-                list(development = list(mode = "devel", version_label = "success"))
-              }
+          target_ref <- if (startsWith("${{ github.event_name }}", "pull_request")) {
+            "${{ github.base_ref }}"
           } else {
-              if ("${{ github.ref_name }}" == "main") {
-                list(development = list(mode = "release", version_label = "light"))
-              } else {
-                list(development = list(mode = "devel", version_label = "success"))
-              }
+            "${{ github.ref }}"
+          }
+          override <- if (target_ref == "main") {
+            list(development = list(mode = "release", version_label = "light"))
+          } else {
+            list(development = list(mode = "devel", version_label = "success"))
           }
           pkg <- pkgdown::as_pkgdown(".", override = override)
           cli::cli_rule("Cleaning files from old site...")
