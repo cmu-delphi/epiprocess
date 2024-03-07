@@ -40,7 +40,7 @@ locf_included <- as_epi_archive(dt, compactify = FALSE)
 head(locf_omitted$DT)
 head(locf_included$DT)
 ```
- 
+
 LOCF-redundant values can mar the performance of dataset operations. As the column
 `case_rate_7d_av` has many more LOCF-redundant values than `percent_cli`, we will omit the
 `percent_cli` column for comparing performance.
@@ -101,7 +101,7 @@ speeds <- rbind(speeds, speed_test(iterate_as_of, "as_of_1000x"))
 
 # Performance of slide
 slide_median <- function(my_ea) {
-  my_ea$slide(median = median(case_rate_7d_av), before = 7)
+  my_ea$slide(median = median(.data$case_rate_7d_av), before = 7)
 }
 
 speeds <- rbind(speeds, speed_test(slide_median, "slide_median"))

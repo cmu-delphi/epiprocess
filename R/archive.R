@@ -1,10 +1,10 @@
 # We use special features of data.table's `[`. The data.table package has a
 # compatibility feature that disables some/all of these features if it thinks we
 # might expect `data.frame`-compatible behavior instead. We can signal that we
-# want the special behavior via `.datatable.aware = TRUE` or by importing any
+# want the special behavior via `.datatable_aware = TRUE` or by importing any
 # `data.table` package member. Do both to prevent surprises if we decide to use
 # `data.table::` everywhere and not importing things.
-.datatable.aware <- TRUE
+.datatable_aware <- TRUE
 
 #' Validate a version bound arg
 #'
@@ -79,6 +79,7 @@ max_version_with_row_in <- function(x) {
       version_bound <- max(version_col)
     }
   }
+  version_bound
 }
 
 #' Get the next possible value greater than `x` of the same type
@@ -343,7 +344,7 @@ epi_archive <-
         # then the call to as.data.table() will fail to set keys, so we
         # need to check this, then do it manually if needed
         key_vars <- c("geo_value", "time_value", other_keys, "version")
-        DT <- as.data.table(x, key = key_vars)
+        DT <- as.data.table(x, key = key_vars) # nolint: object_name_linter
         if (!identical(key_vars, key(DT))) setkeyv(DT, cols = key_vars)
 
         maybe_first_duplicate_key_row_index <- anyDuplicated(DT, by = key(DT))
@@ -381,7 +382,7 @@ epi_archive <-
         # Runs compactify on data frame
         if (is.null(compactify) || compactify == TRUE) {
           elim <- keep_locf(DT)
-          DT <- rm_locf(DT)
+          DT <- rm_locf(DT) # nolint: object_name_linter
         } else {
           # Create empty data frame for nrow(elim) to be 0
           elim <- tibble::tibble()
@@ -543,7 +544,7 @@ epi_archive <-
         validate_version_bound(fill_versions_end, self$DT, na_ok = FALSE)
         how <- arg_match(how)
         if (self$versions_end < fill_versions_end) {
-          new_DT <- switch(how,
+          new_DT <- switch(how, # nolint: object_name_linter
             "na" = {
               # old DT + a version consisting of all NA observations
               # immediately after the last currently/actually-observed
@@ -567,7 +568,7 @@ epi_archive <-
               if (identical(address(self$DT), address(nonversion_key_vals_ever_recorded))) {
                 nonversion_key_vals_ever_recorded <- copy(nonversion_key_vals_ever_recorded)
               }
-              next_version_DT <- nonversion_key_vals_ever_recorded[
+              next_version_DT <- nonversion_key_vals_ever_recorded[ # nolint: object_name_linter
                 , version := next_version_tag
               ][
                 # this makes the class of these columns logical (`NA` is a

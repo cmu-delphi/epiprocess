@@ -97,7 +97,10 @@ detect_outlr <- function(x = seq_along(y), y,
 
   # Validate that x contains all distinct values
   if (any(duplicated(x))) {
-    cli_abort("`x` cannot contain duplicate values. (If being run on a column in an `epi_df`, did you group by relevant key variables?)")
+    cli_abort(
+      "`x` cannot contain duplicate values. (If being run on a
+      column in an `epi_df`, did you group by relevant key variables?)"
+    )
   }
 
   # Run all outlier detection methods
@@ -124,7 +127,9 @@ detect_outlr <- function(x = seq_along(y), y,
   if (combiner != "none") {
     if (combiner == "mean") {
       combine_fun <- mean
-    } else if (combiner == "median") combine_fun <- median
+    } else if (combiner == "median") {
+      combine_fun <- median
+    }
 
     for (target in c("lower", "upper", "replacement")) {
       results[[paste0("combined_", target)]] <- apply(
@@ -312,21 +317,21 @@ detect_outlr_stl <- function(x = seq_along(y), y,
     fabletools::model(feasts::STL(stl_formula, robust = TRUE)) %>%
     generics::components() %>%
     tibble::as_tibble() %>%
-    dplyr::select(trend:remainder) %>%
+    dplyr::select(.data$trend:.data$remainder) %>% #
     dplyr::rename_with(~"seasonal", tidyselect::starts_with("season")) %>%
-    dplyr::rename(resid = remainder)
+    dplyr::rename(resid = .data$remainder)
 
   # Allocate the seasonal term from STL to either fitted or resid
   if (!is.null(seasonal_period)) {
     stl_components <- stl_components %>%
       dplyr::mutate(
-        fitted = trend + seasonal
+        fitted = .data$trend + .data$seasonal
       )
   } else {
     stl_components <- stl_components %>%
       dplyr::mutate(
-        fitted = trend,
-        resid = seasonal + resid
+        fitted = .data$trend,
+        resid = .data$seasonal + resid
       )
   }
 
@@ -368,7 +373,7 @@ detect_outlr_stl <- function(x = seq_along(y), y,
 roll_iqr <- function(z, n, detection_multiplier, min_radius,
                      replacement_multiplier, min_lower) {
   if (typeof(z$y) == "integer") {
-    as_type <- as.integer
+    as_type <- as.integer # nolint: object_usage_linter
   } else {
     as_type <- as.numeric
   }
@@ -386,6 +391,6 @@ roll_iqr <- function(z, n, detection_multiplier, min_radius,
         TRUE ~ y
       )
     ) %>%
-    dplyr::select(lower, upper, replacement) %>%
+    dplyr::select(.data$lower, .data$upper, .data$replacement) %>%
     tibble::as_tibble()
 }

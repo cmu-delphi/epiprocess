@@ -66,6 +66,7 @@ test_that("Grouping, regrouping, and ungrouping archives works as intended", {
         age_group = ordered(age_group, c("pediatric", "adult")),
         time_value = as.Date(time_value)
       ) %>%
+      # nolint start: commented_code_linter.
       # # See
       # # https://github.com/cmu-delphi/epiprocess/pull/290#issuecomment-1489099157
       # # and
@@ -78,6 +79,7 @@ test_that("Grouping, regrouping, and ungrouping archives works as intended", {
       #           additional_metadata = list(other_keys = "age_group")) %>%
       # # put back in expected order; see issue #166:
       # select(age_group, geo_value, time_value, s) %>%
+      # nolint end
       group_by(age_group, geo_value, .drop = FALSE)
   )
   expect_identical(

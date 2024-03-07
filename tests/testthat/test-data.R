@@ -59,7 +59,7 @@ test_that("`delayed_assign_with_unregister_awareness` injection support works", 
   my_exprs <- rlang::exprs(a = b + c, d = e)
   delayed_assign_with_unregister_awareness(
     "good2", list(!!!my_exprs),
-    eval.env = rlang::new_environment(list(b = 2L, c = 3L, e = 4L), rlang::base_env())
+    eval_env = rlang::new_environment(list(b = 2L, c = 3L, e = 4L), rlang::base_env())
   )
   force(good2)
   expect_identical(good2, list(a = 5L, d = 4L))

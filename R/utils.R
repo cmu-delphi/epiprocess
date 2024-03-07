@@ -109,19 +109,19 @@ assert_sufficient_f_args <- function(f, ...) {
   args_names <- names(args)
   # Remove named arguments forwarded from `epi[x]_slide`'s `...`:
   forwarded_dots_names <- names(rlang::call_match(dots_expand = FALSE)[["..."]])
-  args_matched_in_dots <-
-    # positional calling args will skip over args matched by named calling args
-    args_names %in% forwarded_dots_names &
-      # extreme edge case: `epi[x]_slide(<stuff>, dot = 1, `...` = 2)`
-      args_names != "..."
+  # positional calling args will skip over args matched by named calling args
+  # extreme edge case: `epi[x]_slide(<stuff>, dot = 1, `...` = 2)`
+  args_matched_in_dots <- args_names %in% forwarded_dots_names & args_names != "..."
+
   remaining_args <- args[!args_matched_in_dots]
   remaining_args_names <- names(remaining_args)
   # note that this doesn't include unnamed args forwarded through `...`.
   dots_i <- which(remaining_args_names == "...") # integer(0) if no match
   n_f_args_before_dots <- dots_i - 1L
-  if (length(dots_i) != 0L) { # `f` has a dots "arg"
+  if (length(dots_i) != 0L) {
+    # `f` has a dots "arg"
     # Keep all arg names before `...`
-    mandatory_args_mapped_names <- remaining_args_names[seq_len(n_f_args_before_dots)]
+    mandatory_args_mapped_names <- remaining_args_names[seq_len(n_f_args_before_dots)] # nolint: object_usage_linter
 
     if (n_f_args_before_dots < n_mandatory_f_args) {
       mandatory_f_args_in_f_dots <-
@@ -170,10 +170,8 @@ assert_sufficient_f_args <- function(f, ...) {
     default_check_mandatory_args_labels <-
       mandatory_f_args_labels[seq_len(n_remaining_args_for_default_check)]
     # ^ excludes any mandatory args absorbed by f's `...`'s:
-    mandatory_args_replacing_defaults <-
-      default_check_mandatory_args_labels[has_default_replaced_by_mandatory]
-    args_with_default_replaced_by_mandatory <-
-      rlang::syms(default_check_args_names[has_default_replaced_by_mandatory])
+    mandatory_args_replacing_defaults <- default_check_mandatory_args_labels[has_default_replaced_by_mandatory] # nolint: object_usage_linter
+    args_with_default_replaced_by_mandatory <- rlang::syms(default_check_args_names[has_default_replaced_by_mandatory]) # nolint: object_usage_linter
     cli::cli_abort(
       "`epi[x]_slide` would pass the {mandatory_args_replacing_defaults} to
       `f`'s {args_with_default_replaced_by_mandatory} argument{?s}, which
@@ -390,13 +388,11 @@ guess_geo_type <- function(geo_value) {
     )
     if (all(geo_value %in% state_values)) {
       return("state")
-    } # Else if all geo values are 2 letters, then use "nation"
-    else if (all(grepl("[a-z]{2}", geo_value)) &
-      !any(grepl("[a-z]{3}", geo_value))) {
+    } else if (all(grepl("[a-z]{2}", geo_value)) && !any(grepl("[a-z]{3}", geo_value))) {
+      # Else if all geo values are 2 letters, then use "nation"
       return("nation")
-    } # Else if all geo values are 5 numbers, then use "county"
-    else if (all(grepl("[0-9]{5}", geo_value)) &
-      !any(grepl("[0-9]{6}", geo_value))) {
+    } else if (all(grepl("[0-9]{5}", geo_value)) && !any(grepl("[0-9]{6}", geo_value))) {
+      # Else if all geo values are 5 numbers, then use "county"
       return("county")
     }
   } else if (is.numeric(geo_value)) {
@@ -442,8 +438,8 @@ guess_time_type <- function(time_value) {
   # Now, if a POSIXct class, then use "day-time"
   if (inherits(time_value, "POSIXct")) {
     return("day-time")
-  } # Else, if a Date class, then use "week" or "day" depending on gaps
-  else if (inherits(time_value, "Date")) {
+  } else if (inherits(time_value, "Date")) {
+    # Else, if a Date class, then use "week" or "day" depending on gaps
     # Convert to numeric so we can use the modulo operator.
     unique_time_gaps <- as.numeric(diff(sort(unique(time_value))))
     # We need to check the modulus of `unique_time_gaps` in case there are
@@ -451,10 +447,8 @@ guess_time_type <- function(time_value) {
     # be larger than 7 days. If we just check if `diffs == 7`, it will fail
     # unless the weekly date sequence is already complete.
     return(ifelse(all(unique_time_gaps %% 7 == 0), "week", "day"))
-  }
-
-  # Else, check whether it's one of the tsibble classes
-  else if (inherits(time_value, "yearweek")) {
+  } else if (inherits(time_value, "yearweek")) {
+    # Else, check whether it's one of the tsibble classes
     return("yearweek")
   } else if (inherits(time_value, "yearmonth")) {
     return("yearmonth")
@@ -463,9 +457,11 @@ guess_time_type <- function(time_value) {
   }
 
   # Else, if it's an integer that's at least 1582, then use "year"
-  if (is.numeric(time_value) &&
-    all(time_value == as.integer(time_value)) &&
-    all(time_value >= 1582)) {
+  if (
+    is.numeric(time_value) &&
+      all(time_value == as.integer(time_value)) &&
+      all(time_value >= 1582)
+  ) {
     return("year")
   }
 
@@ -561,8 +557,7 @@ deprecated_quo_is_present <- function(quo) {
     FALSE
   } else {
     quo_expr <- rlang::get_expr(quo)
-    if (identical(quo_expr, rlang::expr(deprecated())) ||
-      identical(quo_expr, rlang::expr(lifecycle::deprecated()))) {
+    if (identical(quo_expr, rlang::expr(deprecated())) || identical(quo_expr, rlang::expr(lifecycle::deprecated()))) { # nolint: object_usage_linter
       FALSE
     } else {
       TRUE
@@ -617,7 +612,10 @@ gcd2num <- function(a, b, rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
   assert_numeric(pqlim, len = 1L, lower = 0)
   assert_numeric(irtol, len = 1L, lower = 0)
   if (is.na(a) || is.na(b) || a == 0 || b == 0 || abs(a / b) >= pqlim || abs(b / a) >= pqlim) {
-    cli_abort("`a` and/or `b` is either `NA` or exactly zero, or one is so much smaller than the other that it looks like it's supposed to be zero; see `pqlim` setting.")
+    cli_abort(
+      "`a` and/or `b` is either `NA` or exactly zero, or one is so much
+      smaller than the other that it looks like it's supposed to be zero; see `pqlim` setting."
+    )
   }
   iatol <- irtol * max(a, b)
   a_curr <- a
@@ -625,7 +623,10 @@ gcd2num <- function(a, b, rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
   while (TRUE) {
     # `b_curr` is the candidate GCD / iterand; check first if it seems too small:
     if (abs(b_curr) <= iatol) {
-      cli_abort("No GCD found; remaining potential Gads are all too small relative to one/both of the original inputs; see `irtol` setting.")
+      cli_abort(
+        "No GCD found; remaining potential Gads are all too small relative
+        to one/both of the original inputs; see `irtol` setting."
+      )
     }
     remainder <- a_curr - round(a_curr / b_curr) * b_curr
     if (abs(remainder / b_curr) <= rrtol) {
@@ -653,7 +654,10 @@ gcd_num <- function(dividends, ..., rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
     cli_abort("`dividends` must satisfy `is.numeric`, and have `length` > 0")
   }
   if (rlang::dots_n(...) != 0L) {
-    cli_abort("`...` should be empty; all dividends should go in a single `dividends` vector, and all tolerance&limit settings should be passed by name.")
+    cli_abort(
+      "`...` should be empty; all dividends should go in a single `dividends`
+      vector, and all tolerance&limit settings should be passed by name."
+    )
   }
   # We expect a bunch of duplicate `dividends` for some applications.
   # De-duplicate to reduce work. Sort by absolute value to attempt to reduce

@@ -135,7 +135,10 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
   if (dup_rm) {
     o <- !duplicated(x)
     if (any(!o)) {
-      cli_warn("`x` contains duplicate values. (If being run on a column in an `epi_df`, did you group by relevant key variables?)")
+      cli_warn(
+        "`x` contains duplicate values. (If being run on a
+        column in an `epi_df`, did you group by relevant key variables?)"
+      )
     }
     x <- x[o]
     y <- y[o]
@@ -176,10 +179,8 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
         } else {
           return((b / a - 1) / hh)
         }
-      }
-
-      # Linear regression
-      else {
+      } else {
+        # Linear regression
         xm <- xx - mean(xx)
         ym <- yy - mean(yy)
         b <- sum(xm * ym) / sum(xm^2)
@@ -216,10 +217,8 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
       } else {
         return(d0 / f0)
       }
-    }
-
-    # Trend filtering
-    else {
+    } else {
+      # Trend filtering
       ord <- params$ord
       maxsteps <- params$maxsteps
       cv <- params$cv

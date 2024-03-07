@@ -112,14 +112,14 @@ autoplot.epi_df <- function(
     dplyr::mutate(
       .colours = switch(.color_by,
         all_keys = interaction(!!!all_keys, sep = "/"),
-        geo_value = geo_value,
+        geo_value = .data$geo_value,
         other_keys = interaction(!!!other_keys, sep = "/"),
         all = interaction(!!!all_avail, sep = "/"),
         NULL
       ),
       .facets = switch(.facet_by,
         all_keys = interaction(!!!all_keys, sep = "/"),
-        geo_value = as.factor(geo_value),
+        geo_value = as.factor(.data$geo_value),
         other_keys = interaction(!!!other_keys, sep = "/"),
         all = interaction(!!!all_avail, sep = "/"),
         NULL
@@ -130,10 +130,10 @@ autoplot.epi_df <- function(
     n_facets <- nlevels(object$.facets)
     if (n_facets > .max_facets) {
       top_n <- levels(as.factor(object$.facets))[seq_len(.max_facets)]
-      object <- dplyr::filter(object, .facets %in% top_n) %>%
-        dplyr::mutate(.facets = droplevels(.facets))
+      object <- dplyr::filter(object, .data$.facets %in% top_n) %>%
+        dplyr::mutate(.facets = droplevels(.data$.facets))
       if (".colours" %in% names(object)) {
-        object <- dplyr::mutate(object, .colours = droplevels(.colours))
+        object <- dplyr::mutate(object, .colours = droplevels(.data$.colours))
       }
     }
   }

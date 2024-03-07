@@ -87,10 +87,8 @@ library(dplyr)
 
 edf <- tibble(
   geo_value = rep(c("ca", "fl", "pa"), each = 3),
-  time_value = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
-    by = "day"
-  ), length.out = length(geo_value)),
-  x = 1:length(geo_value) + 0.01 * rnorm(length(geo_value)),
+  time_value = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"), by = "day"), length.out = length(geo_value)),
+  x = seq_along(geo_value) + 0.01 * rnorm(length(geo_value)),
 ) %>%
   as_epi_df()
 
@@ -395,9 +393,9 @@ prob_arx <- function(x, y, geo_value, time_value, args = prob_arx_args()) {
 
   # Build features and response for the AR model, and then fit it
   dat <-
-    tibble(i = 1:ncol(x), lag = args$lags) %>%
+    tibble(i = seq_len(ncol(x)), lag = args$lags) %>%
     unnest(lag) %>%
-    mutate(name = paste0("x", 1:nrow(.))) %>%
+    mutate(name = paste0("x", seq_len(nrow(.)))) %>%
     # One list element for each lagged feature
     pmap(function(i, lag, name) {
       tibble(
@@ -427,9 +425,12 @@ prob_arx <- function(x, y, geo_value, time_value, args = prob_arx_args()) {
 
   # Make predictions
   test_time_value <- max(time_value)
-  point <- predict(obj, newdata = dat %>%
-    dplyr::group_by(geo_value) %>%
-    dplyr::filter(time_value == test_time_value))
+  point <- predict(
+    obj,
+    newdata = dat %>%
+      dplyr::group_by(geo_value) %>%
+      dplyr::filter(time_value == test_time_value)
+  )
 
   # Compute bands
   r <- residuals(obj)
@@ -467,24 +468,24 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
       epix_slide(
-        fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, time_value,
+        fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, .data$geo_value, .data$time_value,
           args = prob_arx_args(ahead = ahead)
         ),
         before = 119, ref_time_values = fc_time_values
       ) %>%
       mutate(
-        target_date = time_value + ahead, as_of = TRUE,
-        geo_value = fc_geo_value
+        target_date = .data$time_value + ahead, as_of = TRUE,
+        geo_value = .data$fc_geo_value
       )
   } else {
     x_latest %>%
       epi_slide(
-        fc = prob_arx(percent_cli, case_rate_7d_av, geo_value, time_value,
+        fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, .data$geo_value, .data$time_value,
           args = prob_arx_args(ahead = ahead)
         ),
         before = 119, ref_time_values = fc_time_values
       ) %>%
-      mutate(target_date = time_value + ahead, as_of = FALSE)
+      mutate(target_date = .data$time_value + ahead, as_of = FALSE)
   }
 }
 

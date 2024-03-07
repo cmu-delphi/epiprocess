@@ -41,14 +41,23 @@ test_that("`validate_version_bound` validate and class checks together allow and
   x_datetime <- tibble::tibble(version = my_datetime)
   # Custom classes matter (test vectors and non-vctrs-specialized lists separately):
   my_version_bound1 <- `class<-`(24, "c1")
-  expect_error(validate_version_bound(my_version_bound1, x_int, na_ok = FALSE), regexp = "must have the same classes as")
+  expect_error(
+    validate_version_bound(my_version_bound1, x_int, na_ok = FALSE),
+    regexp = "must have the same classes as"
+  )
   my_version_bound2 <- `class<-`(list(12), c("c2a", "c2b", "c2c"))
   expect_error(validate_version_bound(my_version_bound2, x_list, na_ok = FALSE), regexp = "must have the same classes")
   # Want no error matching date to date or datetime to datetime, but no interop due to tz issues:
   validate_version_bound(my_date, x_date, version_bound_arg = "vb")
   validate_version_bound(my_datetime, x_datetime, version_bound_arg = "vb")
-  expect_error(validate_version_bound(my_datetime, x_date, na_ok = TRUE, version_bound_arg = "vb"), regexp = "must have the same classes")
-  expect_error(validate_version_bound(my_date, x_datetime, na_ok = TRUE, version_bound_arg = "vb"), regexp = "must have the same classes")
+  expect_error(
+    validate_version_bound(my_datetime, x_date, na_ok = TRUE, version_bound_arg = "vb"),
+    regexp = "must have the same classes"
+  )
+  expect_error(
+    validate_version_bound(my_date, x_datetime, na_ok = TRUE, version_bound_arg = "vb"),
+    regexp = "must have the same classes"
+  )
   # Bad:
   expect_error(validate_version_bound(3.5, x_int, TRUE, "vb"), regexp = "must have the same classes")
   expect_error(validate_version_bound(.Machine$integer.max, x_dbl, TRUE, "vb"), regexp = "must have the same classes")
