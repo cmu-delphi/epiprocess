@@ -18,13 +18,13 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Ryan Tibshirani \email{ryantibs@cmu.edu}
+\strong{Maintainer}: Logan Brooks \email{lcbrooks@andrew.cmu.edu}
 
 Authors:
 \itemize{
-  \item Logan Brooks
   \item Daniel McDonald
   \item Evan Ray
+  \item Ryan Tibshirani
 }
 
 Other contributors:
