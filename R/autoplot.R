@@ -50,7 +50,7 @@ autoplot.epi_df <- function(
   .color_by <- match.arg(.color_by)
   .facet_by <- match.arg(.facet_by)
 
-  assert(anyInfinite(.max_facets), assert_int(.max_facets), combine = "or")
+  assert(anyInfinite(.max_facets), checkInt(.max_facets), combine = "or")
   assert_character(.base_color, len = 1)
 
   key_cols <- key_colnames(object)
