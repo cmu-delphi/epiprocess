@@ -1,8 +1,10 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 #
-# Edits from above workflow: also check pkgdown for PRs to `dev` branch, and
-# update the documentation web site on pushes to `dev` branch.
+# Modifications:
+#   * workflow_dispatch added to allow manual triggering of the workflow
+#   * trigger branches changed
+#   * API key secrets.SECRET_EPIPROCESS_GHACTIONS_DELPHI_EPIDATA_KEY
 on:
   push:
     branches: [main, dev]
@@ -40,19 +42,21 @@ jobs:
           needs: website
 
       - name: Build site
+        # - target_ref gets the ref from a different variable, depending on the event
+        # - override allows us to set the pkgdown mode and version_label
+        #   - mode: release is the standard build mode, devel places the site in /dev
+        #   - version_label: 'light' and 'success' are CSS labels for Bootswatch: Cosmo
+        #                    https://bootswatch.com/cosmo/
+        # - we use pkgdown:::build_github_pages to build the site because of an issue in pkgdown
+        #   https://github.com/r-lib/pkgdown/issues/2257
         run: |
-          override <- if (startsWith("${{ github.event_name }}", "pull_request")) {
-              if ("${{ github.base_ref }}" == "main") {
-                list(development = list(mode = "release", version_label = "light"))
-              } else {
-                list(development = list(mode = "devel", version_label = "success"))
-              }
+          target_ref <- ${{ github.event_name == 'pull_request' && github.base_ref || github.ref }}
+          override <- if (target_ref == "main") {
+            list(development = list(mode = "release", version_label = "light"))
+          } else if (target_ref == "dev") {
+            list(development = list(mode = "devel", version_label = "success"))
           } else {
-              if ("${{ github.ref_name }}" == "main") {
-                list(development = list(mode = "release", version_label = "light"))
-              } else {
-                list(development = list(mode = "devel", version_label = "success"))
-              }
+            stop("Unexpected target_ref: ", target_ref)
           }
           pkg <- pkgdown::as_pkgdown(".", override = override)
           cli::cli_rule("Cleaning files from old site...")
