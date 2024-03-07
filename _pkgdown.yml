@@ -16,6 +16,7 @@ template:
   bslib:
     font_scale: 1.0
     primary: "#C41230"
+    success: "#B4D43C"
     link-color: "#C41230"
 
 navbar:
