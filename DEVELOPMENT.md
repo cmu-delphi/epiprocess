@@ -66,7 +66,7 @@ Open a release issue and then copy and follow this checklist in the issue (modif
 - [ ] `revdepcheck::revdep_check(num_workers = 4)`.
   - This may choke, it is very sensitive to the binary versions of packages on a given system. Either bypass or ask someone else to run it if you're concerned.
 - [ ] Update `cran-comments.md`
-- [ ] PR with any changes (and go through the list again) into dev and run through the list again.
+- [ ] PR with any changes (and go through the list again) into `dev` and run through the list again.
 
 Submit to CRAN:
 
@@ -75,7 +75,7 @@ Submit to CRAN:
 
 Wait for CRAN...
 
-- [ ] If accepted :tada:, move on to next steps.
-- [ ] Make sure you're on `dev`?
-- [ ] `usethis::use_github_release(publish = FALSE)` (publish off, otherwise it won't push) will create a draft release and tag on the GitHub repo.
+- [ ] If accepted :tada:, move to next steps. If rejected, fix and resubmit.
+- [ ] Open and merge a PR containing any updates made to `main` back to `dev`.
+- [ ] `usethis::use_github_release(publish = FALSE)` (publish off, otherwise it won't push) will create a draft release based on the commit hash in CRAN-SUBMISSION and push a tag to the GitHub repo.
 - [ ] Go to the repo, verify the release notes, and publish when ready.
