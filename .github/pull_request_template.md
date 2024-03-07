@@ -14,6 +14,8 @@ Please:
       (backwards-incompatible changes to the documented interface) are noted.
       Collect the changes under the next release number (e.g. if you are on
       1.7.2, then write your changes under the 1.8 heading).
+- See [DEVELOPMENT.md](DEVELOPMENT.md) for more information on the development
+  process.
 
 ### Change explanations for reviewer
 
