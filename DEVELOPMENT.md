@@ -50,7 +50,7 @@ Open a release issue and then copy and follow this checklist in the issue (modif
 
 - [ ] `git pull`
 - [ ] Check [current CRAN check results](https://cran.rstudio.org/web/checks/check_results_epiprocess.html)
-- [ ] `devtools::check(".", manual = TRUE, env_vars = c(NOT_CRAN = "false"))`.
+- [ ] `devtools::check(".", manual = TRUE, env_vars = c(NOT_CRAN = "FALSE"))`.
   - Aim for 10/10, no notes.
 - [ ] If check works well enough, merge to main. Otherwise open a PR to fix up.
 - [ ] [Polish NEWS](https://github.com/cmu-delphi/epiprocess/blob/dev/NEWS.md).
