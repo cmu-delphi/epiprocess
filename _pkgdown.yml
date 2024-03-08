@@ -21,7 +21,7 @@ template:
 
 navbar:
   bg: primary
-  type: dark
+  type: light
 
 url: https://cmu-delphi.github.io/epiprocess/
 
