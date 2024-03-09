@@ -10,11 +10,11 @@ for examples."><meta name="robots" content="noindex"><!-- mathjax --><script src
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
     
 
-    <nav class="navbar fixed-top navbar-dark navbar-expand-lg bg-#C41230"><div class="container">
+    <nav class="navbar fixed-top navbar-light navbar-expand-lg bg-primary"><div class="container">
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.2.9999</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.5</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -228,22 +228,22 @@ user.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 7 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2022-05-23 20:17:07.044666</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-01-26 17:27:32.755949</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># Groups:   geo_value [6]</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value case_rate_7d_av death_rate_7d_av cases cases_7d_av</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01         0.003<span style="text-decoration: underline;">27</span>         0            6        1.29</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02         0.004<span style="text-decoration: underline;">35</span>         0            4        1.71</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03         0.006<span style="text-decoration: underline;">17</span>         0            6        2.43</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-03-04         0.009<span style="text-decoration: underline;">80</span>         0.000<span style="text-decoration: underline;">363</span>    11        3.86</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-03-05         0.013<span style="text-decoration: underline;">4</span>          0.000<span style="text-decoration: underline;">363</span>    10        5.29</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-03-06         0.020<span style="text-decoration: underline;">0</span>          0.000<span style="text-decoration: underline;">363</span>    18        7.86</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-03-07         0.029<span style="text-decoration: underline;">4</span>          0.000<span style="text-decoration: underline;">363</span>    26       11.6 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-03-08         0.034<span style="text-decoration: underline;">1</span>          0.000<span style="text-decoration: underline;">363</span>    19       13.4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09         0.041<span style="text-decoration: underline;">0</span>          0.000<span style="text-decoration: underline;">726</span>    23       16.1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10         0.046<span style="text-decoration: underline;">8</span>          0.000<span style="text-decoration: underline;">726</span>    22       18.4 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_7d_av case_rate_7d_av death_rate_7d_av</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6        1.29         0.003<span style="text-decoration: underline;">27</span>         0       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02     4        1.71         0.004<span style="text-decoration: underline;">35</span>         0       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03     6        2.43         0.006<span style="text-decoration: underline;">17</span>         0       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-03-04    11        3.86         0.009<span style="text-decoration: underline;">80</span>         0.000<span style="text-decoration: underline;">363</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-03-05    10        5.29         0.013<span style="text-decoration: underline;">4</span>          0.000<span style="text-decoration: underline;">363</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-03-06    18        7.86         0.020<span style="text-decoration: underline;">0</span>          0.000<span style="text-decoration: underline;">363</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-03-07    26       11.6          0.029<span style="text-decoration: underline;">4</span>          0.000<span style="text-decoration: underline;">363</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-03-08    19       13.4          0.034<span style="text-decoration: underline;">1</span>          0.000<span style="text-decoration: underline;">363</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09    23       16.1          0.041<span style="text-decoration: underline;">0</span>          0.000<span style="text-decoration: underline;">726</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22       18.4          0.046<span style="text-decoration: underline;">8</span>          0.000<span style="text-decoration: underline;">726</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4,016 more rows</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: cases_gr &lt;dbl&gt;</span></span>
 <span class="r-in"><span></span></span>
@@ -261,22 +261,22 @@ user.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 7 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2022-05-23 20:17:07.044666</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-01-26 17:27:32.755949</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># Groups:   geo_value [6]</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value case_rate_7d_av death_rate_7d_av cases cases_7d_av</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01         0.003<span style="text-decoration: underline;">27</span>         0            6        1.29</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02         0.004<span style="text-decoration: underline;">35</span>         0            4        1.71</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03         0.006<span style="text-decoration: underline;">17</span>         0            6        2.43</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-03-04         0.009<span style="text-decoration: underline;">80</span>         0.000<span style="text-decoration: underline;">363</span>    11        3.86</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-03-05         0.013<span style="text-decoration: underline;">4</span>          0.000<span style="text-decoration: underline;">363</span>    10        5.29</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-03-06         0.020<span style="text-decoration: underline;">0</span>          0.000<span style="text-decoration: underline;">363</span>    18        7.86</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-03-07         0.029<span style="text-decoration: underline;">4</span>          0.000<span style="text-decoration: underline;">363</span>    26       11.6 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-03-08         0.034<span style="text-decoration: underline;">1</span>          0.000<span style="text-decoration: underline;">363</span>    19       13.4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09         0.041<span style="text-decoration: underline;">0</span>          0.000<span style="text-decoration: underline;">726</span>    23       16.1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10         0.046<span style="text-decoration: underline;">8</span>          0.000<span style="text-decoration: underline;">726</span>    22       18.4 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_7d_av case_rate_7d_av death_rate_7d_av</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6        1.29         0.003<span style="text-decoration: underline;">27</span>         0       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02     4        1.71         0.004<span style="text-decoration: underline;">35</span>         0       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03     6        2.43         0.006<span style="text-decoration: underline;">17</span>         0       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-03-04    11        3.86         0.009<span style="text-decoration: underline;">80</span>         0.000<span style="text-decoration: underline;">363</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-03-05    10        5.29         0.013<span style="text-decoration: underline;">4</span>          0.000<span style="text-decoration: underline;">363</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-03-06    18        7.86         0.020<span style="text-decoration: underline;">0</span>          0.000<span style="text-decoration: underline;">363</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-03-07    26       11.6          0.029<span style="text-decoration: underline;">4</span>          0.000<span style="text-decoration: underline;">363</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-03-08    19       13.4          0.034<span style="text-decoration: underline;">1</span>          0.000<span style="text-decoration: underline;">363</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09    23       16.1          0.041<span style="text-decoration: underline;">0</span>          0.000<span style="text-decoration: underline;">726</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22       18.4          0.046<span style="text-decoration: underline;">8</span>          0.000<span style="text-decoration: underline;">726</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4,016 more rows</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: gr_poly &lt;dbl&gt;</span></span>
 </code></pre></div>

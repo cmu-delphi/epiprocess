@@ -6,11 +6,11 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
     
 
-    <nav class="navbar fixed-top navbar-dark navbar-expand-lg bg-#C41230"><div class="container">
+    <nav class="navbar fixed-top navbar-light navbar-expand-lg bg-primary"><div class="container">
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.2.9999</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.5</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,41 +61,37 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.7.2.9999" id="epiprocess-0729999">epiprocess 0.7.2.9999<a class="anchor" aria-label="anchor" href="#epiprocess-0729999"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.8" id="epiprocess-08">epiprocess 0.8<a class="anchor" aria-label="anchor" href="#epiprocess-08"></a></h2>
 <div class="section level3">
-<h3 id="improvements-0-7-2-9999">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-7-2-9999"></a></h3>
+<h3 id="improvements-0-8">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-8"></a></h3>
 <ul><li>
 <code>epi_slide</code> computations are now 2-4 times faster after changing how reference time values, made accessible within sliding functions, are calculated (<a href="https://github.com/cmu-delphi/epiprocess/issues397" class="external-link">#397</a>).</li>
-</ul></div>
-</div>
-    <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.7.1.9999" id="epiprocess-0719999">epiprocess 0.7.1.9999<a class="anchor" aria-label="anchor" href="#epiprocess-0719999"></a></h2>
-<p>Note that <code>epiprocess</code> uses the <a href="https://semver.org/" class="external-link">Semantic Versioning (“semver”)</a> scheme for all release versions, but any inter-release development versions will include an additional “.9999” suffix. Pre-1.0.0 numbering scheme: when making changes to a development version 0.x.y.9999, we will increment y when merging PRs, and will have increment x (and reset y) on release.</p>
-<div class="section level3">
-<h3 id="breaking-changes-0-7-1-9999">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-7-1-9999"></a></h3>
-<ul><li>Switched <code>epi_df</code>’s <code>other_keys</code> default from <code>NULL</code> to <code>character(0)</code>; PR <a href="https://github.com/cmu-delphi/epiprocess/issues390" class="external-link">#390</a></li>
-</ul></div>
-<div class="section level3">
-<h3 id="improvements-0-7-1-9999">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-7-1-9999"></a></h3>
-<ul><li>
+<li>regenerated the <code>jhu_csse_daily_subset</code> dataset with the latest versions of the data from the API</li>
+<li>changed approach to versioning, see DEVELOPMENT.md for details</li>
+<li>
 <code>select</code> on grouped <code>epi_df</code>s now only drops <code>epi_df</code>ness if it makes sense; PR <a href="https://github.com/cmu-delphi/epiprocess/issues390" class="external-link">#390</a></li>
 <li>Minor documentation updates; PR <a href="https://github.com/cmu-delphi/epiprocess/issues393" class="external-link">#393</a></li>
+<li>Improved <code>epi_archive</code> print method. Compactified metadata and shows a snippet of the underlying <code>DT</code> (<a href="https://github.com/cmu-delphi/epiprocess/issues341" class="external-link">#341</a>).</li>
+<li>Added <code>autoplot</code> method for <code>epi_df</code> objects, which creates a <code>ggplot2</code> plot of the <code>epi_df</code> (<a href="https://github.com/cmu-delphi/epiprocess/issues382" class="external-link">#382</a>).</li>
+<li>Refactored internals to use <code>cli</code> for warnings/errors and <code>checkmate</code> for argument checking (<a href="https://github.com/cmu-delphi/epiprocess/issues413" class="external-link">#413</a>).</li>
+<li>Fix logic to auto-assign <code>ep_df</code> <code>time_type</code> to <code>week</code> (<a href="https://github.com/cmu-delphi/epiprocess/issues416" class="external-link">#416</a>).</li>
 </ul></div>
-</div>
-    <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.7.0.9999" id="epiprocess-0709999">epiprocess 0.7.0.9999<a class="anchor" aria-label="anchor" href="#epiprocess-0709999"></a></h2>
 <div class="section level3">
-<h3 id="improvements-0-7-0-9999">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-7-0-9999"></a></h3>
-<ul><li>Updated vignettes for compatibility with epidatr 1.0.0 in PR <a href="https://github.com/cmu-delphi/epiprocess/issues377" class="external-link">#377</a>.</li>
+<h3 id="breaking-changes-0-8">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-8"></a></h3>
+<ul><li>Switched <code>epi_df</code>’s <code>other_keys</code> default from <code>NULL</code> to <code>character(0)</code>; PR <a href="https://github.com/cmu-delphi/epiprocess/issues390" class="external-link">#390</a></li>
 </ul></div>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.7.0" id="epiprocess-070">epiprocess 0.7.0<a class="anchor" aria-label="anchor" href="#epiprocess-070"></a></h2>
 <div class="section level3">
+<h3 id="improvements-0-7-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-7-0"></a></h3>
+<ul><li>Updated vignettes for compatibility with epidatr 1.0.0 in PR <a href="https://github.com/cmu-delphi/epiprocess/issues377" class="external-link">#377</a>.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="breaking-changes-0-7-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-7-0"></a></h3>
 <ul><li>Changes to <code>epi_slide</code> and <code>epix_slide</code>:
 <ul><li>If <code>f</code> is a function, it is now required to take at least three arguments. <code>f</code> must take an <code>epi_df</code> with the same column names as the archive’s <code>DT</code>, minus the <code>version</code> column; followed by a one-row tibble containing the values of the grouping variables for the associated group; followed by a reference time value, usually as a <code>Date</code> object. Optionally, it can take any number of additional arguments after that, and forward values for those arguments through <code>epi[x]_slide</code>’s <code>...</code> args.
-<ul><li>To make your existing slide computations work, add a third argument to your <code>f</code> function to accept this new input: e.g., change <code>f = function(x,   g, &lt;any other arguments&gt;) { &lt;body&gt; }</code> to <code>f = function(x, g, rt, &lt;any   other arguments&gt;) { &lt;body&gt; }</code>.</li>
+<ul><li>To make your existing slide computations work, add a third argument to your <code>f</code> function to accept this new input: e.g., change <code>f = function(x, g, &lt;any other arguments&gt;) { &lt;body&gt; }</code> to <code>f = function(x, g, rt, &lt;any other arguments&gt;) { &lt;body&gt; }</code>.</li>
 </ul></li>
 </ul></li>
 </ul></div>
@@ -116,7 +112,7 @@
 </ul></li>
 </ul></div>
 <div class="section level3">
-<h3 id="improvements-0-7-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-7-0"></a></h3>
+<h3 id="improvements-0-7-0-1">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-7-0-1"></a></h3>
 <ul><li>
 <code>epi_slide</code> and <code>epix_slide</code> now support <code>as_list_col = TRUE</code> when the slide computations output atomic vectors, and output a list column in “chopped” format (see <code><a href="https://tidyr.tidyverse.org/reference/chop.html" class="external-link">tidyr::chop</a></code>).</li>
 <li>
@@ -130,7 +126,7 @@
 <div class="section level3">
 <h3 id="breaking-changes-0-6-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-6-0"></a></h3>
 <ul><li>Changes to both <code>epi_slide</code> and <code>epix_slide</code>:
-<ul><li>The <code>n</code>, <code>align</code>, and <code>before</code> arguments have been replaced by new <code>before</code> and <code>after</code> arguments. To migrate to the new version, replace these arguments in every <code>epi_slide</code> and <code>epix_slide</code> call. If you were only using the <code>n</code> argument, then this means replacing <code>n = &lt;n value&gt;</code> with <code>before =   &lt;n value&gt; - 1</code>.
+<ul><li>The <code>n</code>, <code>align</code>, and <code>before</code> arguments have been replaced by new <code>before</code> and <code>after</code> arguments. To migrate to the new version, replace these arguments in every <code>epi_slide</code> and <code>epix_slide</code> call. If you were only using the <code>n</code> argument, then this means replacing <code>n = &lt;n value&gt;</code> with <code>before = &lt;n value&gt; - 1</code>.
 <ul><li>
 <code>epi_slide</code>’s time windows now extend <code>before</code> time steps before and <code>after</code> time steps after the corresponding <code>ref_time_values</code>. See <code><a href="../reference/epi_slide.html">?epi_slide</a></code> for details on matching old alignments.</li>
 <li>
@@ -163,7 +159,7 @@
 <code>epix_slide</code> now guesses <code>ref_time_values</code> to be a regularly spaced sequence covering all the <code>DT$version</code> values and the <code>version_end</code>, rather than the distinct <code>DT$time_value</code>s. To obtain the old behavior, pass in <code>ref_time_values = unique(&lt;ungrouped archive&gt;$DT$time_value)</code>.</li>
 </ul></li>
 <li>
-<code>epi_archive</code>’s <code>clobberable_versions_start</code>’s default is now <code>NA</code>, so there will be no warnings by default about potential nonreproducibility. To obtain the old behavior, pass in <code>clobberable_versions_start =   max_version_with_row_in(x)</code>.</li>
+<code>epi_archive</code>’s <code>clobberable_versions_start</code>’s default is now <code>NA</code>, so there will be no warnings by default about potential nonreproducibility. To obtain the old behavior, pass in <code>clobberable_versions_start = max_version_with_row_in(x)</code>.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="potentially-breaking-changes-0-6-0">Potentially-breaking changes<a class="anchor" aria-label="anchor" href="#potentially-breaking-changes-0-6-0"></a></h3>
@@ -311,7 +307,7 @@
 <ul><li>Fixed <code>geo_type</code> guessing on alphabetical strings with more than 2 characters to yield <code>"custom"</code>, not US <code>"nation"</code>.</li>
 <li>Fixed <code>time_type</code> guessing to actually detect <code>Date</code>-class <code>time_value</code>s regularly spaced 7 days apart as <code>"week"</code>-type as intended.</li>
 <li>Improved printing of <code>epi_df</code>s, <code>epi_archives</code>s.</li>
-<li>Fixed <code>as_of</code> to not cut off any (forecast-like) data with <code>time_value &gt;   max_version</code>.</li>
+<li>Fixed <code>as_of</code> to not cut off any (forecast-like) data with <code>time_value &gt; max_version</code>.</li>
 <li>Expanded <code>epi_df</code> docs to include conversion from <code>tsibble</code>/<code>tbl_ts</code> objects, usage of <code>other_keys</code>, and pre-processing objects not following the <code>geo_value</code>, <code>time_value</code> naming scheme.</li>
 <li>Expanded <code>epi_slide</code> examples to show how to use an <code>f</code> argument with named parameters.</li>
 <li>Updated examples to print relevant columns given a common 80-column terminal width.</li>

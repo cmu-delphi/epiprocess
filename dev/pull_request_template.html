@@ -6,11 +6,11 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
     
 
-    <nav class="navbar fixed-top navbar-dark navbar-expand-lg bg-#C41230"><div class="container">
+    <nav class="navbar fixed-top navbar-light navbar-expand-lg bg-primary"><div class="container">
     
     <a class="navbar-brand me-2" href="index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.2.9999</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.5</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,8 +63,13 @@
 
 <div class="section level3">
 <h3 id="checklist">Checklist<a class="anchor" aria-label="anchor" href="#checklist"></a></h3>
-<p>Please: - [ ] Make sure this PR is against “dev”, not “main”. - [ ] Request a review from one of the current epiprocess main reviewers: brookslogan, nmdefries. - [ ] Describe changes made in NEWS.md, making sure breaking changes (backwards-incompatible changes to the documented interface) are noted. The right location for this may be in flux (see <a href="https://github.com/cmu-delphi/epiprocess/pull/398" class="external-link">here</a>).</p>
-</div>
+<p>Please:</p>
+<ul><li><label><input type="checkbox">Make sure this PR is against “dev”, not “main” (unless this is a release PR).</label></li>
+<li><label><input type="checkbox">Request a review from one of the current main reviewers: brookslogan, nmdefries.</label></li>
+<li><label><input type="checkbox">Makes sure to bump the version number in <code>DESCRIPTION</code>. Always increment the patch version number (the third number), unless you are making a release PR from dev to main, in which case increment the minor version number (the second number).</label></li>
+<li><label><input type="checkbox">Describe changes made in NEWS.md, making sure breaking changes (backwards-incompatible changes to the documented interface) are noted. Collect the changes under the next release number (e.g. if you are on 1.7.2, then write your changes under the 1.8 heading).</label></li>
+<li>See <a href="DEVELOPMENT.html">DEVELOPMENT.md</a> for more information on the development process.</li>
+</ul></div>
 <div class="section level3">
 <h3 id="change-explanations-for-reviewer">Change explanations for reviewer<a class="anchor" aria-label="anchor" href="#change-explanations-for-reviewer"></a></h3>
 </div>

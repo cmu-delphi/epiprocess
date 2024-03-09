@@ -23,11 +23,11 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
     
 
-    <nav class="navbar fixed-top navbar-dark navbar-expand-lg bg-#C41230"><div class="container">
+    <nav class="navbar fixed-top navbar-light navbar-expand-lg bg-primary"><div class="container">
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.2.9999</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.5</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -253,16 +253,6 @@ provide useful summaries, in slightly different formats.</p>
 <span><span class="co">## <span style="color: #BCBCBC;">6</span> Addison, VT 2020-09-02</span></span></code></pre>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/count_gaps.html" class="external-link">count_gaps</a></span><span class="op">(</span><span class="va">xt</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in</span></span>
-<span><span class="co">## dplyr 1.1.0.</span></span>
-<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Please use `reframe()` instead.</span></span>
-<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> When switching from `summarise()` to `reframe()`, remember that `reframe()`</span></span>
-<span><span class="co">##   always returns an ungrouped data frame and adjust accordingly.</span></span>
-<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">tsibble</span> package.</span></span>
-<span><span class="co">##   Please report the issue at <span style="color: #0000BB; font-style: italic;">&lt;https://github.com/tidyverts/tsibble/issues&gt;</span>.</span></span>
-<span><span class="co">## <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
-<span><span class="co">## <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
-<span><span class="co">## <span style="color: #555555;">generated.</span></span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 4</span></span></span>
 <span><span class="co">##   geo_value   .from      .to           .n</span></span>
 <span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
@@ -273,7 +263,7 @@ provide useful summaries, in slightly different formats.</p>
 <span><span class="co">## <span style="color: #BCBCBC;">5</span> Addison, VT 2020-11-14 2020-11-18     5</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">6</span> Addison, VT 2020-11-20 2020-11-20     1</span></span></code></pre>
 <p>We can also visualize the patterns of missingness:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -301,7 +291,7 @@ zero, which is what we do here. (Other approaches, such as LOCF: last
 observation carried forward in time, could be accomplished by first
 filling with <code>NA</code> values and then following up with a second
 call to <code><a href="https://tidyr.tidyverse.org/reference/fill.html" class="external-link">tidyr::fill()</a></code>.)</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html" class="external-link">fill_gaps</a></span><span class="op">(</span><span class="va">xt</span>, cases <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tsibble: 6 x 3 [1D]</span></span></span>
@@ -319,7 +309,7 @@ call to <code><a href="https://tidyr.tidyverse.org/reference/fill.html" class="e
 from a period that went back to June 6, 2020. By setting
 <code>.full = TRUE</code>, we can at zero-fill over the entire span of
 the observed (censored) data.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">xt_filled</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html" class="external-link">fill_gaps</a></span><span class="op">(</span><span class="va">xt</span>, cases <span class="op">=</span> <span class="fl">0</span>, .full <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">xt_filled</span><span class="op">)</span></span></code></pre></div>
@@ -345,7 +335,7 @@ misleading and is unintentionally biased upwards. Meanwhile, running
 <code><a href="../reference/epi_slide.html">epi_slide()</a></code> on the zero-filled data brings these trailing
 averages (appropriately) downwards, as we can see inspecting Plymouth,
 MA around July 1, 2021.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">xt</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -359,7 +349,7 @@ MA around July 1, 2021.</p>
 <pre><code><span><span class="co">## An `epi_df` object, 4 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = custom</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2024-01-25 04:28:13.01973</span></span>
+<span><span class="co">## * as_of     = 2024-03-09 02:27:32.098118</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 4 × 4</span></span></span>
 <span><span class="co">##   geo_value    time_value cases cases_7dav</span></span>
@@ -368,7 +358,7 @@ MA around July 1, 2021.</p>
 <span><span class="co">## <span style="color: #BCBCBC;">2</span> Plymouth, MA 2021-06-30     7       5   </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">3</span> Plymouth, MA 2021-07-01     6       5   </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">4</span> Plymouth, MA 2021-07-02     6       5.2</span></span></code></pre>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">xt_filled</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -382,7 +372,7 @@ MA around July 1, 2021.</p>
 <pre><code><span><span class="co">## An `epi_df` object, 7 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = custom</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2024-01-25 04:28:13.867434</span></span>
+<span><span class="co">## * as_of     = 2024-03-09 02:27:32.986581</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 7 × 4</span></span></span>
 <span><span class="co">##   geo_value    time_value cases cases_7dav</span></span>
@@ -412,7 +402,7 @@ index variable.</p>
 package in order to aggregate to weekly and monthly resolutions. In the
 former call, we set <code>week_start = 7</code> to coincide with the CDC
 definition of an epiweek (epidemiological week).</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Aggregate to weekly</span></span>
 <span><span class="va">xt_filled_week</span> <span class="op">&lt;-</span> <span class="va">xt_filled</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://tsibble.tidyverts.org/reference/index-by.html" class="external-link">index_by</a></span><span class="op">(</span>epiweek <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/year-week.html" class="external-link">yearweek</a></span><span class="op">(</span><span class="va">.</span>, week_start <span class="op">=</span> <span class="fl">7</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -430,7 +420,7 @@ definition of an epiweek (epidemiological week).</p>
 <span><span class="co">## <span style="color: #BCBCBC;">4</span> Addison, VT 2020 W26     0</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">5</span> Addison, VT 2020 W27     0</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">6</span> Addison, VT 2020 W28     0</span></span></code></pre>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Aggregate to monthly</span></span>
 <span><span class="va">xt_filled_month</span> <span class="op">&lt;-</span> <span class="va">xt_filled_week</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://tsibble.tidyverts.org/reference/index-by.html" class="external-link">index_by</a></span><span class="op">(</span>month <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/year-month.html" class="external-link">yearmonth</a></span><span class="op">(</span><span class="va">.</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>

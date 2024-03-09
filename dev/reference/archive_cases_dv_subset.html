@@ -16,11 +16,11 @@ is also limited to California, Florida, Texas, and New York."><meta name="robots
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
     
 
-    <nav class="navbar fixed-top navbar-dark navbar-expand-lg bg-#C41230"><div class="container">
+    <nav class="navbar fixed-top navbar-light navbar-expand-lg bg-primary"><div class="container">
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.2.9999</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.5</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -97,22 +97,37 @@ is also limited to California, Florida, Texas, and New York.</p>
 <dd><p>the time value specifying the version for each row of measurements.</p></dd>
 
 <dt>percent_cli</dt>
-<dd><p>percentage of doctor’s visits with CLI (COVID-like illness) computed from medical insurance claims</p></dd>
+<dd><p>percentage of doctor’s visits with CLI (COVID-like
+illness) computed from medical insurance claims</p></dd>
 
 <dt>case_rate_7d_av</dt>
-<dd><p>7-day average signal of number of new confirmed deaths due to COVID-19 per 100,000 population, daily</p></dd>
+<dd><p>7-day average signal of number of new confirmed
+deaths due to COVID-19 per 100,000 population, daily</p></dd>
 
 
 </dl></div>
     <div class="section level2">
     <h2 id="source">Source<a class="anchor" aria-label="anchor" href="#source"></a></h2>
-    <p>This object contains a modified part of the <a href="https://github.com/CSSEGISandData/COVID-19" class="external-link">COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University</a> as <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html" class="external-link">republished in the COVIDcast Epidata API</a>. This data set is licensed under the terms of the
-<a href="https://creativecommons.org/licenses/by/4.0/" class="external-link">Creative Commons Attribution 4.0 International license</a>
-by Johns Hopkins University on behalf of its Center for Systems Science in Engineering.
-Copyright Johns Hopkins University 2020.</p>
-<p>Modifications:</p><ul><li><p><a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html" class="external-link">From the COVIDcast Doctor Visits API</a>: The signal <code>percent_cli</code> is taken directly from the API without changes.</p></li>
-<li><p><a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html" class="external-link">From the COVIDcast Epidata API</a>: <code>case_rate_7d_av</code> signal was computed by Delphi from the original JHU-CSSE data by calculating moving averages of the preceding 7 days, so the signal for June 7 is the average of the underlying data for June 1 through 7, inclusive.</p></li>
-<li><p>Furthermore, the data is a subset of the full dataset, the signal names slightly altered, and formatted into a tibble.</p></li>
+    <p>This object contains a modified part of the
+<a href="https://github.com/CSSEGISandData/COVID-19" class="external-link">COVID-19 Data Repository by
+the Center for Systems Science and Engineering (CSSE) at Johns Hopkins
+University</a> as
+<a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html" class="external-link">republished
+in the COVIDcast Epidata API</a>. This data set is licensed under the terms of
+the <a href="https://creativecommons.org/licenses/by/4.0/" class="external-link">Creative Commons
+Attribution 4.0 International license</a> by Johns Hopkins University on behalf
+of its Center for Systems Science in Engineering. Copyright Johns Hopkins
+University 2020.</p>
+<p>Modifications:</p><ul><li><p><a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html" class="external-link">From
+the COVIDcast Doctor Visits API</a>: The signal <code>percent_cli</code> is taken
+directly from the API without changes.</p></li>
+<li><p><a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html" class="external-link">From
+the COVIDcast Epidata API</a>: <code>case_rate_7d_av</code> signal was computed by Delphi
+from the original JHU-CSSE data by calculating moving averages of the
+preceding 7 days, so the signal for June 7 is the average of the underlying
+data for June 1 through 7, inclusive.</p></li>
+<li><p>Furthermore, the data is a subset of the full dataset, the signal names
+slightly altered, and formatted into a tibble.</p></li>
 </ul></div>
 
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

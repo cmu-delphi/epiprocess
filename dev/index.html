@@ -29,11 +29,11 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
     
 
-    <nav class="navbar fixed-top navbar-dark navbar-expand-lg bg-#C41230"><div class="container">
+    <nav class="navbar fixed-top navbar-light navbar-expand-lg bg-primary"><div class="container">
     
     <a class="navbar-brand me-2" href="index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.2.9999</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.5</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,8 +86,21 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="epiprocess">epiprocess<a class="anchor" aria-label="anchor" href="#epiprocess"></a>
 </h1></div>
-<p><!-- badges: start --> <a href="https://github.com/cmu-delphi/epiprocess/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/cmu-delphi/epiprocess/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <!-- badges: end --></p>
+<!-- badges: start -->
+
+<!-- badges: end -->
 <p>This package introduces a common data structure for epidemiological data sets measured over space and time, and offers associated utilities to perform basic signal processing tasks. See the getting started guide and vignettes for examples.</p>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
+<p>To install (unless you’re making changes to the package, use the stable version):</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Stable version</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"cmu-delphi/epiprocess@main"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Dev version</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"cmu-delphi/epiprocess@dev"</span><span class="op">)</span></span></code></pre></div>
+</div>
 <div class="section level2">
 <h2 id="epi_df-snapshot-of-a-data-set">
 <code>epi_df</code>: snapshot of a data set<a class="anchor" aria-label="anchor" href="#epi_df-snapshot-of-a-data-set"></a>
@@ -95,13 +108,17 @@
 <p>The first main data structure in the <code>epiprocess</code> package is called <a href="reference/epi_df.html"><code>epi_df</code></a>. This is simply a tibble with a couple of required columns, <code>geo_value</code> and <code>time_value</code>. It can have any other number of columns, which can be seen as measured variables, which we also call signal variables. In brief, an <code>epi_df</code> object represents a snapshot of a data set that contains the most up-to-date values of the signals variables, as of a given time.</p>
 <p>By convention, functions in the <code>epiprocess</code> package that operate on <code>epi_df</code> objects begin with <code>epi</code>. For example:</p>
 <ul>
-<li><p><code><a href="reference/epi_slide.html">epi_slide()</a></code>, for iteratively applying a custom computation to a variable in an <code>epi_df</code> object over sliding windows in time;</p></li>
-<li><p><code><a href="reference/epi_cor.html">epi_cor()</a></code>, for computing lagged correlations between variables in an <code>epi_df</code> object, (allowing for grouping by geo value, time value, or any other variables).</p></li>
+<li>
+<code><a href="reference/epi_slide.html">epi_slide()</a></code>, for iteratively applying a custom computation to a variable in an <code>epi_df</code> object over sliding windows in time;</li>
+<li>
+<code><a href="reference/epi_cor.html">epi_cor()</a></code>, for computing lagged correlations between variables in an <code>epi_df</code> object, (allowing for grouping by geo value, time value, or any other variables).</li>
 </ul>
 <p>Functions in the package that operate directly on given variables do not begin with <code>epi</code>. For example:</p>
 <ul>
-<li><p><code><a href="reference/growth_rate.html">growth_rate()</a></code>, for estimating the growth rate of a given signal at given time values, using various methodologies;</p></li>
-<li><p><code><a href="reference/detect_outlr.html">detect_outlr()</a></code>, for detecting outliers in a given signal over time, using either built-in or custom methodologies.</p></li>
+<li>
+<code><a href="reference/growth_rate.html">growth_rate()</a></code>, for estimating the growth rate of a given signal at given time values, using various methodologies;</li>
+<li>
+<code><a href="reference/detect_outlr.html">detect_outlr()</a></code>, for detecting outliers in a given signal over time, using either built-in or custom methodologies.</li>
 </ul>
 </div>
 <div class="section level2">
@@ -111,10 +128,14 @@
 <p>The second main data structure in the package is called <a href="reference/epi_archive.html"><code>epi_archive</code></a>. This is a special class (R6 format) wrapped around a data table that stores the archive (version history) of some signal variables of interest.</p>
 <p>By convention, functions in the <code>epiprocess</code> package that operate on <code>epi_archive</code> objects begin with <code>epix</code> (the “x” is meant to remind you of “archive”). These are just wrapper functions around the public methods for the <code>epi_archive</code> R6 class. For example:</p>
 <ul>
-<li><p><code><a href="reference/epix_as_of.html">epix_as_of()</a></code>, for generating a snapshot in <code>epi_df</code> format from the data archive, which represents the most up-to-date values of the signal variables, as of the specified version;</p></li>
-<li><p><code><a href="reference/epix_fill_through_version.html">epix_fill_through_version()</a></code>, for filling in some fake version data following simple rules, for use when downstream methods expect an archive that is more up-to-date (e.g., if it is a forecasting deadline date and one of our data sources cannot be accessed to provide the latest versions of its data)</p></li>
-<li><p><code><a href="reference/epix_merge.html">epix_merge()</a></code>, for merging two data archives with each other, with support for various approaches to handling when one of the archives is more up-to-date version-wise than the other;</p></li>
-<li><p><code><a href="reference/epix_slide.html">epix_slide()</a></code>, for sliding a custom computation to a data archive over local windows in time, much like <code>epi_slide</code> for an <code>epi_df</code> object, but with one key difference: the sliding computation at any given reference time t is performed only on the <strong>data that would have been available as of t</strong>.</p></li>
+<li>
+<code><a href="reference/epix_as_of.html">epix_as_of()</a></code>, for generating a snapshot in <code>epi_df</code> format from the data archive, which represents the most up-to-date values of the signal variables, as of the specified version;</li>
+<li>
+<code><a href="reference/epix_fill_through_version.html">epix_fill_through_version()</a></code>, for filling in some fake version data following simple rules, for use when downstream methods expect an archive that is more up-to-date (e.g., if it is a forecasting deadline date and one of our data sources cannot be accessed to provide the latest versions of its data)</li>
+<li>
+<code><a href="reference/epix_merge.html">epix_merge()</a></code>, for merging two data archives with each other, with support for various approaches to handling when one of the archives is more up-to-date version-wise than the other;</li>
+<li>
+<code><a href="reference/epix_slide.html">epix_slide()</a></code>, for sliding a custom computation to a data archive over local windows in time, much like <code>epi_slide</code> for an <code>epi_df</code> object, but with one key difference: the sliding computation at any given reference time t is performed only on the <strong>data that would have been available as of t</strong>.</li>
 </ul>
 </div>
 </div>
@@ -148,15 +169,20 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Logan Brooks <br><small class="roles"> Author </small>  </li>
+<li>Logan Brooks <br><small class="roles"> Author, maintainer </small>  </li>
 <li>Daniel McDonald <br><small class="roles"> Author </small>  </li>
 <li>Evan Ray <br><small class="roles"> Author </small>  </li>
-<li>Ryan Tibshirani <br><small class="roles"> Author, maintainer </small>  </li>
+<li>Ryan Tibshirani <br><small class="roles"> Author </small>  </li>
 <li><a href="authors.html">More about authors...</a></li>
 </ul>
 </div>
 
-
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/cmu-delphi/epiprocess/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/cmu-delphi/epiprocess/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+</ul>
+</div>
 
   </aside>
 </div>
