@@ -221,7 +221,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
   }
 
   # Arrange by increasing time_value
-  x <- arrange(x, time_value)
+  x <- arrange(x, .data$time_value)
 
   # Now set up starts and stops for sliding/hopping
   starts <- ref_time_values - before
@@ -271,9 +271,14 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
       dplyr::count(.data$time_value) %>%
       `[[`("n")
 
-    if (!all(purrr::map_lgl(slide_values_list, is.atomic)) &&
-      !all(purrr::map_lgl(slide_values_list, is.data.frame))) {
-      cli_abort("The slide computations must return always atomic vectors or data frames (and not a mix of these two structures).")
+    if (
+      !all(purrr::map_lgl(slide_values_list, is.atomic)) &&
+        !all(purrr::map_lgl(slide_values_list, is.data.frame))
+    ) {
+      cli_abort(
+        "The slide computations must return always atomic vectors
+          or data frames (and not a mix of these two structures)."
+      )
     }
 
     # Unlist if appropriate:
@@ -284,8 +289,10 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
         vctrs::list_unchop(slide_values_list)
       }
 
-    if (all(purrr::map_int(slide_values_list, vctrs::vec_size) == 1L) &&
-      length(slide_values_list) != 0L) {
+    if (
+      all(purrr::map_int(slide_values_list, vctrs::vec_size) == 1L) &&
+        length(slide_values_list) != 0L
+    ) {
       # Recycle to make size stable (one slide value per ref time value).
       # (Length-0 case also could be handled here, but causes difficulties;
       # leave it to the next branch, where it also belongs.)
@@ -299,7 +306,10 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
         ))
       }
       if (vctrs::vec_size(slide_values) != num_ref_rows) {
-        cli_abort("The slide computations must either (a) output a single element/row each, or (b) one element/row per appearance of the reference time value in the local window.")
+        cli_abort(
+          "The slide computations must either (a) output a single element/row each, or
+          (b) one element/row per appearance of the reference time value in the local window."
+        )
       }
     }
 
@@ -328,7 +338,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 
     f <- quos[[1]]
     new_col <- sym(names(rlang::quos_auto_name(quos)))
-    ... <- missing_arg() # magic value that passes zero args as dots in calls below
+    ... <- missing_arg() # magic value that passes zero args as dots in calls below # nolint: object_usage_linter
   }
 
   f <- as_slide_computation(f, ...)

@@ -53,7 +53,10 @@ grouped_epi_archive <-
     public = list(
       initialize = function(ungrouped, vars, drop) {
         if (inherits(ungrouped, "grouped_epi_archive")) {
-          cli_abort("`ungrouped` must not already be grouped (neither automatic regrouping nor nested grouping is supported).  Either use `group_by` with `.add=TRUE`, or `ungroup` first.",
+          cli_abort(
+            "`ungrouped` must not already be grouped (neither automatic regrouping
+            nor nested grouping is supported).
+            Either use `group_by` with `.add=TRUE`, or `ungroup` first.",
             class = "epiprocess__grouped_epi_archive__ungrouped_arg_is_already_grouped",
             epiprocess__ungrouped_class = class(ungrouped),
             epiprocess__ungrouped_groups = groups(ungrouped)
@@ -262,7 +265,12 @@ grouped_epi_archive <-
             .data_group <- .data_group$DT
           }
 
-          assert(check_atomic(comp_value, any.missing = TRUE), check_data_frame(comp_value), combine = "or", .var.name = vname(comp_value))
+          assert(
+            check_atomic(comp_value, any.missing = TRUE),
+            check_data_frame(comp_value),
+            combine = "or",
+            .var.name = vname(comp_value)
+          )
 
           # Label every result row with the `ref_time_value`
           res <- list(time_value = ref_time_value)
@@ -297,7 +305,11 @@ grouped_epi_archive <-
         x <- lapply(ref_time_values, function(ref_time_value) {
           # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
           # `epi_archive` if `all_versions` is `TRUE`:
-          as_of_raw <- private$ungrouped$as_of(ref_time_value, min_time_value = ref_time_value - before, all_versions = all_versions)
+          as_of_raw <- private$ungrouped$as_of(
+            ref_time_value,
+            min_time_value = ref_time_value - before,
+            all_versions = all_versions
+          )
 
           # Set:
           # * `as_of_df`, the data.frame/tibble/epi_df/etc. that we will
@@ -371,6 +383,7 @@ grouped_epi_archive <-
           x <- tidyr::unnest(x, !!new_col, names_sep = names_sep)
         }
 
+        # nolint start: commented_code_linter.
         # if (is_epi_df(x)) {
         #   # The analogue of `epi_df`'s `as_of` metadata for an archive is
         #   # `<archive>$versions_end`, at least in the current absence of
@@ -380,6 +393,7 @@ grouped_epi_archive <-
         #   # derived won't always match; override:
         #   attr(x, "metadata")[["as_of"]] <- private$ungrouped$versions_end
         # }
+        # nolint end
 
         # XXX We need to work out when we want to return an `epi_df` and how
         # to get appropriate keys (see #290, #223, #163). We'll probably

@@ -195,7 +195,7 @@ prob_ar <- function(y, lags = c(0, 7, 14), ahead = 6, min_train_window = 20,
     data.frame,
     purrr::map(lags, function(j) lag(y, n = j))
   )
-  names(dat) <- paste0("x", 1:ncol(dat))
+  names(dat) <- paste0("x", seq_len(ncol(dat)))
   if (intercept) dat$x0 <- rep(1, nrow(dat))
   dat$y <- lead(y, n = ahead)
 
@@ -258,13 +258,13 @@ so that we can call it a few times.
 # Note the use of all_rows = TRUE (keeps all original rows in the output)
 k_week_ahead <- function(x, ahead = 7) {
   x %>%
-    group_by(geo_value) %>%
+    group_by(.data$geo_value) %>%
     epi_slide(
-      fc = prob_ar(cases_7dav, ahead = ahead), before = 119,
+      fc = prob_ar(.data$cases_7dav, ahead = ahead), before = 119,
       ref_time_values = fc_time_values, all_rows = TRUE
     ) %>%
     ungroup() %>%
-    mutate(target_date = time_value + ahead)
+    mutate(target_date = .data$time_value + ahead)
 }
 
 # First generate the forecasts, and bind them together

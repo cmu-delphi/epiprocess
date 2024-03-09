@@ -75,7 +75,7 @@
 #'   cor_by = geo_value,
 #'   dt1 = -2
 #' )
-epi_cor <- function(x, var1, var2, dt1 = 0, dt2 = 0, shift_by = geo_value,
+epi_cor <- function(x, var1, var2, dt1 = 0, dt2 = 0, shift_by = geo_value, # nolint: object_usage_linter
                     cor_by = geo_value, use = "na.or.complete",
                     method = c("pearson", "kendall", "spearman")) {
   assert_class(x, "epi_df")

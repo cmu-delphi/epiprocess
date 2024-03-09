@@ -190,7 +190,9 @@ versions <- seq(as.Date("2020-06-01"), self_max - 1, by = "1 month")
 snapshots <- map_dfr(versions, function(v) {
   epix_as_of(x, max_version = v) %>% mutate(version = v)
 }) %>%
-  bind_rows(x_latest %>% mutate(version = self_max)) %>%
+  bind_rows(
+    x_latest %>% mutate(version = self_max)
+  ) %>%
   mutate(latest = version == self_max)
 
 ggplot(
@@ -316,13 +318,13 @@ prob_arx <- function(x, y, lags = c(0, 7, 14), ahead = 7, min_train_window = 20,
   dat <- do.call(
     data.frame,
     unlist( # Below we loop through and build the lagged features
-      purrr::map(1:ncol(x), function(i) {
+      purrr::map(seq_len(ncol(x)), function(i) {
         purrr::map(lags[[i]], function(j) lag(x[, i], n = j))
       }),
       recursive = FALSE
     )
   )
-  names(dat) <- paste0("x", 1:ncol(dat))
+  names(dat) <- paste0("x", seq_len(ncol(dat)))
   if (intercept) dat$x0 <- rep(1, nrow(dat))
   dat$y <- lead(y, n = ahead)
   obj <- lm(y ~ . + 0, data = dat)
@@ -393,21 +395,21 @@ x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
-      group_by(geo_value) %>%
+      group_by(.data$geo_value) %>%
       epix_slide(
-        fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead), before = 119,
+        fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, ahead = ahead), before = 119,
         ref_time_values = fc_time_values
       ) %>%
-      mutate(target_date = time_value + ahead, as_of = TRUE) %>%
+      mutate(target_date = .data$time_value + ahead, as_of = TRUE) %>%
       ungroup()
   } else {
     x_latest %>%
-      group_by(geo_value) %>%
+      group_by(.data$geo_value) %>%
       epi_slide(
-        fc = prob_arx(percent_cli, case_rate_7d_av, ahead = ahead), before = 119,
+        fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, ahead = ahead), before = 119,
         ref_time_values = fc_time_values
       ) %>%
-      mutate(target_date = time_value + ahead, as_of = FALSE) %>%
+      mutate(target_date = .data$time_value + ahead, as_of = FALSE) %>%
       ungroup()
   }
 }

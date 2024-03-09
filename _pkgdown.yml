@@ -1,92 +1,101 @@
+# Colors should stay consistent across epipredict, epiprocess, and epidatr,
+# using Carnegie Red
+# https://www.cmu.edu/brand/brand-guidelines/visual-identity/colors.html
+
+# This is to give a default value to the `mode` parameter in the
+# `pkgdown::build_site` function. This is useful when building the site locally,
+# as it will default to `devel` mode. In practice, this should all be handled
+# dynamically by the CI/CD pipeline.
+development:
+  mode: devel
+  version_label: success
+
 template:
-    bootstrap: 5
+  bootstrap: 5
+  bootswatch: cosmo
+  bslib:
+    font_scale: 1.0
+    primary: "#C41230"
+    success: "#B4D43C"
+    link-color: "#C41230"
 
-
-# Colors from epipredict & epidatr, including Carnegie Red https://www.cmu.edu/brand/brand-guidelines/visual-identity/colors.html
 navbar:
-    bg: "#C41230"
-    fg: "#f8f8f8"
-    bootswatch: cosmo
-    bslib:
-        font_scale: 1.0
-        primary: "#C41230"
-        link-color: "#C41230"
-        navbar-bg: "#C41230"
-        navbar-fg: "#f8f8f8"
+  bg: primary
+  type: light
 
 url: https://cmu-delphi.github.io/epiprocess/
 
 home:
-    links:
-        - text: Introduction to Delphi's Tooling Work
-          href: https://cmu-delphi.github.io/delphi-tooling-book/
-        - text: Get the epipredict R package
-          href: https://cmu-delphi.github.io/epipredict/
-        - text: Get the epidatr R package
-          href: https://github.com/cmu-delphi/epidatr
-        - text: Get the epidatasets R package
-          href: https://cmu-delphi.github.io/epidatasets/
+  links:
+    - text: Introduction to Delphi's Tooling Work
+      href: https://cmu-delphi.github.io/delphi-tooling-book/
+    - text: Get the epipredict R package
+      href: https://cmu-delphi.github.io/epipredict/
+    - text: Get the epidatr R package
+      href: https://github.com/cmu-delphi/epidatr
+    - text: Get the epidatasets R package
+      href: https://cmu-delphi.github.io/epidatasets/
 
 articles:
-    - title: Using the package
-      desc: Basic usage and examples.
-      navbar: ~
-      contents:
-          - epiprocess
-          - slide
-          - growth_rate
-          - correlation
-          - aggregation
-          - outliers
-          - archive
-          - advanced
-          - compactify
+  - title: Using the package
+    desc: Basic usage and examples.
+    navbar: ~
+    contents:
+      - epiprocess
+      - slide
+      - growth_rate
+      - correlation
+      - aggregation
+      - outliers
+      - archive
+      - advanced
+      - compactify
 
 repo:
-    url:
-        home: https://github.com/cmu-delphi/epiprocess/tree/main/
-        source: https://github.com/cmu-delphi/epiprocess/blob/main/
-        issue: https://github.com/cmu-delphi/epiprocess/issues
-        user: https://github.com/
+  url:
+    home: https://github.com/cmu-delphi/epiprocess/tree/main/
+    source: https://github.com/cmu-delphi/epiprocess/blob/main/
+    issue: https://github.com/cmu-delphi/epiprocess/issues
+    user: https://github.com/
 
 reference:
-    - title: "`epi_df` basics"
-      desc: Details on `epi_df` format, and basic functionality.
-    - contents:
-          - matches("epi_df")
-    - title: "`epi_*()` functions"
-      desc: Functions that act on `epi_df` objects.
-    - contents:
-          - epi_slide
-          - epi_cor
-    - title: Vector functions
-      desc: Functions that act directly on signal variables.
-    - contents:
-          - growth_rate
-          - detect_outlr
-          - detect_outlr_rm
-          - detect_outlr_stl
-    - title: "`epi_archive` basics"
-      desc: Details on `epi_archive`, and basic functionality.
-    - contents:
-          - matches("archive")
-    - title: "`epix_*()` functions"
-      desc: Functions that act on an `epi_archive` and/or `grouped_epi_archive` object.
-    - contents:
-          - starts_with("epix")
-          - group_by.epi_archive
-    - title: Example data
-    - contents:
-          - archive_cases_dv_subset
-          - incidence_num_outlier_example
-          - contains("jhu_csse")
-    - title: Basic automatic plotting
-    - contents:
-          - autoplot.epi_df
-    - title: internal
-    - contents:
-          - epiprocess
-          - max_version_with_row_in
-          - next_after
-          - guess_period
-          - key_colnames
+  - title: "`epi_df` basics"
+    desc: Details on `epi_df` format, and basic functionality.
+  - contents:
+      - matches("epi_df")
+  - title: "`epi_*()` functions"
+    desc: Functions that act on `epi_df` objects.
+  - contents:
+      - epi_slide
+      - epi_cor
+  - title: Vector functions
+    desc: Functions that act directly on signal variables.
+  - contents:
+      - growth_rate
+      - detect_outlr
+      - detect_outlr_rm
+      - detect_outlr_stl
+  - title: "`epi_archive` basics"
+    desc: Details on `epi_archive`, and basic functionality.
+  - contents:
+      - matches("archive")
+  - title: "`epix_*()` functions"
+    desc: Functions that act on an `epi_archive` and/or `grouped_epi_archive` object.
+  - contents:
+      - starts_with("epix")
+      - group_by.epi_archive
+  - title: Example data
+  - contents:
+      - archive_cases_dv_subset
+      - incidence_num_outlier_example
+      - contains("jhu_csse")
+  - title: Basic automatic plotting
+  - contents:
+      - autoplot.epi_df
+  - title: internal
+  - contents:
+      - epiprocess
+      - max_version_with_row_in
+      - next_after
+      - guess_period
+      - key_colnames

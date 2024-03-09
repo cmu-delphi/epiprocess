@@ -50,9 +50,7 @@ test_that("as_epi_df errors when additional_metadata is not a list", {
 
 tib <- tibble::tibble(
   x = 1:10, y = 1:10,
-  time_value = rep(seq(as.Date("2020-01-01"),
-    by = 1, length.out = 5
-  ), times = 2),
+  time_value = rep(seq(as.Date("2020-01-01"), by = 1, length.out = 5), times = 2),
   geo_value = rep(c("ca", "hi"), each = 5)
 )
 epi_tib <- epiprocess::new_epi_df(tib)
@@ -78,13 +76,9 @@ test_that("grouped epi_df drops type when dropping keys", {
 test_that("grouped epi_df handles extra keys correctly", {
   tib <- tibble::tibble(
     x = 1:10, y = 1:10,
-    time_value = rep(seq(as.Date("2020-01-01"),
-      by = 1, length.out = 5
-    ), times = 2),
+    time_value = rep(seq(as.Date("2020-01-01"), by = 1, length.out = 5), times = 2),
     geo_value = rep(c("ca", "hi"), each = 5),
-    extra_key = rep(seq(as.Date("2020-01-01"),
-      by = 1, length.out = 5
-    ), times = 2)
+    extra_key = rep(seq(as.Date("2020-01-01"), by = 1, length.out = 5), times = 2)
   )
   epi_tib <- epiprocess::new_epi_df(tib,
     additional_metadata = list(other_keys = "extra_key")

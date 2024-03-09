@@ -21,12 +21,15 @@ COVID-19 cases, daily}
 }
 \source{
 This object contains a modified part of the
-\href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University}
-as \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{republished in the COVIDcast Epidata API}.
-This data set is licensed under the terms of the
-\href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons Attribution 4.0 International license}
-by the Johns Hopkins University on behalf of its Center for Systems Science
-in Engineering. Copyright Johns Hopkins University 2020.
+\href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 Data Repository
+by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins
+University} as
+\href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{republished
+in the COVIDcast Epidata API}. This data set is licensed under the terms of
+the \href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons
+Attribution 4.0 International license} by the Johns Hopkins University on
+behalf of its Center for Systems Science in Engineering. Copyright Johns
+Hopkins University 2020.
 
 Modifications:
 \itemize{

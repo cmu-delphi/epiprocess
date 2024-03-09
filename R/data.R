@@ -20,12 +20,15 @@
 #'       COVID-19 cases, daily}
 #' }
 #' @source This object contains a modified part of the
-#'   \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University}
-#'   as \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{republished in the COVIDcast Epidata API}.
-#'   This data set is licensed under the terms of the
-#'   \href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons Attribution 4.0 International license}
-#'   by the Johns Hopkins University on behalf of its Center for Systems Science
-#'   in Engineering. Copyright Johns Hopkins University 2020.
+#'   \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 Data Repository
+#'   by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins
+#'   University} as
+#'   \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{republished
+#'   in the COVIDcast Epidata API}. This data set is licensed under the terms of
+#'   the \href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons
+#'   Attribution 4.0 International license} by the Johns Hopkins University on
+#'   behalf of its Center for Systems Science in Engineering. Copyright Johns
+#'   Hopkins University 2020.
 #'
 #' Modifications:
 #' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{From
@@ -54,19 +57,34 @@
 #'   \item{geo_value}{the geographic value associated with each row of measurements.}
 #'   \item{time_value}{the time value associated with each row of measurements.}
 #'   \item{version}{the time value specifying the version for each row of measurements. }
-#'   \item{percent_cli}{percentage of doctor’s visits with CLI (COVID-like illness) computed from medical insurance claims}
-#'   \item{case_rate_7d_av}{7-day average signal of number of new confirmed deaths due to COVID-19 per 100,000 population, daily}
+#'   \item{percent_cli}{percentage of doctor’s visits with CLI (COVID-like
+#'   illness) computed from medical insurance claims}
+#'   \item{case_rate_7d_av}{7-day average signal of number of new confirmed
+#'   deaths due to COVID-19 per 100,000 population, daily}
 #' }
 #' @source
-#' This object contains a modified part of the \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University} as \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{republished in the COVIDcast Epidata API}. This data set is licensed under the terms of the
-#' \href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons Attribution 4.0 International license}
-#' by Johns Hopkins University on behalf of its Center for Systems Science in Engineering.
-#' Copyright Johns Hopkins University 2020.
+#' This object contains a modified part of the
+#' \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 Data Repository by
+#' the Center for Systems Science and Engineering (CSSE) at Johns Hopkins
+#' University} as
+#' \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{republished
+#' in the COVIDcast Epidata API}. This data set is licensed under the terms of
+#' the \href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons
+#' Attribution 4.0 International license} by Johns Hopkins University on behalf
+#' of its Center for Systems Science in Engineering. Copyright Johns Hopkins
+#' University 2020.
 #'
 #' Modifications:
-#' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html}{From the COVIDcast Doctor Visits API}: The signal `percent_cli` is taken directly from the API without changes.
-#' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{From the COVIDcast Epidata API}: `case_rate_7d_av` signal was computed by Delphi from the original JHU-CSSE data by calculating moving averages of the preceding 7 days, so the signal for June 7 is the average of the underlying data for June 1 through 7, inclusive.
-#' * Furthermore, the data is a subset of the full dataset, the signal names slightly altered, and formatted into a tibble.
+#' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html}{From
+#'   the COVIDcast Doctor Visits API}: The signal `percent_cli` is taken
+#'   directly from the API without changes.
+#' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{From
+#'   the COVIDcast Epidata API}: `case_rate_7d_av` signal was computed by Delphi
+#'   from the original JHU-CSSE data by calculating moving averages of the
+#'   preceding 7 days, so the signal for June 7 is the average of the underlying
+#'   data for June 1 through 7, inclusive.
+#' * Furthermore, the data is a subset of the full dataset, the signal names
+#'   slightly altered, and formatted into a tibble.
 #'
 #' @export
 "archive_cases_dv_subset"
@@ -128,11 +146,11 @@ some_package_is_being_unregistered <- function(parent_n = 0L) {
 #'
 #' @noRd
 delayed_assign_with_unregister_awareness <- function(x, value,
-                                                     eval.env = rlang::caller_env(),
-                                                     assign.env = rlang::caller_env()) {
-  value_quosure <- rlang::as_quosure(rlang::enexpr(value), eval.env)
+                                                     eval_env = rlang::caller_env(),
+                                                     assign_env = rlang::caller_env()) {
+  value_quosure <- rlang::as_quosure(rlang::enexpr(value), eval_env)
   this_env <- environment()
-  delayedAssign(x, eval.env = this_env, assign.env = assign.env, value = {
+  delayedAssign(x, eval.env = this_env, assign.env = assign_env, value = {
     if (some_package_is_being_unregistered()) {
       withCallingHandlers(
         # `rlang::eval_tidy(value_quosure)` is shorter and would sort of work,
@@ -140,7 +158,7 @@ delayed_assign_with_unregister_awareness <- function(x, value,
         # we'd have with `delayedAssign`; it doesn't seem to actually evaluate
         # quosure's expr in the quosure's env. Using `rlang::eval_bare` instead
         # seems to do the trick. (We also could have just used a `value_expr`
-        # and `eval.env` together rather than introducing `value_quosure` at
+        # and `eval_env` together rather than introducing `value_quosure` at
         # all.)
         rlang::eval_bare(rlang::quo_get_expr(value_quosure), rlang::quo_get_env(value_quosure)),
         error = function(err) {
@@ -193,7 +211,10 @@ delayed_assign_with_unregister_awareness <- function(x, value,
 # binding may have been created with the same name as the package promise, and
 # this binding will stick around even when the package is reloaded, and will
 # need to be `rm`-d to easily access the refreshed package promise.
-delayed_assign_with_unregister_awareness("archive_cases_dv_subset", as_epi_archive(archive_cases_dv_subset_dt, compactify = FALSE))
+delayed_assign_with_unregister_awareness(
+  "archive_cases_dv_subset",
+  as_epi_archive(archive_cases_dv_subset_dt, compactify = FALSE)
+)
 
 #' Subset of JHU daily cases from California and Florida
 #'
@@ -210,15 +231,24 @@ delayed_assign_with_unregister_awareness("archive_cases_dv_subset", as_epi_archi
 #'   \item{time_value}{the time value associated with each row of measurements.}
 #'   \item{cases}{Number of new confirmed COVID-19 cases, daily}
 #' }
-#' @source This object contains a modified part of the \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University} as \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{republished in the COVIDcast Epidata API}. This data set is licensed under the terms of the
-#' \href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons Attribution 4.0 International license}
-#' by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering.
-#' Copyright Johns Hopkins University 2020.
+#' @source This object contains a modified part of the
+#' \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 Data Repository by
+#' the Center for Systems Science and Engineering (CSSE) at Johns Hopkins
+#' University} as
+#' \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{republished
+#' in the COVIDcast Epidata API}. This data set is licensed under the terms of
+#' the \href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons
+#' Attribution 4.0 International license} by the Johns Hopkins University on
+#' behalf of its Center for Systems Science in Engineering. Copyright Johns
+#' Hopkins University 2020.
 #'
 #' Modifications:
-#' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{From the COVIDcast Epidata API}:
-#' These signals are taken directly from the JHU CSSE \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 GitHub repository} without changes.
-#' * Furthermore, the data has been limited to a very small number of rows, the signal names slightly altered, and formatted into a tibble.
+#' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{From
+#' the COVIDcast Epidata API}: These signals are taken directly from the JHU
+#' CSSE \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 GitHub
+#' repository} without changes.
+#' * Furthermore, the data has been limited to a very small number of rows, the
+#'   signal names slightly altered, and formatted into a tibble.
 "incidence_num_outlier_example"
 
 #' Subset of JHU daily cases from counties in Massachusetts and Vermont
@@ -237,12 +267,25 @@ delayed_assign_with_unregister_awareness("archive_cases_dv_subset", as_epi_archi
 #'   \item{county_name}{the name of the county}
 #'   \item{state_name}{the full name of the state}
 #' }
-#' @source This object contains a modified part of the \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University} as \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{republished in the COVIDcast Epidata API}. This data set is licensed under the terms of the
+#' @source This object contains a modified part of the
+#' \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 Data Repository by
+#' the Center for Systems Science and Engineering (CSSE) at Johns Hopkins
+#' University} as
+#' \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{republished
+#' in the COVIDcast Epidata API}. This data set is licensed under the terms of
+#' the
 #' \href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons Attribution 4.0 International license}
 #' by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering.
 #' Copyright Johns Hopkins University 2020.
 #'
 #' Modifications:
-#' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{From the COVIDcast Epidata API}: These signals are taken directly from the JHU CSSE \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 GitHub repository} without changes. The 7-day average signals are computed by Delphi by calculating moving averages of the preceding 7 days, so the signal for June 7 is the average of the underlying data for June 1 through 7, inclusive.
-#' * Furthermore, the data has been limited to a very small number of rows, the signal names slightly altered, and formatted into a tibble.
+#' * \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{From
+#'   the COVIDcast Epidata API}: These signals are taken directly from the JHU
+#'   CSSE \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 GitHub
+#'   repository} without changes. The 7-day average signals are computed by
+#'   Delphi by calculating moving averages of the preceding 7 days, so the
+#'   signal for June 7 is the average of the underlying data for June 1 through
+#'   7, inclusive.
+#' * Furthermore, the data has been limited to a very small number of rows, the
+#'   signal names slightly altered, and formatted into a tibble.
 "jhu_csse_county_level_subset"
