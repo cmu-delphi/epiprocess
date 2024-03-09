@@ -51,9 +51,9 @@ jobs:
         #   https://github.com/r-lib/pkgdown/issues/2257
         run: |
           target_ref <- "${{ github.event_name == 'pull_request' && github.base_ref || github.ref }}"
-          override <- if (target_ref == "main") {
+          override <- if (target_ref == "main" || target_ref == "refs/heads/main") {
             list(development = list(mode = "release", version_label = "light"))
-          } else if (target_ref == "dev") {
+          } else if (target_ref == "dev" || target_ref == "refs/heads/dev") {
             list(development = list(mode = "devel", version_label = "success"))
           } else {
             stop("Unexpected target_ref: ", target_ref)
