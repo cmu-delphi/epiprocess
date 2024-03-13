@@ -143,10 +143,8 @@ ex1 <- tibble(
     "12111", "12113", "12117",
     "42101", "42103", "42105"
   ),
-  time_value = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
-    by = "day"
-  ), length.out = length(geo_value)),
-  value = 1:length(geo_value) + 0.01 * withr::with_rng_version("3.0.0", withr::with_seed(42, length(geo_value)))
+  time_value = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"), by = "day"), length.out = length(geo_value)),
+  value = seq_along(geo_value) + 0.01 * withr::with_rng_version("3.0.0", withr::with_seed(42, length(geo_value)))
 ) %>%
   as_tsibble(index = time_value, key = c(geo_value, county_code))
 
@@ -164,24 +162,26 @@ attr(ex1, "metadata")
 `epi_df` requires there to be columns `geo_value` and `time_value`, if they do not exist then `as_epi_df()` throws an error.
 ```{r, error = TRUE}
 data.frame(
-  state = rep(c("ca", "fl", "pa"), each = 3), # misnamed
-  pol = rep(c("blue", "swing", "swing"), each = 3), # extra key
-  reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
-    by = "day"
-  ), length.out = length(geo_value)), # misnamed
-  value = 1:length(geo_value) + 0.01 * withr::with_rng_version("3.0.0", withr::with_seed(42, length(geo_value)))
+  # misnamed
+  state = rep(c("ca", "fl", "pa"), each = 3),
+  # extra key
+  pol = rep(c("blue", "swing", "swing"), each = 3),
+  # misnamed
+  reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"), by = "day"), length.out = length(geo_value)),
+  value = seq_along(geo_value) + 0.01 * withr::with_rng_version("3.0.0", withr::with_seed(42, length(geo_value)))
 ) %>% as_epi_df()
 ```
 
 The columns can be renamed to match `epi_df` format. In the example below, notice there is also an additional key `pol`.
 ```{r}
 ex2 <- tibble(
-  state = rep(c("ca", "fl", "pa"), each = 3), # misnamed
-  pol = rep(c("blue", "swing", "swing"), each = 3), # extra key
-  reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
-    by = "day"
-  ), length.out = length(state)), # misnamed
-  value = 1:length(state) + 0.01 * withr::with_rng_version("3.0.0", withr::with_seed(42, length(state)))
+  # misnamed
+  state = rep(c("ca", "fl", "pa"), each = 3),
+  # extra key
+  pol = rep(c("blue", "swing", "swing"), each = 3),
+  # misnamed
+  reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"), by = "day"), length.out = length(state)),
+  value = seq_along(state) + 0.01 * withr::with_rng_version("3.0.0", withr::with_seed(42, length(state)))
 ) %>% data.frame()
 
 head(ex2)
@@ -265,8 +265,12 @@ x <- x %>%
   pivot_longer(starts_with("cases"), names_to = "type") %>%
   mutate(type = substring(type, 7))
 
-yrange <- range(x %>% group_by(time_value) %>%
-  summarize(value = sum(value)) %>% pull(value))
+yrange <- range(
+  x %>%
+    group_by(time_value) %>%
+    summarize(value = sum(value)) %>%
+    pull(value)
+)
 
 ggplot(x, aes(x = time_value, y = value)) +
   geom_col(aes(fill = type)) +

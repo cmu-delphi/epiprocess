@@ -134,20 +134,20 @@ new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
   # If as_of is missing, then try to guess it
   if (missing(as_of)) {
     # First check the metadata for an as_of field
-    if ("metadata" %in% names(attributes(x)) &&
-      "as_of" %in% names(attributes(x)$metadata)) {
+    if (
+      "metadata" %in% names(attributes(x)) &&
+        "as_of" %in% names(attributes(x)$metadata)
+    ) {
       as_of <- attributes(x)$metadata$as_of
-    }
-
-    # Next check for as_of, issue, or version columns
-    else if ("as_of" %in% names(x)) {
+    } else if ("as_of" %in% names(x)) {
+      # Next check for as_of, issue, or version columns
       as_of <- max(x$as_of)
     } else if ("issue" %in% names(x)) {
       as_of <- max(x$issue)
     } else if ("version" %in% names(x)) {
       as_of <- max(x$version)
-    } # If we got here then we failed
-    else {
+    } else {
+      # If we got here then we failed
       as_of <- Sys.time()
     } # Use the current day-time
   }

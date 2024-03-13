@@ -89,8 +89,7 @@ test_that("epix_slide works as intended with `as_list_col=TRUE`", {
         2^6 + 2^3,
         2^10 + 2^9,
         2^15 + 2^14
-      ) %>%
-        purrr::map(~ data.frame(bin_sum = .x))
+      ) %>% purrr::map(~ data.frame(bin_sum = .x))
   ) %>%
     group_by(geo_value)
 
@@ -125,8 +124,7 @@ test_that("epix_slide works as intended with `as_list_col=TRUE`", {
         c(2^6, 2^3),
         c(2^10, 2^9),
         c(2^15, 2^14)
-      ) %>%
-        purrr::map(~ data.frame(bin = rev(.x)))
+      ) %>% purrr::map(~ data.frame(bin = rev(.x)))
   ) %>%
     group_by(geo_value)
 
@@ -172,8 +170,7 @@ test_that("epix_slide works as intended with `as_list_col=TRUE`", {
         c(2^6, 2^3),
         c(2^10, 2^9),
         c(2^15, 2^14)
-      ) %>%
-        purrr::map(rev)
+      ) %>% purrr::map(rev)
   ) %>%
     group_by(geo_value)
 
@@ -564,6 +561,7 @@ test_that("epix_slide with all_versions option works as intended", {
   expect_identical(xx1, xx3) # This and * Imply xx2 and xx3 are identical
 })
 
+# nolint start: commented_code_linter.
 # XXX currently, we're using a stopgap measure of having `epix_slide` always
 # output a (grouped/ungrouped) tibble while we think about the class, columns,
 # and attributes of `epix_slide` output more carefully. We might bring this test
@@ -583,6 +581,7 @@ test_that("epix_slide with all_versions option works as intended", {
 #     10
 #   )
 # })
+# nolint end
 
 test_that("epix_slide works with 0-row computation outputs", {
   epix_slide_empty <- function(ea, ...) {
@@ -631,6 +630,7 @@ test_that("epix_slide works with 0-row computation outputs", {
   )
 })
 
+# nolint start: commented_code_linter.
 # test_that("epix_slide grouped by geo can produce `epi_df` output", {
 #   # This is a characterization test. Not sure we actually want this behavior;
 #   # https://github.com/cmu-delphi/epiprocess/pull/290#issuecomment-1489099157
@@ -648,6 +648,7 @@ test_that("epix_slide works with 0-row computation outputs", {
 #       new_epi_df(as_of = ea$versions_end)
 #   )
 # })
+# nolint end
 
 test_that("epix_slide alerts if the provided f doesn't take enough args", {
   f_xgt <- function(x, g, t) dplyr::tibble(value = mean(x$binary), count = length(x$binary))

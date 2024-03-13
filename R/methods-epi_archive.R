@@ -207,7 +207,7 @@ epix_merge <- function(x, y,
     if (all(is.na(c(x$clobberable_versions_start, y$clobberable_versions_start)))) {
       NA # (any type of NA is fine here)
     } else {
-      Min(c(x$clobberable_versions_start, y$clobberable_versions_start))
+      min_na_rm(c(x$clobberable_versions_start, y$clobberable_versions_start))
     }
 
   # The actual merge below may not succeed 100% of the time, so do this
@@ -224,22 +224,22 @@ epix_merge <- function(x, y,
       ), class = "epiprocess__epix_merge_unresolved_sync")
     } else {
       new_versions_end <- x$versions_end
-      x_DT <- x$DT
-      y_DT <- y$DT
+      x_dt <- x$DT
+      y_dt <- y$DT
     }
   } else if (sync %in% c("na", "locf")) {
     new_versions_end <- max(x$versions_end, y$versions_end)
-    x_DT <- epix_fill_through_version(x, new_versions_end, sync)$DT
-    y_DT <- epix_fill_through_version(y, new_versions_end, sync)$DT
+    x_dt <- epix_fill_through_version(x, new_versions_end, sync)$DT
+    y_dt <- epix_fill_through_version(y, new_versions_end, sync)$DT
   } else if (sync == "truncate") {
     new_versions_end <- min(x$versions_end, y$versions_end)
-    x_DT <- x$DT[x[["DT"]][["version"]] <= new_versions_end, names(x$DT), with = FALSE]
-    y_DT <- y$DT[y[["DT"]][["version"]] <= new_versions_end, names(y$DT), with = FALSE]
+    x_dt <- x$DT[x[["DT"]][["version"]] <= new_versions_end, names(x$DT), with = FALSE]
+    y_dt <- y$DT[y[["DT"]][["version"]] <= new_versions_end, names(y$DT), with = FALSE]
   } else {
     cli_abort("unimplemented")
   }
 
-  # key(x_DT) should be the same as key(x$DT) and key(y_DT) should be the same
+  # key(x_dt) should be the same as key(x$DT) and key(y_dt) should be the same
   # as key(y$DT). Below, we only use {x,y}_DT in the code (making it easier to
   # split the code into separate functions if we wish), but still refer to
   # {x,y}$DT in the error messages (further relying on this assumption).
@@ -248,24 +248,24 @@ epix_merge <- function(x, y,
   # have a bug in the preprocessing, a weird/invalid archive as input, and/or a
   # data.table version with different semantics (which may break other parts of
   # our code).
-  x_DT_key_as_expected <- identical(key(x$DT), key(x_DT))
-  y_DT_key_as_expected <- identical(key(y$DT), key(y_DT))
-  if (!x_DT_key_as_expected || !y_DT_key_as_expected) {
+  x_dt_key_as_expected <- identical(key(x$DT), key(x_dt))
+  y_dt_key_as_expected <- identical(key(y$DT), key(y_dt))
+  if (!x_dt_key_as_expected || !y_dt_key_as_expected) {
     cli_warn("
       `epiprocess` internal warning (please report): pre-processing for
       epix_merge unexpectedly resulted in an intermediate data table (or
       tables) with a different key than the corresponding input archive.
       Manually setting intermediate data table keys to the expected values.
     ", internal = TRUE)
-    setkeyv(x_DT, key(x$DT))
-    setkeyv(y_DT, key(y$DT))
+    setkeyv(x_dt, key(x$DT))
+    setkeyv(y_dt, key(y$DT))
   }
   # Without some sort of annotations of what various columns represent, we can't
   # do something that makes sense when merging archives with mismatched keys.
   # E.g., even if we assume extra keys represent demographic breakdowns, a
   # sensible default treatment of count-type and rate-type value columns would
   # differ.
-  if (!identical(sort(key(x_DT)), sort(key(y_DT)))) {
+  if (!identical(sort(key(x_dt)), sort(key(y_dt)))) {
     cli_abort("
             The archives must have the same set of key column names; if the
             key columns represent the same things, just with different
@@ -281,8 +281,8 @@ epix_merge <- function(x, y,
   #
   # non-`by` cols = "value"-ish cols, and are looked up with last
   #                 version carried forward via rolling joins
-  by <- key(x_DT) # = some perm of key(y_DT)
-  if (!all(c("geo_value", "time_value", "version") %in% key(x_DT))) {
+  by <- key(x_dt) # = some perm of key(y_dt)
+  if (!all(c("geo_value", "time_value", "version") %in% key(x_dt))) {
     cli_abort('Invalid `by`; `by` is currently set to the common `key` of
            the two archives, and is expected to contain
            "geo_value", "time_value", and "version".',
@@ -296,8 +296,8 @@ epix_merge <- function(x, y,
       class = "epiprocess__epi_archive_must_have_version_at_end_of_key"
     )
   }
-  x_nonby_colnames <- setdiff(names(x_DT), by)
-  y_nonby_colnames <- setdiff(names(y_DT), by)
+  x_nonby_colnames <- setdiff(names(x_dt), by)
+  y_nonby_colnames <- setdiff(names(y_dt), by)
   if (length(intersect(x_nonby_colnames, y_nonby_colnames)) != 0L) {
     cli_abort("
             `x` and `y` DTs have overlapping non-by column names;
@@ -306,7 +306,7 @@ epix_merge <- function(x, y,
             incorporated into the key, and other columns should be renamed.
           ", class = "epiprocess__epix_merge_x_y_must_not_have_overlapping_nonby_colnames")
   }
-  x_by_vals <- x_DT[, by, with = FALSE]
+  x_by_vals <- x_dt[, by, with = FALSE]
   if (anyDuplicated(x_by_vals) != 0L) {
     cli_abort("
             The `by` columns must uniquely determine rows of `x$DT`;
@@ -315,7 +315,7 @@ epix_merge <- function(x, y,
             to `x`'s key (to get a unique key).
           ", class = "epiprocess__epix_merge_by_cols_must_act_as_unique_key")
   }
-  y_by_vals <- y_DT[, by, with = FALSE]
+  y_by_vals <- y_dt[, by, with = FALSE]
   if (anyDuplicated(y_by_vals) != 0L) {
     cli_abort("
             The `by` columns must uniquely determine rows of `y$DT`;
@@ -324,7 +324,7 @@ epix_merge <- function(x, y,
             to `y`'s key (to get a unique key).
           ", class = "epiprocess__epix_merge_by_cols_must_act_as_unique_key")
   }
-  result_DT <- merge(x_by_vals, y_by_vals,
+  result_dt <- merge(x_by_vals, y_by_vals,
     by = by,
     # We must have `all=TRUE` or we may skip updates
     # from x and/or y and corrupt the history
@@ -337,8 +337,8 @@ epix_merge <- function(x, y,
     allow.cartesian = TRUE
   )
   set(
-    result_DT, , x_nonby_colnames,
-    x_DT[result_DT[, by, with = FALSE], x_nonby_colnames,
+    result_dt, , x_nonby_colnames,
+    x_dt[result_dt[, by, with = FALSE], x_nonby_colnames,
       with = FALSE,
       # It's good practice to specify `on`, and we must
       # explicitly specify `on` if there's a potential key vs.
@@ -356,8 +356,8 @@ epix_merge <- function(x, y,
     ]
   )
   set(
-    result_DT, , y_nonby_colnames,
-    y_DT[result_DT[, by, with = FALSE], y_nonby_colnames,
+    result_dt, , y_nonby_colnames,
+    y_dt[result_dt[, by, with = FALSE], y_nonby_colnames,
       with = FALSE,
       on = by,
       roll = TRUE,
@@ -367,13 +367,13 @@ epix_merge <- function(x, y,
   )
   # The key could be unset in case of a key vs. by order mismatch as
   # noted above. Ensure that we keep it:
-  setkeyv(result_DT, by)
+  setkeyv(result_dt, by)
 
   return(as_epi_archive(
-    result_DT[], # clear data.table internal invisibility flag if set
+    result_dt[], # clear data.table internal invisibility flag if set
     geo_type = x$geo_type,
     time_type = x$time_type,
-    other_keys = setdiff(key(result_DT), c("geo_value", "time_value", "version")),
+    other_keys = setdiff(key(result_dt), c("geo_value", "time_value", "version")),
     additional_metadata = result_additional_metadata,
     # It'd probably be better to pre-compactify before the merge, and might be
     # guaranteed not to be necessary to compactify the merge result if the
@@ -419,7 +419,7 @@ destructure_col_modify_recorder_df <- function(col_modify_recorder_df) {
   list(
     unchanged_parent_df = col_modify_recorder_df %>%
       `attr<-`("epiprocess::col_modify_recorder_df::cols", NULL) %>%
-      `class<-`(setdiff(class(.), "col_modify_recorder_df")),
+      `class<-`(setdiff(class(.data), "col_modify_recorder_df")),
     cols = attr(col_modify_recorder_df,
       "epiprocess::col_modify_recorder_df::cols",
       exact = TRUE
@@ -510,11 +510,11 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
     # sorting (including potential extra copies) or sortedness checking, then
     # `setDT` (rather than `as.data.table`, in order to prevent column copying
     # to establish ownership according to `data.table`'s memory model).
-    out_DT <- dplyr::dplyr_col_modify(in_tbl, col_modify_cols) %>%
+    out_dt <- dplyr::dplyr_col_modify(in_tbl, col_modify_cols) %>%
       data.table::setattr("sorted", data.table::key(.data$DT)) %>%
       data.table::setDT(key = key(.data$DT))
     out_archive <- .data$clone()
-    out_archive$DT <- out_DT
+    out_archive$DT <- out_dt
     request_names <- names(col_modify_cols)
     return(list(
       archive = out_archive,
@@ -668,11 +668,19 @@ group_by.epi_archive <- function(.data, ..., .add = FALSE, .drop = dplyr::group_
     grouping_col_is_factor <- purrr::map_lgl(grouping_cols, is.factor)
     # ^ Use `as.list` to try to avoid any possibility of a deep copy.
     if (!any(grouping_col_is_factor)) {
-      cli_warn("`.drop=FALSE` but there are no factor grouping columns; did you mean to convert one of the columns to a factor beforehand?",
+      cli_warn(
+        "`.drop=FALSE` but there are no factor grouping columns;
+        did you mean to convert one of the columns to a factor beforehand?",
         class = "epiprocess__group_by_epi_archive__drop_FALSE_no_factors"
       )
     } else if (any(diff(grouping_col_is_factor) == -1L)) {
-      cli_warn("`.drop=FALSE` but there are one or more non-factor grouping columns listed after a factor grouping column; this may produce groups with `NA`s for these columns; see https://github.com/tidyverse/dplyr/issues/5369#issuecomment-683762553; depending on how you want completion to work, you might instead want to convert all grouping columns to factors beforehand, specify the non-factor grouping columns first, or use `.drop=TRUE` and add a call to `tidyr::complete`.",
+      cli_warn(
+        "`.drop=FALSE` but there are one or more non-factor grouping columns listed
+        after a factor grouping column; this may produce groups with `NA`s for these columns;
+        see https://github.com/tidyverse/dplyr/issues/5369#issuecomment-683762553;
+        depending on how you want completion to work, you might instead want to convert
+        all grouping columns to factors beforehand, specify the non-factor grouping columns
+        first, or use `.drop=TRUE` and add a call to `tidyr::complete`.",
         class = "epiprocess__group_by_epi_archive__drop_FALSE_nonfactor_after_factor"
       )
     }

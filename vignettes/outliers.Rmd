@@ -141,7 +141,7 @@ To visualize the results, we first define a convenience function for plotting.
 ```{r}
 # Plot outlier detection bands and/or points identified as outliers
 plot_outlr <- function(x, signal, method_abbr, bands = TRUE, points = TRUE,
-                       facet_vars = vars(geo_value), nrow = NULL, ncol = NULL,
+                       facet_vars = vars(.data$geo_value), nrow = NULL, ncol = NULL,
                        scales = "fixed") {
   # Convert outlier detection results to long format
   signal <- rlang::enquo(signal)
@@ -154,27 +154,27 @@ plot_outlr <- function(x, signal, method_abbr, bands = TRUE, points = TRUE,
 
   # Start of plot with observed data
   p <- ggplot() +
-    geom_line(data = x, mapping = aes(x = time_value, y = !!signal))
+    geom_line(data = x, mapping = aes(x = .data$time_value, y = !!signal))
 
   # If requested, add bands
   if (bands) {
     p <- p + geom_ribbon(
       data = x_long,
       aes(
-        x = time_value, ymin = lower, ymax = upper,
-        color = method
+        x = .data$time_value, ymin = .data$lower, ymax = .data$upper,
+        color = .data$method
       ), fill = NA
     )
   }
 
   # If requested, add points
   if (points) {
-    x_detected <- x_long %>% filter((!!signal < lower) | (!!signal > upper))
+    x_detected <- x_long %>% filter((!!signal < .data$lower) | (!!signal > .data$upper))
     p <- p + geom_point(
       data = x_detected,
       aes(
-        x = time_value, y = !!signal, color = method,
-        shape = method
+        x = .data$time_value, y = !!signal, color = .data$method,
+        shape = .data$method
       )
     )
   }

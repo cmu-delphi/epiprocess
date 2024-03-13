@@ -80,9 +80,12 @@ summary.epi_df <- function(object, ...) {
   cat(sprintf("* %-27s = %s\n", "max time value", max(object$time_value)))
   cat(sprintf(
     "* %-27s = %i\n", "average rows per time value",
-    as.integer(object %>% dplyr::group_by(.data$time_value) %>%
-      dplyr::summarize(num = dplyr::n()) %>%
-      dplyr::summarize(mean(.data$num)))
+    as.integer(
+      object %>%
+        dplyr::group_by(.data$time_value) %>%
+        dplyr::summarize(num = dplyr::n()) %>%
+        dplyr::summarize(mean(.data$num))
+    )
   ))
 }
 

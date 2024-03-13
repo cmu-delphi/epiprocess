@@ -216,8 +216,18 @@ local({
 test_that('epix_merge sync="na" balks if do not know next_after', {
   expect_error(
     epix_merge(
-      as_epi_archive(tibble::tibble(geo_value = 1L, time_value = 1L, version = as.POSIXct(as.Date("2020-01-01")), x_value = 10L)),
-      as_epi_archive(tibble::tibble(geo_value = 1L, time_value = 1L, version = as.POSIXct(as.Date("2020-01-02")), y_value = 20L)),
+      as_epi_archive(tibble::tibble(
+        geo_value = 1L,
+        time_value = 1L,
+        version = as.POSIXct(as.Date("2020-01-01")),
+        x_value = 10L
+      )),
+      as_epi_archive(tibble::tibble(
+        geo_value = 1L,
+        time_value = 1L,
+        version = as.POSIXct(as.Date("2020-01-02")),
+        y_value = 20L
+      )),
       sync = "na"
     ),
     regexp = "no applicable method.*next_after"

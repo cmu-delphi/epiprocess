@@ -341,6 +341,7 @@ test_that("nested dataframe output names are controllable", {
 
 test_that("non-size-1 outputs are recycled", {
   # trying with non-size-1 computation outputs:
+  # nolint start: line_length_linter.
   basic_result_from_size2 <- tibble::tribble(
     ~geo_value, ~time_value, ~value, ~slide_value,
     "a", 1:10, 2L^(1:10), data.table::frollsum(2L^(1:10) + 2L^(11:20), c(1:7, rep(7L, 3L)), adaptive = TRUE, na.rm = TRUE),
@@ -349,6 +350,7 @@ test_that("non-size-1 outputs are recycled", {
     tidyr::unchop(c(time_value, value, slide_value)) %>%
     dplyr::arrange(time_value) %>%
     as_epi_df(as_of = 100)
+  # nolint end
   expect_identical(
     toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value) + 0:1),
     basic_result_from_size2
@@ -383,6 +385,7 @@ test_that("epi_slide alerts if the provided f doesn't take enough args", {
 test_that("`ref_time_values` + `all_rows = TRUE` works", {
   # See `toy_edf` definition at top of file. We'll do variants of a slide
   # returning the following:
+  # nolint start: line_length_linter.
   basic_full_result <- tibble::tribble(
     ~geo_value, ~time_value, ~value, ~slide_value,
     "a", 1:10, 2L^(1:10), data.table::frollsum(2L^(1:10) + 2L^(11:20), c(1:7, rep(7L, 3L)), adaptive = TRUE, na.rm = TRUE),
@@ -391,6 +394,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
     tidyr::unchop(c(time_value, value, slide_value)) %>%
     dplyr::arrange(time_value) %>%
     as_epi_df(as_of = 100)
+  # nolint end
   # slide computations returning atomic vecs:
   expect_identical(
     toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value)),
