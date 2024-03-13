@@ -28,6 +28,7 @@ toy_edf <- tibble::tribble(
   tidyr::unchop(c(time_value, value)) %>%
   as_epi_df(as_of = 100)
 
+# nolint start: line_length_linter.
 basic_result_from_size1_sum <- tibble::tribble(
   ~geo_value, ~time_value, ~value, ~slide_value,
   "a", 1:10, 2L^(1:10), data.table::frollsum(2L^(1:10) + 2L^(11:20), c(1:7, rep(7L, 3L)), adaptive = TRUE, na.rm = TRUE),
@@ -44,6 +45,7 @@ basic_result_from_size1_mean <- tibble::tribble(
   tidyr::unchop(c(time_value, value, slide_value)) %>%
   dplyr::arrange(time_value) %>%
   as_epi_df(as_of = 100)
+# nolint end: line_length_linter.
 
 ## --- These cases generate errors (or not): ---
 test_that("`before` and `after` are both vectors of length 1", {
@@ -94,13 +96,36 @@ test_that("Test errors/warnings for discouraged features", {
   )
 
   # Below cases should raise no errors/warnings:
-  expect_no_warning(ref1 <- epi_slide(grouped, f, before = 1L, ref_time_values = d + 2))
-  expect_no_warning(ref2 <- epi_slide(grouped, f, after = 1L, ref_time_values = d + 2))
-  expect_no_warning(ref3 <- epi_slide(grouped, f, before = 0L, after = 0L, ref_time_values = d + 2))
+  expect_no_warning(
+    ref1 <- epi_slide(grouped, f, before = 1L, ref_time_values = d + 2)
+  )
+  expect_no_warning(
+    ref2 <- epi_slide(grouped, f, after = 1L, ref_time_values = d + 2)
+  )
+  expect_no_warning(
+    ref3 <- epi_slide(grouped, f,
+      before = 0L, after = 0L, ref_time_values = d + 2
+    )
+  )
 
-  expect_no_warning(opt1 <- epi_slide_mean(grouped, col_names = "value", before = 1L, ref_time_values = d + 2, na.rm = TRUE))
-  expect_no_warning(opt2 <- epi_slide_mean(grouped, col_names = "value", after = 1L, ref_time_values = d + 2, na.rm = TRUE))
-  expect_no_warning(opt3 <- epi_slide_mean(grouped, col_names = "value", before = 0L, after = 0L, ref_time_values = d + 2, na.rm = TRUE))
+  expect_no_warning(
+    opt1 <- epi_slide_mean(grouped,
+      col_names = "value",
+      before = 1L, ref_time_values = d + 2, na.rm = TRUE
+    )
+  )
+  expect_no_warning(
+    opt2 <- epi_slide_mean(grouped,
+      col_names = "value",
+      after = 1L, ref_time_values = d + 2, na.rm = TRUE
+    )
+  )
+  expect_no_warning(
+    opt3 <- epi_slide_mean(grouped,
+      col_names = "value",
+      before = 0L, after = 0L, ref_time_values = d + 2, na.rm = TRUE
+    )
+  )
 
   # Results from epi_slide and epi_slide_mean should match
   expect_identical(select(ref1, -slide_value_count), opt1)
@@ -168,8 +193,14 @@ test_that("Both `before` and `after` must be non-NA, non-negative, integer-compa
   )
 
   # Non-integer-class but integer-compatible values are allowed:
-  expect_no_error(ref <- epi_slide(grouped, f, before = 1, after = 1, ref_time_values = d + 2L))
-  expect_no_error(opt <- epi_slide_mean(grouped, col_names = "value", before = 1, after = 1, ref_time_values = d + 2L, na.rm = TRUE))
+  expect_no_error(
+    ref <- epi_slide(grouped, f, before = 1, after = 1, ref_time_values = d + 2L)
+  )
+  expect_no_error(opt <- epi_slide_mean(
+    grouped,
+    col_names = "value", before = 1, after = 1,
+    ref_time_values = d + 2L, na.rm = TRUE
+  ))
 
   # Results from epi_slide and epi_slide_mean should match
   expect_identical(select(ref, -slide_value_count), opt)
@@ -195,42 +226,50 @@ test_that("`ref_time_values` + `before` + `after` that result in no slide data, 
   ) # beyond the last, no data in window
 })
 
-test_that("`ref_time_values` + `before` + `after` that have some slide data, but generate the error due to ref. time being out of time range (would also happen if they were in between `time_value`s)", {
-  expect_error(
-    epi_slide(grouped, f, before = 0L, after = 2L, ref_time_values = d),
-    "`ref_time_values` must be a unique subset of the time values in `x`."
-  ) # before the first, but we'd expect there to be data in the window
-  expect_error(
-    epi_slide(grouped, f, before = 2L, ref_time_values = d + 201L),
-    "`ref_time_values` must be a unique subset of the time values in `x`."
-  ) # beyond the last, but still with data in window
+test_that(
+  c(
+    "`ref_time_values` + `before` + `after` that have some slide data, but
+            generate the error due to ref. time being out of time range (would
+            also happen if they were in between `time_value`s)"
+  ),
+  {
+    expect_error(
+      epi_slide(grouped, f, before = 0L, after = 2L, ref_time_values = d),
+      "`ref_time_values` must be a unique subset of the time values in `x`."
+    ) # before the first, but we'd expect there to be data in the window
+    expect_error(
+      epi_slide(grouped, f, before = 2L, ref_time_values = d + 201L),
+      "`ref_time_values` must be a unique subset of the time values in `x`."
+    ) # beyond the last, but still with data in window
 
-  expect_error(
-    epi_slide_mean(grouped, "value", before = 0L, after = 2L, ref_time_values = d),
-    "`ref_time_values` must be a unique subset of the time values in `x`."
-  ) # before the first, but we'd expect there to be data in the window
-  expect_error(
-    epi_slide_mean(grouped, "value", before = 2L, ref_time_values = d + 201L),
-    "`ref_time_values` must be a unique subset of the time values in `x`."
-  ) # beyond the last, but still with data in window
-})
+    expect_error(
+      epi_slide_mean(grouped, "value", before = 0L, after = 2L, ref_time_values = d),
+      "`ref_time_values` must be a unique subset of the time values in `x`."
+    ) # before the first, but we'd expect there to be data in the window
+    expect_error(
+      epi_slide_mean(grouped, "value", before = 2L, ref_time_values = d + 201L),
+      "`ref_time_values` must be a unique subset of the time values in `x`."
+    ) # beyond the last, but still with data in window
+  }
+)
 
 ## --- These cases generate warnings (or not): ---
 test_that("Warn user against having a blank `before`", {
-  expect_no_warning(ref1 <- epi_slide(grouped, f,
-    after = 1L,
-    ref_time_values = d + 1L
+  expect_no_warning(ref1 <- epi_slide(
+    grouped, f,
+    after = 1L, ref_time_values = d + 1L
   ))
-  expect_no_warning(ref2 <- epi_slide(grouped, f,
-    before = 0L, after = 1L,
-    ref_time_values = d + 1L
+  expect_no_warning(ref2 <- epi_slide(
+    grouped, f,
+    before = 0L, after = 1L, ref_time_values = d + 1L
   ))
 
-  expect_no_warning(opt1 <- epi_slide_mean(grouped, "value",
-    after = 1L,
-    ref_time_values = d + 1L, na.rm = TRUE
+  expect_no_warning(opt1 <- epi_slide_mean(
+    grouped, "value",
+    after = 1L, ref_time_values = d + 1L, na.rm = TRUE
   ))
-  expect_no_warning(opt2 <- epi_slide_mean(grouped, "value",
+  expect_no_warning(opt2 <- epi_slide_mean(
+    grouped, "value",
     before = 0L, after = 1L,
     ref_time_values = d + 1L, na.rm = TRUE
   ))
@@ -241,33 +280,39 @@ test_that("Warn user against having a blank `before`", {
 })
 
 ## --- These cases doesn't generate the error: ---
-test_that("these doesn't produce an error; the error appears only if the ref time values are out of the range for every group", {
-  expect_identical(
-    epi_slide(grouped, f, before = 2L, ref_time_values = d + 200L) %>%
-      ungroup() %>%
-      dplyr::select("geo_value", "slide_value_value"),
-    dplyr::tibble(geo_value = "ak", slide_value_value = 199)
-  ) # out of range for one group
-  expect_identical(
-    epi_slide(grouped, f, before = 2L, ref_time_values = d + 3) %>%
-      ungroup() %>%
-      dplyr::select("geo_value", "slide_value_value"),
-    dplyr::tibble(geo_value = c("ak", "al"), slide_value_value = c(2, -2))
-  ) # not out of range for either group
+test_that(
+  c(
+    "these doesn't produce an error; the error appears only if the ref time
+            values are out of the range for every group"
+  ),
+  {
+    expect_identical(
+      epi_slide(grouped, f, before = 2L, ref_time_values = d + 200L) %>%
+        ungroup() %>%
+        dplyr::select("geo_value", "slide_value_value"),
+      dplyr::tibble(geo_value = "ak", slide_value_value = 199)
+    ) # out of range for one group
+    expect_identical(
+      epi_slide(grouped, f, before = 2L, ref_time_values = d + 3) %>%
+        ungroup() %>%
+        dplyr::select("geo_value", "slide_value_value"),
+      dplyr::tibble(geo_value = c("ak", "al"), slide_value_value = c(2, -2))
+    ) # not out of range for either group
 
-  expect_identical(
-    epi_slide_mean(grouped, "value", before = 2L, ref_time_values = d + 200L, na.rm = TRUE) %>%
-      ungroup() %>%
-      dplyr::select("geo_value", "slide_value_value"),
-    dplyr::tibble(geo_value = "ak", slide_value_value = 199)
-  ) # out of range for one group
-  expect_identical(
-    epi_slide_mean(grouped, "value", before = 2L, ref_time_values = d + 3, na.rm = TRUE) %>%
-      ungroup() %>%
-      dplyr::select("geo_value", "slide_value_value"),
-    dplyr::tibble(geo_value = c("ak", "al"), slide_value_value = c(2, -2))
-  ) # not out of range for either group
-})
+    expect_identical(
+      epi_slide_mean(grouped, "value", before = 2L, ref_time_values = d + 200L, na.rm = TRUE) %>%
+        ungroup() %>%
+        dplyr::select("geo_value", "slide_value_value"),
+      dplyr::tibble(geo_value = "ak", slide_value_value = 199)
+    ) # out of range for one group
+    expect_identical(
+      epi_slide_mean(grouped, "value", before = 2L, ref_time_values = d + 3, na.rm = TRUE) %>%
+        ungroup() %>%
+        dplyr::select("geo_value", "slide_value_value"),
+      dplyr::tibble(geo_value = c("ak", "al"), slide_value_value = c(2, -2))
+    ) # not out of range for either group
+  }
+)
 
 test_that("computation output formats x as_list_col", {
   # See `toy_edf` and `basic_result_from_size1_sum` definitions at top of file.
@@ -294,21 +339,28 @@ test_that("computation output formats x as_list_col", {
   # We'll try 7d avg with a few formats.
   # Warning: not exactly the same naming behavior as `epi_slide`.
   expect_identical(
-    toy_edf %>% filter(
-      geo_value == "a"
-    ) %>% epi_slide_mean(
-      "value", before = 6L, na.rm = TRUE
-    ),
+    toy_edf %>%
+      filter(
+        geo_value == "a"
+      ) %>%
+      epi_slide_mean(
+        "value",
+        before = 6L, na.rm = TRUE
+      ),
     basic_result_from_size1_mean %>% dplyr::mutate(
       slide_value_value = slide_value
-    ) %>% select(-slide_value)
+    ) %>%
+      select(-slide_value)
   )
   expect_error(
-    toy_edf %>% filter(
-      geo_value == "a"
-    ) %>% epi_slide_mean(
-      "value", before = 6L, as_list_col = TRUE, na.rm = TRUE
-    ),
+    toy_edf %>%
+      filter(
+        geo_value == "a"
+      ) %>%
+      epi_slide_mean(
+        "value",
+        before = 6L, as_list_col = TRUE, na.rm = TRUE
+      ),
     class = "epiproces__epi_slide_mean__list_not_supported"
   )
   # `epi_slide_mean` doesn't return dataframe columns
@@ -316,25 +368,29 @@ test_that("computation output formats x as_list_col", {
 
 test_that("nested dataframe output names are controllable", {
   expect_identical(
-    toy_edf %>% epi_slide(
-      before = 6L, ~ data.frame(value = sum(.x$value)),
-      new_col_name = "result"
-    ),
+    toy_edf %>%
+      epi_slide(
+        before = 6L, ~ data.frame(value = sum(.x$value)),
+        new_col_name = "result"
+      ),
     basic_result_from_size1_sum %>% rename(result_value = slide_value)
   )
   expect_identical(
-    toy_edf %>% epi_slide(
-      before = 6L, ~ data.frame(value_sum = sum(.x$value)),
-      names_sep = NULL
-    ),
+    toy_edf %>%
+      epi_slide(
+        before = 6L, ~ data.frame(value_sum = sum(.x$value)),
+        names_sep = NULL
+      ),
     basic_result_from_size1_sum %>% rename(value_sum = slide_value)
   )
   expect_identical(
     toy_edf %>% filter(
       geo_value == "a"
-    ) %>% epi_slide_mean(
-      "value", before = 6L, names_sep = NULL, na.rm = TRUE
-    ),
+    ) %>%
+      epi_slide_mean(
+        "value",
+        before = 6L, names_sep = NULL, na.rm = TRUE
+      ),
     basic_result_from_size1_mean
   )
 })
@@ -421,27 +477,33 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
   expect_identical(
     toy_edf %>% filter(
       geo_value == "a"
-    ) %>% epi_slide_mean(
-      "value", before = 6L, names_sep = NULL, na.rm = TRUE
-    ),
+    ) %>%
+      epi_slide_mean(
+        "value",
+        before = 6L, names_sep = NULL, na.rm = TRUE
+      ),
     basic_result_from_size1_mean
   )
   expect_identical(
     toy_edf %>% filter(
       geo_value == "a"
-    ) %>% epi_slide_mean(
-      "value", before = 6L, ref_time_values = c(2L, 8L),
-      names_sep = NULL, na.rm = TRUE
-    ),
+    ) %>%
+      epi_slide_mean(
+        "value",
+        before = 6L, ref_time_values = c(2L, 8L),
+        names_sep = NULL, na.rm = TRUE
+      ),
     filter(basic_result_from_size1_mean, time_value %in% c(2L, 8L))
   )
   expect_identical(
     toy_edf %>% filter(
       geo_value == "a"
-    ) %>% epi_slide_mean(
-      "value", before = 6L, ref_time_values = c(2L, 8L), all_rows = TRUE,
-      names_sep = NULL, na.rm = TRUE
-    ),
+    ) %>%
+      epi_slide_mean(
+        "value",
+        before = 6L, ref_time_values = c(2L, 8L), all_rows = TRUE,
+        names_sep = NULL, na.rm = TRUE
+      ),
     basic_result_from_size1_mean %>%
       dplyr::mutate(slide_value = dplyr::if_else(time_value %in% c(2L, 8L),
         slide_value, NA_integer_
@@ -899,7 +961,7 @@ test_that("results for different `before`s and `after`s match between epi_slide 
   n <- 15 # Max date index
   m <- 3 # Number of missing dates
   n_obs <- n + 1 - m # Number of obs created
-  k <- c(0:(n-(m + 1)), n) # Date indices
+  k <- c(0:(n - (m + 1)), n) # Date indices
 
   # Basic time type
   days <- as.Date("2022-01-01") + k
@@ -907,7 +969,7 @@ test_that("results for different `before`s and `after`s match between epi_slide 
   set.seed(0)
   rand_vals <- rnorm(n_obs)
 
-  test_time_type_mean <- function (dates, vals, before = 6L, after = 0L, ...) {
+  test_time_type_mean <- function(dates, vals, before = 6L, after = 0L, ...) {
     # Three states, with 2 variables. a is linear, going up in one state and down in the other
     # b is just random. date 10 is missing
     epi_data <- epiprocess::as_epi_df(rbind(tibble(
@@ -925,13 +987,15 @@ test_that("results for different `before`s and `after`s match between epi_slide 
 
     # Use the `epi_slide` result as a reference.
     result1 <- epi_slide(epi_data, ~ data.frame(
-        slide_value_a = mean(.x$a, rm.na = TRUE),
-        slide_value_b = mean(.x$b, rm.na = TRUE)
-      ),
-      before = before, after = after, names_sep = NULL, ...)
+      slide_value_a = mean(.x$a, rm.na = TRUE),
+      slide_value_b = mean(.x$b, rm.na = TRUE)
+    ),
+    before = before, after = after, names_sep = NULL, ...
+    )
     result2 <- epi_slide_mean(epi_data,
       col_names = c("a", "b"), na.rm = TRUE,
-      before = before, after = after, ...)
+      before = before, after = after, ...
+    )
     expect_identical(result1, result2)
   }
 
@@ -946,7 +1010,7 @@ test_that("results for different `before`s and `after`s match between epi_slide 
   n <- 15 # Max date index
   m <- 0 # Number of missing dates
   n_obs <- n + 1 - m # Number of obs created
-  k <- c(0:(n-(m + 1)), n) # Date indices
+  k <- c(0:(n - (m + 1)), n) # Date indices
 
   # Basic time type
   days <- as.Date("2022-01-01") + k
@@ -964,7 +1028,7 @@ test_that("results for different time_types match between epi_slide and epi_slid
   n <- 6L # Max date index
   m <- 1L # Number of missing dates
   n_obs <- n + 1L - m # Number of obs created
-  k <- c(0L:(n-(m + 1L)), n) # Date indices
+  k <- c(0L:(n - (m + 1L)), n) # Date indices
 
   set.seed(0)
   rand_vals <- rnorm(n_obs)
@@ -973,17 +1037,17 @@ test_that("results for different time_types match between epi_slide and epi_slid
     epiprocess::as_epi_df(rbind(tibble(
       geo_value = "al",
       time_value = date_seq,
-      a = 1:length(date_seq),
+      a = seq_along(date_seq),
       b = rand_vals
     ), tibble(
       geo_value = "ca",
       time_value = date_seq,
-      a = length(date_seq):1,
+      a = rev(seq_along(date_seq)),
       b = rand_vals + 10
     ), tibble(
       geo_value = "fl",
       time_value = date_seq,
-      a = length(date_seq):1,
+      a = rev(seq_along(date_seq)),
       b = rand_vals * 2
     )), ...)
   }
@@ -1013,25 +1077,28 @@ test_that("results for different time_types match between epi_slide and epi_slid
     group_by(geo_value)
 
   ref_result <- epi_slide(ref_epi_data, ~ data.frame(
-      slide_value_a = mean(.x$a, rm.na = TRUE),
-      slide_value_b = mean(.x$b, rm.na = TRUE)
-    ),
-    before = 6L, after = 0L, names_sep = NULL)
+    slide_value_a = mean(.x$a, rm.na = TRUE),
+    slide_value_b = mean(.x$b, rm.na = TRUE)
+  ),
+  before = 6L, after = 0L, names_sep = NULL
+  )
 
-  test_time_type_mean <- function (dates, before = 6L, after = 0L, ...) {
+  test_time_type_mean <- function(dates, before = 6L, after = 0L, ...) {
     # Three states, with 2 variables. a is linear, going up in one state and down in the other
     # b is just random. date 10 is missing
     epi_data <- generate_special_date_data(dates) %>%
       group_by(geo_value)
 
     result1 <- epi_slide(epi_data, ~ data.frame(
-        slide_value_a = mean(.x$a, rm.na = TRUE),
-        slide_value_b = mean(.x$b, rm.na = TRUE)
-      ),
-      before = before, after = after, names_sep = NULL, ...)
+      slide_value_a = mean(.x$a, rm.na = TRUE),
+      slide_value_b = mean(.x$b, rm.na = TRUE)
+    ),
+    before = before, after = after, names_sep = NULL, ...
+    )
     result2 <- epi_slide_mean(epi_data,
       col_names = c("a", "b"), na.rm = TRUE,
-      before = before, after = after, ...)
+      before = before, after = after, ...
+    )
     expect_identical(result1, result2)
 
     # All fields except dates
@@ -1054,7 +1121,8 @@ test_that("results for different time_types match between epi_slide and epi_slid
     group_by(geo_value)
   result2 <- epi_slide_mean(epi_data,
     col_names = c("a", "b"), na.rm = TRUE,
-    before = 6L, after = 0L)
+    before = 6L, after = 0L
+  )
   expect_identical(select(ref_result, -time_value), select(result2, -time_value))
 })
 
@@ -1072,7 +1140,7 @@ test_that("special time_types without time_step fail in epi_slide_mean", {
   )
   not_dates <- c("a", "b", "c", "d", "e", "f")
 
-  test_time_type_mean <- function (dates, before = 6L, after = 0L, ...) {
+  test_time_type_mean <- function(dates, before = 6L, after = 0L, ...) {
     epi_data <- epiprocess::as_epi_df(tibble(
       geo_value = "al",
       time_value = dates,
@@ -1080,12 +1148,12 @@ test_that("special time_types without time_step fail in epi_slide_mean", {
     ))
 
     expect_error(
-      epi_slide_mean(epi_data, col_names = "a",
+      epi_slide_mean(epi_data,
+        col_names = "a",
         before = before, after = after
       ),
       class = "epiprocess__epi_slide_mean__unmappable_time_type"
     )
-
   }
 
   test_time_type_mean(custom_dates)
@@ -1098,7 +1166,7 @@ test_that("helper `full_date_seq` returns expected date values", {
   n <- 6L # Max date index
   m <- 1L # Number of missing dates
   n_obs <- n + 1L - m # Number of obs created
-  k <- c(0L:(n-(m + 1L)), n) # Date indices
+  k <- c(0L:(n - (m + 1L)), n) # Date indices
 
   set.seed(0)
   rand_vals <- rnorm(n_obs)
@@ -1107,17 +1175,17 @@ test_that("helper `full_date_seq` returns expected date values", {
     epiprocess::as_epi_df(rbind(tibble(
       geo_value = "al",
       time_value = date_seq,
-      a = 1:length(date_seq),
+      a = seq_along(date_seq),
       b = rand_vals
     ), tibble(
       geo_value = "ca",
       time_value = date_seq,
-      a = length(date_seq):1,
+      a = rev(seq_along(date_seq)),
       b = rand_vals + 10
     ), tibble(
       geo_value = "fl",
       time_value = date_seq,
-      a = length(date_seq):1,
+      a = rev(seq_along(date_seq)),
       b = rand_vals * 2
     )), ...)
   }
@@ -1141,17 +1209,22 @@ test_that("helper `full_date_seq` returns expected date values", {
 
   expect_identical(
     full_date_seq(
-      generate_special_date_data(days), before = before, after = after
+      generate_special_date_data(days),
+      before = before, after = after
     ),
     list(
-      all_dates = as.Date(c("2022-01-01", "2022-01-02", "2022-01-03", "2022-01-04", "2022-01-05", "2022-01-06", "2022-01-07")),
+      all_dates = as.Date(c(
+        "2022-01-01", "2022-01-02", "2022-01-03", "2022-01-04",
+        "2022-01-05", "2022-01-06", "2022-01-07"
+      )),
       pad_early_dates = as.Date(c("2021-12-30", "2021-12-31")),
       pad_late_dates = as.Date(c("2022-01-08"))
     )
   )
   expect_identical(
     full_date_seq(
-      generate_special_date_data(yearweeks), before = before, after = after
+      generate_special_date_data(yearweeks),
+      before = before, after = after
     ),
     list(
       all_dates = tsibble::yearweek(10:16),
@@ -1161,7 +1234,8 @@ test_that("helper `full_date_seq` returns expected date values", {
   )
   expect_identical(
     full_date_seq(
-      generate_special_date_data(yearmonths), before = before, after = after
+      generate_special_date_data(yearmonths),
+      before = before, after = after
     ),
     list(
       all_dates = tsibble::yearmonth(10:16),
@@ -1171,7 +1245,8 @@ test_that("helper `full_date_seq` returns expected date values", {
   )
   expect_identical(
     full_date_seq(
-      generate_special_date_data(yearquarters), before = before, after = after
+      generate_special_date_data(yearquarters),
+      before = before, after = after
     ),
     list(
       all_dates = tsibble::yearquarter(10:16),
@@ -1181,7 +1256,8 @@ test_that("helper `full_date_seq` returns expected date values", {
   )
   expect_identical(
     full_date_seq(
-      generate_special_date_data(years), before = before, after = after
+      generate_special_date_data(years),
+      before = before, after = after
     ),
     list(
       all_dates = 2000L:2006L,
@@ -1191,7 +1267,8 @@ test_that("helper `full_date_seq` returns expected date values", {
   )
   expect_identical(
     full_date_seq(
-      generate_special_date_data(day_times_minute), before = before, after = after,
+      generate_special_date_data(day_times_minute),
+      before = before, after = after,
       time_step = lubridate::minutes
     ),
     list(
@@ -1202,7 +1279,8 @@ test_that("helper `full_date_seq` returns expected date values", {
   )
   expect_identical(
     full_date_seq(
-      generate_special_date_data(day_times_hour), before = before, after = after,
+      generate_special_date_data(day_times_hour),
+      before = before, after = after,
       time_step = lubridate::hours
     ),
     list(
@@ -1213,11 +1291,15 @@ test_that("helper `full_date_seq` returns expected date values", {
   )
   expect_identical(
     full_date_seq(
-      generate_special_date_data(weeks), before = before, after = after,
+      generate_special_date_data(weeks),
+      before = before, after = after,
       time_step = lubridate::weeks
     ),
     list(
-      all_dates = as.Date(c("2022-01-01", "2022-01-08", "2022-01-15", "2022-01-22", "2022-01-29", "2022-02-05", "2022-02-12")),
+      all_dates = as.Date(c(
+        "2022-01-01", "2022-01-08", "2022-01-15", "2022-01-22",
+        "2022-01-29", "2022-02-05", "2022-02-12"
+      )),
       pad_early_dates = as.Date(c("2021-12-18", "2021-12-25")),
       pad_late_dates = as.Date(c("2022-02-19"))
     )
@@ -1225,10 +1307,14 @@ test_that("helper `full_date_seq` returns expected date values", {
   # Check the middle branch (`if (missing(time_step))`) of `full_date_seq`.
   expect_identical(
     full_date_seq(
-      generate_special_date_data(weeks, time_type = "week"), before = before, after = after
+      generate_special_date_data(weeks, time_type = "week"),
+      before = before, after = after
     ),
     list(
-      all_dates = as.Date(c("2022-01-01", "2022-01-08", "2022-01-15", "2022-01-22", "2022-01-29", "2022-02-05", "2022-02-12")),
+      all_dates = as.Date(c(
+        "2022-01-01", "2022-01-08", "2022-01-15", "2022-01-22",
+        "2022-01-29", "2022-02-05", "2022-02-12"
+      )),
       pad_early_dates = as.Date(c("2021-12-18", "2021-12-25")),
       pad_late_dates = as.Date(c("2022-02-19"))
     )
@@ -1237,17 +1323,17 @@ test_that("helper `full_date_seq` returns expected date values", {
 
 test_that("`epi_slide_mean` errors when passed `time_values` with closer than expected spacing", {
   time_df <- tibble(
-      geo_value = 1,
-      value = c(0:7, 3.5, 10, 20),
-      # Adding the value 3.5 creates a time that has fractional seconds, which
-      # doesn't follow the expected 1-second spacing of the `time_values`.
-      # This leads to `frollmean` using obs spanning less than the expected
-      # time frame for some computation windows.
-      time_value = Sys.time() + value
-    ) %>%
-      as_epi_df()
-    expect_error(
-      epi_slide_mean(time_df, "value", before = 6L, time_step = lubridate::seconds),
-      class = "epiprocess__epi_slide_mean__unexpected_row_number"
-    )
+    geo_value = 1,
+    value = c(0:7, 3.5, 10, 20),
+    # Adding the value 3.5 creates a time that has fractional seconds, which
+    # doesn't follow the expected 1-second spacing of the `time_values`.
+    # This leads to `frollmean` using obs spanning less than the expected
+    # time frame for some computation windows.
+    time_value = Sys.time() + value
+  ) %>%
+    as_epi_df()
+  expect_error(
+    epi_slide_mean(time_df, "value", before = 6L, time_step = lubridate::seconds),
+    class = "epiprocess__epi_slide_mean__unexpected_row_number"
+  )
 })

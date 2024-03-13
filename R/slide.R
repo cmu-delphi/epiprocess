@@ -493,7 +493,8 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' # and accuracy, and to allow partially-missing windows.
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean("cases", new_col_names = "cases_7dav", names_sep = NULL, before = 6,
+#'   epi_slide_mean("cases",
+#'     new_col_names = "cases_7dav", names_sep = NULL, before = 6,
 #'     # `frollmean` options
 #'     na.rm = TRUE, algo = "exact", hasNA = TRUE
 #'   ) %>%
@@ -523,10 +524,10 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_14dav) %>%
 #'   ungroup()
-epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
-                     time_step,
-                     new_col_names = "slide_value", as_list_col = NULL,
-                     names_sep = "_", all_rows = FALSE) {
+epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
+                           time_step,
+                           new_col_names = "slide_value", as_list_col = NULL,
+                           names_sep = "_", all_rows = FALSE) {
   assert_class(x, "epi_df")
 
   if (!is.null(as_list_col)) {
@@ -593,7 +594,7 @@ epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
 
   if (is.null(names_sep)) {
     if (length(new_col_names) != length(col_names)) {
-     cli_abort(
+      cli_abort(
         c(
           "`new_col_names` must be the same length as `col_names` when
           `names_sep` is NULL to avoid duplicate output column names."
@@ -606,7 +607,7 @@ epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
     result_col_names <- new_col_names
   } else {
     if (length(new_col_names) != 1L && length(new_col_names) != length(col_names)) {
-     cli_abort(
+      cli_abort(
         "`new_col_names` must be either length 1 or the same length as `col_names`.",
         class = "epiprocess__epi_slide_mean__col_names_length_mismatch_and_not_one",
         epiprocess__new_col_names = new_col_names,
@@ -626,7 +627,7 @@ epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
       .data_group,
       tibble(time_value = c(missing_times, pad_early_dates, pad_late_dates), .real = FALSE)
     ) %>%
-      arrange(time_value)
+      arrange(.data$time_value)
 
     # If a group contains duplicate time values, `frollmean` will still only
     # use the last `k` obs. It isn't looking at dates, it just goes in row
@@ -634,7 +635,8 @@ epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
     # same date, `epi_slide_mean` will produce incorrect results; `epi_slide`
     # should be used instead.
     if (anyDuplicated(.data_group$time_value) != 0L) {
-      cli_abort(c(
+      cli_abort(
+        c(
           "group contains duplicate time values. Using `epi_slide_mean` on this
             group will result in incorrect results",
           "i" = "Please change the grouping structure of the input data so that
@@ -647,7 +649,8 @@ epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
       )
     }
     if (nrow(.data_group) != length(c(all_dates, pad_early_dates, pad_late_dates))) {
-      cli_abort(c(
+      cli_abort(
+        c(
           "group contains an unexpected number of rows",
           "i" = c("Input data may contain `time_values` closer together than the
              expected `time_step` size")
@@ -667,9 +670,8 @@ epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
       # timesteps ahead of where they should be. Shift results to the left by
       # `after` timesteps.
       .data_group[, result_col_names] <- purrr::map(roll_output, function(.x) {
-          c(.x[(after + 1L):length(.x)], rep(NA, after))
-        }
-      )
+        c(.x[(after + 1L):length(.x)], rep(NA, after))
+      })
     } else {
       .data_group[, result_col_names] <- roll_output
     }
@@ -742,7 +744,7 @@ full_date_seq <- function(x, before, after, time_step) {
     )
 
     if (is.na(by)) {
-     cli_abort(
+      cli_abort(
         c(
           "`frollmean` requires a full window to compute a result, but the
           `time_type` associated with the epi_df was not mappable to a period
