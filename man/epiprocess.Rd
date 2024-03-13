@@ -2,8 +2,8 @@
 % Please edit documentation in R/epiprocess.R
 \docType{package}
 \name{epiprocess}
-\alias{epiprocess}
 \alias{epiprocess-package}
+\alias{epiprocess}
 \title{epiprocess: Tools for basic signal processing in epidemiology}
 \description{
 This package introduces a common data structure for epidemiological data sets

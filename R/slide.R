@@ -419,12 +419,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' @param new_col_names String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_names` equal to an existing column name will overwrite this column.
-#' @param as_list_col Should the slide results be held in a list column, or be
-#'   [unchopped][tidyr::unchop]/[unnested][tidyr::unnest]? Default is `FALSE`,
-#'   in which case a list object returned by `f` would be unnested (using
-#'   [`tidyr::unnest()`]), and, if the slide computations output data frames,
-#'   the names of the resulting columns are given by prepending `new_col_names`
-#'   to the names of the list elements.
+#' @param as_list_col Not supported. Included to match `epi_slide` interface.
 #' @param names_sep String specifying the separator to use in `tidyr::unnest()`
 #'   when `as_list_col = FALSE`. Default is "_". Using `NULL` drops the prefix
 #'   from `new_col_names` entirely.
@@ -434,10 +429,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   outside `ref_time_values`; otherwise, there will be one row for each row in
 #'   `x` that had a `time_value` in `ref_time_values`. Default is `FALSE`. The
 #'   missing value marker is the result of `vctrs::vec_cast`ing `NA` to the type
-#'   of the slide computation output. If using `as_list_col = TRUE`, note that
-#'   the missing marker is a `NULL` entry in the list column; for certain
-#'   operations, you might want to replace these `NULL` entries with a different
-#'   `NA` marker.
+#'   of the slide computation output.
 #' @return An `epi_df` object given by appending one or more new columns to
 #'  `x`, depending on the `col_names` argument, named according to the
 #'  `new_col_names` argument.
@@ -523,11 +515,11 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   ungroup()
 epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
                      time_step,
-                     new_col_names = "slide_value", as_list_col = FALSE,
+                     new_col_names = "slide_value", as_list_col = NULL,
                      names_sep = "_", all_rows = FALSE) {
   assert_class(x, "epi_df")
 
-  if (as_list_col) {
+  if (!is.null(as_list_col)) {
     cli::cli_abort(
       "`as_list_col` is not supported for `epi_slide_mean`",
       class = "epiproces__epi_slide_mean__list_not_supported"
@@ -589,10 +581,13 @@ epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
   # `before` and `after` params.
   m <- before + after + 1L
 
-  if (is.null(names_sep) && !as_list_col) {
+  if (is.null(names_sep)) {
     if (length(new_col_names) != length(col_names)) {
      cli_abort(
-        "`new_col_names` must be the same length as `col_names` when `names_sep` is NULL.",
+        c(
+          "`new_col_names` must be the same length as `col_names` when
+          `names_sep` is NULL to avoid duplicate output column names."
+        ),
         class = "epiprocess__epi_slide_mean__col_names_length_mismatch",
         epiprocess__new_col_names = new_col_names,
         epiprocess__col_names = col_names
@@ -685,7 +680,7 @@ epi_slide_mean = function(x, col_names, ..., before, after, ref_time_values,
   }
 
   if (!is_epi_df(result)) {
-    # `all_rows` and `as_list_col` handling strip epi_df format and metadata.
+    # `all_rows`handling strip epi_df format and metadata.
     # Restore them.
     result <- reclass(result, attributes(x)$metadata)
   }

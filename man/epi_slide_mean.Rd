@@ -13,7 +13,7 @@ epi_slide_mean(
   ref_time_values,
   time_step,
   new_col_names = "slide_value",
-  as_list_col = FALSE,
+  as_list_col = NULL,
   names_sep = "_",
   all_rows = FALSE
 )
@@ -66,12 +66,7 @@ return an object of class \code{lubridate::period}. For example, we can use
 contain the derivative values. Default is "slide_value"; note that setting
 \code{new_col_names} equal to an existing column name will overwrite this column.}
 
-\item{as_list_col}{Should the slide results be held in a list column, or be
-\link[tidyr:chop]{unchopped}/\link[tidyr:unnest]{unnested}? Default is \code{FALSE},
-in which case a list object returned by \code{f} would be unnested (using
-\code{\link[tidyr:unnest]{tidyr::unnest()}}), and, if the slide computations output data frames,
-the names of the resulting columns are given by prepending \code{new_col_names}
-to the names of the list elements.}
+\item{as_list_col}{Not supported. Included to match \code{epi_slide} interface.}
 
 \item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
 when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
@@ -83,10 +78,7 @@ value marker for the slide computation output column(s) for \code{time_value}s
 outside \code{ref_time_values}; otherwise, there will be one row for each row in
 \code{x} that had a \code{time_value} in \code{ref_time_values}. Default is \code{FALSE}. The
 missing value marker is the result of \code{vctrs::vec_cast}ing \code{NA} to the type
-of the slide computation output. If using \code{as_list_col = TRUE}, note that
-the missing marker is a \code{NULL} entry in the list column; for certain
-operations, you might want to replace these \code{NULL} entries with a different
-\code{NA} marker.}
+of the slide computation output.}
 }
 \value{
 An \code{epi_df} object given by appending one or more new columns to
