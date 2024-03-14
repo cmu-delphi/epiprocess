@@ -723,10 +723,10 @@ full_date_seq <- function(x, before, after, time_step) {
     all_dates <- seq(min(x$time_value), max(x$time_value), by = 1L)
 
     if (before != 0) {
-      pad_early_dates <- Start(all_dates) - before:1
+      pad_early_dates <- all_dates[1L] - before:1
     }
     if (after != 0) {
-      pad_late_dates <- End(all_dates) + 1:after
+      pad_late_dates <- all_dates[length(all_dates)] + 1:after
     }
   } else if (missing(time_step)) {
     # Guess what `by` should be based on the epi_df's `time_type`.
@@ -768,10 +768,10 @@ full_date_seq <- function(x, before, after, time_step) {
       # element.
       #
       # Adding "-1" to the `by` arg makes `seq.Date` go backwards in time.
-      pad_early_dates <- sort(seq(Start(all_dates), by = paste("-1", by), length.out = before + 1)[-1])
+      pad_early_dates <- sort(seq(all_dates[1L], by = paste("-1", by), length.out = before + 1)[-1])
     }
     if (after != 0) {
-      pad_late_dates <- seq(End(all_dates), by = by, length.out = after + 1)[-1]
+      pad_late_dates <- seq(all_dates[length(all_dates)], by = by, length.out = after + 1)[-1]
     }
   } else {
     # A custom time step is specified.
@@ -787,10 +787,10 @@ full_date_seq <- function(x, before, after, time_step) {
     all_dates <- min(x$time_value) + time_step(0:n_steps)
 
     if (before != 0) {
-      pad_early_dates <- Start(all_dates) - time_step(before:1)
+      pad_early_dates <- all_dates[1L] - time_step(before:1)
     }
     if (after != 0) {
-      pad_late_dates <- End(all_dates) + time_step(1:after)
+      pad_late_dates <- all_dates[length(all_dates)] + time_step(1:after)
     }
   }
 
