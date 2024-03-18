@@ -41,7 +41,7 @@
 #'
 #' @examples
 #' # warning message of data latency shown
-#' epix_as_of2(
+#' epix_as_of(
 #'   x = archive_cases_dv_subset,
 #'   max_version = max(archive_cases_dv_subset$DT$version)
 #' )
@@ -50,7 +50,7 @@
 #'
 #' range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
 #'
-#' epix_as_of2(
+#' epix_as_of(
 #'   x = archive_cases_dv_subset,
 #'   max_version = as.Date("2020-06-12")
 #' )
@@ -65,7 +65,7 @@
 #' # muffle such warnings with the following pattern:
 #' withCallingHandlers(
 #'   {
-#'     epix_as_of2(
+#'     epix_as_of(
 #'       x = archive_cases_dv_subset,
 #'       max_version = max(archive_cases_dv_subset$DT$version)
 #'     )
