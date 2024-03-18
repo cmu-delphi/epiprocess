@@ -800,7 +800,7 @@ test_that("`epix_slide2` can access objects inside of helper functions", {
     archive_haystack %>% epix_slide2(has_needle = time_value_needle %in% time_value, before = 365000L)
   }
   expect_error(
-    helper(suppressWarnings(as_epi_archive2(archive_cases_dv_subset$DT)), as.Date("2021-01-01")),
+    helper(archive_cases_dv_subset_2, as.Date("2021-01-01")),
     NA
   )
   expect_error(

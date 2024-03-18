@@ -213,7 +213,7 @@ tib <- tibble::tibble(
   value = rnorm(10, mean = 2, sd = 1)
 )
 
-toy_epi_archive <- tib \%>\% epi_archive$new(
+toy_epi_archive <- tib \%>\% new_epi_archive2(
   geo_type = "state",
   time_type = "day"
 )

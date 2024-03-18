@@ -1,9 +1,7 @@
 library(dplyr)
 
-ea <- archive_cases_dv_subset$DT %>%
-  as_epi_archive2() %>%
-  clone() %>%
-  suppressWarnings()
+ea <- archive_cases_dv_subset_2 %>%
+  clone()
 
 ea2_data <- tibble::tribble(
   ~geo_value, ~time_value, ~version, ~cases,

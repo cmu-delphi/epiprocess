@@ -19,15 +19,15 @@ count? Default is \code{FALSE}.}
 Test for \code{epi_archive} format
 }
 \examples{
-is_epi_archive(jhu_csse_daily_subset) # FALSE (this is an epi_df, not epi_archive)
-is_epi_archive(archive_cases_dv_subset) # TRUE
+is_epi_archive2(jhu_csse_daily_subset) # FALSE (this is an epi_df, not epi_archive)
+is_epi_archive2(archive_cases_dv_subset_2) # TRUE
 
 # By default, grouped_epi_archives don't count as epi_archives, as they may
 # support a different set of operations from regular `epi_archives`. This
 # behavior can be controlled by `grouped_okay`.
-grouped_archive <- archive_cases_dv_subset$group_by(geo_value)
-is_epi_archive(grouped_archive) # FALSE
-is_epi_archive(grouped_archive, grouped_okay = TRUE) # TRUE
+grouped_archive <- archive_cases_dv_subset_2 \%>\% group_by(geo_value)
+is_epi_archive2(grouped_archive) # FALSE
+is_epi_archive2(grouped_archive, grouped_okay = TRUE) # TRUE
 
 }
 \seealso{

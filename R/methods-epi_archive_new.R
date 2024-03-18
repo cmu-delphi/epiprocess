@@ -41,17 +41,15 @@
 #'
 #' @examples
 #' # warning message of data latency shown
-#' epix_as_of(
-#'   x = archive_cases_dv_subset,
-#'   max_version = max(archive_cases_dv_subset$DT$version)
+#' epix_as_of2(
+#'   archive_cases_dv_subset_2,
+#'   max_version = max(archive_cases_dv_subset_2$DT$version)
 #' )
 #'
-#' @examples
+#' range(archive_cases_dv_subset_2$DT$version) # 2020-06-02 -- 2021-12-01
 #'
-#' range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
-#'
-#' epix_as_of(
-#'   x = archive_cases_dv_subset,
+#' epix_as_of2(
+#'   archive_cases_dv_subset_2,
 #'   max_version = as.Date("2020-06-12")
 #' )
 #'
@@ -65,9 +63,9 @@
 #' # muffle such warnings with the following pattern:
 #' withCallingHandlers(
 #'   {
-#'     epix_as_of(
-#'       x = archive_cases_dv_subset,
-#'       max_version = max(archive_cases_dv_subset$DT$version)
+#'     epix_as_of2(
+#'       archive_cases_dv_subset_2,
+#'       max_version = max(archive_cases_dv_subset_2$DT$version)
 #'     )
 #'   },
 #'   epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning")
@@ -164,16 +162,14 @@ epix_fill_through_version2 <- function(epi_archive, fill_versions_end,
 #'
 #' @examples
 #' # create two example epi_archive datasets
-#' x <- archive_cases_dv_subset$DT %>%
+#' x <- archive_cases_dv_subset_2$DT %>%
 #'   dplyr::select(geo_value, time_value, version, case_rate_7d_av) %>%
-#'   as_epi_archive(compactify = TRUE)
-#' y <- archive_cases_dv_subset$DT %>%
+#'   as_epi_archive2(compactify = TRUE)
+#' y <- archive_cases_dv_subset_2$DT %>%
 #'   dplyr::select(geo_value, time_value, version, percent_cli) %>%
-#'   as_epi_archive(compactify = TRUE)
+#'   as_epi_archive2(compactify = TRUE)
 #' # merge results stored in a third object:
-#' xy <- epix_merge(x, y)
-#' # vs. mutating x to hold the merge result:
-#' x$merge(y)
+#' xy <- epix_merge2(x, y)
 #'
 #' @importFrom data.table key set setkeyv
 #' @export
@@ -703,9 +699,9 @@ epix_detailed_restricted_mutate2 <- function(.data, ...) {
 #'
 #' # A simple (but not very useful) example (see the archive vignette for a more
 #' # realistic one):
-#' archive_cases_dv_subset %>%
+#' archive_cases_dv_subset_2 %>%
 #'   group_by(geo_value) %>%
-#'   epix_slide(
+#'   epix_slide2(
 #'     f = ~ mean(.x$case_rate_7d_av),
 #'     before = 2,
 #'     ref_time_values = ref_time_values,
@@ -727,9 +723,9 @@ epix_detailed_restricted_mutate2 <- function(.data, ...) {
 #'
 #' # Examining characteristics of the data passed to each computation with
 #' # `all_versions=FALSE`.
-#' archive_cases_dv_subset %>%
+#' archive_cases_dv_subset_2 %>%
 #'   group_by(geo_value) %>%
-#'   epix_slide(
+#'   epix_slide2(
 #'     function(x, gk, rtv) {
 #'       tibble(
 #'         time_range = if (nrow(x) == 0L) {
@@ -756,9 +752,9 @@ epix_detailed_restricted_mutate2 <- function(.data, ...) {
 #' # to each computation. In this case, each computation should expect an
 #' # `epi_archive` containing the relevant version data:
 #'
-#' archive_cases_dv_subset %>%
+#' archive_cases_dv_subset_2 %>%
 #'   group_by(geo_value) %>%
-#'   epix_slide(
+#'   epix_slide2(
 #'     function(x, gk, rtv) {
 #'       tibble(
 #'         versions_start = if (nrow(x$DT) == 0L) {

@@ -6,7 +6,7 @@ test_that("first input must be a data.frame", {
   )
 })
 
-dt <- archive_cases_dv_subset$DT
+dt <- archive_cases_dv_subset_2$DT
 
 test_that("data.frame must contain geo_value, time_value and version columns", {
   expect_error(as_epi_archive2(select(dt, -geo_value), compactify = FALSE),

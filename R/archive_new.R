@@ -197,7 +197,7 @@ next_after.Date <- function(x) x + 1L
 #'   value = rnorm(10, mean = 2, sd = 1)
 #' )
 #'
-#' toy_epi_archive <- tib %>% epi_archive$new(
+#' toy_epi_archive <- tib %>% new_epi_archive2(
 #'   geo_type = "state",
 #'   time_type = "day"
 #' )
@@ -743,16 +743,16 @@ merge_epi_archive2 <- function(
 #'
 #' @examples
 #'
-#' grouped_archive <- archive_cases_dv_subset %>% group_by(geo_value)
+#' grouped_archive <- archive_cases_dv_subset_2 %>% group_by(geo_value)
 #'
 #' # `print` for metadata and method listing:
 #' grouped_archive %>% print()
 #'
 #' # The primary use for grouping is to perform a grouped `epix_slide`:
 #'
-#' archive_cases_dv_subset %>%
+#' archive_cases_dv_subset_2 %>%
 #'   group_by(geo_value) %>%
-#'   epix_slide(
+#'   epix_slide2(
 #'     f = ~ mean(.x$case_rate_7d_av),
 #'     before = 2,
 #'     ref_time_values = as.Date("2020-06-11") + 0:2,
@@ -778,7 +778,7 @@ merge_epi_archive2 <- function(
 #'     time_value = as.Date(time_value),
 #'     version = as.Date(version)
 #'   ) %>%
-#'   as_epi_archive(other_keys = "age_group")
+#'   as_epi_archive2(other_keys = "age_group")
 #'
 #' # The following are equivalent:
 #' toy_archive %>% group_by(geo_value, age_group)
@@ -801,7 +801,7 @@ merge_epi_archive2 <- function(
 #'
 #' toy_archive %>%
 #'   group_by(geo_value, age_group, .drop = FALSE) %>%
-#'   epix_slide(f = ~ sum(.x$value), before = 20) %>%
+#'   epix_slide2(f = ~ sum(.x$value), before = 20) %>%
 #'   ungroup()
 #'
 #' @importFrom dplyr group_by
@@ -1030,7 +1030,7 @@ slide.epi_archive2 <- function(epi_archive, f, ..., before, ref_time_values,
 #'   value = rnorm(10, mean = 2, sd = 1)
 #' )
 #'
-#' toy_epi_archive <- tib %>% as_epi_archive(
+#' toy_epi_archive <- tib %>% as_epi_archive2(
 #'   geo_type = "state",
 #'   time_type = "day"
 #' )
@@ -1056,7 +1056,7 @@ slide.epi_archive2 <- function(epi_archive, f, ..., before, ref_time_values,
 #'   cases_rate = c(0.01, 0.02, 0.01, 0.05)
 #' )
 #'
-#' x <- df %>% as_epi_archive(
+#' x <- df %>% as_epi_archive2(
 #'   geo_type = "state",
 #'   time_type = "day",
 #'   other_keys = "county"
@@ -1081,15 +1081,15 @@ as_epi_archive2 <- function(x, geo_type, time_type, other_keys,
 #'
 #' @export
 #' @examples
-#' is_epi_archive(jhu_csse_daily_subset) # FALSE (this is an epi_df, not epi_archive)
-#' is_epi_archive(archive_cases_dv_subset) # TRUE
+#' is_epi_archive2(jhu_csse_daily_subset) # FALSE (this is an epi_df, not epi_archive)
+#' is_epi_archive2(archive_cases_dv_subset_2) # TRUE
 #'
 #' # By default, grouped_epi_archives don't count as epi_archives, as they may
 #' # support a different set of operations from regular `epi_archives`. This
 #' # behavior can be controlled by `grouped_okay`.
-#' grouped_archive <- archive_cases_dv_subset$group_by(geo_value)
-#' is_epi_archive(grouped_archive) # FALSE
-#' is_epi_archive(grouped_archive, grouped_okay = TRUE) # TRUE
+#' grouped_archive <- archive_cases_dv_subset_2 %>% group_by(geo_value)
+#' is_epi_archive2(grouped_archive) # FALSE
+#' is_epi_archive2(grouped_archive, grouped_okay = TRUE) # TRUE
 #'
 #' @seealso [`is_grouped_epi_archive`]
 is_epi_archive2 <- function(x, grouped_okay = FALSE) {

@@ -83,16 +83,16 @@ to \code{group_by_drop_default.default} (but there is a dedicated method for
 }
 \examples{
 
-grouped_archive <- archive_cases_dv_subset \%>\% group_by(geo_value)
+grouped_archive <- archive_cases_dv_subset_2 \%>\% group_by(geo_value)
 
 # `print` for metadata and method listing:
 grouped_archive \%>\% print()
 
 # The primary use for grouping is to perform a grouped `epix_slide`:
 
-archive_cases_dv_subset \%>\%
+archive_cases_dv_subset_2 \%>\%
   group_by(geo_value) \%>\%
-  epix_slide(
+  epix_slide2(
     f = ~ mean(.x$case_rate_7d_av),
     before = 2,
     ref_time_values = as.Date("2020-06-11") + 0:2,
@@ -118,7 +118,7 @@ toy_archive <-
     time_value = as.Date(time_value),
     version = as.Date(version)
   ) \%>\%
-  as_epi_archive(other_keys = "age_group")
+  as_epi_archive2(other_keys = "age_group")
 
 # The following are equivalent:
 toy_archive \%>\% group_by(geo_value, age_group)
@@ -141,7 +141,7 @@ toy_archive \%>\%
 
 toy_archive \%>\%
   group_by(geo_value, age_group, .drop = FALSE) \%>\%
-  epix_slide(f = ~ sum(.x$value), before = 20) \%>\%
+  epix_slide2(f = ~ sum(.x$value), before = 20) \%>\%
   ungroup()
 
 }

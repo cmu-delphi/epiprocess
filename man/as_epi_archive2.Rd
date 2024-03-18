@@ -108,7 +108,7 @@ tib <- tibble::tibble(
   value = rnorm(10, mean = 2, sd = 1)
 )
 
-toy_epi_archive <- tib \%>\% as_epi_archive(
+toy_epi_archive <- tib \%>\% as_epi_archive2(
   geo_type = "state",
   time_type = "day"
 )
@@ -134,7 +134,7 @@ df <- data.frame(
   cases_rate = c(0.01, 0.02, 0.01, 0.05)
 )
 
-x <- df \%>\% as_epi_archive(
+x <- df \%>\% as_epi_archive2(
   geo_type = "state",
   time_type = "day",
   other_keys = "county"

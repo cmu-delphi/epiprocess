@@ -59,15 +59,13 @@ be clobbered in either input archive.
 }
 \examples{
 # create two example epi_archive datasets
-x <- archive_cases_dv_subset$DT \%>\%
+x <- archive_cases_dv_subset_2$DT \%>\%
   dplyr::select(geo_value, time_value, version, case_rate_7d_av) \%>\%
-  as_epi_archive(compactify = TRUE)
-y <- archive_cases_dv_subset$DT \%>\%
+  as_epi_archive2(compactify = TRUE)
+y <- archive_cases_dv_subset_2$DT \%>\%
   dplyr::select(geo_value, time_value, version, percent_cli) \%>\%
-  as_epi_archive(compactify = TRUE)
+  as_epi_archive2(compactify = TRUE)
 # merge results stored in a third object:
-xy <- epix_merge(x, y)
-# vs. mutating x to hold the merge result:
-x$merge(y)
+xy <- epix_merge2(x, y)
 
 }
