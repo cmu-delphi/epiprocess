@@ -1319,6 +1319,48 @@ test_that("helper `full_date_seq` returns expected date values", {
       pad_late_dates = as.Date(c("2022-02-19"))
     )
   )
+
+  # Other before/after values
+  before <- 5L
+  after <- 0L
+
+  expect_identical(
+    full_date_seq(
+      generate_special_date_data(days),
+      before = before, after = after
+    ),
+    list(
+      all_dates = as.Date(c(
+        "2022-01-01", "2022-01-02", "2022-01-03", "2022-01-04",
+        "2022-01-05", "2022-01-06", "2022-01-07"
+      )),
+      pad_early_dates = as.Date(c(
+        "2021-12-27", "2021-12-28", "2021-12-29", "2021-12-30",
+        "2021-12-31"
+      )),
+      pad_late_dates = NULL
+    )
+  )
+
+  before <- 0L
+  after <- 3L
+
+  expect_identical(
+    full_date_seq(
+      generate_special_date_data(days),
+      before = before, after = after
+    ),
+    list(
+      all_dates = as.Date(c(
+        "2022-01-01", "2022-01-02", "2022-01-03", "2022-01-04",
+        "2022-01-05", "2022-01-06", "2022-01-07"
+      )),
+      pad_early_dates = NULL,
+      pad_late_dates = as.Date(c(
+        "2022-01-08", "2022-01-09", "2022-01-10"
+      ))
+    )
+  )
 })
 
 test_that("`epi_slide_mean` errors when passed `time_values` with closer than expected spacing", {
