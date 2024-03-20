@@ -957,31 +957,19 @@ test_that("epi_slide gets correct ref_time_value when groups have non-overlappin
 })
 
 test_that("results for different `before`s and `after`s match between epi_slide and epi_slide_mean", {
-  # 3 missing dates
-  n <- 15 # Max date index
-  m <- 3 # Number of missing dates
-  n_obs <- n + 1 - m # Number of obs created
-  k <- c(0:(n - (m + 1)), n) # Date indices
-
-  # Basic time type
-  days <- as.Date("2022-01-01") + k
-
-  set.seed(0)
-  rand_vals <- rnorm(n_obs)
-
-  test_time_type_mean <- function(dates, vals, before = 6L, after = 0L, ...) {
+  test_time_type_mean <- function(dates, vals, before = 6L, after = 0L, n, m, n_obs, k, ...) {
     # Three states, with 2 variables. a is linear, going up in one state and down in the other
-    # b is just random. date 10 is missing
+    # b is just random. last (m-1):(n-1) dates are missing
     epi_data <- epiprocess::as_epi_df(rbind(tibble(
       geo_value = "al",
       time_value = dates,
       a = 1:n_obs,
-      b = rand_vals
+      b = vals
     ), tibble(
       geo_value = "ca",
       time_value = dates,
       a = n_obs:1,
-      b = rand_vals + 10
+      b = vals + 10
     ))) %>%
       group_by(geo_value)
 
@@ -999,12 +987,24 @@ test_that("results for different `before`s and `after`s match between epi_slide 
     expect_identical(result1, result2)
   }
 
-  test_time_type_mean(days, rand_vals, before = 6, after = 0)
-  test_time_type_mean(days, rand_vals, before = 6, after = 1)
-  test_time_type_mean(days, rand_vals, before = 6, after = 6)
-  test_time_type_mean(days, rand_vals, before = 1, after = 6)
-  test_time_type_mean(days, rand_vals, before = 0, after = 6)
-  test_time_type_mean(days, rand_vals, before = 0, after = 1)
+  set.seed(0)
+
+  # 3 missing dates
+  n <- 15 # Max date index
+  m <- 3 # Number of missing dates
+  n_obs <- n + 1 - m # Number of obs created
+  k <- c(0:(n - (m + 1)), n) # Date indices
+
+  rand_vals <- rnorm(n_obs)
+  # Basic time type
+  days <- as.Date("2022-01-01") + k
+
+  test_time_type_mean(days, rand_vals, before = 6, after = 0, n = n, m = m, n_obs = n_obs, k = k)
+  test_time_type_mean(days, rand_vals, before = 6, after = 1, n = n, m = m, n_obs = n_obs, k = k)
+  test_time_type_mean(days, rand_vals, before = 6, after = 6, n = n, m = m, n_obs = n_obs, k = k)
+  test_time_type_mean(days, rand_vals, before = 1, after = 6, n = n, m = m, n_obs = n_obs, k = k)
+  test_time_type_mean(days, rand_vals, before = 0, after = 6, n = n, m = m, n_obs = n_obs, k = k)
+  test_time_type_mean(days, rand_vals, before = 0, after = 1, n = n, m = m, n_obs = n_obs, k = k)
 
   # Without any missing dates
   n <- 15 # Max date index
@@ -1012,16 +1012,16 @@ test_that("results for different `before`s and `after`s match between epi_slide 
   n_obs <- n + 1 - m # Number of obs created
   k <- c(0:(n - (m + 1)), n) # Date indices
 
+  rand_vals <- rnorm(n_obs)
   # Basic time type
   days <- as.Date("2022-01-01") + k
-  rand_vals <- rnorm(n_obs)
 
-  test_time_type_mean(days, rand_vals, before = 6, after = 0)
-  test_time_type_mean(days, rand_vals, before = 6, after = 1)
-  test_time_type_mean(days, rand_vals, before = 6, after = 6)
-  test_time_type_mean(days, rand_vals, before = 1, after = 6)
-  test_time_type_mean(days, rand_vals, before = 0, after = 6)
-  test_time_type_mean(days, rand_vals, before = 0, after = 1)
+  test_time_type_mean(days, rand_vals, before = 6, after = 0, n = n, m = m, n_obs = n_obs, k = k)
+  test_time_type_mean(days, rand_vals, before = 6, after = 1, n = n, m = m, n_obs = n_obs, k = k)
+  test_time_type_mean(days, rand_vals, before = 6, after = 6, n = n, m = m, n_obs = n_obs, k = k)
+  test_time_type_mean(days, rand_vals, before = 1, after = 6, n = n, m = m, n_obs = n_obs, k = k)
+  test_time_type_mean(days, rand_vals, before = 0, after = 6, n = n, m = m, n_obs = n_obs, k = k)
+  test_time_type_mean(days, rand_vals, before = 0, after = 1, n = n, m = m, n_obs = n_obs, k = k)
 })
 
 test_that("results for different time_types match between epi_slide and epi_slide_mean", {
