@@ -76,16 +76,16 @@ the compactify vignette.
 ```{r, eval=FALSE}
 x <- dv %>%
   select(geo_value, time_value, version = issue, percent_cli = value) %>%
-  as_epi_archive2(compactify = TRUE)
+  as_epi_archive(compactify = TRUE)
 
 class(x)
 print(x)
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-x <- archive_cases_dv_subset_2$DT %>%
+x <- archive_cases_dv_subset$DT %>%
   select(geo_value, time_value, version, percent_cli) %>%
-  as_epi_archive2(compactify = TRUE)
+  as_epi_archive(compactify = TRUE)
 
 class(x)
 print(x)
@@ -125,10 +125,6 @@ head(x$DT)
 x$DT$percent_cli[1] <- original_value
 ```
 
-To make a copy, we can use the `clone()` method for an R6 class, as in `y <-
-x$clone()`. You can read more about reference semantics in Hadley Wickham's
-[Advanced R](https://adv-r.hadley.nz/r6.html#r6-semantics) book.
-
 ## Some details on metadata
 
 The following pieces of metadata are included as fields in an `epi_archive`
@@ -154,7 +150,7 @@ function `epix_as_of()` since this is likely a more familiar interface for users
 not familiar with R6 (or object-oriented programming).
 
 ```{r}
-x_snapshot <- epix_as_of2(x, max_version = as.Date("2021-06-01"))
+x_snapshot <- epix_as_of(x, max_version = as.Date("2021-06-01"))
 class(x_snapshot)
 head(x_snapshot)
 max(x_snapshot$time_value)
@@ -174,7 +170,7 @@ this case, since updates to the current version may still come in at a later
 point in time, due to various reasons, such as synchronization issues.
 
 ```{r}
-x_latest <- epix_as_of2(x, max_version = max(x$DT$version))
+x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 ```
 
 Below, we pull several snapshots from the archive, spaced one month apart. We
@@ -188,7 +184,7 @@ theme_set(theme_bw())
 self_max <- max(x$DT$version)
 versions <- seq(as.Date("2020-06-01"), self_max - 1, by = "1 month")
 snapshots <- map_dfr(versions, function(v) {
-  epix_as_of2(x, max_version = v) %>% mutate(version = v)
+  epix_as_of(x, max_version = v) %>% mutate(version = v)
 }) %>%
   bind_rows(
     x_latest %>% mutate(version = self_max)
@@ -258,15 +254,15 @@ y <- pub_covidcast(
   issues = epirange(20200601, 20211201)
 ) %>%
   select(geo_value, time_value, version = issue, case_rate_7d_av = value) %>%
-  as_epi_archive2(compactify = TRUE)
+  as_epi_archive(compactify = TRUE)
 
-x <- epix_merge2(x, y, sync = "locf", compactify = TRUE)
+x <- epix_merge(x, y, sync = "locf", compactify = TRUE)
 print(x)
 head(x$DT)
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-x <- archive_cases_dv_subset_2
+x <- archive_cases_dv_subset
 print(x)
 head(x$DT)
 ```
@@ -362,7 +358,7 @@ fc_time_values <- seq(as.Date("2020-08-01"),
 
 z <- x %>%
   group_by(geo_value) %>%
-  epix_slide2(
+  epix_slide(
     fc = prob_arx(x = percent_cli, y = case_rate_7d_av), before = 119,
     ref_time_values = fc_time_values
   ) %>%
@@ -389,14 +385,14 @@ points in time and forecast horizons. The former comes from using
 `epi_slide()` to the latest snapshot of the data `x_latest`.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
-x_latest <- epix_as_of2(x, max_version = max(x$DT$version))
+x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 
 # Simple function to produce forecasts k weeks ahead
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
       group_by(.data$geo_value) %>%
-      epix_slide2(
+      epix_slide(
         fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, ahead = ahead), before = 119,
         ref_time_values = fc_time_values
       ) %>%
