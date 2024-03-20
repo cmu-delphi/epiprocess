@@ -32,10 +32,10 @@ from the second from the third value included.
 library(epiprocess)
 library(dplyr)
 
-dt <- archive_cases_dv_subset$DT
+dt <- archive_cases_dv_subset_2$DT
 
-locf_omitted <- as_epi_archive(dt)
-locf_included <- as_epi_archive(dt, compactify = FALSE)
+locf_omitted <- as_epi_archive2(dt)
+locf_included <- as_epi_archive2(dt, compactify = FALSE)
 
 head(locf_omitted$DT)
 head(locf_included$DT)
@@ -48,8 +48,8 @@ LOCF-redundant values can mar the performance of dataset operations. As the colu
 ```{r}
 dt2 <- select(dt, -percent_cli)
 
-locf_included_2 <- as_epi_archive(dt2, compactify = FALSE)
-locf_omitted_2 <- as_epi_archive(dt2, compactify = TRUE)
+locf_included_2 <- as_epi_archive2(dt2, compactify = FALSE)
+locf_omitted_2 <- as_epi_archive2(dt2, compactify = TRUE)
 ```
 
 In this example, a huge proportion of the original version update data were
