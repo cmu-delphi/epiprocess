@@ -640,7 +640,8 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
           "group contains duplicate time values. Using `epi_slide_mean` on this
             group will result in incorrect results",
           "i" = "Please change the grouping structure of the input data so that
-            each group has non-duplicate time values",
+            each group has non-duplicate time values (e.g. `x %>% group_by(geo_value)
+            %>% epi_slide_mean`)",
           "i" = "Use `epi_slide` to aggregate across groups"
         ),
         class = "epiprocess__epi_slide_mean__duplicate_time_values",
