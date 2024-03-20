@@ -9,14 +9,13 @@ vignette: >
 
 In this vignette, we discuss how to use the sliding functionality in the
 `epiprocess` package with less common grouping schemes or with computations that
-have advanced output structures.
-The output of a slide computation should either be an atomic value/vector, or a
-data frame. This data frame can have multiple columns, multiple rows, or both.
+have advanced output structures. The output of a slide computation should either
+be an atomic value/vector, or a data frame. This data frame can have multiple
+columns, multiple rows, or both.
 
 During basic usage (e.g., when all optional arguments are set to their defaults):
 
 * `epi_slide(edf, <computation>, .....)`:
-
   * keeps **all** columns of `edf`, adds computed column(s)
   * outputs **one row per row in `edf`** (recycling outputs from
     computations appropriately if there are multiple time series bundled
@@ -26,9 +25,7 @@ During basic usage (e.g., when all optional arguments are set to their defaults)
     `dplyr::arrange(time_value, .by_group = TRUE)`**
   * outputs an **`epi_df`** if the required columns are present, otherwise a
     tibble
-
 * `epix_slide(ea, <computation>, .....)`:
-
   * keeps **grouping and `time_value`** columns of `ea`, adds computed
     column(s)
   * outputs **any number of rows** (computations are allowed to output any
@@ -40,6 +37,7 @@ During basic usage (e.g., when all optional arguments are set to their defaults)
   * outputs a **tibble**
 
 These differences in basic behavior make some common slide operations require less boilerplate:
+
 * predictors and targets calculated with `epi_slide` are automatically lined up
   with each other and with the signals from which they were calculated; and
 * computations for an `epix_slide` can output data frames with any number of
@@ -84,13 +82,14 @@ simple synthetic example.
 ```{r message = FALSE}
 library(epiprocess)
 library(dplyr)
+set.seed(123)
 
 edf <- tibble(
   geo_value = rep(c("ca", "fl", "pa"), each = 3),
   time_value = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"), by = "day"), length.out = length(geo_value)),
   x = seq_along(geo_value) + 0.01 * rnorm(length(geo_value)),
 ) %>%
-  as_epi_df()
+  as_epi_df(as_of = as.Date("2024-03-20"))
 
 # 2-day trailing average, per geo value
 edf %>%
@@ -111,17 +110,17 @@ edf %>%
 edf %>%
   # pretend that observations about time_value t are reported in version t (nowcasts)
   mutate(version = time_value) %>%
-  as_epi_archive2() %>%
+  as_epi_archive() %>%
   group_by(geo_value) %>%
-  epix_slide2(x_2dav = mean(x), before = 1, ref_time_values = as.Date("2020-06-02")) %>%
+  epix_slide(x_2dav = mean(x), before = 1, ref_time_values = as.Date("2020-06-02")) %>%
   ungroup()
 
 edf %>%
   # pretend that observations about time_value t are reported in version t (nowcasts)
   mutate(version = time_value) %>%
-  as_epi_archive2() %>%
+  as_epi_archive() %>%
   group_by(geo_value) %>%
-  epix_slide2(~ mean(.x$x), before = 1, ref_time_values = as.Date("2020-06-02")) %>%
+  epix_slide(~ mean(.x$x), before = 1, ref_time_values = as.Date("2020-06-02")) %>%
   ungroup()
 ```
 
@@ -219,9 +218,9 @@ edf %>%
 
 edf %>%
   mutate(version = time_value) %>%
-  as_epi_archive2() %>%
+  as_epi_archive() %>%
   group_by(geo_value) %>%
-  epix_slide2(
+  epix_slide(
     a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
     ref_time_values = as.Date("2020-06-02"),
     before = 1, as_list_col = FALSE, names_sep = NULL
@@ -317,17 +316,17 @@ x <- y1 %>%
     version = issue,
     percent_cli = value
   ) %>%
-  as_epi_archive2(compactify = FALSE)
+  as_epi_archive(compactify = FALSE)
 
 # mutating merge operation:
-x <- epix_merge2(
+x <- epix_merge(
   x,
   y2 %>%
     select(geo_value, time_value,
       version = issue,
       case_rate_7d_av = value
     ) %>%
-    as_epi_archive2(compactify = FALSE),
+    as_epi_archive(compactify = FALSE),
   sync = "locf",
   compactify = FALSE
 )
@@ -338,9 +337,9 @@ library(data.table)
 library(ggplot2)
 theme_set(theme_bw())
 
-x <- archive_cases_dv_subset_2$DT %>%
+x <- archive_cases_dv_subset$DT %>%
   filter(geo_value %in% c("ca", "fl")) %>%
-  as_epi_archive2(compactify = FALSE)
+  as_epi_archive(compactify = FALSE)
 ```
 
 Next, we extend the ARX function to handle multiple geo values, since in the
@@ -458,7 +457,7 @@ data.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
 # Latest snapshot of data, and forecast dates
-x_latest <- epix_as_of2(x, max_version = max(x$DT$version))
+x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 fc_time_values <- seq(as.Date("2020-08-01"),
   as.Date("2021-11-30"),
   by = "1 month"
@@ -468,7 +467,7 @@ fc_time_values <- seq(as.Date("2020-08-01"),
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
-      epix_slide2(
+      epix_slide(
         fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, .data$geo_value, .data$time_value,
           args = prob_arx_args(ahead = ahead)
         ),
@@ -525,10 +524,7 @@ separate ARX model on each state. As in the archive vignette, we can see a
 difference between version-aware (right column) and -unaware (left column)
 forecasting, as well.
 
-
 ## Attribution
 The `case_rate_7d_av` data used in this document is a modified part of the [COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) as [republished in the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html). This data set is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.
 
 The `percent_cli` data is a modified part of the [COVIDcast Epidata API Doctor Visits data](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html). This dataset is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/). Copyright Delphi Research Group at Carnegie Mellon University 2020.
-
-

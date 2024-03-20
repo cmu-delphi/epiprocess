@@ -7,16 +7,16 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-In addition to the `epi_df` data structure, which we have been working with all
-along in these vignettes, the `epiprocess` package has a companion structure
-called `epi_archive`. In comparison to an `epi_df` object, which can be seen as
-storing a single snapshot of a data set with the most up-to-date signal values
-as of some given time, an `epi_archive` object stores the full version history
-of a data set. Many signals of interest for epidemiological tracking are subject
-to revision (some more than others), and paying attention to data revisions can
-be important for all sorts of downstream data analysis and modeling tasks.
+In addition to the `epi_df` data structure, the `epiprocess` package has a
+companion structure called `epi_archive`. In comparison to an `epi_df` object,
+which can be seen as storing a single snapshot of a data set with the most
+up-to-date signal values as of some given time, an `epi_archive` object stores
+the full version history of a data set. Many signals of interest for
+epidemiological tracking are subject to revision (some more than others) and
+paying attention to data revisions can be important for all sorts of downstream
+data analysis and modeling tasks.
 
-This vignette walks through working with `epi_archive` objects and demonstrates
+This vignette walks through working with `epi_archive()` objects and demonstrates
 some of their key functionality. We'll work with a signal on the percentage of
 doctor's visits with CLI (COVID-like illness) computed from medical insurance
 claims, available through the [COVIDcast
@@ -55,9 +55,8 @@ library(ggplot2)
 
 ## Getting data into `epi_archive` format
 
-An <code><a href="../reference/epi_archive.html">epi_archive</a></code> object
-can be constructed from a data frame, data table, or tibble, provided that it
-has (at least) the following columns:
+An `epi_archive()` object can be constructed from a data frame, data table, or
+tibble, provided that it has (at least) the following columns:
 
 * `geo_value`: the geographic value associated with each row of measurements.
 * `time_value`: the time value associated with each row of measurements.
@@ -71,30 +70,30 @@ As we can see from the above, the data frame returned by
 format, with `issue` playing the role of `version`. We can now use
 `as_epi_archive()` to bring it into `epi_archive` format. For removal of
 redundant version updates in `as_epi_archive` using compactify, please refer to
-the compactify vignette.
+the [compactify vignette](articles/compactify.html).
 
 ```{r, eval=FALSE}
 x <- dv %>%
   select(geo_value, time_value, version = issue, percent_cli = value) %>%
-  as_epi_archive2(compactify = TRUE)
+  as_epi_archive(compactify = TRUE)
 
 class(x)
 print(x)
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-x <- archive_cases_dv_subset_2$DT %>%
+x <- archive_cases_dv_subset$DT %>%
   select(geo_value, time_value, version, percent_cli) %>%
-  as_epi_archive2(compactify = TRUE)
+  as_epi_archive(compactify = TRUE)
 
 class(x)
 print(x)
 ```
 
-An `epi_archive` is special kind of class called an R6 class. Its primary field
-is a data table `DT`, which is of class `data.table` (from the `data.table`
-package), and has columns `geo_value`, `time_value`, `version`, as well as any
-number of additional columns.
+An `epi_archive` is consists of a primary field `DT`, which is a data table
+(from the `data.table` package) that has the columns `geo_value`, `time_value`,
+`version` (and possibly additional ones), and other metadata fields, such as
+`geo_type` and `time_type`.
 
 ```{r}
 class(x$DT)
@@ -112,9 +111,7 @@ key(x$DT)
 ```
 
 In general, the last version of each observation is carried forward (LOCF) to
-fill in data between recorded versions. **A word of caution:** R6 objects,
-unlike most other objects in R, have reference semantics. An important
-consequence of this is that objects are not copied when modified.
+fill in data between recorded versions.
 
 ```{r}
 original_value <- x$DT$percent_cli[1]
@@ -124,10 +121,6 @@ head(y$DT)
 head(x$DT)
 x$DT$percent_cli[1] <- original_value
 ```
-
-To make a copy, we can use the `clone()` method for an R6 class, as in `y <-
-x$clone()`. You can read more about reference semantics in Hadley Wickham's
-[Advanced R](https://adv-r.hadley.nz/r6.html#r6-semantics) book.
 
 ## Some details on metadata
 
@@ -146,15 +139,12 @@ call (as it did in the case above).
 
 ## Producing snapshots in `epi_df` form
 
-A key method of an `epi_archive` class is `as_of()`, which generates a snapshot
+A key method of an `epi_archive` class is `epix_as_of()`, which generates a snapshot
 of the archive in `epi_df` format. This represents the most up-to-date values of
-the signal variables as of a given version. This can be accessed via `x$as_of()`
-for an `epi_archive` object `x`, but the package also provides a simple wrapper
-function `epix_as_of()` since this is likely a more familiar interface for users
-not familiar with R6 (or object-oriented programming).
+the signal variables as of a given version.
 
 ```{r}
-x_snapshot <- epix_as_of2(x, max_version = as.Date("2021-06-01"))
+x_snapshot <- epix_as_of(x, max_version = as.Date("2021-06-01"))
 class(x_snapshot)
 head(x_snapshot)
 max(x_snapshot$time_value)
@@ -174,7 +164,7 @@ this case, since updates to the current version may still come in at a later
 point in time, due to various reasons, such as synchronization issues.
 
 ```{r}
-x_latest <- epix_as_of2(x, max_version = max(x$DT$version))
+x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 ```
 
 Below, we pull several snapshots from the archive, spaced one month apart. We
@@ -188,7 +178,7 @@ theme_set(theme_bw())
 self_max <- max(x$DT$version)
 versions <- seq(as.Date("2020-06-01"), self_max - 1, by = "1 month")
 snapshots <- map_dfr(versions, function(v) {
-  epix_as_of2(x, max_version = v) %>% mutate(version = v)
+  epix_as_of(x, max_version = v) %>% mutate(version = v)
 }) %>%
   bind_rows(
     x_latest %>% mutate(version = self_max)
@@ -219,19 +209,14 @@ they overestimate it (both states towards the beginning of 2021), though not
 quite as dramatically. Modeling the revision process, which is often called
 *backfill modeling*, is an important statistical problem in it of itself.
 
-<!-- todo: refer to some project/code? perhaps we should think about writing a
- function in `epiprocess` or even a separate package? -->
-
 ## Merging `epi_archive` objects
 
 Now we demonstrate how to merge two `epi_archive` objects together, e.g., so
 that grabbing data from multiple sources as of a particular version can be
-performed with a single `as_of` call. The `epi_archive` class provides a method
-`merge()` precisely for this purpose. The wrapper function is called
-`epix_merge()`; this wrapper avoids mutating its inputs, while `x$merge` will
-mutate `x`. Below we merge the working `epi_archive` of versioned percentage CLI
-from outpatient visits to another one of versioned COVID-19 case reporting data,
-which we fetch the from the [COVIDcast
+performed with a single `epix_as_of` call. The function `epix_merge()` is made
+for this purpose. Below we merge the working `epi_archive` of versioned
+percentage CLI from outpatient visits to another one of versioned COVID-19 case
+reporting data, which we fetch the from the [COVIDcast
 API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/), on the
 rate scale (counts per 100,000 people in the population).
 
@@ -258,34 +243,26 @@ y <- pub_covidcast(
   issues = epirange(20200601, 20211201)
 ) %>%
   select(geo_value, time_value, version = issue, case_rate_7d_av = value) %>%
-  as_epi_archive2(compactify = TRUE)
+  as_epi_archive(compactify = TRUE)
 
-x <- epix_merge2(x, y, sync = "locf", compactify = TRUE)
+x <- epix_merge(x, y, sync = "locf", compactify = TRUE)
 print(x)
 head(x$DT)
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-x <- archive_cases_dv_subset_2
+x <- archive_cases_dv_subset
 print(x)
 head(x$DT)
 ```
 
-Importantly, see that `x$merge` mutated `x` to hold the result of the merge. We
-could also have used `xy = epix_merge(x,y)` to avoid mutating `x`. See the
-documentation for either for more detailed descriptions of what mutation,
-pointer aliasing, and pointer reseating is possible.
-
 ## Sliding version-aware computations
 
-Lastly, we demonstrate another key method of the `epi_archive` class, which is
-the `slide()` method. It works just like `epi_slide()` does for an `epi_df`
-object, but with one key difference: it performs version-aware computations.
-That is, for the computation at any given reference time t, it only uses **data
-that would have been available as of t**. The wrapper function is called
-`epix_slide()`; again, this is just for convenience/familiarity---and its
-interface is purposely designed mirror that of `epi_slide()` for `epi_df`
-objects.
+Lastly, we demonstrate another key method for archives, which is the
+`epix_slide()`. It works just like `epi_slide()` does for an `epi_df` object,
+but with one key difference: it performs version-aware computations. That is,
+for the computation at any given reference time t, it only uses **data that
+would have been available as of t**.
 
 For the demonstration, we'll revisit the forecasting example from the [slide
 vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html), and now
@@ -362,7 +339,7 @@ fc_time_values <- seq(as.Date("2020-08-01"),
 
 z <- x %>%
   group_by(geo_value) %>%
-  epix_slide2(
+  epix_slide(
     fc = prob_arx(x = percent_cli, y = case_rate_7d_av), before = 119,
     ref_time_values = fc_time_values
   ) %>%
@@ -389,14 +366,14 @@ points in time and forecast horizons. The former comes from using
 `epi_slide()` to the latest snapshot of the data `x_latest`.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
-x_latest <- epix_as_of2(x, max_version = max(x$DT$version))
+x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 
 # Simple function to produce forecasts k weeks ahead
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
       group_by(.data$geo_value) %>%
-      epix_slide2(
+      epix_slide(
         fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, ahead = ahead), before = 119,
         ref_time_values = fc_time_values
       ) %>%

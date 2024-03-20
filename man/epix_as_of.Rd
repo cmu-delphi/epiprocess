@@ -34,37 +34,17 @@ Generates a snapshot in \code{epi_df} format from an \code{epi_archive} object, 
 given version. See the \href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{archive vignette} for
 examples.
 }
-\details{
-This is simply a wrapper around the \code{as_of()} method of the
-\code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epix_as_of(x, max_version = v)
-}\if{html}{\out{</div>}}
-
-is equivalent to:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{x$as_of(max_version = v)
-}\if{html}{\out{</div>}}
-
-Mutation and aliasing: \code{epix_as_of} and \verb{$as_of} will not mutate the input
-archives, but may in some edge cases alias parts of the inputs, so copy the
-outputs if needed before using mutating operations like \code{data.table}'s \verb{:=}
-operator. Currently, the only situation where there is potentially aliasing
-is of the \code{DT} in edge cases with \code{all_versions = TRUE}, but this may change
-in the future.
-}
 \examples{
 # warning message of data latency shown
 epix_as_of(
-  x = archive_cases_dv_subset,
+  archive_cases_dv_subset,
   max_version = max(archive_cases_dv_subset$DT$version)
 )
-
 
 range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
 
 epix_as_of(
-  x = archive_cases_dv_subset,
+  archive_cases_dv_subset,
   max_version = as.Date("2020-06-12")
 )
 
@@ -79,7 +59,7 @@ epix_as_of(
 withCallingHandlers(
   {
     epix_as_of(
-      x = archive_cases_dv_subset,
+      archive_cases_dv_subset,
       max_version = max(archive_cases_dv_subset$DT$version)
     )
   },

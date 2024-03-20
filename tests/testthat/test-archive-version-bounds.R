@@ -111,12 +111,12 @@ test_that("archive version bounds args work as intended", {
   )
   expect_error(as_epi_archive(update_tbl, versions_end = NA), regexp = "must have the same classes")
   ea_default <- as_epi_archive(update_tbl)
-  ea_default$as_of(measurement_date + 4L)
+  ea_default %>% epix_as_of(measurement_date + 4L)
   expect_warning(
     regexp = NA,
-    ea_default$as_of(measurement_date + 5L),
-    class = "epiprocess__snapshot_as_of_clobberable_version"
+    ea_default %>% epix_as_of(measurement_date + 5L),
+    class = "epiprocess__snapshot_epix_as_of_clobberable_version"
   )
-  ea_default$as_of(measurement_date + 5L)
-  expect_error(ea_default$as_of(measurement_date + 6L))
+  ea_default %>% epix_as_of(measurement_date + 5L)
+  expect_error(ea_default %>% epix_as_of(measurement_date + 6L))
 })
