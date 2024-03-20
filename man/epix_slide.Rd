@@ -186,7 +186,7 @@ feeds to the slide computations may alias parts of the input archive, so copy
 the slide computation inputs if needed before using mutating operations like
 \code{data.table}'s \verb{:=} operator. Similarly, in some edge cases, the output of
 the slide operation may alias parts of the input archive, so similarly, make
-sure to clone and/or copy appropriately before using in-place mutation.
+sure to copy and/or copy appropriately before using in-place mutation.
 }
 \examples{
 library(dplyr)

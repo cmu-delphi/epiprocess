@@ -4,11 +4,14 @@
 \alias{epix_as_of}
 \title{Generate a snapshot from an \code{epi_archive} object}
 \usage{
-epix_as_of(x, max_version, min_time_value = -Inf, all_versions = FALSE)
+epix_as_of(
+  epi_archive,
+  max_version,
+  min_time_value = -Inf,
+  all_versions = FALSE
+)
 }
 \arguments{
-\item{x}{An \code{epi_archive} object}
-
 \item{max_version}{Time value specifying the max version to permit in the
 snapshot. That is, the snapshot will comprise the unique rows of the
 current archive data that represent the most up-to-date signal values, as
@@ -25,6 +28,8 @@ having \code{version <= max_version}. The resulting object will cover a
 potentially narrower \code{version} and \code{time_value} range than \code{x}, depending
 on user-provided arguments. Otherwise, there will be one row in the output
 for the \code{max_version} of each \code{time_value}. Default is \code{FALSE}.}
+
+\item{x}{An \code{epi_archive} object}
 }
 \value{
 An \code{epi_df} object.
@@ -56,15 +61,14 @@ in the future.
 \examples{
 # warning message of data latency shown
 epix_as_of(
-  x = archive_cases_dv_subset,
+  archive_cases_dv_subset,
   max_version = max(archive_cases_dv_subset$DT$version)
 )
-
 
 range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
 
 epix_as_of(
-  x = archive_cases_dv_subset,
+  archive_cases_dv_subset,
   max_version = as.Date("2020-06-12")
 )
 
@@ -79,7 +83,7 @@ epix_as_of(
 withCallingHandlers(
   {
     epix_as_of(
-      x = archive_cases_dv_subset,
+      archive_cases_dv_subset,
       max_version = max(archive_cases_dv_subset$DT$version)
     )
   },

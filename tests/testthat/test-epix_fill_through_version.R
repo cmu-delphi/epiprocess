@@ -39,14 +39,14 @@ test_that("epix_fill_through_version can extend observed versions, gives expecte
   withCallingHandlers(
     {
       expect_identical(ea_fill_na$versions_end, later_unobserved_version)
-      expect_identical(tibble::as_tibble(ea_fill_na$as_of(first_unobserved_version)),
+      expect_identical(tibble::as_tibble(as_of(ea_fill_na, first_unobserved_version)),
         tibble::tibble(geo_value = "g1", time_value = as.Date("2020-01-01") + 0:1, value = rep(NA_integer_, 2L)),
         ignore_attr = TRUE
       )
       expect_identical(ea_fill_locf$versions_end, later_unobserved_version)
       expect_identical(
-        ea_fill_locf$as_of(first_unobserved_version),
-        ea_fill_locf$as_of(ea_orig$versions_end) %>%
+        as_of(ea_fill_locf, first_unobserved_version),
+        as_of(ea_fill_locf, ea_orig$versions_end) %>%
           {
             attr(., "metadata")$as_of <- first_unobserved_version
             .
@@ -70,7 +70,7 @@ test_that("epix_fill_through_version does not mutate x", {
     as_epi_archive(tibble::tibble(geo_value = 1L, time_value = 1L, version = 1L, value = 10L))
   )) {
     # We want to perform a strict comparison of the contents of `ea_orig` before
-    # and `ea_orig` after. `clone` + `expect_identical` based on waldo would
+    # and `ea_orig` after. `copy` + `expect_identical` based on waldo would
     # sort of work, but we might want something stricter. `as.list` +
     # `identical` plus a check of the DT seems to do the trick.
     ea_orig_before_as_list <- as.list(ea_orig)
@@ -90,27 +90,13 @@ test_that("epix_fill_through_version does not mutate x", {
   }
 })
 
-test_that("x$fill_through_version mutates x (if needed)", {
-  ea <- as_epi_archive(data.table::data.table(
-    geo_value = "g1", time_value = as.Date("2020-01-01"),
-    version = 1:5, value = 1:5
-  ))
-  # We want the contents to change in a substantial way that makes waldo compare
-  # different (if the contents need to change).
-  ea_before_copies_as_list <- lapply(ea, data.table::copy)
-  some_unobserved_version <- 8L
-  ea$fill_through_version(some_unobserved_version, "na")
-  ea_after_copies_as_list <- lapply(ea, data.table::copy)
-  expect_failure(expect_identical(ea_before_copies_as_list, ea_after_copies_as_list))
-})
-
-test_that("{epix_,$}fill_through_version return with expected visibility", {
+test_that("epix_fill_through_version return with expected visibility", {
   ea <- as_epi_archive(data.table::data.table(
     geo_value = "g1", time_value = as.Date("2020-01-01"),
     version = 1:5, value = 1:5
   ))
   expect_true(withVisible(epix_fill_through_version(ea, 10L, "na"))[["visible"]])
-  expect_false(withVisible(ea$fill_through_version(15L, "na"))[["visible"]])
+  expect_false(withVisible(ea %>% fill_through_version(15L, "na"))[["visible"]])
 })
 
 test_that("epix_fill_through_version returns same key & doesn't mutate old DT or its key", {

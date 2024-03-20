@@ -111,17 +111,17 @@ edf %>%
 edf %>%
   # pretend that observations about time_value t are reported in version t (nowcasts)
   mutate(version = time_value) %>%
-  as_epi_archive2() %>%
+  as_epi_archive() %>%
   group_by(geo_value) %>%
-  epix_slide2(x_2dav = mean(x), before = 1, ref_time_values = as.Date("2020-06-02")) %>%
+  epix_slide(x_2dav = mean(x), before = 1, ref_time_values = as.Date("2020-06-02")) %>%
   ungroup()
 
 edf %>%
   # pretend that observations about time_value t are reported in version t (nowcasts)
   mutate(version = time_value) %>%
-  as_epi_archive2() %>%
+  as_epi_archive() %>%
   group_by(geo_value) %>%
-  epix_slide2(~ mean(.x$x), before = 1, ref_time_values = as.Date("2020-06-02")) %>%
+  epix_slide(~ mean(.x$x), before = 1, ref_time_values = as.Date("2020-06-02")) %>%
   ungroup()
 ```
 
@@ -219,9 +219,9 @@ edf %>%
 
 edf %>%
   mutate(version = time_value) %>%
-  as_epi_archive2() %>%
+  as_epi_archive() %>%
   group_by(geo_value) %>%
-  epix_slide2(
+  epix_slide(
     a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
     ref_time_values = as.Date("2020-06-02"),
     before = 1, as_list_col = FALSE, names_sep = NULL
@@ -317,17 +317,17 @@ x <- y1 %>%
     version = issue,
     percent_cli = value
   ) %>%
-  as_epi_archive2(compactify = FALSE)
+  as_epi_archive(compactify = FALSE)
 
 # mutating merge operation:
-x <- epix_merge2(
+x <- epix_merge(
   x,
   y2 %>%
     select(geo_value, time_value,
       version = issue,
       case_rate_7d_av = value
     ) %>%
-    as_epi_archive2(compactify = FALSE),
+    as_epi_archive(compactify = FALSE),
   sync = "locf",
   compactify = FALSE
 )
@@ -340,7 +340,7 @@ theme_set(theme_bw())
 
 x <- archive_cases_dv_subset_2$DT %>%
   filter(geo_value %in% c("ca", "fl")) %>%
-  as_epi_archive2(compactify = FALSE)
+  as_epi_archive(compactify = FALSE)
 ```
 
 Next, we extend the ARX function to handle multiple geo values, since in the
@@ -458,7 +458,7 @@ data.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
 # Latest snapshot of data, and forecast dates
-x_latest <- epix_as_of2(x, max_version = max(x$DT$version))
+x_latest <- epix_as_of(x, max_version = max(x$DT$version))
 fc_time_values <- seq(as.Date("2020-08-01"),
   as.Date("2021-11-30"),
   by = "1 month"
@@ -468,7 +468,7 @@ fc_time_values <- seq(as.Date("2020-08-01"),
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
-      epix_slide2(
+      epix_slide(
         fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, .data$geo_value, .data$time_value,
           args = prob_arx_args(ahead = ahead)
         ),

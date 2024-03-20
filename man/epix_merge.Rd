@@ -67,7 +67,5 @@ y <- archive_cases_dv_subset$DT \%>\%
   as_epi_archive(compactify = TRUE)
 # merge results stored in a third object:
 xy <- epix_merge(x, y)
-# vs. mutating x to hold the merge result:
-x$merge(y)
 
 }

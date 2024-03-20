@@ -73,7 +73,6 @@ Depends:
 URL: https://cmu-delphi.github.io/epiprocess/
 Collate:
     'archive.R'
-    'archive_new.R'
     'autoplot.R'
     'correlation.R'
     'data.R'
@@ -81,11 +80,9 @@ Collate:
     'epiprocess.R'
     'group_by_epi_df_methods.R'
     'methods-epi_archive.R'
-    'grouped_archive_new.R'
     'grouped_epi_archive.R'
     'growth_rate.R'
     'key_colnames.R'
-    'methods-epi_archive_new.R'
     'methods-epi_df.R'
     'outliers.R'
     'reexports.R'
