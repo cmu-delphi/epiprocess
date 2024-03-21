@@ -4,11 +4,13 @@
 \alias{epix_fill_through_version}
 \title{\code{epi_archive} with unobserved history filled in (won't mutate, might alias)}
 \usage{
-epix_fill_through_version(x, fill_versions_end, how = c("na", "locf"))
+epix_fill_through_version(
+  epi_archive,
+  fill_versions_end,
+  how = c("na", "locf")
+)
 }
 \arguments{
-\item{x}{An \code{epi_archive}}
-
 \item{fill_versions_end}{Length-1, same class&type as \code{x$version}: the
 version through which to fill in missing version history; this will be the
 result's \verb{$versions_end} unless it already had a later
@@ -22,6 +24,8 @@ classes with a \code{next_after} implementation); \code{"locf"} will fill in mis
 version history with the last version of each observation carried forward
 (LOCF), by leaving the update \verb{$DT} alone (other \code{epi_archive} methods are
 based on LOCF).  Default is \code{"na"}.}
+
+\item{x}{An \code{epi_archive}}
 }
 \value{
 An \code{epi_archive}
