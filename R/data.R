@@ -289,3 +289,11 @@ delayed_assign_with_unregister_awareness(
 #' * Furthermore, the data has been limited to a very small number of rows, the
 #'   signal names slightly altered, and formatted into a tibble.
 "jhu_csse_county_level_subset"
+
+#' @export
+"archive_cases_dv_subset_2"
+
+delayed_assign_with_unregister_awareness(
+  "archive_cases_dv_subset_2",
+  as_epi_archive2(archive_cases_dv_subset_dt, compactify = FALSE)
+)
