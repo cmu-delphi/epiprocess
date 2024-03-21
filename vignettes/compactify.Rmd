@@ -106,6 +106,7 @@ slide_median <- function(my_ea) {
 
 speeds <- rbind(speeds, speed_test(slide_median, "slide_median"))
 ```
+
 Here is a detailed performance comparison:
 
 ```{r}
