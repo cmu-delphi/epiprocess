@@ -530,8 +530,20 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
                            names_sep = "_", all_rows = FALSE) {
   assert_class(x, "epi_df")
 
+  if (nrow(x) == 0L) {
+    cli_abort(
+      c(
+        "input data `x` unexpectedly has 0 rows",
+        "i" = "If this computation is occuring within an `epix_slide` call,
+          check that `epix_slide` `ref_time_values` argument was set appropriately"
+      ),
+      class = "epiprocess__epi_slide_mean__0_row_input",
+      epiprocess__x = x
+    )
+  }
+
   if (!is.null(as_list_col)) {
-    cli::cli_abort(
+    cli_abort(
       "`as_list_col` is not supported for `epi_slide_mean`",
       class = "epiproces__epi_slide_mean__list_not_supported"
     )
@@ -720,7 +732,7 @@ full_date_seq <- function(x, before, after, time_step) {
   # unit) of the date class. For example, one step = 1 quarter for `yearquarter`.
   #
   # `tsibble` classes apparently can't be added to in different units, so even
-  # if `time_step` is provided by the user, use a unit step.
+  # if `time_step` is provided by the user, use a value-1 unitless step.
   if (inherits(x$time_value, c("yearquarter", "yearweek", "yearmonth")) ||
         is.numeric(x$time_value)) {
     all_dates <- seq(min(x$time_value), max(x$time_value), by = 1L)
