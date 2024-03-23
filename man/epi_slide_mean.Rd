@@ -23,8 +23,8 @@ epi_slide_mean(
 or ungrouped. If ungrouped, all data in \code{x} will be treated as part of a
 single data group.}
 
-\item{col_names}{A character vector of the names of one or more columns for
-which to calculate the rolling mean.}
+\item{col_names}{A single tidyselection or a tidyselection vector of the
+names of one or more columns for which to calculate the rolling mean.}
 
 \item{...}{Additional arguments to pass to \code{data.table::frollmean}, for
 example, \code{na.rm} and \code{algo}. \code{data.table::frollmean} is automatically
@@ -123,7 +123,7 @@ misspelled.)
 # slide a 7-day trailing average formula on cases
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean("cases", new_col_names = "cases_7dav", names_sep = NULL, before = 6) \%>\%
+  epi_slide_mean(cases, new_col_names = "cases_7dav", names_sep = NULL, before = 6) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
   ungroup()
@@ -132,7 +132,8 @@ jhu_csse_daily_subset \%>\%
 # and accuracy, and to allow partially-missing windows.
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean("cases", new_col_names = "cases_7dav", names_sep = NULL, before = 6,
+  epi_slide_mean(cases,
+    new_col_names = "cases_7dav", names_sep = NULL, before = 6,
     # `frollmean` options
     na.rm = TRUE, algo = "exact", hasNA = TRUE
   ) \%>\%
@@ -142,7 +143,7 @@ jhu_csse_daily_subset \%>\%
 # slide a 7-day leading average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean("cases", new_col_names = "cases_7dav", names_sep = NULL, after = 6) \%>\%
+  epi_slide_mean(cases, new_col_names = "cases_7dav", names_sep = NULL, after = 6) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
   ungroup()
@@ -150,7 +151,7 @@ jhu_csse_daily_subset \%>\%
 # slide a 7-day centre-aligned average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean("cases", new_col_names = "cases_7dav", names_sep = NULL, before = 3, after = 3) \%>\%
+  epi_slide_mean(cases, new_col_names = "cases_7dav", names_sep = NULL, before = 3, after = 3) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
   ungroup()
@@ -158,7 +159,7 @@ jhu_csse_daily_subset \%>\%
 # slide a 14-day centre-aligned average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean("cases", new_col_names = "cases_14dav", names_sep = NULL, before = 6, after = 7) \%>\%
+  epi_slide_mean(cases, new_col_names = "cases_14dav", names_sep = NULL, before = 6, after = 7) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_14dav) \%>\%
   ungroup()
