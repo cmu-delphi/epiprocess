@@ -7,7 +7,6 @@
 epi_slide_mean(
   x,
   col_names,
-  f,
   ...,
   before,
   after,
@@ -26,16 +25,6 @@ single data group.}
 
 \item{col_names}{A single tidyselection or a tidyselection vector of the
 names of one or more columns for which to calculate the rolling mean.}
-
-\item{f}{Function; together with \code{...} specifies the computation to slide.
-\code{f} must be one of \code{data.table}'s rolling functions
-(\code{frollmean}, \code{frollsum}, \code{frollapply}. See \code{?data.table::roll}) or one
-of \code{slider}'s specialized sliding functions (\code{slide_mean}, \code{slide_sum},
-etc. See \verb{?slider::\\}summary-slide\``). To "slide" means to apply a
-computation within a sliding (a.k.a. "rolling") time window for each data
-group. The window is determined by the \code{before} and `after` parameters
-described below. One time step is typically one day or one week; see
-details for more explanation.}
 
 \item{...}{Additional arguments to pass to \code{data.table::frollmean}, for
 example, \code{na.rm} and \code{algo}. \code{data.table::frollmean} is automatically
@@ -101,6 +90,8 @@ Slides an n-timestep mean over variables in an \code{epi_df} object. See the \hr
 examples.
 }
 \details{
+Wrapper around \code{epi_slide_opt} with \code{f = datatable::frollmean}.
+
 To "slide" means to apply a function or formula over a rolling
 window of time steps for each data group, where the window is entered at a
 reference time and left and right endpoints are given by the \code{before} and
@@ -176,5 +167,5 @@ jhu_csse_daily_subset \%>\%
   ungroup()
 }
 \seealso{
-\code{\link{epi_slide}}
+\code{\link{epi_slide}} \code{\link{epi_slide_opt}} \code{\link{epi_slide_sum}}
 }
