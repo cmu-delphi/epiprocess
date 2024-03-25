@@ -7,6 +7,7 @@
 epi_slide_mean(
   x,
   col_names,
+  f,
   ...,
   before,
   after,
@@ -25,6 +26,16 @@ single data group.}
 
 \item{col_names}{A single tidyselection or a tidyselection vector of the
 names of one or more columns for which to calculate the rolling mean.}
+
+\item{f}{Function; together with \code{...} specifies the computation to slide.
+\code{f} must be one of \code{data.table}'s rolling functions
+(\code{frollmean}, \code{frollsum}, \code{frollapply}. See \code{?data.table::roll}) or one
+of \code{slider}'s specialized sliding functions (\code{slide_mean}, \code{slide_sum},
+etc. See \verb{?slider::\\}summary-slide\``). To "slide" means to apply a
+computation within a sliding (a.k.a. "rolling") time window for each data
+group. The window is determined by the \code{before} and `after` parameters
+described below. One time step is typically one day or one week; see
+details for more explanation.}
 
 \item{...}{Additional arguments to pass to \code{data.table::frollmean}, for
 example, \code{na.rm} and \code{algo}. \code{data.table::frollmean} is automatically

@@ -395,6 +395,15 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   single data group.
 #' @param col_names A single tidyselection or a tidyselection vector of the
 #'  names of one or more columns for which to calculate the rolling mean.
+#' @param f Function; together with `...` specifies the computation to slide.
+#'  `f` must be one of `data.table`'s rolling functions
+#'  (`frollmean`, `frollsum`, `frollapply`. See `?data.table::roll`) or one
+#'  of `slider`'s specialized sliding functions (`slide_mean`, `slide_sum`,
+#'  etc. See `?slider::\`summary-slide\``). To "slide" means to apply a
+#'  computation within a sliding (a.k.a. "rolling") time window for each data
+#'  group. The window is determined by the `before` and `after` parameters
+#'  described below. One time step is typically one day or one week; see
+#'  details for more explanation.
 #' @param ... Additional arguments to pass to `data.table::frollmean`, for
 #'   example, `na.rm` and `algo`. `data.table::frollmean` is automatically
 #'   passed the data `x` to operate on, the window size `n`, and the alignment
@@ -476,9 +485,10 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' @importFrom dplyr bind_rows mutate %>% arrange tibble select
 #' @importFrom rlang enquo quo_get_expr as_label
 #' @importFrom purrr map
-#' @importFrom data.table frollmean
+#' @importFrom data.table frollmean frollsum frollapply
 #' @importFrom lubridate as.period
 #' @importFrom checkmate assert_function
+#' @importFrom slider slide_sum slide_prod slide_mean slide_min slide_max slide_all slide_any
 #' @export
 #' @seealso [`epi_slide`]
 #' @examples
@@ -525,7 +535,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_14dav) %>%
 #'   ungroup()
-epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
+epi_slide_mean <- function(x, col_names, f, ..., before, after, ref_time_values,
                            time_step,
                            new_col_names = "slide_value", as_list_col = NULL,
                            names_sep = "_", all_rows = FALSE) {
@@ -547,6 +557,39 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
     cli_abort(
       "`as_list_col` is not supported for `epi_slide_mean`",
       class = "epiproces__epi_slide_mean__list_not_supported"
+    )
+  }
+
+  # Check that slide function `f` is one of those short-listed from
+  # `data.table` and `slider` (or a function that has the exact same
+  # definition, e.g. if the function has been reexported or defined
+  # locally).
+  if (any(lapply(
+    c(frollmean, frollsum, frollapply),
+    function(roll_fn) {
+      isTRUE(all.equal(f, roll_fn))
+    }
+  ))) {
+    f_from_package <- "data.table"
+  } else if (any(lapply(
+    c(slide_sum, slide_prod, slide_mean, slide_min, slide_max, slide_all, slide_any),
+    function(roll_fn) {
+      isTRUE(all.equal(f, roll_fn))
+    }
+  ))) {
+    f_from_package <- "slider"
+  } else {
+    # `f` is from somewhere else and not supported
+    cli_abort(
+      c(
+        "slide function `f` is not supported",
+        "i" = "`f` must be one of `data.table`'s rolling functions (`frollmean`,
+              `frollsum`, `frollapply`. See `?data.table::roll`) or one of
+              `slider`'s specialized sliding functions (`slide_mean`, `slide_sum`,
+              etc. See `?slider::\`summary-slide\`` for more options)."
+      ),
+      class = "epiprocess__epi_slide_opt__unsupported_slide_function",
+      epiprocess__f = f
     )
   }
 
@@ -692,19 +735,27 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
       )
     }
 
-    roll_output <- data.table::frollmean(
-      x = select(.data_group, {{ col_names }}), n = window_size, align = "right", ...
-    )
+    if (f_from_package == "data.table") {
+      roll_output <- f(
+        x = select(.data_group, {{ col_names }}), n = window_size, align = "right", ...
+      )
 
-    if (after >= 1) {
-      # Right-aligned `frollmean` results' `ref_time_value`s will be `after`
-      # timesteps ahead of where they should be. Shift results to the left by
-      # `after` timesteps.
-      .data_group[, result_col_names] <- purrr::map(roll_output, function(.x) {
-        c(.x[(after + 1L):length(.x)], rep(NA, after))
-      })
-    } else {
-      .data_group[, result_col_names] <- roll_output
+      if (after >= 1) {
+        # Right-aligned `frollmean` results' `ref_time_value`s will be `after`
+        # timesteps ahead of where they should be. Shift results to the left by
+        # `after` timesteps.
+        .data_group[, result_col_names] <- purrr::map(roll_output, function(.x) {
+          c(.x[(after + 1L):length(.x)], rep(NA, after))
+        })
+      } else {
+        .data_group[, result_col_names] <- roll_output
+      }
+    } else if (f_from_package == "slider") {
+      for (i in seq_along(col_names_chr)) {
+        .data_group[, result_col_names[i]] <- f(
+          x = .data_group[[col_names_chr[i]]], before = before, after = after, ...
+        )
+      }
     }
 
     return(.data_group)
