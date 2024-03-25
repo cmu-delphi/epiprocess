@@ -738,7 +738,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
 
     if (f_from_package == "data.table") {
       roll_output <- f(
-        x = select(.data_group, {{ col_names }}), n = window_size, align = "right", ...
+        x = .data_group[, col_names_chr], n = window_size, align = "right", ...
       )
 
       if (after >= 1) {
