@@ -58,7 +58,7 @@ underlying data table, by default.}
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
 \code{time_value} column. This function must take a non-negative integer and
-return an object of class \code{lubridate::period}. For example, we can use
+return an object of class \link[lubridate:period]{lubridate::period}. For example, we can use
 \code{time_step = lubridate::hours} in order to set the time step to be one hour
 (this would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
@@ -91,35 +91,6 @@ examples.
 }
 \details{
 Wrapper around \code{epi_slide_opt} with \code{f = datatable::frollmean}.
-
-To "slide" means to apply a function or formula over a rolling
-window of time steps for each data group, where the window is entered at a
-reference time and left and right endpoints are given by the \code{before} and
-\code{after} arguments. The unit (the meaning of one time step) is implicitly
-defined by the way the \code{time_value} column treats addition and subtraction;
-for example, if the time values are coded as \code{Date} objects, then one time
-step is one day, since \code{as.Date("2022-01-01") + 1} equals
-\code{as.Date("2022-01-02")}. Alternatively, the time step can be set explicitly
-using the \code{time_step} argument (which if specified would override the
-default choice based on \code{time_value} column). If there are not enough time
-steps available to complete the window at any given reference time, then
-\code{epi_slide()} still attempts to perform the computation anyway (it does not
-require a complete window). The issue of what to do with partial
-computations (those run on incomplete windows) is therefore left up to the
-user, either through the specified function or formula \code{f}, or through
-post-processing. For a centrally-aligned slide of \code{n} \code{time_value}s in a
-sliding window, set \code{before = (n-1)/2} and \code{after = (n-1)/2} when the
-number of \code{time_value}s in a sliding window is odd and \code{before = n/2-1} and
-\code{after = n/2} when \code{n} is even.
-
-Sometimes, we want to experiment with various trailing or leading window
-widths and compare the slide outputs. In the (uncommon) case where
-zero-width windows are considered, manually pass both the \code{before} and
-\code{after} arguments in order to prevent potential warnings. (E.g., \code{before=k}
-with \code{k=0} and \code{after} missing may produce a warning. To avoid warnings,
-use \verb{before=k, after=0} instead; otherwise, it looks too much like a
-leading window was intended, but the \code{after} argument was forgotten or
-misspelled.)
 }
 \examples{
 # slide a 7-day trailing average formula on cases

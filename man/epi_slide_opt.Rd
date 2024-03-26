@@ -29,11 +29,11 @@ names of one or more columns for which to calculate the rolling mean.}
 
 \item{f}{Function; together with \code{...} specifies the computation to slide.
 \code{f} must be one of \code{data.table}'s rolling functions
-(\code{frollmean}, \code{frollsum}, \code{frollapply}. See \code{?data.table::roll}) or one
+(\code{frollmean}, \code{frollsum}, \code{frollapply}. See \link[data.table:froll]{data.table::roll}) or one
 of \code{slider}'s specialized sliding functions (\code{slide_mean}, \code{slide_sum},
-etc. See \verb{?slider::\\}summary-slide\``). To "slide" means to apply a
+etc. See \link[slider:summary-slide]{slider::summary-slide}). To "slide" means to apply a
 computation within a sliding (a.k.a. "rolling") time window for each data
-group. The window is determined by the \code{before} and `after` parameters
+group. The window is determined by the \code{before} and \code{after} parameters
 described below. One time step is typically one day or one week; see
 details for more explanation.}
 
@@ -72,7 +72,7 @@ underlying data table, by default.}
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
 \code{time_value} column. This function must take a non-negative integer and
-return an object of class \code{lubridate::period}. For example, we can use
+return an object of class \link[lubridate:period]{lubridate::period}. For example, we can use
 \code{time_step = lubridate::hours} in order to set the time step to be one hour
 (this would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
@@ -138,7 +138,8 @@ misspelled.)
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
-    cases, f = data.table::frollmean, new_col_names = "cases_7dav", names_sep = NULL, before = 6
+    cases,
+    f = data.table::frollmean, new_col_names = "cases_7dav", names_sep = NULL, before = 6
   ) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
@@ -160,7 +161,8 @@ jhu_csse_daily_subset \%>\%
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
-    cases, f = slider::slide_mean, new_col_names = "cases_7dav", names_sep = NULL, after = 6
+    cases,
+    f = slider::slide_mean, new_col_names = "cases_7dav", names_sep = NULL, after = 6
   ) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
@@ -170,7 +172,8 @@ jhu_csse_daily_subset \%>\%
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
-    cases, f = data.table::frollsum, new_col_names = "cases_7dav", names_sep = NULL, before = 3, after = 3
+    cases,
+    f = data.table::frollsum, new_col_names = "cases_7dav", names_sep = NULL, before = 3, after = 3
   ) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
