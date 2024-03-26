@@ -149,7 +149,7 @@ jhu_csse_daily_subset \%>\%
 # and accuracy, and to allow partially-missing windows.
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_opt(cases,
+  epi_slide_opt(cases, f = data.table::frollmean,
     new_col_names = "cases_7dav", names_sep = NULL, before = 6,
     # `frollmean` options
     na.rm = TRUE, algo = "exact", hasNA = TRUE
@@ -157,16 +157,17 @@ jhu_csse_daily_subset \%>\%
   dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
   ungroup()
 
-# slide a 7-day leading average
-jhu_csse_daily_subset \%>\%
-  group_by(geo_value) \%>\%
-  epi_slide_opt(
-    cases,
-    f = slider::slide_mean, new_col_names = "cases_7dav", names_sep = NULL, after = 6
-  ) \%>\%
-  # Remove a nonessential var. to ensure new col is printed
-  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
-  ungroup()
+# # slide a 7-day leading average. Theoretically works, but `slider::slide_mean` is
+# # having a recursion issue.
+# jhu_csse_daily_subset \%>\%
+#   group_by(geo_value) \%>\%
+#   epi_slide_opt(
+#     cases,
+#     f = slider::slide_mean, new_col_names = "cases_7dav", names_sep = NULL, after = 6
+#   ) \%>\%
+#   # Remove a nonessential var. to ensure new col is printed
+#   dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+#   ungroup()
 
 # slide a 7-day centre-aligned sum. This can also be done with `epi_slide_sum`
 jhu_csse_daily_subset \%>\%
