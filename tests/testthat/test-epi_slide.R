@@ -1386,3 +1386,29 @@ test_that("`epi_slide_mean` errors when passed `col_names` as list", {
     class = "epiprocess__epi_slide_mean__col_names_in_list"
   )
 })
+
+test_that("epi_slide_mean produces same output as epi_slide_opt", {
+  result1 <- epi_slide_mean(small_x, value, before = 50, names_sep = NULL, na.rm = TRUE)
+  result2 <- epi_slide_opt(small_x, value, f = data.table::frollmean,
+    before = 50, names_sep = NULL, na.rm = TRUE)
+  expect_identical(result1, result2)
+
+  # # Theoretically should work, but getting "Error: C stack usage  7973092 is
+  # too close to the limit" (recursion is too deep)
+  # result3 <- epi_slide_opt(small_x, value, f = slider::slide_mean,
+  #   before = 50, names_sep = NULL, na_rm = TRUE)
+  # expect_equal(result1, result3)
+})
+
+test_that("epi_slide_sum produces same output as epi_slide_opt", {
+  result1 <- epi_slide_sum(small_x, value, before = 50, names_sep = NULL, na.rm = TRUE)
+  result2 <- epi_slide_opt(small_x, value, f = data.table::frollsum,
+    before = 50, names_sep = NULL, na.rm = TRUE)
+  expect_identical(result1, result2)
+
+  # # Theoretically should work, but getting "Error: C stack usage  7973092 is
+  # too close to the limit" (recursion is too deep)
+  # result3 <- epi_slide_opt(small_x, value, f = slider::slide_sum,
+  #   before = 50, names_sep = NULL, na_rm = TRUE)
+  # expect_equal(result1, result3)
+})
