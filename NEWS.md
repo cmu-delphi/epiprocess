@@ -9,6 +9,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - `epi_slide` computations are now 2-4 times faster after changing how
   reference time values, made accessible within sliding functions, are
   calculated (#397).
+- Add new `epi_slide_mean` function to allow much (~30x) faster rolling
+  average computations in some cases (#400).
 - regenerated the `jhu_csse_daily_subset` dataset with the latest versions of
   the data from the API
 - changed approach to versioning, see DEVELOPMENT.md for details

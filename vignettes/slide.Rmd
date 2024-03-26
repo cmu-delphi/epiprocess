@@ -60,12 +60,34 @@ x <- jhu_csse_daily_subset %>%
   as_epi_df()
 ```
 
+## Optimized rolling mean
+
+We first demonstrate how to apply a 7-day trailing average to the daily cases
+in order to smooth the signal, by passing in the name of the column(s) we
+want to average for the first argument of `epi_slide_mean()`. `epi_slide_mean
+()` can only be used for averaging. To do this computation per state, we
+first call `group_by()`.
+
+```{r}
+x %>%
+  group_by(geo_value) %>%
+  epi_slide_mean("cases", before = 6) %>%
+  ungroup() %>%
+  head(10)
+```
+
+The calculation is done using `data.table::frollmean`, whose behavior can be
+adjusted by passing relevant arguments via `...`.
 
 ## Slide with a formula
 
-We first demonstrate how to apply a 7-day trailing average to the daily cases in
-order to smooth the signal, by passing in a formula for the first argument of
-`epi_slide()`. To do this computation per state, we first call `group_by()`.
+The previous computation can also be performed using `epi_slide()`, which is
+more flexible but quite a bit slower than `epi_slide_mean()`. It is
+recommended to use `epi_slide_mean()` when possible.
+
+The same 7-day trailing average of daily cases can be computed by passing in a
+formula for the first argument of `epi_slide()`. To do this per state, we
+first call `group_by()`.
 
 ```{r}
 x %>%

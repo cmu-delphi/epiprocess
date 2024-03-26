@@ -67,6 +67,7 @@ reference:
     desc: Functions that act on `epi_df` objects.
   - contents:
       - epi_slide
+      - epi_slide_mean
       - epi_cor
   - title: Vector functions
     desc: Functions that act directly on signal variables.
