@@ -603,7 +603,7 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
 
   # `frollmean` is 1-indexed, so create a new window width based on our
   # `before` and `after` params.
-  m <- before + after + 1L
+  window_size <- before + after + 1L
 
   col_names_quo <- enquo(col_names)
   col_names_chr <- as.character(rlang::quo_get_expr(col_names_quo))
@@ -693,7 +693,7 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
     }
 
     roll_output <- data.table::frollmean(
-      x = select(.data_group, {{ col_names }}), n = m, align = "right", ...
+      x = select(.data_group, {{ col_names }}), n = window_size, align = "right", ...
     )
 
     if (after >= 1) {
