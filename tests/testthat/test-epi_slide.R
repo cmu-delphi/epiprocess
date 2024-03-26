@@ -1389,8 +1389,10 @@ test_that("`epi_slide_mean` errors when passed `col_names` as list", {
 
 test_that("epi_slide_mean produces same output as epi_slide_opt", {
   result1 <- epi_slide_mean(small_x, value, before = 50, names_sep = NULL, na.rm = TRUE)
-  result2 <- epi_slide_opt(small_x, value, f = data.table::frollmean,
-    before = 50, names_sep = NULL, na.rm = TRUE)
+  result2 <- epi_slide_opt(small_x, value,
+    f = data.table::frollmean,
+    before = 50, names_sep = NULL, na.rm = TRUE
+  )
   expect_identical(result1, result2)
 
   # # Theoretically should work, but getting "Error: C stack usage  7973092 is
@@ -1402,8 +1404,10 @@ test_that("epi_slide_mean produces same output as epi_slide_opt", {
 
 test_that("epi_slide_sum produces same output as epi_slide_opt", {
   result1 <- epi_slide_sum(small_x, value, before = 50, names_sep = NULL, na.rm = TRUE)
-  result2 <- epi_slide_opt(small_x, value, f = data.table::frollsum,
-    before = 50, names_sep = NULL, na.rm = TRUE)
+  result2 <- epi_slide_opt(small_x, value,
+    f = data.table::frollsum,
+    before = 50, names_sep = NULL, na.rm = TRUE
+  )
   expect_identical(result1, result2)
 
   # # Theoretically should work, but getting "Error: C stack usage  7973092 is
