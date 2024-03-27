@@ -35,7 +35,14 @@ etc. See \link[slider:summary-slide]{slider::summary-slide}). To "slide" means t
 computation within a sliding (a.k.a. "rolling") time window for each data
 group. The window is determined by the \code{before} and \code{after} parameters
 described below. One time step is typically one day or one week; see
-details for more explanation.}
+details for more explanation.
+
+The optimized \code{data.table} and \code{slider} functions can't be directly passed
+as the computation function in \code{epi_slide} without careful handling to
+make sure each computation group is made up of the \code{n} dates rather than
+\code{n} points. \code{epi_slide_opt} (and wrapper functions \code{epi_slide_mean} and
+\code{epi_slide_sum}) take care of window completion automatically to prevent
+associated errors.}
 
 \item{...}{Additional arguments to pass to the slide computation \code{f}, for
 example, \code{na.rm} and \code{algo} if \code{f} is a \code{data.table} function. If \code{f} is

@@ -404,6 +404,13 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'  group. The window is determined by the `before` and `after` parameters
 #'  described below. One time step is typically one day or one week; see
 #'  details for more explanation.
+#'
+#'  The optimized `data.table` and `slider` functions can't be directly passed
+#'  as the computation function in `epi_slide` without careful handling to
+#'  make sure each computation group is made up of the `n` dates rather than
+#'  `n` points. `epi_slide_opt` (and wrapper functions `epi_slide_mean` and
+#'  `epi_slide_sum`) take care of window completion automatically to prevent
+#'  associated errors.
 #' @param ... Additional arguments to pass to the slide computation `f`, for
 #'  example, `na.rm` and `algo` if `f` is a `data.table` function. If `f` is
 #'  a `data.table` function, it is automatically passed the data `x` to
