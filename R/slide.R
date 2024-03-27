@@ -573,14 +573,14 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
   if (any(sapply(
     c(frollmean, frollsum, frollapply),
     function(roll_fn) {
-      isTRUE(all.equal(f, roll_fn))
+      isTRUE(identical(f, roll_fn))
     }
   ))) {
     f_from_package <- "data.table"
   } else if (any(sapply(
     c(slide_sum, slide_prod, slide_mean, slide_min, slide_max, slide_all, slide_any),
     function(roll_fn) {
-      isTRUE(all.equal(f, roll_fn))
+      isTRUE(identical(f, roll_fn))
     }
   ))) {
     f_from_package <- "slider"
