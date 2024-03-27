@@ -205,5 +205,5 @@ jhu_csse_daily_subset \%>\%
   ungroup()
 }
 \seealso{
-\code{\link{epi_slide_mean}}
+\code{\link{epi_slide_opt}} \code{\link{epi_slide_mean}} \code{\link{epi_slide_sum}}
 }

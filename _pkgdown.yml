@@ -68,6 +68,8 @@ reference:
   - contents:
       - epi_slide
       - epi_slide_mean
+      - epi_slide_sum
+      - epi_slide_opt
       - epi_cor
   - title: Vector functions
     desc: Functions that act directly on signal variables.

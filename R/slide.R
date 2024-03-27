@@ -127,7 +127,7 @@
 #' @importFrom dplyr bind_rows group_vars filter select
 #' @importFrom rlang .data .env !! enquo enquos sym env missing_arg
 #' @export
-#' @seealso [`epi_slide_mean`]
+#' @seealso [`epi_slide_opt`] [`epi_slide_mean`] [`epi_slide_sum`]
 #' @examples
 #' # slide a 7-day trailing average formula on cases
 #' # This and other simple sliding means are much faster to do using
@@ -384,7 +384,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
   return(x)
 }
 
-#' Optimized slide function for performing rolling averages on an `epi_df` object
+#' Optimized slide function for performing common rolling computations on an `epi_df` object
 #'
 #' Slides an n-timestep mean over variables in an `epi_df` object. See the [slide
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
@@ -395,10 +395,29 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   single data group.
 #' @param col_names A single tidyselection or a tidyselection vector of the
 #'  names of one or more columns for which to calculate the rolling mean.
-#' @param ... Additional arguments to pass to `data.table::frollmean`, for
-#'   example, `na.rm` and `algo`. `data.table::frollmean` is automatically
-#'   passed the data `x` to operate on, the window size `n`, and the alignment
-#'   `align`. Providing these args via `...` will cause an error.
+#' @param f Function; together with `...` specifies the computation to slide.
+#'  `f` must be one of `data.table`'s rolling functions
+#'  (`frollmean`, `frollsum`, `frollapply`. See [data.table::roll]) or one
+#'  of `slider`'s specialized sliding functions (`slide_mean`, `slide_sum`,
+#'  etc. See [slider::summary-slide]). To "slide" means to apply a
+#'  computation within a sliding (a.k.a. "rolling") time window for each data
+#'  group. The window is determined by the `before` and `after` parameters
+#'  described below. One time step is typically one day or one week; see
+#'  details for more explanation.
+#'
+#'  The optimized `data.table` and `slider` functions can't be directly passed
+#'  as the computation function in `epi_slide` without careful handling to
+#'  make sure each computation group is made up of the `n` dates rather than
+#'  `n` points. `epi_slide_opt` (and wrapper functions `epi_slide_mean` and
+#'  `epi_slide_sum`) take care of window completion automatically to prevent
+#'  associated errors.
+#' @param ... Additional arguments to pass to the slide computation `f`, for
+#'  example, `na.rm` and `algo` if `f` is a `data.table` function. If `f` is
+#'  a `data.table` function, it is automatically passed the data `x` to
+#'  operate on, the window size `n`, and the alignment `align`. Providing
+#'  these args via `...` will cause an error. If `f` is a `slider` function,
+#'  it is automatically passed the data `x` to operate on, and number of
+#'  points `before` and `after` to use in the computation.
 #' @param before,after How far `before` and `after` each `ref_time_value` should
 #'   the sliding window extend? At least one of these two arguments must be
 #'   provided; the other's default will be 0. Any value provided for either
@@ -423,7 +442,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' @param time_step Optional function used to define the meaning of one time
 #'   step, which if specified, overrides the default choice based on the
 #'   `time_value` column. This function must take a non-negative integer and
-#'   return an object of class `lubridate::period`. For example, we can use
+#'   return an object of class [lubridate::period]. For example, we can use
 #'   `time_step = lubridate::hours` in order to set the time step to be one hour
 #'   (this would only be meaningful if `time_value` is of class `POSIXct`).
 #' @param new_col_names String indicating the name of the new column that will
@@ -476,16 +495,20 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' @importFrom dplyr bind_rows mutate %>% arrange tibble select
 #' @importFrom rlang enquo quo_get_expr as_label
 #' @importFrom purrr map
-#' @importFrom data.table frollmean
+#' @importFrom data.table frollmean frollsum frollapply
 #' @importFrom lubridate as.period
 #' @importFrom checkmate assert_function
+#' @importFrom slider slide_sum slide_prod slide_mean slide_min slide_max slide_all slide_any
 #' @export
-#' @seealso [`epi_slide`]
+#' @seealso [`epi_slide`] [`epi_slide_mean`] [`epi_slide_sum`]
 #' @examples
-#' # slide a 7-day trailing average formula on cases
+#' # slide a 7-day trailing average formula on cases. This can also be done with `epi_slide_mean`
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, new_col_names = "cases_7dav", names_sep = NULL, before = 6) %>%
+#'   epi_slide_opt(
+#'     cases,
+#'     f = data.table::frollmean, new_col_names = "cases_7dav", names_sep = NULL, before = 6
+#'   ) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
 #'   ungroup()
@@ -494,7 +517,8 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' # and accuracy, and to allow partially-missing windows.
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases,
+#'   epi_slide_opt(cases,
+#'     f = data.table::frollmean,
 #'     new_col_names = "cases_7dav", names_sep = NULL, before = 6,
 #'     # `frollmean` options
 #'     na.rm = TRUE, algo = "exact", hasNA = TRUE
@@ -505,30 +529,28 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' # slide a 7-day leading average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, new_col_names = "cases_7dav", names_sep = NULL, after = 6) %>%
+#'   epi_slide_opt(
+#'     cases,
+#'     f = slider::slide_mean, new_col_names = "cases_7dav", names_sep = NULL, after = 6
+#'   ) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
 #'   ungroup()
 #'
-#' # slide a 7-day centre-aligned average
+#' # slide a 7-day centre-aligned sum. This can also be done with `epi_slide_sum`
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, new_col_names = "cases_7dav", names_sep = NULL, before = 3, after = 3) %>%
+#'   epi_slide_opt(
+#'     cases,
+#'     f = data.table::frollsum, new_col_names = "cases_7dav", names_sep = NULL, before = 3, after = 3
+#'   ) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
 #'   ungroup()
-#'
-#' # slide a 14-day centre-aligned average
-#' jhu_csse_daily_subset %>%
-#'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, new_col_names = "cases_14dav", names_sep = NULL, before = 6, after = 7) %>%
-#'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_14dav) %>%
-#'   ungroup()
-epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
-                           time_step,
-                           new_col_names = "slide_value", as_list_col = NULL,
-                           names_sep = "_", all_rows = FALSE) {
+epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
+                          time_step,
+                          new_col_names = "slide_value", as_list_col = NULL,
+                          names_sep = "_", all_rows = FALSE) {
   assert_class(x, "epi_df")
 
   if (nrow(x) == 0L) {
@@ -547,6 +569,39 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
     cli_abort(
       "`as_list_col` is not supported for `epi_slide_mean`",
       class = "epiproces__epi_slide_mean__list_not_supported"
+    )
+  }
+
+  # Check that slide function `f` is one of those short-listed from
+  # `data.table` and `slider` (or a function that has the exact same
+  # definition, e.g. if the function has been reexported or defined
+  # locally).
+  if (any(sapply(
+    c(frollmean, frollsum, frollapply),
+    function(roll_fn) {
+      isTRUE(identical(f, roll_fn))
+    }
+  ))) {
+    f_from_package <- "data.table"
+  } else if (any(sapply(
+    c(slide_sum, slide_prod, slide_mean, slide_min, slide_max, slide_all, slide_any),
+    function(roll_fn) {
+      isTRUE(identical(f, roll_fn))
+    }
+  ))) {
+    f_from_package <- "slider"
+  } else {
+    # `f` is from somewhere else and not supported
+    cli_abort(
+      c(
+        "slide function `f` is not supported",
+        "i" = "`f` must be one of `data.table`'s rolling functions (`frollmean`,
+              `frollsum`, `frollapply`. See `?data.table::roll`) or one of
+              `slider`'s specialized sliding functions (`slide_mean`, `slide_sum`,
+              etc. See `?slider::\`summary-slide\`` for more options)."
+      ),
+      class = "epiprocess__epi_slide_opt__unsupported_slide_function",
+      epiprocess__f = f
     )
   }
 
@@ -692,19 +747,27 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
       )
     }
 
-    roll_output <- data.table::frollmean(
-      x = select(.data_group, {{ col_names }}), n = window_size, align = "right", ...
-    )
+    if (f_from_package == "data.table") {
+      roll_output <- f(
+        x = .data_group[, col_names_chr], n = window_size, align = "right", ...
+      )
 
-    if (after >= 1) {
-      # Right-aligned `frollmean` results' `ref_time_value`s will be `after`
-      # timesteps ahead of where they should be. Shift results to the left by
-      # `after` timesteps.
-      .data_group[, result_col_names] <- purrr::map(roll_output, function(.x) {
-        c(.x[(after + 1L):length(.x)], rep(NA, after))
-      })
-    } else {
-      .data_group[, result_col_names] <- roll_output
+      if (after >= 1) {
+        # Right-aligned `frollmean` results' `ref_time_value`s will be `after`
+        # timesteps ahead of where they should be. Shift results to the left by
+        # `after` timesteps.
+        .data_group[, result_col_names] <- purrr::map(roll_output, function(.x) {
+          c(.x[(after + 1L):length(.x)], rep(NA, after))
+        })
+      } else {
+        .data_group[, result_col_names] <- roll_output
+      }
+    } else if (f_from_package == "slider") {
+      for (i in seq_along(col_names_chr)) {
+        .data_group[, result_col_names[i]] <- f(
+          x = .data_group[[col_names_chr[i]]], before = before, after = after, ...
+        )
+      }
     }
 
     return(.data_group)
@@ -729,6 +792,134 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
   }
 
   return(result)
+}
+
+#' Optimized slide function for performing rolling averages on an `epi_df` object
+#'
+#' Slides an n-timestep mean over variables in an `epi_df` object. See the [slide
+#' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
+#' examples.
+#'
+#' Wrapper around `epi_slide_opt` with `f = datatable::frollmean`.
+#'
+#' @param ... Additional arguments to pass to `data.table::frollmean`, for
+#'   example, `na.rm` and `algo`. `data.table::frollmean` is automatically
+#'   passed the data `x` to operate on, the window size `n`, and the alignment
+#'   `align`. Providing these args via `...` will cause an error.
+#' @inheritParams epi_slide_opt
+#' @inherit epi_slide_opt return
+#' @inherit epi_slide_opt details
+#'
+#' @export
+#' @seealso [`epi_slide`] [`epi_slide_opt`] [`epi_slide_sum`]
+#' @examples
+#' # slide a 7-day trailing average formula on cases
+#' jhu_csse_daily_subset %>%
+#'   group_by(geo_value) %>%
+#'   epi_slide_mean(cases, new_col_names = "cases_7dav", names_sep = NULL, before = 6) %>%
+#'   # Remove a nonessential var. to ensure new col is printed
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
+#'   ungroup()
+#'
+#' # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
+#' # and accuracy, and to allow partially-missing windows.
+#' jhu_csse_daily_subset %>%
+#'   group_by(geo_value) %>%
+#'   epi_slide_mean(cases,
+#'     new_col_names = "cases_7dav", names_sep = NULL, before = 6,
+#'     # `frollmean` options
+#'     na.rm = TRUE, algo = "exact", hasNA = TRUE
+#'   ) %>%
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
+#'   ungroup()
+#'
+#' # slide a 7-day leading average
+#' jhu_csse_daily_subset %>%
+#'   group_by(geo_value) %>%
+#'   epi_slide_mean(cases, new_col_names = "cases_7dav", names_sep = NULL, after = 6) %>%
+#'   # Remove a nonessential var. to ensure new col is printed
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
+#'   ungroup()
+#'
+#' # slide a 7-day centre-aligned average
+#' jhu_csse_daily_subset %>%
+#'   group_by(geo_value) %>%
+#'   epi_slide_mean(cases, new_col_names = "cases_7dav", names_sep = NULL, before = 3, after = 3) %>%
+#'   # Remove a nonessential var. to ensure new col is printed
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
+#'   ungroup()
+#'
+#' # slide a 14-day centre-aligned average
+#' jhu_csse_daily_subset %>%
+#'   group_by(geo_value) %>%
+#'   epi_slide_mean(cases, new_col_names = "cases_14dav", names_sep = NULL, before = 6, after = 7) %>%
+#'   # Remove a nonessential var. to ensure new col is printed
+#'   dplyr::select(geo_value, time_value, cases, cases_14dav) %>%
+#'   ungroup()
+epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
+                           time_step,
+                           new_col_names = "slide_value", as_list_col = NULL,
+                           names_sep = "_", all_rows = FALSE) {
+  epi_slide_opt(
+    x = x,
+    col_names = {{ col_names }},
+    f = data.table::frollmean,
+    ...,
+    before = before,
+    after = after,
+    ref_time_values = ref_time_values,
+    time_step = time_step,
+    new_col_names = new_col_names,
+    as_list_col = as_list_col,
+    names_sep = names_sep,
+    all_rows = all_rows
+  )
+}
+
+#' Optimized slide function for performing rolling sums on an `epi_df` object
+#'
+#' Slides an n-timestep mean over variables in an `epi_df` object. See the [slide
+#' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
+#' examples.
+#'
+#' Wrapper around `epi_slide_opt` with `f = datatable::frollsum`.
+#'
+#' @param ... Additional arguments to pass to `data.table::frollsum`, for
+#'   example, `na.rm` and `algo`. `data.table::frollsum` is automatically
+#'   passed the data `x` to operate on, the window size `n`, and the alignment
+#'   `align`. Providing these args via `...` will cause an error.
+#' @inheritParams epi_slide_opt
+#' @inherit epi_slide_opt return
+#' @inherit epi_slide_opt details
+#'
+#' @export
+#' @seealso [`epi_slide`] [`epi_slide_opt`] [`epi_slide_mean`]
+#' @examples
+#' # slide a 7-day trailing sum formula on cases
+#' jhu_csse_daily_subset %>%
+#'   group_by(geo_value) %>%
+#'   epi_slide_sum(cases, new_col_names = "cases_7dsum", names_sep = NULL, before = 6) %>%
+#'   # Remove a nonessential var. to ensure new col is printed
+#'   dplyr::select(geo_value, time_value, cases, cases_7dsum) %>%
+#'   ungroup()
+epi_slide_sum <- function(x, col_names, ..., before, after, ref_time_values,
+                          time_step,
+                          new_col_names = "slide_value", as_list_col = NULL,
+                          names_sep = "_", all_rows = FALSE) {
+  epi_slide_opt(
+    x = x,
+    col_names = {{ col_names }},
+    f = data.table::frollsum,
+    ...,
+    before = before,
+    after = after,
+    ref_time_values = ref_time_values,
+    time_step = time_step,
+    new_col_names = new_col_names,
+    as_list_col = as_list_col,
+    names_sep = names_sep,
+    all_rows = all_rows
+  )
 }
 
 #' Make a complete date sequence between min(x$time_value) and max
