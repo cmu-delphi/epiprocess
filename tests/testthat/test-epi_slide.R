@@ -1412,3 +1412,34 @@ test_that("epi_slide_sum produces same output as epi_slide_opt", {
     before = 50, names_sep = NULL, na_rm = TRUE)
   expect_equal(result1, result3)
 })
+
+test_that("`epi_slide_opt` errors when passed non-`data.table`, non-`slider` functions", {
+  expect_no_error(
+    epi_slide_opt(
+      grouped, col_names = value, f = data.table::frollmean,
+      before = 1L, after = 0L, ref_time_values = d + 1
+    )
+  )
+  expect_no_error(
+    epi_slide_opt(
+      grouped, col_names = value, f = slider::slide_min,
+      before = 1L, after = 0L, ref_time_values = d + 1
+    )
+  )
+
+  reexport_frollmean <- data.table::frollmean
+  expect_no_error(
+    epi_slide_opt(
+      grouped, col_names = value, f = reexport_frollmean,
+      before = 1L, after = 0L, ref_time_values = d + 1
+    )
+  )
+
+  expect_error(
+    epi_slide_opt(
+      grouped, col_names = value, f = mean,
+      before = 1L, after = 0L, ref_time_values = d + 1
+    ),
+    class = "epiprocess__epi_slide_opt__unsupported_slide_function"
+  )
+})
