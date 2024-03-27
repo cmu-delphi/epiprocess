@@ -149,7 +149,8 @@ jhu_csse_daily_subset \%>\%
 # and accuracy, and to allow partially-missing windows.
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_opt(cases, f = data.table::frollmean,
+  epi_slide_opt(cases,
+    f = data.table::frollmean,
     new_col_names = "cases_7dav", names_sep = NULL, before = 6,
     # `frollmean` options
     na.rm = TRUE, algo = "exact", hasNA = TRUE
