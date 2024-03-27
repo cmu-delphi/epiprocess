@@ -1395,11 +1395,9 @@ test_that("epi_slide_mean produces same output as epi_slide_opt", {
   )
   expect_identical(result1, result2)
 
-  # # Theoretically should work, but getting "Error: C stack usage  7973092 is
-  # too close to the limit" (recursion is too deep)
-  # result3 <- epi_slide_opt(small_x, value, f = slider::slide_mean,
-  #   before = 50, names_sep = NULL, na_rm = TRUE)
-  # expect_equal(result1, result3)
+  result3 <- epi_slide_opt(small_x, value, f = slider::slide_mean,
+    before = 50, names_sep = NULL, na_rm = TRUE)
+  expect_equal(result1, result3)
 })
 
 test_that("epi_slide_sum produces same output as epi_slide_opt", {
@@ -1410,9 +1408,7 @@ test_that("epi_slide_sum produces same output as epi_slide_opt", {
   )
   expect_identical(result1, result2)
 
-  # # Theoretically should work, but getting "Error: C stack usage  7973092 is
-  # too close to the limit" (recursion is too deep)
-  # result3 <- epi_slide_opt(small_x, value, f = slider::slide_sum,
-  #   before = 50, names_sep = NULL, na_rm = TRUE)
-  # expect_equal(result1, result3)
+  result3 <- epi_slide_opt(small_x, value, f = slider::slide_sum,
+    before = 50, names_sep = NULL, na_rm = TRUE)
+  expect_equal(result1, result3)
 })
