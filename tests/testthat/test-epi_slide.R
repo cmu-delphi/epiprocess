@@ -1395,8 +1395,10 @@ test_that("epi_slide_mean produces same output as epi_slide_opt", {
   )
   expect_identical(result1, result2)
 
-  result3 <- epi_slide_opt(small_x, value, f = slider::slide_mean,
-    before = 50, names_sep = NULL, na_rm = TRUE)
+  result3 <- epi_slide_opt(small_x, value,
+    f = slider::slide_mean,
+    before = 50, names_sep = NULL, na_rm = TRUE
+  )
   expect_equal(result1, result3)
 })
 
@@ -1408,21 +1410,25 @@ test_that("epi_slide_sum produces same output as epi_slide_opt", {
   )
   expect_identical(result1, result2)
 
-  result3 <- epi_slide_opt(small_x, value, f = slider::slide_sum,
-    before = 50, names_sep = NULL, na_rm = TRUE)
+  result3 <- epi_slide_opt(small_x, value,
+    f = slider::slide_sum,
+    before = 50, names_sep = NULL, na_rm = TRUE
+  )
   expect_equal(result1, result3)
 })
 
 test_that("`epi_slide_opt` errors when passed non-`data.table`, non-`slider` functions", {
   expect_no_error(
     epi_slide_opt(
-      grouped, col_names = value, f = data.table::frollmean,
+      grouped,
+      col_names = value, f = data.table::frollmean,
       before = 1L, after = 0L, ref_time_values = d + 1
     )
   )
   expect_no_error(
     epi_slide_opt(
-      grouped, col_names = value, f = slider::slide_min,
+      grouped,
+      col_names = value, f = slider::slide_min,
       before = 1L, after = 0L, ref_time_values = d + 1
     )
   )
@@ -1430,14 +1436,16 @@ test_that("`epi_slide_opt` errors when passed non-`data.table`, non-`slider` fun
   reexport_frollmean <- data.table::frollmean
   expect_no_error(
     epi_slide_opt(
-      grouped, col_names = value, f = reexport_frollmean,
+      grouped,
+      col_names = value, f = reexport_frollmean,
       before = 1L, after = 0L, ref_time_values = d + 1
     )
   )
 
   expect_error(
     epi_slide_opt(
-      grouped, col_names = value, f = mean,
+      grouped,
+      col_names = value, f = mean,
       before = 1L, after = 0L, ref_time_values = d + 1
     ),
     class = "epiprocess__epi_slide_opt__unsupported_slide_function"
