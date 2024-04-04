@@ -62,15 +62,11 @@ return an object of class \link[lubridate:period]{lubridate::period}. For exampl
 \code{time_step = lubridate::hours} in order to set the time step to be one hour
 (this would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
-\item{new_col_names}{String indicating the name of the new column that will
-contain the derivative values. Default is "slide_value"; note that setting
-\code{new_col_names} equal to an existing column name will overwrite this column.}
-
 \item{as_list_col}{Not supported. Included to match \code{epi_slide} interface.}
 
 \item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
 when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
-from \code{new_col_names} entirely.}
+from \code{new_col_name} entirely.}
 
 \item{all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
 the output even with \code{ref_time_values} provided, with some type of missing
@@ -78,12 +74,14 @@ value marker for the slide computation output column(s) for \code{time_value}s
 outside \code{ref_time_values}; otherwise, there will be one row for each row in
 \code{x} that had a \code{time_value} in \code{ref_time_values}. Default is \code{FALSE}. The
 missing value marker is the result of \code{vctrs::vec_cast}ing \code{NA} to the type
-of the slide computation output.}
+of the slide computation output. If using \code{as_list_col = TRUE}, note that
+the missing marker is a \code{NULL} entry in the list column; for certain
+operations, you might want to replace these \code{NULL} entries with a different
+\code{NA} marker.}
 }
 \value{
 An \code{epi_df} object given by appending one or more new columns to
-\code{x}, depending on the \code{col_names} argument, named according to the
-\code{new_col_names} argument.
+\code{x}, named according to the \code{new_col_name} argument.
 }
 \description{
 Slides an n-timestep mean over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for

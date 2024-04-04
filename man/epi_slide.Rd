@@ -72,7 +72,7 @@ underlying data table, by default.}
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
 \code{time_value} column. This function must take a non-negative integer and
-return an object of class \code{lubridate::period}. For example, we can use
+return an object of class \link[lubridate:period]{lubridate::period}. For example, we can use
 \code{time_step = lubridate::hours} in order to set the time step to be one hour
 (this would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
@@ -103,8 +103,8 @@ operations, you might want to replace these \code{NULL} entries with a different
 \code{NA} marker.}
 }
 \value{
-An \code{epi_df} object given by appending a new column to \code{x}, named
-according to the \code{new_col_name} argument.
+An \code{epi_df} object given by appending one or more new columns to
+\code{x}, named according to the \code{new_col_name} argument.
 }
 \description{
 Slides a given function over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
