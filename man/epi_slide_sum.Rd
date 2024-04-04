@@ -90,7 +90,7 @@ An \code{epi_df} object given by appending one or more new columns to
 \code{x}, named according to the \code{new_col_name} argument.
 }
 \description{
-Slides an n-timestep mean over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
+Slides an n-timestep sum over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
 examples.
 }
 \details{

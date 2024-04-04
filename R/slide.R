@@ -762,7 +762,7 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
 
 #' Optimized slide function for performing rolling sums on an `epi_df` object
 #'
-#' Slides an n-timestep mean over variables in an `epi_df` object. See the [slide
+#' Slides an n-timestep sum over variables in an `epi_df` object. See the [slide
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
 #' examples.
 #'
