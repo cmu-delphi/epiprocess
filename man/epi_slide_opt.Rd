@@ -13,7 +13,7 @@ epi_slide_opt(
   after,
   ref_time_values,
   time_step,
-  new_col_names = "slide_value",
+  new_col_name = "slide_value",
   as_list_col = NULL,
   names_sep = "_",
   all_rows = FALSE
@@ -83,6 +83,12 @@ return an object of class \link[lubridate:period]{lubridate::period}. For exampl
 \code{time_step = lubridate::hours} in order to set the time step to be one hour
 (this would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
+\item{new_col_name}{Character vector indicating the name(s) of the new
+column(s) that will contain the derivative values. Default
+is "slide_value"; note that setting \code{new_col_name} equal to any existing
+column names will overwrite those columns. If \code{names_sep} is \code{NULL},
+\code{new_col_name} must be the same length as \code{col_names}.}
+
 \item{as_list_col}{Not supported. Included to match \code{epi_slide} interface.}
 
 \item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
@@ -99,12 +105,6 @@ of the slide computation output. If using \code{as_list_col = TRUE}, note that
 the missing marker is a \code{NULL} entry in the list column; for certain
 operations, you might want to replace these \code{NULL} entries with a different
 \code{NA} marker.}
-
-\item{new_col_name}{Character vector indicating the name(s) of the new
-column(s) that will contain the derivative values. Default
-is "slide_value"; note that setting \code{new_col_name} equal to any existing
-column names will overwrite those columns. If \code{names_sep} is \code{NULL},
-\code{new_col_name} must be the same length as \code{col_names}.}
 }
 \value{
 An \code{epi_df} object given by appending one or more new columns to
@@ -152,7 +152,7 @@ jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
     cases,
-    f = data.table::frollmean, new_col_names = "cases_7dav", names_sep = NULL, before = 6
+    f = data.table::frollmean, new_col_name = "cases_7dav", names_sep = NULL, before = 6
   ) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
@@ -164,7 +164,7 @@ jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(cases,
     f = data.table::frollmean,
-    new_col_names = "cases_7dav", names_sep = NULL, before = 6,
+    new_col_name = "cases_7dav", names_sep = NULL, before = 6,
     # `frollmean` options
     na.rm = TRUE, algo = "exact", hasNA = TRUE
   ) \%>\%
@@ -176,7 +176,7 @@ jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
     cases,
-    f = slider::slide_mean, new_col_names = "cases_7dav", names_sep = NULL, after = 6
+    f = slider::slide_mean, new_col_name = "cases_7dav", names_sep = NULL, after = 6
   ) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
@@ -187,7 +187,7 @@ jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
     cases,
-    f = data.table::frollsum, new_col_names = "cases_7dav", names_sep = NULL, before = 3, after = 3
+    f = data.table::frollsum, new_col_name = "cases_7dav", names_sep = NULL, before = 3, after = 3
   ) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%

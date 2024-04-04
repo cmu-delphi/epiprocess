@@ -12,7 +12,7 @@ epi_slide_sum(
   after,
   ref_time_values,
   time_step,
-  new_col_names = "slide_value",
+  new_col_name = "slide_value",
   as_list_col = NULL,
   names_sep = "_",
   all_rows = FALSE
@@ -62,6 +62,12 @@ return an object of class \link[lubridate:period]{lubridate::period}. For exampl
 \code{time_step = lubridate::hours} in order to set the time step to be one hour
 (this would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
+\item{new_col_name}{Character vector indicating the name(s) of the new
+column(s) that will contain the derivative values. Default
+is "slide_value"; note that setting \code{new_col_name} equal to any existing
+column names will overwrite those columns. If \code{names_sep} is \code{NULL},
+\code{new_col_name} must be the same length as \code{col_names}.}
+
 \item{as_list_col}{Not supported. Included to match \code{epi_slide} interface.}
 
 \item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
@@ -94,7 +100,7 @@ Wrapper around \code{epi_slide_opt} with \code{f = datatable::frollsum}.
 # slide a 7-day trailing sum formula on cases
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_sum(cases, new_col_names = "cases_7dsum", names_sep = NULL, before = 6) \%>\%
+  epi_slide_sum(cases, new_col_name = "cases_7dsum", names_sep = NULL, before = 6) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dsum) \%>\%
   ungroup()

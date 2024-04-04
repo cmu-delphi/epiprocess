@@ -469,7 +469,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
 #'     cases,
-#'     f = data.table::frollmean, new_col_names = "cases_7dav", names_sep = NULL, before = 6
+#'     f = data.table::frollmean, new_col_name = "cases_7dav", names_sep = NULL, before = 6
 #'   ) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
@@ -481,7 +481,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(cases,
 #'     f = data.table::frollmean,
-#'     new_col_names = "cases_7dav", names_sep = NULL, before = 6,
+#'     new_col_name = "cases_7dav", names_sep = NULL, before = 6,
 #'     # `frollmean` options
 #'     na.rm = TRUE, algo = "exact", hasNA = TRUE
 #'   ) %>%
@@ -493,7 +493,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
 #'     cases,
-#'     f = slider::slide_mean, new_col_names = "cases_7dav", names_sep = NULL, after = 6
+#'     f = slider::slide_mean, new_col_name = "cases_7dav", names_sep = NULL, after = 6
 #'   ) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
@@ -504,14 +504,14 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
 #'     cases,
-#'     f = data.table::frollsum, new_col_names = "cases_7dav", names_sep = NULL, before = 3, after = 3
+#'     f = data.table::frollsum, new_col_name = "cases_7dav", names_sep = NULL, before = 3, after = 3
 #'   ) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
 #'   ungroup()
 epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
                           time_step,
-                          new_col_names = "slide_value", as_list_col = NULL,
+                          new_col_name = "slide_value", as_list_col = NULL,
                           names_sep = "_", all_rows = FALSE) {
   assert_class(x, "epi_df")
 
@@ -640,28 +640,28 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
   # If single column name, do nothing.
 
   if (is.null(names_sep)) {
-    if (length(new_col_names) != length(col_names_chr)) {
+    if (length(new_col_name) != length(col_names_chr)) {
       cli_abort(
         c(
-          "`new_col_names` must be the same length as `col_names` when
+          "`new_col_name` must be the same length as `col_names` when
           `names_sep` is NULL to avoid duplicate output column names."
         ),
         class = "epiprocess__epi_slide_mean__col_names_length_mismatch",
-        epiprocess__new_col_names = new_col_names,
+        epiprocess__new_col_name = new_col_name,
         epiprocess__col_names = col_names_chr
       )
     }
-    result_col_names <- new_col_names
+    result_col_names <- new_col_name
   } else {
-    if (length(new_col_names) != 1L && length(new_col_names) != length(col_names_chr)) {
+    if (length(new_col_name) != 1L && length(new_col_name) != length(col_names_chr)) {
       cli_abort(
-        "`new_col_names` must be either length 1 or the same length as `col_names`.",
+        "`new_col_name` must be either length 1 or the same length as `col_names`.",
         class = "epiprocess__epi_slide_mean__col_names_length_mismatch_and_not_one",
-        epiprocess__new_col_names = new_col_names,
+        epiprocess__new_col_name = new_col_name,
         epiprocess__col_names = col_names_chr
       )
     }
-    result_col_names <- paste(new_col_names, col_names_chr, sep = names_sep)
+    result_col_names <- paste(new_col_name, col_names_chr, sep = names_sep)
   }
 
   slide_one_grp <- function(.data_group, .group_key, ...) {
@@ -778,7 +778,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
 #' # slide a 7-day trailing average formula on cases
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, new_col_names = "cases_7dav", names_sep = NULL, before = 6) %>%
+#'   epi_slide_mean(cases, new_col_name = "cases_7dav", names_sep = NULL, before = 6) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
 #'   ungroup()
@@ -788,7 +788,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_mean(cases,
-#'     new_col_names = "cases_7dav", names_sep = NULL, before = 6,
+#'     new_col_name = "cases_7dav", names_sep = NULL, before = 6,
 #'     # `frollmean` options
 #'     na.rm = TRUE, algo = "exact", hasNA = TRUE
 #'   ) %>%
@@ -798,7 +798,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
 #' # slide a 7-day leading average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, new_col_names = "cases_7dav", names_sep = NULL, after = 6) %>%
+#'   epi_slide_mean(cases, new_col_name = "cases_7dav", names_sep = NULL, after = 6) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
 #'   ungroup()
@@ -806,7 +806,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
 #' # slide a 7-day centre-aligned average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, new_col_names = "cases_7dav", names_sep = NULL, before = 3, after = 3) %>%
+#'   epi_slide_mean(cases, new_col_name = "cases_7dav", names_sep = NULL, before = 3, after = 3) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
 #'   ungroup()
@@ -814,13 +814,13 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
 #' # slide a 14-day centre-aligned average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, new_col_names = "cases_14dav", names_sep = NULL, before = 6, after = 7) %>%
+#'   epi_slide_mean(cases, new_col_name = "cases_14dav", names_sep = NULL, before = 6, after = 7) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_14dav) %>%
 #'   ungroup()
 epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
                            time_step,
-                           new_col_names = "slide_value", as_list_col = NULL,
+                           new_col_name = "slide_value", as_list_col = NULL,
                            names_sep = "_", all_rows = FALSE) {
   epi_slide_opt(
     x = x,
@@ -831,7 +831,7 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
     after = after,
     ref_time_values = ref_time_values,
     time_step = time_step,
-    new_col_names = new_col_names,
+    new_col_name = new_col_name,
     as_list_col = as_list_col,
     names_sep = names_sep,
     all_rows = all_rows
@@ -860,13 +860,13 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
 #' # slide a 7-day trailing sum formula on cases
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_sum(cases, new_col_names = "cases_7dsum", names_sep = NULL, before = 6) %>%
+#'   epi_slide_sum(cases, new_col_name = "cases_7dsum", names_sep = NULL, before = 6) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dsum) %>%
 #'   ungroup()
 epi_slide_sum <- function(x, col_names, ..., before, after, ref_time_values,
                           time_step,
-                          new_col_names = "slide_value", as_list_col = NULL,
+                          new_col_name = "slide_value", as_list_col = NULL,
                           names_sep = "_", all_rows = FALSE) {
   epi_slide_opt(
     x = x,
@@ -877,7 +877,7 @@ epi_slide_sum <- function(x, col_names, ..., before, after, ref_time_values,
     after = after,
     ref_time_values = ref_time_values,
     time_step = time_step,
-    new_col_names = new_col_names,
+    new_col_name = new_col_name,
     as_list_col = as_list_col,
     names_sep = names_sep,
     all_rows = all_rows
