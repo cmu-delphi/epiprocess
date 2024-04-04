@@ -117,25 +117,21 @@ over variables in an \code{epi_df} object. See the \link{slide vignette}
 examples.
 }
 \details{
-To "slide" means to apply a function or formula over a rolling
-window of time steps for each data group, where the window is entered at a
-reference time and left and right endpoints are given by the \code{before} and
-\code{after} arguments. The unit (the meaning of one time step) is implicitly
-defined by the way the \code{time_value} column treats addition and subtraction;
-for example, if the time values are coded as \code{Date} objects, then one time
-step is one day, since \code{as.Date("2022-01-01") + 1} equals
-\code{as.Date("2022-01-02")}. Alternatively, the time step can be set explicitly
-using the \code{time_step} argument (which if specified would override the
-default choice based on \code{time_value} column). If there are not enough time
-steps available to complete the window at any given reference time, then
-\code{epi_slide()} still attempts to perform the computation anyway (it does not
-require a complete window). The issue of what to do with partial
-computations (those run on incomplete windows) is therefore left up to the
-user, either through the specified function or formula \code{f}, or through
-post-processing. For a centrally-aligned slide of \code{n} \code{time_value}s in a
+To "slide" means to apply a function over a rolling window of time
+steps for each data group, where the window is centered at a reference
+time and left and right endpoints are given by the \code{before} and \code{after}
+arguments. The unit (the meaning of one time step) is implicitly defined
+by the way the \code{time_value} column treats addition and subtraction; for
+example, if the time values are coded as \code{Date} objects, then one time
+step is one day, since \code{as.Date("2022-01-01") + 1} equals \code{as.Date ("2022-01-02")}. Alternatively, the time step can be set explicitly using
+the \code{time_step} argument (which if specified would override the default
+choice based on \code{time_value} column). If there are not enough time steps
+available to complete the window at any given reference time, then
+\verb{epi_slide_*()} will fail; it requires a complete window to perform the
+computation. For a centrally-aligned slide of \code{n} \code{time_value}s in a
 sliding window, set \code{before = (n-1)/2} and \code{after = (n-1)/2} when the
-number of \code{time_value}s in a sliding window is odd and \code{before = n/2-1} and
-\code{after = n/2} when \code{n} is even.
+number of \code{time_value}s in a sliding window is odd and \code{before = n/2-1}
+and \code{after = n/2} when \code{n} is even.
 
 Sometimes, we want to experiment with various trailing or leading window
 widths and compare the slide outputs. In the (uncommon) case where

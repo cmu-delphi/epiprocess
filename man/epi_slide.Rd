@@ -112,7 +112,7 @@ examples.
 }
 \details{
 To "slide" means to apply a function or formula over a rolling
-window of time steps for each data group, where the window is entered at a
+window of time steps for each data group, where the window is centered at a
 reference time and left and right endpoints are given by the \code{before} and
 \code{after} arguments. The unit (the meaning of one time step) is implicitly
 defined by the way the \code{time_value} column treats addition and subtraction;
