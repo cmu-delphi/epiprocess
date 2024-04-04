@@ -7,7 +7,7 @@
 \method{as_tsibble}{epi_df}(x, key, ...)
 }
 \arguments{
-\item{x}{The \code{epi_df} object.}
+\item{x}{an \code{epi_df}}
 
 \item{key}{Optional. Any additional keys (other than \code{geo_value}) to add to
 the \code{tsibble}.}
