@@ -38,9 +38,9 @@ summarized results are calculated. Note that if the number of \code{methods}
 purposes of determining whether a given observation is an outlier.}
 }
 \value{
-An tibble with number of rows equal to \code{length(y)} and columns giving
-the outlier detection thresholds and replacement values from each detection
-method.
+An tibble with number of rows equal to \code{length(y)} and columns
+giving the outlier detection thresholds (\code{lower} and \code{upper}) and
+replacement values from each detection method (\code{replacement}).
 }
 \description{
 Applies one or more outlier detection methods to a given signal variable, and
