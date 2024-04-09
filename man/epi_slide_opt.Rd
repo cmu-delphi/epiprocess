@@ -112,9 +112,9 @@ An \code{epi_df} object given by appending one or more new columns to
 }
 \description{
 Slides an n-timestep \link[data.table:froll]{data.table::froll} or \link[slider:summary-slide]{slider::summary-slide} function
-over variables in an \code{epi_df} object. See the \link{slide vignette}
-(https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
-examples.
+over variables in an \code{epi_df} object. See the
+\href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette}
+for examples.
 }
 \details{
 To "slide" means to apply a function over a rolling window of time

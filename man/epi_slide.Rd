@@ -107,8 +107,9 @@ An \code{epi_df} object given by appending one or more new columns to
 \code{x}, named according to the \code{new_col_name} argument.
 }
 \description{
-Slides a given function over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
-examples.
+Slides a given function over variables in an \code{epi_df} object. See the
+\href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette}
+for examples.
 }
 \details{
 To "slide" means to apply a function or formula over a rolling

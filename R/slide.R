@@ -1,8 +1,8 @@
 #' Slide a function over variables in an `epi_df` object
 #'
-#' Slides a given function over variables in an `epi_df` object. See the [slide
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
-#' examples.
+#' Slides a given function over variables in an `epi_df` object. See the
+#' [slide vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html)
+#' for examples.
 #'
 #' @template basic-slide-params
 #' @param f Function, formula, or missing; together with `...` specifies the
@@ -343,9 +343,9 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' Optimized slide function for performing common rolling computations on an `epi_df` object
 #'
 #' Slides an n-timestep [data.table::froll] or [slider::summary-slide] function
-#' over variables in an `epi_df` object. See the [slide vignette]
-#' (https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
-#' examples.
+#' over variables in an `epi_df` object. See the
+#' [slide vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html)
+#' for examples.
 #'
 #' @template basic-slide-params
 #' @template opt-slide-params
