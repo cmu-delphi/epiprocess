@@ -204,6 +204,7 @@ dplyr_row_slice.epi_df <- function(data, i, ...) {
 }
 
 #' @method group_by epi_df
+#' @param .data an `epi_df`
 #' @rdname print.epi_df
 #' @export
 group_by.epi_df <- function(.data, ...) {
@@ -233,7 +234,7 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 
 #' @method unnest epi_df
 #' @rdname print.epi_df
-#' @param .data an `epi_df`
+#' @param data an `epi_df`
 #' @export
 unnest.epi_df <- function(data, ...) {
   dplyr::dplyr_reconstruct(NextMethod(), data)

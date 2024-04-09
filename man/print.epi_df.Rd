@@ -34,6 +34,8 @@ Currently unused.}
 \item{.f}{function or formula; see \code{\link[dplyr:group_map]{dplyr::group_modify}}}
 
 \item{.keep}{Boolean; see \code{\link[dplyr:group_map]{dplyr::group_modify}}}
+
+\item{data}{an \code{epi_df}}
 }
 \description{
 Print and summary functions for an \code{epi_df} object.
