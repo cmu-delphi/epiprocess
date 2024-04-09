@@ -828,7 +828,7 @@ full_date_seq <- function(x, before, after, time_step) {
   # `tsibble` classes apparently can't be added to in different units, so even
   # if `time_step` is provided by the user, use a value-1 unitless step.
   if (inherits(x$time_value, c("yearquarter", "yearweek", "yearmonth")) ||
-    is.numeric(x$time_value)) {
+    is.numeric(x$time_value)) { # nolint: indentation_linter
     all_dates <- seq(min(x$time_value), max(x$time_value), by = 1L)
 
     if (before != 0) {
