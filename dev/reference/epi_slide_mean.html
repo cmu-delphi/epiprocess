@@ -78,7 +78,7 @@ examples.</p>
 <span>  <span class="va">after</span>,</span>
 <span>  <span class="va">ref_time_values</span>,</span>
 <span>  <span class="va">time_step</span>,</span>
-<span>  new_col_names <span class="op">=</span> <span class="st">"slide_value"</span>,</span>
+<span>  new_col_name <span class="op">=</span> <span class="st">"slide_value"</span>,</span>
 <span>  as_list_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  names_sep <span class="op">=</span> <span class="st">"_"</span>,</span>
 <span>  all_rows <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -140,10 +140,12 @@ return an object of class <a href="https://lubridate.tidyverse.org/reference/per
 (this would only be meaningful if <code>time_value</code> is of class <code>POSIXct</code>).</p></dd>
 
 
-<dt>new_col_names</dt>
-<dd><p>String indicating the name of the new column that will
-contain the derivative values. Default is "slide_value"; note that setting
-<code>new_col_names</code> equal to an existing column name will overwrite this column.</p></dd>
+<dt>new_col_name</dt>
+<dd><p>Character vector indicating the name(s) of the new
+column(s) that will contain the derivative values. Default
+is "slide_value"; note that setting <code>new_col_name</code> equal to any existing
+column names will overwrite those columns. If <code>names_sep</code> is <code>NULL</code>,
+<code>new_col_name</code> must be the same length as <code>col_names</code>.</p></dd>
 
 
 <dt>as_list_col</dt>
@@ -153,7 +155,7 @@ contain the derivative values. Default is "slide_value"; note that setting
 <dt>names_sep</dt>
 <dd><p>String specifying the separator to use in <code><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">tidyr::unnest()</a></code>
 when <code>as_list_col = FALSE</code>. Default is "_". Using <code>NULL</code> drops the prefix
-from <code>new_col_names</code> entirely.</p></dd>
+from <code>new_col_name</code> entirely.</p></dd>
 
 
 <dt>all_rows</dt>
@@ -163,7 +165,10 @@ value marker for the slide computation output column(s) for <code>time_value</co
 outside <code>ref_time_values</code>; otherwise, there will be one row for each row in
 <code>x</code> that had a <code>time_value</code> in <code>ref_time_values</code>. Default is <code>FALSE</code>. The
 missing value marker is the result of <code><a href="https://vctrs.r-lib.org/reference/vec_cast.html" class="external-link">vctrs::vec_cast</a></code>ing <code>NA</code> to the type
-of the slide computation output.</p></dd>
+of the slide computation output. If using <code>as_list_col = TRUE</code>, note that
+the missing marker is a <code>NULL</code> entry in the list column; for certain
+operations, you might want to replace these <code>NULL</code> entries with a different
+<code>NA</code> marker.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -171,12 +176,34 @@ of the slide computation output.</p></dd>
     
 
 <p>An <code>epi_df</code> object given by appending one or more new columns to
-<code>x</code>, depending on the <code>col_names</code> argument, named according to the
-<code>new_col_names</code> argument.</p>
+<code>x</code>, named according to the <code>new_col_name</code> argument.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Wrapper around <code>epi_slide_opt</code> with <code>f = datatable::frollmean</code>.</p>
+<p>To "slide" means to apply a function over a rolling window of time
+steps for each data group, where the window is centered at a reference
+time and left and right endpoints are given by the <code>before</code> and <code>after</code>
+arguments. The unit (the meaning of one time step) is implicitly defined
+by the way the <code>time_value</code> column treats addition and subtraction; for
+example, if the time values are coded as <code>Date</code> objects, then one time
+step is one day, since <code>as.Date("2022-01-01") + 1</code> equals <code>as.Date ("2022-01-02")</code>. Alternatively, the time step can be set explicitly using
+the <code>time_step</code> argument (which if specified would override the default
+choice based on <code>time_value</code> column). If there are not enough time steps
+available to complete the window at any given reference time, then
+<code>epi_slide_*()</code> will fail; it requires a complete window to perform the
+computation. For a centrally-aligned slide of <code>n</code> <code>time_value</code>s in a
+sliding window, set <code>before = (n-1)/2</code> and <code>after = (n-1)/2</code> when the
+number of <code>time_value</code>s in a sliding window is odd and <code>before = n/2-1</code>
+and <code>after = n/2</code> when <code>n</code> is even.</p>
+<p>Sometimes, we want to experiment with various trailing or leading window
+widths and compare the slide outputs. In the (uncommon) case where
+zero-width windows are considered, manually pass both the <code>before</code> and
+<code>after</code> arguments in order to prevent potential warnings. (E.g., <code>before=k</code>
+with <code>k=0</code> and <code>after</code> missing may produce a warning. To avoid warnings,
+use <code>before=k, after=0</code> instead; otherwise, it looks too much like a
+leading window was intended, but the <code>after</code> argument was forgotten or
+misspelled.)</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -188,7 +215,7 @@ of the slide computation output.</p></dd>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># slide a 7-day trailing average formula on cases</span></span></span>
 <span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu">epi_slide_mean</span><span class="op">(</span><span class="va">cases</span>, new_col_names <span class="op">=</span> <span class="st">"cases_7dav"</span>, names_sep <span class="op">=</span> <span class="cn">NULL</span>, before <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu">epi_slide_mean</span><span class="op">(</span><span class="va">cases</span>, new_col_name <span class="op">=</span> <span class="st">"cases_7dav"</span>, names_sep <span class="op">=</span> <span class="cn">NULL</span>, before <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="co"># Remove a nonessential var. to ensure new col is printed</span></span></span>
 <span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, <span class="va">cases_7dav</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
@@ -217,7 +244,7 @@ of the slide computation output.</p></dd>
 <span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">epi_slide_mean</span><span class="op">(</span><span class="va">cases</span>,</span></span>
-<span class="r-in"><span>    new_col_names <span class="op">=</span> <span class="st">"cases_7dav"</span>, names_sep <span class="op">=</span> <span class="cn">NULL</span>, before <span class="op">=</span> <span class="fl">6</span>,</span></span>
+<span class="r-in"><span>    new_col_name <span class="op">=</span> <span class="st">"cases_7dav"</span>, names_sep <span class="op">=</span> <span class="cn">NULL</span>, before <span class="op">=</span> <span class="fl">6</span>,</span></span>
 <span class="r-in"><span>    <span class="co"># `frollmean` options</span></span></span>
 <span class="r-in"><span>    na.rm <span class="op">=</span> <span class="cn">TRUE</span>, algo <span class="op">=</span> <span class="st">"exact"</span>, hasNA <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
@@ -246,7 +273,7 @@ of the slide computation output.</p></dd>
 <span class="r-in"><span><span class="co"># slide a 7-day leading average</span></span></span>
 <span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu">epi_slide_mean</span><span class="op">(</span><span class="va">cases</span>, new_col_names <span class="op">=</span> <span class="st">"cases_7dav"</span>, names_sep <span class="op">=</span> <span class="cn">NULL</span>, after <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu">epi_slide_mean</span><span class="op">(</span><span class="va">cases</span>, new_col_name <span class="op">=</span> <span class="st">"cases_7dav"</span>, names_sep <span class="op">=</span> <span class="cn">NULL</span>, after <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="co"># Remove a nonessential var. to ensure new col is printed</span></span></span>
 <span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, <span class="va">cases_7dav</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
@@ -273,7 +300,7 @@ of the slide computation output.</p></dd>
 <span class="r-in"><span><span class="co"># slide a 7-day centre-aligned average</span></span></span>
 <span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu">epi_slide_mean</span><span class="op">(</span><span class="va">cases</span>, new_col_names <span class="op">=</span> <span class="st">"cases_7dav"</span>, names_sep <span class="op">=</span> <span class="cn">NULL</span>, before <span class="op">=</span> <span class="fl">3</span>, after <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu">epi_slide_mean</span><span class="op">(</span><span class="va">cases</span>, new_col_name <span class="op">=</span> <span class="st">"cases_7dav"</span>, names_sep <span class="op">=</span> <span class="cn">NULL</span>, before <span class="op">=</span> <span class="fl">3</span>, after <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="co"># Remove a nonessential var. to ensure new col is printed</span></span></span>
 <span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, <span class="va">cases_7dav</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
@@ -300,7 +327,7 @@ of the slide computation output.</p></dd>
 <span class="r-in"><span><span class="co"># slide a 14-day centre-aligned average</span></span></span>
 <span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu">epi_slide_mean</span><span class="op">(</span><span class="va">cases</span>, new_col_names <span class="op">=</span> <span class="st">"cases_14dav"</span>, names_sep <span class="op">=</span> <span class="cn">NULL</span>, before <span class="op">=</span> <span class="fl">6</span>, after <span class="op">=</span> <span class="fl">7</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu">epi_slide_mean</span><span class="op">(</span><span class="va">cases</span>, new_col_name <span class="op">=</span> <span class="st">"cases_14dav"</span>, names_sep <span class="op">=</span> <span class="cn">NULL</span>, before <span class="op">=</span> <span class="fl">6</span>, after <span class="op">=</span> <span class="fl">7</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="co"># Remove a nonessential var. to ensure new col is printed</span></span></span>
 <span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, <span class="va">cases_14dav</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
