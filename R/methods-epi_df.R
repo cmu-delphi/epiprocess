@@ -3,8 +3,8 @@
 #' Converts an `epi_df` object into a tibble, dropping metadata and any
 #' grouping.
 #'
-#' @param x an `epi_df`
-#' @param ... arguments to forward to `NextMethod()`
+#' @template x
+#' @param ... additional arguments to forward to `NextMethod()`
 #'
 #' @importFrom tibble as_tibble
 #' @export
@@ -22,7 +22,7 @@ as_tibble.epi_df <- function(x, ...) {
 #' others in the `other_keys` field of the metadata, or else explicitly set.
 #'
 #' @method as_tsibble epi_df
-#' @param x The `epi_df` object.
+#' @template x
 #' @param key Optional. Any additional keys (other than `geo_value`) to add to
 #'   the `tsibble`.
 #' @param ... additional arguments passed on to `tsibble::as_tsibble()`
@@ -39,8 +39,8 @@ as_tsibble.epi_df <- function(x, key, ...) {
 #'
 #' Print and summary functions for an `epi_df` object.
 #'
-#' @param x The `epi_df` object.
-#' @param ... Additional arguments passed to methods.
+#' @template x
+#' @param ... additional arguments to forward to `NextMethod()`
 #'
 #' @method print epi_df
 #' @export
@@ -61,7 +61,7 @@ print.epi_df <- function(x, ...) {
 #' Prints a variety of summary statistics about the `epi_df` object, such as
 #' the time range included and geographic coverage.
 #'
-#' @param object The `epi_df` object.
+#' @param object an `epi_df`
 #' @param ... Additional arguments, for compatibility with `summary()`.
 #'   Currently unused.
 #'
@@ -204,6 +204,7 @@ dplyr_row_slice.epi_df <- function(data, i, ...) {
 }
 
 #' @method group_by epi_df
+#' @param .data an `epi_df`
 #' @rdname print.epi_df
 #' @export
 group_by.epi_df <- function(.data, ...) {
@@ -223,7 +224,7 @@ ungroup.epi_df <- function(x, ...) {
 
 #' @method group_modify epi_df
 #' @rdname print.epi_df
-#' @param .data The `epi_df` object.
+#' @param .data an `epi_df`
 #' @param .f function or formula; see [`dplyr::group_modify`]
 #' @param .keep Boolean; see [`dplyr::group_modify`]
 #' @export
@@ -233,7 +234,7 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 
 #' @method unnest epi_df
 #' @rdname print.epi_df
-#' @param data The `epi_df` object.
+#' @param data an `epi_df`
 #' @export
 unnest.epi_df <- function(data, ...) {
   dplyr::dplyr_reconstruct(NextMethod(), data)

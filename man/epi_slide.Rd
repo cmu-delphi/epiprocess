@@ -72,7 +72,7 @@ underlying data table, by default.}
 \item{time_step}{Optional function used to define the meaning of one time
 step, which if specified, overrides the default choice based on the
 \code{time_value} column. This function must take a non-negative integer and
-return an object of class \code{lubridate::period}. For example, we can use
+return an object of class \link[lubridate:period]{lubridate::period}. For example, we can use
 \code{time_step = lubridate::hours} in order to set the time step to be one hour
 (this would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
@@ -103,16 +103,17 @@ operations, you might want to replace these \code{NULL} entries with a different
 \code{NA} marker.}
 }
 \value{
-An \code{epi_df} object given by appending a new column to \code{x}, named
-according to the \code{new_col_name} argument.
+An \code{epi_df} object given by appending one or more new columns to
+\code{x}, named according to the \code{new_col_name} argument.
 }
 \description{
-Slides a given function over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
-examples.
+Slides a given function over variables in an \code{epi_df} object. See the
+\href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette}
+for examples.
 }
 \details{
 To "slide" means to apply a function or formula over a rolling
-window of time steps for each data group, where the window is entered at a
+window of time steps for each data group, where the window is centered at a
 reference time and left and right endpoints are given by the \code{before} and
 \code{after} arguments. The unit (the meaning of one time step) is implicitly
 defined by the way the \code{time_value} column treats addition and subtraction;

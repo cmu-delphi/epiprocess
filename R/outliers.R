@@ -6,10 +6,7 @@
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/outliers.html) for
 #' examples.
 #'
-#' @param x Design points corresponding to the signal values `y`. Default is
-#'   `seq_along(y)` (that is, equally-spaced points from 1 to the length of
-#'   `y`).
-#' @param y Signal values.
+#' @template x-y
 #' @param methods A tibble specifying the method(s) to use for outlier
 #'   detection, with one row per method, and the following columns:
 #'   * `method`: Either "rm" or "stl", or a custom function for outlier
@@ -25,9 +22,7 @@
 #'   summarized results are calculated. Note that if the number of `methods`
 #'   (number of rows) is odd, then "median" is equivalent to a majority vote for
 #'   purposes of determining whether a given observation is an outlier.
-#' @return An tibble with number of rows equal to `length(y)` and columns giving
-#'   the outlier detection thresholds and replacement values from each detection
-#'   method.
+#' @template detect-outlr-return
 #'
 #' @details Each outlier detection method, one per row of the passed `methods`
 #'   tibble, is a function that must take as its first two arguments `x` and
@@ -147,32 +142,14 @@ detect_outlr <- function(x = seq_along(y), y,
 #' Detects outliers based on a distance from the rolling median specified in
 #' terms of multiples of the rolling interquartile range (IQR).
 #'
-#' @param x Design points corresponding to the signal values `y`. Default is
-#'   `seq_along(y)` (that is, equally-spaced points from 1 to the length of
-#'   `y`).
-#' @param y Signal values.
+#' @template x-y
 #' @param n Number of time steps to use in the rolling window. Default is 21.
 #'   This value is centrally aligned. When `n` is an odd number, the rolling
 #'   window extends from `(n-1)/2` time steps before each design point to `(n-1)/2`
 #'   time steps after. When `n` is even, then the rolling range extends from
 #'   `n/2-1` time steps before to `n/2` time steps after.
-#' @param log_transform Should a log transform be applied before running outlier
-#'   detection? Default is `FALSE`. If `TRUE`, and zeros are present, then the
-#'   log transform will be padded by 1.
-#' @param detect_negatives Should negative values automatically count as
-#'   outliers? Default is `FALSE`.
-#' @param detection_multiplier Value determining how far the outlier detection
-#'   thresholds are from the rolling median, which are calculated as (rolling
-#'   median) +/- (detection multiplier) * (rolling IQR). Default is 2.
-#' @param min_radius Minimum distance between rolling median and threshold, on
-#'   transformed scale. Default is 0.
-#' @param replacement_multiplier Value determining how far the replacement
-#'   values are from the rolling median. The replacement is the original value
-#'   if it is within the detection thresholds, or otherwise it is rounded to the
-#'   nearest (rolling median) +/- (replacement multiplier) * (rolling IQR).
-#'   Default is 0.
-#' @return A tibble with number of rows equal to `length(y)`, and columns
-#'   `lower`, `upper`, and `replacement`.
+#' @template outlier-detection-options
+#' @template detect-outlr-return
 #'
 #' @export
 #' @examples
@@ -235,10 +212,7 @@ detect_outlr_rm <- function(x = seq_along(y), y, n = 21,
 #'
 #' Detects outliers based on a seasonal-trend decomposition using LOESS (STL).
 #'
-#' @param x Design points corresponding to the signal values `y`. Default is
-#'   `seq_along(y)` (that is, equally-spaced points from 1 to the length of
-#'   `y`).
-#' @param y Signal values.
+#' @template x-y
 #' @param n_trend Number of time steps to use in the rolling window for trend.
 #'   Default is 21.
 #' @param n_seasonal Number of time steps to use in the rolling window for
@@ -248,23 +222,8 @@ detect_outlr_rm <- function(x = seq_along(y), y, n = 21,
 #' @param seasonal_period Integer specifying period of seasonality. For example,
 #'   for daily data, a period 7 means weekly seasonality. The default is `NULL`,
 #'   meaning that no seasonal term will be included in the STL decomposition.
-#' @param log_transform Should a log transform be applied before running outlier
-#'   detection? Default is `FALSE`. If `TRUE`, and zeros are present, then the
-#'   log transform will be padded by 1.
-#' @param detect_negatives Should negative values automatically count as
-#'   outliers? Default is `FALSE`.
-#' @param detection_multiplier Value determining how far the outlier detection
-#'   thresholds are from the rolling median, which are calculated as (rolling
-#'   median) +/- (detection multiplier) * (rolling IQR). Default is 2.
-#' @param min_radius Minimum distance between rolling median and threshold, on
-#'   transformed scale. Default is 0.
-#' @param replacement_multiplier Value determining how far the replacement
-#'   values are from the rolling median. The replacement is the original value
-#'   if it is within the detection thresholds, or otherwise it is rounded to the
-#'   nearest (rolling median) +/- (replacement multiplier) * (rolling IQR).
-#'   Default is 0.
-#' @return A tibble with number of rows equal to `length(y)`, and columns
-#'   `lower`, `upper`, and `replacement`.
+#' @template outlier-detection-options
+#' @template detect-outlr-return
 #'
 #' @details The STL decomposition is computed using the `feasts` package. Once
 #'   computed, the outlier detection method is analogous to the rolling median

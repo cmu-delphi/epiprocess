@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{an \code{epi_df}}
 
-\item{...}{arguments to forward to \code{NextMethod()}}
+\item{...}{additional arguments to forward to \code{NextMethod()}}
 }
 \description{
 Converts an \code{epi_df} object into a tibble, dropping metadata and any

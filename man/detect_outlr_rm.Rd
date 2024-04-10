@@ -49,8 +49,9 @@ nearest (rolling median) +/- (replacement multiplier) * (rolling IQR).
 Default is 0.}
 }
 \value{
-A tibble with number of rows equal to \code{length(y)}, and columns
-\code{lower}, \code{upper}, and \code{replacement}.
+An tibble with number of rows equal to \code{length(y)} and columns
+giving the outlier detection thresholds (\code{lower} and \code{upper}) and
+replacement values from each detection method (\code{replacement}).
 }
 \description{
 Detects outliers based on a distance from the rolling median specified in
