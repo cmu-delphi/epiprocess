@@ -12,7 +12,7 @@ epi_slide_sum(
   after,
   ref_time_values,
   time_step,
-  new_col_names = "slide_value",
+  new_col_name = "slide_value",
   as_list_col = NULL,
   names_sep = "_",
   all_rows = FALSE
@@ -62,15 +62,17 @@ return an object of class \link[lubridate:period]{lubridate::period}. For exampl
 \code{time_step = lubridate::hours} in order to set the time step to be one hour
 (this would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
-\item{new_col_names}{String indicating the name of the new column that will
-contain the derivative values. Default is "slide_value"; note that setting
-\code{new_col_names} equal to an existing column name will overwrite this column.}
+\item{new_col_name}{Character vector indicating the name(s) of the new
+column(s) that will contain the derivative values. Default
+is "slide_value"; note that setting \code{new_col_name} equal to any existing
+column names will overwrite those columns. If \code{names_sep} is \code{NULL},
+\code{new_col_name} must be the same length as \code{col_names}.}
 
 \item{as_list_col}{Not supported. Included to match \code{epi_slide} interface.}
 
 \item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
 when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
-from \code{new_col_names} entirely.}
+from \code{new_col_name} entirely.}
 
 \item{all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
 the output even with \code{ref_time_values} provided, with some type of missing
@@ -78,25 +80,52 @@ value marker for the slide computation output column(s) for \code{time_value}s
 outside \code{ref_time_values}; otherwise, there will be one row for each row in
 \code{x} that had a \code{time_value} in \code{ref_time_values}. Default is \code{FALSE}. The
 missing value marker is the result of \code{vctrs::vec_cast}ing \code{NA} to the type
-of the slide computation output.}
+of the slide computation output. If using \code{as_list_col = TRUE}, note that
+the missing marker is a \code{NULL} entry in the list column; for certain
+operations, you might want to replace these \code{NULL} entries with a different
+\code{NA} marker.}
 }
 \value{
 An \code{epi_df} object given by appending one or more new columns to
-\code{x}, depending on the \code{col_names} argument, named according to the
-\code{new_col_names} argument.
+\code{x}, named according to the \code{new_col_name} argument.
 }
 \description{
-Slides an n-timestep mean over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
+Slides an n-timestep sum over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
 examples.
 }
 \details{
 Wrapper around \code{epi_slide_opt} with \code{f = datatable::frollsum}.
+
+To "slide" means to apply a function over a rolling window of time
+steps for each data group, where the window is centered at a reference
+time and left and right endpoints are given by the \code{before} and \code{after}
+arguments. The unit (the meaning of one time step) is implicitly defined
+by the way the \code{time_value} column treats addition and subtraction; for
+example, if the time values are coded as \code{Date} objects, then one time
+step is one day, since \code{as.Date("2022-01-01") + 1} equals \code{as.Date ("2022-01-02")}. Alternatively, the time step can be set explicitly using
+the \code{time_step} argument (which if specified would override the default
+choice based on \code{time_value} column). If there are not enough time steps
+available to complete the window at any given reference time, then
+\verb{epi_slide_*()} will fail; it requires a complete window to perform the
+computation. For a centrally-aligned slide of \code{n} \code{time_value}s in a
+sliding window, set \code{before = (n-1)/2} and \code{after = (n-1)/2} when the
+number of \code{time_value}s in a sliding window is odd and \code{before = n/2-1}
+and \code{after = n/2} when \code{n} is even.
+
+Sometimes, we want to experiment with various trailing or leading window
+widths and compare the slide outputs. In the (uncommon) case where
+zero-width windows are considered, manually pass both the \code{before} and
+\code{after} arguments in order to prevent potential warnings. (E.g., \code{before=k}
+with \code{k=0} and \code{after} missing may produce a warning. To avoid warnings,
+use \verb{before=k, after=0} instead; otherwise, it looks too much like a
+leading window was intended, but the \code{after} argument was forgotten or
+misspelled.)
 }
 \examples{
 # slide a 7-day trailing sum formula on cases
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_sum(cases, new_col_names = "cases_7dsum", names_sep = NULL, before = 6) \%>\%
+  epi_slide_sum(cases, new_col_name = "cases_7dsum", names_sep = NULL, before = 6) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dsum) \%>\%
   ungroup()

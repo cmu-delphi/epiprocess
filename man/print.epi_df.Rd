@@ -22,20 +22,20 @@
 \method{unnest}{epi_df}(data, ...)
 }
 \arguments{
-\item{x}{The \code{epi_df} object.}
+\item{x}{an \code{epi_df}}
 
 \item{...}{Additional arguments, for compatibility with \code{summary()}.
 Currently unused.}
 
-\item{object}{The \code{epi_df} object.}
+\item{object}{an \code{epi_df}}
 
-\item{.data}{The \code{epi_df} object.}
+\item{.data}{an \code{epi_df}}
 
 \item{.f}{function or formula; see \code{\link[dplyr:group_map]{dplyr::group_modify}}}
 
 \item{.keep}{Boolean; see \code{\link[dplyr:group_map]{dplyr::group_modify}}}
 
-\item{data}{The \code{epi_df} object.}
+\item{data}{an \code{epi_df}}
 }
 \description{
 Print and summary functions for an \code{epi_df} object.
