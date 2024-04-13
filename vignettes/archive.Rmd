@@ -139,7 +139,7 @@ call (as it did in the case above).
 
 ## Producing snapshots in `epi_df` form
 
-A key method of an `epi_archive` class is `as_of()`, which generates a snapshot
+A key method of an `epi_archive` class is `epix_as_of()`, which generates a snapshot
 of the archive in `epi_df` format. This represents the most up-to-date values of
 the signal variables as of a given version.
 
@@ -213,12 +213,10 @@ quite as dramatically. Modeling the revision process, which is often called
 
 Now we demonstrate how to merge two `epi_archive` objects together, e.g., so
 that grabbing data from multiple sources as of a particular version can be
-performed with a single `as_of` call. The `epi_archive` class provides a method
-`merge()` precisely for this purpose. The wrapper function is called
-`epix_merge()`; this wrapper avoids mutating its inputs, while `x$merge` will
-mutate `x`. Below we merge the working `epi_archive` of versioned percentage CLI
-from outpatient visits to another one of versioned COVID-19 case reporting data,
-which we fetch the from the [COVIDcast
+performed with a single `epix_as_of` call. The function `epix_merge()` is made
+for this purpose. Below we merge the working `epi_archive` of versioned
+percentage CLI from outpatient visits to another one of versioned COVID-19 case
+reporting data, which we fetch the from the [COVIDcast
 API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/), on the
 rate scale (counts per 100,000 people in the population).
 
@@ -258,21 +256,13 @@ print(x)
 head(x$DT)
 ```
 
-Importantly, see that `x$merge` mutated `x` to hold the result of the merge. We
-could also have used `xy = epix_merge(x,y)` to avoid mutating `x`. See the
-documentation for either for more detailed descriptions of what mutation,
-pointer aliasing, and pointer reseating is possible.
-
 ## Sliding version-aware computations
 
-Lastly, we demonstrate another key method of the `epi_archive` class, which is
-the `slide()` method. It works just like `epi_slide()` does for an `epi_df`
-object, but with one key difference: it performs version-aware computations.
-That is, for the computation at any given reference time t, it only uses **data
-that would have been available as of t**. The wrapper function is called
-`epix_slide()`; again, this is just for convenience/familiarity---and its
-interface is purposely designed mirror that of `epi_slide()` for `epi_df`
-objects.
+Lastly, we demonstrate another key method for archives, which is the
+`epix_slide()`. It works just like `epi_slide()` does for an `epi_df` object,
+but with one key difference: it performs version-aware computations. That is,
+for the computation at any given reference time t, it only uses **data that
+would have been available as of t**.
 
 For the demonstration, we'll revisit the forecasting example from the [slide
 vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html), and now

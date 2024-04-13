@@ -2,15 +2,13 @@
 % Please edit documentation in R/methods-epi_archive.R
 \name{epix_fill_through_version}
 \alias{epix_fill_through_version}
-\title{\code{epi_archive} with unobserved history filled in (won't mutate, might alias)}
+\title{Fill \code{epi_archive} unobserved history}
 \usage{
-epix_fill_through_version(
-  epi_archive,
-  fill_versions_end,
-  how = c("na", "locf")
-)
+epix_fill_through_version(x, fill_versions_end, how = c("na", "locf"))
 }
 \arguments{
+\item{x}{An \code{epi_archive}}
+
 \item{fill_versions_end}{Length-1, same class&type as \code{x$version}: the
 version through which to fill in missing version history; this will be the
 result's \verb{$versions_end} unless it already had a later
@@ -24,8 +22,6 @@ classes with a \code{next_after} implementation); \code{"locf"} will fill in mis
 version history with the last version of each observation carried forward
 (LOCF), by leaving the update \verb{$DT} alone (other \code{epi_archive} methods are
 based on LOCF).  Default is \code{"na"}.}
-
-\item{x}{An \code{epi_archive}}
 }
 \value{
 An \code{epi_archive}
@@ -37,12 +33,4 @@ expect archives that are completely up to date, or equally as up-to-date as
 another archive. This function provides one way to approach such mismatches:
 pretend that we've "observed" additional versions, filling in these versions
 with NAs or extrapolated values.
-}
-\details{
-'\code{epix_fill_through_version} will not mutate its \code{x} argument, but its result
-might alias fields of \code{x} (e.g., mutating the result's \code{DT} might mutate
-\code{x$DT}). The R6 method variant, \code{x$fill_through_version}, will mutate \code{x} to
-give the result, but might reseat its fields (e.g., references to the old
-\code{x$DT} might not be updated by this function or subsequent operations on
-\code{x}), and returns the updated \code{x} \link[base:invisible]{invisibly}.
 }

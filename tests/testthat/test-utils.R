@@ -1,13 +1,3 @@
-test_that("new summarizing functions work", {
-  x <- c(3, 4, 5, 9, NA)
-  expect_equal(min_na_rm(x), 3)
-})
-
-test_that("Other capital letter functions work", {
-  x <- c(1, 2, 3, 4, 5)
-  expect_equal(extend_r(x), c(1, 2, 3, 4, 5, 5))
-})
-
 test_that("guess_geo_type tests for different types of geo_value's", {
   # California, New York
   states <- c("ca", "ny")

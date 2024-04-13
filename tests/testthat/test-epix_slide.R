@@ -41,7 +41,7 @@ test_that("epix_slide works as intended", {
 
   xx3 <- xx %>%
     group_by(dplyr::across(dplyr::all_of("geo_value"))) %>%
-    slide(
+    epix_slide(
       f = ~ sum(.x$binary),
       before = 2,
       new_col_name = "sum_binary"
@@ -95,7 +95,7 @@ test_that("epix_slide works as intended with `as_list_col=TRUE`", {
 
   xx_dfrow3 <- xx %>%
     group_by(dplyr::across(dplyr::all_of("geo_value"))) %>%
-    slide(
+    epix_slide(
       f = ~ data.frame(bin_sum = sum(.x$binary)),
       before = 2,
       as_list_col = TRUE
@@ -175,41 +175,40 @@ test_that("epix_slide works as intended with `as_list_col=TRUE`", {
 
 test_that("epix_slide `before` validation works", {
   expect_error(
-    xx %>% slide(f = ~ sum(.x$binary)),
+    xx %>% epix_slide(f = ~ sum(.x$binary)),
     "`before` is required"
   )
   expect_error(
-    xx %>% slide(f = ~ sum(.x$binary), before = NA),
+    xx %>% epix_slide(f = ~ sum(.x$binary), before = NA),
     "Assertion on 'before' failed: May not be NA"
   )
   expect_error(
-    xx %>% slide(f = ~ sum(.x$binary), before = -1),
+    xx %>% epix_slide(f = ~ sum(.x$binary), before = -1),
     "Assertion on 'before' failed: Element 1 is not >= 0"
   )
   expect_error(
-    xx %>% slide(f = ~ sum(.x$binary), before = 1.5),
+    xx %>% epix_slide(f = ~ sum(.x$binary), before = 1.5),
     regexp = "before",
     class = "vctrs_error_incompatible_type"
   )
   # We might want to allow this at some point (issue #219):
   expect_error(
-    xx %>% slide(f = ~ sum(.x$binary), before = Inf),
+    xx %>% epix_slide(f = ~ sum(.x$binary), before = Inf),
     regexp = "before",
     class = "vctrs_error_incompatible_type"
   )
-  # (wrapper shouldn't introduce a value:)
   expect_error(xx %>% epix_slide(f = ~ sum(.x$binary)), "`before` is required")
   # These `before` values should be accepted:
   expect_error(
-    xx %>% slide(f = ~ sum(.x$binary), before = 0),
+    xx %>% epix_slide(f = ~ sum(.x$binary), before = 0),
     NA
   )
   expect_error(
-    xx %>% slide(f = ~ sum(.x$binary), before = 2L),
+    xx %>% epix_slide(f = ~ sum(.x$binary), before = 2L),
     NA
   )
   expect_error(
-    xx %>% slide(f = ~ sum(.x$binary), before = 365000),
+    xx %>% epix_slide(f = ~ sum(.x$binary), before = 365000),
     NA
   )
 })
@@ -251,7 +250,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   expect_identical(
     ea %>%
       group_by(modulus) %>%
-      slide(
+      epix_slide(
         f = ~ mean(.x$case_rate_7d_av),
         before = 2,
         ref_time_values = time_values,
@@ -273,7 +272,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   expect_identical(
     ea %>%
       group_by(.data$modulus) %>%
-      slide(
+      epix_slide(
         f = ~ mean(.x$case_rate_7d_av),
         before = 2,
         ref_time_values = time_values,
@@ -295,7 +294,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   expect_identical(
     ea %>%
       group_by(across(all_of("modulus"))) %>%
-      slide(
+      epix_slide(
         f = ~ mean(.x$case_rate_7d_av),
         before = 2,
         ref_time_values = time_values,
@@ -318,7 +317,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   expect_identical(
     ea %>%
       group_by(dplyr::across(tidyselect::all_of(my_group_by))) %>%
-      slide(
+      epix_slide(
         f = ~ mean(.x$case_rate_7d_av),
         before = 2,
         ref_time_values = time_values,
@@ -338,7 +337,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
     reference_by_neither
   )
   expect_identical(
-    ea %>% slide(
+    ea %>% epix_slide(
       f = ~ mean(.x$case_rate_7d_av),
       before = 2,
       ref_time_values = time_values,
@@ -362,12 +361,6 @@ ea <- tibble::tribble(
   as_epi_archive()
 
 test_that("epix_slide with all_versions option has access to all older versions", {
-  library(data.table)
-  # Make sure we're using testthat edition 3, where `expect_identical` doesn't
-  # actually mean `base::identical` but something more content-based using
-  # `waldo` package:
-  testthat::local_edition(3)
-
   slide_fn <- function(x, gk, rtv) {
     return(tibble(
       n_versions = length(unique(x$DT$version)),
@@ -378,7 +371,7 @@ test_that("epix_slide with all_versions option has access to all older versions"
   }
 
   ea_orig_mirror <- ea %>% clone()
-  ea_orig_mirror$DT <- copy(ea_orig_mirror$DT)
+  ea_orig_mirror$DT <- data.table::copy(ea_orig_mirror$DT)
 
   result1 <- ea %>%
     group_by() %>%
@@ -405,7 +398,7 @@ test_that("epix_slide with all_versions option has access to all older versions"
 
   result3 <- ea %>%
     group_by() %>%
-    slide(
+    epix_slide(
       f = slide_fn,
       before = 10^3,
       names_sep = NULL,
@@ -443,10 +436,7 @@ test_that("epix_slide with all_versions option has access to all older versions"
   expect_identical(ea, ea_orig_mirror) # We shouldn't have mutated ea
 })
 
-test_that("as_of and epix_slide with long enough window are compatible", {
-  library(data.table)
-  testthat::local_edition(3)
-
+test_that("epix_as_of and epix_slide with long enough window are compatible", {
   # For all_versions = FALSE:
 
   f1 <- function(x, gk, rtv) {
@@ -457,8 +447,8 @@ test_that("as_of and epix_slide with long enough window are compatible", {
   ref_time_value1 <- 5
 
   expect_identical(
-    ea %>% as_of(ref_time_value1) %>% f1() %>% mutate(time_value = ref_time_value1, .before = 1L),
-    ea %>% slide(f1, before = 1000L, ref_time_values = ref_time_value1, names_sep = NULL)
+    ea %>% epix_as_of(ref_time_value1) %>% f1() %>% mutate(time_value = ref_time_value1, .before = 1L),
+    ea %>% epix_slide(f1, before = 1000L, ref_time_values = ref_time_value1, names_sep = NULL)
   )
 
   # For all_versions = TRUE:
@@ -479,7 +469,7 @@ test_that("as_of and epix_slide with long enough window are compatible", {
       # assess as nowcast:
       unnest(data) %>%
       inner_join(
-        x %>% as_of(x$versions_end),
+        x %>% epix_as_of(x$versions_end),
         by = setdiff(key(x$DT), c("version"))
       ) %>%
       summarize(mean_abs_delta = mean(abs(binary - lag1)))
@@ -487,8 +477,11 @@ test_that("as_of and epix_slide with long enough window are compatible", {
   ref_time_value2 <- 5
 
   expect_identical(
-    ea %>% as_of(ref_time_value2, all_versions = TRUE) %>% f2() %>% mutate(time_value = ref_time_value2, .before = 1L),
-    ea %>% slide(f2, before = 1000L, ref_time_values = ref_time_value2, all_versions = TRUE, names_sep = NULL)
+    ea %>%
+      epix_as_of(ref_time_value2, all_versions = TRUE) %>%
+      f2() %>%
+      mutate(time_value = ref_time_value2, .before = 1L),
+    ea %>% epix_slide(f2, before = 1000L, ref_time_values = ref_time_value2, all_versions = TRUE, names_sep = NULL)
   )
 
   # Test the same sort of thing when grouping by geo in an archive with multiple geos.
@@ -555,7 +548,7 @@ test_that("epix_slide with all_versions option works as intended", {
 
   xx3 <- xx %>%
     group_by(dplyr::across(dplyr::all_of("geo_value"))) %>%
-    slide(
+    epix_slide(
       f = ~ sum(.x$DT$binary),
       before = 2,
       new_col_name = "sum_binary",

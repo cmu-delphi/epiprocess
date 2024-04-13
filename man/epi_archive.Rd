@@ -3,10 +3,9 @@
 \name{epi_archive}
 \alias{epi_archive}
 \alias{new_epi_archive}
+\alias{as_epi_archive}
 \title{\code{epi_archive} object}
 \usage{
-epi_archive(...)
-
 new_epi_archive(
   x,
   geo_type = NULL,
@@ -16,6 +15,17 @@ new_epi_archive(
   compactify = NULL,
   clobberable_versions_start = NA,
   versions_end = NULL
+)
+
+as_epi_archive(
+  x,
+  geo_type = NULL,
+  time_type = NULL,
+  other_keys = NULL,
+  additional_metadata = list(),
+  compactify = NULL,
+  clobberable_versions_start = NA,
+  versions_end = max_version_with_row_in(x)
 )
 }
 \arguments{
@@ -38,45 +48,50 @@ apart from "geo_value", "time_value", and "version".}
 \code{epi_archive} object. The metadata will have \code{geo_type} and \code{time_type}
 fields; named entries from the passed list or will be included as well.}
 
-\item{compactify}{Optional; Boolean or \code{NULL}: should we remove rows that are
-considered redundant for the purposes of \code{epi_archive}'s built-in methods
-such as \code{as_of}? As these methods use the last version of each observation
-carried forward (LOCF) to interpolate between the version data provided,
-rows that don't change these LOCF results can potentially be omitted to
-save space while maintaining the same behavior (with the help of the
-\code{clobberable_versions_start} and \code{versions_end} fields in some edge cases).
-\code{TRUE} will remove these rows, \code{FALSE} will not, and missing or \code{NULL} will
-remove these rows and issue a warning. Generally, this can be set to
-\code{TRUE}, but if you directly inspect or edit the fields of the \code{epi_archive}
-such as its \code{DT}, or rely on redundant updates to achieve a certain
-behavior of the \code{ref_time_values} default in \code{epix_slide}, you will have to
-determine whether \code{compactify=TRUE} will produce the desired results. If
-compactification here is removing a large proportion of the rows, this may
-indicate a potential for space, time, or bandwidth savings upstream the
-data pipeline, e.g., by avoiding fetching, storing, or processing these
-rows of \code{x}.}
+\item{compactify}{Optional; Boolean or \code{NULL}. \code{TRUE} will remove some
+redundant rows, \code{FALSE} will not, and missing or \code{NULL} will remove
+redundant rows, but issue a warning. See more information at \code{compactify}.}
 
-\item{clobberable_versions_start}{Optional; as in \code{\link{as_epi_archive}}}
+\item{clobberable_versions_start}{Optional; \code{length}-1; either a value of the
+same \code{class} and \code{typeof} as \code{x$version}, or an \code{NA} of any \code{class} and
+\code{typeof}: specifically, either (a) the earliest version that could be
+subject to "clobbering" (being overwritten with different update data, but
+using the \emph{same} version tag as the old update data), or (b) \code{NA}, to
+indicate that no versions are clobberable. There are a variety of reasons
+why versions could be clobberable under routine circumstances, such as (a)
+today's version of one/all of the columns being published after initially
+being filled with \code{NA} or LOCF, (b) a buggy version of today's data being
+published but then fixed and republished later in the day, or (c) data
+pipeline delays (e.g., publisher uploading, periodic scraping, database
+syncing, periodic fetching, etc.) that make events (a) or (b) reflected
+later in the day (or even on a different day) than expected; potential
+causes vary between different data pipelines. The default value is \code{NA},
+which doesn't consider any versions to be clobberable. Another setting that
+may be appropriate for some pipelines is \code{max_version_with_row_in(x)}.}
 
-\item{versions_end}{Optional; as in \code{\link{as_epi_archive}}}
+\item{versions_end}{Optional; length-1, same \code{class} and \code{typeof} as
+\code{x$version}: what is the last version we have observed? The default is
+\code{max_version_with_row_in(x)}, but values greater than this could also be
+valid, and would indicate that we observed additional versions of the data
+beyond \code{max(x$version)}, but they all contained empty updates. (The default
+value of \code{clobberable_versions_start} does not fully trust these empty
+updates, and assumes that any version \verb{>= max(x$version)} could be
+clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
 }
 \value{
 An \code{epi_archive} object.
 }
 \description{
-An \code{epi_archive} is an R6 class which contains a data table
+An \code{epi_archive} is an S3 class which contains a data table
 along with several relevant pieces of metadata. The data table can be seen
 as the full archive (version history) for some signal variables of
 interest.
-
-Creates a new \code{epi_archive} object.
 }
 \details{
 Epi Archive
 
-An \code{epi_archive} is an R6 class which contains a data table \code{DT}, of
-class \code{data.table} from the \code{data.table} package, with (at least) the
-following columns:
+An \code{epi_archive} contains a data table \code{DT}, of class \code{data.table}
+from the \code{data.table} package, with (at least) the following columns:
 \itemize{
 \item \code{geo_value}: the geographic value associated with each row of measurements.
 \item \code{time_value}: the time value associated with each row of measurements.
@@ -90,31 +105,11 @@ later.
 The data table \code{DT} has key variables \code{geo_value}, \code{time_value}, \code{version},
 as well as any others (these can be specified when instantiating the
 \code{epi_archive} object via the \code{other_keys} argument, and/or set by operating
-on \code{DT} directly). Refer to the documentation for \code{\link[=as_epi_archive]{as_epi_archive()}} for
-information and examples of relevant parameter names for an \code{epi_archive} object.
-Note that there can only be a single row per unique combination of
+on \code{DT} directly). Refer to the documentation for \code{as_epi_archive()} for
+information and examples of relevant parameter names for an \code{epi_archive}
+object. Note that there can only be a single row per unique combination of
 key variables, and thus the key variables are critical for figuring out how
 to generate a snapshot of data from the archive, as of a given version.
-
-In general, the last version of each observation is carried forward (LOCF) to
-fill in data between recorded versions, and between the last recorded
-update and the \code{versions_end}. One consequence is that the \code{DT}
-doesn't have to contain a full snapshot of every version (although this
-generally works), but can instead contain only the rows that are new or
-changed from the previous version (see \code{compactify}, which does this
-automatically). Currently, deletions must be represented as revising a row
-to a special state (e.g., making the entries \code{NA} or including a special
-column that flags the data as removed and performing some kind of
-post-processing), and the archive is unaware of what this state is. Note
-that \code{NA}s \emph{can} be introduced by \code{epi_archive} methods for other reasons,
-e.g., in \code{\link{epix_fill_through_version}} and \code{\link{epix_merge}}, if requested, to
-represent potential update data that we do not yet have access to; or in
-\code{\link{epix_merge}} to represent the "value" of an observation before the
-version in which it was first released, or if no version of that
-observation appears in the archive data at allies
-
-Refer to the documentation for \code{\link[=as_epi_archive]{as_epi_archive()}} for more information
-and examples of parameter names.
 }
 \section{Metadata}{
 
@@ -138,9 +133,8 @@ bits of information to convey about the data set at hand.
 
 An \code{epi_archive} object can be used to generate a snapshot of the data in
 \code{epi_df} format, which represents the most up-to-date values of the signal
-variables, as of the specified version. This is accomplished by calling the
-\code{as_of()} method for an \code{epi_archive} object \code{x}. More details on this
-method are documented in the wrapper function \code{\link[=epix_as_of]{epix_as_of()}}.
+variables, as of the specified version. This is accomplished by calling
+\code{epix_as_of()}.
 }
 
 \section{Sliding Computations}{
@@ -151,11 +145,11 @@ the \code{slide()} method for an \code{epi_archive} object, which works similarl
 the way \code{epi_slide()} works for an \code{epi_df} object, but with one key
 difference: it is version-aware. That is, for an \code{epi_archive} object, the
 sliding computation at any given reference time point t is performed on
-\strong{data that would have been available as of t}. More details on \code{slide()}
-are documented in the wrapper function \code{\link[=epix_slide]{epix_slide()}}.
+\strong{data that would have been available as of t}.
 }
 
 \examples{
+# Simple ex. with necessary keys
 tib <- tibble::tibble(
   geo_value = rep(c("ca", "hi"), each = 5),
   time_value = rep(seq(as.Date("2020-01-01"),
@@ -167,9 +161,36 @@ tib <- tibble::tibble(
   value = rnorm(10, mean = 2, sd = 1)
 )
 
-toy_epi_archive <- tib \%>\% new_epi_archive(
+toy_epi_archive <- tib \%>\% as_epi_archive(
   geo_type = "state",
   time_type = "day"
 )
 toy_epi_archive
+
+# Ex. with an additional key for county
+df <- data.frame(
+  geo_value = c(replicate(2, "ca"), replicate(2, "fl")),
+  county = c(1, 3, 2, 5),
+  time_value = c(
+    "2020-06-01",
+    "2020-06-02",
+    "2020-06-01",
+    "2020-06-02"
+  ),
+  version = c(
+    "2020-06-02",
+    "2020-06-03",
+    "2020-06-02",
+    "2020-06-03"
+  ),
+  cases = c(1, 2, 3, 4),
+  cases_rate = c(0.01, 0.02, 0.01, 0.05)
+)
+
+x <- df \%>\% as_epi_archive(
+  geo_type = "state",
+  time_type = "day",
+  other_keys = "county"
+)
+
 }

@@ -359,8 +359,6 @@ as_slide_computation <- function(f, ...) {
   )
 }
 
-min_na_rm <- function(x) min(x, na.rm = TRUE)
-extend_r <- function(x) c(x, x[length(x)])
 
 guess_geo_type <- function(geo_value) {
   if (is.character(geo_value)) {

@@ -39,7 +39,6 @@ Imports:
     lubridate,
     magrittr,
     purrr,
-    R6,
     rlang,
     slider,
     tibble,
@@ -50,7 +49,9 @@ Imports:
     vctrs
 Suggests:
     covidcast,
+    devtools,
     epidatr,
+    here,
     knitr,
     outbreaks,
     rmarkdown,

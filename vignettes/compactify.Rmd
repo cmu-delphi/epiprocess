@@ -93,7 +93,7 @@ We would also like to measure the speed of `epi_archive` methods.
 # Performance of as_of iterated 200 times
 iterate_as_of <- function(my_ea) {
   for (i in 1:1000) {
-    my_ea$as_of(min(my_ea$DT$time_value) + i - 1000)
+    my_ea %>% epix_as_of(min(my_ea$DT$time_value) + i - 1000)
   }
 }
 
@@ -101,7 +101,7 @@ speeds <- rbind(speeds, speed_test(iterate_as_of, "as_of_1000x"))
 
 # Performance of slide
 slide_median <- function(my_ea) {
-  my_ea$slide(median = median(.data$case_rate_7d_av), before = 7)
+  my_ea %>% epix_slide(median = median(.data$case_rate_7d_av), before = 7)
 }
 
 speeds <- rbind(speeds, speed_test(slide_median, "slide_median"))

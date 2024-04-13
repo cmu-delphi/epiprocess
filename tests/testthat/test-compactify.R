@@ -84,8 +84,8 @@ test_that("as_of produces the same results with compactify=TRUE as with compacti
   # Row 22, an LOCF row corresponding to the latest version, is omitted in
   # ea_true
   latest_version <- max(ea_false$DT$version)
-  as_of_true <- as_of(ea_true, latest_version)
-  as_of_false <- as_of(ea_false, latest_version)
+  as_of_true <- epix_as_of(ea_true, latest_version)
+  as_of_false <- epix_as_of(ea_false, latest_version)
 
   expect_identical(as_of_true, as_of_false)
 })

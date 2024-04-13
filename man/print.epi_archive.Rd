@@ -4,9 +4,13 @@
 \alias{print.epi_archive}
 \title{Print information about an \code{epi_archive} object}
 \usage{
-\method{print}{epi_archive}(epi_archive, class = TRUE, methods = TRUE)
+\method{print}{epi_archive}(x, ..., class = TRUE, methods = TRUE)
 }
 \arguments{
+\item{x}{An \code{epi_archive} object.}
+
+\item{...}{Should be empty, there to satisfy the S3 generic.}
+
 \item{class}{Boolean; whether to print the class label header}
 
 \item{methods}{Boolean; whether to print all available methods of

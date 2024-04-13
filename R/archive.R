@@ -6,6 +6,7 @@
 # `data.table::` everywhere and not importing things.
 .datatable_aware <- TRUE
 
+
 #' Validate a version bound arg
 #'
 #' Expected to be used on `clobberable_versions_start`, `versions_end`,
@@ -49,6 +50,7 @@ validate_version_bound <- function(version_bound, x, na_ok = FALSE,
   return(invisible(NULL))
 }
 
+
 #' `max(x$version)`, with error if `x` has 0 rows
 #'
 #' Exported to make defaults more easily copyable.
@@ -82,6 +84,7 @@ max_version_with_row_in <- function(x) {
   version_bound
 }
 
+
 #' Get the next possible value greater than `x` of the same type
 #'
 #' @param x the starting "value"(s)
@@ -90,23 +93,53 @@ max_version_with_row_in <- function(x) {
 #' @export
 next_after <- function(x) UseMethod("next_after")
 
+
 #' @export
 next_after.integer <- function(x) x + 1L
+
 
 #' @export
 next_after.Date <- function(x) x + 1L
 
+
+#' Compactify
+#'
+#' This section describes the internals of how compactification works in an
+#' `epi_archive()`. Compactification can potentially improve code speed or
+#' memory usage, depending on your data.
+#'
+#' In general, the last version of each observation is carried forward (LOCF) to
+#' fill in data between recorded versions, and between the last recorded
+#' update and the `versions_end`. One consequence is that the `DT` doesn't
+#' have to contain a full snapshot of every version (although this generally
+#' works), but can instead contain only the rows that are new or changed from
+#' the previous version (see `compactify`, which does this automatically).
+#' Currently, deletions must be represented as revising a row to a special
+#' state (e.g., making the entries `NA` or including a special column that
+#' flags the data as removed and performing some kind of post-processing), and
+#' the archive is unaware of what this state is. Note that `NA`s *can* be
+#' introduced by `epi_archive` methods for other reasons, e.g., in
+#' [`epix_fill_through_version`] and [`epix_merge`], if requested, to
+#' represent potential update data that we do not yet have access to; or in
+#' [`epix_merge`] to represent the "value" of an observation before the
+#' version in which it was first released, or if no version of that
+#' observation appears in the archive data at all.
+#'
+#' @name compactify
+NULL
+
+
 #' Epi Archive
+#'
 #' @title `epi_archive` object
 #'
-#' @description An `epi_archive` is an R6 class which contains a data table
+#' @description An `epi_archive` is an S3 class which contains a data table
 #'   along with several relevant pieces of metadata. The data table can be seen
 #'   as the full archive (version history) for some signal variables of
 #'   interest.
 #'
-#' @details An `epi_archive` is an R6 class which contains a data table `DT`, of
-#'   class `data.table` from the `data.table` package, with (at least) the
-#'   following columns:
+#' @details An `epi_archive` contains a data table `DT`, of class `data.table`
+#'   from the `data.table` package, with (at least) the following columns:
 #'
 #' * `geo_value`: the geographic value associated with each row of measurements.
 #' * `time_value`: the time value associated with each row of measurements.
@@ -119,28 +152,11 @@ next_after.Date <- function(x) x + 1L
 #' The data table `DT` has key variables `geo_value`, `time_value`, `version`,
 #'   as well as any others (these can be specified when instantiating the
 #'   `epi_archive` object via the `other_keys` argument, and/or set by operating
-#'   on `DT` directly). Refer to the documentation for [as_epi_archive()] for
-#'   information and examples of relevant parameter names for an `epi_archive` object.
-#'   Note that there can only be a single row per unique combination of
+#'   on `DT` directly). Refer to the documentation for `as_epi_archive()` for
+#'   information and examples of relevant parameter names for an `epi_archive`
+#'   object. Note that there can only be a single row per unique combination of
 #'   key variables, and thus the key variables are critical for figuring out how
 #'   to generate a snapshot of data from the archive, as of a given version.
-#'
-#' In general, the last version of each observation is carried forward (LOCF) to
-#'   fill in data between recorded versions, and between the last recorded
-#'   update and the `versions_end`. One consequence is that the `DT`
-#'   doesn't have to contain a full snapshot of every version (although this
-#'   generally works), but can instead contain only the rows that are new or
-#'   changed from the previous version (see `compactify`, which does this
-#'   automatically). Currently, deletions must be represented as revising a row
-#'   to a special state (e.g., making the entries `NA` or including a special
-#'   column that flags the data as removed and performing some kind of
-#'   post-processing), and the archive is unaware of what this state is. Note
-#'   that `NA`s *can* be introduced by `epi_archive` methods for other reasons,
-#'   e.g., in [`epix_fill_through_version`] and [`epix_merge`], if requested, to
-#'   represent potential update data that we do not yet have access to; or in
-#'   [`epix_merge`] to represent the "value" of an observation before the
-#'   version in which it was first released, or if no version of that
-#'   observation appears in the archive data at allies
 #'
 #' @section Metadata:
 #' The following pieces of metadata are included as fields in an `epi_archive`
@@ -160,9 +176,8 @@ next_after.Date <- function(x) x + 1L
 #' @section Generating Snapshots:
 #' An `epi_archive` object can be used to generate a snapshot of the data in
 #'   `epi_df` format, which represents the most up-to-date values of the signal
-#'   variables, as of the specified version. This is accomplished by calling the
-#'   `as_of()` method for an `epi_archive` object `x`. More details on this
-#'   method are documented in the wrapper function [`epix_as_of()`].
+#'   variables, as of the specified version. This is accomplished by calling
+#'   `epix_as_of()`.
 #'
 #' @section Sliding Computations:
 #' We can run a sliding computation over an `epi_archive` object, much like
@@ -171,34 +186,8 @@ next_after.Date <- function(x) x + 1L
 #'   the way `epi_slide()` works for an `epi_df` object, but with one key
 #'   difference: it is version-aware. That is, for an `epi_archive` object, the
 #'   sliding computation at any given reference time point t is performed on
-#'   **data that would have been available as of t**. More details on `slide()`
-#'   are documented in the wrapper function [`epix_slide()`].
+#'   **data that would have been available as of t**.
 #'
-#' @export
-#' @examples
-#' tib <- tibble::tibble(
-#'   geo_value = rep(c("ca", "hi"), each = 5),
-#'   time_value = rep(seq(as.Date("2020-01-01"),
-#'     by = 1, length.out = 5
-#'   ), times = 2),
-#'   version = rep(seq(as.Date("2020-01-02"),
-#'     by = 1, length.out = 5
-#'   ), times = 2),
-#'   value = rnorm(10, mean = 2, sd = 1)
-#' )
-#'
-#' toy_epi_archive <- tib %>% new_epi_archive(
-#'   geo_type = "state",
-#'   time_type = "day"
-#' )
-#' toy_epi_archive
-#' @name epi_archive
-epi_archive <- function(...) {
-  new_epi_archive(...)
-}
-
-#' New epi archive
-#' @description Creates a new `epi_archive` object.
 #' @param x A data.frame, data.table, or tibble, with columns `geo_value`,
 #'   `time_value`, `version`, and then any additional number of columns.
 #' @param geo_type Type for the geo values. If missing, then the function will
@@ -213,34 +202,86 @@ epi_archive <- function(...) {
 #' @param additional_metadata List of additional metadata to attach to the
 #'   `epi_archive` object. The metadata will have `geo_type` and `time_type`
 #'   fields; named entries from the passed list or will be included as well.
-#' @param compactify Optional; Boolean or `NULL`: should we remove rows that are
-#'   considered redundant for the purposes of `epi_archive`'s built-in methods
-#'   such as `as_of`? As these methods use the last version of each observation
-#'   carried forward (LOCF) to interpolate between the version data provided,
-#'   rows that don't change these LOCF results can potentially be omitted to
-#'   save space while maintaining the same behavior (with the help of the
-#'   `clobberable_versions_start` and `versions_end` fields in some edge cases).
-#'   `TRUE` will remove these rows, `FALSE` will not, and missing or `NULL` will
-#'   remove these rows and issue a warning. Generally, this can be set to
-#'   `TRUE`, but if you directly inspect or edit the fields of the `epi_archive`
-#'   such as its `DT`, or rely on redundant updates to achieve a certain
-#'   behavior of the `ref_time_values` default in `epix_slide`, you will have to
-#'   determine whether `compactify=TRUE` will produce the desired results. If
-#'   compactification here is removing a large proportion of the rows, this may
-#'   indicate a potential for space, time, or bandwidth savings upstream the
-#'   data pipeline, e.g., by avoiding fetching, storing, or processing these
-#'   rows of `x`.
-#' @param clobberable_versions_start Optional; as in [`as_epi_archive`]
-#' @param versions_end Optional; as in [`as_epi_archive`]
+#' @param compactify Optional; Boolean or `NULL`. `TRUE` will remove some
+#'   redundant rows, `FALSE` will not, and missing or `NULL` will remove
+#'   redundant rows, but issue a warning. See more information at `compactify`.
+#' @param clobberable_versions_start Optional; `length`-1; either a value of the
+#'   same `class` and `typeof` as `x$version`, or an `NA` of any `class` and
+#'   `typeof`: specifically, either (a) the earliest version that could be
+#'   subject to "clobbering" (being overwritten with different update data, but
+#'   using the *same* version tag as the old update data), or (b) `NA`, to
+#'   indicate that no versions are clobberable. There are a variety of reasons
+#'   why versions could be clobberable under routine circumstances, such as (a)
+#'   today's version of one/all of the columns being published after initially
+#'   being filled with `NA` or LOCF, (b) a buggy version of today's data being
+#'   published but then fixed and republished later in the day, or (c) data
+#'   pipeline delays (e.g., publisher uploading, periodic scraping, database
+#'   syncing, periodic fetching, etc.) that make events (a) or (b) reflected
+#'   later in the day (or even on a different day) than expected; potential
+#'   causes vary between different data pipelines. The default value is `NA`,
+#'   which doesn't consider any versions to be clobberable. Another setting that
+#'   may be appropriate for some pipelines is `max_version_with_row_in(x)`.
+#' @param versions_end Optional; length-1, same `class` and `typeof` as
+#'   `x$version`: what is the last version we have observed? The default is
+#'   `max_version_with_row_in(x)`, but values greater than this could also be
+#'   valid, and would indicate that we observed additional versions of the data
+#'   beyond `max(x$version)`, but they all contained empty updates. (The default
+#'   value of `clobberable_versions_start` does not fully trust these empty
+#'   updates, and assumes that any version `>= max(x$version)` could be
+#'   clobbered.) If `nrow(x) == 0`, then this argument is mandatory.
 #' @return An `epi_archive` object.
+#'
 #' @importFrom data.table as.data.table key setkeyv
 #' @importFrom dplyr if_any if_all everything
 #'
-#' @details
-#' Refer to the documentation for [as_epi_archive()] for more information
-#' and examples of parameter names.
 #' @name epi_archive
 #' @export
+#'
+#' @examples
+#' # Simple ex. with necessary keys
+#' tib <- tibble::tibble(
+#'   geo_value = rep(c("ca", "hi"), each = 5),
+#'   time_value = rep(seq(as.Date("2020-01-01"),
+#'     by = 1, length.out = 5
+#'   ), times = 2),
+#'   version = rep(seq(as.Date("2020-01-02"),
+#'     by = 1, length.out = 5
+#'   ), times = 2),
+#'   value = rnorm(10, mean = 2, sd = 1)
+#' )
+#'
+#' toy_epi_archive <- tib %>% as_epi_archive(
+#'   geo_type = "state",
+#'   time_type = "day"
+#' )
+#' toy_epi_archive
+#'
+#' # Ex. with an additional key for county
+#' df <- data.frame(
+#'   geo_value = c(replicate(2, "ca"), replicate(2, "fl")),
+#'   county = c(1, 3, 2, 5),
+#'   time_value = c(
+#'     "2020-06-01",
+#'     "2020-06-02",
+#'     "2020-06-01",
+#'     "2020-06-02"
+#'   ),
+#'   version = c(
+#'     "2020-06-02",
+#'     "2020-06-03",
+#'     "2020-06-02",
+#'     "2020-06-03"
+#'   ),
+#'   cases = c(1, 2, 3, 4),
+#'   cases_rate = c(0.01, 0.02, 0.01, 0.05)
+#' )
+#'
+#' x <- df %>% as_epi_archive(
+#'   geo_type = "state",
+#'   time_type = "day",
+#'   other_keys = "county"
+#' )
+#'
 new_epi_archive <- function(
     x,
     geo_type = NULL,
@@ -261,7 +302,7 @@ new_epi_archive <- function(
   }
 
   # If geo type is missing, then try to guess it
-  if (missing(geo_type) || is.null(geo_type)) {
+  if (is.null(geo_type)) {
     geo_type <- guess_geo_type(x$geo_value)
   }
 
@@ -341,7 +382,7 @@ new_epi_archive <- function(
   }
 
   # Checks to see if a value in a vector is LOCF
-  is_locf <- function(vec) {
+  is_locf <- function(vec) { # nolint: object_usage_linter
     dplyr::if_else(!is.na(vec) & !is.na(dplyr::lag(vec)),
       vec == dplyr::lag(vec),
       is.na(vec) & is.na(dplyr::lag(vec))
@@ -353,12 +394,12 @@ new_epi_archive <- function(
 
   # Checks for LOCF's in a data frame
   rm_locf <- function(df) {
-    dplyr::filter(df, if_any(c(everything(), -version), ~ !is_locf(.)))
+    dplyr::filter(df, if_any(c(everything(), -version), ~ !is_locf(.))) # nolint: object_usage_linter
   }
 
   # Keeps LOCF values, such as to be printed
   keep_locf <- function(df) {
-    dplyr::filter(df, if_all(c(everything(), -version), ~ is_locf(.)))
+    dplyr::filter(df, if_all(c(everything(), -version), ~ is_locf(.))) # nolint: object_usage_linter
   }
 
   # Runs compactify on data frame
@@ -398,277 +439,67 @@ new_epi_archive <- function(
       time_type = time_type,
       additional_metadata = additional_metadata,
       clobberable_versions_start = clobberable_versions_start,
-      versions_end = versions_end,
-      private = list()
+      versions_end = versions_end
     ),
     class = "epi_archive"
   )
 }
 
+
+#' `as_epi_archive` converts a data frame, data table, or tibble into an
+#' `epi_archive` object.
+#'
+#' @rdname epi_archive
+#'
+#' @export
+as_epi_archive <- function(x, geo_type = NULL, time_type = NULL, other_keys = NULL,
+                           additional_metadata = list(),
+                           compactify = NULL,
+                           clobberable_versions_start = NA,
+                           versions_end = max_version_with_row_in(x)) {
+  new_epi_archive(
+    x, geo_type, time_type, other_keys, additional_metadata,
+    compactify, clobberable_versions_start, versions_end
+  )
+}
+
+
 #' Print information about an `epi_archive` object
+#'
+#' @param x An `epi_archive` object.
+#' @param ... Should be empty, there to satisfy the S3 generic.
 #' @param class Boolean; whether to print the class label header
 #' @param methods Boolean; whether to print all available methods of
 #'   the archive
+#'
 #' @importFrom cli cli_inform
+#' @importFrom rlang check_dots_empty
 #' @export
-print.epi_archive <- function(epi_archive, class = TRUE, methods = TRUE) {
+print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
+  if (rlang::dots_n(...) > 0) {
+    cli_abort(c(
+      "Error in print.epi_archive()",
+      "i" = "Too many arguments passed to `print.epi_archive()`."
+    ))
+  }
+
   cli_inform(
     c(
       ">" = if (class) "An `epi_archive` object, with metadata:",
-      "i" = if (length(setdiff(key(epi_archive$DT), c("geo_value", "time_value", "version"))) > 0) {
-        "Non-standard DT keys: {setdiff(key(epi_archive$DT), c('geo_value', 'time_value', 'version'))}"
+      "i" = if (length(setdiff(key(x$DT), c("geo_value", "time_value", "version"))) > 0) {
+        "Non-standard DT keys: {setdiff(key(x$DT), c('geo_value', 'time_value', 'version'))}"
       },
-      "i" = "Min/max time values: {min(epi_archive$DT$time_value)} / {max(epi_archive$DT$time_value)}",
-      "i" = "First/last version with update: {min(epi_archive$DT$version)} / {max(epi_archive$DT$version)}",
-      "i" = if (!is.na(epi_archive$clobberable_versions_start)) {
-        "Clobberable versions start: {epi_archive$clobberable_versions_start}"
+      "i" = "Min/max time values: {min(x$DT$time_value)} / {max(x$DT$time_value)}",
+      "i" = "First/last version with update: {min(x$DT$version)} / {max(x$DT$version)}",
+      "i" = if (!is.na(x$clobberable_versions_start)) {
+        "Clobberable versions start: {x$clobberable_versions_start}"
       },
-      "i" = "Versions end: {epi_archive$versions_end}",
-      "i" = "A preview of the table ({nrow(epi_archive$DT)} rows x {ncol(epi_archive$DT)} columns):"
+      "i" = "Versions end: {x$versions_end}",
+      "i" = "A preview of the table ({nrow(x$DT)} rows x {ncol(x$DT)} columns):"
     )
   )
 
-  return(invisible(epi_archive$DT %>% print()))
-}
-
-
-#' @export
-as_of <- function(x, ...) {
-  UseMethod("as_of")
-}
-
-
-#' As of epi_archive
-#' @description Generates a snapshot in `epi_df` format as of a given version.
-#'   See the documentation for the wrapper function [`epix_as_of()`] for
-#'   details. The parameter descriptions below are copied from there
-#' @param epi_archive An `epi_archive` object
-#' @param max_version Version specifying the max version to permit in the
-#'   snapshot. That is, the snapshot will comprise the unique rows of the
-#'   current archive data that represent the most up-to-date signal values, as
-#'   of the specified `max_version` (and whose `time_value`s are at least
-#'   `min_time_value`).
-#' @param min_time_value Time value specifying the min `time_value` to permit in
-#'   the snapshot. Default is `-Inf`, which effectively means that there is no
-#'   minimum considered.
-#' @param all_versions Boolean; If `all_versions = TRUE`, then the output will be in
-#'   `epi_archive` format, and contain rows in the specified `time_value` range
-#'   having `version <= max_version`. The resulting object will cover a
-#'   potentially narrower `version` and `time_value` range than `x`, depending
-#'   on user-provided arguments. Otherwise, there will be one row in the output
-#'   for the `max_version` of each `time_value`. Default is `FALSE`.
-#' @importFrom data.table between key
-#' @export
-as_of.epi_archive <- function(epi_archive, max_version, min_time_value = -Inf, all_versions = FALSE) {
-  other_keys <- setdiff(
-    key(epi_archive$DT),
-    c("geo_value", "time_value", "version")
-  )
-  if (length(other_keys) == 0) other_keys <- NULL
-
-  # Check a few things on max_version
-  if (!test_set_equal(class(max_version), class(epi_archive$DT$version))) {
-    cli_abort(
-      "`max_version` must have the same classes as `epi_archive$DT$version`."
-    )
-  }
-  if (!test_set_equal(typeof(max_version), typeof(epi_archive$DT$version))) {
-    cli_abort(
-      "`max_version` must have the same types as `epi_archive$DT$version`."
-    )
-  }
-  assert_scalar(max_version, na.ok = FALSE)
-  if (max_version > epi_archive$versions_end) {
-    cli_abort("`max_version` must be at most `epi_archive$versions_end`.")
-  }
-  assert_logical(all_versions, len = 1)
-  if (!is.na(epi_archive$clobberable_versions_start) && max_version >= epi_archive$clobberable_versions_start) {
-    cli_warn(
-      'Getting data as of some recent version which could still be
-      overwritten (under routine circumstances) without assigning a new
-      version number (a.k.a. "clobbered").  Thus, the snapshot that we
-      produce here should not be expected to be reproducible later. See
-      `?epi_archive` for more info and `?epix_as_of` on how to muffle.',
-      class = "epiprocess__snapshot_as_of_clobberable_version"
-    )
-  }
-
-  # Filter by version and return
-  if (all_versions) {
-    # epi_archive is copied into result, so we can modify result directly
-    result <- epix_truncate_versions_after(epi_archive, max_version)
-    result$DT <- result$DT[time_value >= min_time_value, ]
-    return(result)
-  }
-
-  # Make sure to use data.table ways of filtering and selecting
-  as_of_epi_df <- epi_archive$DT[time_value >= min_time_value & version <= max_version, ] %>%
-    unique(
-      by = c("geo_value", "time_value", other_keys),
-      fromLast = TRUE
-    ) %>%
-    tibble::as_tibble() %>%
-    dplyr::select(-"version") %>%
-    as_epi_df(
-      geo_type = epi_archive$geo_type,
-      time_type = epi_archive$time_type,
-      as_of = max_version,
-      additional_metadata = c(epi_archive$additional_metadata,
-        other_keys = other_keys
-      )
-    )
-
-  return(as_of_epi_df)
-}
-
-
-#' @export
-fill_through_version <- function(x, ...) {
-  UseMethod("fill_through_version")
-}
-
-
-#' Fill through version
-#' @description Fill in unobserved history using requested scheme by mutating
-#'   the given object and potentially reseating its fields. See
-#'   [`epix_fill_through_version`], which doesn't mutate the input archive but
-#'   might alias its fields.
-#'
-#' @param epi_archive an `epi_archive` object
-#' @param fill_versions_end as in [`epix_fill_through_version`]
-#' @param how as in [`epix_fill_through_version`]
-#'
-#' @importFrom data.table key setkeyv := address copy
-#' @importFrom rlang arg_match
-fill_through_version.epi_archive <- function(
-    epi_archive,
-    fill_versions_end,
-    how = c("na", "locf")) {
-  validate_version_bound(fill_versions_end, epi_archive$DT, na_ok = FALSE)
-  how <- arg_match(how)
-  if (epi_archive$versions_end < fill_versions_end) {
-    new_dt <- switch(how,
-      "na" = {
-        # old DT + a version consisting of all NA observations
-        # immediately after the last currently/actually-observed
-        # version. Note that this NA-observation version must only be
-        # added if `epi_archive` is outdated.
-        nonversion_key_cols <- setdiff(key(epi_archive$DT), "version")
-        nonkey_cols <- setdiff(names(epi_archive$DT), key(epi_archive$DT))
-        next_version_tag <- next_after(epi_archive$versions_end)
-        if (next_version_tag > fill_versions_end) {
-          cli_abort(sprintf(paste(
-            "Apparent problem with `next_after` method:",
-            "archive contained observations through version %s",
-            "and the next possible version was supposed to be %s,",
-            "but this appeared to jump from a version < %3$s",
-            "to one > %3$s, implying at least one version in between."
-          ), epi_archive$versions_end, next_version_tag, fill_versions_end))
-        }
-        nonversion_key_vals_ever_recorded <- unique(epi_archive$DT, by = nonversion_key_cols)
-        # In edge cases, the `unique` result can alias the original
-        # DT; detect and copy if necessary:
-        if (identical(address(epi_archive$DT), address(nonversion_key_vals_ever_recorded))) {
-          nonversion_key_vals_ever_recorded <- copy(nonversion_key_vals_ever_recorded)
-        }
-        next_version_dt <- nonversion_key_vals_ever_recorded[
-          , version := next_version_tag
-        ][
-          # this makes the class of these columns logical (`NA` is a
-          # logical NA; we're relying on the rbind below to convert to
-          # the proper class&typeof)
-          , (nonkey_cols) := NA
-        ]
-        # full result DT:
-        setkeyv(rbind(epi_archive$DT, next_version_dt), key(epi_archive$DT))[]
-      },
-      "locf" = {
-        # just the old DT; LOCF is built into other methods:
-        epi_archive$DT
-      }
-    )
-    new_versions_end <- fill_versions_end
-    # Update `epi_archive` all at once with simple, error-free operations +
-    # return below:
-    epi_archive$DT <- new_dt
-    epi_archive$versions_end <- new_versions_end
-  } else {
-    # Already sufficiently up to date; nothing to do.
-  }
-  return(invisible(epi_archive))
-}
-
-
-#' @export
-truncate_versions_after <- function(x, ...) {
-  UseMethod("truncate_versions_after")
-}
-
-
-#' Truncate versions after
-#' @description Filter to keep only older versions, mutating the archive by
-#'   potentially reseating but not mutating some fields. `DT` is likely, but not
-#'   guaranteed, to be copied. Returns the mutated archive
-#'   [invisibly][base::invisible].
-#' @param epi_archive as in [`epix_truncate_versions_after`]
-#' @param max_version as in [`epix_truncate_versions_after`]
-truncate_versions_after.epi_archive <- function(
-    epi_archive,
-    max_version) {
-  if (!test_set_equal(class(max_version), class(epi_archive$DT$version))) {
-    cli_abort("`max_version` must have the same classes as `epi_archive$DT$version`.")
-  }
-  if (!test_set_equal(typeof(max_version), typeof(epi_archive$DT$version))) {
-    cli_abort("`max_version` must have the same types as `epi_archive$DT$version`.")
-  }
-  assert_scalar(max_version, na.ok = FALSE)
-  if (max_version > epi_archive$versions_end) {
-    cli_abort("`max_version` must be at most `epi_archive$versions_end`.")
-  }
-  epi_archive$DT <- epi_archive$DT[epi_archive$DT$version <= max_version, colnames(epi_archive$DT), with = FALSE]
-  # (^ this filter operation seems to always copy the DT, even if it
-  # keeps every entry; we don't guarantee this behavior in
-  # documentation, though, so we could change to alias in this case)
-  if (!is.na(epi_archive$clobberable_versions_start) && epi_archive$clobberable_versions_start > max_version) {
-    epi_archive$clobberable_versions_start <- NA
-  }
-  epi_archive$versions_end <- max_version
-  return(invisible(epi_archive))
-}
-
-
-#' Merge epi archive
-#' @description Merges another `epi_archive` with the current one, mutating the
-#'   current one by reseating its `DT` and several other fields, but avoiding
-#'   mutation of the old `DT`; returns the current archive
-#'   [invisibly][base::invisible]. See [`epix_merge`] for a full description
-#'   of the non-R6-method version, which does not mutate either archive, and
-#'   does not alias either archive's `DT`.a
-#' @param x as in [`epix_merge`]
-#' @param y as in [`epix_merge`]
-#' @param sync as in [`epix_merge`]
-#' @param compactify as in [`epix_merge`]
-merge_epi_archive <- function(
-    x,
-    y,
-    sync = c("forbid", "na", "locf", "truncate"),
-    compactify = TRUE) {
-  result <- epix_merge(x, y,
-    sync = sync,
-    compactify = compactify
-  )
-
-  if (length(x$private_fields) != 0L) {
-    cli_abort("expected no private fields in x",
-      internal = TRUE
-    )
-  }
-
-  # Mutate fields all at once, trying to avoid any potential errors:
-  for (field_name in names(x$public_fields)) {
-    x[[field_name]] <- result[[field_name]]
-  }
-
+  print(x$DT[])
   return(invisible(x))
 }
 
@@ -716,17 +547,6 @@ merge_epi_archive <- function(
 #'
 #' Using `group_by` with `.add=FALSE` to override the existing grouping is
 #' disabled; instead, `ungroup` first then `group_by`.
-#'
-#' Mutation and aliasing: `group_by` tries to use a shallow copy of the `DT`,
-#' introducing column-level aliasing between its input and its result. This
-#' doesn't follow the general model for most `data.table` operations, which
-#' seems to be that, given an nonaliased (i.e., unique) pointer to a
-#' `data.table` object, its pointers to its columns should also be nonaliased.
-#' If you mutate any of the columns of either the input or result, first ensure
-#' that it is fine if columns of the other are also mutated, but do not rely on
-#' such behavior to occur. Additionally, never perform mutation on the key
-#' columns at all (except for strictly increasing transformations), as this will
-#' invalidate sortedness assumptions about the rows.
 #'
 #' `group_by_drop_default` on (ungrouped) `epi_archive`s is expected to dispatch
 #' to `group_by_drop_default.default` (but there is a dedicated method for
@@ -799,9 +619,9 @@ merge_epi_archive <- function(
 #' @export
 #'
 #' @aliases grouped_epi_archive
-group_by.epi_archive <- function(epi_archive, ..., .add = FALSE, .drop = dplyr::group_by_drop_default(epi_archive)) {
+group_by.epi_archive <- function(.data, ..., .add = FALSE, .drop = dplyr::group_by_drop_default(.data)) {
   # `add` makes no difference; this is an ungrouped `epi_archive`.
-  detailed_mutate <- epix_detailed_restricted_mutate(epi_archive, ...)
+  detailed_mutate <- epix_detailed_restricted_mutate(.data, ...)
   assert_logical(.drop)
   if (!.drop) {
     grouping_cols <- as.list(detailed_mutate[["archive"]][["DT"]])[detailed_mutate[["request_names"]]]
@@ -832,237 +652,6 @@ group_by.epi_archive <- function(epi_archive, ..., .add = FALSE, .drop = dplyr::
 }
 
 
-#' @export
-slide <- function(.data, ...) {
-  UseMethod("slide")
-}
-
-
-#' Slide over epi archive
-#' @description Slides a given function over variables in an `epi_archive`
-#'   object. See the documentation for the wrapper function [`epix_slide()`] for
-#'   details. The parameter descriptions below are copied from there
-#' @importFrom data.table key
-#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
-#' @param f Function, formula, or missing; together with `...` specifies the
-#'   computation to slide. To "slide" means to apply a computation over a
-#'   sliding (a.k.a. "rolling") time window for each data group. The window is
-#'   determined by the `before` parameter described below. One time step is
-#'   typically one day or one week; see [`epi_slide`] details for more
-#'   explanation. If a function, `f` must take an `epi_df` with the same
-#'   column names as the archive's `DT`, minus the `version` column; followed
-#'   by a one-row tibble containing the values of the grouping variables for
-#'   the associated group; followed by a reference time value, usually as a
-#'   `Date` object; followed by any number of named arguments. If a formula,
-#'   `f` can operate directly on columns accessed via `.x$var` or `.$var`, as
-#'   in `~ mean (.x$var)` to compute a mean of a column `var` for each
-#'   group-`ref_time_value` combination. The group key can be accessed via
-#'   `.y` or `.group_key`, and the reference time value can be accessed via
-#'   `.z` or `.ref_time_value`. If `f` is missing, then `...` will specify the
-#'   computation.
-#' @param ... Additional arguments to pass to the function or formula specified
-#'   via `f`. Alternatively, if `f` is missing, then `...` is interpreted as an
-#'   expression for tidy evaluation; in addition to referring to columns
-#'   directly by name, the expression has access to `.data` and `.env` pronouns
-#'   as in `dplyr` verbs, and can also refer to the `.group_key` and
-#'   `.ref_time_value`. See details of [`epi_slide`].
-#' @param before How far `before` each `ref_time_value` should the sliding
-#'   window extend? If provided, should be a single, non-NA,
-#'   [integer-compatible][vctrs::vec_cast] number of time steps. This window
-#'   endpoint is inclusive. For example, if `before = 7`, and one time step is
-#'   one day, then to produce a value for a `ref_time_value` of January 8, we
-#'   apply the given function or formula to data (for each group present) with
-#'   `time_value`s from January 1 onward, as they were reported on January 8.
-#'   For typical disease surveillance sources, this will not include any data
-#'   with a `time_value` of January 8, and, depending on the amount of reporting
-#'   latency, may not include January 7 or even earlier `time_value`s. (If
-#'   instead the archive were to hold nowcasts instead of regular surveillance
-#'   data, then we would indeed expect data for `time_value` January 8. If it
-#'   were to hold forecasts, then we would expect data for `time_value`s after
-#'   January 8, and the sliding window would extend as far after each
-#'   `ref_time_value` as needed to include all such `time_value`s.)
-#' @param ref_time_values Reference time values / versions for sliding
-#'   computations; each element of this vector serves both as the anchor point
-#'   for the `time_value` window for the computation and the `max_version`
-#'   `as_of` which we fetch data in this window. If missing, then this will set
-#'   to a regularly-spaced sequence of values set to cover the range of
-#'   `version`s in the `DT` plus the `versions_end`; the spacing of values will
-#'   be guessed (using the GCD of the skips between values).
-#' @param time_step Optional function used to define the meaning of one time
-#'   step, which if specified, overrides the default choice based on the
-#'   `time_value` column. This function must take a positive integer and return
-#'   an object of class `lubridate::period`. For example, we can use `time_step
-#'   = lubridate::hours` in order to set the time step to be one hour (this
-#'   would only be meaningful if `time_value` is of class `POSIXct`).
-#' @param new_col_name String indicating the name of the new column that will
-#'   contain the derivative values. Default is "slide_value"; note that setting
-#'   `new_col_name` equal to an existing column name will overwrite this column.
-#' @param as_list_col Should the slide results be held in a list column, or be
-#'   [unchopped][tidyr::unchop]/[unnested][tidyr::unnest]? Default is `FALSE`,
-#'   in which case a list object returned by `f` would be unnested (using
-#'   [`tidyr::unnest()`]), and, if the slide computations output data frames,
-#'   the names of the resulting columns are given by prepending `new_col_name`
-#'   to the names of the list elements.
-#' @param names_sep String specifying the separator to use in `tidyr::unnest()`
-#'   when `as_list_col = FALSE`. Default is "_". Using `NULL` drops the prefix
-#'   from `new_col_name` entirely.
-#' @param all_versions (Not the same as `all_rows` parameter of `epi_slide`.) If
-#'   `all_versions = TRUE`, then `f` will be passed the version history (all
-#'   `version <= ref_time_value`) for rows having `time_value` between
-#'   `ref_time_value - before` and `ref_time_value`. Otherwise, `f` will be
-#'   passed only the most recent `version` for every unique `time_value`.
-#'   Default is `FALSE`.
-slide.epi_archive <- function(epi_archive, f, ..., before, ref_time_values,
-                              time_step, new_col_name = "slide_value",
-                              as_list_col = FALSE, names_sep = "_",
-                              all_versions = FALSE) {
-  # For an "ungrouped" slide, treat all rows as belonging to one big
-  # group (group by 0 vars), like `dplyr::summarize`, and let the
-  # resulting `grouped_epi_archive` handle the slide:
-  slide(
-    group_by(epi_archive),
-    f,
-    ...,
-    before = before, ref_time_values = ref_time_values,
-    time_step = time_step, new_col_name = new_col_name,
-    as_list_col = as_list_col, names_sep = names_sep,
-    all_versions = all_versions
-  ) %>%
-    # We want a slide on ungrouped archives to output something
-    # ungrouped, rather than retaining the trivial (0-variable)
-    # grouping applied above. So we `ungroup()`. However, the current
-    # `dplyr` implementation automatically ignores/drops trivial
-    # groupings, so this is just a no-op for now.
-    ungroup()
-}
-
-
-#' Convert to `epi_archive` format
-#'
-#' Converts a data frame, data table, or tibble into an `epi_archive`
-#' object. See the [archive
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
-#' examples. The parameter descriptions below are copied from there
-#'
-#' @param x A data frame, data table, or tibble, with columns `geo_value`,
-#'   `time_value`, `version`, and then any additional number of columns.
-#' @param geo_type Type for the geo values. If missing, then the function will
-#'   attempt to infer it from the geo values present; if this fails, then it
-#'   will be set to "custom".
-#' @param time_type Type for the time values. If missing, then the function will
-#'   attempt to infer it from the time values present; if this fails, then it
-#'   will be set to "custom".
-#' @param other_keys Character vector specifying the names of variables in `x`
-#'   that should be considered key variables (in the language of `data.table`)
-#'   apart from "geo_value", "time_value", and "version".
-#' @param additional_metadata List of additional metadata to attach to the
-#'   `epi_archive` object. The metadata will have `geo_type` and `time_type`
-#'   fields; named entries from the passed list or will be included as well.
-#' @param compactify Optional; Boolean or `NULL`: should we remove rows that are
-#'   considered redundant for the purposes of `epi_archive`'s built-in methods
-#'   such as `as_of`? As these methods use the last version of each observation
-#'   carried forward (LOCF) to interpolate between the version data provided,
-#'   rows that don't change these LOCF results can potentially be omitted to
-#'   save space. `TRUE` will remove these rows, `FALSE` will not, and missing or
-#'   `NULL` will remove these rows and issue a warning. Generally, this can be
-#'   set to `TRUE`, but if you directly inspect or edit the fields of the
-#'   `epi_archive` such as its `DT`, you will have to determine whether
-#'   `compactify=TRUE` will produce the desired results. If compactification
-#'   here is removing a large proportion of the rows, this may indicate a
-#'   potential for space, time, or bandwidth savings upstream the data pipeline,
-#'   e.g., when fetching, storing, or preparing the input data `x`
-#' @param clobberable_versions_start Optional; `length`-1; either a value of the
-#'   same `class` and `typeof` as `x$version`, or an `NA` of any `class` and
-#'   `typeof`: specifically, either (a) the earliest version that could be
-#'   subject to "clobbering" (being overwritten with different update data, but
-#'   using the *same* version tag as the old update data), or (b) `NA`, to
-#'   indicate that no versions are clobberable. There are a variety of reasons
-#'   why versions could be clobberable under routine circumstances, such as (a)
-#'   today's version of one/all of the columns being published after initially
-#'   being filled with `NA` or LOCF, (b) a buggy version of today's data being
-#'   published but then fixed and republished later in the day, or (c) data
-#'   pipeline delays (e.g., publisher uploading, periodic scraping, database
-#'   syncing, periodic fetching, etc.) that make events (a) or (b) reflected
-#'   later in the day (or even on a different day) than expected; potential
-#'   causes vary between different data pipelines. The default value is `NA`,
-#'   which doesn't consider any versions to be clobberable. Another setting that
-#'   may be appropriate for some pipelines is `max_version_with_row_in(x)`.
-#' @param versions_end Optional; length-1, same `class` and `typeof` as
-#'   `x$version`: what is the last version we have observed? The default is
-#'   `max_version_with_row_in(x)`, but values greater than this could also be
-#'   valid, and would indicate that we observed additional versions of the data
-#'   beyond `max(x$version)`, but they all contained empty updates. (The default
-#'   value of `clobberable_versions_start` does not fully trust these empty
-#'   updates, and assumes that any version `>= max(x$version)` could be
-#'   clobbered.) If `nrow(x) == 0`, then this argument is mandatory.
-#' @return An `epi_archive` object.
-#'
-#' @details This simply a wrapper around the `new()` method of the `epi_archive`
-#'   class, so for example:
-#'   ```
-#'   x <- as_epi_archive(df, geo_type = "state", time_type = "day")
-#'   ```
-#'   would be equivalent to:
-#'   ```
-#'   x <- epi_archive$new(df, geo_type = "state", time_type = "day")
-#'   ```
-#'
-#' @export
-#' @examples
-#' # Simple ex. with necessary keys
-#' tib <- tibble::tibble(
-#'   geo_value = rep(c("ca", "hi"), each = 5),
-#'   time_value = rep(seq(as.Date("2020-01-01"),
-#'     by = 1, length.out = 5
-#'   ), times = 2),
-#'   version = rep(seq(as.Date("2020-01-02"),
-#'     by = 1, length.out = 5
-#'   ), times = 2),
-#'   value = rnorm(10, mean = 2, sd = 1)
-#' )
-#'
-#' toy_epi_archive <- tib %>% as_epi_archive(
-#'   geo_type = "state",
-#'   time_type = "day"
-#' )
-#' toy_epi_archive
-#'
-#' # Ex. with an additional key for county
-#' df <- data.frame(
-#'   geo_value = c(replicate(2, "ca"), replicate(2, "fl")),
-#'   county = c(1, 3, 2, 5),
-#'   time_value = c(
-#'     "2020-06-01",
-#'     "2020-06-02",
-#'     "2020-06-01",
-#'     "2020-06-02"
-#'   ),
-#'   version = c(
-#'     "2020-06-02",
-#'     "2020-06-03",
-#'     "2020-06-02",
-#'     "2020-06-03"
-#'   ),
-#'   cases = c(1, 2, 3, 4),
-#'   cases_rate = c(0.01, 0.02, 0.01, 0.05)
-#' )
-#'
-#' x <- df %>% as_epi_archive(
-#'   geo_type = "state",
-#'   time_type = "day",
-#'   other_keys = "county"
-#' )
-as_epi_archive <- function(x, geo_type, time_type, other_keys,
-                           additional_metadata = list(),
-                           compactify = NULL,
-                           clobberable_versions_start = NA,
-                           versions_end = max_version_with_row_in(x)) {
-  new_epi_archive(
-    x, geo_type, time_type, other_keys, additional_metadata,
-    compactify, clobberable_versions_start, versions_end
-  )
-}
-
 #' Test for `epi_archive` format
 #'
 #' @param x An object.
@@ -1088,14 +677,20 @@ is_epi_archive <- function(x, grouped_okay = FALSE) {
 }
 
 
+#' Clone an `epi_archive` object.
+#'
+#' @param x An `epi_archive` object.
+#'
+#' @importFrom data.table copy
 #' @export
-clone <- function(x, ...) {
+clone <- function(x) {
   UseMethod("clone")
 }
 
 
+#' @rdname clone
 #' @export
-clone.epi_archive <- function(epi_archive) {
-  epi_archive$DT <- copy(epi_archive$DT)
-  return(epi_archive)
+clone.epi_archive <- function(x) {
+  x$DT <- data.table::copy(x$DT)
+  return(x)
 }

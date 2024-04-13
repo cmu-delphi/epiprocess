@@ -1,3 +1,9 @@
+# At time of writing, roxygen parses content in collation order, impacting the
+# presentation of .Rd files that document multiple functions (see
+# https://github.com/r-lib/roxygen2/pull/324). We use @include tags (determining
+# `Collate:`) below to get the desired ordering.
+
+
 #' Get var names from select-only `tidy_select`ing `...` in `.data`
 #'
 #' Convenience function for performing a `tidy_select` on dots according to its
@@ -22,6 +28,7 @@ eval_pure_select_names_from_dots <- function(..., .data) {
   names(tidyselect::eval_select(rlang::expr(c(...)), .data, allow_rename = FALSE))
 }
 
+
 #' Get names of dots without forcing the dots
 #'
 #' For use in functions that use nonstandard evaluation (NSE) on the dots; we
@@ -37,22 +44,23 @@ nse_dots_names2 <- function(...) {
   rlang::names2(rlang::call_match())
 }
 
+
 #' @importFrom dplyr group_by_drop_default
 #' @noRd
-new_grouped_epi_archive <- function(ungrouped, vars, drop) {
-  if (inherits(ungrouped, "grouped_epi_archive")) {
+new_grouped_epi_archive <- function(x, vars, drop) {
+  if (inherits(x, "grouped_epi_archive")) {
     cli_abort(
       "`ungrouped` must not already be grouped (neither automatic regrouping
        nor nested grouping is supported).  Either use `group_by` with `.add=TRUE`,
         or `ungroup` first.",
       class = "epiprocess__grouped_epi_archive__ungrouped_arg_is_already_grouped",
-      epiprocess__ungrouped_class = class(ungrouped),
-      epiprocess__ungrouped_groups = groups(ungrouped)
+      epiprocess__ungrouped_class = class(x),
+      epiprocess__ungrouped_groups = groups(x)
     )
   }
-  assert_class(ungrouped, "epi_archive")
+  assert_class(x, "epi_archive")
   assert_character(vars)
-  if (!test_subset(vars, names(ungrouped$DT))) {
+  if (!test_subset(vars, names(x$DT))) {
     cli_abort(
       "All grouping variables `vars` must be present in the data.",
     )
@@ -64,7 +72,7 @@ new_grouped_epi_archive <- function(ungrouped, vars, drop) {
 
   # -----
   private <- list()
-  private$ungrouped <- ungrouped
+  private$ungrouped <- x
   private$vars <- vars
   private$drop <- drop
 
@@ -76,10 +84,18 @@ new_grouped_epi_archive <- function(ungrouped, vars, drop) {
   ))
 }
 
+
 #' @export
-print.grouped_epi_archive <- function(grouped_epi_archive, class = TRUE) {
+print.grouped_epi_archive <- function(x, ..., class = TRUE) {
+  if (rlang::dots_n(...) > 0) {
+    cli_abort(c(
+      "Error in print.grouped_epi_archive()",
+      "i" = "Too many arguments passed to `print.grouped_epi_archive()`."
+    ))
+  }
+
   if (class) cat("A `grouped_epi_archive` object:\n")
-  writeLines(wrap_varnames(grouped_epi_archive$private$vars, initial = "* Groups: "))
+  writeLines(wrap_varnames(x$private$vars, initial = "* Groups: "))
   # If none of the grouping vars is a factor, then $drop doesn't seem
   # relevant, so try to be less verbose and don't message about it.
   #
@@ -89,18 +105,19 @@ print.grouped_epi_archive <- function(grouped_epi_archive, class = TRUE) {
   # `as.list`, but its current column-aliasing behavior is probably not
   # something to rely too much on), while map functions currently appear
   # to avoid column copies.
-  if (any(purrr::map_lgl(grouped_epi_archive$private$ungrouped$DT, is.factor)[grouped_epi_archive$private$vars])) {
-    cat(strwrap(init = "* ", prefix = "  ", sprintf(
+  if (any(purrr::map_lgl(x$private$ungrouped$DT, is.factor)[x$private$vars])) {
+    cat(strwrap(initial = "* ", prefix = "  ", sprintf(
       "%s groups formed by factor levels that don't appear in the data",
-      if (grouped_epi_archive$private$drop) "Drops" else "Does not drop"
+      if (x$private$drop) "Drops" else "Does not drop"
     )))
     cat("\n")
   }
   cat("It wraps an ungrouped `epi_archive`, with metadata:\n")
-  print(grouped_epi_archive$private$ungrouped, class = FALSE)
+  print(x$private$ungrouped, class = FALSE)
   # Return self invisibly for convenience in `$`-"pipe":
-  invisible(grouped_epi_archive)
+  invisible(x)
 }
+
 
 #' @include methods-epi_archive.R
 #' @rdname group_by.epi_archive
@@ -108,10 +125,10 @@ print.grouped_epi_archive <- function(grouped_epi_archive, class = TRUE) {
 #' @importFrom dplyr group_by
 #' @export
 group_by.grouped_epi_archive <- function(
-    grouped_epi_archive,
+    .data,
     ...,
     .add = FALSE,
-    .drop = dplyr::group_by_drop_default(grouped_epi_archive)) {
+    .drop = dplyr::group_by_drop_default(.data)) {
   assert_logical(.add, len = 1)
   if (!.add) {
     cli_abort('`group_by` on a `grouped_epi_archive` with `.add=FALSE` is forbidden
@@ -124,84 +141,74 @@ group_by.grouped_epi_archive <- function(
   } else {
     # `group_by` `...` computations are performed on ungrouped data (see
     # `?dplyr::group_by`)
-    detailed_mutate <- epix_detailed_restricted_mutate(grouped_epi_archive$private$ungrouped, ...)
+    detailed_mutate <- epix_detailed_restricted_mutate(.data$private$ungrouped, ...)
     out_ungrouped <- detailed_mutate[["archive"]]
     vars_from_dots <- detailed_mutate[["request_names"]]
-    vars <- union(grouped_epi_archive$private$vars, vars_from_dots)
-    new_grouped_epi_archive(grouped_epi_archive$private$ungrouped, vars, .drop)
+    vars <- union(.data$private$vars, vars_from_dots)
+    new_grouped_epi_archive(out_ungrouped, vars, .drop)
   }
 }
+
 
 #' @include methods-epi_archive.R
 #' @rdname group_by.epi_archive
 #'
+#' @param .tbl A `grouped_epi_archive` object.
+#'
 #' @export
-group_by_drop_default.grouped_epi_archive <- function(grouped_epi_archive) {
-  grouped_epi_archive$private$drop
+group_by_drop_default.grouped_epi_archive <- function(.tbl) {
+  x <- .tbl
+  x$private$drop
 }
+
 
 #' @include methods-epi_archive.R
 #' @rdname group_by.epi_archive
 #'
 #' @importFrom dplyr groups
 #' @export
-groups.grouped_epi_archive <- function(grouped_epi_archive) {
-  rlang::syms(grouped_epi_archive$private$vars)
+groups.grouped_epi_archive <- function(x) {
+  rlang::syms(x$private$vars)
 }
+
 
 #' @include methods-epi_archive.R
 #' @rdname group_by.epi_archive
 #'
 #' @importFrom dplyr ungroup
 #' @export
-ungroup.grouped_epi_archive <- function(grouped_epi_archive, ...) {
+ungroup.grouped_epi_archive <- function(x, ...) {
   if (rlang::dots_n(...) == 0L) {
     # No dots = special behavior: remove all grouping vars and convert to
     # an ungrouped class, as with `grouped_df`s.
-    grouped_epi_archive$private$ungrouped
+    x$private$ungrouped
   } else {
-    exclude_vars <- eval_pure_select_names_from_dots(..., .data = grouped_epi_archive$private$ungrouped$DT)
+    exclude_vars <- eval_pure_select_names_from_dots(..., .data = x$private$ungrouped$DT)
     # (requiring a pure selection here is a little stricter than dplyr
     # implementations, but passing a renaming selection into `ungroup`
     # seems pretty weird.)
-    result_vars <- grouped_epi_archive$private$vars[!grouped_epi_archive$private$vars %in% exclude_vars]
+    result_vars <- x$private$vars[!x$private$vars %in% exclude_vars]
     # `vars` might be length 0 if the user's tidyselection removed all
     # grouping vars. Unlike with tibble, opt here to keep the result as a
     # grouped_epi_archive, for output class consistency when `...` is
     # provided.
-    new_grouped_epi_archive(grouped_epi_archive$private$ungrouped, result_vars, grouped_epi_archive$private$drop)
+    new_grouped_epi_archive(x$private$ungrouped, result_vars, x$private$drop)
   }
 }
 
-#' Truncate versions after a given version, grouped
-#' @description Filter to keep only older versions by mutating the underlying
-#'   `epi_archive` using `$truncate_versions_after`. Returns the mutated
-#'   `grouped_epi_archive` [invisibly][base::invisible].
-#' @param x as in [`epix_truncate_versions_after`]
-#' @param max_version as in [`epix_truncate_versions_after`]
-#' @export
-truncate_versions_after.grouped_epi_archive <- function(grouped_epi_archive, max_version) {
-  # The grouping is irrelevant for this method; if we were to split into
-  # groups and recombine appropriately, we should get the same result as
-  # just leveraging the ungrouped method, so just do the latter:
-  truncate_versions_after(grouped_epi_archive$private$ungrouped, max_version)
-  return(invisible(grouped_epi_archive))
-}
 
-#' Slide over grouped epi archive
-#' @description Slides a given function over variables in a `grouped_epi_archive`
-#'   object. See the documentation for the wrapper function [`epix_slide()`] for
-#'   details.
-#' @importFrom data.table key address rbindlist setDF
+#' @rdname epix_slide
+#'
+#' @importFrom data.table key address rbindlist setDF copy
 #' @importFrom tibble as_tibble new_tibble validate_tibble
 #' @importFrom dplyr group_by groups
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
 #'  env missing_arg
 #' @export
-slide.grouped_epi_archive <- function(grouped_epi_archive, f, ..., before, ref_time_values,
-                                      time_step, new_col_name = "slide_value",
-                                      as_list_col = FALSE, names_sep = "_",
-                                      all_versions = FALSE) {
+epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
+                                           time_step, new_col_name = "slide_value",
+                                           as_list_col = FALSE, names_sep = "_",
+                                           all_versions = FALSE) {
   # Perform some deprecated argument checks without using `<param> =
   # deprecated()` in the function signature, because they are from
   # early development versions and much more likely to be clutter than
@@ -226,10 +233,10 @@ slide.grouped_epi_archive <- function(grouped_epi_archive, f, ..., before, ref_t
   }
 
   if (missing(ref_time_values)) {
-    ref_time_values <- epix_slide_ref_time_values_default(grouped_epi_archive$private$ungrouped)
+    ref_time_values <- epix_slide_ref_time_values_default(x$private$ungrouped)
   } else {
     assert_numeric(ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
-    if (any(ref_time_values > grouped_epi_archive$private$ungrouped$versions_end)) {
+    if (any(ref_time_values > x$private$ungrouped$versions_end)) {
       cli_abort("Some `ref_time_values` are greater than the latest version in the archive.")
     }
     if (anyDuplicated(ref_time_values) != 0L) {
@@ -244,7 +251,7 @@ slide.grouped_epi_archive <- function(grouped_epi_archive, f, ..., before, ref_t
   if (missing(before)) {
     cli_abort("`before` is required (and must be passed by name);
                 if you did not want to apply a sliding window but rather
-                to map `as_of` and `f` across various `ref_time_values`,
+                to map `epix_as_of` and `f` across various `ref_time_values`,
                 pass a large `before` value (e.g., if time steps are days,
                 `before=365000`).")
   }
@@ -274,7 +281,7 @@ slide.grouped_epi_archive <- function(grouped_epi_archive, f, ..., before, ref_t
     if (all_versions) {
       # Extract data from archive so we can do length checks below. When
       # `all_versions = TRUE`, `.data_group` will always be an ungrouped
-      # archive because of the preceding `as_of` step.
+      # archive because of the preceding `epix_as_of` step.
       .data_group <- .data_group$DT
     }
 
@@ -311,14 +318,14 @@ slide.grouped_epi_archive <- function(grouped_epi_archive, f, ..., before, ref_t
 
     f <- quos[[1]]
     new_col <- sym(names(rlang::quos_auto_name(quos)))
-    ... <- missing_arg() # magic value that passes zero args as dots in calls below
+    ... <- missing_arg() # nolint: object_usage_linter. magic value that passes zero args as dots in calls below
   }
 
   f <- as_slide_computation(f, ...)
-  x <- lapply(ref_time_values, function(ref_time_value) {
+  out <- lapply(ref_time_values, function(ref_time_value) {
     # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
     # `epi_archive` if `all_versions` is `TRUE`:
-    as_of_raw <- grouped_epi_archive$private$ungrouped %>% as_of(
+    as_of_raw <- x$private$ungrouped %>% epix_as_of(
       ref_time_value,
       min_time_value = ref_time_value - before,
       all_versions = all_versions
@@ -340,16 +347,14 @@ slide.grouped_epi_archive <- function(grouped_epi_archive, f, ..., before, ref_t
       # behavior based on whether or not `dtplyr` is loaded.
       # Instead, go through an ordinary data frame, trying to avoid
       # copies.
-      if (address(as_of_archive$DT) == address(grouped_epi_archive$private$ungrouped$DT)) {
+      if (address(as_of_archive$DT) == address(x$private$ungrouped$DT)) {
         # `as_of` aliased its the full `$DT`; copy before mutating:
         #
         # Note: this step is probably unneeded; we're fine with
         # aliasing of the DT or its columns: vanilla operations aren't
         # going to mutate them in-place if they are aliases, and we're
-        # not performing mutation (unlike the situation with
-        # `fill_through_version` where we do mutate a `DT` and don't
-        # want aliasing).
-        as_of_archive$DT <- copy(as_of_archive$DT)
+        # not performing mutation.
+        as_of_archive$DT <- data.table::copy(as_of_archive$DT)
       }
       dt_key <- data.table::key(as_of_archive$DT)
       as_of_df <- as_of_archive$DT
@@ -377,7 +382,7 @@ slide.grouped_epi_archive <- function(grouped_epi_archive, f, ..., before, ref_t
 
     return(
       dplyr::group_modify(
-        dplyr::group_by(as_of_df, !!!syms(grouped_epi_archive$private$vars), .drop = grouped_epi_archive$private$drop),
+        dplyr::group_by(as_of_df, !!!syms(x$private$vars), .drop = x$private$drop),
         group_modify_fn,
         f = f, ...,
         ref_time_value = ref_time_value,
@@ -387,13 +392,13 @@ slide.grouped_epi_archive <- function(grouped_epi_archive, f, ..., before, ref_t
     )
   })
   # Combine output into a single tibble
-  x <- as_tibble(setDF(rbindlist(x)))
+  out <- as_tibble(setDF(rbindlist(out)))
   # Reconstruct groups
-  x <- group_by(x, !!!syms(grouped_epi_archive$private$vars), .drop = grouped_epi_archive$private$drop)
+  out <- group_by(out, !!!syms(x$private$vars), .drop = x$private$drop)
 
   # Unchop/unnest if we need to
   if (!as_list_col) {
-    x <- tidyr::unnest(x, !!new_col, names_sep = names_sep)
+    out <- tidyr::unnest(out, !!new_col, names_sep = names_sep)
   }
 
   # nolint start: commented_code_linter.
@@ -415,17 +420,10 @@ slide.grouped_epi_archive <- function(grouped_epi_archive, f, ..., before, ref_t
   # different ways of calling `epix_slide`, and to prevent `epi_df`
   # output with invalid metadata, always output a (grouped or
   # ungrouped) tibble.
-  x <- decay_epi_df(x)
+  out <- decay_epi_df(out)
 
-  return(x)
+  return(out)
 }
-
-
-# At time of writing, roxygen parses content in collation order, impacting the
-# presentation of .Rd files that document multiple functions (see
-# https://github.com/r-lib/roxygen2/pull/324). Use @include tags (determining
-# `Collate:`) and ordering of functions within each file in order to get the
-# desired ordering.
 
 
 #' @include methods-epi_archive.R
@@ -436,15 +434,20 @@ is_grouped_epi_archive <- function(x) {
   inherits(x, "grouped_epi_archive")
 }
 
+
 #' @export
-clone.grouped_epi_archive <- function(grouped_epi_archive) {
-  ungrouped <- grouped_epi_archive$private$ungrouped %>% clone()
-  new_grouped_epi_archive(ungrouped, grouped_epi_archive$private$vars, grouped_epi_archive$private$drop)
+clone.grouped_epi_archive <- function(x, ...) {
+  ungrouped <- x$private$ungrouped %>% clone()
+  new_grouped_epi_archive(ungrouped, x$private$vars, x$private$drop)
 }
 
-#' Truncate versions after a given version, grouped
+
+#' @rdname epix_truncate_versions_after
 #' @export
-epix_truncate_versions_after.grouped_epi_archive <- function(grouped_epi_archive, max_version) {
-  return((grouped_epi_archive %>% clone() %>% truncate_versions_after(max_version)))
-  # ^ second set of parens drops invisibility
+epix_truncate_versions_after.grouped_epi_archive <- function(x, max_version) {
+  # The grouping is irrelevant for this method; if we were to split into
+  # groups and recombine appropriately, we should get the same result as
+  # just leveraging the ungrouped method, so just do the latter:
+  x$private$ungrouped <- epix_truncate_versions_after(x$private$ungrouped, max_version)
+  x
 }

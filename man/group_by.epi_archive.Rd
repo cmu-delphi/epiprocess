@@ -10,29 +10,21 @@
 \alias{is_grouped_epi_archive}
 \title{\code{group_by} and related methods for \code{epi_archive}, \code{grouped_epi_archive}}
 \usage{
-\method{group_by}{epi_archive}(
-  epi_archive,
-  ...,
-  .add = FALSE,
-  .drop = dplyr::group_by_drop_default(epi_archive)
-)
+\method{group_by}{epi_archive}(.data, ..., .add = FALSE, .drop = dplyr::group_by_drop_default(.data))
 
-\method{group_by}{grouped_epi_archive}(
-  grouped_epi_archive,
-  ...,
-  .add = FALSE,
-  .drop = dplyr::group_by_drop_default(grouped_epi_archive)
-)
+\method{group_by}{grouped_epi_archive}(.data, ..., .add = FALSE, .drop = dplyr::group_by_drop_default(.data))
 
-\method{group_by_drop_default}{grouped_epi_archive}(grouped_epi_archive)
+\method{group_by_drop_default}{grouped_epi_archive}(.tbl)
 
-\method{groups}{grouped_epi_archive}(grouped_epi_archive)
+\method{groups}{grouped_epi_archive}(x)
 
-\method{ungroup}{grouped_epi_archive}(grouped_epi_archive, ...)
+\method{ungroup}{grouped_epi_archive}(x, ...)
 
 is_grouped_epi_archive(x)
 }
 \arguments{
+\item{.data}{An \code{epi_archive} or \code{grouped_epi_archive}}
+
 \item{...}{Similar to \code{\link[dplyr:group_by]{dplyr::group_by}} (see "Details:" for edge cases);
 \itemize{
 \item For \code{group_by}: unquoted variable name(s) or other
@@ -58,14 +50,10 @@ grouped by the current grouping variables plus the variable selection from
 \item{.drop}{As described in \code{\link[dplyr:group_by]{dplyr::group_by}}; determines treatment of
 factor columns.}
 
+\item{.tbl}{A \code{grouped_epi_archive} object.}
+
 \item{x}{For \code{groups} or \code{ungroup}: a \code{grouped_epi_archive}; for
 \code{is_grouped_epi_archive}: any object}
-
-\item{.data}{An \code{epi_archive} or \code{grouped_epi_archive}}
-
-\item{.tbl}{(For \code{group_by_drop_default}:) an \code{epi_archive} or
-\code{grouped_epi_archive} (\code{epi_archive} dispatches to the S3 default method;
-\code{grouped_epi_archive} dispatches its own S3 method)}
 }
 \description{
 \code{group_by} and related methods for \code{epi_archive}, \code{grouped_epi_archive}
@@ -85,17 +73,6 @@ the same operations on tibbles and grouped tibbles, which will \emph{not} output
 
 Using \code{group_by} with \code{.add=FALSE} to override the existing grouping is
 disabled; instead, \code{ungroup} first then \code{group_by}.
-
-Mutation and aliasing: \code{group_by} tries to use a shallow copy of the \code{DT},
-introducing column-level aliasing between its input and its result. This
-doesn't follow the general model for most \code{data.table} operations, which
-seems to be that, given an nonaliased (i.e., unique) pointer to a
-\code{data.table} object, its pointers to its columns should also be nonaliased.
-If you mutate any of the columns of either the input or result, first ensure
-that it is fine if columns of the other are also mutated, but do not rely on
-such behavior to occur. Additionally, never perform mutation on the key
-columns at all (except for strictly increasing transformations), as this will
-invalidate sortedness assumptions about the rows.
 
 \code{group_by_drop_default} on (ungrouped) \code{epi_archive}s is expected to dispatch
 to \code{group_by_drop_default.default} (but there is a dedicated method for
