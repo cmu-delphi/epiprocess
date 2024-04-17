@@ -81,7 +81,7 @@ forecast_dates <- seq(as.Date("2020-11-02"), as.Date("2021-11-30"), by = "6 week
 horizons <- c(0, 7, 14, 21, 28) # relative to forecast_date
 
 example_forecaster <- function(snapshot_edf, forecast_date) {
-  shared_reporting_latency <- forecast_date - max(snapshot_edf$time_value)
+  shared_reporting_latency <- as.integer(forecast_date - max(snapshot_edf$time_value))
   aheads <- horizons + shared_reporting_latency # relative to max time_value
   # FIXME shifting technique instead
   aheads %>%
@@ -99,11 +99,13 @@ example_forecaster <- function(snapshot_edf, forecast_date) {
           ## predictors = "percent_cli", # from doctor-visits (claims)
           predictors = c("case_rate_7d_av", "percent_cli"), # from doctor-visits (claims)
           args_list = arx_args_list(
+            # FIXME this is incomplete; latency often varies signficantly by covariate and can't be ignored, so we also need lag adjustment.
             ahead = ahead,
-            quantile_levels = c(0.1, 0.5, 0.9),
-            forecast_date = forecast_date
+            quantile_levels = c(0.1, 0.5, 0.9)
+            # can't use forecast_date = + target_date = ; target_date appears to be ignored
           )) %>%
-        .$predictions
+        .$predictions %>%
+        mutate(forecast_date = .env$forecast_date)
     }) %>%
     bind_rows()
   ## list()
