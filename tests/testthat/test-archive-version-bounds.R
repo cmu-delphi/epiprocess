@@ -3,20 +3,24 @@ test_that("`validate_version_bound` allows/catches `NA` as requested", {
   x <- tibble::tibble(version = 5L)
   validate_version_bound(my_version_bound, x, na_ok = TRUE)
   expect_error(validate_version_bound(my_version_bound, x, na_ok = FALSE),
-               class = "epiprocess__version_bound_na_with_na_not_okay")
+    class = "epiprocess__version_bound_na_with_na_not_okay"
+  )
 })
 
 test_that("`validate_version_bound` catches bounds that are the wrong length", {
   x <- tibble::tibble(version = 5L)
   my_version_bound1a <- NULL
   expect_error(validate_version_bound(my_version_bound1a, x, na_ok = TRUE),
-               class = "epiprocess__version_bound_null")
+    class = "epiprocess__version_bound_null"
+  )
   my_version_bound1b <- integer(0L)
   expect_error(validate_version_bound(my_version_bound1b, x, na_ok = TRUE),
-               class = "epiprocess__version_bound_wrong_length")
+    class = "epiprocess__version_bound_wrong_length"
+  )
   my_version_bound2 <- c(2, 10)
   expect_error(validate_version_bound(my_version_bound2, x, na_ok = TRUE),
-               class = "epiprocess__version_bound_wrong_length")
+    class = "epiprocess__version_bound_wrong_length"
+  )
 })
 
 test_that("`validate_version_bound` validate and class checks together allow and catch as intended", {
@@ -116,7 +120,8 @@ test_that("archive version bounds args work as intended", {
     regexp = "`clobberable_versions_start`.*indicated that there were later observed versions"
   )
   expect_error(as_epi_archive(update_tbl, versions_end = NA),
-               class = "epiprocess__version_bound_na_with_na_not_okay")
+    class = "epiprocess__version_bound_na_with_na_not_okay"
+  )
   ea_default <- as_epi_archive(update_tbl)
   ea_default %>% epix_as_of(measurement_date + 4L)
   expect_warning(
