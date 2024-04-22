@@ -169,13 +169,13 @@ epix_fill_through_version <- function(x, fill_versions_end,
         nonkey_cols <- setdiff(names(x$DT), key(x$DT))
         next_version_tag <- next_after(x$versions_end)
         if (next_version_tag > fill_versions_end) {
-          cli_abort(sprintf(paste(
-            "Apparent problem with `next_after` method:",
-            "archive contained observations through version %s",
-            "and the next possible version was supposed to be %s,",
-            "but this appeared to jump from a version < %3$s",
-            "to one > %3$s, implying at least one version in between."
-          ), x$versions_end, next_version_tag, fill_versions_end))
+          cli_abort(paste(
+            "Apparent problem with {.code next_after} method:",
+            "archive contained observations through version {x$versions_end}",
+            "and the next possible version was supposed to be {next_version_tag},",
+            "but this appeared to jump from a version < {fill_versions_end}",
+            "to one > {fill_versions_end}, implying at least one version in between."
+          ))
         }
         nonversion_key_vals_ever_recorded <- unique(x$DT, by = nonversion_key_cols)
         # In edge cases, the `unique` result can alias the original

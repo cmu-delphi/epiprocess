@@ -142,7 +142,7 @@ assert_sufficient_f_args <- function(f, ...) {
       # `f` doesn't take enough args.
       if (rlang::dots_n(...) == 0L) {
         # common case; try for friendlier error message
-        cli_abort(sprintf("`f` must take at least %s arguments", n_mandatory_f_args),
+        cli_abort("`f` must take at least {n_mandatory_f_args} arguments",
           class = "epiprocess__assert_sufficient_f_args__f_needs_min_args",
           epiprocess__f = f
         )
@@ -312,7 +312,7 @@ as_slide_computation <- function(f, ...) {
 
   if (is_formula(f)) {
     if (length(f) > 2) {
-      cli_abort(sprintf("%s must be a one-sided formula", arg),
+      cli_abort("{.code {arg}} must be a one-sided formula",
         class = "epiprocess__as_slide_computation__formula_is_twosided",
         epiprocess__f = f,
         call = call
@@ -350,7 +350,8 @@ as_slide_computation <- function(f, ...) {
   }
 
   cli_abort(
-    sprintf("Can't convert an object of class %s to a slide computation", paste(collapse = " ", deparse(class(f)))),
+    "Can't convert an object of class {paste(collapse = ' ', deparse(class(f)))}
+      to a slide computation",
     class = "epiprocess__as_slide_computation__cant_convert_catchall",
     epiprocess__f = f,
     epiprocess__f_class = class(f),
@@ -687,7 +688,7 @@ gcd_num <- function(dividends, ..., rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
 guess_period <- function(ref_time_values, ref_time_values_arg = rlang::caller_arg(ref_time_values)) {
   sorted_distinct_ref_time_values <- sort(unique(ref_time_values))
   if (length(sorted_distinct_ref_time_values) < 2L) {
-    cli_abort(sprintf("Not enough distinct values in `%s` to guess the period.", ref_time_values_arg))
+    cli_abort("Not enough distinct values in {.code {ref_time_values_arg}} to guess the period.", ref_time_values_arg)
   }
   skips <- diff(sorted_distinct_ref_time_values)
   decayed_skips <-
