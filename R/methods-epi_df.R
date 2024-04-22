@@ -136,10 +136,8 @@ dplyr_reconstruct.epi_df <- function(data, template) {
   dup_col_names <- cn[duplicated(cn)]
   if (length(dup_col_names) != 0) {
     cli_abort(paste0(
-      "Column name(s) ",
-      paste(unique(dup_col_names),
-        collapse = ", "
-      ), " must not be duplicated."
+      "Column name(s) {unique(dup_col_names)}",
+      "must not be duplicated."
     ))
   }
 

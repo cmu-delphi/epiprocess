@@ -351,21 +351,15 @@ new_epi_archive <- function(
   validate_version_bound(versions_end, x, na_ok = FALSE)
   if (nrow(x) > 0L && versions_end < max(x[["version"]])) {
     cli_abort(
-      sprintf(
-        "`versions_end` was %s, but `x` contained
-                             updates for a later version or versions, up through %s",
-        versions_end, max(x[["version"]])
-      ),
+      "`versions_end` was {versions_end}, but `x` contained
+        updates for a later version or versions, up through {max(x$version)}",
       class = "epiprocess__versions_end_earlier_than_updates"
     )
   }
   if (!is.na(clobberable_versions_start) && clobberable_versions_start > versions_end) {
     cli_abort(
-      sprintf(
-        "`versions_end` was %s, but a `clobberable_versions_start`
-                             of %s indicated that there were later observed versions",
-        versions_end, clobberable_versions_start
-      ),
+      "`versions_end` was {versions_end}, but a `clobberable_versions_start`
+        of {clobberable_versions_start} indicated that there were later observed versions",
       class = "epiprocess__versions_end_earlier_than_clobberable_versions_start"
     )
   }
