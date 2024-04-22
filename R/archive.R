@@ -28,23 +28,38 @@ validate_version_bound <- function(version_bound, x, na_ok = FALSE,
                                    x_arg = rlang::caller_arg(version_bound)) {
   if (is.null(version_bound)) {
     cli_abort(
-      "{version_bound_arg} cannot be NULL"
+      "{version_bound_arg} cannot be NULL",
+      class = "epiprocess__version_bound_null"
     )
   }
-  if (na_ok && is.na(version_bound)) {
-    return(invisible(NULL))
-  }
-  if (!test_set_equal(class(version_bound), class(x[["version"]]))) {
+  if (length(version_bound) != 1L) {
     cli_abort(
-      "{version_bound_arg} must have the same classes as x$version,
+      "{version_bound_arg} must have length of 1",
+      class = "epiprocess__version_bound_wrong_length"
+    )
+  }
+  if (is.na(version_bound)) {
+    if (!na_ok) {
+      cli_abort(
+        "{version_bound_arg} cannot be NA",
+        class = "epiprocess__version_bound_na_with_na_not_okay"
+      )
+    }
+  } else {
+    if (!test_set_equal(class(version_bound), class(x[["version"]]))) {
+      cli_abort(
+        "{version_bound_arg} must have the same classes as x$version,
         which is {class(x$version)}",
-    )
-  }
-  if (!test_set_equal(typeof(version_bound), typeof(x[["version"]]))) {
-    cli_abort(
-      "{version_bound_arg} must have the same types as x$version,
+        class = "epiprocess__version_bound_mismatched_class"
+      )
+    }
+    if (!identical(typeof(version_bound), typeof(x[["version"]]))) {
+      cli_abort(
+        "{version_bound_arg} must have the same type as x$version,
         which is {typeof(x$version)}",
-    )
+        class = "epiprocess__version_bound_mismatched_typeof"
+      )
+    }
   }
 
   return(invisible(NULL))
