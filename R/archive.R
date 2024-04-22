@@ -307,13 +307,13 @@ new_epi_archive <- function(
   }
 
   # If time type is missing, then try to guess it
-  if (missing(time_type) || is.null(time_type)) {
+  if (is.null(time_type)) {
     time_type <- guess_time_type(x$time_value)
   }
 
   # Finish off with small checks on keys variables and metadata
-  if (missing(other_keys)) other_keys <- NULL
-  if (missing(additional_metadata) || is.null(additional_metadata)) additional_metadata <- list()
+  if (is.null(other_keys)) other_keys <- character(0L)
+  if (is.null(additional_metadata)) additional_metadata <- list()
   if (!test_subset(other_keys, names(x))) {
     cli_abort("`other_keys` must be contained in the column names of `x`.")
   }
@@ -325,17 +325,11 @@ new_epi_archive <- function(
   }
 
   # Conduct checks and apply defaults for `compactify`
-  if (missing(compactify)) {
-    compactify <- NULL
-  }
-  assert_logical(compactify, len = 1, null.ok = TRUE)
+  assert_logical(compactify, len = 1, any.missing = FALSE, null.ok = TRUE)
 
   # Apply defaults and conduct checks for
   # `clobberable_versions_start`, `versions_end`:
-  if (missing(clobberable_versions_start)) {
-    clobberable_versions_start <- NA
-  }
-  if (missing(versions_end) || is.null(versions_end)) {
+  if (is.null(versions_end)) {
     versions_end <- max_version_with_row_in(x)
   }
   validate_version_bound(clobberable_versions_start, x, na_ok = TRUE)
