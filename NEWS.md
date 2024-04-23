@@ -32,11 +32,15 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 ## Breaking changes
 
 - Switched `epi_df`'s `other_keys` default from `NULL` to `character(0)`; PR #390
-- Refactor `epi_archive` to use S3 instead of R6 for its object model. The
+- Refactored `epi_archive` to use S3 instead of R6 for its object model. The
   functionality stay the same, but it will break the member function interface.
-  For migration, convert `epi_archive$merge` to `epi_archive %>% epix_merge`
-  (similar for `slide`, `fill_through_version`, `truncate_after_version`, and
-  `as_of`) (#340).
+  For migration, you can usually just convert `epi_archive$merge(...)` to
+  `epi_archive <- epi_archive %>% epix_merge(...)` (and the same for
+  `fill_through_version` and `truncate_after_version`) and
+  `epi_archive$slide(...)` to `epi_archive %>% epix_slide(...)` (and the same
+  for `as_of`, `group_by`, `slide`, etc.) (#340). In some limited situations,
+  such as if you have a helper function that calls `epi_archive$merge` etc. on
+  one of its arguments, then you may need to more carefully refactor them.
 
 # epiprocess 0.7.0
 
