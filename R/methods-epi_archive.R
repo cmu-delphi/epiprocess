@@ -68,14 +68,14 @@ epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FAL
   if (length(other_keys) == 0) other_keys <- NULL
 
   # Check a few things on max_version
-  if (!test_set_equal(class(max_version), class(x$DT$version))) {
+  if (!identical(class(max_version), class(x$DT$version))) {
     cli_abort(
-      "`max_version` must have the same classes as `epi_archive$DT$version`."
+      "`max_version` must have the same `class` vector as `epi_archive$DT$version`."
     )
   }
-  if (!test_set_equal(typeof(max_version), typeof(x$DT$version))) {
+  if (!identical(typeof(max_version), typeof(x$DT$version))) {
     cli_abort(
-      "`max_version` must have the same types as `epi_archive$DT$version`."
+      "`max_version` must have the same `typeof` as `epi_archive$DT$version`."
     )
   }
   assert_scalar(max_version, na.ok = FALSE)
@@ -859,11 +859,11 @@ epix_truncate_versions_after <- function(x, max_version) {
 #' @rdname epix_truncate_versions_after
 #' @export
 epix_truncate_versions_after.epi_archive <- function(x, max_version) {
-  if (!test_set_equal(class(max_version), class(x$DT$version))) {
-    cli_abort("`max_version` must have the same classes as `epi_archive$DT$version`.")
+  if (!identical(class(max_version), class(x$DT$version))) {
+    cli_abort("`max_version` must have the same `class` as `epi_archive$DT$version`.")
   }
-  if (!test_set_equal(typeof(max_version), typeof(x$DT$version))) {
-    cli_abort("`max_version` must have the same types as `epi_archive$DT$version`.")
+  if (!identical(typeof(max_version), typeof(x$DT$version))) {
+    cli_abort("`max_version` must have the same `typeof` as `epi_archive$DT$version`.")
   }
   assert_scalar(max_version, na.ok = FALSE)
   if (max_version > x$versions_end) {

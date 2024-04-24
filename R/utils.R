@@ -609,7 +609,7 @@ gcd2num <- function(a, b, rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
     # `b_curr` is the candidate GCD / iterand; check first if it seems too small:
     if (abs(b_curr) <= iatol) {
       cli_abort(
-        "No GCD found; remaining potential Gads are all too small relative
+        "No GCD found; remaining potential GCDs are all too small relative
         to one/both of the original inputs; see `irtol` setting."
       )
     }
