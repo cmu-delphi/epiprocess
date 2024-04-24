@@ -226,11 +226,11 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
       k <- params$k
 
       # Default parameters
-      if (is.null(ord)) ord <- 3
-      if (is.null(maxsteps)) maxsteps <- 1000
-      if (is.null(cv)) cv <- TRUE
-      if (is.null(df)) df <- "min"
-      if (is.null(k)) k <- 3
+      ord <- ord %||% 3
+      maxsteps <- maxsteps %||% 1000
+      cv <- cv %||% TRUE
+      df <- df %||% "min"
+      k <- k %||% 3
 
       # Check cv and df combo
       if (is.numeric(df)) cv <- FALSE

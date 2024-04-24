@@ -316,19 +316,12 @@ new_epi_archive <- function(
     cli_abort("Column `version` must not contain missing values.")
   }
 
-  # If geo type is missing, then try to guess it
-  if (is.null(geo_type)) {
-    geo_type <- guess_geo_type(x$geo_value)
-  }
-
-  # If time type is missing, then try to guess it
-  if (is.null(time_type)) {
-    time_type <- guess_time_type(x$time_value)
-  }
+  geo_type <- geo_type %||% guess_geo_type(x$geo_value)
+  time_type <- time_type %||% guess_time_type(x$time_value)
+  other_keys <- other_keys %||% character(0L)
+  additional_metadata <- additional_metadata %||% list()
 
   # Finish off with small checks on keys variables and metadata
-  if (is.null(other_keys)) other_keys <- character(0L)
-  if (is.null(additional_metadata)) additional_metadata <- list()
   if (!test_subset(other_keys, names(x))) {
     cli_abort("`other_keys` must be contained in the column names of `x`.")
   }
@@ -344,9 +337,7 @@ new_epi_archive <- function(
 
   # Apply defaults and conduct checks for
   # `clobberable_versions_start`, `versions_end`:
-  if (is.null(versions_end)) {
-    versions_end <- max_version_with_row_in(x)
-  }
+  versions_end <- versions_end %||% max_version_with_row_in(x)
   validate_version_bound(clobberable_versions_start, x, na_ok = TRUE)
   validate_version_bound(versions_end, x, na_ok = FALSE)
   if (nrow(x) > 0L && versions_end < max(x[["version"]])) {
