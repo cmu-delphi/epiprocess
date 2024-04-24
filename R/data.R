@@ -123,7 +123,7 @@ some_package_is_being_unregistered <- function(parent_n = 0L) {
   # evaluation has been triggered via `unregister`.
   simple_call_names <- purrr::map_chr(calls_to_inspect, function(call) {
     maybe_simple_call_name <- rlang::call_name(call)
-    if (is.null(maybe_simple_call_name)) NA_character_ else maybe_simple_call_name
+    maybe_simple_call_name %||% NA_character_
   })
   # `pkgload::unregister` is an (the?) exported function that forces
   # package-level promises, while `pkgload:::unregister_namespace` is the

@@ -68,14 +68,14 @@ epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FAL
   if (length(other_keys) == 0) other_keys <- NULL
 
   # Check a few things on max_version
-  if (!test_set_equal(class(max_version), class(x$DT$version))) {
+  if (!identical(class(max_version), class(x$DT$version))) {
     cli_abort(
-      "`max_version` must have the same classes as `epi_archive$DT$version`."
+      "`max_version` must have the same `class` vector as `epi_archive$DT$version`."
     )
   }
-  if (!test_set_equal(typeof(max_version), typeof(x$DT$version))) {
+  if (!identical(typeof(max_version), typeof(x$DT$version))) {
     cli_abort(
-      "`max_version` must have the same types as `epi_archive$DT$version`."
+      "`max_version` must have the same `typeof` as `epi_archive$DT$version`."
     )
   }
   assert_scalar(max_version, na.ok = FALSE)
@@ -169,13 +169,13 @@ epix_fill_through_version <- function(x, fill_versions_end,
         nonkey_cols <- setdiff(names(x$DT), key(x$DT))
         next_version_tag <- next_after(x$versions_end)
         if (next_version_tag > fill_versions_end) {
-          cli_abort(sprintf(paste(
-            "Apparent problem with `next_after` method:",
-            "archive contained observations through version %s",
-            "and the next possible version was supposed to be %s,",
-            "but this appeared to jump from a version < %3$s",
-            "to one > %3$s, implying at least one version in between."
-          ), x$versions_end, next_version_tag, fill_versions_end))
+          cli_abort(paste(
+            "Apparent problem with {.code next_after} method:",
+            "archive contained observations through version {x$versions_end}",
+            "and the next possible version was supposed to be {next_version_tag},",
+            "but this appeared to jump from a version < {fill_versions_end}",
+            "to one > {fill_versions_end}, implying at least one version in between."
+          ))
         }
         nonversion_key_vals_ever_recorded <- unique(x$DT, by = nonversion_key_cols)
         # In edge cases, the `unique` result can alias the original
@@ -859,11 +859,11 @@ epix_truncate_versions_after <- function(x, max_version) {
 #' @rdname epix_truncate_versions_after
 #' @export
 epix_truncate_versions_after.epi_archive <- function(x, max_version) {
-  if (!test_set_equal(class(max_version), class(x$DT$version))) {
-    cli_abort("`max_version` must have the same classes as `epi_archive$DT$version`.")
+  if (!identical(class(max_version), class(x$DT$version))) {
+    cli_abort("`max_version` must have the same `class` as `epi_archive$DT$version`.")
   }
-  if (!test_set_equal(typeof(max_version), typeof(x$DT$version))) {
-    cli_abort("`max_version` must have the same types as `epi_archive$DT$version`.")
+  if (!identical(typeof(max_version), typeof(x$DT$version))) {
+    cli_abort("`max_version` must have the same `typeof` as `epi_archive$DT$version`.")
   }
   assert_scalar(max_version, na.ok = FALSE)
   if (max_version > x$versions_end) {

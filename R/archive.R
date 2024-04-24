@@ -28,23 +28,38 @@ validate_version_bound <- function(version_bound, x, na_ok = FALSE,
                                    x_arg = rlang::caller_arg(version_bound)) {
   if (is.null(version_bound)) {
     cli_abort(
-      "{version_bound_arg} cannot be NULL"
+      "{version_bound_arg} cannot be NULL",
+      class = "epiprocess__version_bound_null"
     )
   }
-  if (na_ok && is.na(version_bound)) {
-    return(invisible(NULL))
-  }
-  if (!test_set_equal(class(version_bound), class(x[["version"]]))) {
+  if (length(version_bound) != 1L) {
     cli_abort(
-      "{version_bound_arg} must have the same classes as x$version,
-        which is {class(x$version)}",
+      "{version_bound_arg} must have length of 1",
+      class = "epiprocess__version_bound_wrong_length"
     )
   }
-  if (!test_set_equal(typeof(version_bound), typeof(x[["version"]]))) {
-    cli_abort(
-      "{version_bound_arg} must have the same types as x$version,
-        which is {typeof(x$version)}",
-    )
+  if (is.na(version_bound)) {
+    if (!na_ok) {
+      cli_abort(
+        "{version_bound_arg} cannot be NA",
+        class = "epiprocess__version_bound_na_with_na_not_okay"
+      )
+    }
+  } else {
+    if (!identical(class(version_bound), class(x[["version"]]))) {
+      cli_abort(
+        "{version_bound_arg} must have the same `class` vector as x$version,
+        which has a `class` of {paste(collapse = ' ', deparse(class(x$version)))}",
+        class = "epiprocess__version_bound_mismatched_class"
+      )
+    }
+    if (!identical(typeof(version_bound), typeof(x[["version"]]))) {
+      cli_abort(
+        "{version_bound_arg} must have the same `typeof` as x$version,
+        which has a `typeof` of {typeof(x$version)}",
+        class = "epiprocess__version_bound_mismatched_typeof"
+      )
+    }
   }
 
   return(invisible(NULL))
@@ -301,19 +316,12 @@ new_epi_archive <- function(
     cli_abort("Column `version` must not contain missing values.")
   }
 
-  # If geo type is missing, then try to guess it
-  if (is.null(geo_type)) {
-    geo_type <- guess_geo_type(x$geo_value)
-  }
-
-  # If time type is missing, then try to guess it
-  if (missing(time_type) || is.null(time_type)) {
-    time_type <- guess_time_type(x$time_value)
-  }
+  geo_type <- geo_type %||% guess_geo_type(x$geo_value)
+  time_type <- time_type %||% guess_time_type(x$time_value)
+  other_keys <- other_keys %||% character(0L)
+  additional_metadata <- additional_metadata %||% list()
 
   # Finish off with small checks on keys variables and metadata
-  if (missing(other_keys)) other_keys <- NULL
-  if (missing(additional_metadata) || is.null(additional_metadata)) additional_metadata <- list()
   if (!test_subset(other_keys, names(x))) {
     cli_abort("`other_keys` must be contained in the column names of `x`.")
   }
@@ -325,38 +333,24 @@ new_epi_archive <- function(
   }
 
   # Conduct checks and apply defaults for `compactify`
-  if (missing(compactify)) {
-    compactify <- NULL
-  }
-  assert_logical(compactify, len = 1, null.ok = TRUE)
+  assert_logical(compactify, len = 1, any.missing = FALSE, null.ok = TRUE)
 
   # Apply defaults and conduct checks for
   # `clobberable_versions_start`, `versions_end`:
-  if (missing(clobberable_versions_start)) {
-    clobberable_versions_start <- NA
-  }
-  if (missing(versions_end) || is.null(versions_end)) {
-    versions_end <- max_version_with_row_in(x)
-  }
+  versions_end <- versions_end %||% max_version_with_row_in(x)
   validate_version_bound(clobberable_versions_start, x, na_ok = TRUE)
   validate_version_bound(versions_end, x, na_ok = FALSE)
   if (nrow(x) > 0L && versions_end < max(x[["version"]])) {
     cli_abort(
-      sprintf(
-        "`versions_end` was %s, but `x` contained
-                             updates for a later version or versions, up through %s",
-        versions_end, max(x[["version"]])
-      ),
+      "`versions_end` was {versions_end}, but `x` contained
+        updates for a later version or versions, up through {max(x$version)}",
       class = "epiprocess__versions_end_earlier_than_updates"
     )
   }
   if (!is.na(clobberable_versions_start) && clobberable_versions_start > versions_end) {
     cli_abort(
-      sprintf(
-        "`versions_end` was %s, but a `clobberable_versions_start`
-                             of %s indicated that there were later observed versions",
-        versions_end, clobberable_versions_start
-      ),
+      "`versions_end` was {versions_end}, but a `clobberable_versions_start`
+        of {clobberable_versions_start} indicated that there were later observed versions",
       class = "epiprocess__versions_end_earlier_than_clobberable_versions_start"
     )
   }
