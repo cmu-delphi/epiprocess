@@ -123,6 +123,7 @@ decay_epi_df <- function(x) {
 #' @param template `epi_df` template to use to restore
 #' @return `epi_df` or degrade into `tbl_df`
 #' @importFrom dplyr dplyr_reconstruct
+#' @importFrom cli cli_vec
 #' @export
 #' @noRd
 dplyr_reconstruct.epi_df <- function(data, template) {
@@ -135,9 +136,11 @@ dplyr_reconstruct.epi_df <- function(data, template) {
   # Duplicate columns, cli_abort
   dup_col_names <- cn[duplicated(cn)]
   if (length(dup_col_names) != 0) {
-    cli_abort(paste0(
-      "Column name(s) {unique(dup_col_names)}",
-      "must not be duplicated."
+    cli_abort(c(
+      "Duplicate column names are not allowed",
+      "i" = "Duplicated column name{?s}:
+        {cli_vec(unique(dup_col_names),
+                 style = list('vec-sep2' = ', ', 'vec-last' = ', '))}"
     ))
   }
 

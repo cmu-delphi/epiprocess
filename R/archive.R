@@ -46,17 +46,17 @@ validate_version_bound <- function(version_bound, x, na_ok = FALSE,
       )
     }
   } else {
-    if (!test_set_equal(class(version_bound), class(x[["version"]]))) {
+    if (!identical(class(version_bound), class(x[["version"]]))) {
       cli_abort(
-        "{version_bound_arg} must have the same classes as x$version,
-        which is {class(x$version)}",
+        "{version_bound_arg} must have the same `class` vector as x$version,
+        which has a `class` of {paste(collapse = ' ', deparse(class(x$version)))}",
         class = "epiprocess__version_bound_mismatched_class"
       )
     }
     if (!identical(typeof(version_bound), typeof(x[["version"]]))) {
       cli_abort(
-        "{version_bound_arg} must have the same type as x$version,
-        which is {typeof(x$version)}",
+        "{version_bound_arg} must have the same `typeof` as x$version,
+        which has a `typeof` of {typeof(x$version)}",
         class = "epiprocess__version_bound_mismatched_typeof"
       )
     }
