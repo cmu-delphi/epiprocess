@@ -376,7 +376,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' @template opt-slide-details
 #'
 #' @importFrom dplyr bind_rows mutate %>% arrange tibble select
-#' @importFrom rlang enquo quo_get_expr as_label expr_label enexpr
+#' @importFrom rlang enquo quo_get_expr as_label expr_label caller_arg
 #' @importFrom  purrr map map_lgl
 #' @importFrom data.table frollmean frollsum frollapply
 #' @importFrom lubridate as.period
@@ -477,7 +477,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
     # `f` is from somewhere else and not supported
     cli_abort(
       c(
-        "problem with {rlang::expr_label(rlang::enexpr(f))}",
+        "problem with {rlang::expr_label(rlang::caller_arg(f))}",
         "i" = "`f` must be one of `data.table`'s rolling functions (`frollmean`,
               `frollsum`, `frollapply`. See `?data.table::roll`) or one of
               `slider`'s specialized sliding functions (`slide_mean`, `slide_sum`,
