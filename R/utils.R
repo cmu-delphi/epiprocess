@@ -403,7 +403,7 @@ guess_geo_type <- function(geo_value) {
 guess_time_type <- function(time_value) {
   # Convert character time values to Date or POSIXct
   if (is.character(time_value)) {
-    if (nchar(time_value[1]) <= "10") {
+    if (nchar(time_value[1]) <= 10L) {
       new_time_value <- tryCatch(
         {
           as.Date(time_value)
@@ -440,14 +440,8 @@ guess_time_type <- function(time_value) {
     return("yearmonth")
   } else if (inherits(time_value, "yearquarter")) {
     return("yearquarter")
-  }
-
-  # Else, if it's an integer that's at least 1582, then use "year"
-  if (
-    is.numeric(time_value) &&
-      all(time_value == as.integer(time_value)) &&
-      all(time_value >= 1582)
-  ) {
+  } else if (rlang::is_integerish(time_value) &&
+    all(nchar(as.character(time_value)) == 4L)) { # nolint: indentation_linter
     return("year")
   }
 
