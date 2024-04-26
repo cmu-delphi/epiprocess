@@ -75,6 +75,8 @@ validate_version_bound <- function(version_bound, x, na_ok = FALSE,
 #' @return `max(x$version)` if it has any rows; raises error if it has 0 rows or
 #'   an `NA` version value
 #'
+#' @importFrom checkmate check_names
+#'
 #' @export
 max_version_with_row_in <- function(x) {
   if (nrow(x) == 0L) {
@@ -87,7 +89,8 @@ max_version_with_row_in <- function(x) {
       class = "epiprocess__max_version_cannot_be_used"
     )
   } else {
-    version_col <- purrr::pluck(x, "version") # error not NULL if doesn't exist
+    check_names(names(x), must.include = "version")
+    version_col <- x[["version"]]
     if (anyNA(version_col)) {
       cli_abort("version values cannot be NA",
         class = "epiprocess__version_values_must_not_be_na"
