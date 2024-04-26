@@ -486,8 +486,12 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
       "i" = if (length(setdiff(key(x$DT), c("geo_value", "time_value", "version"))) > 0) {
         "Non-standard DT keys: {setdiff(key(x$DT), c('geo_value', 'time_value', 'version'))}"
       },
-      "i" = "Min/max time values: {min(x$DT$time_value)} / {max(x$DT$time_value)}",
-      "i" = "First/last version with update: {min(x$DT$version)} / {max(x$DT$version)}",
+      "i" = if (nrow(x$DT) != 0L) {
+        "Min/max time values: {min(x$DT$time_value)} / {max(x$DT$time_value)}"
+      },
+      "i" = if (nrow(x$DT) != 0L) {
+        "First/last version with update: {min(x$DT$version)} / {max(x$DT$version)}"
+      },
       "i" = if (!is.na(x$clobberable_versions_start)) {
         "Clobberable versions start: {x$clobberable_versions_start}"
       },
