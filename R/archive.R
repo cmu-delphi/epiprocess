@@ -469,7 +469,7 @@ as_epi_archive <- function(x, geo_type = NULL, time_type = NULL, other_keys = NU
 #' @param methods Boolean; whether to print all available methods of
 #'   the archive
 #'
-#' @importFrom cli cli_inform
+#' @importFrom cli cat_line format_message
 #' @importFrom rlang check_dots_empty
 #' @export
 print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
@@ -480,7 +480,7 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
     ))
   }
 
-  cli_inform(
+  cat_line(format_message(
     c(
       ">" = if (class) "An `epi_archive` object, with metadata:",
       "i" = if (length(setdiff(key(x$DT), c("geo_value", "time_value", "version"))) > 0) {
@@ -498,9 +498,9 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
       "i" = "Versions end: {x$versions_end}",
       "i" = "A preview of the table ({nrow(x$DT)} rows x {ncol(x$DT)} columns):"
     )
-  )
-
+  ))
   print(x$DT[])
+
   return(invisible(x))
 }
 
