@@ -42,29 +42,29 @@ epix_as_of(
 
 range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
 
-epix_as_of(
-  archive_cases_dv_subset,
-  max_version = as.Date("2020-06-12")
+epix_as_of(archive_cases_dv_subset, as.Date("2020-06-12"))
+
+# --- Advanced: ---
+
+# When requesting recent versions of a data set, there can be some
+# reproducibility issues. For example, requesting data as of the current date
+# may return different values based on whether today's data is available yet
+# or not. Other factors include the time it takes between data becoming
+# available and when you download the data, and whether the data provider
+# will overwrite ("clobber") version data rather than just publishing new
+# versions. You can include information about these factors by setting the
+# `clobberable_versions_start` and `versions_end` of an `epi_archive`, in
+# which case you will get warnings about potential reproducibility issues:
+
+archive_cases_dv_subset2 <- as_epi_archive(
+  archive_cases_dv_subset$DT,
+  # Suppose last version with an update could potentially be rewritten
+  # (a.k.a. "hotfixed", "clobbered", etc.):
+  clobberable_versions_start <- max(archive_cases_dv_subset$DT$version),
+  # Suppose today is the following day, and there are no updates out yet:
+  versions_end <- max(archive_cases_dv_subset$DT$version) + 1L
 )
 
-# When fetching a snapshot as of the latest version with update data in the
-# archive, a warning is issued by default, as this update data might not yet
-# be finalized (for example, if data versions are labeled with dates, these
-# versions might be overwritten throughout the corresponding days with
-# additional data or "hotfixes" of erroroneous data; when we build an archive
-# based on database queries, the latest available update might still be
-# subject to change, but previous versions should be finalized). We can
-# muffle such warnings with the following pattern:
-withCallingHandlers(
-  {
-    epix_as_of(
-      archive_cases_dv_subset,
-      max_version = max(archive_cases_dv_subset$DT$version)
-    )
-  },
-  epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning")
-)
-# Since R 4.0, there is a `globalCallingHandlers` function that can be used
-# to globally toggle these warnings.
+epix_as_of(archive_cases_dv_subset2, max(archive_cases_dv_subset$DT$version))
 
 }
