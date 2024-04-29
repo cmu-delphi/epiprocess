@@ -80,7 +80,7 @@ new_grouped_epi_archive <- function(x, vars, drop) {
     list(
       private = private
     ),
-    class = c("grouped_epi_archive", "epi_archive")
+    class = "grouped_epi_archive"
   ))
 }
 
