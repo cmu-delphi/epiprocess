@@ -1,7 +1,6 @@
 library(dplyr)
 
-ea <- archive_cases_dv_subset %>%
-  clone()
+ea <- archive_cases_dv_subset
 
 ea2_data <- tibble::tribble(
   ~geo_value, ~time_value, ~version, ~cases,
@@ -32,7 +31,7 @@ test_that("Warning against max_version being clobberable", {
   expect_warning(regexp = NA, ea %>% epix_as_of(max_version = max(ea$DT$version)))
   expect_warning(regexp = NA, ea %>% epix_as_of(max_version = min(ea$DT$version)))
   # but with `clobberable_versions_start` non-`NA`, yes
-  ea_with_clobberable <- ea %>% clone()
+  ea_with_clobberable <- ea
   ea_with_clobberable$clobberable_versions_start <- max(ea_with_clobberable$DT$version)
   expect_warning(ea_with_clobberable %>% epix_as_of(max_version = max(ea$DT$version)))
   expect_warning(regexp = NA, ea_with_clobberable %>% epix_as_of(max_version = min(ea$DT$version)))
@@ -92,7 +91,7 @@ test_that("epix_truncate_version_after doesn't filter if max_verion at latest ve
   ea2 <- ea2_data %>%
     as_epi_archive()
 
-  ea_expected <- ea2 %>% clone()
+  ea_expected <- ea2
 
   ea_as_of <- ea2 %>%
     epix_truncate_versions_after(max_version = as.Date("2020-06-04"))
@@ -120,7 +119,7 @@ test_that("epix_truncate_version_after returns the same groups as input grouped_
     as_epi_archive()
   ea2 <- ea2 %>% group_by(geo_value)
 
-  ea_expected <- ea2 %>% clone()
+  ea_expected <- ea2
 
   ea_as_of <- ea2 %>%
     epix_truncate_versions_after(max_version = as.Date("2020-06-04"))

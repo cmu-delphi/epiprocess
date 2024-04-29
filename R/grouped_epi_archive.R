@@ -370,7 +370,7 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
         # DT; convert and wrap:
         data.table::setattr(.data_group, "sorted", dt_key)
         data.table::setDT(.data_group, key = dt_key)
-        .data_group_archive <- as_of_archive %>% clone()
+        .data_group_archive <- as_of_archive
         .data_group_archive$DT <- .data_group
         comp_one_grp(.data_group_archive, .group_key,
           f = f, ...,
@@ -437,8 +437,8 @@ is_grouped_epi_archive <- function(x) {
 
 #' @export
 clone.grouped_epi_archive <- function(x, ...) {
-  ungrouped <- x$private$ungrouped %>% clone()
-  new_grouped_epi_archive(ungrouped, x$private$vars, x$private$drop)
+  x$private$ungrouped <- x$private$ungrouped %>% clone()
+  x
 }
 
 

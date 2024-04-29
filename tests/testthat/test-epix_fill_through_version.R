@@ -59,16 +59,13 @@ test_that("epix_fill_through_version does not mutate x", {
     as_epi_archive(tibble::tibble(geo_value = 1L, time_value = 1L, version = 1L, value = 10L))
   )) {
     ea_orig_before <- clone(ea_orig)
-    ea_orig_dt_before_copy <- data.table::copy(ea_orig$DT)
     some_unobserved_version <- 8L
 
     ea_fill_na <- epix_fill_through_version(ea_orig, some_unobserved_version, "na")
     expect_identical(ea_orig_before, ea_orig)
-    expect_identical(ea_orig_dt_before_copy, ea_orig$DT)
 
     ea_fill_locf <- epix_fill_through_version(ea_orig, some_unobserved_version, "locf")
     expect_identical(ea_orig_before, ea_orig)
-    expect_identical(ea_orig_dt_before_copy, ea_orig$DT)
   }
 })
 

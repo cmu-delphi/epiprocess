@@ -371,7 +371,6 @@ test_that("epix_slide with all_versions option has access to all older versions"
   }
 
   ea_orig_mirror <- ea %>% clone()
-  ea_orig_mirror$DT <- data.table::copy(ea_orig_mirror$DT)
 
   result1 <- ea %>%
     group_by() %>%
@@ -485,7 +484,7 @@ test_that("epix_as_of and epix_slide with long enough window are compatible", {
   )
 
   # Test the same sort of thing when grouping by geo in an archive with multiple geos.
-  ea_multigeo <- ea %>% clone()
+  ea_multigeo <- ea
   ea_multigeo$DT <- rbind(
     ea_multigeo$DT,
     copy(ea_multigeo$DT)[, geo_value := "y"][, binary := -binary][]
@@ -565,7 +564,7 @@ test_that("epix_slide with all_versions option works as intended", {
 # back depending on the decisions there:
 #
 # test_that("`epix_slide` uses `versions_end` as a resulting `epi_df`'s `as_of`", {
-#   ea_updated_stale = ea %>% clone()
+#   ea_updated_stale = ea
 #   ea_updated_stale$versions_end <- ea_updated_stale$versions_end + 3 # (dbl)
 #   #
 #   expect_identical(
