@@ -60,9 +60,10 @@ archive_cases_dv_subset2 <- as_epi_archive(
   archive_cases_dv_subset$DT,
   # Suppose last version with an update could potentially be rewritten
   # (a.k.a. "hotfixed", "clobbered", etc.):
-  clobberable_versions_start <- max(archive_cases_dv_subset$DT$version),
+  clobberable_versions_start = max(archive_cases_dv_subset$DT$version),
   # Suppose today is the following day, and there are no updates out yet:
-  versions_end <- max(archive_cases_dv_subset$DT$version) + 1L
+  versions_end <- max(archive_cases_dv_subset$DT$version) + 1L,
+  compactify = TRUE
 )
 
 epix_as_of(archive_cases_dv_subset2, max(archive_cases_dv_subset$DT$version))
