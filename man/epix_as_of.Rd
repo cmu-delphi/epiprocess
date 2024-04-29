@@ -35,7 +35,6 @@ given version. See the \href{https://cmu-delphi.github.io/epiprocess/articles/ar
 examples.
 }
 \examples{
-# warning message of data latency shown
 epix_as_of(
   archive_cases_dv_subset,
   max_version = max(archive_cases_dv_subset$DT$version)
