@@ -533,7 +533,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
     out_dt <- dplyr::dplyr_col_modify(in_tbl, col_modify_cols) %>%
       data.table::setattr("sorted", data.table::key(.data$DT)) %>%
       data.table::setDT(key = key(.data$DT))
-    out_archive <- .data %>% clone()
+    out_archive <- .data
     out_archive$DT <- out_dt
     request_names <- names(col_modify_cols)
     return(list(

@@ -1,6 +1,5 @@
 test_that("epix_merge requires forbids on invalid `y`", {
-  ea <- archive_cases_dv_subset %>%
-    clone()
+  ea <- archive_cases_dv_subset
   expect_error(epix_merge(ea, data.frame(x = 1)))
 })
 
