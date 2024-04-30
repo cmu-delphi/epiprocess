@@ -797,9 +797,6 @@ epix_slide <- function(
     as_list_col = FALSE,
     names_sep = "_",
     all_versions = FALSE) {
-  if (!is_epi_archive(x, grouped_okay = TRUE)) {
-    cli_abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
-  }
   UseMethod("epix_slide")
 }
 

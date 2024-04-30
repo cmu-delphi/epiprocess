@@ -3,6 +3,7 @@
 \name{epi_archive}
 \alias{epi_archive}
 \alias{new_epi_archive}
+\alias{validate_epi_archive}
 \alias{as_epi_archive}
 \title{\code{epi_archive} object}
 \usage{
@@ -13,7 +14,18 @@ new_epi_archive(
   other_keys = NULL,
   additional_metadata = NULL,
   compactify = NULL,
-  clobberable_versions_start = NA,
+  clobberable_versions_start = NULL,
+  versions_end = NULL
+)
+
+validate_epi_archive(
+  x,
+  geo_type = NULL,
+  time_type = NULL,
+  other_keys = NULL,
+  additional_metadata = NULL,
+  compactify = NULL,
+  clobberable_versions_start = NULL,
   versions_end = NULL
 )
 
@@ -22,10 +34,10 @@ as_epi_archive(
   geo_type = NULL,
   time_type = NULL,
   other_keys = NULL,
-  additional_metadata = list(),
+  additional_metadata = NULL,
   compactify = NULL,
-  clobberable_versions_start = NA,
-  versions_end = max_version_with_row_in(x)
+  clobberable_versions_start = NULL,
+  versions_end = NULL
 )
 }
 \arguments{

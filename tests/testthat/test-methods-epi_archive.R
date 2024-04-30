@@ -1,7 +1,4 @@
-library(dplyr)
-
 ea <- archive_cases_dv_subset
-
 ea2_data <- tibble::tribble(
   ~geo_value, ~time_value, ~version, ~cases,
   "ca", "2020-06-01", "2020-06-01", 1,
@@ -104,7 +101,7 @@ test_that("epix_truncate_version_after returns the same grouping type as input e
 
   ea_as_of <- ea2 %>%
     epix_truncate_versions_after(max_version = as.Date("2020-06-04"))
-  expect_true(is_epi_archive(ea_as_of, grouped_okay = FALSE))
+  expect_class(ea_as_of, "epi_archive")
 
   ea2_grouped <- ea2 %>% group_by(geo_value)
 

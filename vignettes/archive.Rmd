@@ -113,15 +113,6 @@ key(x$DT)
 In general, the last version of each observation is carried forward (LOCF) to
 fill in data between recorded versions.
 
-```{r}
-original_value <- x$DT$percent_cli[1]
-y <- x # This DOES NOT make a copy of x
-y$DT$percent_cli[1] <- 0
-head(y$DT)
-head(x$DT)
-x$DT$percent_cli[1] <- original_value
-```
-
 ## Some details on metadata
 
 The following pieces of metadata are included as fields in an `epi_archive`

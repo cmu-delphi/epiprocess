@@ -157,8 +157,7 @@ group_by.grouped_epi_archive <- function(
 #'
 #' @export
 group_by_drop_default.grouped_epi_archive <- function(.tbl) {
-  x <- .tbl
-  x$private$drop
+  .tbl$private$drop
 }
 
 

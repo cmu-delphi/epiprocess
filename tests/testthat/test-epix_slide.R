@@ -506,7 +506,7 @@ test_that("epix_as_of and epix_slide with long enough window are compatible", {
 
 test_that("epix_slide `f` is passed an ungrouped `epi_archive` when `all_versions=TRUE`", {
   slide_fn <- function(x, gk, rtv) {
-    expect_true(is_epi_archive(x))
+    expect_class(x, "epi_archive")
     return(NA)
   }
 

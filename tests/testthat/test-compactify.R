@@ -1,7 +1,3 @@
-library(epiprocess)
-library(data.table)
-library(dplyr)
-
 dt <- archive_cases_dv_subset$DT
 dt <- filter(dt, geo_value == "ca") %>%
   filter(version <= "2020-06-15") %>%

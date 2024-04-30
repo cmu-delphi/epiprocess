@@ -51,12 +51,10 @@ Suggests:
     covidcast,
     devtools,
     epidatr,
-    here,
     knitr,
     outbreaks,
     rmarkdown,
     testthat (>= 3.1.5),
-    waldo (>= 0.3.1),
     withr
 VignetteBuilder:
     knitr

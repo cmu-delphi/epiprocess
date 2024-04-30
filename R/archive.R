@@ -307,59 +307,8 @@ new_epi_archive <- function(
     other_keys = NULL,
     additional_metadata = NULL,
     compactify = NULL,
-    clobberable_versions_start = NA,
+    clobberable_versions_start = NULL,
     versions_end = NULL) {
-  assert_data_frame(x)
-  if (!test_subset(c("geo_value", "time_value", "version"), names(x))) {
-    cli_abort(
-      "Columns `geo_value`, `time_value`, and `version` must be present in `x`."
-    )
-  }
-  if (anyMissing(x$version)) {
-    cli_abort("Column `version` must not contain missing values.")
-  }
-
-  geo_type <- geo_type %||% guess_geo_type(x$geo_value)
-  time_type <- time_type %||% guess_time_type(x$time_value)
-  other_keys <- other_keys %||% character(0L)
-  additional_metadata <- additional_metadata %||% list()
-
-  # Finish off with small checks on keys variables and metadata
-  if (!test_subset(other_keys, names(x))) {
-    cli_abort("`other_keys` must be contained in the column names of `x`.")
-  }
-  if (any(c("geo_value", "time_value", "version") %in% other_keys)) {
-    cli_abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
-  }
-  if (any(names(additional_metadata) %in% c("geo_type", "time_type"))) {
-    cli_warn("`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\".")
-  }
-
-  # Conduct checks and apply defaults for `compactify`
-  assert_logical(compactify, len = 1, any.missing = FALSE, null.ok = TRUE)
-
-  # Apply defaults and conduct checks for
-  # `clobberable_versions_start`, `versions_end`:
-  versions_end <- versions_end %||% max_version_with_row_in(x)
-  validate_version_bound(clobberable_versions_start, x, na_ok = TRUE)
-  validate_version_bound(versions_end, x, na_ok = FALSE)
-  if (nrow(x) > 0L && versions_end < max(x[["version"]])) {
-    cli_abort(
-      "`versions_end` was {versions_end}, but `x` contained
-        updates for a later version or versions, up through {max(x$version)}",
-      class = "epiprocess__versions_end_earlier_than_updates"
-    )
-  }
-  if (!is.na(clobberable_versions_start) && clobberable_versions_start > versions_end) {
-    cli_abort(
-      "`versions_end` was {versions_end}, but a `clobberable_versions_start`
-        of {clobberable_versions_start} indicated that there were later observed versions",
-      class = "epiprocess__versions_end_earlier_than_clobberable_versions_start"
-    )
-  }
-
-  # --- End of validation and replacing missing args with defaults ---
-
   # Create the data table; if x was an un-keyed data.table itself,
   # then the call to as.data.table() will fail to set keys, so we
   # need to check this, then do it manually if needed
@@ -441,6 +390,54 @@ new_epi_archive <- function(
   )
 }
 
+#' `validate_epi_archive` ensures correctness of arguments fed to `as_epi_archive`.
+#'
+#' @rdname epi_archive
+#'
+#' @export
+validate_epi_archive <- function(
+    x,
+    geo_type = NULL,
+    time_type = NULL,
+    other_keys = NULL,
+    additional_metadata = NULL,
+    compactify = NULL,
+    clobberable_versions_start = NULL,
+    versions_end = NULL) {
+  # Finish off with small checks on keys variables and metadata
+  if (!test_subset(other_keys, names(x))) {
+    cli_abort("`other_keys` must be contained in the column names of `x`.")
+  }
+  if (any(c("geo_value", "time_value", "version") %in% other_keys)) {
+    cli_abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
+  }
+  if (any(names(additional_metadata) %in% c("geo_type", "time_type"))) {
+    cli_warn("`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\".")
+  }
+
+  # Conduct checks and apply defaults for `compactify`
+  assert_logical(compactify, len = 1, any.missing = FALSE, null.ok = TRUE)
+
+  # Apply defaults and conduct checks for
+  # `clobberable_versions_start`, `versions_end`:
+  validate_version_bound(clobberable_versions_start, x, na_ok = TRUE)
+  validate_version_bound(versions_end, x, na_ok = FALSE)
+  if (nrow(x) > 0L && versions_end < max(x[["version"]])) {
+    cli_abort(
+      "`versions_end` was {versions_end}, but `x` contained
+        updates for a later version or versions, up through {max(x$version)}",
+      class = "epiprocess__versions_end_earlier_than_updates"
+    )
+  }
+  if (!is.na(clobberable_versions_start) && clobberable_versions_start > versions_end) {
+    cli_abort(
+      "`versions_end` was {versions_end}, but a `clobberable_versions_start`
+        of {clobberable_versions_start} indicated that there were later observed versions",
+      class = "epiprocess__versions_end_earlier_than_clobberable_versions_start"
+    )
+  }
+}
+
 
 #' `as_epi_archive` converts a data frame, data table, or tibble into an
 #' `epi_archive` object.
@@ -448,11 +445,36 @@ new_epi_archive <- function(
 #' @rdname epi_archive
 #'
 #' @export
-as_epi_archive <- function(x, geo_type = NULL, time_type = NULL, other_keys = NULL,
-                           additional_metadata = list(),
-                           compactify = NULL,
-                           clobberable_versions_start = NA,
-                           versions_end = max_version_with_row_in(x)) {
+as_epi_archive <- function(
+    x,
+    geo_type = NULL,
+    time_type = NULL,
+    other_keys = NULL,
+    additional_metadata = NULL,
+    compactify = NULL,
+    clobberable_versions_start = NULL,
+    versions_end = NULL) {
+  assert_data_frame(x)
+  if (!test_subset(c("geo_value", "time_value", "version"), names(x))) {
+    cli_abort(
+      "Columns `geo_value`, `time_value`, and `version` must be present in `x`."
+    )
+  }
+  if (anyMissing(x$version)) {
+    cli_abort("Column `version` must not contain missing values.")
+  }
+
+  geo_type <- geo_type %||% guess_geo_type(x$geo_value)
+  time_type <- time_type %||% guess_time_type(x$time_value)
+  other_keys <- other_keys %||% character(0L)
+  additional_metadata <- additional_metadata %||% list()
+  clobberable_versions_start <- clobberable_versions_start %||% NA
+  versions_end <- versions_end %||% max_version_with_row_in(x)
+
+  validate_epi_archive(
+    x, geo_type, time_type, other_keys, additional_metadata,
+    compactify, clobberable_versions_start, versions_end
+  )
   new_epi_archive(
     x, geo_type, time_type, other_keys, additional_metadata,
     compactify, clobberable_versions_start, versions_end
@@ -649,31 +671,6 @@ group_by.epi_archive <- function(.data, ..., .add = FALSE, .drop = dplyr::group_
     detailed_mutate[["request_names"]],
     drop = .drop
   )
-}
-
-
-#' Test for `epi_archive` format
-#'
-#' @param x An object.
-#' @param grouped_okay Optional; Boolean; should a `grouped_epi_archive` also
-#'   count? Default is `FALSE`.
-#' @return `TRUE` if the object inherits from `epi_archive`.
-#'
-#' @export
-#' @examples
-#' is_epi_archive(jhu_csse_daily_subset) # FALSE (this is an epi_df, not epi_archive)
-#' is_epi_archive(archive_cases_dv_subset) # TRUE
-#'
-#' # By default, grouped_epi_archives don't count as epi_archives, as they may
-#' # support a different set of operations from regular `epi_archives`. This
-#' # behavior can be controlled by `grouped_okay`.
-#' grouped_archive <- archive_cases_dv_subset %>% group_by(geo_value)
-#' is_epi_archive(grouped_archive) # FALSE
-#' is_epi_archive(grouped_archive, grouped_okay = TRUE) # TRUE
-#'
-#' @seealso [`is_grouped_epi_archive`]
-is_epi_archive <- function(x, grouped_okay = FALSE) {
-  inherits(x, "epi_archive") || grouped_okay && inherits(x, "grouped_epi_archive")
 }
 
 

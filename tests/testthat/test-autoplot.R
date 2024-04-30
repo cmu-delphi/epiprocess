@@ -1,7 +1,4 @@
-library(dplyr)
-
 d <- as.Date("2020-01-01")
-
 raw_df_chr <- dplyr::bind_rows(
   dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = "a"),
   dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = "d")
