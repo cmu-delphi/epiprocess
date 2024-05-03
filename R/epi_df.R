@@ -99,9 +99,7 @@ new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
   assert_data_frame(x)
   assert_list(additional_metadata)
 
-  if (is.null(additional_metadata[["other_keys"]])) {
-    additional_metadata[["other_keys"]] <- character(0L)
-  }
+  additional_metadata[["other_keys"]] <- additional_metadata[["other_keys"]] %||% character(0L)
 
   # If geo type is missing, then try to guess it
   if (missing(geo_type)) {

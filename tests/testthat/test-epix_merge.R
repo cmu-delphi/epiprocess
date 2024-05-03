@@ -1,5 +1,5 @@
 test_that("epix_merge requires forbids on invalid `y`", {
-  ea <- archive_cases_dv_subset$clone()
+  ea <- archive_cases_dv_subset
   expect_error(epix_merge(ea, data.frame(x = 1)))
 })
 
@@ -58,9 +58,7 @@ test_that("epix_merge merges and carries forward updates properly", {
         dplyr::mutate(dplyr::across(c(x_value, y_value), ~ dplyr::if_else(grepl("NA", .x), NA_character_, .x)))
     )
   )
-  # We rely on testthat edition 3 expect_identical using waldo, not identical. See
-  # test-epix_fill_through_version.R comments for details.
-  testthat::local_edition(3)
+
   expect_identical(xy, xy_expected)
 })
 

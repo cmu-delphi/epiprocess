@@ -30,7 +30,7 @@ use \code{min(x$versions_end, y$versions_end)} as the result's \code{versions_en
 and discard any rows containing update rows for later versions.}
 
 \item{compactify}{Optional; \code{TRUE}, \code{FALSE}, or \code{NULL}; should the result be
-compactified? See \code{\link{as_epi_archive}} for an explanation of what this means.
+compactified? See \code{as_epi_archive()} for an explanation of what this means.
 Default here is \code{TRUE}.}
 }
 \value{
@@ -38,21 +38,14 @@ the resulting \code{epi_archive}
 }
 \description{
 Merges two \code{epi_archive}s that share a common \code{geo_value}, \code{time_value}, and
-set of key columns. When they also share a common \code{versions_end},
-using \verb{$as_of} on the result should be the same as using \verb{$as_of} on \code{x} and
-\code{y} individually, then performing a full join of the \code{DT}s on the non-version
-key columns (potentially consolidating multiple warnings about clobberable
-versions). If the \code{versions_end} values differ, the
-\code{sync} parameter controls what is done.
+set of key columns. When they also share a common \code{versions_end}, using
+\code{epix_as_of} on the result should be the same as using \code{epix_as_of} on \code{x}
+and \code{y} individually, then performing a full join of the \code{DT}s on the
+non-version key columns (potentially consolidating multiple warnings about
+clobberable versions). If the \code{versions_end} values differ, the \code{sync}
+parameter controls what is done.
 }
 \details{
-This function, \code{\link{epix_merge}}, does not mutate its inputs and will not alias
-either archive's \code{DT}, but may alias other fields; \code{x$merge} will overwrite
-\code{x} with the result of the merge, reseating its \code{DT} and several other fields
-(making them point to different objects), but avoiding mutation of the
-contents of the old \code{DT} (only relevant if you have another reference to the
-old \code{DT} in another object).
-
 In all cases, \code{additional_metadata} will be an empty list, and
 \code{clobberable_versions_start} will be set to the earliest version that could
 be clobbered in either input archive.
@@ -67,7 +60,5 @@ y <- archive_cases_dv_subset$DT \%>\%
   as_epi_archive(compactify = TRUE)
 # merge results stored in a third object:
 xy <- epix_merge(x, y)
-# vs. mutating x to hold the merge result:
-x$merge(y)
 
 }

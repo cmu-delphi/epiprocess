@@ -1,5 +1,5 @@
 test_that("`archive_cases_dv_subset` is formed successfully", {
-  expect_true(is_epi_archive(archive_cases_dv_subset))
+  expect_class(archive_cases_dv_subset, "epi_archive")
 })
 
 test_that("`delayed_assign_with_unregister_awareness` works as expected on good promises", {

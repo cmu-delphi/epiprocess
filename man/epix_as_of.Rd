@@ -34,58 +34,38 @@ Generates a snapshot in \code{epi_df} format from an \code{epi_archive} object, 
 given version. See the \href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{archive vignette} for
 examples.
 }
-\details{
-This is simply a wrapper around the \code{as_of()} method of the
-\code{epi_archive} class, so if \code{x} is an \code{epi_archive} object, then:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epix_as_of(x, max_version = v)
-}\if{html}{\out{</div>}}
-
-is equivalent to:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{x$as_of(max_version = v)
-}\if{html}{\out{</div>}}
-
-Mutation and aliasing: \code{epix_as_of} and \verb{$as_of} will not mutate the input
-archives, but may in some edge cases alias parts of the inputs, so copy the
-outputs if needed before using mutating operations like \code{data.table}'s \verb{:=}
-operator. Currently, the only situation where there is potentially aliasing
-is of the \code{DT} in edge cases with \code{all_versions = TRUE}, but this may change
-in the future.
-}
 \examples{
-# warning message of data latency shown
 epix_as_of(
-  x = archive_cases_dv_subset,
+  archive_cases_dv_subset,
   max_version = max(archive_cases_dv_subset$DT$version)
 )
 
-
 range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
 
-epix_as_of(
-  x = archive_cases_dv_subset,
-  max_version = as.Date("2020-06-12")
+epix_as_of(archive_cases_dv_subset, as.Date("2020-06-12"))
+
+# --- Advanced: ---
+
+# When requesting recent versions of a data set, there can be some
+# reproducibility issues. For example, requesting data as of the current date
+# may return different values based on whether today's data is available yet
+# or not. Other factors include the time it takes between data becoming
+# available and when you download the data, and whether the data provider
+# will overwrite ("clobber") version data rather than just publishing new
+# versions. You can include information about these factors by setting the
+# `clobberable_versions_start` and `versions_end` of an `epi_archive`, in
+# which case you will get warnings about potential reproducibility issues:
+
+archive_cases_dv_subset2 <- as_epi_archive(
+  archive_cases_dv_subset$DT,
+  # Suppose last version with an update could potentially be rewritten
+  # (a.k.a. "hotfixed", "clobbered", etc.):
+  clobberable_versions_start = max(archive_cases_dv_subset$DT$version),
+  # Suppose today is the following day, and there are no updates out yet:
+  versions_end <- max(archive_cases_dv_subset$DT$version) + 1L,
+  compactify = TRUE
 )
 
-# When fetching a snapshot as of the latest version with update data in the
-# archive, a warning is issued by default, as this update data might not yet
-# be finalized (for example, if data versions are labeled with dates, these
-# versions might be overwritten throughout the corresponding days with
-# additional data or "hotfixes" of erroroneous data; when we build an archive
-# based on database queries, the latest available update might still be
-# subject to change, but previous versions should be finalized). We can
-# muffle such warnings with the following pattern:
-withCallingHandlers(
-  {
-    epix_as_of(
-      x = archive_cases_dv_subset,
-      max_version = max(archive_cases_dv_subset$DT$version)
-    )
-  },
-  epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning")
-)
-# Since R 4.0, there is a `globalCallingHandlers` function that can be used
-# to globally toggle these warnings.
+epix_as_of(archive_cases_dv_subset2, max(archive_cases_dv_subset$DT$version))
 
 }
