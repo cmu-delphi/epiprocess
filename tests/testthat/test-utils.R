@@ -46,6 +46,10 @@ test_that("guess_time_type works for different types", {
   yearquarters <- tsibble::yearquarter(10)
 
   years <- c(1999, 2000)
+  ambiguous_yearweeks <- c(199901, 199902) # -> "custom"
+
+  daytimes <- as.POSIXct(c("2022-01-01 05:00:00", "2022-01-01 15:0:00"), tz = "UTC")
+  daytimes_chr <- as.character(daytimes)
 
   # YYYY-MM-DD is the accepted format
   not_ymd1 <- "January 1, 2022"
@@ -62,13 +66,17 @@ test_that("guess_time_type works for different types", {
   expect_equal(guess_time_type(yearquarters), "yearquarter")
 
   expect_equal(guess_time_type(years), "year")
+  expect_equal(guess_time_type(ambiguous_yearweeks), "custom")
+
+  expect_equal(guess_time_type(daytimes), "day-time")
+  expect_equal(guess_time_type(daytimes_chr), "day-time")
 
   expect_equal(guess_time_type(not_ymd1), "custom")
   expect_equal(guess_time_type(not_ymd2), "custom")
   expect_equal(guess_time_type(not_ymd3), "custom")
   expect_equal(guess_time_type(not_a_date), "custom")
 })
-3
+
 test_that("guess_time_type works with gaps", {
   days_gaps <- as.Date("2022-01-01") + c(0, 1, 3, 4, 8, 8 + 7)
   weeks_gaps <- as.Date("2022-01-01") + 7 * c(0, 1, 3, 4, 8, 8 + 7)

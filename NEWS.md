@@ -27,7 +27,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   the `epi_df` (#382).
 - Refactored internals to use `cli` for warnings/errors and `checkmate` for
   argument checking (#413).
-- Fix logic to auto-assign `ep_df` `time_type` to `week` (#416).
+- Fix logic to auto-assign `epi_df` `time_type` to `week` (#416) and `year`
+  (#441).
 
 ## Breaking changes
 
