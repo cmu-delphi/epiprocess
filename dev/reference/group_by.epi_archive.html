@@ -57,7 +57,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1><code>group_by</code> and related methods for <code>epi_archive</code>, <code>grouped_epi_archive</code></h1>
-      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/main/R/methods-epi_archive.R" class="external-link"><code>R/methods-epi_archive.R</code></a>, <a href="https://github.com/cmu-delphi/epiprocess/blob/main/R/grouped_epi_archive.R" class="external-link"><code>R/grouped_epi_archive.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/main/R/archive.R" class="external-link"><code>R/archive.R</code></a>, <a href="https://github.com/cmu-delphi/epiprocess/blob/main/R/grouped_epi_archive.R" class="external-link"><code>R/grouped_epi_archive.R</code></a></small>
       <div class="d-none name"><code>group_by.epi_archive.Rd</code></div>
     </div>
 
@@ -74,15 +74,15 @@
 <span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">.data</span>, <span class="va">...</span>, .add <span class="op">=</span> <span class="cn">FALSE</span>, .drop <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by_drop_default.html" class="external-link">group_by_drop_default</a></span><span class="op">(</span><span class="va">.data</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for grouped_epi_archive</span></span>
+<span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by_drop_default.html" class="external-link">group_by_drop_default</a></span><span class="op">(</span><span class="va">.tbl</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for grouped_epi_archive</span></span>
 <span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_data.html" class="external-link">groups</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for grouped_epi_archive</span></span>
 <span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">is_grouped_epi_archive</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S3 method for grouped_epi_archive</span></span>
-<span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by_drop_default.html" class="external-link">group_by_drop_default</a></span><span class="op">(</span><span class="va">.tbl</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">is_grouped_epi_archive</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -118,15 +118,13 @@ grouped by the current grouping variables plus the variable selection from
 factor columns.</p></dd>
 
 
+<dt>.tbl</dt>
+<dd><p>A <code>grouped_epi_archive</code> object.</p></dd>
+
+
 <dt>x</dt>
 <dd><p>For <code>groups</code> or <code>ungroup</code>: a <code>grouped_epi_archive</code>; for
 <code>is_grouped_epi_archive</code>: any object</p></dd>
-
-
-<dt>.tbl</dt>
-<dd><p>(For <code>group_by_drop_default</code>:) an <code>epi_archive</code> or
-<code>grouped_epi_archive</code> (<code>epi_archive</code> dispatches to the S3 default method;
-<code>grouped_epi_archive</code> dispatches its own S3 method)</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -143,16 +141,6 @@ the same operations on tibbles and grouped tibbles, which will <em>not</em> outp
 <code>grouped_df</code> in these circumstances.</p>
 <p>Using <code>group_by</code> with <code>.add=FALSE</code> to override the existing grouping is
 disabled; instead, <code>ungroup</code> first then <code>group_by</code>.</p>
-<p>Mutation and aliasing: <code>group_by</code> tries to use a shallow copy of the <code>DT</code>,
-introducing column-level aliasing between its input and its result. This
-doesn't follow the general model for most <code>data.table</code> operations, which
-seems to be that, given an nonaliased (i.e., unique) pointer to a
-<code>data.table</code> object, its pointers to its columns should also be nonaliased.
-If you mutate any of the columns of either the input or result, first ensure
-that it is fine if columns of the other are also mutated, but do not rely on
-such behavior to occur. Additionally, never perform mutation on the key
-columns at all (except for strictly increasing transformations), as this will
-invalidate sortedness assumptions about the rows.</p>
 <p><code>group_by_drop_default</code> on (ungrouped) <code>epi_archive</code>s is expected to dispatch
 to <code>group_by_drop_default.default</code> (but there is a dedicated method for
 <code>grouped_epi_archive</code>s).</p>
@@ -168,10 +156,10 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> A `grouped_epi_archive` object:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-06-01 / 2021-11-30</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2020-06-02 / 2021-12-01</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2021-12-01</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (129638 rows x 5 columns):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-06-01 / 2021-11-30</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2020-06-02 / 2021-12-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2021-12-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (129638 rows x 5 columns):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, version&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         geo_value time_value    version percent_cli case_rate_7d_av</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;           &lt;num&gt;</span>
@@ -186,12 +174,6 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> 129636:        tx 2021-11-28 2021-11-29          NA        6.834681</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 129637:        tx 2021-11-29 2021-11-30          NA        8.841247</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 129638:        tx 2021-11-30 2021-12-01          NA        9.566218</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Public `grouped_epi_archive` R6 methods:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • Specialized `epi_archive` methods: initialize, print, group_by, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                      truncate_versions_after, slide, clone</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • Exclusive to `grouped_epi_archive`: group_by_drop_default, groups, ungroup</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • `ungroup` to use: as_of, fill_through_version, merge</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The primary use for grouping is to perform a grouped `epix_slide`:</span></span></span>
 <span class="r-in"><span></span></span>
@@ -238,7 +220,7 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-in"><span>    time_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="va">time_value</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="va">version</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="as_epi_archive.html">as_epi_archive</a></span><span class="op">(</span>other_keys <span class="op">=</span> <span class="st">"age_group"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="epi_archive.html">as_epi_archive</a></span><span class="op">(</span>other_keys <span class="op">=</span> <span class="st">"age_group"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The following are equivalent:</span></span></span>
 <span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">age_group</span><span class="op">)</span></span></span>
@@ -246,11 +228,11 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value, age_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Drops groups formed by factor levels that don't appear in the data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (4 rows x 5 columns):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (4 rows x 5 columns):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, age_group, version&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value age_group time_value    version value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;char&gt;     &lt;ord&gt;     &lt;Date&gt;     &lt;Date&gt; &lt;num&gt;</span>
@@ -258,12 +240,6 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2:        us     adult 2000-01-01 2000-01-03   125</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3:        us pediatric 2000-01-02 2000-01-03     5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4:        us     adult 2000-01-02 2000-01-03   130</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Public `grouped_epi_archive` R6 methods:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • Specialized `epi_archive` methods: initialize, print, group_by, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                      truncate_versions_after, slide, clone</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • Exclusive to `grouped_epi_archive`: group_by_drop_default, groups, ungroup</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • `ungroup` to use: as_of, fill_through_version, merge</span>
 <span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">age_group</span>, .add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
@@ -271,11 +247,11 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value, age_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Drops groups formed by factor levels that don't appear in the data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (4 rows x 5 columns):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (4 rows x 5 columns):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, age_group, version&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value age_group time_value    version value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;char&gt;     &lt;ord&gt;     &lt;Date&gt;     &lt;Date&gt; &lt;num&gt;</span>
@@ -283,23 +259,17 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2:        us     adult 2000-01-01 2000-01-03   125</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3:        us pediatric 2000-01-02 2000-01-03     5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4:        us     adult 2000-01-02 2000-01-03   130</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Public `grouped_epi_archive` R6 methods:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • Specialized `epi_archive` methods: initialize, print, group_by, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                      truncate_versions_after, slide, clone</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • Exclusive to `grouped_epi_archive`: group_by_drop_default, groups, ungroup</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • `ungroup` to use: as_of, fill_through_version, merge</span>
 <span class="r-in"><span><span class="va">grouping_cols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"geo_value"</span>, <span class="st">"age_group"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/across.html" class="external-link">across</a></span><span class="op">(</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/all_of.html" class="external-link">all_of</a></span><span class="op">(</span><span class="va">grouping_cols</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A `grouped_epi_archive` object:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value, age_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Drops groups formed by factor levels that don't appear in the data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (4 rows x 5 columns):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (4 rows x 5 columns):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, age_group, version&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value age_group time_value    version value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;char&gt;     &lt;ord&gt;     &lt;Date&gt;     &lt;Date&gt; &lt;num&gt;</span>
@@ -307,23 +277,17 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2:        us     adult 2000-01-01 2000-01-03   125</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3:        us pediatric 2000-01-02 2000-01-03     5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4:        us     adult 2000-01-02 2000-01-03   130</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Public `grouped_epi_archive` R6 methods:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • Specialized `epi_archive` methods: initialize, print, group_by, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                      truncate_versions_after, slide, clone</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • Exclusive to `grouped_epi_archive`: group_by_drop_default, groups, ungroup</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • `ungroup` to use: as_of, fill_through_version, merge</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># And these are equivalent:</span></span></span>
 <span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A `grouped_epi_archive` object:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (4 rows x 5 columns):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (4 rows x 5 columns):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, age_group, version&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value age_group time_value    version value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;char&gt;     &lt;ord&gt;     &lt;Date&gt;     &lt;Date&gt; &lt;num&gt;</span>
@@ -331,23 +295,17 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2:        us     adult 2000-01-01 2000-01-03   125</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3:        us pediatric 2000-01-02 2000-01-03     5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4:        us     adult 2000-01-02 2000-01-03   130</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Public `grouped_epi_archive` R6 methods:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • Specialized `epi_archive` methods: initialize, print, group_by, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                      truncate_versions_after, slide, clone</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • Exclusive to `grouped_epi_archive`: group_by_drop_default, groups, ungroup</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • `ungroup` to use: as_of, fill_through_version, merge</span>
 <span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">age_group</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="va">age_group</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A `grouped_epi_archive` object:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (4 rows x 5 columns):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (4 rows x 5 columns):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, age_group, version&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value age_group time_value    version value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;char&gt;     &lt;ord&gt;     &lt;Date&gt;     &lt;Date&gt; &lt;num&gt;</span>
@@ -355,12 +313,6 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2:        us     adult 2000-01-01 2000-01-03   125</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3:        us pediatric 2000-01-02 2000-01-03     5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4:        us     adult 2000-01-02 2000-01-03   130</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ----------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Public `grouped_epi_archive` R6 methods:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • Specialized `epi_archive` methods: initialize, print, group_by, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                      truncate_versions_after, slide, clone</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • Exclusive to `grouped_epi_archive`: group_by_drop_default, groups, ungroup</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • `ungroup` to use: as_of, fill_through_version, merge</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># To get the grouping variable names as a `list` of `name`s (a.k.a. symbols):</span></span></span>
 <span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>

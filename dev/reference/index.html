@@ -195,24 +195,34 @@
         <dd>Subset of daily doctor visits and cases in archive format</dd>
       </dl><dl><dt>
           
-          <code><a href="as_epi_archive.html">as_epi_archive()</a></code> 
+          <code><a href="clone.html">clone()</a></code> 
         </dt>
-        <dd>Convert to <code>epi_archive</code> format</dd>
+        <dd>Clone an <code>epi_archive</code> object.</dd>
       </dl><dl><dt>
           
-          <code><a href="epi_archive.html">epi_archive</a></code> 
+          <code><a href="epi_archive.html">new_epi_archive()</a></code> <code><a href="epi_archive.html">validate_epi_archive()</a></code> <code><a href="epi_archive.html">as_epi_archive()</a></code> 
         </dt>
         <dd><code>epi_archive</code> object</dd>
       </dl><dl><dt>
           
-          <code><a href="group_by.epi_archive.html">group_by(<i>&lt;epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">groups(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">ungroup(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">is_grouped_epi_archive()</a></code> <code><a href="group_by.epi_archive.html">group_by_drop_default(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> 
+          <code><a href="epix_slide.html">epix_slide()</a></code> 
+        </dt>
+        <dd>Slide a function over variables in an <code>epi_archive</code> or <code>grouped_epi_archive</code></dd>
+      </dl><dl><dt>
+          
+          <code><a href="epix_truncate_versions_after.html">epix_truncate_versions_after()</a></code> 
+        </dt>
+        <dd>Filter an <code>epi_archive</code> object to keep only older versions</dd>
+      </dl><dl><dt>
+          
+          <code><a href="group_by.epi_archive.html">group_by(<i>&lt;epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by_drop_default(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">groups(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">ungroup(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">is_grouped_epi_archive()</a></code> 
         </dt>
         <dd><code>group_by</code> and related methods for <code>epi_archive</code>, <code>grouped_epi_archive</code></dd>
       </dl><dl><dt>
           
-          <code><a href="is_epi_archive.html">is_epi_archive()</a></code> 
+          <code><a href="print.epi_archive.html">print(<i>&lt;epi_archive&gt;</i>)</a></code> 
         </dt>
-        <dd>Test for <code>epi_archive</code> format</dd>
+        <dd>Print information about an <code>epi_archive</code> object</dd>
       </dl></div><div class="section level2">
       <h2 id="-epix-functions"><code>epix_*()</code> functions<a class="anchor" aria-label="anchor" href="#-epix-functions"></a></h2>
       
@@ -233,7 +243,7 @@
           
           <code><a href="epix_fill_through_version.html">epix_fill_through_version()</a></code> 
         </dt>
-        <dd><code>epi_archive</code> with unobserved history filled in (won't mutate, might alias)</dd>
+        <dd>Fill <code>epi_archive</code> unobserved history</dd>
       </dl><dl><dt>
           
           <code><a href="epix_merge.html">epix_merge()</a></code> 
@@ -251,7 +261,7 @@
         <dd>Filter an <code>epi_archive</code> object to keep only older versions</dd>
       </dl><dl><dt>
           
-          <code><a href="group_by.epi_archive.html">group_by(<i>&lt;epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">groups(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">ungroup(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">is_grouped_epi_archive()</a></code> <code><a href="group_by.epi_archive.html">group_by_drop_default(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> 
+          <code><a href="group_by.epi_archive.html">group_by(<i>&lt;epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by_drop_default(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">groups(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">ungroup(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">is_grouped_epi_archive()</a></code> 
         </dt>
         <dd><code>group_by</code> and related methods for <code>epi_archive</code>, <code>grouped_epi_archive</code></dd>
       </dl></div><div class="section level2">
@@ -301,6 +311,22 @@
           <code><a href="autoplot.epi_df.html">autoplot(<i>&lt;epi_df&gt;</i>)</a></code> 
         </dt>
         <dd>Automatically plot an epi_df</dd>
+      </dl></div><div class="section level2">
+      <h2 id="advanced-internals">Advanced internals<a class="anchor" aria-label="anchor" href="#advanced-internals"></a></h2>
+      
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="compactify.html">compactify</a></code> 
+        </dt>
+        <dd>Compactify</dd>
       </dl></div><div id="" class="section level2">
       
       

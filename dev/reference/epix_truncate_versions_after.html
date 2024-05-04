@@ -59,7 +59,7 @@ only rows with version falling on or before a specified date."><meta name="robot
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Filter an <code>epi_archive</code> object to keep only older versions</h1>
-      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/main/R/methods-epi_archive.R" class="external-link"><code>R/methods-epi_archive.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/main/R/methods-epi_archive.R" class="external-link"><code>R/methods-epi_archive.R</code></a>, <a href="https://github.com/cmu-delphi/epiprocess/blob/main/R/grouped_epi_archive.R" class="external-link"><code>R/grouped_epi_archive.R</code></a></small>
       <div class="d-none name"><code>epix_truncate_versions_after.Rd</code></div>
     </div>
 
@@ -70,20 +70,23 @@ only rows with <code>version</code> falling on or before a specified date.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">epix_truncate_versions_after</span><span class="op">(</span><span class="va">x</span>, <span class="va">max_version</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">epix_truncate_versions_after</span><span class="op">(</span><span class="va">x</span>, <span class="va">max_version</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for epi_archive</span></span>
+<span><span class="fu">epix_truncate_versions_after</span><span class="op">(</span><span class="va">x</span>, <span class="va">max_version</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for grouped_epi_archive</span></span>
+<span><span class="fu">epix_truncate_versions_after</span><span class="op">(</span><span class="va">x</span>, <span class="va">max_version</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>x</dt>
-<dd><p>An <code>epi_archive</code> object</p></dd>
+<dd><p>An <code>epi_archive</code> object.</p></dd>
 
 
 <dt>max_version</dt>
-<dd><p>Time value specifying the max version to permit in the
-filtered archive. That is, the output archive will comprise rows of the
-current archive data having <code>version</code> less than or equal to the
-specified <code>max_version</code></p></dd>
+<dd><p>The latest version to include in the archive.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -111,26 +111,11 @@ for the <code>max_version</code> of each <code>time_value</code>. Default is <co
 
 <p>An <code>epi_df</code> object.</p>
     </div>
-    <div class="section level2">
-    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This is simply a wrapper around the <code>as_of()</code> method of the
-<code>epi_archive</code> class, so if <code>x</code> is an <code>epi_archive</code> object, then:</p>
-<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">epix_as_of</span>(x, <span class="at">max_version =</span> v)</span></code></pre><p></p></div>
-<p>is equivalent to:</p>
-<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>x<span class="sc">$</span><span class="fu">as_of</span>(<span class="at">max_version =</span> v)</span></code></pre><p></p></div>
-<p>Mutation and aliasing: <code>epix_as_of</code> and <code>$as_of</code> will not mutate the input
-archives, but may in some edge cases alias parts of the inputs, so copy the
-outputs if needed before using mutating operations like <code>data.table</code>'s <code>:=</code>
-operator. Currently, the only situation where there is potentially aliasing
-is of the <code>DT</code> in edge cases with <code>all_versions = TRUE</code>, but this may change
-in the future.</p>
-    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># warning message of data latency shown</span></span></span>
-<span class="r-in"><span><span class="fu">epix_as_of</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  x <span class="op">=</span> <span class="va">archive_cases_dv_subset</span>,</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">epix_as_of</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">archive_cases_dv_subset</span>,</span></span>
 <span class="r-in"><span>  max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 2,192 x 4 with metadata:</span>
@@ -153,14 +138,10 @@ in the future.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-06-10        2.99            7.13</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2,182 more rows</span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span> <span class="co"># 2020-06-02 -- 2021-12-01</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "2020-06-02" "2021-12-01"</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">epix_as_of</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  x <span class="op">=</span> <span class="va">archive_cases_dv_subset</span>,</span></span>
-<span class="r-in"><span>  max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-12"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">epix_as_of</span><span class="op">(</span><span class="va">archive_cases_dv_subset</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-12"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 44 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
@@ -181,25 +162,36 @@ in the future.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-06-10       <span style="color: #BB0000;">NA</span>               7.36</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 34 more rows</span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># When fetching a snapshot as of the latest version with update data in the</span></span></span>
-<span class="r-in"><span><span class="co"># archive, a warning is issued by default, as this update data might not yet</span></span></span>
-<span class="r-in"><span><span class="co"># be finalized (for example, if data versions are labeled with dates, these</span></span></span>
-<span class="r-in"><span><span class="co"># versions might be overwritten throughout the corresponding days with</span></span></span>
-<span class="r-in"><span><span class="co"># additional data or "hotfixes" of erroroneous data; when we build an archive</span></span></span>
-<span class="r-in"><span><span class="co"># based on database queries, the latest available update might still be</span></span></span>
-<span class="r-in"><span><span class="co"># subject to change, but previous versions should be finalized). We can</span></span></span>
-<span class="r-in"><span><span class="co"># muffle such warnings with the following pattern:</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">withCallingHandlers</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="op">{</span></span></span>
-<span class="r-in"><span>    <span class="fu">epix_as_of</span><span class="op">(</span></span></span>
-<span class="r-in"><span>      x <span class="op">=</span> <span class="va">archive_cases_dv_subset</span>,</span></span>
-<span class="r-in"><span>      max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span></span></span>
-<span class="r-in"><span>    <span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="op">}</span>,</span></span>
-<span class="r-in"><span>  epiprocess__snapshot_as_of_clobberable_version <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">wrn</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">invokeRestart</a></span><span class="op">(</span><span class="st">"muffleWarning"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># --- Advanced: ---</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># When requesting recent versions of a data set, there can be some</span></span></span>
+<span class="r-in"><span><span class="co"># reproducibility issues. For example, requesting data as of the current date</span></span></span>
+<span class="r-in"><span><span class="co"># may return different values based on whether today's data is available yet</span></span></span>
+<span class="r-in"><span><span class="co"># or not. Other factors include the time it takes between data becoming</span></span></span>
+<span class="r-in"><span><span class="co"># available and when you download the data, and whether the data provider</span></span></span>
+<span class="r-in"><span><span class="co"># will overwrite ("clobber") version data rather than just publishing new</span></span></span>
+<span class="r-in"><span><span class="co"># versions. You can include information about these factors by setting the</span></span></span>
+<span class="r-in"><span><span class="co"># `clobberable_versions_start` and `versions_end` of an `epi_archive`, in</span></span></span>
+<span class="r-in"><span><span class="co"># which case you will get warnings about potential reproducibility issues:</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">archive_cases_dv_subset2</span> <span class="op">&lt;-</span> <span class="fu"><a href="epi_archive.html">as_epi_archive</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span>,</span></span>
+<span class="r-in"><span>  <span class="co"># Suppose last version with an update could potentially be rewritten</span></span></span>
+<span class="r-in"><span>  <span class="co"># (a.k.a. "hotfixed", "clobbered", etc.):</span></span></span>
+<span class="r-in"><span>  clobberable_versions_start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="co"># Suppose today is the following day, and there are no updates out yet:</span></span></span>
+<span class="r-in"><span>  <span class="va">versions_end</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1L</span>,</span></span>
+<span class="r-in"><span>  compactify <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu">epix_as_of</span><span class="op">(</span><span class="va">archive_cases_dv_subset2</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Getting data as of some recent version which could still be overwritten (under</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> routine circumstances) without assigning a new version number (a.k.a.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> "clobbered").  Thus, the snapshot that we produce here should not be expected</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> to be reproducible later. See `?epi_archive` for more info and `?epix_as_of` on</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> how to muffle.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 2,192 x 4 with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = 2021-12-02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2021-12-01</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -217,8 +209,6 @@ in the future.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-06-09        2.97            6.81</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-06-10        2.99            7.13</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2,182 more rows</span></span>
-<span class="r-in"><span><span class="co"># Since R 4.0, there is a `globalCallingHandlers` function that can be used</span></span></span>
-<span class="r-in"><span><span class="co"># to globally toggle these warnings.</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

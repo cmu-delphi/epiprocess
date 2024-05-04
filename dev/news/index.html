@@ -82,6 +82,7 @@
 <div class="section level3">
 <h3 id="breaking-changes-0-8">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-8"></a></h3>
 <ul><li>Switched <code>epi_df</code>’s <code>other_keys</code> default from <code>NULL</code> to <code>character(0)</code>; PR <a href="https://github.com/cmu-delphi/epiprocess/issues390" class="external-link">#390</a></li>
+<li>Refactored <code>epi_archive</code> to use S3 instead of R6 for its object model. The functionality stay the same, but it will break the member function interface. For migration, you can usually just convert <code>epi_archive$merge(...)</code> to <code>epi_archive &lt;- epi_archive %&gt;% epix_merge(...)</code> (and the same for <code>fill_through_version</code> and <code>truncate_after_version</code>) and <code>epi_archive$slide(...)</code> to <code>epi_archive %&gt;% epix_slide(...)</code> (and the same for <code>as_of</code>, <code>group_by</code>, <code>slide</code>, etc.) (<a href="https://github.com/cmu-delphi/epiprocess/issues340" class="external-link">#340</a>). In some limited situations, such as if you have a helper function that calls <code>epi_archive$merge</code> etc. on one of its arguments, then you may need to more carefully refactor them.</li>
 </ul></div>
 </div>
     <div class="section level2">

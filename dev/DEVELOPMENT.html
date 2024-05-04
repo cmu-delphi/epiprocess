@@ -65,9 +65,9 @@
 <h2 id="setting-up-the-development-environment">Setting up the development environment<a class="anchor" aria-label="anchor" href="#setting-up-the-development-environment"></a></h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'devtools'</span>, <span class="st">'pkgdown'</span>, <span class="st">'styler'</span>, <span class="st">'lintr'</span><span class="op">)</span><span class="op">)</span> <span class="co"># install dev dependencies</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_deps</span><span class="op">(</span>dependencies <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># install package dependencies</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">document</span><span class="op">(</span><span class="op">)</span> <span class="co"># generate package meta data and man files</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">build</span><span class="op">(</span><span class="op">)</span> <span class="co"># build package</span></span></code></pre></div>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/install_deps.html" class="external-link">install_deps</a></span><span class="op">(</span>dependencies <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># install package dependencies</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">document</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># generate package meta data and man files</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/build.html" class="external-link">build</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># build package</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="validating-the-package">Validating the package<a class="anchor" aria-label="anchor" href="#validating-the-package"></a></h2>
@@ -75,8 +75,8 @@
 <code class="sourceCode R"><span><span class="fu">styler</span><span class="fu">::</span><span class="fu">style_pkg</span><span class="op">(</span><span class="op">)</span> <span class="co"># format code</span></span>
 <span><span class="fu">lintr</span><span class="fu">::</span><span class="fu">lint_package</span><span class="op">(</span><span class="op">)</span> <span class="co"># lint code</span></span>
 <span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">test</span><span class="op">(</span><span class="op">)</span> <span class="co"># test package</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span><span class="op">)</span> <span class="co"># check package for errors</span></span></code></pre></div>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/test.html" class="external-link">test</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># test package</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/check.html" class="external-link">check</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># check package for errors</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="developing-the-documentation-site">Developing the documentation site<a class="anchor" aria-label="anchor" href="#developing-the-documentation-site"></a></h2>
@@ -116,11 +116,11 @@
 <li><label><input type="checkbox"><code>git checkout main</code></label></li>
 <li><label><input type="checkbox"><code>git pull</code></label></li>
 <li>
-<label><input type="checkbox"><code>urlchecker::url_check()</code>.</label>
+<label><input type="checkbox"><code><a href="https://rdrr.io/pkg/urlchecker/man/url_check.html" class="external-link">urlchecker::url_check()</a></code>.</label>
 <ul><li>This may choke on the MIT license url, and that’s ok.</li>
 </ul></li>
-<li><label><input type="checkbox"><code>devtools::build_readme()</code></label></li>
-<li><label><input type="checkbox"><code>devtools::check_win_devel()</code></label></li>
+<li><label><input type="checkbox"><code><a href="https://devtools.r-lib.org/reference/build_rmd.html" class="external-link">devtools::build_readme()</a></code></label></li>
+<li><label><input type="checkbox"><code><a href="https://devtools.r-lib.org/reference/check_win.html" class="external-link">devtools::check_win_devel()</a></code></label></li>
 <li><label><input type="checkbox">Have maintainer (“cre” in description) check email for problems.</label></li>
 <li>
 <label><input type="checkbox"><code>revdepcheck::revdep_check(num_workers = 4)</code>.</label>
@@ -129,7 +129,7 @@
 <li><label><input type="checkbox">Update <code>cran-comments.md</code></label></li>
 <li><label><input type="checkbox">PR with any changes (and go through the list again) into <code>dev</code> and run through the list again.</label></li>
 </ul><p>Submit to CRAN:</p>
-<ul class="task-list"><li><label><input type="checkbox"><code>devtools::submit_cran()</code>.</label></li>
+<ul class="task-list"><li><label><input type="checkbox"><code><a href="https://devtools.r-lib.org/reference/submit_cran.html" class="external-link">devtools::submit_cran()</a></code>.</label></li>
 <li><label><input type="checkbox">Maintainer approves email.</label></li>
 </ul><p>Wait for CRAN…</p>
 <ul class="task-list"><li><label><input type="checkbox">If accepted <span class="emoji" data-emoji="tada">🎉</span>, move to next steps. If rejected, fix and resubmit.</label></li>
