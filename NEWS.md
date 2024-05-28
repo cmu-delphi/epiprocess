@@ -29,8 +29,12 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   argument checking (#413).
 - Fix logic to auto-assign `epi_df` `time_type` to `week` (#416) and `year`
   (#441).
+- Clarified "Get started" example of getting Ebola line list data into `epi_df`
+  format.
 
-## Breaking changes
+# epiprocess 0.7.0
+
+## Breaking changes:
 
 - Switched `epi_df`'s `other_keys` default from `NULL` to `character(0)`; PR #390
 - Refactored `epi_archive` to use S3 instead of R6 for its object model. The
