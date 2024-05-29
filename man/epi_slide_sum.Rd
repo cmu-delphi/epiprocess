@@ -23,8 +23,12 @@ epi_slide_sum(
 or ungrouped. If ungrouped, all data in \code{x} will be treated as part of a
 single data group.}
 
-\item{col_names}{A single tidyselection or a tidyselection vector of the
-names of one or more columns for which to calculate the rolling mean.}
+\item{col_names}{A <\code{\link[=dplyr_tidy_select]{tidy-select}}> of the names of one
+or more columns for which to calculate a rolling computation. One or more
+unquoted expressions separated by commas. Variable names can be used as
+if they were positions in the data frame, so expressions like \code{x:y} can
+be used to select a range of variables. The tidyselection cannot be used
+to provide output column names.}
 
 \item{...}{Additional arguments to pass to \code{data.table::frollsum}, for
 example, \code{na.rm} and \code{algo}. \code{data.table::frollsum} is automatically

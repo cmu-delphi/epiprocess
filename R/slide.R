@@ -557,7 +557,8 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
   window_size <- before + after + 1L
 
   pos <- eval_select(rlang::enquo(col_names), data = x)
-  result_col_names <- names(pos)
+  # Always rename results to "slide_value_<original column name>".
+  result_col_names <- paste0("slide_value_", names(x[, pos]))
   slide_one_grp <- function(.data_group, .group_key, ...) {
     missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
 
@@ -605,8 +606,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
 
     if (f_from_package == "data.table") {
       roll_output <- f(
-        x = rlang::set_names(.data_group[, pos], result_col_names),
-        n = window_size, align = "right", ...
+        x = .data_group[, pos], n = window_size, align = "right", ...
       )
 
       if (after >= 1) {
@@ -616,6 +616,8 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
         .data_group[, result_col_names] <- purrr::map(roll_output, function(.x) {
           c(.x[(after + 1L):length(.x)], rep(NA, after))
         })
+      } else {
+        .data_group[, result_col_names] <- roll_output
       }
     } else if (f_from_package == "slider") {
       for (i in seq_along(pos)) {
