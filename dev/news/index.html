@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.8</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.9</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,21 +78,25 @@
 <li>Added <code>autoplot</code> method for <code>epi_df</code> objects, which creates a <code>ggplot2</code> plot of the <code>epi_df</code> (<a href="https://github.com/cmu-delphi/epiprocess/issues382" class="external-link">#382</a>).</li>
 <li>Refactored internals to use <code>cli</code> for warnings/errors and <code>checkmate</code> for argument checking (<a href="https://github.com/cmu-delphi/epiprocess/issues413" class="external-link">#413</a>).</li>
 <li>Fix logic to auto-assign <code>epi_df</code> <code>time_type</code> to <code>week</code> (<a href="https://github.com/cmu-delphi/epiprocess/issues416" class="external-link">#416</a>) and <code>year</code> (<a href="https://github.com/cmu-delphi/epiprocess/issues441" class="external-link">#441</a>).</li>
-</ul></div>
-<div class="section level3">
-<h3 id="breaking-changes-0-8">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-8"></a></h3>
-<ul><li>Switched <code>epi_df</code>’s <code>other_keys</code> default from <code>NULL</code> to <code>character(0)</code>; PR <a href="https://github.com/cmu-delphi/epiprocess/issues390" class="external-link">#390</a></li>
-<li>Refactored <code>epi_archive</code> to use S3 instead of R6 for its object model. The functionality stay the same, but it will break the member function interface. For migration, you can usually just convert <code>epi_archive$merge(...)</code> to <code>epi_archive &lt;- epi_archive %&gt;% epix_merge(...)</code> (and the same for <code>fill_through_version</code> and <code>truncate_after_version</code>) and <code>epi_archive$slide(...)</code> to <code>epi_archive %&gt;% epix_slide(...)</code> (and the same for <code>as_of</code>, <code>group_by</code>, <code>slide</code>, etc.) (<a href="https://github.com/cmu-delphi/epiprocess/issues340" class="external-link">#340</a>). In some limited situations, such as if you have a helper function that calls <code>epi_archive$merge</code> etc. on one of its arguments, then you may need to more carefully refactor them.</li>
+<li>Clarified “Get started” example of getting Ebola line list data into <code>epi_df</code> format.</li>
 </ul></div>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.7.0" id="epiprocess-070">epiprocess 0.7.0<a class="anchor" aria-label="anchor" href="#epiprocess-070"></a></h2>
 <div class="section level3">
+<h3 id="breaking-changes-0-7-0">Breaking changes:<a class="anchor" aria-label="anchor" href="#breaking-changes-0-7-0"></a></h3>
+<ul><li>Switched <code>epi_df</code>’s <code>other_keys</code> default from <code>NULL</code> to <code>character(0)</code>; PR <a href="https://github.com/cmu-delphi/epiprocess/issues390" class="external-link">#390</a></li>
+<li>Refactored <code>epi_archive</code> to use S3 instead of R6 for its object model. The functionality stay the same, but it will break the member function interface. For migration, you can usually just convert <code>epi_archive$merge(...)</code> to <code>epi_archive &lt;- epi_archive %&gt;% epix_merge(...)</code> (and the same for <code>fill_through_version</code> and <code>truncate_after_version</code>) and <code>epi_archive$slide(...)</code> to <code>epi_archive %&gt;% epix_slide(...)</code> (and the same for <code>as_of</code>, <code>group_by</code>, <code>slide</code>, etc.) (<a href="https://github.com/cmu-delphi/epiprocess/issues340" class="external-link">#340</a>). In some limited situations, such as if you have a helper function that calls <code>epi_archive$merge</code> etc. on one of its arguments, then you may need to more carefully refactor them.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.7.0" id="epiprocess-070-1">epiprocess 0.7.0<a class="anchor" aria-label="anchor" href="#epiprocess-070-1"></a></h2>
+<div class="section level3">
 <h3 id="improvements-0-7-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-7-0"></a></h3>
 <ul><li>Updated vignettes for compatibility with epidatr 1.0.0 in PR <a href="https://github.com/cmu-delphi/epiprocess/issues377" class="external-link">#377</a>.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="breaking-changes-0-7-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-7-0"></a></h3>
+<h3 id="breaking-changes-0-7-0-1">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-7-0-1"></a></h3>
 <ul><li>Changes to <code>epi_slide</code> and <code>epix_slide</code>:
 <ul><li>If <code>f</code> is a function, it is now required to take at least three arguments. <code>f</code> must take an <code>epi_df</code> with the same column names as the archive’s <code>DT</code>, minus the <code>version</code> column; followed by a one-row tibble containing the values of the grouping variables for the associated group; followed by a reference time value, usually as a <code>Date</code> object. Optionally, it can take any number of additional arguments after that, and forward values for those arguments through <code>epi[x]_slide</code>’s <code>...</code> args.
 <ul><li>To make your existing slide computations work, add a third argument to your <code>f</code> function to accept this new input: e.g., change <code>f = function(x, g, &lt;any other arguments&gt;) { &lt;body&gt; }</code> to <code>f = function(x, g, rt, &lt;any other arguments&gt;) { &lt;body&gt; }</code>.</li>
