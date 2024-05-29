@@ -376,9 +376,9 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' @template opt-slide-details
 #'
 #' @importFrom dplyr bind_rows mutate %>% arrange tibble select
-#' @importFrom rlang enquo quo_get_expr as_label
+#' @importFrom rlang enquo quo_get_expr as_label expr_label caller_arg
 #' @importFrom tidyselect eval_select
-#' @importFrom purrr map
+#' @importFrom purrr map map_lgl
 #' @importFrom data.table frollmean frollsum frollapply
 #' @importFrom lubridate as.period
 #' @importFrom checkmate assert_function
@@ -472,17 +472,17 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
   # `data.table` and `slider` (or a function that has the exact same
   # definition, e.g. if the function has been reexported or defined
   # locally).
-  if (any(sapply(
-    c(frollmean, frollsum, frollapply),
+  if (any(map_lgl(
+    list(frollmean, frollsum, frollapply),
     function(roll_fn) {
-      isTRUE(identical(f, roll_fn))
+      identical(f, roll_fn)
     }
   ))) {
     f_from_package <- "data.table"
-  } else if (any(sapply(
-    c(slide_sum, slide_prod, slide_mean, slide_min, slide_max, slide_all, slide_any),
+  } else if (any(map_lgl(
+    list(slide_sum, slide_prod, slide_mean, slide_min, slide_max, slide_all, slide_any),
     function(roll_fn) {
-      isTRUE(identical(f, roll_fn))
+      identical(f, roll_fn)
     }
   ))) {
     f_from_package <- "slider"
@@ -490,7 +490,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
     # `f` is from somewhere else and not supported
     cli_abort(
       c(
-        "slide function `f` is not supported",
+        "problem with {rlang::expr_label(rlang::caller_arg(f))}",
         "i" = "`f` must be one of `data.table`'s rolling functions (`frollmean`,
               `frollsum`, `frollapply`. See `?data.table::roll`) or one of
               `slider`'s specialized sliding functions (`slide_mean`, `slide_sum`,

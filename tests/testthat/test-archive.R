@@ -1,5 +1,3 @@
-library(dplyr)
-
 test_that("first input must be a data.frame", {
   expect_error(as_epi_archive(c(1, 2, 3), compactify = FALSE),
     regexp = "Must be of type 'data.frame'."

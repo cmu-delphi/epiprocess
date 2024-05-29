@@ -16,10 +16,6 @@ test_that("Grouping, regrouping, and ungrouping archives works as intended", {
     ) %>%
     as_epi_archive(other_keys = "age_group")
 
-  # Ensure that we're using testthat edition 3's idea of "identical", which is
-  # not as strict as `identical`:
-  testthat::local_edition(3)
-
   # Test equivalency claims in example:
   by_both_keys <- toy_archive %>% group_by(geo_value, age_group)
   expect_identical(

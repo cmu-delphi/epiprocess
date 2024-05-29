@@ -60,6 +60,7 @@ API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html).
 library(epidatr)
 library(epiprocess)
 library(dplyr)
+library(tidyr)
 library(withr)
 
 cases <- pub_covidcast(
@@ -125,7 +126,7 @@ and `time_value` columns, respectively, but inferring the `as_of` field is not
 as easy. See the documentation for `as_epi_df()` more details.
 
 ```{r}
-x <- as_epi_df(cases) %>%
+x <- as_epi_df(cases, as_of = as.Date("2024-03-20")) %>%
   select(geo_value, time_value, total_cases = value)
 
 attributes(x)$metadata
@@ -169,7 +170,7 @@ data.frame(
   # misnamed
   reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"), by = "day"), length.out = length(geo_value)),
   value = seq_along(geo_value) + 0.01 * withr::with_rng_version("3.0.0", withr::with_seed(42, length(geo_value)))
-) %>% as_epi_df()
+) %>% as_epi_df(as_of = as.Date("2024-03-20"))
 ```
 
 The columns can be renamed to match `epi_df` format. In the example below, notice there is also an additional key `pol`.
@@ -220,7 +221,7 @@ ex3 <- ex3 %>%
     state = rep(tolower("MA"), 6),
     pol = rep(c("blue", "swing", "swing"), each = 2)
   ) %>%
-  as_epi_df(additional_metadata = list(other_keys = c("state", "pol")))
+  as_epi_df(additional_metadata = list(other_keys = c("state", "pol")), as_of = as.Date("2024-03-20"))
 
 attr(ex3, "metadata")
 ```
@@ -256,7 +257,7 @@ cases in Canada in 2003, from the
 x <- outbreaks::sars_canada_2003 %>%
   mutate(geo_value = "ca") %>%
   select(geo_value, time_value = date, starts_with("cases")) %>%
-  as_epi_df(geo_type = "nation")
+  as_epi_df(geo_type = "nation", as_of = as.Date("2024-03-20"))
 
 head(x)
 
@@ -279,31 +280,32 @@ ggplot(x, aes(x = time_value, y = value)) +
   labs(x = "Date", y = "SARS cases in Canada", fill = "Type")
 ```
 
-Data on new cases of Ebola in Sierra Leone in 2014, from the same package:
+Get confirmed cases of Ebola in Sierra Leone from 2014 to 2015 by province and
+date of onset, prepared from line list data from the same package:
 
-```{r, message = FALSE, fig.width = 9, fig.height = 6}
+```{r, fig.width = 9, fig.height = 6}
 x <- outbreaks::ebola_sierraleone_2014 %>%
-  mutate(
-    cases = ifelse(status == "confirmed", 1, 0),
-    province = case_when(
-      district %in% c("Kailahun", "Kenema", "Kono") ~ "Eastern",
-      district %in% c(
-        "Bombali", "Kambia", "Koinadugu",
-        "Port Loko", "Tonkolili"
-      ) ~ "Northern",
-      district %in% c("Bo", "Bonthe", "Moyamba", "Pujehun") ~ "Sourthern",
-      district %in% c("Western Rural", "Western Urban") ~ "Western"
-    )
+  select(district, date_of_onset, status) %>%
+  mutate(province = case_when(
+    district %in% c("Kailahun", "Kenema", "Kono") ~
+      "Eastern",
+    district %in% c(
+      "Bombali", "Kambia", "Koinadugu", "Port Loko",
+      "Tonkolili"
+    ) ~
+      "Northern",
+    district %in% c("Bo", "Bonthe", "Moyamba", "Pujehun") ~
+      "Sourthern",
+    district %in% c("Western Rural", "Western Urban") ~
+      "Western"
+  )) %>%
+  group_by(geo_value = province, time_value = date_of_onset) %>%
+  summarise(cases = sum(status == "confirmed"), .groups = "drop") %>%
+  complete(geo_value,
+    time_value = full_seq(time_value, period = 1),
+    fill = list(cases = 0)
   ) %>%
-  select(
-    geo_value = province,
-    time_value = date_of_onset,
-    cases
-  ) %>%
-  filter(cases == 1) %>%
-  group_by(geo_value, time_value) %>%
-  summarise(cases = sum(cases)) %>%
-  as_epi_df(geo_type = "province")
+  as_epi_df(geo_type = "province", as_of = as.Date("2024-03-20"))
 
 ggplot(x, aes(x = time_value, y = cases)) +
   geom_col(aes(fill = geo_value), show.legend = FALSE) +
@@ -312,11 +314,8 @@ ggplot(x, aes(x = time_value, y = cases)) +
   labs(x = "Date", y = "Confirmed cases of Ebola in Sierra Leone")
 ```
 
-
-
 ## Attribution
 This document contains a dataset that is a modified part of the [COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) as [republished in the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html). This data set is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.
 
 [From the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html):
  These signals are taken directly from the JHU CSSE [COVID-19 GitHub repository](https://github.com/CSSEGISandData/COVID-19) without changes.
-

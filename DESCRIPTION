@@ -1,7 +1,7 @@
 Type: Package
 Package: epiprocess
 Title: Tools for basic signal processing in epidemiology
-Version: 0.7.7
+Version: 0.7.9
 Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", email = "lcbrooks@andrew.cmu.edu", role = c("aut", "cre")),
@@ -39,7 +39,6 @@ Imports:
     lubridate,
     magrittr,
     purrr,
-    R6,
     rlang,
     slider,
     tibble,
@@ -50,12 +49,12 @@ Imports:
     vctrs
 Suggests:
     covidcast,
+    devtools,
     epidatr,
     knitr,
     outbreaks,
     rmarkdown,
     testthat (>= 3.1.5),
-    waldo (>= 0.3.1),
     withr
 VignetteBuilder:
     knitr

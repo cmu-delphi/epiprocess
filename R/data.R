@@ -123,7 +123,7 @@ some_package_is_being_unregistered <- function(parent_n = 0L) {
   # evaluation has been triggered via `unregister`.
   simple_call_names <- purrr::map_chr(calls_to_inspect, function(call) {
     maybe_simple_call_name <- rlang::call_name(call)
-    if (is.null(maybe_simple_call_name)) NA_character_ else maybe_simple_call_name
+    maybe_simple_call_name %||% NA_character_
   })
   # `pkgload::unregister` is an (the?) exported function that forces
   # package-level promises, while `pkgload:::unregister_namespace` is the
@@ -195,11 +195,11 @@ delayed_assign_with_unregister_awareness <- function(x, value,
 # Like normal data objects, set `archive_cases_dv_subset` up as a promise, so it
 # doesn't take unnecessary space before it's evaluated. This also avoids a need
 # for @include tags. However, this pattern will use unnecessary space after this
-# promise is evaluated, because `as_epi_archive` clones `archive_cases_dv_subset_dt`
+# promise is evaluated, because `as_epi_archive` copies `archive_cases_dv_subset_dt`
 # and `archive_cases_dv_subset_dt` will stick around along with `archive_cases_dv_subset`
 # after they have been evaluated. We may want to add an option to avoid cloning
 # in `as_epi_archive` and make use of it here. But we may also want to change
-# this into an active binding that clones every time, unless we can hide the
+# this into an active binding that copies every time, unless we can hide the
 # `DT` field from the user (make it non-`public` in general) or make it
 # read-only (in this specific case), so that the user cannot modify the `DT`
 # here and potentially mess up examples that they refer to later on.
