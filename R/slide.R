@@ -432,8 +432,8 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   ungroup()
 epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
                           time_step,
-                          new_col_name = "slide_value", as_list_col = NULL,
-                          names_sep = "_", all_rows = FALSE) {
+                          new_col_name = NULL, as_list_col = NULL,
+                          names_sep = NULL, all_rows = FALSE) {
   assert_class(x, "epi_df")
 
   if (nrow(x) == 0L) {
@@ -452,6 +452,18 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
     cli_abort(
       "`as_list_col` is not supported for `epi_slide_mean`",
       class = "epiproces__epi_slide_mean__list_not_supported"
+    )
+  }
+  if (!is.null(new_col_name)) {
+    cli_abort(
+      "`new_col_name` is not supported for `epi_slide_mean`",
+      class = "epiproces__epi_slide_mean__new_name_not_supported"
+    )
+  }
+  if (!is.null(names_sep)) {
+    cli_abort(
+      "`names_sep` is not supported for `epi_slide_mean`",
+      class = "epiproces__epi_slide_mean__name_sep_not_supported"
     )
   }
 
@@ -543,48 +555,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
   # `before` and `after` params.
   window_size <- before + after + 1L
 
-  col_names_quo <- enquo(col_names)
-  col_names_chr <- as.character(rlang::quo_get_expr(col_names_quo))
-  if (startsWith(rlang::as_label(col_names_quo), "c(")) {
-    # List or vector of col names. We need to drop the first element since it
-    # will be either "c" (if built as a vector) or "list" (if built as a
-    # list).
-    col_names_chr <- col_names_chr[-1]
-  } else if (startsWith(rlang::as_label(col_names_quo), "list(")) {
-    cli_abort(
-      "`col_names` must be a single tidy column name or a vector
-      (`c()`) of tidy column names",
-      class = "epiprocess__epi_slide_mean__col_names_in_list",
-      epiprocess__col_names = col_names_chr
-    )
-  }
-  # If single column name, do nothing.
-
-  if (is.null(names_sep)) {
-    if (length(new_col_name) != length(col_names_chr)) {
-      cli_abort(
-        c(
-          "`new_col_name` must be the same length as `col_names` when
-          `names_sep` is NULL to avoid duplicate output column names."
-        ),
-        class = "epiprocess__epi_slide_mean__col_names_length_mismatch",
-        epiprocess__new_col_name = new_col_name,
-        epiprocess__col_names = col_names_chr
-      )
-    }
-    result_col_names <- new_col_name
-  } else {
-    if (length(new_col_name) != 1L && length(new_col_name) != length(col_names_chr)) {
-      cli_abort(
-        "`new_col_name` must be either length 1 or the same length as `col_names`.",
-        class = "epiprocess__epi_slide_mean__col_names_length_mismatch_and_not_one",
-        epiprocess__new_col_name = new_col_name,
-        epiprocess__col_names = col_names_chr
-      )
-    }
-    result_col_names <- paste(new_col_name, col_names_chr, sep = names_sep)
-  }
-
+  result_col_names <- ...
   slide_one_grp <- function(.data_group, .group_key, ...) {
     missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
 
@@ -632,7 +603,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
 
     if (f_from_package == "data.table") {
       roll_output <- f(
-        x = .data_group[, col_names_chr], n = window_size, align = "right", ...
+        x = .data_group[, col_names], n = window_size, align = "right", ...
       )
 
       if (after >= 1) {
@@ -646,9 +617,9 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
         .data_group[, result_col_names] <- roll_output
       }
     } else if (f_from_package == "slider") {
-      for (i in seq_along(col_names_chr)) {
+      for (i in seq_along(col_names)) {
         .data_group[, result_col_names[i]] <- f(
-          x = .data_group[[col_names_chr[i]]], before = before, after = after, ...
+          x = .data_group[[col_names[i]]], before = before, after = after, ...
         )
       }
     }
