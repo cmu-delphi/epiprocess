@@ -60,6 +60,7 @@ API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html).
 library(epidatr)
 library(epiprocess)
 library(dplyr)
+library(tidyr)
 library(withr)
 
 cases <- pub_covidcast(
@@ -279,30 +280,31 @@ ggplot(x, aes(x = time_value, y = value)) +
   labs(x = "Date", y = "SARS cases in Canada", fill = "Type")
 ```
 
-Data on new cases of Ebola in Sierra Leone in 2014, from the same package:
+Get confirmed cases of Ebola in Sierra Leone from 2014 to 2015 by province and
+date of onset, prepared from line list data from the same package:
 
-```{r, message = FALSE, fig.width = 9, fig.height = 6}
+```{r, fig.width = 9, fig.height = 6}
 x <- outbreaks::ebola_sierraleone_2014 %>%
-  mutate(
-    cases = ifelse(status == "confirmed", 1, 0),
-    province = case_when(
-      district %in% c("Kailahun", "Kenema", "Kono") ~ "Eastern",
-      district %in% c(
-        "Bombali", "Kambia", "Koinadugu",
-        "Port Loko", "Tonkolili"
-      ) ~ "Northern",
-      district %in% c("Bo", "Bonthe", "Moyamba", "Pujehun") ~ "Sourthern",
-      district %in% c("Western Rural", "Western Urban") ~ "Western"
-    )
+  select(district, date_of_onset, status) %>%
+  mutate(province = case_when(
+    district %in% c("Kailahun", "Kenema", "Kono") ~
+      "Eastern",
+    district %in% c(
+      "Bombali", "Kambia", "Koinadugu", "Port Loko",
+      "Tonkolili"
+    ) ~
+      "Northern",
+    district %in% c("Bo", "Bonthe", "Moyamba", "Pujehun") ~
+      "Sourthern",
+    district %in% c("Western Rural", "Western Urban") ~
+      "Western"
+  )) %>%
+  group_by(geo_value = province, time_value = date_of_onset) %>%
+  summarise(cases = sum(status == "confirmed"), .groups = "drop") %>%
+  complete(geo_value,
+    time_value = full_seq(time_value, period = 1),
+    fill = list(cases = 0)
   ) %>%
-  select(
-    geo_value = province,
-    time_value = date_of_onset,
-    cases
-  ) %>%
-  filter(cases == 1) %>%
-  group_by(geo_value, time_value) %>%
-  summarise(cases = sum(cases)) %>%
   as_epi_df(geo_type = "province", as_of = as.Date("2024-03-20"))
 
 ggplot(x, aes(x = time_value, y = cases)) +
