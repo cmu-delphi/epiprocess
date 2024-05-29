@@ -377,6 +377,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'
 #' @importFrom dplyr bind_rows mutate %>% arrange tibble select
 #' @importFrom rlang enquo quo_get_expr as_label
+#' @importFrom tidyselect eval_select
 #' @importFrom purrr map
 #' @importFrom data.table frollmean frollsum frollapply
 #' @importFrom lubridate as.period
@@ -555,7 +556,8 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
   # `before` and `after` params.
   window_size <- before + after + 1L
 
-  result_col_names <- ...
+  pos <- eval_select(rlang::enquo(col_names), data = x)
+  result_col_names <- names(pos)
   slide_one_grp <- function(.data_group, .group_key, ...) {
     missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
 
@@ -603,7 +605,8 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
 
     if (f_from_package == "data.table") {
       roll_output <- f(
-        x = .data_group[, col_names], n = window_size, align = "right", ...
+        x = rlang::set_names(.data_group[, pos], result_col_names),
+        n = window_size, align = "right", ...
       )
 
       if (after >= 1) {
@@ -613,13 +616,11 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
         .data_group[, result_col_names] <- purrr::map(roll_output, function(.x) {
           c(.x[(after + 1L):length(.x)], rep(NA, after))
         })
-      } else {
-        .data_group[, result_col_names] <- roll_output
       }
     } else if (f_from_package == "slider") {
-      for (i in seq_along(col_names)) {
+      for (i in seq_along(pos)) {
         .data_group[, result_col_names[i]] <- f(
-          x = .data_group[[col_names[i]]], before = before, after = after, ...
+          x = .data_group[[pos[i]]], before = before, after = after, ...
         )
       }
     }
@@ -640,7 +641,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
   }
 
   if (!is_epi_df(result)) {
-    # `all_rows`handling strip epi_df format and metadata.
+    # `all_rows`handling strips epi_df format and metadata.
     # Restore them.
     result <- reclass(result, attributes(x)$metadata)
   }
