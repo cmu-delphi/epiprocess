@@ -556,9 +556,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
   # `before` and `after` params.
   window_size <- before + after + 1L
 
-  pos <- eval_select(rlang::enquo(col_names), data = x)
   # Always rename results to "slide_value_<original column name>".
-  result_col_names <- paste0("slide_value_", names(x[, pos]))
   slide_one_grp <- function(.data_group, .group_key, ...) {
     missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
 
@@ -603,6 +601,19 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
         epiprocess__group_key = .group_key
       )
     }
+
+    # Although this value is the same for every `.data_group`, it needs to be
+    # evaluated inside `slide_one_grp`. This is because input `x` and
+    # `.data_group` can have a different number of columns (due to the
+    # grouping step), i.e. the position that `eval_select` returns for a
+    # given column can be different.
+    #
+    # It is possible that rerunning this is slow We could alternately
+    # initialize `pos` and `result_col_names` variables to `NULL` one level
+    # up, and superassign `<<-` the values here the first time we run
+    # `slide_one_grp` (relative resources use TBD).
+    pos <- eval_select(rlang::enquo(col_names), data = .data_group)
+    result_col_names <- paste0("slide_value_", names(x[, pos]))
 
     if (f_from_package == "data.table") {
       roll_output <- f(
