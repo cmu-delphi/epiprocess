@@ -12,9 +12,9 @@ epi_slide_sum(
   after,
   ref_time_values,
   time_step,
-  new_col_name = "slide_value",
+  new_col_name = NULL,
   as_list_col = NULL,
-  names_sep = "_",
+  names_sep = NULL,
   all_rows = FALSE
 )
 }

@@ -727,8 +727,8 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
 #'   ungroup()
 epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
                            time_step,
-                           new_col_name = "slide_value", as_list_col = NULL,
-                           names_sep = "_", all_rows = FALSE) {
+                           new_col_name = NULL, as_list_col = NULL,
+                           names_sep = NULL, all_rows = FALSE) {
   epi_slide_opt(
     x = x,
     col_names = {{ col_names }},
@@ -774,8 +774,8 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
 #'   ungroup()
 epi_slide_sum <- function(x, col_names, ..., before, after, ref_time_values,
                           time_step,
-                          new_col_name = "slide_value", as_list_col = NULL,
-                          names_sep = "_", all_rows = FALSE) {
+                          new_col_name = NULL, as_list_col = NULL,
+                          names_sep = NULL, all_rows = FALSE) {
   epi_slide_opt(
     x = x,
     col_names = {{ col_names }},
