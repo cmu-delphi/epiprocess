@@ -556,7 +556,6 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
   # `before` and `after` params.
   window_size <- before + after + 1L
 
-  # Always rename results to "slide_value_<original column name>".
   slide_one_grp <- function(.data_group, .group_key, ...) {
     missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
 
@@ -613,6 +612,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
     # up, and superassign `<<-` the values here the first time we run
     # `slide_one_grp` (relative resources use TBD).
     pos <- eval_select(rlang::enquo(col_names), data = .data_group)
+    # Always rename results to "slide_value_<original column name>".
     result_col_names <- paste0("slide_value_", names(x[, pos]))
 
     if (f_from_package == "data.table") {

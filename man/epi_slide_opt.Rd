@@ -24,12 +24,13 @@ epi_slide_opt(
 or ungrouped. If ungrouped, all data in \code{x} will be treated as part of a
 single data group.}
 
-\item{col_names}{A <\code{\link[=dplyr_tidy_select]{tidy-select}}> of the names of one
-or more columns for which to calculate a rolling computation. One or more
-unquoted expressions separated by commas. Variable names can be used as
-if they were positions in the data frame, so expressions like \code{x:y} can
-be used to select a range of variables. The tidyselection cannot be used
-to provide output column names.}
+\item{col_names}{A character vector OR a
+<\code{\link[=dplyr_tidy_select]{tidy-select}}> of the names of one or more columns
+for which to calculate a rolling computation. If a tidy-selection, one
+or more unquoted expressions separated by commas. Variable names can be
+used as if they were positions in the data frame, so expressions like
+\code{x:y} can be used to select a range of variables. The tidy-selection
+cannot be used to provide output column names.}
 
 \item{f}{Function; together with \code{...} specifies the computation to slide.
 \code{f} must be one of \code{data.table}'s rolling functions

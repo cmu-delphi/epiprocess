@@ -1,9 +1,10 @@
-#' @param col_names A <[`tidy-select`][dplyr_tidy_select]> of the names of one
-#'  or more columns for which to calculate a rolling computation. One or more
-#'  unquoted expressions separated by commas. Variable names can be used as
-#'  if they were positions in the data frame, so expressions like `x:y` can
-#'  be used to select a range of variables. The tidyselection cannot be used
-#'  to provide output column names.
+#' @param col_names A character vector OR a
+#'  <[`tidy-select`][dplyr_tidy_select]> of the names of one or more columns
+#'  for which to calculate a rolling computation. If a tidy-selection, one
+#'  or more unquoted expressions separated by commas. Variable names can be
+#'  used as if they were positions in the data frame, so expressions like
+#'  `x:y` can be used to select a range of variables. The tidy-selection
+#'  cannot be used to provide output column names.
 #' @param as_list_col Not supported. Included to match `epi_slide` interface.
 #' @param new_col_name Character vector indicating the name(s) of the new
 #'  column(s) that will contain the derivative values. Default
