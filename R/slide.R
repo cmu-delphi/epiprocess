@@ -556,6 +556,16 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
   # `before` and `after` params.
   window_size <- before + after + 1L
 
+  # The position of a given column can be differ between input `x` and
+  # `.data_group` since the grouping step by default drops grouping columns.
+  # To avoid rerunning `eval_select` for every `.data_group`, convert
+  # positions of user-provided `col_names` into string column names. We avoid
+  # using `names(pos)` directly for robustness and in case we later want to
+  # allow users to rename fields via tidyselection.
+  pos <- eval_select(rlang::enquo(col_names), data = x, allow_rename = FALSE)
+  col_names_chr <- names(x)[pos]
+  # Always rename results to "slide_value_<original column name>".
+  result_col_names <- paste0("slide_value_", col_names_chr)
   slide_one_grp <- function(.data_group, .group_key, ...) {
     missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
 
@@ -601,23 +611,9 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
       )
     }
 
-    # Although this value is the same for every `.data_group`, it needs to be
-    # evaluated inside `slide_one_grp`. This is because input `x` and
-    # `.data_group` can have a different number of columns (due to the
-    # grouping step), i.e. the position that `eval_select` returns for a
-    # given column can be different.
-    #
-    # It is possible that rerunning this is slow We could alternately
-    # initialize `pos` and `result_col_names` variables to `NULL` one level
-    # up, and superassign `<<-` the values here the first time we run
-    # `slide_one_grp` (relative resources use TBD).
-    pos <- eval_select(rlang::enquo(col_names), data = .data_group)
-    # Always rename results to "slide_value_<original column name>".
-    result_col_names <- paste0("slide_value_", names(x[, pos]))
-
     if (f_from_package == "data.table") {
       roll_output <- f(
-        x = .data_group[, pos], n = window_size, align = "right", ...
+        x = .data_group[, col_names_chr], n = window_size, align = "right", ...
       )
 
       if (after >= 1) {
@@ -631,9 +627,9 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
         .data_group[, result_col_names] <- roll_output
       }
     } else if (f_from_package == "slider") {
-      for (i in seq_along(pos)) {
+      for (i in seq_along(col_names_chr)) {
         .data_group[, result_col_names[i]] <- f(
-          x = .data_group[[pos[i]]], before = before, after = after, ...
+          x = .data_group[[col_names_chr[i]]], before = before, after = after, ...
         )
       }
     }
