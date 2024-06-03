@@ -153,45 +153,42 @@ jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
     cases,
-    f = data.table::frollmean, new_col_name = "cases_7dav", names_sep = NULL, before = 6
+    f = data.table::frollmean, before = 6
   ) \%>\%
-  # Remove a nonessential var. to ensure new col is printed
-  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  # Remove a nonessential var. to ensure new col is printed, and rename new col
+  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 
 # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
 # and accuracy, and to allow partially-missing windows.
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_opt(cases,
-    f = data.table::frollmean,
-    new_col_name = "cases_7dav", names_sep = NULL, before = 6,
+  epi_slide_opt(
+    cases, f = data.table::frollmean, before = 6,
     # `frollmean` options
     na.rm = TRUE, algo = "exact", hasNA = TRUE
   ) \%>\%
-  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 
 # slide a 7-day leading average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
-    cases,
-    f = slider::slide_mean, new_col_name = "cases_7dav", names_sep = NULL, after = 6
+    cases, f = slider::slide_mean, after = 6
   ) \%>\%
   # Remove a nonessential var. to ensure new col is printed
-  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 
 # slide a 7-day centre-aligned sum. This can also be done with `epi_slide_sum`
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
-    cases,
-    f = data.table::frollsum, new_col_name = "cases_7dav", names_sep = NULL, before = 3, after = 3
+    cases, f = data.table::frollsum, before = 3, after = 3
   ) \%>\%
   # Remove a nonessential var. to ensure new col is printed
-  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 }
 \seealso{

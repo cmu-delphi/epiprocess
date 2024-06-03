@@ -130,9 +130,9 @@ misspelled.)
 # slide a 7-day trailing sum formula on cases
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_sum(cases, new_col_name = "cases_7dsum", names_sep = NULL, before = 6) \%>\%
+  epi_slide_sum(cases, before = 6) \%>\%
   # Remove a nonessential var. to ensure new col is printed
-  dplyr::select(geo_value, time_value, cases, cases_7dsum) \%>\%
+  dplyr::select(geo_value, time_value, cases, cases_7dsum = slide_value_cases) \%>\%
   ungroup()
 }
 \seealso{

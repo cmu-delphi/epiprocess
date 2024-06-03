@@ -130,45 +130,45 @@ misspelled.)
 # slide a 7-day trailing average formula on cases
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(cases, new_col_name = "cases_7dav", names_sep = NULL, before = 6) \%>\%
+  epi_slide_mean(cases, before = 6) \%>\%
   # Remove a nonessential var. to ensure new col is printed
-  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 
 # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
 # and accuracy, and to allow partially-missing windows.
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(cases,
-    new_col_name = "cases_7dav", names_sep = NULL, before = 6,
+  epi_slide_mean(
+    cases, before = 6,
     # `frollmean` options
     na.rm = TRUE, algo = "exact", hasNA = TRUE
   ) \%>\%
-  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 
 # slide a 7-day leading average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(cases, new_col_name = "cases_7dav", names_sep = NULL, after = 6) \%>\%
+  epi_slide_mean(cases, after = 6) \%>\%
   # Remove a nonessential var. to ensure new col is printed
-  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 
 # slide a 7-day centre-aligned average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(cases, new_col_name = "cases_7dav", names_sep = NULL, before = 3, after = 3) \%>\%
+  epi_slide_mean(cases, before = 3, after = 3) \%>\%
   # Remove a nonessential var. to ensure new col is printed
-  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 
 # slide a 14-day centre-aligned average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(cases, new_col_name = "cases_14dav", names_sep = NULL, before = 6, after = 7) \%>\%
+  epi_slide_mean(cases, before = 6, after = 7) \%>\%
   # Remove a nonessential var. to ensure new col is printed
-  dplyr::select(geo_value, time_value, cases, cases_14dav) \%>\%
+  dplyr::select(geo_value, time_value, cases, cases_14dav = slide_value_cases) \%>\%
   ungroup()
 }
 \seealso{
