@@ -361,7 +361,7 @@ test_that("computation output formats x as_list_col", {
         value,
         before = 6L, as_list_col = TRUE, na.rm = TRUE
       ),
-    class = "epiproces__epi_slide_mean__list_not_supported"
+    class = "epiprocess__epi_slide_opt__list_not_supported"
   )
   # `epi_slide_mean` doesn't return dataframe columns
 })
@@ -729,7 +729,7 @@ test_that("basic ungrouped epi_slide_mean computation produces expected output",
   # e.g. aggregating across geos
   expect_error(
     small_x %>% ungroup() %>% epi_slide_mean(value, before = 6L),
-    class = "epiprocess__epi_slide_mean__duplicate_time_values"
+    class = "epiprocess__epi_slide_opt__duplicate_time_values"
   )
 })
 
@@ -1152,7 +1152,7 @@ test_that("special time_types without time_step fail in epi_slide_mean", {
         col_names = a,
         before = before, after = after
       ),
-      class = "epiprocess__epi_slide_mean__unmappable_time_type"
+      class = "epiprocess__epi_slide_opt__unmappable_time_type"
     )
   }
 
@@ -1376,14 +1376,14 @@ test_that("`epi_slide_mean` errors when passed `time_values` with closer than ex
     as_epi_df()
   expect_error(
     epi_slide_mean(time_df, value, before = 6L, time_step = lubridate::seconds),
-    class = "epiprocess__epi_slide_mean__unexpected_row_number"
+    class = "epiprocess__epi_slide_opt__unexpected_row_number"
   )
 })
 
 test_that("`epi_slide_mean` errors when passed `col_names` as list", {
   expect_error(
     epi_slide_mean(grouped, col_names = list(value), before = 1L, after = 0L, ref_time_values = d + 1),
-    class = "epiprocess__epi_slide_mean__col_names_in_list"
+    class = "epiprocess__epi_slide_opt__col_names_in_list"
   )
 })
 

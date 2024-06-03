@@ -452,19 +452,19 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
   if (!is.null(as_list_col)) {
     cli_abort(
       "`as_list_col` is not supported for `epi_slide_[opt/mean/sum]`",
-      class = "epiproces__epi_slide_opt__list_not_supported"
+      class = "epiprocess__epi_slide_opt__list_not_supported"
     )
   }
   if (!is.null(new_col_name)) {
     cli_abort(
       "`new_col_name` is not supported for `epi_slide_[opt/mean/sum]`",
-      class = "epiproces__epi_slide_opt__new_name_not_supported"
+      class = "epiprocess__epi_slide_opt__new_name_not_supported"
     )
   }
   if (!is.null(names_sep)) {
     cli_abort(
       "`names_sep` is not supported for `epi_slide_[opt/mean/sum]`",
-      class = "epiproces__epi_slide_opt__name_sep_not_supported"
+      class = "epiprocess__epi_slide_opt__name_sep_not_supported"
     )
   }
 
