@@ -402,7 +402,8 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
-#'     cases, f = data.table::frollmean, before = 6,
+#'     cases,
+#'     f = data.table::frollmean, before = 6,
 #'     # `frollmean` options
 #'     na.rm = TRUE, algo = "exact", hasNA = TRUE
 #'   ) %>%
@@ -413,7 +414,8 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
-#'     cases, f = slider::slide_mean, after = 6
+#'     cases,
+#'     f = slider::slide_mean, after = 6
 #'   ) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
@@ -423,7 +425,8 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
-#'     cases, f = data.table::frollsum, before = 3, after = 3
+#'     cases,
+#'     f = data.table::frollsum, before = 3, after = 3
 #'   ) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
@@ -688,7 +691,8 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_mean(
-#'     cases, before = 6,
+#'     cases,
+#'     before = 6,
 #'     # `frollmean` options
 #'     na.rm = TRUE, algo = "exact", hasNA = TRUE
 #'   ) %>%
