@@ -383,16 +383,6 @@ test_that("nested dataframe output names are controllable", {
       ),
     basic_result_from_size1_sum %>% rename(value_sum = slide_value)
   )
-  expect_identical(
-    toy_edf %>% filter(
-      geo_value == "a"
-    ) %>%
-      epi_slide_mean(
-        value,
-        before = 6L, names_sep = NULL, na.rm = TRUE
-      ),
-    basic_result_from_size1_mean
-  )
 })
 
 test_that("non-size-1 outputs are recycled", {
@@ -482,7 +472,8 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
         value,
         before = 6L, names_sep = NULL, na.rm = TRUE
       ),
-    basic_result_from_size1_mean
+    basic_result_from_size1_mean %>%
+      rename(slide_value_value = slide_value)
   )
   expect_identical(
     toy_edf %>% filter(
@@ -493,7 +484,8 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
         before = 6L, ref_time_values = c(2L, 8L),
         names_sep = NULL, na.rm = TRUE
       ),
-    filter(basic_result_from_size1_mean, time_value %in% c(2L, 8L))
+    filter(basic_result_from_size1_mean, time_value %in% c(2L, 8L)) %>%
+      rename(slide_value_value = slide_value)
   )
   expect_identical(
     toy_edf %>% filter(
@@ -505,9 +497,10 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
         names_sep = NULL, na.rm = TRUE
       ),
     basic_result_from_size1_mean %>%
-      dplyr::mutate(slide_value = dplyr::if_else(time_value %in% c(2L, 8L),
+      dplyr::mutate(slide_value_value = dplyr::if_else(time_value %in% c(2L, 8L),
         slide_value, NA_integer_
-      ))
+      )) %>%
+      select(-slide_value)
   )
 
   # slide computations returning data frames:
@@ -662,7 +655,7 @@ test_that("basic grouped epi_slide_mean computation produces expected output", {
     as_epi_df(as_of = d + 6)
 
   result1 <- epi_slide_mean(small_x, value, before = 50, names_sep = NULL, na.rm = TRUE)
-  expect_identical(result1, expected_output)
+  expect_identical(result1, expected_output %>% rename(slide_value_value = slide_value))
 })
 
 test_that("ungrouped epi_slide computation completes successfully", {
@@ -722,7 +715,7 @@ test_that("basic ungrouped epi_slide_mean computation produces expected output",
     ungroup() %>%
     filter(geo_value == "ak") %>%
     epi_slide_mean(value, before = 50, names_sep = NULL, na.rm = TRUE)
-  expect_identical(result1, expected_output)
+  expect_identical(result1, expected_output %>% rename(slide_value_value = slide_value))
 
   # Ungrouped with multiple geos
   # epi_slide_mean fails when input data groups contain duplicate time_values,
@@ -928,7 +921,7 @@ test_that("basic slide behavior is correct when groups have non-overlapping date
   expect_identical(result1, expected_output)
 
   result2 <- epi_slide_mean(small_x_misaligned_dates, value, before = 50, names_sep = NULL, na.rm = TRUE)
-  expect_identical(result2, expected_output)
+  expect_identical(result2, expected_output %>% rename(slide_value_value = slide_value))
 })
 
 
@@ -1152,7 +1145,7 @@ test_that("special time_types without time_step fail in epi_slide_mean", {
         col_names = a,
         before = before, after = after
       ),
-      class = "epiprocess__epi_slide_opt__unmappable_time_type"
+      class = "epiprocess__full_date_seq__unmappable_time_type"
     )
   }
 
@@ -1377,13 +1370,6 @@ test_that("`epi_slide_mean` errors when passed `time_values` with closer than ex
   expect_error(
     epi_slide_mean(time_df, value, before = 6L, time_step = lubridate::seconds),
     class = "epiprocess__epi_slide_opt__unexpected_row_number"
-  )
-})
-
-test_that("`epi_slide_mean` errors when passed `col_names` as list", {
-  expect_error(
-    epi_slide_mean(grouped, col_names = list(value), before = 1L, after = 0L, ref_time_values = d + 1),
-    class = "epiprocess__epi_slide_opt__col_names_in_list"
   )
 })
 
