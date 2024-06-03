@@ -160,8 +160,8 @@ through the \code{new_col_name} argument.
 }
 \examples{
 # slide a 7-day trailing average formula on cases
-# This and other simple sliding means are much faster to do using
-# the `epi_slide_mean` function instead.
+# Simple sliding means and sums are much faster to do using
+# the `epi_slide_mean` and `epi_slide_sum` functions instead.
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), before = 6) \%>\%

@@ -86,8 +86,8 @@
 #' @seealso [`epi_slide_opt`] [`epi_slide_mean`] [`epi_slide_sum`]
 #' @examples
 #' # slide a 7-day trailing average formula on cases
-#' # This and other simple sliding means are much faster to do using
-#' # the `epi_slide_mean` function instead.
+#' # Simple sliding means and sums are much faster to do using
+#' # the `epi_slide_mean` and `epi_slide_sum` functions instead.
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), before = 6) %>%
@@ -444,27 +444,27 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
         "i" = "If this computation is occuring within an `epix_slide` call,
           check that `epix_slide` `ref_time_values` argument was set appropriately"
       ),
-      class = "epiprocess__epi_slide_mean__0_row_input",
+      class = "epiprocess__epi_slide_opt__0_row_input",
       epiprocess__x = x
     )
   }
 
   if (!is.null(as_list_col)) {
     cli_abort(
-      "`as_list_col` is not supported for `epi_slide_mean`",
-      class = "epiproces__epi_slide_mean__list_not_supported"
+      "`as_list_col` is not supported for `epi_slide_[opt/mean/sum]`",
+      class = "epiproces__epi_slide_opt__list_not_supported"
     )
   }
   if (!is.null(new_col_name)) {
     cli_abort(
-      "`new_col_name` is not supported for `epi_slide_mean`",
-      class = "epiproces__epi_slide_mean__new_name_not_supported"
+      "`new_col_name` is not supported for `epi_slide_[opt/mean/sum]`",
+      class = "epiproces__epi_slide_opt__new_name_not_supported"
     )
   }
   if (!is.null(names_sep)) {
     cli_abort(
-      "`names_sep` is not supported for `epi_slide_mean`",
-      class = "epiproces__epi_slide_mean__name_sep_not_supported"
+      "`names_sep` is not supported for `epi_slide_[opt/mean/sum]`",
+      class = "epiproces__epi_slide_opt__name_sep_not_supported"
     )
   }
 
@@ -571,19 +571,19 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
     # If a group contains duplicate time values, `frollmean` will still only
     # use the last `k` obs. It isn't looking at dates, it just goes in row
     # order. So if the computation is aggregating across multiple obs for the
-    # same date, `epi_slide_mean` will produce incorrect results; `epi_slide`
-    # should be used instead.
+    # same date, `epi_slide_opt` and derivates will produce incorrect
+    # results; `epi_slide` should be used instead.
     if (anyDuplicated(.data_group$time_value) != 0L) {
       cli_abort(
         c(
-          "group contains duplicate time values. Using `epi_slide_mean` on this
+          "group contains duplicate time values. Using `epi_slide_[opt/mean/sum]` on this
             group will result in incorrect results",
           "i" = "Please change the grouping structure of the input data so that
             each group has non-duplicate time values (e.g. `x %>% group_by(geo_value)
-            %>% epi_slide_mean`)",
+            %>% epi_slide_opt(f = frollmean)`)",
           "i" = "Use `epi_slide` to aggregate across groups"
         ),
-        class = "epiprocess__epi_slide_mean__duplicate_time_values",
+        class = "epiprocess__epi_slide_opt__duplicate_time_values",
         epiprocess__data_group = .data_group,
         epiprocess__group_key = .group_key
       )
@@ -595,7 +595,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
           "i" = c("Input data may contain `time_values` closer together than the
              expected `time_step` size")
         ),
-        class = "epiprocess__epi_slide_mean__unexpected_row_number",
+        class = "epiprocess__epi_slide_opt__unexpected_row_number",
         epiprocess__data_group = .data_group,
         epiprocess__group_key = .group_key
       )
@@ -844,7 +844,7 @@ full_date_seq <- function(x, before, after, time_step) {
           "i" = c("The input data's `time_type` was probably `custom` or `day-time`.
           These require also passing a `time_step` function.")
         ),
-        class = "epiprocess__epi_slide_mean__unmappable_time_type",
+        class = "epiprocess__full_date_seq__unmappable_time_type",
         epiprocess__time_type = ttype
       )
     }
