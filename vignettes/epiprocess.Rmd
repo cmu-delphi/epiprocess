@@ -9,16 +9,21 @@ editor_options:
   chunk_output_type: console
 ---
 
-The [`{epiprocess}`](https://cmu-delphi.github.io/epiprocess/) package provides
+The [`{epiprocess}`](https://cmu-delphi.github.io/epiprocess/) package works
+with epidemiological time series and version data to provide situational
+awareness, processing and transformations in preparation for modeling, and
+version-faithful model backtesting.  It contains:
 
 - `epi_df`, a class for working with epidemiological time series data;
 - `epi_archive`, a class for working with the version history of such time series data;
 - sample data in these formats;
-- functions for common data transformations (e.g., 7-day averages);
+- [`{dplyr}`](https://dplyr.tidyverse.org/)-esque "verbs" for common data
+  transformations (e.g., 7-day averages);
 - functions for exploratory data analysis and situational awareness (e.g.,
   outlier detection and growth rate estimation); and
-- functions for version-faithful "pseudoprospective" backtesting of models, and
-  other version history analysis.
+- [`{dplyr}`](https://dplyr.tidyverse.org/)-esque "verbs" for version-faithful
+  "pseudoprospective" backtesting of models, and other version history analysis
+  and transformations.
 
 It is part of a broader suite of packages including
 [`{epidatr}`](https://cmu-delphi.github.io/epidatr/),
