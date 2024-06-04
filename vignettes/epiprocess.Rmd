@@ -9,14 +9,61 @@ editor_options:
   chunk_output_type: console
 ---
 
-This package introduces a common data structure for epidemiological data sets
-measured over space and time, and offers associated utilities to perform basic
-signal processing tasks.
+The [`{epiprocess}`](https://cmu-delphi.github.io/epiprocess/) package works
+with epidemiological time series and version data to provide situational
+awareness, processing and transformations in preparation for modeling, and
+version-faithful model backtesting.  It contains:
+
+- `epi_df`, a class for working with epidemiological time series data;
+- `epi_archive`, a class for working with the version history of such time series data;
+- sample data in these formats;
+- [`{dplyr}`](https://dplyr.tidyverse.org/)-esque "verbs" for common data
+  transformations (e.g., 7-day averages);
+- functions for exploratory data analysis and situational awareness (e.g.,
+  outlier detection and growth rate estimation); and
+- [`{dplyr}`](https://dplyr.tidyverse.org/)-esque "verbs" for version-faithful
+  "pseudoprospective" backtesting of models, and other version history analysis
+  and transformations.
+
+It is part of a broader suite of packages that includes
+[`{epipredict}`](https://cmu-delphi.github.io/epipredict/),
+[`{epidatr}`](https://cmu-delphi.github.io/epidatr/),
+[`{rtestim}`](https://dajmcdon.github.io/rtestim/), and
+[`{epidatasets}`](https://cmu-delphi.github.io/epidatasets/), for accessing,
+analyzing, and forecasting epidemiological time series data. We have expanded
+documentation and demonstrations for some of these packages available in an
+online "book" format [here](https://cmu-delphi.github.io/delphi-tooling-book/).
+
+## Motivation
+
+[`{epiprocess}`](https://cmu-delphi.github.io/epiprocess/) and
+[`{epipredict}`](https://cmu-delphi.github.io/epipredict/) are designed to lower
+the barrier to entry and implementation cost for epidemiological time series
+analysis and forecasting. Epidemiologists and forecasting groups repeatedly and
+separately have had to rush to implement this type of functionality in a much
+more ad hoc manner; we are trying to save such effort in the future by providing
+well-documented, tested, and general packages that can be called for many common
+tasks instead.
+
+[`{epiprocess}`](https://github.com/cmu-delphi/epiprocess/) also provides tools
+to help avoid a particularly common pitfall in analysis and forecasting:
+ignoring reporting latency and revisions to a data set. This can, for example,
+lead to one retrospectively analyzing a surveillance signal or forecasting model
+and concluding that it is much more accurate than it actually was in real time,
+or producing always-decreasing forecasts on data sets where initial surveillance
+estimates are systematically revised upward. Storing and working with version
+history can help avoid these issues.
+
+## Intended audience
+
+We expect users to be proficient in R, and familiar with the
+[`{dplyr}`](https://dplyr.tidyverse.org/) and
+[`{tidyr}`](https://tidyr.tidyverse.org/) packages.
 
 ## Installing
 
 This package is not on CRAN yet, so it can be installed using the
-[`devtools`](https://devtools.r-lib.org) package:
+[`{devtools}`](https://devtools.r-lib.org) package:
 
 ```{r, eval = FALSE}
 devtools::install_github("cmu-delphi/epiprocess", ref = "main")
