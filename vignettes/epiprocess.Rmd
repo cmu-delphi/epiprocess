@@ -25,11 +25,11 @@ version-faithful model backtesting.  It contains:
   "pseudoprospective" backtesting of models, and other version history analysis
   and transformations.
 
-It is part of a broader suite of packages including
+It is part of a broader suite of packages that includes
+[`{epipredict}`](https://cmu-delphi.github.io/epipredict/),
 [`{epidatr}`](https://cmu-delphi.github.io/epidatr/),
-[`{epidatasets}`](https://cmu-delphi.github.io/epidatasets/),
 [`{rtestim}`](https://dajmcdon.github.io/rtestim/), and
-[`{epipredict}`](https://cmu-delphi.github.io/epipredict/), for accessing,
+[`{epidatasets}`](https://cmu-delphi.github.io/epidatasets/), for accessing,
 analyzing, and forecasting epidemiological time series data. We have expanded
 documentation and demonstrations for some of these packages available in an
 online "book" format [here](https://cmu-delphi.github.io/delphi-tooling-book/).
