@@ -27,7 +27,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.9</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.10</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -91,13 +91,69 @@
 
     
     
-<p>This package introduces a common data structure for epidemiological
-data sets measured over space and time, and offers associated utilities
-to perform basic signal processing tasks.</p>
+<p>The <a href="https://cmu-delphi.github.io/epiprocess/"><code>{epiprocess}</code></a>
+package works with epidemiological time series and version data to
+provide situational awareness, processing and transformations in
+preparation for modeling, and version-faithful model backtesting. It
+contains:</p>
+<ul>
+<li>
+<code>epi_df</code>, a class for working with epidemiological time
+series data;</li>
+<li>
+<code>epi_archive</code>, a class for working with the version
+history of such time series data;</li>
+<li>sample data in these formats;</li>
+<li>
+<a href="https://dplyr.tidyverse.org/" class="external-link"><code>{dplyr}</code></a>-esque
+“verbs” for common data transformations (e.g., 7-day averages);</li>
+<li>functions for exploratory data analysis and situational awareness
+(e.g., outlier detection and growth rate estimation); and</li>
+<li>
+<a href="https://dplyr.tidyverse.org/" class="external-link"><code>{dplyr}</code></a>-esque
+“verbs” for version-faithful “pseudoprospective” backtesting of models,
+and other version history analysis and transformations.</li>
+</ul>
+<p>It is part of a broader suite of packages that includes <a href="https://cmu-delphi.github.io/epipredict/" class="external-link"><code>{epipredict}</code></a>,
+<a href="https://cmu-delphi.github.io/epidatr/" class="external-link"><code>{epidatr}</code></a>,
+<a href="https://dajmcdon.github.io/rtestim/" class="external-link"><code>{rtestim}</code></a>,
+and <a href="https://cmu-delphi.github.io/epidatasets/" class="external-link"><code>{epidatasets}</code></a>,
+for accessing, analyzing, and forecasting epidemiological time series
+data. We have expanded documentation and demonstrations for some of
+these packages available in an online “book” format <a href="https://cmu-delphi.github.io/delphi-tooling-book/" class="external-link">here</a>.</p>
+<div class="section level2">
+<h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
+</h2>
+<p><a href="https://cmu-delphi.github.io/epiprocess/"><code>{epiprocess}</code></a>
+and <a href="https://cmu-delphi.github.io/epipredict/" class="external-link"><code>{epipredict}</code></a>
+are designed to lower the barrier to entry and implementation cost for
+epidemiological time series analysis and forecasting. Epidemiologists
+and forecasting groups repeatedly and separately have had to rush to
+implement this type of functionality in a much more ad hoc manner; we
+are trying to save such effort in the future by providing
+well-documented, tested, and general packages that can be called for
+many common tasks instead.</p>
+<p><a href="https://github.com/cmu-delphi/epiprocess/" class="external-link"><code>{epiprocess}</code></a>
+also provides tools to help avoid a particularly common pitfall in
+analysis and forecasting: ignoring reporting latency and revisions to a
+data set. This can, for example, lead to one retrospectively analyzing a
+surveillance signal or forecasting model and concluding that it is much
+more accurate than it actually was in real time, or producing
+always-decreasing forecasts on data sets where initial surveillance
+estimates are systematically revised upward. Storing and working with
+version history can help avoid these issues.</p>
+</div>
+<div class="section level2">
+<h2 id="intended-audience">Intended audience<a class="anchor" aria-label="anchor" href="#intended-audience"></a>
+</h2>
+<p>We expect users to be proficient in R, and familiar with the <a href="https://dplyr.tidyverse.org/" class="external-link"><code>{dplyr}</code></a> and <a href="https://tidyr.tidyverse.org/" class="external-link"><code>{tidyr}</code></a>
+packages.</p>
+</div>
 <div class="section level2">
 <h2 id="installing">Installing<a class="anchor" aria-label="anchor" href="#installing"></a>
 </h2>
-<p>This package is not on CRAN yet, so it can be installed using the <a href="https://devtools.r-lib.org" class="external-link"><code>devtools</code></a> package:</p>
+<p>This package is not on CRAN yet, so it can be installed using the <a href="https://devtools.r-lib.org" class="external-link"><code>{devtools}</code></a>
+package:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"cmu-delphi/epiprocess"</span>, ref <span class="op">=</span> <span class="st">"main"</span><span class="op">)</span></span></code></pre></div>
 <p>Building the vignettes, such as this getting started guide, takes a
