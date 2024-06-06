@@ -46,6 +46,22 @@ test_that("as_epi_df errors when additional_metadata is not a list", {
   )
 })
 
+test_that("as_epi_df works for nonstandard input", {
+  tib <- tibble::tibble(
+    x = 1:10, y = 1:10,
+    date = rep(seq(as.Date("2020-01-01"), by = 1, length.out = 5), times = 2),
+    geo_value = rep(c("ca", "hi"), each = 5)
+  )
+  expect_message(expect_no_error(tib_epi_df <- tib %>% as_epi_df()))
+
+  tib <- tib %>% rename(forecast_date = date)
+  expect_message(expect_no_error(tib_epi_df <- tib %>% as_epi_df()))
+  tib %>% rename(any_of(name_substitutions))
+
+  tib <- tib %>% mutate(target_date = 20 + forecast_date)
+  expect_error(tib_epi_df <- tib %>% as_epi_df())
+})
+
 # select fixes
 
 tib <- tibble::tibble(

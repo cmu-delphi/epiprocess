@@ -12,7 +12,15 @@ as_epi_df(x, ...)
 
 \method{as_epi_df}{epi_df}(x, ...)
 
-\method{as_epi_df}{tbl_df}(x, geo_type, time_type, as_of, additional_metadata = list(), ...)
+\method{as_epi_df}{tbl_df}(
+  x,
+  geo_type,
+  time_type,
+  as_of,
+  additional_metadata = list(),
+  substitutions = NULL,
+  ...
+)
 
 \method{as_epi_df}{data.frame}(x, geo_type, time_type, as_of, additional_metadata = list(), ...)
 
