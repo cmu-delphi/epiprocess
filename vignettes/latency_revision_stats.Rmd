@@ -30,16 +30,15 @@ hhs_influenza_hosp_issue_data_path = "hhs_influenza_hosp_issue_data.rds"
 if (!file.exists(hhs_influenza_hosp_issue_data_path)) {
   cat("Fetching.\n")
   hhs_influenza_hosp_issue_data =
-    covidcast(
-      data_source = "hhs", signals = "confirmed_admissions_influenza_1d",
+    pub_covidcast(
+      source = "hhs", signals = "confirmed_admissions_influenza_1d",
       geo_type = "state", time_type = "day",
       geo_values = "*",
       # all `time_value`s:
       time_values = "*",
       # all issues through the analysis issue
       issues = epirange(12340101, hhs_influenza_hosp_analysis_issue)
-    ) %>%
-    fetch()
+    )
   saveRDS(hhs_influenza_hosp_issue_data, hhs_influenza_hosp_issue_data_path)
   writeLines(c("License: Public Domain US Government",
                "Accessed via COVIDcast Epidata API"),

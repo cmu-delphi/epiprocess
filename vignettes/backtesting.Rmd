@@ -7,32 +7,34 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-### Overview, and why to use `epix_slide()`
+### Backtesting overview, and why to use `epi_archive`s
 
-The `epiprocess` package provides two functions that can be used for backtesting
-forecasts and other models across a range of dates: `epi_slide()` and
-`epix_slide()`; however, we recommend always using the latter, because:
+The `epiprocess` package provides a few functions that can be used for
+backtesting forecasts and other models: `epi_slide()` (on `epi_df`s), and
+`epix_as_of()` and `epix_slide()` (on `epi_archive`s); however, we recommend
+always using `epi_archive`s, because:
 
-* `epix_slide()` faithfully reproduces latency in data reporting, while
-  `epi_slide()` does not; and
-* `epix_slide()` faithfully reproduces the version of each available observation
-  that would have been available in real time, while `epi_slide()` does not.
+* `epix_as_of()` and `epix_slide()` faithfully reproduce latency in data
+  reporting, while `epi_slide()` does not; and
+* `epix_as_of()` and `epix_slide()` faithfully reproduce the version of each
+  available observation that would have been available in real time, while
+  `epi_slide()` does not.
 
 Using `epi_slide()` or a similar approach instead will typically produce
 **overly optimistic** retrospective forecast evaluations, and might miss some
 run-time errors that would have occurred in real time due to irregular latency
 in data reporting. Thus, it is important to use a versioning-faithful
-"pseudoprospective" approach like `epix_slide()` for backtesting evaluations
-whenever possible.
+"pseudoprospective" approach like `epix_as_of()` and `epix_slide()` for
+backtesting evaluations whenever possible.
 
-Additionally, `epix_slide()` can be used to build and evaluate version-aware
-models that factor in historical data revisions to try to improve their
-accuracy.
+Additionally, `epix_as_of()` and `epix_slide()` can be used to build and
+evaluate version-aware models that factor in historical data revisions to try to
+improve their accuracy.
 
 ### Smaller reproducibility issues that may remain
 
-Even using version-aware approaches like `epix_slide()`, there may still be some
-smaller reproducibility issues based on the data set/provider:
+Even using version-aware approaches based on `epi_archive`s, there may still be
+some smaller reproducibility issues based on the data set/provider:
 
 * If the `version` tags are not date+times, it is unclear what the input to the
   forecaster would have looked like at a particular date+time. For example, if
@@ -55,13 +57,13 @@ smaller reproducibility issues based on the data set/provider:
   this situation, modeling based on the early-morning version wouldn't be
   reproducible if backtesting at a later date.
 
-### Pseudoprospective modeling with `epi_archive`
+### Pseudoprospective backtesting with `epi_archive`s
 
-Pseudoprospective modeling can be performed with `epix_as_of()` or
+Pseudoprospective backtesting can be performed with `epix_as_of()` or
 `epix_slide()`. We'll demonstrate using `epix_slide()` to perform
 pseudoprospective forecasting on COVID-19 incident case rate data from JHU-CSSE
 for a few US states. This data stream had very low reporting latency, and in
-most cases defined incident cases in a way that made revisions theoretically
+most instances defined incident cases in a way that made revisions theoretically
 impossible (the difference between cumulative reporting between consecutive
 reports), but nevertheless, there were some exceptions such as large revisions.
 
@@ -71,21 +73,139 @@ FIXME discussion here.  CLI if used
 library(dplyr)
 library(tidyr)
 library(purrr)
+library(ggplot2)
+library(epidatr)
 library(epiprocess)
 library(epipredict)
-library(ggplot2)
+
+
+
+
+
+
+
+
+
+
+# For reproducibility, we'll work with data reporting through some fixed issue
+# we've already observed. For better reproducibility, that issue should be at
+# least two days ago (from today), to incorporate any "hotfixes" to that data
+# and allow up to a day for database replication delays:
+hhs_analysis_issue = as.Date("2024-02-01") - 2L
+# For speed & politness, we have enabled epidatr caching.
+cache_info()[c("max_size", "max_age")]
+# Fetch issue data using `epidatr`:
+hhs_issue_data =
+  pub_covidcast(
+    source = "hhs", signals = "confirmed_admissions_covid_1d",
+    geo_type = "state", time_type = "day",
+    # all issues through the analysis issue
+    issues = epirange(12340101, hhs_analysis_issue)
+  )
+# ^ Data license: Public Domain US Government. Accessed via COVIDcast Epidata API.
+
+# It looks like more regular reporting started around version 2021-09-21, with
+# 2021-09-21 being a little different as well. It's currently not easy to filter
+# diff-based issue data correctly based on the version, so let's just filter out
+# some this reporting based on time values that we expect would be included. We
+# might also consider one of the mandatory reporting start dates. We're working
+# on ways to filter both version and time values more easily from an archive
+# object directly.
+# hhs_start_time_value = as.Date("2021-09-21") # flu, approx
+hhs_start_time_value = as.Date("2020-12-01") # covid, approx, though start of 2021 might also have some reporting quirks
+hhs_archive = hhs_issue_data %>%
+  filter(time_value >= hhs_start_time_value) %>%
+  select(geo_value, time_value, version = issue, admissions = value) %>%
+  as_epi_archive(compactify = TRUE)
+
+
+flusurv_analysis_issue <- as.Date("2019-08-01") %>%
+  MMWRweek::MMWRweek() %>%
+  {.$MMWRyear * 100L + .$MMWRweek}
+
+flusurv_issue_data <-
+  pub_flusurv(
+    locations = "network_all",
+    issues = epirange(123401, flusurv_analysis_issue)
+  )
+
+flusurv_archive <- flusurv_issue_data %>%
+  select(geo_value = location,
+         time_value = epiweek,
+         ## version = release_date,
+         version = issue,
+         starts_with("rate_")) %>%
+  as_epi_archive(compactify = TRUE)
+
+flusurv_issue_data %>%
+  count(lag2 = release_date - issue)
+
+flusurv_issue_data %>%
+  count(release_wday = as.POSIXlt(release_date)$wday)
+
+as.POSIXlt(min(flusurv_issue_data$release_date))$wday
+
+# XXX surprises regarding release_date ranges (not actually turning off during off and early season); investigating:
+
+# any update:
+tibble(date = flusurv_archive$DT$version %>% unique() %>% sort(),
+       datediff = c(NA, diff(date))) %>%
+  print(n=10000L)
+
+flusurv_archive$DT[, .N, by = version] %>%
+  ggplot(aes(version, N)) %>%
+  `+`(geom_point())
+
+# adding for first time:
+unique(flusurv_archive$DT, by = c("geo_value", "time_value")) %>%
+  .$version %>% unique() %>% sort() %>%
+  {tibble(date = ., datediff = c(NA, diff(date)))} %>%
+  print(n=10000L)
+
+# okay, this now makes sense
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Mondays
-forecast_dates <- seq(as.Date("2020-11-02"), as.Date("2021-11-30"), by = "6 weeks")
+## forecast_dates <- seq(as.Date("2020-11-02"), as.Date("2021-11-30"), by = "6 weeks")
+
+
+
+## archive <- hhs_archive
+archive <- flusurv_archive
+
+forecast_dates <- seq(min(archive$DT$version) + 120L, archive$versions_end,
+                      by = "6 weeks")
 
 horizons <- c(0, 7, 14, 21, 28) # relative to forecast_date
+## horizons <- 1 + c(0, 7, 14, 21, 28) # relative to forecast_date
 
 example_forecaster <- function(snapshot_edf, forecast_date) {
+  if (snapshot_edf %>%
+        distinct(time_value) %>%
+        filter(time_value >= forecast_date - 40L) %>%
+        nrow() < 3L) {
+    return (tibble::tibble())
+  }
   shared_reporting_latency <- as.integer(forecast_date - max(snapshot_edf$time_value))
-  aheads <- horizons + shared_reporting_latency # relative to max time_value
+  ## aheads <- horizons + shared_reporting_latency # relative to max time_value
   # FIXME shifting technique instead
-  aheads %>%
-    map(function(ahead) {
+  horizons %>%
+    map(function(horizon) {
       snapshot_edf %>%
         ## flatline_forecaster(
         ##   "case_rate_7d_av",
@@ -95,24 +215,33 @@ example_forecaster <- function(snapshot_edf, forecast_date) {
         ##     forecast_date = forecast_date
         ##   )) %>%
         arx_forecaster(
-          outcome = "case_rate_7d_av", # via JHU-CSSE
+          ## outcome = "case_rate_7d_av", # via JHU-CSSE
           ## predictors = "percent_cli", # from doctor-visits (claims)
-          predictors = c("case_rate_7d_av", "percent_cli"), # from doctor-visits (claims)
+          ## predictors = c("case_rate_7d_av", "percent_cli"), # cli from doctor-visits (claims)
+          ## outcome = "admissions",
+          outcome = "rate_overall",
+          ## predictors = c("case_rate_7d_av"),
+          ## predictors = "admissions",
+          predictors = "rate_overall",
           args_list = arx_args_list(
             # FIXME this is incomplete; latency often varies signficantly by covariate and can't be ignored, so we also need lag adjustment.
-            ahead = ahead,
-            quantile_levels = c(0.1, 0.5, 0.9)
-            # can't use forecast_date = + target_date = ; target_date appears to be ignored
+            ## ahead = shared_reporting_latency + horizon,
+            ahead = horizon,
+            quantile_levels = c(0.1, 0.5, 0.9)#,
+            ## forecast_date = forecast_date,
+            ## target_date = forecast_date + horizon
           )) %>%
         .$predictions %>%
-        mutate(forecast_date = .env$forecast_date)
+        mutate(forecast_date = forecast_date,
+               target_date = forecast_date + horizon)
     }) %>%
     bind_rows()
   ## list()
 }
 
 pseudoprospective_forecasts <-
-  archive_cases_dv_subset %>%
+  ## archive_cases_dv_subset %>%
+  archive %>%
   epix_slide(
     ref_time_values = forecast_dates,
     before = 365000L, # 1000-year time window --> don't filter out any `time_value`s
@@ -123,7 +252,8 @@ pseudoprospective_forecasts <-
   select(-time_value)
 
 snapshots <-
-  archive_cases_dv_subset %>%
+  ## archive_cases_dv_subset %>%
+  archive %>%
   epix_slide(
     ref_time_values = forecast_dates,
     before = 365000L, # 1000-year time window --> don't filter out any `time_value`s
@@ -133,13 +263,14 @@ snapshots <-
   rename(forecast_date = time_value) %>%
   unnest(slide_value)
 
-latest_edf <- archive_cases_dv_subset %>% epix_as_of(.$versions_end)
+latest_edf <- archive %>% epix_as_of(.$versions_end)
 
 unfaithful_forecasts <- latest_edf %>%
   # pretend we get observations about today, on today, with no revisions
   mutate(version = time_value) %>%
-  as_epi_archive() %>%
+  as_epi_archive(versions_end = max(forecast_dates)) %>%
   epix_slide(
+    # pretend version releases are on forecast dates
     ref_time_values = forecast_dates,
     before = 365000L, # 1000-year time window --> don't filter out any `time_value`s
     ~ example_forecaster(.x, .ref_time_value),
@@ -147,14 +278,21 @@ unfaithful_forecasts <- latest_edf %>%
   ) %>%
   select(-time_value)
 
+## plot_geo_values <- c("mi", "id", "ca", "ga", "pa")
+## plot_geo_values <- c("ca")
+plot_geo_values <- c("network_all")
+
 # Plot them, on top of latest COVID-19 case rates
-bind_rows(list(
-  pseudoprospective = pseudoprospective_forecasts,
-  unfaithful = unfaithful_forecasts
-), .id = "backtester") %>%
+plt <- 
+  bind_rows(list(
+    pseudoprospective = pseudoprospective_forecasts,
+    unfaithful = unfaithful_forecasts
+  ), .id = "backtester") %>%
+  filter(geo_value %in% plot_geo_values) %>%
   pivot_quantiles_wider(.pred_distn) %>%
   ggplot(aes(x = target_date)) +
-  facet_wrap(vars(geo_value)) +
+  ## facet_wrap(vars(geo_value)) +
+  facet_wrap(vars(geo_value), scales = "free_y") +
   geom_ribbon(aes(group = interaction(backtester, forecast_date),
                   fill = backtester,
                   ymin = `0.1`, ymax = `0.9`),
@@ -169,16 +307,25 @@ bind_rows(list(
                 group = interaction(signal, forecast_date)),
             data =
               snapshots %>%
-              pivot_longer(c(percent_cli, case_rate_7d_av),
+              filter(geo_value %in%  plot_geo_values) %>%
+              ## pivot_longer(c(percent_cli, case_rate_7d_av),
+              ## pivot_longer(c(admissions),
+              pivot_longer(c(rate_overall),
                            names_to = "signal") %>%
               left_join(
                 latest_edf %>%
-                  drop_na(c(percent_cli, case_rate_7d_av)) %>%
+                  ## drop_na(c(percent_cli, case_rate_7d_av)) %>%
+                  ## drop_na(c(admissions)) %>%
+                  drop_na(c(rate_overall)) %>%
                   summarize(
                     ## case_rate_7d_av = 1,
-                    across(c(percent_cli, case_rate_7d_av), ~ mean(case_rate_7d_av) / mean(.x))
+                    ## across(c(percent_cli, case_rate_7d_av), ~ mean(case_rate_7d_av) / mean(.x))
+                    ## across(c(admissions), ~ mean(admissions) / mean(.x))
+                    across(c(rate_overall), ~ mean(rate_overall) / mean(.x))
                   ) %>%
-                  pivot_longer(c(percent_cli, case_rate_7d_av),
+                  ## pivot_longer(c(percent_cli, case_rate_7d_av),
+                  ## pivot_longer(c(admissions),
+                  pivot_longer(c(rate_overall),
                                names_to = "signal",
                                values_to = "scale_factor"),
                 by = "signal"
@@ -187,8 +334,11 @@ bind_rows(list(
               ## mutate(forecast_date = as.factor(forecast_date)) %>%
               {.}
             ) +
-  geom_line(aes(y = case_rate_7d_av),
+  ## geom_line(aes(y = case_rate_7d_av),
+  ## geom_line(aes(y = admissions),
+  geom_line(aes(y = rate_overall),
             data = latest_edf %>%
+              filter(geo_value %in% plot_geo_values) %>%
               rename(target_date = time_value)) +
   geom_vline(aes(xintercept = forecast_date),
              data = function(df) distinct(df, forecast_date),
@@ -211,24 +361,24 @@ bind_rows(list(
 ##   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
 ##   labs(x = "Date", y = "Reported COVID-19 case rates") + 
 ##   theme(legend.position = "none") 
+plotly::ggplotly(plt)
 
-
-archive_cases_dv_subset %>%
-  epix_slide(ref_time_values = .$DT$version %>% unique() %>% `[`(as.POSIXlt(.)$wday == 1L),
-             before = 14L, ~ slice_max(.x, time_value, by = geo_value), as_list_col = TRUE) %>%
-  rename(version = time_value) %>%
-  unnest(slide_value) %>%
-  left_join(
-    archive_cases_dv_subset %>% epix_as_of(.$versions_end),
-    by = c("geo_value", "time_value")
-  ) %>%
-  mutate(reldiff = abs(case_rate_7d_av.x - case_rate_7d_av.y)/(10 + abs(case_rate_7d_av.y))) %>%
-  mutate(version_lag = as.integer(version - time_value)) %>%
-  ## filter(version_lag %in% c(7L, 14L)) %>%
-  ## slice_max(reldiff, n = 10L, by = version_lag) %>%
-  slice_max(reldiff, n = 10L) %>%
-  select(version_lag, geo_value, version, case_rate_7d_av.x, case_rate_7d_av.y, reldiff) %>%
-  print(n = 100L)
+## archive_cases_dv_subset %>%
+##   epix_slide(ref_time_values = .$DT$version %>% unique() %>% `[`(as.POSIXlt(.)$wday == 1L),
+##              before = 14L, ~ slice_max(.x, time_value, by = geo_value), as_list_col = TRUE) %>%
+##   rename(version = time_value) %>%
+##   unnest(slide_value) %>%
+##   left_join(
+##     archive_cases_dv_subset %>% epix_as_of(.$versions_end),
+##     by = c("geo_value", "time_value")
+##   ) %>%
+##   mutate(reldiff = abs(case_rate_7d_av.x - case_rate_7d_av.y)/(10 + abs(case_rate_7d_av.y))) %>%
+##   mutate(version_lag = as.integer(version - time_value)) %>%
+##   ## filter(version_lag %in% c(7L, 14L)) %>%
+##   ## slice_max(reldiff, n = 10L, by = version_lag) %>%
+##   slice_max(reldiff, n = 10L) %>%
+##   select(version_lag, geo_value, version, case_rate_7d_av.x, case_rate_7d_av.y, reldiff) %>%
+##   print(n = 100L)
 
 ```
 
