@@ -29,7 +29,7 @@ toy_edf <- tibble::tribble(
   as_epi_df(as_of = 100)
 
 # nolint start: line_length_linter.
-basic_result_from_size1_sum <- tibble::tribble(
+basic_sum_result <- tibble::tribble(
   ~geo_value, ~time_value, ~value, ~slide_value,
   "a", 1:10, 2L^(1:10), data.table::frollsum(2L^(1:10) + 2L^(11:20), c(1:7, rep(7L, 3L)), adaptive = TRUE, na.rm = TRUE),
   "b", 1:10, 2L^(11:20), data.table::frollsum(2L^(1:10) + 2L^(11:20), c(1:7, rep(7L, 3L)), adaptive = TRUE, na.rm = TRUE),
@@ -38,7 +38,7 @@ basic_result_from_size1_sum <- tibble::tribble(
   dplyr::arrange(time_value) %>%
   as_epi_df(as_of = 100)
 
-basic_result_from_size1_mean <- tibble::tribble(
+basic_mean_result <- tibble::tribble(
   ~geo_value, ~time_value, ~value, ~slide_value,
   "a", 1:10, 2L^(1:10), data.table::frollmean(2L^(1:10), c(1:7, rep(7L, 3L)), adaptive = TRUE, na.rm = TRUE),
 ) %>%
@@ -315,27 +315,29 @@ test_that(
 )
 
 test_that("computation output formats x as_list_col", {
-  # See `toy_edf` and `basic_result_from_size1_sum` definitions at top of file.
+  # See `toy_edf` and `basic_sum_result` definitions at top of file.
   # We'll try 7d sum with a few formats.
   expect_identical(
     toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value)),
-    basic_result_from_size1_sum
+    basic_sum_result
   )
   expect_identical(
     toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value), as_list_col = TRUE),
-    basic_result_from_size1_sum %>% dplyr::mutate(slide_value = as.list(slide_value))
+    basic_sum_result %>% dplyr::mutate(slide_value = as.list(slide_value))
   )
   expect_identical(
     toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value))),
-    basic_result_from_size1_sum %>% rename(slide_value_value = slide_value)
+    basic_sum_result %>% rename(slide_value_value = slide_value)
   )
   expect_identical(
     toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value)), as_list_col = TRUE),
-    basic_result_from_size1_sum %>%
+    basic_sum_result %>%
       mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x)))
   )
+}
 
-  # See `toy_edf` and `basic_result_from_size1_mean` definitions at top of file.
+test_that("epi_slide_mean errors when `as_list_col` non-NULL", {
+  # See `toy_edf` and `basic_mean_result` definitions at top of file.
   # We'll try 7d avg with a few formats.
   # Warning: not exactly the same naming behavior as `epi_slide`.
   expect_identical(
@@ -347,7 +349,7 @@ test_that("computation output formats x as_list_col", {
         value,
         before = 6L, na.rm = TRUE
       ),
-    basic_result_from_size1_mean %>% dplyr::mutate(
+    basic_mean_result %>% dplyr::mutate(
       slide_value_value = slide_value
     ) %>%
       select(-slide_value)
@@ -373,7 +375,7 @@ test_that("nested dataframe output names are controllable", {
         before = 6L, ~ data.frame(value = sum(.x$value)),
         new_col_name = "result"
       ),
-    basic_result_from_size1_sum %>% rename(result_value = slide_value)
+    basic_sum_result %>% rename(result_value = slide_value)
   )
   expect_identical(
     toy_edf %>%
@@ -381,7 +383,7 @@ test_that("nested dataframe output names are controllable", {
         before = 6L, ~ data.frame(value_sum = sum(.x$value)),
         names_sep = NULL
       ),
-    basic_result_from_size1_sum %>% rename(value_sum = slide_value)
+    basic_sum_result %>% rename(value_sum = slide_value)
   )
 })
 
@@ -472,7 +474,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
         value,
         before = 6L, names_sep = NULL, na.rm = TRUE
       ),
-    basic_result_from_size1_mean %>%
+    basic_mean_result %>%
       rename(slide_value_value = slide_value)
   )
   expect_identical(
@@ -484,7 +486,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
         before = 6L, ref_time_values = c(2L, 8L),
         names_sep = NULL, na.rm = TRUE
       ),
-    filter(basic_result_from_size1_mean, time_value %in% c(2L, 8L)) %>%
+    filter(basic_mean_result, time_value %in% c(2L, 8L)) %>%
       rename(slide_value_value = slide_value)
   )
   expect_identical(
@@ -496,7 +498,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
         before = 6L, ref_time_values = c(2L, 8L), all_rows = TRUE,
         names_sep = NULL, na.rm = TRUE
       ),
-    basic_result_from_size1_mean %>%
+    basic_mean_result %>%
       dplyr::mutate(slide_value_value = dplyr::if_else(time_value %in% c(2L, 8L),
         slide_value, NA_integer_
       )) %>%

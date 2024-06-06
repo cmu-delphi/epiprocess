@@ -16,7 +16,7 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - Add new `epi_slide_opt` function to allow much faster rolling computations
   in some cases, using `data.table` and `slider` optimized rolling functions
   (#433).
-- Add tidyselect interfact for `epi_slide_opt` and derivatives (#452).
+- Add tidyselect interface for `epi_slide_opt` and derivatives (#452).
 - regenerated the `jhu_csse_daily_subset` dataset with the latest versions of
   the data from the API
 - changed approach to versioning, see DEVELOPMENT.md for details
