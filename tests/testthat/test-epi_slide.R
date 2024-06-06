@@ -334,7 +334,7 @@ test_that("computation output formats x as_list_col", {
     basic_sum_result %>%
       mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x)))
   )
-}
+})
 
 test_that("epi_slide_mean errors when `as_list_col` non-NULL", {
   # See `toy_edf` and `basic_mean_result` definitions at top of file.
