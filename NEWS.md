@@ -32,6 +32,7 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   (#441).
 - Clarified "Get started" example of getting Ebola line list data into `epi_df`
   format.
+- Improved documentation web site landing page's introduction.
 
 # epiprocess 0.7.0
 
