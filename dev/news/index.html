@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.10</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.11</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,6 +69,7 @@
 <li>Add new <code>epi_slide_mean</code> function to allow much (~30x) faster rolling average computations in some cases (<a href="https://github.com/cmu-delphi/epiprocess/issues400" class="external-link">#400</a>).</li>
 <li>Add new <code>epi_slide_sum</code> function to allow much faster rolling sum computations in some cases (<a href="https://github.com/cmu-delphi/epiprocess/issues433" class="external-link">#433</a>).</li>
 <li>Add new <code>epi_slide_opt</code> function to allow much faster rolling computations in some cases, using <code>data.table</code> and <code>slider</code> optimized rolling functions (<a href="https://github.com/cmu-delphi/epiprocess/issues433" class="external-link">#433</a>).</li>
+<li>Add tidyselect interface for <code>epi_slide_opt</code> and derivatives (<a href="https://github.com/cmu-delphi/epiprocess/issues452" class="external-link">#452</a>).</li>
 <li>regenerated the <code>jhu_csse_daily_subset</code> dataset with the latest versions of the data from the API</li>
 <li>changed approach to versioning, see DEVELOPMENT.md for details</li>
 <li>

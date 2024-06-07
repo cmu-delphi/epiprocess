@@ -12,7 +12,7 @@ examples."><meta name="robots" content="noindex"><!-- mathjax --><script src="ht
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.10</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.11</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,9 +78,9 @@ examples.</p>
 <span>  <span class="va">after</span>,</span>
 <span>  <span class="va">ref_time_values</span>,</span>
 <span>  <span class="va">time_step</span>,</span>
-<span>  new_col_name <span class="op">=</span> <span class="st">"slide_value"</span>,</span>
+<span>  new_col_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  as_list_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  names_sep <span class="op">=</span> <span class="st">"_"</span>,</span>
+<span>  names_sep <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  all_rows <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -94,8 +94,15 @@ single data group.</p></dd>
 
 
 <dt>col_names</dt>
-<dd><p>A single tidyselection or a tidyselection vector of the
-names of one or more columns for which to calculate the rolling mean.</p></dd>
+<dd><p>&lt;<code>tidy-select</code>&gt; An unquoted column
+name(e.g., <code>cases</code>), multiple column names (e.g., <code>c(cases, deaths)</code>), or
+<a href="https://tidyselect.r-lib.org/reference/language.html" class="external-link">other tidy-select expression</a>. Variable names can
+be used as if they were positions in the data frame, so expressions like
+<code>x:y</code> can be used to select a range of variables. If you have the desired
+column names stored in a vector <code>vars</code>, use <code>col_names = all_of(vars)</code>.</p>
+<p>The tidy-selection renaming interface is not supported, and cannot be used
+to provide output column names; if you want to customize the output column
+names, use <code><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">dplyr::rename</a></code> after the slide.</p></dd>
 
 
 <dt>...</dt>
@@ -215,9 +222,9 @@ misspelled.)</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># slide a 7-day trailing sum formula on cases</span></span></span>
 <span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu">epi_slide_sum</span><span class="op">(</span><span class="va">cases</span>, new_col_name <span class="op">=</span> <span class="st">"cases_7dsum"</span>, names_sep <span class="op">=</span> <span class="cn">NULL</span>, before <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu">epi_slide_sum</span><span class="op">(</span><span class="va">cases</span>, before <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="co"># Remove a nonessential var. to ensure new col is printed</span></span></span>
-<span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, <span class="va">cases_7dsum</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, cases_7dsum <span class="op">=</span> <span class="va">slide_value_cases</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
