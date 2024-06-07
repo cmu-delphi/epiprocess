@@ -486,10 +486,10 @@ guess_time_column_name <- function(x, substitutions = NULL) {
       )
       substitutions <- upcase_snake_case(substitutions)
     }
-    strsplit(name_substitutions, "_") %>%
+    strsplit(substitutions, "_") %>%
       map(function(name) paste0(toupper(substr(name, 1, 1)), substr(name, 2, nchar(name)), collapse = "_")) %>%
       unlist()
-    x <- tryCatch(x %>% rename(any_of(name_substitutions)),
+    x <- tryCatch(x %>% rename(any_of(substitutions)),
       error = function(cond) {
         cli_abort("There are multiple `time_value` candidate columns.
 Either `rename` some yourself or drop some.")

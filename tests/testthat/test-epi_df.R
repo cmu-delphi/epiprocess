@@ -56,7 +56,6 @@ test_that("as_epi_df works for nonstandard input", {
 
   tib <- tib %>% rename(forecast_date = date)
   expect_message(expect_no_error(tib_epi_df <- tib %>% as_epi_df()))
-  tib %>% rename(any_of(name_substitutions))
 
   tib <- tib %>% mutate(target_date = 20 + forecast_date)
   expect_error(tib_epi_df <- tib %>% as_epi_df())
