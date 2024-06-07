@@ -12,9 +12,9 @@ epi_slide_mean(
   after,
   ref_time_values,
   time_step,
-  new_col_name = "slide_value",
+  new_col_name = NULL,
   as_list_col = NULL,
-  names_sep = "_",
+  names_sep = NULL,
   all_rows = FALSE
 )
 }
@@ -23,8 +23,16 @@ epi_slide_mean(
 or ungrouped. If ungrouped, all data in \code{x} will be treated as part of a
 single data group.}
 
-\item{col_names}{A single tidyselection or a tidyselection vector of the
-names of one or more columns for which to calculate the rolling mean.}
+\item{col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
+name(e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}), or
+\link[tidyselect:language]{other tidy-select expression}. Variable names can
+be used as if they were positions in the data frame, so expressions like
+\code{x:y} can be used to select a range of variables. If you have the desired
+column names stored in a vector \code{vars}, use \code{col_names = all_of(vars)}.
+
+The tidy-selection renaming interface is not supported, and cannot be used
+to provide output column names; if you want to customize the output column
+names, use \code{\link[dplyr:rename]{dplyr::rename}} after the slide.}
 
 \item{...}{Additional arguments to pass to \code{data.table::frollmean}, for
 example, \code{na.rm} and \code{algo}. \code{data.table::frollmean} is automatically
@@ -125,45 +133,46 @@ misspelled.)
 # slide a 7-day trailing average formula on cases
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(cases, new_col_name = "cases_7dav", names_sep = NULL, before = 6) \%>\%
+  epi_slide_mean(cases, before = 6) \%>\%
   # Remove a nonessential var. to ensure new col is printed
-  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 
 # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
 # and accuracy, and to allow partially-missing windows.
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(cases,
-    new_col_name = "cases_7dav", names_sep = NULL, before = 6,
+  epi_slide_mean(
+    cases,
+    before = 6,
     # `frollmean` options
     na.rm = TRUE, algo = "exact", hasNA = TRUE
   ) \%>\%
-  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 
 # slide a 7-day leading average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(cases, new_col_name = "cases_7dav", names_sep = NULL, after = 6) \%>\%
+  epi_slide_mean(cases, after = 6) \%>\%
   # Remove a nonessential var. to ensure new col is printed
-  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 
 # slide a 7-day centre-aligned average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(cases, new_col_name = "cases_7dav", names_sep = NULL, before = 3, after = 3) \%>\%
+  epi_slide_mean(cases, before = 3, after = 3) \%>\%
   # Remove a nonessential var. to ensure new col is printed
-  dplyr::select(geo_value, time_value, cases, cases_7dav) \%>\%
+  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 
 # slide a 14-day centre-aligned average
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(cases, new_col_name = "cases_14dav", names_sep = NULL, before = 6, after = 7) \%>\%
+  epi_slide_mean(cases, before = 6, after = 7) \%>\%
   # Remove a nonessential var. to ensure new col is printed
-  dplyr::select(geo_value, time_value, cases, cases_14dav) \%>\%
+  dplyr::select(geo_value, time_value, cases, cases_14dav = slide_value_cases) \%>\%
   ungroup()
 }
 \seealso{

@@ -86,8 +86,8 @@
 #' @seealso [`epi_slide_opt`] [`epi_slide_mean`] [`epi_slide_sum`]
 #' @examples
 #' # slide a 7-day trailing average formula on cases
-#' # This and other simple sliding means are much faster to do using
-#' # the `epi_slide_mean` function instead.
+#' # Simple sliding means and sums are much faster to do using
+#' # the `epi_slide_mean` and `epi_slide_sum` functions instead.
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), before = 6) %>%
@@ -377,7 +377,8 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'
 #' @importFrom dplyr bind_rows mutate %>% arrange tibble select
 #' @importFrom rlang enquo quo_get_expr as_label expr_label caller_arg
-#' @importFrom  purrr map map_lgl
+#' @importFrom tidyselect eval_select
+#' @importFrom purrr map map_lgl
 #' @importFrom data.table frollmean frollsum frollapply
 #' @importFrom lubridate as.period
 #' @importFrom checkmate assert_function
@@ -390,23 +391,23 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
 #'     cases,
-#'     f = data.table::frollmean, new_col_name = "cases_7dav", names_sep = NULL, before = 6
+#'     f = data.table::frollmean, before = 6
 #'   ) %>%
-#'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
+#'   # Remove a nonessential var. to ensure new col is printed, and rename new col
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
 #'   ungroup()
 #'
 #' # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
 #' # and accuracy, and to allow partially-missing windows.
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_opt(cases,
-#'     f = data.table::frollmean,
-#'     new_col_name = "cases_7dav", names_sep = NULL, before = 6,
+#'   epi_slide_opt(
+#'     cases,
+#'     f = data.table::frollmean, before = 6,
 #'     # `frollmean` options
 #'     na.rm = TRUE, algo = "exact", hasNA = TRUE
 #'   ) %>%
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
 #'   ungroup()
 #'
 #' # slide a 7-day leading average
@@ -414,10 +415,10 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
 #'     cases,
-#'     f = slider::slide_mean, new_col_name = "cases_7dav", names_sep = NULL, after = 6
+#'     f = slider::slide_mean, after = 6
 #'   ) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
 #'   ungroup()
 #'
 #' # slide a 7-day centre-aligned sum. This can also be done with `epi_slide_sum`
@@ -425,15 +426,15 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
 #'     cases,
-#'     f = data.table::frollsum, new_col_name = "cases_7dav", names_sep = NULL, before = 3, after = 3
+#'     f = data.table::frollsum, before = 3, after = 3
 #'   ) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
 #'   ungroup()
 epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
                           time_step,
-                          new_col_name = "slide_value", as_list_col = NULL,
-                          names_sep = "_", all_rows = FALSE) {
+                          new_col_name = NULL, as_list_col = NULL,
+                          names_sep = NULL, all_rows = FALSE) {
   assert_class(x, "epi_df")
 
   if (nrow(x) == 0L) {
@@ -443,15 +444,27 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
         "i" = "If this computation is occuring within an `epix_slide` call,
           check that `epix_slide` `ref_time_values` argument was set appropriately"
       ),
-      class = "epiprocess__epi_slide_mean__0_row_input",
+      class = "epiprocess__epi_slide_opt__0_row_input",
       epiprocess__x = x
     )
   }
 
   if (!is.null(as_list_col)) {
     cli_abort(
-      "`as_list_col` is not supported for `epi_slide_mean`",
-      class = "epiproces__epi_slide_mean__list_not_supported"
+      "`as_list_col` is not supported for `epi_slide_[opt/mean/sum]`",
+      class = "epiprocess__epi_slide_opt__list_not_supported"
+    )
+  }
+  if (!is.null(new_col_name)) {
+    cli_abort(
+      "`new_col_name` is not supported for `epi_slide_[opt/mean/sum]`",
+      class = "epiprocess__epi_slide_opt__new_name_not_supported"
+    )
+  }
+  if (!is.null(names_sep)) {
+    cli_abort(
+      "`names_sep` is not supported for `epi_slide_[opt/mean/sum]`",
+      class = "epiprocess__epi_slide_opt__name_sep_not_supported"
     )
   }
 
@@ -543,48 +556,16 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
   # `before` and `after` params.
   window_size <- before + after + 1L
 
-  col_names_quo <- enquo(col_names)
-  col_names_chr <- as.character(rlang::quo_get_expr(col_names_quo))
-  if (startsWith(rlang::as_label(col_names_quo), "c(")) {
-    # List or vector of col names. We need to drop the first element since it
-    # will be either "c" (if built as a vector) or "list" (if built as a
-    # list).
-    col_names_chr <- col_names_chr[-1]
-  } else if (startsWith(rlang::as_label(col_names_quo), "list(")) {
-    cli_abort(
-      "`col_names` must be a single tidy column name or a vector
-      (`c()`) of tidy column names",
-      class = "epiprocess__epi_slide_mean__col_names_in_list",
-      epiprocess__col_names = col_names_chr
-    )
-  }
-  # If single column name, do nothing.
-
-  if (is.null(names_sep)) {
-    if (length(new_col_name) != length(col_names_chr)) {
-      cli_abort(
-        c(
-          "`new_col_name` must be the same length as `col_names` when
-          `names_sep` is NULL to avoid duplicate output column names."
-        ),
-        class = "epiprocess__epi_slide_mean__col_names_length_mismatch",
-        epiprocess__new_col_name = new_col_name,
-        epiprocess__col_names = col_names_chr
-      )
-    }
-    result_col_names <- new_col_name
-  } else {
-    if (length(new_col_name) != 1L && length(new_col_name) != length(col_names_chr)) {
-      cli_abort(
-        "`new_col_name` must be either length 1 or the same length as `col_names`.",
-        class = "epiprocess__epi_slide_mean__col_names_length_mismatch_and_not_one",
-        epiprocess__new_col_name = new_col_name,
-        epiprocess__col_names = col_names_chr
-      )
-    }
-    result_col_names <- paste(new_col_name, col_names_chr, sep = names_sep)
-  }
-
+  # The position of a given column can be differ between input `x` and
+  # `.data_group` since the grouping step by default drops grouping columns.
+  # To avoid rerunning `eval_select` for every `.data_group`, convert
+  # positions of user-provided `col_names` into string column names. We avoid
+  # using `names(pos)` directly for robustness and in case we later want to
+  # allow users to rename fields via tidyselection.
+  pos <- eval_select(rlang::enquo(col_names), data = x, allow_rename = FALSE)
+  col_names_chr <- names(x)[pos]
+  # Always rename results to "slide_value_<original column name>".
+  result_col_names <- paste0("slide_value_", col_names_chr)
   slide_one_grp <- function(.data_group, .group_key, ...) {
     missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
 
@@ -600,19 +581,19 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
     # If a group contains duplicate time values, `frollmean` will still only
     # use the last `k` obs. It isn't looking at dates, it just goes in row
     # order. So if the computation is aggregating across multiple obs for the
-    # same date, `epi_slide_mean` will produce incorrect results; `epi_slide`
-    # should be used instead.
+    # same date, `epi_slide_opt` and derivates will produce incorrect
+    # results; `epi_slide` should be used instead.
     if (anyDuplicated(.data_group$time_value) != 0L) {
       cli_abort(
         c(
-          "group contains duplicate time values. Using `epi_slide_mean` on this
+          "group contains duplicate time values. Using `epi_slide_[opt/mean/sum]` on this
             group will result in incorrect results",
           "i" = "Please change the grouping structure of the input data so that
             each group has non-duplicate time values (e.g. `x %>% group_by(geo_value)
-            %>% epi_slide_mean`)",
+            %>% epi_slide_opt(f = frollmean)`)",
           "i" = "Use `epi_slide` to aggregate across groups"
         ),
-        class = "epiprocess__epi_slide_mean__duplicate_time_values",
+        class = "epiprocess__epi_slide_opt__duplicate_time_values",
         epiprocess__data_group = .data_group,
         epiprocess__group_key = .group_key
       )
@@ -624,7 +605,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
           "i" = c("Input data may contain `time_values` closer together than the
              expected `time_step` size")
         ),
-        class = "epiprocess__epi_slide_mean__unexpected_row_number",
+        class = "epiprocess__epi_slide_opt__unexpected_row_number",
         epiprocess__data_group = .data_group,
         epiprocess__group_key = .group_key
       )
@@ -669,7 +650,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
   }
 
   if (!is_epi_df(result)) {
-    # `all_rows`handling strip epi_df format and metadata.
+    # `all_rows`handling strips epi_df format and metadata.
     # Restore them.
     result <- reclass(result, attributes(x)$metadata)
   }
@@ -700,50 +681,51 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
 #' # slide a 7-day trailing average formula on cases
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, new_col_name = "cases_7dav", names_sep = NULL, before = 6) %>%
+#'   epi_slide_mean(cases, before = 6) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
 #'   ungroup()
 #'
 #' # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
 #' # and accuracy, and to allow partially-missing windows.
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases,
-#'     new_col_name = "cases_7dav", names_sep = NULL, before = 6,
+#'   epi_slide_mean(
+#'     cases,
+#'     before = 6,
 #'     # `frollmean` options
 #'     na.rm = TRUE, algo = "exact", hasNA = TRUE
 #'   ) %>%
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
 #'   ungroup()
 #'
 #' # slide a 7-day leading average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, new_col_name = "cases_7dav", names_sep = NULL, after = 6) %>%
+#'   epi_slide_mean(cases, after = 6) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
 #'   ungroup()
 #'
 #' # slide a 7-day centre-aligned average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, new_col_name = "cases_7dav", names_sep = NULL, before = 3, after = 3) %>%
+#'   epi_slide_mean(cases, before = 3, after = 3) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
 #'   ungroup()
 #'
 #' # slide a 14-day centre-aligned average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, new_col_name = "cases_14dav", names_sep = NULL, before = 6, after = 7) %>%
+#'   epi_slide_mean(cases, before = 6, after = 7) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_14dav) %>%
+#'   dplyr::select(geo_value, time_value, cases, cases_14dav = slide_value_cases) %>%
 #'   ungroup()
 epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
                            time_step,
-                           new_col_name = "slide_value", as_list_col = NULL,
-                           names_sep = "_", all_rows = FALSE) {
+                           new_col_name = NULL, as_list_col = NULL,
+                           names_sep = NULL, all_rows = FALSE) {
   epi_slide_opt(
     x = x,
     col_names = {{ col_names }},
@@ -783,14 +765,14 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
 #' # slide a 7-day trailing sum formula on cases
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_sum(cases, new_col_name = "cases_7dsum", names_sep = NULL, before = 6) %>%
+#'   epi_slide_sum(cases, before = 6) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_7dsum) %>%
+#'   dplyr::select(geo_value, time_value, cases, cases_7dsum = slide_value_cases) %>%
 #'   ungroup()
 epi_slide_sum <- function(x, col_names, ..., before, after, ref_time_values,
                           time_step,
-                          new_col_name = "slide_value", as_list_col = NULL,
-                          names_sep = "_", all_rows = FALSE) {
+                          new_col_name = NULL, as_list_col = NULL,
+                          names_sep = NULL, all_rows = FALSE) {
   epi_slide_opt(
     x = x,
     col_names = {{ col_names }},
@@ -859,7 +841,7 @@ full_date_seq <- function(x, before, after, time_step) {
           "i" = c("The input data's `time_type` was probably `custom` or `day-time`.
           These require also passing a `time_step` function.")
         ),
-        class = "epiprocess__epi_slide_mean__unmappable_time_type",
+        class = "epiprocess__full_date_seq__unmappable_time_type",
         epiprocess__time_type = ttype
       )
     }
