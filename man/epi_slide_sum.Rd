@@ -23,13 +23,16 @@ epi_slide_sum(
 or ungrouped. If ungrouped, all data in \code{x} will be treated as part of a
 single data group.}
 
-\item{col_names}{A character vector OR a
-<\code{\link[=dplyr_tidy_select]{tidy-select}}> of the names of one or more columns
-for which to calculate a rolling computation. If a tidy-selection, one
-or more unquoted expressions separated by commas. Variable names can be
-used as if they were positions in the data frame, so expressions like
-\code{x:y} can be used to select a range of variables. The tidy-selection
-cannot be used to provide output column names.}
+\item{col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
+name(e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}), or
+\link[tidyselect:language]{other tidy-select expression}. Variable names can
+be used as if they were positions in the data frame, so expressions like
+\code{x:y} can be used to select a range of variables. If you have the desired
+column names stored in a vector \code{vars}, use \code{col_names = all_of(vars)}.
+
+The tidy-selection renaming interface is not supported, and cannot be used
+to provide output column names; if you want to customize the output column
+names, use \code{\link[dplyr:rename]{dplyr::rename}} after the slide.}
 
 \item{...}{Additional arguments to pass to \code{data.table::frollsum}, for
 example, \code{na.rm} and \code{algo}. \code{data.table::frollsum} is automatically

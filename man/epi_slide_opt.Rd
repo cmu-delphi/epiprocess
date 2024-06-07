@@ -24,13 +24,16 @@ epi_slide_opt(
 or ungrouped. If ungrouped, all data in \code{x} will be treated as part of a
 single data group.}
 
-\item{col_names}{A character vector OR a
-<\code{\link[=dplyr_tidy_select]{tidy-select}}> of the names of one or more columns
-for which to calculate a rolling computation. If a tidy-selection, one
-or more unquoted expressions separated by commas. Variable names can be
-used as if they were positions in the data frame, so expressions like
-\code{x:y} can be used to select a range of variables. The tidy-selection
-cannot be used to provide output column names.}
+\item{col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
+name(e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}), or
+\link[tidyselect:language]{other tidy-select expression}. Variable names can
+be used as if they were positions in the data frame, so expressions like
+\code{x:y} can be used to select a range of variables. If you have the desired
+column names stored in a vector \code{vars}, use \code{col_names = all_of(vars)}.
+
+The tidy-selection renaming interface is not supported, and cannot be used
+to provide output column names; if you want to customize the output column
+names, use \code{\link[dplyr:rename]{dplyr::rename}} after the slide.}
 
 \item{f}{Function; together with \code{...} specifies the computation to slide.
 \code{f} must be one of \code{data.table}'s rolling functions
@@ -164,7 +167,8 @@ jhu_csse_daily_subset \%>\%
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
-    cases, f = data.table::frollmean, before = 6,
+    cases,
+    f = data.table::frollmean, before = 6,
     # `frollmean` options
     na.rm = TRUE, algo = "exact", hasNA = TRUE
   ) \%>\%
@@ -175,7 +179,8 @@ jhu_csse_daily_subset \%>\%
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
-    cases, f = slider::slide_mean, after = 6
+    cases,
+    f = slider::slide_mean, after = 6
   ) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
@@ -185,7 +190,8 @@ jhu_csse_daily_subset \%>\%
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
-    cases, f = data.table::frollsum, before = 3, after = 3
+    cases,
+    f = data.table::frollsum, before = 3, after = 3
   ) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
