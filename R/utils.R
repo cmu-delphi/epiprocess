@@ -448,6 +448,112 @@ guess_time_type <- function(time_value) {
   return("custom")
 }
 
+#'  given a vector of characters, add the same values, but upcased, e.g.
+#'   "date" -> c("date", "Date")
+#'   "target_date" -> c("target_date", "Target_Date")
+#' @keywords internal
+upcase_snake_case <- function(x) {
+  X <- strsplit(x, "_") %>%
+    map(function(name) paste0(toupper(substr(name, 1, 1)), substr(name, 2, nchar(name)), collapse = "_")) %>%
+    unlist()
+  c(x, X)
+}
+
+#' given an arbitrary
+#' @keywords internal
+guess_time_column_name <- function(x, substitutions = NULL) {
+  if (!("time_value" %in% names(x))) {
+    if (is.null(substitutions)) {
+      substitutions <- c(
+        time_value = "date",
+        time_value = "time",
+        time_value = "datetime",
+        time_value = "dateTime",
+        tmie_value = "date_time",
+        time_value = "forecast_date",
+        time_value = "target_date",
+        time_value = "week",
+        time_value = "day",
+        time_value = "epiweek",
+        time_value = "month",
+        time_value = "year",
+        time_value = "yearmon",
+        time_value = "yearMon",
+        time_value = "dates",
+        time_value = "time_values",
+        time_value = "forecast_dates",
+        time_value = "target_dates"
+      )
+      substitutions <- upcase_snake_case(substitutions)
+    }
+    strsplit(name_substitutions, "_") %>%
+      map(function(name) paste0(toupper(substr(name, 1, 1)), substr(name, 2, nchar(name)), collapse = "_")) %>%
+      unlist()
+    x <- tryCatch(x %>% rename(any_of(name_substitutions)),
+      error = function(cond) {
+        cli_abort("There are multiple `time_value` candidate columns.
+Either `rename` some yourself or drop some.")
+      }
+    )
+    cli_inform("inferring `time_value` column.")
+  }
+  return(x)
+}
+
+
+#' @keywords internal
+guess_geo_column_name <- function(x, substitutions = NULL) {
+  if (!("time_value" %in% names(x))) {
+    substitutions <- substitutions %||% c(
+      geo_value = "geo_values",
+      geo_value = "geo_id",
+      geo_value = "geos",
+      geo_value = "location",
+      geo_value = "jurisdiction",
+      geo_value = "fips",
+      geo_value = "zip",
+      geo_value = "county",
+      geo_value = "hrr",
+      geo_value = "msa",
+      geo_value = "state",
+      geo_value = "province",
+      geo_value = "nation",
+      geo_value = "states",
+      geo_value = "provinces",
+      geo_value = "counties"
+    )
+    substitutions <- upcase_snake_case(substitutions)
+    x <- tryCatch(x %>% rename(any_of(substitutions)),
+      error = function(cond) {
+        cli_abort("There are multiple `geo_value` candidate columns.
+Either `rename` some yourself or drop some.")
+      }
+    )
+    cli_inform("inferring `time_value` column.")
+  }
+  return(x)
+}
+
+guess_version_column_name <- function(x, substitutions = NULL) {
+  if (!("version" %in% names(x))) {
+    if (is.null(substitutions)) {
+      substitutions <- c(
+        version = "issue",
+        version = "release"
+      )
+      substitutions <- upcase_snake_case(substitutions)
+    }
+    x <- tryCatch(x %>% rename(any_of(substitutions)),
+      error = function(cond) {
+        cli_abort("There are multiple `geo_value` candidate columns.
+Either `rename` some yourself or drop some.")
+      }
+    )
+    cli_inform("inferring `time_value` column.")
+  }
+  return(x)
+}
+
 ##########
 
 

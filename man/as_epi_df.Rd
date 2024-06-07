@@ -17,8 +17,8 @@ as_epi_df(x, ...)
   geo_type,
   time_type,
   as_of,
+  other_keys = character(0),
   additional_metadata = list(),
-  substitutions = NULL,
   ...
 )
 

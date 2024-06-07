@@ -456,6 +456,9 @@ as_epi_archive <- function(
     clobberable_versions_start = NULL,
     versions_end = NULL) {
   assert_data_frame(x)
+  x <- guess_time_column_name(x)
+  x <- guess_geo_column_name(x)
+  x <- guess_version_column_name(x)
   if (!test_subset(c("geo_value", "time_value", "version"), names(x))) {
     cli_abort(
       "Columns `geo_value`, `time_value`, and `version` must be present in `x`."

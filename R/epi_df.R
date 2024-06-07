@@ -256,34 +256,15 @@ as_epi_df.epi_df <- function(x, ...) {
 #'   (stored in its attributes); if this fails, then the current day-time will
 #'   be used.
 #' @importFrom rlang .data
+#' @importFrom tidyselect any_of
 #' @importFrom cli cli_inform
 #' @export
 as_epi_df.tbl_df <- function(x, geo_type, time_type, as_of,
                              additional_metadata = list(),
-                             substitutions = NULL, ...) {
-  # possible standard substitutions
-  if (!("time_value" %in% names(x))) {
-    if (("forecast_date" %in% names(x)) && ("target_date" %in% names(x))) {
-      cli_abort("both `forecast_date` and `target_date` are present without a `time_value`
-column, so it is ambiguous which to choose as `time_value`.")
-    }
-    name_substitutions <- substitutions %||% c(
-      time_value = "date",
-      time_value = "forecast_date",
-      time_value = "target_date",
-      time_value = "dates",
-      time_value = "time_values",
-      time_value = "forecast_dates",
-      time_value = "target_dates"
-    )
-    x <- tryCatch(x %>% rename(any_of(name_substitutions)),
-      error = function(cond) {
-        cli_abort("There are multiple `time_value` candidate columns.
-Either `rename` on yourself or drop some.")
-      }
-    )
-    cli_inform("inferring `time_value` column.")
-  }
+                             ...) {
+  # possible standard substitutions for time_value
+  x <- guess_time_column_name(x)
+  x <- guess_geo_column_name(x)
   if (!test_subset(c("geo_value", "time_value"), names(x))) {
     cli_abort(
       "Columns `geo_value` and `time_value` must be present in `x`."
