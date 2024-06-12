@@ -277,13 +277,6 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
     # Carry out the specified computation
     comp_value <- f(.data_group, .group_key, ref_time_value, ...)
 
-    if (all_versions) {
-      # Extract data from archive so we can do length checks below. When
-      # `all_versions = TRUE`, `.data_group` will always be an ungrouped
-      # archive because of the preceding `epix_as_of` step.
-      .data_group <- .data_group$DT
-    }
-
     assert(
       check_atomic(comp_value, any.missing = TRUE),
       check_data_frame(comp_value),
