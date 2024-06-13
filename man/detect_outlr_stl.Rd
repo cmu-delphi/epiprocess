@@ -36,7 +36,8 @@ outlier thresholds.}
 
 \item{seasonal_period}{Integer specifying period of seasonality. For example,
 for daily data, a period 7 means weekly seasonality. The default is \code{NULL},
-meaning that no seasonal term will be included in the STL decomposition.}
+meaning that no seasonal term will be included in the STL decomposition.
+If specified, it must be strictly larger than 1.}
 
 \item{log_transform}{Should a log transform be applied before running outlier
 detection? Default is \code{FALSE}. If \code{TRUE}, and zeros are present, then the
