@@ -64,9 +64,10 @@
 #'     args = list(list(
 #'       detect_negatives = TRUE,
 #'       detection_multiplier = 2.5,
-#'       seasonal_period = NULL
+#'       seasonal_period = 7,
+#'       seasonal_as_residual = TRUE
 #'     )),
-#'     abbr = "stl_nonseasonal"
+#'     abbr = "stl_reseasonal"
 #'   )
 #' )
 #'
@@ -216,19 +217,28 @@ detect_outlr_rm <- function(x = seq_along(y), y, n = 21,
 #' @param n_trend Number of time steps to use in the rolling window for trend.
 #'   Default is 21.
 #' @param n_seasonal Number of time steps to use in the rolling window for
-#'   seasonality. Default is 21.
+#'   seasonality. Default is 21. Can also be the string "periodic". See
+#'   `s.window` in [`stats::stl`].
 #' @param n_threshold Number of time steps to use in rolling window for the IQR
 #'   outlier thresholds.
-#' @param seasonal_period Integer specifying period of seasonality. For example,
-#'   for daily data, a period 7 means weekly seasonality. The default is `NULL`,
-#'   meaning that no seasonal term will be included in the STL decomposition.
-#'   If specified, it must be strictly larger than 1.
+#' @param seasonal_period Integer specifying period of "seasonality". For
+#'   example, for daily data, a period 7 means weekly seasonality. It must be
+#'   strictly larger than 1. Also impacts the size of the low-pass filter
+#'   window; see `l.window` in [`stats::stl`].
+#' @param seasonal_as_residual Boolean specifying whether the seasonal(/weekly)
+#'   component should be treated as part of the residual component instead of as
+#'   part of the predictions. The default, FALSE, treats them as part of the
+#'   predictions, so large seasonal(/weekly) components will not lead to
+#'   flagging points as outliers. `TRUE` may instead consider the extrema of
+#'   large seasonal variations to be outliers; `n_seasonal` and
+#'   `seasonal_period` will still have an impact on the result, though, by
+#'   impacting the estimation of the trend component.
 #' @template outlier-detection-options
 #' @template detect-outlr-return
 #'
-#' @details The STL decomposition is computed using the `feasts` package. Once
+#' @details The STL decomposition is computed using the [`stats::stl()`]. Once
 #'   computed, the outlier detection method is analogous to the rolling median
-#'   method in `detect_outlr_rm()`, except with the fitted values and residuals
+#'   method in [`detect_outlr_rm()`], except with the fitted values and residuals
 #'   from the STL decomposition taking the place of the rolling median and
 #'   residuals to the rolling median, respectively.
 #'
@@ -262,6 +272,19 @@ detect_outlr_stl <- function(x = seq_along(y), y,
   if (dplyr::n_distinct(x) != length(y)) {
     cli_abort("`x` contains duplicate values. (If being run on a column in an `epi_df`, did you group by relevant key variables?)")
   }
+  if (length(y) <= 1L) {
+    cli_abort("`y` has length {length(y)}; that's definitely too little for STL.  (If being run in a `mutate()` or `epi_slide()`, check whether you grouped by too many variables; you should not be grouping by `time_value` in particular.)")
+  }
+  distinct_x_skips <- unique(diff(x))
+  if (diff(range(distinct_x_skips)) > 1e-4 * mean(distinct_x_skips)) {
+    cli_abort("`x` does not appear to have regular spacing; consider filling in gaps with imputed values (STL does not allow NAs).")
+  }
+  if (is.unsorted(x)) { # <- for performance in common (sorted) case
+    o <- order(x)
+    x <- x[o]
+    y <- y[o]
+  }
+
   # Transform if requested
   if (log_transform) {
     # Replace all negative values with 0
@@ -270,14 +293,10 @@ detect_outlr_stl <- function(x = seq_along(y), y,
     y <- log(y + offset)
   }
 
-  if (is.null(seasonal_period)) {
-    freq <- 7L
-  } else {
-    if (seasonal_period == 1L) cli_abort("`seasonal_period` must be `NULL` or > 1.")
-    freq <- seasonal_period
-  }
+  assert_int(seasonal_period, len = 1L, lower = 2L)
+  assert_logical(seasonal_as_residual, len = 1L, any.missing = FALSE)
 
-  yts <- stats::ts(y, frequency = freq)
+  yts <- stats::ts(y, frequency = seasonal_period)
   stl_comp <- stats::stl(yts,
     t.window = n_trend, s.window = n_seasonal,
     robust = TRUE
@@ -286,7 +305,7 @@ detect_outlr_stl <- function(x = seq_along(y), y,
     dplyr::rename(resid = .data$remainder)
 
   # Allocate the seasonal term from STL to either fitted or resid
-  if (!is.null(seasonal_period)) {
+  if (!seasonal_as_residual) {
     stl_comp <- dplyr::mutate(stl_comp, fitted = .data$trend + .data$seasonal)
   } else {
     stl_comp <- dplyr::mutate(stl_comp, fitted = .data$trend, resid = .data$seasonal + .data$resid)
