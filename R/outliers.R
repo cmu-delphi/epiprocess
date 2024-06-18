@@ -293,7 +293,7 @@ detect_outlr_stl <- function(x = seq_along(y), y,
     y <- log(y + offset)
   }
 
-  assert_int(seasonal_period, len = 1L, lower = 2L)
+  assert_int(seasonal_period, lower = 2L)
   assert_logical(seasonal_as_residual, len = 1L, any.missing = FALSE)
 
   yts <- stats::ts(y, frequency = seasonal_period)
