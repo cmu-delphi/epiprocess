@@ -10,7 +10,8 @@ detect_outlr_stl(
   n_trend = 21,
   n_seasonal = 21,
   n_threshold = 21,
-  seasonal_period = NULL,
+  seasonal_period,
+  seasonal_as_residual = FALSE,
   log_transform = FALSE,
   detect_negatives = FALSE,
   detection_multiplier = 2,
@@ -40,6 +41,15 @@ example, for daily data, a period 7 means weekly seasonality. It must be
 strictly larger than 1. Also impacts the size of the low-pass filter
 window; see \code{l.window} in \code{\link[stats:stl]{stats::stl}}.}
 
+\item{seasonal_as_residual}{Boolean specifying whether the seasonal(/weekly)
+component should be treated as part of the residual component instead of as
+part of the predictions. The default, FALSE, treats them as part of the
+predictions, so large seasonal(/weekly) components will not lead to
+flagging points as outliers. \code{TRUE} may instead consider the extrema of
+large seasonal variations to be outliers; \code{n_seasonal} and
+\code{seasonal_period} will still have an impact on the result, though, by
+impacting the estimation of the trend component.}
+
 \item{log_transform}{Should a log transform be applied before running outlier
 detection? Default is \code{FALSE}. If \code{TRUE}, and zeros are present, then the
 log transform will be padded by 1.}
@@ -59,15 +69,6 @@ values are from the rolling median. The replacement is the original value
 if it is within the detection thresholds, or otherwise it is rounded to the
 nearest (rolling median) +/- (replacement multiplier) * (rolling IQR).
 Default is 0.}
-
-\item{seasonal_as_residual}{Boolean specifying whether the seasonal(/weekly)
-component should be treated as part of the residual component instead of as
-part of the predictions. The default, FALSE, treats them as part of the
-predictions, so large seasonal(/weekly) components will not lead to
-flagging points as outliers. \code{TRUE} may instead consider the extrema of
-large seasonal variations to be outliers; \code{n_seasonal} and
-\code{seasonal_period} will still have an impact on the result, though, by
-impacting the estimation of the trend component.}
 }
 \value{
 An tibble with number of rows equal to \code{length(y)} and columns
