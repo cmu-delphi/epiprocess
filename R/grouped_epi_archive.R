@@ -281,7 +281,7 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
       check_atomic(comp_value, any.missing = TRUE),
       check_data_frame(comp_value),
       combine = "or",
-      .var.name = vname(comp_value)
+      .var.name = "comp_value (an output of one of your slide computations)"
     )
 
     # Label every result row with the `ref_time_value`
