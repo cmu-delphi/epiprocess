@@ -271,10 +271,14 @@ detect_outlr_stl <- function(x = seq_along(y), y,
                              min_radius = 0,
                              replacement_multiplier = 0) {
   if (dplyr::n_distinct(x) != length(y)) {
-    cli_abort("`x` contains duplicate values. (If being run on a column in an `epi_df`, did you group by relevant key variables?)")
+    cli_abort("`x` contains duplicate values. (If being run on a column in an
+               `epi_df`, did you group by relevant key variables?)")
   }
   if (length(y) <= 1L) {
-    cli_abort("`y` has length {length(y)}; that's definitely too little for STL.  (If being run in a `mutate()` or `epi_slide()`, check whether you grouped by too many variables; you should not be grouping by `time_value` in particular.)")
+    cli_abort("`y` has length {length(y)}; that's definitely too little for
+               STL.  (If being run in a `mutate()` or `epi_slide()`, check
+               whether you grouped by too many variables; you should not be
+               grouping by `time_value` in particular.)")
   }
   distinct_x_skips <- unique(diff(x))
   if (diff(range(distinct_x_skips)) > 1e-4 * mean(distinct_x_skips)) {
