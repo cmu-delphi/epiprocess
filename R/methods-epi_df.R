@@ -12,7 +12,7 @@ as_tibble.epi_df <- function(x, ...) {
   # Decaying drops the class and metadata. `as_tibble.grouped_df` drops the
   # grouping and should be called by `NextMethod()` in the current design.
   # See #223 for discussion of alternatives.
-  if (attr(x, "no_decay_to_tibble") %||% FALSE) return(x)
+  if (attr(x, "no_decay_to_tibble") %||% FALSE) return(ungroup(x))
   decay_epi_df(NextMethod())
 }
 
