@@ -317,7 +317,10 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
 
     f <- quos[[1]]
     new_col <- sym(names(rlang::quos_auto_name(quos)))
-    ... <- missing_arg() # nolint: object_usage_linter. magic value that passes zero args as dots in calls below
+    # Magic value that passes zero args as dots in calls below. Equivalent to
+    # `... <- missing_arg()`, but use `assign` to avoid warning about
+    # improper use of dots.
+    assign("...", missing_arg())
   }
 
   f <- as_slide_computation(f, ...)
