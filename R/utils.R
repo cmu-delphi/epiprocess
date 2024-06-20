@@ -536,7 +536,7 @@ deprecated_quo_is_present <- function(quo) {
     FALSE
   } else {
     quo_expr <- rlang::get_expr(quo)
-    if (identical(quo_expr, rlang::expr(deprecated())) || identical(quo_expr, rlang::expr(lifecycle::deprecated()))) { # nolint: object_usage_linter
+    if (identical(quo_expr, rlang::expr(lifecycle::deprecated())) || identical(quo_expr, rlang::expr(lifecycle::deprecated()))) { # nolint: object_usage_linter
       FALSE
     } else {
       TRUE
