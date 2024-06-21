@@ -236,7 +236,7 @@ detect_outlr_rm <- function(x = seq_along(y), y, n = 21,
 #' @template outlier-detection-options
 #' @template detect-outlr-return
 #'
-#' @details The STL decomposition is computed using the [`stats::stl()`]. Once
+#' @details The STL decomposition is computed using [`stats::stl()`]. Once
 #'   computed, the outlier detection method is analogous to the rolling median
 #'   method in [`detect_outlr_rm()`], except with the fitted values and residuals
 #'   from the STL decomposition taking the place of the rolling median and
