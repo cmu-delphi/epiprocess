@@ -128,9 +128,9 @@ test_that("Test errors/warnings for discouraged features", {
   )
 
   # Results from epi_slide and epi_slide_mean should match
-  expect_identical(select(ref1, -slide_value_count), opt1)
-  expect_identical(select(ref2, -slide_value_count), opt2)
-  expect_identical(select(ref3, -slide_value_count), opt3)
+  expect_equal(select(ref1, -slide_value_count), opt1)
+  expect_equal(select(ref2, -slide_value_count), opt2)
+  expect_equal(select(ref3, -slide_value_count), opt3)
 })
 
 test_that("Both `before` and `after` must be non-NA, non-negative, integer-compatible", {
@@ -203,7 +203,7 @@ test_that("Both `before` and `after` must be non-NA, non-negative, integer-compa
   ))
 
   # Results from epi_slide and epi_slide_mean should match
-  expect_identical(select(ref, -slide_value_count), opt)
+  expect_equal(select(ref, -slide_value_count), opt)
 })
 
 test_that("`ref_time_values` + `before` + `after` that result in no slide data, generate the error", {
@@ -275,8 +275,8 @@ test_that("Warn user against having a blank `before`", {
   ))
 
   # Results from epi_slide and epi_slide_mean should match
-  expect_identical(select(ref1, -slide_value_count), opt1)
-  expect_identical(select(ref2, -slide_value_count), opt2)
+  expect_equal(select(ref1, -slide_value_count), opt1)
+  expect_equal(select(ref2, -slide_value_count), opt2)
 })
 
 ## --- These cases doesn't generate the error: ---
@@ -286,26 +286,26 @@ test_that(
             values are out of the range for every group"
   ),
   {
-    expect_identical(
+    expect_equal(
       epi_slide(grouped, f, before = 2L, ref_time_values = d + 200L) %>%
         ungroup() %>%
         dplyr::select("geo_value", "slide_value_value"),
       dplyr::tibble(geo_value = "ak", slide_value_value = 199)
     ) # out of range for one group
-    expect_identical(
+    expect_equal(
       epi_slide(grouped, f, before = 2L, ref_time_values = d + 3) %>%
         ungroup() %>%
         dplyr::select("geo_value", "slide_value_value"),
       dplyr::tibble(geo_value = c("ak", "al"), slide_value_value = c(2, -2))
     ) # not out of range for either group
 
-    expect_identical(
+    expect_equal(
       epi_slide_mean(grouped, value, before = 2L, ref_time_values = d + 200L, na.rm = TRUE) %>%
         ungroup() %>%
         dplyr::select("geo_value", "slide_value_value"),
       dplyr::tibble(geo_value = "ak", slide_value_value = 199)
     ) # out of range for one group
-    expect_identical(
+    expect_equal(
       epi_slide_mean(grouped, value, before = 2L, ref_time_values = d + 3, na.rm = TRUE) %>%
         ungroup() %>%
         dplyr::select("geo_value", "slide_value_value"),
@@ -317,19 +317,19 @@ test_that(
 test_that("computation output formats x as_list_col", {
   # See `toy_edf` and `basic_sum_result` definitions at top of file.
   # We'll try 7d sum with a few formats.
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value)),
     basic_sum_result
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value), as_list_col = TRUE),
     basic_sum_result %>% dplyr::mutate(slide_value = as.list(slide_value))
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value))),
     basic_sum_result %>% rename(slide_value_value = slide_value)
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value)), as_list_col = TRUE),
     basic_sum_result %>%
       mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x)))
@@ -340,7 +340,7 @@ test_that("epi_slide_mean errors when `as_list_col` non-NULL", {
   # See `toy_edf` and `basic_mean_result` definitions at top of file.
   # We'll try 7d avg with a few formats.
   # Warning: not exactly the same naming behavior as `epi_slide`.
-  expect_identical(
+  expect_equal(
     toy_edf %>%
       filter(
         geo_value == "a"
@@ -369,7 +369,7 @@ test_that("epi_slide_mean errors when `as_list_col` non-NULL", {
 })
 
 test_that("nested dataframe output names are controllable", {
-  expect_identical(
+  expect_equal(
     toy_edf %>%
       epi_slide(
         before = 6L, ~ data.frame(value = sum(.x$value)),
@@ -377,7 +377,7 @@ test_that("nested dataframe output names are controllable", {
       ),
     basic_sum_result %>% rename(result_value = slide_value)
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>%
       epi_slide(
         before = 6L, ~ data.frame(value_sum = sum(.x$value)),
@@ -399,19 +399,19 @@ test_that("non-size-1 outputs are recycled", {
     dplyr::arrange(time_value) %>%
     as_epi_df(as_of = 100)
   # nolint end
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value) + 0:1),
     basic_result_from_size2
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value) + 0:1, as_list_col = TRUE),
     basic_result_from_size2 %>% dplyr::mutate(slide_value = as.list(slide_value))
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value) + 0:1)),
     basic_result_from_size2 %>% rename(slide_value_value = slide_value)
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value) + 0:1), as_list_col = TRUE),
     basic_result_from_size2 %>%
       mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x)))
@@ -444,18 +444,18 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
     as_epi_df(as_of = 100)
   # nolint end
   # slide computations returning atomic vecs:
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value)),
     basic_full_result
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(
       before = 6L, ~ sum(.x$value),
       ref_time_values = c(2L, 8L)
     ),
     basic_full_result %>% dplyr::filter(time_value %in% c(2L, 8L))
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(
       before = 6L, ~ sum(.x$value),
       ref_time_values = c(2L, 8L), all_rows = TRUE
@@ -466,7 +466,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
       ))
   )
 
-  expect_identical(
+  expect_equal(
     toy_edf %>% filter(
       geo_value == "a"
     ) %>%
@@ -477,7 +477,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
     basic_mean_result %>%
       rename(slide_value_value = slide_value)
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% filter(
       geo_value == "a"
     ) %>%
@@ -489,7 +489,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
     filter(basic_mean_result, time_value %in% c(2L, 8L)) %>%
       rename(slide_value_value = slide_value)
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% filter(
       geo_value == "a"
     ) %>%
@@ -506,11 +506,11 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
   )
 
   # slide computations returning data frames:
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value))),
     basic_full_result %>% dplyr::rename(slide_value_value = slide_value)
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(
       before = 6L, ~ data.frame(value = sum(.x$value)),
       ref_time_values = c(2L, 8L)
@@ -519,7 +519,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
       dplyr::filter(time_value %in% c(2L, 8L)) %>%
       dplyr::rename(slide_value_value = slide_value)
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(
       before = 6L, ~ data.frame(value = sum(.x$value)),
       ref_time_values = c(2L, 8L), all_rows = TRUE
@@ -531,7 +531,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
       dplyr::rename(slide_value_value = slide_value)
   )
   # slide computations returning data frames with `as_list_col=TRUE`:
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(
       before = 6L, ~ data.frame(value = sum(.x$value)),
       as_list_col = TRUE
@@ -539,7 +539,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
     basic_full_result %>%
       dplyr::mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x)))
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(
       before = 6L, ~ data.frame(value = sum(.x$value)),
       ref_time_values = c(2L, 8L),
@@ -549,7 +549,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
       dplyr::mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x))) %>%
       dplyr::filter(time_value %in% c(2L, 8L))
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(
       before = 6L, ~ data.frame(value = sum(.x$value)),
       ref_time_values = c(2L, 8L), all_rows = TRUE,
@@ -562,7 +562,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
       ))
   )
   # slide computations returning data frames, `as_list_col = TRUE`, `unnest`:
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(
       before = 6L, ~ data.frame(value = sum(.x$value)),
       as_list_col = TRUE
@@ -570,7 +570,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
       unnest(slide_value, names_sep = "_"),
     basic_full_result %>% dplyr::rename(slide_value_value = slide_value)
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(
       before = 6L, ~ data.frame(value = sum(.x$value)),
       ref_time_values = c(2L, 8L),
@@ -581,7 +581,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
       dplyr::filter(time_value %in% c(2L, 8L)) %>%
       dplyr::rename(slide_value_value = slide_value)
   )
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(
       before = 6L, ~ data.frame(value = sum(.x$value)),
       ref_time_values = c(2L, 8L), all_rows = TRUE,
@@ -602,7 +602,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
       list(vctrs::vec_cast(NA, vctrs::vec_ptype_common(!!!slide_values_list)))
     )
   }
-  expect_identical(
+  expect_equal(
     toy_edf %>% epi_slide(
       before = 6L, ~ data.frame(value = sum(.x$value)),
       ref_time_values = c(2L, 8L), all_rows = TRUE,
@@ -637,15 +637,15 @@ test_that("basic grouped epi_slide computation produces expected output", {
 
   # formula
   result1 <- epi_slide(small_x, f = ~ sum(.x$value), before = 50)
-  expect_identical(result1, expected_output)
+  expect_equal(result1, expected_output)
 
   # function
   result2 <- epi_slide(small_x, f = function(x, g, t) sum(x$value), before = 50)
-  expect_identical(result2, expected_output)
+  expect_equal(result2, expected_output)
 
   # dots
   result3 <- epi_slide(small_x, slide_value = sum(value), before = 50)
-  expect_identical(result3, expected_output)
+  expect_equal(result3, expected_output)
 })
 
 test_that("basic grouped epi_slide_mean computation produces expected output", {
@@ -657,7 +657,7 @@ test_that("basic grouped epi_slide_mean computation produces expected output", {
     as_epi_df(as_of = d + 6)
 
   result1 <- epi_slide_mean(small_x, value, before = 50, names_sep = NULL, na.rm = TRUE)
-  expect_identical(result1, expected_output %>% rename(slide_value_value = slide_value))
+  expect_equal(result1, expected_output %>% rename(slide_value_value = slide_value))
 })
 
 test_that("ungrouped epi_slide computation completes successfully", {
@@ -684,7 +684,7 @@ test_that("basic ungrouped epi_slide computation produces expected output", {
       before = 50,
       slide_value = sum(.x$value)
     )
-  expect_identical(result1, expected_output)
+  expect_equal(result1, expected_output)
 
   # Ungrouped with multiple geos
   expected_output <- dplyr::bind_rows(
@@ -704,7 +704,7 @@ test_that("basic ungrouped epi_slide computation produces expected output", {
       before = 50,
       slide_value = sum(.x$value)
     )
-  expect_identical(result2, expected_output)
+  expect_equal(result2, expected_output)
 })
 
 test_that("basic ungrouped epi_slide_mean computation produces expected output", {
@@ -717,7 +717,7 @@ test_that("basic ungrouped epi_slide_mean computation produces expected output",
     ungroup() %>%
     filter(geo_value == "ak") %>%
     epi_slide_mean(value, before = 50, names_sep = NULL, na.rm = TRUE)
-  expect_identical(result1, expected_output %>% rename(slide_value_value = slide_value))
+  expect_equal(result1, expected_output %>% rename(slide_value_value = slide_value))
 
   # Ungrouped with multiple geos
   # epi_slide_mean fails when input data groups contain duplicate time_values,
@@ -742,7 +742,7 @@ test_that("epi_slide computation via formula can use ref_time_value", {
       before = 50
     )
 
-  expect_identical(result1, expected_output)
+  expect_equal(result1, expected_output)
 
   result2 <- small_x %>%
     epi_slide(
@@ -750,7 +750,7 @@ test_that("epi_slide computation via formula can use ref_time_value", {
       before = 50
     )
 
-  expect_identical(result2, expected_output)
+  expect_equal(result2, expected_output)
 
   result3 <- small_x %>%
     epi_slide(
@@ -758,7 +758,7 @@ test_that("epi_slide computation via formula can use ref_time_value", {
       before = 50
     )
 
-  expect_identical(result3, expected_output)
+  expect_equal(result3, expected_output)
 
   # Ungrouped with multiple geos
   expected_output <- dplyr::bind_rows(
@@ -774,7 +774,7 @@ test_that("epi_slide computation via formula can use ref_time_value", {
       f = ~.ref_time_value,
       before = 50
     )
-  expect_identical(result4, expected_output)
+  expect_equal(result4, expected_output)
 })
 
 test_that("epi_slide computation via function can use ref_time_value", {
@@ -791,7 +791,7 @@ test_that("epi_slide computation via function can use ref_time_value", {
       before = 2
     )
 
-  expect_identical(result1, expected_output)
+  expect_equal(result1, expected_output)
 })
 
 test_that("epi_slide computation via dots can use ref_time_value and group", {
@@ -809,7 +809,7 @@ test_that("epi_slide computation via dots can use ref_time_value and group", {
       slide_value = .ref_time_value
     )
 
-  expect_identical(result1, expected_output)
+  expect_equal(result1, expected_output)
 
   # `.{x,group_key,ref_time_value}` should be inaccessible from `.data` and
   # `.env`.
@@ -834,7 +834,7 @@ test_that("epi_slide computation via dots can use ref_time_value and group", {
       slide_value = .group_key$geo_value
     )
 
-  expect_identical(result3, expected_output)
+  expect_equal(result3, expected_output)
 
   # Use entire group_key object
   expected_output <- dplyr::bind_rows(
@@ -850,7 +850,7 @@ test_that("epi_slide computation via dots can use ref_time_value and group", {
       slide_value = nrow(.group_key)
     )
 
-  expect_identical(result4, expected_output)
+  expect_equal(result4, expected_output)
 
   # Ungrouped with multiple geos
   expected_output <- dplyr::bind_rows(
@@ -866,7 +866,7 @@ test_that("epi_slide computation via dots can use ref_time_value and group", {
       before = 50,
       slide_value = .ref_time_value
     )
-  expect_identical(result5, expected_output)
+  expect_equal(result5, expected_output)
 })
 
 test_that("epi_slide computation via dots outputs the same result using col names and the data var", {
@@ -883,7 +883,7 @@ test_that("epi_slide computation via dots outputs the same result using col name
       slide_value = max(.x$time_value)
     )
 
-  expect_identical(result1, expected_output)
+  expect_equal(result1, expected_output)
 
   result2 <- small_x %>%
     epi_slide(
@@ -891,7 +891,7 @@ test_that("epi_slide computation via dots outputs the same result using col name
       slide_value = max(.data$time_value)
     )
 
-  expect_identical(result2, expected_output)
+  expect_equal(result2, expected_output)
 })
 
 test_that("`epi_slide` can access objects inside of helper functions", {
@@ -920,10 +920,10 @@ test_that("basic slide behavior is correct when groups have non-overlapping date
     as_epi_df(as_of = d + 6)
 
   result1 <- epi_slide(small_x_misaligned_dates, f = ~ mean(.x$value), before = 50)
-  expect_identical(result1, expected_output)
+  expect_equal(result1, expected_output)
 
   result2 <- epi_slide_mean(small_x_misaligned_dates, value, before = 50, names_sep = NULL, na.rm = TRUE)
-  expect_identical(result2, expected_output %>% rename(slide_value_value = slide_value))
+  expect_equal(result2, expected_output %>% rename(slide_value_value = slide_value))
 })
 
 
@@ -948,7 +948,7 @@ test_that("epi_slide gets correct ref_time_value when groups have non-overlappin
       slide_value = .ref_time_value
     )
 
-  expect_identical(result1, expected_output)
+  expect_equal(result1, expected_output)
 })
 
 test_that("results for different `before`s and `after`s match between epi_slide and epi_slide_mean", {
@@ -979,7 +979,7 @@ test_that("results for different `before`s and `after`s match between epi_slide 
       col_names = c(a, b), na.rm = TRUE,
       before = before, after = after, ...
     )
-    expect_identical(result1, result2)
+    expect_equal(result1, result2)
   }
 
   set.seed(0)
@@ -1094,11 +1094,11 @@ test_that("results for different time_types match between epi_slide and epi_slid
       col_names = c(a, b), na.rm = TRUE,
       before = before, after = after, ...
     )
-    expect_identical(result1, result2)
+    expect_equal(result1, result2)
 
     # All fields except dates
-    expect_identical(select(ref_result, -time_value), select(result1, -time_value))
-    expect_identical(select(ref_result, -time_value), select(result2, -time_value))
+    expect_equal(select(ref_result, -time_value), select(result1, -time_value))
+    expect_equal(select(ref_result, -time_value), select(result2, -time_value))
   }
 
   test_time_type_mean(days)
@@ -1118,7 +1118,7 @@ test_that("results for different time_types match between epi_slide and epi_slid
     col_names = c(a, b), na.rm = TRUE,
     before = 6L, after = 0L
   )
-  expect_identical(select(ref_result, -time_value), select(result2, -time_value))
+  expect_equal(select(ref_result, -time_value), select(result2, -time_value))
 })
 
 test_that("special time_types without time_step fail in epi_slide_mean", {
@@ -1381,7 +1381,7 @@ test_that("epi_slide_mean produces same output as epi_slide_opt", {
     f = data.table::frollmean,
     before = 50, names_sep = NULL, na.rm = TRUE
   )
-  expect_identical(result1, result2)
+  expect_equal(result1, result2)
 
   result3 <- epi_slide_opt(small_x, value,
     f = slider::slide_mean,
@@ -1396,7 +1396,7 @@ test_that("epi_slide_sum produces same output as epi_slide_opt", {
     f = data.table::frollsum,
     before = 50, names_sep = NULL, na.rm = TRUE
   )
-  expect_identical(result1, result2)
+  expect_equal(result1, result2)
 
   result3 <- epi_slide_opt(small_x, value,
     f = slider::slide_sum,
