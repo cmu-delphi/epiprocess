@@ -107,9 +107,8 @@ subtraction. For example, if the time values are coded as
 <code>as.Date("2022-01-02")</code>. Alternatively, the time step can be
 specified manually in the call to <code><a href="../reference/epi_slide.html">epi_slide()</a></code>; you can read
 the documentation for more details. Furthermore, the alignment of the
-running window used in <code><a href="../reference/epi_slide.html">epi_slide()</a></code> can be “right”,
-“center”, or “left”; the default is “right”, and is what we use in this
-vignette.</p>
+running window used in <code><a href="../reference/epi_slide.html">epi_slide()</a></code> is specified by
+<code>before</code> and <code>after</code>.</p>
 <p>As in getting started guide, we’ll fetch daily reported COVID-19
 cases from CA, FL, NY, and TX (note: here we’re using new, not
 cumulative cases) using the <a href="https://github.com/cmu-delphi/epidatr" class="external-link"><code>epidatr</code></a>
