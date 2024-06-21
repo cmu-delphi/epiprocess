@@ -3,6 +3,10 @@
 #' Converts an `epi_df` object into a tibble, dropping metadata and any
 #' grouping.
 #'
+#' Advanced: if you are working with a third-party package that uses
+#' `as_tibble()` on `epi_df`s but you actually want them to remain `epi_df`s,
+#' use `attr(your_epi_df, "decay_to_tibble") <- FALSE` beforehand.
+#'
 #' @template x
 #' @param ... additional arguments to forward to `NextMethod()`
 #'
@@ -12,7 +16,11 @@ as_tibble.epi_df <- function(x, ...) {
   # Decaying drops the class and metadata. `as_tibble.grouped_df` drops the
   # grouping and should be called by `NextMethod()` in the current design.
   # See #223 for discussion of alternatives.
-  decay_epi_df(NextMethod())
+  if (attr(x, "decay_to_tibble") %||% TRUE) {
+    return(decay_epi_df(NextMethod()))
+  }
+  metadata <- attr(x, "metadata")
+  reclass(NextMethod(), metadata)
 }
 
 #' Convert to tsibble format
@@ -52,6 +60,8 @@ print.epi_df <- function(x, ...) {
   cat(sprintf("* %-9s = %s\n", "geo_type", attributes(x)$metadata$geo_type))
   cat(sprintf("* %-9s = %s\n", "time_type", attributes(x)$metadata$time_type))
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(x)$metadata$as_of))
+  # Conditional output (silent if attribute is NULL):
+  cat(sprintf("* %-9s = %s\n", "decay_to_tibble", attr(x, "decay_to_tibble")))
   cat("\n")
   NextMethod()
 }
