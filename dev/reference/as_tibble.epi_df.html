@@ -12,7 +12,7 @@ grouping."><meta name="robots" content="noindex"><!-- mathjax --><script src="ht
     
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.11</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.12</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -84,6 +84,12 @@ grouping.</p>
 <dd><p>additional arguments to forward to <code><a href="https://rdrr.io/r/base/UseMethod.html" class="external-link">NextMethod()</a></code></p></dd>
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Advanced: if you are working with a third-party package that uses
+<code>as_tibble()</code> on <code>epi_df</code>s but you actually want them to remain <code>epi_df</code>s,
+use <code>attr(your_epi_df, "decay_to_tibble") &lt;- FALSE</code> beforehand.</p>
+    </div>
 
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
