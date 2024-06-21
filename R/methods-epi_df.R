@@ -3,6 +3,10 @@
 #' Converts an `epi_df` object into a tibble, dropping metadata and any
 #' grouping.
 #'
+#' Advanced: if you are working with a third-party package that uses
+#' `as_tibble()` on `epi_df`s but you actually want them to remain `epi_df`s,
+#' use `attr(your_epi_df, "decay_to_tibble") <- FALSE` beforehand.
+#'
 #' @template x
 #' @param ... additional arguments to forward to `NextMethod()`
 #'
