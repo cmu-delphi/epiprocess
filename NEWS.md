@@ -36,7 +36,7 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 ## Cleanup
 - Added optional `decay_to_tibble` attribute controlling `as_tibble()` behavior
-  of `epi_df`s to let `epipredict` work more easily with other libraries (#471).
+  of `epi_df`s to let `{epipredict}` work more easily with other libraries (#471).
 
 # epiprocess 0.7.0
 
