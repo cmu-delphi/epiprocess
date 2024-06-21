@@ -79,7 +79,7 @@ replacement values from each detection method (\code{replacement}).
 Detects outliers based on a seasonal-trend decomposition using LOESS (STL).
 }
 \details{
-The STL decomposition is computed using the \code{\link[stats:stl]{stats::stl()}}. Once
+The STL decomposition is computed using \code{\link[stats:stl]{stats::stl()}}. Once
 computed, the outlier detection method is analogous to the rolling median
 method in \code{\link[=detect_outlr_rm]{detect_outlr_rm()}}, except with the fitted values and residuals
 from the STL decomposition taking the place of the rolling median and
