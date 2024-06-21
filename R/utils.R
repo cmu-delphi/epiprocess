@@ -395,56 +395,38 @@ guess_geo_type <- function(geo_value) {
     }
   }
 
-  # If we got here then we failed
   return("custom")
 }
 
-guess_time_type <- function(time_value) {
-  # Convert character time values to Date or POSIXct
-  if (is.character(time_value)) {
-    if (nchar(time_value[1]) <= 10L) {
-      new_time_value <- tryCatch(
-        {
-          as.Date(time_value)
-        },
-        error = function(e) NULL
-      )
-    } else {
-      new_time_value <- tryCatch(
-        {
-          as.POSIXct(time_value)
-        },
-        error = function(e) NULL
+
+guess_time_type <- function(time_value, time_value_arg = rlang::caller_arg(time_value)) {
+  if (inherits(time_value, "Date")) {
+    unique_time_gaps <- as.numeric(diff(sort(unique(time_value))))
+    # Gaps in a weekly date sequence will cause some diffs to be larger than 7
+    # days, so check modulo 7 equality, rather than equality with 7.
+    if (all(unique_time_gaps %% 7 == 0)) {
+      return("week")
+    }
+    if (all(unique_time_gaps >= 28)) {
+      cli_abort(
+        "Found a monthly or longer cadence in the time column `{time_value_arg}`.
+        Consider using tsibble::yearmonth for monthly data and 'YYYY' integers for year data."
       )
     }
-    if (!is.null(new_time_value)) time_value <- new_time_value
-  }
-
-  # Now, if a POSIXct class, then use "day-time"
-  if (inherits(time_value, "POSIXct")) {
-    return("day-time")
-  } else if (inherits(time_value, "Date")) {
-    # Else, if a Date class, then use "week" or "day" depending on gaps
-    # Convert to numeric so we can use the modulo operator.
-    unique_time_gaps <- as.numeric(diff(sort(unique(time_value))))
-    # We need to check the modulus of `unique_time_gaps` in case there are
-    # missing dates. Gaps in a weekly date sequence will cause some diffs to
-    # be larger than 7 days. If we just check if `diffs == 7`, it will fail
-    # unless the weekly date sequence is already complete.
-    return(ifelse(all(unique_time_gaps %% 7 == 0), "week", "day"))
-  } else if (inherits(time_value, "yearweek")) {
-    # Else, check whether it's one of the tsibble classes
-    return("yearweek")
+    return("day")
   } else if (inherits(time_value, "yearmonth")) {
     return("yearmonth")
-  } else if (inherits(time_value, "yearquarter")) {
-    return("yearquarter")
-  } else if (rlang::is_integerish(time_value) &&
-    all(nchar(as.character(time_value)) == 4L)) { # nolint: indentation_linter
-    return("year")
+  } else if (rlang::is_integerish(time_value)) {
+    return("integer")
   }
 
-  # If we got here then we failed
+  cli_warn(
+    "Unsupported time type in column `{time_value_arg}`, with class {.code {class(time_value)}}.
+    Time-related functionality may have unexpected behavior.
+    ",
+    class = "epiprocess__guess_time_type__unknown_time_type",
+    epiprocess__time_value = time_value
+  )
   return("custom")
 }
 
@@ -819,4 +801,42 @@ guess_period.Date <- function(time_values, time_values_arg = rlang::caller_arg(t
 #' @export
 guess_period.POSIXt <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
   as.numeric(NextMethod(), units = "secs")
+}
+
+
+validate_slide_window_arg <- function(arg, time_type, arg_name = rlang::caller_arg(arg)) {
+  if (is.null(arg)) {
+    cli_abort("`{arg_name}` is a required argument.")
+  }
+
+  if (!checkmate::test_scalar(arg)) {
+    cli_abort("Expected `{arg_name}` to be a scalar value.")
+  }
+
+  if (time_type == "custom") {
+    cli_abort("Unsure how to interpret slide units with a custom time type. Consider converting your time
+    column to a Date, yearmonth, or integer type.")
+  }
+
+  if (!identical(arg, Inf)) {
+    if (time_type == "day") {
+      if (!test_int(arg, lower = 0L) && !(inherits(arg, "difftime") && units(arg) == "days")) {
+        cli_abort("Expected `{arg_name}` to be a difftime with units in days or a non-negative integer.")
+      }
+    } else if (time_type == "week") {
+      if (!(inherits(arg, "difftime") && units(arg) == "weeks")) {
+        cli_abort("Expected `{arg_name}` to be a difftime with units in weeks.")
+      }
+    } else if (time_type == "yearmonth") {
+      if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
+        cli_abort("Expected `{arg_name}` to be a non-negative integer.")
+      }
+    } else if (time_type == "integer") {
+      if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
+        cli_abort("Expected `{arg_name}` to be a non-negative integer.")
+      }
+    } else {
+      cli_abort("Expected `{arg_name}` to be Inf, an appropriate a difftime, or a non-negative integer.")
+    }
+  }
 }

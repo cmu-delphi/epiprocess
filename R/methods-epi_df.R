@@ -83,7 +83,6 @@ print.epi_df <- function(x, ...) {
 summary.epi_df <- function(object, ...) {
   cat("An `epi_df` x, with metadata:\n")
   cat(sprintf("* %-9s = %s\n", "geo_type", attributes(object)$metadata$geo_type))
-  cat(sprintf("* %-9s = %s\n", "time_type", attributes(object)$metadata$time_type))
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(object)$metadata$as_of))
   cat("----------\n")
   cat(sprintf("* %-27s = %s\n", "min time value", min(object$time_value)))
@@ -118,15 +117,14 @@ decay_epi_df <- function(x) {
 }
 
 # Implementing `dplyr_extending`: we have a few metadata attributes to consider:
-# `as_of` is an attribute doesn't depend on the rows or columns, `geo_type` and
-# `time_type` are scalar attributes dependent on columns, and `other_keys` acts
-# like an attribute vectorized over columns; `dplyr_extending` advice at time of
-# writing says to implement `dplyr_reconstruct`, 1d `[`, `dplyr_col_modify`, and
-# `names<-`, but not `dplyr_row_slice`; however, we'll also implement
-# `dplyr_row_slice` anyway to prevent a `arrange` on grouped `epi_df`s from
-# dropping the `epi_df` class. We'll implement `[` to allow either 1d or 2d.
-# We'll also implement some other methods where we want to (try to) maintain an
-# `epi_df`.
+# `as_of` is an attribute doesn't depend on the rows or columns, `geo_type` is a
+# scalar attribute dependent on columns, and `other_keys` acts like an attribute
+# vectorized over columns; `dplyr_extending` advice at time of writing says to
+# implement `dplyr_reconstruct`, 1d `[`, `dplyr_col_modify`, and `names<-`, but
+# not `dplyr_row_slice`; however, we'll also implement `dplyr_row_slice` anyway
+# to prevent a `arrange` on grouped `epi_df`s from dropping the `epi_df` class.
+# We'll implement `[` to allow either 1d or 2d. We'll also implement some other
+# methods where we want to (try to) maintain an `epi_df`.
 
 #' @param data tibble or `epi_df` (`dplyr` feeds in former, but we may
 #'   directly feed in latter from our other methods)

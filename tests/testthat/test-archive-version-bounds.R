@@ -89,7 +89,7 @@ test_that("`validate_version_bound` validate and class checks together allow and
 test_that("archive version bounds args work as intended", {
   measurement_date <- as.Date("2000-01-01")
   update_tbl <- tibble::tibble(
-    geo_value = "g1",
+    geo_value = "ak",
     time_value = measurement_date,
     version = measurement_date + 1:5,
     value = 1:5

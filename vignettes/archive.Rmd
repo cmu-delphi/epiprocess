@@ -93,7 +93,7 @@ print(x)
 An `epi_archive` is consists of a primary field `DT`, which is a data table
 (from the `data.table` package) that has the columns `geo_value`, `time_value`,
 `version` (and possibly additional ones), and other metadata fields, such as
-`geo_type` and `time_type`.
+`geo_type`.
 
 ```{r}
 class(x$DT)
@@ -119,11 +119,10 @@ The following pieces of metadata are included as fields in an `epi_archive`
 object:
 
 * `geo_type`: the type for the geo values.
-* `time_type`: the type for the time values.
 * `additional_metadata`: list of additional metadata for the data archive.
 
 Metadata for an `epi_archive` object `x` can be accessed (and altered) directly,
-as in `x$geo_type` or `x$time_type`, etc. Just like `as_epi_df()`, the function
+as in `x$geo_type`, etc. Just like `as_epi_df()`, the function
 `as_epi_archive()` attempts to guess metadata fields when an `epi_archive`
 object is instantiated, if they are not explicitly specified in the function
 call (as it did in the case above).

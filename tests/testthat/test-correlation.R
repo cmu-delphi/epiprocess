@@ -21,7 +21,7 @@ test_that("epi_cor functions as intended", {
   )
 
   edf <- as_epi_df(data.frame(
-    geo_value = rep("asdf", 20),
+    geo_value = rep("ak", 20),
     time_value = as.Date("2020-01-01") + 1:20,
     pos = 1:20,
     neg = -(1:20)

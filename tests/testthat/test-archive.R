@@ -67,21 +67,22 @@ test_that("other_keys cannot contain names geo_value, time_value or version", {
   )
 })
 
-test_that("Warning thrown when other_metadata contains overlapping names with geo_type or time_type fields", {
+test_that("Warning thrown when other_metadata contains overlapping names with geo_type field", {
   expect_warning(as_epi_archive(dt, additional_metadata = list(geo_type = 1), compactify = FALSE),
-    regexp = "`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\"."
+    regexp = "`additional_metadata` names overlap with existing metadata fields"
   )
   expect_warning(as_epi_archive(dt, additional_metadata = list(time_type = 1), compactify = FALSE),
-    regexp = "`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\"."
+    regexp = "`additional_metadata` names overlap with existing metadata fields"
   )
 })
 
 test_that("epi_archives are correctly instantiated with a variety of data types", {
+  d <- as.Date("2020-01-01")
   # Data frame
   df <- data.frame(
     geo_value = "ca",
-    time_value = as.Date("2020-01-01"),
-    version = as.Date("2020-01-01") + 0:19,
+    time_value = d,
+    version = d + 0:19,
     value = 1:20
   )
 
@@ -107,8 +108,8 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   # Keyed data.table
   kdt <- data.table::data.table(
     geo_value = "ca",
-    time_value = as.Date("2020-01-01"),
-    version = as.Date("2020-01-01") + 0:19,
+    time_value = d,
+    version = d + 0:19,
     value = 1:20,
     code = "CA",
     key = "code"
@@ -127,8 +128,8 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   # Unkeyed data.table
   udt <- data.table::data.table(
     geo_value = "ca",
-    time_value = as.Date("2020-01-01"),
-    version = as.Date("2020-01-01") + 0:19,
+    time_value = d,
+    version = d + 0:19,
     value = 1:20,
     code = "CA"
   )
@@ -157,7 +158,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   # Keyed epi_df
   edf2 <- data.frame(
     geo_value = "al",
-    time_value = rep(as.Date("2020-01-01") + 0:9, 2),
+    time_value = rep(d + 0:9, 2),
     version = c(
       rep(as.Date("2020-01-25"), 10),
       rep(as.Date("2020-01-26"), 10)
@@ -177,14 +178,13 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
 })
 
 test_that("`epi_archive` rejects nonunique keys", {
-  toy_update_tbl <-
-    tibble::tribble(
-      ~geo_value, ~age_group, ~time_value, ~version, ~value,
-      "us", "adult", "2000-01-01", "2000-01-02", 121,
-      "us", "adult", "2000-01-01", "2000-01-03", 125, # (revision)
-      "us", "adult", "2000-01-02", "2000-01-03", 130,
-      "us", "pediatric", "2000-01-01", "2000-01-02", 5
-    ) %>%
+  toy_update_tbl <- tibble::tribble(
+    ~geo_value, ~age_group, ~time_value, ~version, ~value,
+    "us", "adult", "2000-01-01", "2000-01-02", 121,
+    "us", "adult", "2000-01-01", "2000-01-03", 125, # (revision)
+    "us", "adult", "2000-01-02", "2000-01-03", 130,
+    "us", "pediatric", "2000-01-01", "2000-01-02", 5
+  ) %>%
     mutate(
       age_group = ordered(age_group, c("pediatric", "adult")),
       time_value = as.Date(time_value),
@@ -198,4 +198,31 @@ test_that("`epi_archive` rejects nonunique keys", {
     regexp = NA,
     as_epi_archive(toy_update_tbl, other_keys = "age_group"),
   )
+})
+
+test_that("`epi_archive` rejects dataframes where time_value and version columns don't share type", {
+  tbl1 <- tibble::tribble(
+    ~geo_value, ~age_group, ~time_value, ~version, ~value,
+    "us", "adult", as.Date("2000-01-01"), as.Date("2000-01-02"), 121,
+  ) %>%
+    mutate(
+      age_group = ordered(age_group, c("pediatric", "adult")),
+    )
+  expect_no_error(as_epi_archive(tbl1))
+  tbl2 <- tibble::tribble(
+    ~geo_value, ~age_group, ~time_value, ~version, ~value,
+    "us", "adult", as.Date("2000-01-01"), 2022, 121,
+  ) %>%
+    mutate(
+      age_group = ordered(age_group, c("pediatric", "adult")),
+    )
+  expect_error(as_epi_archive(tbl2), class = "epiprocess__time_value_version_mismatch")
+  tbl3 <- tibble::tribble(
+    ~geo_value, ~age_group, ~time_value, ~version, ~value,
+    "us", "adult", as.Date("2000-01-01"), as.POSIXct("2000-01-01"), 121,
+  ) %>%
+    mutate(
+      age_group = ordered(age_group, c("pediatric", "adult")),
+    )
+  expect_error(as_epi_archive(tbl3), class = "epiprocess__time_value_version_mismatch")
 })
