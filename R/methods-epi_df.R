@@ -60,6 +60,8 @@ print.epi_df <- function(x, ...) {
   cat(sprintf("* %-9s = %s\n", "geo_type", attributes(x)$metadata$geo_type))
   cat(sprintf("* %-9s = %s\n", "time_type", attributes(x)$metadata$time_type))
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(x)$metadata$as_of))
+  # Conditional output (silent if attribute is NULL):
+  cat(sprintf("* %-9s = %s\n", "decay_to_tibble", attr(x, "decay_to_tibble")))
   cat("\n")
   NextMethod()
 }
