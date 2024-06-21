@@ -33,6 +33,11 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - Clarified "Get started" example of getting Ebola line list data into `epi_df`
   format.
 - Improved documentation web site landing page's introduction.
+- Fixed documentation referring to old `epi_slide()` interface (#466, thanks
+  @XuedaShen!).
+
+## Cleanup
+- Resolved some linting messages in package checks (#468).
 
 # epiprocess 0.7.0
 

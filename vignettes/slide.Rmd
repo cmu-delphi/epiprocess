@@ -21,8 +21,7 @@ as `Date` objects, then one time step is one day, since `as.Date("2022-01-01") +
 1` equals `as.Date("2022-01-02")`. Alternatively, the time step can be specified
 manually in the call to `epi_slide()`; you can read the documentation for more
 details. Furthermore, the alignment of the running window used in `epi_slide()`
-can be "right", "center", or "left"; the default is "right", and is what we use
-in this vignette.
+is specified by `before` and `after`. 
 
 As in getting started guide, we'll fetch daily reported COVID-19 cases from CA,
 FL, NY, and TX (note: here we're using new, not cumulative cases) using the
