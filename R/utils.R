@@ -321,7 +321,8 @@ as_slide_computation <- function(f, ...) {
     if (rlang::dots_n(...) > 0L) {
       cli_abort(
         "No arguments can be passed via `...` when `f` is a formula, or there
-        are unrecognized/misspelled parameter names.",
+        are unrecognized/misspelled parameter names, or there is a trailing
+        comma in the `epi[x]_slide()` call.",
         class = "epiprocess__as_slide_computation__formula_with_dots",
         epiprocess__f = f,
         epiprocess__enquos_dots = enquos(...)
