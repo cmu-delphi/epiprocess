@@ -63,10 +63,10 @@ test_that("as_epi_df works for nonstandard input", {
     regexp = "inferring `time_value` column."
   ))
 
-  tib <- tib %>% rename(forecast_date = date)
+  tib <- tib %>% rename(target_date = date)
   expect_message(expect_no_error(tib_epi_df <- tib %>% as_epi_df()))
 
-  tib <- tib %>% mutate(target_date = 20 + forecast_date)
+  tib <- tib %>% mutate(Time = 20 + target_date)
   expect_error(tib_epi_df <- tib %>% as_epi_df())
 })
 

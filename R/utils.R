@@ -453,10 +453,10 @@ guess_time_type <- function(time_value) {
 #'   "target_date" -> c("target_date", "Target_Date")
 #' @keywords internal
 upcase_snake_case <- function(vec) {
-  VEC <- strsplit(vec, "_") %>%
+  upper_vec <- strsplit(vec, "_") %>%
     map(function(name) paste0(toupper(substr(name, 1, 1)), substr(name, 2, nchar(name)), collapse = "_")) %>%
     unlist()
-  c(vec, VEC)
+  c(vec, upper_vec)
 }
 
 #' rename potential time_value columns
@@ -491,7 +491,7 @@ guess_time_column_name <- function(x, substitutions = NULL) {
       unlist()
     x <- tryCatch(x %>% rename(any_of(substitutions)),
       error = function(cond) {
-        cli_abort("There are multiple `time_value` candidate columns.
+        cli_abort("{names(x)[names(x) %in% substitutions]} are both/all valid substitutions.
 Either `rename` some yourself or drop some.")
       }
     )
@@ -527,7 +527,7 @@ guess_geo_column_name <- function(x, substitutions = NULL) {
     substitutions <- upcase_snake_case(substitutions)
     x <- tryCatch(x %>% rename(any_of(substitutions)),
       error = function(cond) {
-        cli_abort("There are multiple `geo_value` candidate columns.
+        cli_abort("{names(x)[names(x) %in% substitutions]} are both/all valid substitutions.
 Either `rename` some yourself or drop some.")
       }
     )
@@ -549,7 +549,7 @@ guess_version_column_name <- function(x, substitutions = NULL) {
     }
     x <- tryCatch(x %>% rename(any_of(substitutions)),
       error = function(cond) {
-        cli_abort("There are multiple `version` candidate columns.
+        cli_abort("{names(x)[names(x) %in% substitutions]} are both/all valid substitutions.
 Either `rename` some yourself or drop some.")
       }
     )

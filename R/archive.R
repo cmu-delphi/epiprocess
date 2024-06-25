@@ -442,6 +442,7 @@ validate_epi_archive <- function(
 
 #' `as_epi_archive` converts a data frame, data table, or tibble into an
 #' `epi_archive` object.
+#' @param ... used for specifying column names, such as `version = release_date`
 #'
 #' @rdname epi_archive
 #'
