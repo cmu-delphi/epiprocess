@@ -2,11 +2,11 @@
 % Please edit documentation in R/utils.R
 \name{guess_time_column_name}
 \alias{guess_time_column_name}
-\title{given an arbitrary}
+\title{rename potential time_value columns}
 \usage{
 guess_time_column_name(x, substitutions = NULL)
 }
 \description{
-given an arbitrary
+rename potential time_value columns
 }
 \keyword{internal}

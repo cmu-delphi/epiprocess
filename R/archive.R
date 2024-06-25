@@ -454,8 +454,9 @@ as_epi_archive <- function(
     additional_metadata = NULL,
     compactify = NULL,
     clobberable_versions_start = NULL,
-    versions_end = NULL) {
+    versions_end = NULL, ...) {
   assert_data_frame(x)
+  x <- rename(x, ...)
   x <- guess_time_column_name(x)
   x <- guess_geo_column_name(x)
   x <- guess_version_column_name(x)

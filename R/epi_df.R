@@ -249,12 +249,16 @@ as_epi_df.epi_df <- function(x, ...) {
 
 #' @method as_epi_df tbl_df
 #' @describeIn as_epi_df The input tibble `x` must contain the columns
-#'   `geo_value` and `time_value`. All other columns will be preserved as is,
-#'   and treated as measured variables. If `as_of` is missing, then the function
-#'   will try to guess it from an `as_of`, `issue`, or `version` column of `x`
-#'   (if any of these are present), or from as an `as_of` field in its metadata
-#'   (stored in its attributes); if this fails, then the current day-time will
-#'   be used.
+#'   `geo_value` and `time_value`, or column names that uniquely map onto these
+#'   (e.g. `date` or `province`). Alternatively, you can specify the conversion
+#'   explicitly (`time_value = someWeirdColumnName`). All other columns not
+#'   specified as `other_keys` will be preserved as is, and treated as measured
+#'   variables.
+#'
+#'  If `as_of` is missing, then the function will try to guess it from an
+#'   `as_of`, `issue`, or `version` column of `x` (if any of these are present),
+#'   or from as an `as_of` field in its metadata (stored in its attributes); if
+#'   this fails, then the current day-time will be used.
 #' @importFrom rlang .data
 #' @importFrom tidyselect any_of
 #' @importFrom cli cli_inform
@@ -263,11 +267,12 @@ as_epi_df.tbl_df <- function(x, geo_type, time_type, as_of,
                              additional_metadata = list(),
                              ...) {
   # possible standard substitutions for time_value
+  x <- rename(x, ...)
   x <- guess_time_column_name(x)
   x <- guess_geo_column_name(x)
   if (!test_subset(c("geo_value", "time_value"), names(x))) {
     cli_abort(
-      "Columns `geo_value` and `time_value` must be present in `x`."
+      "Either columns `geo_value` and `time_value` must be present in `x`, or related columns (see the internal functions `guess_time_column_name()` and/or `guess_geo_column_name()` for a complete list)."
     )
   }
 

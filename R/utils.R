@@ -459,7 +459,7 @@ upcase_snake_case <- function(x) {
   c(x, X)
 }
 
-#' given an arbitrary
+#' rename potential time_value columns
 #' @keywords internal
 guess_time_column_name <- function(x, substitutions = NULL) {
   if (!("time_value" %in% names(x))) {
@@ -473,12 +473,14 @@ guess_time_column_name <- function(x, substitutions = NULL) {
         time_value = "forecast_date",
         time_value = "target_date",
         time_value = "week",
-        time_value = "day",
         time_value = "epiweek",
         time_value = "month",
+        time_value = "mon",
         time_value = "year",
         time_value = "yearmon",
+        time_value = "yearmonth",
         time_value = "yearMon",
+        time_value = "yearMonth",
         time_value = "dates",
         time_value = "time_values",
         time_value = "forecast_dates",
@@ -495,7 +497,9 @@ guess_time_column_name <- function(x, substitutions = NULL) {
 Either `rename` some yourself or drop some.")
       }
     )
-    cli_inform("inferring `time_value` column.")
+    if (any(substitutions != "")) {
+      cli_inform("inferring `time_value` column.")
+    }
   }
   return(x)
 }
@@ -529,7 +533,9 @@ guess_geo_column_name <- function(x, substitutions = NULL) {
 Either `rename` some yourself or drop some.")
       }
     )
-    cli_inform("inferring `time_value` column.")
+    if (any(substitutions != "")) {
+      cli_inform("inferring `geo_value` column.")
+    }
   }
   return(x)
 }
@@ -545,11 +551,13 @@ guess_version_column_name <- function(x, substitutions = NULL) {
     }
     x <- tryCatch(x %>% rename(any_of(substitutions)),
       error = function(cond) {
-        cli_abort("There are multiple `geo_value` candidate columns.
+        cli_abort("There are multiple `version` candidate columns.
 Either `rename` some yourself or drop some.")
       }
     )
-    cli_inform("inferring `time_value` column.")
+    if (any(substitutions != "")) {
+      cli_inform("inferring `version` column.")
+    }
   }
   return(x)
 }
