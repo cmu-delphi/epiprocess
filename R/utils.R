@@ -470,7 +470,6 @@ guess_time_column_name <- function(x, substitutions = NULL) {
         time_value = "datetime",
         time_value = "dateTime",
         tmie_value = "date_time",
-        time_value = "forecast_date",
         time_value = "target_date",
         time_value = "week",
         time_value = "epiweek",
@@ -483,7 +482,6 @@ guess_time_column_name <- function(x, substitutions = NULL) {
         time_value = "yearMonth",
         time_value = "dates",
         time_value = "time_values",
-        time_value = "forecast_dates",
         time_value = "target_dates"
       )
       substitutions <- upcase_snake_case(substitutions)
