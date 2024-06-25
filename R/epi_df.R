@@ -272,7 +272,8 @@ as_epi_df.tbl_df <- function(x, geo_type, time_type, as_of,
   x <- guess_geo_column_name(x)
   if (!test_subset(c("geo_value", "time_value"), names(x))) {
     cli_abort(
-      "Either columns `geo_value` and `time_value` must be present in `x`, or related columns (see the internal functions `guess_time_column_name()` and/or `guess_geo_column_name()` for a complete list)."
+      "Either columns `geo_value` and `time_value` must be present in `x`, or related columns (see the internal
+ functions `guess_time_column_name()` and/or `guess_geo_column_name()` for a complete list)."
     )
   }
 

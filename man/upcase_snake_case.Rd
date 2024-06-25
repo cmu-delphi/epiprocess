@@ -6,7 +6,7 @@
 "date" -> c("date", "Date")
 "target_date" -> c("target_date", "Target_Date")}
 \usage{
-upcase_snake_case(x)
+upcase_snake_case(vec)
 }
 \description{
 given a vector of characters, add the same values, but upcased, e.g.

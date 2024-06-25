@@ -452,11 +452,11 @@ guess_time_type <- function(time_value) {
 #'   "date" -> c("date", "Date")
 #'   "target_date" -> c("target_date", "Target_Date")
 #' @keywords internal
-upcase_snake_case <- function(x) {
-  X <- strsplit(x, "_") %>%
+upcase_snake_case <- function(vec) {
+  VEC <- strsplit(vec, "_") %>%
     map(function(name) paste0(toupper(substr(name, 1, 1)), substr(name, 2, nchar(name)), collapse = "_")) %>%
     unlist()
-  c(x, X)
+  c(vec, VEC)
 }
 
 #' rename potential time_value columns
