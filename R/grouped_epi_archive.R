@@ -308,7 +308,7 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
       cli_abort("If `f` is missing then a computation must be specified via `...`.")
     }
 
-    f <- as_slide_computation(f, new_col_name)
+    f <- as_slide_computation(f)
     ... <- missing_arg() # nolint: object_usage_linter. magic value that passes zero args as dots in calls below
   }
 
