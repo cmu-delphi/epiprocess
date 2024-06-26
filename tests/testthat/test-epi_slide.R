@@ -326,13 +326,17 @@ test_that("can use unnamed list cols as slide computation output", {
     basic_sum_result %>% dplyr::mutate(slide_value = as.list(slide_value))
   )
   expect_identical(
-    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value))),
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(slide_value = sum(.x$value))),
     basic_sum_result
   )
   expect_identical(
-    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = list(sum(.x$value))), as_list_col = TRUE),
+    toy_edf %>% epi_slide(before = 6L, ~ list(data.frame(value = sum(.x$value)))),
     basic_sum_result %>%
       mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x)))
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ tibble(slide_value = list(sum(.x$value)))),
+    basic_sum_result %>% mutate(across(slide_value, as.list))
   )
 })
 
@@ -363,7 +367,7 @@ test_that("epi_slide_mean errors when `as_list_col` non-NULL", {
         value,
         before = 6L, as_list_col = TRUE, na.rm = TRUE
       ),
-    class = "epiprocess__epi_slide_opt__list_not_supported"
+    class = "lifecycle_error_deprecated"
   )
   # `epi_slide_mean` doesn't return dataframe columns
 })
@@ -372,22 +376,13 @@ test_that("nested dataframe output names are controllable", {
   expect_identical(
     toy_edf %>%
       epi_slide(
-        before = 6L, ~ data.frame(value = sum(.x$value)),
-        new_col_name = "result"
+        before = 6L, ~ data.frame(result = sum(.x$value))
       ),
-    basic_sum_result %>% rename(result_value = slide_value)
-  )
-  expect_identical(
-    toy_edf %>%
-      epi_slide(
-        before = 6L, ~ data.frame(value_sum = sum(.x$value)),
-        names_sep = NULL
-      ),
-    basic_sum_result %>% rename(value_sum = slide_value)
+    basic_sum_result %>% rename(result = slide_value)
   )
 })
 
-test_that("non-size-1 outputs are recycled", {
+test_that("outputs are recycled", {
   # trying with non-size-1 computation outputs:
   # nolint start: line_length_linter.
   basic_result_from_size2 <- tibble::tribble(
@@ -399,22 +394,27 @@ test_that("non-size-1 outputs are recycled", {
     dplyr::arrange(time_value) %>%
     as_epi_df(as_of = 100)
   # nolint end
+  #
+  # non-size-1 outputs with appropriate size are no-op "recycled":
   expect_identical(
     toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value) + 0:1),
     basic_result_from_size2
   )
   expect_identical(
-    toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value) + 0:1, as_list_col = TRUE),
+    toy_edf %>% epi_slide(before = 6L, ~ as.list(sum(.x$value) + 0:1)),
     basic_result_from_size2 %>% dplyr::mutate(slide_value = as.list(slide_value))
   )
   expect_identical(
-    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value) + 0:1)),
-    basic_result_from_size2 %>% rename(slide_value_value = slide_value)
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(slide_value = sum(.x$value) + 0:1)),
+    basic_result_from_size2
   )
+  # size-1 list is recycled:
   expect_identical(
-    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value) + 0:1), as_list_col = TRUE),
+    toy_edf %>% epi_slide(before = 6L, ~ list(tibble(value = sum(.x$value) + 0:1))),
     basic_result_from_size2 %>%
-      mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x)))
+      group_by(time_value) %>%
+      mutate(slide_value = rep(list(tibble(value = slide_value)), 2L)) %>%
+      ungroup()
   )
 })
 
@@ -472,7 +472,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
     ) %>%
       epi_slide_mean(
         value,
-        before = 6L, names_sep = NULL, na.rm = TRUE
+        before = 6L, na.rm = TRUE
       ),
     basic_mean_result %>%
       rename(slide_value_value = slide_value)
@@ -484,7 +484,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
       epi_slide_mean(
         value,
         before = 6L, ref_time_values = c(2L, 8L),
-        names_sep = NULL, na.rm = TRUE
+        na.rm = TRUE
       ),
     filter(basic_mean_result, time_value %in% c(2L, 8L)) %>%
       rename(slide_value_value = slide_value)
@@ -496,7 +496,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
       epi_slide_mean(
         value,
         before = 6L, ref_time_values = c(2L, 8L), all_rows = TRUE,
-        names_sep = NULL, na.rm = TRUE
+        na.rm = TRUE
       ),
     basic_mean_result %>%
       dplyr::mutate(slide_value_value = dplyr::if_else(time_value %in% c(2L, 8L),
