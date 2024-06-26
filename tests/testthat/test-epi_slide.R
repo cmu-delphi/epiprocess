@@ -18,7 +18,7 @@ small_x <- dplyr::bind_rows(
   group_by(geo_value)
 
 
-f <- function(x, g, t) dplyr::tibble(value = mean(x$value), count = length(x$value))
+f <- function(x, g, t) dplyr::tibble(avg = mean(x$value), count = length(x$value))
 
 toy_edf <- tibble::tribble(
   ~geo_value, ~time_value, ~value,
@@ -128,9 +128,9 @@ test_that("Test errors/warnings for discouraged features", {
   )
 
   # Results from epi_slide and epi_slide_mean should match
-  expect_identical(select(ref1, -slide_value_count), opt1)
-  expect_identical(select(ref2, -slide_value_count), opt2)
-  expect_identical(select(ref3, -slide_value_count), opt3)
+  expect_identical(select(ref1, -count), opt1 %>% rename(avg = slide_value_value))
+  expect_identical(select(ref2, -count), opt2 %>% rename(avg = slide_value_value))
+  expect_identical(select(ref3, -count), opt3 %>% rename(avg = slide_value_value))
 })
 
 test_that("Both `before` and `after` must be non-NA, non-negative, integer-compatible", {
@@ -203,7 +203,7 @@ test_that("Both `before` and `after` must be non-NA, non-negative, integer-compa
   ))
 
   # Results from epi_slide and epi_slide_mean should match
-  expect_identical(select(ref, -slide_value_count), opt)
+  expect_identical(select(ref, -count), opt %>% rename(avg = slide_value_value))
 })
 
 test_that("`ref_time_values` + `before` + `after` that result in no slide data, generate the error", {
@@ -275,8 +275,8 @@ test_that("Warn user against having a blank `before`", {
   ))
 
   # Results from epi_slide and epi_slide_mean should match
-  expect_identical(select(ref1, -slide_value_count), opt1)
-  expect_identical(select(ref2, -slide_value_count), opt2)
+  expect_identical(select(ref1, -count), opt1 %>% rename(avg = slide_value_value))
+  expect_identical(select(ref2, -count), opt2 %>% rename(avg = slide_value_value))
 })
 
 ## --- These cases doesn't generate the error: ---
@@ -289,14 +289,14 @@ test_that(
     expect_identical(
       epi_slide(grouped, f, before = 2L, ref_time_values = d + 200L) %>%
         ungroup() %>%
-        dplyr::select("geo_value", "slide_value_value"),
-      dplyr::tibble(geo_value = "ak", slide_value_value = 199)
+        dplyr::select("geo_value", "avg"),
+      dplyr::tibble(geo_value = "ak", avg = 199)
     ) # out of range for one group
     expect_identical(
       epi_slide(grouped, f, before = 2L, ref_time_values = d + 3) %>%
         ungroup() %>%
-        dplyr::select("geo_value", "slide_value_value"),
-      dplyr::tibble(geo_value = c("ak", "al"), slide_value_value = c(2, -2))
+        dplyr::select("geo_value", "avg"),
+      dplyr::tibble(geo_value = c("ak", "al"), avg = c(2, -2))
     ) # not out of range for either group
 
     expect_identical(
@@ -314,7 +314,7 @@ test_that(
   }
 )
 
-test_that("computation output formats x as_list_col", {
+test_that("can use unnamed list cols as slide computation output", {
   # See `toy_edf` and `basic_sum_result` definitions at top of file.
   # We'll try 7d sum with a few formats.
   expect_identical(
@@ -322,15 +322,15 @@ test_that("computation output formats x as_list_col", {
     basic_sum_result
   )
   expect_identical(
-    toy_edf %>% epi_slide(before = 6L, ~ sum(.x$value), as_list_col = TRUE),
+    toy_edf %>% epi_slide(before = 6L, ~ list(sum(.x$value))),
     basic_sum_result %>% dplyr::mutate(slide_value = as.list(slide_value))
   )
   expect_identical(
     toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value))),
-    basic_sum_result %>% rename(slide_value_value = slide_value)
+    basic_sum_result
   )
   expect_identical(
-    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = sum(.x$value)), as_list_col = TRUE),
+    toy_edf %>% epi_slide(before = 6L, ~ data.frame(value = list(sum(.x$value))), as_list_col = TRUE),
     basic_sum_result %>%
       mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x)))
   )

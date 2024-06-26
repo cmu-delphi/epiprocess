@@ -12,10 +12,9 @@ epi_slide_mean(
   after,
   ref_time_values,
   time_step,
-  new_col_name = NULL,
-  as_list_col = NULL,
-  names_sep = NULL,
-  all_rows = FALSE
+  all_rows = FALSE,
+  as_list_col = deprecated(),
+  names_sep = deprecated()
 )
 }
 \arguments{
@@ -70,18 +69,6 @@ return an object of class \link[lubridate:period]{lubridate::period}. For exampl
 \code{time_step = lubridate::hours} in order to set the time step to be one hour
 (this would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
-\item{new_col_name}{Character vector indicating the name(s) of the new
-column(s) that will contain the derivative values. Default
-is "slide_value"; note that setting \code{new_col_name} equal to any existing
-column names will overwrite those columns. If \code{names_sep} is \code{NULL},
-\code{new_col_name} must be the same length as \code{col_names}.}
-
-\item{as_list_col}{Not supported. Included to match \code{epi_slide} interface.}
-
-\item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
-when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
-from \code{new_col_name} entirely.}
-
 \item{all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
 the output even with \code{ref_time_values} provided, with some type of missing
 value marker for the slide computation output column(s) for \code{time_value}s
@@ -92,6 +79,18 @@ of the slide computation output. If using \code{as_list_col = TRUE}, note that
 the missing marker is a \code{NULL} entry in the list column; for certain
 operations, you might want to replace these \code{NULL} entries with a different
 \code{NA} marker.}
+
+\item{as_list_col}{Not supported. Included to match \code{epi_slide} interface.}
+
+\item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
+when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
+from \code{new_col_name} entirely.}
+
+\item{new_col_name}{Character vector indicating the name(s) of the new
+column(s) that will contain the derivative values. Default
+is "slide_value"; note that setting \code{new_col_name} equal to any existing
+column names will overwrite those columns. If \code{names_sep} is \code{NULL},
+\code{new_col_name} must be the same length as \code{col_names}.}
 }
 \value{
 An \code{epi_df} object given by appending one or more new columns to

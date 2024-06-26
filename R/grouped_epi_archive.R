@@ -205,9 +205,9 @@ ungroup.grouped_epi_archive <- function(x, ...) {
 #'  env missing_arg
 #' @export
 epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
-                                           time_step, new_col_name = "slide_value",
-                                           as_list_col = FALSE, names_sep = "_",
-                                           all_versions = FALSE) {
+                                           time_step, new_col_name = NULL,
+                                           all_versions = FALSE,
+                                           as_list_col = deprecated(), names_sep = deprecated()) {
   # Perform some deprecated argument checks without using `<param> =
   # deprecated()` in the function signature, because they are from
   # early development versions and much more likely to be clutter than
@@ -261,13 +261,16 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
 
   if (!missing(time_step)) before <- time_step(before)
 
-  # Symbolize column name
-  new_col <- sym(new_col_name)
-
   # Validate rest of parameters:
-  assert_logical(as_list_col, len = 1L)
   assert_logical(all_versions, len = 1L)
-  assert_character(names_sep, len = 1L, null.ok = TRUE)
+
+  if (lifecycle::is_present(as_list_col)) {
+    lifecycle::deprecate_stop("0.7.12", "epix_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead.")
+  }
+
+  if (lifecycle::is_present(names_sep)) {
+    lifecycle::deprecate_stop("0.7.12", "epix_slide(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)")
+  }
 
   # Computation for one group, one time value
   comp_one_grp <- function(.data_group, .group_key,
@@ -300,16 +303,12 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
 
   # If `f` is missing, interpret ... as an expression for tidy evaluation
   if (missing(f)) {
-    quos <- enquos(...)
-    if (length(quos) == 0) {
+    quosures <- enquos(...)
+    if (length(quosures) == 0) {
       cli_abort("If `f` is missing then a computation must be specified via `...`.")
     }
-    if (length(quos) > 1) {
-      cli_abort("If `f` is missing then only a single computation can be specified via `...`.")
-    }
 
-    f <- quos[[1]]
-    new_col <- sym(names(rlang::quos_auto_name(quos)))
+    f <- as_slide_computation(f, new_col_name)
     ... <- missing_arg() # nolint: object_usage_linter. magic value that passes zero args as dots in calls below
   }
 

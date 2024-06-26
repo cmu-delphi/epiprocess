@@ -283,22 +283,70 @@ as_slide_computation <- function(f, ...) {
   arg <- caller_arg(f)
   call <- caller_env()
 
-  # A quosure is a type of formula, so be careful with the order and contents
-  # of the conditional logic here.
-  if (is_quosure(f)) {
+  if (rlang::is_quosures(f)) {
+    quosures <- rlang::quos_auto_name(f) # resolves := among other things
+    nms <- names(quosures)
+    manually_named <-
+      rlang::names2(f) != "" |
+      vapply(f, function(quosure) {
+        expression <- rlang::quo_get_expr(quosure)
+        is.call(expression) && expression[[1L]] == rlang::sym(":=")
+      }, FUN.VALUE = logical(1L))
     fn <- function(.x, .group_key, .ref_time_value) {
-      # Convert to environment to standardize between tibble and R6
-      # based inputs. In both cases, we should get a simple
-      # environment with the empty environment as its parent.
-      data_env <- rlang::as_environment(.x)
-      data_mask <- rlang::new_data_mask(bottom = data_env, top = data_env)
+      x_as_env <- rlang::as_environment(.x)
+      results_env <- new.env(parent = x_as_env)
+      data_mask <- rlang::new_data_mask(bottom = results_env, top = x_as_env)
       data_mask$.data <- rlang::as_data_pronoun(data_mask)
       # We'll also install `.x` directly, not as an `rlang_data_pronoun`, so
-      # that we can, e.g., use more dplyr and epiprocess operations.
+      # that we can, e.g., use more dplyr and epiprocess operations. It won't be
+      # (and doesn't make sense nrow-wise to be) updated with results as we loop
+      # through the quosures.
       data_mask$.x <- .x
       data_mask$.group_key <- .group_key
       data_mask$.ref_time_value <- .ref_time_value
-      rlang::eval_tidy(f, data_mask)
+      common_size <- NULL
+      results_names <- character(0L) # track ordering; env doesn't
+      for (quosure_i in seq_along(f)) {
+        # XXX could capture and improve error messages here at cost of recover()ability
+        quosure_result_raw <- rlang::eval_tidy(quosures[[quosure_i]], data_mask)
+        if (is.null(quosure_result_raw)) {
+          nm <- nms[[quosure_i]]
+          results_names <- results_names[results_names != nm]
+          remove(list = nm, envir = results_env)
+        } else if (vctrs::obj_is_vector(quosure_result_raw) &&
+                     is.null(vctrs::vec_names(quosure_result_raw))) {
+          # We want something like `dplyr_col_modify()` but allowing recycling
+          # of previous computations and updating `results_env` and unpacking
+          # tibbles if not manually named.
+          if (!is.null(common_size)) {
+            # XXX could improve error messages here
+            quosure_result_recycled <- vctrs::vec_recycle(quosure_result_raw, common_size)
+          } else {
+            quosure_result_recycled <- quosure_result_raw
+            quosure_result_size <- vctrs::vec_size(quosure_result_raw)
+            if (quosure_result_size != 1L) {
+              common_size <- quosure_result_size
+              for (previous_result_nm in names(results_env)) {
+                results_env[[previous_result_nm]] <- vctrs::vec_recycle(results_env[[previous_result_nm]], common_size)
+              }
+            } # else `common_size` remains NULL
+          }
+          if (is.data.frame(quosure_result_recycled) && !manually_named[[i]]) {
+            new_results_names <- names(quosure_result_recycled)
+            results_names <- c(results_names, new_results_names)
+            for (new_result_i in seq_along(quosure_result_recycled)) {
+              results_env[[new_result_i]] <- quosure_result_recycled[[new_result_i]]
+            }
+          } else {
+            nm <- nms[[quosure_i]]
+            results_names <- c(results_names, nm)
+            results_env[[nm]] <- quosure_result_recycled
+          }
+        } else {
+          cli_abort("Problem with output of {.code {rlang::expr_deparse(rlang::quo_get_expr(f[[quosure_i]]))}}; it produced a result that was neither NULL, a data.frame, nor a vector without unnamed entries (as determined by the vctrs package).")
+        }
+      }
+      validate_tibble(new_tibble(as.list(results_env)[results_names]))
     }
 
     return(fn)
@@ -311,6 +359,10 @@ as_slide_computation <- function(f, ...) {
   }
 
   if (is_formula(f)) {
+    if (is_quosure(f)) {
+      cli_abort("`f` argument to `as_slide_computation()` cannot be a `quosure`; it should probably be a `quosures`.  This is likely an internal bug in `{{epiprocess}}`.")
+    }
+
     if (length(f) > 2) {
       cli_abort("{.code {arg}} must be a one-sided formula",
         class = "epiprocess__as_slide_computation__formula_is_twosided",

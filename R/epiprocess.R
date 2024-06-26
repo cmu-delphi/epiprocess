@@ -10,6 +10,7 @@
 #'             anyInfinite test_subset test_set_equal checkInt expect_class
 #' @importFrom cli cli_abort cli_warn
 #' @importFrom rlang %||%
+#' @importFrom lifecycle deprecated
 #' @name epiprocess
 "_PACKAGE"
 utils::globalVariables(c(".x", ".group_key", ".ref_time_value"))
