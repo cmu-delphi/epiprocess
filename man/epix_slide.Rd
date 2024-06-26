@@ -14,9 +14,9 @@ epix_slide(
   ref_time_values,
   time_step,
   new_col_name = "slide_value",
-  as_list_col = FALSE,
-  names_sep = "_",
-  all_versions = FALSE
+  all_versions = FALSE,
+  as_list_col = deprecated(),
+  names_sep = deprecated()
 )
 
 \method{epix_slide}{epi_archive}(
@@ -27,9 +27,9 @@ epix_slide(
   ref_time_values,
   time_step,
   new_col_name = "slide_value",
-  as_list_col = FALSE,
-  names_sep = "_",
-  all_versions = FALSE
+  all_versions = FALSE,
+  as_list_col = deprecated(),
+  names_sep = deprecated()
 )
 
 \method{epix_slide}{grouped_epi_archive}(
@@ -40,9 +40,9 @@ epix_slide(
   ref_time_values,
   time_step,
   new_col_name = NULL,
-  as_list_col = FALSE,
-  names_sep = "_",
-  all_versions = FALSE
+  all_versions = FALSE,
+  as_list_col = deprecated(),
+  names_sep = deprecated()
 )
 }
 \arguments{
@@ -107,6 +107,13 @@ would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 contain the derivative values. Default is "slide_value"; note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
 
+\item{all_versions}{(Not the same as \code{all_rows} parameter of \code{epi_slide}.) If
+\code{all_versions = TRUE}, then \code{f} will be passed the version history (all
+\code{version <= ref_time_value}) for rows having \code{time_value} between
+\code{ref_time_value - before} and \code{ref_time_value}. Otherwise, \code{f} will be
+passed only the most recent \code{version} for every unique \code{time_value}.
+Default is \code{FALSE}.}
+
 \item{as_list_col}{Should the slide results be held in a list column, or be
 \link[tidyr:chop]{unchopped}/\link[tidyr:unnest]{unnested}? Default is \code{FALSE},
 in which case a list object returned by \code{f} would be unnested (using
@@ -117,13 +124,6 @@ to the names of the list elements.}
 \item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
 when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
 from \code{new_col_name} entirely.}
-
-\item{all_versions}{(Not the same as \code{all_rows} parameter of \code{epi_slide}.) If
-\code{all_versions = TRUE}, then \code{f} will be passed the version history (all
-\code{version <= ref_time_value}) for rows having \code{time_value} between
-\code{ref_time_value - before} and \code{ref_time_value}. Otherwise, \code{f} will be
-passed only the most recent \code{version} for every unique \code{time_value}.
-Default is \code{FALSE}.}
 }
 \value{
 A tibble whose columns are: the grouping variables, \code{time_value},
