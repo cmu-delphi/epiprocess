@@ -288,10 +288,10 @@ as_slide_computation <- function(f, ...) {
     nms <- names(quosures)
     manually_named <-
       rlang::names2(f) != "" |
-      vapply(f, function(quosure) {
-        expression <- rlang::quo_get_expr(quosure)
-        is.call(expression) && expression[[1L]] == rlang::sym(":=")
-      }, FUN.VALUE = logical(1L))
+        vapply(f, function(quosure) {
+          expression <- rlang::quo_get_expr(quosure)
+          is.call(expression) && expression[[1L]] == rlang::sym(":=")
+        }, FUN.VALUE = logical(1L))
     fn <- function(.x, .group_key, .ref_time_value) {
       x_as_env <- rlang::as_environment(.x)
       results_env <- new.env(parent = x_as_env)
@@ -314,7 +314,7 @@ as_slide_computation <- function(f, ...) {
           results_names <- results_names[results_names != nm]
           remove(list = nm, envir = results_env)
         } else if (vctrs::obj_is_vector(quosure_result_raw) &&
-                     is.null(vctrs::vec_names(quosure_result_raw))) {
+          is.null(vctrs::vec_names(quosure_result_raw))) {
           # We want something like `dplyr_col_modify()` but allowing recycling
           # of previous computations and updating `results_env` and unpacking
           # tibbles if not manually named.

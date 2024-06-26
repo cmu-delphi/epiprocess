@@ -236,9 +236,9 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     # types. We'll let `list_unchop` deal with checking for type compatibility
     # between the outputs.
     if (!rlang::is_quosures(f) &&
-          !all(vapply(slide_values_list, function(x) {
-            vctrs::obj_is_vector(x) && is.null(vctrs::vec_names(x))
-          }, logical(1L)))
+      !all(vapply(slide_values_list, function(x) {
+        vctrs::obj_is_vector(x) && is.null(vctrs::vec_names(x))
+      }, logical(1L)))
     ) {
       cli_abort(
         "The slide computations must return always atomic vectors
@@ -285,7 +285,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
       .data_group <- filter(.data_group, o)
     }
 
-    result =
+    result <-
       if (!is.null(new_col_name)) {
         # vector or packed data.frame-type column:
         mutate(.data_group, !!new_col_name := slide_values)
