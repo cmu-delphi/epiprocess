@@ -498,7 +498,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
     basic_mean_result %>%
       dplyr::mutate(slide_value = dplyr::if_else(time_value %in% c(2L, 8L),
         slide_value, NA_integer_
-        )) %>%
+      )) %>%
       rename(slide_value_value = slide_value)
   )
 
