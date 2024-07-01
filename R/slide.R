@@ -290,7 +290,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
         # vector or packed data.frame-type column:
         mutate(.data_group, !!new_col_name := slide_values)
       } else {
-        if (is.data.frame(slide_values)) {
+        if (inherits(slide_values, "data.frame")) {
           # unpack into separate columns (without name prefix):
           mutate(.data_group, slide_values)
         } else {

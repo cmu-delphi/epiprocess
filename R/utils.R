@@ -331,7 +331,7 @@ as_slide_computation <- function(f, ...) {
               }
             } # else `common_size` remains NULL
           }
-          if (is.data.frame(quosure_result_recycled) && !manually_named[[i]]) {
+          if (inherits(quosure_result_recycled, "data.frame") && !manually_named[[i]]) {
             new_results_names <- names(quosure_result_recycled)
             results_names <- c(results_names, new_results_names)
             for (new_result_i in seq_along(quosure_result_recycled)) {

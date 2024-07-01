@@ -13,7 +13,7 @@ epix_slide(
   before,
   ref_time_values,
   time_step,
-  new_col_name = "slide_value",
+  new_col_name = NULL,
   all_versions = FALSE,
   as_list_col = deprecated(),
   names_sep = deprecated()
@@ -26,7 +26,7 @@ epix_slide(
   before,
   ref_time_values,
   time_step,
-  new_col_name = "slide_value",
+  new_col_name = NULL,
   all_versions = FALSE,
   as_list_col = deprecated(),
   names_sep = deprecated()

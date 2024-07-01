@@ -793,7 +793,7 @@ epix_slide <- function(
     before,
     ref_time_values,
     time_step,
-    new_col_name = "slide_value",
+    new_col_name = NULL,
     all_versions = FALSE,
     as_list_col = deprecated(), names_sep = deprecated()) {
   UseMethod("epix_slide")
@@ -803,7 +803,7 @@ epix_slide <- function(
 #' @rdname epix_slide
 #' @export
 epix_slide.epi_archive <- function(x, f, ..., before, ref_time_values,
-                                   time_step, new_col_name = "slide_value",
+                                   time_step, new_col_name = NULL,
                                    all_versions = FALSE,
                                    as_list_col = deprecated(), names_sep = deprecated()) {
   # For an "ungrouped" slide, treat all rows as belonging to one big

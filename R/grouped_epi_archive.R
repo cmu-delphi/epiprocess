@@ -261,6 +261,11 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
 
   if (!missing(time_step)) before <- time_step(before)
 
+  checkmate::assert_string(new_col_name, null.ok = TRUE)
+  if (identical(new_col_name, "time_value")) {
+    cli_abort('`new_col_name` must not be `"time_value"`; `epix_slide()` uses that column name to attach the `ref_time_value` associated with each slide computation')
+  }
+
   # Validate rest of parameters:
   assert_logical(all_versions, len = 1L)
 
@@ -276,7 +281,7 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
   comp_one_grp <- function(.data_group, .group_key,
                            f, ...,
                            ref_time_value,
-                           new_col) {
+                           new_col_name) {
     # Carry out the specified computation
     comp_value <- f(.data_group, .group_key, ref_time_value, ...)
 
@@ -287,17 +292,31 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
       .var.name = "comp_value (an output of one of your slide computations)"
     )
 
-    # Label every result row with the `ref_time_value`
-    res <- list(time_value = ref_time_value)
+    # Construct result first as list, then tibble-ify, to try to avoid some
+    # redundant work. `group_modify()` provides the group key, we provide the
+    # ref time value (appropriately recycled) and comp_value (appropriately
+    # named / unpacked, for quick feedback)
+    res <- list(time_value = vctrs::vec_rep(ref_time_value, vctrs::vec_size(comp_value)))
 
-    # Wrap the computation output in a list and unchop/unnest later if
-    # `as_list_col = FALSE`. This approach means that we will get a
-    # list-class col rather than a data.frame-class col when
-    # `as_list_col = TRUE` and the computations outputs are data
-    # frames.
-    res[[new_col]] <- list(comp_value)
+    if (!is.null(new_col_name)) {
+      # vector or packed data.frame-type column (note: new_col_name of
+      # "time_value" is disallowed):
+      res[[new_col_name]] <- comp_value
+    } else {
+      if (inherits(comp_value, "data.frame")) {
+        # unpack into separate columns (without name prefix):
+        res <- c(res, comp_value)
+      } else {
+        # apply default name (to vector or packed data.frame-type column):
+        res[["slide_value"]] <- comp_value
+      }
+    }
 
-    # Convert the list to a tibble all at once for speed.
+    # Stop on naming conflicts (names() fine here, non-NULL). Not the
+    # friendliest error messages though.
+    vctrs::vec_as_names(names(res), repair = "check_unique")
+
+    # Fast conversion:
     return(validate_tibble(new_tibble(res)))
   }
 
@@ -355,7 +374,7 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
       group_modify_fn <- function(.data_group, .group_key,
                                   f, ...,
                                   ref_time_value,
-                                  new_col) {
+                                  new_col_name) {
         # .data_group is coming from as_of_df as a tibble, but we
         # want to feed `comp_one_grp` an `epi_archive` backed by a
         # DT; convert and wrap:
@@ -366,7 +385,7 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
         comp_one_grp(.data_group_archive, .group_key,
           f = f, ...,
           ref_time_value = ref_time_value,
-          new_col = new_col
+          new_col_name = new_col_name
         )
       }
     }
@@ -377,20 +396,15 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
         group_modify_fn,
         f = f, ...,
         ref_time_value = ref_time_value,
-        new_col = new_col,
+        new_col_name = new_col_name,
         .keep = TRUE
       )
     )
   })
-  # Combine output into a single tibble
-  out <- as_tibble(setDF(rbindlist(out)))
+  # Combine output into a single tibble (allowing for packed columns)
+  out <- vctrs::vec_rbind(!!!out)
   # Reconstruct groups
   out <- group_by(out, !!!syms(x$private$vars), .drop = x$private$drop)
-
-  # Unchop/unnest if we need to
-  if (!as_list_col) {
-    out <- tidyr::unnest(out, !!new_col, names_sep = names_sep)
-  }
 
   # nolint start: commented_code_linter.
   # if (is_epi_df(x)) {
