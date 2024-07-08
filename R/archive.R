@@ -458,9 +458,9 @@ as_epi_archive <- function(
     versions_end = NULL, ...) {
   assert_data_frame(x)
   x <- rename(x, ...)
-  x <- guess_time_column_name(x)
-  x <- guess_geo_column_name(x)
-  x <- guess_version_column_name(x)
+  x <- guess_column_name(x, "time_value", time_column_names())
+  x <- guess_column_name(x, "geo_value", geo_column_names())
+  x <- guess_column_name(x, "version", version_column_names())
   if (!test_subset(c("geo_value", "time_value", "version"), names(x))) {
     cli_abort(
       "Columns `geo_value`, `time_value`, and `version` must be present in `x`."

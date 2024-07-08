@@ -268,8 +268,8 @@ as_epi_df.tbl_df <- function(x, geo_type, time_type, as_of,
                              ...) {
   # possible standard substitutions for time_value
   x <- rename(x, ...)
-  x <- guess_time_column_name(x)
-  x <- guess_geo_column_name(x)
+  x <- guess_column_name(x, "time_value", time_column_names())
+  x <- guess_column_name(x, "geo_value", geo_column_names())
   if (!test_subset(c("geo_value", "time_value"), names(x))) {
     cli_abort(
       "Either columns `geo_value` and `time_value` must be present in `x`, or related columns (see the internal

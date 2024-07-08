@@ -56,11 +56,11 @@ test_that("as_epi_df works for nonstandard input", {
   expect_no_error(tib_epi_df <- tib %>% as_epi_df(time_value = date, geo_value = geo_value))
   expect_error(expect_message(
     tib %>% rename(awefa = geo_value) %>% as_epi_df(),
-    regexp = "inferring `time_value` column."
+    regexp = "inferring "
   ))
   expect_no_error(expect_message(
     tib %>% rename(awefa = geo_value) %>% as_epi_df(geo_value = awefa),
-    regexp = "inferring `time_value` column."
+    regexp = "inferring"
   ))
 
   tib <- tib %>% rename(target_date = date)
