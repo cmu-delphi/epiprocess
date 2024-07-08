@@ -9,8 +9,7 @@ new_epi_df(
   geo_type,
   time_type,
   as_of,
-  additional_metadata = list(),
-  ...
+  additional_metadata = list()
 )
 }
 \arguments{

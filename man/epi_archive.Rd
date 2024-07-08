@@ -91,7 +91,8 @@ value of \code{clobberable_versions_start} does not fully trust these empty
 updates, and assumes that any version \verb{>= max(x$version)} could be
 clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
 
-\item{...}{used for specifying column names, such as \code{version = release_date}}
+\item{...}{used for specifying column names, as in \code{\link[dplyr:rename]{dplyr::rename}}. For
+example \code{version = release_date}}
 }
 \value{
 An \code{epi_archive} object.

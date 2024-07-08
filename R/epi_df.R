@@ -95,7 +95,7 @@ NULL
 #'
 #' @export
 new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
-                       additional_metadata = list(), ...) {
+                       additional_metadata = list()) {
   assert_data_frame(x)
   assert_list(additional_metadata)
 
@@ -279,7 +279,7 @@ as_epi_df.tbl_df <- function(x, geo_type, time_type, as_of,
 
   new_epi_df(
     x, geo_type, time_type, as_of,
-    additional_metadata, ...
+    additional_metadata
   )
 }
 
