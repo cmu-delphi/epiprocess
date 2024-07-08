@@ -526,6 +526,8 @@ list2var <- function(x) {
 #' bad_wrapper1 <- function(x) fn(x)
 #' bad_wrapper1() # TRUE, bad
 #'
+#' @importFrom lifecycle deprecated
+#'
 #' @noRd
 deprecated_quo_is_present <- function(quo) {
   if (!rlang::is_quosure(quo)) {
@@ -536,7 +538,7 @@ deprecated_quo_is_present <- function(quo) {
     FALSE
   } else {
     quo_expr <- rlang::get_expr(quo)
-    if (identical(quo_expr, rlang::expr(lifecycle::deprecated())) || identical(quo_expr, rlang::expr(lifecycle::deprecated()))) { # nolint: object_usage_linter
+    if (identical(quo_expr, rlang::expr(deprecated())) || identical(quo_expr, rlang::expr(lifecycle::deprecated()))) { # nolint: object_usage_linter
       FALSE
     } else {
       TRUE
