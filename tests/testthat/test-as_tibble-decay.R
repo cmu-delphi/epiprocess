@@ -8,6 +8,8 @@ test_that("as_tibble checks an attr to avoid decay to tibble", {
 })
 
 test_that("as_tibble ungroups if needed", {
+  # tsibble is doing some method piracy, and overwriting as_tibble.grouped_df as of 1.1.5
+  skip_if(packageVersion("tsibble") > "1.1.4")
   edf <- jhu_csse_daily_subset %>% group_by(geo_value)
   # removes the grouped_df class
   expect_identical(class(as_tibble(edf)), c("tbl_df", "tbl", "data.frame"))
