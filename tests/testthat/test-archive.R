@@ -18,6 +18,24 @@ test_that("data.frame must contain geo_value, time_value and version columns", {
   )
 })
 
+test_that("as_epi_archive custom name mapping works correctly", {
+  # custom name works correctly
+  suppressWarnings(expect_equal(
+      as_epi_archive(rename(dt, weirdName = version), version = weirdName),
+    as_epi_archive(dt)
+  ))
+  suppressWarnings(expect_equal(
+    as_epi_archive(rename(dt, weirdName = geo_value), geo_value = weirdName),
+    as_epi_archive(dt)
+  ))
+  suppressWarnings(expect_equal(
+      as_epi_archive(rename(dt, weirdName = time_value), time_value = weirdName),
+    as_epi_archive(dt)
+  ))
+
+  expect_error(as_epi_archive(rename(dt, weirdName = version), version = weirdName, version = time_value), "Names must be unique")
+})
+
 test_that("other_keys can only contain names of the data.frame columns", {
   expect_error(as_epi_archive(dt, other_keys = "xyz", compactify = FALSE),
     regexp = "`other_keys` must be contained in the column names of `x`."
