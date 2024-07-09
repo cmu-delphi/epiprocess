@@ -37,8 +37,9 @@ as_epi_archive(
   additional_metadata = NULL,
   compactify = NULL,
   clobberable_versions_start = NULL,
-  versions_end = NULL,
-  ...
+  .versions_end = NULL,
+  ...,
+  versions_end = .versions_end
 )
 }
 \arguments{
