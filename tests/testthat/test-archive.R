@@ -21,7 +21,7 @@ test_that("data.frame must contain geo_value, time_value and version columns", {
 test_that("as_epi_archive custom name mapping works correctly", {
   # custom name works correctly
   suppressWarnings(expect_equal(
-      as_epi_archive(rename(dt, weirdName = version), version = weirdName),
+    as_epi_archive(rename(dt, weirdName = version), version = weirdName),
     as_epi_archive(dt)
   ))
   suppressWarnings(expect_equal(
@@ -29,7 +29,7 @@ test_that("as_epi_archive custom name mapping works correctly", {
     as_epi_archive(dt)
   ))
   suppressWarnings(expect_equal(
-      as_epi_archive(rename(dt, weirdName = time_value), time_value = weirdName),
+    as_epi_archive(rename(dt, weirdName = time_value), time_value = weirdName),
     as_epi_archive(dt)
   ))
 
