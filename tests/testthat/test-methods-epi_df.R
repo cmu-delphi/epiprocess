@@ -131,6 +131,7 @@ test_that("Metadata is dropped by `as_tibble`", {
 })
 
 test_that("Grouping are dropped by `as_tibble`", {
+  # tsibble is doing some method piracy, and overwriting as_tibble.grouped_df as of 1.1.5
   skip_if(packageVersion("tsibble") > "1.1.4")
   grouped_converted <- toy_epi_df %>%
     group_by(geo_value) %>%
