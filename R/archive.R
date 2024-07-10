@@ -251,6 +251,7 @@ NULL
 #'
 #' @importFrom data.table as.data.table key setkeyv
 #' @importFrom dplyr if_any if_all everything
+#' @importFrom utils capture.output
 #'
 #' @name epi_archive
 #' @export

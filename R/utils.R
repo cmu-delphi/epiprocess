@@ -526,6 +526,8 @@ list2var <- function(x) {
 #' bad_wrapper1 <- function(x) fn(x)
 #' bad_wrapper1() # TRUE, bad
 #'
+#' @importFrom lifecycle deprecated
+#'
 #' @noRd
 deprecated_quo_is_present <- function(quo) {
   if (!rlang::is_quosure(quo)) {
