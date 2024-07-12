@@ -15,5 +15,4 @@
 #'   `as_of` fields; named entries from the passed list will be included as
 #'   well. If your tibble has additional keys, be sure to specify them as a
 #'   character vector in the `other_keys` component of `additional_metadata`.
-#' @param ... Additional arguments passed to methods.
 #' @return An `epi_df` object.

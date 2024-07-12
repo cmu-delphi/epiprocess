@@ -510,7 +510,7 @@ version_column_names <- function() {
 #' @description
 #' potentially renames
 #' @param x the tibble to potentially rename
-#' @param substitions a named vector. the potential substitions, with every name `time_value`
+#' @param substitutions a named vector. the potential substitions, with every name `time_value`
 #' @keywords internal
 guess_column_name <- function(x, column_name, substitutions) {
   if (!(column_name %in% names(x))) {

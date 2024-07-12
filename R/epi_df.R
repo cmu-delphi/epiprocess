@@ -162,6 +162,7 @@ new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
 #' guide](https://cmu-delphi.github.io/epiprocess/articles/epiprocess.html) for
 #' examples.
 #'
+#' @param ... Additional arguments passed to methods.
 #' @template epi_df-params
 #'
 #' @export

@@ -9,7 +9,7 @@ guess_column_name(x, column_name, substitutions)
 \arguments{
 \item{x}{the tibble to potentially rename}
 
-\item{substitions}{a named vector. the potential substitions, with every name \code{time_value}}
+\item{substitutions}{a named vector. the potential substitions, with every name \code{time_value}}
 }
 \description{
 potentially renames

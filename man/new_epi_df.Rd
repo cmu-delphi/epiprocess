@@ -34,8 +34,6 @@ then the current day-time will be used.}
 \code{as_of} fields; named entries from the passed list will be included as
 well. If your tibble has additional keys, be sure to specify them as a
 character vector in the \code{other_keys} component of \code{additional_metadata}.}
-
-\item{...}{Additional arguments passed to methods.}
 }
 \value{
 An \code{epi_df} object.
