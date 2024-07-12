@@ -33,7 +33,9 @@ test_that("as_epi_archive custom name mapping works correctly", {
     as_epi_archive(dt)
   ))
 
-  expect_error(as_epi_archive(rename(dt, weirdName = version), version = weirdName, version = time_value), "Names must be unique")
+  expect_error(as_epi_archive(rename(dt, weirdName = version),
+    version = weirdName, version = time_value
+  ), "Names must be unique")
 })
 
 test_that("other_keys can only contain names of the data.frame columns", {
