@@ -282,7 +282,8 @@ detect_outlr_stl <- function(x = seq_along(y), y,
   }
   distinct_x_skips <- unique(diff(x))
   if (diff(range(distinct_x_skips)) > 1e-4 * mean(distinct_x_skips)) {
-    cli_abort("`x` does not appear to have regular spacing; consider filling in gaps with imputed values (STL does not allow NAs).")
+    cli_abort("`x` does not appear to have regular spacing; consider filling in
+               gaps with imputed values (STL does not allow NAs).")
   }
   if (is.unsorted(x)) { # <- for performance in common (sorted) case
     o <- order(x)
