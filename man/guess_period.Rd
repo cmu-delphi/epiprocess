@@ -2,27 +2,29 @@
 % Please edit documentation in R/utils.R
 \name{guess_period}
 \alias{guess_period}
-\title{Use max valid period as guess for \code{period} of \code{ref_time_values}}
+\title{Use max valid period as guess for \code{period} of \code{time_values}}
 \usage{
 guess_period(
-  ref_time_values,
-  ref_time_values_arg = rlang::caller_arg(ref_time_values)
+  time_values,
+  time_values_arg = rlang::caller_arg(time_values),
+  ...
 )
 }
 \arguments{
-\item{ref_time_values}{Vector containing time-interval-like or time-like
-data, with at least two distinct values, \code{\link{diff}}-able (e.g., a
-\code{time_value} or \code{version} column), and should have a sensible result from
-adding \code{is.numeric} versions of its \code{diff} result (via \code{as.integer} if its
-\code{typeof} is \code{"integer"}, otherwise via \code{as.numeric}).}
+\item{time_values}{Vector containing time-interval-like or time-point-like
+data, with at least two distinct values.}
 
-\item{ref_time_values_arg}{Optional, string; name to give \code{ref_time_values}
-in error messages. Defaults to quoting the expression the caller fed into
-the \code{ref_time_values} argument.}
+\item{time_values_arg}{Optional, string; name to give \code{time_values} in error
+messages. Defaults to quoting the expression the caller fed into the
+\code{time_values} argument.}
 }
 \value{
-\code{is.numeric}, length 1; attempts to match \code{typeof(ref_time_values)}
+length-1 vector; \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} class will
+either be the same class as \code{\link[base:diff]{base::diff()}} on such time values, an
+integer, or a double, such that all \code{time_values} can be exactly obtained
+by adding \code{k * result} for an integer k, and such that there is no smaller
+\code{result} that can achieve this.
 }
 \description{
-Use max valid period as guess for \code{period} of \code{ref_time_values}
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
 }

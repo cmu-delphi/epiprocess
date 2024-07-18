@@ -35,6 +35,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - Improved documentation web site landing page's introduction.
 - Fixed documentation referring to old `epi_slide()` interface (#466, thanks
   @XuedaShen!).
+- Fixed bug where `epix_slide_ref_time_values_default()` on datetimes would
+  output a huge number of `ref_time_values` spaced apart by mere seconds.
 
 ## Cleanup
 - Resolved some linting messages in package checks (#468).
