@@ -130,8 +130,9 @@ multiplier times a rolling IQR computed on the residuals.</li>
 using <code><a href="../reference/detect_outlr_stl.html">detect_outlr_stl()</a></code>, which is similar to the rolling
 median method but replaces the rolling median with fitted values from
 STL.</li>
-<li>Detection based on an STL decomposition, but without seasonality
-term, which amounts to smoothing using LOESS.</li>
+<li>Detection based on an STL decomposition, but subtracting out the
+seasonality term from its predictions, which may result in the extrema
+of large seasonal variations being considered as outliers.</li>
 </ol>
 <p>The outlier detection methods are specified using a
 <code>tibble</code> that is passed to <code><a href="../reference/detect_outlr.html">detect_outlr()</a></code>, with
@@ -165,19 +166,20 @@ detection functions <code><a href="../reference/detect_outlr_rm.html">detect_out
 <span>    args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>      detect_negatives <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>      detection_multiplier <span class="op">=</span> <span class="fl">2.5</span>,</span>
-<span>      seasonal_period <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>      seasonal_period <span class="op">=</span> <span class="fl">7</span>,</span>
+<span>      seasonal_as_residual <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span>    <span class="op">)</span><span class="op">)</span>,</span>
-<span>    abbr <span class="op">=</span> <span class="st">"stl_nonseasonal"</span></span>
+<span>    abbr <span class="op">=</span> <span class="st">"stl_reseasonal"</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">detection_methods</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 3 × 3</span></span></span>
-<span><span class="co">##   method args             abbr           </span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> rm     <span style="color: #949494;">&lt;named list [2]&gt;</span> rm             </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> stl    <span style="color: #949494;">&lt;named list [3]&gt;</span> stl_seasonal   </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> stl    <span style="color: #949494;">&lt;named list [3]&gt;</span> stl_nonseasonal</span></span></code></pre>
+<span><span class="co">##   method args             abbr          </span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> rm     <span style="color: #949494;">&lt;named list [2]&gt;</span> rm            </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> stl    <span style="color: #949494;">&lt;named list [3]&gt;</span> stl_seasonal  </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> stl    <span style="color: #949494;">&lt;named list [4]&gt;</span> stl_reseasonal</span></span></code></pre>
 <p>Additionally, we’ll form combined lower and upper thresholds,
 calculated as the median of the lower and upper thresholds from the
 methods at each time point. Note that using this combined median
@@ -210,8 +212,8 @@ to determine whether a value is an outlier.</p>
 <span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-03  <span style="text-decoration: underline;">1</span>317    468.     <span style="text-decoration: underline;">2</span>142.           <span style="text-decoration: underline;">1</span>317                 0 </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">6</span> nj        2020-06-03   541    216       756             541               227.</span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 8 more variables: stl_seasonal_upper &lt;dbl&gt;, stl_seasonal_replacement &lt;dbl&gt;,</span></span></span>
-<span><span class="co">## <span style="color: #949494;">#   stl_nonseasonal_lower &lt;dbl&gt;, stl_nonseasonal_upper &lt;dbl&gt;,</span></span></span>
-<span><span class="co">## <span style="color: #949494;">#   stl_nonseasonal_replacement &lt;dbl&gt;, combined_lower &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   stl_reseasonal_lower &lt;dbl&gt;, stl_reseasonal_upper &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   stl_reseasonal_replacement &lt;dbl&gt;, combined_lower &lt;dbl&gt;,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   combined_upper &lt;dbl&gt;, combined_replacement &lt;dbl&gt;</span></span></span></code></pre>
 <p>To visualize the results, we first define a convenience function for
 plotting.</p>

@@ -47,6 +47,11 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.8" id="epiprocess-08">epiprocess 0.8<a class="anchor" aria-label="anchor" href="#epiprocess-08"></a></h2>
 <div class="section level3">
+<h3 id="breaking-changes-0-8">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-8"></a></h3>
+<ul><li>
+<code>detect_outlr_stl(seasonal_period = NULL)</code> is no longer accepted. Use <code>detect_outlr_stl(seasonal_period = &lt;value&gt;, seasonal_as_residual = TRUE)</code> instead. See <code><a href="../reference/detect_outlr_stl.html">?detect_outlr_stl</a></code> for more details.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="improvements-0-8">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-8"></a></h3>
 <ul><li>
 <code>epi_slide</code> computations are now 2-4 times faster after changing how reference time values, made accessible within sliding functions, are calculated (<a href="https://github.com/cmu-delphi/epiprocess/issues397" class="external-link">#397</a>).</li>
@@ -74,6 +79,10 @@
 <div class="section level3">
 <h3 id="cleanup-0-8-1">Cleanup<a class="anchor" aria-label="anchor" href="#cleanup-0-8-1"></a></h3>
 <ul><li>Added optional <code>decay_to_tibble</code> attribute controlling <code><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble()</a></code> behavior of <code>epi_df</code>s to let <code>{epipredict}</code> work more easily with other libraries (<a href="https://github.com/cmu-delphi/epiprocess/issues471" class="external-link">#471</a>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="cleanup-0-8-2">Cleanup<a class="anchor" aria-label="anchor" href="#cleanup-0-8-2"></a></h3>
+<ul><li>Removed some external package dependencies.</li>
 </ul></div>
 </div>
     <div class="section level2">
