@@ -10,7 +10,7 @@ test_that("data.frame must contain geo_value, time_value and version columns", {
   expect_error(as_epi_archive(select(dt, -geo_value), compactify = FALSE),
     regexp = "There is no geo_value column or similar name"
   )
-  expect_error(expect_message(as_epi_archive(select(dt, -time_value), compactify = FALSE)),
+  expect_error(as_epi_archive(select(dt, -time_value), compactify = FALSE),
     regexp = "There is no time_value column or similar name"
   )
   expect_error(as_epi_archive(select(dt, -version), compactify = FALSE),
@@ -20,18 +20,24 @@ test_that("data.frame must contain geo_value, time_value and version columns", {
 
 test_that("as_epi_archive custom name mapping works correctly", {
   # custom name works correctly
-  suppressWarnings(expect_equal(
-    as_epi_archive(rename(dt, weirdName = version), version = weirdName),
-    as_epi_archive(dt)
-  ))
-  suppressWarnings(expect_equal(
-    as_epi_archive(rename(dt, weirdName = geo_value), geo_value = weirdName),
-    as_epi_archive(dt)
-  ))
-  suppressWarnings(expect_equal(
-    as_epi_archive(rename(dt, weirdName = time_value), time_value = weirdName),
-    as_epi_archive(dt)
-  ))
+  expect_equal(
+    as_epi_archive(rename(dt, weirdName = version),
+      version = weirdName, compactify = TRUE
+    ),
+    as_epi_archive(dt, compactify = TRUE)
+  )
+  expect_equal(
+    as_epi_archive(rename(dt, weirdName = geo_value),
+      geo_value = weirdName, compactify = TRUE
+    ),
+    as_epi_archive(dt, compactify = TRUE)
+  )
+  expect_equal(
+    as_epi_archive(rename(dt, weirdName = time_value),
+      time_value = weirdName, compactify = TRUE
+    ),
+    as_epi_archive(dt, compactify = TRUE)
+  )
 
   expect_error(
     as_epi_archive(

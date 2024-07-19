@@ -468,9 +468,10 @@ as_epi_archive <- function(
   x <- guess_column_name(x, "version", version_column_names())
   if (!test_subset(c("geo_value", "time_value", "version"), names(x))) {
     cli_abort(
-      "Either columns `geo_value`, `time_value`, and `version` must be present in `x`,
-or related columns (see the internal functions `guess_time_column_name()`,
-`guess_geo_column_name()` and/or `guess_geo_version_name()` for complete list)."
+      "Either columns `geo_value`, `time_value`, and `version`, or related columns
+      (see the internal functions `guess_time_column_name()`,
+      `guess_geo_column_name()` and/or `guess_geo_version_name()` for complete
+      list) must be present in `x`."
     )
   }
   if (anyMissing(x$version)) {

@@ -512,21 +512,37 @@ version_column_names <- function() {
 #' @param x the tibble to potentially rename
 #' @param substitutions a named vector. the potential substitions, with every name `time_value`
 #' @keywords internal
+#' @importFrom cli cli_inform cli_abort
+#' @importFrom dplyr rename
 guess_column_name <- function(x, column_name, substitutions) {
   if (!(column_name %in% names(x))) {
-    x <- tryCatch(x %>% rename(any_of(substitutions)),
-      error = function(cond) {
-        cli_abort("{names(x)[names(x) %in% substitutions]} are both/all valid substitutions.
-Either `rename` some yourself or drop some.")
-      }
-    )
     # if none of the names are in substitutions, and `column_name` isn't a column, we're missing a relevant column
     if (!any(names(x) %in% substitutions)) {
-      cli_abort("There is no {column_name} column or similar name. See e.g. [`time_column_name()`] for a complete list")
+      cli_abort(
+        "There is no {column_name} column or similar name.
+         See e.g. [`time_column_name()`] for a complete list",
+        class = "epiprocess__guess_column__multiple_substitution_error"
+      )
     }
-    if (any(substitutions != "")) {
-      cli_inform("inferring {column_name} column.")
-    }
+
+    tryCatch(
+      {
+        x <- x %>% rename(any_of(substitutions))
+        cli_inform(
+          "inferring {column_name} column.",
+          class = "epiprocess__guess_column_inferring_inform"
+        )
+        return(x)
+      },
+      error = function(cond) {
+        cli_abort(
+          "{intersect(names(x), substitutions)}
+           are both/all valid substitutions for {column_name}.
+           Either `rename` some yourself or drop some.",
+          class = "epiprocess__guess_column__multiple_substitution_error"
+        )
+      }
+    )
   }
   return(x)
 }
