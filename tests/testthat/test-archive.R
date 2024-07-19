@@ -8,13 +8,43 @@ dt <- archive_cases_dv_subset$DT
 
 test_that("data.frame must contain geo_value, time_value and version columns", {
   expect_error(as_epi_archive(select(dt, -geo_value), compactify = FALSE),
-    regexp = "Columns `geo_value`, `time_value`, and `version` must be present in `x`."
+    regexp = "There is no geo_value column or similar name"
   )
   expect_error(as_epi_archive(select(dt, -time_value), compactify = FALSE),
-    regexp = "Columns `geo_value`, `time_value`, and `version` must be present in `x`."
+    regexp = "There is no time_value column or similar name"
   )
   expect_error(as_epi_archive(select(dt, -version), compactify = FALSE),
-    regexp = "Columns `geo_value`, `time_value`, and `version` must be present in `x`."
+    regexp = "There is no version column or similar name"
+  )
+})
+
+test_that("as_epi_archive custom name mapping works correctly", {
+  # custom name works correctly
+  expect_equal(
+    as_epi_archive(rename(dt, weirdName = version),
+      version = weirdName, compactify = TRUE
+    ),
+    as_epi_archive(dt, compactify = TRUE)
+  )
+  expect_equal(
+    as_epi_archive(rename(dt, weirdName = geo_value),
+      geo_value = weirdName, compactify = TRUE
+    ),
+    as_epi_archive(dt, compactify = TRUE)
+  )
+  expect_equal(
+    as_epi_archive(rename(dt, weirdName = time_value),
+      time_value = weirdName, compactify = TRUE
+    ),
+    as_epi_archive(dt, compactify = TRUE)
+  )
+
+  expect_error(
+    as_epi_archive(
+      rename(dt, weirdName = version),
+      version = weirdName,
+      version = time_value
+    ), "Names must be unique"
   )
 })
 

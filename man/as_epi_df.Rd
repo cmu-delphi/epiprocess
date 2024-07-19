@@ -55,12 +55,16 @@ examples.
 \item \code{as_epi_df(epi_df)}: Simply returns the \code{epi_df} object unchanged.
 
 \item \code{as_epi_df(tbl_df)}: The input tibble \code{x} must contain the columns
-\code{geo_value} and \code{time_value}. All other columns will be preserved as is,
-and treated as measured variables. If \code{as_of} is missing, then the function
-will try to guess it from an \code{as_of}, \code{issue}, or \code{version} column of \code{x}
-(if any of these are present), or from as an \code{as_of} field in its metadata
-(stored in its attributes); if this fails, then the current day-time will
-be used.
+\code{geo_value} and \code{time_value}, or column names that uniquely map onto these
+(e.g. \code{date} or \code{province}). Alternatively, you can specify the conversion
+explicitly (\code{time_value = someWeirdColumnName}). All other columns not
+specified as \code{other_keys} will be preserved as is, and treated as measured
+variables.
+
+If \code{as_of} is missing, then the function will try to guess it from an
+\code{as_of}, \code{issue}, or \code{version} column of \code{x} (if any of these are present),
+or from as an \code{as_of} field in its metadata (stored in its attributes); if
+this fails, then the current day-time will be used.
 
 \item \code{as_epi_df(data.frame)}: Works analogously to \code{as_epi_df.tbl_df()}.
 

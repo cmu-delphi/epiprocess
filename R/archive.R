@@ -442,6 +442,11 @@ validate_epi_archive <- function(
 
 #' `as_epi_archive` converts a data frame, data table, or tibble into an
 #' `epi_archive` object.
+#' @param ... used for specifying column names, as in [`dplyr::rename`]. For
+#'   example `version = release_date`
+#' @param .versions_end location based versions_end, used to avoid prefix
+#'   `version = issue` from being assigned to `versions_end` instead of being
+#'   used to rename columns.
 #'
 #' @rdname epi_archive
 #'
@@ -454,11 +459,19 @@ as_epi_archive <- function(
     additional_metadata = NULL,
     compactify = NULL,
     clobberable_versions_start = NULL,
-    versions_end = NULL) {
+    .versions_end = NULL, ...,
+    versions_end = .versions_end) {
   assert_data_frame(x)
+  x <- rename(x, ...)
+  x <- guess_column_name(x, "time_value", time_column_names())
+  x <- guess_column_name(x, "geo_value", geo_column_names())
+  x <- guess_column_name(x, "version", version_column_names())
   if (!test_subset(c("geo_value", "time_value", "version"), names(x))) {
     cli_abort(
-      "Columns `geo_value`, `time_value`, and `version` must be present in `x`."
+      "Either columns `geo_value`, `time_value`, and `version`, or related columns
+      (see the internal functions `guess_time_column_name()`,
+      `guess_geo_column_name()` and/or `guess_geo_version_name()` for complete
+      list) must be present in `x`."
     )
   }
   if (anyMissing(x$version)) {

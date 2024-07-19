@@ -448,6 +448,105 @@ guess_time_type <- function(time_value) {
   return("custom")
 }
 
+#'  given a vector of characters, add the same values, but upcased, e.g.
+#'   "date" -> c("date", "Date")
+#'   "target_date" -> c("target_date", "Target_Date")
+#' @keywords internal
+upcase_snake_case <- function(vec) {
+  upper_vec <- strsplit(vec, "_") %>%
+    map(function(name) paste0(toupper(substr(name, 1, 1)), substr(name, 2, nchar(name)), collapse = "_")) %>%
+    unlist()
+  c(vec, upper_vec)
+}
+
+#' potential time_value columns
+#' @description
+#' the full list of potential substitutions for the `time_value` column name:
+#' `r time_column_names()`
+#' @export
+time_column_names <- function() {
+  substitutions <- c(
+    "time_value", "date", "time", "datetime", "dateTime", "date_time", "target_date",
+    "week", "epiweek", "month", "mon", "year", "yearmon", "yearmonth",
+    "yearMon", "yearMonth", "dates", "time_values", "target_dates", "time_Value"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("time_value", length(substitutions))
+  return(substitutions)
+}
+#
+#' potential geo_value columns
+#' @description
+#' the full list of potential substitutions for the `geo_value` column name:
+#' `r geo_column_names()`
+#' @export
+geo_column_names <- function() {
+  substitutions <- c(
+    "geo_value", "geo_values", "geo_id", "geos", "location", "jurisdiction", "fips", "zip",
+    "county", "hrr", "msa", "state", "province", "nation", "states",
+    "provinces", "counties", "geo_Value"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("geo_value", length(substitutions))
+  return(substitutions)
+}
+
+#' potential version columns
+#' @description
+#' the full list of potential substitutions for the `version` column name:
+#' `r version_column_names()`
+#' @export
+version_column_names <- function() {
+  substitutions <- c(
+    "version", "issue", "release"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("version", length(substitutions))
+  return(substitutions)
+}
+
+#' rename potential time_value columns
+#'
+#' @description
+#' potentially renames
+#' @param x the tibble to potentially rename
+#' @param substitutions a named vector. the potential substitions, with every name `time_value`
+#' @keywords internal
+#' @importFrom cli cli_inform cli_abort
+#' @importFrom dplyr rename
+guess_column_name <- function(x, column_name, substitutions) {
+  if (!(column_name %in% names(x))) {
+    # if none of the names are in substitutions, and `column_name` isn't a column, we're missing a relevant column
+    if (!any(names(x) %in% substitutions)) {
+      cli_abort(
+        "There is no {column_name} column or similar name.
+         See e.g. [`time_column_name()`] for a complete list",
+        class = "epiprocess__guess_column__multiple_substitution_error"
+      )
+    }
+
+    tryCatch(
+      {
+        x <- x %>% rename(any_of(substitutions))
+        cli_inform(
+          "inferring {column_name} column.",
+          class = "epiprocess__guess_column_inferring_inform"
+        )
+        return(x)
+      },
+      error = function(cond) {
+        cli_abort(
+          "{intersect(names(x), substitutions)}
+           are both/all valid substitutions for {column_name}.
+           Either `rename` some yourself or drop some.",
+          class = "epiprocess__guess_column__multiple_substitution_error"
+        )
+      }
+    )
+  }
+  return(x)
+}
+
 ##########
 
 

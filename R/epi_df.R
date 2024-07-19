@@ -95,7 +95,7 @@ NULL
 #'
 #' @export
 new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
-                       additional_metadata = list(), ...) {
+                       additional_metadata = list()) {
   assert_data_frame(x)
   assert_list(additional_metadata)
 
@@ -162,6 +162,7 @@ new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
 #' guide](https://cmu-delphi.github.io/epiprocess/articles/epiprocess.html) for
 #' examples.
 #'
+#' @param ... Additional arguments passed to methods.
 #' @template epi_df-params
 #'
 #' @export
@@ -249,25 +250,39 @@ as_epi_df.epi_df <- function(x, ...) {
 
 #' @method as_epi_df tbl_df
 #' @describeIn as_epi_df The input tibble `x` must contain the columns
-#'   `geo_value` and `time_value`. All other columns will be preserved as is,
-#'   and treated as measured variables. If `as_of` is missing, then the function
-#'   will try to guess it from an `as_of`, `issue`, or `version` column of `x`
-#'   (if any of these are present), or from as an `as_of` field in its metadata
-#'   (stored in its attributes); if this fails, then the current day-time will
-#'   be used.
+#'   `geo_value` and `time_value`, or column names that uniquely map onto these
+#'   (e.g. `date` or `province`). Alternatively, you can specify the conversion
+#'   explicitly (`time_value = someWeirdColumnName`). All other columns not
+#'   specified as `other_keys` will be preserved as is, and treated as measured
+#'   variables.
+#'
+#'  If `as_of` is missing, then the function will try to guess it from an
+#'   `as_of`, `issue`, or `version` column of `x` (if any of these are present),
+#'   or from as an `as_of` field in its metadata (stored in its attributes); if
+#'   this fails, then the current day-time will be used.
 #' @importFrom rlang .data
+#' @importFrom tidyselect any_of
+#' @importFrom cli cli_inform
 #' @export
 as_epi_df.tbl_df <- function(x, geo_type, time_type, as_of,
-                             additional_metadata = list(), ...) {
+                             additional_metadata = list(),
+                             ...) {
+  # possible standard substitutions for time_value
+  x <- rename(x, ...)
+  x <- guess_column_name(x, "time_value", time_column_names())
+  x <- guess_column_name(x, "geo_value", geo_column_names())
   if (!test_subset(c("geo_value", "time_value"), names(x))) {
     cli_abort(
-      "Columns `geo_value` and `time_value` must be present in `x`."
+      "Either columns `geo_value` and `time_value` or related columns
+       (see the internal functions `guess_time_column_name()` and/or
+       `guess_geo_column_name()` for a complete list)
+       must be present in `x`."
     )
   }
 
   new_epi_df(
     x, geo_type, time_type, as_of,
-    additional_metadata, ...
+    additional_metadata
   )
 }
 
