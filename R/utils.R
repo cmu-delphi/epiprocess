@@ -769,28 +769,54 @@ gcd_num <- function(dividends, ..., rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
   vctrs::vec_cast(numeric_gcd, dividends)
 }
 
-#' Use max valid period as guess for `period` of `ref_time_values`
+#' Use max valid period as guess for `period` of `time_values`
 #'
-#' @param ref_time_values Vector containing time-interval-like or time-like
-#'   data, with at least two distinct values, [`diff`]-able (e.g., a
-#'   `time_value` or `version` column), and should have a sensible result from
-#'   adding `is.numeric` versions of its `diff` result (via `as.integer` if its
-#'   `typeof` is `"integer"`, otherwise via `as.numeric`).
-#' @param ref_time_values_arg Optional, string; name to give `ref_time_values`
-#'   in error messages. Defaults to quoting the expression the caller fed into
-#'   the `ref_time_values` argument.
-#' @return `is.numeric`, length 1; attempts to match `typeof(ref_time_values)`
-guess_period <- function(ref_time_values, ref_time_values_arg = rlang::caller_arg(ref_time_values)) {
-  sorted_distinct_ref_time_values <- sort(unique(ref_time_values))
-  if (length(sorted_distinct_ref_time_values) < 2L) {
-    cli_abort("Not enough distinct values in {.code {ref_time_values_arg}} to guess the period.", ref_time_values_arg)
+#' `r lifecycle::badge("experimental")`
+#'
+#' @param time_values Vector containing time-interval-like or time-point-like
+#'   data, with at least two distinct values.
+#' @param time_values_arg Optional, string; name to give `time_values` in error
+#'   messages. Defaults to quoting the expression the caller fed into the
+#'   `time_values` argument.
+#' @param ... Should be empty, there to satisfy the S3 generic.
+#' @return length-1 vector; `r lifecycle::badge("experimental")` class will
+#'   either be the same class as [`base::diff()`] on such time values, an
+#'   integer, or a double, such that all `time_values` can be exactly obtained
+#'   by adding `k * result` for an integer k, and such that there is no smaller
+#'   `result` that can achieve this.
+#'
+#' @export
+guess_period <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
+  UseMethod("guess_period")
+}
+
+#' @export
+guess_period.default <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
+  rlang::check_dots_empty()
+  sorted_distinct_time_values <- sort(unique(time_values))
+  if (length(sorted_distinct_time_values) < 2L) {
+    cli_abort("Not enough distinct values in {.code {time_values_arg}} to guess the period.",
+      class = "epiprocess__guess_period__not_enough_times",
+      time_values = time_values
+    )
   }
-  skips <- diff(sorted_distinct_ref_time_values)
-  decayed_skips <-
-    if (typeof(skips) == "integer") {
-      as.integer(skips)
-    } else {
-      as.numeric(skips)
-    }
-  gcd_num(decayed_skips)
+  skips <- diff(sorted_distinct_time_values)
+  # Certain diff results have special classes or attributes; use vctrs to try to
+  # appropriately destructure for gcd_num, then restore to their original class
+  # & attributes.
+  skips_data <- vctrs::vec_data(skips)
+  period_data <- gcd_num(skips_data, rrtol = 0)
+  vctrs::vec_restore(period_data, skips)
+}
+
+# `full_seq()` doesn't like difftimes, so convert to the natural units of some time types:
+
+#' @export
+guess_period.Date <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
+  as.numeric(NextMethod(), units = "days")
+}
+
+#' @export
+guess_period.POSIXt <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
+  as.numeric(NextMethod(), units = "secs")
 }

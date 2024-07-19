@@ -45,6 +45,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   of default conversions, see `time_column_names`  for a list of columns that
   will automatically be recognized and converted to  `time_value` column (there
   are similar functions for `geo` and `version`).
+- Fixed bug where `epix_slide_ref_time_values_default()` on datetimes would
+  output a huge number of `ref_time_values` spaced apart by mere seconds.
 
 ## Cleanup
 - Resolved some linting messages in package checks (#468).
