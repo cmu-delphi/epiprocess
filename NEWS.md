@@ -40,6 +40,11 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - Improved documentation web site landing page's introduction.
 - Fixed documentation referring to old `epi_slide()` interface (#466, thanks
   @XuedaShen!).
+- `as_epi_df` and `as_epi_archive` now support arguments to specify column names
+  e.g.  `as_epi_df(some_tibble, geo_value=state)`. In addition, there is a list
+  of default conversions, see `time_column_names`  for a list of columns that
+  will automatically be recognized and converted to  `time_value` column (there
+  are similar functions for `geo` and `version`).
 
 ## Cleanup
 - Resolved some linting messages in package checks (#468).
