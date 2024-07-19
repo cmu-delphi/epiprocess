@@ -241,10 +241,9 @@ test_that("guess_period works", {
   expect_identical(guess_period(c(1, 8, 15)), 7)
   expect_identical(guess_period(c(1L, 8L, 15L)), 7L)
   expect_identical(guess_period(c(0, 7, 14, 15)), 1)
-  # We currently allow the guessed frequency to no appear in the diffs, but this
-  # might not be a good idea as it likely indicates an issue with the data. If
-  # we drop this behavior we could also drop the gcd algorithm by just checking
-  # the validity of the smallest diff:
+  # We currently allow the guessed frequency to not appear in the diffs, but
+  # this might not be a good idea as it likely indicates an issue with the data
+  # (#485).
   expect_identical(guess_period(c(0, 2, 5)), 1)
   expect_identical(guess_period(c(0, 4, 10)), 2)
   # On Dates:
