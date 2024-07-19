@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.12</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.13</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,6 +71,8 @@
 <li>Clarified “Get started” example of getting Ebola line list data into <code>epi_df</code> format.</li>
 <li>Improved documentation web site landing page’s introduction.</li>
 <li>Fixed documentation referring to old <code><a href="../reference/epi_slide.html">epi_slide()</a></code> interface (<a href="https://github.com/cmu-delphi/epiprocess/issues466" class="external-link">#466</a>, thanks <a href="https://github.com/XuedaShen" class="external-link">@XuedaShen</a>!).</li>
+<li>
+<code>as_epi_df</code> and <code>as_epi_archive</code> now support arguments to specify column names e.g. <code>as_epi_df(some_tibble, geo_value=state)</code>. In addition, there is a list of default conversions, see <code>time_column_names</code> for a list of columns that will automatically be recognized and converted to <code>time_value</code> column (there are similar functions for <code>geo</code> and <code>version</code>).</li>
 </ul></div>
 <div class="section level3">
 <h3 id="cleanup-0-8">Cleanup<a class="anchor" aria-label="anchor" href="#cleanup-0-8"></a></h3>

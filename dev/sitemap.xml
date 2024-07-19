@@ -38,8 +38,10 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/epix_merge.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/epix_slide.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/epix_truncate_versions_after.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/geo_column_names.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/group_by.epi_archive.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/growth_rate.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/guess_column_name.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/guess_period.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/incidence_num_outlier_example.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/index.html</loc></url>
@@ -54,5 +56,8 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/print.epi_archive.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/print.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/reexports.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_column_names.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/upcase_snake_case.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/version_column_names.html</loc></url>
 </urlset>
 

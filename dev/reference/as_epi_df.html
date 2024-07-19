@@ -9,7 +9,7 @@ examples."><meta name="robots" content="noindex"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.12</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.13</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -118,12 +118,15 @@ character vector in the <code>other_keys</code> component of <code>additional_me
 
 <ul><li><p><code>as_epi_df(epi_df)</code>: Simply returns the <code>epi_df</code> object unchanged.</p></li>
 <li><p><code>as_epi_df(tbl_df)</code>: The input tibble <code>x</code> must contain the columns
-<code>geo_value</code> and <code>time_value</code>. All other columns will be preserved as is,
-and treated as measured variables. If <code>as_of</code> is missing, then the function
-will try to guess it from an <code>as_of</code>, <code>issue</code>, or <code>version</code> column of <code>x</code>
-(if any of these are present), or from as an <code>as_of</code> field in its metadata
-(stored in its attributes); if this fails, then the current day-time will
-be used.</p></li>
+<code>geo_value</code> and <code>time_value</code>, or column names that uniquely map onto these
+(e.g. <code>date</code> or <code>province</code>). Alternatively, you can specify the conversion
+explicitly (<code>time_value = someWeirdColumnName</code>). All other columns not
+specified as <code>other_keys</code> will be preserved as is, and treated as measured
+variables.</p>
+<p>If <code>as_of</code> is missing, then the function will try to guess it from an
+<code>as_of</code>, <code>issue</code>, or <code>version</code> column of <code>x</code> (if any of these are present),
+or from as an <code>as_of</code> field in its metadata (stored in its attributes); if
+this fails, then the current day-time will be used.</p></li>
 <li><p><code>as_epi_df(data.frame)</code>: Works analogously to <code>as_epi_df.tbl_df()</code>.</p></li>
 <li><p><code>as_epi_df(tbl_ts)</code>: Works analogously to <code>as_epi_df.tbl_df()</code>, except that
 the <code>tbl_ts</code> class is dropped, and any key variables (other than
@@ -235,7 +238,7 @@ the <code>tbl_ts</code> class is dropped, and any key variables (other than
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "week"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $as_of</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "2024-07-18 01:20:08 UTC"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "2024-07-19 20:46:03 UTC"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $other_keys</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "state" "pol"  </span>

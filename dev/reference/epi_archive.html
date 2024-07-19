@@ -13,7 +13,7 @@ interest."><meta name="robots" content="noindex"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.12</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.7.13</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -90,7 +90,9 @@ interest.</p>
 <span>  additional_metadata <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  compactify <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  clobberable_versions_start <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  versions_end <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  .versions_end <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span>,</span>
+<span>  versions_end <span class="op">=</span> <span class="va">.versions_end</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -161,6 +163,17 @@ beyond <code>max(x$version)</code>, but they all contained empty updates. (The d
 value of <code>clobberable_versions_start</code> does not fully trust these empty
 updates, and assumes that any version <code>&gt;= max(x$version)</code> could be
 clobbered.) If <code>nrow(x) == 0</code>, then this argument is mandatory.</p></dd>
+
+
+<dt id="arg--versions-end">.versions_end<a class="anchor" aria-label="anchor" href="#arg--versions-end"></a></dt>
+<dd><p>location based versions_end, used to avoid prefix
+<code>version = issue</code> from being assigned to <code>versions_end</code> instead of being
+used to rename columns.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>used for specifying column names, as in <code><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">dplyr::rename</a></code>. For
+example <code>version = release_date</code></p></dd>
 
 </dl></div>
     <div class="section level2">
