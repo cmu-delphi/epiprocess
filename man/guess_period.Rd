@@ -17,6 +17,8 @@ data, with at least two distinct values.}
 \item{time_values_arg}{Optional, string; name to give \code{time_values} in error
 messages. Defaults to quoting the expression the caller fed into the
 \code{time_values} argument.}
+
+\item{...}{Should be empty, there to satisfy the S3 generic.}
 }
 \value{
 length-1 vector; \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} class will

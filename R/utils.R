@@ -679,11 +679,13 @@ gcd_num <- function(dividends, ..., rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
 #' @param time_values_arg Optional, string; name to give `time_values` in error
 #'   messages. Defaults to quoting the expression the caller fed into the
 #'   `time_values` argument.
+#' @param ... Should be empty, there to satisfy the S3 generic.
 #' @return length-1 vector; `r lifecycle::badge("experimental")` class will
 #'   either be the same class as [`base::diff()`] on such time values, an
 #'   integer, or a double, such that all `time_values` can be exactly obtained
 #'   by adding `k * result` for an integer k, and such that there is no smaller
 #'   `result` that can achieve this.
+#'
 #' @export
 guess_period <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
   UseMethod("guess_period")
