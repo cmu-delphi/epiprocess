@@ -63,6 +63,7 @@ reference:
     desc: Details on `epi_df` format, and basic functionality.
   - contents:
       - matches("epi_df")
+      - matches("column_names")
   - title: "`epi_*()` functions"
     desc: Functions that act on `epi_df` objects.
   - contents:

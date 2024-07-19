@@ -87,9 +87,10 @@ detection_methods <- dplyr::bind_rows(
     args = list(list(
       detect_negatives = TRUE,
       detection_multiplier = 2.5,
-      seasonal_period = NULL
+      seasonal_period = 7,
+      seasonal_as_residual = TRUE
     )),
-    abbr = "stl_nonseasonal"
+    abbr = "stl_reseasonal"
   )
 )
 

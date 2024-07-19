@@ -46,6 +46,41 @@ test_that("as_epi_df errors when additional_metadata is not a list", {
   )
 })
 
+test_that("as_epi_df works for nonstandard input", {
+  tib <- tibble::tibble(
+    x = 1:10, y = 1:10,
+    date = rep(seq(as.Date("2020-01-01"), by = 1, length.out = 5), times = 2),
+    geo_value = rep(c("ca", "hi"), each = 5)
+  )
+  expect_message(expect_no_error(tib_epi_df <- tib %>% as_epi_df()),
+    class = "epiprocess__guess_column_inferring_inform"
+  )
+  expect_no_error(tib_epi_df <- tib %>% as_epi_df(time_value = date, geo_value = geo_value))
+  expect_error(
+    expect_message(
+      tib %>%
+        rename(awefa = geo_value) %>%
+        as_epi_df(),
+      class = "epiprocess__guess_column_inferring_inform"
+    ),
+    class = "epiprocess__guess_column__multiple_substitution_error"
+  )
+  expect_no_error(expect_message(
+    tib %>% rename(awefa = geo_value) %>% as_epi_df(geo_value = awefa),
+    class = "epiprocess__guess_column_inferring_inform"
+  ))
+
+  tib <- tib %>% rename(target_date = date)
+  expect_message(expect_no_error(tib_epi_df <- tib %>% as_epi_df()),
+    class = "epiprocess__guess_column_inferring_inform"
+  )
+
+  tib <- tib %>% mutate(Time = 20 + target_date)
+  expect_error(tib_epi_df <- tib %>% as_epi_df(),
+    class = "epiprocess__guess_column__multiple_substitution_error"
+  )
+})
+
 # select fixes
 
 tib <- tibble::tibble(

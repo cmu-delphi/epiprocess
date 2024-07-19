@@ -37,7 +37,9 @@ as_epi_archive(
   additional_metadata = NULL,
   compactify = NULL,
   clobberable_versions_start = NULL,
-  versions_end = NULL
+  .versions_end = NULL,
+  ...,
+  versions_end = .versions_end
 )
 }
 \arguments{
@@ -89,6 +91,13 @@ beyond \code{max(x$version)}, but they all contained empty updates. (The default
 value of \code{clobberable_versions_start} does not fully trust these empty
 updates, and assumes that any version \verb{>= max(x$version)} could be
 clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
+
+\item{.versions_end}{location based versions_end, used to avoid prefix
+\code{version = issue} from being assigned to \code{versions_end} instead of being
+used to rename columns.}
+
+\item{...}{used for specifying column names, as in \code{\link[dplyr:rename]{dplyr::rename}}. For
+example \code{version = release_date}}
 }
 \value{
 An \code{epi_archive} object.
