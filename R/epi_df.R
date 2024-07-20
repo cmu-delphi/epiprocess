@@ -180,6 +180,8 @@ new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
 }
 
 #' @rdname epi_df
+#' @param ... used for specifying column names, as in [`dplyr::rename`]. For
+#'   example, `geo_value = STATEFP, time_value = end_date`.
 #' @export
 as_epi_df <- function(x, ...) {
   UseMethod("as_epi_df")

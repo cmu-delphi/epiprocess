@@ -56,7 +56,8 @@ then the current day-time will be used.}
 well. If your tibble has additional keys, be sure to specify them as a
 character vector in the \code{other_keys} component of \code{additional_metadata}.}
 
-\item{...}{Additional arguments passed to methods.}
+\item{...}{used for specifying column names, as in \code{\link[dplyr:rename]{dplyr::rename}}. For
+example, \verb{geo_value = STATEFP, time_value = end_date}.}
 }
 \value{
 An \code{epi_df} object.

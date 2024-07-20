@@ -14,6 +14,8 @@
 \alias{rename}
 \alias{slice}
 \alias{unnest}
+\alias{complete}
+\alias{full_seq}
 \alias{autoplot}
 \title{Objects exported from other packages}
 \keyword{internal}
@@ -26,7 +28,7 @@ below to see their documentation.
 
   \item{ggplot2}{\code{\link[ggplot2]{autoplot}}}
 
-  \item{tidyr}{\code{\link[tidyr]{unnest}}}
+  \item{tidyr}{\code{\link[tidyr]{complete}}, \code{\link[tidyr]{full_seq}}, \code{\link[tidyr]{unnest}}}
 
   \item{tsibble}{\code{\link[tsibble:as-tsibble]{as_tsibble}}}
 }}

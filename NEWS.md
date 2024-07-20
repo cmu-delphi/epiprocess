@@ -4,6 +4,11 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 # epiprocess 0.9
 
+## Improvements
+
+- Added `complete.epi_df`, which fills in missing values in an `epi_df` with
+  `NA`s. Uses `tidyr::complete` underneath and preserves `epi_df` metadata.
+
 # epiprocess 0.8
 
 ## Breaking changes
