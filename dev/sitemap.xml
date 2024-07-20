@@ -16,7 +16,6 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/index.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/news/index.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/archive_cases_dv_subset.html</loc></url>
-<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/as_epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/as_tibble.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/as_tsibble.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/autoplot.epi_df.html</loc></url>
@@ -50,7 +49,6 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/jhu_csse_daily_subset.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/key_colnames.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/max_version_with_row_in.html</loc></url>
-<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/new_epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/next_after.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/pipe.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/print.epi_archive.html</loc></url>

@@ -70,9 +70,8 @@ examples.</p>
 <span>  <span class="va">x</span>,</span>
 <span>  <span class="va">f</span>,</span>
 <span>  <span class="va">...</span>,</span>
-<span>  <span class="va">before</span>,</span>
-<span>  <span class="va">ref_time_values</span>,</span>
-<span>  <span class="va">time_step</span>,</span>
+<span>  before <span class="op">=</span> <span class="cn">Inf</span>,</span>
+<span>  ref_time_values <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  new_col_name <span class="op">=</span> <span class="st">"slide_value"</span>,</span>
 <span>  as_list_col <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  names_sep <span class="op">=</span> <span class="st">"_"</span>,</span>
@@ -84,9 +83,8 @@ examples.</p>
 <span>  <span class="va">x</span>,</span>
 <span>  <span class="va">f</span>,</span>
 <span>  <span class="va">...</span>,</span>
-<span>  <span class="va">before</span>,</span>
-<span>  <span class="va">ref_time_values</span>,</span>
-<span>  <span class="va">time_step</span>,</span>
+<span>  before <span class="op">=</span> <span class="cn">Inf</span>,</span>
+<span>  ref_time_values <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  new_col_name <span class="op">=</span> <span class="st">"slide_value"</span>,</span>
 <span>  as_list_col <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  names_sep <span class="op">=</span> <span class="st">"_"</span>,</span>
@@ -98,9 +96,8 @@ examples.</p>
 <span>  <span class="va">x</span>,</span>
 <span>  <span class="va">f</span>,</span>
 <span>  <span class="va">...</span>,</span>
-<span>  <span class="va">before</span>,</span>
-<span>  <span class="va">ref_time_values</span>,</span>
-<span>  <span class="va">time_step</span>,</span>
+<span>  before <span class="op">=</span> <span class="cn">Inf</span>,</span>
+<span>  ref_time_values <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  new_col_name <span class="op">=</span> <span class="st">"slide_value"</span>,</span>
 <span>  as_list_col <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  names_sep <span class="op">=</span> <span class="st">"_"</span>,</span>
@@ -171,14 +168,6 @@ for the <code>time_value</code> window for the computation and the <code>max_ver
 set to a regularly-spaced sequence of values set to cover the range of
 <code>version</code>s in the <code>DT</code> plus the <code>versions_end</code>; the spacing of values will
 be guessed (using the GCD of the skips between values).</p></dd>
-
-
-<dt id="arg-time-step">time_step<a class="anchor" aria-label="anchor" href="#arg-time-step"></a></dt>
-<dd><p>Optional function used to define the meaning of one time
-step, which if specified, overrides the default choice based on the
-<code>time_value</code> column. This function must take a positive integer and return
-an object of class <code><a href="https://lubridate.tidyverse.org/reference/period.html" class="external-link">lubridate::period</a></code>. For example, we can use <code>time_step = lubridate::hours</code> in order to set the time step to be one hour (this
-would only be meaningful if <code>time_value</code> is of class <code>POSIXct</code>).</p></dd>
 
 
 <dt id="arg-new-col-name">new_col_name<a class="anchor" aria-label="anchor" href="#arg-new-col-name"></a></dt>

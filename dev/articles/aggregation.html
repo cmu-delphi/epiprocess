@@ -100,7 +100,7 @@ We’ll work with county-level reported COVID-19 cases in MA and VT.</p>
 <span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, cases <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">full_join</a></span><span class="op">(</span><span class="va">y</span>, by <span class="op">=</span> <span class="st">"geo_value"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span>as_of <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-03-20"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="../reference/epi_df.html">as_epi_df</a></span><span class="op">(</span>as_of <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-03-20"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The data contains 16,212 rows and 5 columns.</p>
 <div class="section level2">
 <h2 id="converting-to-tsibble-format">Converting to <code>tsibble</code> format<a class="anchor" aria-label="anchor" href="#converting-to-tsibble-format"></a>
@@ -320,7 +320,7 @@ averages (appropriately) downwards, as we can see inspecting Plymouth,
 MA around July 1, 2021.</p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">xt</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span>as_of <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-03-20"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="../reference/epi_df.html">as_epi_df</a></span><span class="op">(</span>as_of <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-03-20"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span>cases_7dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -343,7 +343,7 @@ MA around July 1, 2021.</p>
 <span><span class="co">## <span style="color: #BCBCBC;">4</span> Plymouth, MA 2021-07-02     6       5.2</span></span></code></pre>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">xt_filled</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/as_epi_df.html">as_epi_df</a></span><span class="op">(</span>as_of <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-03-20"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="../reference/epi_df.html">as_epi_df</a></span><span class="op">(</span>as_of <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-03-20"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span>cases_7dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -367,60 +367,6 @@ MA around July 1, 2021.</p>
 <span><span class="co">## <span style="color: #BCBCBC;">5</span> Plymouth, MA 2021-07-02     6       3.71</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">6</span> Plymouth, MA 2021-07-03     0       3.71</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">7</span> Plymouth, MA 2021-07-04     0       3.14</span></span></code></pre>
-</div>
-<div class="section level2">
-<h2 id="aggregate-to-different-time-scales">Aggregate to different time scales<a class="anchor" aria-label="anchor" href="#aggregate-to-different-time-scales"></a>
-</h2>
-<p>Continuing on with useful <code>tsibble</code> functionality, we can
-aggregate to different time scales using <code><a href="https://tsibble.tidyverts.org/reference/index-by.html" class="external-link">index_by()</a></code> from
-<code>tsibble</code>, which modifies the index variable in the given
-object by applying a suitable time-coarsening transformation (say,
-moving from days to weeks, or weeks to months, and so on). The most
-common use case would be to follow up with a call to a
-<code>dplyr</code> verb like <code><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize()</a></code> in order to
-perform some kind of aggregation of our measured variables over the new
-index variable.</p>
-<p>Below, we use the functions <code><a href="https://tsibble.tidyverts.org/reference/year-week.html" class="external-link">yearweek()</a></code> and
-<code><a href="https://tsibble.tidyverts.org/reference/year-month.html" class="external-link">yearmonth()</a></code> that are provided in the <code>tsibble</code>
-package in order to aggregate to weekly and monthly resolutions. In the
-former call, we set <code>week_start = 7</code> to coincide with the CDC
-definition of an epiweek (epidemiological week).</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Aggregate to weekly</span></span>
-<span><span class="va">xt_filled_week</span> <span class="op">&lt;-</span> <span class="va">xt_filled</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://tsibble.tidyverts.org/reference/index-by.html" class="external-link">index_by</a></span><span class="op">(</span>epiweek <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/year-week.html" class="external-link">yearweek</a></span><span class="op">(</span><span class="va">.</span>, week_start <span class="op">=</span> <span class="fl">7</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>cases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cases</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">xt_filled_week</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tsibble: 6 x 3 [1W]</span></span></span>
-<span><span class="co">## <span style="color: #949494;"># Key:       geo_value [1]</span></span></span>
-<span><span class="co">##   geo_value    epiweek cases</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;week&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> Addison, VT 2020 W23     0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> Addison, VT 2020 W24     0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> Addison, VT 2020 W25     0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> Addison, VT 2020 W26     0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> Addison, VT 2020 W27     0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> Addison, VT 2020 W28     0</span></span></code></pre>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Aggregate to monthly</span></span>
-<span><span class="va">xt_filled_month</span> <span class="op">&lt;-</span> <span class="va">xt_filled_week</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://tsibble.tidyverts.org/reference/index-by.html" class="external-link">index_by</a></span><span class="op">(</span>month <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/year-month.html" class="external-link">yearmonth</a></span><span class="op">(</span><span class="va">.</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>cases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cases</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">xt_filled_month</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tsibble: 6 x 3 [1M]</span></span></span>
-<span><span class="co">## <span style="color: #949494;"># Key:       geo_value [1]</span></span></span>
-<span><span class="co">##   geo_value      month cases</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;mth&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> Addison, VT 2020 May     0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> Addison, VT 2020 Jun     0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> Addison, VT 2020 Jul     0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> Addison, VT 2020 Aug     3</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> Addison, VT 2020 Sep     0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> Addison, VT 2020 Oct    29</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="geographic-aggregation">Geographic aggregation<a class="anchor" aria-label="anchor" href="#geographic-aggregation"></a>

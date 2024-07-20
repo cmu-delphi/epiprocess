@@ -167,8 +167,7 @@ format. For removal of redundant version updates in
 <code>DT</code>, which is a data table (from the <code>data.table</code>
 package) that has the columns <code>geo_value</code>,
 <code>time_value</code>, <code>version</code> (and possibly additional
-ones), and other metadata fields, such as <code>geo_type</code> and
-<code>time_type</code>.</p>
+ones), and other metadata fields, such as <code>geo_type</code>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "data.table" "data.frame"</span></span></code></pre>
@@ -205,16 +204,14 @@ version (also described below).</p>
 <li>
 <code>geo_type</code>: the type for the geo values.</li>
 <li>
-<code>time_type</code>: the type for the time values.</li>
-<li>
 <code>additional_metadata</code>: list of additional metadata for
 the data archive.</li>
 </ul>
 <p>Metadata for an <code>epi_archive</code> object <code>x</code> can be
-accessed (and altered) directly, as in <code>x$geo_type</code> or
-<code>x$time_type</code>, etc. Just like <code><a href="../reference/as_epi_df.html">as_epi_df()</a></code>, the
-function <code><a href="../reference/epi_archive.html">as_epi_archive()</a></code> attempts to guess metadata fields
-when an <code>epi_archive</code> object is instantiated, if they are not
+accessed (and altered) directly, as in <code>x$geo_type</code>, etc.
+Just like <code><a href="../reference/epi_df.html">as_epi_df()</a></code>, the function
+<code><a href="../reference/epi_archive.html">as_epi_archive()</a></code> attempts to guess metadata fields when an
+<code>epi_archive</code> object is instantiated, if they are not
 explicitly specified in the function call (as it did in the case
 above).</p>
 </div>

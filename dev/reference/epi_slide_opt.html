@@ -65,10 +65,9 @@ for examples.</p>
 <span>  <span class="va">col_names</span>,</span>
 <span>  <span class="va">f</span>,</span>
 <span>  <span class="va">...</span>,</span>
-<span>  <span class="va">before</span>,</span>
-<span>  <span class="va">after</span>,</span>
-<span>  <span class="va">ref_time_values</span>,</span>
-<span>  <span class="va">time_step</span>,</span>
+<span>  before <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  after <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ref_time_values <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  new_col_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  as_list_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  names_sep <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -129,20 +128,21 @@ points <code>before</code> and <code>after</code> to use in the computation.</p>
 <dt id="arg-before-after">before, after<a class="anchor" aria-label="anchor" href="#arg-before-after"></a></dt>
 <dd><p>How far <code>before</code> and <code>after</code> each <code>ref_time_value</code> should
 the sliding window extend? At least one of these two arguments must be
-provided; the other's default will be 0. Any value provided for either
-argument must be a single, non-<code>NA</code>, non-negative,
-<a href="https://vctrs.r-lib.org/reference/vec_cast.html" class="external-link">integer-compatible</a> number of time steps. Endpoints of
-the window are inclusive. Common settings:</p><ul><li><p>For trailing/right-aligned windows from <code>ref_time_value - time_step (k)</code> to <code>ref_time_value</code>: either pass <code>before=k</code> by itself, or pass
-<code>before=k, after=0</code>.</p></li>
-<li><p>For center-aligned windows from <code>ref_time_value - time_step(k)</code> to
-<code>ref_time_value + time_step(k)</code>: pass <code>before=k, after=k</code>.</p></li>
+provided; the other's default will be 0. The accepted values for these
+depend on the type of the <code>time_value</code> column:</p><ul><li><p>if it is a Date and the cadence is daily, then they can be integers
+(which will be interpreted in units of days) or difftimes with units
+"days"</p></li>
+<li><p>if it is a Date and the cadence is weekly, then they must be difftimes
+with units "weeks"</p></li>
+<li><p>if it is an integer, then they must be integers</p></li>
+</ul><p>Endpoints of the window are inclusive. Common settings:</p><ul><li><p>For trailing/right-aligned windows from <code>ref_time_value - k</code> to
+<code>ref_time_value</code>: either pass <code>before=k</code> by itself, or pass <code>before=k, after=0</code>.</p></li>
+<li><p>For center-aligned windows from <code>ref_time_value - k</code> to
+<code>ref_time_value + k</code>: pass <code>before=k, after=k</code>.</p></li>
 <li><p>For leading/left-aligned windows from <code>ref_time_value</code> to
-<code>ref_time_value + time_step(k)</code>: either pass pass <code>after=k</code> by itself,
-or pass <code>before=0, after=k</code>.
-See "Details:" about the definition of a time step,(non)treatment of
-missing rows within the window, and avoiding warnings about
-<code>before</code>&amp;<code>after</code> settings for a certain uncommon use case.</p></li>
-</ul></dd>
+<code>ref_time_value + k</code>: either pass pass <code>after=k</code> by itself,
+or pass <code>before=0, after=k</code>.</p></li>
+</ul><p>See "Details:" on how missing rows are handled within the window.</p></dd>
 
 
 <dt id="arg-ref-time-values">ref_time_values<a class="anchor" aria-label="anchor" href="#arg-ref-time-values"></a></dt>
@@ -150,15 +150,6 @@ missing rows within the window, and avoiding warnings about
 element of this vector serves as the reference time point for one sliding
 window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.</p></dd>
-
-
-<dt id="arg-time-step">time_step<a class="anchor" aria-label="anchor" href="#arg-time-step"></a></dt>
-<dd><p>Optional function used to define the meaning of one time
-step, which if specified, overrides the default choice based on the
-<code>time_value</code> column. This function must take a non-negative integer and
-return an object of class <a href="https://lubridate.tidyverse.org/reference/period.html" class="external-link">lubridate::period</a>. For example, we can use
-<code>time_step = lubridate::hours</code> in order to set the time step to be one hour
-(this would only be meaningful if <code>time_value</code> is of class <code>POSIXct</code>).</p></dd>
 
 
 <dt id="arg-new-col-name">new_col_name<a class="anchor" aria-label="anchor" href="#arg-new-col-name"></a></dt>
@@ -200,28 +191,18 @@ operations, you might want to replace these <code>NULL</code> entries with a dif
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>To "slide" means to apply a function over a rolling window of time
-steps for each data group, where the window is centered at a reference
-time and left and right endpoints are given by the <code>before</code> and <code>after</code>
-arguments. The unit (the meaning of one time step) is implicitly defined
-by the way the <code>time_value</code> column treats addition and subtraction; for
-example, if the time values are coded as <code>Date</code> objects, then one time
-step is one day, since <code>as.Date("2022-01-01") + 1</code> equals <code>as.Date ("2022-01-02")</code>. Alternatively, the time step can be set explicitly using
-the <code>time_step</code> argument (which if specified would override the default
-choice based on <code>time_value</code> column). If there are not enough time steps
-available to complete the window at any given reference time, then
-<code>epi_slide_*()</code> will fail; it requires a complete window to perform the
-computation. For a centrally-aligned slide of <code>n</code> <code>time_value</code>s in a
-sliding window, set <code>before = (n-1)/2</code> and <code>after = (n-1)/2</code> when the
-number of <code>time_value</code>s in a sliding window is odd and <code>before = n/2-1</code>
-and <code>after = n/2</code> when <code>n</code> is even.</p>
+steps for each data group, where the window is centered at a reference time
+and left and right endpoints are given by the <code>before</code> and <code>after</code>
+arguments.
+If there are not enough time steps available to complete the window at any
+given reference time, then <code>epi_slide_*()</code> will fail; it requires a
+complete window to perform the computation. For a centrally-aligned slide
+of <code>n</code> <code>time_value</code>s in a sliding window, set <code>before = (n-1)/2</code> and <code>after = (n-1)/2</code> when the number of <code>time_value</code>s in a sliding window is odd and
+<code>before = n/2-1</code> and <code>after = n/2</code> when <code>n</code> is even.</p>
 <p>Sometimes, we want to experiment with various trailing or leading window
 widths and compare the slide outputs. In the (uncommon) case where
 zero-width windows are considered, manually pass both the <code>before</code> and
-<code>after</code> arguments in order to prevent potential warnings. (E.g., <code>before=k</code>
-with <code>k=0</code> and <code>after</code> missing may produce a warning. To avoid warnings,
-use <code>before=k, after=0</code> instead; otherwise, it looks too much like a
-leading window was intended, but the <code>after</code> argument was forgotten or
-misspelled.)</p>
+<code>after</code> arguments.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

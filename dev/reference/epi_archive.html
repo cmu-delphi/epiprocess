@@ -62,35 +62,33 @@ interest.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">new_epi_archive</span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
-<span>  geo_type <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  time_type <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  other_keys <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  additional_metadata <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  compactify <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  clobberable_versions_start <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  versions_end <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  <span class="va">geo_type</span>,</span>
+<span>  <span class="va">time_type</span>,</span>
+<span>  <span class="va">other_keys</span>,</span>
+<span>  <span class="va">additional_metadata</span>,</span>
+<span>  <span class="va">compactify</span>,</span>
+<span>  <span class="va">clobberable_versions_start</span>,</span>
+<span>  <span class="va">versions_end</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">validate_epi_archive</span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
-<span>  geo_type <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  time_type <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  other_keys <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  additional_metadata <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  compactify <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  clobberable_versions_start <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  versions_end <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  <span class="va">other_keys</span>,</span>
+<span>  <span class="va">additional_metadata</span>,</span>
+<span>  <span class="va">compactify</span>,</span>
+<span>  <span class="va">clobberable_versions_start</span>,</span>
+<span>  <span class="va">versions_end</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">as_epi_archive</span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
-<span>  geo_type <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  time_type <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  other_keys <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  additional_metadata <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  geo_type <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  time_type <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  other_keys <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0L</span><span class="op">)</span>,</span>
+<span>  additional_metadata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  compactify <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  clobberable_versions_start <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  .versions_end <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  clobberable_versions_start <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  .versions_end <span class="op">=</span> <span class="fu"><a href="max_version_with_row_in.html">max_version_with_row_in</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span>,</span>
 <span>  versions_end <span class="op">=</span> <span class="va">.versions_end</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -106,15 +104,14 @@ interest.</p>
 
 
 <dt id="arg-geo-type">geo_type<a class="anchor" aria-label="anchor" href="#arg-geo-type"></a></dt>
-<dd><p>Type for the geo values. If missing, then the function will
-attempt to infer it from the geo values present; if this fails, then it
-will be set to "custom".</p></dd>
+<dd><p>DEPRECATED Has no effect. Geo value type is inferred from the
+location column and set to "custom" if not recognized.</p></dd>
 
 
 <dt id="arg-time-type">time_type<a class="anchor" aria-label="anchor" href="#arg-time-type"></a></dt>
-<dd><p>Type for the time values. If missing, then the function will
-attempt to infer it from the time values present; if this fails, then it
-will be set to "custom".</p></dd>
+<dd><p>DEPRECATED Has no effect. Time value type inferred from the time
+column and set to "custom" if not recognized. Unpredictable behavior may result
+if the time type is not recognized.</p></dd>
 
 
 <dt id="arg-other-keys">other_keys<a class="anchor" aria-label="anchor" href="#arg-other-keys"></a></dt>
@@ -125,12 +122,12 @@ apart from "geo_value", "time_value", and "version".</p></dd>
 
 <dt id="arg-additional-metadata">additional_metadata<a class="anchor" aria-label="anchor" href="#arg-additional-metadata"></a></dt>
 <dd><p>List of additional metadata to attach to the
-<code>epi_archive</code> object. The metadata will have <code>geo_type</code> and <code>time_type</code>
-fields; named entries from the passed list or will be included as well.</p></dd>
+<code>epi_archive</code> object. The metadata will have the <code>geo_type</code> field; named
+entries from the passed list or will be included as well.</p></dd>
 
 
 <dt id="arg-compactify">compactify<a class="anchor" aria-label="anchor" href="#arg-compactify"></a></dt>
-<dd><p>Optional; Boolean or <code>NULL</code>. <code>TRUE</code> will remove some
+<dd><p>Optional; Boolean. <code>TRUE</code> will remove some
 redundant rows, <code>FALSE</code> will not, and missing or <code>NULL</code> will remove
 redundant rows, but issue a warning. See more information at <code>compactify</code>.</p></dd>
 
@@ -194,11 +191,8 @@ later.</p></li>
 </ul><p>The data table <code>DT</code> has key variables <code>geo_value</code>, <code>time_value</code>, <code>version</code>,
 as well as any others (these can be specified when instantiating the
 <code>epi_archive</code> object via the <code>other_keys</code> argument, and/or set by operating
-on <code>DT</code> directly). Refer to the documentation for <code>as_epi_archive()</code> for
-information and examples of relevant parameter names for an <code>epi_archive</code>
-object. Note that there can only be a single row per unique combination of
-key variables, and thus the key variables are critical for figuring out how
-to generate a snapshot of data from the archive, as of a given version.</p>
+on <code>DT</code> directly). Note that there can only be a single row per unique
+combination of key variables.</p>
     </div>
     <div class="section level2">
     <h2 id="metadata">Metadata<a class="anchor" aria-label="anchor" href="#metadata"></a></h2>
@@ -208,21 +202,18 @@ to generate a snapshot of data from the archive, as of a given version.</p>
 object:</p><ul><li><p><code>geo_type</code>: the type for the geo values.</p></li>
 <li><p><code>time_type</code>: the type for the time values.</p></li>
 <li><p><code>additional_metadata</code>: list of additional metadata for the data archive.</p></li>
-</ul><p>Unlike an <code>epi_df</code> object, metadata for an <code>epi_archive</code> object <code>x</code> can be
-accessed (and altered) directly, as in <code>x$geo_type</code> or <code>x$time_type</code>,
-etc. Like an <code>epi_df</code> object, the <code>geo_type</code> and <code>time_type</code> fields in the
-metadata of an <code>epi_archive</code> object are not currently used by any
-downstream functions in the <code>epiprocess</code> package, and serve only as useful
-bits of information to convey about the data set at hand.</p>
+</ul><p>While this metadata is not protected, it is generally recommended to treat it
+as read-only, and to use the <code>epi_archive</code> methods to interact with the data
+archive. Unexpected behavior may result from modifying the metadata
+directly.</p>
     </div>
     <div class="section level2">
     <h2 id="generating-snapshots">Generating Snapshots<a class="anchor" aria-label="anchor" href="#generating-snapshots"></a></h2>
 
 
 <p>An <code>epi_archive</code> object can be used to generate a snapshot of the data in
-<code>epi_df</code> format, which represents the most up-to-date values of the signal
-variables, as of the specified version. This is accomplished by calling
-<code><a href="epix_as_of.html">epix_as_of()</a></code>.</p>
+<code>epi_df</code> format, which represents the most up-to-date time series values up
+to a point in time. This is accomplished by calling <code><a href="epix_as_of.html">epix_as_of()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="sliding-computations">Sliding Computations<a class="anchor" aria-label="anchor" href="#sliding-computations"></a></h2>
@@ -251,10 +242,7 @@ sliding computation at any given reference time point t is performed on
 <span class="r-in"><span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">10</span>, mean <span class="op">=</span> <span class="fl">2</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">toy_epi_archive</span> <span class="op">&lt;-</span> <span class="va">tib</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu">as_epi_archive</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  geo_type <span class="op">=</span> <span class="st">"state"</span>,</span></span>
-<span class="r-in"><span>  time_type <span class="op">=</span> <span class="st">"day"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy_epi_archive</span> <span class="op">&lt;-</span> <span class="va">tib</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu">as_epi_archive</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">toy_epi_archive</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> → An `epi_archive` object, with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-01-01 / 2020-01-05</span>
@@ -262,18 +250,18 @@ sliding computation at any given reference time point t is performed on
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2020-01-06</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (10 rows x 4 columns):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, version&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     geo_value time_value    version     value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;     &lt;num&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1:        ca 2020-01-01 2020-01-02 2.5429963</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2:        ca 2020-01-02 2020-01-03 1.0859252</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3:        ca 2020-01-03 2020-01-04 2.4681544</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4:        ca 2020-01-04 2020-01-05 2.3629513</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5:        ca 2020-01-05 2020-01-06 0.6954565</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6:        hi 2020-01-01 2020-01-02 2.7377763</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7:        hi 2020-01-02 2020-01-03 3.8885049</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8:        hi 2020-01-03 2020-01-04 1.9025549</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9:        hi 2020-01-04 2020-01-05 1.0641526</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10:        hi 2020-01-05 2020-01-06 1.9840497</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     geo_value time_value    version      value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;      &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1:        ca 2020-01-01 2020-01-02  0.5999565</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2:        ca 2020-01-02 2020-01-03  2.2553171</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3:        ca 2020-01-03 2020-01-04 -0.4372636</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4:        ca 2020-01-04 2020-01-05  1.9944287</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5:        ca 2020-01-05 2020-01-06  2.6215527</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6:        hi 2020-01-01 2020-01-02  3.1484116</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  7:        hi 2020-01-02 2020-01-03  0.1781823</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8:        hi 2020-01-03 2020-01-04  1.7526747</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  9:        hi 2020-01-04 2020-01-05  1.7558004</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10:        hi 2020-01-05 2020-01-06  1.7172946</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Ex. with an additional key for county</span></span></span>
 <span class="r-in"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
@@ -295,11 +283,9 @@ sliding computation at any given reference time point t is performed on
 <span class="r-in"><span>  cases_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.01</span>, <span class="fl">0.02</span>, <span class="fl">0.01</span>, <span class="fl">0.05</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu">as_epi_archive</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  geo_type <span class="op">=</span> <span class="st">"state"</span>,</span></span>
-<span class="r-in"><span>  time_type <span class="op">=</span> <span class="st">"day"</span>,</span></span>
-<span class="r-in"><span>  other_keys <span class="op">=</span> <span class="st">"county"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu">as_epi_archive</span><span class="op">(</span>other_keys <span class="op">=</span> <span class="st">"county"</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Unsupported time type in column `x$time_value`, with class `character`.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> Time-related functionality may have unexpected behavior.</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

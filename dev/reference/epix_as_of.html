@@ -164,7 +164,7 @@ for the <code>max_version</code> of each <code>time_value</code>. Default is <co
 <span class="r-in"><span>  <span class="co"># (a.k.a. "hotfixed", "clobbered", etc.):</span></span></span>
 <span class="r-in"><span>  clobberable_versions_start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  <span class="co"># Suppose today is the following day, and there are no updates out yet:</span></span></span>
-<span class="r-in"><span>  <span class="va">versions_end</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1L</span>,</span></span>
+<span class="r-in"><span>  versions_end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1L</span>,</span></span>
 <span class="r-in"><span>  compactify <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -175,7 +175,7 @@ for the <code>max_version</code> of each <code>time_value</code>. Default is <co
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> to be reproducible later. See `?epi_archive` for more info and `?epix_as_of` on</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> how to muffle.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 2,192 x 4 with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = 2021-12-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2021-12-01</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
