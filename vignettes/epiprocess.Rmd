@@ -129,8 +129,6 @@ frame into `epi_df` format.
 
 ```{r, message = FALSE}
 x <- as_epi_df(cases,
-  geo_type = "state",
-  time_type = "day",
   as_of = max(cases$issue)
 ) %>%
   select(geo_value, time_value, total_cases = value)
@@ -146,15 +144,13 @@ attributes(x)$metadata
 In general, an `epi_df` object has the following fields in its metadata:
 
 * `geo_type`: the type for the geo values.
-* `time_type`: the type for the time values.
 * `as_of`: the time value at which the given data were available.
 
 Metadata for an `epi_df` object `x` can be accessed (and altered) via
-`attributes(x)$metadata`. The first two fields here, `geo_type` and `time_type`,
-are not currently used by any downstream functions in the `epiprocess` package,
-and serve only as useful bits of information to convey about the data set at
-hand. The last field here, `as_of`, is one of the most unique aspects of an
-`epi_df` object.
+`attributes(x)$metadata`. The field, `geo_type`,is not currently used by any
+downstream functions in the `epiprocess` package, and serve only as useful bits
+of information to convey about the data set at hand. The last field here,
+`as_of`, is one of the most unique aspects of an `epi_df` object.
 
 In brief, we can think of an `epi_df` object as a single snapshot of a data set
 that contains the most up-to-date values of some signals of interest, as of the
@@ -166,11 +162,11 @@ data set. See the [archive
 vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 more.
 
-If any of the `geo_type`, `time_type`, or `as_of` arguments are missing in a
-call to `as_epi_df()`, then this function will try to infer them from the passed
-object. Usually, `geo_type` and `time_type` can be inferred from the `geo_value`
-and `time_value` columns, respectively, but inferring the `as_of` field is not
-as easy. See the documentation for `as_epi_df()` more details.
+If `geo_type` or `as_of` arguments are missing in a call to `as_epi_df()`, then
+this function will try to infer them from the passed object. Usually, `geo_type`
+can be inferred from the `geo_value` columns, respectively, but inferring the
+`as_of` field is not as easy. See the documentation for `as_epi_df()` more
+details.
 
 ```{r}
 x <- as_epi_df(cases, as_of = as.Date("2024-03-20")) %>%
@@ -196,7 +192,7 @@ ex1 <- tibble(
 ) %>%
   as_tsibble(index = time_value, key = c(geo_value, county_code))
 
-ex1 <- as_epi_df(x = ex1, geo_type = "state", time_type = "day", as_of = "2020-06-03")
+ex1 <- as_epi_df(x = ex1, as_of = "2020-06-03")
 ```
 
 The metadata now includes `county_code` as an extra key.
@@ -237,7 +233,7 @@ head(ex2)
 ex2 <- ex2 %>%
   rename(geo_value = state, time_value = reported_date) %>%
   as_epi_df(
-    geo_type = "state", as_of = "2020-06-03",
+    as_of = "2020-06-03",
     additional_metadata = list(other_keys = "pol")
   )
 
@@ -304,7 +300,7 @@ cases in Canada in 2003, from the
 x <- outbreaks::sars_canada_2003 %>%
   mutate(geo_value = "ca") %>%
   select(geo_value, time_value = date, starts_with("cases")) %>%
-  as_epi_df(geo_type = "nation", as_of = as.Date("2024-03-20"))
+  as_epi_df(as_of = as.Date("2024-03-20"))
 
 head(x)
 
@@ -352,7 +348,7 @@ x <- outbreaks::ebola_sierraleone_2014 %>%
     time_value = full_seq(time_value, period = 1),
     fill = list(cases = 0)
   ) %>%
-  as_epi_df(geo_type = "province", as_of = as.Date("2024-03-20"))
+  as_epi_df(as_of = as.Date("2024-03-20"))
 
 ggplot(x, aes(x = time_value, y = cases)) +
   geom_col(aes(fill = geo_value), show.legend = FALSE) +

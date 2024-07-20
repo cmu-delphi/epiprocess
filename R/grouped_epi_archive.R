@@ -204,10 +204,16 @@ ungroup.grouped_epi_archive <- function(x, ...) {
 #' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
 #'  env missing_arg
 #' @export
-epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
-                                           time_step, new_col_name = "slide_value",
-                                           as_list_col = FALSE, names_sep = "_",
-                                           all_versions = FALSE) {
+epix_slide.grouped_epi_archive <- function(
+    x,
+    f,
+    ...,
+    before = Inf,
+    ref_time_values = NULL,
+    new_col_name = "slide_value",
+    as_list_col = FALSE,
+    names_sep = "_",
+    all_versions = FALSE) {
   # Perform some deprecated argument checks without using `<param> =
   # deprecated()` in the function signature, because they are from
   # early development versions and much more likely to be clutter than
@@ -231,7 +237,7 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
         ", class = "epiprocess__epix_slide_all_rows_parameter_deprecated")
   }
 
-  if (missing(ref_time_values)) {
+  if (is.null(ref_time_values)) {
     ref_time_values <- epix_slide_ref_time_values_default(x$private$ungrouped)
   } else {
     assert_numeric(ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
@@ -246,20 +252,7 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
     ref_time_values <- sort(ref_time_values)
   }
 
-  # Validate and pre-process `before`:
-  if (missing(before)) {
-    cli_abort("`before` is required (and must be passed by name);
-                if you did not want to apply a sliding window but rather
-                to map `epix_as_of` and `f` across various `ref_time_values`,
-                pass a large `before` value (e.g., if time steps are days,
-                `before=365000`).")
-  }
-  before <- vctrs::vec_cast(before, integer())
-  assert_int(before, lower = 0L, null.ok = FALSE, na.ok = FALSE)
-
-  # If a custom time step is specified, then redefine units
-
-  if (!missing(time_step)) before <- time_step(before)
+  validate_slide_window_arg(before, x$private$ungrouped$time_type)
 
   # Symbolize column name
   new_col <- sym(new_col_name)

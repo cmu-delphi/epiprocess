@@ -40,48 +40,30 @@ test_that("guess_geo_type tests for different types of geo_value's", {
 test_that("guess_time_type works for different types", {
   days <- as.Date("2022-01-01") + 0:6
   weeks <- as.Date("2022-01-01") + 7 * 0:6
-
-  yearweeks <- tsibble::yearweek(10)
   yearmonths <- tsibble::yearmonth(10)
-  yearquarters <- tsibble::yearquarter(10)
-
-  years <- c(1999, 2000)
-  ambiguous_yearweeks <- c(199901, 199902) # -> "custom"
-
-  daytimes <- as.POSIXct(c("2022-01-01 05:00:00", "2022-01-01 15:0:00"), tz = "UTC")
-  daytimes_chr <- as.character(daytimes)
+  integers <- c(1999, 2000)
 
   # YYYY-MM-DD is the accepted format
   not_ymd1 <- "January 1, 2022"
   not_ymd2 <- "1 January 2022"
   not_ymd3 <- "1 Jan 2022"
-
   not_a_date <- "asdf"
 
   expect_equal(guess_time_type(days), "day")
   expect_equal(guess_time_type(weeks), "week")
-
-  expect_equal(guess_time_type(yearweeks), "yearweek")
   expect_equal(guess_time_type(yearmonths), "yearmonth")
-  expect_equal(guess_time_type(yearquarters), "yearquarter")
+  expect_equal(guess_time_type(integers), "integer")
 
-  expect_equal(guess_time_type(years), "year")
-  expect_equal(guess_time_type(ambiguous_yearweeks), "custom")
-
-  expect_equal(guess_time_type(daytimes), "day-time")
-  expect_equal(guess_time_type(daytimes_chr), "day-time")
-
-  expect_equal(guess_time_type(not_ymd1), "custom")
-  expect_equal(guess_time_type(not_ymd2), "custom")
-  expect_equal(guess_time_type(not_ymd3), "custom")
-  expect_equal(guess_time_type(not_a_date), "custom")
+  expect_warning(guess_time_type(not_ymd1), "Unsupported time type in column")
+  expect_warning(guess_time_type(not_ymd2), "Unsupported time type in column")
+  expect_warning(guess_time_type(not_ymd3), "Unsupported time type in column")
+  expect_warning(guess_time_type(not_a_date), "Unsupported time type in column")
 })
 
 test_that("guess_time_type works with gaps", {
-  days_gaps <- as.Date("2022-01-01") + c(0, 1, 3, 4, 8, 8 + 7)
-  weeks_gaps <- as.Date("2022-01-01") + 7 * c(0, 1, 3, 4, 8, 8 + 7)
-  expect_equal(guess_time_type(days_gaps), "day")
-  expect_equal(guess_time_type(weeks_gaps), "week")
+  gaps <- c(1:6, 8, 9, 11, 8 + 7)
+  expect_equal(guess_time_type(as.Date("2022-01-01") + gaps), "day")
+  expect_equal(guess_time_type(as.Date("2022-01-01") + 7 * gaps), "week")
 })
 
 test_that("enlist works", {
@@ -279,4 +261,24 @@ test_that("guess_period works", {
     weekly_posixlts[[1L]] + guess_period(weekly_posixlts) * (seq_along(weekly_posixlts) - 1L),
     weekly_posixlts
   )
+})
+
+
+test_that("validate_slide_window_arg works", {
+  for (time_type in c("day", "week", "integer", "yearmonth")) {
+    expect_no_error(validate_slide_window_arg(Inf, time_type))
+  }
+  expect_no_error(validate_slide_window_arg(as.difftime(1, units = "days"), "day"))
+  expect_no_error(validate_slide_window_arg(1, "day"))
+  expect_no_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "day"))
+
+  expect_no_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "week"))
+  expect_error(validate_slide_window_arg(1, "week"))
+
+  expect_no_error(validate_slide_window_arg(1, "integer"))
+  expect_error(validate_slide_window_arg(as.difftime(1, units = "days"), "integer"))
+  expect_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "integer"))
+
+  expect_no_error(validate_slide_window_arg(1, "yearmonth"))
+  expect_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "yearmonth"))
 })

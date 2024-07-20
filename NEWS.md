@@ -5,9 +5,10 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 # epiprocess 0.8
 
 ## Breaking changes
+
 - `detect_outlr_stl(seasonal_period = NULL)` is no longer accepted. Use
   `detect_outlr_stl(seasonal_period = <value>, seasonal_as_residual = TRUE)`
-  instead.  See `?detect_outlr_stl` for more details.
+  instead. See `?detect_outlr_stl` for more details.
 
 ## Improvements
 
@@ -49,14 +50,22 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   output a huge number of `ref_time_values` spaced apart by mere seconds.
 
 ## Cleanup
-- Resolved some linting messages in package checks (#468).
 
-## Cleanup
+- Resolved some linting messages in package checks (#468).
 - Added optional `decay_to_tibble` attribute controlling `as_tibble()` behavior
   of `epi_df`s to let `{epipredict}` work more easily with other libraries (#471).
-
-## Cleanup
 - Removed some external package dependencies.
+
+## Breaking Changes
+
+- `epi_df`'s are now more strict about what types they allow in the time column.
+  Namely, we are explicit about only supporting `Date` at the daily and weekly
+  cadence and generic integer types (for yearly cadence).
+- `epi_slide` `before` and `after` arguments are now require the user to
+  specific time units in certain cases. The `time_step` argument has been
+  removed.
+- `epix_slide` `before` argument now defaults to `Inf`, and requires the user to
+  specify units in some cases. The `time_step` argument has been removed.
 
 # epiprocess 0.7.0
 

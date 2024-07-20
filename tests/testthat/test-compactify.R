@@ -87,10 +87,11 @@ test_that("as_of produces the same results with compactify=TRUE as with compacti
 })
 
 test_that("compactify does not alter the default clobberable and observed version bounds", {
+  d <- as.Date("2000-01-01")
   x <- tibble::tibble(
-    geo_value = "geo1",
-    time_value = as.Date("2000-01-01"),
-    version = as.Date("2000-01-01") + 1:5,
+    geo_value = "ak",
+    time_value = d,
+    version = d + 1:5,
     value = 42L
   )
   ea_true <- as_epi_archive(x, compactify = TRUE)
