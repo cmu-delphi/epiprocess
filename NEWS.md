@@ -2,6 +2,8 @@
 
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicate PR's.
 
+# epiprocess 0.9
+
 # epiprocess 0.8
 
 ## Breaking changes
@@ -42,9 +44,9 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - Fixed documentation referring to old `epi_slide()` interface (#466, thanks
   @XuedaShen!).
 - `as_epi_df` and `as_epi_archive` now support arguments to specify column names
-  e.g.  `as_epi_df(some_tibble, geo_value=state)`. In addition, there is a list
-  of default conversions, see `time_column_names`  for a list of columns that
-  will automatically be recognized and converted to  `time_value` column (there
+  e.g. `as_epi_df(some_tibble, geo_value=state)`. In addition, there is a list
+  of default conversions, see `time_column_names` for a list of columns that
+  will automatically be recognized and converted to `time_value` column (there
   are similar functions for `geo` and `version`).
 - Fixed bug where `epix_slide_ref_time_values_default()` on datetimes would
   output a huge number of `ref_time_values` spaced apart by mere seconds.
