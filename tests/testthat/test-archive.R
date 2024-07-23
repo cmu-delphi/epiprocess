@@ -4,16 +4,16 @@ test_that("first input must be a data.frame", {
   )
 })
 
-dt <- archive_cases_dv_subset$DT
+archive_data <- archive_cases_dv_subset$DT
 
 test_that("data.frame must contain geo_value, time_value and version columns", {
-  expect_error(as_epi_archive(select(dt, -geo_value), compactify = FALSE),
+  expect_error(as_epi_archive(select(archive_data, -geo_value), compactify = FALSE),
     regexp = "There is no geo_value column or similar name"
   )
-  expect_error(as_epi_archive(select(dt, -time_value), compactify = FALSE),
+  expect_error(as_epi_archive(select(archive_data, -time_value), compactify = FALSE),
     regexp = "There is no time_value column or similar name"
   )
-  expect_error(as_epi_archive(select(dt, -version), compactify = FALSE),
+  expect_error(as_epi_archive(select(archive_data, -version), compactify = FALSE),
     regexp = "There is no version column or similar name"
   )
 })
@@ -21,27 +21,27 @@ test_that("data.frame must contain geo_value, time_value and version columns", {
 test_that("as_epi_archive custom name mapping works correctly", {
   # custom name works correctly
   expect_equal(
-    as_epi_archive(rename(dt, weirdName = version),
+    as_epi_archive(rename(archive_data, weirdName = version),
       version = weirdName, compactify = TRUE
     ),
-    as_epi_archive(dt, compactify = TRUE)
+    as_epi_archive(archive_data, compactify = TRUE)
   )
   expect_equal(
-    as_epi_archive(rename(dt, weirdName = geo_value),
+    as_epi_archive(rename(archive_data, weirdName = geo_value),
       geo_value = weirdName, compactify = TRUE
     ),
-    as_epi_archive(dt, compactify = TRUE)
+    as_epi_archive(archive_data, compactify = TRUE)
   )
   expect_equal(
-    as_epi_archive(rename(dt, weirdName = time_value),
+    as_epi_archive(rename(archive_data, weirdName = time_value),
       time_value = weirdName, compactify = TRUE
     ),
-    as_epi_archive(dt, compactify = TRUE)
+    as_epi_archive(archive_data, compactify = TRUE)
   )
 
   expect_error(
     as_epi_archive(
-      rename(dt, weirdName = version),
+      rename(archive_data, weirdName = version),
       version = weirdName,
       version = time_value
     ), "Names must be unique"
@@ -49,29 +49,29 @@ test_that("as_epi_archive custom name mapping works correctly", {
 })
 
 test_that("other_keys can only contain names of the data.frame columns", {
-  expect_error(as_epi_archive(dt, other_keys = "xyz", compactify = FALSE),
+  expect_error(as_epi_archive(archive_data, other_keys = "xyz", compactify = FALSE),
     regexp = "`other_keys` must be contained in the column names of `x`."
   )
-  expect_error(as_epi_archive(dt, other_keys = "percent_cli", compactify = FALSE), NA)
+  expect_error(as_epi_archive(archive_data, other_keys = "percent_cli", compactify = FALSE), NA)
 })
 
 test_that("other_keys cannot contain names geo_value, time_value or version", {
-  expect_error(as_epi_archive(dt, other_keys = "geo_value", compactify = FALSE),
+  expect_error(as_epi_archive(archive_data, other_keys = "geo_value", compactify = FALSE),
     regexp = "`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\"."
   )
-  expect_error(as_epi_archive(dt, other_keys = "time_value", compactify = FALSE),
+  expect_error(as_epi_archive(archive_data, other_keys = "time_value", compactify = FALSE),
     regexp = "`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\"."
   )
-  expect_error(as_epi_archive(dt, other_keys = "version", compactify = FALSE),
+  expect_error(as_epi_archive(archive_data, other_keys = "version", compactify = FALSE),
     regexp = "`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\"."
   )
 })
 
 test_that("Warning thrown when other_metadata contains overlapping names with geo_type field", {
-  expect_warning(as_epi_archive(dt, additional_metadata = list(geo_type = 1), compactify = FALSE),
+  expect_warning(as_epi_archive(archive_data, additional_metadata = list(geo_type = 1), compactify = FALSE),
     regexp = "`additional_metadata` names overlap with existing metadata fields"
   )
-  expect_warning(as_epi_archive(dt, additional_metadata = list(time_type = 1), compactify = FALSE),
+  expect_warning(as_epi_archive(archive_data, additional_metadata = list(time_type = 1), compactify = FALSE),
     regexp = "`additional_metadata` names overlap with existing metadata fields"
   )
 })
