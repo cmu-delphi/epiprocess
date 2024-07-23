@@ -1,162 +1,62 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/404.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/DEVELOPMENT.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/LICENSE.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/articles/advanced.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/articles/aggregation.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/articles/archive.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/articles/compactify.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/articles/correlation.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/articles/epiprocess.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/articles/growth_rate.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/articles/outliers.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/articles/slide.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/index.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/news/index.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/pull_request_template.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/archive_cases_dv_subset.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/as_epi_archive.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/as_epi_df.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/as_tibble.epi_df.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/as_tsibble.epi_df.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/autoplot.epi_df.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/detect_outlr.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/detect_outlr_rm.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/detect_outlr_stl.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/epi_archive.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/epi_cor.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/epi_df.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/epi_slide.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/epiprocess.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/epix_as_of.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/epix_fill_through_version.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/epix_merge.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/epix_slide.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/epix_truncate_versions_after.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/group_by.epi_archive.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/growth_rate.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/guess_period.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/incidence_num_outlier_example.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/is_epi_archive.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/is_epi_df.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/jhu_csse_county_level_subset.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/jhu_csse_daily_subset.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/key_colnames.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/max_version_with_row_in.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/new_epi_df.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/next_after.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/pipe.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/print.epi_df.html</loc>
-  </url>
-  <url>
-    <loc>https://cmu-delphi.github.io/epiprocess/reference/reexports.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://cmu-delphi.github.io/epiprocess/404.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/DEVELOPMENT.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/LICENSE-text.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/LICENSE.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/articles/advanced.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/articles/aggregation.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/articles/archive.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/articles/compactify.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/articles/correlation.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/articles/epiprocess.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/articles/growth_rate.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/articles/index.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/articles/outliers.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/articles/slide.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/authors.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/index.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/news/index.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/archive_cases_dv_subset.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/as_tibble.epi_df.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/as_tsibble.epi_df.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/autoplot.epi_df.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/clone.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/compactify.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/detect_outlr.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/detect_outlr_rm.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/detect_outlr_stl.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/epi_archive.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/epi_cor.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/epi_df.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/epi_slide.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/epi_slide_mean.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/epi_slide_opt.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/epi_slide_sum.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/epiprocess.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/epix_as_of.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/epix_fill_through_version.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/epix_merge.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/epix_slide.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/epix_truncate_versions_after.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/geo_column_names.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/group_by.epi_archive.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/growth_rate.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/guess_column_name.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/guess_period.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/incidence_num_outlier_example.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/index.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/is_epi_df.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/jhu_csse_county_level_subset.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/jhu_csse_daily_subset.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/key_colnames.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/max_version_with_row_in.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/next_after.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/pipe.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/print.epi_archive.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/print.epi_df.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/reexports.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/time_column_names.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/upcase_snake_case.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/version_column_names.html</loc></url>
 </urlset>
+
