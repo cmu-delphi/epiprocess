@@ -313,38 +313,15 @@ new_epi_archive <- function(
     )
   }
 
-  # Checks to see if a value in a vector is LOCF
-  is_locf <- function(vec) { # nolint: object_usage_linter
-    dplyr::if_else(!is.na(vec) & !is.na(dplyr::lag(vec)),
-      vec == dplyr::lag(vec),
-      is.na(vec) & is.na(dplyr::lag(vec))
-    )
-  }
-
-  # LOCF is defined by a row where all values except for the version
-  # differ from their respective lag values
-
-  # Checks for LOCF's in a data frame
-  rm_locf <- function(df) {
-    dplyr::filter(df, if_any(c(everything(), -version), ~ !is_locf(.))) # nolint: object_usage_linter
-  }
-
-  # Keeps LOCF values, such as to be printed
-  keep_locf <- function(df) {
-    dplyr::filter(df, if_all(c(everything(), -version), ~ is_locf(.))) # nolint: object_usage_linter
-  }
-
+  nrow_before_compactify <- nrow(DT)
   # Runs compactify on data frame
   if (is.null(compactify) || compactify == TRUE) {
-    elim <- keep_locf(DT)
-    DT <- rm_locf(DT) # nolint: object_name_linter
-  } else {
-    # Create empty data frame for nrow(elim) to be 0
-    elim <- tibble::tibble()
+    DT <- compactify_tibble(DT, key_vars) # nolint: object_name_linter
   }
-
-  # Warns about redundant rows
-  if (is.null(compactify) && nrow(elim) > 0) {
+  # Warns about redundant rows if the number of rows decreased, and we didn't
+  # explicitly say to compactify
+  if (is.null(compactify) && nrow(DT) < nrow_before_compactify) {
+    elim <- removed_by_compactify(DT, key_vars)
     warning_intro <- cli::format_inline(
       "Found rows that appear redundant based on
             last (version of each) observation carried forward;
@@ -376,6 +353,63 @@ new_epi_archive <- function(
     class = "epi_archive"
   )
 }
+
+#' given a tibble as would be found in an epi_archive, remove duplicate entries.
+#' @description
+#' works by shifting all rows except the version, then comparing values to see
+#'   if they've changed. We need to arrange in descending order, but note that
+#'   we don't need to group, since at least one column other than version has
+#'   changed, and so is kept.
+#' @keywords internal
+#' @importFrom dplyr filter
+compactify_tibble <- function(df, keys) {
+  df %>%
+    arrange(!!!keys) %>%
+    filter(if_any(
+      c(everything(), -version), # all non-version columns
+      ~ !is_locf(.)
+    ))
+}
+
+#' get the entries that `compactify_tibble` would remove
+#' @keywords internal
+#' @importFrom dplyr filter if_all everything
+removed_by_compactify <- function(df, keys) {
+  df %>%
+    arrange(!!!keys) %>%
+    filter(if_all(
+      c(everything(), -version),
+      ~ is_locf(.)
+    )) # nolint: object_usage_linter
+}
+
+#' Checks to see if a value in a vector is LOCF
+#' @description
+#' LOCF meaning last observation carried forward. lags the vector by 1, then
+#'   compares with itself. For floats it uses float comparison, otherwise it
+#'   uses equality.
+#' `NA`'s are considered equal to `NA`'s, while nan's are not.
+#' @importFrom dplyr lag if_else near
+#' @keywords internal
+is_locf <- function(vec) { # nolint: object_usage_linter
+  lag_vec <- lag(vec)
+  if (typeof(vec) == "double") {
+    if_else(
+      !is.na(vec) & !is.na(lag_vec),
+      near(vec, lag_vec),
+      is.na(vec) & is.na(lag_vec)
+    ) %>%
+      return()
+  } else {
+    if_else(
+      !is.na(vec) & !is.na(lag_vec),
+      vec == lag_vec,
+      is.na(vec) & is.na(lag_vec)
+    ) %>%
+      return()
+  }
+}
+
 
 #' `validate_epi_archive` ensures correctness of arguments fed to `as_epi_archive`.
 #'
