@@ -49,8 +49,9 @@ nearest (rolling median) +/- (replacement multiplier) * (rolling IQR).
 Default is 0.}
 }
 \value{
-A tibble with number of rows equal to \code{length(y)}, and columns
-\code{lower}, \code{upper}, and \code{replacement}.
+An tibble with number of rows equal to \code{length(y)} and columns
+giving the outlier detection thresholds (\code{lower} and \code{upper}) and
+replacement values from each detection method (\code{replacement}).
 }
 \description{
 Detects outliers based on a distance from the rolling median specified in
@@ -59,10 +60,11 @@ terms of multiples of the rolling interquartile range (IQR).
 \examples{
 # Detect outliers based on a rolling median
 incidence_num_outlier_example \%>\%
-  dplyr::select(geo_value,time_value,cases) \%>\%
+  dplyr::select(geo_value, time_value, cases) \%>\%
   as_epi_df() \%>\%
   group_by(geo_value) \%>\%
-  mutate(outlier_info  = detect_outlr_rm(
-    x = time_value, y = cases)) \%>\%
+  mutate(outlier_info = detect_outlr_rm(
+    x = time_value, y = cases
+  )) \%>\%
   unnest(outlier_info)
 }

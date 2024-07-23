@@ -1,5 +1,5 @@
 #' Estimate growth rate
-#' 
+#'
 #' Estimates the growth rate of a signal at given points along the underlying
 #' sequence. Several methodologies are available; see the [growth rate
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/growth_rate.html)
@@ -10,7 +10,7 @@
 #'   `y`).
 #' @param y Signal values.
 #' @param x0 Points at which we should estimate the growth rate. Must be a
-#'   subset of `x` (no extrapolation allowed). Default is `x`. 
+#'   subset of `x` (no extrapolation allowed). Default is `x`.
 #' @param method Either "rel_change", "linear_reg", "smooth_spline", or
 #'   "trend_filter", indicating the method to use for the growth rate
 #'   calculation. The first two are local methods: they are run in a sliding
@@ -28,7 +28,7 @@
 #' @param na_rm Should missing values be removed before the computation? Default
 #'   is `FALSE`.
 #' @param ... Additional arguments to pass to the method used to estimate the
-#'   derivative. 
+#'   derivative.
 #' @return Vector of growth rate estimates at the specified points `x0`.
 #'
 #' @details The growth rate of a function f defined over a continuously-valued
@@ -39,8 +39,8 @@
 #'   the signal value itself (or possibly a smoothed version of the signal
 #'   value).
 #'
-#' The following methods are available for estimating the growth rate: 
-#' 
+#' The following methods are available for estimating the growth rate:
+#'
 #' * "rel_change": uses (B/A - 1) / h, where B is the average of `y` over the
 #'   second half of a sliding window of bandwidth h centered at the reference
 #'   point `x0`, and A the average over the first half. This can be seen as
@@ -51,11 +51,11 @@
 #' * "smooth_spline": uses the estimated derivative at `x0` from a smoothing
 #'   spline fit to `x` and `y`, via `stats::smooth.spline()`, divided by the
 #'   fitted value of the spline at `x0`.
-#' * "trend_filter": uses the estimated derivative at `x0` from polynomial trend 
+#' * "trend_filter": uses the estimated derivative at `x0` from polynomial trend
 #'   filtering (a discrete spline) fit to `x` and `y`, via
 #'   `genlasso::trendfilter()`, divided by the fitted value of the discrete
 #'   spline at `x0`.
-#' 
+#'
 #' @section Log Scale:
 #'  An alternative view for the growth rate of a function f in general is given
 #'   by defining g(t) = log(f(t)), and then observing that g'(t) = f'(t) /
@@ -74,7 +74,7 @@
 #'   `Date` objects, `h = 7`, and the reference point is January 7, then the
 #'   sliding window contains all data in between January 1 and 14 (matching the
 #'   behavior of `epi_slide()` with `before = h - 1` and `after = h`).
-#' 
+#'
 #' @section Additional Arguments:
 #' For the global methods, "smooth_spline" and "trend_filter", additional
 #'   arguments can be specified via `...` for the underlying estimation
@@ -89,7 +89,7 @@
 #' * `maxsteps`: maximum number of steps to take in the solution path before
 #'   terminating. Default is 1000.
 #' * `cv`: should cross-validation be used to choose an effective degrees of
-#'   freedom for the fit? Default is `TRUE`. 
+#'   freedom for the fit? Default is `TRUE`.
 #' * `k`: number of folds if cross-validation is to be used. Default is 3.
 #' * `df`: desired effective degrees of freedom for the trend filtering fit. If
 #'   `cv = FALSE`, then `df` must be a positive integer; if `cv = TRUE`, then
@@ -98,153 +98,165 @@
 #'   rule, respectively. Default is "min" (going along with the default `cv =
 #'   TRUE`). Note that if `cv = FALSE`, then we require `df` to be set by the
 #'   user.
-#' 
+#'
 #' @export
 #' @examples
 #' # COVID cases growth rate by state using default method relative change
-#' jhu_csse_daily_subset %>% 
-#'   group_by(geo_value) %>% 
-#'   mutate(cases_gr = growth_rate(x = time_value,  y = cases))
-#' 
+#' jhu_csse_daily_subset %>%
+#'   group_by(geo_value) %>%
+#'   mutate(cases_gr = growth_rate(x = time_value, y = cases))
+#'
 #' # Log scale, degree 4 polynomial and 6-fold cross validation
-#' jhu_csse_daily_subset %>% 
-#'   group_by(geo_value) %>% 
-#'   mutate(gr_poly = growth_rate( x = time_value, y = cases, log_scale = TRUE,  ord = 4,  k = 6))
-
-growth_rate = function(x = seq_along(y), y, x0 = x,
-                       method = c("rel_change", "linear_reg",
-                                  "smooth_spline", "trend_filter"),
-                       h = 7, log_scale = FALSE,
-                       dup_rm = FALSE, na_rm = FALSE, ...) { 
+#' jhu_csse_daily_subset %>%
+#'   group_by(geo_value) %>%
+#'   mutate(gr_poly = growth_rate(x = time_value, y = cases, log_scale = TRUE, ord = 4, k = 6))
+growth_rate <- function(x = seq_along(y), y, x0 = x,
+                        method = c(
+                          "rel_change", "linear_reg",
+                          "smooth_spline", "trend_filter"
+                        ),
+                        h = 7, log_scale = FALSE,
+                        dup_rm = FALSE, na_rm = FALSE, ...) {
   # Check x, y, x0
-  if (length(x) != length(y)) Abort("`x` and `y` must have the same length.")
-  if (!all(x0 %in% x)) Abort("`x0` must be a subset of `x`.")
-  
-  # Check the method
-  method = match.arg(method)
-  
+  if (length(x) != length(y)) cli_abort("`x` and `y` must have the same length.")
+  if (!all(x0 %in% x)) cli_abort("`x0` must be a subset of `x`.")
+  method <- match.arg(method)
+
   # Arrange in increasing order of x
-  o = order(x)
-  x = x[o]
-  y = y[o]
-  
+  o <- order(x)
+  x <- x[o]
+  y <- y[o]
+
   # Convert to log(y) if we need to
-  y = as.numeric(y) 
-  if (log_scale) y = log(y)
+  y <- as.numeric(y)
+  if (log_scale) y <- log(y)
 
   # Remove duplicates if we need to
   if (dup_rm) {
-    o = !duplicated(x)
+    o <- !duplicated(x)
     if (any(!o)) {
-      Warn("`x` contains duplicate values. (If being run on a column in an `epi_df`, did you group by relevant key variables?)")
+      cli_warn(
+        "`x` contains duplicate values. (If being run on a
+        column in an `epi_df`, did you group by relevant key variables?)"
+      )
     }
-    x = x[o]
-    y = y[o]
+    x <- x[o]
+    y <- y[o]
   }
-    
-  
+
+
   # Remove NAs if we need to
   if (na_rm) {
-    o = !(is.na(x) & is.na(y))
-    x = x[o]
-    y = y[o]
+    o <- !(is.na(x) & is.na(y))
+    x <- x[o]
+    y <- y[o]
   }
 
   # Useful indices for later
-  i0 = x %in% x0
+  i0 <- x %in% x0
 
   # Local methods
-  if (method == "rel_change" || method == "linear_reg") {    
-    g = purrr::map_dbl(x, function(x_ref) {
+  if (method == "rel_change" || method == "linear_reg") {
+    g <- purrr::map_dbl(x, function(x_ref) {
       # Form the local window
-      ii = (x > x_ref - h) & (x <= x_ref + h)
-      xx = x[ii]
-      yy = y[ii]
+      ii <- (x > x_ref - h) & (x <= x_ref + h)
+      xx <- x[ii]
+      yy <- y[ii]
 
       # Convert to numerics
-      x_ref = as.numeric(x_ref)
-      xx = as.numeric(xx)
-      
+      x_ref <- as.numeric(x_ref)
+      xx <- as.numeric(xx)
+
       # Relative change
       if (method == "rel_change") {
-        right = xx > x_ref
-        left = xx <= x_ref
-        b = mean(yy[right])
-        a = mean(yy[left])
-        hh = mean(xx[right]) - mean(xx[left])
-        if (log_scale) return((b-a) / hh)
-        else return((b/a - 1) / hh)
-      }
-
-      # Linear regression
-      else {
-        xm = xx - mean(xx)
-        ym = yy - mean(yy)
-        b = sum(xm * ym) / sum(xm^2)
-        a = mean(yy - b * xx)
-        if (log_scale) return(b)
-        else return(b / (a + b * x_ref))
+        right <- xx > x_ref
+        left <- xx <= x_ref
+        b <- mean(yy[right])
+        a <- mean(yy[left])
+        hh <- mean(xx[right]) - mean(xx[left])
+        if (log_scale) {
+          return((b - a) / hh)
+        } else {
+          return((b / a - 1) / hh)
+        }
+      } else {
+        # Linear regression
+        xm <- xx - mean(xx)
+        ym <- yy - mean(yy)
+        b <- sum(xm * ym) / sum(xm^2)
+        a <- mean(yy - b * xx)
+        if (log_scale) {
+          return(b)
+        } else {
+          return(b / (a + b * x_ref))
+        }
       }
     })
-    
+
     return(g[i0])
   }
-  
+
   # Global methods
   if (method == "smooth_spline" || method == "trend_filter") {
     # Convert to numerics
-    x = as.numeric(x)
-    x0 = as.numeric(x0)
-    
+    x <- as.numeric(x)
+    x0 <- as.numeric(x0)
+
     # Collect parameters
-    params = list(...)
+    params <- list(...)
 
     # Smoothing spline
     if (method == "smooth_spline") {
-      params$x = x
-      params$y = y
-      obj = do.call(stats::smooth.spline, params)
-      f0 = stats::predict(obj, x = x0)$y
-      d0 = stats::predict(obj, x = x0, deriv = 1)$y
-      if (log_scale) return(d0)
-      else return(d0 / f0)
-    }
-
-    # Trend filtering
-    else {
-      ord = params$ord
-      maxsteps = params$maxsteps
-      cv = params$cv
-      df = params$df
-      k = params$k
+      params$x <- x
+      params$y <- y
+      obj <- do.call(stats::smooth.spline, params)
+      f0 <- stats::predict(obj, x = x0)$y
+      d0 <- stats::predict(obj, x = x0, deriv = 1)$y
+      if (log_scale) {
+        return(d0)
+      } else {
+        return(d0 / f0)
+      }
+    } else {
+      # Trend filtering
+      ord <- params$ord
+      maxsteps <- params$maxsteps
+      cv <- params$cv
+      df <- params$df
+      k <- params$k
 
       # Default parameters
-      if (is.null(ord)) ord = 3
-      if (is.null(maxsteps)) maxsteps = 1000
-      if (is.null(cv)) cv = TRUE
-      if (is.null(df)) df = "min"
-      if (is.null(k)) k = 3
+      ord <- ord %||% 3
+      maxsteps <- maxsteps %||% 1000
+      cv <- cv %||% TRUE
+      df <- df %||% "min"
+      k <- k %||% 3
 
       # Check cv and df combo
-      if (is.numeric(df)) cv = FALSE
+      if (is.numeric(df)) cv <- FALSE
       if (!cv && !(is.numeric(df) && df == round(df))) {
-        Abort("If `cv = FALSE`, then `df` must be an integer.")
+        cli_abort("If `cv = FALSE`, then `df` must be an integer.")
       }
 
       # Compute trend filtering path
-      obj = genlasso::trendfilter(y = y, pos = x, ord = ord, max = maxsteps)
+      obj <- genlasso::trendfilter(y = y, pos = x, ord = ord, max = maxsteps)
 
       # Use CV to find df, if we need to
       if (cv) {
-        cv_obj = quiet(genlasso::cv.trendfilter(obj, k = k, mode = "df"))
-        df = ifelse(df == "min", cv_obj$df.min, cv_obj$df.1se)
+        cv_obj <- quiet(genlasso::cv.trendfilter(obj, k = k, mode = "df"))
+        df <- ifelse(df == "min", cv_obj$df.min, cv_obj$df.1se)
       }
 
       # Estimate growth rate and return
-      f = genlasso::coef.genlasso(obj, df = df)$beta
-      d = ExtendR(diff(f) / diff(x))
-      if (log_scale) return(d[i0])
-      else return((d / f)[i0])
+      f <- genlasso::coef.genlasso(obj, df = df)$beta
+      d <- diff(f) / diff(x)
+      # Extend by one element
+      d <- c(d, d[length(d)])
+      if (log_scale) {
+        return(d[i0])
+      } else {
+        return((d / f)[i0])
+      }
     }
   }
 }

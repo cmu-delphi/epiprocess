@@ -12,3 +12,7 @@
 ^pkgdown$
 ^doc$
 ^Meta$
+^.git-blame-ignore-revs$
+^.lintr$
+^DEVELOPMENT.md$
+man-roxygen

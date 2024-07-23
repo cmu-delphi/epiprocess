@@ -38,9 +38,9 @@ summarized results are calculated. Note that if the number of \code{methods}
 purposes of determining whether a given observation is an outlier.}
 }
 \value{
-An tibble with number of rows equal to \code{length(y)} and columns giving
-the outlier detection thresholds and replacement values from each detection
-method.
+An tibble with number of rows equal to \code{length(y)} and columns
+giving the outlier detection thresholds (\code{lower} and \code{upper}) and
+replacement values from each detection method (\code{replacement}).
 }
 \description{
 Applies one or more outlier detection methods to a given signal variable, and
@@ -64,29 +64,44 @@ For convenience, the outlier detection method can be specified (in the
 STL decomposition.
 }
 \examples{
- detection_methods = dplyr::bind_rows(
-   dplyr::tibble(method = "rm",
-          args = list(list(detect_negatives = TRUE,
-                           detection_multiplier = 2.5)),
-          abbr = "rm"),
-   dplyr::tibble(method = "stl",
-          args = list(list(detect_negatives = TRUE,
-                           detection_multiplier = 2.5,
-                           seasonal_period = 7)),
-          abbr = "stl_seasonal"),
-   dplyr::tibble(method = "stl",
-          args = list(list(detect_negatives = TRUE,
-                           detection_multiplier = 2.5,
-                           seasonal_period = NULL)),
-          abbr = "stl_nonseasonal"))
+detection_methods <- dplyr::bind_rows(
+  dplyr::tibble(
+    method = "rm",
+    args = list(list(
+      detect_negatives = TRUE,
+      detection_multiplier = 2.5
+    )),
+    abbr = "rm"
+  ),
+  dplyr::tibble(
+    method = "stl",
+    args = list(list(
+      detect_negatives = TRUE,
+      detection_multiplier = 2.5,
+      seasonal_period = 7
+    )),
+    abbr = "stl_seasonal"
+  ),
+  dplyr::tibble(
+    method = "stl",
+    args = list(list(
+      detect_negatives = TRUE,
+      detection_multiplier = 2.5,
+      seasonal_period = 7,
+      seasonal_as_residual = TRUE
+    )),
+    abbr = "stl_reseasonal"
+  )
+)
 
- x <- incidence_num_outlier_example \%>\%
-   dplyr::select(geo_value,time_value,cases) \%>\%
-   as_epi_df() \%>\%
-   group_by(geo_value) \%>\%
-   mutate(outlier_info  = detect_outlr(
-     x = time_value, y = cases,
-     methods = detection_methods,
-     combiner = "median")) \%>\%
-   unnest(outlier_info)
+x <- incidence_num_outlier_example \%>\%
+  dplyr::select(geo_value, time_value, cases) \%>\%
+  as_epi_df() \%>\%
+  group_by(geo_value) \%>\%
+  mutate(outlier_info = detect_outlr(
+    x = time_value, y = cases,
+    methods = detection_methods,
+    combiner = "median"
+  )) \%>\%
+  unnest(outlier_info)
 }

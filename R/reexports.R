@@ -55,3 +55,10 @@ dplyr::slice
 #' @importFrom tidyr unnest
 #' @export
 tidyr::unnest
+
+
+# ggplot2 -----------------------------------------------------------------
+
+#' @importFrom ggplot2 autoplot
+#' @export
+ggplot2::autoplot

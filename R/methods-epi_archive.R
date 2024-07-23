@@ -22,64 +22,115 @@
 #'   for the `max_version` of each `time_value`. Default is `FALSE`.
 #' @return An `epi_df` object.
 #'
-#' @details This is simply a wrapper around the `as_of()` method of the
-#'   `epi_archive` class, so if `x` is an `epi_archive` object, then:
-#'   ```
-#'   epix_as_of(x, max_version = v)
-#'   ```
-#'   is equivalent to:
-#'   ```
-#'   x$as_of(max_version = v)
-#'   ```
-#'
-#' @export
 #' @examples
-#' # warning message of data latency shown
-#' epix_as_of(x = archive_cases_dv_subset,
-#'            max_version = max(archive_cases_dv_subset$DT$version))
-#' 
-#' @export 
-#' @examples
+#' epix_as_of(
+#'   archive_cases_dv_subset,
+#'   max_version = max(archive_cases_dv_subset$DT$version)
+#' )
 #'
 #' range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
 #'
-#' epix_as_of(x = archive_cases_dv_subset,
-#'            max_version = as.Date("2020-06-12"))
+#' epix_as_of(archive_cases_dv_subset, as.Date("2020-06-12"))
 #'
-#' # When fetching a snapshot as of the latest version with update data in the
-#' # archive, a warning is issued by default, as this update data might not yet
-#' # be finalized (for example, if data versions are labeled with dates, these
-#' # versions might be overwritten throughout the corresponding days with
-#' # additional data or "hotfixes" of erroroneous data; when we build an archive
-#' # based on database queries, the latest available update might still be
-#' # subject to change, but previous versions should be finalized). We can
-#' # muffle such warnings with the following pattern:
-#' withCallingHandlers({
-#'   epix_as_of(x = archive_cases_dv_subset,
-#'              max_version = max(archive_cases_dv_subset$DT$version))
-#' }, epiprocess__snapshot_as_of_clobberable_version = function(wrn) invokeRestart("muffleWarning"))
-#' # Since R 4.0, there is a `globalCallingHandlers` function that can be used
-#' # to globally toggle these warnings.
-epix_as_of = function(x, max_version, min_time_value = -Inf, all_versions = FALSE) {
-  if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
-  return(x$as_of(max_version, min_time_value, all_versions = all_versions))
+#' # --- Advanced: ---
+#'
+#' # When requesting recent versions of a data set, there can be some
+#' # reproducibility issues. For example, requesting data as of the current date
+#' # may return different values based on whether today's data is available yet
+#' # or not. Other factors include the time it takes between data becoming
+#' # available and when you download the data, and whether the data provider
+#' # will overwrite ("clobber") version data rather than just publishing new
+#' # versions. You can include information about these factors by setting the
+#' # `clobberable_versions_start` and `versions_end` of an `epi_archive`, in
+#' # which case you will get warnings about potential reproducibility issues:
+#'
+#' archive_cases_dv_subset2 <- as_epi_archive(
+#'   archive_cases_dv_subset$DT,
+#'   # Suppose last version with an update could potentially be rewritten
+#'   # (a.k.a. "hotfixed", "clobbered", etc.):
+#'   clobberable_versions_start = max(archive_cases_dv_subset$DT$version),
+#'   # Suppose today is the following day, and there are no updates out yet:
+#'   versions_end = max(archive_cases_dv_subset$DT$version) + 1L,
+#'   compactify = TRUE
+#' )
+#'
+#' epix_as_of(archive_cases_dv_subset2, max(archive_cases_dv_subset$DT$version))
+#'
+#' @importFrom data.table between key
+#' @export
+epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FALSE) {
+  assert_class(x, "epi_archive")
+
+  other_keys <- setdiff(
+    key(x$DT),
+    c("geo_value", "time_value", "version")
+  )
+  if (length(other_keys) == 0) other_keys <- NULL
+
+  # Check a few things on max_version
+  if (!identical(class(max_version), class(x$DT$version))) {
+    cli_abort(
+      "`max_version` must have the same `class` vector as `epi_archive$DT$version`."
+    )
+  }
+  if (!identical(typeof(max_version), typeof(x$DT$version))) {
+    cli_abort(
+      "`max_version` must have the same `typeof` as `epi_archive$DT$version`."
+    )
+  }
+  assert_scalar(max_version, na.ok = FALSE)
+  if (max_version > x$versions_end) {
+    cli_abort("`max_version` must be at most `epi_archive$versions_end`.")
+  }
+  assert_logical(all_versions, len = 1)
+  if (!is.na(x$clobberable_versions_start) && max_version >= x$clobberable_versions_start) {
+    cli_warn(
+      'Getting data as of some recent version which could still be
+      overwritten (under routine circumstances) without assigning a new
+      version number (a.k.a. "clobbered").  Thus, the snapshot that we
+      produce here should not be expected to be reproducible later. See
+      `?epi_archive` for more info and `?epix_as_of` on how to muffle.',
+      class = "epiprocess__snapshot_as_of_clobberable_version"
+    )
+  }
+
+  # Filter by version and return
+  if (all_versions) {
+    # epi_archive is copied into result, so we can modify result directly
+    result <- epix_truncate_versions_after(x, max_version)
+    result$DT <- result$DT[time_value >= min_time_value, ] # nolint: object_usage_linter
+    return(result)
+  }
+
+  # Make sure to use data.table ways of filtering and selecting
+  as_of_epi_df <- x$DT[time_value >= min_time_value & version <= max_version, ] %>% # nolint: object_usage_linter
+    unique(
+      by = c("geo_value", "time_value", other_keys),
+      fromLast = TRUE
+    ) %>%
+    tibble::as_tibble() %>%
+    dplyr::select(-"version") %>%
+    as_epi_df(
+      as_of = max_version,
+      additional_metadata = c(
+        x$additional_metadata,
+        list(other_keys = other_keys)
+      )
+    )
+
+  return(as_of_epi_df)
 }
 
-#' `epi_archive` with unobserved history filled in (won't mutate, might alias)
+
+#' Fill `epi_archive` unobserved history
 #'
+#' @description
 #' Sometimes, due to upstream data pipeline issues, we have to work with a
 #' version history that isn't completely up to date, but with functions that
 #' expect archives that are completely up to date, or equally as up-to-date as
 #' another archive. This function provides one way to approach such mismatches:
 #' pretend that we've "observed" additional versions, filling in these versions
 #' with NAs or extrapolated values.
-#'
-#' '`epix_fill_through_version` will not mutate its `x` argument, but its result
-#'  might alias fields of `x` (e.g., mutating the result's `DT` might mutate
-#'  `x$DT`). The R6 method variant, `x$fill_through_version`, will mutate `x` to
-#'  give the result, but might reseat its fields (e.g., references to the old
-#'  `x$DT` might not be updated by this function or subsequent operations on
-#'  `x`), and returns the updated `x` [invisibly][base::invisible].
 #'
 #' @param x An `epi_archive`
 #' @param fill_versions_end Length-1, same class&type as `x$version`: the
@@ -94,31 +145,79 @@ epix_as_of = function(x, max_version, min_time_value = -Inf, all_versions = FALS
 #'   version history with the last version of each observation carried forward
 #'   (LOCF), by leaving the update `$DT` alone (other `epi_archive` methods are
 #'   based on LOCF).  Default is `"na"`.
+#'
+#' @importFrom data.table copy ":="
+#' @importFrom rlang arg_match
 #' @return An `epi_archive`
-epix_fill_through_version = function(x, fill_versions_end,
-                                     how=c("na", "locf")) {
-  if (!inherits(x, "epi_archive")) Abort("`x` must be of class `epi_archive`.")
-  # Enclosing parentheses drop the invisibility flag. See description above of
-  # potential mutation and aliasing behavior.
-  ( x$clone()$fill_through_version(fill_versions_end, how=how) )
+#' @export
+epix_fill_through_version <- function(x, fill_versions_end,
+                                      how = c("na", "locf")) {
+  assert_class(x, "epi_archive")
+
+  validate_version_bound(fill_versions_end, x$DT, na_ok = FALSE)
+  how <- arg_match(how)
+  if (x$versions_end < fill_versions_end) {
+    new_dt <- switch(how,
+      "na" = {
+        # old DT + a version consisting of all NA observations
+        # immediately after the last currently/actually-observed
+        # version. Note that this NA-observation version must only be
+        # added if `epi_archive` is outdated.
+        nonversion_key_cols <- setdiff(key(x$DT), "version")
+        nonkey_cols <- setdiff(names(x$DT), key(x$DT))
+        next_version_tag <- next_after(x$versions_end)
+        if (next_version_tag > fill_versions_end) {
+          cli_abort(paste(
+            "Apparent problem with {.code next_after} method:",
+            "archive contained observations through version {x$versions_end}",
+            "and the next possible version was supposed to be {next_version_tag},",
+            "but this appeared to jump from a version < {fill_versions_end}",
+            "to one > {fill_versions_end}, implying at least one version in between."
+          ))
+        }
+        nonversion_key_vals_ever_recorded <- unique(x$DT, by = nonversion_key_cols)
+        # In edge cases, the `unique` result can alias the original
+        # DT; detect and copy if necessary:
+        if (identical(address(x$DT), address(nonversion_key_vals_ever_recorded))) {
+          nonversion_key_vals_ever_recorded <- data.table::copy(nonversion_key_vals_ever_recorded)
+        }
+        next_version_dt <- nonversion_key_vals_ever_recorded[
+          , version := next_version_tag
+        ][
+          # this makes the class of these columns logical (`NA` is a
+          # logical NA; we're relying on the rbind below to convert to
+          # the proper class&typeof)
+          , (nonkey_cols) := NA
+        ]
+        # full result DT:
+        setkeyv(rbind(x$DT, next_version_dt), key(x$DT))[]
+      },
+      "locf" = {
+        # just the old DT; LOCF is built into other methods:
+        x$DT
+      }
+    )
+    new_versions_end <- fill_versions_end
+    # Update `epi_archive` all at once with simple, error-free operations +
+    # return below:
+    x$DT <- new_dt
+    x$versions_end <- new_versions_end
+  } else {
+    # Already sufficiently up to date; nothing to do.
+  }
+  return(x)
 }
+
 
 #' Merge two `epi_archive` objects
 #'
 #' Merges two `epi_archive`s that share a common `geo_value`, `time_value`, and
-#' set of key columns. When they also share a common `versions_end`,
-#' using `$as_of` on the result should be the same as using `$as_of` on `x` and
-#' `y` individually, then performing a full join of the `DT`s on the non-version
-#' key columns (potentially consolidating multiple warnings about clobberable
-#' versions). If the `versions_end` values differ, the
-#' `sync` parameter controls what is done.
-#'
-#' This function, [`epix_merge`], does not mutate its inputs and will not alias
-#' either archive's `DT`, but may alias other fields; `x$merge` will overwrite
-#' `x` with the result of the merge, reseating its `DT` and several other fields
-#' (making them point to different objects), but avoiding mutation of the
-#' contents of the old `DT` (only relevant if you have another reference to the
-#' old `DT` in another object).
+#' set of key columns. When they also share a common `versions_end`, using
+#' `epix_as_of` on the result should be the same as using `epix_as_of` on `x`
+#' and `y` individually, then performing a full join of the `DT`s on the
+#' non-version key columns (potentially consolidating multiple warnings about
+#' clobberable versions). If the `versions_end` values differ, the `sync`
+#' parameter controls what is done.
 #'
 #' @param x,y Two `epi_archive` objects to join together.
 #' @param sync Optional; `"forbid"`, `"na"`, `"locf"`, or `"truncate"`; in the
@@ -137,7 +236,7 @@ epix_fill_through_version = function(x, fill_versions_end,
 #'   use `min(x$versions_end, y$versions_end)` as the result's `versions_end`,
 #'   and discard any rows containing update rows for later versions.
 #' @param compactify Optional; `TRUE`, `FALSE`, or `NULL`; should the result be
-#'   compactified? See [`as_epi_archive`] for an explanation of what this means.
+#'   compactified? See `as_epi_archive()` for an explanation of what this means.
 #'   Default here is `TRUE`.
 #' @return the resulting `epi_archive`
 #'
@@ -148,84 +247,76 @@ epix_fill_through_version = function(x, fill_versions_end,
 #' @examples
 #' # create two example epi_archive datasets
 #' x <- archive_cases_dv_subset$DT %>%
-#'   dplyr::select(geo_value,time_value,version,case_rate_7d_av) %>%
-#'   as_epi_archive(compactify=TRUE)
+#'   dplyr::select(geo_value, time_value, version, case_rate_7d_av) %>%
+#'   as_epi_archive(compactify = TRUE)
 #' y <- archive_cases_dv_subset$DT %>%
-#'   dplyr::select(geo_value,time_value,version,percent_cli) %>%
-#'   as_epi_archive(compactify=TRUE)
+#'   dplyr::select(geo_value, time_value, version, percent_cli) %>%
+#'   as_epi_archive(compactify = TRUE)
 #' # merge results stored in a third object:
-#' xy = epix_merge(x, y)
-#' # vs. mutating x to hold the merge result:
-#' x$merge(y)
+#' xy <- epix_merge(x, y)
 #'
 #' @importFrom data.table key set setkeyv
 #' @export
-epix_merge = function(x, y,
-                      sync = c("forbid","na","locf","truncate"),
-                      compactify = TRUE) {
-  if (!inherits(x, "epi_archive")) {
-    Abort("`x` must be of class `epi_archive`.")
-  }
-
-  if (!inherits(y, "epi_archive")) {
-    Abort("`y` must be of class `epi_archive`.")
-  }
-
+epix_merge <- function(x, y,
+                       sync = c("forbid", "na", "locf", "truncate"),
+                       compactify = TRUE) {
+  assert_class(x, "epi_archive")
+  assert_class(y, "epi_archive")
   sync <- rlang::arg_match(sync)
 
   if (!identical(x$geo_type, y$geo_type)) {
-    Abort("`x` and `y` must have the same `$geo_type`")
+    cli_abort("`x` and `y` must have the same `$geo_type`")
   }
 
   if (!identical(x$time_type, y$time_type)) {
-    Abort("`x` and `y` must have the same `$time_type`")
+    cli_abort("`x` and `y` must share data type on their `time_value` column.")
   }
 
   if (length(x$additional_metadata) != 0L) {
-    Warn("x$additional_metadata won't appear in merge result",
-         class = "epiprocess__epix_merge_ignores_additional_metadata")
+    cli_warn("x$additional_metadata won't appear in merge result",
+      class = "epiprocess__epix_merge_ignores_additional_metadata"
+    )
   }
   if (length(y$additional_metadata) != 0L) {
-    Warn("y$additional_metadata won't appear in merge result",
-         class = "epiprocess__epix_merge_ignores_additional_metadata")
+    cli_warn("y$additional_metadata won't appear in merge result",
+      class = "epiprocess__epix_merge_ignores_additional_metadata"
+    )
   }
-  result_additional_metadata = list()
+  result_additional_metadata <- list()
 
-  result_clobberable_versions_start =
+  result_clobberable_versions_start <-
     if (all(is.na(c(x$clobberable_versions_start, y$clobberable_versions_start)))) {
       NA # (any type of NA is fine here)
     } else {
-      Min(c(x$clobberable_versions_start, y$clobberable_versions_start))
+      min(c(x$clobberable_versions_start, y$clobberable_versions_start), na.rm = TRUE)
     }
 
-  # The actual merge below may not succeed 100% of the time, so do this
-  # preprocessing using non-mutating (but potentially aliasing) functions. This
-  # approach potentially uses more memory, but won't leave behind a
-  # partially-mutated `x` on failure.
   if (sync == "forbid") {
     if (!identical(x$versions_end, y$versions_end)) {
-      Abort(paste(
+      cli_abort(paste(
         "`x` and `y` were not equally up to date version-wise:",
         "`x$versions_end` was not identical to `y$versions_end`;",
         "either ensure that `x` and `y` are equally up to date before merging,",
         "or specify how to deal with this using `sync`"
-      ), class="epiprocess__epix_merge_unresolved_sync")
+      ), class = "epiprocess__epix_merge_unresolved_sync")
     } else {
-      new_versions_end = x$versions_end
-      x_DT = x$DT
-      y_DT = y$DT
+      new_versions_end <- x$versions_end
+      x_dt <- x$DT
+      y_dt <- y$DT
     }
   } else if (sync %in% c("na", "locf")) {
-    new_versions_end = max(x$versions_end, y$versions_end)
-    x_DT = epix_fill_through_version(x, new_versions_end, sync)$DT
-    y_DT = epix_fill_through_version(y, new_versions_end, sync)$DT
+    new_versions_end <- max(c(x$versions_end, y$versions_end))
+    x_dt <- epix_fill_through_version(x, new_versions_end, sync)$DT
+    y_dt <- epix_fill_through_version(y, new_versions_end, sync)$DT
   } else if (sync == "truncate") {
-    new_versions_end = min(x$versions_end, y$versions_end)
-    x_DT = x$DT[x[["DT"]][["version"]] <= new_versions_end, names(x$DT), with=FALSE]
-    y_DT = y$DT[y[["DT"]][["version"]] <= new_versions_end, names(y$DT), with=FALSE]
-  } else Abort("unimplemented")
+    new_versions_end <- min(c(x$versions_end, y$versions_end))
+    x_dt <- x$DT[x[["DT"]][["version"]] <= new_versions_end, names(x$DT), with = FALSE]
+    y_dt <- y$DT[y[["DT"]][["version"]] <= new_versions_end, names(y$DT), with = FALSE]
+  } else {
+    cli_abort("unimplemented")
+  }
 
-  # key(x_DT) should be the same as key(x$DT) and key(y_DT) should be the same
+  # key(x_dt) should be the same as key(x$DT) and key(y_dt) should be the same
   # as key(y$DT). Below, we only use {x,y}_DT in the code (making it easier to
   # split the code into separate functions if we wish), but still refer to
   # {x,y}$DT in the error messages (further relying on this assumption).
@@ -234,25 +325,25 @@ epix_merge = function(x, y,
   # have a bug in the preprocessing, a weird/invalid archive as input, and/or a
   # data.table version with different semantics (which may break other parts of
   # our code).
-  x_DT_key_as_expected = identical(key(x$DT), key(x_DT))
-  y_DT_key_as_expected = identical(key(y$DT), key(y_DT))
-  if (!x_DT_key_as_expected || !y_DT_key_as_expected) {
-    Warn("
+  x_dt_key_as_expected <- identical(key(x$DT), key(x_dt))
+  y_dt_key_as_expected <- identical(key(y$DT), key(y_dt))
+  if (!x_dt_key_as_expected || !y_dt_key_as_expected) {
+    cli_warn("
       `epiprocess` internal warning (please report): pre-processing for
       epix_merge unexpectedly resulted in an intermediate data table (or
       tables) with a different key than the corresponding input archive.
       Manually setting intermediate data table keys to the expected values.
-    ", internal=TRUE)
-    setkeyv(x_DT, key(x$DT))
-    setkeyv(y_DT, key(y$DT))
+    ", internal = TRUE)
+    setkeyv(x_dt, key(x$DT))
+    setkeyv(y_dt, key(y$DT))
   }
   # Without some sort of annotations of what various columns represent, we can't
   # do something that makes sense when merging archives with mismatched keys.
   # E.g., even if we assume extra keys represent demographic breakdowns, a
   # sensible default treatment of count-type and rate-type value columns would
   # differ.
-  if (!identical(sort(key(x_DT)), sort(key(y_DT)))) {
-    Abort("
+  if (!identical(sort(key(x_dt)), sort(key(y_dt)))) {
+    cli_abort("
             The archives must have the same set of key column names; if the
             key columns represent the same things, just with different
             names, please retry after manually renaming to match; if they
@@ -260,94 +351,104 @@ epix_merge = function(x, y,
             but y does not), please retry after processing them to share
             the same key (e.g., by summarizing x to remove the age breakdown,
             or by applying a static age breakdown to y).
-          ", class="epiprocess__epix_merge_x_y_must_have_same_key_set")
+          ", class = "epiprocess__epix_merge_x_y_must_have_same_key_set")
   }
   # `by` cols = result (and each input's) `key` cols, and determine
   # the row set, determined using a full join via `merge`
   #
   # non-`by` cols = "value"-ish cols, and are looked up with last
   #                 version carried forward via rolling joins
-  by = key(x_DT) # = some perm of key(y_DT)
-  if (!all(c("geo_value","time_value","version") %in% key(x_DT))) {
-    Abort('Invalid `by`; `by` is currently set to the common `key` of
+  by <- key(x_dt) # = some perm of key(y_dt)
+  if (!all(c("geo_value", "time_value", "version") %in% key(x_dt))) {
+    cli_abort('Invalid `by`; `by` is currently set to the common `key` of
            the two archives, and is expected to contain
            "geo_value", "time_value", and "version".',
-          class="epiprocess__epi_archive_must_have_required_key_cols")
+      class = "epiprocess__epi_archive_must_have_required_key_cols"
+    )
   }
   if (length(by) < 1L || utils::tail(by, 1L) != "version") {
-    Abort('Invalid `by`; `by` is currently set to the common `key` of
+    cli_abort('Invalid `by`; `by` is currently set to the common `key` of
            the two archives, and is expected to have a "version" as
            the last key col.',
-          class="epiprocess__epi_archive_must_have_version_at_end_of_key")
+      class = "epiprocess__epi_archive_must_have_version_at_end_of_key"
+    )
   }
-  x_nonby_colnames = setdiff(names(x_DT), by)
-  y_nonby_colnames = setdiff(names(y_DT), by)
+  x_nonby_colnames <- setdiff(names(x_dt), by)
+  y_nonby_colnames <- setdiff(names(y_dt), by)
   if (length(intersect(x_nonby_colnames, y_nonby_colnames)) != 0L) {
-    Abort("
+    cli_abort("
             `x` and `y` DTs have overlapping non-by column names;
             this is currently not supported; please manually fix up first:
             any overlapping columns that can are key-like should be
             incorporated into the key, and other columns should be renamed.
-          ", class="epiprocess__epix_merge_x_y_must_not_have_overlapping_nonby_colnames")
+          ", class = "epiprocess__epix_merge_x_y_must_not_have_overlapping_nonby_colnames")
   }
-  x_by_vals = x_DT[, by, with=FALSE]
+  x_by_vals <- x_dt[, by, with = FALSE]
   if (anyDuplicated(x_by_vals) != 0L) {
-    Abort("
+    cli_abort("
             The `by` columns must uniquely determine rows of `x$DT`;
             the `by` is currently set to the common `key` of the two
             archives, so this can be resolved by adding key-like columns
             to `x`'s key (to get a unique key).
-          ", class="epiprocess__epix_merge_by_cols_must_act_as_unique_key")
+          ", class = "epiprocess__epix_merge_by_cols_must_act_as_unique_key")
   }
-  y_by_vals = y_DT[, by, with=FALSE]
+  y_by_vals <- y_dt[, by, with = FALSE]
   if (anyDuplicated(y_by_vals) != 0L) {
-    Abort("
+    cli_abort("
             The `by` columns must uniquely determine rows of `y$DT`;
             the `by` is currently set to the common `key` of the two
             archives, so this can be resolved by adding key-like columns
             to `y`'s key (to get a unique key).
-          ", class="epiprocess__epix_merge_by_cols_must_act_as_unique_key")
+          ", class = "epiprocess__epix_merge_by_cols_must_act_as_unique_key")
   }
-  result_DT = merge(x_by_vals, y_by_vals, by=by,
-                    # We must have `all=TRUE` or we may skip updates
-                    # from x and/or y and corrupt the history
-                    all=TRUE,
-                    # We don't want Cartesian products, but the
-                    # by-is-unique-key check above already ensures
-                    # this. (Note that `allow.cartesian=FALSE` doesn't
-                    # actually catch all Cartesian products anyway.)
-                    # Disable superfluous check:
-                    allow.cartesian=TRUE)
-  set(result_DT,, x_nonby_colnames,
-      x_DT[result_DT[, by, with=FALSE], x_nonby_colnames, with=FALSE,
-           # It's good practice to specify `on`, and we must
-           # explicitly specify `on` if there's a potential key vs.
-           # by order mismatch (not possible currently for x
-           # with by = key(x$DT), but possible for y):
-           on = by,
-           # last version carried forward:
-           roll=TRUE,
-           # requesting non-version key that doesn't exist in the other archive,
-           # or before its first version, should result in NA
-           nomatch=NA,
-           # see note on `allow.cartesian` above; currently have a
-           # similar story here.
-           allow.cartesian=TRUE])
-  set(result_DT,,  y_nonby_colnames,
-      y_DT[result_DT[, by, with=FALSE], y_nonby_colnames, with=FALSE,
-           on = by,
-           roll=TRUE,
-           nomatch=NA,
-           allow.cartesian=TRUE])
+  result_dt <- merge(x_by_vals, y_by_vals,
+    by = by,
+    # We must have `all=TRUE` or we may skip updates
+    # from x and/or y and corrupt the history
+    all = TRUE,
+    # We don't want Cartesian products, but the
+    # by-is-unique-key check above already ensures
+    # this. (Note that `allow.cartesian=FALSE` doesn't
+    # actually catch all Cartesian products anyway.)
+    # Disable superfluous check:
+    allow.cartesian = TRUE
+  )
+  set(
+    result_dt, , x_nonby_colnames,
+    x_dt[result_dt[, by, with = FALSE], x_nonby_colnames,
+      with = FALSE,
+      # It's good practice to specify `on`, and we must
+      # explicitly specify `on` if there's a potential key vs.
+      # by order mismatch (not possible currently for x
+      # with by = key(x$DT), but possible for y):
+      on = by,
+      # last version carried forward:
+      roll = TRUE,
+      # requesting non-version key that doesn't exist in the other archive,
+      # or before its first version, should result in NA
+      nomatch = NA,
+      # see note on `allow.cartesian` above; currently have a
+      # similar story here.
+      allow.cartesian = TRUE
+    ]
+  )
+  set(
+    result_dt, , y_nonby_colnames,
+    y_dt[result_dt[, by, with = FALSE], y_nonby_colnames,
+      with = FALSE,
+      on = by,
+      roll = TRUE,
+      nomatch = NA,
+      allow.cartesian = TRUE
+    ]
+  )
   # The key could be unset in case of a key vs. by order mismatch as
   # noted above. Ensure that we keep it:
-  setkeyv(result_DT, by)
+  setkeyv(result_dt, by)
 
-  return (as_epi_archive(
-    result_DT[], # clear data.table internal invisibility flag if set
-    geo_type = x$geo_type,
-    time_type = x$time_type,
-    other_keys = setdiff(key(result_DT), c("geo_value","time_value","version")),
+  return(as_epi_archive(
+    result_dt[], # clear data.table internal invisibility flag if set
+    other_keys = setdiff(key(result_dt), c("geo_value", "time_value", "version")),
     additional_metadata = result_additional_metadata,
     # It'd probably be better to pre-compactify before the merge, and might be
     # guaranteed not to be necessary to compactify the merge result if the
@@ -360,67 +461,6 @@ epix_merge = function(x, y,
   ))
 }
 
-# Helpers for `group_by`:
-
-#' Make non-testing mock to get [`dplyr::dplyr_col_modify`] input
-#'
-#' A workaround for `dplyr:::mutate_cols` not being exported and directly
-#' applying test mock libraries likely being impossible (due to mocking another
-#' package's S3 generic or method).
-#'
-#' Use solely with a single call to the [`dplyr::mutate`] function and then
-#' `destructure_col_modify_recorder_df`; other applicable operations from
-#' [dplyr::dplyr_extending] have not been implemented.
-#'
-#' @param parent_df the "parent class" data frame to wrap
-#' @return a `col_modify_recorder_df`
-#'
-#' @noRd
-new_col_modify_recorder_df = function(parent_df) {
-  if (!inherits(parent_df, "data.frame")) {
-    Abort('`parent_df` must inherit class `"data.frame"`',
-          internal=TRUE)
-  }
-  `class<-`(parent_df, c("col_modify_recorder_df", class(parent_df)))
-}
-
-#' Extract unchanged parent-class data frame from a `new_col_modify_recorder_df`
-#'
-#' @param col_modify_recorder_df an instance of a `col_modify_recorder_df`
-#' @return named list with elements `unchanged_parent_df`, `cols`; `cols` is the
-#'   input to [`dplyr::dplyr_col_modify`] that this class was designed to record
-#'
-#' @noRd
-destructure_col_modify_recorder_df = function(col_modify_recorder_df) {
-  if (!inherits(col_modify_recorder_df, "col_modify_recorder_df")) {
-    Abort('`col_modify_recorder_df` must inherit class `"col_modify_recorder_df"`',
-          internal=TRUE)
-  }
-  list(
-    unchanged_parent_df = col_modify_recorder_df %>%
-      `attr<-`("epiprocess::col_modify_recorder_df::cols", NULL) %>%
-      `class<-`(setdiff(class(.), "col_modify_recorder_df")),
-    cols = attr(col_modify_recorder_df,
-                "epiprocess::col_modify_recorder_df::cols", exact=TRUE)
-  )
-}
-
-#' `dplyr_col_modify` method that simply records the `cols` argument
-#'
-#' Must export S3 methods in R >= 4.0, even if they're only designed to be
-#' package internals, and must import any corresponding upstream S3 generic
-#' functions:
-#' @importFrom dplyr dplyr_col_modify
-#' @export
-#' @noRd
-dplyr_col_modify.col_modify_recorder_df = function(data, cols) {
-  if (!is.null(attr(data, "epiprocess::col_modify_recorder_df::cols", exact=TRUE))) {
-    Abort("`col_modify_recorder_df` can only record `cols` once",
-          internal=TRUE)
-  }
-  attr(data, "epiprocess::col_modify_recorder_df::cols") <- cols
-  data
-}
 
 #' A more detailed but restricted `mutate` for use in `group_by.epi_archive`
 #'
@@ -445,11 +485,10 @@ dplyr_col_modify.col_modify_recorder_df = function(data, cols) {
 #' Don't export this without cleaning up language of "mutate" as in side effects
 #' vs. "mutate" as in `dplyr::mutate`.
 #' @noRd
-epix_detailed_restricted_mutate = function(.data, ...) {
+epix_detailed_restricted_mutate <- function(.data, ...) {
   # We don't want to directly use `dplyr::mutate` on the `$DT`, as:
-  # - this likely copies the entire table
   # - `mutate` behavior, including the output class, changes depending on
-  #   whether `dtplyr` is loaded and would require post-processing
+  #   whether `dtplyr` < 1.3.0 is loaded and would require post-processing
   # - behavior with `dtplyr` isn't fully compatible
   # - it doesn't give the desired details, and `rlang::exprs_auto_name` does not
   #   appropriately handle the `= NULL` and `= <data.frame>` tidyeval cases
@@ -459,12 +498,12 @@ epix_detailed_restricted_mutate = function(.data, ...) {
   #   back to something that will use `dplyr`'s included `mutate` method(s),
   #   then convert this using shallow operations into a `data.table`.
   # - Use `col_modify_recorder_df` to get the desired details.
-  in_tbl = tibble::as_tibble(as.list(.data$DT), .name_repair="minimal")
-  col_modify_cols =
+  in_tbl <- tibble::as_tibble(as.list(.data$DT), .name_repair = "minimal")
+  col_modify_cols <-
     destructure_col_modify_recorder_df(
       mutate(new_col_modify_recorder_df(in_tbl), ...)
     )[["cols"]]
-  invalidated_key_col_is =
+  invalidated_key_col_is <-
     which(purrr::map_lgl(key(.data$DT), function(key_colname) {
       key_colname %in% names(col_modify_cols) &&
         !rlang::is_reference(in_tbl[[key_colname]], col_modify_cols[[key_colname]])
@@ -473,7 +512,8 @@ epix_detailed_restricted_mutate = function(.data, ...) {
     rlang::abort(paste_lines(c(
       "Key columns must not be replaced or removed.",
       wrap_varnames(key(.data$DT)[invalidated_key_col_is],
-                    initial="Flagged key cols: ")
+        initial = "Flagged key cols: "
+      )
     )))
   } else {
     # Have `dplyr` do the `dplyr_col_modify`, keeping the column-level-aliasing
@@ -486,12 +526,12 @@ epix_detailed_restricted_mutate = function(.data, ...) {
     # sorting (including potential extra copies) or sortedness checking, then
     # `setDT` (rather than `as.data.table`, in order to prevent column copying
     # to establish ownership according to `data.table`'s memory model).
-    out_DT = dplyr::dplyr_col_modify(in_tbl, col_modify_cols) %>%
+    out_dt <- dplyr::dplyr_col_modify(in_tbl, col_modify_cols) %>%
       data.table::setattr("sorted", data.table::key(.data$DT)) %>%
-      data.table::setDT(key=key(.data$DT))
-    out_archive = .data$clone()
-    out_archive$DT <- out_DT
-    request_names = names(col_modify_cols)
+      data.table::setDT(key = key(.data$DT))
+    out_archive <- .data
+    out_archive$DT <- out_dt
+    request_names <- names(col_modify_cols)
     return(list(
       archive = out_archive,
       request_names = request_names
@@ -509,144 +549,6 @@ epix_detailed_restricted_mutate = function(.data, ...) {
   }
 }
 
-#' `group_by` and related methods for `epi_archive`, `grouped_epi_archive`
-#'
-#' @param .data An `epi_archive` or `grouped_epi_archive`
-#' @param ... Similar to [`dplyr::group_by`] (see "Details:" for edge cases);
-#' * For `group_by`: unquoted variable name(s) or other
-#'   ["data masking"][dplyr::dplyr_data_masking] expression(s). It's possible to
-#'   use [`dplyr::mutate`]-like syntax here to calculate new columns on which to
-#'   perform grouping, but note that, if you are regrouping an already-grouped
-#'   `.data` object, the calculations will be carried out ignoring such grouping
-#'   (same as [in dplyr][dplyr::group_by]).
-#' * For `ungroup`: either
-#'   * empty, in order to remove the grouping and output an `epi_archive`; or
-#'   * variable name(s) or other ["tidy-select"][dplyr::dplyr_tidy_select]
-#'     expression(s), in order to remove the matching variables from the list of
-#'     grouping variables, and output another `grouped_epi_archive`.
-#' @param .add Boolean. If `FALSE`, the default, the output will be grouped by
-#'   the variable selection from `...` only; if `TRUE`, the output will be
-#'   grouped by the current grouping variables plus the variable selection from
-#'   `...`.
-#' @param .drop As described in [`dplyr::group_by`]; determines treatment of
-#'   factor columns.
-#' @param x For `groups` or `ungroup`: a `grouped_epi_archive`; for
-#'   `is_grouped_epi_archive`: any object
-#' @param .tbl (For `group_by_drop_default`:) an `epi_archive` or
-#'   `grouped_epi_archive` (`epi_archive` dispatches to the S3 default method;
-#'   `grouped_epi_archive` dispatches its own S3 method)
-#'
-#' @details
-#'
-#' To match `dplyr`, `group_by` allows "data masking" (also referred to as
-#' "tidy evaluation") expressions `...`, not just column names, in a way similar
-#' to `mutate`. Note that replacing or removing key columns with these
-#' expressions is disabled.
-#'
-#' `archive %>% group_by()` and other expressions that group or regroup by zero
-#' columns (indicating that all rows should be treated as part of one large
-#' group) will output a `grouped_epi_archive`, in order to enable the use of
-#' `grouped_epi_archive` methods on the result. This is in slight contrast to
-#' the same operations on tibbles and grouped tibbles, which will *not* output a
-#' `grouped_df` in these circumstances.
-#'
-#' Using `group_by` with `.add=FALSE` to override the existing grouping is
-#' disabled; instead, `ungroup` first then `group_by`.
-#'
-#' Mutation and aliasing: `group_by` tries to use a shallow copy of the `DT`,
-#' introducing column-level aliasing between its input and its result. This
-#' doesn't follow the general model for most `data.table` operations, which
-#' seems to be that, given an nonaliased (i.e., unique) pointer to a
-#' `data.table` object, its pointers to its columns should also be nonaliased.
-#' If you mutate any of the columns of either the input or result, first ensure
-#' that it is fine if columns of the other are also mutated, but do not rely on
-#' such behavior to occur. Additionally, never perform mutation on the key
-#' columns at all (except for strictly increasing transformations), as this will
-#' invalidate sortedness assumptions about the rows.
-#'
-#' `group_by_drop_default` on (ungrouped) `epi_archive`s is expected to dispatch
-#' to `group_by_drop_default.default` (but there is a dedicated method for
-#' `grouped_epi_archive`s).
-#'
-#' @examples
-#'
-#' grouped_archive = archive_cases_dv_subset %>% group_by(geo_value)
-#'
-#' # `print` for metadata and method listing:
-#' grouped_archive %>% print()
-#'
-#' # The primary use for grouping is to perform a grouped `epix_slide`:
-#'
-#' archive_cases_dv_subset %>%
-#'   group_by(geo_value) %>%
-#'   epix_slide(f = ~ mean(.x$case_rate_7d_av),
-#'              before = 2,
-#'              ref_time_values = as.Date("2020-06-11") + 0:2,
-#'              new_col_name = 'case_rate_3d_av') %>%
-#'   ungroup()
-#'
-#' # -----------------------------------------------------------------
-#'
-#' # Advanced: some other features of dplyr grouping are implemented:
-#'
-#' library(dplyr)
-#' toy_archive =
-#'   tribble(
-#'     ~geo_value,  ~age_group,  ~time_value,     ~version, ~value,
-#'           "us",     "adult", "2000-01-01", "2000-01-02",    121,
-#'           "us", "pediatric", "2000-01-02", "2000-01-03",      5, # (addition)
-#'           "us",     "adult", "2000-01-01", "2000-01-03",    125, # (revision)
-#'           "us",     "adult", "2000-01-02", "2000-01-03",    130  # (addition)
-#'   ) %>%
-#'   mutate(age_group = ordered(age_group, c("pediatric", "adult")),
-#'          time_value = as.Date(time_value),
-#'          version = as.Date(version)) %>%
-#'   as_epi_archive(other_keys = "age_group")
-#'
-#' # The following are equivalent:
-#' toy_archive %>% group_by(geo_value, age_group)
-#' toy_archive %>% group_by(geo_value) %>% group_by(age_group, .add=TRUE)
-#' grouping_cols = c("geo_value", "age_group")
-#' toy_archive %>% group_by(across(all_of(grouping_cols)))
-#'
-#' # And these are equivalent:
-#' toy_archive %>% group_by(geo_value)
-#' toy_archive %>% group_by(geo_value, age_group) %>% ungroup(age_group)
-#'
-#' # To get the grouping variable names as a `list` of `name`s (a.k.a. symbols):
-#' toy_archive %>% group_by(geo_value) %>% groups()
-#'
-#' toy_archive %>%
-#'   group_by(geo_value, age_group, .drop=FALSE) %>%
-#'   epix_slide(f = ~ sum(.x$value), before = 20) %>%
-#'   ungroup()
-#'
-#' @importFrom dplyr group_by
-#' @export
-#'
-#' @aliases grouped_epi_archive
-group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_drop_default(.data)) {
-  # `add` makes no difference; this is an ungrouped `epi_archive`.
-  detailed_mutate = epix_detailed_restricted_mutate(.data, ...)
-  if (!rlang::is_bool(.drop)) {
-    Abort("`.drop` must be TRUE or FALSE")
-  }
-  if (!.drop) {
-    grouping_cols = as.list(detailed_mutate[["archive"]][["DT"]])[detailed_mutate[["request_names"]]]
-    grouping_col_is_factor = purrr::map_lgl(grouping_cols, is.factor)
-    # ^ Use `as.list` to try to avoid any possibility of a deep copy.
-    if (!any(grouping_col_is_factor)) {
-      Warn("`.drop=FALSE` but there are no factor grouping columns; did you mean to convert one of the columns to a factor beforehand?",
-           class = "epiprocess__group_by_epi_archive__drop_FALSE_no_factors")
-    } else if (any(diff(grouping_col_is_factor) == -1L)) {
-      Warn("`.drop=FALSE` but there are one or more non-factor grouping columns listed after a factor grouping column; this may produce groups with `NA`s for these columns; see https://github.com/tidyverse/dplyr/issues/5369#issuecomment-683762553; depending on how you want completion to work, you might instead want to convert all grouping columns to factors beforehand, specify the non-factor grouping columns first, or use `.drop=TRUE` and add a call to `tidyr::complete`.",
-           class = "epiprocess__group_by_epi_archive__drop_FALSE_nonfactor_after_factor")
-    }
-  }
-  grouped_epi_archive$new(detailed_mutate[["archive"]],
-                          detailed_mutate[["request_names"]],
-                          drop = .drop)
-}
 
 #' Slide a function over variables in an `epi_archive` or `grouped_epi_archive`
 #'
@@ -700,16 +602,10 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #' @param ref_time_values Reference time values / versions for sliding
 #'   computations; each element of this vector serves both as the anchor point
 #'   for the `time_value` window for the computation and the `max_version`
-#'   `as_of` which we fetch data in this window. If missing, then this will set
-#'   to a regularly-spaced sequence of values set to cover the range of
+#'   `epix_as_of` which we fetch data in this window. If missing, then this will
+#'   set to a regularly-spaced sequence of values set to cover the range of
 #'   `version`s in the `DT` plus the `versions_end`; the spacing of values will
 #'   be guessed (using the GCD of the skips between values).
-#' @param time_step Optional function used to define the meaning of one time
-#'   step, which if specified, overrides the default choice based on the
-#'   `time_value` column. This function must take a positive integer and return
-#'   an object of class `lubridate::period`. For example, we can use `time_step
-#'   = lubridate::hours` in order to set the time step to be one hour (this
-#'   would only be meaningful if `time_value` is of class `POSIXct`).
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
@@ -781,39 +677,31 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'
 #' Furthermore, the current function can be considerably slower than
 #'   `epi_slide()`, for two reasons: (1) it must repeatedly fetch
-#'   properly-versioned snapshots from the data archive (via its `as_of()`
-#'   method), and (2) it performs a "manual" sliding of sorts, and does not
-#'   benefit from the highly efficient `slider` package. For this reason, it
-#'   should never be used in place of `epi_slide()`, and only used when
-#'   version-aware sliding is necessary (as it its purpose).
-#'
-#' Finally, this is simply a wrapper around the `slide()` method of the
-#'   `epi_archive` and `grouped_epi_archive` classes, so if `x` is an
-#'   object of either of these classes, then:
-#'   ```
-#'   epix_slide(x, new_var = comp(old_var), before = 119)
-#'   ```
-#'   is equivalent to:
-#'   ```
-#'   x$slide(new_var = comp(old_var), before = 119)
-#'   ```
+#'   properly-versioned snapshots from the data archive (via `epix_as_of()`),
+#'   and (2) it performs a "manual" sliding of sorts, and does not benefit from
+#'   the highly efficient `slider` package. For this reason, it should never be
+#'   used in place of `epi_slide()`, and only used when version-aware sliding is
+#'   necessary (as it its purpose).
 #'
 #' @examples
 #' library(dplyr)
 #'
 #' # Reference time points for which we want to compute slide values:
 #' ref_time_values <- seq(as.Date("2020-06-01"),
-#'                        as.Date("2020-06-15"),
-#'                        by = "1 day")
+#'   as.Date("2020-06-15"),
+#'   by = "1 day"
+#' )
 #'
 #' # A simple (but not very useful) example (see the archive vignette for a more
 #' # realistic one):
 #' archive_cases_dv_subset %>%
 #'   group_by(geo_value) %>%
-#'   epix_slide(f = ~ mean(.x$case_rate_7d_av),
-#'              before = 2,
-#'              ref_time_values = ref_time_values,
-#'              new_col_name = 'case_rate_7d_av_recent_av') %>%
+#'   epix_slide(
+#'     f = ~ mean(.x$case_rate_7d_av),
+#'     before = 2,
+#'     ref_time_values = ref_time_values,
+#'     new_col_name = "case_rate_7d_av_recent_av"
+#'   ) %>%
 #'   ungroup()
 #' # We requested time windows that started 2 days before the corresponding time
 #' # values. The actual number of `time_value`s in each computation depends on
@@ -831,23 +719,24 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #' # Examining characteristics of the data passed to each computation with
 #' # `all_versions=FALSE`.
 #' archive_cases_dv_subset %>%
-#'  group_by(geo_value) %>%
-#'  epix_slide(
-#'    function(x, gk, rtv) {
-#'      tibble(
-#'        time_range = if(nrow(x) == 0L) {
-#'          "0 `time_value`s"
-#'        } else {
-#'          sprintf("%s -- %s", min(x$time_value), max(x$time_value))
-#'        },
-#'        n = nrow(x),
-#'        class1 = class(x)[[1L]]
-#'      )
-#'    },
-#'    before = 5, all_versions = FALSE,
-#'    ref_time_values = ref_time_values, names_sep=NULL) %>%
-#'  ungroup() %>%
-#'  arrange(geo_value, time_value)
+#'   group_by(geo_value) %>%
+#'   epix_slide(
+#'     function(x, gk, rtv) {
+#'       tibble(
+#'         time_range = if (nrow(x) == 0L) {
+#'           "0 `time_value`s"
+#'         } else {
+#'           sprintf("%s -- %s", min(x$time_value), max(x$time_value))
+#'         },
+#'         n = nrow(x),
+#'         class1 = class(x)[[1L]]
+#'       )
+#'     },
+#'     before = 5, all_versions = FALSE,
+#'     ref_time_values = ref_time_values, names_sep = NULL
+#'   ) %>%
+#'   ungroup() %>%
+#'   arrange(geo_value, time_value)
 #'
 #' # --- Advanced: ---
 #'
@@ -869,7 +758,7 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'           toString(min(x$DT$version))
 #'         },
 #'         versions_end = x$versions_end,
-#'         time_range = if(nrow(x$DT) == 0L) {
+#'         time_range = if (nrow(x$DT) == 0L) {
 #'           "0 `time_value`s"
 #'         } else {
 #'           sprintf("%s -- %s", min(x$DT$time_value), max(x$DT$time_value))
@@ -879,59 +768,167 @@ group_by.epi_archive = function(.data, ..., .add=FALSE, .drop=dplyr::group_by_dr
 #'       )
 #'     },
 #'     before = 5, all_versions = TRUE,
-#'     ref_time_values = ref_time_values, names_sep=NULL) %>%
+#'     ref_time_values = ref_time_values, names_sep = NULL
+#'   ) %>%
 #'   ungroup() %>%
 #'   # Focus on one geo_value so we can better see the columns above:
 #'   filter(geo_value == "ca") %>%
 #'   select(-geo_value)
 #'
-#' @importFrom rlang enquo !!!
 #' @export
-epix_slide = function(x, f, ..., before, ref_time_values,
-                      time_step, new_col_name = "slide_value",
-                      as_list_col = FALSE, names_sep = "_",
-                      all_versions = FALSE) {
-  if (!is_epi_archive(x, grouped_okay=TRUE)) {
-    Abort("`x` must be of class `epi_archive` or `grouped_epi_archive`.")
-  }
-  return(x$slide(f, ..., before = before,
-                 ref_time_values = ref_time_values,
-                 time_step = time_step,
-                 new_col_name = new_col_name,
-                 as_list_col = as_list_col,
-                 names_sep = names_sep,
-                 all_versions = all_versions
-                 ))
+epix_slide <- function(
+    x,
+    f,
+    ...,
+    before = Inf,
+    ref_time_values = NULL,
+    new_col_name = "slide_value",
+    as_list_col = FALSE,
+    names_sep = "_",
+    all_versions = FALSE) {
+  UseMethod("epix_slide")
 }
+
+
+#' @rdname epix_slide
+#' @export
+epix_slide.epi_archive <- function(
+    x,
+    f,
+    ...,
+    before = Inf,
+    ref_time_values = NULL,
+    new_col_name = "slide_value",
+    as_list_col = FALSE,
+    names_sep = "_",
+    all_versions = FALSE) {
+  # For an "ungrouped" slide, treat all rows as belonging to one big
+  # group (group by 0 vars), like `dplyr::summarize`, and let the
+  # resulting `grouped_epi_archive` handle the slide:
+  epix_slide(
+    group_by(x),
+    f,
+    ...,
+    before = before, ref_time_values = ref_time_values, new_col_name = new_col_name,
+    as_list_col = as_list_col, names_sep = names_sep,
+    all_versions = all_versions
+  ) %>%
+    # We want a slide on ungrouped archives to output something
+    # ungrouped, rather than retaining the trivial (0-variable)
+    # grouping applied above. So we `ungroup()`. However, the current
+    # `dplyr` implementation automatically ignores/drops trivial
+    # groupings, so this is just a no-op for now.
+    ungroup()
+}
+
 
 #' Default value for `ref_time_values` in an `epix_slide`
 #'
 #' @noRd
-epix_slide_ref_time_values_default = function(ea) {
-  versions_with_updates = c(ea$DT$version, ea$versions_end)
-  ref_time_values = tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
-  return (ref_time_values)
+epix_slide_ref_time_values_default <- function(ea) {
+  versions_with_updates <- c(ea$DT$version, ea$versions_end)
+  ref_time_values <- tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
+  return(ref_time_values)
 }
+
 
 #' Filter an `epi_archive` object to keep only older versions
 #'
 #' Generates a filtered `epi_archive` from an `epi_archive` object, keeping
 #' only rows with `version` falling on or before a specified date.
 #'
-#' @param x An `epi_archive` object
-#' @param max_version Time value specifying the max version to permit in the
-#'   filtered archive. That is, the output archive will comprise rows of the
-#'   current archive data having `version` less than or equal to the
-#'   specified `max_version`
+#' @param x An `epi_archive` object.
+#' @param max_version The latest version to include in the archive.
 #' @return An `epi_archive` object
 #'
 #' @export
-epix_truncate_versions_after = function(x, max_version) {
+epix_truncate_versions_after <- function(x, max_version) {
   UseMethod("epix_truncate_versions_after")
 }
 
+
+#' @rdname epix_truncate_versions_after
 #' @export
-epix_truncate_versions_after.epi_archive = function(x, max_version) {
-  return ((x$clone()$truncate_versions_after(max_version)))
-  # ^ second set of parens drops invisibility
+epix_truncate_versions_after.epi_archive <- function(x, max_version) {
+  if (!identical(class(max_version), class(x$DT$version))) {
+    cli_abort("`max_version` must have the same `class` as `epi_archive$DT$version`.")
+  }
+  if (!identical(typeof(max_version), typeof(x$DT$version))) {
+    cli_abort("`max_version` must have the same `typeof` as `epi_archive$DT$version`.")
+  }
+  assert_scalar(max_version, na.ok = FALSE)
+  if (max_version > x$versions_end) {
+    cli_abort("`max_version` must be at most `epi_archive$versions_end`.")
+  }
+  x$DT <- x$DT[x$DT$version <= max_version, colnames(x$DT), with = FALSE]
+  # (^ this filter operation seems to always copy the DT, even if it
+  # keeps every entry; we don't guarantee this behavior in
+  # documentation, though, so we could change to alias in this case)
+  if (!is.na(x$clobberable_versions_start) && x$clobberable_versions_start > max_version) {
+    x$clobberable_versions_start <- NA
+  }
+  x$versions_end <- max_version
+  return(x)
+}
+
+
+# Helpers for `group_by`:
+
+#' Make non-testing mock to get [`dplyr::dplyr_col_modify`] input
+#'
+#' A workaround for `dplyr:::mutate_cols` not being exported and directly
+#' applying test mock libraries likely being impossible (due to mocking another
+#' package's S3 generic or method).
+#'
+#' Use solely with a single call to the [`dplyr::mutate`] function and then
+#' `destructure_col_modify_recorder_df`; other applicable operations from
+#' [dplyr::dplyr_extending] have not been implemented.
+#'
+#' @param parent_df the "parent class" data frame to wrap
+#' @return a `col_modify_recorder_df`
+#'
+#' @noRd
+new_col_modify_recorder_df <- function(parent_df) {
+  assert_class(parent_df, "data.frame")
+  `class<-`(parent_df, c("col_modify_recorder_df", class(parent_df)))
+}
+
+
+#' Extract unchanged parent-class data frame from a `new_col_modify_recorder_df`
+#'
+#' @param col_modify_recorder_df an instance of a `col_modify_recorder_df`
+#' @return named list with elements `unchanged_parent_df`, `cols`; `cols` is the
+#'   input to [`dplyr::dplyr_col_modify`] that this class was designed to record
+#'
+#' @noRd
+destructure_col_modify_recorder_df <- function(col_modify_recorder_df) {
+  assert_class(col_modify_recorder_df, "col_modify_recorder_df")
+  list(
+    unchanged_parent_df = col_modify_recorder_df %>%
+      `attr<-`("epiprocess::col_modify_recorder_df::cols", NULL) %>%
+      `class<-`(setdiff(class(.data), "col_modify_recorder_df")),
+    cols = attr(col_modify_recorder_df,
+      "epiprocess::col_modify_recorder_df::cols",
+      exact = TRUE
+    )
+  )
+}
+
+
+#' `dplyr_col_modify` method that simply records the `cols` argument
+#'
+#' Must export S3 methods in R >= 4.0, even if they're only designed to be
+#' package internals, and must import any corresponding upstream S3 generic
+#' functions:
+#' @importFrom dplyr dplyr_col_modify
+#' @export
+#' @noRd
+dplyr_col_modify.col_modify_recorder_df <- function(data, cols) {
+  if (!is.null(attr(data, "epiprocess::col_modify_recorder_df::cols", exact = TRUE))) {
+    cli_abort("`col_modify_recorder_df` can only record `cols` once",
+      internal = TRUE
+    )
+  }
+  attr(data, "epiprocess::col_modify_recorder_df::cols") <- cols
+  data
 }

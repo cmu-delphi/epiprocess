@@ -2,17 +2,114 @@
 % Please edit documentation in R/archive.R
 \name{epi_archive}
 \alias{epi_archive}
+\alias{new_epi_archive}
+\alias{validate_epi_archive}
+\alias{as_epi_archive}
 \title{\code{epi_archive} object}
+\usage{
+new_epi_archive(
+  x,
+  geo_type,
+  time_type,
+  other_keys,
+  additional_metadata,
+  compactify,
+  clobberable_versions_start,
+  versions_end
+)
+
+validate_epi_archive(
+  x,
+  other_keys,
+  additional_metadata,
+  compactify,
+  clobberable_versions_start,
+  versions_end
+)
+
+as_epi_archive(
+  x,
+  geo_type = deprecated(),
+  time_type = deprecated(),
+  other_keys = character(0L),
+  additional_metadata = list(),
+  compactify = NULL,
+  clobberable_versions_start = NA,
+  .versions_end = max_version_with_row_in(x),
+  ...,
+  versions_end = .versions_end
+)
+}
+\arguments{
+\item{x}{A data.frame, data.table, or tibble, with columns \code{geo_value},
+\code{time_value}, \code{version}, and then any additional number of columns.}
+
+\item{geo_type}{DEPRECATED Has no effect. Geo value type is inferred from the
+location column and set to "custom" if not recognized.}
+
+\item{time_type}{DEPRECATED Has no effect. Time value type inferred from the time
+column and set to "custom" if not recognized. Unpredictable behavior may result
+if the time type is not recognized.}
+
+\item{other_keys}{Character vector specifying the names of variables in \code{x}
+that should be considered key variables (in the language of \code{data.table})
+apart from "geo_value", "time_value", and "version".}
+
+\item{additional_metadata}{List of additional metadata to attach to the
+\code{epi_archive} object. The metadata will have the \code{geo_type} field; named
+entries from the passed list or will be included as well.}
+
+\item{compactify}{Optional; Boolean. \code{TRUE} will remove some
+redundant rows, \code{FALSE} will not, and missing or \code{NULL} will remove
+redundant rows, but issue a warning. See more information at \code{compactify}.}
+
+\item{clobberable_versions_start}{Optional; \code{length}-1; either a value of the
+same \code{class} and \code{typeof} as \code{x$version}, or an \code{NA} of any \code{class} and
+\code{typeof}: specifically, either (a) the earliest version that could be
+subject to "clobbering" (being overwritten with different update data, but
+using the \emph{same} version tag as the old update data), or (b) \code{NA}, to
+indicate that no versions are clobberable. There are a variety of reasons
+why versions could be clobberable under routine circumstances, such as (a)
+today's version of one/all of the columns being published after initially
+being filled with \code{NA} or LOCF, (b) a buggy version of today's data being
+published but then fixed and republished later in the day, or (c) data
+pipeline delays (e.g., publisher uploading, periodic scraping, database
+syncing, periodic fetching, etc.) that make events (a) or (b) reflected
+later in the day (or even on a different day) than expected; potential
+causes vary between different data pipelines. The default value is \code{NA},
+which doesn't consider any versions to be clobberable. Another setting that
+may be appropriate for some pipelines is \code{max_version_with_row_in(x)}.}
+
+\item{versions_end}{Optional; length-1, same \code{class} and \code{typeof} as
+\code{x$version}: what is the last version we have observed? The default is
+\code{max_version_with_row_in(x)}, but values greater than this could also be
+valid, and would indicate that we observed additional versions of the data
+beyond \code{max(x$version)}, but they all contained empty updates. (The default
+value of \code{clobberable_versions_start} does not fully trust these empty
+updates, and assumes that any version \verb{>= max(x$version)} could be
+clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
+
+\item{.versions_end}{location based versions_end, used to avoid prefix
+\code{version = issue} from being assigned to \code{versions_end} instead of being
+used to rename columns.}
+
+\item{...}{used for specifying column names, as in \code{\link[dplyr:rename]{dplyr::rename}}. For
+example \code{version = release_date}}
+}
+\value{
+An \code{epi_archive} object.
+}
 \description{
-An \code{epi_archive} is an R6 class which contains a data table
+An \code{epi_archive} is an S3 class which contains a data table
 along with several relevant pieces of metadata. The data table can be seen
 as the full archive (version history) for some signal variables of
 interest.
 }
 \details{
-An \code{epi_archive} is an R6 class which contains a data table \code{DT}, of
-class \code{data.table} from the \code{data.table} package, with (at least) the
-following columns:
+Epi Archive
+
+An \code{epi_archive} contains a data table \code{DT}, of class \code{data.table}
+from the \code{data.table} package, with (at least) the following columns:
 \itemize{
 \item \code{geo_value}: the geographic value associated with each row of measurements.
 \item \code{time_value}: the time value associated with each row of measurements.
@@ -26,37 +123,8 @@ later.
 The data table \code{DT} has key variables \code{geo_value}, \code{time_value}, \code{version},
 as well as any others (these can be specified when instantiating the
 \code{epi_archive} object via the \code{other_keys} argument, and/or set by operating
-on \code{DT} directly). Refer to the documentation for \code{\link[=as_epi_archive]{as_epi_archive()}} for
-information and examples of relevant parameter names for an \code{epi_archive} object.
-Note that there can only be a single row per unique combination of
-key variables, and thus the key variables are critical for figuring out how
-to generate a snapshot of data from the archive, as of a given version.
-
-In general, the last version of each observation is carried forward (LOCF) to
-fill in data between recorded versions, and between the last recorded
-update and the \code{versions_end}. One consequence is that the \code{DT}
-doesn't have to contain a full snapshot of every version (although this
-generally works), but can instead contain only the rows that are new or
-changed from the previous version (see \code{compactify}, which does this
-automatically). Currently, deletions must be represented as revising a row
-to a special state (e.g., making the entries \code{NA} or including a special
-column that flags the data as removed and performing some kind of
-post-processing), and the archive is unaware of what this state is. Note
-that \code{NA}s \emph{can} be introduced by \code{epi_archive} methods for other reasons,
-e.g., in \code{\link{epix_fill_through_version}} and \code{\link{epix_merge}}, if requested, to
-represent potential update data that we do not yet have access to; or in
-\code{\link{epix_merge}} to represent the "value" of an observation before the
-version in which it was first released, or if no version of that
-observation appears in the archive data at all.
-
-\strong{A word of caution:} R6 objects, unlike most other objects in R, have
-reference semantics. A primary consequence of this is that objects are not
-copied when modified. You can read more about this in Hadley Wickham's
-\href{https://adv-r.hadley.nz/r6.html#r6-semantics}{Advanced R} book. In order
-to construct a modified archive while keeping the original intact, first
-make a clone using the \verb{$clone} method, then overwrite the clone's \code{DT}
-field with \code{data.table::copy(clone$DT)}, and finally perform the
-modifications on the clone.
+on \code{DT} directly). Note that there can only be a single row per unique
+combination of key variables.
 }
 \section{Metadata}{
 
@@ -68,21 +136,17 @@ object:
 \item \code{additional_metadata}: list of additional metadata for the data archive.
 }
 
-Unlike an \code{epi_df} object, metadata for an \code{epi_archive} object \code{x} can be
-accessed (and altered) directly, as in \code{x$geo_type} or \code{x$time_type},
-etc. Like an \code{epi_df} object, the \code{geo_type} and \code{time_type} fields in the
-metadata of an \code{epi_archive} object are not currently used by any
-downstream functions in the \code{epiprocess} package, and serve only as useful
-bits of information to convey about the data set at hand.
+While this metadata is not protected, it is generally recommended to treat it
+as read-only, and to use the \code{epi_archive} methods to interact with the data
+archive. Unexpected behavior may result from modifying the metadata
+directly.
 }
 
 \section{Generating Snapshots}{
 
 An \code{epi_archive} object can be used to generate a snapshot of the data in
-\code{epi_df} format, which represents the most up-to-date values of the signal
-variables, as of the specified version. This is accomplished by calling the
-\code{as_of()} method for an \code{epi_archive} object \code{x}. More details on this
-method are documented in the wrapper function \code{\link[=epix_as_of]{epix_as_of()}}.
+\code{epi_df} format, which represents the most up-to-date time series values up
+to a point in time. This is accomplished by calling \code{epix_as_of()}.
 }
 
 \section{Sliding Computations}{
@@ -93,255 +157,45 @@ the \code{slide()} method for an \code{epi_archive} object, which works similarl
 the way \code{epi_slide()} works for an \code{epi_df} object, but with one key
 difference: it is version-aware. That is, for an \code{epi_archive} object, the
 sliding computation at any given reference time point t is performed on
-\strong{data that would have been available as of t}. More details on \code{slide()}
-are documented in the wrapper function \code{\link[=epix_slide]{epix_slide()}}.
+\strong{data that would have been available as of t}.
 }
 
 \examples{
+# Simple ex. with necessary keys
 tib <- tibble::tibble(
   geo_value = rep(c("ca", "hi"), each = 5),
-  time_value = rep(seq(as.Date("2020-01-01"), 
-                       by = 1, length.out = 5), times = 2),
-  version = rep(seq(as.Date("2020-01-02"), 
-                    by = 1, length.out = 5), times = 2),
+  time_value = rep(seq(as.Date("2020-01-01"),
+    by = 1, length.out = 5
+  ), times = 2),
+  version = rep(seq(as.Date("2020-01-02"),
+    by = 1, length.out = 5
+  ), times = 2),
   value = rnorm(10, mean = 2, sd = 1)
 )
 
-toy_epi_archive <- tib \%>\% epi_archive$new(geo_type = "state", 
-                                           time_type = "day")
-toy_epi_archive 
-}
-\section{Methods}{
-\subsection{Public methods}{
-\itemize{
-\item \href{#method-epi_archive-new}{\code{epi_archive$new()}}
-\item \href{#method-epi_archive-print}{\code{epi_archive$print()}}
-\item \href{#method-epi_archive-as_of}{\code{epi_archive$as_of()}}
-\item \href{#method-epi_archive-fill_through_version}{\code{epi_archive$fill_through_version()}}
-\item \href{#method-epi_archive-truncate_versions_after}{\code{epi_archive$truncate_versions_after()}}
-\item \href{#method-epi_archive-merge}{\code{epi_archive$merge()}}
-\item \href{#method-epi_archive-group_by}{\code{epi_archive$group_by()}}
-\item \href{#method-epi_archive-slide}{\code{epi_archive$slide()}}
-\item \href{#method-epi_archive-clone}{\code{epi_archive$clone()}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-new"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-new}{}}}
-\subsection{Method \code{new()}}{
-Creates a new \code{epi_archive} object.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$new(
-  x,
-  geo_type,
-  time_type,
-  other_keys,
-  additional_metadata,
-  compactify,
-  clobberable_versions_start,
-  versions_end
-)}\if{html}{\out{</div>}}
-}
+toy_epi_archive <- tib \%>\% as_epi_archive()
+toy_epi_archive
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{A data frame, data table, or tibble, with columns \code{geo_value},
-\code{time_value}, \code{version}, and then any additional number of columns.}
+# Ex. with an additional key for county
+df <- data.frame(
+  geo_value = c(replicate(2, "ca"), replicate(2, "fl")),
+  county = c(1, 3, 2, 5),
+  time_value = c(
+    "2020-06-01",
+    "2020-06-02",
+    "2020-06-01",
+    "2020-06-02"
+  ),
+  version = c(
+    "2020-06-02",
+    "2020-06-03",
+    "2020-06-02",
+    "2020-06-03"
+  ),
+  cases = c(1, 2, 3, 4),
+  cases_rate = c(0.01, 0.02, 0.01, 0.05)
+)
 
-\item{\code{geo_type}}{Type for the geo values. If missing, then the function will
-attempt to infer it from the geo values present; if this fails, then it
-will be set to "custom".}
+x <- df \%>\% as_epi_archive(other_keys = "county")
 
-\item{\code{time_type}}{Type for the time values. If missing, then the function will
-attempt to infer it from the time values present; if this fails, then it
-will be set to "custom".}
-
-\item{\code{other_keys}}{Character vector specifying the names of variables in \code{x}
-that should be considered key variables (in the language of \code{data.table})
-apart from "geo_value", "time_value", and "version".}
-
-\item{\code{additional_metadata}}{List of additional metadata to attach to the
-\code{epi_archive} object. The metadata will have \code{geo_type} and \code{time_type}
-fields; named entries from the passed list or will be included as well.}
-
-\item{\code{compactify}}{Optional; Boolean or \code{NULL}: should we remove rows that are
-considered redundant for the purposes of \code{epi_archive}'s built-in methods
-such as \code{as_of}? As these methods use the last version of each observation
-carried forward (LOCF) to interpolate between the version data provided,
-rows that don't change these LOCF results can potentially be omitted to
-save space while maintaining the same behavior (with the help of the
-\code{clobberable_versions_start} and \code{versions_end} fields in some edge cases).
-\code{TRUE} will remove these rows, \code{FALSE} will not, and missing or \code{NULL} will
-remove these rows and issue a warning. Generally, this can be set to
-\code{TRUE}, but if you directly inspect or edit the fields of the \code{epi_archive}
-such as its \code{DT}, or rely on redundant updates to achieve a certain
-behavior of the \code{ref_time_values} default in \code{epix_slide}, you will have to
-determine whether \code{compactify=TRUE} will produce the desired results. If
-compactification here is removing a large proportion of the rows, this may
-indicate a potential for space, time, or bandwidth savings upstream the
-data pipeline, e.g., by avoiding fetching, storing, or processing these
-rows of \code{x}.}
-
-\item{\code{clobberable_versions_start}}{Optional; as in \code{\link{as_epi_archive}}}
-
-\item{\code{versions_end}}{Optional; as in \code{\link{as_epi_archive}}}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Details}{
-Refer to the documentation for \code{\link[=as_epi_archive]{as_epi_archive()}} for more information
-and examples of parameter names.
-}
-
-\subsection{Returns}{
-An \code{epi_archive} object.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-print"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-print}{}}}
-\subsection{Method \code{print()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$print(class = TRUE, methods = TRUE)}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-as_of"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-as_of}{}}}
-\subsection{Method \code{as_of()}}{
-Generates a snapshot in \code{epi_df} format as of a given version.
-See the documentation for the wrapper function \code{\link[=epix_as_of]{epix_as_of()}} for details.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$as_of(max_version, min_time_value = -Inf, all_versions = FALSE)}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-fill_through_version"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-fill_through_version}{}}}
-\subsection{Method \code{fill_through_version()}}{
-Fill in unobserved history using requested scheme by mutating
-\code{self} and potentially reseating its fields. See
-\code{\link{epix_fill_through_version}} for a full description of the non-R6-method
-version, which doesn't mutate the input archive but might alias its fields.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$fill_through_version(fill_versions_end, how = c("na", "locf"))}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{fill_versions_end}}{as in \code{\link{epix_fill_through_version}}}
-
-\item{\code{how}}{as in \code{\link{epix_fill_through_version}}}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-truncate_versions_after"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-truncate_versions_after}{}}}
-\subsection{Method \code{truncate_versions_after()}}{
-Filter to keep only older versions, mutating the archive by
-potentially reseating but not mutating some fields. \code{DT} is likely, but not
-guaranteed, to be copied. Returns the mutated archive
-\link[base:invisible]{invisibly}.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$truncate_versions_after(max_version)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{max_version}}{as in \code{\link{epix_truncate_versions_after}}}
-
-\item{\code{x}}{as in \code{\link{epix_truncate_versions_after}}}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-merge"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-merge}{}}}
-\subsection{Method \code{merge()}}{
-Merges another \code{epi_archive} with the current one, mutating the
-current one by reseating its \code{DT} and several other fields, but avoiding
-mutation of the old \code{DT}; returns the current archive
-\link[base:invisible]{invisibly}. See \code{\link{epix_merge}} for a full description
-of the non-R6-method version, which does not mutate either archive, and
-does not alias either archive's \code{DT}.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$merge(
-  y,
-  sync = c("forbid", "na", "locf", "truncate"),
-  compactify = TRUE
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{y}}{as in \code{\link{epix_merge}}}
-
-\item{\code{sync}}{as in \code{\link{epix_merge}}}
-
-\item{\code{compactify}}{as in \code{\link{epix_merge}}}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-group_by"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-group_by}{}}}
-\subsection{Method \code{group_by()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$group_by(
-  ...,
-  .add = FALSE,
-  .drop = dplyr::group_by_drop_default(self)
-)}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-slide"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-slide}{}}}
-\subsection{Method \code{slide()}}{
-Slides a given function over variables in an \code{epi_archive}
-object. See the documentation for the wrapper function \code{\link[=epix_slide]{epix_slide()}} for
-details.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$slide(
-  f,
-  ...,
-  before,
-  ref_time_values,
-  time_step,
-  new_col_name = "slide_value",
-  as_list_col = FALSE,
-  names_sep = "_",
-  all_versions = FALSE
-)}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-epi_archive-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-epi_archive-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{epi_archive$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

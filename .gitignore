@@ -8,3 +8,8 @@ docs
 /doc/
 /Meta/
 *.DS_Store
+
+# Delphi custom
+renv/
+renv.lock
+.Rprofile

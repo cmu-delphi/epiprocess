@@ -10,7 +10,8 @@ detect_outlr_stl(
   n_trend = 21,
   n_seasonal = 21,
   n_threshold = 21,
-  seasonal_period = NULL,
+  seasonal_period,
+  seasonal_as_residual = FALSE,
   log_transform = FALSE,
   detect_negatives = FALSE,
   detection_multiplier = 2,
@@ -29,14 +30,25 @@ detect_outlr_stl(
 Default is 21.}
 
 \item{n_seasonal}{Number of time steps to use in the rolling window for
-seasonality. Default is 21.}
+seasonality. Default is 21. Can also be the string "periodic". See
+\code{s.window} in \code{\link[stats:stl]{stats::stl}}.}
 
 \item{n_threshold}{Number of time steps to use in rolling window for the IQR
 outlier thresholds.}
 
-\item{seasonal_period}{Integer specifying period of seasonality. For example,
-for daily data, a period 7 means weekly seasonality. The default is \code{NULL},
-meaning that no seasonal term will be included in the STL decomposition.}
+\item{seasonal_period}{Integer specifying period of "seasonality". For
+example, for daily data, a period 7 means weekly seasonality. It must be
+strictly larger than 1. Also impacts the size of the low-pass filter
+window; see \code{l.window} in \code{\link[stats:stl]{stats::stl}}.}
+
+\item{seasonal_as_residual}{Boolean specifying whether the seasonal(/weekly)
+component should be treated as part of the residual component instead of as
+part of the predictions. The default, FALSE, treats them as part of the
+predictions, so large seasonal(/weekly) components will not lead to
+flagging points as outliers. \code{TRUE} may instead consider the extrema of
+large seasonal variations to be outliers; \code{n_seasonal} and
+\code{seasonal_period} will still have an impact on the result, though, by
+impacting the estimation of the trend component.}
 
 \item{log_transform}{Should a log transform be applied before running outlier
 detection? Default is \code{FALSE}. If \code{TRUE}, and zeros are present, then the
@@ -59,16 +71,17 @@ nearest (rolling median) +/- (replacement multiplier) * (rolling IQR).
 Default is 0.}
 }
 \value{
-A tibble with number of rows equal to \code{length(y)}, and columns
-\code{lower}, \code{upper}, and \code{replacement}.
+An tibble with number of rows equal to \code{length(y)} and columns
+giving the outlier detection thresholds (\code{lower} and \code{upper}) and
+replacement values from each detection method (\code{replacement}).
 }
 \description{
 Detects outliers based on a seasonal-trend decomposition using LOESS (STL).
 }
 \details{
-The STL decomposition is computed using the \code{feasts} package. Once
+The STL decomposition is computed using \code{\link[stats:stl]{stats::stl()}}. Once
 computed, the outlier detection method is analogous to the rolling median
-method in \code{detect_outlr_rm()}, except with the fitted values and residuals
+method in \code{\link[=detect_outlr_rm]{detect_outlr_rm()}}, except with the fitted values and residuals
 from the STL decomposition taking the place of the rolling median and
 residuals to the rolling median, respectively.
 
@@ -78,11 +91,12 @@ are exactly as in \code{detect_outlr_rm()}.
 \examples{
 # Detects outliers based on a seasonal-trend decomposition using LOESS
 incidence_num_outlier_example \%>\%
-  dplyr::select(geo_value,time_value,cases) \%>\%
+  dplyr::select(geo_value, time_value, cases) \%>\%
   as_epi_df() \%>\%
   group_by(geo_value) \%>\%
-  mutate(outlier_info  = detect_outlr_stl(
+  mutate(outlier_info = detect_outlr_stl(
     x = time_value, y = cases,
-    seasonal_period = 7 )) \%>\% # weekly seasonality for daily data
+    seasonal_period = 7
+  )) \%>\% # weekly seasonality for daily data
   unnest(outlier_info)
 }

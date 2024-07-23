@@ -1,9 +1,3 @@
-break_str = function(str, nchar = 79, init = "") {
-  str = paste(strwrap(str, nchar, initial = init), collapse = "\n")
-  str[1] = substring(str, nchar(init)+1)
-  return(str)
-}
-
 # Note: update `wrap_symbolics` and `wrap_varnames` (parameters, parameter
 # defaults, bodies) together.
 
@@ -29,29 +23,27 @@ break_str = function(str, nchar = 79, init = "") {
 #' @return `chr`; to print, use [`base::writeLines`].
 #'
 #' @noRd
-wrap_symbolics = function(symbolics,
-                          initial = "", common_prefix = "", none_str = "<none>",
-                          width = getOption("width", 80L)) {
+wrap_symbolics <- function(symbolics,
+                           initial = "", common_prefix = "", none_str = "<none>",
+                           width = getOption("width", 80L)) {
   if (!all(purrr::map_lgl(symbolics, rlang::is_symbolic))) {
-    Abort("`symbolics` must be a list of symbolic objects")
+    cli_abort("`symbolics` must be a list of symbolic objects")
   }
-  if (!rlang::is_string(initial)) {
-    Abort("`initial` must be a string")
-  }
-  if (!rlang::is_string(common_prefix)) {
-    Abort("`common_prefix` must be a string")
-  }
-  if (!rlang::is_string(none_str)) {
-    Abort("`none_str` must be a string")
-  }
-  prefix = strrep(" ", nchar(initial, type="width"))
-  full_initial = paste0(common_prefix, initial)
-  full_prefix = paste0(common_prefix, prefix)
-  full_initial_width = nchar(full_initial, type="width")
-  minimum_reasonable_line_width_for_syms = 20L
-  line_width_for_syms = max(width - full_initial_width,
-                            minimum_reasonable_line_width_for_syms)
-  unprefixed_lines =
+  assert_character(initial, len = 1L)
+  assert_character(common_prefix, len = 1L)
+  assert_character(none_str, len = 1L)
+  assert_int(width, lower = 1L)
+
+  prefix <- strrep(" ", nchar(initial, type = "width"))
+  full_initial <- paste0(common_prefix, initial)
+  full_prefix <- paste0(common_prefix, prefix)
+  full_initial_width <- nchar(full_initial, type = "width")
+  minimum_reasonable_line_width_for_syms <- 20L
+  line_width_for_syms <- max(
+    width - full_initial_width,
+    minimum_reasonable_line_width_for_syms
+  )
+  unprefixed_lines <-
     if (length(symbolics) == 0L) {
       none_str
     } else {
@@ -60,12 +52,14 @@ wrap_symbolics = function(symbolics,
           # `paste0` already takes care of necessary backquotes. `cat` with
           # `fill=TRUE` takes care of spacing + line wrapping exclusively
           # between elements. We need to add commas appropriately.
-          cat(paste0(symbolics, c(rep(",", times=length(symbolics)-1L), "")), fill=TRUE)
+          cat(paste0(symbolics, c(rep(",", times = length(symbolics) - 1L), "")), fill = TRUE)
         })
       )
     }
-  lines = paste0(c(full_initial, rep(full_prefix, times=length(unprefixed_lines)-1L)),
-                 unprefixed_lines)
+  lines <- paste0(
+    c(full_initial, rep(full_prefix, times = length(unprefixed_lines) - 1L)),
+    unprefixed_lines
+  )
   lines
 }
 
@@ -76,15 +70,13 @@ wrap_symbolics = function(symbolics,
 #' @return `chr`; to print, use [`base::writeLines`].
 #'
 #' @noRd
-wrap_varnames = function(nms,
-                         initial = "", common_prefix = "", none_str = "<none>",
-                         width = getOption("width", 80L)) {
+wrap_varnames <- function(nms,
+                          initial = "", common_prefix = "", none_str = "<none>",
+                          width = getOption("width", 80L)) {
   # (Repeating parameter names and default args here for better autocomplete.
   # Using `...` instead would require less upkeep, but have worse autocomplete.)
-  if (!rlang::is_character(nms)) {
-    Abort("`nms` must be a character vector")
-  }
-  wrap_symbolics(rlang::syms(nms), initial=initial, common_prefix=common_prefix, none_str=none_str, width=width)
+  assert_character(nms)
+  wrap_symbolics(rlang::syms(nms), initial = initial, common_prefix = common_prefix, none_str = none_str, width = width)
 }
 
 #' Paste `chr` entries (lines) together with `"\n"` separators, trailing `"\n"`
@@ -93,12 +85,10 @@ wrap_varnames = function(nms,
 #' @return string
 #'
 #' @noRd
-paste_lines = function(lines) {
-  paste(paste0(lines,"\n"), collapse="")
+paste_lines <- function(lines) {
+  paste(paste0(lines, "\n"), collapse = "")
 }
 
-Abort = function(msg, ...) rlang::abort(break_str(msg, init = "Error: "), ...)
-Warn = function(msg, ...) rlang::warn(break_str(msg, init = "Warning: "), ...)
 
 #' Assert that a sliding computation function takes enough args
 #'
@@ -115,29 +105,33 @@ Warn = function(msg, ...) rlang::warn(break_str(msg, init = "Warning: "), ...)
 assert_sufficient_f_args <- function(f, ...) {
   mandatory_f_args_labels <- c("window data", "group key", "reference time value")
   n_mandatory_f_args <- length(mandatory_f_args_labels)
-  args = formals(args(f))
-  args_names = names(args)
+  args <- formals(args(f))
+  args_names <- names(args)
   # Remove named arguments forwarded from `epi[x]_slide`'s `...`:
-  forwarded_dots_names = names(rlang::call_match(dots_expand = FALSE)[["..."]])
-  args_matched_in_dots =
-    # positional calling args will skip over args matched by named calling args
-    args_names %in% forwarded_dots_names &
-    # extreme edge case: `epi[x]_slide(<stuff>, dot = 1, `...` = 2)`
-    args_names != "..."
-  remaining_args = args[!args_matched_in_dots]
-  remaining_args_names = names(remaining_args)
+  forwarded_dots_names <- names(rlang::call_match(dots_expand = FALSE)[["..."]])
+  # positional calling args will skip over args matched by named calling args
+  # extreme edge case: `epi[x]_slide(<stuff>, dot = 1, `...` = 2)`
+  args_matched_in_dots <- args_names %in% forwarded_dots_names & args_names != "..."
+
+  remaining_args <- args[!args_matched_in_dots]
+  remaining_args_names <- names(remaining_args)
   # note that this doesn't include unnamed args forwarded through `...`.
   dots_i <- which(remaining_args_names == "...") # integer(0) if no match
   n_f_args_before_dots <- dots_i - 1L
-  if (length(dots_i) != 0L) { # `f` has a dots "arg"
+  if (length(dots_i) != 0L) {
+    # `f` has a dots "arg"
     # Keep all arg names before `...`
-    mandatory_args_mapped_names <- remaining_args_names[seq_len(n_f_args_before_dots)]
+    mandatory_args_mapped_names <- remaining_args_names[seq_len(n_f_args_before_dots)] # nolint: object_usage_linter
 
     if (n_f_args_before_dots < n_mandatory_f_args) {
-      mandatory_f_args_in_f_dots =
+      mandatory_f_args_in_f_dots <-
         tail(mandatory_f_args_labels, n_mandatory_f_args - n_f_args_before_dots)
+
       cli::cli_warn(
-        "`f` might not have enough positional arguments before its `...`; in the current `epi[x]_slide` call, the {mandatory_f_args_in_f_dots} will be included in `f`'s `...`; if `f` doesn't expect those arguments, it may produce confusing error messages",
+        "`f` might not have enough positional arguments before its `...`; in
+        the current `epi[x]_slide` call, the {mandatory_f_args_in_f_dots} will
+        be included in `f`'s `...`; if `f` doesn't expect those arguments, it
+        may produce confusing error messages",
         class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots",
         epiprocess__f = f,
         epiprocess__mandatory_f_args_in_f_dots = mandatory_f_args_in_f_dots
@@ -148,14 +142,19 @@ assert_sufficient_f_args <- function(f, ...) {
       # `f` doesn't take enough args.
       if (rlang::dots_n(...) == 0L) {
         # common case; try for friendlier error message
-        Abort(sprintf("`f` must take at least %s arguments", n_mandatory_f_args),
-              class = "epiprocess__assert_sufficient_f_args__f_needs_min_args",
-              epiprocess__f = f)
+        cli_abort("`f` must take at least {n_mandatory_f_args} arguments",
+          class = "epiprocess__assert_sufficient_f_args__f_needs_min_args",
+          epiprocess__f = f
+        )
       } else {
         # less common; highlight that they are (accidentally?) using dots forwarding
-        Abort(sprintf("`f` must take at least %s arguments plus the %s arguments forwarded through `epi[x]_slide`'s `...`, or a named argument to `epi[x]_slide` was misspelled", n_mandatory_f_args, rlang::dots_n(...)),
-              class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_plus_forwarded",
-              epiprocess__f = f)
+        cli_abort(
+          "`f` must take at least {n_mandatory_f_args} arguments plus the
+          {rlang::dots_n(...)} arguments forwarded through `epi[x]_slide`'s
+          `...`, or a named argument to `epi[x]_slide` was misspelled",
+          class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_plus_forwarded",
+          epiprocess__f = f
+        )
       }
     }
   }
@@ -163,21 +162,26 @@ assert_sufficient_f_args <- function(f, ...) {
   # calling args. If `f` has fewer than n_mandatory_f_args before `...`, then we
   # only need to check those args for defaults. Note that `n_f_args_before_dots` is
   # length 0 if `f` doesn't accept `...`.
-  n_remaining_args_for_default_check = min(c(n_f_args_before_dots, n_mandatory_f_args))
-  default_check_args = remaining_args[seq_len(n_remaining_args_for_default_check)]
-  default_check_args_names = names(default_check_args)
-  has_default_replaced_by_mandatory = map_lgl(default_check_args, ~!is_missing(.x))
+  n_remaining_args_for_default_check <- min(c(n_f_args_before_dots, n_mandatory_f_args))
+  default_check_args <- remaining_args[seq_len(n_remaining_args_for_default_check)]
+  default_check_args_names <- names(default_check_args)
+  has_default_replaced_by_mandatory <- map_lgl(default_check_args, ~ !is_missing(.x))
   if (any(has_default_replaced_by_mandatory)) {
-    default_check_mandatory_args_labels =
+    default_check_mandatory_args_labels <-
       mandatory_f_args_labels[seq_len(n_remaining_args_for_default_check)]
     # ^ excludes any mandatory args absorbed by f's `...`'s:
-    mandatory_args_replacing_defaults =
-      default_check_mandatory_args_labels[has_default_replaced_by_mandatory]
-    args_with_default_replaced_by_mandatory =
-      rlang::syms(default_check_args_names[has_default_replaced_by_mandatory])
-    cli::cli_abort("`epi[x]_slide` would pass the {mandatory_args_replacing_defaults} to `f`'s {args_with_default_replaced_by_mandatory} argument{?s}, which {?has a/have} default value{?s}; we suspect that `f` doesn't expect {?this arg/these args} at all and may produce confusing error messages.  Please add additional arguments to `f` or remove defaults as appropriate.",
-                   class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults",
-                   epiprocess__f = f)
+    mandatory_args_replacing_defaults <- default_check_mandatory_args_labels[has_default_replaced_by_mandatory] # nolint: object_usage_linter
+    args_with_default_replaced_by_mandatory <- rlang::syms(default_check_args_names[has_default_replaced_by_mandatory]) # nolint: object_usage_linter
+    cli::cli_abort(
+      "`epi[x]_slide` would pass the {mandatory_args_replacing_defaults} to
+      `f`'s {args_with_default_replaced_by_mandatory} argument{?s}, which
+      {?has a/have} default value{?s}; we suspect that `f` doesn't expect
+      {?this arg/these args} at all and may produce confusing error messages.
+      Please add additional arguments to `f` or remove defaults as
+      appropriate.",
+      class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults",
+      epiprocess__f = f
+    )
   }
 }
 
@@ -276,24 +280,24 @@ assert_sufficient_f_args <- function(f, ...) {
 #'
 #' @noRd
 as_slide_computation <- function(f, ...) {
-  arg = caller_arg(f)
-  call = caller_env()
+  arg <- caller_arg(f)
+  call <- caller_env()
 
   # A quosure is a type of formula, so be careful with the order and contents
   # of the conditional logic here.
   if (is_quosure(f)) {
-    fn = function(.x, .group_key, .ref_time_value) {
+    fn <- function(.x, .group_key, .ref_time_value) {
       # Convert to environment to standardize between tibble and R6
       # based inputs. In both cases, we should get a simple
       # environment with the empty environment as its parent.
-      data_env = rlang::as_environment(.x)
-      data_mask = rlang::new_data_mask(bottom = data_env, top = data_env)
+      data_env <- rlang::as_environment(.x)
+      data_mask <- rlang::new_data_mask(bottom = data_env, top = data_env)
       data_mask$.data <- rlang::as_data_pronoun(data_mask)
       # We'll also install `.x` directly, not as an `rlang_data_pronoun`, so
       # that we can, e.g., use more dplyr and epiprocess operations.
-      data_mask$.x = .x
-      data_mask$.group_key = .group_key
-      data_mask$.ref_time_value = .ref_time_value
+      data_mask$.x <- .x
+      data_mask$.group_key <- .group_key
+      data_mask$.ref_time_value <- .ref_time_value
       rlang::eval_tidy(f, data_mask)
     }
 
@@ -308,25 +312,30 @@ as_slide_computation <- function(f, ...) {
 
   if (is_formula(f)) {
     if (length(f) > 2) {
-      Abort(sprintf("%s must be a one-sided formula", arg),
-              class = "epiprocess__as_slide_computation__formula_is_twosided",
-              epiprocess__f = f,
-              call = call)
+      cli_abort("{.code {arg}} must be a one-sided formula",
+        class = "epiprocess__as_slide_computation__formula_is_twosided",
+        epiprocess__f = f,
+        call = call
+      )
     }
     if (rlang::dots_n(...) > 0L) {
-      Abort("No arguments can be passed via `...` when `f` is a formula, or there are unrecognized/misspelled parameter names.",
-            class = "epiprocess__as_slide_computation__formula_with_dots",
-            epiprocess__f = f,
-            epiprocess__enquos_dots = enquos(...))
+      cli_abort(
+        "No arguments can be passed via `...` when `f` is a formula, or there
+        are unrecognized/misspelled parameter names.",
+        class = "epiprocess__as_slide_computation__formula_with_dots",
+        epiprocess__f = f,
+        epiprocess__enquos_dots = enquos(...)
+      )
     }
 
     env <- f_env(f)
     if (!is_environment(env)) {
-      Abort("Formula must carry an environment.",
-              class = "epiprocess__as_slide_computation__formula_has_no_env",
-              epiprocess__f = f,
-              epiprocess__f_env = env,
-              arg = arg, call = call)
+      cli_abort("Formula must carry an environment.",
+        class = "epiprocess__as_slide_computation__formula_has_no_env",
+        epiprocess__f = f,
+        epiprocess__f_env = env,
+        arg = arg, call = call
+      )
     }
 
     args <- list(
@@ -340,133 +349,212 @@ as_slide_computation <- function(f, ...) {
     return(fn)
   }
 
-  Abort(sprintf("Can't convert an object of class %s to a slide computation", paste(collapse=" ", deparse(class(f)))),
-            class = "epiprocess__as_slide_computation__cant_convert_catchall",
-            epiprocess__f = f,
-            epiprocess__f_class = class(f),
-            arg = arg,
-            call = call)
+  cli_abort(
+    "Can't convert an object of class {paste(collapse = ' ', deparse(class(f)))}
+      to a slide computation",
+    class = "epiprocess__as_slide_computation__cant_convert_catchall",
+    epiprocess__f = f,
+    epiprocess__f_class = class(f),
+    arg = arg,
+    call = call
+  )
 }
 
-##########
 
-in_range = function(x, rng) pmin(pmax(x, rng[1]), rng[2])
-
-##########
-
-Min = function(x) min(x, na.rm = TRUE)
-Max = function(x) max(x, na.rm = TRUE)
-Sum = function(x) sum(x, na.rm = TRUE)
-Mean = function(x) mean(x, na.rm = TRUE)
-Median = function(x) median(x, na.rm = TRUE)
-
-##########
-
-Start = function(x) x[1]
-End = function(x) x[length(x)]
-MiddleL = function(x) x[floor((length(x)+1)/2)]
-MiddleR = function(x) x[ceiling((length(x)+1)/2)]
-ExtendL = function(x) c(Start(x), x)
-ExtendR = function(x) c(x, End(x))
-
-guess_geo_type = function(geo_value) {
+guess_geo_type <- function(geo_value) {
   if (is.character(geo_value)) {
     # Convert geo values to lowercase
-    geo_value = tolower(geo_value)
-      
-    # If all geo values are state abbreviations, then use "state" 
-    state_values = c(tolower(datasets::state.abb), 
-                     "as", "dc", "gu", "mp", "pr", "vi")
-    if (all(geo_value %in% state_values)) return("state")
+    geo_value <- tolower(geo_value)
 
-    # Else if all geo values are 2 letters, then use "nation"
-    else if (all(grepl("[a-z]{2}", geo_value))
-             & !any(grepl("[a-z]{3}", geo_value))) return("nation")
-
-    # Else if all geo values are 5 numbers, then use "county"
-    else if (all(grepl("[0-9]{5}", geo_value)) &
-             !any(grepl("[0-9]{6}", geo_value))) return("county")
-  }
-
-  else if (is.numeric(geo_value)) {
+    # If all geo values are state abbreviations, then use "state"
+    state_values <- c(
+      tolower(datasets::state.abb),
+      "as", "dc", "gu", "mp", "pr", "vi"
+    )
+    if (all(geo_value %in% state_values)) {
+      return("state")
+    } else if (all(grepl("[a-z]{2}", geo_value)) && !any(grepl("[a-z]{3}", geo_value))) {
+      # Else if all geo values are 2 letters, then use "nation"
+      return("nation")
+    } else if (all(grepl("[0-9]{5}", geo_value)) && !any(grepl("[0-9]{6}", geo_value))) {
+      # Else if all geo values are 5 numbers, then use "county"
+      return("county")
+    }
+  } else if (is.numeric(geo_value)) {
     # Convert geo values to integers
-    geo_value = as.integer(geo_value)
+    geo_value <- as.integer(geo_value)
 
     # If the max geo value is at most 10, then use "hhs"
-    if (max(geo_value) <= 10) return("hhs")
-      
+    if (max(geo_value) <= 10) {
+      return("hhs")
+    }
+
     # Else if the max geo value is at most 457, then use "hrr"
-    if (max(geo_value) <= 457) return("hrr")
+    if (max(geo_value) <= 457) {
+      return("hrr")
+    }
   }
 
-  # If we got here then we failed
   return("custom")
 }
 
-guess_time_type = function(time_value) {
-  # Convert character time values to Date or POSIXct
-  if (is.character(time_value)) {
-    if (nchar(time_value[1]) <= "10") {
-      new_time_value = tryCatch({ as.Date(time_value) },
-                                error = function(e) NULL)
+
+guess_time_type <- function(time_value, time_value_arg = rlang::caller_arg(time_value)) {
+  if (inherits(time_value, "Date")) {
+    unique_time_gaps <- as.numeric(diff(sort(unique(time_value))))
+    # Gaps in a weekly date sequence will cause some diffs to be larger than 7
+    # days, so check modulo 7 equality, rather than equality with 7.
+    if (all(unique_time_gaps %% 7 == 0)) {
+      return("week")
     }
-    else {
-      new_time_value = tryCatch({ as.POSIXct(time_value) },
-                                error = function(e) NULL)
+    if (all(unique_time_gaps >= 28)) {
+      cli_abort(
+        "Found a monthly or longer cadence in the time column `{time_value_arg}`.
+        Consider using tsibble::yearmonth for monthly data and 'YYYY' integers for year data."
+      )
     }
-    if (!is.null(new_time_value)) time_value = new_time_value
-  }
-    
-  # Now, if a POSIXct class, then use "day-time"
-  if (inherits(time_value, "POSIXct")) return("day-time")
-
-  # Else, if a Date class, then use "week" or "day" depending on gaps 
-  else if (inherits(time_value, "Date")) {
-    return(ifelse(all(diff(sort(time_value)) == 7), "week", "day"))
+    return("day")
+  } else if (inherits(time_value, "yearmonth")) {
+    return("yearmonth")
+  } else if (rlang::is_integerish(time_value)) {
+    return("integer")
   }
 
-  # Else, check whether it's one of the tsibble classes
-  else if (inherits(time_value, "yearweek")) return("yearweek")
-  else if (inherits(time_value, "yearmonth")) return("yearmonth")
-  else if (inherits(time_value, "yearquarter")) return("yearquarter")
-
-  # Else, if it's an integer that's at least 1582, then use "year"
-  if (is.numeric(time_value) &&
-      all(time_value == as.integer(time_value)) &&
-      all(time_value >= 1582)) {
-    return("year")
-  }
-      
-  # If we got here then we failed
+  cli_warn(
+    "Unsupported time type in column `{time_value_arg}`, with class {.code {class(time_value)}}.
+    Time-related functionality may have unexpected behavior.
+    ",
+    class = "epiprocess__guess_time_type__unknown_time_type",
+    epiprocess__time_value = time_value
+  )
   return("custom")
+}
+
+#'  given a vector of characters, add the same values, but upcased, e.g.
+#'   "date" -> c("date", "Date")
+#'   "target_date" -> c("target_date", "Target_Date")
+#' @keywords internal
+upcase_snake_case <- function(vec) {
+  upper_vec <- strsplit(vec, "_") %>%
+    map(function(name) paste0(toupper(substr(name, 1, 1)), substr(name, 2, nchar(name)), collapse = "_")) %>%
+    unlist()
+  c(vec, upper_vec)
+}
+
+#' potential time_value columns
+#' @description
+#' the full list of potential substitutions for the `time_value` column name:
+#' `r time_column_names()`
+#' @export
+time_column_names <- function() {
+  substitutions <- c(
+    "time_value", "date", "time", "datetime", "dateTime", "date_time", "target_date",
+    "week", "epiweek", "month", "mon", "year", "yearmon", "yearmonth",
+    "yearMon", "yearMonth", "dates", "time_values", "target_dates", "time_Value"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("time_value", length(substitutions))
+  return(substitutions)
+}
+#
+#' potential geo_value columns
+#' @description
+#' the full list of potential substitutions for the `geo_value` column name:
+#' `r geo_column_names()`
+#' @export
+geo_column_names <- function() {
+  substitutions <- c(
+    "geo_value", "geo_values", "geo_id", "geos", "location", "jurisdiction", "fips", "zip",
+    "county", "hrr", "msa", "state", "province", "nation", "states",
+    "provinces", "counties", "geo_Value"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("geo_value", length(substitutions))
+  return(substitutions)
+}
+
+#' potential version columns
+#' @description
+#' the full list of potential substitutions for the `version` column name:
+#' `r version_column_names()`
+#' @export
+version_column_names <- function() {
+  substitutions <- c(
+    "version", "issue", "release"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("version", length(substitutions))
+  return(substitutions)
+}
+
+#' rename potential time_value columns
+#'
+#' @description
+#' potentially renames
+#' @param x the tibble to potentially rename
+#' @param substitutions a named vector. the potential substitions, with every name `time_value`
+#' @keywords internal
+#' @importFrom cli cli_inform cli_abort
+#' @importFrom dplyr rename
+guess_column_name <- function(x, column_name, substitutions) {
+  if (!(column_name %in% names(x))) {
+    # if none of the names are in substitutions, and `column_name` isn't a column, we're missing a relevant column
+    if (!any(names(x) %in% substitutions)) {
+      cli_abort(
+        "There is no {column_name} column or similar name.
+         See e.g. [`time_column_name()`] for a complete list",
+        class = "epiprocess__guess_column__multiple_substitution_error"
+      )
+    }
+
+    tryCatch(
+      {
+        x <- x %>% rename(any_of(substitutions))
+        cli_inform(
+          "inferring {column_name} column.",
+          class = "epiprocess__guess_column_inferring_inform"
+        )
+        return(x)
+      },
+      error = function(cond) {
+        cli_abort(
+          "{intersect(names(x), substitutions)}
+           are both/all valid substitutions for {column_name}.
+           Either `rename` some yourself or drop some.",
+          class = "epiprocess__guess_column__multiple_substitution_error"
+        )
+      }
+    )
+  }
+  return(x)
 }
 
 ##########
 
 
-quiet = function(x) { 
-  sink(tempfile()) 
-  on.exit(sink()) 
-  invisible(force(x)) 
+quiet <- function(x) {
+  sink(tempfile())
+  on.exit(sink())
+  invisible(force(x))
 }
 
 ##########
 
 # Create an auto-named list
-enlist = function(...) {
-  x = list(...)
-  n = as.character(sys.call())[-1]
-  if (!is.null(n0 <- names(x))) {
-    n[n0 != ""] = n0[n0 != ""]
-  }
-  names(x) = n
-  return(x) 
+enlist <- function(...) {
+  # converted to thin wrapper around
+  rlang::dots_list(
+    ...,
+    .homonyms = "error",
+    .named = TRUE,
+    .check_assign = TRUE
+  )
 }
 
-# Variable assignment from a list. NOT USED. Something is broken, this doesn't 
+# Variable assignment from a list. NOT USED. Something is broken, this doesn't
 # seem to work completely as expected: the variables it define don't propogate
-# down to child environments  
-list2var = function(x) {
+# down to child environments
+list2var <- function(x) {
   list2env(x, envir = parent.frame())
 }
 
@@ -485,7 +573,7 @@ list2var = function(x) {
 #'
 #' @examples
 #'
-#' fn = function(x = deprecated()) {
+#' fn <- function(x = deprecated()) {
 #'   deprecated_quo_is_present(rlang::enquo(x))
 #' }
 #'
@@ -497,10 +585,10 @@ list2var = function(x) {
 #' # argument that has already been defused into a quosure, `!!quo`). (This is
 #' # already how NSE arguments that will be enquosed should be forwarded.)
 #'
-#' wrapper1 = function(x=deprecated()) fn({{x}})
-#' wrapper2 = function(x=lifecycle::deprecated()) fn({{x}})
-#' wrapper3 = function(x) fn({{x}})
-#' wrapper4 = function(x) fn(!!rlang::enquo(x))
+#' wrapper1 <- function(x = deprecated()) fn({{ x }})
+#' wrapper2 <- function(x = lifecycle::deprecated()) fn({{ x }})
+#' wrapper3 <- function(x) fn({{ x }})
+#' wrapper4 <- function(x) fn(!!rlang::enquo(x))
 #'
 #' wrapper1() # FALSE
 #' wrapper2() # FALSE
@@ -509,27 +597,29 @@ list2var = function(x) {
 #'
 #' # More advanced: wrapper that receives an already-enquosed arg:
 #'
-#' inner_wrapper = function(quo) fn(!!quo)
-#' outer_wrapper1 = function(x=deprecated()) inner_wrapper(rlang::enquo(x))
+#' inner_wrapper <- function(quo) fn(!!quo)
+#' outer_wrapper1 <- function(x = deprecated()) inner_wrapper(rlang::enquo(x))
 #'
 #' outer_wrapper1() # FALSE
 #'
 #' # Improper argument forwarding from a wrapper function will cause this
 #' # function to produce incorrect results.
-#' bad_wrapper1 = function(x) fn(x)
+#' bad_wrapper1 <- function(x) fn(x)
 #' bad_wrapper1() # TRUE, bad
 #'
+#' @importFrom lifecycle deprecated
+#'
 #' @noRd
-deprecated_quo_is_present = function(quo) {
+deprecated_quo_is_present <- function(quo) {
   if (!rlang::is_quosure(quo)) {
-    Abort("`quo` must be a quosure; `enquo` the arg first",
-          internal=TRUE)
+    cli_abort("`quo` must be a quosure; `enquo` the arg first",
+      internal = TRUE
+    )
   } else if (rlang::quo_is_missing(quo)) {
     FALSE
   } else {
-    quo_expr = rlang::get_expr(quo)
-    if (identical(quo_expr, rlang::expr(deprecated())) ||
-          identical(quo_expr, rlang::expr(lifecycle::deprecated()))) {
+    quo_expr <- rlang::get_expr(quo)
+    if (identical(quo_expr, rlang::expr(deprecated())) || identical(quo_expr, rlang::expr(lifecycle::deprecated()))) { # nolint: object_usage_linter
       FALSE
     } else {
       TRUE
@@ -577,37 +667,33 @@ deprecated_quo_is_present = function(quo) {
 #'   be an integer.
 #'
 #' @noRd
-gcd2num = function(a, b, rrtol=1e-6, pqlim=1e6, irtol=1e-6) {
-  if (!is.numeric(a) || length(a) != 1L) {
-    Abort("`a` must satisfy `is.numeric`, have `length` 1.")
+gcd2num <- function(a, b, rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
+  assert_numeric(a, len = 1L)
+  assert_numeric(b, len = 1L)
+  assert_numeric(rrtol, len = 1L, lower = 0)
+  assert_numeric(pqlim, len = 1L, lower = 0)
+  assert_numeric(irtol, len = 1L, lower = 0)
+  if (is.na(a) || is.na(b) || a == 0 || b == 0 || abs(a / b) >= pqlim || abs(b / a) >= pqlim) {
+    cli_abort(
+      "`a` and/or `b` is either `NA` or exactly zero, or one is so much
+      smaller than the other that it looks like it's supposed to be zero; see `pqlim` setting."
+    )
   }
-  if (!is.numeric(b) || length(b) != 1L) {
-    Abort("`b` must satisfy `is.numeric`, have `length` 1.")
-  }
-  if (!is.numeric(rrtol) || length(rrtol) != 1L || rrtol < 0) {
-    Abort("`rrtol` must satisfy `is.numeric`, have `length` 1, and be non-negative.")
-  }
-  if (!is.numeric(pqlim) || length(pqlim) != 1L || pqlim < 0) {
-    Abort("`pqlim` must satisfy `is.numeric`, have `length` 1, and be non-negative.")
-  }
-  if (!is.numeric(irtol) || length(irtol) != 1L || irtol < 0) {
-    Abort("`irtol` must satisfy `is.numeric`, have `length` 1, and be non-negative.")
-  }
-  if (is.na(a) || is.na(b) || a == 0 || b == 0 || abs(a/b) >= pqlim || abs(b/a) >= pqlim) {
-    Abort("`a` and/or `b` is either `NA` or exactly zero, or one is so much smaller than the other that it looks like it's supposed to be zero; see `pqlim` setting.")
-  }
-  iatol = irtol * max(a,b)
-  a_curr = a
-  b_curr = b
+  iatol <- irtol * max(a, b)
+  a_curr <- a
+  b_curr <- b
   while (TRUE) {
     # `b_curr` is the candidate GCD / iterand; check first if it seems too small:
     if (abs(b_curr) <= iatol) {
-      Abort('No GCD found; remaining potential Gads are all too small relative to one/both of the original inputs; see `irtol` setting.')
+      cli_abort(
+        "No GCD found; remaining potential GCDs are all too small relative
+        to one/both of the original inputs; see `irtol` setting."
+      )
     }
-    remainder = a_curr - round(a_curr / b_curr) * b_curr
+    remainder <- a_curr - round(a_curr / b_curr) * b_curr
     if (abs(remainder / b_curr) <= rrtol) {
       # We consider `a_curr` divisible by `b_curr`; `b_curr` is the GCD or its negation
-      return (abs(b_curr))
+      return(abs(b_curr))
     }
     a_curr <- b_curr
     b_curr <- remainder
@@ -625,19 +711,22 @@ gcd2num = function(a, b, rrtol=1e-6, pqlim=1e6, irtol=1e-6) {
 #'   error.)
 #'
 #' @noRd
-gcd_num = function(dividends, ..., rrtol=1e-6, pqlim=1e6, irtol=1e-6) {
+gcd_num <- function(dividends, ..., rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
   if (!is.numeric(dividends) || length(dividends) == 0L) {
-    Abort("`dividends` must satisfy `is.numeric`, and have `length` > 0")
+    cli_abort("`dividends` must satisfy `is.numeric`, and have `length` > 0")
   }
   if (rlang::dots_n(...) != 0L) {
-    Abort("`...` should be empty; all dividends should go in a single `dividends` vector, and all tolerance&limit settings should be passed by name.")
+    cli_abort(
+      "`...` should be empty; all dividends should go in a single `dividends`
+      vector, and all tolerance&limit settings should be passed by name."
+    )
   }
   # We expect a bunch of duplicate `dividends` for some applications.
   # De-duplicate to reduce work. Sort by absolute value to attempt to reduce
   # workload. Also take `abs` early on as another form of deduplication and to
   # make the sort simpler. Use `na.last=FALSE` in the sort to preserve presence
   # of `NA`s in order to get a better error message in this case.
-  optimized_dividends = sort(unique(abs(dividends)), na.last=FALSE)
+  optimized_dividends <- sort(unique(abs(dividends)), na.last = FALSE)
   # Note that taking the prime factorizations of a set of integers, and
   # calculating the minimum power for each prime across all these
   # factorizations, yields the prime factorization of the GCD of the set of
@@ -656,33 +745,98 @@ gcd_num = function(dividends, ..., rrtol=1e-6, pqlim=1e6, irtol=1e-6) {
   # gcd2real(gcd_int(X/gcd_real(XUY))*gcd_real(XUY),
   # gcd_int(Y/gcd_real(XUY))*gcd_real(XUY)) = gcd2real(gcd_real(X),
   # gcd_real(Y)). So "gcd_real" should also be `reduce`-compatible.
-  numeric_gcd = purrr::reduce(optimized_dividends, gcd2num,
-                              rrtol=rrtol, pqlim=pqlim, irtol=irtol)
+  numeric_gcd <- purrr::reduce(optimized_dividends, gcd2num,
+    rrtol = rrtol, pqlim = pqlim, irtol = irtol
+  )
   vctrs::vec_cast(numeric_gcd, dividends)
 }
 
-#' Use max valid period as guess for `period` of `ref_time_values`
+#' Use max valid period as guess for `period` of `time_values`
 #'
-#' @param ref_time_values Vector containing time-interval-like or time-like
-#'   data, with at least two distinct values, [`diff`]-able (e.g., a
-#'   `time_value` or `version` column), and should have a sensible result from
-#'   adding `is.numeric` versions of its `diff` result (via `as.integer` if its
-#'   `typeof` is `"integer"`, otherwise via `as.numeric`).
-#' @param ref_time_values_arg Optional, string; name to give `ref_time_values`
-#'   in error messages. Defaults to quoting the expression the caller fed into
-#'   the `ref_time_values` argument.
-#' @return `is.numeric`, length 1; attempts to match `typeof(ref_time_values)`
-guess_period = function(ref_time_values, ref_time_values_arg = rlang::caller_arg(ref_time_values)) {
-  sorted_distinct_ref_time_values = sort(unique(ref_time_values))
-  if (length(sorted_distinct_ref_time_values) < 2L) {
-    Abort(sprintf("Not enough distinct values in `%s` to guess the period.", ref_time_values_arg))
+#' `r lifecycle::badge("experimental")`
+#'
+#' @param time_values Vector containing time-interval-like or time-point-like
+#'   data, with at least two distinct values.
+#' @param time_values_arg Optional, string; name to give `time_values` in error
+#'   messages. Defaults to quoting the expression the caller fed into the
+#'   `time_values` argument.
+#' @param ... Should be empty, there to satisfy the S3 generic.
+#' @return length-1 vector; `r lifecycle::badge("experimental")` class will
+#'   either be the same class as [`base::diff()`] on such time values, an
+#'   integer, or a double, such that all `time_values` can be exactly obtained
+#'   by adding `k * result` for an integer k, and such that there is no smaller
+#'   `result` that can achieve this.
+#'
+#' @export
+guess_period <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
+  UseMethod("guess_period")
+}
+
+#' @export
+guess_period.default <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
+  rlang::check_dots_empty()
+  sorted_distinct_time_values <- sort(unique(time_values))
+  if (length(sorted_distinct_time_values) < 2L) {
+    cli_abort("Not enough distinct values in {.code {time_values_arg}} to guess the period.",
+      class = "epiprocess__guess_period__not_enough_times",
+      time_values = time_values
+    )
   }
-  skips = diff(sorted_distinct_ref_time_values)
-  decayed_skips =
-    if (typeof(skips) == "integer") {
-      as.integer(skips)
+  skips <- diff(sorted_distinct_time_values)
+  # Certain diff results have special classes or attributes; use vctrs to try to
+  # appropriately destructure for gcd_num, then restore to their original class
+  # & attributes.
+  skips_data <- vctrs::vec_data(skips)
+  period_data <- gcd_num(skips_data, rrtol = 0)
+  vctrs::vec_restore(period_data, skips)
+}
+
+# `full_seq()` doesn't like difftimes, so convert to the natural units of some time types:
+
+#' @export
+guess_period.Date <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
+  as.numeric(NextMethod(), units = "days")
+}
+
+#' @export
+guess_period.POSIXt <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
+  as.numeric(NextMethod(), units = "secs")
+}
+
+
+validate_slide_window_arg <- function(arg, time_type, arg_name = rlang::caller_arg(arg)) {
+  if (is.null(arg)) {
+    cli_abort("`{arg_name}` is a required argument.")
+  }
+
+  if (!checkmate::test_scalar(arg)) {
+    cli_abort("Expected `{arg_name}` to be a scalar value.")
+  }
+
+  if (time_type == "custom") {
+    cli_abort("Unsure how to interpret slide units with a custom time type. Consider converting your time
+    column to a Date, yearmonth, or integer type.")
+  }
+
+  if (!identical(arg, Inf)) {
+    if (time_type == "day") {
+      if (!test_int(arg, lower = 0L) && !(inherits(arg, "difftime") && units(arg) == "days")) {
+        cli_abort("Expected `{arg_name}` to be a difftime with units in days or a non-negative integer.")
+      }
+    } else if (time_type == "week") {
+      if (!(inherits(arg, "difftime") && units(arg) == "weeks")) {
+        cli_abort("Expected `{arg_name}` to be a difftime with units in weeks.")
+      }
+    } else if (time_type == "yearmonth") {
+      if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
+        cli_abort("Expected `{arg_name}` to be a non-negative integer.")
+      }
+    } else if (time_type == "integer") {
+      if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
+        cli_abort("Expected `{arg_name}` to be a non-negative integer.")
+      }
     } else {
-      as.numeric(skips)
+      cli_abort("Expected `{arg_name}` to be Inf, an appropriate a difftime, or a non-negative integer.")
     }
-  gcd_num(decayed_skips)
+  }
 }
