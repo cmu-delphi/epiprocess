@@ -19,29 +19,27 @@
 #'   time. For example, consider the series (0,20, 99, 150, 102, 100); then
 #'   `time_to_x_final` is the 5th index, since even though 99 is within 20%, it
 #'   is outside the window afterwards at 150.
-#' epi_arch$DT %>% filter(time_value == "2019-12-31", geo_value =="al")
-#' revision_tb <- revision_summary(epi_arch, drop_nas = TRUE)
-#' revision_tb["time_to_0.8_final"] %>%
-#' revision_tb %>% select(-max_rel_change, -number_of_revisions)
-#' epi_arch$DT %>% filter(time_value =="2020-01-01", geo_value == "nv")
-#' epi_arch$DT %>% group_by(time_value, geo_value)
 #' @param epi_arch an epi_archive to be analyzed
 #' @param ... tidyselect, used to choose the column to summarize. If empty, it
 #'   chooses the first. Currently only implemented for one column at a time
+#' @param drop_nas bool, drop any `NA` values from the archive? After dropping
+#'   `NA`'s compactify is run again to make sure there are no duplicate values.
 #' @param print_inform bool, determines whether to print summary information, or
 #'   only return the full summary tibble
+#' @param percent_final_value double between 0 and 1. Determines the threshold
+#'   used for the `time_to`
 #' @param quick_revision difftime or integer (integer is treated as days), for
 #'   the printed summary, the amount of time between the final revision and the
 #'   actual time_value to consider the revision quickly resolved. Default of 3
 #'   days
 #' @param few_revisions integer, for the printed summary, the upper bound on the
 #'   number of revisions to consider "few". Default is 3.
-#' @param abs_threshold numeric, for the printed summary, the maximum change
+#' @param abs_change_threshold numeric, for the printed summary, the maximum change
 #'   used to characterize revisions which don't actually change very much.
 #'   Default is 5% of the maximum value in the dataset, but this is the most
 #'   unit dependent of values, and likely needs to be chosen appropriate for the
 #'   scale of the dataset
-#' @param rel_threshold float between 0 and 1, for the printed summary, the
+#' @param rel_change_threshold float between 0 and 1, for the printed summary, the
 #'   relative change fraction used to characterize revisions which don't
 #'   actually change very much. Default is .1, or 10% of the final value
 #' @examples
@@ -53,12 +51,12 @@
 #' @importFrom cli cli_inform cli_abort cli_li
 #' @importFrom rlang list2 sym
 #' @importFrom dplyr mutate group_by arrange filter if_any all_of across pull
-#'   everything ungroup summarize if_else
+#'   everything ungroup summarize if_else %>%
 revision_summary <- function(epi_arch,
                              ...,
                              drop_nas = TRUE,
-                             percent_final_value = 0.8,
                              print_inform = TRUE,
+                             percent_final_value = 0.8,
                              quick_revision = as.difftime(3, units = "days"),
                              few_revisions = 3,
                              rel_change_threshold = 0.1,
@@ -113,7 +111,7 @@ revision_summary <- function(epi_arch,
       # TODO the units here may be a problem
       min_lag = as.difftime(min_lag, units = "days"), # nolint: object_usage_linter
       max_lag = as.difftime(max_lag, units = "days"), # nolint: object_usage_linter
-      "time_to_{percent_final_value}_final" := as.difftime(time_to, units = "days") # nolint: object_usage_linter
+      time_to_pct_final = as.difftime(time_to, units = "days") # nolint: object_usage_linter
     ) %>%
     select(-time_to)
   if (print_inform) {
@@ -124,24 +122,24 @@ revision_summary <- function(epi_arch,
     if (!drop_nas) {
       total_na <- nrow(epi_arch$DT %>% filter(is.na(!!arg))) # nolint: object_usage_linter
       cli_inform("Fraction of all versions that are `NA`:")
-      cli_li("{num_percent(total_na, nrow(epi_arch$DT))}")
+      cli_li(num_percent(total_na, nrow(epi_arch$DT)))
     }
     total_num_unrevised <- sum(revision_behavior$n_revisions == 0) # nolint: object_usage_linter
     cli_inform("No revisions:")
-    cli_li("{num_percent(total_num_unrevised, total_num)}")
+    cli_li(num_percent(total_num_unrevised, total_num))
     total_quickly_revised <- sum( # nolint: object_usage_linter
       revision_behavior$max_lag <=
         as.difftime(quick_revision, units = "days")
     )
     cli_inform("Quick revisions (last revision within {quick_revision}
 {units(quick_revision)} of the `time_value`):")
-    cli_li("{num_percent(total_quickly_revised, total_num)}")
+    cli_li(num_percent(total_quickly_revised, total_num))
     total_barely_revised <- sum( # nolint: object_usage_linter
       revision_behavior$n_revisions <=
         few_revisions
     )
     cli_inform("Few revisions (At most {few_revisions} revisions for that `time_value`):")
-    cli_li("{num_percent(total_barely_revised, total_num)}")
+    cli_li(num_percent(total_barely_revised, total_num))
     cli_inform("")
     cli_inform("Changes in Value:")
 
@@ -153,17 +151,18 @@ revision_summary <- function(epi_arch,
       na.rm = TRUE
     ) # nolint: object_usage_linter
     cli_inform("Less than {rel_change_threshold} change in relative value (only from the revised subset):")
-    cli_li("{num_percent(rel_change, n_real_revised)}")
+    cli_li(num_percent(rel_change, n_real_revised))
     na_rel_change <- sum(is.na(real_revisions$max_rel_change)) # nolint: object_usage_linter
     cli_inform("Revised entries with `NA` relative change:")
     cli_li("{num_percent(na_rel_change, n_real_revised)} ")
-    cli_inform("Number of {units(quick_revision)}")
+    cli_inform("{units(quick_revision)} until over {percent_final_value} percent of the final value:")
+    difftime_summary(revision_behavior[[glue::glue("time_to_pct_final")]])
     abs_change <- sum( # nolint: object_usage_linter
       real_revisions$max_change >
         abs_change_threshold
     ) # nolint: object_usage_linter
     cli_inform("Change by more than {abs_change_threshold} in actual value (when revised):")
-    cli_li("{num_percent(abs_change, n_real_revised)}")
+    cli_li(num_percent(abs_change, n_real_revised))
   }
   return(revision_behavior)
 }

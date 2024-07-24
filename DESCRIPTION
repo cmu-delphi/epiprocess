@@ -31,6 +31,7 @@ Imports:
     data.table,
     dplyr (>= 1.0.0),
     genlasso,
+    glue,
     ggplot2,
     lifecycle (>= 1.0.1),
     lubridate,

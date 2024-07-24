@@ -8,8 +8,8 @@ revision_summary(
   epi_arch,
   ...,
   drop_nas = TRUE,
-  percent_final_value = 0.8,
   print_inform = TRUE,
+  percent_final_value = 0.8,
   quick_revision = as.difftime(3, units = "days"),
   few_revisions = 3,
   rel_change_threshold = 0.1,
@@ -22,8 +22,14 @@ revision_summary(
 \item{...}{tidyselect, used to choose the column to summarize. If empty, it
 chooses the first. Currently only implemented for one column at a time}
 
+\item{drop_nas}{bool, drop any \code{NA} values from the archive? After dropping
+\code{NA}'s compactify is run again to make sure there are no duplicate values.}
+
 \item{print_inform}{bool, determines whether to print summary information, or
 only return the full summary tibble}
+
+\item{percent_final_value}{double between 0 and 1. Determines the threshold
+used for the \code{time_to}}
 
 \item{quick_revision}{difftime or integer (integer is treated as days), for
 the printed summary, the amount of time between the final revision and the
@@ -33,15 +39,15 @@ days}
 \item{few_revisions}{integer, for the printed summary, the upper bound on the
 number of revisions to consider "few". Default is 3.}
 
-\item{abs_threshold}{numeric, for the printed summary, the maximum change
+\item{rel_change_threshold}{float between 0 and 1, for the printed summary, the
+relative change fraction used to characterize revisions which don't
+actually change very much. Default is .1, or 10\% of the final value}
+
+\item{abs_change_threshold}{numeric, for the printed summary, the maximum change
 used to characterize revisions which don't actually change very much.
 Default is 5\% of the maximum value in the dataset, but this is the most
 unit dependent of values, and likely needs to be chosen appropriate for the
 scale of the dataset}
-
-\item{rel_threshold}{float between 0 and 1, for the printed summary, the
-relative change fraction used to characterize revisions which don't
-actually change very much. Default is .1, or 10\% of the final value}
 }
 \description{
 \code{revision_summary} removes all missing values, and then computes some basic
@@ -64,12 +70,6 @@ gives the lag when the value is within \code{1-x} of the value at the final
 time. For example, consider the series (0,20, 99, 150, 102, 100); then
 \code{time_to_x_final} is the 5th index, since even though 99 is within 20\%, it
 is outside the window afterwards at 150.
-epi_arch$DT \%>\% filter(time_value == "2019-12-31", geo_value =="al")
-revision_tb <- revision_summary(epi_arch, drop_nas = TRUE)
-revision_tb\link{"time_to_0.8_final"} \%>\%
-revision_tb \%>\% select(-max_rel_change, -number_of_revisions)
-epi_arch$DT \%>\% filter(time_value =="2020-01-01", geo_value == "nv")
-epi_arch$DT \%>\% group_by(time_value, geo_value)
 }
 }
 \examples{
