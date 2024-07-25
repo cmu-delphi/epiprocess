@@ -87,7 +87,7 @@ revision_summary <- function(epi_arch,
     # if we're dropping NA's, we should recompactify
     revision_behavior <-
       epi_arch$DT %>%
-      filter(!is.na(!!!arg)) %>%
+      filter(!is.na(!!arg)) %>%
       arrange(across(c(geo_value, time_value, all_of(keys), version))) %>% # need to sort before compactifying
       compactify_tibble(c(keys, version))
   } else {
@@ -102,9 +102,9 @@ revision_summary <- function(epi_arch,
       n_revisions = dplyr::n() - 1,
       min_lag = min(lag), # nolint: object_usage_linter
       max_lag = max(lag), # nolint: object_usage_linter
-      max_rel_change = (max(!!!arg) - min(!!!arg)) / max(!!!arg),
-      max_change = suppressWarnings(max(!!!arg, na.rm = TRUE) - min(!!!arg, na.rm = TRUE)),
-      time_to = time_to_x_percent(lag, !!!arg, percent = percent_final_value)
+      max_change = suppressWarnings(max(!!arg, na.rm = TRUE) - min(!!arg, na.rm = TRUE)),
+      max_rel_change = (max_change) / suppressWarnings(max(!!arg, na.rm = TRUE)),
+      time_to = time_to_x_percent(lag, !!arg, percent = percent_final_value)
     ) %>%
     ungroup() %>%
     mutate(
@@ -146,15 +146,13 @@ revision_summary <- function(epi_arch,
     real_revisions <- revision_behavior %>% filter(n_revisions > 0) # nolint: object_usage_linter
     n_real_revised <- nrow(real_revisions) # nolint: object_usage_linter
     rel_change <- sum( # nolint: object_usage_linter
-      real_revisions$max_rel_change >
+      real_revisions$max_rel_change <
         rel_change_threshold,
       na.rm = TRUE
-    ) # nolint: object_usage_linter
+    ) + sum(is.na(real_revisions$max_rel_change))
     cli_inform("Less than {rel_change_threshold} change in relative value (only from the revised subset):")
     cli_li(num_percent(rel_change, n_real_revised))
     na_rel_change <- sum(is.na(real_revisions$max_rel_change)) # nolint: object_usage_linter
-    cli_inform("Revised entries with `NA` relative change:")
-    cli_li("{num_percent(na_rel_change, n_real_revised)} ")
     cli_inform("{units(quick_revision)} until over {percent_final_value} percent of the final value:")
     difftime_summary(revision_behavior[[glue::glue("time_to_pct_final")]])
     abs_change <- sum( # nolint: object_usage_linter
