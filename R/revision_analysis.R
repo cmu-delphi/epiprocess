@@ -49,7 +49,7 @@
 #' revision_example %>% arrange(desc(max_change))
 #' @export
 #' @importFrom cli cli_inform cli_abort cli_li
-#' @importFrom rlang list2 sym
+#' @importFrom rlang list2 syms
 #' @importFrom dplyr mutate group_by arrange filter if_any all_of across pull
 #'   everything ungroup summarize if_else %>%
 revision_summary <- function(epi_arch,
@@ -64,7 +64,7 @@ revision_summary <- function(epi_arch,
   arg <- enquos(...)
   if (length(arg) == 0) {
     first_non_key <- !(names(epi_arch$DT) %in% c(key_colnames(epi_arch), "version"))
-    arg <- sym(names(epi_arch$DT)[first_non_key][1])
+    arg <- syms(names(epi_arch$DT)[first_non_key][1])
   } else if (length(arg) > 1) {
     cli_abort("Not currently implementing more than one column at a time. Run each separately")
   }
@@ -87,7 +87,7 @@ revision_summary <- function(epi_arch,
     # if we're dropping NA's, we should recompactify
     revision_behavior <-
       epi_arch$DT %>%
-      filter(!is.na(!!arg)) %>%
+      filter(!is.na(!!arg[[1]])) %>%
       arrange(across(c(geo_value, time_value, all_of(keys), version))) %>% # need to sort before compactifying
       compactify_tibble(c(keys, version))
   } else {
@@ -102,9 +102,9 @@ revision_summary <- function(epi_arch,
       n_revisions = dplyr::n() - 1,
       min_lag = min(lag), # nolint: object_usage_linter
       max_lag = max(lag), # nolint: object_usage_linter
-      max_change = suppressWarnings(max(!!arg, na.rm = TRUE) - min(!!arg, na.rm = TRUE)),
-      max_rel_change = (max_change) / suppressWarnings(max(!!arg, na.rm = TRUE)),
-      time_to = time_to_x_percent(lag, !!arg, percent = percent_final_value)
+      max_change = suppressWarnings(max(!!arg[[1]], na.rm = TRUE) - min(!!arg[[1]], na.rm = TRUE)),
+      max_rel_change = (max_change) / suppressWarnings(max(!!arg[[1]], na.rm = TRUE)),
+      time_to = time_to_x_percent(lag, !!arg[[1]], percent = percent_final_value)
     ) %>%
     ungroup() %>%
     mutate(
@@ -120,7 +120,7 @@ revision_summary <- function(epi_arch,
     cli_inform("Min lag (time to first version):")
     difftime_summary(revision_behavior$min_lag)
     if (!drop_nas) {
-      total_na <- nrow(epi_arch$DT %>% filter(is.na(!!arg))) # nolint: object_usage_linter
+      total_na <- nrow(epi_arch$DT %>% filter(is.na(!!arg[[1]]))) # nolint: object_usage_linter
       cli_inform("Fraction of all versions that are `NA`:")
       cli_li(num_percent(total_na, nrow(epi_arch$DT)))
     }

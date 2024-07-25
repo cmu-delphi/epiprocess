@@ -1,8 +1,7 @@
 # revision_summary works for a dummy dataset
 
     Code
-      dummy_ex %>% as_epi_archive(compactify = FALSE) %>% revision_summary() %>%
-        print(n = 10, width = 300)
+      dummy_ex %>% revision_summary() %>% print(n = 10, width = 300)
     Message
       Number of revisions:
       Min lag (time to first version):
@@ -50,8 +49,7 @@
 ---
 
     Code
-      dummy_ex %>% as_epi_archive(compactify = FALSE) %>% revision_summary(drop_nas = FALSE) %>%
-        print(n = 10, width = 300)
+      dummy_ex %>% revision_summary(drop_nas = FALSE) %>% print(n = 10, width = 300)
     Message
       Number of revisions:
       Min lag (time to first version):
