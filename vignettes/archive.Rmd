@@ -127,6 +127,23 @@ as in `x$geo_type`, etc. Just like `as_epi_df()`, the function
 object is instantiated, if they are not explicitly specified in the function
 call (as it did in the case above).
 
+## Summarizing Revision Behavior
+There are many ways to examine the ways that signals change across different revisions. 
+The simplest that is included directly in epiprocess is `revision_summary()`, which computes simple summary statistics for each key (by default, `(geo_value,time_value)` pairs), such as the lag to the first value (latency). In addition to the per key summary, it also returns an overall summary:
+```{r}
+revision_details <- revision_summary(x, print_inform=TRUE)
+```
+
+So as was mentioned at the top, this is clearly a data set where basically everything has some amount of revisions, only 0.37% have no revision at all, and 0.92 have fewer than 3.
+Over 94% change by more than 10%.
+On the other hand, most are within plus or minus 20% within 5-9 days, so the revisions converge relatively quickly, even if the revisions continue for longer.
+
+To do more detailed analysis than is possible with the above printing, we have `revision_details`:
+```{r}
+revision_details %>% group_by(geo_value) %>% summarise(n_rev = mean(n_revisions), min_lag = min(min_lag), max_lag = max(max_lag), max_change = mean(max_change), max_rel_change = mean(max_rel_change), time_to_pct_final = mean(time_to_pct_final))
+```
+Most of the states have similar stats on most of these features, except for Florida, which takes nearly double the amount of time to get close to the right value, with California not too far behind.
+
 ## Producing snapshots in `epi_df` form
 
 A key method of an `epi_archive` class is `epix_as_of()`, which generates a snapshot
