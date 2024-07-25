@@ -103,7 +103,7 @@ revision_summary <- function(epi_arch,
       min_lag = min(lag), # nolint: object_usage_linter
       max_lag = max(lag), # nolint: object_usage_linter
       max_change = suppressWarnings(max(!!arg[[1]], na.rm = TRUE) - min(!!arg[[1]], na.rm = TRUE)),
-      max_rel_change = (max_change) / suppressWarnings(max(!!arg[[1]], na.rm = TRUE)),
+      max_rel_change = (max_change) / suppressWarnings(max(!!arg[[1]], na.rm = TRUE)), # nolint: object_usage_linter
       time_to = time_to_x_percent(lag, !!arg[[1]], percent = percent_final_value)
     ) %>%
     ungroup() %>%
