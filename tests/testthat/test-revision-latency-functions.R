@@ -27,10 +27,14 @@ dummy_ex <- tibble::tribble(
   # ak 3 has 0 revisions, and a value of zero, and thus a max_rel_change of NaN
   "ak", as.Date("2020-01-03"), as.Date("2020-01-06"), 0,
   "ak", as.Date("2020-01-03"), as.Date("2020-01-07"), 0,
-)
+) %>%
+  as_epi_archive(compactify = FALSE)
 
 test_that("revision_summary works for a dummy dataset", {
-  expect_snapshot(dummy_ex %>% as_epi_archive(compactify = FALSE) %>% revision_summary() %>% print(n = 10, width = 300))
-  expect_snapshot(dummy_ex %>% as_epi_archive(compactify = FALSE) %>% revision_summary(drop_nas = FALSE) %>% print(n = 10, width = 300))
+  expect_snapshot(dummy_ex  %>% revision_summary() %>% print(n = 10, width = 300))
+  expect_snapshot(dummy_ex %>% revision_summary(drop_nas = FALSE) %>% print(n = 10, width = 300))
+})
+test_that("tidyselect is functional", {
+  expect_no_error(revision_summary(dummy_ex, value))
 })
 test_that("revision_summary works for various timetypes", {})
