@@ -142,7 +142,14 @@ To do more detailed analysis than is possible with the above printing, we have `
 ```{r}
 revision_details %>%
   group_by(geo_value) %>%
-  summarise(n_rev = mean(n_revisions), min_lag = min(min_lag), max_lag = max(max_lag), max_change = mean(max_change), max_rel_change = mean(max_rel_change), time_to_pct_final = mean(time_to_pct_final))
+  summarise(
+    n_rev = mean(n_revisions),
+    min_lag = min(min_lag),
+    max_lag = max(max_lag),
+    max_change = mean(max_change),
+    max_rel_change = mean(max_rel_change),
+    time_to_pct_final = mean(time_to_pct_final)
+  )
 ```
 Most of the states have similar stats on most of these features, except for Florida, which takes nearly double the amount of time to get close to the right value, with California not too far behind.
 
