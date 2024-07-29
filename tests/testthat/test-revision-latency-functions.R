@@ -36,5 +36,6 @@ test_that("revision_summary works for a dummy dataset", {
 })
 test_that("tidyselect is functional", {
   expect_no_error(revision_summary(dummy_ex, value))
+  expect_no_error(revision_summary(dummy_ex, starts_with("val")))
 })
 test_that("revision_summary works for various timetypes", {})
