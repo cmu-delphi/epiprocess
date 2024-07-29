@@ -15,7 +15,8 @@ new_epi_archive(
   additional_metadata,
   compactify,
   clobberable_versions_start,
-  versions_end
+  versions_end,
+  compactify_tol = .Machine$double.eps^0.5
 )
 
 validate_epi_archive(
@@ -88,6 +89,8 @@ beyond \code{max(x$version)}, but they all contained empty updates. (The default
 value of \code{clobberable_versions_start} does not fully trust these empty
 updates, and assumes that any version \verb{>= max(x$version)} could be
 clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
+
+\item{compactify_tol}{double. the tolerance used to detect approximate equality for compactification}
 
 \item{.versions_end}{location based versions_end, used to avoid prefix
 \code{version = issue} from being assigned to \code{versions_end} instead of being

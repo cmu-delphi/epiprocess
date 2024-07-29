@@ -13,7 +13,8 @@ revision_summary(
   quick_revision = as.difftime(3, units = "days"),
   few_revisions = 3,
   rel_spread_threshold = 0.1,
-  abs_spread_threshold = NULL
+  abs_spread_threshold = NULL,
+  compactify_tol = .Machine$double.eps^0.5
 )
 }
 \arguments{
@@ -50,13 +51,16 @@ spread used to characterize revisions which don't actually change very
 much. Default is 5\% of the maximum value in the dataset, but this is the
 most unit dependent of values, and likely needs to be chosen appropriate
 for the scale of the dataset.}
+
+\item{compactify_tol}{float, used if \code{drop_nas=TRUE}, it determines the
+threshold for when two floats are considered identical.}
 }
 \description{
-\code{revision_summary} removes all missing values, and then computes some basic
-statistics about the revision behavior of an archive, returning a tibble of
-a per-epi-key (so time_value, geo_value pair, possibly others based on the
-metadata). If \code{print_inform} is true, it prints a concise summary. The
-columns returned are:
+\code{revision_summary} removes all missing values (if requested), and then
+computes some basic statistics about the revision behavior of an archive,
+returning a tibble of a per-epi-key (so time_value, geo_value pair,
+possibly others based on the metadata). If \code{print_inform} is true, it
+prints a concise summary. The columns returned are:
 \enumerate{
 \item \code{min_lag}: the minimum time to any value (if \code{drop_nas=FALSE}, this
 includes \code{NA}'s)
