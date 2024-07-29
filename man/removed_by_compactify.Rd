@@ -4,7 +4,7 @@
 \alias{removed_by_compactify}
 \title{get the entries that \code{compactify_tibble} would remove}
 \usage{
-removed_by_compactify(df, keys)
+removed_by_compactify(df, keys, tolerance)
 }
 \description{
 get the entries that \code{compactify_tibble} would remove
