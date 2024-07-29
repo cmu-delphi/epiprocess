@@ -240,6 +240,7 @@ NULL
 #'   value of `clobberable_versions_start` does not fully trust these empty
 #'   updates, and assumes that any version `>= max(x$version)` could be
 #'   clobbered.) If `nrow(x) == 0`, then this argument is mandatory.
+#' @param compactify_tol double. the tolerance used to detect approximate equality for compactification
 #' @return An `epi_archive` object.
 #'
 #' @importFrom data.table as.data.table key setkeyv
@@ -295,15 +296,16 @@ new_epi_archive <- function(
     additional_metadata,
     compactify,
     clobberable_versions_start,
-    versions_end) {
+    versions_end,
+    compactify_tol = .Machine$double.eps^0.5) {
   # Create the data table; if x was an un-keyed data.table itself,
   # then the call to as.data.table() will fail to set keys, so we
   # need to check this, then do it manually if needed
   key_vars <- c("geo_value", "time_value", other_keys, "version")
-  DT <- as.data.table(x, key = key_vars) # nolint: object_name_linter
-  if (!identical(key_vars, key(DT))) setkeyv(DT, cols = key_vars)
+  data_table <- as.data.table(x, key = key_vars) # nolint: object_name_linter
+  if (!identical(key_vars, key(data_table))) setkeyv(data_table, cols = key_vars)
 
-  if (anyDuplicated(DT, by = key(DT)) != 0L) {
+  if (anyDuplicated(data_table, by = key(data_table)) != 0L) {
     cli_abort("`x` must have one row per unique combination of the key variables. If you
             have additional key variables other than `geo_value`, `time_value`, and
             `version`, such as an age group column, please specify them in `other_keys`.
@@ -313,15 +315,15 @@ new_epi_archive <- function(
     )
   }
 
-  nrow_before_compactify <- nrow(DT)
+  nrow_before_compactify <- nrow(data_table)
   # Runs compactify on data frame
   if (is.null(compactify) || compactify == TRUE) {
-    DT <- compactify_tibble(DT, key_vars) # nolint: object_name_linter
+    data_table <- compactify_tibble(data_table, key_vars, compactify_tol)
   }
   # Warns about redundant rows if the number of rows decreased, and we didn't
   # explicitly say to compactify
-  if (is.null(compactify) && nrow(DT) < nrow_before_compactify) {
-    elim <- removed_by_compactify(DT, key_vars)
+  if (is.null(compactify) && nrow(data_table) < nrow_before_compactify) {
+    elim <- removed_by_compactify(data_table, key_vars, compactify_tol)
     warning_intro <- cli::format_inline(
       "Found rows that appear redundant based on
             last (version of each) observation carried forward;
@@ -343,7 +345,7 @@ new_epi_archive <- function(
 
   structure(
     list(
-      DT = DT,
+      DT = data_table,
       geo_type = geo_type,
       time_type = time_type,
       additional_metadata = additional_metadata,
@@ -362,51 +364,51 @@ new_epi_archive <- function(
 #'   changed, and so is kept.
 #' @keywords internal
 #' @importFrom dplyr filter
-compactify_tibble <- function(df, keys) {
+compactify_tibble <- function(df, keys, tolerance = .Machine$double.eps^.5) {
   df %>%
     arrange(!!!keys) %>%
     filter(if_any(
       c(everything(), -version), # all non-version columns
-      ~ !is_locf(.)
+      ~ !is_locf(., tolerance)
     ))
 }
 
 #' get the entries that `compactify_tibble` would remove
 #' @keywords internal
 #' @importFrom dplyr filter if_all everything
-removed_by_compactify <- function(df, keys) {
+removed_by_compactify <- function(df, keys, tolerance) {
   df %>%
     arrange(!!!keys) %>%
-    filter(if_all(
+    filter(if_any(
       c(everything(), -version),
-      ~ is_locf(.)
+      ~ is_locf(., tolerance)
     )) # nolint: object_usage_linter
 }
 
 #' Checks to see if a value in a vector is LOCF
 #' @description
 #' LOCF meaning last observation carried forward. lags the vector by 1, then
-#'   compares with itself. For floats it uses float comparison, otherwise it
-#'   uses equality.
-#' `NA`'s are considered equal to `NA`'s, while nan's are not.
+#'   compares with itself. For doubles it uses float comparison via
+#'   [`dplyr::near`], otherwise it uses equality.  `NA`'s and `NaN`'s are
+#'   considered equal to themselves and each other.
 #' @importFrom dplyr lag if_else near
 #' @keywords internal
-is_locf <- function(vec) { # nolint: object_usage_linter
-  lag_vec <- lag(vec)
+is_locf <- function(vec, tolerance) { # nolint: object_usage_linter
+  lag_vec <- dplyr::lag(vec)
   if (typeof(vec) == "double") {
-    if_else(
+    res <- if_else(
       !is.na(vec) & !is.na(lag_vec),
-      near(vec, lag_vec),
+      near(vec, lag_vec, tol = tolerance),
       is.na(vec) & is.na(lag_vec)
-    ) %>%
-      return()
+    )
+    return(res)
   } else {
-    if_else(
+    res <- if_else(
       !is.na(vec) & !is.na(lag_vec),
       vec == lag_vec,
       is.na(vec) & is.na(lag_vec)
-    ) %>%
-      return()
+    )
+    return(res)
   }
 }
 

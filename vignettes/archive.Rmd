@@ -146,9 +146,9 @@ revision_details %>%
     n_rev = mean(n_revisions),
     min_lag = min(min_lag),
     max_lag = max(max_lag),
-    max_change = mean(max_change),
-    max_rel_change = mean(max_rel_change),
-    time_to_pct_final = mean(time_to_pct_final)
+    spread = mean(spread),
+    rel_spread = mean(rel_spread),
+    time_near_latest = mean(time_near_latest)
   )
 ```
 Most of the states have similar stats on most of these features, except for Florida, which takes nearly double the amount of time to get close to the right value, with California not too far behind.

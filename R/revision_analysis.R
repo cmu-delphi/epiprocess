@@ -1,32 +1,34 @@
 #' A function to describe revision behavior for an archive
 #' @description
-#' `revision_summary` removes all missing values, and then computes some basic
-#'   statistics about the revision behavior of an archive, returning a tibble of
-#'   a per-epi-key (so time_value, geo_value pair, possibly others based on the
-#'   metadata). If `print_inform` is true, it prints a concise summary. The
-#'   columns returned are:
+#' `revision_summary` removes all missing values (if requested), and then
+#'   computes some basic statistics about the revision behavior of an archive,
+#'   returning a tibble of a per-epi-key (so time_value, geo_value pair,
+#'   possibly others based on the metadata). If `print_inform` is true, it
+#'   prints a concise summary. The columns returned are:
 #'  1. `min_lag`: the minimum time to any value (if `drop_nas=FALSE`, this
 #'   includes `NA`'s)
 #'  2. `max_lag`: the amount of time until the final (new) version (same caveat
 #'   for `drop_nas=FALSE`, though it is far less likely to matter)
-#'  3. `max_change`: the difference between the smallest and largest values (this
+#'  3. `spread`: the difference between the smallest and largest values (this
 #'   always excludes `NA` values)
-#'  4. `max_rel_change`: `max_change` divided by the largest value (so it will
+#'  4. `rel_spread`: `spread` divided by the largest value (so it will
 #'   always be less than 1). Note that this need not be the final value. It will
-#'   be `NA` whenever `max_change` is 0.
-#'  5. `time_to_x_final`: where `x` is the `percent_final_value` (default). This
-#'   gives the lag when the value is within `1-x` of the value at the final
-#'   time. For example, consider the series (0,20, 99, 150, 102, 100); then
-#'   `time_to_x_final` is the 5th index, since even though 99 is within 20%, it
-#'   is outside the window afterwards at 150.
+#'   be `NA` whenever `spread` is 0.
+#'  5. `time_near_latest`: This gives the lag when the value is within
+#'   `within_latest` (default 20%) of the value at the latest time. For example,
+#'   consider the series (0,20, 99, 150, 102, 100); then `time_near_latest` is
+#'   the 5th index, since even though 99 is within 20%, it is outside the window
+#'   afterwards at 150.
 #' @param epi_arch an epi_archive to be analyzed
-#' @param ... tidyselect, used to choose the column to summarize. If empty, it
+#' @param ... <[`tidyselect`][dplyr_tidy_select]>, used to choose the column to summarize. If empty, it
 #'   chooses the first. Currently only implemented for one column at a time
 #' @param drop_nas bool, drop any `NA` values from the archive? After dropping
-#'   `NA`'s compactify is run again to make sure there are no duplicate values.
+#'   `NA`'s compactify is run again to make sure there are no duplicate values
+#'   from occasions when the signal is revised to be NA, and then back to its
+#'   immediately-preceding value.
 #' @param print_inform bool, determines whether to print summary information, or
 #'   only return the full summary tibble
-#' @param percent_final_value double between 0 and 1. Determines the threshold
+#' @param within_latest double between 0 and 1. Determines the threshold
 #'   used for the `time_to`
 #' @param quick_revision difftime or integer (integer is treated as days), for
 #'   the printed summary, the amount of time between the final revision and the
@@ -34,19 +36,21 @@
 #'   days
 #' @param few_revisions integer, for the printed summary, the upper bound on the
 #'   number of revisions to consider "few". Default is 3.
-#' @param abs_change_threshold numeric, for the printed summary, the maximum change
-#'   used to characterize revisions which don't actually change very much.
-#'   Default is 5% of the maximum value in the dataset, but this is the most
-#'   unit dependent of values, and likely needs to be chosen appropriate for the
-#'   scale of the dataset
-#' @param rel_change_threshold float between 0 and 1, for the printed summary, the
-#'   relative change fraction used to characterize revisions which don't
+#' @param abs_spread_threshold numeric, for the printed summary, the maximum
+#'   spread used to characterize revisions which don't actually change very
+#'   much. Default is 5% of the maximum value in the dataset, but this is the
+#'   most unit dependent of values, and likely needs to be chosen appropriate
+#'   for the scale of the dataset.
+#' @param rel_spread_threshold float between 0 and 1, for the printed summary,
+#'   the relative spread fraction used to characterize revisions which don't
 #'   actually change very much. Default is .1, or 10% of the final value
+#' @param compactify_tol float, used if `drop_nas=TRUE`, it determines the
+#'   threshold for when two floats are considered identical.
 #' @examples
 #'
 #' revision_example <- revision_summary(archive_cases_dv_subset, percent_cli)
 #'
-#' revision_example %>% arrange(desc(max_change))
+#' revision_example %>% arrange(desc(spread))
 #' @export
 #' @importFrom cli cli_inform cli_abort cli_li
 #' @importFrom rlang list2 syms
@@ -56,11 +60,12 @@ revision_summary <- function(epi_arch,
                              ...,
                              drop_nas = TRUE,
                              print_inform = TRUE,
-                             percent_final_value = 0.8,
+                             within_latest = 0.2,
                              quick_revision = as.difftime(3, units = "days"),
                              few_revisions = 3,
-                             rel_change_threshold = 0.1,
-                             abs_change_threshold = NULL) {
+                             rel_spread_threshold = 0.1,
+                             abs_spread_threshold = NULL,
+                             compactify_tol = .Machine$double.eps^0.5) {
   arg <- enquos(...)
   if (length(arg) == 0) {
     first_non_key <- !(names(epi_arch$DT) %in% c(key_colnames(epi_arch), "version"))
@@ -68,14 +73,14 @@ revision_summary <- function(epi_arch,
   } else if (length(arg) > 1) {
     cli_abort("Not currently implementing more than one column at a time. Run each separately")
   }
-  if (is.null(abs_change_threshold)) {
-    abs_change_threshold <- .05 * epi_arch$DT %>%
+  if (is.null(abs_spread_threshold)) {
+    abs_spread_threshold <- .05 * epi_arch$DT %>%
       pull(...) %>%
       max(na.rm = TRUE)
   }
   # for each time_value, get
   #   the number of revisions
-  #   the maximum change in value (both absolute and relative)
+  #   the maximum spread in value (both absolute and relative)
   #   the min lag
   #   the max lag
   #
@@ -83,47 +88,48 @@ revision_summary <- function(epi_arch,
   keys <- key_colnames(epi_arch)
   names(epi_arch$DT)
 
+  revision_behavior <-
+    epi_arch$DT %>%
+    select(c(geo_value, time_value, all_of(keys), version, !!arg[[1]]))
   if (drop_nas) {
     # if we're dropping NA's, we should recompactify
     revision_behavior <-
-      epi_arch$DT %>%
+      revision_behavior %>%
       filter(!is.na(!!arg[[1]])) %>%
       arrange(across(c(geo_value, time_value, all_of(keys), version))) %>% # need to sort before compactifying
-      compactify_tibble(c(keys, version))
+      compactify_tibble(c(keys, version), compactify_tol)
   } else {
     revision_behavior <- epi_arch$DT
   }
   revision_behavior <- revision_behavior %>%
-    mutate(across(c(version, time_value), list(int = as.integer))) %>%
-    mutate(lag = version_int - time_value_int) %>% # nolint: object_usage_linter
+    mutate(lag = as.integer(version) - as.integer(time_value)) %>% # nolint: object_usage_linter
     group_by(across(all_of(keys))) %>% # group by all the keys
-    select(-time_value_int, -version_int) %>%
     summarize(
       n_revisions = dplyr::n() - 1,
       min_lag = min(lag), # nolint: object_usage_linter
       max_lag = max(lag), # nolint: object_usage_linter
-      max_change = suppressWarnings(max(!!arg[[1]], na.rm = TRUE) - min(!!arg[[1]], na.rm = TRUE)),
-      max_rel_change = (max_change) / suppressWarnings(max(!!arg[[1]], na.rm = TRUE)), # nolint: object_usage_linter
-      time_to = time_to_x_percent(lag, !!arg[[1]], percent = percent_final_value)
+      spread = spread_vec(!!arg[[1]]),
+      rel_spread = (spread) / max_no_na(!!arg[[1]]), # nolint: object_usage_linter
+      time_to = time_within_x_latest(lag, !!arg[[1]], prop = within_latest), # nolint: object_usage_linter
+      .groups = "drop"
     ) %>%
-    ungroup() %>%
     mutate(
       # TODO the units here may be a problem
       min_lag = as.difftime(min_lag, units = "days"), # nolint: object_usage_linter
       max_lag = as.difftime(max_lag, units = "days"), # nolint: object_usage_linter
-      time_to_pct_final = as.difftime(time_to, units = "days") # nolint: object_usage_linter
+      time_near_latest = as.difftime(time_to, units = "days") # nolint: object_usage_linter
     ) %>%
     select(-time_to)
   if (print_inform) {
-    total_num <- nrow(revision_behavior) # nolint: object_usage_linter
     cli_inform("Number of revisions:")
     cli_inform("Min lag (time to first version):")
-    difftime_summary(revision_behavior$min_lag)
+    difftime_summary(revision_behavior$min_lag) %>% print()
     if (!drop_nas) {
       total_na <- nrow(epi_arch$DT %>% filter(is.na(!!arg[[1]]))) # nolint: object_usage_linter
       cli_inform("Fraction of all versions that are `NA`:")
       cli_li(num_percent(total_na, nrow(epi_arch$DT)))
     }
+    total_num <- nrow(revision_behavior) # nolint: object_usage_linter
     total_num_unrevised <- sum(revision_behavior$n_revisions == 0) # nolint: object_usage_linter
     cli_inform("No revisions:")
     cli_li(num_percent(total_num_unrevised, total_num))
@@ -145,30 +151,30 @@ revision_summary <- function(epi_arch,
 
     real_revisions <- revision_behavior %>% filter(n_revisions > 0) # nolint: object_usage_linter
     n_real_revised <- nrow(real_revisions) # nolint: object_usage_linter
-    rel_change <- sum( # nolint: object_usage_linter
-      real_revisions$max_rel_change <
-        rel_change_threshold,
+    rel_spread <- sum( # nolint: object_usage_linter
+      real_revisions$rel_spread <
+        rel_spread_threshold,
       na.rm = TRUE
-    ) + sum(is.na(real_revisions$max_rel_change))
-    cli_inform("Less than {rel_change_threshold} change in relative value (only from the revised subset):")
-    cli_li(num_percent(rel_change, n_real_revised))
-    na_rel_change <- sum(is.na(real_revisions$max_rel_change)) # nolint: object_usage_linter
-    cli_inform("{units(quick_revision)} until over {percent_final_value} percent of the final value:")
-    difftime_summary(revision_behavior[[glue::glue("time_to_pct_final")]])
-    abs_change <- sum( # nolint: object_usage_linter
-      real_revisions$max_change >
-        abs_change_threshold
+    ) + sum(is.na(real_revisions$rel_spread))
+    cli_inform("Less than {rel_spread_threshold} spread in relative value (only from the revised subset):")
+    cli_li(num_percent(rel_spread, n_real_revised))
+    na_rel_spread <- sum(is.na(real_revisions$rel_spread)) # nolint: object_usage_linter
+    cli_inform("{units(quick_revision)} until within {within_latest*100}% of the latest value:")
+    difftime_summary(revision_behavior[["time_near_latest"]]) %>% print()
+    abs_spread <- sum( # nolint: object_usage_linter
+      real_revisions$spread >
+        abs_spread_threshold
     ) # nolint: object_usage_linter
-    cli_inform("Change by more than {abs_change_threshold} in actual value (when revised):")
-    cli_li(num_percent(abs_change, n_real_revised))
+    cli_inform("Spread of more than {abs_spread_threshold} in actual value (when revised):")
+    cli_li(num_percent(abs_spread, n_real_revised))
   }
   return(revision_behavior)
 }
 
 #' @keywords internal
-time_to_x_percent <- function(lags, values, percent = .9) {
-  final_value <- values[which.max(lags)]
-  close_enough <- abs(values - final_value) < (1 - percent) * final_value
+time_within_x_latest <- function(lags, values, prop = .2) {
+  latest_value <- values[length(values)]
+  close_enough <- abs(values - latest_value) < prop * latest_value
   # we want to ignore any stretches where it's close, but goes farther away later
   return(get_last_run(close_enough, lags))
 }
@@ -183,7 +189,32 @@ time_to_x_percent <- function(lags, values, percent = .9) {
 get_last_run <- function(bool_vec, values_from) {
   runs <- rle(bool_vec)
   length(bool_vec) - tail(runs$lengths, n = 1)
-  values_from[length(bool_vec) - tail(runs$lengths, n = 1) + 1]
+  values_from[[length(bool_vec) - tail(runs$lengths, n = 1) + 1]]
+}
+
+#' the default behavior returns a warning on empty lists, which we do not want,
+#' and there is no super clean way of preventing this
+#' @keywords internal
+max_no_na <- function(x) {
+  x <- x[!is.na(x)]
+  if (length(x) == 0) {
+    return(Inf)
+  } else {
+    return(max(x))
+  }
+}
+#' the default behavior returns a warning on empty lists, which we do not want
+#' @keywords internal
+spread_vec <- function(x) {
+  x <- x[!is.na(x)]
+  if (length(x) == 0) {
+    return(-Inf)
+  } else {
+    res <- x %>%
+      range(na.rm = TRUE) %>%
+      diff(na.rm = TRUE)
+    return(res)
+  }
 }
 
 
@@ -198,12 +229,17 @@ num_percent <- function(a, b) {
 #' summary doesn't work on difftimes
 #' @keywords internal
 difftime_summary <- function(diff_time_val) {
-  data.frame(
-    min = min(diff_time_val),
-    median = median(diff_time_val),
-    mean = round(mean(diff_time_val), 0),
-    max = max(diff_time_val),
-    row.names = " ",
-    check.names = FALSE
-  ) %>% print()
+  if (length(diff_time_val) > 0) {
+    res <- data.frame(
+      min = min(diff_time_val),
+      median = median(diff_time_val),
+      mean = round(mean(diff_time_val), 1),
+      max = max(diff_time_val),
+      row.names = " ",
+      check.names = FALSE
+    )
+    return(res)
+  } else {
+    return(data.frame())
+  }
 }
