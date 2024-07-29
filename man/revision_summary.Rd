@@ -9,26 +9,28 @@ revision_summary(
   ...,
   drop_nas = TRUE,
   print_inform = TRUE,
-  percent_final_value = 0.8,
+  within_latest = 0.2,
   quick_revision = as.difftime(3, units = "days"),
   few_revisions = 3,
-  rel_change_threshold = 0.1,
-  abs_change_threshold = NULL
+  rel_spread_threshold = 0.1,
+  abs_spread_threshold = NULL
 )
 }
 \arguments{
 \item{epi_arch}{an epi_archive to be analyzed}
 
-\item{...}{tidyselect, used to choose the column to summarize. If empty, it
+\item{...}{<\code{\link[=dplyr_tidy_select]{tidyselect}}>, used to choose the column to summarize. If empty, it
 chooses the first. Currently only implemented for one column at a time}
 
 \item{drop_nas}{bool, drop any \code{NA} values from the archive? After dropping
-\code{NA}'s compactify is run again to make sure there are no duplicate values.}
+\code{NA}'s compactify is run again to make sure there are no duplicate values
+from occasions when the signal is revised to be NA, and then back to its
+immediately-preceding value.}
 
 \item{print_inform}{bool, determines whether to print summary information, or
 only return the full summary tibble}
 
-\item{percent_final_value}{double between 0 and 1. Determines the threshold
+\item{within_latest}{double between 0 and 1. Determines the threshold
 used for the \code{time_to}}
 
 \item{quick_revision}{difftime or integer (integer is treated as days), for
@@ -39,15 +41,15 @@ days}
 \item{few_revisions}{integer, for the printed summary, the upper bound on the
 number of revisions to consider "few". Default is 3.}
 
-\item{rel_change_threshold}{float between 0 and 1, for the printed summary, the
-relative change fraction used to characterize revisions which don't
+\item{rel_spread_threshold}{float between 0 and 1, for the printed summary,
+the relative spread fraction used to characterize revisions which don't
 actually change very much. Default is .1, or 10\% of the final value}
 
-\item{abs_change_threshold}{numeric, for the printed summary, the maximum change
-used to characterize revisions which don't actually change very much.
-Default is 5\% of the maximum value in the dataset, but this is the most
-unit dependent of values, and likely needs to be chosen appropriate for the
-scale of the dataset}
+\item{abs_spread_threshold}{numeric, for the printed summary, the maximum
+spread used to characterize revisions which don't actually change very
+much. Default is 5\% of the maximum value in the dataset, but this is the
+most unit dependent of values, and likely needs to be chosen appropriate
+for the scale of the dataset.}
 }
 \description{
 \code{revision_summary} removes all missing values, and then computes some basic
@@ -60,21 +62,21 @@ columns returned are:
 includes \code{NA}'s)
 \item \code{max_lag}: the amount of time until the final (new) version (same caveat
 for \code{drop_nas=FALSE}, though it is far less likely to matter)
-\item \code{max_change}: the difference between the smallest and largest values (this
+\item \code{spread}: the difference between the smallest and largest values (this
 always excludes \code{NA} values)
-\item \code{max_rel_change}: \code{max_change} divided by the largest value (so it will
+\item \code{rel_spread}: \code{spread} divided by the largest value (so it will
 always be less than 1). Note that this need not be the final value. It will
-be \code{NA} whenever \code{max_change} is 0.
-\item \code{time_to_x_final}: where \code{x} is the \code{percent_final_value} (default). This
-gives the lag when the value is within \code{1-x} of the value at the final
-time. For example, consider the series (0,20, 99, 150, 102, 100); then
-\code{time_to_x_final} is the 5th index, since even though 99 is within 20\%, it
-is outside the window afterwards at 150.
+be \code{NA} whenever \code{spread} is 0.
+\item \code{time_near_latest}: This gives the lag when the value is within
+\code{within_latest} (default 20\%) of the value at the latest time. For example,
+consider the series (0,20, 99, 150, 102, 100); then \code{time_near_latest} is
+the 5th index, since even though 99 is within 20\%, it is outside the window
+afterwards at 150.
 }
 }
 \examples{
 
 revision_example <- revision_summary(archive_cases_dv_subset, percent_cli)
 
-revision_example \%>\% arrange(desc(max_change))
+revision_example \%>\% arrange(desc(spread))
 }

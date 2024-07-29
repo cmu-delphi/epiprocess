@@ -4,7 +4,7 @@ dummy_ex <- tibble::tribble(
   "al", as.Date("2020-01-01"), as.Date("2020-01-01"), 1,
   "al", as.Date("2020-01-01"), as.Date("2020-01-10"), 1,
   "al", as.Date("2020-01-01"), as.Date("2020-01-20"), 100,
-  # al 2 has no revision, a min lag of 0, and a max_rel_change of 0
+  # al 2 has no revision, a min lag of 0, and a rel_spread of 0
   "al", as.Date("2020-01-02"), as.Date("2020-01-02"), 1,
   # al 3 has 1 revision and a min lag of 1, and a change of 3
   "al", as.Date("2020-01-03"), as.Date("2020-01-04"), 1,
@@ -24,7 +24,7 @@ dummy_ex <- tibble::tribble(
   # ak 2 has 1 revision a min lag of 4, a change of 9, and a rel change of 9%
   "ak", as.Date("2020-01-02"), as.Date("2020-01-06"), 100,
   "ak", as.Date("2020-01-02"), as.Date("2020-01-07"), 91,
-  # ak 3 has 0 revisions, and a value of zero, and thus a max_rel_change of NaN
+  # ak 3 has 0 revisions, and a value of zero, and thus a rel_spread of NaN
   "ak", as.Date("2020-01-03"), as.Date("2020-01-06"), 0,
   "ak", as.Date("2020-01-03"), as.Date("2020-01-07"), 0,
 ) %>%

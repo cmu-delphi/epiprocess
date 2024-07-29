@@ -226,3 +226,9 @@ test_that("`epi_archive` rejects dataframes where time_value and version columns
     )
   expect_error(as_epi_archive(tbl3), class = "epiprocess__time_value_version_mismatch")
 })
+
+test_that("is_locf works as expected", {
+  vec <- c(1, 1, 1e-10, 1.1e-10, NA, NA, NaN, NaN)
+  is_repeated <- c(0, 1, 0, 1, 0, 1, 1, 1)
+  expect_equal(is_locf(vec, .Machine$double.eps^0.5), as.logical(is_repeated))
+})
