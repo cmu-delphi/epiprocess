@@ -54,7 +54,7 @@
 #' @export
 #' @importFrom cli cli_inform cli_abort cli_li
 #' @importFrom rlang list2 syms
-#' @importFrom dplyr mutate group_by arrange filter if_any all_of across pull
+#' @importFrom dplyr mutate group_by arrange filter if_any all_of across pull pick
 #'   everything ungroup summarize if_else %>%
 revision_summary <- function(epi_arch,
                              ...,
@@ -66,10 +66,10 @@ revision_summary <- function(epi_arch,
                              rel_spread_threshold = 0.1,
                              abs_spread_threshold = NULL,
                              compactify_tol = .Machine$double.eps^0.5) {
-  arg <- enquos(...)
+  arg <- names(eval_select(rlang::expr(c(...)), allow_rename = FALSE, data = epi_arch$DT))
   if (length(arg) == 0) {
     first_non_key <- !(names(epi_arch$DT) %in% c(key_colnames(epi_arch), "version"))
-    arg <- syms(names(epi_arch$DT)[first_non_key][1])
+    arg <- names(epi_arch$DT)[first_non_key][1]
   } else if (length(arg) > 1) {
     cli_abort("Not currently implementing more than one column at a time. Run each separately")
   }
@@ -90,27 +90,28 @@ revision_summary <- function(epi_arch,
 
   revision_behavior <-
     epi_arch$DT %>%
-    select(c(geo_value, time_value, all_of(keys), version, !!arg[[1]]))
+    select(c(geo_value, time_value, all_of(keys), version, !!arg))
   if (drop_nas) {
     # if we're dropping NA's, we should recompactify
     revision_behavior <-
       revision_behavior %>%
-      filter(!is.na(!!arg[[1]])) %>%
+      filter(!is.na(c_across(!!arg))) %>%
       arrange(across(c(geo_value, time_value, all_of(keys), version))) %>% # need to sort before compactifying
       compactify_tibble(c(keys, version), compactify_tol)
   } else {
     revision_behavior <- epi_arch$DT
   }
-  revision_behavior <- revision_behavior %>%
+  revision_behavior <-
+    revision_behavior %>%
     mutate(lag = as.integer(version) - as.integer(time_value)) %>% # nolint: object_usage_linter
     group_by(across(all_of(keys))) %>% # group by all the keys
     summarize(
       n_revisions = dplyr::n() - 1,
       min_lag = min(lag), # nolint: object_usage_linter
       max_lag = max(lag), # nolint: object_usage_linter
-      spread = spread_vec(!!arg[[1]]),
-      rel_spread = (spread) / max_no_na(!!arg[[1]]), # nolint: object_usage_linter
-      time_to = time_within_x_latest(lag, !!arg[[1]], prop = within_latest), # nolint: object_usage_linter
+      spread = spread_vec(pick(!!arg)),
+      rel_spread = spread / max_no_na(pick(!!arg)), # nolint: object_usage_linter
+      time_to = time_within_x_latest(lag, pick(!!arg), prop = within_latest), # nolint: object_usage_linter
       .groups = "drop"
     ) %>%
     mutate(
@@ -125,7 +126,9 @@ revision_summary <- function(epi_arch,
     cli_inform("Min lag (time to first version):")
     difftime_summary(revision_behavior$min_lag) %>% print()
     if (!drop_nas) {
-      total_na <- nrow(epi_arch$DT %>% filter(is.na(!!arg[[1]]))) # nolint: object_usage_linter
+      total_na <- epi_arch$DT %>%
+        filter(is.na(c_across(!!arg))) %>% # nolint: object_usage_linter
+        nrow()
       cli_inform("Fraction of all versions that are `NA`:")
       cli_li(num_percent(total_na, nrow(epi_arch$DT)))
     }
@@ -171,9 +174,12 @@ revision_summary <- function(epi_arch,
   return(revision_behavior)
 }
 
+#' pull the value from lags when values starts indefinitely being within prop of it's last value.
+#' @param values this should be a 1 column tibble. errors may occur otherwise
 #' @keywords internal
 time_within_x_latest <- function(lags, values, prop = .2) {
-  latest_value <- values[length(values)]
+  values <- values[[1]]
+  latest_value <- values[[length(values)]]
   close_enough <- abs(values - latest_value) < prop * latest_value
   # we want to ignore any stretches where it's close, but goes farther away later
   return(get_last_run(close_enough, lags))
