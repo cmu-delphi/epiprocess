@@ -414,7 +414,9 @@ test_that("epix_slide with all_versions option has access to all older versions"
   result5 <- ea %>%
     group_by() %>%
     epix_slide(
-      , slide_fn(.x, .group_key, .ref_time_value),
+      # unfortunately, we can't pass this directly as `f` and need an extra comma
+      ,
+      slide_fn(.x, .group_key, .ref_time_value),
       before = 10^3,
       all_versions = TRUE
     )

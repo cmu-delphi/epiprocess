@@ -314,7 +314,7 @@ test_that(
   }
 )
 
-test_that("can use unnamed list cols as slide computation output", {
+test_that("epi_slide outputs list columns when desired, and unpacks unnamed computations", {
   # See `toy_edf` and `basic_sum_result` definitions at top of file.
   # We'll try 7d sum with a few formats.
   expect_identical(
@@ -324,6 +324,10 @@ test_that("can use unnamed list cols as slide computation output", {
   expect_identical(
     toy_edf %>% epi_slide(before = 6L, ~ list(sum(.x$value))),
     basic_sum_result %>% dplyr::mutate(slide_value = as.list(slide_value))
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ list(rep(sum(.x$value), 2L))),
+    basic_sum_result %>% dplyr::mutate(slide_value = lapply(slide_value, rep, 2L))
   )
   expect_identical(
     toy_edf %>% epi_slide(before = 6L, ~ data.frame(slide_value = sum(.x$value))),
@@ -337,6 +341,70 @@ test_that("can use unnamed list cols as slide computation output", {
   expect_identical(
     toy_edf %>% epi_slide(before = 6L, ~ tibble(slide_value = list(sum(.x$value)))),
     basic_sum_result %>% mutate(across(slide_value, as.list))
+  )
+  # unnamed data-masking expression producing data frame:
+  expect_identical(
+    # unfortunately, we can't pass this directly as `f` and need an extra comma
+    toy_edf %>% epi_slide(before = 6L, , data.frame(slide_value = sum(.x$value))),
+    basic_sum_result
+  )
+})
+
+test_that("epi_slide can use sequential data masking expressions including NULL", {
+  edf <- tibble::tibble(
+    geo_value = 1,
+    time_value = 1:10,
+    value = 1:10
+  ) %>%
+    as_epi_df(as_of = 12L)
+
+  noisiness1 <- edf %>%
+    group_by(geo_value) %>%
+    epi_slide(
+      before = 1L, after = 2L,
+      valid = length(.x$value) == 4L,
+      pred = mean(.x$value[1:2]),
+      noisiness = sqrt(sum((.x$value[3:4] - pred)^2)),
+      pred = NULL
+    ) %>%
+    ungroup() %>%
+    filter(valid) %>%
+    select(-valid)
+
+  noisiness0 <- edf %>%
+    filter(
+      time_value >= min(time_value) + 1L,
+      time_value <= max(time_value) - 2L
+    ) %>%
+    mutate(noisiness = sqrt((3 - 1.5)^2 + (4 - 1.5)^2))
+
+  expect_identical(noisiness1, noisiness0)
+})
+
+test_that("epi_slide can use {nm} :=", {
+  nm <- "slide_value"
+  expect_identical(
+    # unfortunately, we can't pass this directly as `f` and need an extra comma
+    toy_edf %>% epi_slide(before = 6L, , !!nm := sum(value)),
+    basic_sum_result
+  )
+})
+
+test_that("epi_slide can produce packed outputs", {
+  packed_basic_result <- basic_sum_result %>%
+    tidyr::pack(container = c(slide_value)) %>%
+    dplyr_reconstruct(basic_sum_result)
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ tibble::tibble(slide_value = sum(.x$value)), new_col_name = "container"),
+    packed_basic_result
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, container = tibble::tibble(slide_value = sum(.x$value))),
+    packed_basic_result
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, , tibble::tibble(slide_value = sum(.x$value)), new_col_name = "container"),
+    packed_basic_result
   )
 })
 
