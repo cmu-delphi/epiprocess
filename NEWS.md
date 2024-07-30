@@ -4,6 +4,10 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 # epiprocess 0.9
 
+## Improvements
+
+- Inclusion of the function `revision_summary` to provide basic revision information for `epi_archive`s out of the box. (#492)
+
 # epiprocess 0.8
 
 ## Breaking changes
