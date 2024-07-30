@@ -235,15 +235,15 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     # If this wasn't a tidyeval computation, we still need to check the output
     # types. We'll let `list_unchop` deal with checking for type compatibility
     # between the outputs.
-    if (!rlang::is_quosures(f) &&
-      !all(vapply(slide_values_list, function(x) {
-        vctrs::obj_is_vector(x) && is.null(vctrs::vec_names(x))
+    if (!used_data_masking &&
+      !all(vapply(slide_values_list, function(comp_value) {
+        vctrs::obj_is_vector(comp_value) && is.null(vctrs::vec_names(comp_value))
       }, logical(1L)))
     ) {
-      cli_abort(
-        "The slide computations must return always atomic vectors
-          or data frames (and not a mix of these two structures)."
-      )
+      cli_abort("
+        the slide computations must always return data frames or unnamed (and
+        not a mix of these two structures).
+      ")
     }
 
     # Now figure out which rows in the data group are in the reference time
@@ -304,16 +304,19 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 
   # If `f` is missing, interpret ... as an expression for tidy evaluation
   if (missing(f)) {
-    quos <- enquos(...)
-    if (length(quos) == 0) {
+    used_data_masking <- TRUE
+    quosures <- enquos(...)
+    if (length(quosures) == 0) {
       cli_abort("If `f` is missing then a computation must be specified via `...`.")
     }
-    if (length(quos) > 1) {
+    if (length(quosures) > 1) {
       cli_abort("If `f` is missing then only a single computation can be specified via `...`.")
     }
 
-    f <- quos
+    f <- quosures
     ... <- missing_arg() # magic value that passes zero args as dots in calls below # nolint: object_usage_linter
+  } else {
+    used_data_masking <- FALSE
   }
 
   f <- as_slide_computation(f, ...)

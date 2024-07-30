@@ -285,12 +285,16 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
     # Carry out the specified computation
     comp_value <- f(.data_group, .group_key, ref_time_value, ...)
 
-    assert(
-      check_atomic(comp_value, any.missing = TRUE),
-      check_data_frame(comp_value),
-      combine = "or",
-      .var.name = "comp_value (an output of one of your slide computations)"
-    )
+    # If this wasn't a tidyeval computation, we still need to check the output
+    # types. We'll let `group_modify` and `vec_rbind` deal with checking for
+    # type compatibility between the outputs.
+    if (!used_data_masking &&
+          ! (vctrs::obj_is_vector(comp_value) && is.null(vctrs::vec_names(comp_value)))) {
+      cli_abort("
+        the slide computations must always return data frames or unnamed (and
+        not a mix of these two structures).
+      ")
+    }
 
     # Construct result first as list, then tibble-ify, to try to avoid some
     # redundant work. `group_modify()` provides the group key, we provide the
@@ -322,13 +326,16 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
 
   # If `f` is missing, interpret ... as an expression for tidy evaluation
   if (missing(f)) {
+    used_data_masking <- TRUE
     quosures <- enquos(...)
     if (length(quosures) == 0) {
       cli_abort("If `f` is missing then a computation must be specified via `...`.")
     }
 
-    f <- as_slide_computation(f)
+    f <- as_slide_computation(quosures)
     ... <- missing_arg() # nolint: object_usage_linter. magic value that passes zero args as dots in calls below
+  } else {
+    used_data_masking <- FALSE
   }
 
   f <- as_slide_computation(f, ...)
