@@ -2,11 +2,11 @@
 % Please edit documentation in R/archive.R
 \name{removed_by_compactify}
 \alias{removed_by_compactify}
-\title{get the entries that \code{compactify_tibble} would remove}
+\title{get the entries that \code{compactify} would remove}
 \usage{
 removed_by_compactify(df, keys, tolerance)
 }
 \description{
-get the entries that \code{compactify_tibble} would remove
+get the entries that \code{compactify} would remove
 }
 \keyword{internal}

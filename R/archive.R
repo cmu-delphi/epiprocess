@@ -318,7 +318,7 @@ new_epi_archive <- function(
   nrow_before_compactify <- nrow(data_table)
   # Runs compactify on data frame
   if (is.null(compactify) || compactify == TRUE) {
-    data_table <- compactify_tibble(data_table, key_vars, compactify_tol)
+    data_table <- compactify(data_table, key_vars, compactify_tol)
   }
   # Warns about redundant rows if the number of rows decreased, and we didn't
   # explicitly say to compactify
@@ -364,7 +364,7 @@ new_epi_archive <- function(
 #'   changed, and so is kept.
 #' @keywords internal
 #' @importFrom dplyr filter
-compactify_tibble <- function(df, keys, tolerance = .Machine$double.eps^.5) {
+compactify <- function(df, keys, tolerance = .Machine$double.eps^.5) {
   df %>%
     arrange(!!!keys) %>%
     filter(if_any(
@@ -373,7 +373,7 @@ compactify_tibble <- function(df, keys, tolerance = .Machine$double.eps^.5) {
     ))
 }
 
-#' get the entries that `compactify_tibble` would remove
+#' get the entries that `compactify` would remove
 #' @keywords internal
 #' @importFrom dplyr filter if_all everything
 removed_by_compactify <- function(df, keys, tolerance) {
