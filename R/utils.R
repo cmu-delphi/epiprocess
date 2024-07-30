@@ -312,7 +312,7 @@ as_slide_computation <- function(f, ...) {
         if (is.null(quosure_result_raw)) {
           nm <- nms[[quosure_i]]
           results_names <- results_names[results_names != nm]
-          remove(list = nm, envir = results_env)
+          rlang::env_unbind(results_env, nm)
         } else if (vctrs::obj_is_vector(quosure_result_raw) &&
           is.null(vctrs::vec_names(quosure_result_raw))) {
           # We want something like `dplyr_col_modify()` but allowing recycling
