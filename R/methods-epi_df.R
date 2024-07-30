@@ -4,15 +4,15 @@
 #' grouping.
 #'
 #' @template x
-#' @param ... additional arguments to forward to `NextMethod()`
+#' @param ... forwarded to `as_tibble` for `data.frame`s
 #'
 #' @importFrom tibble as_tibble
 #' @export
 as_tibble.epi_df <- function(x, ...) {
-  # Decaying drops the class and metadata. `as_tibble.grouped_df` drops the
-  # grouping and should be called by `NextMethod()` in the current design.
-  # See #223 for discussion of alternatives.
-  decay_epi_df(NextMethod())
+  # Note that some versions of `tsibble` overwrite `as_tibble.grouped_df`, which
+  # also impacts grouped `epi_df`s don't rely on `NextMethod()`. Destructure
+  # first instead.
+  tibble::as_tibble(vctrs::vec_data(x), ...)
 }
 
 #' Convert to tsibble format

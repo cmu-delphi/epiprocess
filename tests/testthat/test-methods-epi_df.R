@@ -128,6 +128,7 @@ test_that("Metadata and grouping are dropped by `as_tibble`", {
   expect_true(
     !any(c("metadata", "groups") %in% names(attributes(grouped_converted)))
   )
+  expect_s3_class(grouped_converted, class(tibble()), exact = TRUE)
 })
 
 test_that("Renaming columns gives appropriate colnames and metadata", {
