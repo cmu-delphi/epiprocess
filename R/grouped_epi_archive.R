@@ -289,7 +289,7 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
     # types. We'll let `group_modify` and `vec_rbind` deal with checking for
     # type compatibility between the outputs.
     if (!used_data_masking &&
-          ! (vctrs::obj_is_vector(comp_value) && is.null(vctrs::vec_names(comp_value)))) {
+      !(vctrs::obj_is_vector(comp_value) && is.null(vctrs::vec_names(comp_value)))) {
       cli_abort("
         the slide computations must always return data frames or unnamed (and
         not a mix of these two structures).
