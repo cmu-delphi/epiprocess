@@ -54,7 +54,7 @@
 #' @export
 #' @importFrom cli cli_inform cli_abort cli_li
 #' @importFrom rlang list2 syms
-#' @importFrom dplyr mutate group_by arrange filter if_any all_of across pull pick
+#' @importFrom dplyr mutate group_by arrange filter if_any all_of across pull pick c_across
 #'   everything ungroup summarize if_else %>%
 revision_summary <- function(epi_arch,
                              ...,
