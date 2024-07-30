@@ -351,34 +351,65 @@ test_that("epi_slide outputs list columns when desired, and unpacks unnamed comp
 })
 
 test_that("epi_slide can use sequential data masking expressions including NULL", {
-  edf <- tibble::tibble(
+  edf_A <- tibble::tibble(
     geo_value = 1,
     time_value = 1:10,
     value = 1:10
   ) %>%
     as_epi_df(as_of = 12L)
 
-  noisiness1 <- edf %>%
+  noisiness_A1 <- edf_A %>%
     group_by(geo_value) %>%
     epi_slide(
       before = 1L, after = 2L,
-      valid = length(.x$value) == 4L,
-      pred = mean(.x$value[1:2]),
-      noisiness = sqrt(sum((.x$value[3:4] - pred)^2)),
+      valid = nrow(.x) == 4L, # not the best approach...
+      m = mean(.x$value[1:2]),
+      noisiness = sqrt(mean((value[3:4] - m)^2)),
+      m = NULL
+    ) %>%
+    ungroup() %>%
+    filter(valid) %>%
+    select(-valid)
+
+  noisiness_A0 <- edf_A %>%
+    filter(
+      time_value >= min(time_value) + 1L,
+      time_value <= max(time_value) - 2L
+    ) %>%
+    mutate(noisiness = sqrt((3 - 1.5)^2 + (4 - 1.5)^2) / sqrt(2))
+
+  expect_identical(noisiness_A1, noisiness_A0)
+
+  edf_B <- tibble::tibble(
+    geo_value = 1,
+    time_value = 1:10,
+    value = rep(1:2, 5L)
+  ) %>%
+    as_epi_df(as_of = 12L)
+
+  noisiness_B1 <- edf_B %>%
+    group_by(geo_value) %>%
+    epi_slide(
+      before = 1L, after = 2L,
+      valid = nrow(.x) == 4L, # not the best approach...
+      model = list(lm(value ~ time_value, .x[1:2, ])),
+      pred = list(predict(model[[1L]], newdata = .x[3:4, "time_value"])),
+      model = NULL,
+      noisiness = sqrt(mean((.data$value[3:4] - .data$pred[[1L]])^2)),
       pred = NULL
     ) %>%
     ungroup() %>%
     filter(valid) %>%
     select(-valid)
 
-  noisiness0 <- edf %>%
+  noisiness_B0 <- edf_B %>%
     filter(
       time_value >= min(time_value) + 1L,
       time_value <= max(time_value) - 2L
     ) %>%
-    mutate(noisiness = sqrt((3 - 1.5)^2 + (4 - 1.5)^2))
+    mutate(noisiness = sqrt((1 - 3)^2 + (2 - 4)^2) / sqrt(2))
 
-  expect_identical(noisiness1, noisiness0)
+  expect_equal(noisiness_B1, noisiness_B0)
 })
 
 test_that("epi_slide can use {nm} :=", {
