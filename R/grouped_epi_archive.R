@@ -291,9 +291,10 @@ epix_slide.grouped_epi_archive <- function(x, f, ..., before, ref_time_values,
     if (!used_data_masking &&
       !(vctrs::obj_is_vector(comp_value) && is.null(vctrs::vec_names(comp_value)))) {
       cli_abort("
-        the slide computations must always return data frames or unnamed (and
-        not a mix of these two structures).
-      ")
+        the slide computations must always return data frames or unnamed vectors
+        (as determined by the vctrs package) (and not a mix of these two
+        structures).
+      ", class = "epiprocess__invalid_slide_comp_value")
     }
 
     # Construct result first as list, then tibble-ify, to try to avoid some

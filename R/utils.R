@@ -343,7 +343,12 @@ as_slide_computation <- function(f, ...) {
             results_env[[nm]] <- quosure_result_recycled
           }
         } else {
-          cli_abort("Problem with output of {.code {rlang::expr_deparse(rlang::quo_get_expr(f[[quosure_i]]))}}; it produced a result that was neither NULL, a data.frame, nor a vector without unnamed entries (as determined by the vctrs package).")
+          cli_abort("
+            Problem with output of {.code
+            {rlang::expr_deparse(rlang::quo_get_expr(f[[quosure_i]]))}}; it
+            produced a result that was neither NULL, a data.frame, nor a vector
+            without unnamed entries (as determined by the vctrs package).
+          ", class = "epiprocess__invalid_slide_comp_tidyeval_output")
         }
       }
       validate_tibble(new_tibble(as.list(results_env)[results_names]))

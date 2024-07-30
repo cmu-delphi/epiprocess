@@ -241,9 +241,10 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
       }, logical(1L)))
     ) {
       cli_abort("
-        the slide computations must always return data frames or unnamed (and
-        not a mix of these two structures).
-      ")
+        the slide computations must always return data frames or unnamed vectors
+        (as determined by the vctrs package) (and not a mix of these two
+        structures).
+      ", class = "epiprocess__invalid_slide_comp_value")
     }
 
     # Now figure out which rows in the data group are in the reference time

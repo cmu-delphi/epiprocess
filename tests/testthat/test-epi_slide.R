@@ -412,6 +412,25 @@ test_that("epi_slide can use sequential data masking expressions including NULL"
   expect_equal(noisiness_B1, noisiness_B0)
 })
 
+test_that("epi_slide complains on invalid computation outputs", {
+  expect_error(
+    toy_edf %>% epi_slide(before = 6L, ~ lm(value ~ time_value, .x)),
+    class = "epiprocess__invalid_slide_comp_value"
+  )
+  expect_no_error(
+    toy_edf %>% epi_slide(before = 6L, ~ list(lm(value ~ time_value, .x))),
+    class = "epiprocess__invalid_slide_comp_value"
+  )
+  expect_error(
+    toy_edf %>% epi_slide(before = 6L, model = lm(value ~ time_value, .x)),
+    class = "epiprocess__invalid_slide_comp_tidyeval_output"
+  )
+  expect_no_error(
+    toy_edf %>% epi_slide(before = 6L, model = list(lm(value ~ time_value, .x))),
+    class = "epiprocess__invalid_slide_comp_tidyeval_output"
+  )
+})
+
 test_that("epi_slide can use {nm} :=", {
   nm <- "slide_value"
   expect_identical(
