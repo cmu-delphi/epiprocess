@@ -309,9 +309,6 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     if (length(quosures) == 0) {
       cli_abort("If `f` is missing then a computation must be specified via `...`.")
     }
-    if (length(quosures) > 1) {
-      cli_abort("If `f` is missing then only a single computation can be specified via `...`.")
-    }
 
     f <- quosures
     ... <- missing_arg() # magic value that passes zero args as dots in calls below # nolint: object_usage_linter
