@@ -3,10 +3,18 @@
 \name{compactify}
 \alias{compactify}
 \title{Compactify}
+\usage{
+compactify(df, keys, tolerance = .Machine$double.eps^0.5)
+}
 \description{
 This section describes the internals of how compactification works in an
 \code{epi_archive()}. Compactification can potentially improve code speed or
 memory usage, depending on your data.
+
+works by shifting all rows except the version, then comparing values to see
+if they've changed. We need to arrange in descending order, but note that
+we don't need to group, since at least one column other than version has
+changed, and so is kept.
 }
 \details{
 In general, the last version of each observation is carried forward (LOCF) to
@@ -26,3 +34,4 @@ represent potential update data that we do not yet have access to; or in
 version in which it was first released, or if no version of that
 observation appears in the archive data at all.
 }
+\keyword{internal}

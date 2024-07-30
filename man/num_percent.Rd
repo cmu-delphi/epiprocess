@@ -4,7 +4,7 @@
 \alias{num_percent}
 \title{simple util for printing a fraction and it's percent}
 \usage{
-num_percent(a, b)
+num_percent(a, b, b_description)
 }
 \description{
 simple util for printing a fraction and it's percent

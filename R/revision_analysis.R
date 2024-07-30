@@ -21,10 +21,10 @@
 #'   afterwards at 150.
 #' @param epi_arch an epi_archive to be analyzed
 #' @param ... <[`tidyselect`][dplyr_tidy_select]>, used to choose the column to summarize. If empty, it
-#'   chooses the first. Currently only implemented for one column at a time
+#'   chooses the first. Currently only implemented for one column at a time.
 #' @param drop_nas bool, drop any `NA` values from the archive? After dropping
 #'   `NA`'s compactify is run again to make sure there are no duplicate values
-#'   from occasions when the signal is revised to be NA, and then back to its
+#'   from occasions when the signal is revised to `NA`, and then back to its
 #'   immediately-preceding value.
 #' @param print_inform bool, determines whether to print summary information, or
 #'   only return the full summary tibble
@@ -97,7 +97,7 @@ revision_summary <- function(epi_arch,
       revision_behavior %>%
       filter(!is.na(c_across(!!arg))) %>%
       arrange(across(c(geo_value, time_value, all_of(keys), version))) %>% # need to sort before compactifying
-      compactify_tibble(c(keys, version), compactify_tol)
+      compactify(c(keys, version), compactify_tol)
   } else {
     revision_behavior <- epi_arch$DT
   }
@@ -130,25 +130,25 @@ revision_summary <- function(epi_arch,
         filter(is.na(c_across(!!arg))) %>% # nolint: object_usage_linter
         nrow()
       cli_inform("Fraction of all versions that are `NA`:")
-      cli_li(num_percent(total_na, nrow(epi_arch$DT)))
+      cli_li(num_percent(total_na, nrow(epi_arch$DT), "versions"))
     }
     total_num <- nrow(revision_behavior) # nolint: object_usage_linter
     total_num_unrevised <- sum(revision_behavior$n_revisions == 0) # nolint: object_usage_linter
     cli_inform("No revisions:")
-    cli_li(num_percent(total_num_unrevised, total_num))
+    cli_li(num_percent(total_num_unrevised, total_num, "entries"))
     total_quickly_revised <- sum( # nolint: object_usage_linter
       revision_behavior$max_lag <=
         as.difftime(quick_revision, units = "days")
     )
     cli_inform("Quick revisions (last revision within {quick_revision}
 {units(quick_revision)} of the `time_value`):")
-    cli_li(num_percent(total_quickly_revised, total_num))
+    cli_li(num_percent(total_quickly_revised, total_num, "entries"))
     total_barely_revised <- sum( # nolint: object_usage_linter
       revision_behavior$n_revisions <=
         few_revisions
     )
     cli_inform("Few revisions (At most {few_revisions} revisions for that `time_value`):")
-    cli_li(num_percent(total_barely_revised, total_num))
+    cli_li(num_percent(total_barely_revised, total_num, "entries"))
     cli_inform("")
     cli_inform("Changes in Value:")
 
@@ -160,7 +160,7 @@ revision_summary <- function(epi_arch,
       na.rm = TRUE
     ) + sum(is.na(real_revisions$rel_spread))
     cli_inform("Less than {rel_spread_threshold} spread in relative value (only from the revised subset):")
-    cli_li(num_percent(rel_spread, n_real_revised))
+    cli_li(num_percent(rel_spread, n_real_revised, "revised entries"))
     na_rel_spread <- sum(is.na(real_revisions$rel_spread)) # nolint: object_usage_linter
     cli_inform("{units(quick_revision)} until within {within_latest*100}% of the latest value:")
     difftime_summary(revision_behavior[["time_near_latest"]]) %>% print()
@@ -169,7 +169,7 @@ revision_summary <- function(epi_arch,
         abs_spread_threshold
     ) # nolint: object_usage_linter
     cli_inform("Spread of more than {abs_spread_threshold} in actual value (when revised):")
-    cli_li(num_percent(abs_spread, n_real_revised))
+    cli_li(num_percent(abs_spread, n_real_revised, "revised entries"))
   }
   return(revision_behavior)
 }
@@ -227,8 +227,8 @@ spread_vec <- function(x) {
 
 #' simple util for printing a fraction and it's percent
 #' @keywords internal
-num_percent <- function(a, b) {
-  glue::glue("{prettyNum(a, big.mark=',')} out of {prettyNum(b, big.mark=',')}
+num_percent <- function(a, b, b_description) {
+  glue::glue("{prettyNum(a, big.mark=',')} out of {prettyNum(b, big.mark=',')} {b_description}
 ({round(a/b*100,digits=2)}%)")
 }
 
