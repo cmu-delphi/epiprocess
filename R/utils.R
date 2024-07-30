@@ -331,11 +331,11 @@ as_slide_computation <- function(f, ...) {
               }
             } # else `common_size` remains NULL
           }
-          if (inherits(quosure_result_recycled, "data.frame") && !manually_named[[i]]) {
+          if (inherits(quosure_result_recycled, "data.frame") && !manually_named[[quosure_i]]) {
             new_results_names <- names(quosure_result_recycled)
             results_names <- c(results_names, new_results_names)
             for (new_result_i in seq_along(quosure_result_recycled)) {
-              results_env[[new_result_i]] <- quosure_result_recycled[[new_result_i]]
+              results_env[[new_results_names[[new_result_i]]]] <- quosure_result_recycled[[new_result_i]]
             }
           } else {
             nm <- nms[[quosure_i]]
