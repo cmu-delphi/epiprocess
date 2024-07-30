@@ -47,23 +47,14 @@ library(epipredict)
 
 ga_hhs_analysis_issue = as.Date("2023-04-05") - 2L
 ga_hhs_issue_data_path = "ga_hhs_issue_data.rds"
-if (!file.exists(ga_hhs_issue_data_path)) {
-  ga_hhs_issue_data =
-    covidcast(
-      "ga_hhs", "confirmed_admissions_influenza_1d",
-      geo_type = "state", time_type = "day",
-      # TODO explain * in comments
-      geo_values = "ga", time_values = "*",
-      issues = "*"
-    ) %>%
-    fetch_tbl()
-  saveRDS(ga_hhs_issue_data, ga_hhs_issue_data_path)
-  writeLines(c("License: Public Domain US Government","Accessed via COVIDcast Epidata API"),
-             "LICENSE_ga_hhs_issue_data.txt")
-} else {
-  ga_hhs_issue_data = readRDS(ga_hhs_issue_data_path)
-}
-# TODO use, e.g., cachem.  And explain why caching.
+ga_hhs_issue_data =
+  pub_covidcast(
+    "hhs", "confirmed_admissions_influenza_1d",
+    geo_type = "state", time_type = "day",
+    # TODO explain * in comments
+    geo_values = "ga", time_values = "*",
+    issues = epirange(12340101, ga_hhs_analysis_issue)
+  )
 ```
 
 Convert to `epi_archive` format:
@@ -132,7 +123,7 @@ ga_hhs_archive %>%
     ref_time_values = forecast_dates,
     before = 365000, # train on all past data
     as_list_col = TRUE,
-    function(edf, gk) {
+    function(edf, gk, v) {
       edf %>%
         filter(time_value >= hhs_start_time_value) %>%
         arx_forecaster(
@@ -172,8 +163,7 @@ version_aware_covariates =
     ref_time_values = training_and_testing_issues,
     before = forecast_date_latency + 14L, # include just enough to get the lags we want
     names_sep = NULL,
-    function(edf, gk) {
-      ref_time_value = attr(edf, "metadata")$as_of
+    function(edf, gk, ref_time_value) {
       edf %>%
         filter(time_value >= hhs_start_time_value) %>%
         complete(geo_value, time_value = full_seq(c(time_value, ref_time_value), period=1L)) %>%
@@ -187,19 +177,22 @@ version_aware_covariates =
     }
   )
 
-full_join(version_aware_covariates, forecast_date_edf) %>%
+fc = full_join(version_aware_covariates, forecast_date_edf, by = c("geo_value", "time_value")) %>%
   as_epi_df(as_of = forecast_date) %>%
   na.omit() %>%
   arx_forecaster(
-  outcome = "admissions",
-  predictors = c("x1","x2","x3"),
-  args_list = arx_args_list(
-    lags = 0L,
-    ahead = 14L,
-    forecast_date = forecast_date,
-    # Use defaults for everything else.
+    outcome = "admissions",
+    predictors = c("x1","x2","x3"),
+    args_list = arx_args_list(
+      lags = 0L,
+      ahead = 14L,
+      forecast_date = forecast_date,
+      # Use defaults for everything else.
+      )
   )
-)
+
+fc$epi_workflow %>% extract_fit_engine() # need to re-impl no-intercept model to get clear picture
+fc %>% autoplot()
 ```
 
 
