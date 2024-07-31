@@ -9,6 +9,7 @@ revision_summary(
   ...,
   drop_nas = TRUE,
   print_inform = TRUE,
+  min_waiting_period = as.difftime(60, units = "days"),
   within_latest = 0.2,
   quick_revision = as.difftime(3, units = "days"),
   few_revisions = 3,
@@ -21,8 +22,9 @@ revision_summary(
 \arguments{
 \item{epi_arch}{an epi_archive to be analyzed}
 
-\item{...}{<\code{\link[=dplyr_tidy_select]{tidyselect}}>, used to choose the column to summarize. If empty, it
-chooses the first. Currently only implemented for one column at a time.}
+\item{...}{<\code{\link[=dplyr_tidy_select]{tidyselect}}>, used to choose the column to
+summarize. If empty, it chooses the first. Currently only implemented for
+one column at a time.}
 
 \item{drop_nas}{bool, drop any \code{NA} values from the archive? After dropping
 \code{NA}'s compactify is run again to make sure there are no duplicate values
@@ -31,6 +33,13 @@ immediately-preceding value.}
 
 \item{print_inform}{bool, determines whether to print summary information, or
 only return the full summary tibble}
+
+\item{min_waiting_period}{\code{difftime}, integer or \code{NULL}. Sets a cutoff: any
+time_values not earlier than \code{min_waiting_period} before \code{versions_end} are
+removed. \code{min_waiting_period} should characterize the typical time during
+which revisions occur.  The default of 60 days corresponds to a typical
+final value for case counts as reported in the context of insurance. To
+avoid this filtering, either set to \code{NULL} or 0.}
 
 \item{within_latest}{double between 0 and 1. Determines the threshold
 used for the \code{time_to}}
@@ -67,6 +76,9 @@ prints a concise summary. The columns returned are:
 includes \code{NA}'s)
 \item \code{max_lag}: the amount of time until the final (new) version (same caveat
 for \code{drop_nas=FALSE}, though it is far less likely to matter)
+\item \code{min_value}: the minimum value across revisions
+\item \code{max_value}: the maximum value across revisions
+\item \code{median_value}: the median value across revisions
 \item \code{spread}: the difference between the smallest and largest values (this
 always excludes \code{NA} values)
 \item \code{rel_spread}: \code{spread} divided by the largest value (so it will
