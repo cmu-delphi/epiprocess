@@ -13,8 +13,8 @@ revision_summary(
   within_latest = 0.2,
   quick_revision = as.difftime(3, units = "days"),
   few_revisions = 3,
-  rel_spread_threshold = 0.1,
   abs_spread_threshold = NULL,
+  rel_spread_threshold = 0.1,
   compactify_tol = .Machine$double.eps^0.5,
   should_compactify = TRUE
 )
@@ -52,18 +52,20 @@ days}
 \item{few_revisions}{integer, for the printed summary, the upper bound on the
 number of revisions to consider "few". Default is 3.}
 
-\item{rel_spread_threshold}{float between 0 and 1, for the printed summary,
-the relative spread fraction used to characterize revisions which don't
-actually change very much. Default is .1, or 10\% of the final value}
-
 \item{abs_spread_threshold}{numeric, for the printed summary, the maximum
 spread used to characterize revisions which don't actually change very
 much. Default is 5\% of the maximum value in the dataset, but this is the
 most unit dependent of values, and likely needs to be chosen appropriate
 for the scale of the dataset.}
 
+\item{rel_spread_threshold}{float between 0 and 1, for the printed summary,
+the relative spread fraction used to characterize revisions which don't
+actually change very much. Default is .1, or 10\% of the final value}
+
 \item{compactify_tol}{float, used if \code{drop_nas=TRUE}, it determines the
 threshold for when two floats are considered identical.}
+
+\item{should_compactify}{bool. Compactify if \code{TRUE}.}
 }
 \description{
 \code{revision_summary} removes all missing values (if requested), and then
