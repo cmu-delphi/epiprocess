@@ -39,10 +39,11 @@ If \code{f} is missing, then \code{...} will specify the computation.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{f}. Alternatively, if \code{f} is missing, then the \code{...} is interpreted as
-an expression for tidy evaluation; in addition to referring to columns
-directly by name, the expression has access to \code{.data} and \code{.env} pronouns
-as in \code{dplyr} verbs, and can also refer to \code{.x}, \code{.group_key}, and
-\code{.ref_time_value}. See details.}
+a \link[rlang:args_data_masking]{"data-masking"} expression or expressions for
+tidy evaluation; in addition to referring columns directly by name, the
+expressions have access to \code{.data} and \code{.env} pronouns as in \code{dplyr} verbs,
+and can also refer to \code{.x}, \code{.group_key}, and \code{.ref_time_value}. See
+details.}
 
 \item{before, after}{How far \code{before} and \code{after} each \code{ref_time_value} should
 the sliding window extend? At least one of these two arguments must be
@@ -130,22 +131,45 @@ widths and compare the slide outputs. In the (uncommon) case where
 zero-width windows are considered, manually pass both the \code{before} and
 \code{after} arguments.
 
-If \code{f} is missing, then an expression for tidy evaluation can be specified,
-for example, as in:
+If \code{f} is missing, then \link[rlang:args_data_masking]{"data-masking"}
+expression(s) for tidy evaluation can be specified, for example, as in:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, cases_7dav = mean(cases), before = 6)
 }\if{html}{\out{</div>}}
 
 which would be equivalent to:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, g) mean(x$cases), before = 6,
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, g, t) mean(x$cases), before = 6,
           new_col_name = "cases_7dav")
 }\if{html}{\out{</div>}}
 
-Thus, to be clear, when the computation is specified via an expression for
-tidy evaluation (first example, above), then the name for the new column is
-inferred from the given expression and overrides any name passed explicitly
-through the \code{new_col_name} argument.
+In a manner similar to \code{\link[dplyr:mutate]{dplyr::mutate}}:
+\itemize{
+\item Expressions evaluating to length-1 vectors will be recycled to
+appropriate lengths.
+\item \verb{= NULL} can be used to remove results from previous expressions (though
+we don't allow it to remove pre-existing columns).
+\item Unnamed expressions evaluating to data frames will be unpacked into
+multiple columns in the result; to use this feature, you will need to add
+an extra comma before your first data-masking expression to make sure \code{f}
+appears as missing.
+\item Named expressions evaluating to data frames will be placed into
+\code{\link[tidyr:pack]{tidyr::pack}}ed columns.
+}
+
+In addition to \code{\link{.data}} and \code{\link{.env}}, we make some additional
+"pronoun"-like bindings available:
+\itemize{
+\item .x, which is like \code{.x} in \code{\link[dplyr:group_map]{dplyr::group_modify}}; an ordinary object
+like an \code{epi_df} rather than an rlang \link[rlang:as_data_mask]{pronoun}
+like \code{\link{.data}}; this allows you to use additional {dplyr}, {tidyr}, and
+{epiprocess} operations. If you have multiple expressions in \code{...}, this
+won't let you refer to the output of the earlier expressions, but \code{.data}
+will.
+\item .group_key, which is like \code{.y} in \code{\link[dplyr:group_map]{dplyr::group_modify}}.
+\item .ref_time_value, which is the element of \code{ref_time_values} that
+determined the time window for the current computation.
+}
 }
 \examples{
 # slide a 7-day trailing average formula on cases

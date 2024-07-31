@@ -579,11 +579,12 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   `.z` or `.ref_time_value`. If `f` is missing, then `...` will specify the
 #'   computation.
 #' @param ... Additional arguments to pass to the function or formula specified
-#'   via `f`. Alternatively, if `f` is missing, then `...` is interpreted as an
-#'   expression for tidy evaluation; in addition to referring to columns
-#'   directly by name, the expression has access to `.data` and `.env` pronouns
-#'   as in `dplyr` verbs, and can also refer to the `.group_key` and
-#'   `.ref_time_value`. See details of [`epi_slide`].
+#'   via `f`. Alternatively, if `f` is missing, then the `...` is interpreted as
+#'   a ["data-masking"][rlang::args_data_masking] expression or expressions for
+#'   tidy evaluation; in addition to referring columns directly by name, the
+#'   expressions have access to `.data` and `.env` pronouns as in `dplyr` verbs,
+#'   and can also refer to `.x`, `.group_key`, and `.ref_time_value`. See
+#'   details.
 #' @param before How far `before` each `ref_time_value` should the sliding
 #'   window extend? If provided, should be a single, non-NA,
 #'   [integer-compatible][vctrs::vec_cast] number of time steps. This window

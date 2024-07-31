@@ -18,17 +18,36 @@
 #'   zero-width windows are considered, manually pass both the `before` and
 #'   `after` arguments.
 #'
-#'   If `f` is missing, then an expression for tidy evaluation can be specified,
-#'   for example, as in:
+#'   If `f` is missing, then ["data-masking"][rlang::args_data_masking]
+#'   expression(s) for tidy evaluation can be specified, for example, as in:
 #'   ```
 #'   epi_slide(x, cases_7dav = mean(cases), before = 6)
 #'   ```
 #'   which would be equivalent to:
 #'   ```
-#'   epi_slide(x, function(x, g) mean(x$cases), before = 6,
+#'   epi_slide(x, function(x, g, t) mean(x$cases), before = 6,
 #'             new_col_name = "cases_7dav")
 #'   ```
-#'   Thus, to be clear, when the computation is specified via an expression for
-#'   tidy evaluation (first example, above), then the name for the new column is
-#'   inferred from the given expression and overrides any name passed explicitly
-#'   through the `new_col_name` argument.
+#'   In a manner similar to [`dplyr::mutate`]:
+#'   * Expressions evaluating to length-1 vectors will be recycled to
+#'     appropriate lengths.
+#'   * `= NULL` can be used to remove results from previous expressions (though
+#'     we don't allow it to remove pre-existing columns).
+#'   * Unnamed expressions evaluating to data frames will be unpacked into
+#'     multiple columns in the result; to use this feature, you will need to add
+#'     an extra comma before your first data-masking expression to make sure `f`
+#'     appears as missing.
+#'   * Named expressions evaluating to data frames will be placed into
+#'     [`tidyr::pack`]ed columns.
+#'
+#'   In addition to [`.data`] and [`.env`], we make some additional
+#'   "pronoun"-like bindings available:
+#'   * .x, which is like `.x` in [`dplyr::group_modify`]; an ordinary object
+#'     like an `epi_df` rather than an rlang [pronoun][rlang::as_data_pronoun]
+#'     like [`.data`]; this allows you to use additional {dplyr}, {tidyr}, and
+#'     {epiprocess} operations. If you have multiple expressions in `...`, this
+#'     won't let you refer to the output of the earlier expressions, but `.data`
+#'     will.
+#'   * .group_key, which is like `.y` in [`dplyr::group_modify`].
+#'   * .ref_time_value, which is the element of `ref_time_values` that
+#'     determined the time window for the current computation.

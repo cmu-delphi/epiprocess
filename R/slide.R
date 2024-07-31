@@ -21,10 +21,11 @@
 #'   If `f` is missing, then `...` will specify the computation.
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the `...` is interpreted as
-#'   an expression for tidy evaluation; in addition to referring to columns
-#'   directly by name, the expression has access to `.data` and `.env` pronouns
-#'   as in `dplyr` verbs, and can also refer to `.x`, `.group_key`, and
-#'   `.ref_time_value`. See details.
+#'   a ["data-masking"][rlang::args_data_masking] expression or expressions for
+#'   tidy evaluation; in addition to referring columns directly by name, the
+#'   expressions have access to `.data` and `.env` pronouns as in `dplyr` verbs,
+#'   and can also refer to `.x`, `.group_key`, and `.ref_time_value`. See
+#'   details.
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.

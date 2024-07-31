@@ -64,11 +64,12 @@ group-\code{ref_time_value} combination. The group key can be accessed via
 computation.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
-via \code{f}. Alternatively, if \code{f} is missing, then \code{...} is interpreted as an
-expression for tidy evaluation; in addition to referring to columns
-directly by name, the expression has access to \code{.data} and \code{.env} pronouns
-as in \code{dplyr} verbs, and can also refer to the \code{.group_key} and
-\code{.ref_time_value}. See details of \code{\link{epi_slide}}.}
+via \code{f}. Alternatively, if \code{f} is missing, then the \code{...} is interpreted as
+a \link[rlang:args_data_masking]{"data-masking"} expression or expressions for
+tidy evaluation; in addition to referring columns directly by name, the
+expressions have access to \code{.data} and \code{.env} pronouns as in \code{dplyr} verbs,
+and can also refer to \code{.x}, \code{.group_key}, and \code{.ref_time_value}. See
+details.}
 
 \item{before}{How far \code{before} each \code{ref_time_value} should the sliding
 window extend? If provided, should be a single, non-NA,
