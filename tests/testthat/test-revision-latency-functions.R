@@ -35,9 +35,6 @@ test_that("revision_summary works for a dummy dataset", {
     revision_summary() %>%
     print(n = 10, width = 300)
   expect_snapshot(dummy_ex %>% revision_summary() %>% print(n = 10, width = 300))
-  dummy_ex %>%
-    revision_summary(drop_nas = FALSE) %>%
-    print(n = 10, width = 300)
   expect_snapshot(dummy_ex %>% revision_summary(drop_nas = FALSE) %>% print(n = 10, width = 300))
 })
 test_that("tidyselect is functional", {
