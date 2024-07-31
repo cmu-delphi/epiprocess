@@ -319,7 +319,7 @@ new_epi_archive <- function(
   # Runs compactify on data frame
   if (is.null(compactify) || compactify == TRUE) {
     compactified <- apply_compactify(data_table, key_vars, compactify_tol)
-  } else{
+  } else {
     compactified <- data_table
   }
   # Warns about redundant rows if the number of rows decreased, and we didn't
