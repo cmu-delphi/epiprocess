@@ -56,6 +56,7 @@
 #'   actually change very much. Default is .1, or 10% of the final value
 #' @param compactify_tol float, used if `drop_nas=TRUE`, it determines the
 #'   threshold for when two floats are considered identical.
+#' @param should_compactify bool. Compactify if `TRUE`.
 #' @examples
 #'
 #' revision_example <- revision_summary(archive_cases_dv_subset, percent_cli)
@@ -74,8 +75,8 @@ revision_summary <- function(epi_arch,
                              within_latest = 0.2,
                              quick_revision = as.difftime(3, units = "days"),
                              few_revisions = 3,
-                             rel_spread_threshold = 0.1,
                              abs_spread_threshold = NULL,
+                             rel_spread_threshold = 0.1,
                              compactify_tol = .Machine$double.eps^0.5,
                              should_compactify = TRUE) {
   arg <- names(eval_select(rlang::expr(c(...)), allow_rename = FALSE, data = epi_arch$DT))
@@ -144,7 +145,10 @@ revision_summary <- function(epi_arch,
       time_near_latest = as.difftime(time_to, units = "days") # nolint: object_usage_linter
     ) %>%
     select(-time_to) %>%
-    relocate(time_value, geo_value, all_of(keys), n_revisions, min_lag, max_lag, time_near_latest, spread, rel_spread, min_value, max_value, median_value)
+    relocate(
+      time_value, geo_value, all_of(keys), n_revisions, min_lag, max_lag, # nolint: object_usage_linter
+      time_near_latest, spread, rel_spread, min_value, max_value, median_value # nolint: object_usage_linter
+    )
   if (print_inform) {
     cli_inform("Min lag (time to first version):")
     difftime_summary(revision_behavior$min_lag) %>% print()
