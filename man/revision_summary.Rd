@@ -14,7 +14,8 @@ revision_summary(
   few_revisions = 3,
   rel_spread_threshold = 0.1,
   abs_spread_threshold = NULL,
-  compactify_tol = .Machine$double.eps^0.5
+  compactify_tol = .Machine$double.eps^0.5,
+  should_compactify = TRUE
 )
 }
 \arguments{
@@ -58,10 +59,10 @@ threshold for when two floats are considered identical.}
 \description{
 \code{revision_summary} removes all missing values (if requested), and then
 computes some basic statistics about the revision behavior of an archive,
-returning a tibble of a per-epi-key (so time_value, geo_value pair,
-possibly others based on the metadata). If \code{print_inform} is true, it
+returning a tibble summarizing the revisions per time_value+epi_key features. If \code{print_inform} is true, it
 prints a concise summary. The columns returned are:
 \enumerate{
+\item \code{n_revisions}: the total number of revisions for that entry
 \item \code{min_lag}: the minimum time to any value (if \code{drop_nas=FALSE}, this
 includes \code{NA}'s)
 \item \code{max_lag}: the amount of time until the final (new) version (same caveat
