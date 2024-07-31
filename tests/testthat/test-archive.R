@@ -51,7 +51,7 @@ test_that("as_epi_archive custom name mapping works correctly", {
 dumb_ex <- data.frame(
   geo_value = c("ca", "ca"),
   time_value = as.Date(c("2020-01-01", "2020-01-01")),
-  value = c(1,1),
+  value = c(1, 1),
   version = as.Date(c("2020-01-01", "2020-01-02"))
 )
 test_that("new_epi_archive correctly detects and warns about compactification", {
