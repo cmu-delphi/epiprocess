@@ -170,11 +170,8 @@ NULL
 #' The data table `DT` has key variables `geo_value`, `time_value`, `version`,
 #'   as well as any others (these can be specified when instantiating the
 #'   `epi_archive` object via the `other_keys` argument, and/or set by operating
-#'   on `DT` directly). Refer to the documentation for `as_epi_archive()` for
-#'   information and examples of relevant parameter names for an `epi_archive`
-#'   object. Note that there can only be a single row per unique combination of
-#'   key variables, and thus the key variables are critical for figuring out how
-#'   to generate a snapshot of data from the archive, as of a given version.
+#'   on `DT` directly). Note that there can only be a single row per unique
+#'   combination of key variables.
 #'
 #' @section Metadata:
 #' The following pieces of metadata are included as fields in an `epi_archive`
@@ -184,18 +181,15 @@ NULL
 #' * `time_type`: the type for the time values.
 #' * `additional_metadata`: list of additional metadata for the data archive.
 #'
-#' Unlike an `epi_df` object, metadata for an `epi_archive` object `x` can be
-#'   accessed (and altered) directly, as in `x$geo_type` or `x$time_type`,
-#'   etc. Like an `epi_df` object, the `geo_type` and `time_type` fields in the
-#'   metadata of an `epi_archive` object are not currently used by any
-#'   downstream functions in the `epiprocess` package, and serve only as useful
-#'   bits of information to convey about the data set at hand.
+#' While this metadata is not protected, it is generally recommended to treat it
+#'  as read-only, and to use the `epi_archive` methods to interact with the data
+#'  archive. Unexpected behavior may result from modifying the metadata
+#'  directly.
 #'
 #' @section Generating Snapshots:
 #' An `epi_archive` object can be used to generate a snapshot of the data in
-#'   `epi_df` format, which represents the most up-to-date values of the signal
-#'   variables, as of the specified version. This is accomplished by calling
-#'   `epix_as_of()`.
+#'   `epi_df` format, which represents the most up-to-date time series values up
+#'   to a point in time. This is accomplished by calling `epix_as_of()`.
 #'
 #' @section Sliding Computations:
 #' We can run a sliding computation over an `epi_archive` object, much like
@@ -208,19 +202,18 @@ NULL
 #'
 #' @param x A data.frame, data.table, or tibble, with columns `geo_value`,
 #'   `time_value`, `version`, and then any additional number of columns.
-#' @param geo_type Type for the geo values. If missing, then the function will
-#'   attempt to infer it from the geo values present; if this fails, then it
-#'   will be set to "custom".
-#' @param time_type Type for the time values. If missing, then the function will
-#'   attempt to infer it from the time values present; if this fails, then it
-#'   will be set to "custom".
+#' @param geo_type DEPRECATED Has no effect. Geo value type is inferred from the
+#' location column and set to "custom" if not recognized.
+#' @param time_type DEPRECATED Has no effect. Time value type inferred from the time
+#' column and set to "custom" if not recognized. Unpredictable behavior may result
+#' if the time type is not recognized.
 #' @param other_keys Character vector specifying the names of variables in `x`
 #'   that should be considered key variables (in the language of `data.table`)
 #'   apart from "geo_value", "time_value", and "version".
 #' @param additional_metadata List of additional metadata to attach to the
-#'   `epi_archive` object. The metadata will have `geo_type` and `time_type`
-#'   fields; named entries from the passed list or will be included as well.
-#' @param compactify Optional; Boolean or `NULL`. `TRUE` will remove some
+#'   `epi_archive` object. The metadata will have the `geo_type` field; named
+#'   entries from the passed list or will be included as well.
+#' @param compactify Optional; Boolean. `TRUE` will remove some
 #'   redundant rows, `FALSE` will not, and missing or `NULL` will remove
 #'   redundant rows, but issue a warning. See more information at `compactify`.
 #' @param clobberable_versions_start Optional; `length`-1; either a value of the
@@ -251,6 +244,7 @@ NULL
 #'
 #' @importFrom data.table as.data.table key setkeyv
 #' @importFrom dplyr if_any if_all everything
+#' @importFrom utils capture.output
 #'
 #' @name epi_archive
 #' @export
@@ -268,10 +262,7 @@ NULL
 #'   value = rnorm(10, mean = 2, sd = 1)
 #' )
 #'
-#' toy_epi_archive <- tib %>% as_epi_archive(
-#'   geo_type = "state",
-#'   time_type = "day"
-#' )
+#' toy_epi_archive <- tib %>% as_epi_archive()
 #' toy_epi_archive
 #'
 #' # Ex. with an additional key for county
@@ -294,21 +285,17 @@ NULL
 #'   cases_rate = c(0.01, 0.02, 0.01, 0.05)
 #' )
 #'
-#' x <- df %>% as_epi_archive(
-#'   geo_type = "state",
-#'   time_type = "day",
-#'   other_keys = "county"
-#' )
+#' x <- df %>% as_epi_archive(other_keys = "county")
 #'
 new_epi_archive <- function(
     x,
-    geo_type = NULL,
-    time_type = NULL,
-    other_keys = NULL,
-    additional_metadata = NULL,
-    compactify = NULL,
-    clobberable_versions_start = NULL,
-    versions_end = NULL) {
+    geo_type,
+    time_type,
+    other_keys,
+    additional_metadata,
+    compactify,
+    clobberable_versions_start,
+    versions_end) {
   # Create the data table; if x was an un-keyed data.table itself,
   # then the call to as.data.table() will fail to set keys, so we
   # need to check this, then do it manually if needed
@@ -397,13 +384,11 @@ new_epi_archive <- function(
 #' @export
 validate_epi_archive <- function(
     x,
-    geo_type = NULL,
-    time_type = NULL,
-    other_keys = NULL,
-    additional_metadata = NULL,
-    compactify = NULL,
-    clobberable_versions_start = NULL,
-    versions_end = NULL) {
+    other_keys,
+    additional_metadata,
+    compactify,
+    clobberable_versions_start,
+    versions_end) {
   # Finish off with small checks on keys variables and metadata
   if (!test_subset(other_keys, names(x))) {
     cli_abort("`other_keys` must be contained in the column names of `x`.")
@@ -412,11 +397,19 @@ validate_epi_archive <- function(
     cli_abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
   }
   if (any(names(additional_metadata) %in% c("geo_type", "time_type"))) {
-    cli_warn("`additional_metadata` names overlap with existing metadata fields \"geo_type\", \"time_type\".")
+    cli_warn("`additional_metadata` names overlap with existing metadata fields \"geo_type\" or \"time_type\".")
   }
 
   # Conduct checks and apply defaults for `compactify`
   assert_logical(compactify, len = 1, any.missing = FALSE, null.ok = TRUE)
+
+  # Make sure `time_value` and `version` have the same time type
+  if (!identical(class(x[["time_value"]]), class(x[["version"]]))) {
+    cli_abort(
+      "`time_value` and `version` must have the same class.",
+      class = "epiprocess__time_value_version_mismatch"
+    )
+  }
 
   # Apply defaults and conduct checks for
   # `clobberable_versions_start`, `versions_end`:
@@ -441,38 +434,53 @@ validate_epi_archive <- function(
 
 #' `as_epi_archive` converts a data frame, data table, or tibble into an
 #' `epi_archive` object.
+#' @param ... used for specifying column names, as in [`dplyr::rename`]. For
+#'   example `version = release_date`
+#' @param .versions_end location based versions_end, used to avoid prefix
+#'   `version = issue` from being assigned to `versions_end` instead of being
+#'   used to rename columns.
 #'
 #' @rdname epi_archive
 #'
 #' @export
 as_epi_archive <- function(
     x,
-    geo_type = NULL,
-    time_type = NULL,
-    other_keys = NULL,
-    additional_metadata = NULL,
+    geo_type = deprecated(),
+    time_type = deprecated(),
+    other_keys = character(0L),
+    additional_metadata = list(),
     compactify = NULL,
-    clobberable_versions_start = NULL,
-    versions_end = NULL) {
+    clobberable_versions_start = NA,
+    .versions_end = max_version_with_row_in(x), ...,
+    versions_end = .versions_end) {
   assert_data_frame(x)
+  x <- rename(x, ...)
+  x <- guess_column_name(x, "time_value", time_column_names())
+  x <- guess_column_name(x, "geo_value", geo_column_names())
+  x <- guess_column_name(x, "version", version_column_names())
   if (!test_subset(c("geo_value", "time_value", "version"), names(x))) {
     cli_abort(
-      "Columns `geo_value`, `time_value`, and `version` must be present in `x`."
+      "Either columns `geo_value`, `time_value`, and `version`, or related columns
+      (see the internal functions `guess_time_column_name()`,
+      `guess_geo_column_name()` and/or `guess_geo_version_name()` for complete
+      list) must be present in `x`."
     )
   }
   if (anyMissing(x$version)) {
     cli_abort("Column `version` must not contain missing values.")
   }
+  if (lifecycle::is_present(geo_type)) {
+    cli_warn("epi_archive constructor argument `geo_type` is now ignored. Consider removing.")
+  }
+  if (lifecycle::is_present(time_type)) {
+    cli_warn("epi_archive constructor argument `time_type` is now ignored. Consider removing.")
+  }
 
-  geo_type <- geo_type %||% guess_geo_type(x$geo_value)
-  time_type <- time_type %||% guess_time_type(x$time_value)
-  other_keys <- other_keys %||% character(0L)
-  additional_metadata <- additional_metadata %||% list()
-  clobberable_versions_start <- clobberable_versions_start %||% NA
-  versions_end <- versions_end %||% max_version_with_row_in(x)
+  geo_type <- guess_geo_type(x$geo_value)
+  time_type <- guess_time_type(x$time_value)
 
   validate_epi_archive(
-    x, geo_type, time_type, other_keys, additional_metadata,
+    x, other_keys, additional_metadata,
     compactify, clobberable_versions_start, versions_end
   )
   new_epi_archive(

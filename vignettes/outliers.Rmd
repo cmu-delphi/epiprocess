@@ -74,8 +74,9 @@ methods.
 2. Detection based on a seasonal-trend decomposition using LOESS (STL), using
   `detect_outlr_stl()`, which is similar to the rolling median method but
   replaces the rolling median with fitted values from STL.
-3. Detection based on an STL decomposition, but without seasonality term, which
-  amounts to smoothing using LOESS.
+3. Detection based on an STL decomposition, but subtracting out the seasonality
+   term from its predictions, which may result in the extrema of large seasonal
+   variations being considered as outliers.
 
 The outlier detection methods are specified using a `tibble` that is passed to
 `detect_outlr()`, with one row per method, and whose columms specify the
@@ -108,9 +109,10 @@ detection_methods <- bind_rows(
     args = list(list(
       detect_negatives = TRUE,
       detection_multiplier = 2.5,
-      seasonal_period = NULL
+      seasonal_period = 7,
+      seasonal_as_residual = TRUE
     )),
-    abbr = "stl_nonseasonal"
+    abbr = "stl_reseasonal"
   )
 )
 

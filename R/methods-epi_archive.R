@@ -50,7 +50,7 @@
 #'   # (a.k.a. "hotfixed", "clobbered", etc.):
 #'   clobberable_versions_start = max(archive_cases_dv_subset$DT$version),
 #'   # Suppose today is the following day, and there are no updates out yet:
-#'   versions_end <- max(archive_cases_dv_subset$DT$version) + 1L,
+#'   versions_end = max(archive_cases_dv_subset$DT$version) + 1L,
 #'   compactify = TRUE
 #' )
 #'
@@ -111,8 +111,6 @@ epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FAL
     tibble::as_tibble() %>%
     dplyr::select(-"version") %>%
     as_epi_df(
-      geo_type = x$geo_type,
-      time_type = x$time_type,
       as_of = max_version,
       additional_metadata = c(
         x$additional_metadata,
@@ -271,7 +269,7 @@ epix_merge <- function(x, y,
   }
 
   if (!identical(x$time_type, y$time_type)) {
-    cli_abort("`x` and `y` must have the same `$time_type`")
+    cli_abort("`x` and `y` must share data type on their `time_value` column.")
   }
 
   if (length(x$additional_metadata) != 0L) {
@@ -307,11 +305,11 @@ epix_merge <- function(x, y,
       y_dt <- y$DT
     }
   } else if (sync %in% c("na", "locf")) {
-    new_versions_end <- max(x$versions_end, y$versions_end)
+    new_versions_end <- max(c(x$versions_end, y$versions_end))
     x_dt <- epix_fill_through_version(x, new_versions_end, sync)$DT
     y_dt <- epix_fill_through_version(y, new_versions_end, sync)$DT
   } else if (sync == "truncate") {
-    new_versions_end <- min(x$versions_end, y$versions_end)
+    new_versions_end <- min(c(x$versions_end, y$versions_end))
     x_dt <- x$DT[x[["DT"]][["version"]] <= new_versions_end, names(x$DT), with = FALSE]
     y_dt <- y$DT[y[["DT"]][["version"]] <= new_versions_end, names(y$DT), with = FALSE]
   } else {
@@ -450,8 +448,6 @@ epix_merge <- function(x, y,
 
   return(as_epi_archive(
     result_dt[], # clear data.table internal invisibility flag if set
-    geo_type = x$geo_type,
-    time_type = x$time_type,
     other_keys = setdiff(key(result_dt), c("geo_value", "time_value", "version")),
     additional_metadata = result_additional_metadata,
     # It'd probably be better to pre-compactify before the merge, and might be
@@ -610,12 +606,6 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   set to a regularly-spaced sequence of values set to cover the range of
 #'   `version`s in the `DT` plus the `versions_end`; the spacing of values will
 #'   be guessed (using the GCD of the skips between values).
-#' @param time_step Optional function used to define the meaning of one time
-#'   step, which if specified, overrides the default choice based on the
-#'   `time_value` column. This function must take a positive integer and return
-#'   an object of class `lubridate::period`. For example, we can use `time_step
-#'   = lubridate::hours` in order to set the time step to be one hour (this
-#'   would only be meaningful if `time_value` is of class `POSIXct`).
 #' @param new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
@@ -790,22 +780,28 @@ epix_slide <- function(
     x,
     f,
     ...,
-    before,
-    ref_time_values,
-    time_step,
+    before = Inf,
+    ref_time_values = NULL,
     new_col_name = NULL,
     all_versions = FALSE,
-    as_list_col = deprecated(), names_sep = deprecated()) {
+    as_list_col = deprecated(),
+    names_sep = deprecated()) {
   UseMethod("epix_slide")
 }
 
 
 #' @rdname epix_slide
 #' @export
-epix_slide.epi_archive <- function(x, f, ..., before, ref_time_values,
-                                   time_step, new_col_name = NULL,
-                                   all_versions = FALSE,
-                                   as_list_col = deprecated(), names_sep = deprecated()) {
+epix_slide.epi_archive <- function(
+     x,
+     f,
+     ...,
+     before = Inf,
+     ref_time_values = NULL,
+     new_col_name = NULL,
+     all_versions = FALSE,
+     as_list_col = deprecated(),
+     names_sep = deprecated()) {
   # For an "ungrouped" slide, treat all rows as belonging to one big
   # group (group by 0 vars), like `dplyr::summarize`, and let the
   # resulting `grouped_epi_archive` handle the slide:
@@ -813,8 +809,7 @@ epix_slide.epi_archive <- function(x, f, ..., before, ref_time_values,
     group_by(x),
     f,
     ...,
-    before = before, ref_time_values = ref_time_values,
-    time_step = time_step, new_col_name = new_col_name,
+    before = before, ref_time_values = ref_time_values, new_col_name = new_col_name,
     as_list_col = as_list_col, names_sep = names_sep,
     all_versions = all_versions
   ) %>%

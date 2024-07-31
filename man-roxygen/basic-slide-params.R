@@ -3,31 +3,32 @@
 #'   single data group.
 #' @param before,after How far `before` and `after` each `ref_time_value` should
 #'   the sliding window extend? At least one of these two arguments must be
-#'   provided; the other's default will be 0. Any value provided for either
-#'   argument must be a single, non-`NA`, non-negative,
-#'   [integer-compatible][vctrs::vec_cast] number of time steps. Endpoints of
-#'   the window are inclusive. Common settings:
-#'   * For trailing/right-aligned windows from `ref_time_value - time_step
-#'     (k)` to `ref_time_value`: either pass `before=k` by itself, or pass
-#'     `before=k, after=0`.
-#'   * For center-aligned windows from `ref_time_value - time_step(k)` to
-#'     `ref_time_value + time_step(k)`: pass `before=k, after=k`.
-#'   * For leading/left-aligned windows from `ref_time_value` to
-#'     `ref_time_value + time_step(k)`: either pass pass `after=k` by itself,
+#'   provided; the other's default will be 0. The accepted values for these
+#'   depend on the type of the `time_value` column:
+#'
+#'   - if it is a Date and the cadence is daily, then they can be integers
+#'     (which will be interpreted in units of days) or difftimes with units
+#'     "days"
+#'   - if it is a Date and the cadence is weekly, then they must be difftimes
+#'     with units "weeks"
+#'   - if it is an integer, then they must be integers
+#'
+#'   Endpoints of the window are inclusive. Common settings:
+#'
+#'   - For trailing/right-aligned windows from `ref_time_value - k` to
+#'     `ref_time_value`: either pass `before=k` by itself, or pass `before=k,
+#'     after=0`.
+#'   - For center-aligned windows from `ref_time_value - k` to
+#'     `ref_time_value + k`: pass `before=k, after=k`.
+#'   - For leading/left-aligned windows from `ref_time_value` to
+#'     `ref_time_value + k`: either pass pass `after=k` by itself,
 #'     or pass `before=0, after=k`.
-#'   See "Details:" about the definition of a time step,(non)treatment of
-#'   missing rows within the window, and avoiding warnings about
-#'   `before`&`after` settings for a certain uncommon use case.
+#'
+#'   See "Details:" on how missing rows are handled within the window.
 #' @param ref_time_values Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
 #'   window. If missing, then this will be set to all unique time values in the
 #'   underlying data table, by default.
-#' @param time_step Optional function used to define the meaning of one time
-#'   step, which if specified, overrides the default choice based on the
-#'   `time_value` column. This function must take a non-negative integer and
-#'   return an object of class [lubridate::period]. For example, we can use
-#'   `time_step = lubridate::hours` in order to set the time step to be one hour
-#'   (this would only be meaningful if `time_value` is of class `POSIXct`).
 #' @param names_sep String specifying the separator to use in `tidyr::unnest()`
 #'   when `as_list_col = FALSE`. Default is "_". Using `NULL` drops the prefix
 #'   from `new_col_name` entirely.

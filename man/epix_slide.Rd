@@ -10,9 +10,8 @@ epix_slide(
   x,
   f,
   ...,
-  before,
-  ref_time_values,
-  time_step,
+  before = Inf,
+  ref_time_values = NULL,
   new_col_name = NULL,
   all_versions = FALSE,
   as_list_col = deprecated(),
@@ -23,9 +22,8 @@ epix_slide(
   x,
   f,
   ...,
-  before,
-  ref_time_values,
-  time_step,
+  before = Inf,
+  ref_time_values = NULL,
   new_col_name = NULL,
   all_versions = FALSE,
   as_list_col = deprecated(),
@@ -36,9 +34,8 @@ epix_slide(
   x,
   f,
   ...,
-  before,
-  ref_time_values,
-  time_step,
+  before = Inf,
+  ref_time_values = NULL,
   new_col_name = NULL,
   all_versions = FALSE,
   as_list_col = deprecated(),
@@ -96,12 +93,6 @@ for the \code{time_value} window for the computation and the \code{max_version}
 set to a regularly-spaced sequence of values set to cover the range of
 \code{version}s in the \code{DT} plus the \code{versions_end}; the spacing of values will
 be guessed (using the GCD of the skips between values).}
-
-\item{time_step}{Optional function used to define the meaning of one time
-step, which if specified, overrides the default choice based on the
-\code{time_value} column. This function must take a positive integer and return
-an object of class \code{lubridate::period}. For example, we can use \code{time_step = lubridate::hours} in order to set the time step to be one hour (this
-would only be meaningful if \code{time_value} is of class \code{POSIXct}).}
 
 \item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. Default is "slide_value"; note that setting

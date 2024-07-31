@@ -35,49 +35,7 @@
 #'   the names of the resulting columns are given by prepending `new_col_name`
 #'   to the names of the list elements.
 #'
-#' @details To "slide" means to apply a function or formula over a rolling
-#'   window of time steps for each data group, where the window is centered at a
-#'   reference time and left and right endpoints are given by the `before` and
-#'   `after` arguments. The unit (the meaning of one time step) is implicitly
-#'   defined by the way the `time_value` column treats addition and subtraction;
-#'   for example, if the time values are coded as `Date` objects, then one time
-#'   step is one day, since `as.Date("2022-01-01") + 1` equals
-#'   `as.Date("2022-01-02")`. Alternatively, the time step can be set explicitly
-#'   using the `time_step` argument (which if specified would override the
-#'   default choice based on `time_value` column). If there are not enough time
-#'   steps available to complete the window at any given reference time, then
-#'   `epi_slide()` still attempts to perform the computation anyway (it does not
-#'   require a complete window). The issue of what to do with partial
-#'   computations (those run on incomplete windows) is therefore left up to the
-#'   user, either through the specified function or formula `f`, or through
-#'   post-processing. For a centrally-aligned slide of `n` `time_value`s in a
-#'   sliding window, set `before = (n-1)/2` and `after = (n-1)/2` when the
-#'   number of `time_value`s in a sliding window is odd and `before = n/2-1` and
-#'   `after = n/2` when `n` is even.
-#'
-#'   Sometimes, we want to experiment with various trailing or leading window
-#'   widths and compare the slide outputs. In the (uncommon) case where
-#'   zero-width windows are considered, manually pass both the `before` and
-#'   `after` arguments in order to prevent potential warnings. (E.g., `before=k`
-#'   with `k=0` and `after` missing may produce a warning. To avoid warnings,
-#'   use `before=k, after=0` instead; otherwise, it looks too much like a
-#'   leading window was intended, but the `after` argument was forgotten or
-#'   misspelled.)
-#'
-#'   If `f` is missing, then an expression for tidy evaluation can be specified,
-#'   for example, as in:
-#'   ```
-#'   epi_slide(x, cases_7dav = mean(cases), before = 6)
-#'   ```
-#'   which would be equivalent to:
-#'   ```
-#'   epi_slide(x, function(x, g) mean(x$cases), before = 6,
-#'             new_col_name = "cases_7dav")
-#'   ```
-#'   Thus, to be clear, when the computation is specified via an expression for
-#'   tidy evaluation (first example, above), then the name for the new column is
-#'   inferred from the given expression and overrides any name passed explicitly
-#'   through the `new_col_name` argument.
+#' @template basic-slide-details
 #'
 #' @importFrom lubridate days weeks
 #' @importFrom dplyr bind_rows group_vars filter select
@@ -130,13 +88,16 @@
 #'     before = 1, as_list_col = TRUE
 #'   ) %>%
 #'   ungroup()
-epi_slide <- function(x, f, ..., before, after, ref_time_values,
-                      time_step,
+epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = NULL,
                       new_col_name = NULL, all_rows = FALSE,
                       as_list_col = deprecated(), names_sep = deprecated()) {
   assert_class(x, "epi_df")
 
-  if (missing(ref_time_values)) {
+  if (nrow(x) == 0L) {
+    return(x)
+  }
+
+  if (is.null(ref_time_values)) {
     ref_time_values <- unique(x$time_value)
   } else {
     assert_numeric(ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
@@ -151,40 +112,22 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
   }
   ref_time_values <- sort(ref_time_values)
 
-  # Validate and pre-process `before`, `after`:
-  if (!missing(before)) {
-    before <- vctrs::vec_cast(before, integer())
-    assert_int(before, lower = 0, null.ok = FALSE, na.ok = FALSE)
-  }
-  if (!missing(after)) {
-    after <- vctrs::vec_cast(after, integer())
-    assert_int(after, lower = 0, null.ok = FALSE, na.ok = FALSE)
-  }
-  if (missing(before)) {
-    if (missing(after)) {
-      cli_abort("Either or both of `before`, `after` must be provided.")
-    } else if (after == 0L) {
-      cli_warn("`before` missing, `after==0`; maybe this was intended to be some
-            non-zero-width trailing window, but since `before` appears to be
-            missing, it's interpreted as a zero-width window (`before=0,
-            after=0`).")
+  if (is.null(before) && !is.null(after)) {
+    if (inherits(after, "difftime")) {
+      before <- as.difftime(0, units = units(after))
+    } else {
+      before <- 0
     }
-    before <- 0L
-  } else if (missing(after)) {
-    if (before == 0L) {
-      cli_warn("`before==0`, `after` missing; maybe this was intended to be some
-            non-zero-width leading window, but since `after` appears to be
-            missing, it's interpreted as a zero-width window (`before=0,
-            after=0`).")
+  }
+  if (is.null(after) && !is.null(before)) {
+    if (inherits(before, "difftime")) {
+      after <- as.difftime(0, units = units(before))
+    } else {
+      after <- 0
     }
-    after <- 0L
   }
-
-  # If a custom time step is specified, then redefine units
-  if (!missing(time_step)) {
-    before <- time_step(before)
-    after <- time_step(after)
-  }
+  validate_slide_window_arg(before, attr(x, "metadata")$time_type)
+  validate_slide_window_arg(after, attr(x, "metadata")$time_type)
 
   if (lifecycle::is_present(as_list_col)) {
     lifecycle::deprecate_stop("0.7.12", "epi_slide_opt(as_list_col =)")
@@ -312,7 +255,10 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
     }
 
     f <- quosures
-    ... <- missing_arg() # magic value that passes zero args as dots in calls below # nolint: object_usage_linter
+    # Magic value that passes zero args as dots in calls below. Equivalent to
+    # `... <- missing_arg()`, but use `assign` to avoid warning about
+    # improper use of dots.
+    assign("...", missing_arg())
   } else {
     used_data_masking <- FALSE
   }
@@ -436,8 +382,7 @@ epi_slide <- function(x, f, ..., before, after, ref_time_values,
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
 #'   ungroup()
-epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
-                          time_step,
+epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref_time_values = NULL,
                           new_col_name = NULL, all_rows = FALSE,
                           as_list_col = deprecated(), names_sep = deprecated()) {
   assert_class(x, "epi_df")
@@ -502,7 +447,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
     )
   }
 
-  user_provided_rtvs <- !missing(ref_time_values)
+  user_provided_rtvs <- !is.null(ref_time_values)
   if (!user_provided_rtvs) {
     ref_time_values <- unique(x$time_value)
   } else {
@@ -518,37 +463,25 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
   }
   ref_time_values <- sort(ref_time_values)
 
-  # Validate and pre-process `before`, `after`:
-  if (!missing(before)) {
-    before <- vctrs::vec_cast(before, integer())
-    assert_int(before, lower = 0, null.ok = FALSE, na.ok = FALSE)
-  }
-  if (!missing(after)) {
-    after <- vctrs::vec_cast(after, integer())
-    assert_int(after, lower = 0, null.ok = FALSE, na.ok = FALSE)
-  }
-  if (missing(before)) {
-    if (missing(after)) {
-      cli_abort("Either or both of `before`, `after` must be provided.")
-    } else if (after == 0L) {
-      cli_warn("`before` missing, `after==0`; maybe this was intended to be some
-            non-zero-width trailing window, but since `before` appears to be
-            missing, it's interpreted as a zero-width window (`before=0,
-            after=0`).")
+  if (is.null(before) && !is.null(after)) {
+    if (inherits(after, "difftime")) {
+      before <- as.difftime(0, units = units(after))
+    } else {
+      before <- 0
     }
-    before <- 0L
-  } else if (missing(after)) {
-    if (before == 0L) {
-      cli_warn("`before==0`, `after` missing; maybe this was intended to be some
-            non-zero-width leading window, but since `after` appears to be
-            missing, it's interpreted as a zero-width window (`before=0,
-            after=0`).")
-    }
-    after <- 0L
   }
+  if (is.null(after) && !is.null(before)) {
+    if (inherits(before, "difftime")) {
+      after <- as.difftime(0, units = units(before))
+    } else {
+      after <- 0
+    }
+  }
+  validate_slide_window_arg(before, attr(x, "metadata")$time_type)
+  validate_slide_window_arg(after, attr(x, "metadata")$time_type)
 
   # Make a complete date sequence between min(x$time_value) and max(x$time_value).
-  date_seq_list <- full_date_seq(x, before, after, time_step)
+  date_seq_list <- full_date_seq(x, before, after, attr(x, "metadata")$time_type)
   all_dates <- date_seq_list$all_dates
   pad_early_dates <- date_seq_list$pad_early_dates
   pad_late_dates <- date_seq_list$pad_late_dates
@@ -630,7 +563,10 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
     } else if (f_from_package == "slider") {
       for (i in seq_along(col_names_chr)) {
         .data_group[, result_col_names[i]] <- f(
-          x = .data_group[[col_names_chr[i]]], before = before, after = after, ...
+          x = .data_group[[col_names_chr[i]]],
+          before = as.numeric(before),
+          after = as.numeric(after),
+          ...
         )
       }
     }
@@ -723,8 +659,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before, after, ref_time_values,
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_14dav = slide_value_cases) %>%
 #'   ungroup()
-epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
-                           time_step,
+epi_slide_mean <- function(x, col_names, ..., before = NULL, after = NULL, ref_time_values = NULL,
                            new_col_name = NULL, all_rows = FALSE,
                            as_list_col = deprecated(), names_sep = deprecated()) {
   epi_slide_opt(
@@ -735,7 +670,6 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
     before = before,
     after = after,
     ref_time_values = ref_time_values,
-    time_step = time_step,
     new_col_name = new_col_name,
     as_list_col = as_list_col,
     names_sep = names_sep,
@@ -770,8 +704,7 @@ epi_slide_mean <- function(x, col_names, ..., before, after, ref_time_values,
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dsum = slide_value_cases) %>%
 #'   ungroup()
-epi_slide_sum <- function(x, col_names, ..., before, after, ref_time_values,
-                          time_step,
+epi_slide_sum <- function(x, col_names, ..., before = NULL, after = NULL, ref_time_values = NULL,
                           new_col_name = NULL,
                           all_rows = FALSE,
                           as_list_col = deprecated(),
@@ -784,7 +717,6 @@ epi_slide_sum <- function(x, col_names, ..., before, after, ref_time_values,
     before = before,
     after = after,
     ref_time_values = ref_time_values,
-    time_step = time_step,
     new_col_name = new_col_name,
     as_list_col = as_list_col,
     names_sep = names_sep,
@@ -796,24 +728,25 @@ epi_slide_sum <- function(x, col_names, ..., before, after, ref_time_values,
 #' (x$time_value). Produce lists of dates before min(x$time_value) and after
 #' max(x$time_value) for padding initial and final windows to size `n`.
 #'
-#' `before` and `after` inputs here should be raw (numeric) values;
-#' `time_step` function should NOT have been applied. `full_date_seq` applies
-#' `time_step` as needed.
+#' `before` and `after` args are assumed to have been validated by the calling
+#' function (using `validate_slide_window_arg`).
 #'
 #' @importFrom checkmate assert_function
 #' @noRd
-full_date_seq <- function(x, before, after, time_step) {
+full_date_seq <- function(x, before, after, time_type) {
+  if (!time_type %in% c("day", "week", "yearmonth", "integer")) {
+    cli_abort(
+      "time_type must be one of 'day', 'week', or 'integer'."
+    )
+  }
+
   pad_early_dates <- c()
   pad_late_dates <- c()
 
-  # If dates are one of tsibble-provided classes, can step by numeric. `tsibble`
-  # defines a step of 1 to automatically be the quantum (smallest resolvable
-  # unit) of the date class. For example, one step = 1 quarter for `yearquarter`.
-  #
-  # `tsibble` classes apparently can't be added to in different units, so even
-  # if `time_step` is provided by the user, use a value-1 unitless step.
-  if (inherits(x$time_value, c("yearquarter", "yearweek", "yearmonth")) ||
-    is.numeric(x$time_value)) { # nolint: indentation_linter
+  # `tsibble` time types have their own behavior, where adding 1 corresponds to
+  # incrementing by a quantum (smallest resolvable unit) of the date class. For
+  # example, one step = 1 quarter for `yearquarter`.
+  if (time_type %in% c("yearmonth", "integer")) {
     all_dates <- seq(min(x$time_value), max(x$time_value), by = 1L)
 
     if (before != 0) {
@@ -822,69 +755,23 @@ full_date_seq <- function(x, before, after, time_step) {
     if (after != 0) {
       pad_late_dates <- all_dates[length(all_dates)] + 1:after
     }
-  } else if (missing(time_step)) {
-    # Guess what `by` should be based on the epi_df's `time_type`.
-    ttype <- attributes(x)$metadata$time_type
-    by <- switch(ttype,
+  } else {
+    by <- switch(time_type,
       day = "days",
       week = "weeks",
-      yearweek = "weeks",
-      yearmonth = "months",
-      yearquarter = "quarters",
-      year = "years",
-      NA # default value for "custom", "day-time"
     )
 
-    if (is.na(by)) {
-      cli_abort(
-        c(
-          "`frollmean` requires a full window to compute a result, but the
-          `time_type` associated with the epi_df was not mappable to a period
-          type valid for creating a date sequence.",
-          "i" = c("The input data's `time_type` was probably `custom` or `day-time`.
-          These require also passing a `time_step` function.")
-        ),
-        class = "epiprocess__full_date_seq__unmappable_time_type",
-        epiprocess__time_type = ttype
-      )
-    }
-
-    # `seq.Date` `by` arg can be any of `c("days", "weeks", "months", "quarters", "years")`.
     all_dates <- seq(min(x$time_value), max(x$time_value), by = by)
-
     if (before != 0) {
-      # Use `seq.Date` here to avoid having to map `epi_df` `time_type` to
-      # `time_step` functions.
-      #
-      # The first element `seq.Date` returns is always equal to the provided
-      # `from` date (`from + 0`). The full return value is equivalent to
-      # `from + 0:n`. In our case, we `from + 1:n`, so drop the first
-      # element.
-      #
-      # Adding "-1" to the `by` arg makes `seq.Date` go backwards in time.
+      # The behavior is analogous to the branch with tsibble types above. For
+      # more detail, note that the function `seq.Date(from, ..., length.out =
+      # n)` returns `from + 0:n`. Since we want `from + 1:n`, we drop the first
+      # element. Adding "-1" to the `by` arg makes `seq.Date` go backwards in
+      # time.
       pad_early_dates <- sort(seq(all_dates[1L], by = paste("-1", by), length.out = before + 1)[-1])
     }
     if (after != 0) {
       pad_late_dates <- seq(all_dates[length(all_dates)], by = by, length.out = after + 1)[-1]
-    }
-  } else {
-    # A custom time step is specified.
-    assert_function(time_step)
-
-    # Calculate the number of `time_step`s required to go between min and max time
-    # values. This is roundabout because difftime objects, lubridate::period objects,
-    # and Dates are hard to convert to the same time scale and add.
-    t_elapsed_s <- difftime(max(x$time_value), min(x$time_value), units = "secs")
-    step_size_s <- lubridate::as.period(time_step(1), unit = "secs")
-    n_steps <- ceiling(as.numeric(t_elapsed_s) / as.numeric(step_size_s))
-
-    all_dates <- min(x$time_value) + time_step(0:n_steps)
-
-    if (before != 0) {
-      pad_early_dates <- all_dates[1L] - time_step(before:1)
-    }
-    if (after != 0) {
-      pad_late_dates <- all_dates[length(all_dates)] + time_step(1:after)
     }
   }
 

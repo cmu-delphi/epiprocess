@@ -3,16 +3,27 @@
 #' Converts an `epi_df` object into a tibble, dropping metadata and any
 #' grouping.
 #'
+#' Advanced: if you are working with a third-party package that uses
+#' `as_tibble()` on `epi_df`s but you actually want them to remain `epi_df`s,
+#' use `attr(your_epi_df, "decay_to_tibble") <- FALSE` beforehand.
+#'
 #' @template x
 #' @param ... forwarded to `as_tibble` for `data.frame`s
 #'
 #' @importFrom tibble as_tibble
 #' @export
 as_tibble.epi_df <- function(x, ...) {
-  # Note that some versions of `tsibble` overwrite `as_tibble.grouped_df`, which
-  # also impacts grouped `epi_df`s don't rely on `NextMethod()`. Destructure
-  # first instead.
-  tibble::as_tibble(vctrs::vec_data(x), ...)
+  # Decaying drops the class and metadata. `as_tibble.grouped_df` drops the
+  # grouping and should be called by `NextMethod()` in the current design.
+  # See #223 for discussion of alternatives.
+  if (attr(x, "decay_to_tibble") %||% TRUE) {
+    # Note that some versions of `tsibble` overwrite `as_tibble.grouped_df`, which
+    # also impacts grouped `epi_df`s don't rely on `NextMethod()`. Destructure
+    # first instead.
+    return(tibble::as_tibble(vctrs::vec_data(x), ...))
+  }
+  metadata <- attr(x, "metadata")
+  reclass(NextMethod(), metadata)
 }
 
 #' Convert to tsibble format
@@ -52,6 +63,8 @@ print.epi_df <- function(x, ...) {
   cat(sprintf("* %-9s = %s\n", "geo_type", attributes(x)$metadata$geo_type))
   cat(sprintf("* %-9s = %s\n", "time_type", attributes(x)$metadata$time_type))
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(x)$metadata$as_of))
+  # Conditional output (silent if attribute is NULL):
+  cat(sprintf("* %-9s = %s\n", "decay_to_tibble", attr(x, "decay_to_tibble")))
   cat("\n")
   NextMethod()
 }
@@ -73,7 +86,6 @@ print.epi_df <- function(x, ...) {
 summary.epi_df <- function(object, ...) {
   cat("An `epi_df` x, with metadata:\n")
   cat(sprintf("* %-9s = %s\n", "geo_type", attributes(object)$metadata$geo_type))
-  cat(sprintf("* %-9s = %s\n", "time_type", attributes(object)$metadata$time_type))
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(object)$metadata$as_of))
   cat("----------\n")
   cat(sprintf("* %-27s = %s\n", "min time value", min(object$time_value)))
@@ -108,15 +120,14 @@ decay_epi_df <- function(x) {
 }
 
 # Implementing `dplyr_extending`: we have a few metadata attributes to consider:
-# `as_of` is an attribute doesn't depend on the rows or columns, `geo_type` and
-# `time_type` are scalar attributes dependent on columns, and `other_keys` acts
-# like an attribute vectorized over columns; `dplyr_extending` advice at time of
-# writing says to implement `dplyr_reconstruct`, 1d `[`, `dplyr_col_modify`, and
-# `names<-`, but not `dplyr_row_slice`; however, we'll also implement
-# `dplyr_row_slice` anyway to prevent a `arrange` on grouped `epi_df`s from
-# dropping the `epi_df` class. We'll implement `[` to allow either 1d or 2d.
-# We'll also implement some other methods where we want to (try to) maintain an
-# `epi_df`.
+# `as_of` is an attribute doesn't depend on the rows or columns, `geo_type` is a
+# scalar attribute dependent on columns, and `other_keys` acts like an attribute
+# vectorized over columns; `dplyr_extending` advice at time of writing says to
+# implement `dplyr_reconstruct`, 1d `[`, `dplyr_col_modify`, and `names<-`, but
+# not `dplyr_row_slice`; however, we'll also implement `dplyr_row_slice` anyway
+# to prevent a `arrange` on grouped `epi_df`s from dropping the `epi_df` class.
+# We'll implement `[` to allow either 1d or 2d. We'll also implement some other
+# methods where we want to (try to) maintain an `epi_df`.
 
 #' @param data tibble or `epi_df` (`dplyr` feeds in former, but we may
 #'   directly feed in latter from our other methods)

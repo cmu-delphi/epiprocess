@@ -1,19 +1,21 @@
 library(dplyr)
 
+test_date <- as.Date("2020-01-01")
+
 test_that("epix_slide only works on an epi_archive", {
   expect_error(epix_slide(data.frame(x = 1)))
 })
 
 x <- tibble::tribble(
   ~version, ~time_value, ~binary,
-  4, c(1:3), 2^(1:3),
-  5, c(1:2, 4), 2^(4:6),
-  6, c(1:2, 4:5), 2^(7:10),
-  7, 2:6, 2^(11:15)
+  test_date + 4, test_date + c(1:3), 2^(1:3),
+  test_date + 5, test_date + c(1:2, 4), 2^(4:6),
+  test_date + 6, test_date + c(1:2, 4:5), 2^(7:10),
+  test_date + 7, test_date + 2:6, 2^(11:15)
 ) %>%
   tidyr::unnest(c(time_value, binary))
 
-xx <- bind_cols(geo_value = rep("x", 15), x) %>%
+xx <- bind_cols(geo_value = rep("ak", 15), x) %>%
   as_epi_archive()
 
 test_that("epix_slide works as intended", {
@@ -26,8 +28,8 @@ test_that("epix_slide works as intended", {
     )
 
   xx2 <- tibble(
-    geo_value = rep("x", 4),
-    time_value = c(4, 5, 6, 7),
+    geo_value = rep("ak", 4),
+    time_value = test_date + c(4, 5, 6, 7),
     sum_binary = c(
       2^3 + 2^2,
       2^6 + 2^3,
@@ -76,10 +78,9 @@ test_that("epix_slide works as intended with list cols", {
       f = ~ list(data.frame(bin_sum = sum(.x$binary))),
       before = 2
     )
-
   xx_dfrow2 <- tibble(
-    geo_value = rep("x", 4),
-    time_value = c(4, 5, 6, 7),
+    geo_value = rep("ak", 4),
+    time_value = test_date + c(4, 5, 6, 7),
     slide_value =
       c(
         2^3 + 2^2,
@@ -89,7 +90,6 @@ test_that("epix_slide works as intended with list cols", {
       ) %>% purrr::map(~ data.frame(bin_sum = .x))
   ) %>%
     group_by(geo_value)
-
   expect_identical(xx_dfrow1, xx_dfrow2) # *
 
   xx_dfrow3 <- xx %>%
@@ -98,7 +98,6 @@ test_that("epix_slide works as intended with list cols", {
       f = ~ list(data.frame(bin_sum = sum(.x$binary))),
       before = 2
     )
-
   expect_identical(xx_dfrow1, xx_dfrow3) # This and * Imply xx_dfrow2 and xx_dfrow3 are identical
 
   xx_df1 <- xx %>%
@@ -107,10 +106,9 @@ test_that("epix_slide works as intended with list cols", {
       f = ~ list(data.frame(bin = .x$binary)),
       before = 2
     )
-
   xx_df2 <- tibble(
-    geo_value = rep("x", 4),
-    time_value = c(4, 5, 6, 7),
+    geo_value = rep("ak", 4),
+    time_value = test_date + c(4, 5, 6, 7),
     slide_value =
       list(
         c(2^3, 2^2),
@@ -120,7 +118,6 @@ test_that("epix_slide works as intended with list cols", {
       ) %>% purrr::map(~ data.frame(bin = rev(.x)))
   ) %>%
     group_by(geo_value)
-
   expect_identical(xx_df1, xx_df2)
 
   xx_scalar1 <- xx %>%
@@ -129,10 +126,9 @@ test_that("epix_slide works as intended with list cols", {
       f = ~ list(sum(.x$binary)),
       before = 2
     )
-
   xx_scalar2 <- tibble(
-    geo_value = rep("x", 4),
-    time_value = c(4, 5, 6, 7),
+    geo_value = rep("ak", 4),
+    time_value = test_date + c(4, 5, 6, 7),
     slide_value =
       list(
         2^3 + 2^2,
@@ -142,7 +138,6 @@ test_that("epix_slide works as intended with list cols", {
       )
   ) %>%
     group_by(geo_value)
-
   expect_identical(xx_scalar1, xx_scalar2)
 
   xx_vec1 <- xx %>%
@@ -151,10 +146,9 @@ test_that("epix_slide works as intended with list cols", {
       f = ~ list(.x$binary),
       before = 2
     )
-
   xx_vec2 <- tibble(
-    geo_value = rep("x", 4),
-    time_value = c(4, 5, 6, 7),
+    geo_value = rep("ak", 4),
+    time_value = test_date + c(4, 5, 6, 7),
     slide_value =
       list(
         c(2^3, 2^2),
@@ -164,48 +158,26 @@ test_that("epix_slide works as intended with list cols", {
       ) %>% purrr::map(rev)
   ) %>%
     group_by(geo_value)
-
   expect_identical(xx_vec1, xx_vec2)
 })
 
 test_that("epix_slide `before` validation works", {
   expect_error(
-    xx %>% epix_slide(f = ~ sum(.x$binary)),
-    "`before` is required"
-  )
-  expect_error(
     xx %>% epix_slide(f = ~ sum(.x$binary), before = NA),
-    "Assertion on 'before' failed: May not be NA"
+    "Expected `before` to be a scalar value."
   )
   expect_error(
     xx %>% epix_slide(f = ~ sum(.x$binary), before = -1),
-    "Assertion on 'before' failed: Element 1 is not >= 0"
+    "Expected `before` to be a difftime with units in days or a non-negative integer."
   )
   expect_error(
     xx %>% epix_slide(f = ~ sum(.x$binary), before = 1.5),
-    regexp = "before",
-    class = "vctrs_error_incompatible_type"
+    "Expected `before` to be a difftime with units in days or a non-negative integer."
   )
-  # We might want to allow this at some point (issue #219):
-  expect_error(
-    xx %>% epix_slide(f = ~ sum(.x$binary), before = Inf),
-    regexp = "before",
-    class = "vctrs_error_incompatible_type"
-  )
-  expect_error(xx %>% epix_slide(f = ~ sum(.x$binary)), "`before` is required")
   # These `before` values should be accepted:
-  expect_error(
-    xx %>% epix_slide(f = ~ sum(.x$binary), before = 0),
-    NA
-  )
-  expect_error(
-    xx %>% epix_slide(f = ~ sum(.x$binary), before = 2L),
-    NA
-  )
-  expect_error(
-    xx %>% epix_slide(f = ~ sum(.x$binary), before = 365000),
-    NA
-  )
+  expect_no_error(xx %>% epix_slide(f = ~ sum(.x$binary), before = 0))
+  expect_no_error(xx %>% epix_slide(f = ~ sum(.x$binary), before = 2))
+  expect_no_error(xx %>% epix_slide(f = ~ sum(.x$binary), before = as.difftime(365000, units = "days")))
 })
 
 test_that("quosure passing issue in epix_slide is resolved + other potential issues", {
@@ -344,15 +316,15 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
 
 ea <- tibble::tribble(
   ~version, ~time_value, ~binary,
-  2, 1:1, 2^(1:1),
-  3, 1:2, 2^(2:1),
-  4, 1:3, 2^(3:1),
-  5, 1:4, 2^(4:1),
-  6, 1:5, 2^(5:1),
-  7, 1:6, 2^(6:1)
+  test_date + 2, test_date + 1:1, 2^(1:1),
+  test_date + 3, test_date + 1:2, 2^(2:1),
+  test_date + 4, test_date + 1:3, 2^(3:1),
+  test_date + 5, test_date + 1:4, 2^(4:1),
+  test_date + 6, test_date + 1:5, 2^(5:1),
+  test_date + 7, test_date + 1:6, 2^(6:1)
 ) %>%
   tidyr::unnest(c(time_value, binary)) %>%
-  mutate(geo_value = "x") %>%
+  mutate(geo_value = "ak") %>%
   as_epi_archive()
 
 test_that("epix_slide with all_versions option has access to all older versions", {
@@ -379,12 +351,12 @@ test_that("epix_slide with all_versions option has access to all older versions"
 
   result2 <- tibble::tribble(
     ~time_value, ~n_versions, ~n_row, ~dt_class1, ~dt_key,
-    2, 1L, sum(1:1), "data.table", key(ea$DT),
-    3, 2L, sum(1:2), "data.table", key(ea$DT),
-    4, 3L, sum(1:3), "data.table", key(ea$DT),
-    5, 4L, sum(1:4), "data.table", key(ea$DT),
-    6, 5L, sum(1:5), "data.table", key(ea$DT),
-    7, 6L, sum(1:6), "data.table", key(ea$DT),
+    test_date + 2, 1L, sum(1:1), "data.table", key(ea$DT),
+    test_date + 3, 2L, sum(1:2), "data.table", key(ea$DT),
+    test_date + 4, 3L, sum(1:3), "data.table", key(ea$DT),
+    test_date + 5, 4L, sum(1:4), "data.table", key(ea$DT),
+    test_date + 6, 5L, sum(1:5), "data.table", key(ea$DT),
+    test_date + 7, 6L, sum(1:6), "data.table", key(ea$DT),
   )
 
   expect_identical(result1, result2) # *
@@ -427,21 +399,23 @@ test_that("epix_slide with all_versions option has access to all older versions"
 
 test_that("epix_as_of and epix_slide with long enough window are compatible", {
   # For all_versions = FALSE:
-
   f1 <- function(x, gk, rtv) {
     tibble(
       diff_mean = mean(diff(x$binary))
     )
   }
-  ref_time_value1 <- 5
+  ref_time_value1 <- test_date
 
   expect_identical(
     ea %>% epix_as_of(ref_time_value1) %>% f1() %>% mutate(time_value = ref_time_value1, .before = 1L),
-    ea %>% epix_slide(f1, before = 1000L, ref_time_values = ref_time_value1)
+    ea %>% epix_slide(
+      f1,
+      before = 1000,
+      ref_time_values = ref_time_value1
+    )
   )
 
   # For all_versions = TRUE:
-
   f2 <- function(x, gk, rtv) {
     x %>%
       # extract time&version-lag-1 data:
@@ -463,33 +437,43 @@ test_that("epix_as_of and epix_slide with long enough window are compatible", {
       ) %>%
       summarize(mean_abs_delta = mean(abs(binary - lag1)))
   }
-  ref_time_value2 <- 5
+  ref_time_value2 <- test_date + 5
 
   expect_identical(
     ea %>%
       epix_as_of(ref_time_value2, all_versions = TRUE) %>%
       f2() %>%
       mutate(time_value = ref_time_value2, .before = 1L),
-    ea %>% epix_slide(f2, before = 1000L, ref_time_values = ref_time_value2, all_versions = TRUE)
+    ea %>% epix_slide(
+      f2,
+      before = 1000,
+      ref_time_values = ref_time_value2,
+      all_versions = TRUE
+    )
   )
 
   # Test the same sort of thing when grouping by geo in an archive with multiple geos.
   ea_multigeo <- ea
   ea_multigeo$DT <- rbind(
     ea_multigeo$DT,
-    copy(ea_multigeo$DT)[, geo_value := "y"][, binary := -binary][]
+    copy(ea_multigeo$DT)[, geo_value := "ak"][, binary := -binary][]
   )
   setkeyv(ea_multigeo$DT, key(ea$DT))
 
   expect_identical(
     ea_multigeo %>%
       group_by(geo_value) %>%
-      epix_slide(f2, before = 1000L, ref_time_values = ref_time_value2, all_versions = TRUE) %>%
-      filter(geo_value == "x"),
+      epix_slide(
+        f2,
+        before = 1000,
+        ref_time_values = ref_time_value2,
+        all_versions = TRUE
+      ) %>%
+      filter(geo_value == "ak"),
     ea %>% # using `ea` here is like filtering `ea_multigeo` to `geo_value=="x"`
       epix_as_of(ref_time_value2, all_versions = TRUE) %>%
       f2() %>%
-      transmute(geo_value = "x", time_value = ref_time_value2, mean_abs_delta) %>%
+      transmute(geo_value = "ak", time_value = ref_time_value2, mean_abs_delta) %>%
       group_by(geo_value)
   )
 })
@@ -505,7 +489,7 @@ test_that("epix_slide `f` is passed an ungrouped `epi_archive` when `all_version
     epix_slide(
       f = slide_fn,
       before = 1,
-      ref_time_values = 5,
+      ref_time_values = test_date + 5,
       new_col_name = "out",
       all_versions = TRUE
     )
@@ -522,8 +506,8 @@ test_that("epix_slide with all_versions option works as intended", {
     )
 
   xx2 <- tibble(
-    geo_value = rep("x", 4),
-    time_value = c(4, 5, 6, 7),
+    geo_value = rep("ak", 4),
+    time_value = test_date + c(4, 5, 6, 7),
     sum_binary = c(
       2^3 + 2^2,
       2^6 + 2^3,
@@ -572,7 +556,7 @@ test_that("epix_slide with all_versions option works as intended", {
 test_that("epix_slide works with 0-row computation outputs", {
   epix_slide_empty <- function(ea, ...) {
     ea %>%
-      epix_slide(before = 5L, ..., function(x, gk, rtv) {
+      epix_slide(before = 5, ..., function(x, gk, rtv) {
         tibble::tibble()
       })
   }
@@ -591,8 +575,6 @@ test_that("epix_slide works with 0-row computation outputs", {
       geo_value = ea$DT$geo_value[integer(0)],
       time_value = ea$DT$version[integer(0)]
     ) %>%
-      # new_epi_df(geo_type = ea$geo_type, time_type = ea$time_type,
-      #            as_of = ea$versions_end) %>%
       group_by(geo_value)
   )
   # with `all_versions=TRUE`, we have something similar but never get an
@@ -619,20 +601,20 @@ test_that("epix_slide works with 0-row computation outputs", {
 test_that("epix_slide alerts if the provided f doesn't take enough args", {
   f_xgt <- function(x, g, t) dplyr::tibble(value = mean(x$binary), count = length(x$binary))
   # If `regexp` is NA, asserts that there should be no errors/messages.
-  expect_error(epix_slide(xx, f = f_xgt, before = 2L), regexp = NA)
-  expect_warning(epix_slide(xx, f = f_xgt, before = 2L), regexp = NA)
+  expect_error(epix_slide(xx, f = f_xgt, before = 2), regexp = NA)
+  expect_warning(epix_slide(xx, f = f_xgt, before = 2), regexp = NA)
 
   f_x_dots <- function(x, ...) dplyr::tibble(value = mean(x$binary), count = length(x$binary))
-  expect_warning(epix_slide(xx, f_x_dots, before = 2L),
+  expect_warning(epix_slide(xx, f_x_dots, before = 2),
     class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
   )
 })
 
 test_that("epix_slide computation via formula can use ref_time_value", {
   xx_ref <- tibble(
-    geo_value = rep("x", 4),
-    time_value = c(4, 5, 6, 7),
-    slide_value = c(4, 5, 6, 7)
+    geo_value = rep("ak", 4),
+    time_value = test_date + c(4, 5, 6, 7),
+    slide_value = test_date + c(4, 5, 6, 7)
   ) %>%
     group_by(geo_value)
 
@@ -666,9 +648,9 @@ test_that("epix_slide computation via formula can use ref_time_value", {
 
 test_that("epix_slide computation via function can use ref_time_value", {
   xx_ref <- tibble(
-    geo_value = rep("x", 4),
-    time_value = c(4, 5, 6, 7),
-    slide_value = c(4, 5, 6, 7)
+    geo_value = rep("ak", 4),
+    time_value = test_date + c(4, 5, 6, 7),
+    slide_value = test_date + c(4, 5, 6, 7)
   ) %>%
     group_by(geo_value)
 
@@ -685,9 +667,9 @@ test_that("epix_slide computation via function can use ref_time_value", {
 test_that("epix_slide computation via dots can use ref_time_value and group", {
   # ref_time_value
   xx_ref <- tibble(
-    geo_value = rep("x", 4),
-    time_value = c(4, 5, 6, 7),
-    slide_value = c(4, 5, 6, 7)
+    geo_value = rep("ak", 4),
+    time_value = test_date + c(4, 5, 6, 7),
+    slide_value = test_date + c(4, 5, 6, 7)
   ) %>%
     group_by(geo_value)
 
@@ -702,9 +684,9 @@ test_that("epix_slide computation via dots can use ref_time_value and group", {
 
   # group_key
   xx_ref <- tibble(
-    geo_value = rep("x", 4),
-    time_value = c(4, 5, 6, 7),
-    slide_value = "x"
+    geo_value = rep("ak", 4),
+    time_value = test_date + c(4, 5, 6, 7),
+    slide_value = "ak"
   ) %>%
     group_by(geo_value)
 
@@ -735,14 +717,14 @@ test_that("epix_slide computation via dots outputs the same result using col nam
     group_by(.data$geo_value) %>%
     epix_slide(
       before = 2,
-      sum_binary = sum(time_value)
+      sum_binary = sum(binary)
     )
 
   xx1 <- xx %>%
     group_by(.data$geo_value) %>%
     epix_slide(
       before = 2,
-      sum_binary = sum(.x$time_value)
+      sum_binary = sum(.x$binary)
     )
 
   expect_identical(xx1, xx_ref)
@@ -751,7 +733,7 @@ test_that("epix_slide computation via dots outputs the same result using col nam
     group_by(.data$geo_value) %>%
     epix_slide(
       before = 2,
-      sum_binary = sum(.data$time_value)
+      sum_binary = sum(.data$binary)
     )
 
   expect_identical(xx2, xx_ref)
@@ -761,9 +743,8 @@ test_that("`epix_slide` doesn't decay date output", {
   expect_true(
     xx$DT %>%
       as_tibble() %>%
-      mutate(across(c(time_value, version), ~ as.Date("2000-01-01") + .x - 1L)) %>%
       as_epi_archive() %>%
-      epix_slide(before = 5L, ~ attr(.x, "metadata")$as_of) %>%
+      epix_slide(before = 5, ~ attr(.x, "metadata")$as_of) %>%
       `[[`("slide_value") %>%
       inherits("Date")
   )
@@ -771,14 +752,8 @@ test_that("`epix_slide` doesn't decay date output", {
 
 test_that("`epix_slide` can access objects inside of helper functions", {
   helper <- function(archive_haystack, time_value_needle) {
-    archive_haystack %>% epix_slide(has_needle = time_value_needle %in% time_value, before = 365000L)
+    archive_haystack %>% epix_slide(has_needle = time_value_needle %in% time_value, before = Inf)
   }
-  expect_error(
-    helper(archive_cases_dv_subset, as.Date("2021-01-01")),
-    NA
-  )
-  expect_error(
-    helper(xx, 3L),
-    NA
-  )
+  expect_no_error(helper(archive_cases_dv_subset, as.Date("2021-01-01")))
+  expect_no_error(helper(xx, 3L))
 })

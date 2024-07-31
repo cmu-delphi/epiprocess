@@ -15,3 +15,8 @@
 Converts an \code{epi_df} object into a tibble, dropping metadata and any
 grouping.
 }
+\details{
+Advanced: if you are working with a third-party package that uses
+\code{as_tibble()} on \code{epi_df}s but you actually want them to remain \code{epi_df}s,
+use \code{attr(your_epi_df, "decay_to_tibble") <- FALSE} beforehand.
+}

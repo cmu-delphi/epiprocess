@@ -1,14 +1,8 @@
 test_that("new_epi_df works as intended", {
-  # Empty tibble
-  wmsg <- capture_warnings(a <- new_epi_df())
-  expect_match(
-    wmsg[1],
-    "Unknown or uninitialised column: `geo_value`."
-  )
-  expect_match(
-    wmsg[2],
-    "Unknown or uninitialised column: `time_value`."
-  )
+  # Empty call fails
+  expect_error(new_epi_df(), "argument \"geo_type\" is missing")
+  # Empty tibble works, but requires metadata
+  a <- new_epi_df(tibble(), geo_type = "custom", time_type = "custom", as_of = as.POSIXct("2020-01-01"))
   expect_true(is_epi_df(a))
   expect_identical(attributes(a)$metadata$geo_type, "custom")
   expect_identical(attributes(a)$metadata$time_type, "custom")
@@ -21,7 +15,7 @@ test_that("new_epi_df works as intended", {
     geo_value = rep(c("ca", "hi"), each = 5)
   )
 
-  epi_tib <- new_epi_df(tib)
+  epi_tib <- new_epi_df(tib, geo_type = "state", time_type = "day", as_of = as.POSIXct("2020-01-01"))
   expect_true(is_epi_df(epi_tib))
   expect_length(epi_tib, 4L)
   expect_identical(attributes(epi_tib)$metadata$geo_type, "state")
@@ -46,14 +40,48 @@ test_that("as_epi_df errors when additional_metadata is not a list", {
   )
 })
 
-# select fixes
+test_that("as_epi_df works for nonstandard input", {
+  tib <- tibble::tibble(
+    x = 1:10, y = 1:10,
+    date = rep(seq(as.Date("2020-01-01"), by = 1, length.out = 5), times = 2),
+    geo_value = rep(c("ca", "hi"), each = 5)
+  )
+  expect_message(expect_no_error(tib_epi_df <- tib %>% as_epi_df()),
+    class = "epiprocess__guess_column_inferring_inform"
+  )
+  expect_no_error(tib_epi_df <- tib %>% as_epi_df(time_value = date, geo_value = geo_value))
+  expect_error(
+    expect_message(
+      tib %>%
+        rename(awefa = geo_value) %>%
+        as_epi_df(),
+      class = "epiprocess__guess_column_inferring_inform"
+    ),
+    class = "epiprocess__guess_column__multiple_substitution_error"
+  )
+  expect_no_error(expect_message(
+    tib %>% rename(awefa = geo_value) %>% as_epi_df(geo_value = awefa),
+    class = "epiprocess__guess_column_inferring_inform"
+  ))
 
+  tib <- tib %>% rename(target_date = date)
+  expect_message(expect_no_error(tib_epi_df <- tib %>% as_epi_df()),
+    class = "epiprocess__guess_column_inferring_inform"
+  )
+
+  tib <- tib %>% mutate(Time = 20 + target_date)
+  expect_error(tib_epi_df <- tib %>% as_epi_df(),
+    class = "epiprocess__guess_column__multiple_substitution_error"
+  )
+})
+
+# select fixes
 tib <- tibble::tibble(
   x = 1:10, y = 1:10,
   time_value = rep(seq(as.Date("2020-01-01"), by = 1, length.out = 5), times = 2),
   geo_value = rep(c("ca", "hi"), each = 5)
 )
-epi_tib <- epiprocess::new_epi_df(tib)
+epi_tib <- epiprocess::as_epi_df(tib)
 test_that("grouped epi_df maintains type for select", {
   grouped_epi <- epi_tib %>% group_by(geo_value)
   selected_df <- grouped_epi %>% select(-y)
@@ -80,10 +108,9 @@ test_that("grouped epi_df handles extra keys correctly", {
     geo_value = rep(c("ca", "hi"), each = 5),
     extra_key = rep(seq(as.Date("2020-01-01"), by = 1, length.out = 5), times = 2)
   )
-  epi_tib <- epiprocess::new_epi_df(tib,
+  epi_tib <- epiprocess::as_epi_df(tib,
     additional_metadata = list(other_keys = "extra_key")
   )
-  attributes(epi_tib)
   grouped_epi <- epi_tib %>% group_by(geo_value)
   selected_df <- grouped_epi %>% select(-extra_key)
   expect_true(inherits(selected_df, "epi_df"))

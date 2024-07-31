@@ -121,7 +121,18 @@ test_that("Correct metadata when subset includes some of other_keys", {
   # Including both original other_keys was already tested above
 })
 
-test_that("Metadata and grouping are dropped by `as_tibble`", {
+test_that("Metadata is dropped by `as_tibble`", {
+  grouped_converted <- toy_epi_df %>%
+    group_by(geo_value) %>%
+    as_tibble()
+  expect_true(
+    !any(c("metadata") %in% names(attributes(grouped_converted)))
+  )
+})
+
+test_that("Grouping are dropped by `as_tibble`", {
+  # tsibble is doing some method piracy, and overwriting as_tibble.grouped_df as of 1.1.5
+  skip_if(packageVersion("tsibble") > "1.1.4")
   grouped_converted <- toy_epi_df %>%
     group_by(geo_value) %>%
     as_tibble()
@@ -132,7 +143,7 @@ test_that("Metadata and grouping are dropped by `as_tibble`", {
 })
 
 test_that("Renaming columns gives appropriate colnames and metadata", {
-  edf <- tibble::tibble(geo_value = 1, time_value = 1, age = 1, value = 1) %>%
+  edf <- tibble::tibble(geo_value = "ak", time_value = as.Date("2020-01-01"), age = 1, value = 1) %>%
     as_epi_df(additional_metadata = list(other_keys = "age"))
   # renaming using base R
   renamed_edf1 <- edf %>%
@@ -148,7 +159,7 @@ test_that("Renaming columns gives appropriate colnames and metadata", {
 })
 
 test_that("Renaming columns while grouped gives appropriate colnames and metadata", {
-  gedf <- tibble::tibble(geo_value = 1, time_value = 1, age = 1, value = 1) %>%
+  gedf <- tibble::tibble(geo_value = "ak", time_value = as.Date("2020-01-01"), age = 1, value = 1) %>%
     as_epi_df(additional_metadata = list(other_keys = "age")) %>%
     group_by(geo_value)
   # renaming using base R

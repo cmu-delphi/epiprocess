@@ -9,58 +9,57 @@
 \usage{
 new_epi_archive(
   x,
-  geo_type = NULL,
-  time_type = NULL,
-  other_keys = NULL,
-  additional_metadata = NULL,
-  compactify = NULL,
-  clobberable_versions_start = NULL,
-  versions_end = NULL
+  geo_type,
+  time_type,
+  other_keys,
+  additional_metadata,
+  compactify,
+  clobberable_versions_start,
+  versions_end
 )
 
 validate_epi_archive(
   x,
-  geo_type = NULL,
-  time_type = NULL,
-  other_keys = NULL,
-  additional_metadata = NULL,
-  compactify = NULL,
-  clobberable_versions_start = NULL,
-  versions_end = NULL
+  other_keys,
+  additional_metadata,
+  compactify,
+  clobberable_versions_start,
+  versions_end
 )
 
 as_epi_archive(
   x,
-  geo_type = NULL,
-  time_type = NULL,
-  other_keys = NULL,
-  additional_metadata = NULL,
+  geo_type = deprecated(),
+  time_type = deprecated(),
+  other_keys = character(0L),
+  additional_metadata = list(),
   compactify = NULL,
-  clobberable_versions_start = NULL,
-  versions_end = NULL
+  clobberable_versions_start = NA,
+  .versions_end = max_version_with_row_in(x),
+  ...,
+  versions_end = .versions_end
 )
 }
 \arguments{
 \item{x}{A data.frame, data.table, or tibble, with columns \code{geo_value},
 \code{time_value}, \code{version}, and then any additional number of columns.}
 
-\item{geo_type}{Type for the geo values. If missing, then the function will
-attempt to infer it from the geo values present; if this fails, then it
-will be set to "custom".}
+\item{geo_type}{DEPRECATED Has no effect. Geo value type is inferred from the
+location column and set to "custom" if not recognized.}
 
-\item{time_type}{Type for the time values. If missing, then the function will
-attempt to infer it from the time values present; if this fails, then it
-will be set to "custom".}
+\item{time_type}{DEPRECATED Has no effect. Time value type inferred from the time
+column and set to "custom" if not recognized. Unpredictable behavior may result
+if the time type is not recognized.}
 
 \item{other_keys}{Character vector specifying the names of variables in \code{x}
 that should be considered key variables (in the language of \code{data.table})
 apart from "geo_value", "time_value", and "version".}
 
 \item{additional_metadata}{List of additional metadata to attach to the
-\code{epi_archive} object. The metadata will have \code{geo_type} and \code{time_type}
-fields; named entries from the passed list or will be included as well.}
+\code{epi_archive} object. The metadata will have the \code{geo_type} field; named
+entries from the passed list or will be included as well.}
 
-\item{compactify}{Optional; Boolean or \code{NULL}. \code{TRUE} will remove some
+\item{compactify}{Optional; Boolean. \code{TRUE} will remove some
 redundant rows, \code{FALSE} will not, and missing or \code{NULL} will remove
 redundant rows, but issue a warning. See more information at \code{compactify}.}
 
@@ -89,6 +88,13 @@ beyond \code{max(x$version)}, but they all contained empty updates. (The default
 value of \code{clobberable_versions_start} does not fully trust these empty
 updates, and assumes that any version \verb{>= max(x$version)} could be
 clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
+
+\item{.versions_end}{location based versions_end, used to avoid prefix
+\code{version = issue} from being assigned to \code{versions_end} instead of being
+used to rename columns.}
+
+\item{...}{used for specifying column names, as in \code{\link[dplyr:rename]{dplyr::rename}}. For
+example \code{version = release_date}}
 }
 \value{
 An \code{epi_archive} object.
@@ -117,11 +123,8 @@ later.
 The data table \code{DT} has key variables \code{geo_value}, \code{time_value}, \code{version},
 as well as any others (these can be specified when instantiating the
 \code{epi_archive} object via the \code{other_keys} argument, and/or set by operating
-on \code{DT} directly). Refer to the documentation for \code{as_epi_archive()} for
-information and examples of relevant parameter names for an \code{epi_archive}
-object. Note that there can only be a single row per unique combination of
-key variables, and thus the key variables are critical for figuring out how
-to generate a snapshot of data from the archive, as of a given version.
+on \code{DT} directly). Note that there can only be a single row per unique
+combination of key variables.
 }
 \section{Metadata}{
 
@@ -133,20 +136,17 @@ object:
 \item \code{additional_metadata}: list of additional metadata for the data archive.
 }
 
-Unlike an \code{epi_df} object, metadata for an \code{epi_archive} object \code{x} can be
-accessed (and altered) directly, as in \code{x$geo_type} or \code{x$time_type},
-etc. Like an \code{epi_df} object, the \code{geo_type} and \code{time_type} fields in the
-metadata of an \code{epi_archive} object are not currently used by any
-downstream functions in the \code{epiprocess} package, and serve only as useful
-bits of information to convey about the data set at hand.
+While this metadata is not protected, it is generally recommended to treat it
+as read-only, and to use the \code{epi_archive} methods to interact with the data
+archive. Unexpected behavior may result from modifying the metadata
+directly.
 }
 
 \section{Generating Snapshots}{
 
 An \code{epi_archive} object can be used to generate a snapshot of the data in
-\code{epi_df} format, which represents the most up-to-date values of the signal
-variables, as of the specified version. This is accomplished by calling
-\code{epix_as_of()}.
+\code{epi_df} format, which represents the most up-to-date time series values up
+to a point in time. This is accomplished by calling \code{epix_as_of()}.
 }
 
 \section{Sliding Computations}{
@@ -173,10 +173,7 @@ tib <- tibble::tibble(
   value = rnorm(10, mean = 2, sd = 1)
 )
 
-toy_epi_archive <- tib \%>\% as_epi_archive(
-  geo_type = "state",
-  time_type = "day"
-)
+toy_epi_archive <- tib \%>\% as_epi_archive()
 toy_epi_archive
 
 # Ex. with an additional key for county
@@ -199,10 +196,6 @@ df <- data.frame(
   cases_rate = c(0.01, 0.02, 0.01, 0.05)
 )
 
-x <- df \%>\% as_epi_archive(
-  geo_type = "state",
-  time_type = "day",
-  other_keys = "county"
-)
+x <- df \%>\% as_epi_archive(other_keys = "county")
 
 }

@@ -1,10 +1,9 @@
 #' @param x A data.frame, [tibble::tibble], or [tsibble::tsibble] to be converted
-#' @param geo_type Type for the geo values. If missing, then the function will
-#'   attempt to infer it from the geo values present; if this fails, then it
-#'   will be set to "custom".
-#' @param time_type Type for the time values. If missing, then the function will
-#'   attempt to infer it from the time values present; if this fails, then it
-#'   will be set to "custom".
+#' @param geo_type DEPRECATED Has no effect. Geo value type is inferred from the
+#' location column and set to "custom" if not recognized.
+#' @param time_type DEPRECATED Has no effect. Time value type inferred from the time
+#' column and set to "custom" if not recognized. Unpredictable behavior may result
+#' if the time type is not recognized.
 #' @param as_of Time value representing the time at which the given data were
 #'   available. For example, if `as_of` is January 31, 2022, then the `epi_df`
 #'   object that is created would represent the most up-to-date version of the

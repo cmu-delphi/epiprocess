@@ -1,17 +1,17 @@
-d <- as.Date("2020-01-01")
+test_date <- as.Date("2020-01-01")
 raw_df_chr <- dplyr::bind_rows(
-  dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = "a"),
-  dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = "d")
+  dplyr::tibble(geo_value = "ak", time_value = test_date + 1:5, value = "a"),
+  dplyr::tibble(geo_value = "al", time_value = test_date + 1:5, value = "d")
 )
-ungrouped_chr <- as_epi_df(raw_df_chr, as_of = d + 6)
+ungrouped_chr <- as_epi_df(raw_df_chr, as_of = test_date + 6)
 grouped_chr <- ungrouped_chr %>%
   group_by(geo_value)
 
 raw_df_num <- dplyr::bind_rows(
-  dplyr::tibble(geo_value = "ak", time_value = d + 1:5, value = 11:15),
-  dplyr::tibble(geo_value = "al", time_value = d + 1:5, value = 1:5)
+  dplyr::tibble(geo_value = "ak", time_value = test_date + 1:5, value = 11:15),
+  dplyr::tibble(geo_value = "al", time_value = test_date + 1:5, value = 1:5)
 )
-ungrouped_num <- as_epi_df(raw_df_num, as_of = d + 6)
+ungrouped_num <- as_epi_df(raw_df_num, as_of = test_date + 6)
 grouped_num <- ungrouped_num %>%
   group_by(geo_value)
 
@@ -33,7 +33,7 @@ test_that("autoplot fails if no non-key columns are numeric", {
   # A numeric column is available, but is a key not a value.
   testdf <- mutate(raw_df_chr, key1 = c(1:5, 5:9)) %>%
     as_tsibble(index = time_value, key = c(geo_value, key1)) %>%
-    as_epi_df(as_of = d + 6)
+    as_epi_df(as_of = test_date + 6)
   expect_error(autoplot(testdf),
     class = "epiprocess__no_numeric_vars_available"
   )

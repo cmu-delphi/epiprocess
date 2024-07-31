@@ -453,57 +453,138 @@ guess_geo_type <- function(geo_value) {
     }
   }
 
-  # If we got here then we failed
   return("custom")
 }
 
-guess_time_type <- function(time_value) {
-  # Convert character time values to Date or POSIXct
-  if (is.character(time_value)) {
-    if (nchar(time_value[1]) <= 10L) {
-      new_time_value <- tryCatch(
-        {
-          as.Date(time_value)
-        },
-        error = function(e) NULL
-      )
-    } else {
-      new_time_value <- tryCatch(
-        {
-          as.POSIXct(time_value)
-        },
-        error = function(e) NULL
+
+guess_time_type <- function(time_value, time_value_arg = rlang::caller_arg(time_value)) {
+  if (inherits(time_value, "Date")) {
+    unique_time_gaps <- as.numeric(diff(sort(unique(time_value))))
+    # Gaps in a weekly date sequence will cause some diffs to be larger than 7
+    # days, so check modulo 7 equality, rather than equality with 7.
+    if (all(unique_time_gaps %% 7 == 0)) {
+      return("week")
+    }
+    if (all(unique_time_gaps >= 28)) {
+      cli_abort(
+        "Found a monthly or longer cadence in the time column `{time_value_arg}`.
+        Consider using tsibble::yearmonth for monthly data and 'YYYY' integers for year data."
       )
     }
-    if (!is.null(new_time_value)) time_value <- new_time_value
-  }
-
-  # Now, if a POSIXct class, then use "day-time"
-  if (inherits(time_value, "POSIXct")) {
-    return("day-time")
-  } else if (inherits(time_value, "Date")) {
-    # Else, if a Date class, then use "week" or "day" depending on gaps
-    # Convert to numeric so we can use the modulo operator.
-    unique_time_gaps <- as.numeric(diff(sort(unique(time_value))))
-    # We need to check the modulus of `unique_time_gaps` in case there are
-    # missing dates. Gaps in a weekly date sequence will cause some diffs to
-    # be larger than 7 days. If we just check if `diffs == 7`, it will fail
-    # unless the weekly date sequence is already complete.
-    return(ifelse(all(unique_time_gaps %% 7 == 0), "week", "day"))
-  } else if (inherits(time_value, "yearweek")) {
-    # Else, check whether it's one of the tsibble classes
-    return("yearweek")
+    return("day")
   } else if (inherits(time_value, "yearmonth")) {
     return("yearmonth")
-  } else if (inherits(time_value, "yearquarter")) {
-    return("yearquarter")
-  } else if (rlang::is_integerish(time_value) &&
-    all(nchar(as.character(time_value)) == 4L)) { # nolint: indentation_linter
-    return("year")
+  } else if (rlang::is_integerish(time_value)) {
+    return("integer")
   }
 
-  # If we got here then we failed
+  cli_warn(
+    "Unsupported time type in column `{time_value_arg}`, with class {.code {class(time_value)}}.
+    Time-related functionality may have unexpected behavior.
+    ",
+    class = "epiprocess__guess_time_type__unknown_time_type",
+    epiprocess__time_value = time_value
+  )
   return("custom")
+}
+
+#'  given a vector of characters, add the same values, but upcased, e.g.
+#'   "date" -> c("date", "Date")
+#'   "target_date" -> c("target_date", "Target_Date")
+#' @keywords internal
+upcase_snake_case <- function(vec) {
+  upper_vec <- strsplit(vec, "_") %>%
+    map(function(name) paste0(toupper(substr(name, 1, 1)), substr(name, 2, nchar(name)), collapse = "_")) %>%
+    unlist()
+  c(vec, upper_vec)
+}
+
+#' potential time_value columns
+#' @description
+#' the full list of potential substitutions for the `time_value` column name:
+#' `r time_column_names()`
+#' @export
+time_column_names <- function() {
+  substitutions <- c(
+    "time_value", "date", "time", "datetime", "dateTime", "date_time", "target_date",
+    "week", "epiweek", "month", "mon", "year", "yearmon", "yearmonth",
+    "yearMon", "yearMonth", "dates", "time_values", "target_dates", "time_Value"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("time_value", length(substitutions))
+  return(substitutions)
+}
+#
+#' potential geo_value columns
+#' @description
+#' the full list of potential substitutions for the `geo_value` column name:
+#' `r geo_column_names()`
+#' @export
+geo_column_names <- function() {
+  substitutions <- c(
+    "geo_value", "geo_values", "geo_id", "geos", "location", "jurisdiction", "fips", "zip",
+    "county", "hrr", "msa", "state", "province", "nation", "states",
+    "provinces", "counties", "geo_Value"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("geo_value", length(substitutions))
+  return(substitutions)
+}
+
+#' potential version columns
+#' @description
+#' the full list of potential substitutions for the `version` column name:
+#' `r version_column_names()`
+#' @export
+version_column_names <- function() {
+  substitutions <- c(
+    "version", "issue", "release"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("version", length(substitutions))
+  return(substitutions)
+}
+
+#' rename potential time_value columns
+#'
+#' @description
+#' potentially renames
+#' @param x the tibble to potentially rename
+#' @param substitutions a named vector. the potential substitions, with every name `time_value`
+#' @keywords internal
+#' @importFrom cli cli_inform cli_abort
+#' @importFrom dplyr rename
+guess_column_name <- function(x, column_name, substitutions) {
+  if (!(column_name %in% names(x))) {
+    # if none of the names are in substitutions, and `column_name` isn't a column, we're missing a relevant column
+    if (!any(names(x) %in% substitutions)) {
+      cli_abort(
+        "There is no {column_name} column or similar name.
+         See e.g. [`time_column_name()`] for a complete list",
+        class = "epiprocess__guess_column__multiple_substitution_error"
+      )
+    }
+
+    tryCatch(
+      {
+        x <- x %>% rename(any_of(substitutions))
+        cli_inform(
+          "inferring {column_name} column.",
+          class = "epiprocess__guess_column_inferring_inform"
+        )
+        return(x)
+      },
+      error = function(cond) {
+        cli_abort(
+          "{intersect(names(x), substitutions)}
+           are both/all valid substitutions for {column_name}.
+           Either `rename` some yourself or drop some.",
+          class = "epiprocess__guess_column__multiple_substitution_error"
+        )
+      }
+    )
+  }
+  return(x)
 }
 
 ##########
@@ -583,6 +664,8 @@ list2var <- function(x) {
 #' # function to produce incorrect results.
 #' bad_wrapper1 <- function(x) fn(x)
 #' bad_wrapper1() # TRUE, bad
+#'
+#' @importFrom lifecycle deprecated
 #'
 #' @noRd
 deprecated_quo_is_present <- function(quo) {
@@ -726,28 +809,92 @@ gcd_num <- function(dividends, ..., rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
   vctrs::vec_cast(numeric_gcd, dividends)
 }
 
-#' Use max valid period as guess for `period` of `ref_time_values`
+#' Use max valid period as guess for `period` of `time_values`
 #'
-#' @param ref_time_values Vector containing time-interval-like or time-like
-#'   data, with at least two distinct values, [`diff`]-able (e.g., a
-#'   `time_value` or `version` column), and should have a sensible result from
-#'   adding `is.numeric` versions of its `diff` result (via `as.integer` if its
-#'   `typeof` is `"integer"`, otherwise via `as.numeric`).
-#' @param ref_time_values_arg Optional, string; name to give `ref_time_values`
-#'   in error messages. Defaults to quoting the expression the caller fed into
-#'   the `ref_time_values` argument.
-#' @return `is.numeric`, length 1; attempts to match `typeof(ref_time_values)`
-guess_period <- function(ref_time_values, ref_time_values_arg = rlang::caller_arg(ref_time_values)) {
-  sorted_distinct_ref_time_values <- sort(unique(ref_time_values))
-  if (length(sorted_distinct_ref_time_values) < 2L) {
-    cli_abort("Not enough distinct values in {.code {ref_time_values_arg}} to guess the period.", ref_time_values_arg)
+#' `r lifecycle::badge("experimental")`
+#'
+#' @param time_values Vector containing time-interval-like or time-point-like
+#'   data, with at least two distinct values.
+#' @param time_values_arg Optional, string; name to give `time_values` in error
+#'   messages. Defaults to quoting the expression the caller fed into the
+#'   `time_values` argument.
+#' @param ... Should be empty, there to satisfy the S3 generic.
+#' @return length-1 vector; `r lifecycle::badge("experimental")` class will
+#'   either be the same class as [`base::diff()`] on such time values, an
+#'   integer, or a double, such that all `time_values` can be exactly obtained
+#'   by adding `k * result` for an integer k, and such that there is no smaller
+#'   `result` that can achieve this.
+#'
+#' @export
+guess_period <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
+  UseMethod("guess_period")
+}
+
+#' @export
+guess_period.default <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
+  rlang::check_dots_empty()
+  sorted_distinct_time_values <- sort(unique(time_values))
+  if (length(sorted_distinct_time_values) < 2L) {
+    cli_abort("Not enough distinct values in {.code {time_values_arg}} to guess the period.",
+      class = "epiprocess__guess_period__not_enough_times",
+      time_values = time_values
+    )
   }
-  skips <- diff(sorted_distinct_ref_time_values)
-  decayed_skips <-
-    if (typeof(skips) == "integer") {
-      as.integer(skips)
+  skips <- diff(sorted_distinct_time_values)
+  # Certain diff results have special classes or attributes; use vctrs to try to
+  # appropriately destructure for gcd_num, then restore to their original class
+  # & attributes.
+  skips_data <- vctrs::vec_data(skips)
+  period_data <- gcd_num(skips_data, rrtol = 0)
+  vctrs::vec_restore(period_data, skips)
+}
+
+# `full_seq()` doesn't like difftimes, so convert to the natural units of some time types:
+
+#' @export
+guess_period.Date <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
+  as.numeric(NextMethod(), units = "days")
+}
+
+#' @export
+guess_period.POSIXt <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
+  as.numeric(NextMethod(), units = "secs")
+}
+
+
+validate_slide_window_arg <- function(arg, time_type, arg_name = rlang::caller_arg(arg)) {
+  if (is.null(arg)) {
+    cli_abort("`{arg_name}` is a required argument.")
+  }
+
+  if (!checkmate::test_scalar(arg)) {
+    cli_abort("Expected `{arg_name}` to be a scalar value.")
+  }
+
+  if (time_type == "custom") {
+    cli_abort("Unsure how to interpret slide units with a custom time type. Consider converting your time
+    column to a Date, yearmonth, or integer type.")
+  }
+
+  if (!identical(arg, Inf)) {
+    if (time_type == "day") {
+      if (!test_int(arg, lower = 0L) && !(inherits(arg, "difftime") && units(arg) == "days")) {
+        cli_abort("Expected `{arg_name}` to be a difftime with units in days or a non-negative integer.")
+      }
+    } else if (time_type == "week") {
+      if (!(inherits(arg, "difftime") && units(arg) == "weeks")) {
+        cli_abort("Expected `{arg_name}` to be a difftime with units in weeks.")
+      }
+    } else if (time_type == "yearmonth") {
+      if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
+        cli_abort("Expected `{arg_name}` to be a non-negative integer.")
+      }
+    } else if (time_type == "integer") {
+      if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
+        cli_abort("Expected `{arg_name}` to be a non-negative integer.")
+      }
     } else {
-      as.numeric(skips)
+      cli_abort("Expected `{arg_name}` to be Inf, an appropriate a difftime, or a non-negative integer.")
     }
-  gcd_num(decayed_skips)
+  }
 }
