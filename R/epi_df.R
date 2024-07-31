@@ -242,7 +242,6 @@ as_epi_df.tbl_df <- function(
        must be present in `x`."
     )
   }
-
   if (lifecycle::is_present(geo_type)) {
     cli_warn("epi_archive constructor argument `geo_type` is now ignored. Consider removing.")
   }

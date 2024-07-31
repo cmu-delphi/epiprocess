@@ -2,19 +2,19 @@
 #' @description
 #' `revision_summary` removes all missing values (if requested), and then
 #'   computes some basic statistics about the revision behavior of an archive,
-#'   returning a tibble of a per-epi-key (so time_value, geo_value pair,
-#'   possibly others based on the metadata). If `print_inform` is true, it
+#'   returning a tibble summarizing the revisions per time_value+epi_key features. If `print_inform` is true, it
 #'   prints a concise summary. The columns returned are:
-#'  1. `min_lag`: the minimum time to any value (if `drop_nas=FALSE`, this
+#'  1. `n_revisions`: the total number of revisions for that entry
+#'  2. `min_lag`: the minimum time to any value (if `drop_nas=FALSE`, this
 #'   includes `NA`'s)
-#'  2. `max_lag`: the amount of time until the final (new) version (same caveat
+#'  3. `max_lag`: the amount of time until the final (new) version (same caveat
 #'   for `drop_nas=FALSE`, though it is far less likely to matter)
-#'  3. `spread`: the difference between the smallest and largest values (this
+#'  4. `spread`: the difference between the smallest and largest values (this
 #'   always excludes `NA` values)
-#'  4. `rel_spread`: `spread` divided by the largest value (so it will
+#'  5. `rel_spread`: `spread` divided by the largest value (so it will
 #'   always be less than 1). Note that this need not be the final value. It will
 #'   be `NA` whenever `spread` is 0.
-#'  5. `time_near_latest`: This gives the lag when the value is within
+#'  6. `time_near_latest`: This gives the lag when the value is within
 #'   `within_latest` (default 20%) of the value at the latest time. For example,
 #'   consider the series (0,20, 99, 150, 102, 100); then `time_near_latest` is
 #'   the 5th index, since even though 99 is within 20%, it is outside the window
@@ -65,7 +65,8 @@ revision_summary <- function(epi_arch,
                              few_revisions = 3,
                              rel_spread_threshold = 0.1,
                              abs_spread_threshold = NULL,
-                             compactify_tol = .Machine$double.eps^0.5) {
+                             compactify_tol = .Machine$double.eps^0.5,
+                             should_compactify = TRUE) {
   arg <- names(eval_select(rlang::expr(c(...)), allow_rename = FALSE, data = epi_arch$DT))
   if (length(arg) == 0) {
     first_non_key <- !(names(epi_arch$DT) %in% c(key_colnames(epi_arch), "version"))
@@ -95,11 +96,14 @@ revision_summary <- function(epi_arch,
     # if we're dropping NA's, we should recompactify
     revision_behavior <-
       revision_behavior %>%
-      filter(!is.na(c_across(!!arg))) %>%
-      arrange(across(c(geo_value, time_value, all_of(keys), version))) %>% # need to sort before compactifying
-      compactify(c(keys, version), compactify_tol)
+      filter(!is.na(c_across(!!arg)))
   } else {
     revision_behavior <- epi_arch$DT
+  }
+  if (should_compactify) {
+    revision_behavior <- revision_behavior %>%
+      arrange(across(c(geo_value, time_value, all_of(keys), version))) %>% # need to sort before compactifying
+      compactify(c(keys, version), compactify_tol)
   }
   revision_behavior <-
     revision_behavior %>%
@@ -122,7 +126,6 @@ revision_summary <- function(epi_arch,
     ) %>%
     select(-time_to)
   if (print_inform) {
-    cli_inform("Number of revisions:")
     cli_inform("Min lag (time to first version):")
     difftime_summary(revision_behavior$min_lag) %>% print()
     if (!drop_nas) {
@@ -130,27 +133,29 @@ revision_summary <- function(epi_arch,
         filter(is.na(c_across(!!arg))) %>% # nolint: object_usage_linter
         nrow()
       cli_inform("Fraction of all versions that are `NA`:")
-      cli_li(num_percent(total_na, nrow(epi_arch$DT), "versions"))
+      cli_li(num_percent(total_na, nrow(epi_arch$DT), ""))
+      cli_inform("")
     }
+    cli_inform("Fraction of epi_key+time_values with")
     total_num <- nrow(revision_behavior) # nolint: object_usage_linter
     total_num_unrevised <- sum(revision_behavior$n_revisions == 0) # nolint: object_usage_linter
     cli_inform("No revisions:")
-    cli_li(num_percent(total_num_unrevised, total_num, "entries"))
+    cli_li(num_percent(total_num_unrevised, total_num, ""))
     total_quickly_revised <- sum( # nolint: object_usage_linter
       revision_behavior$max_lag <=
         as.difftime(quick_revision, units = "days")
     )
     cli_inform("Quick revisions (last revision within {quick_revision}
 {units(quick_revision)} of the `time_value`):")
-    cli_li(num_percent(total_quickly_revised, total_num, "entries"))
+    cli_li(num_percent(total_quickly_revised, total_num, ""))
     total_barely_revised <- sum( # nolint: object_usage_linter
       revision_behavior$n_revisions <=
         few_revisions
     )
     cli_inform("Few revisions (At most {few_revisions} revisions for that `time_value`):")
-    cli_li(num_percent(total_barely_revised, total_num, "entries"))
+    cli_li(num_percent(total_barely_revised, total_num, ""))
     cli_inform("")
-    cli_inform("Changes in Value:")
+    cli_inform("Fraction of revised epi_key+time_values which have:")
 
     real_revisions <- revision_behavior %>% filter(n_revisions > 0) # nolint: object_usage_linter
     n_real_revised <- nrow(real_revisions) # nolint: object_usage_linter
@@ -159,17 +164,17 @@ revision_summary <- function(epi_arch,
         rel_spread_threshold,
       na.rm = TRUE
     ) + sum(is.na(real_revisions$rel_spread))
-    cli_inform("Less than {rel_spread_threshold} spread in relative value (only from the revised subset):")
-    cli_li(num_percent(rel_spread, n_real_revised, "revised entries"))
-    na_rel_spread <- sum(is.na(real_revisions$rel_spread)) # nolint: object_usage_linter
-    cli_inform("{units(quick_revision)} until within {within_latest*100}% of the latest value:")
-    difftime_summary(revision_behavior[["time_near_latest"]]) %>% print()
+    cli_inform("Less than {rel_spread_threshold} spread in relative value:")
+    cli_li(num_percent(rel_spread, n_real_revised, ""))
     abs_spread <- sum( # nolint: object_usage_linter
       real_revisions$spread >
         abs_spread_threshold
     ) # nolint: object_usage_linter
     cli_inform("Spread of more than {abs_spread_threshold} in actual value (when revised):")
-    cli_li(num_percent(abs_spread, n_real_revised, "revised entries"))
+    cli_li(num_percent(abs_spread, n_real_revised, ""))
+
+    cli_inform("{units(quick_revision)} until within {within_latest*100}% of the latest value:")
+    difftime_summary(revision_behavior[["time_near_latest"]]) %>% print()
   }
   return(revision_behavior)
 }

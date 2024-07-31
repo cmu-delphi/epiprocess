@@ -3,29 +3,27 @@
     Code
       dummy_ex %>% revision_summary() %>% print(n = 10, width = 300)
     Message
-      Number of revisions:
       Min lag (time to first version):
     Output
            min median     mean    max
         0 days 1 days 1.6 days 4 days
     Message
+      Fraction of epi_key+time_values with
       No revisions:
       * 3 out of 7 (42.86%)
       Quick revisions (last revision within 3 days of the `time_value`):
       * 4 out of 7 (57.14%)
       Few revisions (At most 3 revisions for that `time_value`):
       * 6 out of 7 (85.71%)
-      Changes in Value:
-      Less than 0.1 spread in relative value (only from the revised subset):
+      Fraction of revised epi_key+time_values which have:
+      Less than 0.1 spread in relative value:
       * 1 out of 4 (25%)
+      Spread of more than 5.1 in actual value (when revised):
+      * 3 out of 4 (75%)
       days until within 20% of the latest value:
     Output
            min median     mean     max
         0 days 3 days 6.9 days 19 days
-    Message
-      Spread of more than 5.1 in actual value (when revised):
-      * 3 out of 4 (75%)
-    Output
       # A tibble: 7 x 8
         time_value geo_value n_revisions min_lag max_lag spread rel_spread
         <date>     <chr>           <dbl> <drtn>  <drtn>   <dbl>      <dbl>
@@ -51,7 +49,6 @@
     Code
       dummy_ex %>% revision_summary(drop_nas = FALSE) %>% print(n = 10, width = 300)
     Message
-      Number of revisions:
       Min lag (time to first version):
     Output
            min median     mean    max
@@ -59,23 +56,22 @@
     Message
       Fraction of all versions that are `NA`:
       * 2 out of 19 (10.53%)
+      Fraction of epi_key+time_values with
       No revisions:
       * 1 out of 7 (14.29%)
       Quick revisions (last revision within 3 days of the `time_value`):
       * 3 out of 7 (42.86%)
       Few revisions (At most 3 revisions for that `time_value`):
       * 6 out of 7 (85.71%)
-      Changes in Value:
-      Less than 0.1 spread in relative value (only from the revised subset):
+      Fraction of revised epi_key+time_values which have:
+      Less than 0.1 spread in relative value:
+      * 3 out of 6 (50%)
+      Spread of more than 5.1 in actual value (when revised):
       * 3 out of 6 (50%)
       days until within 20% of the latest value:
     Output
            min median     mean     max
         0 days 3 days 6.9 days 19 days
-    Message
-      Spread of more than 5.1 in actual value (when revised):
-      * 3 out of 6 (50%)
-    Output
       # A tibble: 7 x 8
         time_value geo_value n_revisions min_lag max_lag spread rel_spread
         <date>     <chr>           <dbl> <drtn>  <drtn>   <dbl>      <dbl>
