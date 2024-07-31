@@ -27,14 +27,10 @@
 #'   and can also refer to `.x`, `.group_key`, and `.ref_time_value`. See
 #'   details.
 #' @param new_col_name String indicating the name of the new column that will
-#'   contain the derivative values. Default is "slide_value"; note that setting
+#'   contain the derivative values. The default is "slide_value" unless your
+#'   slide computations output data frames, in which case they will be unpacked
+#'   into the constituent columns and those names used. Note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
-#' @param as_list_col Should the slide results be held in a list column, or be
-#'   [unchopped][tidyr::unchop]/[unnested][tidyr::unnest]? Default is `FALSE`,
-#'   in which case a list object returned by `f` would be unnested (using
-#'   [`tidyr::unnest()`]), and, if the slide computations output data frames,
-#'   the names of the resulting columns are given by prepending `new_col_name`
-#'   to the names of the list elements.
 #'
 #' @template basic-slide-details
 #'

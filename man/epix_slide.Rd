@@ -96,7 +96,9 @@ set to a regularly-spaced sequence of values set to cover the range of
 be guessed (using the GCD of the skips between values).}
 
 \item{new_col_name}{String indicating the name of the new column that will
-contain the derivative values. Default is "slide_value"; note that setting
+contain the derivative values. The default is "slide_value" unless your
+slide computations output data frames, in which case they will be unpacked
+into the constituent columns and those names used. Note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
 
 \item{all_versions}{(Not the same as \code{all_rows} parameter of \code{epi_slide}.) If
@@ -106,16 +108,15 @@ contain the derivative values. Default is "slide_value"; note that setting
 passed only the most recent \code{version} for every unique \code{time_value}.
 Default is \code{FALSE}.}
 
-\item{as_list_col}{Should the slide results be held in a list column, or be
-\link[tidyr:chop]{unchopped}/\link[tidyr:unnest]{unnested}? Default is \code{FALSE},
-in which case a list object returned by \code{f} would be unnested (using
-\code{\link[tidyr:unnest]{tidyr::unnest()}}), and, if the slide computations output data frames,
-the names of the resulting columns are given by prepending \code{new_col_name}
-to the names of the list elements.}
+\item{as_list_col}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} if you want a list
+column as output, you can now just directly output a list from your slide
+computations. Usually this just means wrapping your output in a length-1
+list (outputting \code{list(result)} instead of \code{result}).}
 
-\item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
-when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
-from \code{new_col_name} entirely.}
+\item{names_sep}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} if you were specifying
+\code{names_sep = NULL}, that's no longer needed. If you were using a non-NULL
+value, you can either directly prefix your slide computation names, or
+output a list and then later call \verb{tidyr::unnest(slide_output, <result_column_name>, names_sep = <names_sep>)}.}
 }
 \value{
 A tibble whose columns are: the grouping variables, \code{time_value},

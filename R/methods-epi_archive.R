@@ -608,23 +608,25 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   `version`s in the `DT` plus the `versions_end`; the spacing of values will
 #'   be guessed (using the GCD of the skips between values).
 #' @param new_col_name String indicating the name of the new column that will
-#'   contain the derivative values. Default is "slide_value"; note that setting
+#'   contain the derivative values. The default is "slide_value" unless your
+#'   slide computations output data frames, in which case they will be unpacked
+#'   into the constituent columns and those names used. Note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
-#' @param as_list_col Should the slide results be held in a list column, or be
-#'   [unchopped][tidyr::unchop]/[unnested][tidyr::unnest]? Default is `FALSE`,
-#'   in which case a list object returned by `f` would be unnested (using
-#'   [`tidyr::unnest()`]), and, if the slide computations output data frames,
-#'   the names of the resulting columns are given by prepending `new_col_name`
-#'   to the names of the list elements.
-#' @param names_sep String specifying the separator to use in `tidyr::unnest()`
-#'   when `as_list_col = FALSE`. Default is "_". Using `NULL` drops the prefix
-#'   from `new_col_name` entirely.
 #' @param all_versions (Not the same as `all_rows` parameter of `epi_slide`.) If
 #'   `all_versions = TRUE`, then `f` will be passed the version history (all
 #'   `version <= ref_time_value`) for rows having `time_value` between
 #'   `ref_time_value - before` and `ref_time_value`. Otherwise, `f` will be
 #'   passed only the most recent `version` for every unique `time_value`.
 #'   Default is `FALSE`.
+#' @param as_list_col `r lifecycle::badge("deprecated")` if you want a list
+#'   column as output, you can now just directly output a list from your slide
+#'   computations. Usually this just means wrapping your output in a length-1
+#'   list (outputting `list(result)` instead of `result`).
+#' @param names_sep `r lifecycle::badge("deprecated")` if you were specifying
+#'   `names_sep = NULL`, that's no longer needed. If you were using a non-NULL
+#'   value, you can either directly prefix your slide computation names, or
+#'   output a list and then later call `tidyr::unnest(slide_output,
+#'   <result_column_name>, names_sep = <names_sep>)`.
 #' @return A tibble whose columns are: the grouping variables, `time_value`,
 #'   containing the reference time values for the slide computation, and a
 #'   column named according to the `new_col_name` argument, containing the slide
@@ -794,15 +796,15 @@ epix_slide <- function(
 #' @rdname epix_slide
 #' @export
 epix_slide.epi_archive <- function(
-     x,
-     f,
-     ...,
-     before = Inf,
-     ref_time_values = NULL,
-     new_col_name = NULL,
-     all_versions = FALSE,
-     as_list_col = deprecated(),
-     names_sep = deprecated()) {
+    x,
+    f,
+    ...,
+    before = Inf,
+    ref_time_values = NULL,
+    new_col_name = NULL,
+    all_versions = FALSE,
+    as_list_col = deprecated(),
+    names_sep = deprecated()) {
   # For an "ungrouped" slide, treat all rows as belonging to one big
   # group (group by 0 vars), like `dplyr::summarize`, and let the
   # resulting `grouped_epi_archive` handle the slide:

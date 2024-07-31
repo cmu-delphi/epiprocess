@@ -31,12 +31,14 @@
 #'   In a manner similar to [`dplyr::mutate`]:
 #'   * Expressions evaluating to length-1 vectors will be recycled to
 #'     appropriate lengths.
+#'   * `, name_var := value` can be used to set the output column name based on
+#'     a variable `name_var` rather than requiring you to use a hard-coded
+#'     name. (The leading comma is needed to make sure that `f` is treated as
+#'     missing.)
 #'   * `= NULL` can be used to remove results from previous expressions (though
 #'     we don't allow it to remove pre-existing columns).
-#'   * Unnamed expressions evaluating to data frames will be unpacked into
-#'     multiple columns in the result; to use this feature, you will need to add
-#'     an extra comma before your first data-masking expression to make sure `f`
-#'     appears as missing.
+#'   * `, fn_returning_a_data_frame(.x)` will unpack the output of the function
+#'     into multiple columns in the result.
 #'   * Named expressions evaluating to data frames will be placed into
 #'     [`tidyr::pack`]ed columns.
 #'

@@ -77,7 +77,9 @@ window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.}
 
 \item{new_col_name}{String indicating the name of the new column that will
-contain the derivative values. Default is "slide_value"; note that setting
+contain the derivative values. The default is "slide_value" unless your
+slide computations output data frames, in which case they will be unpacked
+into the constituent columns and those names used. Note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
 
 \item{all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
@@ -91,20 +93,19 @@ the missing marker is a \code{NULL} entry in the list column; for certain
 operations, you might want to replace these \code{NULL} entries with a different
 \code{NA} marker.}
 
-\item{as_list_col}{Should the slide results be held in a list column, or be
-\link[tidyr:chop]{unchopped}/\link[tidyr:unnest]{unnested}? Default is \code{FALSE},
-in which case a list object returned by \code{f} would be unnested (using
-\code{\link[tidyr:unnest]{tidyr::unnest()}}), and, if the slide computations output data frames,
-the names of the resulting columns are given by prepending \code{new_col_name}
-to the names of the list elements.}
+\item{as_list_col}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} if you want a list
+column as output, you can now just directly output a list from your slide
+computations. Usually this just means wrapping your output in a length-1
+list (outputting \code{list(result)} instead of \code{result}).}
 
-\item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
-when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
-from \code{new_col_name} entirely.}
+\item{names_sep}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} if you were specifying
+\code{names_sep = NULL}, that's no longer needed. If you were using a non-NULL
+value, you can either directly prefix your slide computation names, or
+output a list and then later call \verb{tidyr::unnest(slide_output, <result_column_name>, names_sep = <names_sep>)}.}
 }
 \value{
-An \code{epi_df} object given by appending one or more new columns to
-\code{x}, named according to the \code{new_col_name} argument.
+An \code{epi_df} object given by appending one or more new columns to \code{x},
+named according to the \code{new_col_name} argument.
 }
 \description{
 Slides a given function over variables in an \code{epi_df} object. See the
@@ -147,12 +148,14 @@ In a manner similar to \code{\link[dplyr:mutate]{dplyr::mutate}}:
 \itemize{
 \item Expressions evaluating to length-1 vectors will be recycled to
 appropriate lengths.
+\item \verb{, name_var := value} can be used to set the output column name based on
+a variable \code{name_var} rather than requiring you to use a hard-coded
+name. (The leading comma is needed to make sure that \code{f} is treated as
+missing.)
 \item \verb{= NULL} can be used to remove results from previous expressions (though
 we don't allow it to remove pre-existing columns).
-\item Unnamed expressions evaluating to data frames will be unpacked into
-multiple columns in the result; to use this feature, you will need to add
-an extra comma before your first data-masking expression to make sure \code{f}
-appears as missing.
+\item \verb{, fn_returning_a_data_frame(.x)} will unpack the output of the function
+into multiple columns in the result.
 \item Named expressions evaluating to data frames will be placed into
 \code{\link[tidyr:pack]{tidyr::pack}}ed columns.
 }

@@ -88,13 +88,14 @@ operations, you might want to replace these \code{NULL} entries with a different
 
 \item{as_list_col}{Not supported. Included to match \code{epi_slide} interface.}
 
-\item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
-when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
-from \code{new_col_name} entirely.}
+\item{names_sep}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} if you were specifying
+\code{names_sep = NULL}, that's no longer needed. If you were using a non-NULL
+value, you can either directly prefix your slide computation names, or
+output a list and then later call \verb{tidyr::unnest(slide_output, <result_column_name>, names_sep = <names_sep>)}.}
 }
 \value{
-An \code{epi_df} object given by appending one or more new columns to
-\code{x}, named according to the \code{new_col_name} argument.
+An \code{epi_df} object given by appending one or more new columns to \code{x},
+named according to the \code{new_col_name} argument.
 }
 \description{
 Slides an n-timestep sum over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
