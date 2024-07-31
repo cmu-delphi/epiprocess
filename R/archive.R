@@ -318,11 +318,13 @@ new_epi_archive <- function(
   nrow_before_compactify <- nrow(data_table)
   # Runs compactify on data frame
   if (is.null(compactify) || compactify == TRUE) {
-    data_table <- compactify(data_table, key_vars, compactify_tol)
+    compactified <- apply_compactify(data_table, key_vars, compactify_tol)
+  } else{
+    compactified <- data_table
   }
   # Warns about redundant rows if the number of rows decreased, and we didn't
   # explicitly say to compactify
-  if (is.null(compactify) && nrow(data_table) < nrow_before_compactify) {
+  if (is.null(compactify) && nrow(compactified) < nrow_before_compactify) {
     elim <- removed_by_compactify(data_table, key_vars, compactify_tol)
     warning_intro <- cli::format_inline(
       "Found rows that appear redundant based on
@@ -345,7 +347,7 @@ new_epi_archive <- function(
 
   structure(
     list(
-      DT = data_table,
+      DT = compactified,
       geo_type = geo_type,
       time_type = time_type,
       additional_metadata = additional_metadata,
@@ -364,7 +366,7 @@ new_epi_archive <- function(
 #'   changed, and so is kept.
 #' @keywords internal
 #' @importFrom dplyr filter
-compactify <- function(df, keys, tolerance = .Machine$double.eps^.5) {
+apply_compactify <- function(df, keys, tolerance = .Machine$double.eps^.5) {
   df %>%
     arrange(!!!keys) %>%
     filter(if_any(
@@ -379,7 +381,7 @@ compactify <- function(df, keys, tolerance = .Machine$double.eps^.5) {
 removed_by_compactify <- function(df, keys, tolerance) {
   df %>%
     arrange(!!!keys) %>%
-    filter(if_any(
+    filter(if_all(
       c(everything(), -version),
       ~ is_locf(., tolerance)
     )) # nolint: object_usage_linter

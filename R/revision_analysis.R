@@ -103,7 +103,7 @@ revision_summary <- function(epi_arch,
   if (should_compactify) {
     revision_behavior <- revision_behavior %>%
       arrange(across(c(geo_value, time_value, all_of(keys), version))) %>% # need to sort before compactifying
-      compactify(c(keys, version), compactify_tol)
+      apply_compactify(c(keys, version), compactify_tol)
   }
   revision_behavior <-
     revision_behavior %>%

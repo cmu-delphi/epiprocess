@@ -48,6 +48,16 @@ test_that("as_epi_archive custom name mapping works correctly", {
   )
 })
 
+dumb_ex <- data.frame(
+  geo_value = c("ca", "ca"),
+  time_value = as.Date(c("2020-01-01", "2020-01-01")),
+  value = c(1,1),
+  version = as.Date(c("2020-01-01", "2020-01-02"))
+)
+test_that("new_epi_archive correctly detects and warns about compactification", {
+  expect_snapshot(res <- dumb_ex %>% as_epi_archive())
+})
+
 test_that("other_keys can only contain names of the data.frame columns", {
   expect_error(as_epi_archive(archive_data, other_keys = "xyz", compactify = FALSE),
     regexp = "`other_keys` must be contained in the column names of `x`."
