@@ -28,7 +28,7 @@ dummy_ex <- tibble::tribble(
   "ak", as.Date("2020-01-03"), as.Date("2020-01-06"), 0,
   "ak", as.Date("2020-01-03"), as.Date("2020-01-07"), 0,
 ) %>%
-  as_epi_archive(compactify = FALSE)
+  as_epi_archive(versions_end = as.Date("2022-01-01"), compactify = FALSE)
 
 test_that("revision_summary works for a dummy dataset", {
   expect_snapshot(dummy_ex %>% revision_summary() %>% print(n = 10, width = 300))
