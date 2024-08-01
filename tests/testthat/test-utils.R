@@ -77,10 +77,10 @@ test_that("assert_sufficient_f_args alerts if the provided f doesn't take enough
   f_xgt_dots <- function(x, g, t, ...) dplyr::tibble(value = mean(x$binary), count = length(x$binary))
 
   # If `regexp` is NA, asserts that there should be no errors/messages.
-  expect_error(assert_sufficient_f_args(f_xgt), regexp = NA)
-  expect_warning(assert_sufficient_f_args(f_xgt), regexp = NA)
-  expect_error(assert_sufficient_f_args(f_xgt_dots), regexp = NA)
-  expect_warning(assert_sufficient_f_args(f_xgt_dots), regexp = NA)
+  expect_no_error(assert_sufficient_f_args(f_xgt))
+  expect_no_warning(assert_sufficient_f_args(f_xgt))
+  expect_no_error(assert_sufficient_f_args(f_xgt_dots))
+  expect_no_warning(assert_sufficient_f_args(f_xgt_dots))
 
   f_x_dots <- function(x, ...) dplyr::tibble(value = mean(x$binary), count = length(x$binary))
   f_dots <- function(...) dplyr::tibble(value = c(5), count = c(2))
@@ -100,6 +100,21 @@ test_that("assert_sufficient_f_args alerts if the provided f doesn't take enough
   )
   expect_error(assert_sufficient_f_args(f),
     class = "epiprocess__assert_sufficient_f_args__f_needs_min_args"
+  )
+
+  # Make sure we generate the same sort of conditions on some external functions
+  # that have caused surprises in the past:
+  expect_warning(assert_sufficient_f_args(mean),
+    regexp = ", the group key and reference time value will be included",
+    class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
+  )
+  expect_warning(assert_sufficient_f_args(sum),
+    regexp = ", the window data, group key, and reference time value will be included",
+    class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
+  )
+  expect_warning(assert_sufficient_f_args(dplyr::slice),
+    regexp = ", the group key and reference time value will be included",
+    class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
   )
 
   f_xs_dots <- function(x, setting = "a", ...) dplyr::tibble(value = mean(x$binary), count = length(x$binary))
