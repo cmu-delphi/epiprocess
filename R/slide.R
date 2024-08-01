@@ -127,11 +127,11 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
   validate_slide_window_arg(after, attr(x, "metadata")$time_type)
 
   if (lifecycle::is_present(as_list_col)) {
-    lifecycle::deprecate_stop("0.7.12", "epi_slide_opt(as_list_col =)")
+    lifecycle::deprecate_stop("0.8.1", "epi_slide_opt(as_list_col =)")
   }
 
   if (lifecycle::is_present(names_sep)) {
-    lifecycle::deprecate_stop("0.7.12", "epi_slide_opt(names_sep =)")
+    lifecycle::deprecate_stop("0.8.1", "epi_slide_opt(names_sep =)")
   }
 
   # Arrange by increasing time_value
@@ -404,11 +404,11 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
   }
 
   if (lifecycle::is_present(as_list_col)) {
-    lifecycle::deprecate_stop("0.7.12", "epi_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless the `epi_slide()` row-recycling behavior would be inappropriate.")
+    lifecycle::deprecate_stop("0.8.1", "epi_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless the `epi_slide()` row-recycling behavior would be inappropriate.")
   }
 
   if (lifecycle::is_present(names_sep)) {
-    lifecycle::deprecate_stop("0.7.12", "epi_slide(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)")
+    lifecycle::deprecate_stop("0.8.1", "epi_slide(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)")
   }
 
   # Check that slide function `f` is one of those short-listed from

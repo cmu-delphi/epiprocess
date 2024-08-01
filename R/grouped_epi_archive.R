@@ -236,6 +236,12 @@ epix_slide.grouped_epi_archive <- function(
           results with a manual join instead.
         ", class = "epiprocess__epix_slide_all_rows_parameter_deprecated")
   }
+  if (lifecycle::is_present(as_list_col)) {
+    lifecycle::deprecate_stop("0.8.1", "epix_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead.")
+  }
+  if (lifecycle::is_present(names_sep)) {
+    lifecycle::deprecate_stop("0.8.1", "epix_slide(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)")
+  }
 
   if (is.null(ref_time_values)) {
     ref_time_values <- epix_slide_ref_time_values_default(x$private$ungrouped)
@@ -261,14 +267,6 @@ epix_slide.grouped_epi_archive <- function(
 
   # Validate rest of parameters:
   assert_logical(all_versions, len = 1L)
-
-  if (lifecycle::is_present(as_list_col)) {
-    lifecycle::deprecate_stop("0.7.12", "epix_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead.")
-  }
-
-  if (lifecycle::is_present(names_sep)) {
-    lifecycle::deprecate_stop("0.7.12", "epix_slide(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)")
-  }
 
   # Computation for one group, one time value
   comp_one_grp <- function(.data_group, .group_key,
