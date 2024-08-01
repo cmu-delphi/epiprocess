@@ -351,7 +351,7 @@ as_slide_computation <- function(f, ...) {
           ", class = "epiprocess__invalid_slide_comp_tidyeval_output")
         }
       }
-      validate_tibble(new_tibble(as.list(results_env)[results_names]))
+      validate_tibble(new_tibble(as.list(results_env, all.names = TRUE)[results_names]))
     }
 
     return(fn)
