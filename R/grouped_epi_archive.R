@@ -268,6 +268,24 @@ epix_slide.grouped_epi_archive <- function(
   # Validate rest of parameters:
   assert_logical(all_versions, len = 1L)
 
+  # If `f` is missing, interpret ... as an expression for tidy evaluation
+  if (missing(f)) {
+    used_data_masking <- TRUE
+    quosures <- enquos(...)
+    if (length(quosures) == 0) {
+      cli_abort("If `f` is missing then a computation must be specified via `...`.")
+    }
+
+    f <- as_slide_computation(quosures)
+    # Magic value that passes zero args as dots in calls below. Equivalent to
+    # `... <- missing_arg()`, but use `assign` to avoid warning about
+    # improper use of dots.
+    assign("...", missing_arg())
+  } else {
+    used_data_masking <- FALSE
+    f <- as_slide_computation(f, ...)
+  }
+
   # Computation for one group, one time value
   comp_one_grp <- function(.data_group, .group_key,
                            f, ...,
@@ -316,24 +334,6 @@ epix_slide.grouped_epi_archive <- function(
     return(validate_tibble(new_tibble(res)))
   }
 
-  # If `f` is missing, interpret ... as an expression for tidy evaluation
-  if (missing(f)) {
-    used_data_masking <- TRUE
-    quosures <- enquos(...)
-    if (length(quosures) == 0) {
-      cli_abort("If `f` is missing then a computation must be specified via `...`.")
-    }
-
-    f <- as_slide_computation(quosures)
-    # Magic value that passes zero args as dots in calls below. Equivalent to
-    # `... <- missing_arg()`, but use `assign` to avoid warning about
-    # improper use of dots.
-    assign("...", missing_arg())
-  } else {
-    used_data_masking <- FALSE
-  }
-
-  f <- as_slide_computation(f, ...)
   out <- lapply(ref_time_values, function(ref_time_value) {
     # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
     # `epi_archive` if `all_versions` is `TRUE`:
