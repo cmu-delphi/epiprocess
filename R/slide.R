@@ -153,9 +153,39 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
   f <- as_slide_computation(f, ...)
 
   if (lifecycle::is_present(as_list_col)) {
-    lifecycle::deprecate_warn("0.8.1", "epi_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless the `epi_slide()` row-recycling behavior would be inappropriate.  Automatically trying this sort of rewrite...")
-    f_orig <- f
-    f <- function(...) list(f_orig(...))
+    if (!as_list_col) {
+      lifecycle::deprecate_warn("0.8.1", "epi_slide(as_list_col =)", details = "You can simply remove as_list_col = FALSE.")
+    } else {
+      lifecycle::deprecate_warn("0.8.1", "epi_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless the `epi_slide()` row-recycling behavior would be inappropriate.  Attempting to mimic the effects of such a rewrite, but you may see changes in behavior...")
+      f_orig <- f
+      if (!used_data_masking) {
+        f <- function(...) {
+          list(f_orig(...))
+        }
+      } else {
+        f <- function(...) {
+          # tidyeval pre-as_list_col-deprecation only supported a single, named,
+          # data-masking expr. So we should have a single column which is a packed
+          # data.frame, or a non-data.frame.
+          wrapped_result_orig <- f_orig(...)
+          if (length(wrapped_result_orig) != 1L) {
+            cli_abort("Failed to rewrite `as_list_col = TRUE`, which is deprecated: an internal bug was encountered.  Please remove `as_list_col = TRUE` and update your slide computation instead.")
+          }
+          name_orig <- names(wrapped_result_orig)[[1L]]
+          result_orig <- wrapped_result_orig[[1L]]
+          if (is.data.frame(result_orig)) {
+            # to list of rows:
+            result_col <- lapply(seq_len(nrow(result_orig)), function(subresult_i) {
+              result_orig[subresult_i, ]
+            })
+            results_lst <- list(result_col)
+          } else {
+            results_lst <- as.list(result_orig)
+          }
+          validate_tibble(new_tibble(`names<-`(results_lst, name_orig)))
+        }
+      }
+    }
   }
 
   if (lifecycle::is_present(names_sep)) {
@@ -216,13 +246,17 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
     # between the outputs.
     if (!used_data_masking &&
       !all(vapply(slide_values_list, function(comp_value) {
-        vctrs::obj_is_vector(comp_value) && is.null(vctrs::vec_names(comp_value))
+        # vctrs considers data.frames to be vectors, but we still check
+        # separately for them because certain base operations output data frames
+        # with rownames, which we will allow (but might drop)
+        is.data.frame(comp_value) ||
+          vctrs::obj_is_vector(comp_value) && is.null(vctrs::vec_names(comp_value))
       }, logical(1L)))
     ) {
       cli_abort("
-        the slide computations must always return data frames or unnamed vectors
-        (as determined by the vctrs package) (and not a mix of these two
-        structures).
+        the slide computations must always return either data frames without rownames
+        or unnamed vectors (as determined by the vctrs package) (and not a mix
+        of these two structures).
       ", class = "epiprocess__invalid_slide_comp_value")
     }
 

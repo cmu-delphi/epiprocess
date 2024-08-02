@@ -305,8 +305,13 @@ epix_slide.grouped_epi_archive <- function(
     # If this wasn't a tidyeval computation, we still need to check the output
     # types. We'll let `group_modify` and `vec_rbind` deal with checking for
     # type compatibility between the outputs.
-    if (!used_data_masking &&
-      !(vctrs::obj_is_vector(comp_value) && is.null(vctrs::vec_names(comp_value)))) {
+    if (!used_data_masking && !(
+      # vctrs considers data.frames to be vectors, but we still check
+      # separately for them because certain base operations output data frames
+      # with rownames, which we will allow (but might drop)
+      is.data.frame(comp_value) ||
+        vctrs::obj_is_vector(comp_value) && is.null(vctrs::vec_names(comp_value))
+    )) {
       cli_abort("
         the slide computations must always return data frames or unnamed vectors
         (as determined by the vctrs package) (and not a mix of these two
