@@ -281,16 +281,16 @@ epix_slide.grouped_epi_archive <- function(
   }
 
   if (lifecycle::is_present(as_list_col)) {
-    lifecycle::deprecate_warn("0.8.1", "epi_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless the `epi_slide()` row-recycling behavior would be inappropriate.  Automatically trying this sort of rewrite...")
+    lifecycle::deprecate_warn("0.8.1", "epix_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless you want more than one list element per computation.  Automatically trying this sort of rewrite...")
     f_orig <- f
     f <- function(...) list(f_orig(...))
   }
 
   if (lifecycle::is_present(names_sep)) {
     if (is.null(names_sep)) {
-      lifecycle::deprecate_warn("0.8.1", "epi_slide_opt(names_sep =)", details = "You can simply remove `names_sep = NULL`; that's now the defualt.")
+      lifecycle::deprecate_warn("0.8.1", "epix_slide(names_sep =)", details = "You can simply remove `names_sep = NULL`; that's now the defualt.")
     } else {
-      lifecycle::deprecate_stop("0.8.1", "epi_slide_opt(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)")
+      lifecycle::deprecate_stop("0.8.1", "epix_slide(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)")
     }
   }
 
