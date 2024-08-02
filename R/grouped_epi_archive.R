@@ -236,12 +236,6 @@ epix_slide.grouped_epi_archive <- function(
           results with a manual join instead.
         ", class = "epiprocess__epix_slide_all_rows_parameter_deprecated")
   }
-  if (lifecycle::is_present(as_list_col)) {
-    lifecycle::deprecate_stop("0.8.1", "epix_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead.")
-  }
-  if (lifecycle::is_present(names_sep)) {
-    lifecycle::deprecate_stop("0.8.1", "epix_slide(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)")
-  }
 
   if (is.null(ref_time_values)) {
     ref_time_values <- epix_slide_ref_time_values_default(x$private$ungrouped)
@@ -284,6 +278,20 @@ epix_slide.grouped_epi_archive <- function(
   } else {
     used_data_masking <- FALSE
     f <- as_slide_computation(f, ...)
+  }
+
+  if (lifecycle::is_present(as_list_col)) {
+    lifecycle::deprecate_warn("0.8.1", "epi_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless the `epi_slide()` row-recycling behavior would be inappropriate.  Automatically trying this sort of rewrite...")
+    f_orig <- f
+    f <- function(...) list(f_orig(...))
+  }
+
+  if (lifecycle::is_present(names_sep)) {
+    if (is.null(names_sep)) {
+      lifecycle::deprecate_warn("0.8.1", "epi_slide_opt(names_sep =)", details = "You can simply remove `names_sep = NULL`; that's now the defualt.")
+    } else {
+      lifecycle::deprecate_stop("0.8.1", "epi_slide_opt(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)")
+    }
   }
 
   # Computation for one group, one time value

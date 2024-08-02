@@ -126,14 +126,6 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
   validate_slide_window_arg(before, attr(x, "metadata")$time_type)
   validate_slide_window_arg(after, attr(x, "metadata")$time_type)
 
-  if (lifecycle::is_present(as_list_col)) {
-    lifecycle::deprecate_stop("0.8.1", "epi_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless the `epi_slide()` row-recycling behavior would be inappropriate.")
-  }
-
-  if (lifecycle::is_present(names_sep)) {
-    lifecycle::deprecate_stop("0.8.1", "epi_slide(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)")
-  }
-
   # Arrange by increasing time_value
   x <- arrange(x, .data$time_value)
 
@@ -159,6 +151,20 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
   }
 
   f <- as_slide_computation(f, ...)
+
+  if (lifecycle::is_present(as_list_col)) {
+    lifecycle::deprecate_warn("0.8.1", "epi_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless the `epi_slide()` row-recycling behavior would be inappropriate.  Automatically trying this sort of rewrite...")
+    f_orig <- f
+    f <- function(...) list(f_orig(...))
+  }
+
+  if (lifecycle::is_present(names_sep)) {
+    if (is.null(names_sep)) {
+      lifecycle::deprecate_warn("0.8.1", "epi_slide_opt(names_sep =)", details = "You can simply remove `names_sep = NULL`; that's now the defualt.")
+    } else {
+      lifecycle::deprecate_stop("0.8.1", "epi_slide_opt(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)")
+    }
+  }
 
   # Create a wrapper that calculates and passes `.ref_time_value` to the
   # computation. `i` is contained in the `f_wrapper_factory` environment such
