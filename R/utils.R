@@ -313,8 +313,13 @@ as_slide_computation <- function(f, ...) {
           nm <- nms[[quosure_i]]
           results_names <- results_names[results_names != nm]
           rlang::env_unbind(results_env, nm)
-        } else if (vctrs::obj_is_vector(quosure_result_raw) &&
-          is.null(vctrs::vec_names(quosure_result_raw))) {
+        } else if (
+          # vctrs considers data.frames to be vectors, but we still check
+          # separately for them because certain base operations output data frames
+          # with rownames, which we will allow (but might drop)
+          is.data.frame(quosure_result_raw) ||
+            vctrs::obj_is_vector(quosure_result_raw) && is.null(vctrs::vec_names(quosure_result_raw))
+        ) {
           # We want something like `dplyr_col_modify()` but allowing recycling
           # of previous computations and updating `results_env` and unpacking
           # tibbles if not manually named.
