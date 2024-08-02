@@ -141,6 +141,39 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
   starts <- ref_time_values - before
   stops <- ref_time_values + after
 
+  # If `f` is missing, interpret ... as an expression for tidy evaluation
+  if (missing(f)) {
+    used_data_masking <- TRUE
+    quosures <- enquos(...)
+    if (length(quosures) == 0) {
+      cli_abort("If `f` is missing then a computation must be specified via `...`.")
+    }
+
+    f <- quosures
+    # Magic value that passes zero args as dots in calls below. Equivalent to
+    # `... <- missing_arg()`, but use `assign` to avoid warning about
+    # improper use of dots.
+    assign("...", missing_arg())
+  } else {
+    used_data_masking <- FALSE
+  }
+
+  f <- as_slide_computation(f, ...)
+
+  # Create a wrapper that calculates and passes `.ref_time_value` to the
+  # computation. `i` is contained in the `f_wrapper_factory` environment such
+  # that when called within `slide_one_grp` `i` is reset for every group.
+  f_wrapper_factory <- function(kept_ref_time_values) {
+    # Use `i` to advance through list of start dates.
+    i <- 1L
+    f_wrapper <- function(.x, .group_key, ...) {
+      .ref_time_value <- kept_ref_time_values[[i]]
+      i <<- i + 1L
+      f(.x, .group_key, .ref_time_value, ...)
+    }
+    return(f_wrapper)
+  }
+
   # Computation for one group, all time values
   slide_one_grp <- function(.data_group,
                             .group_key, # see `?group_modify`
@@ -243,37 +276,6 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
     return(result)
   }
 
-  # If `f` is missing, interpret ... as an expression for tidy evaluation
-  if (missing(f)) {
-    used_data_masking <- TRUE
-    quosures <- enquos(...)
-    if (length(quosures) == 0) {
-      cli_abort("If `f` is missing then a computation must be specified via `...`.")
-    }
-
-    f <- quosures
-    # Magic value that passes zero args as dots in calls below. Equivalent to
-    # `... <- missing_arg()`, but use `assign` to avoid warning about
-    # improper use of dots.
-    assign("...", missing_arg())
-  } else {
-    used_data_masking <- FALSE
-  }
-
-  f <- as_slide_computation(f, ...)
-  # Create a wrapper that calculates and passes `.ref_time_value` to the
-  # computation. `i` is contained in the `f_wrapper_factory` environment such
-  # that when called within `slide_one_grp` `i` is reset for every group.
-  f_wrapper_factory <- function(kept_ref_time_values) {
-    # Use `i` to advance through list of start dates.
-    i <- 1L
-    f_wrapper <- function(.x, .group_key, ...) {
-      .ref_time_value <- kept_ref_time_values[[i]]
-      i <<- i + 1L
-      f(.x, .group_key, .ref_time_value, ...)
-    }
-    return(f_wrapper)
-  }
   x <- group_modify(x, slide_one_grp,
     ...,
     f_factory = f_wrapper_factory,
