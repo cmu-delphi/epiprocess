@@ -150,7 +150,7 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
     used_data_masking <- FALSE
   }
 
-  f <- as_slide_computation(f, ...)
+  f <- as_time_slide_computation(f, ...)
 
   if (lifecycle::is_present(as_list_col)) {
     if (!as_list_col) {

@@ -784,9 +784,10 @@ epix_slide <- function(
     f,
     ...,
     before = Inf,
-    ref_time_values = NULL,
+    versions = NULL,
     new_col_name = NULL,
     all_versions = FALSE,
+    ref_time_values = deprecated(),
     as_list_col = deprecated(),
     names_sep = deprecated()) {
   UseMethod("epix_slide")
@@ -800,9 +801,10 @@ epix_slide.epi_archive <- function(
     f,
     ...,
     before = Inf,
-    ref_time_values = NULL,
+    versions = NULL,
     new_col_name = NULL,
     all_versions = FALSE,
+    ref_time_values = deprecated(),
     as_list_col = deprecated(),
     names_sep = deprecated()) {
   # For an "ungrouped" slide, treat all rows as belonging to one big
@@ -812,9 +814,11 @@ epix_slide.epi_archive <- function(
     group_by(x),
     f,
     ...,
-    before = before, ref_time_values = ref_time_values, new_col_name = new_col_name,
-    as_list_col = as_list_col, names_sep = names_sep,
-    all_versions = all_versions
+    before = before, versions = versions,
+    new_col_name = new_col_name,
+    all_versions = all_versions,
+    ref_time_values = ref_time_values,
+    as_list_col = as_list_col, names_sep = names_sep
   ) %>%
     # We want a slide on ungrouped archives to output something
     # ungrouped, rather than retaining the trivial (0-variable)
@@ -828,7 +832,7 @@ epix_slide.epi_archive <- function(
 #' Default value for `ref_time_values` in an `epix_slide`
 #'
 #' @noRd
-epix_slide_ref_time_values_default <- function(ea) {
+epix_slide_versions_default <- function(ea) {
   versions_with_updates <- c(ea$DT$version, ea$versions_end)
   ref_time_values <- tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
   return(ref_time_values)

@@ -11,9 +11,10 @@ epix_slide(
   f,
   ...,
   before = Inf,
-  ref_time_values = NULL,
+  versions = NULL,
   new_col_name = NULL,
   all_versions = FALSE,
+  ref_time_values = deprecated(),
   as_list_col = deprecated(),
   names_sep = deprecated()
 )
@@ -23,9 +24,10 @@ epix_slide(
   f,
   ...,
   before = Inf,
-  ref_time_values = NULL,
+  versions = NULL,
   new_col_name = NULL,
   all_versions = FALSE,
+  ref_time_values = deprecated(),
   as_list_col = deprecated(),
   names_sep = deprecated()
 )
@@ -35,9 +37,10 @@ epix_slide(
   f,
   ...,
   before = Inf,
-  ref_time_values = NULL,
+  versions = NULL,
   new_col_name = NULL,
   all_versions = FALSE,
+  ref_time_values = deprecated(),
   as_list_col = deprecated(),
   names_sep = deprecated()
 )
@@ -87,14 +90,6 @@ were to hold forecasts, then we would expect data for \code{time_value}s after
 January 8, and the sliding window would extend as far after each
 \code{ref_time_value} as needed to include all such \code{time_value}s.)}
 
-\item{ref_time_values}{Reference time values / versions for sliding
-computations; each element of this vector serves both as the anchor point
-for the \code{time_value} window for the computation and the \code{max_version}
-\code{epix_as_of} which we fetch data in this window. If missing, then this will
-set to a regularly-spaced sequence of values set to cover the range of
-\code{version}s in the \code{DT} plus the \code{versions_end}; the spacing of values will
-be guessed (using the GCD of the skips between values).}
-
 \item{new_col_name}{String indicating the name of the new column that will
 contain the derivative values. The default is "slide_value" unless your
 slide computations output data frames, in which case they will be unpacked
@@ -107,6 +102,14 @@ into the constituent columns and those names used. Note that setting
 \code{ref_time_value - before} and \code{ref_time_value}. Otherwise, \code{f} will be
 passed only the most recent \code{version} for every unique \code{time_value}.
 Default is \code{FALSE}.}
+
+\item{ref_time_values}{Reference time values / versions for sliding
+computations; each element of this vector serves both as the anchor point
+for the \code{time_value} window for the computation and the \code{max_version}
+\code{epix_as_of} which we fetch data in this window. If missing, then this will
+set to a regularly-spaced sequence of values set to cover the range of
+\code{version}s in the \code{DT} plus the \code{versions_end}; the spacing of values will
+be guessed (using the GCD of the skips between values).}
 
 \item{as_list_col}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} if you want a list
 column as output, you can now just directly output a list from your slide
