@@ -1279,8 +1279,9 @@ multi_columns <- dplyr::bind_rows(
   dplyr::tibble(geo_value = "ak", time_value = test_date + 1:200, value = 1:200, value2 = -1:-200),
   dplyr::tibble(geo_value = "al", time_value = test_date + 1:5, value = -(1:5), value2 = 1:5)
 ) %>%
-  as_epi_df() %>% group_by(geo_value)
+  as_epi_df() %>%
+  group_by(geo_value)
 
 test_that("no dplyr warnings from selecting multiple columns", {
-  expect_no_warning(epi_slide_mean(multi_columns, col_names = c("value", "value2"), before=3L))
+  expect_no_warning(epi_slide_mean(multi_columns, col_names = c("value", "value2"), before = 3L))
 })
