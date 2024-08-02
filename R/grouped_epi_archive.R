@@ -209,14 +209,16 @@ epix_slide.grouped_epi_archive <- function(
     .f,
     ...,
     .before = Inf,
-    .ref_time_values = NULL,
+    .versions = NULL,
     .new_col_name = NULL,
     .all_versions = FALSE) {
-  # Deprecated argument handling
+
+  # Perform some deprecated argument checks without using `<param> =
+  # deprecated()` in the function signature, because they are from
+  # early development versions and much more likely to be clutter than
+  # informative in the signature.
   provided_args <- rlang::call_args_names(rlang::call_match())
-  if (any(purrr::map_lgl(
-    provided_args, ~ .x %in% c("x", "f", "before", "ref_time_values", "new_col_name", "all_versions")
-  ))) {
+  if (any(provided_args %in% c("x", "f", "before", "ref_time_values", "new_col_name", "all_versions", "group_by"))) {
     cli::cli_abort(
       "epix_slide: you are using one of the following old argument names: `x`, `f`, `before`, `ref_time_values`,
       `new_col_name`, `all_versions`. Please use the new names: `.x`, `.f`, `.before`, `.ref_time_values`,
@@ -255,19 +257,21 @@ epix_slide.grouped_epi_archive <- function(
   }
 
   # Argument validation
-  if (is.null(.ref_time_values)) {
-    ref_time_values <- epix_slide_ref_time_values_default(.x$private$ungrouped)
+  if (is.null(.versions)) {
+    .versions <- epix_slide_versions_default(.x$private$ungrouped)
   } else {
-    assert_numeric(.ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
-    if (any(.ref_time_values > .x$private$ungrouped$versions_end)) {
-      cli_abort("Some `ref_time_values` are greater than the latest version in the archive.")
+    assert_numeric(.versions, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
+    if (any(.versions > .x$private$ungrouped$versions_end)) {
+      cli_abort("All `.versions` must be less than or equal to the latest version in the archive.")
     }
-    if (anyDuplicated(.ref_time_values) != 0L) {
-      cli_abort("Some `ref_time_values` are duplicated.")
+    if (anyDuplicated(.versions) != 0L) {
+      cli_abort("All `.versions` must be unique.")
     }
     # Sort, for consistency with `epi_slide`, although the current
     # implementation doesn't take advantage of it.
-    ref_time_values <- sort(.ref_time_values)
+    .versions <- sort(.versions)
+    ref_time_values <- sort(ref_time_values)
+    .versions <- sort(.versions)
   }
 
   validate_slide_window_arg(.before, .x$private$ungrouped$time_type)
@@ -287,14 +291,14 @@ epix_slide.grouped_epi_archive <- function(
       cli_abort("If `f` is missing then a computation must be specified via `...`.")
     }
 
-    f <- as_slide_computation(quosures)
+    f <- as_diagonal_slide_computation(quosures)
     # Magic value that passes zero args as dots in calls below. Equivalent to
     # `... <- missing_arg()`, but use `assign` to avoid warning about
     # improper use of dots.
     assign("...", missing_arg())
   } else {
     used_data_masking <- FALSE
-    f <- as_slide_computation(.f, ...)
+    f <- as_diagonal_slide_computation(.f, ...)
   }
 
   # Computation for one group, one time value
@@ -326,7 +330,7 @@ epix_slide.grouped_epi_archive <- function(
     # redundant work. `group_modify()` provides the group key, we provide the
     # ref time value (appropriately recycled) and comp_value (appropriately
     # named / unpacked, for quick feedback)
-    res <- list(time_value = vctrs::vec_rep(ref_time_value, vctrs::vec_size(comp_value)))
+    res <- list(version = vctrs::vec_rep(ref_time_value, vctrs::vec_size(comp_value)))
 
     if (is.null(new_col_name)) {
       if (inherits(comp_value, "data.frame")) {
@@ -350,7 +354,7 @@ epix_slide.grouped_epi_archive <- function(
     return(validate_tibble(new_tibble(res)))
   }
 
-  out <- lapply(ref_time_values, function(ref_time_value) {
+  out <- lapply(versions, function(ref_time_value) {
     # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
     # `epi_archive` if `all_versions` is `TRUE`:
     as_of_raw <- .x$private$ungrouped %>% epix_as_of(

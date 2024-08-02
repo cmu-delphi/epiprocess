@@ -89,21 +89,21 @@ paste_lines <- function(lines) {
   paste(paste0(lines, "\n"), collapse = "")
 }
 
-
 #' Assert that a sliding computation function takes enough args
 #'
 #' @param f Function; specifies a computation to slide over an `epi_df` or
-#'  `epi_archive` in `epi_slide` or `epix_slide`.
+#'   `epi_archive` in `epi_slide` or `epix_slide`.
 #' @param ... Dots that will be forwarded to `f` from the dots of `epi_slide` or
 #'   `epix_slide`.
+#' @template ref-time-value-label
 #'
 #' @importFrom rlang is_missing
 #' @importFrom purrr map_lgl
 #' @importFrom utils tail
 #'
 #' @noRd
-assert_sufficient_f_args <- function(f, ...) {
-  mandatory_f_args_labels <- c("window data", "group key", "reference time value")
+assert_sufficient_f_args <- function(f, ..., .ref_time_value_label) {
+  mandatory_f_args_labels <- c("window data", "group key", .ref_time_value_label)
   n_mandatory_f_args <- length(mandatory_f_args_labels)
   args <- formals(args(f))
   args_names <- names(args)
@@ -265,21 +265,42 @@ assert_sufficient_f_args <- function(f, ...) {
 #' @param ... Additional arguments to pass to the function or formula
 #'  specified via `x`. If `x` is a quosure, any arguments passed via `...`
 #'  will be ignored.
-#' @examples
-#' f <- as_slide_computation(~ .x + 1)
-#' f(10)
 #'
-#' g <- as_slide_computation(~ -1 * .)
+#' @param .ref_time_value_long_varnames `r lifecycle::badge("experimental")`
+#'   Character vector. What variable names should we allow formulas and
+#'   data-masking tidy evaluation to use to refer to `ref_time_value` for the
+#'   computation (in addition to `.z` in formulas)? E.g., `".ref_time_value"` or
+#'   `c(".ref_time_value", ".version")`.
+#'
+#' @template ref-time-value-label
+#'
+#' @examples
+#' f1 <- as_slide_computation(~ .z - .x$time_value,
+#'   .ref_time_value_long_varnames = character(0L),
+#'   .ref_time_value_label = "third argument"
+#' )
+#' f1(tibble::tibble(time_value = 10), tibble::tibble(), 12)
+#'
+#' f2 <- as_time_slide_computation(~ .ref_time_value - .x$time_value)
+#' f2(tibble::tibble(time_value = 10), tibble::tibble(), 12)
+#'
+#' f3 <- as_diagonal_slide_computation(~ .version - .x$time_value)
+#' f3(tibble::tibble(time_value = 10), tibble::tibble(), 12)
+#'
+#' f4 <- as_diagonal_slide_computation(~ .ref_time_value - .x$time_value)
+#' f4(tibble::tibble(time_value = 10), tibble::tibble(), 12)
+#'
+#' g <- as_time_slide_computation(~ -1 * .)
 #' g(4)
 #'
-#' h <- as_slide_computation(~ .x - .group_key)
+#' h <- as_time_slide_computation(~ .x - .group_key)
 #' h(6, 3)
 #'
 #' @importFrom rlang is_function new_function f_env is_environment missing_arg
 #'  f_rhs is_formula caller_arg caller_env
 #'
 #' @noRd
-as_slide_computation <- function(f, ...) {
+as_slide_computation <- function(f, ..., .ref_time_value_long_varnames, .ref_time_value_label) {
   arg <- caller_arg(f)
   call <- caller_env()
 
@@ -301,7 +322,9 @@ as_slide_computation <- function(f, ...) {
       # through the quosures.
       data_mask$.x <- .x
       data_mask$.group_key <- .group_key
-      data_mask$.ref_time_value <- .ref_time_value
+      for (ref_time_value_long_varname in .ref_time_value_long_varnames) {
+        data_mask[[ref_time_value_long_varname]] <- .ref_time_value
+      }
       common_size <- NULL
       # The data mask is an environment; it doesn't track the binding order.
       # We'll track that separately. For efficiency, we'll use `c` to add to
@@ -373,7 +396,7 @@ as_slide_computation <- function(f, ...) {
 
   if (is_function(f)) {
     # Check that `f` takes enough args
-    assert_sufficient_f_args(f, ...)
+    assert_sufficient_f_args(f, ..., .ref_time_value_label = .ref_time_value_label)
     return(f)
   }
 
@@ -410,13 +433,19 @@ as_slide_computation <- function(f, ...) {
       )
     }
 
-    args <- list(
-      ... = missing_arg(),
-      .x = quote(..1), .y = quote(..2), .z = quote(..3),
-      . = quote(..1), .group_key = quote(..2), .ref_time_value = quote(..3)
+    args <- c(
+      list(
+        ... = missing_arg(),
+        .x = quote(..1), .y = quote(..2), .z = quote(..3),
+        . = quote(..1), .group_key = quote(..2)
+      ),
+      `names<-`(
+        rep(list(quote(..3)), length(.ref_time_value_long_varnames)),
+        .ref_time_value_long_varnames
+      )
     )
     fn <- new_function(args, f_rhs(f), env)
-    fn <- structure(fn, class = c("epiprocess_slide_computation", "function"))
+    fn <- structure(fn, class = c("epiprocess_formula_slide_computation", "function"))
 
     return(fn)
   }
@@ -432,6 +461,27 @@ as_slide_computation <- function(f, ...) {
   )
 }
 
+#' @rdname as_slide_computation
+#' @export
+#' @noRd
+as_time_slide_computation <- function(f, ...) {
+  as_slide_computation(
+    f, ...,
+    .ref_time_value_long_varnames = ".ref_time_value",
+    .ref_time_value_label = "reference time value"
+  )
+}
+
+#' @rdname as_slide_computation
+#' @export
+#' @noRd
+as_diagonal_slide_computation <- function(f, ...) {
+  as_slide_computation(
+    f, ...,
+    .ref_time_value_long_varnames = c(".version", ".ref_time_value"),
+    .ref_time_value_label = "version"
+  )
+}
 
 guess_geo_type <- function(geo_value) {
   if (is.character(geo_value)) {

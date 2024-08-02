@@ -193,7 +193,7 @@ epi_slide <- function(
     used_data_masking <- FALSE
   }
 
-  f <- as_slide_computation(.f, ...)
+  f <- as_time_slide_computation(.f, ...)
 
   # Create a wrapper that calculates and passes `.ref_time_value` to the
   # computation. `i` is contained in the `f_wrapper_factory` environment such
