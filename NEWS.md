@@ -8,6 +8,16 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 ## Breaking changes
 
+- In `epi[x]_slide`:
+  - `names_sep` is deprecated, and if you return data frames from your
+    computations, they will no longer be unpacked into separate columns with
+    name prefixes; instead:
+    - if you don't provide a name for your slide computations, they will be
+      unpacked into separate columns, just without any name prefixes
+    - if you do provide a name for your slide computation, it will become a
+      packed data.frame-class column (see `tidyr::pack`).
+  - `as_list_col` is deprecated; you can now directly return a list from your
+    slide computations instead.
 - `detect_outlr_stl(seasonal_period = NULL)` is no longer accepted. Use
   `detect_outlr_stl(seasonal_period = <value>, seasonal_as_residual = TRUE)`
   instead. See `?detect_outlr_stl` for more details.
@@ -50,6 +60,12 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   are similar functions for `geo` and `version`).
 - Fixed bug where `epix_slide_ref_time_values_default()` on datetimes would
   output a huge number of `ref_time_values` spaced apart by mere seconds.
+- In `epi_slide()` and `epix_slide()`:
+  - Multiple "data-masking" tidy evaluation expressions can be passed in via
+    `...`, rather than just one.
+  - Additional tidy evaluation features from `dplyr::mutate` are supported: `!!
+    name_var := value`, unnamed expressions evaluating to data frames, and `=
+    NULL`; see `?epi_slide` for more details.
 
 ## Cleanup
 

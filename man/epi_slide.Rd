@@ -11,10 +11,10 @@ epi_slide(
   before = NULL,
   after = NULL,
   ref_time_values = NULL,
-  new_col_name = "slide_value",
-  as_list_col = FALSE,
-  names_sep = "_",
-  all_rows = FALSE
+  new_col_name = NULL,
+  all_rows = FALSE,
+  as_list_col = deprecated(),
+  names_sep = deprecated()
 )
 }
 \arguments{
@@ -39,10 +39,11 @@ If \code{f} is missing, then \code{...} will specify the computation.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{f}. Alternatively, if \code{f} is missing, then the \code{...} is interpreted as
-an expression for tidy evaluation; in addition to referring to columns
-directly by name, the expression has access to \code{.data} and \code{.env} pronouns
-as in \code{dplyr} verbs, and can also refer to \code{.x}, \code{.group_key}, and
-\code{.ref_time_value}. See details.}
+a \link[rlang:args_data_masking]{"data-masking"} expression or expressions for
+tidy evaluation; in addition to referring columns directly by name, the
+expressions have access to \code{.data} and \code{.env} pronouns as in \code{dplyr} verbs,
+and can also refer to \code{.x}, \code{.group_key}, and \code{.ref_time_value}. See
+details.}
 
 \item{before, after}{How far \code{before} and \code{after} each \code{ref_time_value} should
 the sliding window extend? At least one of these two arguments must be
@@ -76,19 +77,10 @@ window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.}
 
 \item{new_col_name}{String indicating the name of the new column that will
-contain the derivative values. Default is "slide_value"; note that setting
+contain the derivative values. The default is "slide_value" unless your
+slide computations output data frames, in which case they will be unpacked
+into the constituent columns and those names used. Note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
-
-\item{as_list_col}{Should the slide results be held in a list column, or be
-\link[tidyr:chop]{unchopped}/\link[tidyr:unnest]{unnested}? Default is \code{FALSE},
-in which case a list object returned by \code{f} would be unnested (using
-\code{\link[tidyr:unnest]{tidyr::unnest()}}), and, if the slide computations output data frames,
-the names of the resulting columns are given by prepending \code{new_col_name}
-to the names of the list elements.}
-
-\item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
-when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
-from \code{new_col_name} entirely.}
 
 \item{all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
 the output even with \code{ref_time_values} provided, with some type of missing
@@ -100,10 +92,20 @@ of the slide computation output. If using \code{as_list_col = TRUE}, note that
 the missing marker is a \code{NULL} entry in the list column; for certain
 operations, you might want to replace these \code{NULL} entries with a different
 \code{NA} marker.}
+
+\item{as_list_col}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} if you want a list
+column as output, you can now just directly output a list from your slide
+computations. Usually this just means wrapping your output in a length-1
+list (outputting \code{list(result)} instead of \code{result}).}
+
+\item{names_sep}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} if you were specifying
+\code{names_sep = NULL}, that's no longer needed. If you were using a non-NULL
+value, you can either directly prefix your slide computation names, or
+output a list and then later call \verb{tidyr::unnest(slide_output, <result_column_name>, names_sep = <names_sep>)}.}
 }
 \value{
-An \code{epi_df} object given by appending one or more new columns to
-\code{x}, named according to the \code{new_col_name} argument.
+An \code{epi_df} object given by appending one or more new columns to \code{x},
+named according to the \code{new_col_name} argument.
 }
 \description{
 Slides a given function over variables in an \code{epi_df} object. See the
@@ -130,22 +132,47 @@ widths and compare the slide outputs. In the (uncommon) case where
 zero-width windows are considered, manually pass both the \code{before} and
 \code{after} arguments.
 
-If \code{f} is missing, then an expression for tidy evaluation can be specified,
-for example, as in:
+If \code{f} is missing, then \link[rlang:args_data_masking]{"data-masking"}
+expression(s) for tidy evaluation can be specified, for example, as in:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, cases_7dav = mean(cases), before = 6)
 }\if{html}{\out{</div>}}
 
 which would be equivalent to:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, g) mean(x$cases), before = 6,
+\if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, g, t) mean(x$cases), before = 6,
           new_col_name = "cases_7dav")
 }\if{html}{\out{</div>}}
 
-Thus, to be clear, when the computation is specified via an expression for
-tidy evaluation (first example, above), then the name for the new column is
-inferred from the given expression and overrides any name passed explicitly
-through the \code{new_col_name} argument.
+In a manner similar to \code{\link[dplyr:mutate]{dplyr::mutate}}:
+\itemize{
+\item Expressions evaluating to length-1 vectors will be recycled to
+appropriate lengths.
+\item \verb{, name_var := value} can be used to set the output column name based on
+a variable \code{name_var} rather than requiring you to use a hard-coded
+name. (The leading comma is needed to make sure that \code{f} is treated as
+missing.)
+\item \verb{= NULL} can be used to remove results from previous expressions (though
+we don't allow it to remove pre-existing columns).
+\item \verb{, fn_returning_a_data_frame(.x)} will unpack the output of the function
+into multiple columns in the result.
+\item Named expressions evaluating to data frames will be placed into
+\code{\link[tidyr:pack]{tidyr::pack}}ed columns.
+}
+
+In addition to \code{\link{.data}} and \code{\link{.env}}, we make some additional
+"pronoun"-like bindings available:
+\itemize{
+\item .x, which is like \code{.x} in \code{\link[dplyr:group_map]{dplyr::group_modify}}; an ordinary object
+like an \code{epi_df} rather than an rlang \link[rlang:as_data_mask]{pronoun}
+like \code{\link{.data}}; this allows you to use additional {dplyr}, {tidyr}, and
+{epiprocess} operations. If you have multiple expressions in \code{...}, this
+won't let you refer to the output of the earlier expressions, but \code{.data}
+will.
+\item .group_key, which is like \code{.y} in \code{\link[dplyr:group_map]{dplyr::group_modify}}.
+\item .ref_time_value, which is the element of \code{ref_time_values} that
+determined the time window for the current computation.
+}
 }
 \examples{
 # slide a 7-day trailing average formula on cases

@@ -210,10 +210,10 @@ epix_slide.grouped_epi_archive <- function(
     ...,
     before = Inf,
     ref_time_values = NULL,
-    new_col_name = "slide_value",
-    as_list_col = FALSE,
-    names_sep = "_",
-    all_versions = FALSE) {
+    new_col_name = NULL,
+    all_versions = FALSE,
+    as_list_col = deprecated(),
+    names_sep = deprecated()) {
   # Perform some deprecated argument checks without using `<param> =
   # deprecated()` in the function signature, because they are from
   # early development versions and much more likely to be clutter than
@@ -254,69 +254,99 @@ epix_slide.grouped_epi_archive <- function(
 
   validate_slide_window_arg(before, x$private$ungrouped$time_type)
 
-  # Symbolize column name
-  new_col <- sym(new_col_name)
+  checkmate::assert_string(new_col_name, null.ok = TRUE)
+  if (identical(new_col_name, "time_value")) {
+    cli_abort('`new_col_name` must not be `"time_value"`; `epix_slide()` uses that column name to attach the `ref_time_value` associated with each slide computation')
+  }
 
   # Validate rest of parameters:
-  assert_logical(as_list_col, len = 1L)
   assert_logical(all_versions, len = 1L)
-  assert_character(names_sep, len = 1L, null.ok = TRUE)
+
+  # If `f` is missing, interpret ... as an expression for tidy evaluation
+  if (missing(f)) {
+    used_data_masking <- TRUE
+    quosures <- enquos(...)
+    if (length(quosures) == 0) {
+      cli_abort("If `f` is missing then a computation must be specified via `...`.")
+    }
+
+    f <- as_slide_computation(quosures)
+    # Magic value that passes zero args as dots in calls below. Equivalent to
+    # `... <- missing_arg()`, but use `assign` to avoid warning about
+    # improper use of dots.
+    assign("...", missing_arg())
+  } else {
+    used_data_masking <- FALSE
+    f <- as_slide_computation(f, ...)
+  }
+
+  if (lifecycle::is_present(as_list_col)) {
+    lifecycle::deprecate_warn("0.8.1", "epix_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless you want more than one list element per computation.  Automatically trying this sort of rewrite...")
+    f_orig <- f
+    f <- function(...) list(f_orig(...))
+  }
+
+  if (lifecycle::is_present(names_sep)) {
+    if (is.null(names_sep)) {
+      lifecycle::deprecate_warn("0.8.1", "epix_slide(names_sep =)", details = "You can simply remove `names_sep = NULL`; that's now the defualt.")
+    } else {
+      lifecycle::deprecate_stop("0.8.1", "epix_slide(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)")
+    }
+  }
 
   # Computation for one group, one time value
   comp_one_grp <- function(.data_group, .group_key,
                            f, ...,
                            ref_time_value,
-                           new_col) {
+                           new_col_name) {
     # Carry out the specified computation
     comp_value <- f(.data_group, .group_key, ref_time_value, ...)
 
-    if (all_versions) {
-      # Extract data from archive so we can do length checks below. When
-      # `all_versions = TRUE`, `.data_group` will always be an ungrouped
-      # archive because of the preceding `epix_as_of` step.
-      .data_group <- .data_group$DT
+    # If this wasn't a tidyeval computation, we still need to check the output
+    # types. We'll let `group_modify` and `vec_rbind` deal with checking for
+    # type compatibility between the outputs.
+    if (!used_data_masking && !(
+      # vctrs considers data.frames to be vectors, but we still check
+      # separately for them because certain base operations output data frames
+      # with rownames, which we will allow (but might drop)
+      is.data.frame(comp_value) ||
+        vctrs::obj_is_vector(comp_value) && is.null(vctrs::vec_names(comp_value))
+    )) {
+      cli_abort("
+        the slide computations must always return data frames or unnamed vectors
+        (as determined by the vctrs package) (and not a mix of these two
+        structures).
+      ", class = "epiprocess__invalid_slide_comp_value")
     }
 
-    assert(
-      check_atomic(comp_value, any.missing = TRUE),
-      check_data_frame(comp_value),
-      combine = "or",
-      .var.name = vname(comp_value)
-    )
+    # Construct result first as list, then tibble-ify, to try to avoid some
+    # redundant work. `group_modify()` provides the group key, we provide the
+    # ref time value (appropriately recycled) and comp_value (appropriately
+    # named / unpacked, for quick feedback)
+    res <- list(time_value = vctrs::vec_rep(ref_time_value, vctrs::vec_size(comp_value)))
 
-    # Label every result row with the `ref_time_value`
-    res <- list(time_value = ref_time_value)
+    if (!is.null(new_col_name)) {
+      # vector or packed data.frame-type column (note: new_col_name of
+      # "time_value" is disallowed):
+      res[[new_col_name]] <- comp_value
+    } else {
+      if (inherits(comp_value, "data.frame")) {
+        # unpack into separate columns (without name prefix):
+        res <- c(res, comp_value)
+      } else {
+        # apply default name (to vector or packed data.frame-type column):
+        res[["slide_value"]] <- comp_value
+      }
+    }
 
-    # Wrap the computation output in a list and unchop/unnest later if
-    # `as_list_col = FALSE`. This approach means that we will get a
-    # list-class col rather than a data.frame-class col when
-    # `as_list_col = TRUE` and the computations outputs are data
-    # frames.
-    res[[new_col]] <- list(comp_value)
+    # Stop on naming conflicts (names() fine here, non-NULL). Not the
+    # friendliest error messages though.
+    vctrs::vec_as_names(names(res), repair = "check_unique")
 
-    # Convert the list to a tibble all at once for speed.
+    # Fast conversion:
     return(validate_tibble(new_tibble(res)))
   }
 
-  # If `f` is missing, interpret ... as an expression for tidy evaluation
-  if (missing(f)) {
-    quos <- enquos(...)
-    if (length(quos) == 0) {
-      cli_abort("If `f` is missing then a computation must be specified via `...`.")
-    }
-    if (length(quos) > 1) {
-      cli_abort("If `f` is missing then only a single computation can be specified via `...`.")
-    }
-
-    f <- quos[[1]]
-    new_col <- sym(names(rlang::quos_auto_name(quos)))
-    # Magic value that passes zero args as dots in calls below. Equivalent to
-    # `... <- missing_arg()`, but use `assign` to avoid warning about
-    # improper use of dots.
-    assign("...", missing_arg())
-  }
-
-  f <- as_slide_computation(f, ...)
   out <- lapply(ref_time_values, function(ref_time_value) {
     # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
     # `epi_archive` if `all_versions` is `TRUE`:
@@ -359,7 +389,7 @@ epix_slide.grouped_epi_archive <- function(
       group_modify_fn <- function(.data_group, .group_key,
                                   f, ...,
                                   ref_time_value,
-                                  new_col) {
+                                  new_col_name) {
         # .data_group is coming from as_of_df as a tibble, but we
         # want to feed `comp_one_grp` an `epi_archive` backed by a
         # DT; convert and wrap:
@@ -370,7 +400,7 @@ epix_slide.grouped_epi_archive <- function(
         comp_one_grp(.data_group_archive, .group_key,
           f = f, ...,
           ref_time_value = ref_time_value,
-          new_col = new_col
+          new_col_name = new_col_name
         )
       }
     }
@@ -381,20 +411,15 @@ epix_slide.grouped_epi_archive <- function(
         group_modify_fn,
         f = f, ...,
         ref_time_value = ref_time_value,
-        new_col = new_col,
+        new_col_name = new_col_name,
         .keep = TRUE
       )
     )
   })
-  # Combine output into a single tibble
-  out <- as_tibble(setDF(rbindlist(out)))
+  # Combine output into a single tibble (allowing for packed columns)
+  out <- vctrs::vec_rbind(!!!out)
   # Reconstruct groups
   out <- group_by(out, !!!syms(x$private$vars), .drop = x$private$drop)
-
-  # Unchop/unnest if we need to
-  if (!as_list_col) {
-    out <- tidyr::unnest(out, !!new_col, names_sep = names_sep)
-  }
 
   # nolint start: commented_code_linter.
   # if (is_epi_df(x)) {

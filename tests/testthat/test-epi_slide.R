@@ -19,7 +19,7 @@ small_x <- dplyr::bind_rows(
   as_epi_df(as_of = test_date + 6) %>%
   group_by(geo_value)
 
-f <- function(x, g, t) dplyr::tibble(value = mean(x$value), count = length(x$value))
+f <- function(x, g, t) dplyr::tibble(avg = mean(x$value), count = length(x$value))
 
 toy_edf <- tibble::tribble(
   ~geo_value, ~time_value, ~value,
@@ -100,8 +100,8 @@ test_that("Test errors/warnings for discouraged features", {
   )
 
   # Results from epi_slide and epi_slide_mean should match
-  expect_equal(select(ref1, -slide_value_count), opt1)
-  expect_equal(select(ref2, -slide_value_count), opt2)
+  expect_equal(select(ref1, -count), opt1 %>% rename(avg = slide_value_value))
+  expect_equal(select(ref2, -count), opt2 %>% rename(avg = slide_value_value))
 })
 
 test_that("Both `before` and `after` must be non-NA, non-negative, integer-compatible", {
@@ -178,7 +178,7 @@ test_that("Both `before` and `after` must be non-NA, non-negative, integer-compa
   ))
 
   # Results from epi_slide and epi_slide_mean should match
-  expect_equal(select(ref, -slide_value_count), opt)
+  expect_equal(select(ref, -count), opt %>% rename(avg = slide_value_value))
 })
 
 test_that("`ref_time_values` + `before` + `after` that result in no slide data, generate the error", {
@@ -243,14 +243,14 @@ test_that(
     expect_equal(
       epi_slide(grouped, f, before = 2 * days_dt, ref_time_values = test_date + 200L) %>%
         ungroup() %>%
-        dplyr::select("geo_value", "slide_value_value"),
-      dplyr::tibble(geo_value = "ak", slide_value_value = 199)
+        dplyr::select("geo_value", "avg"),
+      dplyr::tibble(geo_value = "ak", avg = 199)
     ) # out of range for one group
     expect_equal(
       epi_slide(grouped, f, before = 2 * days_dt, ref_time_values = test_date + 3) %>%
         ungroup() %>%
-        dplyr::select("geo_value", "slide_value_value"),
-      dplyr::tibble(geo_value = c("ak", "al"), slide_value_value = c(2, -2))
+        dplyr::select("geo_value", "avg"),
+      dplyr::tibble(geo_value = c("ak", "al"), avg = c(2, -2))
     ) # not out of range for either group
 
     expect_equal(
@@ -274,7 +274,7 @@ test_that(
   }
 )
 
-test_that("computation output formats x as_list_col", {
+test_that("epi_slide outputs list columns when desired, and unpacks unnamed computations", {
   # See `toy_edf` and `basic_sum_result` definitions at top of file.
   # We'll try 7d sum with a few formats.
   expect_equal(
@@ -283,20 +283,139 @@ test_that("computation output formats x as_list_col", {
     basic_sum_result
   )
   expect_equal(
-    toy_edf %>%
-      epi_slide(before = 6 * days_dt, ~ sum(.x$value), as_list_col = TRUE),
+    toy_edf %>% epi_slide(before = 6 * days_dt, ~ list(sum(.x$value))),
     basic_sum_result %>% dplyr::mutate(slide_value = as.list(slide_value))
   )
   expect_equal(
-    toy_edf %>%
-      epi_slide(before = 6 * days_dt, ~ data.frame(value = sum(.x$value))),
-    basic_sum_result %>% rename(slide_value_value = slide_value)
+    toy_edf %>% epi_slide(before = 6 * days_dt, ~ list(rep(sum(.x$value), 2L))),
+    basic_sum_result %>% dplyr::mutate(slide_value = lapply(slide_value, rep, 2L))
   )
   expect_equal(
-    toy_edf %>%
-      epi_slide(before = 6 * days_dt, ~ data.frame(value = sum(.x$value)), as_list_col = TRUE),
+    toy_edf %>% epi_slide(before = 6 * days_dt, ~ data.frame(slide_value = sum(.x$value))),
+    basic_sum_result
+  )
+  expect_equal(
+    toy_edf %>% epi_slide(before = 6 * days_dt, ~ list(data.frame(slide_value = sum(.x$value)))),
     basic_sum_result %>%
-      mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x)))
+      mutate(slide_value = purrr::map(slide_value, ~ data.frame(slide_value = .x)))
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ tibble(slide_value = list(sum(.x$value)))),
+    basic_sum_result %>% mutate(across(slide_value, as.list))
+  )
+  # unnamed data-masking expression producing data frame:
+  expect_identical(
+    # unfortunately, we can't pass this directly as `f` and need an extra comma
+    toy_edf %>% epi_slide(before = 6L, , data.frame(slide_value = sum(.x$value))),
+    basic_sum_result
+  )
+})
+
+test_that("epi_slide can use sequential data masking expressions including NULL", {
+  edf_A <- tibble::tibble(
+    geo_value = 1,
+    time_value = 1:10,
+    value = 1:10
+  ) %>%
+    as_epi_df(as_of = 12L)
+
+  noisiness_A1 <- edf_A %>%
+    group_by(geo_value) %>%
+    epi_slide(
+      before = 1L, after = 2L,
+      valid = nrow(.x) == 4L, # not the best approach...
+      m = mean(.x$value[1:2]),
+      noisiness = sqrt(mean((value[3:4] - m)^2)),
+      m = NULL
+    ) %>%
+    ungroup() %>%
+    filter(valid) %>%
+    select(-valid)
+
+  noisiness_A0 <- edf_A %>%
+    filter(
+      time_value >= min(time_value) + 1L,
+      time_value <= max(time_value) - 2L
+    ) %>%
+    mutate(noisiness = sqrt((3 - 1.5)^2 + (4 - 1.5)^2) / sqrt(2))
+
+  expect_identical(noisiness_A1, noisiness_A0)
+
+  edf_B <- tibble::tibble(
+    geo_value = 1,
+    time_value = 1:10,
+    value = rep(1:2, 5L)
+  ) %>%
+    as_epi_df(as_of = 12L)
+
+  noisiness_B1 <- edf_B %>%
+    group_by(geo_value) %>%
+    epi_slide(
+      before = 1L, after = 2L,
+      valid = nrow(.x) == 4L, # not the best approach...
+      model = list(lm(value ~ time_value, .x[1:2, ])),
+      pred = list(predict(model[[1L]], newdata = .x[3:4, "time_value"])),
+      model = NULL,
+      noisiness = sqrt(mean((.data$value[3:4] - .data$pred[[1L]])^2)),
+      pred = NULL
+    ) %>%
+    ungroup() %>%
+    filter(valid) %>%
+    select(-valid)
+
+  noisiness_B0 <- edf_B %>%
+    filter(
+      time_value >= min(time_value) + 1L,
+      time_value <= max(time_value) - 2L
+    ) %>%
+    mutate(noisiness = sqrt((1 - 3)^2 + (2 - 4)^2) / sqrt(2))
+
+  expect_equal(noisiness_B1, noisiness_B0)
+})
+
+test_that("epi_slide complains on invalid computation outputs", {
+  expect_error(
+    toy_edf %>% epi_slide(before = 6L, ~ lm(value ~ time_value, .x)),
+    class = "epiprocess__invalid_slide_comp_value"
+  )
+  expect_no_error(
+    toy_edf %>% epi_slide(before = 6L, ~ list(lm(value ~ time_value, .x))),
+    class = "epiprocess__invalid_slide_comp_value"
+  )
+  expect_error(
+    toy_edf %>% epi_slide(before = 6L, model = lm(value ~ time_value, .x)),
+    class = "epiprocess__invalid_slide_comp_tidyeval_output"
+  )
+  expect_no_error(
+    toy_edf %>% epi_slide(before = 6L, model = list(lm(value ~ time_value, .x))),
+    class = "epiprocess__invalid_slide_comp_tidyeval_output"
+  )
+})
+
+test_that("epi_slide can use {nm} :=", {
+  nm <- "slide_value"
+  expect_identical(
+    # unfortunately, we can't pass this directly as `f` and need an extra comma
+    toy_edf %>% epi_slide(before = 6L, , !!nm := sum(value)),
+    basic_sum_result
+  )
+})
+
+test_that("epi_slide can produce packed outputs", {
+  packed_basic_result <- basic_sum_result %>%
+    tidyr::pack(container = c(slide_value)) %>%
+    dplyr_reconstruct(basic_sum_result)
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, ~ tibble::tibble(slide_value = sum(.x$value)), new_col_name = "container"),
+    packed_basic_result
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, container = tibble::tibble(slide_value = sum(.x$value))),
+    packed_basic_result
+  )
+  expect_identical(
+    toy_edf %>% epi_slide(before = 6L, , tibble::tibble(slide_value = sum(.x$value)), new_col_name = "container"),
+    packed_basic_result
   )
 })
 
@@ -313,10 +432,7 @@ test_that("epi_slide_mean errors when `as_list_col` non-NULL", {
         value,
         before = 6 * days_dt, na.rm = TRUE
       ),
-    basic_mean_result %>% dplyr::mutate(
-      slide_value_value = slide_value
-    ) %>%
-      select(-slide_value)
+    basic_mean_result %>% rename(slide_value_value = slide_value)
   )
   expect_error(
     toy_edf %>%
@@ -327,7 +443,7 @@ test_that("epi_slide_mean errors when `as_list_col` non-NULL", {
         value,
         before = 6 * days_dt, as_list_col = TRUE, na.rm = TRUE
       ),
-    class = "epiprocess__epi_slide_opt__list_not_supported"
+    class = "lifecycle_error_deprecated"
   )
   # `epi_slide_mean` doesn't return dataframe columns
 })
@@ -336,22 +452,20 @@ test_that("nested dataframe output names are controllable", {
   expect_equal(
     toy_edf %>%
       epi_slide(
-        before = 6 * days_dt, ~ data.frame(value = sum(.x$value)),
-        new_col_name = "result"
+        before = 6 * days_dt, ~ data.frame(result = sum(.x$value))
       ),
-    basic_sum_result %>% rename(result_value = slide_value)
+    basic_sum_result %>% rename(result = slide_value)
   )
   expect_equal(
     toy_edf %>%
       epi_slide(
-        before = 6 * days_dt, ~ data.frame(value_sum = sum(.x$value)),
-        names_sep = NULL
+        before = 6 * days_dt, ~ data.frame(value_sum = sum(.x$value))
       ),
     basic_sum_result %>% rename(value_sum = slide_value)
   )
 })
 
-test_that("non-size-1 outputs are recycled", {
+test_that("outputs are recycled", {
   # trying with non-size-1 computation outputs:
   # nolint start: line_length_linter.
   basic_result_from_size2 <- tibble::tribble(
@@ -363,24 +477,27 @@ test_that("non-size-1 outputs are recycled", {
     dplyr::arrange(time_value) %>%
     as_epi_df(as_of = test_date + 100)
   # nolint end
+  #
+  # non-size-1 outputs with appropriate size are no-op "recycled":
   expect_equal(
     toy_edf %>% epi_slide(before = 6 * days_dt, ~ sum(.x$value) + 0:1),
     basic_result_from_size2
   )
   expect_equal(
-    toy_edf %>% epi_slide(before = 6 * days_dt, ~ sum(.x$value) + 0:1, as_list_col = TRUE),
+    toy_edf %>% epi_slide(before = 6 * days_dt, ~ as.list(sum(.x$value) + 0:1)),
     basic_result_from_size2 %>% dplyr::mutate(slide_value = as.list(slide_value))
   )
   expect_equal(
-    toy_edf %>% epi_slide(before = 6 * days_dt, ~ data.frame(value = sum(.x$value) + 0:1)),
-    basic_result_from_size2 %>% rename(slide_value_value = slide_value)
+    toy_edf %>% epi_slide(before = 6 * days_dt, ~ data.frame(slide_value = sum(.x$value) + 0:1)),
+    basic_result_from_size2
   )
+  # size-1 list is recycled:
   expect_equal(
-    toy_edf %>% epi_slide(
-      before = 6 * days_dt, ~ data.frame(value = sum(.x$value) + 0:1), as_list_col = TRUE
-    ),
+    toy_edf %>% epi_slide(before = 6 * days_dt, ~ list(tibble(value = sum(.x$value) + 0:1))),
     basic_result_from_size2 %>%
-      mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x)))
+      group_by(time_value) %>%
+      mutate(slide_value = rep(list(tibble(value = slide_value)), 2L)) %>%
+      ungroup()
   )
 })
 
@@ -444,7 +561,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
     ) %>%
       epi_slide_mean(
         value,
-        before = 6 * days_dt, names_sep = NULL, na.rm = TRUE
+        before = 6 * days_dt, na.rm = TRUE
       ),
     basic_mean_result %>%
       rename(slide_value_value = slide_value)
@@ -456,7 +573,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
       epi_slide_mean(
         value,
         before = 6 * days_dt, ref_time_values = test_date + c(2L, 8L),
-        names_sep = NULL, na.rm = TRUE
+        na.rm = TRUE
       ),
     filter(basic_mean_result, time_value %in% (test_date + c(2L, 8L))) %>%
       rename(slide_value_value = slide_value)
@@ -468,67 +585,62 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
       epi_slide_mean(
         value,
         before = 6 * days_dt, ref_time_values = test_date + c(2L, 8L), all_rows = TRUE,
-        names_sep = NULL, na.rm = TRUE
+        na.rm = TRUE
       ),
     basic_mean_result %>%
-      dplyr::mutate(slide_value_value = dplyr::if_else(time_value %in% (test_date + c(2L, 8L)),
+      dplyr::mutate(slide_value = dplyr::if_else(time_value %in% (test_date + c(2L, 8L)),
         slide_value, NA_integer_
       )) %>%
-      select(-slide_value)
+      rename(slide_value_value = slide_value)
   )
 
   # slide computations returning data frames:
   expect_equal(
-    toy_edf %>% epi_slide(before = 6 * days_dt, ~ data.frame(value = sum(.x$value))),
-    basic_full_result %>% dplyr::rename(slide_value_value = slide_value)
+    toy_edf %>% epi_slide(before = 6 * days_dt, ~ data.frame(slide_value = sum(.x$value))),
+    basic_full_result
   )
   expect_equal(
     toy_edf %>% epi_slide(
-      before = 6 * days_dt, ~ data.frame(value = sum(.x$value)),
+      before = 6 * days_dt, ~ data.frame(slide_value = sum(.x$value)),
       ref_time_values = test_date + c(2L, 8L)
     ),
     basic_full_result %>%
-      dplyr::filter(time_value %in% (test_date + c(2L, 8L))) %>%
-      dplyr::rename(slide_value_value = slide_value)
+      dplyr::filter(time_value %in% (test_date + c(2L, 8L)))
   )
   expect_equal(
     toy_edf %>% epi_slide(
-      before = 6 * days_dt, ~ data.frame(value = sum(.x$value)),
+      before = 6 * days_dt, ~ data.frame(slide_value = sum(.x$value)),
       ref_time_values = test_date + c(2L, 8L), all_rows = TRUE
     ),
     basic_full_result %>%
       dplyr::mutate(slide_value = dplyr::if_else(time_value %in% (test_date + c(2L, 8L)),
         slide_value, NA_integer_
-      )) %>%
-      dplyr::rename(slide_value_value = slide_value)
+      ))
   )
   # slide computations returning data frames with `as_list_col=TRUE`:
   expect_equal(
     toy_edf %>% epi_slide(
-      before = 6 * days_dt, ~ data.frame(value = sum(.x$value)),
-      as_list_col = TRUE
+      before = 6 * days_dt, ~ list(data.frame(slide_value = sum(.x$value)))
     ),
     basic_full_result %>%
-      dplyr::mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x)))
+      dplyr::mutate(slide_value = purrr::map(slide_value, ~ data.frame(slide_value = .x)))
   )
   expect_equal(
     toy_edf %>% epi_slide(
-      before = 6 * days_dt, ~ data.frame(value = sum(.x$value)),
-      ref_time_values = test_date + c(2L, 8L),
-      as_list_col = TRUE
+      before = 6 * days_dt, ~ list(data.frame(slide_value = sum(.x$value))),
+      ref_time_values = test_date + c(2L, 8L)
     ),
     basic_full_result %>%
-      dplyr::mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x))) %>%
+      dplyr::mutate(slide_value = purrr::map(slide_value, ~ data.frame(slide_value = .x))) %>%
       dplyr::filter(time_value %in% (test_date + c(2L, 8L)))
   )
   expect_equal(
     toy_edf %>% epi_slide(
-      before = 6 * days_dt, ~ data.frame(value = sum(.x$value)),
-      ref_time_values = test_date + c(2L, 8L), all_rows = TRUE,
-      as_list_col = TRUE
+      before = 6 * days_dt, ~ list(data.frame(slide_value = sum(.x$value))),
+      ref_time_values = test_date + c(2L, 8L), all_rows = TRUE
     ),
     basic_full_result %>%
-      dplyr::mutate(slide_value = purrr::map(slide_value, ~ data.frame(value = .x))) %>%
+      dplyr::mutate(slide_value = purrr::map(slide_value, ~ data.frame(slide_value = .x))) %>%
       dplyr::mutate(slide_value = dplyr::if_else(time_value %in% (test_date + c(2L, 8L)),
         slide_value, list(NULL)
       ))
@@ -536,36 +648,31 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
   # slide computations returning data frames, `as_list_col = TRUE`, `unnest`:
   expect_equal(
     toy_edf %>% epi_slide(
-      before = 6 * days_dt, ~ data.frame(value = sum(.x$value)),
-      as_list_col = TRUE
+      before = 6 * days_dt, ~ list(data.frame(slide_value = sum(.x$value)))
     ) %>%
-      unnest(slide_value, names_sep = "_"),
-    basic_full_result %>% dplyr::rename(slide_value_value = slide_value)
+      unnest(slide_value),
+    basic_full_result
   )
   expect_equal(
     toy_edf %>% epi_slide(
-      before = 6 * days_dt, ~ data.frame(value = sum(.x$value)),
-      ref_time_values = test_date + c(2L, 8L),
-      as_list_col = TRUE
+      before = 6 * days_dt, ~ list(data.frame(slide_value = sum(.x$value))),
+      ref_time_values = test_date + c(2L, 8L)
     ) %>%
-      unnest(slide_value, names_sep = "_"),
+      unnest(slide_value),
     basic_full_result %>%
-      dplyr::filter(time_value %in% (test_date + c(2L, 8L))) %>%
-      dplyr::rename(slide_value_value = slide_value)
+      dplyr::filter(time_value %in% (test_date + c(2L, 8L)))
   )
   expect_equal(
     toy_edf %>% epi_slide(
-      before = 6 * days_dt, ~ data.frame(value = sum(.x$value)),
-      ref_time_values = test_date + c(2L, 8L), all_rows = TRUE,
-      as_list_col = TRUE
+      before = 6 * days_dt, ~ list(data.frame(slide_value = sum(.x$value))),
+      ref_time_values = test_date + c(2L, 8L), all_rows = TRUE
     ) %>%
-      unnest(slide_value, names_sep = "_"),
+      unnest(slide_value),
     basic_full_result %>%
       # XXX unclear exactly what we want in this case. Current approach is
       # compatible with `vctrs::vec_detect_missing` but breaks `tidyr::unnest`
-      # compatibility
-      dplyr::filter(time_value %in% (test_date + c(2L, 8L))) %>%
-      dplyr::rename(slide_value_value = slide_value)
+      # compatibility since the non-ref rows are dropped
+      dplyr::filter(time_value %in% (test_date + c(2L, 8L)))
   )
   rework_nulls <- function(slide_values_list) {
     vctrs::vec_assign(
@@ -576,17 +683,15 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
   }
   expect_equal(
     toy_edf %>% epi_slide(
-      before = 6 * days_dt, ~ data.frame(value = sum(.x$value)),
-      ref_time_values = test_date + c(2L, 8L), all_rows = TRUE,
-      as_list_col = TRUE
+      before = 6 * days_dt, ~ list(data.frame(slide_value = sum(.x$value))),
+      ref_time_values = test_date + c(2L, 8L), all_rows = TRUE
     ) %>%
       mutate(slide_value = rework_nulls(slide_value)) %>%
-      unnest(slide_value, names_sep = "_"),
+      unnest(slide_value),
     basic_full_result %>%
       dplyr::mutate(slide_value = dplyr::if_else(time_value %in% (test_date + c(2L, 8L)),
         slide_value, NA_integer_
-      )) %>%
-      dplyr::rename(slide_value_value = slide_value)
+      ))
   )
 })
 
@@ -628,7 +733,7 @@ test_that("basic grouped epi_slide_mean computation produces expected output", {
     group_by(geo_value) %>%
     as_epi_df(as_of = test_date + 6)
 
-  result1 <- epi_slide_mean(small_x, value, before = 50 * days_dt, names_sep = NULL, na.rm = TRUE)
+  result1 <- epi_slide_mean(small_x, value, before = 50 * days_dt, na.rm = TRUE)
   expect_equal(result1, expected_output %>% rename(slide_value_value = slide_value))
 })
 
@@ -688,7 +793,7 @@ test_that("basic ungrouped epi_slide_mean computation produces expected output",
   result1 <- small_x %>%
     ungroup() %>%
     filter(geo_value == "ak") %>%
-    epi_slide_mean(value, before = 50 * days_dt, names_sep = NULL, na.rm = TRUE)
+    epi_slide_mean(value, before = 50 * days_dt, na.rm = TRUE)
   expect_equal(result1, expected_output %>% rename(slide_value_value = slide_value))
 
   # Ungrouped with multiple geos
@@ -898,10 +1003,7 @@ test_that("basic slide behavior is correct when groups have non-overlapping date
   result1 <- epi_slide(small_x_misaligned_dates, f = ~ mean(.x$value), before = 50 * days_dt)
   expect_equal(result1, expected_output)
 
-  result2 <- epi_slide_mean(
-    small_x_misaligned_dates, value,
-    before = 50 * days_dt, names_sep = NULL, na.rm = TRUE
-  )
+  result2 <- epi_slide_mean(small_x_misaligned_dates, value, before = 50 * days_dt, na.rm = TRUE)
   expect_equal(result2, expected_output %>% rename(slide_value_value = slide_value))
 })
 
@@ -952,7 +1054,7 @@ test_that("results for different `before`s and `after`s match between epi_slide 
       slide_value_a = mean(.x$a, rm.na = TRUE),
       slide_value_b = mean(.x$b, rm.na = TRUE)
     ),
-    before = before, after = after, names_sep = NULL, ...
+    before = before, after = after, ...
     )
     result2 <- epi_slide_mean(epi_data, col_names = c(a, b), na.rm = TRUE, before = before, after = after, ...)
     expect_equal(result1, result2)
@@ -1036,7 +1138,7 @@ test_that("results for different time_types match between epi_slide and epi_slid
     slide_value_a = mean(.x$a, rm.na = TRUE),
     slide_value_b = mean(.x$b, rm.na = TRUE)
   ),
-  before = 6 * days_dt, names_sep = NULL
+  before = 6 * days_dt
   )
 
   test_time_type_mean <- function(dates, before) {
@@ -1049,7 +1151,7 @@ test_that("results for different time_types match between epi_slide and epi_slid
       slide_value_a = mean(.x$a, rm.na = TRUE),
       slide_value_b = mean(.x$b, rm.na = TRUE)
     ),
-    before = before, names_sep = NULL
+    before = before
     )
     result2 <- epi_slide_mean(epi_data,
       col_names = c(a, b), na.rm = TRUE, before = before
@@ -1200,19 +1302,16 @@ test_that("helper `full_date_seq` returns expected date values", {
 })
 
 test_that("epi_slide_mean produces same output as epi_slide_opt", {
-  result1 <- epi_slide_mean(
-    small_x,
-    value,
-    before = 50 * days_dt,
-    names_sep = NULL,
-    na.rm = TRUE
+  result1 <- epi_slide_mean(small_x, value, before = 50 * days_dt, na.rm = TRUE)
+  result2 <- epi_slide_opt(small_x, value,
+    f = data.table::frollmean,
+    before = 50 * days_dt, na.rm = TRUE
   )
   result2 <- epi_slide_opt(
     small_x,
     value,
     f = data.table::frollmean,
     before = 50 * days_dt,
-    names_sep = NULL,
     na.rm = TRUE
   )
   expect_equal(result1, result2)
@@ -1221,22 +1320,21 @@ test_that("epi_slide_mean produces same output as epi_slide_opt", {
     value,
     f = slider::slide_mean,
     before = 50 * days_dt,
-    names_sep = NULL,
     na_rm = TRUE
   )
   expect_equal(result1, result3)
 })
 
 test_that("epi_slide_sum produces same output as epi_slide_opt", {
-  result1 <- epi_slide_sum(small_x, value, before = 50 * days_dt, names_sep = NULL, na.rm = TRUE)
+  result1 <- epi_slide_sum(small_x, value, before = 50 * days_dt, na.rm = TRUE)
   result2 <- epi_slide_opt(small_x, value,
     f = data.table::frollsum,
-    before = 50 * days_dt, names_sep = NULL, na.rm = TRUE
+    before = 50 * days_dt, na.rm = TRUE
   )
   expect_equal(result1, result2)
   result3 <- epi_slide_opt(small_x, value,
     f = slider::slide_sum,
-    before = 50 * days_dt, names_sep = NULL, na_rm = TRUE
+    before = 50 * days_dt, na_rm = TRUE
   )
   expect_equal(result1, result3)
 })

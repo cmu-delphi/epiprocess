@@ -11,6 +11,7 @@
 #'             test_int
 #' @importFrom cli cli_abort cli_warn
 #' @importFrom rlang %||%
+#' @importFrom lifecycle deprecated
 #' @name epiprocess
 "_PACKAGE"
 utils::globalVariables(c(

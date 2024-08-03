@@ -56,7 +56,7 @@ test_that("epix_slide works as intended", {
     group_by(.data$geo_value) %>%
     epix_slide(f = function(x, gk, rtv) {
       tibble::tibble(sum_binary = sum(x$binary))
-    }, before = 2, names_sep = NULL)
+    }, before = 2)
 
   expect_identical(xx1, xx4)
 
@@ -71,13 +71,12 @@ test_that("epix_slide works as intended", {
   expect_identical(xx1, xx5)
 })
 
-test_that("epix_slide works as intended with `as_list_col=TRUE`", {
+test_that("epix_slide works as intended with list cols", {
   xx_dfrow1 <- xx %>%
     group_by(.data$geo_value) %>%
     epix_slide(
-      f = ~ data.frame(bin_sum = sum(.x$binary)),
-      before = 2,
-      as_list_col = TRUE
+      f = ~ list(data.frame(bin_sum = sum(.x$binary))),
+      before = 2
     )
   xx_dfrow2 <- tibble(
     geo_value = rep("ak", 4),
@@ -96,18 +95,16 @@ test_that("epix_slide works as intended with `as_list_col=TRUE`", {
   xx_dfrow3 <- xx %>%
     group_by(dplyr::across(dplyr::all_of("geo_value"))) %>%
     epix_slide(
-      f = ~ data.frame(bin_sum = sum(.x$binary)),
-      before = 2,
-      as_list_col = TRUE
+      f = ~ list(data.frame(bin_sum = sum(.x$binary))),
+      before = 2
     )
   expect_identical(xx_dfrow1, xx_dfrow3) # This and * Imply xx_dfrow2 and xx_dfrow3 are identical
 
   xx_df1 <- xx %>%
     group_by(.data$geo_value) %>%
     epix_slide(
-      f = ~ data.frame(bin = .x$binary),
-      before = 2,
-      as_list_col = TRUE
+      f = ~ list(data.frame(bin = .x$binary)),
+      before = 2
     )
   xx_df2 <- tibble(
     geo_value = rep("ak", 4),
@@ -126,9 +123,8 @@ test_that("epix_slide works as intended with `as_list_col=TRUE`", {
   xx_scalar1 <- xx %>%
     group_by(.data$geo_value) %>%
     epix_slide(
-      f = ~ sum(.x$binary),
-      before = 2,
-      as_list_col = TRUE
+      f = ~ list(sum(.x$binary)),
+      before = 2
     )
   xx_scalar2 <- tibble(
     geo_value = rep("ak", 4),
@@ -147,9 +143,8 @@ test_that("epix_slide works as intended with `as_list_col=TRUE`", {
   xx_vec1 <- xx %>%
     group_by(.data$geo_value) %>%
     epix_slide(
-      f = ~ .x$binary,
-      before = 2,
-      as_list_col = TRUE
+      f = ~ list(.x$binary),
+      before = 2
     )
   xx_vec2 <- tibble(
     geo_value = rep("ak", 4),
@@ -349,7 +344,6 @@ test_that("epix_slide with all_versions option has access to all older versions"
     epix_slide(
       f = slide_fn,
       before = 10^3,
-      names_sep = NULL,
       all_versions = TRUE
     )
 
@@ -372,7 +366,6 @@ test_that("epix_slide with all_versions option has access to all older versions"
     epix_slide(
       f = slide_fn,
       before = 10^3,
-      names_sep = NULL,
       all_versions = TRUE
     )
 
@@ -384,7 +377,6 @@ test_that("epix_slide with all_versions option has access to all older versions"
     epix_slide(
       f = ~ slide_fn(.x, .y),
       before = 10^3,
-      names_sep = NULL,
       all_versions = TRUE
     )
 
@@ -394,12 +386,10 @@ test_that("epix_slide with all_versions option has access to all older versions"
   result5 <- ea %>%
     group_by() %>%
     epix_slide(
-      data = slide_fn(
-        .x,
-        stop("slide_fn doesn't use group key, no need to prepare it")
-      ),
+      # unfortunately, we can't pass this directly as `f` and need an extra comma
+      ,
+      slide_fn(.x, .group_key, .ref_time_value),
       before = 10^3,
-      names_sep = NULL,
       all_versions = TRUE
     )
 
@@ -421,8 +411,7 @@ test_that("epix_as_of and epix_slide with long enough window are compatible", {
     ea %>% epix_slide(
       f1,
       before = 1000,
-      ref_time_values = ref_time_value1,
-      names_sep = NULL
+      ref_time_values = ref_time_value1
     )
   )
 
@@ -438,7 +427,7 @@ test_that("epix_as_of and epix_slide with long enough window are compatible", {
               rename(real_time_value = time_value, lag1 = binary)
           ))
         },
-        before = 1, names_sep = NULL
+        before = 1
       ) %>%
       # assess as nowcast:
       unnest(data) %>%
@@ -459,8 +448,7 @@ test_that("epix_as_of and epix_slide with long enough window are compatible", {
       f2,
       before = 1000,
       ref_time_values = ref_time_value2,
-      all_versions = TRUE,
-      names_sep = NULL
+      all_versions = TRUE
     )
   )
 
@@ -479,8 +467,7 @@ test_that("epix_as_of and epix_slide with long enough window are compatible", {
         f2,
         before = 1000,
         ref_time_values = ref_time_value2,
-        all_versions = TRUE,
-        names_sep = NULL
+        all_versions = TRUE
       ) %>%
       filter(geo_value == "ak"),
     ea %>% # using `ea` here is like filtering `ea_multigeo` to `geo_value=="x"`
@@ -610,26 +597,6 @@ test_that("epix_slide works with 0-row computation outputs", {
       group_by(geo_value)
   )
 })
-
-# nolint start: commented_code_linter.
-# test_that("epix_slide grouped by geo can produce `epi_df` output", {
-#   # This is a characterization test. Not sure we actually want this behavior;
-#   # https://github.com/cmu-delphi/epiprocess/pull/290#issuecomment-1489099157
-#   expect_identical(
-#     ea %>%
-#       group_by(geo_value) %>%
-#       epix_slide(before = 5L, function(x,g) {
-#         tibble::tibble(value = 42)
-#       }, names_sep = NULL),
-#     tibble::tibble(
-#       geo_value = "ak",
-#       time_value = epix_slide_ref_time_values_default(ea),
-#       value = 42
-#     ) %>%
-#       as_epi_df(as_of = ea$versions_end)
-#   )
-# })
-# nolint end
 
 test_that("epix_slide alerts if the provided f doesn't take enough args", {
   f_xgt <- function(x, g, t) dplyr::tibble(value = mean(x$binary), count = length(x$binary))
