@@ -263,12 +263,13 @@ x %>%
 
 Note that here we have utilized an argument `ref_time_values` to perform the
 sliding computation (here, compute a forecast) at a specific subset of reference
-time values. We get out three columns `fc_point`, `fc_lower`, and `fc_upper`
-that correspond to the point forecast, and the lower and upper endpoints of the
-95\% prediction band, respectively. (If instead we had set `as_list_col = TRUE`
-in the call to `epi_slide()`, then we would have gotten a list column `fc`,
-where each element of `fc` is a data frame with named columns `point`, `lower`,
-and `upper`.)
+time values. We get out a ["packed"][tidyr::pack] data frame column `fc`
+containing `fc$point`, `fc$lower`, and `fc$upper` that correspond to the point
+forecast, and the lower and upper endpoints of the 95\% prediction band,
+respectively. (We could also have used `, prob_ar(cases_7dav)` to get three
+separate columns `point`, `lower`, and `upper`, or used `fc =
+list(prob_ar(cases_7dav))` to make an `fc` column with a ["nested"][tidyr::nest]
+format (list of data frames) instead.)
 
 To finish off, we plot the forecasts at some times (spaced out by a few months)
 over the last year, at multiple horizons: 7, 14, 21, and 28 days ahead. To do
@@ -300,11 +301,11 @@ z <- bind_rows(
 ggplot(z) +
   geom_line(aes(x = time_value, y = cases_7dav), color = "gray50") +
   geom_ribbon(aes(
-    x = target_date, ymin = fc_lower, ymax = fc_upper,
+    x = target_date, ymin = fc$lower, ymax = fc$upper,
     group = time_value
   ), fill = 6, alpha = 0.4) +
-  geom_line(aes(x = target_date, y = fc_point, group = time_value)) +
-  geom_point(aes(x = target_date, y = fc_point, group = time_value),
+  geom_line(aes(x = target_date, y = fc$point, group = time_value)) +
+  geom_point(aes(x = target_date, y = fc$point, group = time_value),
     size = 0.5
   ) +
   geom_vline(

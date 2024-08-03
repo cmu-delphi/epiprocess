@@ -247,7 +247,7 @@ locations.
 edf$y <- 2 * edf$x + 0.05 * rnorm(length(edf$x))
 
 edf %>%
-  epi_slide(function(d, ...) {
+  epi_slide(function(d, group_key, ref_time_value) {
     obj <- lm(y ~ x, data = d)
     return(
       as.data.frame(
@@ -297,7 +297,7 @@ y1 <- pub_covidcast(
   geo_type = "state",
   time_type = "day",
   geo_values = "ca,fl",
-  time_value = epirange(20200601, 20211201),
+  time_values = epirange(20200601, 20211201),
   issues = epirange(20200601, 20211201)
 )
 
@@ -307,7 +307,7 @@ y2 <- pub_covidcast(
   geo_type = "state",
   time_type = "day",
   geo_values = "ca,fl",
-  time_value = epirange(20200601, 20211201),
+  time_values = epirange(20200601, 20211201),
   issues = epirange(20200601, 20211201)
 )
 
@@ -475,7 +475,7 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
       ) %>%
       mutate(
         target_date = .data$time_value + ahead, as_of = TRUE,
-        geo_value = .data$fc_geo_value
+        geo_value = .data$fc$geo_value
       )
   } else {
     x_latest %>%
@@ -503,13 +503,13 @@ fc <- bind_rows(
 
 # Plot them, on top of latest COVID-19 case rates
 ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
-  geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), alpha = 0.4) +
+  geom_ribbon(aes(ymin = fc$lower, ymax = fc$upper), alpha = 0.4) +
   geom_line(
     data = x_latest, aes(x = time_value, y = case_rate_7d_av),
     inherit.aes = FALSE, color = "gray50"
   ) +
-  geom_line(aes(y = fc_point)) +
-  geom_point(aes(y = fc_point), size = 0.5) +
+  geom_line(aes(y = fc$point)) +
+  geom_point(aes(y = fc$point), size = 0.5) +
   geom_vline(aes(xintercept = time_value), linetype = 2, alpha = 0.5) +
   facet_grid(vars(geo_value), vars(as_of), scales = "free") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +

@@ -338,13 +338,16 @@ z <- x %>%
 head(z, 10)
 ```
 
-We get back a tibble `z` with the grouping variables (here geo value), the time
-values, and three columns `fc_point`, `fc_lower`, and `fc_upper` produced by the
-slide computation that correspond to the point forecast, and the lower and upper
-endpoints of the 95\% prediction band, respectively. (If instead we had set
-`as_list_col = TRUE` in the call to `epix_slide()`, then we would have gotten a
-list column `fc`, where each element of `fc` is a data frame with named columns
-`point`, `lower`, and `upper`.)
+
+
+We get back a tibble `z` with the grouping variables (here geo value), the
+(reference) time values, and a ["packed"][tidyr::pack] data frame column `fc`
+containing `fc$point`, `fc$lower`, and `fc$upper` that correspond to the point
+forecast, and the lower and upper endpoints of the 95\% prediction band,
+respectively. (We could also have used `, prob_ar(cases_7dav)` to get three
+separate columns `point`, `lower`, and `upper`, or used `fc =
+list(prob_ar(cases_7dav))` to make an `fc` column with a ["nested"][tidyr::nest]
+format (list of data frames) instead.)
 
 On the whole, `epix_slide()` works similarly to `epix_slide()`, though there are
 a few notable differences, even apart from the version-aware aspect. You can
@@ -395,13 +398,13 @@ fc <- bind_rows(
 
 # Plot them, on top of latest COVID-19 case rates
 ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
-  geom_ribbon(aes(ymin = fc_lower, ymax = fc_upper), alpha = 0.4) +
+  geom_ribbon(aes(ymin = fc$lower, ymax = fc$upper), alpha = 0.4) +
   geom_line(
     data = x_latest, aes(x = time_value, y = case_rate_7d_av),
     inherit.aes = FALSE, color = "gray50"
   ) +
-  geom_line(aes(y = fc_point)) +
-  geom_point(aes(y = fc_point), size = 0.5) +
+  geom_line(aes(y = fc$point)) +
+  geom_point(aes(y = fc$point), size = 0.5) +
   geom_vline(aes(xintercept = time_value), linetype = 2, alpha = 0.5) +
   facet_grid(vars(geo_value), vars(as_of), scales = "free") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
