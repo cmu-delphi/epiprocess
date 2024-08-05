@@ -52,19 +52,19 @@ basic_mean_result <- tibble::tribble(
 test_that("`before` and `after` are both vectors of length 1", {
   expect_error(
     epi_slide(grouped, f, before = c(0, 1), after = 0, ref_time_values = test_date + 3),
-    "Expected `before` to be a scalar value."
+    "Slide function expected `before` to be a scalar value."
   )
   expect_error(
     epi_slide(grouped, f, before = 1, after = c(0, 1), ref_time_values = test_date + 3),
-    "Expected `after` to be a scalar value."
+    "Slide function expected `after` to be a scalar value."
   )
   expect_error(
     epi_slide_mean(grouped, col_names = value, before = c(0, 1), after = 0, ref_time_values = test_date + 3),
-    "Expected `before` to be a scalar value."
+    "Slide function expected `before` to be a scalar value."
   )
   expect_error(
     epi_slide_mean(grouped, col_names = value, before = 1, after = c(0, 1), ref_time_values = test_date + 3),
-    "Expected `after` to be a scalar value."
+    "Slide function expected `after` to be a scalar value."
   )
 })
 
@@ -107,64 +107,64 @@ test_that("Test errors/warnings for discouraged features", {
 test_that("Both `before` and `after` must be non-NA, non-negative, integer-compatible", {
   expect_error(
     epi_slide(grouped, f, before = -1L, ref_time_values = test_date + 2L),
-    "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
+    "Slide function expected `before` to be a difftime with units in days or non-negative integer or Inf."
   )
   expect_error(
     epi_slide(grouped, f, after = -1L, ref_time_values = test_date + 2L),
-    "Expected `after` to be a difftime with units in days, a non-negative integer, or Inf."
+    "Slide function expected `after` to be a difftime with units in days or non-negative integer or Inf."
   )
   expect_error(epi_slide(grouped, f, before = "a", after = days_dt, ref_time_values = test_date + 2L),
-    regexp = "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
+    regexp = "Slide function expected `before` to be a difftime with units in days or non-negative integer or Inf."
   )
   expect_error(epi_slide(grouped, f, before = days_dt, after = "a", ref_time_values = test_date + 2L),
-    regexp = "Expected `after` to be a difftime with units in days, a non-negative integer, or Inf."
+    regexp = "Slide function expected `after` to be a difftime with units in days or non-negative integer or Inf."
   )
   expect_error(epi_slide(grouped, f, before = 0.5, after = days_dt, ref_time_values = test_date + 2L),
-    regexp = "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
+    regexp = "Slide function expected `before` to be a difftime with units in days or non-negative integer or Inf."
   )
   expect_error(epi_slide(grouped, f, before = days_dt, after = 0.5, ref_time_values = test_date + 2L),
-    regexp = "Expected `after` to be a difftime with units in days, a non-negative integer, or Inf."
+    regexp = "Slide function expected `after` to be a difftime with units in days or non-negative integer or Inf."
   )
   expect_error(
     epi_slide(grouped, f, before = NA, after = 1L, ref_time_values = test_date + 2L),
-    "Expected `before` to be a scalar value."
+    "Slide function expected `before` to be a scalar value."
   )
   expect_error(
     epi_slide(grouped, f, before = days_dt, after = NA, ref_time_values = test_date + 2L),
-    "Expected `after` to be a scalar value."
+    "Slide function expected `after` to be a scalar value."
   )
 
   expect_error(
     epi_slide_mean(grouped, col_names = value, before = -1L, ref_time_values = test_date + 2L),
-    "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
+    "Slide function expected `before` to be a difftime with units in days or non-negative integer or Inf."
   )
   expect_error(
     epi_slide_mean(grouped, col_names = value, after = -1L, ref_time_values = test_date + 2L),
-    "Expected `after` to be a difftime with units in days, a non-negative integer, or Inf."
+    "Slide function expected `after` to be a difftime with units in days or non-negative integer or Inf."
   )
   expect_error(
     epi_slide_mean(grouped, col_names = value, before = "a", ref_time_values = test_date + 2L),
-    regexp = "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
+    regexp = "Slide function expected `before` to be a difftime with units in days or non-negative integer or Inf."
   )
   expect_error(
     epi_slide_mean(grouped, col_names = value, after = "a", ref_time_values = test_date + 2L),
-    regexp = "Expected `after` to be a difftime with units in days, a non-negative integer, or Inf."
+    regexp = "Slide function expected `after` to be a difftime with units in days or non-negative integer or Inf."
   )
   expect_error(
     epi_slide_mean(grouped, col_names = value, before = 0.5, ref_time_values = test_date + 2L),
-    regexp = "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
+    regexp = "Slide function expected `before` to be a difftime with units in days or non-negative integer or Inf."
   )
   expect_error(
     epi_slide_mean(grouped, col_names = value, after = 0.5, ref_time_values = test_date + 2L),
-    regexp = "Expected `after` to be a difftime with units in days, a non-negative integer, or Inf."
+    regexp = "Slide function expected `after` to be a difftime with units in days or non-negative integer or Inf."
   )
   expect_error(
     epi_slide_mean(grouped, col_names = value, before = NA, after = days_dt, ref_time_values = test_date + 2L),
-    "Expected `before` to be a scalar value."
+    "Slide function expected `before` to be a scalar value."
   )
   expect_error(
     epi_slide_mean(grouped, col_names = value, before = days_dt, after = NA, ref_time_values = test_date + 2L),
-    "Expected `after` to be a scalar value."
+    "Slide function expected `after` to be a scalar value."
   )
 
   # Non-integer-class but integer-compatible values are allowed:
@@ -1271,5 +1271,110 @@ test_that("`epi_slide_opt` errors when passed non-`data.table`, non-`slider` fun
       before = days_dt,  ref_time_values = test_date + 1
     ),
     class = "epiprocess__epi_slide_opt__unsupported_slide_function"
+  )
+})
+
+test_that("Inf works in before/after in slide and slide_opt", {
+  # Daily data
+  df <- dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = test_date + 1:200, value = 1:200),
+    dplyr::tibble(geo_value = "al", time_value = test_date + 1:5, value = -(1:5))
+  ) %>%
+    as_epi_df()
+  expect_equal(
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = Inf,
+        slide_value = sum(value)
+      ),
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = 365000,
+        slide_value = sum(value)
+      )
+  )
+  expect_equal(
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide_opt(
+        before = Inf,
+        f = data.table::frollsum,
+        col_names = value
+      ),
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = 365000,
+        slide_value_value = sum(value)
+      )
+  )
+  expect_equal(
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide_opt(
+        before = Inf,
+        f = slider::slide_sum,
+        col_names = value
+      ),
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = 365000,
+        slide_value_value = sum(value)
+      )
+  )
+
+  # Weekly data
+  df <- dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = test_date + 1:200 * 7, value = 1:200),
+    dplyr::tibble(geo_value = "al", time_value = test_date + 1:5 * 7, value = -(1:5))
+  ) %>%
+    as_epi_df()
+
+  expect_equal(
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = Inf,
+        slide_value = sum(value)
+      ),
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = 365000 * weeks_dt,
+        slide_value = sum(value)
+      )
+  )
+  expect_equal(
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide_opt(
+        col_names = value,
+        f = data.table::frollsum,
+        before = Inf
+      ),
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = 365000 * weeks_dt,
+        slide_value_value = sum(value)
+      )
+  )
+  expect_equal(
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide_opt(
+        before = Inf,
+        f = slider::slide_sum,
+        col_names = value
+      ),
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = 365000 * weeks_dt,
+        slide_value_value = sum(value)
+      )
   )
 })

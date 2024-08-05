@@ -112,6 +112,8 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
   }
   ref_time_values <- sort(ref_time_values)
 
+  # Handle defaults for before/after
+  time_type <- attr(x, "metadata")$time_type
   if (is.null(before) && !is.null(after)) {
     if (inherits(after, "difftime")) {
       before <- as.difftime(0, units = units(after))
@@ -123,11 +125,15 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
     if (inherits(before, "difftime")) {
       after <- as.difftime(0, units = units(before))
     } else {
-      after <- 0
+      if (before == Inf && time_type %in% c("day", "week")) {
+        after <- as.difftime(0, units = glue::glue("{time_type}s"))
+      } else {
+        after <- 0
+      }
     }
   }
-  validate_slide_window_arg(before, attr(x, "metadata")$time_type)
-  validate_slide_window_arg(after, attr(x, "metadata")$time_type)
+  validate_slide_window_arg(before, time_type)
+  validate_slide_window_arg(after, time_type, allow_inf = FALSE)
 
   # Arrange by increasing time_value
   x <- arrange(x, .data$time_value)
@@ -462,6 +468,8 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
   }
   ref_time_values <- sort(ref_time_values)
 
+  # Handle defaults for before/after
+  time_type <- attr(x, "metadata")$time_type
   if (is.null(before) && !is.null(after)) {
     if (inherits(after, "difftime")) {
       before <- as.difftime(0, units = units(after))
@@ -473,21 +481,21 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
     if (inherits(before, "difftime")) {
       after <- as.difftime(0, units = units(before))
     } else {
-      after <- 0
+      if (before == Inf && time_type %in% c("day", "week")) {
+        after <- as.difftime(0, units = glue::glue("{time_type}s"))
+      } else {
+        after <- 0
+      }
     }
   }
-  validate_slide_window_arg(before, attr(x, "metadata")$time_type)
-  validate_slide_window_arg(after, attr(x, "metadata")$time_type)
+  validate_slide_window_arg(before, time_type)
+  validate_slide_window_arg(after, time_type, allow_inf = FALSE)
 
   # Make a complete date sequence between min(x$time_value) and max(x$time_value).
-  date_seq_list <- full_date_seq(x, before, after, attr(x, "metadata")$time_type)
+  date_seq_list <- full_date_seq(x, before, after, time_type)
   all_dates <- date_seq_list$all_dates
   pad_early_dates <- date_seq_list$pad_early_dates
   pad_late_dates <- date_seq_list$pad_late_dates
-
-  # `frollmean` is 1-indexed, so create a new window width based on our
-  # `before` and `after` params.
-  window_size <- before + after + 1L
 
   # The position of a given column can be differ between input `x` and
   # `.data_group` since the grouping step by default drops grouping columns.
@@ -501,7 +509,6 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
   result_col_names <- paste0("slide_value_", col_names_chr)
   slide_one_grp <- function(.data_group, .group_key, ...) {
     missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
-
     # `frollmean` requires a full window to compute a result. Add NA values
     # to beginning and end of the group so that we get results for the
     # first `before` and last `after` elements.
@@ -511,55 +518,61 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
     ) %>%
       arrange(.data$time_value)
 
-    # If a group contains duplicate time values, `frollmean` will still only
-    # use the last `k` obs. It isn't looking at dates, it just goes in row
-    # order. So if the computation is aggregating across multiple obs for the
-    # same date, `epi_slide_opt` and derivates will produce incorrect
-    # results; `epi_slide` should be used instead.
-    if (anyDuplicated(.data_group$time_value) != 0L) {
-      cli_abort(
-        c(
-          "group contains duplicate time values. Using `epi_slide_[opt/mean/sum]` on this
-            group will result in incorrect results",
-          "i" = "Please change the grouping structure of the input data so that
-            each group has non-duplicate time values (e.g. `x %>% group_by(geo_value)
-            %>% epi_slide_opt(f = frollmean)`)",
-          "i" = "Use `epi_slide` to aggregate across groups"
-        ),
-        class = "epiprocess__epi_slide_opt__duplicate_time_values",
-        epiprocess__data_group = .data_group,
-        epiprocess__group_key = .group_key
-      )
-    }
-    if (nrow(.data_group) != length(c(all_dates, pad_early_dates, pad_late_dates))) {
-      cli_abort(
-        c(
-          "group contains an unexpected number of rows",
-          "i" = c("Input data may contain `time_values` closer together than the
-             expected `time_step` size")
-        ),
-        class = "epiprocess__epi_slide_opt__unexpected_row_number",
-        epiprocess__data_group = .data_group,
-        epiprocess__group_key = .group_key
-      )
-    }
-
     if (f_from_package == "data.table") {
-      roll_output <- f(
-        x = .data_group[, col_names_chr], n = window_size, align = "right", ...
-      )
+      # If a group contains duplicate time values, `frollmean` will still only
+      # use the last `k` obs. It isn't looking at dates, it just goes in row
+      # order. So if the computation is aggregating across multiple obs for the
+      # same date, `epi_slide_opt` and derivates will produce incorrect results;
+      # `epi_slide` should be used instead.
+      if (anyDuplicated(.data_group$time_value) != 0L) {
+        cli_abort(
+          c(
+            "group contains duplicate time values. Using `epi_slide_[opt/mean/sum]` on this
+              group will result in incorrect results",
+            "i" = "Please change the grouping structure of the input data so that
+              each group has non-duplicate time values (e.g. `x %>% group_by(geo_value)
+              %>% epi_slide_opt(f = frollmean)`)",
+            "i" = "Use `epi_slide` to aggregate across groups"
+          ),
+          class = "epiprocess__epi_slide_opt__duplicate_time_values",
+          epiprocess__data_group = .data_group,
+          epiprocess__group_key = .group_key
+        )
+      }
 
+      if (nrow(.data_group) != length(c(all_dates, pad_early_dates, pad_late_dates))) {
+        cli_abort(
+          c(
+            "group contains an unexpected number of rows",
+            "i" = c("Input data may contain `time_values` closer together than the
+              expected `time_step` size")
+          ),
+          class = "epiprocess__epi_slide_opt__unexpected_row_number",
+          epiprocess__data_group = .data_group,
+          epiprocess__group_key = .group_key
+        )
+      }
+
+      # `frollmean` is 1-indexed, so create a new window width based on our
+      # `before` and `after` params. Right-aligned `frollmean` results'
+      # `ref_time_value`s will be `after` timesteps ahead of where they should
+      # be; shift results to the left by `after` timesteps.
+      if (before != Inf) {
+        window_size <- before + after + 1L
+        roll_output <- f(x = .data_group[, col_names_chr], n = window_size, ...)
+      } else {
+        window_size <- list(seq_along(.data_group$time_value))
+        roll_output <- f(x = .data_group[, col_names_chr], n = window_size, adaptive = TRUE, ...)
+      }
       if (after >= 1) {
-        # Right-aligned `frollmean` results' `ref_time_value`s will be `after`
-        # timesteps ahead of where they should be. Shift results to the left by
-        # `after` timesteps.
         .data_group[, result_col_names] <- purrr::map(roll_output, function(.x) {
           c(.x[(after + 1L):length(.x)], rep(NA, after))
         })
       } else {
         .data_group[, result_col_names] <- roll_output
       }
-    } else if (f_from_package == "slider") {
+    }
+    if (f_from_package == "slider") {
       for (i in seq_along(col_names_chr)) {
         .data_group[, result_col_names[i]] <- f(
           x = .data_group[[col_names_chr[i]]],
@@ -746,7 +759,7 @@ full_date_seq <- function(x, before, after, time_type) {
   if (time_type %in% c("yearmonth", "integer")) {
     all_dates <- seq(min(x$time_value), max(x$time_value), by = 1L)
 
-    if (before != 0) {
+    if (before != 0 && before != Inf) {
       pad_early_dates <- all_dates[1L] - before:1
     }
     if (after != 0) {
@@ -759,7 +772,7 @@ full_date_seq <- function(x, before, after, time_type) {
     )
 
     all_dates <- seq(min(x$time_value), max(x$time_value), by = by)
-    if (before != 0) {
+    if (before != 0 && before != Inf) {
       # The behavior is analogous to the branch with tsibble types above. For
       # more detail, note that the function `seq.Date(from, ..., length.out =
       # n)` returns `from + 0:n`. Since we want `from + 1:n`, we drop the first

@@ -286,7 +286,12 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 #' ) %>%
 #'   as_epi_df(as_of = start_date + 3)
 #' daily_edf %>%
-#'   complete(geo_value, time_value = full_seq(time_value, period = 1), fill = list(value = 0), explicit = FALSE)
+#'   complete(
+#'     geo_value,
+#'     time_value = full_seq(time_value, period = 1),
+#'     fill = list(value = 0),
+#'     explicit = FALSE
+#'   )
 #' # Complete works for weekly data and can take a fill value
 #' # No grouping
 #' weekly_edf <- tibble::tribble(

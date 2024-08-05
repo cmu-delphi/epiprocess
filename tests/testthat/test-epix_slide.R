@@ -169,15 +169,15 @@ test_that("epix_slide works as intended with `as_list_col=TRUE`", {
 test_that("epix_slide `before` validation works", {
   expect_error(
     xx %>% epix_slide(f = ~ sum(.x$binary), before = NA),
-    "Expected `before` to be a scalar value."
+    "Slide function expected `before` to be a scalar value."
   )
   expect_error(
     xx %>% epix_slide(f = ~ sum(.x$binary), before = -1),
-    "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
+    "Slide function expected `before` to be a difftime with units in days or non-negative integer or Inf."
   )
   expect_error(
     xx %>% epix_slide(f = ~ sum(.x$binary), before = 1.5),
-    "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
+    "Slide function expected `before` to be a difftime with units in days or non-negative integer or Inf."
   )
   # These `before` values should be accepted:
   expect_no_error(xx %>% epix_slide(f = ~ sum(.x$binary), before = 0))
@@ -789,4 +789,17 @@ test_that("`epix_slide` can access objects inside of helper functions", {
   }
   expect_no_error(helper(archive_cases_dv_subset, as.Date("2021-01-01")))
   expect_no_error(helper(xx, 3L))
+})
+
+test_that("`epix_slide` works with before = Inf", {
+  expect_equal(
+    xx %>%
+      group_by(geo_value) %>%
+      epix_slide(sum_binary = sum(binary), before = Inf) %>%
+      pull(sum_binary),
+    xx %>%
+      group_by(geo_value) %>%
+      epix_slide(sum_binary = sum(binary), before = 365000) %>%
+      pull(sum_binary)
+  )
 })
