@@ -495,7 +495,11 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
   # positions of user-provided `col_names` into string column names. We avoid
   # using `names(pos)` directly for robustness and in case we later want to
   # allow users to rename fields via tidyselection.
-  pos <- eval_select(all_of(col_names), data = x, allow_rename = FALSE)
+  if (typeof(quo_get_expr(enquo(col_names))) == "character") {
+    pos <- eval_select(all_of(col_names), data = x, allow_rename = FALSE)
+  } else {
+    pos <- eval_select(enquo(col_names), data = x, allow_rename = FALSE)
+  }
   col_names_chr <- names(x)[pos]
   # Always rename results to "slide_value_<original column name>".
   result_col_names <- paste0("slide_value_", col_names_chr)
