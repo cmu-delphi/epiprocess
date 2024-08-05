@@ -1,6 +1,6 @@
 test_that("Grouping, regrouping, and ungrouping archives works as intended", {
   # From an example:
-  library(dplyr)
+  suppressPackageStartupMessages(library(dplyr))
   toy_archive <-
     tribble(
       ~geo_value, ~age_group, ~time_value, ~version, ~value,
