@@ -256,7 +256,7 @@ epix_slide.grouped_epi_archive <- function(
 
   checkmate::assert_string(new_col_name, null.ok = TRUE)
   if (identical(new_col_name, "time_value")) {
-    cli_abort('`new_col_name` must not be `"time_value"`; `epix_slide()` uses that column name to attach the `ref_time_value` associated with each slide computation')
+    cli_abort('`new_col_name` must not be `"time_value"`; `epix_slide()` uses that column name to attach the `ref_time_value` associated with each slide computation') # nolint: line_length_linter
   }
 
   # Validate rest of parameters:
@@ -281,16 +281,16 @@ epix_slide.grouped_epi_archive <- function(
   }
 
   if (lifecycle::is_present(as_list_col)) {
-    lifecycle::deprecate_warn("0.8.1", "epix_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless you want more than one list element per computation.  Automatically trying this sort of rewrite...")
+    lifecycle::deprecate_warn("0.8.1", "epix_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless you want more than one list element per computation.  Automatically trying this sort of rewrite...") # nolint: line_length_linter
     f_orig <- f
     f <- function(...) list(f_orig(...))
   }
 
   if (lifecycle::is_present(names_sep)) {
     if (is.null(names_sep)) {
-      lifecycle::deprecate_warn("0.8.1", "epix_slide(names_sep =)", details = "You can simply remove `names_sep = NULL`; that's now the defualt.")
+      lifecycle::deprecate_warn("0.8.1", "epix_slide(names_sep =)", details = "You can simply remove `names_sep = NULL`; that's now the defualt.") # nolint: line_length_linter
     } else {
-      lifecycle::deprecate_stop("0.8.1", "epix_slide(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)")
+      lifecycle::deprecate_stop("0.8.1", "epix_slide(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)") # nolint: line_length_linter
     }
   }
 

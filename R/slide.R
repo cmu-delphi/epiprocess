@@ -154,9 +154,9 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
 
   if (lifecycle::is_present(as_list_col)) {
     if (!as_list_col) {
-      lifecycle::deprecate_warn("0.8.1", "epi_slide(as_list_col =)", details = "You can simply remove as_list_col = FALSE.")
+      lifecycle::deprecate_warn("0.8.1", "epi_slide(as_list_col =)", details = "You can simply remove as_list_col = FALSE.") # nolint: line_length_linter
     } else {
-      lifecycle::deprecate_warn("0.8.1", "epi_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless the `epi_slide()` row-recycling behavior would be inappropriate.  Attempting to mimic the effects of such a rewrite, but you may see changes in behavior...")
+      lifecycle::deprecate_warn("0.8.1", "epi_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless the `epi_slide()` row-recycling behavior would be inappropriate.  Attempting to mimic the effects of such a rewrite, but you may see changes in behavior...") # nolint: line_length_linter
       f_orig <- f
       if (!used_data_masking) {
         f <- function(...) {
@@ -169,7 +169,7 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
           # data.frame, or a non-data.frame.
           wrapped_result_orig <- f_orig(...)
           if (length(wrapped_result_orig) != 1L) {
-            cli_abort("Failed to rewrite `as_list_col = TRUE`, which is deprecated: an internal bug was encountered.  Please remove `as_list_col = TRUE` and update your slide computation instead.")
+            cli_abort("Failed to rewrite `as_list_col = TRUE`, which is deprecated: an internal bug was encountered.  Please remove `as_list_col = TRUE` and update your slide computation instead.") # nolint: line_length_linter
           }
           name_orig <- names(wrapped_result_orig)[[1L]]
           result_orig <- wrapped_result_orig[[1L]]
@@ -190,9 +190,9 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
 
   if (lifecycle::is_present(names_sep)) {
     if (is.null(names_sep)) {
-      lifecycle::deprecate_warn("0.8.1", "epi_slide(names_sep =)", details = "You can simply remove `names_sep = NULL`; that's now the defualt.")
+      lifecycle::deprecate_warn("0.8.1", "epi_slide(names_sep =)", details = "You can simply remove `names_sep = NULL`; that's now the defualt.") # nolint: line_length_linter
     } else {
-      lifecycle::deprecate_stop("0.8.1", "epi_slide(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)")
+      lifecycle::deprecate_stop("0.8.1", "epi_slide(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)") # nolint: line_length_linter
     }
   }
 

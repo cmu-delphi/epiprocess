@@ -312,14 +312,14 @@ test_that("epi_slide outputs list columns when desired, and unpacks unnamed comp
 })
 
 test_that("epi_slide can use sequential data masking expressions including NULL", {
-  edf_A <- tibble::tibble(
+  edf_a <- tibble::tibble(
     geo_value = 1,
     time_value = 1:10,
     value = 1:10
   ) %>%
     as_epi_df(as_of = 12L)
 
-  noisiness_A1 <- edf_A %>%
+  noisiness_a1 <- edf_a %>%
     group_by(geo_value) %>%
     epi_slide(
       before = 1L, after = 2L,
@@ -332,23 +332,23 @@ test_that("epi_slide can use sequential data masking expressions including NULL"
     filter(valid) %>%
     select(-valid)
 
-  noisiness_A0 <- edf_A %>%
+  noisiness_a0 <- edf_a %>%
     filter(
       time_value >= min(time_value) + 1L,
       time_value <= max(time_value) - 2L
     ) %>%
     mutate(noisiness = sqrt((3 - 1.5)^2 + (4 - 1.5)^2) / sqrt(2))
 
-  expect_identical(noisiness_A1, noisiness_A0)
+  expect_identical(noisiness_a1, noisiness_a0)
 
-  edf_B <- tibble::tibble(
+  edf_b <- tibble::tibble(
     geo_value = 1,
     time_value = 1:10,
     value = rep(1:2, 5L)
   ) %>%
     as_epi_df(as_of = 12L)
 
-  noisiness_B1 <- edf_B %>%
+  noisiness_b1 <- edf_b %>%
     group_by(geo_value) %>%
     epi_slide(
       before = 1L, after = 2L,
@@ -363,14 +363,14 @@ test_that("epi_slide can use sequential data masking expressions including NULL"
     filter(valid) %>%
     select(-valid)
 
-  noisiness_B0 <- edf_B %>%
+  noisiness_b0 <- edf_b %>%
     filter(
       time_value >= min(time_value) + 1L,
       time_value <= max(time_value) - 2L
     ) %>%
     mutate(noisiness = sqrt((1 - 3)^2 + (2 - 4)^2) / sqrt(2))
 
-  expect_equal(noisiness_B1, noisiness_B0)
+  expect_equal(noisiness_b1, noisiness_b0)
 })
 
 test_that("epi_slide complains on invalid computation outputs", {
