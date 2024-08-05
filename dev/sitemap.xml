@@ -21,6 +21,7 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/autoplot.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/clone.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/compactify.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/complete.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/detect_outlr.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/detect_outlr_rm.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/detect_outlr_stl.html</loc></url>
@@ -54,6 +55,7 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/print.epi_archive.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/print.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/reexports.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/summary.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_column_names.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/upcase_snake_case.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/version_column_names.html</loc></url>
