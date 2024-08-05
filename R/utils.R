@@ -821,22 +821,22 @@ validate_slide_window_arg <- function(arg, time_type, arg_name = rlang::caller_a
   if (!identical(arg, Inf)) {
     if (time_type == "day") {
       if (!test_int(arg, lower = 0L) && !(inherits(arg, "difftime") && units(arg) == "days")) {
-        cli_abort("Expected `{arg_name}` to be a difftime with units in days or a non-negative integer.")
+        cli_abort("Expected `{arg_name}` to be a difftime with units in days, a non-negative integer, or Inf.")
       }
     } else if (time_type == "week") {
       if (!(inherits(arg, "difftime") && units(arg) == "weeks")) {
-        cli_abort("Expected `{arg_name}` to be a difftime with units in weeks.")
+        cli_abort("Expected `{arg_name}` to be a difftime with units in weeks or Inf.")
       }
     } else if (time_type == "yearmonth") {
       if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
-        cli_abort("Expected `{arg_name}` to be a non-negative integer.")
+        cli_abort("Expected `{arg_name}` to be a non-negative integer or Inf.")
       }
     } else if (time_type == "integer") {
       if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
-        cli_abort("Expected `{arg_name}` to be a non-negative integer.")
+        cli_abort("Expected `{arg_name}` to be a non-negative integer or Inf.")
       }
     } else {
-      cli_abort("Expected `{arg_name}` to be Inf, an appropriate a difftime, or a non-negative integer.")
+      cli_abort("Expected `{arg_name}` to be an appropriate a difftime, a non-negative integer, or Inf.")
     }
   }
 }

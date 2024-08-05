@@ -173,11 +173,11 @@ test_that("epix_slide `before` validation works", {
   )
   expect_error(
     xx %>% epix_slide(f = ~ sum(.x$binary), before = -1),
-    "Expected `before` to be a difftime with units in days or a non-negative integer."
+    "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
   )
   expect_error(
     xx %>% epix_slide(f = ~ sum(.x$binary), before = 1.5),
-    "Expected `before` to be a difftime with units in days or a non-negative integer."
+    "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
   )
   # These `before` values should be accepted:
   expect_no_error(xx %>% epix_slide(f = ~ sum(.x$binary), before = 0))

@@ -107,23 +107,23 @@ test_that("Test errors/warnings for discouraged features", {
 test_that("Both `before` and `after` must be non-NA, non-negative, integer-compatible", {
   expect_error(
     epi_slide(grouped, f, before = -1L, ref_time_values = test_date + 2L),
-    "Expected `before` to be a difftime with units in days or a non-negative integer."
+    "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
   )
   expect_error(
     epi_slide(grouped, f, after = -1L, ref_time_values = test_date + 2L),
-    "Expected `after` to be a difftime with units in days or a non-negative integer."
+    "Expected `after` to be a difftime with units in days, a non-negative integer, or Inf."
   )
   expect_error(epi_slide(grouped, f, before = "a", after = days_dt, ref_time_values = test_date + 2L),
-    regexp = "Expected `before` to be a difftime with units in days or a non-negative integer."
+    regexp = "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
   )
   expect_error(epi_slide(grouped, f, before = days_dt, after = "a", ref_time_values = test_date + 2L),
-    regexp = "Expected `after` to be a difftime with units in days or a non-negative integer."
+    regexp = "Expected `after` to be a difftime with units in days, a non-negative integer, or Inf."
   )
   expect_error(epi_slide(grouped, f, before = 0.5, after = days_dt, ref_time_values = test_date + 2L),
-    regexp = "Expected `before` to be a difftime with units in days or a non-negative integer."
+    regexp = "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
   )
   expect_error(epi_slide(grouped, f, before = days_dt, after = 0.5, ref_time_values = test_date + 2L),
-    regexp = "Expected `after` to be a difftime with units in days or a non-negative integer."
+    regexp = "Expected `after` to be a difftime with units in days, a non-negative integer, or Inf."
   )
   expect_error(
     epi_slide(grouped, f, before = NA, after = 1L, ref_time_values = test_date + 2L),
@@ -136,27 +136,27 @@ test_that("Both `before` and `after` must be non-NA, non-negative, integer-compa
 
   expect_error(
     epi_slide_mean(grouped, col_names = value, before = -1L, ref_time_values = test_date + 2L),
-    "Expected `before` to be a difftime with units in days or a non-negative integer."
+    "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
   )
   expect_error(
     epi_slide_mean(grouped, col_names = value, after = -1L, ref_time_values = test_date + 2L),
-    "Expected `after` to be a difftime with units in days or a non-negative integer."
+    "Expected `after` to be a difftime with units in days, a non-negative integer, or Inf."
   )
   expect_error(
     epi_slide_mean(grouped, col_names = value, before = "a", ref_time_values = test_date + 2L),
-    regexp = "Expected `before` to be a difftime with units in days or a non-negative integer."
+    regexp = "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
   )
   expect_error(
     epi_slide_mean(grouped, col_names = value, after = "a", ref_time_values = test_date + 2L),
-    regexp = "Expected `after` to be a difftime with units in days or a non-negative integer."
+    regexp = "Expected `after` to be a difftime with units in days, a non-negative integer, or Inf."
   )
   expect_error(
     epi_slide_mean(grouped, col_names = value, before = 0.5, ref_time_values = test_date + 2L),
-    regexp = "Expected `before` to be a difftime with units in days or a non-negative integer."
+    regexp = "Expected `before` to be a difftime with units in days, a non-negative integer, or Inf."
   )
   expect_error(
     epi_slide_mean(grouped, col_names = value, after = 0.5, ref_time_values = test_date + 2L),
-    regexp = "Expected `after` to be a difftime with units in days or a non-negative integer."
+    regexp = "Expected `after` to be a difftime with units in days, a non-negative integer, or Inf."
   )
   expect_error(
     epi_slide_mean(grouped, col_names = value, before = NA, after = days_dt, ref_time_values = test_date + 2L),
@@ -444,7 +444,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
     ) %>%
       epi_slide_mean(
         value,
-        before = 6 * days_dt, names_sep = NULL, na.rm = TRUE
+        before = 6 * days_dt, na.rm = TRUE
       ),
     basic_mean_result %>%
       rename(slide_value_value = slide_value)
