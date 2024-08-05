@@ -177,3 +177,119 @@ test_that("Renaming columns while grouped gives appropriate colnames and metadat
     select(geo_value, time_value, age_group = age, value)
   expect_identical(renamed_gedf1, renamed_gedf2)
 })
+
+test_that("complete.epi_df works", {
+  start_date <- as.Date("2020-01-01")
+  daily_edf <- tibble::tribble(
+    ~geo_value, ~time_value, ~value,
+    1, start_date + 1, 1,
+    1, start_date + 3, 3,
+    2, start_date + 2, 2,
+    2, start_date + 3, 3,
+  ) %>%
+    as_epi_df(as_of = start_date + 3)
+  # Complete without grouping puts all the geo_values on the same min and max
+  # time_value index
+  expect_identical(
+    daily_edf %>%
+      complete(geo_value, time_value = full_seq(time_value, period = 1)),
+    tibble::tribble(
+      ~geo_value, ~time_value, ~value,
+      1, start_date + 1, 1,
+      1, start_date + 2, NA,
+      1, start_date + 3, 3,
+      2, start_date + 1, NA,
+      2, start_date + 2, 2,
+      2, start_date + 3, 3,
+    ) %>%
+      as_epi_df(as_of = start_date + 3)
+  )
+  # Complete with grouping puts all the geo_values on individual min and max
+  # time_value indices
+  expect_identical(
+    daily_edf %>%
+      group_by(geo_value) %>%
+      complete(time_value = full_seq(time_value, period = 1)),
+    tibble::tribble(
+      ~geo_value, ~time_value, ~value,
+      1, start_date + 1, 1,
+      1, start_date + 2, NA,
+      1, start_date + 3, 3,
+      2, start_date + 2, 2,
+      2, start_date + 3, 3,
+    ) %>%
+      as_epi_df(as_of = start_date + 3) %>%
+      group_by(geo_value)
+  )
+  # Complete has explicit=TRUE by default, but if it's FALSE, then complete only fills the implicit gaps
+  # not those that are explicitly NA
+  daily_edf <- tibble::tribble(
+    ~geo_value, ~time_value, ~value,
+    1, start_date + 1, 1,
+    1, start_date + 2, NA,
+    1, start_date + 3, 3,
+    2, start_date + 2, 2,
+    2, start_date + 3, 3,
+  ) %>%
+    as_epi_df(as_of = start_date + 3)
+  expect_identical(
+    daily_edf %>%
+      complete(geo_value, time_value = full_seq(time_value, period = 1), fill = list(value = 0), explicit = FALSE),
+    tibble::tribble(
+      ~geo_value, ~time_value, ~value,
+      1, start_date + 1, 1,
+      1, start_date + 2, NA,
+      1, start_date + 3, 3,
+      2, start_date + 1, 0,
+      2, start_date + 2, 2,
+      2, start_date + 3, 3,
+    ) %>%
+      as_epi_df(as_of = start_date + 3)
+  )
+  # Complete works for weekly data and can take a fill value
+  # No grouping
+  weekly_edf <- tibble::tribble(
+    ~geo_value, ~time_value, ~value,
+    1, start_date + 1, 1,
+    1, start_date + 15, 3,
+    2, start_date + 8, 2,
+    2, start_date + 15, 3,
+  ) %>%
+    as_epi_df(as_of = start_date + 3)
+  expect_identical(
+    weekly_edf %>%
+      complete(geo_value,
+        time_value = full_seq(time_value, period = 7),
+        fill = list(value = 0)
+      ),
+    tibble::tribble(
+      ~geo_value, ~time_value, ~value,
+      1, start_date + 1, 1,
+      1, start_date + 8, 0,
+      1, start_date + 15, 3,
+      2, start_date + 1, 0,
+      2, start_date + 8, 2,
+      2, start_date + 15, 3,
+    ) %>%
+      as_epi_df(as_of = start_date + 3)
+  )
+  # With grouping
+  expect_identical(
+    weekly_edf %>%
+      group_by(geo_value) %>%
+      complete(
+        time_value = full_seq(time_value, period = 7),
+        fill = list(value = 0)
+      ),
+    tibble::tribble(
+      ~geo_value, ~time_value, ~value,
+      1, start_date + 1, 1,
+      1, start_date + 8, 0,
+      1, start_date + 15, 3,
+      2, start_date + 8, 2,
+      2, start_date + 15, 3,
+    ) %>%
+      as_epi_df(as_of = start_date + 3) %>%
+      group_by(geo_value)
+  )
+})
