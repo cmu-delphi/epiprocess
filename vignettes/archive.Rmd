@@ -159,7 +159,7 @@ of the archive in `epi_df` format. This represents the most up-to-date values of
 the signal variables as of a given version.
 
 ```{r}
-x_snapshot <- epix_as_of(x, max_version = as.Date("2021-06-01"))
+x_snapshot <- epix_as_of(x, as.Date("2021-06-01"))
 class(x_snapshot)
 head(x_snapshot)
 max(x_snapshot$time_value)
@@ -183,7 +183,7 @@ theme_set(theme_bw())
 self_max <- max(x$DT$version)
 versions <- seq(as.Date("2020-06-01"), self_max - 1, by = "1 month")
 snapshots <- map_dfr(versions, function(v) {
-  epix_as_of(x, max_version = v) %>% mutate(version = v)
+  epix_as_of(x, v) %>% mutate(version = v)
 }) %>%
   bind_rows(
     x_latest %>% mutate(version = self_max)

@@ -6,26 +6,28 @@
 #' examples.
 #'
 #' @param x An `epi_archive` object
-#' @param max_version Time value specifying the max version to permit in the
+#' @param version Time value specifying the max version to permit in the
 #'   snapshot. That is, the snapshot will comprise the unique rows of the
 #'   current archive data that represent the most up-to-date signal values, as
-#'   of the specified `max_version` (and whose time values are at least
+#'   of the specified `version` (and whose time values are at least
 #'   `min_time_value`.)
 #' @param min_time_value Time value specifying the min time value to permit in
 #'   the snapshot. Default is `-Inf`, which effectively means that there is no
 #'   minimum considered.
 #' @param all_versions If `all_versions = TRUE`, then the output will be in
 #'   `epi_archive` format, and contain rows in the specified `time_value` range
-#'   having `version <= max_version`. The resulting object will cover a
+#'   having `version <= version`. The resulting object will cover a
 #'   potentially narrower `version` and `time_value` range than `x`, depending
 #'   on user-provided arguments. Otherwise, there will be one row in the output
-#'   for the `max_version` of each `time_value`. Default is `FALSE`.
+#'   for the `version` of each `time_value`. Default is `FALSE`.
+#' @param max_version `r lifecycle::badge("deprecated")` please use `version`
+#'   argument instead.
 #' @return An `epi_df` object.
 #'
 #' @examples
 #' epix_as_of(
 #'   archive_cases_dv_subset,
-#'   max_version = max(archive_cases_dv_subset$DT$version)
+#'   version = max(archive_cases_dv_subset$DT$version)
 #' )
 #'
 #' range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
@@ -58,31 +60,37 @@
 #'
 #' @importFrom data.table between key
 #' @export
-epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FALSE) {
+epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
+                       max_version = deprecated()) {
   assert_class(x, "epi_archive")
+
+  if (lifecycle::is_present(max_version)) {
+    lifecycle::deprecate_warn("0.8.1", "epix_as_of(max_version =)", "epix_as_of(version =)")
+    version <- max_version
+  }
 
   other_keys <- setdiff(
     key(x$DT),
     c("geo_value", "time_value", "version")
   )
 
-  # Check a few things on max_version
-  if (!identical(class(max_version), class(x$DT$version))) {
+  # Check a few things on version
+  if (!identical(class(version), class(x$DT$version))) {
     cli_abort(
-      "`max_version` must have the same `class` vector as `epi_archive$DT$version`."
+      "`version` must have the same `class` vector as `epi_archive$DT$version`."
     )
   }
-  if (!identical(typeof(max_version), typeof(x$DT$version))) {
+  if (!identical(typeof(version), typeof(x$DT$version))) {
     cli_abort(
-      "`max_version` must have the same `typeof` as `epi_archive$DT$version`."
+      "`version` must have the same `typeof` as `epi_archive$DT$version`."
     )
   }
-  assert_scalar(max_version, na.ok = FALSE)
-  if (max_version > x$versions_end) {
-    cli_abort("`max_version` must be at most `epi_archive$versions_end`.")
+  assert_scalar(version, na.ok = FALSE)
+  if (version > x$versions_end) {
+    cli_abort("`version` must be at most `epi_archive$versions_end`.")
   }
   assert_logical(all_versions, len = 1)
-  if (!is.na(x$clobberable_versions_start) && max_version >= x$clobberable_versions_start) {
+  if (!is.na(x$clobberable_versions_start) && version >= x$clobberable_versions_start) {
     cli_warn(
       'Getting data as of some recent version which could still be
       overwritten (under routine circumstances) without assigning a new
@@ -96,13 +104,14 @@ epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FAL
   # Filter by version and return
   if (all_versions) {
     # epi_archive is copied into result, so we can modify result directly
-    result <- epix_truncate_versions_after(x, max_version)
+    result <- epix_truncate_versions_after(x, version)
     result$DT <- result$DT[time_value >= min_time_value, ] # nolint: object_usage_linter
     return(result)
   }
 
   # Make sure to use data.table ways of filtering and selecting
-  as_of_epi_df <- x$DT[time_value >= min_time_value & version <= max_version, ] %>% # nolint: object_usage_linter
+  .version <- version # workaround for `i` arg not supporting `..` feature
+  as_of_epi_df <- x$DT[time_value >= min_time_value & version <= .version, ] %>% # nolint: object_usage_linter
     unique(
       by = c("geo_value", "time_value", other_keys),
       fromLast = TRUE
@@ -110,7 +119,7 @@ epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FAL
     tibble::as_tibble() %>%
     dplyr::select(-"version") %>%
     as_epi_df(
-      as_of = max_version,
+      as_of = version,
       other_keys = other_keys
     )
 

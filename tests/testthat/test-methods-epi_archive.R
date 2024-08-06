@@ -25,13 +25,13 @@ test_that("Errors are thrown due to bad epix_as_of inputs", {
 
 test_that("Warning against max_version being clobberable", {
   # none by default
-  expect_warning(regexp = NA, ea %>% epix_as_of(max_version = max(ea$DT$version)))
-  expect_warning(regexp = NA, ea %>% epix_as_of(max_version = min(ea$DT$version)))
+  expect_warning(regexp = NA, ea %>% epix_as_of(max(ea$DT$version)))
+  expect_warning(regexp = NA, ea %>% epix_as_of(min(ea$DT$version)))
   # but with `clobberable_versions_start` non-`NA`, yes
   ea_with_clobberable <- ea
   ea_with_clobberable$clobberable_versions_start <- max(ea_with_clobberable$DT$version)
-  expect_warning(ea_with_clobberable %>% epix_as_of(max_version = max(ea$DT$version)))
-  expect_warning(regexp = NA, ea_with_clobberable %>% epix_as_of(max_version = min(ea$DT$version)))
+  expect_warning(ea_with_clobberable %>% epix_as_of(max(ea$DT$version)))
+  expect_warning(regexp = NA, ea_with_clobberable %>% epix_as_of(min(ea$DT$version)))
 })
 
 test_that("epix_as_of properly grabs the data and doesn't mutate key", {
@@ -43,7 +43,7 @@ test_that("epix_as_of properly grabs the data and doesn't mutate key", {
   old_key <- data.table::key(ea2$DT)
 
   edf_as_of <- ea2 %>%
-    epix_as_of(max_version = as.Date("2020-06-03"))
+    epix_as_of(as.Date("2020-06-03"))
 
   edf_expected <- as_epi_df(tibble(
     geo_value = "ca",
