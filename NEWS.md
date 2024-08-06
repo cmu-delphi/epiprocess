@@ -9,6 +9,12 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - Added `complete.epi_df`, which fills in missing values in an `epi_df` with
   `NA`s. Uses `tidyr::complete` underneath and preserves `epi_df` metadata.
 
+## Bug fixes
+
+- Fix `epi_slide_opt` (and related functions) to correctly handle `before=Inf`.
+- Disallow `after=Inf` in slide functions, since it doesn't seem like a likely
+  use case and complicates code.
+
 # epiprocess 0.8
 
 ## Breaking changes

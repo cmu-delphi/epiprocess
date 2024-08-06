@@ -803,14 +803,13 @@ guess_period.POSIXt <- function(time_values, time_values_arg = rlang::caller_arg
   as.numeric(NextMethod(), units = "secs")
 }
 
-
-validate_slide_window_arg <- function(arg, time_type, arg_name = rlang::caller_arg(arg)) {
+validate_slide_window_arg <- function(arg, time_type, allow_inf = TRUE, arg_name = rlang::caller_arg(arg)) {
   if (is.null(arg)) {
-    cli_abort("`{arg_name}` is a required argument.")
+    cli_abort("`{arg_name}` is a required argument for slide functions.")
   }
 
   if (!checkmate::test_scalar(arg)) {
-    cli_abort("Expected `{arg_name}` to be a scalar value.")
+    cli_abort("Slide function expected `{arg_name}` to be a scalar value.")
   }
 
   if (time_type == "custom") {
@@ -818,25 +817,33 @@ validate_slide_window_arg <- function(arg, time_type, arg_name = rlang::caller_a
     column to a Date, yearmonth, or integer type.")
   }
 
+  msg <- ""
   if (!identical(arg, Inf)) {
     if (time_type == "day") {
       if (!test_int(arg, lower = 0L) && !(inherits(arg, "difftime") && units(arg) == "days")) {
-        cli_abort("Expected `{arg_name}` to be a difftime with units in days or a non-negative integer.")
+        msg <- glue::glue_collapse(c("difftime with units in days", "non-negative integer", "Inf"), " or ")
       }
     } else if (time_type == "week") {
       if (!(inherits(arg, "difftime") && units(arg) == "weeks")) {
-        cli_abort("Expected `{arg_name}` to be a difftime with units in weeks.")
+        msg <- glue::glue_collapse(c("difftime with units in weeks", "Inf"), " or ")
       }
     } else if (time_type == "yearmonth") {
       if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
-        cli_abort("Expected `{arg_name}` to be a non-negative integer.")
+        msg <- glue::glue_collapse(c("non-negative integer", "Inf"), " or ")
       }
     } else if (time_type == "integer") {
       if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
-        cli_abort("Expected `{arg_name}` to be a non-negative integer.")
+        msg <- glue::glue_collapse(c("non-negative integer", "Inf"), " or ")
       }
     } else {
-      cli_abort("Expected `{arg_name}` to be Inf, an appropriate a difftime, or a non-negative integer.")
+      msg <- glue::glue_collapse(c("difftime", "non-negative integer", "Inf"), " or ")
     }
+  } else {
+    if (!allow_inf) {
+      msg <- glue::glue_collapse(c("a difftime", "a non-negative integer"), " or ")
+    }
+  }
+  if (msg != "") {
+    cli_abort("Slide function expected `{arg_name}` to be a {msg}.")
   }
 }
