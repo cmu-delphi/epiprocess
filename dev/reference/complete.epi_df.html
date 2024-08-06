@@ -11,7 +11,7 @@ the examples for usage details."><meta name="robots" content="noindex"></head><b
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.8.1</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.8.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -142,7 +142,12 @@ the examples for usage details.</p>
 <span class="r-in"><span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="epi_df.html">as_epi_df</a></span><span class="op">(</span>as_of <span class="op">=</span> <span class="va">start_date</span> <span class="op">+</span> <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">daily_edf</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/complete.html" class="external-link">complete</a></span><span class="op">(</span><span class="va">geo_value</span>, time_value <span class="op">=</span> <span class="fu"><a href="https://tidyr.tidyverse.org/reference/full_seq.html" class="external-link">full_seq</a></span><span class="op">(</span><span class="va">time_value</span>, period <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>value <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>, explicit <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/complete.html" class="external-link">complete</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="va">geo_value</span>,</span></span>
+<span class="r-in"><span>    time_value <span class="op">=</span> <span class="fu"><a href="https://tidyr.tidyverse.org/reference/full_seq.html" class="external-link">full_seq</a></span><span class="op">(</span><span class="va">time_value</span>, period <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>value <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    explicit <span class="op">=</span> <span class="cn">FALSE</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 6 x 3 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = hhs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
