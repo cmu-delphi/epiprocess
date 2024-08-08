@@ -3,11 +3,3 @@
 # `epi_df`s. It would be nice if there were a way to replace these with a
 # generic core that automatically fixed all misbehaving methods; see
 # brainstorming within Issue #223.
-
-#' @importFrom dplyr select
-#' @export
-select.epi_df <- function(.data, ...) {
-  selected <- NextMethod(.data)
-  might_decay <- reclass(selected, attr(selected, "metadata"))
-  return(dplyr_reconstruct(might_decay, might_decay))
-}
