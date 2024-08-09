@@ -408,13 +408,19 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
   }
   if (!is.null(new_col_name)) {
     cli_abort(
-      "`new_col_name` is not supported for `epi_slide_[opt/mean/sum]`",
+      c(
+        "`new_col_name` is not supported for `epi_slide_[opt/mean/sum]`",
+        "i" = "If you want to customize the output column names, use [`dplyr::rename`] after the slide."
+      ),
       class = "epiprocess__epi_slide_opt__new_name_not_supported"
     )
   }
   if (!is.null(names_sep)) {
     cli_abort(
-      "`names_sep` is not supported for `epi_slide_[opt/mean/sum]`",
+      c(
+        "`names_sep` is not supported for `epi_slide_[opt/mean/sum]`",
+        "i" = "If you want to customize the output column names, use [`dplyr::rename`] after the slide."
+      ),
       class = "epiprocess__epi_slide_opt__name_sep_not_supported"
     )
   }

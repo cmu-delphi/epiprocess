@@ -90,17 +90,11 @@ element of this vector serves as the reference time point for one sliding
 window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.}
 
-\item{new_col_name}{Character vector indicating the name(s) of the new
-column(s) that will contain the derivative values. Default
-is "slide_value"; note that setting \code{new_col_name} equal to any existing
-column names will overwrite those columns. If \code{names_sep} is \code{NULL},
-\code{new_col_name} must be the same length as \code{col_names}.}
+\item{new_col_name}{Not supported. Included to match \code{epi_slide} interface.}
 
 \item{as_list_col}{Not supported. Included to match \code{epi_slide} interface.}
 
-\item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
-when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
-from \code{new_col_name} entirely.}
+\item{names_sep}{Not supported. Included to match \code{epi_slide} interface.}
 
 \item{all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
 the output even with \code{ref_time_values} provided, with some type of missing
