@@ -434,7 +434,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
     ),
     basic_full_result %>%
       dplyr::mutate(slide_value = dplyr::if_else(time_value %in% (test_date + c(2L, 8L)),
-        slide_value, NA_integer_
+        slide_value, NA_real_ # (`^` outputs numeric)
       ))
   )
 
@@ -472,7 +472,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
       ),
     basic_mean_result %>%
       dplyr::mutate(slide_value_value = dplyr::if_else(time_value %in% (test_date + c(2L, 8L)),
-        slide_value, NA_integer_
+        slide_value, NA_real_
       )) %>%
       select(-slide_value)
   )
@@ -498,7 +498,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
     ),
     basic_full_result %>%
       dplyr::mutate(slide_value = dplyr::if_else(time_value %in% (test_date + c(2L, 8L)),
-        slide_value, NA_integer_
+        slide_value, NA_real_
       )) %>%
       dplyr::rename(slide_value_value = slide_value)
   )
@@ -584,7 +584,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
       unnest(slide_value, names_sep = "_"),
     basic_full_result %>%
       dplyr::mutate(slide_value = dplyr::if_else(time_value %in% (test_date + c(2L, 8L)),
-        slide_value, NA_integer_
+        slide_value, NA_real_
       )) %>%
       dplyr::rename(slide_value_value = slide_value)
   )

@@ -173,9 +173,28 @@ test_that("Renaming columns while grouped gives appropriate colnames and metadat
   expect_identical(attr(renamed_gedf1, "metadata")$other_keys, c("age_group"))
   # renaming using select
   renamed_gedf2 <- gedf %>%
-    as_epi_df(additional_metadata = list(other_keys = "age")) %>%
     select(geo_value, time_value, age_group = age, value)
   expect_identical(renamed_gedf1, renamed_gedf2)
+})
+
+test_that("Additional `select` on `epi_df` tests", {
+  edf <- tibble::tibble(geo_value = "ak", time_value = as.Date("2020-01-01"), age = 1, value = 1) %>%
+    as_epi_df(additional_metadata = list(other_keys = "age"))
+
+  # Dropping a non-geo_value epikey column doesn't decay, though maybe it
+  # should, since you'd expect that to possibly result in multiple rows per
+  # epikey (though not in this toy case), and while we don't require that, we
+  # sort of expect it:
+  edf_not_decayed <- edf %>%
+    select(geo_value, time_value, value)
+  expect_class(edf_not_decayed, "epi_df")
+  expect_identical(attr(edf_not_decayed, "metadata")$other_keys, character(0L))
+
+  # Dropping geo_value does decay:
+  edf_decayed <- edf %>%
+    select(age, time_value, value)
+  expect_false(inherits(edf_decayed, "epi_df"))
+  expect_identical(attr(edf_decayed, "metadata"), NULL)
 })
 
 test_that("complete.epi_df works", {

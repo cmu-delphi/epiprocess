@@ -29,7 +29,7 @@ Imports:
     checkmate,
     cli,
     data.table,
-    dplyr (>= 1.0.0),
+    dplyr (>= 1.0.8),
     genlasso,
     ggplot2,
     glue,
