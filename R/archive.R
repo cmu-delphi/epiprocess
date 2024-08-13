@@ -179,7 +179,8 @@ NULL
 #'
 #' * `geo_type`: the type for the geo values.
 #' * `time_type`: the type for the time values.
-#' * `additional_metadata`: list of additional metadata for the data archive.
+#' * `other_keys`: any additional keys as a character vector.
+#'    Typical examples are "age" or sub-geographies.
 #'
 #' While this metadata is not protected, it is generally recommended to treat it
 #'  as read-only, and to use the `epi_archive` methods to interact with the data
@@ -209,7 +210,8 @@ NULL
 #' if the time type is not recognized.
 #' @param other_keys Character vector specifying the names of variables in `x`
 #'   that should be considered key variables (in the language of `data.table`)
-#'   apart from "geo_value", "time_value", and "version".
+#'   apart from "geo_value", "time_value", and "version". Typical examples
+#'   are "age" or more granular geographies.
 #' @param additional_metadata List of additional metadata to attach to the
 #'   `epi_archive` object. The metadata will have the `geo_type` field; named
 #'   entries from the passed list or will be included as well.
@@ -345,16 +347,18 @@ new_epi_archive <- function(
     rlang::warn(warning_message, class = "epiprocess__compactify_default_removed_rows")
   }
 
+  assert_character(subclass)
   structure(
     list(
       DT = compactified,
       geo_type = geo_type,
       time_type = time_type,
+      other_keys = other_keys,
       additional_metadata = additional_metadata,
       clobberable_versions_start = clobberable_versions_start,
       versions_end = versions_end
     ),
-    class = "epi_archive"
+    class = c(subclass, "epi_archive")
   )
 }
 

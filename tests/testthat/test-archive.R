@@ -176,7 +176,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
     cases = 1:20,
     misc = "USA"
   ) %>%
-    as_epi_df(additional_metadata = list(other_keys = "misc"))
+    as_epi_df(other_keys = "misc")
 
   ea11 <- as_epi_archive(edf2, compactify = FALSE)
   expect_equal(key(ea11$DT), c("geo_value", "time_value", "version"))

@@ -112,11 +112,11 @@ epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FAL
     dplyr::select(-"version") %>%
     as_epi_df(
       as_of = max_version,
-      additional_metadata = c(
-        x$additional_metadata,
-        list(other_keys = other_keys)
-      )
+      other_keys = other_keys
     )
+  if (length(x$additional_metadata) != 0L) {
+    attr(as_of_epi_df, "additional_metadata") <- x$additional_metadata
+  }
 
   return(as_of_epi_df)
 }
