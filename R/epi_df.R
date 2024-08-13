@@ -127,7 +127,7 @@
 #'   dplyr::rename(geo_value = state, time_value = reported_date) %>%
 #'   as_epi_df(
 #'     as_of = "2020-06-03",
-#'     additional_metadata = list(other_keys = "pol")
+#'     other_keys = "pol"
 #'   )
 #'
 #' attr(ex2, "metadata")
@@ -165,7 +165,7 @@ NULL
 #'   data available as of January 31, 2022. If the `as_of` argument is missing,
 #'   then the current day-time will be used.
 #' @param other_keys If your tibble has additional keys, be sure to specify them as a
-#'   character vector here.
+#'   character vector here (typical examples are "age" or sub-geographies).
 #' @param ... Additional arguments passed to methods.
 #' @param subclass additional class, will be prepended to the `epi_df` class
 #' @return An `epi_df` object.
@@ -286,7 +286,7 @@ as_epi_df.data.frame <- function(x, as_of, other_keys = character(), ...) {
 #' @rdname epi_df
 #' @export
 as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(), ...) {
-  tsibble_other_keys <- setdiff(tsibble::key_vars(x), "geo_value"))
+  tsibble_other_keys <- setdiff(tsibble::key_vars(x), "geo_value")
   if (length(tsibble_other_keys) != 0) {
     other_keys <- unique(c(other_keys, tsibble_other_keys))
   }

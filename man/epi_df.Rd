@@ -15,7 +15,9 @@ new_epi_df(
   geo_type,
   time_type,
   as_of,
-  additional_metadata = list()
+  other_keys = character(0L),
+  ...,
+  subclass = character(0L)
 )
 
 as_epi_df(x, ...)
@@ -27,13 +29,13 @@ as_epi_df(x, ...)
   geo_type = deprecated(),
   time_type = deprecated(),
   as_of,
-  additional_metadata = list(),
+  other_keys = character(),
   ...
 )
 
-\method{as_epi_df}{data.frame}(x, as_of, additional_metadata = list(), ...)
+\method{as_epi_df}{data.frame}(x, as_of, other_keys = character(), ...)
 
-\method{as_epi_df}{tbl_ts}(x, as_of, additional_metadata = list(), ...)
+\method{as_epi_df}{tbl_ts}(x, as_of, other_keys = character(), ...)
 }
 \arguments{
 \item{x}{An \code{epi_df}, \code{data.frame}, \link[tibble:tibble]{tibble::tibble}, or \link[tsibble:tsibble]{tsibble::tsibble}
@@ -52,14 +54,13 @@ object that is created would represent the most up-to-date version of the
 data available as of January 31, 2022. If the \code{as_of} argument is missing,
 then the current day-time will be used.}
 
-\item{additional_metadata}{List of additional metadata to attach to the
-\code{epi_df} object. The metadata will have \code{geo_type}, \code{time_type}, and
-\code{as_of} fields; named entries from the passed list will be included as
-well. If your tibble has additional keys, be sure to specify them as a
-character vector in the \code{other_keys} component of \code{additional_metadata}.}
+\item{other_keys}{If your tibble has additional keys, be sure to specify them as a
+character vector here (typical examples are "age" or sub-geographies).}
 
 \item{...}{used for specifying column names, as in \code{\link[dplyr:rename]{dplyr::rename}}. For
 example, \verb{geo_value = STATEFP, time_value = end_date}.}
+
+\item{subclass}{additional class, will be prepended to the \code{epi_df} class}
 }
 \value{
 An \code{epi_df} object.
@@ -200,7 +201,7 @@ ex2 <- ex2_input \%>\%
   dplyr::rename(geo_value = state, time_value = reported_date) \%>\%
   as_epi_df(
     as_of = "2020-06-03",
-    additional_metadata = list(other_keys = "pol")
+    other_keys = "pol"
   )
 
 attr(ex2, "metadata")
@@ -219,9 +220,7 @@ ex3 <- ex3_input \%>\%
     state = rep("MA", 6),
     pol = rep(c("blue", "swing", "swing"), each = 2)
   ) \%>\%
-  # the 2 extra keys we added have to be specified in the other_keys
-  # component of additional_metadata.
-  as_epi_df(additional_metadata = list(other_keys = c("state", "pol")))
+  as_epi_df(other_keys = c("state", "pol"))
 
 attr(ex3, "metadata")
 }
