@@ -303,11 +303,18 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 #' ) %>%
 #'   as_epi_df(as_of = start_date + 3)
 #' weekly_edf %>%
-#'   complete(geo_value, time_value = full_seq(time_value, period = 7), fill = list(value = 0))
+#'   complete(
+#'     geo_value,
+#'     time_value = full_seq(time_value, period = 7),
+#'     fill = list(value = 0)
+#'   )
 #' # With grouping
 #' weekly_edf %>%
 #'   group_by(geo_value) %>%
-#'   complete(time_value = full_seq(time_value, period = 7), fill = list(value = 0))
+#'   complete(
+#'     time_value = full_seq(time_value, period = 7),
+#'     fill = list(value = 0)
+#'   )
 #' @export
 complete.epi_df <- function(data, ..., fill = list(), explicit = TRUE) {
   result <- dplyr::dplyr_reconstruct(NextMethod(), data)
@@ -333,6 +340,7 @@ reclass <- function(x, metadata) {
 }
 
 #' @keywords internal
+#' @noRd
 #' @export
 arrange_canonical <- function(x, ...) {
   UseMethod("arrange_canonical")

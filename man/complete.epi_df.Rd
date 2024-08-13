@@ -68,9 +68,16 @@ weekly_edf <- tibble::tribble(
 ) \%>\%
   as_epi_df(as_of = start_date + 3)
 weekly_edf \%>\%
-  complete(geo_value, time_value = full_seq(time_value, period = 7), fill = list(value = 0))
+  complete(
+    geo_value,
+    time_value = full_seq(time_value, period = 7),
+    fill = list(value = 0)
+  )
 # With grouping
 weekly_edf \%>\%
   group_by(geo_value) \%>\%
-  complete(time_value = full_seq(time_value, period = 7), fill = list(value = 0))
+  complete(
+    time_value = full_seq(time_value, period = 7),
+    fill = list(value = 0)
+  )
 }
