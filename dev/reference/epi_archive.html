@@ -13,7 +13,7 @@ interest."><meta name="robots" content="noindex"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.8.2</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.8.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,7 +68,8 @@ interest.</p>
 <span>  <span class="va">additional_metadata</span>,</span>
 <span>  <span class="va">compactify</span>,</span>
 <span>  <span class="va">clobberable_versions_start</span>,</span>
-<span>  <span class="va">versions_end</span></span>
+<span>  <span class="va">versions_end</span>,</span>
+<span>  compactify_tol <span class="op">=</span> <span class="va">.Machine</span><span class="op">$</span><span class="va">double.eps</span><span class="op">^</span><span class="fl">0.5</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">validate_epi_archive</span><span class="op">(</span></span>
@@ -160,6 +161,10 @@ beyond <code>max(x$version)</code>, but they all contained empty updates. (The d
 value of <code>clobberable_versions_start</code> does not fully trust these empty
 updates, and assumes that any version <code>&gt;= max(x$version)</code> could be
 clobbered.) If <code>nrow(x) == 0</code>, then this argument is mandatory.</p></dd>
+
+
+<dt id="arg-compactify-tol">compactify_tol<a class="anchor" aria-label="anchor" href="#arg-compactify-tol"></a></dt>
+<dd><p>double. the tolerance used to detect approximate equality for compactification</p></dd>
 
 
 <dt id="arg--versions-end">.versions_end<a class="anchor" aria-label="anchor" href="#arg--versions-end"></a></dt>
