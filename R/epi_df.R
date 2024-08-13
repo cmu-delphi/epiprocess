@@ -225,7 +225,7 @@ as_epi_df.tbl_df <- function(
     geo_type = deprecated(),
     time_type = deprecated(),
     as_of,
-    other_keys = character(),
+    other_keys = NULL,
     ...) {
   # possible standard substitutions for time_value
   x <- rename(x, ...)
@@ -271,21 +271,21 @@ as_epi_df.tbl_df <- function(
     } # Use the current day-time
   }
 
-  assert_character(other_keys)
+  assert_character(other_keys, null.ok = TRUE)
   new_epi_df(x, geo_type, time_type, as_of, other_keys)
 }
 
 #' @method as_epi_df data.frame
 #' @rdname epi_df
 #' @export
-as_epi_df.data.frame <- function(x, as_of, other_keys = character(), ...) {
+as_epi_df.data.frame <- function(x, as_of, other_keys = NULL, ...) {
   as_epi_df.tbl_df(x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys, ...)
 }
 
 #' @method as_epi_df tbl_ts
 #' @rdname epi_df
 #' @export
-as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(), ...) {
+as_epi_df.tbl_ts <- function(x, as_of, other_keys = NULL, ...) {
   tsibble_other_keys <- setdiff(tsibble::key_vars(x), "geo_value")
   if (length(tsibble_other_keys) != 0) {
     other_keys <- unique(c(other_keys, tsibble_other_keys))

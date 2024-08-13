@@ -24,6 +24,7 @@ test_that("new_epi_df works as intended", {
 })
 
 test_that("as_epi_df errors when additional_metadata is not a list", {
+  skip("additional_metadata is no longer an argument, not tested")
   # This is the 3rd example from as_epi_df
   ex_input <- jhu_csse_county_level_subset %>%
     dplyr::filter(time_value > "2021-12-01", state_name == "Massachusetts") %>%
@@ -38,6 +39,23 @@ test_that("as_epi_df errors when additional_metadata is not a list", {
     as_epi_df(ex_input, additional_metadata = c(other_keys = "state", "pol")),
     "Must be of type 'list', not 'character'."
   )
+})
+
+test_that("as_epi_df errors for non-character other_keys",{
+  ex_input <- jhu_csse_county_level_subset %>%
+    dplyr::filter(time_value > "2021-12-01", state_name == "Massachusetts") %>%
+    dplyr::slice_tail(n = 6) %>%
+    tsibble::as_tsibble() %>%
+    dplyr::mutate(
+      state = rep("MA", 6),
+      pol = rep(c("blue", "swing", "swing"), each = 2)
+    )
+  
+  expect_error(
+    as_epi_df(ex_input, other_keys = list()),
+    "Must be of type 'character'"
+  )
+  expect_silent(as_epi_df(ex_input, other_keys = c("state", "pol")))
 })
 
 test_that("as_epi_df works for nonstandard input", {
@@ -81,7 +99,7 @@ tib <- tibble::tibble(
   time_value = rep(seq(as.Date("2020-01-01"), by = 1, length.out = 5), times = 2),
   geo_value = rep(c("ca", "hi"), each = 5)
 )
-epi_tib <- epiprocess::as_epi_df(tib)
+epi_tib <- as_epi_df(tib)
 test_that("grouped epi_df maintains type for select", {
   grouped_epi <- epi_tib %>% group_by(geo_value)
   selected_df <- grouped_epi %>% select(-y)
@@ -108,9 +126,7 @@ test_that("grouped epi_df handles extra keys correctly", {
     geo_value = rep(c("ca", "hi"), each = 5),
     extra_key = rep(seq(as.Date("2020-01-01"), by = 1, length.out = 5), times = 2)
   )
-  epi_tib <- epiprocess::as_epi_df(tib,
-    additional_metadata = list(other_keys = "extra_key")
-  )
+  epi_tib <- as_epi_df(tib, other_keys = "extra_key")
   grouped_epi <- epi_tib %>% group_by(geo_value)
   selected_df <- grouped_epi %>% select(-extra_key)
   expect_true(inherits(selected_df, "epi_df"))

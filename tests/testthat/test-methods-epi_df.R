@@ -10,8 +10,7 @@ toy_epi_df <- tibble::tibble(
   indic_var1 = as.factor(rep(1:2, times = 5)),
   indic_var2 = as.factor(rep(letters[1:5], times = 2))
 ) %>% as_epi_df(
-  additional_metadata =
-    list(other_keys = c("indic_var1", "indic_var2"))
+  other_keys = c("indic_var1", "indic_var2")
 )
 
 att_toy <- attr(toy_epi_df, "metadata")
@@ -79,12 +78,12 @@ test_that("Subsetting drops & does not drop the epi_df class appropriately", {
   expect_identical(att_row_col_subset2$geo_type, att_toy$geo_type)
   expect_identical(att_row_col_subset2$time_type, att_toy$time_type)
   expect_identical(att_row_col_subset2$as_of, att_toy$as_of)
-  expect_identical(att_row_col_subset2$other_keys, character(0))
+  expect_identical(att_row_col_subset2$other_keys, att_toy$other_keys[1])
 })
 
 test_that("When duplicate cols in subset should abort", {
   expect_error(toy_epi_df[, c(2, 2:3, 4, 4, 4)],
-    "Duplicated column names: time_value, y",
+    "Duplicated column names: time_value, indic_var2", 
     fixed = TRUE
   )
   expect_error(toy_epi_df[1:4, c(1, 2:4, 1)],
