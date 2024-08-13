@@ -8,6 +8,7 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 - Added `complete.epi_df`, which fills in missing values in an `epi_df` with
   `NA`s. Uses `tidyr::complete` underneath and preserves `epi_df` metadata.
+- Inclusion of the function `revision_summary` to provide basic revision information for `epi_archive`s out of the box. (#492)
 
 ## Bug fixes
 
