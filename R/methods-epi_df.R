@@ -331,3 +331,26 @@ reclass <- function(x, metadata) {
   attributes(x)$metadata <- metadata
   return(x)
 }
+
+#' @keywords internal
+#' @export
+arrange_canonical <- function(x, ...) {
+  UseMethod("arrange_canonical")
+}
+
+#' @export
+arrange_canonical.default <- function(x, ...) {
+  cli::cli_warn(c(
+    "`arrange_canonical()` is only meaningful for an {.cls epi_df}.",
+    i = "Returning the original {.cls {class(x)[1]}} object."
+  ))
+  return(x)
+}
+
+#' @export
+arrange_canonical.epi_df <- function(x, ...) {
+  keys <- key_colnames(x)
+  x %>%
+    dplyr::relocate(dplyr::all_of(keys), .before = 1) %>%
+    dplyr::arrange(dplyr::across(dplyr::all_of(keys)))
+}
