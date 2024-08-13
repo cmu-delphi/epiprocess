@@ -5,7 +5,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 # epiprocess 0.9
 
 ## Breaking changes
-- In `epi[x]_slide`:
+
+- In `epi[x]_slide`
   - `names_sep` is deprecated, and if you return data frames from your
     computations, they will no longer be unpacked into separate columns with
     name prefixes; instead:
@@ -15,6 +16,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
       packed data.frame-class column (see `tidyr::pack`).
   - `as_list_col` is deprecated; you can now directly return a list from your
     slide computations instead.
+- `additional_metadata` is no longer used in `as_epi_df()` construction.
+  `other_keys` is promoted to be an argument directly.
 
 ## Improvements
 
@@ -87,8 +90,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   - Multiple "data-masking" tidy evaluation expressions can be passed in via
     `...`, rather than just one.
   - Additional tidy evaluation features from `dplyr::mutate` are supported: `!!
-    name_var := value`, unnamed expressions evaluating to data frames, and `=
-    NULL`; see `?epi_slide` for more details.
+name_var := value`, unnamed expressions evaluating to data frames, and `=
+NULL`; see `?epi_slide` for more details.
 
 ## Cleanup
 
