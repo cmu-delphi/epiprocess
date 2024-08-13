@@ -41,7 +41,7 @@ test_that("as_epi_df errors when additional_metadata is not a list", {
   )
 })
 
-test_that("as_epi_df errors for non-character other_keys",{
+test_that("as_epi_df errors for non-character other_keys", {
   ex_input <- jhu_csse_county_level_subset %>%
     dplyr::filter(time_value > "2021-12-01", state_name == "Massachusetts") %>%
     dplyr::slice_tail(n = 6) %>%
@@ -50,7 +50,7 @@ test_that("as_epi_df errors for non-character other_keys",{
       state = rep("MA", 6),
       pol = rep(c("blue", "swing", "swing"), each = 2)
     )
-  
+
   expect_error(
     as_epi_df(ex_input, other_keys = list()),
     "Must be of type 'character'"

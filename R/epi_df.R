@@ -172,8 +172,7 @@ NULL
 #'
 #' @export
 new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
-                       other_keys = character(0L), ..., subclass = character(0L)
-                       ) {
+                       other_keys = character(0L), ..., subclass = character(0L)) {
   # Define metadata fields
   metadata <- list()
   metadata$geo_type <- geo_type

@@ -83,7 +83,7 @@ test_that("Subsetting drops & does not drop the epi_df class appropriately", {
 
 test_that("When duplicate cols in subset should abort", {
   expect_error(toy_epi_df[, c(2, 2:3, 4, 4, 4)],
-    "Duplicated column names: time_value, indic_var2", 
+    "Duplicated column names: time_value, indic_var2",
     fixed = TRUE
   )
   expect_error(toy_epi_df[1:4, c(1, 2:4, 1)],
