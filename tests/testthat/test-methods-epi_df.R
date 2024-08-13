@@ -94,7 +94,7 @@ test_that("When duplicate cols in subset should abort", {
 
 test_that("Correct metadata when subset includes some of other_keys", {
   # Only include other_var of indic_var1
-  only_indic_var1 <- toy_epi_df[, 1:5]
+  only_indic_var1 <- toy_epi_df[, c(1:3, 5:6)]
   att_only_indic_var1 <- attr(only_indic_var1, "metadata")
 
   expect_true(is_epi_df(only_indic_var1))
@@ -106,7 +106,7 @@ test_that("Correct metadata when subset includes some of other_keys", {
   expect_identical(att_only_indic_var1$other_keys, att_toy$other_keys[-2])
 
   # Only include other_var of indic_var2
-  only_indic_var2 <- toy_epi_df[, c(1:4, 6)]
+  only_indic_var2 <- toy_epi_df[, c(1:2, 4:6)]
   att_only_indic_var2 <- attr(only_indic_var2, "metadata")
 
   expect_true(is_epi_df(only_indic_var2))
@@ -141,7 +141,7 @@ test_that("Grouping are dropped by `as_tibble`", {
 
 test_that("Renaming columns gives appropriate colnames and metadata", {
   edf <- tibble::tibble(geo_value = "ak", time_value = as.Date("2020-01-01"), age = 1, value = 1) %>%
-    as_epi_df(additional_metadata = list(other_keys = "age"))
+    as_epi_df(other_keys = "age")
   # renaming using base R
   renamed_edf1 <- edf %>%
     `[`(c("geo_value", "time_value", "age", "value")) %>%
@@ -157,7 +157,7 @@ test_that("Renaming columns gives appropriate colnames and metadata", {
 
 test_that("Renaming columns while grouped gives appropriate colnames and metadata", {
   gedf <- tibble::tibble(geo_value = "ak", time_value = as.Date("2020-01-01"), age = 1, value = 1) %>%
-    as_epi_df(additional_metadata = list(other_keys = "age")) %>%
+    as_epi_df(other_keys = "age") %>%
     group_by(geo_value)
   # renaming using base R
   renamed_gedf1 <- gedf %>%
@@ -177,7 +177,7 @@ test_that("Renaming columns while grouped gives appropriate colnames and metadat
 
 test_that("Additional `select` on `epi_df` tests", {
   edf <- tibble::tibble(geo_value = "ak", time_value = as.Date("2020-01-01"), age = 1, value = 1) %>%
-    as_epi_df(additional_metadata = list(other_keys = "age"))
+    as_epi_df(other_keys = "age")
 
   # Dropping a non-geo_value epikey column doesn't decay, though maybe it
   # should, since you'd expect that to possibly result in multiple rows per
