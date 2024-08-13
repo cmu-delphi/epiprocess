@@ -39,8 +39,8 @@ daily_edf \%>\%
 daily_edf \%>\%
   group_by(geo_value) \%>\%
   complete(time_value = full_seq(time_value, period = 1))
-# Complete has explicit=TRUE by default, but if it's FALSE, then complete only fills the implicit gaps
-# not those that are explicitly NA
+# Complete has explicit=TRUE by default, but if it's FALSE, then complete
+# only fills the implicit gaps, not those that are explicitly NA
 daily_edf <- tibble::tribble(
   ~geo_value, ~time_value, ~value,
   1, start_date + 1, 1,

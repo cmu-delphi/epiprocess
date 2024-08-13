@@ -274,8 +274,8 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 #' daily_edf %>%
 #'   group_by(geo_value) %>%
 #'   complete(time_value = full_seq(time_value, period = 1))
-#' # Complete has explicit=TRUE by default, but if it's FALSE, then complete only fills the implicit gaps
-#' # not those that are explicitly NA
+#' # Complete has explicit=TRUE by default, but if it's FALSE, then complete
+#' # only fills the implicit gaps, not those that are explicitly NA
 #' daily_edf <- tibble::tribble(
 #'   ~geo_value, ~time_value, ~value,
 #'   1, start_date + 1, 1,
@@ -339,8 +339,16 @@ reclass <- function(x, metadata) {
   return(x)
 }
 
+#' Arrange an epi_df into a standard order
+#' 
+#' Moves `key_colnames()` to the left, then arranges rows based on that
+#' ordering. This function is mainly for use in tests and so that 
+#' other function output will be in predictable order, where necessary.
+#' 
+#' @param x an `epi_df`. Other objects will produce a warning and return as is.
+#' @param ... not used
+#'
 #' @keywords internal
-#' @noRd
 #' @export
 arrange_canonical <- function(x, ...) {
   UseMethod("arrange_canonical")
@@ -348,6 +356,7 @@ arrange_canonical <- function(x, ...) {
 
 #' @export
 arrange_canonical.default <- function(x, ...) {
+  rlang::check_dots_empty()
   cli::cli_warn(c(
     "`arrange_canonical()` is only meaningful for an {.cls epi_df}.",
     i = "Returning the original {.cls {class(x)[1]}} object."
@@ -357,6 +366,7 @@ arrange_canonical.default <- function(x, ...) {
 
 #' @export
 arrange_canonical.epi_df <- function(x, ...) {
+  rlang::check_dots_empty()
   keys <- key_colnames(x)
   x %>%
     dplyr::relocate(dplyr::all_of(keys), .before = 1) %>%
