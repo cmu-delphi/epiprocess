@@ -340,11 +340,11 @@ reclass <- function(x, metadata) {
 }
 
 #' Arrange an epi_df into a standard order
-#' 
+#'
 #' Moves `key_colnames()` to the left, then arranges rows based on that
-#' ordering. This function is mainly for use in tests and so that 
+#' ordering. This function is mainly for use in tests and so that
 #' other function output will be in predictable order, where necessary.
-#' 
+#'
 #' @param x an `epi_df`. Other objects will produce a warning and return as is.
 #' @param ... not used
 #'
