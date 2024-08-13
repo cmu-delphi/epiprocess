@@ -234,7 +234,7 @@ ex2 <- ex2 %>%
   rename(geo_value = state, time_value = reported_date) %>%
   as_epi_df(
     as_of = "2020-06-03",
-    additional_metadata = list(other_keys = "pol")
+    other_keys = "pol"
   )
 
 attr(ex2, "metadata")
@@ -264,12 +264,12 @@ ex3 <- ex3 %>%
     state = rep(tolower("MA"), 6),
     pol = rep(c("blue", "swing", "swing"), each = 2)
   ) %>%
-  as_epi_df(additional_metadata = list(other_keys = c("state", "pol")), as_of = as.Date("2024-03-20"))
+  as_epi_df(other_keys = c("state", "pol"), as_of = as.Date("2024-03-20"))
 
 attr(ex3, "metadata")
 ```
 
-Note that the two additional keys we added, `state` and `pol`, are specified as a character vector in the `other_keys` component of the `additional_metadata` list. They must be specified in this manner so that downstream actions on the `epi_df`, like model fitting and prediction, can recognize and use these keys.
+Note that the two additional keys we added, `state` and `pol`, are specified as a character vector in the `other_keys` argument. They must be specified in this manner so that downstream actions on the `epi_df`, like model fitting and prediction, can recognize and use these keys.
 
 Currently `other_keys` metadata in `epi_df` doesn't impact `epi_slide()`, contrary to `other_keys` in `as_epi_archive` which affects how the update data is interpreted.
 
