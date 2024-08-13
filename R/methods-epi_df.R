@@ -90,7 +90,7 @@ print.epi_df <- function(x, ...) {
 summary.epi_df <- function(object, ...) {
   cat("An `epi_df` x, with metadata:\n")
   cat(sprintf("* %-9s = %s\n", "geo_type", attributes(object)$metadata$geo_type))
-  ok <- attributes(x)$metadata$other_keys
+  ok <- attributes(object)$metadata$other_keys
   if (!is.null(ok)) {
     cat(sprintf("* %-9s = %s\n", "other_keys", paste(ok, collapse = ", ")))
   }
