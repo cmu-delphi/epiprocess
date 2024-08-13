@@ -146,9 +146,7 @@
 #'     state = rep("MA", 6),
 #'     pol = rep(c("blue", "swing", "swing"), each = 2)
 #'   ) %>%
-#'   # the 2 extra keys we added have to be specified in the other_keys
-#'   # component of additional_metadata.
-#'   as_epi_df(additional_metadata = list(other_keys = c("state", "pol")))
+#'   as_epi_df(other_keys = c("state", "pol"))
 #'
 #' attr(ex3, "metadata")
 NULL
@@ -166,27 +164,26 @@ NULL
 #'   object that is created would represent the most up-to-date version of the
 #'   data available as of January 31, 2022. If the `as_of` argument is missing,
 #'   then the current day-time will be used.
-#' @param additional_metadata List of additional metadata to attach to the
-#'   `epi_df` object. The metadata will have `geo_type`, `time_type`, and
-#'   `as_of` fields; named entries from the passed list will be included as
-#'   well. If your tibble has additional keys, be sure to specify them as a
-#'   character vector in the `other_keys` component of `additional_metadata`.
+#' @param other_keys If your tibble has additional keys, be sure to specify them as a
+#'   character vector here.
 #' @param ... Additional arguments passed to methods.
+#' @param subclass additional class, will be prepended to the `epi_df` class
 #' @return An `epi_df` object.
 #'
 #' @export
 new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
-                       additional_metadata = list()) {
+                       other_keys = character(0L), ..., subclass = character(0L)
+                       ) {
   # Define metadata fields
   metadata <- list()
   metadata$geo_type <- geo_type
   metadata$time_type <- time_type
   metadata$as_of <- as_of
-  metadata <- c(metadata, additional_metadata)
+  if (length(other_keys)) metadata$other_keys <- other_keys
 
   # Reorder columns (geo_value, time_value, ...)
   if (sum(dim(x)) != 0) {
-    cols_to_put_first <- c("geo_value", "time_value")
+    cols_to_put_first <- c("geo_value", "time_value", other_keys)
     x <- x[, c(
       cols_to_put_first,
       # All other columns
@@ -195,7 +192,7 @@ new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
   }
 
   # Apply epi_df class, attach metadata, and return
-  class(x) <- c("epi_df", class(x))
+  class(x) <- c(subclass, "epi_df", class(x))
   attributes(x)$metadata <- metadata
   return(x)
 }
@@ -228,7 +225,7 @@ as_epi_df.tbl_df <- function(
     geo_type = deprecated(),
     time_type = deprecated(),
     as_of,
-    additional_metadata = list(),
+    other_keys = character(),
     ...) {
   # possible standard substitutions for time_value
   x <- rename(x, ...)
@@ -274,29 +271,26 @@ as_epi_df.tbl_df <- function(
     } # Use the current day-time
   }
 
-  assert_list(additional_metadata)
-  additional_metadata[["other_keys"]] <- additional_metadata[["other_keys"]] %||% character(0L)
-  new_epi_df(x, geo_type, time_type, as_of, additional_metadata)
+  assert_character(other_keys)
+  new_epi_df(x, geo_type, time_type, as_of, other_keys)
 }
 
 #' @method as_epi_df data.frame
 #' @rdname epi_df
 #' @export
-as_epi_df.data.frame <- function(x, as_of, additional_metadata = list(), ...) {
-  as_epi_df.tbl_df(x = tibble::as_tibble(x), as_of = as_of, additional_metadata = additional_metadata, ...)
+as_epi_df.data.frame <- function(x, as_of, other_keys = character(), ...) {
+  as_epi_df.tbl_df(x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys, ...)
 }
 
 #' @method as_epi_df tbl_ts
 #' @rdname epi_df
 #' @export
-as_epi_df.tbl_ts <- function(x, as_of, additional_metadata = list(), ...) {
-  tsibble_other_keys <- setdiff(tsibble::key_vars(x), "geo_value")
+as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(), ...) {
+  tsibble_other_keys <- setdiff(tsibble::key_vars(x), "geo_value"))
   if (length(tsibble_other_keys) != 0) {
-    additional_metadata$other_keys <- unique(
-      c(additional_metadata$other_keys, tsibble_other_keys)
-    )
+    other_keys <- unique(c(other_keys, tsibble_other_keys))
   }
-  as_epi_df.tbl_df(x = tibble::as_tibble(x), as_of = as_of, additional_metadata = additional_metadata, ...)
+  as_epi_df.tbl_df(x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys, ...)
 }
 
 #' Test for `epi_df` format
