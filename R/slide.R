@@ -21,16 +21,10 @@
 #'   If `f` is missing, then `...` will specify the computation.
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the `...` is interpreted as
-#'   a ["data-masking"][rlang::args_data_masking] expression or expressions for
-#'   tidy evaluation; in addition to referring columns directly by name, the
-#'   expressions have access to `.data` and `.env` pronouns as in `dplyr` verbs,
-#'   and can also refer to `.x`, `.group_key`, and `.ref_time_value`. See
-#'   details.
-#' @param new_col_name String indicating the name of the new column that will
-#'   contain the derivative values. The default is "slide_value" unless your
-#'   slide computations output data frames, in which case they will be unpacked
-#'   into the constituent columns and those names used. Note that setting
-#'   `new_col_name` equal to an existing column name will overwrite this column.
+#'   an expression for tidy evaluation; in addition to referring to columns
+#'   directly by name, the expression has access to `.data` and `.env` pronouns
+#'   as in `dplyr` verbs, and can also refer to `.x`, `.group_key`, and
+#'   `.ref_time_value`. See details.
 #'
 #' @template basic-slide-details
 #'
@@ -85,63 +79,85 @@
 #'     before = 1, as_list_col = TRUE
 #'   ) %>%
 #'   ungroup()
-epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = NULL,
-                      new_col_name = NULL, all_rows = FALSE,
-                      as_list_col = deprecated(), names_sep = deprecated()) {
+epi_slide <- function(
+    x, f, ...,
+    .window_size = 0, .align = c("right", "center", "left"), .ref_time_values = NULL, .all_rows = FALSE) {
+
+  if (any(map(c(n, before, after, ref_time_values, new_col_name, as_list_col, names_sep, all_rows), Negate(is.null)))) {
+    cli_abort(
+      "epi_slide: deprecated arguments `n`, `before`, `after`, `ref_time_values`, `new_col_name`, `as_list_col`,
+      `names_sep`, and `all_rows` have been removed. Please use `.n`, `.align`, `.ref_time_values`,
+      `.new_col_name`, `.as_list_col`, and `.names_sep` instead."
+    )
+  }
+
   assert_class(x, "epi_df")
 
   if (nrow(x) == 0L) {
     return(x)
   }
 
-  if (is.null(ref_time_values)) {
-    ref_time_values <- unique(x$time_value)
+  if (is.null(.ref_time_values)) {
+    .ref_time_values <- unique(x$time_value)
   } else {
-    assert_numeric(ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
-    if (!test_subset(ref_time_values, unique(x$time_value))) {
+    assert_numeric(.ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
+    if (!test_subset(.ref_time_values, unique(x$time_value))) {
       cli_abort(
         "`ref_time_values` must be a unique subset of the time values in `x`.",
         class = "epi_slide__invalid_ref_time_values"
       )
     }
-    if (anyDuplicated(ref_time_values) != 0L) {
+
+    if (anyDuplicated(.ref_time_values) != 0L) {
       cli_abort(
-        "`ref_time_values` must not contain any duplicates; use `unique` if appropriate.",
+        "`.ref_time_values` must not contain any duplicates; use `unique` if appropriate.",
         class = "epi_slide__invalid_ref_time_values"
       )
     }
   }
-  ref_time_values <- sort(ref_time_values)
+  .ref_time_values <- sort(.ref_time_values)
 
-  # Handle defaults for before/after
-  time_type <- attr(x, "metadata")$time_type
-  if (is.null(before) && !is.null(after)) {
-    if (inherits(after, "difftime")) {
-      before <- as.difftime(0, units = units(after))
-    } else {
-      before <- 0
-    }
+  if (!is.null(before) || !is.null(after)) {
+    cli_abort("`before` and `after` are deprecated for `epi_slide`. Use `n` instead.")
   }
-  if (is.null(after) && !is.null(before)) {
-    if (inherits(before, "difftime")) {
-      after <- as.difftime(0, units = units(before))
-    } else {
-      if (identical(before, Inf) && time_type %in% c("day", "week")) {
+
+  # Handle window arguments
+  align <- rlang::arg_match(.align)
+  time_type <- attr(x, "metadata")$time_type
+  validate_slide_window_arg(.window_size, time_type)
+  if (identical(.window_size, Inf)) {
+    if (align == "right") {
+      before <- Inf
+      if (time_type %in% c("day", "week")) {
         after <- as.difftime(0, units = glue::glue("{time_type}s"))
       } else {
         after <- 0
       }
+    } else {
+      cli_abort(
+        "`epi_slide`: center and left alignment are not supported with an infinite window size."
+      )
+    }
+  } else {
+    if (align == "right") {
+      before <- .window_size - 1
+      after <- 0
+    } else if (align == "center") {
+      # For n = 5, before = 2, after = 2. For n = 4, before = 2, after = 1.
+      before <- floor(.window_size / 2)
+      after <- .window_size - before - 1
+    } else if (align == "left") {
+      before <- 0
+      after <- .window_size - 1
     }
   }
-  validate_slide_window_arg(before, time_type)
-  validate_slide_window_arg(after, time_type, allow_inf = FALSE)
 
   # Arrange by increasing time_value
   x <- arrange(x, .data$time_value)
 
   # Now set up starts and stops for sliding/hopping
-  starts <- ref_time_values - before
-  stops <- ref_time_values + after
+  starts <- .ref_time_values - before
+  stops <- .ref_time_values + after
 
   # If `f` is missing, interpret ... as an expression for tidy evaluation
   if (missing(f)) {
@@ -220,6 +236,7 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
     return(f_wrapper)
   }
 
+
   # Computation for one group, all time values
   slide_one_grp <- function(.data_group,
                             .group_key, # see `?group_modify`
@@ -282,6 +299,7 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
 
     slide_values <- vctrs::list_unchop(slide_values_list)
 
+
     if (
       all(purrr::map_int(slide_values_list, vctrs::vec_size) == 1L) &&
         length(slide_values_list) != 0L
@@ -333,11 +351,12 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
     f_factory = f_wrapper_factory,
     starts = starts,
     stops = stops,
-    ref_time_values = ref_time_values,
-    all_rows = all_rows,
+    ref_time_values = .ref_time_values,
+    all_rows = .all_rows,
     new_col_name = new_col_name,
     .keep = FALSE
   )
+
 
   return(x)
 }

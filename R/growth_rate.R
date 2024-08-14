@@ -120,7 +120,7 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
   # Check x, y, x0
   if (length(x) != length(y)) cli_abort("`x` and `y` must have the same length.")
   if (!all(x0 %in% x)) cli_abort("`x0` must be a subset of `x`.")
-  method <- match.arg(method)
+  method <- rlang::match_arg(method)
 
   # Arrange in increasing order of x
   o <- order(x)

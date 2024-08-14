@@ -99,7 +99,7 @@ epi_cor <- function(x, var1, var2, dt1 = 0, dt2 = 0, shift_by = geo_value, # nol
   shift_by <- syms(names(eval_select(enquo(shift_by), x)))
 
   # Which method?
-  method <- match.arg(method)
+  method <- rlang::match_arg(method)
 
   # Perform time shifts, then compute appropriate correlations and return
   return(x %>%
