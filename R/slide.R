@@ -305,7 +305,9 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
         mutate(.data_group, !!new_col_name := slide_values)
       } else {
         if (inherits(slide_values, "data.frame")) {
-          # unpack into separate columns (without name prefix):
+          # unpack into separate columns (without name prefix) and, if there are
+          # re-bindings, make the last one win for determining column value &
+          # column placement:
           mutate(.data_group, slide_values)
         } else {
           # apply default name:

@@ -303,13 +303,19 @@ as_slide_computation <- function(f, ...) {
       data_mask$.group_key <- .group_key
       data_mask$.ref_time_value <- .ref_time_value
       common_size <- NULL
-      results_names <- character(0L) # track ordering; env doesn't
+      # The data mask is an environment; it doesn't track the binding order.
+      # We'll track that separately. For efficiency, we'll use `c` to add to
+      # this order, and deal with binding redefinitions at the end. We'll
+      # reflect deletions immediately (current implementation of `new_tibble`
+      # seems like it would exclude `NULL` bindings for us but `?new_tibble`
+      # doesn't reflect this behavior).
+      results_multiorder <- character(0L)
       for (quosure_i in seq_along(f)) {
         # XXX could capture and improve error messages here at cost of recover()ability
         quosure_result_raw <- rlang::eval_tidy(quosures[[quosure_i]], data_mask)
         if (is.null(quosure_result_raw)) {
           nm <- nms[[quosure_i]]
-          results_names <- results_names[results_names != nm]
+          results_multiorder <- results_multiorder[results_multiorder != nm]
           rlang::env_unbind(results_env, nm)
         } else if (
           # vctrs considers data.frames to be vectors, but we still check
@@ -335,14 +341,14 @@ as_slide_computation <- function(f, ...) {
             } # else `common_size` remains NULL
           }
           if (inherits(quosure_result_recycled, "data.frame") && !manually_named[[quosure_i]]) {
-            new_results_names <- names(quosure_result_recycled)
-            results_names <- c(results_names, new_results_names)
+            new_results_multiorder <- names(quosure_result_recycled)
+            results_multiorder <- c(results_multiorder, new_results_multiorder)
             for (new_result_i in seq_along(quosure_result_recycled)) {
-              results_env[[new_results_names[[new_result_i]]]] <- quosure_result_recycled[[new_result_i]]
+              results_env[[new_results_multiorder[[new_result_i]]]] <- quosure_result_recycled[[new_result_i]]
             }
           } else {
             nm <- nms[[quosure_i]]
-            results_names <- c(results_names, nm)
+            results_multiorder <- c(results_multiorder, nm)
             results_env[[nm]] <- quosure_result_recycled
           }
         } else {
@@ -354,7 +360,12 @@ as_slide_computation <- function(f, ...) {
           ", class = "epiprocess__invalid_slide_comp_tidyeval_output")
         }
       }
-      validate_tibble(new_tibble(as.list(results_env, all.names = TRUE)[results_names]))
+      # If a binding was defined and redefined, we may have duplications within
+      # `results_multiorder`. `unique(results_multiorder, fromLast = TRUE)` is
+      # actually quite slow, so we'll keep the duplicates (--> duplicate result
+      # columns) and leave it to various `mutate` in epi[x]_slide to resolve
+      # this to the appropriate placement:
+      validate_tibble(new_tibble(as.list(results_env, all.names = TRUE)[results_multiorder]))
     }
 
     return(fn)
