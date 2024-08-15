@@ -31,6 +31,7 @@ Imports:
     data.table,
     dplyr (>= 1.0.8),
     genlasso,
+    glue,
     ggplot2,
     glue,
     lifecycle (>= 1.0.1),
@@ -83,6 +84,7 @@ Collate:
     'methods-epi_df.R'
     'outliers.R'
     'reexports.R'
+    'revision_analysis.R'
     'slide.R'
     'utils.R'
     'utils_pipe.R'
