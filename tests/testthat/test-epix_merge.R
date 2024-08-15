@@ -177,6 +177,8 @@ test_that("epix_merge forbids and warns on metadata and naming issues", {
     ),
     regexp = "overlapping.*names"
   )
+  
+  skip("Additional metadata is no longer used, not tested.")
   expect_warning(
     epix_merge(
       as_epi_archive(tibble::tibble(geo_value = "ak", time_value = test_date, version = test_date + 1L, x_value = 1L),

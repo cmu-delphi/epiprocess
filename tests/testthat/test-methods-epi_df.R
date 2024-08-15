@@ -150,7 +150,7 @@ test_that("Renaming columns gives appropriate colnames and metadata", {
   expect_identical(attr(renamed_edf1, "metadata")$other_keys, c("age_group"))
   # renaming using select
   renamed_edf2 <- edf %>%
-    as_epi_df(additional_metadata = list(other_keys = "age")) %>%
+    as_epi_df(other_keys = "age") %>%
     select(geo_value, time_value, age_group = age, value)
   expect_identical(renamed_edf1, renamed_edf2)
 })

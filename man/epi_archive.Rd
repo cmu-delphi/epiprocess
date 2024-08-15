@@ -12,7 +12,6 @@ new_epi_archive(
   geo_type,
   time_type,
   other_keys,
-  additional_metadata,
   compactify,
   clobberable_versions_start,
   versions_end,
@@ -22,7 +21,6 @@ new_epi_archive(
 validate_epi_archive(
   x,
   other_keys,
-  additional_metadata,
   compactify,
   clobberable_versions_start,
   versions_end
@@ -33,7 +31,6 @@ as_epi_archive(
   geo_type = deprecated(),
   time_type = deprecated(),
   other_keys = character(0L),
-  additional_metadata = list(),
   compactify = NULL,
   clobberable_versions_start = NA,
   .versions_end = max_version_with_row_in(x),
@@ -56,10 +53,6 @@ if the time type is not recognized.}
 that should be considered key variables (in the language of \code{data.table})
 apart from "geo_value", "time_value", and "version". Typical examples
 are "age" or more granular geographies.}
-
-\item{additional_metadata}{List of additional metadata to attach to the
-\code{epi_archive} object. The metadata will have the \code{geo_type} field; named
-entries from the passed list or will be included as well.}
 
 \item{compactify}{Optional; Boolean. \code{TRUE} will remove some
 redundant rows, \code{FALSE} will not, and missing or \code{NULL} will remove
