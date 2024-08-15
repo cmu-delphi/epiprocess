@@ -5,7 +5,7 @@ test_that("canonical arrangement works", {
     geo_value = rep(c("ga", "ca"), each = 4),
     time_value = rep(2:1, times = 4)
   )
-  expect_warning(arrange_canonical(tib))
+  expect_error(arrange_canonical(tib))
 
   tib <- tib %>% as_epi_df(additional_metadata = list(other_keys = "demo_grp"))
   expect_equal(names(tib), c("geo_value", "time_value", "x", "demo_grp"))
