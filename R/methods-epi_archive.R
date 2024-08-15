@@ -237,7 +237,7 @@ epix_fill_through_version <- function(x, fill_versions_end,
 #'   Default here is `TRUE`.
 #' @return the resulting `epi_archive`
 #'
-#' @details In all cases, `clobberable_versions_start` will be set to the 
+#' @details In all cases, `clobberable_versions_start` will be set to the
 #'   earliest version that could be clobbered in either input archive.
 #'
 #' @examples

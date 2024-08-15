@@ -679,7 +679,7 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
 #' @export
 #'
 #' @aliases grouped_epi_archive
-group_by.epi_archive <- function(.data, ..., .add = FALSE, 
+group_by.epi_archive <- function(.data, ..., .add = FALSE,
                                  .drop = dplyr::group_by_drop_default(.data)) {
   # `add` makes no difference; this is an ungrouped `epi_archive`.
   detailed_mutate <- epix_detailed_restricted_mutate(.data, ...)

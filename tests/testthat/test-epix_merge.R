@@ -177,7 +177,7 @@ test_that("epix_merge forbids and warns on metadata and naming issues", {
     ),
     regexp = "overlapping.*names"
   )
-  
+
   skip("Additional metadata is no longer used, not tested.")
   expect_warning(
     epix_merge(
