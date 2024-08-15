@@ -240,8 +240,8 @@ test_that("guess_period works", {
     weekly_dates
   )
   # On POSIXcts:
-  daily_posixcts <- as.POSIXct(daily_dates, tz = "ET") + 3600
-  weekly_posixcts <- as.POSIXct(weekly_dates, tz = "ET") + 3600
+  daily_posixcts <- as.POSIXct(daily_dates, tz = "US/Aleutian") + 3600
+  weekly_posixcts <- as.POSIXct(weekly_dates, tz = "US/Aleutian") + 3600
   expect_identical(
     daily_posixcts[[1L]] + guess_period(daily_posixcts) * (seq_along(daily_posixcts) - 1L),
     daily_posixcts
