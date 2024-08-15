@@ -347,7 +347,6 @@ new_epi_archive <- function(
     rlang::warn(warning_message, class = "epiprocess__compactify_default_removed_rows")
   }
 
-  assert_character(subclass)
   structure(
     list(
       DT = compactified,
@@ -358,7 +357,7 @@ new_epi_archive <- function(
       clobberable_versions_start = clobberable_versions_start,
       versions_end = versions_end
     ),
-    class = c(subclass, "epi_archive")
+    class = "epi_archive"
   )
 }
 

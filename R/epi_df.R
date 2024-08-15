@@ -167,12 +167,11 @@ NULL
 #' @param other_keys If your tibble has additional keys, be sure to specify them as a
 #'   character vector here (typical examples are "age" or sub-geographies).
 #' @param ... Additional arguments passed to methods.
-#' @param subclass additional class, will be prepended to the `epi_df` class
 #' @return An `epi_df` object.
 #'
 #' @export
 new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
-                       other_keys = character(0L), ..., subclass = character(0L)) {
+                       other_keys = character(0L), ...) {
   # Define metadata fields
   metadata <- list()
   metadata$geo_type <- geo_type
@@ -191,7 +190,7 @@ new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
   }
 
   # Apply epi_df class, attach metadata, and return
-  class(x) <- c(subclass, "epi_df", class(x))
+  class(x) <- c("epi_df", class(x))
   attributes(x)$metadata <- metadata
   return(x)
 }

@@ -16,8 +16,7 @@ new_epi_df(
   time_type,
   as_of,
   other_keys = character(0L),
-  ...,
-  subclass = character(0L)
+  ...
 )
 
 as_epi_df(x, ...)
@@ -59,8 +58,6 @@ character vector here (typical examples are "age" or sub-geographies).}
 
 \item{...}{used for specifying column names, as in \code{\link[dplyr:rename]{dplyr::rename}}. For
 example, \verb{geo_value = STATEFP, time_value = end_date}.}
-
-\item{subclass}{additional class, will be prepended to the \code{epi_df} class}
 }
 \value{
 An \code{epi_df} object.

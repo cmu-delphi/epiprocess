@@ -16,7 +16,7 @@ new_epi_archive(
   compactify,
   clobberable_versions_start,
   versions_end,
-  subclass = character()
+  compactify_tol = .Machine$double.eps^0.5
 )
 
 validate_epi_archive(
@@ -91,7 +91,7 @@ value of \code{clobberable_versions_start} does not fully trust these empty
 updates, and assumes that any version \verb{>= max(x$version)} could be
 clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
 
-\item{subclass}{additional class, will be prepended to the canonical class.}
+\item{compactify_tol}{double. the tolerance used to detect approximate equality for compactification}
 
 \item{.versions_end}{location based versions_end, used to avoid prefix
 \code{version = issue} from being assigned to \code{versions_end} instead of being
