@@ -341,7 +341,7 @@ reclass <- function(x, metadata) {
 
 #' Arrange an epi_df into a standard order
 #'
-#' Moves `key_colnames()` to the left, then arranges rows based on that
+#' Moves [key_colnames()] to the left, then arranges rows based on that
 #' ordering. This function is mainly for use in tests and so that
 #' other function output will be in predictable order, where necessary.
 #'
@@ -357,9 +357,8 @@ arrange_canonical <- function(x, ...) {
 #' @export
 arrange_canonical.default <- function(x, ...) {
   rlang::check_dots_empty()
-  cli::cli_warn(c(
-    "`arrange_canonical()` is only meaningful for an {.cls epi_df}.",
-    i = "Returning the original {.cls {class(x)[1]}} object."
+  cli::cli_abort(c(
+    "`arrange_canonical()` is only meaningful for an {.cls epi_df}."
   ))
   return(x)
 }

@@ -12,7 +12,7 @@ arrange_canonical(x, ...)
 \item{...}{not used}
 }
 \description{
-Moves \code{key_colnames()} to the left, then arranges rows based on that
+Moves \code{\link[=key_colnames]{key_colnames()}} to the left, then arranges rows based on that
 ordering. This function is mainly for use in tests and so that
 other function output will be in predictable order, where necessary.
 }
