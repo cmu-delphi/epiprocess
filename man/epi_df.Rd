@@ -15,7 +15,7 @@ new_epi_df(
   geo_type,
   time_type,
   as_of,
-  other_keys = character(0L),
+  other_keys = character(),
   ...
 )
 
@@ -28,13 +28,13 @@ as_epi_df(x, ...)
   geo_type = deprecated(),
   time_type = deprecated(),
   as_of,
-  other_keys = NULL,
+  other_keys = character(),
   ...
 )
 
-\method{as_epi_df}{data.frame}(x, as_of, other_keys = NULL, ...)
+\method{as_epi_df}{data.frame}(x, as_of, other_keys = character(), ...)
 
-\method{as_epi_df}{tbl_ts}(x, as_of, other_keys = NULL, ...)
+\method{as_epi_df}{tbl_ts}(x, as_of, other_keys = character(), ...)
 }
 \arguments{
 \item{x}{An \code{epi_df}, \code{data.frame}, \link[tibble:tibble]{tibble::tibble}, or \link[tsibble:tsibble]{tsibble::tsibble}

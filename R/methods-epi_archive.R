@@ -65,7 +65,6 @@ epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FAL
     key(x$DT),
     c("geo_value", "time_value", "version")
   )
-  if (length(other_keys) == 0) other_keys <- NULL
 
   # Check a few things on max_version
   if (!identical(class(max_version), class(x$DT$version))) {

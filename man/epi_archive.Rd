@@ -30,7 +30,7 @@ as_epi_archive(
   x,
   geo_type = deprecated(),
   time_type = deprecated(),
-  other_keys = character(0L),
+  other_keys = character(),
   compactify = NULL,
   clobberable_versions_start = NA,
   .versions_end = max_version_with_row_in(x),

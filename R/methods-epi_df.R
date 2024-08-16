@@ -64,7 +64,7 @@ print.epi_df <- function(x, ...) {
   cat(sprintf("* %-9s = %s\n", "geo_type", attributes(x)$metadata$geo_type))
   cat(sprintf("* %-9s = %s\n", "time_type", attributes(x)$metadata$time_type))
   ok <- attributes(x)$metadata$other_keys
-  if (!is.null(ok)) {
+  if (length(ok) > 0) {
     cat(sprintf("* %-9s = %s\n", "other_keys", paste(ok, collapse = ", ")))
   }
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(x)$metadata$as_of))
@@ -91,7 +91,7 @@ summary.epi_df <- function(object, ...) {
   cat("An `epi_df` x, with metadata:\n")
   cat(sprintf("* %-9s = %s\n", "geo_type", attributes(object)$metadata$geo_type))
   ok <- attributes(object)$metadata$other_keys
-  if (!is.null(ok)) {
+  if (length(ok) > 0) {
     cat(sprintf("* %-9s = %s\n", "other_keys", paste(ok, collapse = ", ")))
   }
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(object)$metadata$as_of))

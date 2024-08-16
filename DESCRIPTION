@@ -73,3 +73,22 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+Collate: 
+    'archive.R'
+    'autoplot.R'
+    'correlation.R'
+    'data.R'
+    'epi_df.R'
+    'epiprocess.R'
+    'group_by_epi_df_methods.R'
+    'methods-epi_archive.R'
+    'grouped_epi_archive.R'
+    'growth_rate.R'
+    'key_colnames.R'
+    'methods-epi_df.R'
+    'outliers.R'
+    'reexports.R'
+    'revision_analysis.R'
+    'slide.R'
+    'utils.R'
+    'utils_pipe.R'
