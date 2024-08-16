@@ -177,7 +177,7 @@ new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
   metadata$geo_type <- geo_type
   metadata$time_type <- time_type
   metadata$as_of <- as_of
-  if (length(other_keys)) metadata$other_keys <- other_keys
+  metadata$other_keys <- other_keys
 
   # Reorder columns (geo_value, time_value, ...)
   if (sum(dim(x)) != 0) {
