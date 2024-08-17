@@ -301,7 +301,7 @@ epix_fill_through_version <- function(x, fill_versions_end,
 #' )
 #'
 #' # The s2 signal at August 1st gets revised from 3 to 5 on August 3rd
-#' s2 <- tibble(
+#' s2 <- tibble::tibble(
 #'   geo_value = c("ca", "ca", "ca"),
 #'   time_value = as.Date(c("2024-08-01", "2024-08-01", "2024-08-02")),
 #'   version = as.Date(c("2024-08-02", "2024-08-03", "2024-08-03")),
