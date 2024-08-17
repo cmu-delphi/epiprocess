@@ -83,7 +83,7 @@ s1 <- tibble(
   signal1 = c(12, 13, 22, 19)
 )
 
-s2 <- tibble(
+s2 <- tibble::tibble(
   geo_value = c("ca", "ca"),
   time_value = as.Date(c("2024-08-01", "2024-08-02")),
   version = as.Date(c("2024-08-02", "2024-08-02")),
