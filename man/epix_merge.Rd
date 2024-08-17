@@ -53,25 +53,25 @@ be clobbered in either input archive.
 \examples{
 # Example 1
 # The s1 signal at August 1st gets revised from 10 to 11 on August 2nd
-s1 <- tibble(
-   geo_value = c("ca", "ca", "ca"),
-   time_value = as.Date(c("2024-08-01", "2024-08-01", "2024-08-02")),
-   version = as.Date(c("2024-08-01", "2024-08-02", "2024-08-02")),
-   signal1 = c(10, 11, 7)
+s1 <- tibble::tibble(
+  geo_value = c("ca", "ca", "ca"),
+  time_value = as.Date(c("2024-08-01", "2024-08-01", "2024-08-02")),
+  version = as.Date(c("2024-08-01", "2024-08-02", "2024-08-02")),
+  signal1 = c(10, 11, 7)
 )
 
 s2 <- tibble(
-   geo_value = c("ca", "ca"),
-   time_value = as.Date(c("2024-08-01", "2024-08-02")),
-   version = as.Date(c("2024-08-03", "2024-08-03")),
-   signal2 = c(2, 3)
+  geo_value = c("ca", "ca"),
+  time_value = as.Date(c("2024-08-01", "2024-08-02")),
+  version = as.Date(c("2024-08-03", "2024-08-03")),
+  signal2 = c(2, 3)
 )
 
 
 s1 <- s1 \%>\% as_epi_archive()
 s2 <- s2 \%>\% as_epi_archive()
 
-merged <- epix_merge(s1, s2, sync="locf")
+merged <- epix_merge(s1, s2, sync = "locf")
 merged[["DT"]]
 
 # Example 2
@@ -94,23 +94,23 @@ s2 <- tibble(
 s1 <- s1 \%>\% as_epi_archive()
 s2 <- s2 \%>\% as_epi_archive()
 
-merged <- epix_merge(s1, s2, sync="locf")
+merged <- epix_merge(s1, s2, sync = "locf")
 merged[["DT"]]
 
 
 # Example 3:
 s1 <- tibble(
   geo_value = c("ca", "ca", "ca"),
-  time_value = as.Date(c("2024-08-01","2024-08-02","2024-08-03")),
-  version = as.Date(c("2024-08-01","2024-08-02","2024-08-03")),
+  time_value = as.Date(c("2024-08-01", "2024-08-02", "2024-08-03")),
+  version = as.Date(c("2024-08-01", "2024-08-02", "2024-08-03")),
   signal1 = c(14, 11, 9)
 )
 
 # The s2 signal at August 1st gets revised from 3 to 5 on August 3rd
 s2 <- tibble(
   geo_value = c("ca", "ca", "ca"),
-  time_value = as.Date(c("2024-08-01","2024-08-01", "2024-08-02")),
-  version = as.Date(c("2024-08-02","2024-08-03","2024-08-03")),
+  time_value = as.Date(c("2024-08-01", "2024-08-01", "2024-08-02")),
+  version = as.Date(c("2024-08-02", "2024-08-03", "2024-08-03")),
   signal2 = c(3, 5, 2),
 )
 
@@ -118,6 +118,6 @@ s1 <- s1 \%>\% as_epi_archive()
 s2 <- s2 \%>\% as_epi_archive()
 
 # Some LOCF for signal 1 as signal 2 gets updated
-merged <- epix_merge(s1, s2, sync="locf")
+merged <- epix_merge(s1, s2, sync = "locf")
 merged[["DT"]]
 }
