@@ -3,8 +3,7 @@
 #'   [other tidy-select expression][tidyselect::language], or a vector of
 #'   characters (e.g. `c("cases", "deaths")`). Variable names can be used as if
 #'   they were positions in the data frame, so expressions like `x:y` can be
-#'   used to select a range of variables. If you have the desired column names
-#'   stored in a vector `vars`, use `col_names = all_of(vars)`.
+#'   used to select a range of variables.
 #'
 #'   The tidy-selection renaming interface is not supported, and cannot be used
 #'   to provide output column names; if you want to customize the output column
