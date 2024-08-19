@@ -57,6 +57,19 @@ dplyr::slice
 tidyr::unnest
 
 
+#' @importFrom tidyr complete
+#' @export
+tidyr::complete
+
+# We don't provide a method for full_seq, but complete-ing using
+# full_seq(time_value) is still needed to make some downstream things behave
+# nicely.  So make that more ergonomic/discoverable with a re-export:
+
+#' @importFrom tidyr full_seq
+#' @export
+tidyr::full_seq
+
+
 # ggplot2 -----------------------------------------------------------------
 
 #' @importFrom ggplot2 autoplot

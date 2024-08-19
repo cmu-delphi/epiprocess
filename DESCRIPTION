@@ -1,7 +1,7 @@
 Type: Package
 Package: epiprocess
 Title: Tools for basic signal processing in epidemiology
-Version: 0.8.0
+Version: 0.8.3
 Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", email = "lcbrooks@andrew.cmu.edu", role = c("aut", "cre")),
@@ -29,9 +29,11 @@ Imports:
     checkmate,
     cli,
     data.table,
-    dplyr (>= 1.0.0),
+    dplyr (>= 1.0.8),
     genlasso,
+    glue,
     ggplot2,
+    glue,
     lifecycle (>= 1.0.1),
     lubridate,
     magrittr,
@@ -82,6 +84,7 @@ Collate:
     'methods-epi_df.R'
     'outliers.R'
     'reexports.R'
+    'revision_analysis.R'
     'slide.R'
     'utils.R'
     'utils_pipe.R'

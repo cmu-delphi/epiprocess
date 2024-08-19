@@ -8,7 +8,8 @@
 #' use `attr(your_epi_df, "decay_to_tibble") <- FALSE` beforehand.
 #'
 #' @template x
-#' @param ... additional arguments to forward to `NextMethod()`
+#'
+#' @inheritParams tibble::as_tibble
 #'
 #' @importFrom tibble as_tibble
 #' @export
@@ -48,9 +49,9 @@ as_tsibble.epi_df <- function(x, key, ...) {
 #' Print and summary functions for an `epi_df` object.
 #'
 #' @template x
-#' @param ... additional arguments to forward to `NextMethod()`
 #'
 #' @method print epi_df
+#' @param ... additional arguments to forward to `NextMethod()`, or unused
 #' @export
 print.epi_df <- function(x, ...) {
   cat(
@@ -76,7 +77,6 @@ print.epi_df <- function(x, ...) {
 #'   Currently unused.
 #'
 #' @method summary epi_df
-#' @rdname print.epi_df
 #' @importFrom rlang .data
 #' @importFrom stats median
 #' @export
@@ -239,6 +239,82 @@ ungroup.epi_df <- function(x, ...) {
 #' @export
 group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
   dplyr::dplyr_reconstruct(NextMethod(), .data)
+}
+
+#' Complete epi_df
+#'
+#' A [tidyr::complete()] analogue for `epi_df` objects. This function fills in
+#' missing combinations of `geo_value` and `time_value` with `NA` values. See
+#' the examples for usage details.
+#'
+#' @param data an `epi_df`
+#' @param ... see [`tidyr::complete`]
+#' @param fill see [`tidyr::complete`]
+#' @param explicit see [`tidyr::complete`]
+#'
+#' @method complete epi_df
+#' @importFrom tidyr complete
+#'
+#' @examples
+#' start_date <- as.Date("2020-01-01")
+#' daily_edf <- tibble::tribble(
+#'   ~geo_value, ~time_value, ~value,
+#'   1, start_date + 1, 1,
+#'   1, start_date + 3, 3,
+#'   2, start_date + 2, 2,
+#'   2, start_date + 3, 3,
+#' ) %>%
+#'   as_epi_df(as_of = start_date + 3)
+#' # Complete without grouping puts all the geo_values on the same min and max
+#' # time_value index
+#' daily_edf %>%
+#'   complete(geo_value, time_value = full_seq(time_value, period = 1))
+#' # Complete with grouping puts all the geo_values on individual min and max
+#' # time_value indices
+#' daily_edf %>%
+#'   group_by(geo_value) %>%
+#'   complete(time_value = full_seq(time_value, period = 1))
+#' # Complete has explicit=TRUE by default, but if it's FALSE, then complete only fills the implicit gaps
+#' # not those that are explicitly NA
+#' daily_edf <- tibble::tribble(
+#'   ~geo_value, ~time_value, ~value,
+#'   1, start_date + 1, 1,
+#'   1, start_date + 2, NA,
+#'   1, start_date + 3, 3,
+#'   2, start_date + 2, 2,
+#'   2, start_date + 3, 3,
+#' ) %>%
+#'   as_epi_df(as_of = start_date + 3)
+#' daily_edf %>%
+#'   complete(
+#'     geo_value,
+#'     time_value = full_seq(time_value, period = 1),
+#'     fill = list(value = 0),
+#'     explicit = FALSE
+#'   )
+#' # Complete works for weekly data and can take a fill value
+#' # No grouping
+#' weekly_edf <- tibble::tribble(
+#'   ~geo_value, ~time_value, ~value,
+#'   1, start_date + 1, 1,
+#'   1, start_date + 15, 3,
+#'   2, start_date + 8, 2,
+#'   2, start_date + 15, 3,
+#' ) %>%
+#'   as_epi_df(as_of = start_date + 3)
+#' weekly_edf %>%
+#'   complete(geo_value, time_value = full_seq(time_value, period = 7), fill = list(value = 0))
+#' # With grouping
+#' weekly_edf %>%
+#'   group_by(geo_value) %>%
+#'   complete(time_value = full_seq(time_value, period = 7), fill = list(value = 0))
+#' @export
+complete.epi_df <- function(data, ..., fill = list(), explicit = TRUE) {
+  result <- dplyr::dplyr_reconstruct(NextMethod(), data)
+  if ("time_value" %in% names(rlang::call_match(dots_expand = FALSE)[["..."]])) {
+    attr(result, "metadata")$time_type <- guess_time_type(result$time_value)
+  }
+  result
 }
 
 #' @method unnest epi_df

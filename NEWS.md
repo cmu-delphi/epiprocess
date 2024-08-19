@@ -4,6 +4,18 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 # epiprocess 0.9
 
+## Improvements
+
+- Added `complete.epi_df`, which fills in missing values in an `epi_df` with
+  `NA`s. Uses `tidyr::complete` underneath and preserves `epi_df` metadata.
+- Inclusion of the function `revision_summary` to provide basic revision information for `epi_archive`s out of the box. (#492)
+
+## Bug fixes
+
+- Fix `epi_slide_opt` (and related functions) to correctly handle `before=Inf`.
+- Disallow `after=Inf` in slide functions, since it doesn't seem like a likely
+  use case and complicates code.
+
 # epiprocess 0.8
 
 ## Breaking changes
