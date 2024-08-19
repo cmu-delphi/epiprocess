@@ -1298,7 +1298,7 @@ test_that("no dplyr warnings from selecting multiple columns", {
   )
   expect_equal(multi_slid_select, multi_slid)
 })
-  
+
 test_that("Inf works in before/after in slide and slide_opt", {
   # Daily data
   df <- dplyr::bind_rows(
