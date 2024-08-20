@@ -9,7 +9,7 @@ examples."><meta name="robots" content="noindex"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.8.3</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.8.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,11 +80,11 @@ single data group.</p></dd>
 
 <dt id="arg-col-names">col_names<a class="anchor" aria-label="anchor" href="#arg-col-names"></a></dt>
 <dd><p>&lt;<code>tidy-select</code>&gt; An unquoted column
-name(e.g., <code>cases</code>), multiple column names (e.g., <code>c(cases, deaths)</code>), or
-<a href="https://tidyselect.r-lib.org/reference/language.html" class="external-link">other tidy-select expression</a>. Variable names can
-be used as if they were positions in the data frame, so expressions like
-<code>x:y</code> can be used to select a range of variables. If you have the desired
-column names stored in a vector <code>vars</code>, use <code>col_names = all_of(vars)</code>.</p>
+name(e.g., <code>cases</code>), multiple column names (e.g., <code>c(cases, deaths)</code>),
+<a href="https://tidyselect.r-lib.org/reference/language.html" class="external-link">other tidy-select expression</a>, or a vector of
+characters (e.g. <code>c("cases", "deaths")</code>). Variable names can be used as if
+they were positions in the data frame, so expressions like <code>x:y</code> can be
+used to select a range of variables.</p>
 <p>The tidy-selection renaming interface is not supported, and cannot be used
 to provide output column names; if you want to customize the output column
 names, use <code><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">dplyr::rename</a></code> after the slide.</p></dd>
