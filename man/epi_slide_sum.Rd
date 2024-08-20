@@ -23,11 +23,11 @@ or ungrouped. If ungrouped, all data in \code{x} will be treated as part of a
 single data group.}
 
 \item{col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
-name(e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}), or
-\link[tidyselect:language]{other tidy-select expression}. Variable names can
-be used as if they were positions in the data frame, so expressions like
-\code{x:y} can be used to select a range of variables. If you have the desired
-column names stored in a vector \code{vars}, use \code{col_names = all_of(vars)}.
+name(e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}),
+\link[tidyselect:language]{other tidy-select expression}, or a vector of
+characters (e.g. \code{c("cases", "deaths")}). Variable names can be used as if
+they were positions in the data frame, so expressions like \code{x:y} can be
+used to select a range of variables.
 
 The tidy-selection renaming interface is not supported, and cannot be used
 to provide output column names; if you want to customize the output column

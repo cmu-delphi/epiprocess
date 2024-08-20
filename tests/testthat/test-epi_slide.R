@@ -1274,6 +1274,31 @@ test_that("`epi_slide_opt` errors when passed non-`data.table`, non-`slider` fun
   )
 })
 
+multi_columns <- dplyr::bind_rows(
+  dplyr::tibble(geo_value = "ak", time_value = test_date + 1:200, value = 1:200, value2 = -1:-200),
+  dplyr::tibble(geo_value = "al", time_value = test_date + 1:5, value = -(1:5), value2 = 1:5)
+) %>%
+  as_epi_df() %>%
+  group_by(geo_value)
+
+test_that("no dplyr warnings from selecting multiple columns", {
+  expect_no_warning(
+    multi_slid <- epi_slide_mean(multi_columns, col_names = c("value", "value2"), before = 3L)
+  )
+  expect_equal(
+    names(multi_slid),
+    c("geo_value", "time_value", "value", "value2", "slide_value_value", "slide_value_value2")
+  )
+  expect_no_warning(
+    multi_slid_select <- epi_slide_mean(multi_columns, c(value, value2), before = 3L)
+  )
+  expect_equal(multi_slid_select, multi_slid)
+  expect_no_warning(
+    multi_slid_select <- epi_slide_mean(multi_columns, starts_with("value"), before = 3L)
+  )
+  expect_equal(multi_slid_select, multi_slid)
+})
+
 test_that("Inf works in before/after in slide and slide_opt", {
   # Daily data
   df <- dplyr::bind_rows(

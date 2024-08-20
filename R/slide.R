@@ -39,7 +39,7 @@
 #'
 #' @importFrom lubridate days weeks
 #' @importFrom dplyr bind_rows group_vars filter select
-#' @importFrom rlang .data .env !! enquo enquos sym env missing_arg
+#' @importFrom rlang .data .env !! enquos sym env missing_arg
 #' @export
 #' @seealso [`epi_slide_opt`] [`epi_slide_mean`] [`epi_slide_sum`]
 #' @examples
@@ -327,7 +327,7 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
 #'
 #' @template opt-slide-details
 #'
-#' @importFrom dplyr bind_rows mutate %>% arrange tibble select
+#' @importFrom dplyr bind_rows mutate %>% arrange tibble select all_of
 #' @importFrom rlang enquo quo_get_expr as_label expr_label caller_arg
 #' @importFrom tidyselect eval_select
 #' @importFrom purrr map map_lgl
@@ -509,7 +509,11 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
   # positions of user-provided `col_names` into string column names. We avoid
   # using `names(pos)` directly for robustness and in case we later want to
   # allow users to rename fields via tidyselection.
-  pos <- eval_select(rlang::enquo(col_names), data = x, allow_rename = FALSE)
+  if (class(quo_get_expr(enquo(col_names))) == "character") {
+    pos <- eval_select(all_of(col_names), data = x, allow_rename = FALSE)
+  } else {
+    pos <- eval_select(enquo(col_names), data = x, allow_rename = FALSE)
+  }
   col_names_chr <- names(x)[pos]
   # Always rename results to "slide_value_<original column name>".
   result_col_names <- paste0("slide_value_", col_names_chr)

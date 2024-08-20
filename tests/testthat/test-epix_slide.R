@@ -1,4 +1,4 @@
-library(dplyr)
+suppressPackageStartupMessages(library(dplyr))
 
 test_date <- as.Date("2020-01-01")
 

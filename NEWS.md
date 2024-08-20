@@ -13,6 +13,7 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 ## Bug fixes
 
 - Fix `epi_slide_opt` (and related functions) to correctly handle `before=Inf`.
+  Also allow multiple columns specified as a list of strings.
 - Disallow `after=Inf` in slide functions, since it doesn't seem like a likely
   use case and complicates code.
 
