@@ -278,7 +278,7 @@ epix_slide.grouped_epi_archive <- function(
 
   checkmate::assert_string(.new_col_name, null.ok = TRUE)
   if (identical(.new_col_name, "time_value")) {
-    cli_abort('`new_col_name` must not be `"time_value"`; `epix_slide()` uses that column name to attach the `ref_time_value` associated with each slide computation') # nolint: line_length_linter
+    cli_abort('`.new_col_name` must not be `"version"`; `epix_slide()` uses that column name to attach which of the `.versions` is associated with each slide computation') # nolint: line_length_linter
   }
 
   assert_logical(.all_versions, len = 1L)
@@ -342,7 +342,7 @@ epix_slide.grouped_epi_archive <- function(
       }
     } else {
       # vector or packed data.frame-type column (note: new_col_name of
-      # "time_value" is disallowed):
+      # "version" is disallowed):
       res[[new_col_name]] <- comp_value
     }
 
