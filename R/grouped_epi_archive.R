@@ -325,11 +325,7 @@ epix_slide.grouped_epi_archive <- function(
     # named / unpacked, for quick feedback)
     res <- list(time_value = vctrs::vec_rep(ref_time_value, vctrs::vec_size(comp_value)))
 
-    if (!is.null(new_col_name)) {
-      # vector or packed data.frame-type column (note: new_col_name of
-      # "time_value" is disallowed):
-      res[[new_col_name]] <- comp_value
-    } else {
+    if (is.null(new_col_name)) {
       if (inherits(comp_value, "data.frame")) {
         # unpack into separate columns (without name prefix):
         res <- c(res, comp_value)
@@ -337,6 +333,10 @@ epix_slide.grouped_epi_archive <- function(
         # apply default name (to vector or packed data.frame-type column):
         res[["slide_value"]] <- comp_value
       }
+    } else {
+      # vector or packed data.frame-type column (note: new_col_name of
+      # "time_value" is disallowed):
+      res[[new_col_name]] <- comp_value
     }
 
     # Stop on naming conflicts (names() fine here, non-NULL). Not the

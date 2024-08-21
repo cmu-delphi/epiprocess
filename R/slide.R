@@ -300,10 +300,7 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
     }
 
     result <-
-      if (!is.null(new_col_name)) {
-        # vector or packed data.frame-type column:
-        mutate(.data_group, !!new_col_name := slide_values)
-      } else {
+      if (is.null(new_col_name)) {
         if (inherits(slide_values, "data.frame")) {
           # unpack into separate columns (without name prefix) and, if there are
           # re-bindings, make the last one win for determining column value &
@@ -313,6 +310,9 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
           # apply default name:
           mutate(.data_group, slide_value = slide_values)
         }
+      } else {
+        # vector or packed data.frame-type column:
+        mutate(.data_group, !!new_col_name := slide_values)
       }
 
     return(result)
