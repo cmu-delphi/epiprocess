@@ -4,6 +4,18 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 # epiprocess 0.9
 
+## Breaking changes
+- In `epi[x]_slide`:
+  - `names_sep` is deprecated, and if you return data frames from your
+    computations, they will no longer be unpacked into separate columns with
+    name prefixes; instead:
+    - if you don't provide a name for your slide computations, they will be
+      unpacked into separate columns, just without any name prefixes
+    - if you do provide a name for your slide computation, it will become a
+      packed data.frame-class column (see `tidyr::pack`).
+  - `as_list_col` is deprecated; you can now directly return a list from your
+    slide computations instead.
+
 ## Improvements
 
 - Added `complete.epi_df`, which fills in missing values in an `epi_df` with
@@ -21,16 +33,14 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 ## Breaking changes
 
-- In `epi[x]_slide`:
-  - `names_sep` is deprecated, and if you return data frames from your
-    computations, they will no longer be unpacked into separate columns with
-    name prefixes; instead:
-    - if you don't provide a name for your slide computations, they will be
-      unpacked into separate columns, just without any name prefixes
-    - if you do provide a name for your slide computation, it will become a
-      packed data.frame-class column (see `tidyr::pack`).
-  - `as_list_col` is deprecated; you can now directly return a list from your
-    slide computations instead.
+- `epi_df`'s are now more strict about what types they allow in the time column.
+  Namely, we are explicit about only supporting `Date` at the daily and weekly
+  cadence and generic integer types (for yearly cadence).
+- `epi_slide` `before` and `after` arguments are now require the user to
+  specific time units in certain cases. The `time_step` argument has been
+  removed.
+- `epix_slide` `before` argument now defaults to `Inf`, and requires the user to
+  specify units in some cases. The `time_step` argument has been removed.
 - `detect_outlr_stl(seasonal_period = NULL)` is no longer accepted. Use
   `detect_outlr_stl(seasonal_period = <value>, seasonal_as_residual = TRUE)`
   instead. See `?detect_outlr_stl` for more details.
@@ -86,17 +96,6 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - Added optional `decay_to_tibble` attribute controlling `as_tibble()` behavior
   of `epi_df`s to let `{epipredict}` work more easily with other libraries (#471).
 - Removed some external package dependencies.
-
-## Breaking Changes
-
-- `epi_df`'s are now more strict about what types they allow in the time column.
-  Namely, we are explicit about only supporting `Date` at the daily and weekly
-  cadence and generic integer types (for yearly cadence).
-- `epi_slide` `before` and `after` arguments are now require the user to
-  specific time units in certain cases. The `time_step` argument has been
-  removed.
-- `epix_slide` `before` argument now defaults to `Inf`, and requires the user to
-  specify units in some cases. The `time_step` argument has been removed.
 
 # epiprocess 0.7.0
 
