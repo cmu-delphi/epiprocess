@@ -100,11 +100,15 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
     assert_numeric(ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
     if (!test_subset(ref_time_values, unique(x$time_value))) {
       cli_abort(
-        "`ref_time_values` must be a unique subset of the time values in `x`."
+        "`ref_time_values` must be a unique subset of the time values in `x`.",
+        class = "epi_slide__invalid_ref_time_values"
       )
     }
     if (anyDuplicated(ref_time_values) != 0L) {
-      cli_abort("`ref_time_values` must not contain any duplicates; use `unique` if appropriate.")
+      cli_abort(
+        "`ref_time_values` must not contain any duplicates; use `unique` if appropriate.",
+        class = "epi_slide__invalid_ref_time_values"
+      )
     }
   }
   ref_time_values <- sort(ref_time_values)
@@ -495,11 +499,15 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
     assert_numeric(ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
     if (!test_subset(ref_time_values, unique(x$time_value))) {
       cli_abort(
-        "`ref_time_values` must be a unique subset of the time values in `x`."
+        "`ref_time_values` must be a unique subset of the time values in `x`.",
+        class = "epi_slide_opt__invalid_ref_time_values"
       )
     }
     if (anyDuplicated(ref_time_values) != 0L) {
-      cli_abort("`ref_time_values` must not contain any duplicates; use `unique` if appropriate.")
+      cli_abort(
+        "`ref_time_values` must not contain any duplicates; use `unique` if appropriate.",
+        class = "epi_slide_opt__invalid_ref_time_values"
+      )
     }
   }
   ref_time_values <- sort(ref_time_values)
