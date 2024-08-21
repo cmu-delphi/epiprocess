@@ -28,19 +28,19 @@
         time_value geo_value n_revisions min_lag max_lag time_near_latest spread
         <date>     <chr>           <dbl> <drtn>  <drtn>  <drtn>            <dbl>
       1 2020-01-01 ak                  4 2 days  19 days 19 days             101
-      2 2020-01-01 al                  1 0 days  19 days 19 days              99
-      3 2020-01-02 ak                  1 4 days   5 days  4 days               9
-      4 2020-01-02 al                  0 0 days   0 days  0 days               0
-      5 2020-01-03 ak                  0 3 days   3 days  3 days               0
+      2 2020-01-02 ak                  1 4 days   5 days  4 days               9
+      3 2020-01-03 ak                  0 3 days   3 days  3 days               0
+      4 2020-01-01 al                  1 0 days  19 days 19 days              99
+      5 2020-01-02 al                  0 0 days   0 days  0 days               0
       6 2020-01-03 al                  1 1 days   2 days  2 days               3
       7 2020-01-04 al                  0 1 days   1 days  1 days               0
         rel_spread min_value max_value median_value
              <dbl>     <dbl>     <dbl>        <dbl>
       1      0.990         1       102          6  
-      2      0.99          1       100         50.5
-      3      0.09         91       100         95.5
-      4      0             1         1          1  
-      5    NaN             0         0          0  
+      2      0.09         91       100         95.5
+      3    NaN             0         0          0  
+      4      0.99          1       100         50.5
+      5      0             1         1          1  
       6      0.75          1         4          2.5
       7      0             9         9          9  
 
@@ -76,19 +76,19 @@
         time_value geo_value n_revisions min_lag max_lag time_near_latest spread
         <date>     <chr>           <dbl> <drtn>  <drtn>  <drtn>            <dbl>
       1 2020-01-01 ak                  6 2 days  19 days 19 days             101
-      2 2020-01-01 al                  1 0 days  19 days 19 days              99
-      3 2020-01-02 ak                  1 4 days   5 days  4 days               9
-      4 2020-01-02 al                  0 0 days   0 days  0 days               0
-      5 2020-01-03 ak                  0 3 days   3 days  3 days               0
+      2 2020-01-02 ak                  1 4 days   5 days  4 days               9
+      3 2020-01-03 ak                  0 3 days   3 days  3 days               0
+      4 2020-01-01 al                  1 0 days  19 days 19 days              99
+      5 2020-01-02 al                  0 0 days   0 days  0 days               0
       6 2020-01-03 al                  1 1 days   2 days  2 days               3
       7 2020-01-04 al                  1 0 days   1 days  1 days               0
         rel_spread min_value max_value median_value
              <dbl>     <dbl>     <dbl>        <dbl>
       1      0.990         1       102          5.5
-      2      0.99          1       100         50.5
-      3      0.09         91       100         95.5
-      4      0             1         1          1  
-      5    NaN             0         0          0  
+      2      0.09         91       100         95.5
+      3    NaN             0         0          0  
+      4      0.99          1       100         50.5
+      5      0             1         1          1  
       6      0.75          1         4          2.5
       7      0             9         9          9  
 

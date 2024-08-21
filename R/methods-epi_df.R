@@ -274,8 +274,8 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 #' daily_edf %>%
 #'   group_by(geo_value) %>%
 #'   complete(time_value = full_seq(time_value, period = 1))
-#' # Complete has explicit=TRUE by default, but if it's FALSE, then complete only fills the implicit gaps
-#' # not those that are explicitly NA
+#' # Complete has explicit=TRUE by default, but if it's FALSE, then complete
+#' # only fills the implicit gaps, not those that are explicitly NA
 #' daily_edf <- tibble::tribble(
 #'   ~geo_value, ~time_value, ~value,
 #'   1, start_date + 1, 1,
@@ -303,11 +303,18 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 #' ) %>%
 #'   as_epi_df(as_of = start_date + 3)
 #' weekly_edf %>%
-#'   complete(geo_value, time_value = full_seq(time_value, period = 7), fill = list(value = 0))
+#'   complete(
+#'     geo_value,
+#'     time_value = full_seq(time_value, period = 7),
+#'     fill = list(value = 0)
+#'   )
 #' # With grouping
 #' weekly_edf %>%
 #'   group_by(geo_value) %>%
-#'   complete(time_value = full_seq(time_value, period = 7), fill = list(value = 0))
+#'   complete(
+#'     time_value = full_seq(time_value, period = 7),
+#'     fill = list(value = 0)
+#'   )
 #' @export
 complete.epi_df <- function(data, ..., fill = list(), explicit = TRUE) {
   result <- dplyr::dplyr_reconstruct(NextMethod(), data)
@@ -330,4 +337,37 @@ reclass <- function(x, metadata) {
   class(x) <- unique(c("epi_df", class(x)))
   attributes(x)$metadata <- metadata
   return(x)
+}
+
+#' Arrange an epi_df into a standard order
+#'
+#' Moves [key_colnames()] to the left, then arranges rows based on that
+#' ordering. This function is mainly for use in tests and so that
+#' other function output will be in predictable order, where necessary.
+#'
+#' @param x an `epi_df`. Other objects will produce a warning and return as is.
+#' @param ... not used
+#'
+#' @keywords internal
+#' @export
+arrange_canonical <- function(x, ...) {
+  UseMethod("arrange_canonical")
+}
+
+#' @export
+arrange_canonical.default <- function(x, ...) {
+  rlang::check_dots_empty()
+  cli::cli_abort(c(
+    "`arrange_canonical()` is only meaningful for an {.cls epi_df}."
+  ))
+  return(x)
+}
+
+#' @export
+arrange_canonical.epi_df <- function(x, ...) {
+  rlang::check_dots_empty()
+  keys <- key_colnames(x)
+  x %>%
+    dplyr::relocate(dplyr::all_of(keys), .before = 1) %>%
+    dplyr::arrange(dplyr::across(dplyr::all_of(keys)))
 }
