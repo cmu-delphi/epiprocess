@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{an \code{epi_df}}
 
-\item{...}{Unused, for extensibility.}
+\item{...}{forwarded to \code{as_tibble} for \code{data.frame}s}
 }
 \description{
 Converts an \code{epi_df} object into a tibble, dropping metadata and any
