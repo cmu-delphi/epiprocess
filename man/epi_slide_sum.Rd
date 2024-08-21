@@ -14,7 +14,7 @@ epi_slide_sum(
   new_col_name = NULL,
   all_rows = FALSE,
   as_list_col = deprecated(),
-  names_sep = deprecated()
+  names_sep = NULL
 )
 }
 \arguments{
