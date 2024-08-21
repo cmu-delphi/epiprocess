@@ -130,8 +130,8 @@ the examples for usage details.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span>         1 2020-01-04     3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>         2 2020-01-03     2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span>         2 2020-01-04     3</span>
-<span class="r-in"><span><span class="co"># Complete has explicit=TRUE by default, but if it's FALSE, then complete only fills the implicit gaps</span></span></span>
-<span class="r-in"><span><span class="co"># not those that are explicitly NA</span></span></span>
+<span class="r-in"><span><span class="co"># Complete has explicit=TRUE by default, but if it's FALSE, then complete</span></span></span>
+<span class="r-in"><span><span class="co"># only fills the implicit gaps, not those that are explicitly NA</span></span></span>
 <span class="r-in"><span><span class="va">daily_edf</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tribble.html" class="external-link">tribble</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="op">~</span><span class="va">geo_value</span>, <span class="op">~</span><span class="va">time_value</span>, <span class="op">~</span><span class="va">value</span>,</span></span>
 <span class="r-in"><span>  <span class="fl">1</span>, <span class="va">start_date</span> <span class="op">+</span> <span class="fl">1</span>, <span class="fl">1</span>,</span></span>
@@ -173,7 +173,11 @@ the examples for usage details.</p>
 <span class="r-in"><span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="epi_df.html">as_epi_df</a></span><span class="op">(</span>as_of <span class="op">=</span> <span class="va">start_date</span> <span class="op">+</span> <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">weekly_edf</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/complete.html" class="external-link">complete</a></span><span class="op">(</span><span class="va">geo_value</span>, time_value <span class="op">=</span> <span class="fu"><a href="https://tidyr.tidyverse.org/reference/full_seq.html" class="external-link">full_seq</a></span><span class="op">(</span><span class="va">time_value</span>, period <span class="op">=</span> <span class="fl">7</span><span class="op">)</span>, fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>value <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/complete.html" class="external-link">complete</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="va">geo_value</span>,</span></span>
+<span class="r-in"><span>    time_value <span class="op">=</span> <span class="fu"><a href="https://tidyr.tidyverse.org/reference/full_seq.html" class="external-link">full_seq</a></span><span class="op">(</span><span class="va">time_value</span>, period <span class="op">=</span> <span class="fl">7</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>value <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 6 x 3 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = hhs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = week</span>
@@ -191,7 +195,10 @@ the examples for usage details.</p>
 <span class="r-in"><span><span class="co"># With grouping</span></span></span>
 <span class="r-in"><span><span class="va">weekly_edf</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/complete.html" class="external-link">complete</a></span><span class="op">(</span>time_value <span class="op">=</span> <span class="fu"><a href="https://tidyr.tidyverse.org/reference/full_seq.html" class="external-link">full_seq</a></span><span class="op">(</span><span class="va">time_value</span>, period <span class="op">=</span> <span class="fl">7</span><span class="op">)</span>, fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>value <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/complete.html" class="external-link">complete</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    time_value <span class="op">=</span> <span class="fu"><a href="https://tidyr.tidyverse.org/reference/full_seq.html" class="external-link">full_seq</a></span><span class="op">(</span><span class="va">time_value</span>, period <span class="op">=</span> <span class="fl">7</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>value <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 5 x 3 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = hhs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = week</span>
