@@ -1,3 +1,5 @@
+library(cli)
+
 # Create an epi_df and a function to test epi_slide with
 test_date <- as.Date("2020-01-01")
 days_dt <- as.difftime(1, units = "days")
@@ -53,19 +55,22 @@ bad_values <- list(
   "a", 0.5, -1L, -1.5, 1.5, NA, c(0, 1)
 )
 purrr::map(bad_values, function(bad_value) {
-  test_that("`before` and `after` in epi_slide fail on {x}", {
-    expect_error(
-      epi_slide(grouped, before = bad_value, ref_time_values = test_date + 2),
-      class = "epiprocess__validate_slide_window_arg"
-    )
-    expect_error(
-      epi_slide(grouped, after = bad_value, ref_time_values = test_date + 2),
-      class = "epiprocess__validate_slide_window_arg"
-    )
-  })
+  test_that(
+    format_inline("`before` and `after` in epi_slide fail on {bad_value}"),
+    {
+      expect_error(
+        epi_slide(grouped, before = bad_value, ref_time_values = test_date + 2),
+        class = "epiprocess__validate_slide_window_arg"
+      )
+      expect_error(
+        epi_slide(grouped, after = bad_value, ref_time_values = test_date + 2),
+        class = "epiprocess__validate_slide_window_arg"
+      )
+    }
+  )
 })
 purrr::map(bad_values, function(bad_value) {
-  test_that("`before` and `after` in epi_slide_mean fail on {x}", {
+  test_that(format_inline("`before` and `after` in epi_slide_mean fail on {bad_value}"), {
     expect_error(
       epi_slide_mean(grouped, col_names = value, before = bad_value, ref_time_values = test_date + 2),
       class = "epiprocess__validate_slide_window_arg"
@@ -79,7 +84,7 @@ purrr::map(bad_values, function(bad_value) {
 
 bad_values <- c(min(grouped$time_value) - 1, max(grouped$time_value) + 1)
 purrr::map(bad_values, function(bad_value) {
-  test_that("epi_slide or epi_slide_mean: `ref_time_values` out of range for all groups generate an error", {
+  test_that(format_inline("epi_slide[_mean]: `ref_time_values` out of range for all groups {bad_value}"), {
     expect_error(
       epi_slide(grouped, f, before = 2 * days_dt, ref_time_values = bad_value),
       class = "epi_slide__invalid_ref_time_values"
@@ -142,38 +147,62 @@ test_that("epi_slide alerts if the provided f doesn't take enough args", {
 })
 
 
-# Computation tests
-test_that("epi_slide outputs list columns when desired, and unpacks unnamed computations", {
-  # See `toy_edf` and `basic_sum_result` definitions at top of file.
-  expect_equal(
-    toy_edf %>% epi_slide(before = 6 * days_dt, ~ sum(.x$value)),
-    basic_sum_result
-  )
-  expect_equal(
-    toy_edf %>% epi_slide(before = 6 * days_dt, ~ list(rep(sum(.x$value), 2L))),
-    basic_sum_result %>% mutate(slide_value = lapply(slide_value, rep, 2L))
-  )
-  expect_equal(
-    toy_edf %>% epi_slide(before = 6 * days_dt, ~ data.frame(slide_value = sum(.x$value))),
-    basic_sum_result
-  )
-  expect_equal(
-    toy_edf %>% epi_slide(before = 6 * days_dt, ~ list(data.frame(slide_value = sum(.x$value)))),
-    basic_sum_result %>%
-      mutate(slide_value = purrr::map(slide_value, ~ data.frame(slide_value = .x)))
-  )
-  expect_identical(
-    toy_edf %>% epi_slide(before = 6L, ~ tibble(slide_value = list(sum(.x$value)))),
-    basic_sum_result %>% mutate(slide_value = as.list(slide_value))
-  )
-  # unnamed data-masking expression producing data frame:
-  expect_identical(
-    # unfortunately, we can't pass this directly as `f` and need an extra comma
-    toy_edf %>% epi_slide(before = 6L, , data.frame(slide_value = sum(.x$value))),
-    basic_sum_result
-  )
-})
+# Common example tests
+for (rtv in list(NULL, test_date + 1, c(test_date + 1, test_date + 3))) {
+  test_that(format_inline("epi_slide works with formulas, lists, and data.frame outputs with ref_time_value {rtv}"), {
+    expect_equal(
+      toy_edf %>% epi_slide(before = 6 * days_dt, ~ sum(.x$value), ref_time_values = rtv),
+      basic_sum_result %>%
+        {
+          if (!is.null(rtv)) dplyr::filter(., time_value %in% rtv) else .
+        }
+    )
+    expect_equal(
+      toy_edf %>% epi_slide(before = 6 * days_dt, ~ list(rep(sum(.x$value), 2L)), ref_time_values = rtv),
+      basic_sum_result %>% mutate(slide_value = lapply(slide_value, rep, 2L)) %>%
+        {
+          if (!is.null(rtv)) dplyr::filter(., time_value %in% rtv) else .
+        }
+    )
+    expect_equal(
+      toy_edf %>% epi_slide(before = 6 * days_dt, ~ data.frame(slide_value = sum(.x$value)), ref_time_values = rtv),
+      basic_sum_result %>%
+        {
+          if (!is.null(rtv)) dplyr::filter(., time_value %in% rtv) else .
+        }
+    )
+    expect_equal(
+      toy_edf %>% epi_slide(
+        before = 6 * days_dt, ~ list(data.frame(slide_value = sum(.x$value))),
+        ref_time_values = rtv
+      ),
+      basic_sum_result %>%
+        mutate(slide_value = purrr::map(slide_value, ~ data.frame(slide_value = .x))) %>%
+        {
+          if (!is.null(rtv)) dplyr::filter(., time_value %in% rtv) else .
+        }
+    )
+    expect_identical(
+      toy_edf %>% epi_slide(before = 6L, ~ tibble(slide_value = list(sum(.x$value))), ref_time_values = rtv),
+      basic_sum_result %>% mutate(slide_value = as.list(slide_value)) %>%
+        {
+          if (!is.null(rtv)) dplyr::filter(., time_value %in% rtv) else .
+        }
+    )
+    # unnamed data-masking expression producing data frame:
+    expect_identical(
+      # unfortunately, we can't pass this directly as `f` and need an extra comma
+      toy_edf %>% epi_slide(before = 6L, , data.frame(slide_value = sum(.x$value)), ref_time_values = rtv),
+      basic_sum_result %>%
+        {
+          if (!is.null(rtv)) dplyr::filter(., time_value %in% rtv) else .
+        }
+    )
+  })
+}
 
+
+# Edge example tests
 test_that("epi_slide can use sequential data masking expressions including NULL", {
   edf_a <- tibble::tibble(
     geo_value = 1,
@@ -837,7 +866,7 @@ test_that("epi_slide gets correct ref_time_value when groups have non-overlappin
 
 time_types <- c("days", "weeks", "yearmonths", "integers")
 for (time_type in time_types) {
-  test_that("epi_slide and epi_slide_mean: different before/after match for {time_type}", {
+  test_that(format_inline("epi_slide and epi_slide_mean: different before/after match for {time_type}"), {
     set.seed(0)
     n <- 16
     epi_data_no_missing <- rbind(

@@ -126,7 +126,7 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
     if (inherits(before, "difftime")) {
       after <- as.difftime(0, units = units(before))
     } else {
-      if (before == Inf && time_type %in% c("day", "week")) {
+      if (identical(before, Inf) && time_type %in% c("day", "week")) {
         after <- as.difftime(0, units = glue::glue("{time_type}s"))
       } else {
         after <- 0
@@ -435,7 +435,7 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
 #'   ungroup()
 epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref_time_values = NULL,
                           new_col_name = NULL, all_rows = FALSE,
-                          as_list_col = deprecated(), names_sep = deprecated()) {
+                          as_list_col = deprecated(), names_sep = NULL) {
   assert_class(x, "epi_df")
 
   if (nrow(x) == 0L) {
@@ -540,7 +540,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
     if (inherits(before, "difftime")) {
       after <- as.difftime(0, units = units(before))
     } else {
-      if (before == Inf && time_type %in% c("day", "week")) {
+      if (identical(before, Inf) && time_type %in% c("day", "week")) {
         after <- as.difftime(0, units = glue::glue("{time_type}s"))
       } else {
         after <- 0
@@ -736,7 +736,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
 #'   ungroup()
 epi_slide_mean <- function(x, col_names, ..., before = NULL, after = NULL, ref_time_values = NULL,
                            new_col_name = NULL, all_rows = FALSE,
-                           as_list_col = deprecated(), names_sep = deprecated()) {
+                           as_list_col = deprecated(), names_sep = NULL) {
   epi_slide_opt(
     x = x,
     col_names = {{ col_names }},
@@ -783,7 +783,7 @@ epi_slide_sum <- function(x, col_names, ..., before = NULL, after = NULL, ref_ti
                           new_col_name = NULL,
                           all_rows = FALSE,
                           as_list_col = deprecated(),
-                          names_sep = deprecated()) {
+                          names_sep = NULL) {
   epi_slide_opt(
     x = x,
     col_names = {{ col_names }},
