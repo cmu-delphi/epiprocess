@@ -1,5 +1,4 @@
-## Create an epi. df and a function to test epi_slide with
-
+# Create an epi_df and a function to test epi_slide with
 test_date <- as.Date("2020-01-01")
 days_dt <- as.difftime(1, units = "days")
 weeks_dt <- as.difftime(1, units = "weeks")
@@ -48,211 +47,59 @@ basic_mean_result <- tibble::tribble(
   as_epi_df(as_of = test_date + 100)
 # nolint end: line_length_linter.
 
-## --- These cases generate errors (or not): ---
-test_that("`before` and `after` are both vectors of length 1", {
-  expect_error(
-    epi_slide(grouped, f, before = c(0, 1), after = 0, ref_time_values = test_date + 3),
-    "Expected `before` to be a scalar value."
-  )
-  expect_error(
-    epi_slide(grouped, f, before = 1, after = c(0, 1), ref_time_values = test_date + 3),
-    "Expected `after` to be a scalar value."
-  )
-  expect_error(
-    epi_slide_mean(grouped, col_names = value, before = c(0, 1), after = 0, ref_time_values = test_date + 3),
-    "Expected `before` to be a scalar value."
-  )
-  expect_error(
-    epi_slide_mean(grouped, col_names = value, before = 1, after = c(0, 1), ref_time_values = test_date + 3),
-    "Expected `after` to be a scalar value."
-  )
-})
 
-test_that("Test errors/warnings for discouraged features", {
-  expect_error(
-    epi_slide(grouped, f, ref_time_values = test_date + 1),
-    "`before` is a required argument."
-  )
-
-  expect_error(
-    epi_slide_mean(grouped, col_names = value, ref_time_values = test_date + 1),
-    "`before` is a required argument."
-  )
-
-  expect_no_warning(
-    ref1 <- epi_slide(grouped, f, before = days_dt, ref_time_values = test_date + 2)
-  )
-  expect_no_warning(
-    ref2 <- epi_slide(grouped, f, after = days_dt, ref_time_values = test_date + 2)
-  )
-
-  expect_no_warning(
-    opt1 <- epi_slide_mean(grouped,
-      col_names = value,
-      before = days_dt, ref_time_values = test_date + 2, na.rm = TRUE
-    )
-  )
-  expect_no_warning(
-    opt2 <- epi_slide_mean(grouped,
-      col_names = value,
-      after = days_dt, ref_time_values = test_date + 2, na.rm = TRUE
-    )
-  )
-
-  # Results from epi_slide and epi_slide_mean should match
-  expect_equal(select(ref1, -count), opt1 %>% rename(avg = slide_value_value))
-  expect_equal(select(ref2, -count), opt2 %>% rename(avg = slide_value_value))
-})
-
-test_that("Both `before` and `after` must be non-NA, non-negative, integer-compatible", {
-  expect_error(
-    epi_slide(grouped, f, before = -1L, ref_time_values = test_date + 2L),
-    "Expected `before` to be a difftime with units in days or a non-negative integer."
-  )
-  expect_error(
-    epi_slide(grouped, f, after = -1L, ref_time_values = test_date + 2L),
-    "Expected `after` to be a difftime with units in days or a non-negative integer."
-  )
-  expect_error(epi_slide(grouped, f, before = "a", after = days_dt, ref_time_values = test_date + 2L),
-    regexp = "Expected `before` to be a difftime with units in days or a non-negative integer."
-  )
-  expect_error(epi_slide(grouped, f, before = days_dt, after = "a", ref_time_values = test_date + 2L),
-    regexp = "Expected `after` to be a difftime with units in days or a non-negative integer."
-  )
-  expect_error(epi_slide(grouped, f, before = 0.5, after = days_dt, ref_time_values = test_date + 2L),
-    regexp = "Expected `before` to be a difftime with units in days or a non-negative integer."
-  )
-  expect_error(epi_slide(grouped, f, before = days_dt, after = 0.5, ref_time_values = test_date + 2L),
-    regexp = "Expected `after` to be a difftime with units in days or a non-negative integer."
-  )
-  expect_error(
-    epi_slide(grouped, f, before = NA, after = 1L, ref_time_values = test_date + 2L),
-    "Expected `before` to be a scalar value."
-  )
-  expect_error(
-    epi_slide(grouped, f, before = days_dt, after = NA, ref_time_values = test_date + 2L),
-    "Expected `after` to be a scalar value."
-  )
-
-  expect_error(
-    epi_slide_mean(grouped, col_names = value, before = -1L, ref_time_values = test_date + 2L),
-    "Expected `before` to be a difftime with units in days or a non-negative integer."
-  )
-  expect_error(
-    epi_slide_mean(grouped, col_names = value, after = -1L, ref_time_values = test_date + 2L),
-    "Expected `after` to be a difftime with units in days or a non-negative integer."
-  )
-  expect_error(
-    epi_slide_mean(grouped, col_names = value, before = "a", ref_time_values = test_date + 2L),
-    regexp = "Expected `before` to be a difftime with units in days or a non-negative integer."
-  )
-  expect_error(
-    epi_slide_mean(grouped, col_names = value, after = "a", ref_time_values = test_date + 2L),
-    regexp = "Expected `after` to be a difftime with units in days or a non-negative integer."
-  )
-  expect_error(
-    epi_slide_mean(grouped, col_names = value, before = 0.5, ref_time_values = test_date + 2L),
-    regexp = "Expected `before` to be a difftime with units in days or a non-negative integer."
-  )
-  expect_error(
-    epi_slide_mean(grouped, col_names = value, after = 0.5, ref_time_values = test_date + 2L),
-    regexp = "Expected `after` to be a difftime with units in days or a non-negative integer."
-  )
-  expect_error(
-    epi_slide_mean(grouped, col_names = value, before = NA, after = days_dt, ref_time_values = test_date + 2L),
-    "Expected `before` to be a scalar value."
-  )
-  expect_error(
-    epi_slide_mean(grouped, col_names = value, before = days_dt, after = NA, ref_time_values = test_date + 2L),
-    "Expected `after` to be a scalar value."
-  )
-
-  # Non-integer-class but integer-compatible values are allowed:
-  expect_no_error(
-    ref <- epi_slide(grouped, f, before = days_dt, after = days_dt, ref_time_values = test_date + 2L)
-  )
-  expect_no_error(opt <- epi_slide_mean(
-    grouped,
-    col_names = value, before = days_dt, after = days_dt,
-    ref_time_values = test_date + 2L, na.rm = TRUE
-  ))
-
-  # Results from epi_slide and epi_slide_mean should match
-  expect_equal(select(ref, -count), opt %>% rename(avg = slide_value_value))
-})
-
-test_that("`ref_time_values` + `before` + `after` that result in no slide data, generate the error", {
-  expect_error(
-    epi_slide(grouped, f, before = 2 * days_dt, ref_time_values = test_date),
-    "`ref_time_values` must be a unique subset of the time values in `x`."
-  ) # before the first, no data in the slide windows
-  expect_error(
-    epi_slide(grouped, f, before = 2 * days_dt, ref_time_values = test_date + 207L),
-    "`ref_time_values` must be a unique subset of the time values in `x`."
-  ) # beyond the last, no data in window
-
-  expect_error(
-    epi_slide_mean(grouped, col_names = value, before = 2 * days_dt, ref_time_values = test_date),
-    "`ref_time_values` must be a unique subset of the time values in `x`."
-  ) # before the first, no data in the slide windows
-  expect_error(
-    epi_slide_mean(
-      grouped,
-      col_names = value,
-      before = 2 * days_dt,
-      ref_time_values = test_date + 207L
-    ),
-    "`ref_time_values` must be a unique subset of the time values in `x`."
-  ) # beyond the last, no data in window
-})
-
-test_that(
-  c(
-    "`ref_time_values` + `before` + `after` that have some slide data, but
-            generate the error due to ref. time being out of time range (would
-            also happen if they were in between `time_value`s)"
-  ),
-  {
-    expect_error(
-      epi_slide(grouped, f, after = 2 * days_dt, ref_time_values = test_date),
-      "`ref_time_values` must be a unique subset of the time values in `x`."
-    ) # before the first, but we'd expect there to be data in the window
-    expect_error(
-      epi_slide(grouped, f, before = 2 * days_dt, ref_time_values = test_date + 201L),
-      "`ref_time_values` must be a unique subset of the time values in `x`."
-    ) # beyond the last, but still with data in window
-
-    expect_error(
-      epi_slide_mean(grouped, value, after = 2 * days_dt, ref_time_values = test_date),
-      "`ref_time_values` must be a unique subset of the time values in `x`."
-    ) # before the first, but we'd expect there to be data in the window
-    expect_error(
-      epi_slide_mean(grouped, value, before = 2 * days_dt, ref_time_values = test_date + 201L),
-      "`ref_time_values` must be a unique subset of the time values in `x`."
-    ) # beyond the last, but still with data in window
-  }
+# Argument validation tests
+bad_values <- list(
+  "a", 0.5, -1L, -1.5, 1.5, NA, c(0, 1)
 )
+purrr::map(bad_values, function(bad_value) {
+  test_that("`before` and `after` in epi_slide fail on {x}", {
+    expect_error(
+      epi_slide(grouped, before = bad_value, ref_time_values = test_date + 2),
+      class = "epiprocess__validate_slide_window_arg"
+    )
+    expect_error(
+      epi_slide(grouped, after = bad_value, ref_time_values = test_date + 2),
+      class = "epiprocess__validate_slide_window_arg"
+    )
+  })
+})
+purrr::map(bad_values, function(bad_value) {
+  test_that("`before` and `after` in epi_slide_mean fail on {x}", {
+    expect_error(
+      epi_slide_mean(grouped, col_names = value, before = bad_value, ref_time_values = test_date + 2),
+      class = "epiprocess__validate_slide_window_arg"
+    )
+    expect_error(
+      epi_slide_mean(grouped, col_names = value, after = bad_value, ref_time_values = test_date + 2),
+      class = "epiprocess__validate_slide_window_arg"
+    )
+  })
+})
 
-## --- These cases doesn't generate the error: ---
+bad_values <- c(min(grouped$time_value) - 1, max(grouped$time_value) + 1)
+purrr::map(bad_values, function(bad_value) {
+  test_that("epi_slide or epi_slide_mean: `ref_time_values` out of range for all groups generate an error", {
+    expect_error(
+      epi_slide(grouped, f, before = 2 * days_dt, ref_time_values = bad_value),
+      class = "epi_slide__invalid_ref_time_values"
+    )
+    expect_error(
+      epi_slide_mean(grouped, col_names = value, before = 2 * days_dt, ref_time_values = bad_value),
+      class = "epi_slide_opt__invalid_ref_time_values"
+    )
+  })
+})
+
 test_that(
-  c(
-    "these doesn't produce an error; the error appears only if the ref time
-            values are out of the range for every group"
-  ),
+  "epi_slide or epi_slide_mean: `ref_time_values` in range for at least group generate no error",
   {
     expect_equal(
       epi_slide(grouped, f, before = 2 * days_dt, ref_time_values = test_date + 200L) %>%
         ungroup() %>%
         dplyr::select("geo_value", "avg"),
       dplyr::tibble(geo_value = "ak", avg = 199)
-    ) # out of range for one group
-    expect_equal(
-      epi_slide(grouped, f, before = 2 * days_dt, ref_time_values = test_date + 3) %>%
-        ungroup() %>%
-        dplyr::select("geo_value", "avg"),
-      dplyr::tibble(geo_value = c("ak", "al"), avg = c(2, -2))
-    ) # not out of range for either group
-
+    )
     expect_equal(
       epi_slide_mean(
         grouped, value,
@@ -261,25 +108,16 @@ test_that(
         ungroup() %>%
         dplyr::select("geo_value", "slide_value_value"),
       dplyr::tibble(geo_value = "ak", slide_value_value = 199)
-    ) # out of range for one group
-    expect_equal(
-      epi_slide_mean(
-        grouped, value,
-        before = 2 * days_dt, ref_time_values = test_date + 3, na.rm = TRUE
-      ) %>%
-        ungroup() %>%
-        dplyr::select("geo_value", "slide_value_value"),
-      dplyr::tibble(geo_value = c("ak", "al"), slide_value_value = c(2, -2))
-    ) # not out of range for either group
+    )
   }
 )
 
+
+# Computation tests
 test_that("epi_slide outputs list columns when desired, and unpacks unnamed computations", {
   # See `toy_edf` and `basic_sum_result` definitions at top of file.
-  # We'll try 7d sum with a few formats.
   expect_equal(
-    toy_edf %>%
-      epi_slide(before = 6 * days_dt, ~ sum(.x$value)),
+    toy_edf %>% epi_slide(before = 6 * days_dt, ~ sum(.x$value)),
     basic_sum_result
   )
   expect_equal(
@@ -401,6 +239,17 @@ test_that("epi_slide can use {nm} :=", {
   )
 })
 
+test_that("epi_slide and epi_slide_opt outputs match", {
+  expect_equal(
+    epi_slide(grouped, f, before = days_dt, after = days_dt, ref_time_values = test_date + 2) %>% select(-count),
+    epi_slide_mean(
+      grouped,
+      col_names = value, before = days_dt, after = days_dt,
+      ref_time_values = test_date + 2, na.rm = TRUE
+    ) %>% rename(avg = slide_value_value)
+  )
+})
+
 test_that("epi_slide can produce packed outputs", {
   packed_basic_result <- basic_sum_result %>%
     tidyr::pack(container = c(slide_value)) %>%
@@ -434,6 +283,7 @@ test_that("epi_slide_mean errors when `as_list_col` non-NULL", {
       ),
     basic_mean_result %>% rename(slide_value_value = slide_value)
   )
+  # `epi_slide_mean` doesn't return dataframe columns
   expect_error(
     toy_edf %>%
       filter(
@@ -445,7 +295,6 @@ test_that("epi_slide_mean errors when `as_list_col` non-NULL", {
       ),
     class = "lifecycle_error_deprecated"
   )
-  # `epi_slide_mean` doesn't return dataframe columns
 })
 
 test_that("nested dataframe output names are controllable", {
@@ -503,14 +352,11 @@ test_that("outputs are recycled", {
 
 test_that("epi_slide alerts if the provided f doesn't take enough args", {
   f_xgt <- function(x, g, t) dplyr::tibble(value = mean(x$value), count = length(x$value))
-  # If `regexp` is NA, asserts that there should be no errors/messages.
-  expect_error(
+  expect_no_error(
     epi_slide(grouped, f_xgt, before = days_dt, ref_time_values = test_date + 1),
-    regexp = NA
   )
-  expect_warning(
+  expect_no_warning(
     epi_slide(grouped, f_xgt, before = days_dt, ref_time_values = test_date + 1),
-    regexp = NA
   )
 
   f_x_dots <- function(x, ...) dplyr::tibble(value = mean(x$value), count = length(x$value))
@@ -1032,193 +878,89 @@ test_that("epi_slide gets correct ref_time_value when groups have non-overlappin
   expect_equal(result1, expected_output)
 })
 
-test_that("results for different `before`s and `after`s match between epi_slide and epi_slide_mean", {
-  test_time_type_mean <- function(dates, vals, before = 6 * days_dt, after = 0 * days_dt, n, m, n_obs, k, ...) {
-    # Three states, with 2 variables. a is linear, going up in one state and down in the other
-    # b is just random. last (m-1):(n-1) dates are missing
-    epi_data <- epiprocess::as_epi_df(rbind(tibble(
-      geo_value = "al",
-      time_value = dates,
-      a = 1:n_obs,
-      b = vals
-    ), tibble(
-      geo_value = "ca",
-      time_value = dates,
-      a = n_obs:1,
-      b = vals + 10
-    ))) %>%
+time_types <- c("days", "weeks", "yearmonths", "integers")
+for (time_type in time_types) {
+  test_that("epi_slide and epi_slide_mean: different before/after match for {time_type}", {
+    set.seed(0)
+    n <- 16
+    epi_data_no_missing <- rbind(
+      tibble(geo_value = "al", a = 1:n, b = rnorm(n)),
+      tibble(geo_value = "ca", a = n:1, b = rnorm(n) + 10),
+      tibble(geo_value = "fl", a = n:1, b = rnorm(n) * 2)
+    ) %>%
+      mutate(
+        time_value = rep(
+          switch(time_type,
+            days = as.Date("2022-01-01") + 1:n,
+            weeks = as.Date("2022-01-01") + 7L * 1:n,
+            yearmonths = tsibble::yearmonth(10L + 1:n),
+            integers = 2000L + 1:n,
+          ), 3
+        )
+      ) %>%
+      as_epi_df() %>%
       group_by(geo_value)
+    # Remove rows 12, 13, and 14 from every group
+    epi_data_missing <- epi_data_no_missing %>% slice(1:11, 15:16)
 
-    # Use the `epi_slide` result as a reference.
-    result1 <- epi_slide(epi_data, ~ data.frame(
-      slide_value_a = mean(.x$a, rm.na = TRUE),
-      slide_value_b = mean(.x$b, rm.na = TRUE)
-    ),
-    before = before, after = after, ...
+    test_time_type_mean <- function(epi_data, before = NULL, after = NULL, ...) {
+      result1 <- epi_slide(epi_data, ~ data.frame(
+        slide_value_a = mean(.x$a, rm.na = TRUE),
+        slide_value_b = mean(.x$b, rm.na = TRUE)
+      ),
+      before = before, after = after, ...
+      )
+      result2 <- epi_slide_mean(epi_data, col_names = c(a, b), na.rm = TRUE, before = before, after = after, ...)
+      expect_equal(result1, result2)
+    }
+
+    units <- switch(time_type,
+      days = days_dt,
+      weeks = weeks_dt,
+      yearmonths = 1,
+      integers = 1
     )
-    result2 <- epi_slide_mean(epi_data, col_names = c(a, b), na.rm = TRUE, before = before, after = after, ...)
-    expect_equal(result1, result2)
-  }
 
-  set.seed(0)
+    test_time_type_mean(epi_data_missing, before = 6 * units)
+    test_time_type_mean(epi_data_missing, before = 6 * units, after = 1 * units)
+    test_time_type_mean(epi_data_missing, before = 6 * units, after = 6 * units)
+    test_time_type_mean(epi_data_missing, before = 1 * units, after = 6 * units)
+    test_time_type_mean(epi_data_missing, after = 6 * units)
+    test_time_type_mean(epi_data_missing, after = 1 * units)
 
-  # 3 missing dates
-  n <- 15 # Max date index
-  m <- 3 # Number of missing dates
-  n_obs <- n + 1 - m # Number of obs created
-  k <- c(0:(n - (m + 1)), n) # Date indices
-
-  rand_vals <- rnorm(n_obs)
-  # Basic time type
-  days <- as.Date("2022-01-01") + k
-
-  test_time_type_mean(days, rand_vals, before = 6 * days_dt, n = n, m = m, n_obs = n_obs, k = k)
-  test_time_type_mean(days, rand_vals, before = 6 * days_dt, after = 1 * days_dt, n = n, m = m, n_obs = n_obs, k = k)
-  test_time_type_mean(days, rand_vals, before = 6 * days_dt, after = 6 * days_dt, n = n, m = m, n_obs = n_obs, k = k)
-  test_time_type_mean(days, rand_vals, before = 1 * days_dt, after = 6 * days_dt, n = n, m = m, n_obs = n_obs, k = k)
-  test_time_type_mean(days, rand_vals, after = 6 * days_dt, n = n, m = m, n_obs = n_obs, k = k)
-  test_time_type_mean(days, rand_vals, after = 1 * days_dt, n = n, m = m, n_obs = n_obs, k = k)
-
-  # Without any missing dates
-  n <- 15 # Max date index
-  m <- 0 # Number of missing dates
-  n_obs <- n + 1 - m # Number of obs created
-  k <- c(0:(n - (m + 1)), n) # Date indices
-
-  rand_vals <- rnorm(n_obs)
-  # Basic time type
-  days <- as.Date("2022-01-01") + k
-
-  test_time_type_mean(days, rand_vals, before = 6 * days_dt, n = n, m = m, n_obs = n_obs, k = k)
-  test_time_type_mean(days, rand_vals, before = 6 * days_dt, after = 1 * days_dt, n = n, m = m, n_obs = n_obs, k = k)
-  test_time_type_mean(days, rand_vals, before = 6 * days_dt, after = 6 * days_dt, n = n, m = m, n_obs = n_obs, k = k)
-  test_time_type_mean(days, rand_vals, before = 1 * days_dt, after = 6 * days_dt, n = n, m = m, n_obs = n_obs, k = k)
-  test_time_type_mean(days, rand_vals, after = 6 * days_dt, n = n, m = m, n_obs = n_obs, k = k)
-  test_time_type_mean(days, rand_vals, after = 1 * days_dt, n = n, m = m, n_obs = n_obs, k = k)
-})
-
-test_that("results for different time_types match between epi_slide and epi_slide_mean", {
-  n <- 6L # Max date index
-  m <- 1L # Number of missing dates
-  n_obs <- n + 1L - m # Number of obs created
-  k <- c(0L:(n - (m + 1L)), n) # Date indices
-
-  set.seed(0)
-  rand_vals <- rnorm(n_obs)
-
-  generate_special_date_data <- function(date_seq, ...) {
-    epiprocess::as_epi_df(rbind(tibble(
-      geo_value = "al",
-      time_value = date_seq,
-      a = seq_along(date_seq),
-      b = rand_vals
-    ), tibble(
-      geo_value = "ca",
-      time_value = date_seq,
-      a = rev(seq_along(date_seq)),
-      b = rand_vals + 10
-    ), tibble(
-      geo_value = "fl",
-      time_value = date_seq,
-      a = rev(seq_along(date_seq)),
-      b = rand_vals * 2
-    )), ...)
-  }
-
-  # Basic time type, require before and after in difftimes
-  days <- as.Date("2022-01-01") + k
-  weeks <- as.Date("2022-01-01") + 7L * k
-  yearmonths <- tsibble::yearmonth(10L + k)
-  integers <- 2000L + k
-
-  ref_epi_data <- generate_special_date_data(days) %>%
-    group_by(geo_value)
-
-  ref_result <- epi_slide(ref_epi_data, ~ data.frame(
-    slide_value_a = mean(.x$a, rm.na = TRUE),
-    slide_value_b = mean(.x$b, rm.na = TRUE)
-  ),
-  before = 6 * days_dt
-  )
-
-  test_time_type_mean <- function(dates, before) {
-    # Three states, with 2 variables. a is linear, going up in one state and down in the other
-    # b is just random. date 10 is missing
-    epi_data <- generate_special_date_data(dates) %>%
-      group_by(geo_value)
-
-    result1 <- epi_slide(epi_data, ~ data.frame(
-      slide_value_a = mean(.x$a, rm.na = TRUE),
-      slide_value_b = mean(.x$b, rm.na = TRUE)
-    ),
-    before = before
-    )
-    result2 <- epi_slide_mean(epi_data,
-      col_names = c(a, b), na.rm = TRUE, before = before
-    )
-    expect_equal(result1, result2)
-
-    # All fields except dates
-    expect_equal(select(ref_result, -time_value), select(result1, -time_value))
-    expect_equal(select(ref_result, -time_value), select(result2, -time_value))
-  }
-
-  test_time_type_mean(days, before = 6 * days_dt)
-  test_time_type_mean(weeks, before = 6 * weeks_dt)
-  test_time_type_mean(yearmonths, before = 6)
-  test_time_type_mean(integers, before = 6)
-
-  # `epi_slide_mean` can also handle `weeks` without `time_step` being
-  # provided, but `epi_slide` can't
-  epi_data <- generate_special_date_data(weeks) %>%
-    group_by(geo_value)
-  result2 <- epi_slide_mean(epi_data,
-    col_names = c(a, b), na.rm = TRUE,
-    before = 6 * weeks_dt
-  )
-  expect_equal(select(ref_result, -time_value), select(result2, -time_value))
-})
+    test_time_type_mean(epi_data_no_missing, before = 6 * units)
+    test_time_type_mean(epi_data_no_missing, before = 6 * units, after = 1 * units)
+    test_time_type_mean(epi_data_no_missing, before = 6 * units, after = 6 * units)
+    test_time_type_mean(epi_data_no_missing, before = 1 * units, after = 6 * units)
+    test_time_type_mean(epi_data_no_missing, after = 6 * units)
+    test_time_type_mean(epi_data_no_missing, after = 1 * units)
+  })
+}
 
 test_that("helper `full_date_seq` returns expected date values", {
-  n <- 6L # Max date index
-  m <- 1L # Number of missing dates
-  n_obs <- n + 1L - m # Number of obs created
-  k <- c(0L:(n - (m + 1L)), n) # Date indices
-
   set.seed(0)
-  rand_vals <- rnorm(n_obs)
-
-  generate_special_date_data <- function(date_seq, ...) {
-    epiprocess::as_epi_df(rbind(tibble(
-      geo_value = "al",
-      time_value = date_seq,
-      a = seq_along(date_seq),
-      b = rand_vals
-    ), tibble(
-      geo_value = "ca",
-      time_value = date_seq,
-      a = rev(seq_along(date_seq)),
-      b = rand_vals + 10
-    ), tibble(
-      geo_value = "fl",
-      time_value = date_seq,
-      a = rev(seq_along(date_seq)),
-      b = rand_vals * 2
-    )), ...)
-  }
-
-  # Basic time type, require before and after in difftimes
-  days <- as.Date("2022-01-01") + k
-  weeks <- as.Date("2022-01-01") + 7L * k
-  yearmonths <- tsibble::yearmonth(10L + k)
-  integers <- 2000L + k
+  n <- 7
+  epi_data_missing <- rbind(
+    tibble(geo_value = "al", a = 1:n, b = rnorm(n)),
+    tibble(geo_value = "ca", a = n:1, b = rnorm(n) + 10),
+    tibble(geo_value = "fl", a = n:1, b = rnorm(n) * 2)
+  ) %>%
+    mutate(
+      days = rep(as.Date("2022-01-01") - 1 + 1:n, 3),
+      weeks = rep(as.Date("2022-01-01") - 7 + 7L * 1:n, 3),
+      yearmonths = rep(tsibble::yearmonth(10L - 1 + 1:n), 3),
+      integers = rep(2000L - 1 + 1:n, 3)
+    ) %>%
+    slice(1:4, 6:7)
 
   before <- 2L
   after <- 1L
 
   expect_identical(
     full_date_seq(
-      generate_special_date_data(days),
+      epi_data_missing %>% mutate(time_value = days) %>%
+        as_epi_df() %>%
+        group_by(geo_value),
       before = before * days_dt, after = after * days_dt, time_type = "day"
     ),
     list(
@@ -1231,7 +973,12 @@ test_that("helper `full_date_seq` returns expected date values", {
     )
   )
   expect_identical(
-    full_date_seq(generate_special_date_data(weeks), before = before, after = after, time_type = "week"),
+    full_date_seq(
+      epi_data_missing %>% mutate(time_value = weeks) %>%
+        as_epi_df() %>%
+        group_by(geo_value),
+      before = before, after = after, time_type = "week"
+    ),
     list(
       all_dates = as.Date(c(
         "2022-01-01", "2022-01-08", "2022-01-15", "2022-01-22",
@@ -1242,7 +989,12 @@ test_that("helper `full_date_seq` returns expected date values", {
     )
   )
   expect_identical(
-    full_date_seq(generate_special_date_data(yearmonths), before = before, after = after, time_type = "yearmonth"),
+    full_date_seq(
+      epi_data_missing %>% mutate(time_value = yearmonths) %>%
+        as_epi_df() %>%
+        group_by(geo_value),
+      before = before, after = after, time_type = "yearmonth"
+    ),
     list(
       all_dates = tsibble::yearmonth(10:16),
       pad_early_dates = tsibble::yearmonth(8:9),
@@ -1250,11 +1002,16 @@ test_that("helper `full_date_seq` returns expected date values", {
     )
   )
   expect_identical(
-    full_date_seq(generate_special_date_data(integers), before = before, after = after, time_type = "integer"),
+    full_date_seq(
+      epi_data_missing %>% mutate(time_value = integers) %>%
+        as_epi_df() %>%
+        group_by(geo_value),
+      before = before, after = after, time_type = "integer"
+    ),
     list(
-      all_dates = 2000L:2006L,
-      pad_early_dates = 1998L:1999L,
-      pad_late_dates = 2007L
+      all_dates = as.double(2000:2006),
+      pad_early_dates = as.double(1998:1999),
+      pad_late_dates = 2007
     )
   )
 
@@ -1264,7 +1021,9 @@ test_that("helper `full_date_seq` returns expected date values", {
 
   expect_identical(
     full_date_seq(
-      generate_special_date_data(days),
+      epi_data_missing %>% mutate(time_value = days) %>%
+        as_epi_df() %>%
+        group_by(geo_value),
       before = before * days_dt, after = after * days_dt, time_type = "day"
     ),
     list(
@@ -1285,7 +1044,9 @@ test_that("helper `full_date_seq` returns expected date values", {
 
   expect_identical(
     full_date_seq(
-      generate_special_date_data(days),
+      epi_data_missing %>% mutate(time_value = days) %>%
+        as_epi_df() %>%
+        group_by(geo_value),
       before = before * days_dt, after = after * days_dt, time_type = "day"
     ),
     list(
@@ -1301,59 +1062,26 @@ test_that("helper `full_date_seq` returns expected date values", {
   )
 })
 
-test_that("epi_slide_mean produces same output as epi_slide_opt", {
-  result1 <- epi_slide_mean(small_x, value, before = 50 * days_dt, na.rm = TRUE)
-  result2 <- epi_slide_opt(small_x, value,
-    f = data.table::frollmean,
-    before = 50 * days_dt, na.rm = TRUE
+test_that("epi_slide_mean/sum produces same output as epi_slide_opt", {
+  expect_equal(
+    epi_slide_mean(small_x, value, before = 50 * days_dt, na.rm = TRUE),
+    epi_slide_opt(small_x, value, f = data.table::frollmean, before = 50 * days_dt, na.rm = TRUE)
   )
-  result2 <- epi_slide_opt(
-    small_x,
-    value,
-    f = data.table::frollmean,
-    before = 50 * days_dt,
-    na.rm = TRUE
+  expect_equal(
+    epi_slide_mean(small_x, value, before = 50 * days_dt, na.rm = TRUE),
+    epi_slide_opt(small_x, value, f = slider::slide_mean, before = 50 * days_dt, na_rm = TRUE)
   )
-  expect_equal(result1, result2)
-  result3 <- epi_slide_opt(
-    small_x,
-    value,
-    f = slider::slide_mean,
-    before = 50 * days_dt,
-    na_rm = TRUE
+  expect_equal(
+    epi_slide_sum(small_x, value, before = 50 * days_dt, na.rm = TRUE),
+    epi_slide_opt(small_x, value, f = data.table::frollsum, before = 50 * days_dt, na.rm = TRUE)
   )
-  expect_equal(result1, result3)
-})
-
-test_that("epi_slide_sum produces same output as epi_slide_opt", {
-  result1 <- epi_slide_sum(small_x, value, before = 50 * days_dt, na.rm = TRUE)
-  result2 <- epi_slide_opt(small_x, value,
-    f = data.table::frollsum,
-    before = 50 * days_dt, na.rm = TRUE
+  expect_equal(
+    epi_slide_sum(small_x, value, before = 50 * days_dt, na.rm = TRUE),
+    epi_slide_opt(small_x, value, f = slider::slide_sum, before = 50 * days_dt, na_rm = TRUE)
   )
-  expect_equal(result1, result2)
-  result3 <- epi_slide_opt(small_x, value,
-    f = slider::slide_sum,
-    before = 50 * days_dt, na_rm = TRUE
-  )
-  expect_equal(result1, result3)
 })
 
 test_that("`epi_slide_opt` errors when passed non-`data.table`, non-`slider` functions", {
-  expect_no_error(
-    epi_slide_opt(
-      grouped,
-      col_names = value, f = data.table::frollmean,
-      before = days_dt,  ref_time_values = test_date + 1
-    )
-  )
-  expect_no_error(
-    epi_slide_opt(
-      grouped,
-      col_names = value, f = slider::slide_min,
-      before = days_dt,  ref_time_values = test_date + 1
-    )
-  )
   reexport_frollmean <- data.table::frollmean
   expect_no_error(
     epi_slide_opt(

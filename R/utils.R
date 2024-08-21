@@ -878,37 +878,55 @@ guess_period.POSIXt <- function(time_values, time_values_arg = rlang::caller_arg
 
 validate_slide_window_arg <- function(arg, time_type, arg_name = rlang::caller_arg(arg)) {
   if (is.null(arg)) {
-    cli_abort("`{arg_name}` is a required argument.")
+    cli_abort("`{arg_name}` is a required argument.", class = "epiprocess__validate_slide_window_arg")
   }
 
   if (!checkmate::test_scalar(arg)) {
-    cli_abort("Expected `{arg_name}` to be a scalar value.")
+    cli_abort("Expected `{arg_name}` to be a scalar value.", class = "epiprocess__validate_slide_window_arg")
   }
 
   if (time_type == "custom") {
-    cli_abort("Unsure how to interpret slide units with a custom time type. Consider converting your time
-    column to a Date, yearmonth, or integer type.")
+    cli_abort(
+      "Unsure how to interpret slide units with a custom time type. Consider converting your time
+      column to a Date, yearmonth, or integer type.",
+      class = "epiprocess__validate_slide_window_arg"
+    )
   }
 
   if (!identical(arg, Inf)) {
     if (time_type == "day") {
       if (!test_int(arg, lower = 0L) && !(inherits(arg, "difftime") && units(arg) == "days")) {
-        cli_abort("Expected `{arg_name}` to be a difftime with units in days or a non-negative integer.")
+        cli_abort(
+          "Expected `{arg_name}` to be a difftime with units in days or a non-negative integer.",
+          class = "epiprocess__validate_slide_window_arg"
+        )
       }
     } else if (time_type == "week") {
       if (!(inherits(arg, "difftime") && units(arg) == "weeks")) {
-        cli_abort("Expected `{arg_name}` to be a difftime with units in weeks.")
+        cli_abort(
+          "Expected `{arg_name}` to be a difftime with units in weeks.",
+          class = "epiprocess__validate_slide_window_arg"
+        )
       }
     } else if (time_type == "yearmonth") {
       if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
-        cli_abort("Expected `{arg_name}` to be a non-negative integer.")
+        cli_abort(
+          "Expected `{arg_name}` to be a non-negative integer.",
+          class = "epiprocess__validate_slide_window_arg"
+        )
       }
     } else if (time_type == "integer") {
       if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
-        cli_abort("Expected `{arg_name}` to be a non-negative integer.")
+        cli_abort(
+          "Expected `{arg_name}` to be a non-negative integer.",
+          class = "epiprocess__validate_slide_window_arg"
+        )
       }
     } else {
-      cli_abort("Expected `{arg_name}` to be Inf, an appropriate a difftime, or a non-negative integer.")
+      cli_abort(
+        "Expected `{arg_name}` to be Inf, an appropriate a difftime, or a non-negative integer.",
+        class = "epiprocess__validate_slide_window_arg"
+      )
     }
   }
 }
