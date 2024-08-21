@@ -18,20 +18,20 @@ key_colnames.default <- function(x, ...) {
 #' @export
 key_colnames.data.frame <- function(x, other_keys = character(0L), ...) {
   assert_character(other_keys)
-  nm <- c("time_value", "geo_value", other_keys)
+  nm <- c("geo_value", "time_value", other_keys)
   intersect(nm, colnames(x))
 }
 
 #' @export
 key_colnames.epi_df <- function(x, ...) {
   other_keys <- attr(x, "metadata")$other_keys
-  c("time_value", "geo_value", other_keys)
+  c("geo_value", "time_value", other_keys)
 }
 
 #' @export
 key_colnames.epi_archive <- function(x, ...) {
   other_keys <- attr(x, "metadata")$other_keys
-  c("time_value", "geo_value", other_keys)
+  c("geo_value", "time_value", other_keys)
 }
 
 kill_time_value <- function(v) {

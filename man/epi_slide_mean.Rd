@@ -23,11 +23,11 @@ or ungrouped. If ungrouped, all data in \code{x} will be treated as part of a
 single data group.}
 
 \item{col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
-name(e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}), or
-\link[tidyselect:language]{other tidy-select expression}. Variable names can
-be used as if they were positions in the data frame, so expressions like
-\code{x:y} can be used to select a range of variables. If you have the desired
-column names stored in a vector \code{vars}, use \code{col_names = all_of(vars)}.
+name(e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}),
+\link[tidyselect:language]{other tidy-select expression}, or a vector of
+characters (e.g. \code{c("cases", "deaths")}). Variable names can be used as if
+they were positions in the data frame, so expressions like \code{x:y} can be
+used to select a range of variables.
 
 The tidy-selection renaming interface is not supported, and cannot be used
 to provide output column names; if you want to customize the output column
@@ -69,11 +69,11 @@ element of this vector serves as the reference time point for one sliding
 window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.}
 
-\item{new_col_name}{Character vector indicating the name(s) of the new
-column(s) that will contain the derivative values. Default
-is "slide_value"; note that setting \code{new_col_name} equal to any existing
-column names will overwrite those columns. If \code{names_sep} is \code{NULL},
-\code{new_col_name} must be the same length as \code{col_names}.}
+\item{new_col_name}{Not supported. Included to match \code{epi_slide} interface.}
+
+\item{as_list_col}{Not supported. Included to match \code{epi_slide} interface.}
+
+\item{names_sep}{Not supported. Included to match \code{epi_slide} interface.}
 
 \item{all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
 the output even with \code{ref_time_values} provided, with some type of missing

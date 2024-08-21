@@ -350,7 +350,7 @@ test_that("`ref_time_values` + `all_rows = TRUE` works", {
     ),
     basic_sum_result %>%
       dplyr::mutate(slide_value = dplyr::if_else(time_value %in% (test_date + c(2L, 8L)),
-        slide_value, NA_integer_
+        slide_value, NA_real_ # (`^` outputs numeric)
       ))
   )
 
@@ -492,7 +492,7 @@ test_that("epi_slide_mean works with ref_time_value and all_rows", {
       ),
     basic_mean_result %>%
       dplyr::mutate(slide_value = dplyr::if_else(time_value %in% (test_date + c(2L, 8L)),
-        slide_value, NA_integer_
+        slide_value, NA_real_
       )) %>%
       rename(slide_value_value = slide_value)
   )
@@ -1054,5 +1054,135 @@ test_that("`epi_slide_opt` errors when passed non-`data.table`, non-`slider` fun
       before = days_dt,  ref_time_values = test_date + 1
     ),
     class = "epiprocess__epi_slide_opt__unsupported_slide_function"
+  )
+})
+
+multi_columns <- dplyr::bind_rows(
+  dplyr::tibble(geo_value = "ak", time_value = test_date + 1:200, value = 1:200, value2 = -1:-200),
+  dplyr::tibble(geo_value = "al", time_value = test_date + 1:5, value = -(1:5), value2 = 1:5)
+) %>%
+  as_epi_df() %>%
+  group_by(geo_value)
+
+test_that("no dplyr warnings from selecting multiple columns", {
+  expect_no_warning(
+    multi_slid <- epi_slide_mean(multi_columns, col_names = c("value", "value2"), before = 3L)
+  )
+  expect_equal(
+    names(multi_slid),
+    c("geo_value", "time_value", "value", "value2", "slide_value_value", "slide_value_value2")
+  )
+  expect_no_warning(
+    multi_slid_select <- epi_slide_mean(multi_columns, c(value, value2), before = 3L)
+  )
+  expect_equal(multi_slid_select, multi_slid)
+  expect_no_warning(
+    multi_slid_select <- epi_slide_mean(multi_columns, starts_with("value"), before = 3L)
+  )
+  expect_equal(multi_slid_select, multi_slid)
+})
+
+test_that("Inf works in before/after in slide and slide_opt", {
+  # Daily data
+  df <- dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = test_date + 1:200, value = 1:200),
+    dplyr::tibble(geo_value = "al", time_value = test_date + 1:5, value = -(1:5))
+  ) %>%
+    as_epi_df()
+  expect_equal(
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = Inf,
+        slide_value = sum(value)
+      ),
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = 365000,
+        slide_value = sum(value)
+      )
+  )
+  expect_equal(
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide_opt(
+        before = Inf,
+        f = data.table::frollsum,
+        col_names = value
+      ),
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = 365000,
+        slide_value_value = sum(value)
+      )
+  )
+  expect_equal(
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide_opt(
+        before = Inf,
+        f = slider::slide_sum,
+        col_names = value
+      ),
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = 365000,
+        slide_value_value = sum(value)
+      )
+  )
+
+  # Weekly data
+  df <- dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = test_date + 1:200 * 7, value = 1:200),
+    dplyr::tibble(geo_value = "al", time_value = test_date + 1:5 * 7, value = -(1:5))
+  ) %>%
+    as_epi_df()
+
+  expect_equal(
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = Inf,
+        slide_value = sum(value)
+      ),
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = 365000 * weeks_dt,
+        slide_value = sum(value)
+      )
+  )
+  expect_equal(
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide_opt(
+        col_names = value,
+        f = data.table::frollsum,
+        before = Inf
+      ),
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = 365000 * weeks_dt,
+        slide_value_value = sum(value)
+      )
+  )
+  expect_equal(
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide_opt(
+        before = Inf,
+        f = slider::slide_sum,
+        col_names = value
+      ),
+    df %>%
+      group_by(geo_value) %>%
+      epi_slide(
+        before = 365000 * weeks_dt,
+        slide_value_value = sum(value)
+      )
   )
 })

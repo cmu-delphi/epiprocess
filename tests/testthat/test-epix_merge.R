@@ -62,6 +62,95 @@ test_that("epix_merge merges and carries forward updates properly", {
   )
 
   expect_identical(xy, xy_expected)
+
+
+  s1 <- tibble(
+    geo_value = c("ca", "ca", "ca"),
+    time_value = as.Date(c("2024-08-01", "2024-08-01", "2024-08-02")),
+    version = as.Date(c("2024-08-01", "2024-08-02", "2024-08-02")),
+    signal1 = c("XA", "XB", "XC")
+  )
+
+  s2 <- tibble(
+    geo_value = c("ca", "ca"),
+    time_value = as.Date(c("2024-08-01", "2024-08-02")),
+    version = as.Date(c("2024-08-03", "2024-08-03")),
+    signal2 = c("YA", "YB")
+  )
+
+  s1 <- s1 %>% as_epi_archive()
+  s2 <- s2 %>% as_epi_archive()
+
+  merge1_expected <- tibble(
+    geo_value = rep("ca", 5),
+    time_value = as.Date(c("2024-08-01", "2024-08-01", "2024-08-01", "2024-08-02", "2024-08-02")),
+    version = as.Date(c("2024-08-01", "2024-08-02", "2024-08-03", "2024-08-02", "2024-08-03")),
+    signal1 = c("XA", "XB", "XB", "XC", "XC"),
+    signal2 = c(NA, NA, "YA", NA, "YB")
+  ) %>% as_epi_archive()
+
+  merged1 <- epix_merge(s1, s2, sync = "locf")
+
+  expect_identical(merged1, merge1_expected)
+
+  s1 <- tibble(
+    geo_value = c("ca", "ca", "ca", "ca"),
+    time_value = as.Date(c("2024-08-01", "2024-08-01", "2024-08-02", "2024-08-03")),
+    version = as.Date(c("2024-08-01", "2024-08-03", "2024-08-03", "2024-08-03")),
+    signal1 = c("XA", "XB", "XC", "XD")
+  )
+
+  s2 <- tibble(
+    geo_value = c("ca", "ca"),
+    time_value = as.Date(c("2024-08-01", "2024-08-02")),
+    version = as.Date(c("2024-08-02", "2024-08-02")),
+    signal2 = c("YA", "YB"),
+  )
+
+
+  s1 <- s1 %>% as_epi_archive()
+  s2 <- s2 %>% as_epi_archive()
+
+  merge2_expected <- tibble(
+    geo_value = rep("ca", 6),
+    time_value = as.Date(c("2024-08-01", "2024-08-01", "2024-08-01", "2024-08-02", "2024-08-02", "2024-08-03")),
+    version = as.Date(c("2024-08-01", "2024-08-02", "2024-08-03", "2024-08-02", "2024-08-03", "2024-08-03")),
+    signal1 = c("XA", "XA", "XB", NA, "XC", "XD"),
+    signal2 = c(NA, "YA", "YA", "YB", "YB", NA)
+  ) %>% as_epi_archive()
+
+  merged2 <- epix_merge(s1, s2, sync = "locf")
+
+  expect_identical(merged2, merge2_expected)
+
+  s1 <- tibble(
+    geo_value = c("ca", "ca", "ca"),
+    time_value = as.Date(c("2024-08-01", "2024-08-02", "2024-08-03")),
+    version = as.Date(c("2024-08-01", "2024-08-02", "2024-08-03")),
+    signal1 = c("XA", "XB", "XC")
+  )
+
+  s2 <- tibble(
+    geo_value = c("ca", "ca", "ca"),
+    time_value = as.Date(c("2024-08-01", "2024-08-01", "2024-08-02")),
+    version = as.Date(c("2024-08-02", "2024-08-03", "2024-08-03")),
+    signal2 = c("YA", "YB", "YC"),
+  )
+
+  s1 <- s1 %>% as_epi_archive()
+  s2 <- s2 %>% as_epi_archive()
+
+  merge3_expected <- tibble(
+    geo_value = rep("ca", 6),
+    time_value = as.Date(c("2024-08-01", "2024-08-01", "2024-08-01", "2024-08-02", "2024-08-02", "2024-08-03")),
+    version = as.Date(c("2024-08-01", "2024-08-02", "2024-08-03", "2024-08-02", "2024-08-03", "2024-08-03")),
+    signal1 = c("XA", "XA", "XA", "XB", "XB", "XC"),
+    signal2 = c(NA, "YA", "YB", NA, "YC", NA)
+  ) %>% as_epi_archive()
+
+  merged3 <- epix_merge(s1, s2, sync = "locf")
+
+  expect_identical(merged3, merge3_expected)
 })
 
 test_that("epix_merge forbids and warns on metadata and naming issues", {

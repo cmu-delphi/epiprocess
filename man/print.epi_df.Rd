@@ -2,7 +2,6 @@
 % Please edit documentation in R/methods-epi_df.R
 \name{print.epi_df}
 \alias{print.epi_df}
-\alias{summary.epi_df}
 \alias{group_by.epi_df}
 \alias{ungroup.epi_df}
 \alias{group_modify.epi_df}
@@ -10,8 +9,6 @@
 \title{Base S3 methods for an \code{epi_df} object}
 \usage{
 \method{print}{epi_df}(x, ...)
-
-\method{summary}{epi_df}(object, ...)
 
 \method{group_by}{epi_df}(.data, ...)
 
@@ -24,10 +21,7 @@
 \arguments{
 \item{x}{an \code{epi_df}}
 
-\item{...}{Additional arguments, for compatibility with \code{summary()}.
-Currently unused.}
-
-\item{object}{an \code{epi_df}}
+\item{...}{additional arguments to forward to \code{NextMethod()}, or unused}
 
 \item{.data}{an \code{epi_df}}
 
@@ -39,7 +33,4 @@ Currently unused.}
 }
 \description{
 Print and summary functions for an \code{epi_df} object.
-
-Prints a variety of summary statistics about the \code{epi_df} object, such as
-the time range included and geographic coverage.
 }
