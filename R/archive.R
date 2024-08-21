@@ -585,8 +585,8 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
 #'   `...`.
 #' @param .drop As described in [`dplyr::group_by`]; determines treatment of
 #'   factor columns.
-#' @param x For `groups` or `ungroup`: a `grouped_epi_archive`; for
-#'   `is_grouped_epi_archive`: any object
+#' @param x For `groups`, `group_vars`, or `ungroup`: a `grouped_epi_archive`;
+#'   for `is_grouped_epi_archive`: any object
 #' @param .tbl (For `group_by_drop_default`:) an `epi_archive` or
 #'   `grouped_epi_archive` (`epi_archive` dispatches to the S3 default method;
 #'   `grouped_epi_archive` dispatches its own S3 method)
@@ -664,6 +664,11 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
 #' toy_archive %>%
 #'   group_by(geo_value, age_group) %>%
 #'   ungroup(age_group)
+#'
+#' # To get the grouping variable names as a character vector:
+#' toy_archive %>%
+#'   group_by(geo_value) %>%
+#'   group_vars()
 #'
 #' # To get the grouping variable names as a `list` of `name`s (a.k.a. symbols):
 #' toy_archive %>%

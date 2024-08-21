@@ -55,7 +55,7 @@ new_grouped_epi_archive <- function(x, vars, drop) {
         or `ungroup` first.",
       class = "epiprocess__grouped_epi_archive__ungrouped_arg_is_already_grouped",
       epiprocess__ungrouped_class = class(x),
-      epiprocess__ungrouped_groups = groups(x)
+      epiprocess__ungrouped_group_vars = group_vars(x)
     )
   }
   assert_class(x, "epi_archive")
@@ -160,6 +160,14 @@ group_by_drop_default.grouped_epi_archive <- function(.tbl) {
   .tbl$private$drop
 }
 
+#' @include methods-epi_archive.R
+#' @rdname group_by.epi_archive
+#'
+#' @importFrom dplyr group_vars
+#' @export
+group_vars.grouped_epi_archive <- function(x) {
+  x$private$vars
+}
 
 #' @include methods-epi_archive.R
 #' @rdname group_by.epi_archive
@@ -169,7 +177,6 @@ group_by_drop_default.grouped_epi_archive <- function(.tbl) {
 groups.grouped_epi_archive <- function(x) {
   rlang::syms(x$private$vars)
 }
-
 
 #' @include methods-epi_archive.R
 #' @rdname group_by.epi_archive

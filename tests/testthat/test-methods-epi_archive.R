@@ -110,7 +110,6 @@ test_that("epix_truncate_version_after returns the same grouping type as input e
   expect_true(is_grouped_epi_archive(ea_as_of))
 })
 
-
 test_that("epix_truncate_version_after returns the same groups as input grouped_epi_archive", {
   ea2 <- ea2_data %>%
     as_epi_archive()
@@ -121,4 +120,9 @@ test_that("epix_truncate_version_after returns the same groups as input grouped_
   ea_as_of <- ea2 %>%
     epix_truncate_versions_after(max_version = as.Date("2020-06-04"))
   expect_equal(ea_as_of %>% groups(), ea_expected %>% groups())
+})
+
+test_that("group_vars works as expected", {
+  expect_equal(ea2_data %>% as_epi_archive() %>% group_by(geo_value) %>% group_vars(),
+               "geo_value")
 })
