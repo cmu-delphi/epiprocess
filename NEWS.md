@@ -16,14 +16,18 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
       packed data.frame-class column (see `tidyr::pack`).
   - `as_list_col` is deprecated; you can now directly return a list from your
     slide computations instead.
-- `additional_metadata` is no longer used in `as_epi_df()` construction.
-  `other_keys` is promoted to be an argument directly.
+- `additional_metadata` is no longer accepted in `as_epi_df()` or
+  `as_epi_archive()`. Use the new `other_keys` arg to specify additional key
+  columns, such as age group columns or other demographic breakdowns.
+  Miscellaneous metadata are no longer handled by `epiprocess`, but you can use
+  R's built-in `attr<-` instead for a similar feature.
 
 ## Improvements
 
 - Added `complete.epi_df`, which fills in missing values in an `epi_df` with
   `NA`s. Uses `tidyr::complete` underneath and preserves `epi_df` metadata.
-- Inclusion of the function `revision_summary` to provide basic revision information for `epi_archive`s out of the box. (#492)
+- Inclusion of the function `revision_summary` to provide basic revision
+  information for `epi_archive`s out of the box. (#492)
 
 ## Bug fixes
 
