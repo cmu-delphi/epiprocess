@@ -86,8 +86,8 @@ epi_slide <- function(
     .ref_time_values = NULL, .new_col_name = NULL, .all_rows = FALSE) {
   # Argument deprecation handling
   provided_args <- rlang::call_args_names(rlang::call_match())
-  dot_prefixed_args <- c("x", "f", "ref_time_values", "new_col_name", "all_rows")
-  if (any(purrr::map_lgl(provided_args, ~ .x %in% dot_prefixed_args))) {
+  old_arg_names <- c("x", "f", "ref_time_values", "new_col_name", "all_rows")
+  if (any(purrr::map_lgl(provided_args, ~ .x %in% old_arg_names))) {
     cli::cli_abort(
       "epi_slide: you are using one of the following old argument names: `x`, `f`, `ref_time_values`,
       `new_col_name`, or `all_rows`. Please use the new dot-prefixed names: `.x`, `.f`, `.ref_time_values`,
@@ -434,8 +434,8 @@ epi_slide_opt <- function(
 
   # Argument deprecation handling
   provided_args <- rlang::call_args_names(rlang::call_match())
-  dot_prefixed_args <- c("x", "col_names", "f", "ref_time_values", "all_rows")
-  if (any(purrr::map_lgl(provided_args, ~ .x %in% dot_prefixed_args))) {
+  old_arg_names <- c("x", "col_names", "f", "ref_time_values", "all_rows")
+  if (any(purrr::map_lgl(provided_args, ~ .x %in% old_arg_names))) {
     cli::cli_abort(
       "epi_slide_opt: you are using one of the following old argument names: `x`, `col_names`, `f`, `ref_time_values`,
       or `all_rows`. Please use the new dot-prefixed names: `.x`, `.col_names`, `.f`,
