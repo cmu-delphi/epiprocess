@@ -8,15 +8,10 @@ epi_slide(
   x,
   f,
   ...,
-  n = 0,
-  align = c("left", "center", "right"),
-  before = NULL,
-  after = NULL,
-  ref_time_values = NULL,
-  new_col_name = NULL,
-  all_rows = FALSE,
-  as_list_col = deprecated(),
-  names_sep = deprecated()
+  .window_size = 0,
+  .align = c("right", "center", "left"),
+  .ref_time_values = NULL,
+  .all_rows = FALSE
 )
 }
 \arguments{
@@ -41,50 +36,37 @@ If \code{f} is missing, then \code{...} will specify the computation.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{f}. Alternatively, if \code{f} is missing, then the \code{...} is interpreted as
-a \link[rlang:args_data_masking]{"data-masking"} expression or expressions for
-tidy evaluation; in addition to referring columns directly by name, the
-expressions have access to \code{.data} and \code{.env} pronouns as in \code{dplyr} verbs,
-and can also refer to \code{.x}, \code{.group_key}, and \code{.ref_time_value}. See
-details.}
+an expression for tidy evaluation; in addition to referring to columns
+directly by name, the expression has access to \code{.data} and \code{.env} pronouns
+as in \code{dplyr} verbs, and can also refer to \code{.x}, \code{.group_key}, and
+\code{.ref_time_value}. See details.}
 
-\item{before, after}{How far \code{before} and \code{after} each \code{ref_time_value} should
-the sliding window extend? At least one of these two arguments must be
-provided; the other's default will be 0. The accepted values for these
-depend on the type of the \code{time_value} column:
+\item{.window_size}{The size of the sliding window. By default, this is 0,
+meaning that only the current ref_time_value is included. The accepted values
+here depend on the \code{time_value} column:
 \itemize{
-\item if it is a Date and the cadence is daily, then they can be integers
-(which will be interpreted in units of days) or difftimes with units
+\item if time_type is Date and the cadence is daily, then \code{.n} can be an integer
+(which will be interpreted in units of days) or a difftime with units
 "days"
-\item if it is a Date and the cadence is weekly, then they must be difftimes
+\item if time_type is Date and the cadence is weekly, then \code{.n} must be a difftime
 with units "weeks"
-\item if it is an integer, then they must be integers
-}
+\item if time_type is an integer, then \code{.n} must be an integer
+}}
 
-Endpoints of the window are inclusive. Common settings:
-\itemize{
-\item For trailing/right-aligned windows from \code{ref_time_value - k} to
-\code{ref_time_value}: either pass \code{before=k} by itself, or pass \verb{before=k, after=0}.
-\item For center-aligned windows from \code{ref_time_value - k} to
-\code{ref_time_value + k}: pass \verb{before=k, after=k}.
-\item For leading/left-aligned windows from \code{ref_time_value} to
-\code{ref_time_value + k}: either pass pass \code{after=k} by itself,
-or pass \verb{before=0, after=k}.
-}
+\item{.align}{The alignment of the sliding window. If \code{right} (default), then
+the window has its end at the reference time; if \code{center}, then the window is
+centered at the reference time; if \code{left}, then the window has its start at
+the reference time. If the alignment is \code{center} and the window size is odd,
+then the window will have floor(window_size/2) points before and after the
+reference time. If the window size is even, then the window will be
+asymmetric and have one less value on the right side of the reference time.}
 
-See "Details:" on how missing rows are handled within the window.}
-
-\item{ref_time_values}{Time values for sliding computations, meaning, each
+\item{.ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
 window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.}
 
-\item{new_col_name}{String indicating the name of the new column that will
-contain the derivative values. The default is "slide_value" unless your
-slide computations output data frames, in which case they will be unpacked
-into the constituent columns and those names used. Note that setting
-\code{new_col_name} equal to an existing column name will overwrite this column.}
-
-\item{all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
+\item{.all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
 the output even with \code{ref_time_values} provided, with some type of missing
 value marker for the slide computation output column(s) for \code{time_value}s
 outside \code{ref_time_values}; otherwise, there will be one row for each row in
@@ -94,6 +76,8 @@ of the slide computation output. If using \code{as_list_col = TRUE}, note that
 the missing marker is a \code{NULL} entry in the list column; for certain
 operations, you might want to replace these \code{NULL} entries with a different
 \code{NA} marker.}
+
+\item{before, after}{Deprecated. Use \code{.n} instead.}
 
 \item{as_list_col}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} if you want a list
 column as output, you can now just directly output a list from your slide
