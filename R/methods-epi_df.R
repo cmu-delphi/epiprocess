@@ -8,7 +8,6 @@
 #' use `attr(your_epi_df, "decay_to_tibble") <- FALSE` beforehand.
 #'
 #' @template x
-#' @param ... forwarded to `as_tibble` for `data.frame`s
 #'
 #' @inheritParams tibble::as_tibble
 #'
