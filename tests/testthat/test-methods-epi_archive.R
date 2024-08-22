@@ -123,6 +123,8 @@ test_that("epix_truncate_version_after returns the same groups as input grouped_
 })
 
 test_that("group_vars works as expected", {
-  expect_equal(ea2_data %>% as_epi_archive() %>% group_by(geo_value) %>% group_vars(),
-               "geo_value")
+  expect_equal(
+    ea2_data %>% as_epi_archive() %>% group_by(geo_value) %>% group_vars(),
+    "geo_value"
+  )
 })

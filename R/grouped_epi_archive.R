@@ -284,8 +284,19 @@ epix_slide.grouped_epi_archive <- function(
   validate_slide_window_arg(.before, .x$private$ungrouped$time_type)
 
   checkmate::assert_string(.new_col_name, null.ok = TRUE)
-  if (identical(.new_col_name, "time_value")) {
-    cli_abort('`.new_col_name` must not be `"version"`; `epix_slide()` uses that column name to attach which of the `.versions` is associated with each slide computation') # nolint: line_length_linter
+  if (!is.null(.new_col_name)) {
+    if (.new_col_name %in% x$private$vars) {
+      cli_abort(c("`new_col_name` must not be one of the grouping column name(s);
+                   `epix_slide()` uses these column name(s) to label what group
+                   each slide computation came from.",
+        "i" = "{cli::qty(length(x$private$vars))} grouping column name{?s}
+                         {?was/were} {format_chr_with_quotes(x$private$vars)}",
+        "x" = "`new_col_name` was {format_chr_with_quotes(new_col_name)}"
+      ))
+    }
+    if (identical(.new_col_name, "version")) {
+      cli_abort('`.new_col_name` must not be `"version"`; `epix_slide()` uses that column name to attach the element of `.versions` associated with each slide computation') # nolint: line_length_linter
+    }
   }
 
   assert_logical(.all_versions, len = 1L)

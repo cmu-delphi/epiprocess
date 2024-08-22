@@ -174,15 +174,16 @@ epi_slide <- function(
   checkmate::assert_string(new_col_name, null.ok = TRUE)
   if (!is.null(new_col_name)) {
     if (new_col_name %in% group_vars(x)) {
-      cli_abort(c("`new_col_name` must not be one of the grouping column name(s);
+      cli_abort(c("`.new_col_name` must not be one of the grouping column name(s);
                    `epi_slide()` uses these column name(s) to label what group
                    each slide computation came from.",
-                  "i" = "{cli::qty(length(group_vars(x)))} grouping column name{?s}
-                         {?was/were} {format_chr_with_quotes(group_vars(x))}",
-                  "x" = "`new_col_name` was {format_chr_with_quotes(new_col_name)}"))
+        "i" = "{cli::qty(length(group_vars(.x)))} grouping column name{?s}
+                         {?was/were} {format_chr_with_quotes(group_vars(.x))}",
+        "x" = "`.new_col_name` was {format_chr_with_quotes(.new_col_name)}"
+      ))
     }
     if (identical(new_col_name, "time_value")) {
-      cli_abort('`new_col_name` must not be `"time_value"`; `epi_slide()` uses that column name to attach the `ref_time_value` associated with each slide computation') # nolint: line_length_linter
+      cli_abort('`.new_col_name` must not be `"time_value"`; `epi_slide()` uses that column name to attach the element of `.ref_time_values` associated with each slide computation') # nolint: line_length_linter
     }
   }
 
