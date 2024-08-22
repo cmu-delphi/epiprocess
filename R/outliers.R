@@ -89,7 +89,7 @@ detect_outlr <- function(x = seq_along(y), y,
                          ),
                          combiner = c("median", "mean", "none")) {
   # Validate combiner
-  combiner <- rlang::match_arg(combiner)
+  combiner <- rlang::arg_match(combiner)
 
   # Validate that x contains all distinct values
   if (any(duplicated(x))) {
