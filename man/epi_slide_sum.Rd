@@ -5,46 +5,25 @@
 \title{Optimized slide function for performing rolling sums on an \code{epi_df} object}
 \usage{
 epi_slide_sum(
-  x,
-  col_names,
+  .x,
+  .col_names,
   ...,
-  before = NULL,
-  after = NULL,
-  ref_time_values = NULL,
-  new_col_name = NULL,
-  all_rows = FALSE,
-  as_list_col = deprecated(),
-  names_sep = NULL
+  .window_size = 0,
+  .align = c("right", "center", "left"),
+  .ref_time_values = NULL,
+  .all_rows = FALSE,
+  .na_rm = FALSE
 )
 }
 \arguments{
-\item{x}{The \code{epi_df} object under consideration, \link[dplyr:group_by]{grouped}
+\item{.x}{The \code{epi_df} object under consideration, \link[dplyr:group_by]{grouped}
 or ungrouped. If ungrouped, all data in \code{x} will be treated as part of a
 single data group.}
-
-\item{col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
-name(e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}),
-\link[tidyselect:language]{other tidy-select expression}, or a vector of
-characters (e.g. \code{c("cases", "deaths")}). Variable names can be used as if
-they were positions in the data frame, so expressions like \code{x:y} can be
-used to select a range of variables.
-
-The tidy-selection renaming interface is not supported, and cannot be used
-to provide output column names; if you want to customize the output column
-names, use \code{\link[dplyr:rename]{dplyr::rename}} after the slide.}
 
 \item{...}{Additional arguments to pass to \code{data.table::frollsum}, for
 example, \code{na.rm} and \code{algo}. \code{data.table::frollsum} is automatically
 passed the data \code{x} to operate on, the window size \code{n}, and the alignment
 \code{align}. Providing these args via \code{...} will cause an error.}
-
-\item{before, after}{Deprecated. Use \code{.n} instead.}
-
-\item{new_col_name}{Not supported. Included to match \code{epi_slide} interface.}
-
-\item{as_list_col}{Not supported. Included to match \code{epi_slide} interface.}
-
-\item{names_sep}{Not supported. Included to match \code{epi_slide} interface.}
 
 \item{.window_size}{The size of the sliding window. By default, this is 0,
 meaning that only the current ref_time_value is included. The accepted values
@@ -81,6 +60,23 @@ of the slide computation output. If using \code{as_list_col = TRUE}, note that
 the missing marker is a \code{NULL} entry in the list column; for certain
 operations, you might want to replace these \code{NULL} entries with a different
 \code{NA} marker.}
+
+\item{col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
+name(e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}),
+\link[tidyselect:language]{other tidy-select expression}, or a vector of
+characters (e.g. \code{c("cases", "deaths")}). Variable names can be used as if
+they were positions in the data frame, so expressions like \code{x:y} can be
+used to select a range of variables.
+
+The tidy-selection renaming interface is not supported, and cannot be used
+to provide output column names; if you want to customize the output column
+names, use \code{\link[dplyr:rename]{dplyr::rename}} after the slide.}
+
+\item{as_list_col}{Not supported. Included to match \code{epi_slide} interface.}
+
+\item{new_col_name}{Not supported. Included to match \code{epi_slide} interface.}
+
+\item{names_sep}{Not supported. Included to match \code{epi_slide} interface.}
 }
 \value{
 An \code{epi_df} object given by appending one or more new columns to \code{x},

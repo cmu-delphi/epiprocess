@@ -5,21 +5,22 @@
 \title{Slide a function over variables in an \code{epi_df} object}
 \usage{
 epi_slide(
-  x,
-  f,
+  .x,
+  .f,
   ...,
   .window_size = 0,
   .align = c("right", "center", "left"),
   .ref_time_values = NULL,
+  .new_col_name = NULL,
   .all_rows = FALSE
 )
 }
 \arguments{
-\item{x}{The \code{epi_df} object under consideration, \link[dplyr:group_by]{grouped}
+\item{.x}{The \code{epi_df} object under consideration, \link[dplyr:group_by]{grouped}
 or ungrouped. If ungrouped, all data in \code{x} will be treated as part of a
 single data group.}
 
-\item{f}{Function, formula, or missing; together with \code{...} specifies the
+\item{.f}{Function, formula, or missing; together with \code{...} specifies the
 computation to slide. To "slide" means to apply a computation within a
 sliding (a.k.a. "rolling") time window for each data group. The window is
 determined by the \code{before} and \code{after} parameters described below. One time
@@ -36,10 +37,11 @@ If \code{f} is missing, then \code{...} will specify the computation.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{f}. Alternatively, if \code{f} is missing, then the \code{...} is interpreted as
-an expression for tidy evaluation; in addition to referring to columns
-directly by name, the expression has access to \code{.data} and \code{.env} pronouns
-as in \code{dplyr} verbs, and can also refer to \code{.x}, \code{.group_key}, and
-\code{.ref_time_value}. See details.}
+a \link[rlang:args_data_masking]{"data-masking"} expression or expressions for
+tidy evaluation; in addition to referring columns directly by name, the
+expressions have access to \code{.data} and \code{.env} pronouns as in \code{dplyr} verbs,
+and can also refer to \code{.x}, \code{.group_key}, and \code{.ref_time_value}. See
+details.}
 
 \item{.window_size}{The size of the sliding window. By default, this is 0,
 meaning that only the current ref_time_value is included. The accepted values
@@ -76,18 +78,6 @@ of the slide computation output. If using \code{as_list_col = TRUE}, note that
 the missing marker is a \code{NULL} entry in the list column; for certain
 operations, you might want to replace these \code{NULL} entries with a different
 \code{NA} marker.}
-
-\item{before, after}{Deprecated. Use \code{.n} instead.}
-
-\item{as_list_col}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} if you want a list
-column as output, you can now just directly output a list from your slide
-computations. Usually this just means wrapping your output in a length-1
-list (outputting \code{list(result)} instead of \code{result}).}
-
-\item{names_sep}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} if you were specifying
-\code{names_sep = NULL}, that's no longer needed. If you were using a non-NULL
-value, you can either directly prefix your slide computation names, or
-output a list and then later call \verb{tidyr::unnest(slide_output, <result_column_name>, names_sep = <names_sep>)}.}
 }
 \value{
 An \code{epi_df} object given by appending one or more new columns to \code{x},
