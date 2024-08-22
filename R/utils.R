@@ -89,6 +89,14 @@ paste_lines <- function(lines) {
   paste(paste0(lines, "\n"), collapse = "")
 }
 
+#' Format a class vector as a string via deparsing it
+#'
+#' @param class_vec `chr`; output of `class(object)` for some `object`
+#' @return string
+format_class_vec <- function(class_vec) {
+  paste(collapse = "", deparse(class_vec))
+}
+
 #' Assert that a sliding computation function takes enough args
 #'
 #' @param f Function; specifies a computation to slide over an `epi_df` or
@@ -451,7 +459,7 @@ as_slide_computation <- function(f, ..., .ref_time_value_long_varnames, .ref_tim
   }
 
   cli_abort(
-    "Can't convert an object of class {paste(collapse = ' ', deparse(class(f)))}
+    "Can't convert an object of class {format_class_vec(class(f))}
       to a slide computation",
     class = "epiprocess__as_slide_computation__cant_convert_catchall",
     epiprocess__f = f,

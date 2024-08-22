@@ -49,7 +49,7 @@ validate_version_bound <- function(version_bound, x, na_ok = FALSE,
     if (!identical(class(version_bound), class(x[["version"]]))) {
       cli_abort(
         "{version_bound_arg} must have the same `class` vector as x$version,
-        which has a `class` of {paste(collapse = ' ', deparse(class(x$version)))}",
+        which has a `class` of {format_class_vec(class(x$version))}",
         class = "epiprocess__version_bound_mismatched_class"
       )
     }
