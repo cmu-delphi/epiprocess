@@ -82,7 +82,6 @@
 epi_slide <- function(
     x, f, ...,
     .window_size = 0, .align = c("right", "center", "left"), .ref_time_values = NULL, .all_rows = FALSE) {
-
   if (any(map(c(n, before, after, ref_time_values, new_col_name, as_list_col, names_sep, all_rows), Negate(is.null)))) {
     cli_abort(
       "epi_slide: deprecated arguments `n`, `before`, `after`, `ref_time_values`, `new_col_name`, `as_list_col`,
