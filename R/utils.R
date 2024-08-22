@@ -877,11 +877,17 @@ guess_period.POSIXt <- function(time_values, time_values_arg = rlang::caller_arg
 
 validate_slide_window_arg <- function(arg, time_type, allow_inf = TRUE, arg_name = rlang::caller_arg(arg)) {
   if (is.null(arg)) {
-    cli_abort("`{arg_name}` is a required argument for slide functions.", class = "epiprocess__validate_slide_window_arg")
+    cli_abort(
+      "`{arg_name}` is a required argument for slide functions.",
+      class = "epiprocess__validate_slide_window_arg"
+    )
   }
 
   if (!checkmate::test_scalar(arg)) {
-    cli_abort("Slide function expected `{arg_name}` to be a scalar value.", class = "epiprocess__validate_slide_window_arg")
+    cli_abort(
+      "Slide function expected `{arg_name}` to be a scalar value.",
+      class = "epiprocess__validate_slide_window_arg"
+    )
   }
 
   if (time_type == "custom") {

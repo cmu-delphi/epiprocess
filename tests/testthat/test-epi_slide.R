@@ -612,7 +612,8 @@ test_that("helper `full_date_seq` returns expected date values", {
 
   expect_identical(
     full_date_seq(
-      epi_data_missing %>% mutate(time_value = days) %>%
+      epi_data_missing %>%
+        mutate(time_value = days) %>%
         as_epi_df() %>%
         group_by(geo_value),
       before = before * days_dt, after = after * days_dt, time_type = "day"
@@ -628,7 +629,8 @@ test_that("helper `full_date_seq` returns expected date values", {
   )
   expect_identical(
     full_date_seq(
-      epi_data_missing %>% mutate(time_value = weeks) %>%
+      epi_data_missing %>%
+        mutate(time_value = weeks) %>%
         as_epi_df() %>%
         group_by(geo_value),
       before = before, after = after, time_type = "week"
@@ -644,7 +646,8 @@ test_that("helper `full_date_seq` returns expected date values", {
   )
   expect_identical(
     full_date_seq(
-      epi_data_missing %>% mutate(time_value = yearmonths) %>%
+      epi_data_missing %>%
+        mutate(time_value = yearmonths) %>%
         as_epi_df() %>%
         group_by(geo_value),
       before = before, after = after, time_type = "yearmonth"
@@ -657,7 +660,8 @@ test_that("helper `full_date_seq` returns expected date values", {
   )
   expect_identical(
     full_date_seq(
-      epi_data_missing %>% mutate(time_value = integers) %>%
+      epi_data_missing %>%
+        mutate(time_value = integers) %>%
         as_epi_df() %>%
         group_by(geo_value),
       before = before, after = after, time_type = "integer"
@@ -675,7 +679,8 @@ test_that("helper `full_date_seq` returns expected date values", {
 
   expect_identical(
     full_date_seq(
-      epi_data_missing %>% mutate(time_value = days) %>%
+      epi_data_missing %>%
+        mutate(time_value = days) %>%
         as_epi_df() %>%
         group_by(geo_value),
       before = before * days_dt, after = after * days_dt, time_type = "day"
@@ -698,7 +703,8 @@ test_that("helper `full_date_seq` returns expected date values", {
 
   expect_identical(
     full_date_seq(
-      epi_data_missing %>% mutate(time_value = days) %>%
+      epi_data_missing %>%
+        mutate(time_value = days) %>%
         as_epi_df() %>%
         group_by(geo_value),
       before = before * days_dt, after = after * days_dt, time_type = "day"
