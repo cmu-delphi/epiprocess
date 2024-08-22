@@ -47,8 +47,8 @@ autoplot.epi_df <- function(
     .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
     .base_color = "#3A448F",
     .max_facets = Inf) {
-  .color_by <- rlang::match_arg(.color_by)
-  .facet_by <- rlang::match_arg(.facet_by)
+  .color_by <- rlang::arg_match(.color_by)
+  .facet_by <- rlang::arg_match(.facet_by)
 
   assert(anyInfinite(.max_facets), checkInt(.max_facets), combine = "or")
   assert_character(.base_color, len = 1)
