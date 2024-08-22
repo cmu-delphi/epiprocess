@@ -27,7 +27,9 @@
 #'   and can also refer to `.x`, `.group_key`, and `.ref_time_value`. See
 #'   details.
 #' @param .new_col_name String indicating the name of the new column that will
-#'   contain the derivative values. Default is "slide_value"; note that setting
+#'   contain the derivative values. The default is "slide_value" unless your
+#'   slide computations output data frames, in which case they will be unpacked
+#'   into the constituent columns and those names used. Note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.
 #'
 #' @template basic-slide-details
@@ -166,6 +168,21 @@ epi_slide <- function(
     } else if (align == "left") {
       before <- 0
       after <- .window_size - 1
+    }
+  }
+
+  checkmate::assert_string(new_col_name, null.ok = TRUE)
+  if (!is.null(new_col_name)) {
+    if (new_col_name %in% group_vars(x)) {
+      cli_abort(c("`new_col_name` must not be one of the grouping column name(s);
+                   `epi_slide()` uses these column name(s) to label what group
+                   each slide computation came from.",
+                  "i" = "{cli::qty(length(group_vars(x)))} grouping column name{?s}
+                         {?was/were} {format_chr_with_quotes(group_vars(x))}",
+                  "x" = "`new_col_name` was {format_chr_with_quotes(new_col_name)}"))
+    }
+    if (identical(new_col_name, "time_value")) {
+      cli_abort('`new_col_name` must not be `"time_value"`; `epi_slide()` uses that column name to attach the `ref_time_value` associated with each slide computation') # nolint: line_length_linter
     }
   }
 

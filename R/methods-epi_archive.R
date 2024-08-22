@@ -650,15 +650,18 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   set to a regularly-spaced sequence of values set to cover the range of
 #'   `version`s in the `DT` plus the `versions_end`; the spacing of values will
 #'   be guessed (using the GCD of the skips between values).
-#' @param .new_col_name String indicating the name of the new column that will
-#'   contain the derivative values. The default is "slide_value" unless your
-#'   slide computations output data frames, in which case they will be unpacked
-#'   into the constituent columns and those names used. Note that setting
-#'   `.new_col_name` equal to an existing column name will overwrite this column.
+#' @param .new_col_name Either `NULL` or a string indicating the name of the new
+#'   column that will contain the derived values. The default, `NULL`, will use
+#'   the name "slide_value" unless your slide computations output data frames,
+#'   in which case they will be unpacked into the constituent columns and those
+#'   names used. If the resulting column name(s) overlap with the column names
+#'   used for labeling the computations, which are `group_vars(x)` and
+#'   `"version"`, then the values for these columns must be identical to the
+#'   labels we assign.
 #' @param .all_versions (Not the same as `.all_rows` parameter of `epi_slide`.) If
-#'   TRUE, then `.f` will be passed the version history (all
-#'   `version <= .ref_time_value`) for rows having `time_value` between
-#'   `.ref_time_value - before` and `.ref_time_value`. Otherwise, `.f` will be
+#'   `.all_versions = TRUE`, then `.f` will be passed the version history (all
+#'   `version <= .ref_time_value`) for rows having `time_value` of at least
+#'   `.version - before`. Otherwise, `.f` will be
 #'   passed only the most recent `version` for every unique `time_value`.
 #'   Default is `FALSE`.
 #' @return A tibble whose columns are: the grouping variables, `time_value`,

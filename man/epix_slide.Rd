@@ -74,16 +74,19 @@ in the archive is "day", and the \code{.ref_time_value} is January 8, then the
 smallest time_value in the snapshot will be January 1. If missing, then the
 default is no limit on the time values, so the full snapshot is given.}
 
-\item{.new_col_name}{String indicating the name of the new column that will
-contain the derivative values. The default is "slide_value" unless your
-slide computations output data frames, in which case they will be unpacked
-into the constituent columns and those names used. Note that setting
-\code{.new_col_name} equal to an existing column name will overwrite this column.}
+\item{.new_col_name}{Either \code{NULL} or a string indicating the name of the new
+column that will contain the derived values. The default, \code{NULL}, will use
+the name "slide_value" unless your slide computations output data frames,
+in which case they will be unpacked into the constituent columns and those
+names used. If the resulting column name(s) overlap with the column names
+used for labeling the computations, which are \code{group_vars(x)} and
+\code{"version"}, then the values for these columns must be identical to the
+labels we assign.}
 
 \item{.all_versions}{(Not the same as \code{.all_rows} parameter of \code{epi_slide}.) If
-TRUE, then \code{.f} will be passed the version history (all
-\code{version <= .ref_time_value}) for rows having \code{time_value} between
-\code{.ref_time_value - before} and \code{.ref_time_value}. Otherwise, \code{.f} will be
+\code{.all_versions = TRUE}, then \code{.f} will be passed the version history (all
+\code{version <= .ref_time_value}) for rows having \code{time_value} of at least
+\code{.version - before}. Otherwise, \code{.f} will be
 passed only the most recent \code{version} for every unique \code{time_value}.
 Default is \code{FALSE}.}
 

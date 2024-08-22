@@ -70,7 +70,9 @@ window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.}
 
 \item{.new_col_name}{String indicating the name of the new column that will
-contain the derivative values. Default is "slide_value"; note that setting
+contain the derivative values. The default is "slide_value" unless your
+slide computations output data frames, in which case they will be unpacked
+into the constituent columns and those names used. Note that setting
 \code{new_col_name} equal to an existing column name will overwrite this column.}
 
 \item{.all_rows}{If \code{.all_rows = TRUE}, then all rows of \code{.x} will be kept in

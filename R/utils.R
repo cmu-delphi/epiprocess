@@ -97,6 +97,28 @@ format_class_vec <- function(class_vec) {
   paste(collapse = "", deparse(class_vec))
 }
 
+#' Format a character vector as a string via deparsing/quoting each
+#'
+#' @param x `chr`; e.g., `colnames` of some data frame
+#' @param empty string; what should be output if `x` is of length 0?
+#' @return string
+format_chr_with_quotes <- function(x, empty = "*none*") {
+  if (length(x) == 0L) {
+    empty
+  } else {
+    # Deparse to get quoted + escape-sequenced versions of varnames; collapse to
+    # single line (assuming no newlines in `x`). Though if we hand this to cli
+    # it may insert them (even in middle of quotes) while wrapping lines.
+    deparsed_collapsed <- paste(collapse = "", deparse(x))
+    if (length(x) == 1L) {
+      deparsed_collapsed
+    } else {
+      # remove surrounding `c()`:
+      substr(deparsed_collapsed, 3L, nchar(deparsed_collapsed) - 1L)
+    }
+  }
+}
+
 #' Assert that a sliding computation function takes enough args
 #'
 #' @param f Function; specifies a computation to slide over an `epi_df` or
