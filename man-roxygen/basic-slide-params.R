@@ -1,4 +1,4 @@
-#' @param x The `epi_df` object under consideration, [grouped][dplyr::group_by]
+#' @param .x The `epi_df` object under consideration, [grouped][dplyr::group_by]
 #'   or ungrouped. If ungrouped, all data in `x` will be treated as part of a
 #'   single data group.
 #' @param .window_size The size of the sliding window. By default, this is 0,
@@ -19,7 +19,6 @@
 #' then the window will have floor(window_size/2) points before and after the
 #' reference time. If the window size is even, then the window will be
 #' asymmetric and have one less value on the right side of the reference time.
-#' @param before,after Deprecated. Use `.n` instead.
 #' @param .ref_time_values Time values for sliding computations, meaning, each
 #'   element of this vector serves as the reference time point for one sliding
 #'   window. If missing, then this will be set to all unique time values in the
@@ -34,14 +33,5 @@
 #'   the missing marker is a `NULL` entry in the list column; for certain
 #'   operations, you might want to replace these `NULL` entries with a different
 #'   `NA` marker.
-#' @param as_list_col `r lifecycle::badge("deprecated")` if you want a list
-#'   column as output, you can now just directly output a list from your slide
-#'   computations. Usually this just means wrapping your output in a length-1
-#'   list (outputting `list(result)` instead of `result`).
-#' @param names_sep `r lifecycle::badge("deprecated")` if you were specifying
-#'   `names_sep = NULL`, that's no longer needed. If you were using a non-NULL
-#'   value, you can either directly prefix your slide computation names, or
-#'   output a list and then later call `tidyr::unnest(slide_output,
-#'   <result_column_name>, names_sep = <names_sep>)`.
 #' @return An `epi_df` object given by appending one or more new columns to `x`,
 #'   named according to the `new_col_name` argument.

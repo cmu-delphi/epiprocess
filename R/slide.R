@@ -5,7 +5,7 @@
 #' for examples.
 #'
 #' @template basic-slide-params
-#' @param f Function, formula, or missing; together with `...` specifies the
+#' @param .f Function, formula, or missing; together with `...` specifies the
 #'   computation to slide. To "slide" means to apply a computation within a
 #'   sliding (a.k.a. "rolling") time window for each data group. The window is
 #'   determined by the `before` and `after` parameters described below. One time
@@ -21,10 +21,11 @@
 #'   If `f` is missing, then `...` will specify the computation.
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `f`. Alternatively, if `f` is missing, then the `...` is interpreted as
-#'   an expression for tidy evaluation; in addition to referring to columns
-#'   directly by name, the expression has access to `.data` and `.env` pronouns
-#'   as in `dplyr` verbs, and can also refer to `.x`, `.group_key`, and
-#'   `.ref_time_value`. See details.
+#'   a ["data-masking"][rlang::args_data_masking] expression or expressions for
+#'   tidy evaluation; in addition to referring columns directly by name, the
+#'   expressions have access to `.data` and `.env` pronouns as in `dplyr` verbs,
+#'   and can also refer to `.x`, `.group_key`, and `.ref_time_value`. See
+#'   details.
 #'
 #' @template basic-slide-details
 #'
@@ -80,27 +81,50 @@
 #'   ) %>%
 #'   ungroup()
 epi_slide <- function(
-    x, f, ...,
-    .window_size = 0, .align = c("right", "center", "left"), .ref_time_values = NULL, .all_rows = FALSE) {
-  if (any(map(c(n, before, after, ref_time_values, new_col_name, as_list_col, names_sep, all_rows), Negate(is.null)))) {
-    cli_abort(
-      "epi_slide: deprecated arguments `n`, `before`, `after`, `ref_time_values`, `new_col_name`, `as_list_col`,
-      `names_sep`, and `all_rows` have been removed. Please use `.n`, `.align`, `.ref_time_values`,
-      `.new_col_name`, `.as_list_col`, and `.names_sep` instead."
+    .x, .f, ...,
+    .window_size = 0, .align = c("right", "center", "left"),
+    .ref_time_values = NULL, .new_col_name = NULL, .all_rows = FALSE) {
+  # Argument deprecation handling
+  provided_args <- rlang::call_args_names(rlang::call_match())
+  dot_prefixed_args <- c("x", "f", "ref_time_values", "new_col_name", "all_rows")
+  if (any(purrr::map_lgl(provided_args, ~ .x %in% dot_prefixed_args))) {
+    cli::cli_abort(
+      "epi_slide: you are using one of the following old argument names: `x`, `f`, `ref_time_values`,
+      `new_col_name`, or `all_rows`. Please use the new dot-prefixed names: `.x`, `.f`, `.ref_time_values`,
+      `.new_col_name`, `.all_rows`."
+    )
+  }
+  if ("as_list_col" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide: the argument `as_list_col` is deprecated. If FALSE, you can just remove it.
+      If TRUE, have your given computation wrap its result using `list(result)` instead."
+    )
+  }
+  if ("names_sep" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide: the argument `names_sep` is deprecated. If NULL, you can remove it, it is now default.
+      If a string, please manually prefix your column names instead."
+    )
+  }
+  if ("before" %in% provided_args || "after" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide: `before` and `after` are deprecated for `epi_slide`. Use `.window_size` and `.align` instead.
+      See the slide documentation for more details."
     )
   }
 
-  assert_class(x, "epi_df")
+  # Function body starts
+  assert_class(.x, "epi_df")
 
-  if (nrow(x) == 0L) {
-    return(x)
+  if (nrow(.x) == 0L) {
+    return(.x)
   }
 
   if (is.null(.ref_time_values)) {
-    .ref_time_values <- unique(x$time_value)
+    .ref_time_values <- unique(.x$time_value)
   } else {
     assert_numeric(.ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
-    if (!test_subset(.ref_time_values, unique(x$time_value))) {
+    if (!test_subset(.ref_time_values, unique(.x$time_value))) {
       cli_abort(
         "`ref_time_values` must be a unique subset of the time values in `x`.",
         class = "epi_slide__invalid_ref_time_values"
@@ -116,13 +140,9 @@ epi_slide <- function(
   }
   .ref_time_values <- sort(.ref_time_values)
 
-  if (!is.null(before) || !is.null(after)) {
-    cli_abort("`before` and `after` are deprecated for `epi_slide`. Use `n` instead.")
-  }
-
   # Handle window arguments
   align <- rlang::arg_match(.align)
-  time_type <- attr(x, "metadata")$time_type
+  time_type <- attr(.x, "metadata")$time_type
   validate_slide_window_arg(.window_size, time_type)
   if (identical(.window_size, Inf)) {
     if (align == "right") {
@@ -142,7 +162,7 @@ epi_slide <- function(
       before <- .window_size - 1
       after <- 0
     } else if (align == "center") {
-      # For n = 5, before = 2, after = 2. For n = 4, before = 2, after = 1.
+      # For .window_size = 5, before = 2, after = 2. For .window_size = 4, before = 2, after = 1.
       before <- floor(.window_size / 2)
       after <- .window_size - before - 1
     } else if (align == "left") {
@@ -152,21 +172,21 @@ epi_slide <- function(
   }
 
   # Arrange by increasing time_value
-  x <- arrange(x, .data$time_value)
+  x <- arrange(.x, .data$time_value)
 
   # Now set up starts and stops for sliding/hopping
   starts <- .ref_time_values - before
   stops <- .ref_time_values + after
 
   # If `f` is missing, interpret ... as an expression for tidy evaluation
-  if (missing(f)) {
+  if (missing(.f)) {
     used_data_masking <- TRUE
     quosures <- enquos(...)
     if (length(quosures) == 0) {
       cli_abort("If `f` is missing then a computation must be specified via `...`.")
     }
 
-    f <- quosures
+    .f <- quosures
     # Magic value that passes zero args as dots in calls below. Equivalent to
     # `... <- missing_arg()`, but use `assign` to avoid warning about
     # improper use of dots.
@@ -175,51 +195,7 @@ epi_slide <- function(
     used_data_masking <- FALSE
   }
 
-  f <- as_slide_computation(f, ...)
-
-  if (lifecycle::is_present(as_list_col)) {
-    if (!as_list_col) {
-      lifecycle::deprecate_warn("0.8.1", "epi_slide(as_list_col =)", details = "You can simply remove as_list_col = FALSE.") # nolint: line_length_linter
-    } else {
-      lifecycle::deprecate_warn("0.8.1", "epi_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless the `epi_slide()` row-recycling behavior would be inappropriate.  Attempting to mimic the effects of such a rewrite, but you may see changes in behavior...") # nolint: line_length_linter
-      f_orig <- f
-      if (!used_data_masking) {
-        f <- function(...) {
-          list(f_orig(...))
-        }
-      } else {
-        f <- function(...) {
-          # tidyeval pre-as_list_col-deprecation only supported a single, named,
-          # data-masking expr. So we should have a single column which is a packed
-          # data.frame, or a non-data.frame.
-          wrapped_result_orig <- f_orig(...)
-          if (length(wrapped_result_orig) != 1L) {
-            cli_abort("Failed to rewrite `as_list_col = TRUE`, which is deprecated: an internal bug was encountered.  Please remove `as_list_col = TRUE` and update your slide computation instead.") # nolint: line_length_linter
-          }
-          name_orig <- names(wrapped_result_orig)[[1L]]
-          result_orig <- wrapped_result_orig[[1L]]
-          if (is.data.frame(result_orig)) {
-            # to list of rows:
-            result_col <- lapply(seq_len(nrow(result_orig)), function(subresult_i) {
-              result_orig[subresult_i, ]
-            })
-            results_lst <- list(result_col)
-          } else {
-            results_lst <- as.list(result_orig)
-          }
-          validate_tibble(new_tibble(`names<-`(results_lst, name_orig)))
-        }
-      }
-    }
-  }
-
-  if (lifecycle::is_present(names_sep)) {
-    if (is.null(names_sep)) {
-      lifecycle::deprecate_warn("0.8.1", "epi_slide(names_sep =)", details = "You can simply remove `names_sep = NULL`; that's now the defualt.") # nolint: line_length_linter
-    } else {
-      lifecycle::deprecate_stop("0.8.1", "epi_slide(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)") # nolint: line_length_linter
-    }
-  }
+  f <- as_slide_computation(.f, ...)
 
   # Create a wrapper that calculates and passes `.ref_time_value` to the
   # computation. `i` is contained in the `f_wrapper_factory` environment such
@@ -234,7 +210,6 @@ epi_slide <- function(
     }
     return(f_wrapper)
   }
-
 
   # Computation for one group, all time values
   slide_one_grp <- function(.data_group,
@@ -352,7 +327,7 @@ epi_slide <- function(
     stops = stops,
     ref_time_values = .ref_time_values,
     all_rows = .all_rows,
-    new_col_name = new_col_name,
+    new_col_name = .new_col_name,
     .keep = FALSE
   )
 
@@ -369,7 +344,7 @@ epi_slide <- function(
 #'
 #' @template basic-slide-params
 #' @template opt-slide-params
-#' @param f Function; together with `...` specifies the computation to slide.
+#' @param .f Function; together with `...` specifies the computation to slide.
 #'  `f` must be one of `data.table`'s rolling functions
 #'  (`frollmean`, `frollsum`, `frollapply`. See [data.table::roll]) or one
 #'  of `slider`'s specialized sliding functions (`slide_mean`, `slide_sum`,
@@ -451,12 +426,50 @@ epi_slide <- function(
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
 #'   ungroup()
-epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref_time_values = NULL,
-                          new_col_name = NULL, all_rows = FALSE,
-                          as_list_col = deprecated(), names_sep = NULL) {
-  assert_class(x, "epi_df")
+epi_slide_opt <- function(
+    .x, .col_names, .f, ...,
+    .window_size = 0, .align = c("right", "center", "left"),
+    .ref_time_values = NULL, .all_rows = FALSE, .na_rm = FALSE) {
+  assert_class(.x, "epi_df")
 
-  if (nrow(x) == 0L) {
+  # Argument deprecation handling
+  provided_args <- rlang::call_args_names(rlang::call_match())
+  dot_prefixed_args <- c("x", "col_names", "f", "ref_time_values", "all_rows")
+  if (any(purrr::map_lgl(provided_args, ~ .x %in% dot_prefixed_args))) {
+    cli::cli_abort(
+      "epi_slide_opt: you are using one of the following old argument names: `x`, `col_names`, `f`, `ref_time_values`,
+      or `all_rows`. Please use the new dot-prefixed names: `.x`, `.col_names`, `.f`,
+      `.ref_time_values`, `.all_rows`."
+    )
+  }
+  if ("as_list_col" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide_opt: the argument `as_list_col` is deprecated. If FALSE, you can just remove it.
+      If TRUE, have your given computation wrap its result using `list(result)` instead."
+    )
+  }
+  if ("before" %in% provided_args || "after" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide_opt: `before` and `after` are deprecated for `epi_slide`. Use `.window_size` and `.align` instead.
+      See the slide documentation for more details."
+    )
+  }
+  if ("new_col_name" %in% provided_args || ".new_col_name" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide_opt: the argument `new_col_name` is not supported for `epi_slide_opt`. If you want to customize
+      the output column names, use `dplyr::rename` after the slide.",
+      class = "epiprocess__epi_slide_opt__new_name_not_supported"
+    )
+  }
+  if ("names_sep" %in% provided_args || ".names_sep" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide_opt: the argument `names_sep` is not supported for `epi_slide_opt`. If you want to customize
+      the output column names, use `dplyr::rename` after the slide.",
+      class = "epiprocess__epi_slide_opt__name_sep_not_supported"
+    )
+  }
+
+  if (nrow(.x) == 0L) {
     cli_abort(
       c(
         "input data `x` unexpectedly has 0 rows",
@@ -464,31 +477,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
           check that `epix_slide` `ref_time_values` argument was set appropriately"
       ),
       class = "epiprocess__epi_slide_opt__0_row_input",
-      epiprocess__x = x
-    )
-  }
-
-  if (!is.null(new_col_name)) {
-    cli_abort(
-      c(
-        "`new_col_name` is not supported for `epi_slide_[opt/mean/sum]`",
-        "i" = "If you want to customize the output column names, use [`dplyr::rename`] after the slide."
-      ),
-      class = "epiprocess__epi_slide_opt__new_name_not_supported"
-    )
-  }
-
-  if (lifecycle::is_present(as_list_col)) {
-    lifecycle::deprecate_stop("0.8.1", "epi_slide_opt(as_list_col =)")
-  }
-
-  if (!is.null(names_sep)) {
-    cli_abort(
-      c(
-        "`names_sep` is not supported for `epi_slide_[opt/mean/sum]`",
-        "i" = "If you want to customize the output column names, use [`dplyr::rename`] after the slide."
-      ),
-      class = "epiprocess__epi_slide_opt__name_sep_not_supported"
+      epiprocess__x = .x
     )
   }
 
@@ -498,16 +487,12 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
   # locally).
   if (any(map_lgl(
     list(frollmean, frollsum, frollapply),
-    function(roll_fn) {
-      identical(f, roll_fn)
-    }
+    ~ identical(.f, .x)
   ))) {
     f_from_package <- "data.table"
   } else if (any(map_lgl(
     list(slide_sum, slide_prod, slide_mean, slide_min, slide_max, slide_all, slide_any),
-    function(roll_fn) {
-      identical(f, roll_fn)
-    }
+    ~ identical(.f, .x)
   ))) {
     f_from_package <- "slider"
   } else {
@@ -521,55 +506,71 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
               etc. See `?slider::\`summary-slide\`` for more options)."
       ),
       class = "epiprocess__epi_slide_opt__unsupported_slide_function",
-      epiprocess__f = f
+      epiprocess__f = .f
     )
   }
 
-  user_provided_rtvs <- !is.null(ref_time_values)
+  user_provided_rtvs <- !is.null(.ref_time_values)
   if (!user_provided_rtvs) {
-    ref_time_values <- unique(x$time_value)
+    .ref_time_values <- unique(.x$time_value)
   } else {
-    assert_numeric(ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
-    if (!test_subset(ref_time_values, unique(x$time_value))) {
+    assert_numeric(.ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
+    if (!test_subset(.ref_time_values, unique(.x$time_value))) {
       cli_abort(
         "`ref_time_values` must be a unique subset of the time values in `x`.",
         class = "epi_slide_opt__invalid_ref_time_values"
       )
     }
-    if (anyDuplicated(ref_time_values) != 0L) {
+    if (anyDuplicated(.ref_time_values) != 0L) {
       cli_abort(
         "`ref_time_values` must not contain any duplicates; use `unique` if appropriate.",
         class = "epi_slide_opt__invalid_ref_time_values"
       )
     }
   }
-  ref_time_values <- sort(ref_time_values)
+  ref_time_values <- sort(.ref_time_values)
 
-  # Handle defaults for before/after
-  time_type <- attr(x, "metadata")$time_type
-  if (is.null(before) && !is.null(after)) {
-    if (inherits(after, "difftime")) {
-      before <- as.difftime(0, units = units(after))
-    } else {
-      before <- 0
-    }
-  }
-  if (is.null(after) && !is.null(before)) {
-    if (inherits(before, "difftime")) {
-      after <- as.difftime(0, units = units(before))
-    } else {
-      if (identical(before, Inf) && time_type %in% c("day", "week")) {
+  # Handle window arguments
+  align <- rlang::arg_match(.align)
+  time_type <- attr(.x, "metadata")$time_type
+  validate_slide_window_arg(.window_size, time_type)
+  if (identical(.window_size, Inf)) {
+    if (align == "right") {
+      before <- Inf
+      if (time_type %in% c("day", "week")) {
         after <- as.difftime(0, units = glue::glue("{time_type}s"))
       } else {
         after <- 0
       }
+    } else {
+      cli_abort(
+        "`epi_slide`: center and left alignment are not supported with an infinite window size."
+      )
+    }
+  } else {
+    if (align == "right") {
+      before <- .window_size - 1
+      if (time_type %in% c("day", "week")) {
+        after <- as.difftime(0, units = glue::glue("{time_type}s"))
+      } else {
+        after <- 0
+      }
+    } else if (align == "center") {
+      # For .window_size = 5, before = 2, after = 2. For .window_size = 4, before = 2, after = 1.
+      before <- floor(.window_size / 2)
+      after <- .window_size - before - 1
+    } else if (align == "left") {
+      if (time_type %in% c("day", "week")) {
+        before <- as.difftime(0, units = glue::glue("{time_type}s"))
+      } else {
+        before <- 0
+      }
+      after <- .window_size - 1
     }
   }
-  validate_slide_window_arg(before, time_type)
-  validate_slide_window_arg(after, time_type, allow_inf = FALSE)
 
   # Make a complete date sequence between min(x$time_value) and max(x$time_value).
-  date_seq_list <- full_date_seq(x, before, after, time_type)
+  date_seq_list <- full_date_seq(.x, before, after, time_type)
   all_dates <- date_seq_list$all_dates
   pad_early_dates <- date_seq_list$pad_early_dates
   pad_late_dates <- date_seq_list$pad_late_dates
@@ -580,12 +581,12 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
   # positions of user-provided `col_names` into string column names. We avoid
   # using `names(pos)` directly for robustness and in case we later want to
   # allow users to rename fields via tidyselection.
-  if (class(quo_get_expr(enquo(col_names))) == "character") {
-    pos <- eval_select(all_of(col_names), data = x, allow_rename = FALSE)
+  if (class(quo_get_expr(enquo(.col_names))) == "character") {
+    pos <- eval_select(all_of(.col_names), data = .x, allow_rename = FALSE)
   } else {
-    pos <- eval_select(enquo(col_names), data = x, allow_rename = FALSE)
+    pos <- eval_select(enquo(.col_names), data = .x, allow_rename = FALSE)
   }
-  col_names_chr <- names(x)[pos]
+  col_names_chr <- names(.x)[pos]
   # Always rename results to "slide_value_<original column name>".
   result_col_names <- paste0("slide_value_", col_names_chr)
   slide_one_grp <- function(.data_group, .group_key, ...) {
@@ -640,10 +641,10 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
       # be; shift results to the left by `after` timesteps.
       if (before != Inf) {
         window_size <- before + after + 1L
-        roll_output <- f(x = .data_group[, col_names_chr], n = window_size, ...)
+        roll_output <- .f(x = .data_group[, col_names_chr], n = window_size, na.rm = .na_rm, ...)
       } else {
         window_size <- list(seq_along(.data_group$time_value))
-        roll_output <- f(x = .data_group[, col_names_chr], n = window_size, adaptive = TRUE, ...)
+        roll_output <- .f(x = .data_group[, col_names_chr], n = window_size, adaptive = TRUE, na.rm = .na_rm, ...)
       }
       if (after >= 1) {
         .data_group[, result_col_names] <- purrr::map(roll_output, function(.x) {
@@ -655,10 +656,11 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
     }
     if (f_from_package == "slider") {
       for (i in seq_along(col_names_chr)) {
-        .data_group[, result_col_names[i]] <- f(
+        .data_group[, result_col_names[i]] <- .f(
           x = .data_group[[col_names_chr[i]]],
           before = as.numeric(before),
           after = as.numeric(after),
+          na_rm = .na_rm,
           ...
         )
       }
@@ -667,13 +669,13 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
     return(.data_group)
   }
 
-  result <- mutate(x, .real = TRUE) %>%
+  result <- mutate(.x, .real = TRUE) %>%
     group_modify(slide_one_grp, ..., .keep = FALSE)
 
   result <- result[result$.real, ]
   result$.real <- NULL
 
-  if (all_rows) {
+  if (.all_rows) {
     result[!(result$time_value %in% ref_time_values), result_col_names] <- NA
   } else if (user_provided_rtvs) {
     result <- result[result$time_value %in% ref_time_values, ]
@@ -682,7 +684,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
   if (!is_epi_df(result)) {
     # `all_rows`handling strips epi_df format and metadata.
     # Restore them.
-    result <- reclass(result, attributes(x)$metadata)
+    result <- reclass(result, attributes(.x)$metadata)
   }
 
   return(result)
@@ -752,21 +754,61 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_14dav = slide_value_cases) %>%
 #'   ungroup()
-epi_slide_mean <- function(x, col_names, ..., before = NULL, after = NULL, ref_time_values = NULL,
-                           new_col_name = NULL, all_rows = FALSE,
-                           as_list_col = deprecated(), names_sep = NULL) {
+epi_slide_mean <- function(
+    .x, .col_names, ...,
+    .window_size = 0, .align = c("right", "center", "left"),
+    .ref_time_values = NULL, .all_rows = FALSE, .na_rm = FALSE) {
+  # Argument deprecation handling
+  provided_args <- rlang::call_args_names(rlang::call_match())
+  dot_prefixed_args <- c("x", "col_names", "f", "ref_time_values", "all_rows")
+  if (any(purrr::map_lgl(provided_args, ~ .x %in% dot_prefixed_args))) {
+    cli::cli_abort(
+      "epi_slide_mean: you are using one of the following old argument names: `x`, `col_names`, `f`, `ref_time_values`,
+      or `all_rows`. Please use the new dot-prefixed names: `.x`, `.col_names`, `.f`,
+      `.ref_time_values`, `.all_rows`."
+    )
+  }
+  if ("as_list_col" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide_mean: the argument `as_list_col` is deprecated. If FALSE, you can just remove it.
+      If TRUE, have your given computation wrap its result using `list(result)` instead."
+    )
+  }
+  if ("names_sep" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide_mean: the argument `names_sep` is deprecated. If NULL, you can remove it, it is now default.
+      If a string, please manually prefix your column names instead."
+    )
+  }
+  if ("before" %in% provided_args || "after" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide_mean: `before` and `after` are deprecated for `epi_slide`. Use `.window_size` and `.align` instead.
+      See the slide documentation for more details."
+    )
+  }
+  if ("new_col_name" %in% provided_args || ".new_col_name" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide_mean: the argument `new_col_name` is not supported. If you want to customize
+      the output column names, use `dplyr::rename` after the slide."
+    )
+  }
+  if ("names_sep" %in% provided_args || ".names_sep" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide_mean: the argument `names_sep` is not supported. If you want to customize
+      the output column names, use `dplyr::rename` after the slide."
+    )
+  }
+
   epi_slide_opt(
-    x = x,
-    col_names = {{ col_names }},
-    f = data.table::frollmean,
+    .x = .x,
+    .col_names = {{ .col_names }},
+    .f = data.table::frollmean,
     ...,
-    before = before,
-    after = after,
-    ref_time_values = ref_time_values,
-    new_col_name = new_col_name,
-    as_list_col = as_list_col,
-    names_sep = names_sep,
-    all_rows = all_rows
+    .window_size = .window_size,
+    .align = .align,
+    .ref_time_values = .ref_time_values,
+    .all_rows = .all_rows,
+    .na_rm = .na_rm
   )
 }
 
@@ -797,23 +839,60 @@ epi_slide_mean <- function(x, col_names, ..., before = NULL, after = NULL, ref_t
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dsum = slide_value_cases) %>%
 #'   ungroup()
-epi_slide_sum <- function(x, col_names, ..., before = NULL, after = NULL, ref_time_values = NULL,
-                          new_col_name = NULL,
-                          all_rows = FALSE,
-                          as_list_col = deprecated(),
-                          names_sep = NULL) {
+epi_slide_sum <- function(
+    .x, .col_names, ...,
+    .window_size = 0, .align = c("right", "center", "left"),
+    .ref_time_values = NULL, .all_rows = FALSE, .na_rm = FALSE) {
+  # Argument deprecation handling
+  provided_args <- rlang::call_args_names(rlang::call_match())
+  dot_prefixed_args <- c("x", "col_names", "f", "ref_time_values", "all_rows")
+  if (any(purrr::map_lgl(provided_args, ~ .x %in% dot_prefixed_args))) {
+    cli::cli_abort(
+      "epi_slide_sum: you are using one of the following old argument names: `x`, `col_names`, `f`, `ref_time_values`,
+      or `all_rows`. Please use the new dot-prefixed names: `.x`, `.col_names`, `.f`,
+      `.ref_time_values`, `.all_rows`."
+    )
+  }
+  if ("as_list_col" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide_sum: the argument `as_list_col` is deprecated. If FALSE, you can just remove it.
+      If TRUE, have your given computation wrap its result using `list(result)` instead."
+    )
+  }
+  if ("names_sep" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide_sum: the argument `names_sep` is deprecated. If NULL, you can remove it, it is now default.
+      If a string, please manually prefix your column names instead."
+    )
+  }
+  if ("before" %in% provided_args || "after" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide_sum: `before` and `after` are deprecated for `epi_slide`. Use `.window_size` and `.align` instead.
+      See the slide documentation for more details."
+    )
+  }
+  if ("new_col_name" %in% provided_args || ".new_col_name" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide_sum: the argument `new_col_name` is not supported. If you want to customize
+      the output column names, use `dplyr::rename` after the slide."
+    )
+  }
+  if ("names_sep" %in% provided_args || ".names_sep" %in% provided_args) {
+    cli::cli_abort(
+      "epi_slide_sum: the argument `names_sep` is not supported. If you want to customize
+      the output column names, use `dplyr::rename` after the slide."
+    )
+  }
   epi_slide_opt(
-    x = x,
-    col_names = {{ col_names }},
-    f = data.table::frollsum,
+    .x = .x,
+    .col_names = {{ .col_names }},
+    .f = data.table::frollsum,
     ...,
-    before = before,
-    after = after,
-    ref_time_values = ref_time_values,
-    new_col_name = new_col_name,
-    as_list_col = as_list_col,
-    names_sep = names_sep,
-    all_rows = all_rows
+    .window_size = .window_size,
+    .align = .align,
+    .ref_time_values = .ref_time_values,
+    .all_rows = .all_rows,
+    .na_rm = .na_rm
   )
 }
 
