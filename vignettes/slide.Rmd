@@ -21,7 +21,7 @@ as `Date` objects, then one time step is one day, since `as.Date("2022-01-01") +
 1` equals `as.Date("2022-01-02")`. Alternatively, the time step can be specified
 manually in the call to `epi_slide()`; you can read the documentation for more
 details. Furthermore, the alignment of the running window used in `epi_slide()`
-is specified by `before` and `after`. 
+is specified by `before` and `after`.
 
 As in getting started guide, we'll fetch daily reported COVID-19 cases from CA,
 FL, NY, and TX (note: here we're using new, not cumulative cases) using the
@@ -70,7 +70,7 @@ first call `group_by()`.
 ```{r}
 x %>%
   group_by(geo_value) %>%
-  epi_slide_mean("cases", before = 6) %>%
+  epi_slide_mean("cases", .window_size = 7) %>%
   ungroup() %>%
   head(10)
 ```
@@ -91,7 +91,7 @@ first call `group_by()`.
 ```{r}
 x %>%
   group_by(geo_value) %>%
-  epi_slide(~ mean(.x$cases), before = 6) %>%
+  epi_slide(~ mean(.x$cases), .window_size = 7) %>%
   ungroup() %>%
   head(10)
 ```
@@ -106,7 +106,7 @@ name up front using the `new_col_name` argument:
 ```{r}
 x <- x %>%
   group_by(geo_value) %>%
-  epi_slide(~ mean(.x$cases), before = 6, new_col_name = "cases_7dav") %>%
+  epi_slide(~ mean(.x$cases), .window_size = 7, new_col_name = "cases_7dav") %>%
   ungroup()
 
 head(x, 10)
@@ -140,7 +140,7 @@ Recreating the last example of a 7-day trailing average:
 ```{r}
 x <- x %>%
   group_by(geo_value) %>%
-  epi_slide(function(x, gk, rtv) mean(x$cases), before = 6, new_col_name = "cases_7dav") %>%
+  epi_slide(function(x, gk, rtv) mean(x$cases), .window_size = 7, new_col_name = "cases_7dav") %>%
   ungroup()
 
 head(x, 10)
@@ -157,7 +157,7 @@ would in a call to `dplyr::mutate()`, or any of the `dplyr` verbs. For example:
 ```{r}
 x <- x %>%
   group_by(geo_value) %>%
-  epi_slide(cases_7dav = mean(cases), before = 6) %>%
+  epi_slide(cases_7dav = mean(cases), .window_size = 7) %>%
   ungroup()
 
 head(x, 10)

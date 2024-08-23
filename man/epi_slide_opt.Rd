@@ -2,7 +2,8 @@
 % Please edit documentation in R/slide.R
 \name{epi_slide_opt}
 \alias{epi_slide_opt}
-\title{Optimized slide function for performing common rolling computations on an \code{epi_df} object}
+\title{Optimized slide function for performing common rolling computations on an
+\code{epi_df} object}
 \usage{
 epi_slide_opt(
   .x,
@@ -18,71 +19,10 @@ epi_slide_opt(
 }
 \arguments{
 \item{.x}{The \code{epi_df} object under consideration, \link[dplyr:group_by]{grouped}
-or ungrouped. If ungrouped, all data in \code{x} will be treated as part of a
+or ungrouped. If ungrouped, all data in \code{.x} will be treated as part of a
 single data group.}
 
-\item{.f}{Function; together with \code{...} specifies the computation to slide.
-\code{f} must be one of \code{data.table}'s rolling functions
-(\code{frollmean}, \code{frollsum}, \code{frollapply}. See \link[data.table:froll]{data.table::roll}) or one
-of \code{slider}'s specialized sliding functions (\code{slide_mean}, \code{slide_sum},
-etc. See \link[slider:summary-slide]{slider::summary-slide}). To "slide" means to apply a
-computation within a sliding (a.k.a. "rolling") time window for each data
-group. The window is determined by the \code{before} and \code{after} parameters
-described below. One time step is typically one day or one week; see
-details for more explanation.
-
-The optimized \code{data.table} and \code{slider} functions can't be directly passed
-as the computation function in \code{epi_slide} without careful handling to
-make sure each computation group is made up of the \code{n} dates rather than
-\code{n} points. \code{epi_slide_opt} (and wrapper functions \code{epi_slide_mean} and
-\code{epi_slide_sum}) take care of window completion automatically to prevent
-associated errors.}
-
-\item{...}{Additional arguments to pass to the slide computation \code{f}, for
-example, \code{na.rm} and \code{algo} if \code{f} is a \code{data.table} function. If \code{f} is
-a \code{data.table} function, it is automatically passed the data \code{x} to
-operate on, the window size \code{n}, and the alignment \code{align}. Providing
-these args via \code{...} will cause an error. If \code{f} is a \code{slider} function,
-it is automatically passed the data \code{x} to operate on, and number of
-points \code{before} and \code{after} to use in the computation.}
-
-\item{.window_size}{The size of the sliding window. By default, this is 0,
-meaning that only the current ref_time_value is included. The accepted values
-here depend on the \code{time_value} column:
-\itemize{
-\item if time_type is Date and the cadence is daily, then \code{.n} can be an integer
-(which will be interpreted in units of days) or a difftime with units
-"days"
-\item if time_type is Date and the cadence is weekly, then \code{.n} must be a difftime
-with units "weeks"
-\item if time_type is an integer, then \code{.n} must be an integer
-}}
-
-\item{.align}{The alignment of the sliding window. If \code{right} (default), then
-the window has its end at the reference time; if \code{center}, then the window is
-centered at the reference time; if \code{left}, then the window has its start at
-the reference time. If the alignment is \code{center} and the window size is odd,
-then the window will have floor(window_size/2) points before and after the
-reference time. If the window size is even, then the window will be
-asymmetric and have one less value on the right side of the reference time.}
-
-\item{.ref_time_values}{Time values for sliding computations, meaning, each
-element of this vector serves as the reference time point for one sliding
-window. If missing, then this will be set to all unique time values in the
-underlying data table, by default.}
-
-\item{.all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
-the output even with \code{ref_time_values} provided, with some type of missing
-value marker for the slide computation output column(s) for \code{time_value}s
-outside \code{ref_time_values}; otherwise, there will be one row for each row in
-\code{x} that had a \code{time_value} in \code{ref_time_values}. Default is \code{FALSE}. The
-missing value marker is the result of \code{vctrs::vec_cast}ing \code{NA} to the type
-of the slide computation output. If using \code{as_list_col = TRUE}, note that
-the missing marker is a \code{NULL} entry in the list column; for certain
-operations, you might want to replace these \code{NULL} entries with a different
-\code{NA} marker.}
-
-\item{col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
+\item{.col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
 name(e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}),
 \link[tidyselect:language]{other tidy-select expression}, or a vector of
 characters (e.g. \code{c("cases", "deaths")}). Variable names can be used as if
@@ -93,15 +33,67 @@ The tidy-selection renaming interface is not supported, and cannot be used
 to provide output column names; if you want to customize the output column
 names, use \code{\link[dplyr:rename]{dplyr::rename}} after the slide.}
 
-\item{as_list_col}{Not supported. Included to match \code{epi_slide} interface.}
+\item{.f}{Function; together with \code{...} specifies the computation to slide.
+\code{.f} must be one of \code{data.table}'s rolling functions
+(\code{frollmean}, \code{frollsum}, \code{frollapply}. See \link[data.table:froll]{data.table::roll}) or one
+of \code{slider}'s specialized sliding functions (\code{slide_mean}, \code{slide_sum},
+etc. See \link[slider:summary-slide]{slider::summary-slide}).
 
-\item{new_col_name}{Not supported. Included to match \code{epi_slide} interface.}
+The optimized \code{data.table} and \code{slider} functions can't be directly passed
+as the computation function in \code{epi_slide} without careful handling to make
+sure each computation group is made up of the \code{.window_size} dates rather
+than \code{.window_size} points. \code{epi_slide_opt} (and wrapper functions
+\code{epi_slide_mean} and \code{epi_slide_sum}) take care of window completion
+automatically to prevent associated errors.}
 
-\item{names_sep}{Not supported. Included to match \code{epi_slide} interface.}
+\item{...}{Additional arguments to pass to the slide computation \code{.f}, for
+example, \code{algo} if \code{.f} is a \code{data.table} function. If \code{.f} is
+a \code{data.table} function, \code{epi_slide_opt()} handles passing the data \code{.x},
+the window size \code{.window_size}, and the alignment \code{.align} to the function.
+If \code{.f} is a \code{slider} function, \code{epi_slide_opt()} handles passing the data
+\code{.x} and calculating the appropriate \code{before} and \code{after} values.}
+
+\item{.window_size}{The size of the sliding window. By default, this is 1,
+meaning that only the current ref_time_value is included. The accepted values
+here depend on the \code{time_value} column:
+\itemize{
+\item if time_type is Date and the cadence is daily, then \code{.window_size} can be
+an integer (which will be interpreted in units of days) or a difftime
+with units "days"
+\item if time_type is Date and the cadence is weekly, then \code{.window_size} must
+be a difftime with units "weeks"
+\item if time_type is an integer, then \code{.window_size} must be an integer
+}}
+
+\item{.align}{The alignment of the sliding window. If \code{right} (default), then
+the window has its end at the reference time; if \code{center}, then the window is
+centered at the reference time; if \code{left}, then the window has its start at
+the reference time. If the alignment is \code{center} and the window size is odd,
+then the window will have floor(window_size/2) points before and after the
+reference time. If the window size is even, then the window will be
+asymmetric and have one less value on the right side of the reference time
+(assuming time increases from left to right).}
+
+\item{.ref_time_values}{Time values for sliding computations, meaning, each
+element of this vector serves as the reference time point for one sliding
+window. If missing, then this will be set to all unique time values in the
+underlying data table, by default.}
+
+\item{.all_rows}{If \code{.all_rows = TRUE}, then all rows of \code{.x} will be kept in
+the output even with \code{.ref_time_values} provided, with some type of missing
+value marker for the slide computation output column(s) for \code{time_value}s
+outside \code{.ref_time_values}; otherwise, there will be one row for each row in
+\code{.x} that had a \code{time_value} in \code{.ref_time_values}. Default is \code{FALSE}. The
+missing value marker is the result of \code{vctrs::vec_cast}ing \code{NA} to the type
+of the slide computation output.}
+
+\item{.na_rm}{Logical; passes the argument to the appropriate slide function
+to determine how to handle missing values. If \code{TRUE}, missing values are
+removed before the computation is performed, otherwise they are left in.}
 }
 \value{
-An \code{epi_df} object given by appending one or more new columns to \code{x},
-named according to the \code{new_col_name} argument.
+An \code{epi_df} object given by appending one or more new columns to \code{.x},
+named according to the \code{.new_col_name} argument.
 }
 \description{
 Slides an n-timestep \link[data.table:froll]{data.table::froll} or \link[slider:summary-slide]{slider::summary-slide} function
@@ -110,20 +102,39 @@ over variables in an \code{epi_df} object. See the
 for examples.
 }
 \details{
-To "slide" means to apply a function over a rolling window of time
-steps for each data group, where the window is centered at a reference time
-and left and right endpoints are given by the \code{before} and \code{after}
-arguments.
-If there are not enough time steps available to complete the window at any
-given reference time, then \verb{epi_slide_*()} will fail; it requires a
-complete window to perform the computation. For a centrally-aligned slide
-of \code{n} \code{time_value}s in a sliding window, set \code{before = (n-1)/2} and \code{after = (n-1)/2} when the number of \code{time_value}s in a sliding window is odd and
-\code{before = n/2-1} and \code{after = n/2} when \code{n} is even.
+To "slide" means to apply a function or formula over a rolling
+window. The \code{.window_size} arg determines the width of the window
+(including the reference time) and the \code{.align} arg governs how the window
+is aligned (see below for examples). The \code{.ref_time_values} arg controls
+which time values to consider for the slide and \code{.all_rows} allows you to
+keep NAs around.
 
-Sometimes, we want to experiment with various trailing or leading window
-widths and compare the slide outputs. In the (uncommon) case where
-zero-width windows are considered, manually pass both the \code{before} and
-\code{after} arguments.
+\verb{epi_slide_*()} does not require a complete window (such as on the left
+boundary of the dataset) and will attempt to perform the computation
+anyway. The issue of what to do with partial computations (those run on
+incomplete windows) is therefore left up to the user, either through the
+specified function or formula \code{f}, or through post-processing.
+
+Let's look at some window examples, assuming that the reference time value
+is \code{tv}. With .align = "right" and .window_size = 3, the window will be:
+
+time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:                     \link{tv - 2, tv - 1, tv}
+
+With .align = "center" and .window_size = 3, the window will be:
+
+time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:                             \link{tv - 1, tv, tv + 1}
+
+With .align = "center" and .window_size = 4, the window will be:
+
+time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:                     \link{tv - 2, tv - 1, tv, tv + 1}
+
+With .align = "left" and .window_size = 3, the window will be:
+
+time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:                                     \link{tv, tv + 1, tv + 2}
 }
 \examples{
 # slide a 7-day trailing average formula on cases. This can also be done with `epi_slide_mean`
@@ -131,7 +142,7 @@ jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
     cases,
-    f = data.table::frollmean, before = 6
+    .f = data.table::frollmean, .window_size = 7
   ) \%>\%
   # Remove a nonessential var. to ensure new col is printed, and rename new col
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
@@ -143,9 +154,10 @@ jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
     cases,
-    f = data.table::frollmean, before = 6,
+    .f = data.table::frollmean, .window_size = 7,
+    .na_rm = TRUE,
     # `frollmean` options
-    na.rm = TRUE, algo = "exact", hasNA = TRUE
+    algo = "exact", hasNA = TRUE
   ) \%>\%
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
@@ -155,18 +167,18 @@ jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
     cases,
-    f = slider::slide_mean, after = 6
+    .f = slider::slide_mean, .window_size = 7, .align = "left"
   ) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 
-# slide a 7-day centre-aligned sum. This can also be done with `epi_slide_sum`
+# slide a 7-day center-aligned sum. This can also be done with `epi_slide_sum`
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
     cases,
-    f = data.table::frollsum, before = 3, after = 3
+    .f = data.table::frollsum, .window_size = 6, .align = "center"
   ) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%

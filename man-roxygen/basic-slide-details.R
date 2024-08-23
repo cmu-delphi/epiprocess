@@ -1,31 +1,45 @@
 #' @details To "slide" means to apply a function or formula over a rolling
-#'   window of time steps for each data group, where the window is centered at a
-#'   reference time and left and right endpoints are given by the `before` and
-#'   `after` arguments.
+#'   window. The `.window_size` arg determines the width of the window
+#'   (including the reference time) and the `.align` arg governs how the window
+#'   is aligned (see below for examples). The `.ref_time_values` arg controls
+#'   which time values to consider for the slide and `.all_rows` allows you to
+#'   keep NAs around.
 #'
-#'   If there are not enough time steps available to complete the window at any
-#'   given reference time, then `epi_slide()` still attempts to perform the
-#'   computation anyway (it does not require a complete window). The issue of
-#'   what to do with partial computations (those run on incomplete windows) is
-#'   therefore left up to the user, either through the specified function or
-#'   formula `f`, or through post-processing. For a centrally-aligned slide of
-#'   `n` `time_value`s in a sliding window, set `before = (n-1)/2` and `after =
-#'   (n-1)/2` when the number of `time_value`s in a sliding window is odd and
-#'   `before = n/2-1` and `after = n/2` when `n` is even.
+#'   `epi_slide()` does not require a complete window (such as on the left
+#'   boundary of the dataset) and will attempt to perform the computation
+#'   anyway. The issue of what to do with partial computations (those run on
+#'   incomplete windows) is therefore left up to the user, either through the
+#'   specified function or formula `f`, or through post-processing.
 #'
-#'   Sometimes, we want to experiment with various trailing or leading window
-#'   widths and compare the slide outputs. In the (uncommon) case where
-#'   zero-width windows are considered, manually pass both the `before` and
-#'   `after` arguments.
+#'   Let's look at some window examples, assuming that the reference time value
+#'   is `tv`. With .align = "right" and .window_size = 3, the window will be:
+#'
+#'   time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+#'   window:                     [tv - 2, tv - 1, tv]
+#'
+#'   With .align = "center" and .window_size = 3, the window will be:
+#'
+#'   time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+#'   window:                             [tv - 1, tv, tv + 1]
+#'
+#'   With .align = "center" and .window_size = 4, the window will be:
+#'
+#'   time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+#'   window:                     [tv - 2, tv - 1, tv, tv + 1]
+#'
+#'   With .align = "left" and .window_size = 3, the window will be:
+#'
+#'   time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+#'   window:                                     [tv, tv + 1, tv + 2]
 #'
 #'   If `f` is missing, then ["data-masking"][rlang::args_data_masking]
 #'   expression(s) for tidy evaluation can be specified, for example, as in:
 #'   ```
-#'   epi_slide(x, cases_7dav = mean(cases), before = 6)
+#'   epi_slide(x, cases_7dav = mean(cases), .window_size = 7)
 #'   ```
 #'   which would be equivalent to:
 #'   ```
-#'   epi_slide(x, function(x, g, t) mean(x$cases), before = 6,
+#'   epi_slide(x, function(x, g, t) mean(x$cases), .window_size = 7,
 #'             new_col_name = "cases_7dav")
 #'   ```
 #'   In a manner similar to [`dplyr::mutate`]:
