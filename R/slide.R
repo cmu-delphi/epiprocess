@@ -26,6 +26,9 @@
 #'   expressions have access to `.data` and `.env` pronouns as in `dplyr` verbs,
 #'   and can also refer to `.x`, `.group_key`, and `.ref_time_value`. See
 #'   details.
+#' @param .new_col_name String indicating the name of the new column that will
+#'   contain the derivative values. Default is "slide_value"; note that setting
+#'   `new_col_name` equal to an existing column name will overwrite this column.
 #'
 #' @template basic-slide-details
 #'
@@ -69,7 +72,7 @@
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(
-#'     ~ list(data.frame(
+#'     cases_2d = list(data.frame(
 #'       cases_2dav = mean(cases),
 #'       cases_2dma = mad(cases)
 #'     )),
@@ -353,15 +356,9 @@ epi_slide <- function(
 #'  `epi_slide_mean` and `epi_slide_sum`) take care of window completion
 #'  automatically to prevent associated errors.
 #' @param ... Additional arguments to pass to the slide computation `.f`, for
-#'  example, `algo` if `.f` is a `data.table` function. If `.f` is
-#'  a `data.table` function, `epi_slide_opt()` handles passing the data `.x`,
-#'  the window size `.window_size`, and the alignment `.align` to the function.
-#'  If `.f` is a `slider` function, `epi_slide_opt()` handles passing the data
-#'  `.x` and calculating the appropriate `before` and `after` values.
-#' @param .na_rm Logical; passes the argument to the appropriate slide function
-#' to determine how to handle missing values. If `TRUE`, missing values are
-#' removed before the computation is performed, otherwise they are left in.
-#'
+#'  example, `algo` or `na.rm` in data.table functions. You don't need to
+#'  specify `.x`, `.window_size`, or `.align` (or `before`/`after` for slider
+#'  functions).
 #' @template opt-slide-details
 #'
 #' @importFrom dplyr bind_rows mutate %>% arrange tibble select all_of
@@ -393,9 +390,8 @@ epi_slide <- function(
 #'   epi_slide_opt(
 #'     cases,
 #'     .f = data.table::frollmean, .window_size = 7,
-#'     .na_rm = TRUE,
 #'     # `frollmean` options
-#'     algo = "exact", hasNA = TRUE
+#'     algo = "exact", hasNA = TRUE, na.rm = TRUE
 #'   ) %>%
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
 #'   ungroup()
@@ -424,7 +420,7 @@ epi_slide <- function(
 epi_slide_opt <- function(
     .x, .col_names, .f, ...,
     .window_size = 0, .align = c("right", "center", "left"),
-    .ref_time_values = NULL, .all_rows = FALSE, .na_rm = FALSE) {
+    .ref_time_values = NULL, .all_rows = FALSE) {
   assert_class(.x, "epi_df")
 
   # Argument deprecation handling
@@ -635,10 +631,10 @@ epi_slide_opt <- function(
       # be; shift results to the left by `after` timesteps.
       if (before != Inf) {
         window_size <- before + after + 1L
-        roll_output <- .f(x = .data_group[, col_names_chr], n = window_size, na.rm = .na_rm, ...)
+        roll_output <- .f(x = .data_group[, col_names_chr], n = window_size, ...)
       } else {
         window_size <- list(seq_along(.data_group$time_value))
-        roll_output <- .f(x = .data_group[, col_names_chr], n = window_size, adaptive = TRUE, na.rm = .na_rm, ...)
+        roll_output <- .f(x = .data_group[, col_names_chr], n = window_size, adaptive = TRUE, ...)
       }
       if (after >= 1) {
         .data_group[, result_col_names] <- purrr::map(roll_output, function(.x) {
@@ -654,7 +650,6 @@ epi_slide_opt <- function(
           x = .data_group[[col_names_chr[i]]],
           before = as.numeric(before),
           after = as.numeric(after),
-          na_rm = .na_rm,
           ...
         )
       }
@@ -694,11 +689,10 @@ epi_slide_opt <- function(
 #'
 #' @template basic-slide-params
 #' @template opt-slide-params
-#' @param ... Additional arguments to pass to `data.table::frollmean`, for
-#'   example, `na.rm` and `algo`. `data.table::frollmean` is automatically
-#'   passed the data `.x` to operate on, the window size `.window_size`, and the
-#'   alignment `.align`. `slider::slide_mean` is automatically passed the data
-#'  `.x` and calculates the appropriate `before` and `after` values.
+#' @param ... Additional arguments to pass to the slide computation `.f`, for
+#'  example, `algo` or `na.rm` in data.table functions. You don't need to
+#'  specify `.x`, `.window_size`, or `.align` (or `before`/`after` for slider
+#'  functions).
 #'
 #' @template opt-slide-details
 #'
@@ -752,7 +746,7 @@ epi_slide_opt <- function(
 epi_slide_mean <- function(
     .x, .col_names, ...,
     .window_size = 0, .align = c("right", "center", "left"),
-    .ref_time_values = NULL, .all_rows = FALSE, .na_rm = FALSE) {
+    .ref_time_values = NULL, .all_rows = FALSE) {
   # Argument deprecation handling
   provided_args <- rlang::call_args_names(rlang::call_match())
   if (any(purrr::map_lgl(provided_args, ~ .x %in% c("x", "col_names", "f", "ref_time_values", "all_rows")))) {
@@ -801,8 +795,7 @@ epi_slide_mean <- function(
     .window_size = .window_size,
     .align = .align,
     .ref_time_values = .ref_time_values,
-    .all_rows = .all_rows,
-    .na_rm = .na_rm
+    .all_rows = .all_rows
   )
 }
 
@@ -816,11 +809,10 @@ epi_slide_mean <- function(
 #'
 #' @template basic-slide-params
 #' @template opt-slide-params
-#' @param ... Additional arguments to pass to `data.table::frollsum`, for
-#'   example, `na.rm` and `algo`. `data.table::frollsum` is automatically passed
-#'   the data `x` to operate on, the window size `.window_size`, and the
-#'   alignment `.align`. `slider::slide_sum` is automatically passed the data
-#'  `.x` and calculates the appropriate `before` and `after` values.
+#' @param ... Additional arguments to pass to the slide computation `.f`, for
+#'  example, `algo` or `na.rm` in data.table functions. You don't need to
+#'  specify `.x`, `.window_size`, or `.align` (or `before`/`after` for slider
+#'  functions).
 #'
 #' @template opt-slide-details
 #'
@@ -837,7 +829,7 @@ epi_slide_mean <- function(
 epi_slide_sum <- function(
     .x, .col_names, ...,
     .window_size = 0, .align = c("right", "center", "left"),
-    .ref_time_values = NULL, .all_rows = FALSE, .na_rm = FALSE) {
+    .ref_time_values = NULL, .all_rows = FALSE) {
   # Argument deprecation handling
   provided_args <- rlang::call_args_names(rlang::call_match())
   if (any(purrr::map_lgl(provided_args, ~ .x %in% c("x", "col_names", "f", "ref_time_values", "all_rows")))) {
@@ -885,8 +877,7 @@ epi_slide_sum <- function(
     .window_size = .window_size,
     .align = .align,
     .ref_time_values = .ref_time_values,
-    .all_rows = .all_rows,
-    .na_rm = .na_rm
+    .all_rows = .all_rows
   )
 }
 

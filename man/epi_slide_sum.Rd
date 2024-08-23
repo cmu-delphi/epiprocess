@@ -11,8 +11,7 @@ epi_slide_sum(
   .window_size = 0,
   .align = c("right", "center", "left"),
   .ref_time_values = NULL,
-  .all_rows = FALSE,
-  .na_rm = FALSE
+  .all_rows = FALSE
 )
 }
 \arguments{
@@ -31,11 +30,10 @@ The tidy-selection renaming interface is not supported, and cannot be used
 to provide output column names; if you want to customize the output column
 names, use \code{\link[dplyr:rename]{dplyr::rename}} after the slide.}
 
-\item{...}{Additional arguments to pass to \code{data.table::frollsum}, for
-example, \code{na.rm} and \code{algo}. \code{data.table::frollsum} is automatically passed
-the data \code{x} to operate on, the window size \code{.window_size}, and the
-alignment \code{.align}. \code{slider::slide_sum} is automatically passed the data
-\code{.x} and calculates the appropriate \code{before} and \code{after} values.}
+\item{...}{Additional arguments to pass to the slide computation \code{.f}, for
+example, \code{algo} or \code{na.rm} in data.table functions. You don't need to
+specify \code{.x}, \code{.window_size}, or \code{.align} (or \code{before}/\code{after} for slider
+functions).}
 
 \item{.window_size}{The size of the sliding window. By default, this is 1,
 meaning that only the current ref_time_value is included. The accepted values

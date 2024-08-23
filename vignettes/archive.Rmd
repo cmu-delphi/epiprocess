@@ -128,7 +128,7 @@ object is instantiated, if they are not explicitly specified in the function
 call (as it did in the case above).
 
 ## Summarizing Revision Behavior
-There are many ways to examine the ways that signals change across different revisions. 
+There are many ways to examine the ways that signals change across different revisions.
 The simplest that is included directly in epiprocess is `revision_summary()`, which computes simple summary statistics for each key (by default, `(geo_value,time_value)` pairs), such as the lag to the first value (latency). In addition to the per key summary, it also returns an overall summary:
 ```{r}
 revision_details <- revision_summary(x, print_inform = TRUE)
@@ -402,8 +402,8 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
     x_latest %>%
       group_by(.data$geo_value) %>%
       epi_slide(
-        fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, ahead = ahead), before = 119,
-        ref_time_values = fc_time_values
+        fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, ahead = ahead), .window_size = 120,
+        .ref_time_values = fc_time_values
       ) %>%
       mutate(target_date = .data$time_value + ahead, as_of = FALSE) %>%
       ungroup()

@@ -97,7 +97,7 @@ test_that(
       compute_slide_external_g(.window_size = 2) %>% ungroup() %>% filter(time_value == test_date + 5)
     )
     expect_equal(
-      epi_slide_sum(toy_edf_g, value, .window_size = 2 * days_dt, .ref_time_values = test_date + 5, .na_rm = TRUE) %>%
+      epi_slide_sum(toy_edf_g, value, .window_size = 2 * days_dt, .ref_time_values = test_date + 5, na.rm = TRUE) %>%
         ungroup() %>%
         rename(slide_value = slide_value_value),
       compute_slide_external_g(.window_size = 2) %>% ungroup() %>% filter(time_value == test_date + 5)
@@ -215,7 +215,7 @@ for (all_rows in list(FALSE, TRUE)) {
           toy_edf_g %>%
             epi_slide_sum(
               value,
-              .window_size = 6 * days_dt, .ref_time_values = rtv, .all_rows = all_rows, .na_rm = TRUE
+              .window_size = 6 * days_dt, .ref_time_values = rtv, .all_rows = all_rows, na.rm = TRUE
             ) %>%
             rename(slide_value = slide_value_value),
           compute_slide_external_g(.window_size = 6) %>% filter_expected()
@@ -336,7 +336,7 @@ test_that("basic ungrouped epi_slide_mean computation produces expected output",
   expect_equal(
     toy_edf %>%
       filter(geo_value == "a") %>%
-      epi_slide_sum(value, .window_size = 50 * days_dt, .na_rm = TRUE) %>%
+      epi_slide_sum(value, .window_size = 50 * days_dt, na.rm = TRUE) %>%
       rename(slide_value = slide_value_value),
     compute_slide_external_g(.window_size = 50) %>% ungroup() %>% filter(geo_value == "a") %>% arrange(time_value)
   )
@@ -564,7 +564,7 @@ for (time_type in c("days", "weeks", "yearmonths", "integers")) {
           result2 <- epi_slide_mean(
             epi_data,
             .window_size = window_size, .align = align,
-            .col_names = c(a, b), .na_rm = TRUE, ...
+            .col_names = c(a, b), na.rm = TRUE, ...
           )
           expect_equal(result1, result2)
         }
@@ -709,20 +709,20 @@ test_that("helper `full_date_seq` returns expected date values", {
 
 test_that("epi_slide_mean/sum produces same output as epi_slide_opt grouped", {
   expect_equal(
-    epi_slide_mean(toy_edf_g, value, .window_size = 50 * days_dt, .na_rm = TRUE),
-    epi_slide_opt(toy_edf_g, value, .f = data.table::frollmean, .window_size = 50 * days_dt, .na_rm = TRUE)
+    epi_slide_mean(toy_edf_g, value, .window_size = 50 * days_dt, na.rm = TRUE),
+    epi_slide_opt(toy_edf_g, value, .f = data.table::frollmean, .window_size = 50 * days_dt, na.rm = TRUE)
   )
   expect_equal(
-    epi_slide_mean(toy_edf_g, value, .window_size = 50 * days_dt, .na_rm = TRUE),
-    epi_slide_opt(toy_edf_g, value, .f = slider::slide_mean, .window_size = 50 * days_dt, .na_rm = TRUE)
+    epi_slide_mean(toy_edf_g, value, .window_size = 50 * days_dt, na.rm = TRUE),
+    epi_slide_opt(toy_edf_g, value, .f = slider::slide_mean, .window_size = 50 * days_dt, na_rm = TRUE)
   )
   expect_equal(
-    epi_slide_sum(toy_edf_g, value, .window_size = 50 * days_dt, .na_rm = TRUE),
-    epi_slide_opt(toy_edf_g, value, .f = data.table::frollsum, .window_size = 50 * days_dt, .na_rm = TRUE)
+    epi_slide_sum(toy_edf_g, value, .window_size = 50 * days_dt, na.rm = TRUE),
+    epi_slide_opt(toy_edf_g, value, .f = data.table::frollsum, .window_size = 50 * days_dt, na.rm = TRUE)
   )
   expect_equal(
-    epi_slide_sum(toy_edf_g, value, .window_size = 50 * days_dt, .na_rm = TRUE),
-    epi_slide_opt(toy_edf_g, value, .f = slider::slide_sum, .window_size = 50 * days_dt, .na_rm = TRUE)
+    epi_slide_sum(toy_edf_g, value, .window_size = 50 * days_dt, na.rm = TRUE),
+    epi_slide_opt(toy_edf_g, value, .f = slider::slide_sum, .window_size = 50 * days_dt, na_rm = TRUE)
   )
 })
 

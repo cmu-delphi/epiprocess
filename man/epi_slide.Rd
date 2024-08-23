@@ -69,6 +69,10 @@ element of this vector serves as the reference time point for one sliding
 window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.}
 
+\item{.new_col_name}{String indicating the name of the new column that will
+contain the derivative values. Default is "slide_value"; note that setting
+\code{new_col_name} equal to an existing column name will overwrite this column.}
+
 \item{.all_rows}{If \code{.all_rows = TRUE}, then all rows of \code{.x} will be kept in
 the output even with \code{.ref_time_values} provided, with some type of missing
 value marker for the slide computation output column(s) for \code{time_value}s
@@ -101,27 +105,27 @@ incomplete windows) is therefore left up to the user, either through the
 specified function or formula \code{f}, or through post-processing.
 
 Let's look at some window examples, assuming that the reference time value
-is \code{tv}. With .align = "right" and .window_size = 3, the window will be:
+is "tv". With .align = "right" and .window_size = 3, the window will be:
 
-time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
-window:                     \link{tv - 2, tv - 1, tv}
+time_values: tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:              tv - 2, tv - 1, tv
 
 With .align = "center" and .window_size = 3, the window will be:
 
-time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
-window:                             \link{tv - 1, tv, tv + 1}
+time_values: tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:                      tv - 1, tv, tv + 1
 
 With .align = "center" and .window_size = 4, the window will be:
 
-time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
-window:                     \link{tv - 2, tv - 1, tv, tv + 1}
+time_values: tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:              tv - 2, tv - 1, tv, tv + 1
 
 With .align = "left" and .window_size = 3, the window will be:
 
-time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
-window:                                     \link{tv, tv + 1, tv + 2}
+time_values: ttv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:                               tv, tv + 1, tv + 2
 
-If \code{f} is missing, then \link[rlang:args_data_masking]{"data-masking"}
+If \code{.f} is missing, then \link[rlang:args_data_masking]{"data-masking"}
 expression(s) for tidy evaluation can be specified, for example, as in:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, cases_7dav = mean(cases), .window_size = 7)
@@ -130,7 +134,7 @@ expression(s) for tidy evaluation can be specified, for example, as in:
 which would be equivalent to:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{epi_slide(x, function(x, g, t) mean(x$cases), .window_size = 7,
-          new_col_name = "cases_7dav")
+          .new_col_name = "cases_7dav")
 }\if{html}{\out{</div>}}
 
 In a manner similar to \code{\link[dplyr:mutate]{dplyr::mutate}}:
@@ -139,7 +143,7 @@ In a manner similar to \code{\link[dplyr:mutate]{dplyr::mutate}}:
 appropriate lengths.
 \item \verb{, name_var := value} can be used to set the output column name based on
 a variable \code{name_var} rather than requiring you to use a hard-coded
-name. (The leading comma is needed to make sure that \code{f} is treated as
+name. (The leading comma is needed to make sure that \code{.f} is treated as
 missing.)
 \item \verb{= NULL} can be used to remove results from previous expressions (though
 we don't allow it to remove pre-existing columns).
@@ -159,7 +163,7 @@ like \code{\link{.data}}; this allows you to use additional {dplyr}, {tidyr}, an
 won't let you refer to the output of the earlier expressions, but \code{.data}
 will.
 \item .group_key, which is like \code{.y} in \code{\link[dplyr:group_map]{dplyr::group_modify}}.
-\item .ref_time_value, which is the element of \code{ref_time_values} that
+\item .ref_time_value, which is the element of \code{.ref_time_values} that
 determined the time window for the current computation.
 }
 }
@@ -198,7 +202,7 @@ jhu_csse_daily_subset \%>\%
 jhu_csse_daily_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(
-    ~ list(data.frame(
+    cases_2d = list(data.frame(
       cases_2dav = mean(cases),
       cases_2dma = mad(cases)
     )),

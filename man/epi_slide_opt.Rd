@@ -13,8 +13,7 @@ epi_slide_opt(
   .window_size = 0,
   .align = c("right", "center", "left"),
   .ref_time_values = NULL,
-  .all_rows = FALSE,
-  .na_rm = FALSE
+  .all_rows = FALSE
 )
 }
 \arguments{
@@ -47,11 +46,9 @@ than \code{.window_size} points. \code{epi_slide_opt} (and wrapper functions
 automatically to prevent associated errors.}
 
 \item{...}{Additional arguments to pass to the slide computation \code{.f}, for
-example, \code{algo} if \code{.f} is a \code{data.table} function. If \code{.f} is
-a \code{data.table} function, \code{epi_slide_opt()} handles passing the data \code{.x},
-the window size \code{.window_size}, and the alignment \code{.align} to the function.
-If \code{.f} is a \code{slider} function, \code{epi_slide_opt()} handles passing the data
-\code{.x} and calculating the appropriate \code{before} and \code{after} values.}
+example, \code{algo} or \code{na.rm} in data.table functions. You don't need to
+specify \code{.x}, \code{.window_size}, or \code{.align} (or \code{before}/\code{after} for slider
+functions).}
 
 \item{.window_size}{The size of the sliding window. By default, this is 1,
 meaning that only the current ref_time_value is included. The accepted values
@@ -86,10 +83,6 @@ outside \code{.ref_time_values}; otherwise, there will be one row for each row i
 \code{.x} that had a \code{time_value} in \code{.ref_time_values}. Default is \code{FALSE}. The
 missing value marker is the result of \code{vctrs::vec_cast}ing \code{NA} to the type
 of the slide computation output.}
-
-\item{.na_rm}{Logical; passes the argument to the appropriate slide function
-to determine how to handle missing values. If \code{TRUE}, missing values are
-removed before the computation is performed, otherwise they are left in.}
 }
 \value{
 An \code{epi_df} object given by appending one or more new columns to \code{.x},
@@ -155,9 +148,8 @@ jhu_csse_daily_subset \%>\%
   epi_slide_opt(
     cases,
     .f = data.table::frollmean, .window_size = 7,
-    .na_rm = TRUE,
     # `frollmean` options
-    algo = "exact", hasNA = TRUE
+    algo = "exact", hasNA = TRUE, na.rm = TRUE
   ) \%>\%
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()

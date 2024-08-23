@@ -46,22 +46,16 @@ These differences in basic behavior make some common slide operations require le
 
 When using more advanced features, more complex rules apply:
 
-* Generalization: `epi_slide(edf, ....., ref_time_values=my_ref_time_values)`
+* Generalization: `epi_slide(edf, ....., .ref_time_values=my_ref_time_values)`
   will output one row for every row in `edf` with `time_value` appearing inside
   `my_ref_time_values`, and is analogous to a `dplyr::mutate`&`dplyr::arrange`
-  followed by `dplyr::filter` to those `ref_time_values`. We call this property
+  followed by `dplyr::filter` to those `.ref_time_values`. We call this property
   **size stability**, and describe how it is achieved in the following sections.
   The default behavior described above is a special case of this general rule
-  based on a default value of `ref_time_values`.
-* Exception/feature: `epi_slide(edf, ....., ref_time_values=my_ref_time_values,
-  all_rows=TRUE)` will not just output rows for `my_ref_time_values`, but
+  based on a default value of `.ref_time_values`.
+* Exception/feature: `epi_slide(edf, ....., .ref_time_values=my_ref_time_values,
+  .all_rows=TRUE)` will not just output rows for `my_ref_time_values`, but
   instead will output one row per row in `edf`.
-* Exception/feature: `epi_slide(edf, ....., as_list_col=TRUE)` will format the
-  output to add a single list-class computed column.
-* Exception/feature: `epix_slide(ea, ....., as_list_col=TRUE)` will format the
-  output to have one row per computation and a single list-class computed column
-  (in addition to the grouping variables and `time_value`), as if we had used
-  `tidyr::chop()` or `tidyr::nest()`.
 * Clarification: `ea %>% group_by(....., .drop=FALSE) %>%
   epix_slide(<computation>, .....)` will call the computation on any missing
   groups according to `dplyr`'s `.drop=FALSE` rules, resulting in additional
@@ -94,18 +88,18 @@ edf <- tibble(
 # 2-day trailing average, per geo value
 edf %>%
   group_by(geo_value) %>%
-  epi_slide(x_2dav = mean(x), before = 1) %>%
+  epi_slide(x_2dav = mean(x), .window_size = 2) %>%
   ungroup()
 
 # 2-day trailing average, marginally
 edf %>%
-  epi_slide(x_2dav = mean(x), before = 1)
+  epi_slide(x_2dav = mean(x), .window_size = 2)
 ```
 
 ```{r, include = FALSE}
 # More checks (not included)
 edf %>%
-  epi_slide(x_2dav = mean(x), before = 1, ref_time_values = as.Date("2020-06-02"))
+  epi_slide(x_2dav = mean(x), .window_size = 2, .ref_time_values = as.Date("2020-06-02"))
 
 edf %>%
   # pretend that observations about time_value t are reported in version t (nowcasts)
@@ -131,7 +125,7 @@ same result as the last one.
 
 ```{r}
 edf %>%
-  epi_slide(y_2dav = rep(mean(x), 3), before = 1)
+  epi_slide(y_2dav = rep(mean(x), 3), .window_size = 2)
 ```
 
 However, if the output is an atomic vector (rather than a single value) and it
@@ -140,7 +134,7 @@ are trying to return 2 things for 3 states.
 
 ```{r, error = TRUE}
 edf %>%
-  epi_slide(x_2dav = rep(mean(x), 2), before = 1)
+  epi_slide(x_2dav = rep(mean(x), 2), .window_size = 2)
 ```
 
 ## Multi-column outputs
@@ -148,16 +142,14 @@ edf %>%
 Now we move on to outputs that are data frames with a single row but multiple
 columns. Working with this type of output structure has in fact has already been
 demonstrated in the [slide
-vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html). When
-we set `as_list_col = TRUE` in the call to `epi_slide()`, the resulting `epi_df`
-object returned by `epi_slide()` has a list column containing the slide values.
+vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html).
 
 ```{r}
 edf2 <- edf %>%
   group_by(geo_value) %>%
   epi_slide(
-    a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-    before = 1, as_list_col = TRUE
+    a = list(data.frame(x_2dav = mean(x), x_2dma = mad(x))),
+    .window_size = 2
   ) %>%
   ungroup()
 
@@ -166,66 +158,32 @@ length(edf2$a)
 edf2$a[[2]]
 ```
 
-When we use `as_list_col = FALSE` (the default in `epi_slide()`), the function
-unnests (in the sense of `tidyr::unnest()`) the list column `a`, so that the
-resulting `epi_df` has multiple new columns containing the slide values. The
-default is to name these unnested columns by prefixing the name assigned to the
-list column (here `a`) onto the column names of the output data frame from the
-slide computation (here `x_2dav` and `x_2dma`) separated by "_".
+If you do not wrap the data.frame in a list above, the resulting `epi_df` has
+multiple new columns containing the slide values. The default is to name these
+unnested columns by prefixing the name assigned to the list column (here `a`)
+onto the column names of the output data frame from the slide computation (here
+`x_2dav` and `x_2dma`) separated by "_".
 
 ```{r}
 edf %>%
   group_by(geo_value) %>%
   epi_slide(
     a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-    before = 1, as_list_col = FALSE
-  ) %>%
-  ungroup()
-```
-
-We can use `names_sep = NULL` (which gets passed to `tidyr::unnest()`) to drop
-the prefix associated with list column name, in naming the unnested columns.
-
-```{r}
-edf %>%
-  group_by(geo_value) %>%
-  epi_slide(
-    a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-    before = 1, as_list_col = FALSE, names_sep = NULL
+    .window_size = 2
   ) %>%
   ungroup()
 ```
 
 Furthermore, `epi_slide()` will recycle the single row data frame as needed in
-order to make the result size stable, just like the case for atomic values.
+order to make the result size stable, just like the case for atomic values (note
+that we are not grouping here by geo_value).
 
 ```{r}
 edf %>%
   epi_slide(
     a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-    before = 1, as_list_col = FALSE, names_sep = NULL
+    .window_size = 2
   )
-```
-
-```{r, include = FALSE}
-# More checks (not included)
-edf %>%
-  epi_slide(
-    a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-    ref_time_values = as.Date("2020-06-02"),
-    before = 1, as_list_col = FALSE, names_sep = NULL
-  )
-
-edf %>%
-  mutate(version = time_value) %>%
-  as_epi_archive() %>%
-  group_by(geo_value) %>%
-  epix_slide(
-    a = data.frame(x_2dav = mean(x), x_2dma = mad(x)),
-    ref_time_values = as.Date("2020-06-02"),
-    before = 1, as_list_col = FALSE, names_sep = NULL
-  ) %>%
-  ungroup()
 ```
 
 ## Multi-row outputs
@@ -250,16 +208,14 @@ edf %>%
   epi_slide(function(d, group_key, ref_time_value) {
     obj <- lm(y ~ x, data = d)
     return(
-      as.data.frame(
-        predict(obj,
-          newdata = d %>%
-            group_by(geo_value) %>%
-            filter(time_value == max(time_value)),
-          interval = "prediction", level = 0.9
-        )
-      )
+      predict(
+        obj,
+        newdata = d %>% group_by(geo_value) %>% filter(time_value == max(time_value)),
+        interval = "prediction",
+        level = 0.9
+      ) %>% as.data.frame() %>% list()
     )
-  }, before = 1, new_col_name = "fc", names_sep = NULL)
+  }, .window_size = 2)
 ```
 
 The above example focused on simplicity to show how to work with multi-row
@@ -471,7 +427,7 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
         fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, .data$geo_value, .data$time_value,
           args = prob_arx_args(ahead = ahead)
         ),
-        before = 119, ref_time_values = fc_time_values
+        before = 219, ref_time_values = fc_time_values
       ) %>%
       mutate(
         target_date = .data$time_value + ahead, as_of = TRUE,
@@ -483,7 +439,7 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
         fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, .data$geo_value, .data$time_value,
           args = prob_arx_args(ahead = ahead)
         ),
-        before = 119, ref_time_values = fc_time_values
+        .window_size = 220, .ref_time_values = fc_time_values
       ) %>%
       mutate(target_date = .data$time_value + ahead, as_of = FALSE)
   }
