@@ -20,8 +20,7 @@ understands addition and subtraction. For example, if the time values are coded
 as `Date` objects, then one time step is one day, since `as.Date("2022-01-01") +
 1` equals `as.Date("2022-01-02")`. Alternatively, the time step can be specified
 manually in the call to `epi_slide()`; you can read the documentation for more
-details. Furthermore, the alignment of the running window used in `epi_slide()`
-is specified by `before` and `after`. 
+details.
 
 As in getting started guide, we'll fetch daily reported COVID-19 cases from CA,
 FL, NY, and TX (note: here we're using new, not cumulative cases) using the
@@ -70,7 +69,7 @@ first call `group_by()`.
 ```{r}
 x %>%
   group_by(geo_value) %>%
-  epi_slide_mean("cases", before = 6) %>%
+  epi_slide_mean("cases", .window_size = 7) %>%
   ungroup() %>%
   head(10)
 ```
@@ -91,7 +90,7 @@ first call `group_by()`.
 ```{r}
 x %>%
   group_by(geo_value) %>%
-  epi_slide(~ mean(.x$cases), before = 6) %>%
+  epi_slide(~ mean(.x$cases), .window_size = 7) %>%
   ungroup() %>%
   head(10)
 ```
@@ -101,12 +100,12 @@ original `epi_df` object (and must refer to them with the prefix `.x$`). As we
 can see, the function `epi_slide()` returns an `epi_df` object with a new column
 appended that contains the results (from sliding), named `slide_value` as the
 default. We can of course change this post hoc, or we can instead specify a new
-name up front using the `new_col_name` argument:
+name up front using the `.new_col_name` argument:
 
 ```{r}
 x <- x %>%
   group_by(geo_value) %>%
-  epi_slide(~ mean(.x$cases), before = 6, new_col_name = "cases_7dav") %>%
+  epi_slide(~ mean(.x$cases), .window_size = 7, .new_col_name = "cases_7dav") %>%
   ungroup()
 
 head(x, 10)
@@ -127,20 +126,20 @@ instead of `.ref_time_value`.
 We can also pass a function for the first argument in `epi_slide()`. In this
 case, the passed function must accept the following arguments:
 
-In this case, the passed function `f` must accept the following arguments: a
+In this case, the passed function `.f` must accept the following arguments: a
 data frame with the same column names as the original object, minus any grouping
-variables, containing the time window data for one group-`ref_time_value`
+variables, containing the time window data for one group-`.ref_time_value`
 combination; followed by a one-row tibble containing the values of the grouping
-variables for the associated group; followed by the associated `ref_time_value`.
+variables for the associated group; followed by the associated `.ref_time_value`.
 It can accept additional arguments; `epi_slide()` will forward any `...` args it
-receives to `f`.
+receives to `.f`.
 
 Recreating the last example of a 7-day trailing average:
 
 ```{r}
 x <- x %>%
   group_by(geo_value) %>%
-  epi_slide(function(x, gk, rtv) mean(x$cases), before = 6, new_col_name = "cases_7dav") %>%
+  epi_slide(function(x, gk, rtv) mean(x$cases), .window_size = 7, .new_col_name = "cases_7dav") %>%
   ungroup()
 
 head(x, 10)
@@ -151,13 +150,13 @@ head(x, 10)
 Perhaps the most convenient way to setup a computation in `epi_slide()` is to
 pass in an expression for tidy evaluation. In this case, we can simply define
 the name of the new column directly as part of the expression, setting it equal
-to a computation in which we can access any columns of `x` by name, just as we
+to a computation in which we can access any columns of `.x` by name, just as we
 would in a call to `dplyr::mutate()`, or any of the `dplyr` verbs. For example:
 
 ```{r}
 x <- x %>%
   group_by(geo_value) %>%
-  epi_slide(cases_7dav = mean(cases), before = 6) %>%
+  epi_slide(cases_7dav = mean(cases), .window_size = 7) %>%
   ungroup()
 
 head(x, 10)
@@ -254,14 +253,14 @@ fc_time_values <- seq(as.Date("2020-06-01"),
 x %>%
   group_by(geo_value) %>%
   epi_slide(
-    fc = prob_ar(cases_7dav), before = 119,
-    ref_time_values = fc_time_values
+    fc = prob_ar(cases_7dav), .window_size = 120,
+    .ref_time_values = fc_time_values
   ) %>%
   ungroup() %>%
   head(10)
 ```
 
-Note that here we have utilized an argument `ref_time_values` to perform the
+Note that here we have utilized an argument `.ref_time_values` to perform the
 sliding computation (here, compute a forecast) at a specific subset of reference
 time values. We get out a ["packed"][tidyr::pack] data frame column `fc`
 containing `fc$point`, `fc$lower`, and `fc$upper` that correspond to the point
@@ -282,8 +281,8 @@ k_week_ahead <- function(x, ahead = 7) {
   x %>%
     group_by(.data$geo_value) %>%
     epi_slide(
-      fc = prob_ar(.data$cases_7dav, ahead = ahead), before = 119,
-      ref_time_values = fc_time_values, all_rows = TRUE
+      fc = prob_ar(.data$cases_7dav, ahead = ahead),
+      .window_size = 120, .ref_time_values = fc_time_values, .all_rows = TRUE
     ) %>%
     ungroup() %>%
     mutate(target_date = .data$time_value + ahead)
