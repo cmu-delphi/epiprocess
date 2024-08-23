@@ -213,7 +213,9 @@ edf %>%
         newdata = d %>% group_by(geo_value) %>% filter(time_value == max(time_value)),
         interval = "prediction",
         level = 0.9
-      ) %>% as.data.frame() %>% list()
+      ) %>%
+        as.data.frame() %>%
+        list()
     )
   }, .window_size = 2)
 ```
