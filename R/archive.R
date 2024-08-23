@@ -624,10 +624,10 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
 #' archive_cases_dv_subset %>%
 #'   group_by(geo_value) %>%
 #'   epix_slide(
-#'     f = ~ mean(.x$case_rate_7d_av),
-#'     before = 2,
-#'     ref_time_values = as.Date("2020-06-11") + 0:2,
-#'     new_col_name = "case_rate_3d_av"
+#'     .f = ~ mean(.x$case_rate_7d_av),
+#'     .before = 2,
+#'     .ref_time_values = as.Date("2020-06-11") + 0:2,
+#'     .new_col_name = "case_rate_3d_av"
 #'   ) %>%
 #'   ungroup()
 #'
@@ -672,7 +672,7 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
 #'
 #' toy_archive %>%
 #'   group_by(geo_value, age_group, .drop = FALSE) %>%
-#'   epix_slide(f = ~ sum(.x$value), before = 20) %>%
+#'   epix_slide(.f = ~ sum(.x$value), .before = 20) %>%
 #'   ungroup()
 #'
 #' @importFrom dplyr group_by

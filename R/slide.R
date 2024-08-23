@@ -464,7 +464,7 @@ epi_slide_opt <- function(
       c(
         "input data `x` unexpectedly has 0 rows",
         "i" = "If this computation is occuring within an `epix_slide` call,
-          check that `epix_slide` `ref_time_values` argument was set appropriately"
+          check that `epix_slide` `.ref_time_values` argument was set appropriately"
       ),
       class = "epiprocess__epi_slide_opt__0_row_input",
       epiprocess__x = .x
@@ -671,7 +671,7 @@ epi_slide_opt <- function(
   }
 
   if (!is_epi_df(result)) {
-    # `all_rows`handling strips epi_df format and metadata.
+    # `.all_rows`handling strips epi_df format and metadata.
     # Restore them.
     result <- reclass(result, attributes(.x)$metadata)
   }

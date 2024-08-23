@@ -50,7 +50,7 @@ test_that("Grouping, regrouping, and ungrouping archives works as intended", {
   )
   expect_identical(
     grouped_factor_then_nonfactor %>%
-      epix_slide(before = 10, s = sum(value)),
+      epix_slide(.before = 10, s = sum(value)),
     tibble::tribble(
       ~age_group, ~geo_value, ~time_value, ~s,
       "pediatric", NA_character_, "2000-01-02", 0,
@@ -67,7 +67,7 @@ test_that("Grouping, regrouping, and ungrouping archives works as intended", {
   expect_identical(
     toy_archive %>%
       group_by(geo_value, age_group, .drop = FALSE) %>%
-      epix_slide(before = 10, s = sum(value)),
+      epix_slide(.before = 10, s = sum(value)),
     tibble::tribble(
       ~geo_value, ~age_group, ~time_value, ~s,
       "us", "pediatric", "2000-01-02", 0,

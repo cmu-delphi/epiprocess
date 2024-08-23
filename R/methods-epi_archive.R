@@ -601,92 +601,78 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
 #' examples.
 #'
-#' @param x An [`epi_archive`] or [`grouped_epi_archive`] object. If ungrouped,
+#' @param .x An [`epi_archive`] or [`grouped_epi_archive`] object. If ungrouped,
 #'   all data in `x` will be treated as part of a single data group.
-#' @param f Function, formula, or missing; together with `...` specifies the
+#' @param .f Function, formula, or missing; together with `...` specifies the
 #'   computation to slide. To "slide" means to apply a computation over a
 #'   sliding (a.k.a. "rolling") time window for each data group. The window is
 #'   determined by the `before` parameter described below. One time step is
 #'   typically one day or one week; see [`epi_slide`] details for more
-#'   explanation. If a function, `f` must take an `epi_df` with the same
+#'   explanation. If a function, `.f` must take an `epi_df` with the same
 #'   column names as the archive's `DT`, minus the `version` column; followed
 #'   by a one-row tibble containing the values of the grouping variables for
 #'   the associated group; followed by a reference time value, usually as a
 #'   `Date` object; followed by any number of named arguments. If a formula,
-#'   `f` can operate directly on columns accessed via `.x$var` or `.$var`, as
+#'   `.f` can operate directly on columns accessed via `.x$var` or `.$var`, as
 #'   in `~ mean (.x$var)` to compute a mean of a column `var` for each
 #'   group-`ref_time_value` combination. The group key can be accessed via
 #'   `.y` or `.group_key`, and the reference time value can be accessed via
-#'   `.z` or `.ref_time_value`. If `f` is missing, then `...` will specify the
+#'   `.z` or `.ref_time_value`. If `.f` is missing, then `...` will specify the
 #'   computation.
 #' @param ... Additional arguments to pass to the function or formula specified
-#'   via `f`. Alternatively, if `f` is missing, then the `...` is interpreted as
+#'   via `f`. Alternatively, if `.f` is missing, then the `...` is interpreted as
 #'   a ["data-masking"][rlang::args_data_masking] expression or expressions for
 #'   tidy evaluation; in addition to referring columns directly by name, the
 #'   expressions have access to `.data` and `.env` pronouns as in `dplyr` verbs,
 #'   and can also refer to `.x`, `.group_key`, and `.ref_time_value`. See
 #'   details.
-#' @param before How far `before` each `ref_time_value` should the sliding
-#'   window extend? If provided, should be a single, non-NA,
-#'   [integer-compatible][vctrs::vec_cast] number of time steps. This window
-#'   endpoint is inclusive. For example, if `before = 7`, and one time step is
-#'   one day, then to produce a value for a `ref_time_value` of January 8, we
-#'   apply the given function or formula to data (for each group present) with
-#'   `time_value`s from January 1 onward, as they were reported on January 8.
-#'   For typical disease surveillance sources, this will not include any data
-#'   with a `time_value` of January 8, and, depending on the amount of reporting
-#'   latency, may not include January 7 or even earlier `time_value`s. (If
-#'   instead the archive were to hold nowcasts instead of regular surveillance
-#'   data, then we would indeed expect data for `time_value` January 8. If it
-#'   were to hold forecasts, then we would expect data for `time_value`s after
-#'   January 8, and the sliding window would extend as far after each
-#'   `ref_time_value` as needed to include all such `time_value`s.)
-#' @param ref_time_values Reference time values / versions for sliding
+#' @param .before How many time values before the `.ref_time_value`
+#'   should each snapshot handed to the function `.f` contain? If provided, it
+#'   should be a single value that is compatible with the time_type of the
+#'   time_value column (more below), but most commonly an integer. This window
+#'   endpoint is inclusive. For example, if `.before = 7`, `time_type`
+#'   in the archive is "day", and the `.ref_time_value` is January 8, then the
+#'   smallest time_value in the snapshot will be January 1. If missing, then the
+#'   default is no limit on the time values, so the full snapshot is given.
+#' @param .ref_time_values Reference time values / versions for sliding
 #'   computations; each element of this vector serves both as the anchor point
 #'   for the `time_value` window for the computation and the `max_version`
 #'   `epix_as_of` which we fetch data in this window. If missing, then this will
 #'   set to a regularly-spaced sequence of values set to cover the range of
 #'   `version`s in the `DT` plus the `versions_end`; the spacing of values will
 #'   be guessed (using the GCD of the skips between values).
-#' @param new_col_name String indicating the name of the new column that will
+#' @param .new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. The default is "slide_value" unless your
 #'   slide computations output data frames, in which case they will be unpacked
 #'   into the constituent columns and those names used. Note that setting
-#'   `new_col_name` equal to an existing column name will overwrite this column.
-#' @param all_versions (Not the same as `all_rows` parameter of `epi_slide`.) If
-#'   `all_versions = TRUE`, then `f` will be passed the version history (all
-#'   `version <= ref_time_value`) for rows having `time_value` between
-#'   `ref_time_value - before` and `ref_time_value`. Otherwise, `f` will be
+#'   `.new_col_name` equal to an existing column name will overwrite this column.
+#' @param .all_versions (Not the same as `.all_rows` parameter of `epi_slide`.) If
+#'   TRUE, then `.f` will be passed the version history (all
+#'   `version <= .ref_time_value`) for rows having `time_value` between
+#'   `.ref_time_value - before` and `.ref_time_value`. Otherwise, `.f` will be
 #'   passed only the most recent `version` for every unique `time_value`.
 #'   Default is `FALSE`.
 #' @return A tibble whose columns are: the grouping variables, `time_value`,
 #'   containing the reference time values for the slide computation, and a
-#'   column named according to the `new_col_name` argument, containing the slide
+#'   column named according to the `.new_col_name` argument, containing the slide
 #'   values.
 #'
 #' @details A few key distinctions between the current function and `epi_slide()`:
-#'   1. In `f` functions for `epix_slide`, one should not assume that the input
+#'   1. In `.f` functions for `epix_slide`, one should not assume that the input
 #'   data to contain any rows with `time_value` matching the computation's
-#'   `ref_time_value` (accessible via `attributes(<data>)$metadata$as_of`); for
+#'   `.ref_time_value` (accessible via `attributes(<data>)$metadata$as_of`); for
 #'   typical epidemiological surveillance data, observations pertaining to a
 #'   particular time period (`time_value`) are first reported `as_of` some
 #'   instant after that time period has ended.
-#'   2. `epix_slide()` doesn't accept an `after` argument; its windows extend
-#'   from `before` time steps before a given `ref_time_value` through the last
-#'   `time_value` available as of version `ref_time_value` (typically, this
-#'   won't include `ref_time_value` itself, as observations about a particular
-#'   time interval (e.g., day) are only published after that time interval
-#'   ends); `epi_slide` windows extend from `before` time steps before a
-#'   `ref_time_value` through `after` time steps after `ref_time_value`.
-#'   3. The input class and columns are similar but different: `epix_slide`
-#'   (with the default `all_versions=FALSE`) keeps all columns and the
+#'   2. The input class and columns are similar but different: `epix_slide`
+#'   (with the default `.all_versions=FALSE`) keeps all columns and the
 #'   `epi_df`-ness of the first argument to each computation; `epi_slide` only
 #'   provides the grouping variables in the second input, and will convert the
 #'   first input into a regular tibble if the grouping variables include the
-#'   essential `geo_value` column. (With `all_versions=TRUE`, `epix_slide` will
+#'   essential `geo_value` column. (With .all_versions=TRUE`, `epix_slide` will
 #'   will provide an `epi_archive` rather than an `epi-df` to each
 #'   computation.)
-#'   4. The output class and columns are similar but different: `epix_slide()`
+#'   3. The output class and columns are similar but different: `epix_slide()`
 #'   returns a tibble containing only the grouping variables, `time_value`, and
 #'   the new column(s) from the slide computations, whereas `epi_slide()`
 #'   returns an `epi_df` with all original variables plus the new columns from
@@ -694,16 +680,16 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   their input, with one exception: `epi_archive`s can have trivial
 #'   (zero-variable) groupings, but these will be dropped in `epix_slide`
 #'   results as they are not supported by tibbles.)
-#'   5. There are no size stability checks or element/row recycling to maintain
+#'   4. There are no size stability checks or element/row recycling to maintain
 #'   size stability in `epix_slide`, unlike in `epi_slide`. (`epix_slide` is
 #'   roughly analogous to [`dplyr::group_modify`], while `epi_slide` is roughly
 #'   analogous to `dplyr::mutate` followed by `dplyr::arrange`) This is detailed
 #'   in the "advanced" vignette.
-#'   6. `all_rows` is not supported in `epix_slide`; since the slide
+#'   5. `.all_rows` is not supported in `epix_slide`; since the slide
 #'   computations are allowed more flexibility in their outputs than in
 #'   `epi_slide`, we can't guess a good representation for missing computations
-#'   for excluded group-`ref_time_value` pairs.
-#'   7. The `ref_time_values` default for `epix_slide` is based on making an
+#'   for excluded group-`.ref_time_value` pairs.
+#'   76. The `.ref_time_values` default for `epix_slide` is based on making an
 #'   evenly-spaced sequence out of the `version`s in the `DT` plus the
 #'   `versions_end`, rather than the `time_value`s.
 #'
@@ -732,10 +718,10 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #' archive_cases_dv_subset %>%
 #'   group_by(geo_value) %>%
 #'   epix_slide(
-#'     f = ~ mean(.x$case_rate_7d_av),
-#'     before = 2,
-#'     ref_time_values = ref_time_values,
-#'     new_col_name = "case_rate_7d_av_recent_av"
+#'     .f = ~ mean(.x$case_rate_7d_av),
+#'     .before = 2,
+#'     .ref_time_values = ref_time_values,
+#'     .new_col_name = "case_rate_7d_av_recent_av"
 #'   ) %>%
 #'   ungroup()
 #' # We requested time windows that started 2 days before the corresponding time
@@ -748,7 +734,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #' # * 2 `time_value`s, for the rest of the results
 #' # * never the 3 `time_value`s we would get from `epi_slide`, since, because
 #' #   of data latency, we'll never have an observation
-#' #   `time_value == ref_time_value` as of `ref_time_value`.
+#' #   `time_value == .ref_time_value` as of `.ref_time_value`.
 #' # The example below shows this type of behavior in more detail.
 #'
 #' # Examining characteristics of the data passed to each computation with
@@ -767,8 +753,8 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'         class1 = class(x)[[1L]]
 #'       )
 #'     },
-#'     before = 5, all_versions = FALSE,
-#'     ref_time_values = ref_time_values
+#'     .before = 5, .all_versions = FALSE,
+#'     .ref_time_values = ref_time_values
 #'   ) %>%
 #'   ungroup() %>%
 #'   arrange(geo_value, time_value)
@@ -777,7 +763,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'
 #' # `epix_slide` with `all_versions=FALSE` (the default) applies a
 #' # version-unaware computation to several versions of the data. We can also
-#' # use `all_versions=TRUE` to apply a version-*aware* computation to several
+#' # use `.all_versions=TRUE` to apply a version-*aware* computation to several
 #' # versions of the data, again looking at characteristics of the data passed
 #' # to each computation. In this case, each computation should expect an
 #' # `epi_archive` containing the relevant version data:
@@ -802,8 +788,8 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'         class1 = class(x)[[1L]]
 #'       )
 #'     },
-#'     before = 5, all_versions = TRUE,
-#'     ref_time_values = ref_time_values
+#'     .before = 5, .all_versions = TRUE,
+#'     .ref_time_values = ref_time_values
 #'   ) %>%
 #'   ungroup() %>%
 #'   # Focus on one geo_value so we can better see the columns above:
@@ -812,13 +798,13 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'
 #' @export
 epix_slide <- function(
-    x,
-    f,
+    .x,
+    .f,
     ...,
-    before = Inf,
-    ref_time_values = NULL,
-    new_col_name = NULL,
-    all_versions = FALSE) {
+    .before = Inf,
+    .ref_time_values = NULL,
+    .new_col_name = NULL,
+    .all_versions = FALSE) {
   UseMethod("epix_slide")
 }
 
@@ -826,22 +812,22 @@ epix_slide <- function(
 #' @rdname epix_slide
 #' @export
 epix_slide.epi_archive <- function(
-    x,
-    f,
+    .x,
+    .f,
     ...,
-    before = Inf,
-    ref_time_values = NULL,
-    new_col_name = NULL,
-    all_versions = FALSE) {
+    .before = Inf,
+    .ref_time_values = NULL,
+    .new_col_name = NULL,
+    .all_versions = FALSE) {
   # For an "ungrouped" slide, treat all rows as belonging to one big
   # group (group by 0 vars), like `dplyr::summarize`, and let the
   # resulting `grouped_epi_archive` handle the slide:
   epix_slide(
-    group_by(x),
-    f,
+    group_by(.x),
+    .f,
     ...,
-    before = before, ref_time_values = ref_time_values, new_col_name = new_col_name,
-    all_versions = all_versions
+    .before = .before, .ref_time_values = .ref_time_values,
+    .new_col_name = .new_col_name, .all_versions = .all_versions
   ) %>%
     # We want a slide on ungrouped archives to output something
     # ungrouped, rather than retaining the trivial (0-variable)

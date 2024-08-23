@@ -106,7 +106,7 @@ edf %>%
   mutate(version = time_value) %>%
   as_epi_archive() %>%
   group_by(geo_value) %>%
-  epix_slide(x_2dav = mean(x), before = 1, ref_time_values = as.Date("2020-06-02")) %>%
+  epix_slide(x_2dav = mean(x), .before = 1, .ref_time_values = as.Date("2020-06-02")) %>%
   ungroup()
 
 edf %>%
@@ -114,7 +114,7 @@ edf %>%
   mutate(version = time_value) %>%
   as_epi_archive() %>%
   group_by(geo_value) %>%
-  epix_slide(~ mean(.x$x), before = 1, ref_time_values = as.Date("2020-06-02")) %>%
+  epix_slide(~ mean(.x$x), .before = 1, .ref_time_values = as.Date("2020-06-02")) %>%
   ungroup()
 ```
 
@@ -429,7 +429,7 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
         fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, .data$geo_value, .data$time_value,
           args = prob_arx_args(ahead = ahead)
         ),
-        before = 219, ref_time_values = fc_time_values
+        .before = 219, .ref_time_values = fc_time_values
       ) %>%
       mutate(
         target_date = .data$time_value + ahead, as_of = TRUE,

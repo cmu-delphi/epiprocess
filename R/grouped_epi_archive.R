@@ -205,15 +205,24 @@ ungroup.grouped_epi_archive <- function(x, ...) {
 #'  env missing_arg
 #' @export
 epix_slide.grouped_epi_archive <- function(
-    x,
-    f,
+    .x,
+    .f,
     ...,
-    before = Inf,
-    ref_time_values = NULL,
-    new_col_name = NULL,
-    all_versions = FALSE) {
+    .before = Inf,
+    .ref_time_values = NULL,
+    .new_col_name = NULL,
+    .all_versions = FALSE) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
+  if (any(purrr::map_lgl(
+    provided_args, ~ .x %in% c("x", "f", "before", "ref_time_values", "new_col_name", "all_versions")
+  ))) {
+    cli::cli_abort(
+      "epix_slide: you are using one of the following old argument names: `x`, `f`, `before`, `ref_time_values`,
+      `new_col_name`, `all_versions`. Please use the new names: `.x`, `.f`, `.before`, `.ref_time_values`,
+      `.new_col_name`, `.all_versions`."
+    )
+  }
   if ("group_by" %in% provided_args) {
     cli_abort("
           The `group_by` argument to `slide` has been removed; please use
@@ -245,33 +254,33 @@ epix_slide.grouped_epi_archive <- function(
     )
   }
 
-  if (is.null(ref_time_values)) {
-    ref_time_values <- epix_slide_ref_time_values_default(x$private$ungrouped)
+  # Argument validation
+  if (is.null(.ref_time_values)) {
+    ref_time_values <- epix_slide_ref_time_values_default(.x$private$ungrouped)
   } else {
-    assert_numeric(ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
-    if (any(ref_time_values > x$private$ungrouped$versions_end)) {
+    assert_numeric(.ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
+    if (any(.ref_time_values > .x$private$ungrouped$versions_end)) {
       cli_abort("Some `ref_time_values` are greater than the latest version in the archive.")
     }
-    if (anyDuplicated(ref_time_values) != 0L) {
+    if (anyDuplicated(.ref_time_values) != 0L) {
       cli_abort("Some `ref_time_values` are duplicated.")
     }
     # Sort, for consistency with `epi_slide`, although the current
     # implementation doesn't take advantage of it.
-    ref_time_values <- sort(ref_time_values)
+    ref_time_values <- sort(.ref_time_values)
   }
 
-  validate_slide_window_arg(before, x$private$ungrouped$time_type)
+  validate_slide_window_arg(.before, .x$private$ungrouped$time_type)
 
-  checkmate::assert_string(new_col_name, null.ok = TRUE)
-  if (identical(new_col_name, "time_value")) {
+  checkmate::assert_string(.new_col_name, null.ok = TRUE)
+  if (identical(.new_col_name, "time_value")) {
     cli_abort('`new_col_name` must not be `"time_value"`; `epix_slide()` uses that column name to attach the `ref_time_value` associated with each slide computation') # nolint: line_length_linter
   }
 
-  # Validate rest of parameters:
-  assert_logical(all_versions, len = 1L)
+  assert_logical(.all_versions, len = 1L)
 
-  # If `f` is missing, interpret ... as an expression for tidy evaluation
-  if (missing(f)) {
+  # If `.f` is missing, interpret ... as an expression for tidy evaluation
+  if (missing(.f)) {
     used_data_masking <- TRUE
     quosures <- enquos(...)
     if (length(quosures) == 0) {
@@ -285,7 +294,7 @@ epix_slide.grouped_epi_archive <- function(
     assign("...", missing_arg())
   } else {
     used_data_masking <- FALSE
-    f <- as_slide_computation(f, ...)
+    f <- as_slide_computation(.f, ...)
   }
 
   # Computation for one group, one time value
@@ -344,10 +353,10 @@ epix_slide.grouped_epi_archive <- function(
   out <- lapply(ref_time_values, function(ref_time_value) {
     # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
     # `epi_archive` if `all_versions` is `TRUE`:
-    as_of_raw <- x$private$ungrouped %>% epix_as_of(
+    as_of_raw <- .x$private$ungrouped %>% epix_as_of(
       ref_time_value,
-      min_time_value = ref_time_value - before,
-      all_versions = all_versions
+      min_time_value = ref_time_value - .before,
+      all_versions = .all_versions
     )
 
     # Set:
@@ -355,7 +364,7 @@ epix_slide.grouped_epi_archive <- function(
     #    `group_modify` as the `.data` argument. Might or might not
     #    include version column.
     # * `group_modify_fn`, the corresponding `.f` argument
-    if (!all_versions) {
+    if (!.all_versions) {
       as_of_df <- as_of_raw
       group_modify_fn <- comp_one_grp
     } else {
@@ -366,7 +375,7 @@ epix_slide.grouped_epi_archive <- function(
       # behavior based on whether or not `dtplyr` is loaded.
       # Instead, go through an ordinary data frame, trying to avoid
       # copies.
-      if (address(as_of_archive$DT) == address(x$private$ungrouped$DT)) {
+      if (address(as_of_archive$DT) == address(.x$private$ungrouped$DT)) {
         # `as_of` aliased its the full `$DT`; copy before mutating:
         #
         # Note: this step is probably unneeded; we're fine with
@@ -401,11 +410,11 @@ epix_slide.grouped_epi_archive <- function(
 
     return(
       dplyr::group_modify(
-        dplyr::group_by(as_of_df, !!!syms(x$private$vars), .drop = x$private$drop),
+        dplyr::group_by(as_of_df, !!!syms(.x$private$vars), .drop = .x$private$drop),
         group_modify_fn,
         f = f, ...,
         ref_time_value = ref_time_value,
-        new_col_name = new_col_name,
+        new_col_name = .new_col_name,
         .keep = TRUE
       )
     )
@@ -413,7 +422,7 @@ epix_slide.grouped_epi_archive <- function(
   # Combine output into a single tibble (allowing for packed columns)
   out <- vctrs::vec_rbind(!!!out)
   # Reconstruct groups
-  out <- group_by(out, !!!syms(x$private$vars), .drop = x$private$drop)
+  out <- group_by(out, !!!syms(.x$private$vars), .drop = .x$private$drop)
 
   # nolint start: commented_code_linter.
   # if (is_epi_df(x)) {
