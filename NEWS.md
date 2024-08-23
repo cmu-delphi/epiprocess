@@ -6,21 +6,35 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 ## Breaking changes
 
-- In `epi[x]_slide`
-  - `names_sep` is deprecated, and if you return data frames from your
-    computations, they will no longer be unpacked into separate columns with
-    name prefixes; instead:
-    - if you don't provide a name for your slide computations, they will be
-      unpacked into separate columns, just without any name prefixes
-    - if you do provide a name for your slide computation, it will become a
-      packed data.frame-class column (see `tidyr::pack`).
-  - `as_list_col` is deprecated; you can now directly return a list from your
-    slide computations instead.
-- `additional_metadata` is no longer accepted in `as_epi_df()` or
-  `as_epi_archive()`. Use the new `other_keys` arg to specify additional key
-  columns, such as age group columns or other demographic breakdowns.
-  Miscellaneous metadata are no longer handled by `epiprocess`, but you can use
-  R's built-in `attr<-` instead for a similar feature.
+- `epi_slide` interface has major breaking changes.
+  - All variables are now dot-prefixed to be more consistent with tidyverse
+    style for functions that allow tidyeval.
+  - The `before/after` arguments have been replaced with the `.window_size` and
+    `.align` arguments. See documentation for how to translate.
+  - `names_sep` has been removed. If you return data frames from your
+    computations:
+    - without a name, they will be unpacked into separate columns without name
+      prefixes
+    - with a name, it will become a packed data.frame-class column (see
+      `tidyr::pack`).
+  - `as_list_col` has been removed. You can now directly return a list from your
+    slide computations instead. If you were using `as_list_col=TRUE`, you will
+    need to wrap your output in a list.
+- `epix_slide` interface has major changes.
+  - `names_sep` has been removed. If you return data frames from your
+    computations:
+    - without a name, they will be unpacked into separate columns without name
+      prefixes
+    - with a name, it will become a packed data.frame-class column (see
+      `tidyr::pack`).
+  - `as_list_col` has been removed. You can now directly return a list from your
+    slide computations instead. If you were using `as_list_col=TRUE`, you will
+    need to wrap your output in a list.
+- `as_epi_df()` or `as_epi_archive()` no longer accept `additional_metadata`.
+  Use the new `other_keys` arg to specify additional key columns, such as age
+  group columns or other demographic breakdowns. Miscellaneous metadata are no
+  longer handled by `epiprocess`, but you can use R's built-in `attr<-` instead
+  for a similar feature.
 
 ## Improvements
 
