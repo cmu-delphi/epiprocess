@@ -211,14 +211,10 @@ epix_slide.grouped_epi_archive <- function(
     before = Inf,
     ref_time_values = NULL,
     new_col_name = NULL,
-    all_versions = FALSE,
-    as_list_col = deprecated(),
-    names_sep = deprecated()) {
-  # Perform some deprecated argument checks without using `<param> =
-  # deprecated()` in the function signature, because they are from
-  # early development versions and much more likely to be clutter than
-  # informative in the signature.
-  if ("group_by" %in% nse_dots_names(...)) {
+    all_versions = FALSE) {
+  # Deprecated argument handling
+  provided_args <- rlang::call_args_names(rlang::call_match())
+  if ("group_by" %in% provided_args) {
     cli_abort("
           The `group_by` argument to `slide` has been removed; please use
           the `group_by()` S3 generic function
@@ -229,12 +225,24 @@ epix_slide.grouped_epi_archive <- function(
           the slide.)
         ", class = "epiprocess__epix_slide_group_by_parameter_deprecated")
   }
-  if ("all_rows" %in% nse_dots_names(...)) {
+  if ("all_rows" %in% provided_args) {
     cli_abort("
           The `all_rows` argument has been removed from `epix_slide` (but
           is still supported in `epi_slide`). Add rows for excluded
           results with a manual join instead.
         ", class = "epiprocess__epix_slide_all_rows_parameter_deprecated")
+  }
+  if ("as_list_col" %in% provided_args) {
+    cli::cli_abort(
+      "epix_slide: the argument `as_list_col` is deprecated. If FALSE, you can just remove it.
+      If TRUE, have your given computation wrap its result using `list(result)` instead."
+    )
+  }
+  if ("names_sep" %in% provided_args) {
+    cli::cli_abort(
+      "epix_slide: the argument `names_sep` is deprecated. If NULL, you can remove it, it is now default.
+      If a string, please manually prefix your column names instead."
+    )
   }
 
   if (is.null(ref_time_values)) {
@@ -278,20 +286,6 @@ epix_slide.grouped_epi_archive <- function(
   } else {
     used_data_masking <- FALSE
     f <- as_slide_computation(f, ...)
-  }
-
-  if (lifecycle::is_present(as_list_col)) {
-    lifecycle::deprecate_warn("0.8.1", "epix_slide(as_list_col =)", details = "Have your computation wrap its result using `list(result)` instead, unless you want more than one list element per computation.  Automatically trying this sort of rewrite...") # nolint: line_length_linter
-    f_orig <- f
-    f <- function(...) list(f_orig(...))
-  }
-
-  if (lifecycle::is_present(names_sep)) {
-    if (is.null(names_sep)) {
-      lifecycle::deprecate_warn("0.8.1", "epix_slide(names_sep =)", details = "You can simply remove `names_sep = NULL`; that's now the defualt.") # nolint: line_length_linter
-    } else {
-      lifecycle::deprecate_stop("0.8.1", "epix_slide(names_sep =)", details = "Manually prefix your column names instead, or wrap the results in (return `list(result)` instead of `result` in your slide computation) and pipe into tidyr::unnest(names_sep = <desired value>)") # nolint: line_length_linter
-    }
   }
 
   # Computation for one group, one time value

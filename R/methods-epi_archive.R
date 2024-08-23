@@ -659,15 +659,6 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   `ref_time_value - before` and `ref_time_value`. Otherwise, `f` will be
 #'   passed only the most recent `version` for every unique `time_value`.
 #'   Default is `FALSE`.
-#' @param as_list_col `r lifecycle::badge("deprecated")` if you want a list
-#'   column as output, you can now just directly output a list from your slide
-#'   computations. Usually this just means wrapping your output in a length-1
-#'   list (outputting `list(result)` instead of `result`).
-#' @param names_sep `r lifecycle::badge("deprecated")` if you were specifying
-#'   `names_sep = NULL`, that's no longer needed. If you were using a non-NULL
-#'   value, you can either directly prefix your slide computation names, or
-#'   output a list and then later call `tidyr::unnest(slide_output,
-#'   <result_column_name>, names_sep = <names_sep>)`.
 #' @return A tibble whose columns are: the grouping variables, `time_value`,
 #'   containing the reference time values for the slide computation, and a
 #'   column named according to the `new_col_name` argument, containing the slide
@@ -777,7 +768,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'       )
 #'     },
 #'     before = 5, all_versions = FALSE,
-#'     ref_time_values = ref_time_values, names_sep = NULL
+#'     ref_time_values = ref_time_values
 #'   ) %>%
 #'   ungroup() %>%
 #'   arrange(geo_value, time_value)
@@ -812,7 +803,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'       )
 #'     },
 #'     before = 5, all_versions = TRUE,
-#'     ref_time_values = ref_time_values, names_sep = NULL
+#'     ref_time_values = ref_time_values
 #'   ) %>%
 #'   ungroup() %>%
 #'   # Focus on one geo_value so we can better see the columns above:
@@ -827,9 +818,7 @@ epix_slide <- function(
     before = Inf,
     ref_time_values = NULL,
     new_col_name = NULL,
-    all_versions = FALSE,
-    as_list_col = deprecated(),
-    names_sep = deprecated()) {
+    all_versions = FALSE) {
   UseMethod("epix_slide")
 }
 
@@ -843,9 +832,7 @@ epix_slide.epi_archive <- function(
     before = Inf,
     ref_time_values = NULL,
     new_col_name = NULL,
-    all_versions = FALSE,
-    as_list_col = deprecated(),
-    names_sep = deprecated()) {
+    all_versions = FALSE) {
   # For an "ungrouped" slide, treat all rows as belonging to one big
   # group (group by 0 vars), like `dplyr::summarize`, and let the
   # resulting `grouped_epi_archive` handle the slide:
@@ -854,7 +841,6 @@ epix_slide.epi_archive <- function(
     f,
     ...,
     before = before, ref_time_values = ref_time_values, new_col_name = new_col_name,
-    as_list_col = as_list_col, names_sep = names_sep,
     all_versions = all_versions
   ) %>%
     # We want a slide on ungrouped archives to output something

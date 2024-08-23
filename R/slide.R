@@ -83,7 +83,7 @@ epi_slide <- function(
     .x, .f, ...,
     .window_size = 1, .align = c("right", "center", "left"),
     .ref_time_values = NULL, .new_col_name = NULL, .all_rows = FALSE) {
-  # Argument deprecation handling
+  # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
   if (any(purrr::map_lgl(provided_args, ~ .x %in% c("x", "f", "ref_time_values", "new_col_name", "all_rows")))) {
     cli::cli_abort(
@@ -423,7 +423,7 @@ epi_slide_opt <- function(
     .ref_time_values = NULL, .all_rows = FALSE) {
   assert_class(.x, "epi_df")
 
-  # Argument deprecation handling
+  # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
   if (any(purrr::map_lgl(provided_args, ~ .x %in% c("x", "col_names", "f", "ref_time_values", "all_rows")))) {
     cli::cli_abort(
@@ -747,7 +747,7 @@ epi_slide_mean <- function(
     .x, .col_names, ...,
     .window_size = 1, .align = c("right", "center", "left"),
     .ref_time_values = NULL, .all_rows = FALSE) {
-  # Argument deprecation handling
+  # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
   if (any(purrr::map_lgl(provided_args, ~ .x %in% c("x", "col_names", "f", "ref_time_values", "all_rows")))) {
     cli::cli_abort(
@@ -760,12 +760,6 @@ epi_slide_mean <- function(
     cli::cli_abort(
       "epi_slide_mean: the argument `as_list_col` is deprecated. If FALSE, you can just remove it.
       If TRUE, have your given computation wrap its result using `list(result)` instead."
-    )
-  }
-  if ("names_sep" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide_mean: the argument `names_sep` is deprecated. If NULL, you can remove it, it is now default.
-      If a string, please manually prefix your column names instead."
     )
   }
   if ("before" %in% provided_args || "after" %in% provided_args) {
@@ -830,7 +824,7 @@ epi_slide_sum <- function(
     .x, .col_names, ...,
     .window_size = 1, .align = c("right", "center", "left"),
     .ref_time_values = NULL, .all_rows = FALSE) {
-  # Argument deprecation handling
+  # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
   if (any(purrr::map_lgl(provided_args, ~ .x %in% c("x", "col_names", "f", "ref_time_values", "all_rows")))) {
     cli::cli_abort(
@@ -843,12 +837,6 @@ epi_slide_sum <- function(
     cli::cli_abort(
       "epi_slide_sum: the argument `as_list_col` is deprecated. If FALSE, you can just remove it.
       If TRUE, have your given computation wrap its result using `list(result)` instead."
-    )
-  }
-  if ("names_sep" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide_sum: the argument `names_sep` is deprecated. If NULL, you can remove it, it is now default.
-      If a string, please manually prefix your column names instead."
     )
   }
   if ("before" %in% provided_args || "after" %in% provided_args) {
