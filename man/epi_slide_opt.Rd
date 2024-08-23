@@ -10,7 +10,7 @@ epi_slide_opt(
   .col_names,
   .f,
   ...,
-  .window_size = 0,
+  .window_size = 1,
   .align = c("right", "center", "left"),
   .ref_time_values = NULL,
   .all_rows = FALSE
