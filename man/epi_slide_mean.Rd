@@ -94,25 +94,25 @@ incomplete windows) is therefore left up to the user, either through the
 specified function or formula \code{f}, or through post-processing.
 
 Let's look at some window examples, assuming that the reference time value
-is \code{tv}. With .align = "right" and .window_size = 3, the window will be:
+is "tv". With .align = "right" and .window_size = 3, the window will be:
 
-time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
-window:                     \link{tv - 2, tv - 1, tv}
+time_values: tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:              tv - 2, tv - 1, tv
 
 With .align = "center" and .window_size = 3, the window will be:
 
-time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
-window:                             \link{tv - 1, tv, tv + 1}
+time_values: tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:                      tv - 1, tv, tv + 1
 
 With .align = "center" and .window_size = 4, the window will be:
 
-time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
-window:                     \link{tv - 2, tv - 1, tv, tv + 1}
+time_values: tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:              tv - 2, tv - 1, tv, tv + 1
 
 With .align = "left" and .window_size = 3, the window will be:
 
-time_values: tv - 4, tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
-window:                                     \link{tv, tv + 1, tv + 2}
+time_values: ttv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:                               tv, tv + 1, tv + 2
 }
 \examples{
 # slide a 7-day trailing average formula on cases
