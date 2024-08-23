@@ -177,28 +177,6 @@ test_that("epix_merge forbids and warns on metadata and naming issues", {
     ),
     regexp = "overlapping.*names"
   )
-
-  skip("Additional metadata is no longer used, not tested.")
-  expect_warning(
-    epix_merge(
-      as_epi_archive(tibble::tibble(geo_value = "ak", time_value = test_date, version = test_date + 1L, x_value = 1L),
-        additional_metadata = list("updates_fetched" = lubridate::ymd_hms("2022-05-01 16:00:00", tz = "UTC"))
-      ),
-      as_epi_archive(tibble::tibble(geo_value = "ak", time_value = test_date, version = test_date + 1L, y_value = 2L))
-    ),
-    regexp = "x\\$additional_metadata",
-    class = "epiprocess__epix_merge_ignores_additional_metadata"
-  )
-  expect_warning(
-    epix_merge(
-      as_epi_archive(tibble::tibble(geo_value = "ak", time_value = test_date, version = test_date + 1L, x_value = 1L)),
-      as_epi_archive(tibble::tibble(geo_value = "ak", time_value = test_date, version = test_date + 1L, y_value = 2L),
-        additional_metadata = list("updates_fetched" = lubridate::ymd_hms("2022-05-01 16:00:00", tz = "UTC"))
-      )
-    ),
-    regexp = "y\\$additional_metadata",
-    class = "epiprocess__epix_merge_ignores_additional_metadata"
-  )
 })
 
 # use `local` to prevent accidentally using the x, y, xy bindings here
