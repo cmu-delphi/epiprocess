@@ -13,9 +13,7 @@ epix_slide(
   before = Inf,
   ref_time_values = NULL,
   new_col_name = NULL,
-  all_versions = FALSE,
-  as_list_col = deprecated(),
-  names_sep = deprecated()
+  all_versions = FALSE
 )
 
 \method{epix_slide}{epi_archive}(
@@ -25,9 +23,7 @@ epix_slide(
   before = Inf,
   ref_time_values = NULL,
   new_col_name = NULL,
-  all_versions = FALSE,
-  as_list_col = deprecated(),
-  names_sep = deprecated()
+  all_versions = FALSE
 )
 
 \method{epix_slide}{grouped_epi_archive}(
@@ -37,9 +33,7 @@ epix_slide(
   before = Inf,
   ref_time_values = NULL,
   new_col_name = NULL,
-  all_versions = FALSE,
-  as_list_col = deprecated(),
-  names_sep = deprecated()
+  all_versions = FALSE
 )
 }
 \arguments{
@@ -107,16 +101,6 @@ into the constituent columns and those names used. Note that setting
 \code{ref_time_value - before} and \code{ref_time_value}. Otherwise, \code{f} will be
 passed only the most recent \code{version} for every unique \code{time_value}.
 Default is \code{FALSE}.}
-
-\item{as_list_col}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} if you want a list
-column as output, you can now just directly output a list from your slide
-computations. Usually this just means wrapping your output in a length-1
-list (outputting \code{list(result)} instead of \code{result}).}
-
-\item{names_sep}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} if you were specifying
-\code{names_sep = NULL}, that's no longer needed. If you were using a non-NULL
-value, you can either directly prefix your slide computation names, or
-output a list and then later call \verb{tidyr::unnest(slide_output, <result_column_name>, names_sep = <names_sep>)}.}
 }
 \value{
 A tibble whose columns are: the grouping variables, \code{time_value},
@@ -239,7 +223,7 @@ archive_cases_dv_subset \%>\%
       )
     },
     before = 5, all_versions = FALSE,
-    ref_time_values = ref_time_values, names_sep = NULL
+    ref_time_values = ref_time_values
   ) \%>\%
   ungroup() \%>\%
   arrange(geo_value, time_value)
@@ -274,7 +258,7 @@ archive_cases_dv_subset \%>\%
       )
     },
     before = 5, all_versions = TRUE,
-    ref_time_values = ref_time_values, names_sep = NULL
+    ref_time_values = ref_time_values
   ) \%>\%
   ungroup() \%>\%
   # Focus on one geo_value so we can better see the columns above:
