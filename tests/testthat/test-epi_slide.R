@@ -1,4 +1,5 @@
 library(cli)
+library(dplyr)
 
 test_date <- as.Date("2020-01-01")
 days_dt <- as.difftime(1, units = "days")
@@ -33,8 +34,8 @@ compute_slide_external <- function(.window_size, overlap = FALSE) {
   }
   slide_value <- toy_edf %>%
     group_by(time_value) %>%
-    summarize(value = sum(value)) %>%
-    pull(value) %>%
+    summarize(value = sum(.data$value)) %>%
+    pull(.data$value) %>%
     slider::slide_sum(before = .window_size - 1)
   toy_edf_g %>%
     mutate(slide_value = slide_value) %>%
@@ -42,7 +43,7 @@ compute_slide_external <- function(.window_size, overlap = FALSE) {
 }
 compute_slide_external_g <- function(.window_size) {
   toy_edf_g %>%
-    mutate(slide_value = slider::slide_sum(value, before = .window_size - 1)) %>%
+    mutate(slide_value = slider::slide_sum(.data$value, before = .window_size - 1)) %>%
     dplyr::arrange(geo_value, time_value) %>%
     as_epi_df(as_of = test_date + 100)
 }
@@ -316,12 +317,16 @@ test_that("`epi_slide` can access objects inside of helper functions", {
 test_that("basic ungrouped epi_slide computation produces expected output", {
   # Single geo
   expect_equal(
-    toy_edf %>% filter(geo_value == "a") %>% epi_slide(.window_size = 50 * days_dt, slide_value = sum(.x$value)),
+    toy_edf %>%
+      filter(geo_value == "a") %>%
+      epi_slide(.window_size = 50 * days_dt, slide_value = sum(.x$value)),
     compute_slide_external_g(.window_size = 50) %>% ungroup() %>% filter(geo_value == "a") %>% arrange(time_value)
   )
   # Multiple geos
   expect_equal(
-    toy_edf %>% filter(time_value %in% overlap_index) %>% epi_slide(.window_size = 50 * days_dt, slide_value = sum(.x$value)),
+    toy_edf %>%
+      filter(time_value %in% overlap_index) %>%
+      epi_slide(.window_size = 50 * days_dt, slide_value = sum(.x$value)),
     compute_slide_external(.window_size = 50, overlap = TRUE) %>% arrange(time_value)
   )
 })
@@ -472,7 +477,9 @@ test_that("nested dataframe output names are controllable", {
 # TODO: This seems really strange and counter-intuitive. Deprecate?4
 test_that("non-size-1 f outputs are no-op recycled", {
   expect_equal(
-    toy_edf %>% filter(time_value %in% overlap_index) %>% epi_slide(.window_size = 6 * days_dt, ~ sum(.x$value) + c(0, 0, 0)),
+    toy_edf %>%
+      filter(time_value %in% overlap_index) %>%
+      epi_slide(.window_size = 6 * days_dt, ~ sum(.x$value) + c(0, 0, 0)),
     compute_slide_external(.window_size = 6, overlap = TRUE) %>% arrange(time_value)
   )
   expect_equal(
