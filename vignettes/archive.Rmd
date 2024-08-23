@@ -119,7 +119,6 @@ The following pieces of metadata are included as fields in an `epi_archive`
 object:
 
 * `geo_type`: the type for the geo values.
-* `additional_metadata`: list of additional metadata for the data archive.
 
 Metadata for an `epi_archive` object `x` can be accessed (and altered) directly,
 as in `x$geo_type`, etc. Just like `as_epi_df()`, the function

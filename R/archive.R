@@ -179,7 +179,8 @@ NULL
 #'
 #' * `geo_type`: the type for the geo values.
 #' * `time_type`: the type for the time values.
-#' * `additional_metadata`: list of additional metadata for the data archive.
+#' * `other_keys`: any additional keys as a character vector.
+#'    Typical examples are "age" or sub-geographies.
 #'
 #' While this metadata is not protected, it is generally recommended to treat it
 #'  as read-only, and to use the `epi_archive` methods to interact with the data
@@ -209,10 +210,8 @@ NULL
 #' if the time type is not recognized.
 #' @param other_keys Character vector specifying the names of variables in `x`
 #'   that should be considered key variables (in the language of `data.table`)
-#'   apart from "geo_value", "time_value", and "version".
-#' @param additional_metadata List of additional metadata to attach to the
-#'   `epi_archive` object. The metadata will have the `geo_type` field; named
-#'   entries from the passed list or will be included as well.
+#'   apart from "geo_value", "time_value", and "version". Typical examples
+#'   are "age" or more granular geographies.
 #' @param compactify Optional; Boolean. `TRUE` will remove some
 #'   redundant rows, `FALSE` will not, and missing or `NULL` will remove
 #'   redundant rows, but issue a warning. See more information at `compactify`.
@@ -293,7 +292,6 @@ new_epi_archive <- function(
     geo_type,
     time_type,
     other_keys,
-    additional_metadata,
     compactify,
     clobberable_versions_start,
     versions_end,
@@ -350,7 +348,7 @@ new_epi_archive <- function(
       DT = compactified,
       geo_type = geo_type,
       time_type = time_type,
-      additional_metadata = additional_metadata,
+      other_keys = other_keys,
       clobberable_versions_start = clobberable_versions_start,
       versions_end = versions_end
     ),
@@ -423,7 +421,6 @@ is_locf <- function(vec, tolerance) { # nolint: object_usage_linter
 validate_epi_archive <- function(
     x,
     other_keys,
-    additional_metadata,
     compactify,
     clobberable_versions_start,
     versions_end) {
@@ -433,9 +430,6 @@ validate_epi_archive <- function(
   }
   if (any(c("geo_value", "time_value", "version") %in% other_keys)) {
     cli_abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
-  }
-  if (any(names(additional_metadata) %in% c("geo_type", "time_type"))) {
-    cli_warn("`additional_metadata` names overlap with existing metadata fields \"geo_type\" or \"time_type\".")
   }
 
   # Conduct checks and apply defaults for `compactify`
@@ -485,8 +479,7 @@ as_epi_archive <- function(
     x,
     geo_type = deprecated(),
     time_type = deprecated(),
-    other_keys = character(0L),
-    additional_metadata = list(),
+    other_keys = character(),
     compactify = NULL,
     clobberable_versions_start = NA,
     .versions_end = max_version_with_row_in(x), ...,
@@ -518,11 +511,10 @@ as_epi_archive <- function(
   time_type <- guess_time_type(x$time_value)
 
   validate_epi_archive(
-    x, other_keys, additional_metadata,
-    compactify, clobberable_versions_start, versions_end
+    x, other_keys, compactify, clobberable_versions_start, versions_end
   )
   new_epi_archive(
-    x, geo_type, time_type, other_keys, additional_metadata,
+    x, geo_type, time_type, other_keys,
     compactify, clobberable_versions_start, versions_end
   )
 }
@@ -551,7 +543,7 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
     c(
       ">" = if (class) "An `epi_archive` object, with metadata:",
       "i" = if (length(setdiff(key(x$DT), c("geo_value", "time_value", "version"))) > 0) {
-        "Non-standard DT keys: {setdiff(key(x$DT), c('geo_value', 'time_value', 'version'))}"
+        "Other DT keys: {setdiff(key(x$DT), c('geo_value', 'time_value', 'version'))}"
       },
       "i" = if (nrow(x$DT) != 0L) {
         "Min/max time values: {min(x$DT$time_value)} / {max(x$DT$time_value)}"
@@ -687,7 +679,8 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
 #' @export
 #'
 #' @aliases grouped_epi_archive
-group_by.epi_archive <- function(.data, ..., .add = FALSE, .drop = dplyr::group_by_drop_default(.data)) {
+group_by.epi_archive <- function(.data, ..., .add = FALSE,
+                                 .drop = dplyr::group_by_drop_default(.data)) {
   # `add` makes no difference; this is an ungrouped `epi_archive`.
   detailed_mutate <- epix_detailed_restricted_mutate(.data, ...)
   assert_logical(.drop)

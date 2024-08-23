@@ -63,6 +63,10 @@ print.epi_df <- function(x, ...) {
   )
   cat(sprintf("* %-9s = %s\n", "geo_type", attributes(x)$metadata$geo_type))
   cat(sprintf("* %-9s = %s\n", "time_type", attributes(x)$metadata$time_type))
+  ok <- attributes(x)$metadata$other_keys
+  if (length(ok) > 0) {
+    cat(sprintf("* %-9s = %s\n", "other_keys", paste(ok, collapse = ", ")))
+  }
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(x)$metadata$as_of))
   # Conditional output (silent if attribute is NULL):
   cat(sprintf("* %-9s = %s\n", "decay_to_tibble", attr(x, "decay_to_tibble")))
@@ -86,6 +90,10 @@ print.epi_df <- function(x, ...) {
 summary.epi_df <- function(object, ...) {
   cat("An `epi_df` x, with metadata:\n")
   cat(sprintf("* %-9s = %s\n", "geo_type", attributes(object)$metadata$geo_type))
+  ok <- attributes(object)$metadata$other_keys
+  if (length(ok) > 0) {
+    cat(sprintf("* %-9s = %s\n", "other_keys", paste(ok, collapse = ", ")))
+  }
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(object)$metadata$as_of))
   cat("----------\n")
   cat(sprintf("* %-27s = %s\n", "min time value", min(object$time_value)))
@@ -206,12 +214,13 @@ dplyr_row_slice.epi_df <- function(data, i, ...) {
 `names<-.epi_df` <- function(x, value) {
   old_names <- names(x)
   old_metadata <- attr(x, "metadata")
-  old_other_keys <- old_metadata[["other_keys"]]
-  new_other_keys <- value[match(old_other_keys, old_names)]
   new_metadata <- old_metadata
-  new_metadata[["other_keys"]] <- new_other_keys
+  old_other_keys <- old_metadata[["other_keys"]]
+  if (!is.null(old_other_keys)) {
+    new_other_keys <- value[match(old_other_keys, old_names)]
+    new_metadata[["other_keys"]] <- new_other_keys
+  }
   result <- reclass(NextMethod(), new_metadata)
-  # decay to non-`epi_df` if needed:
   dplyr::dplyr_reconstruct(result, result)
 }
 

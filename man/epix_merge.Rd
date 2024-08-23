@@ -46,9 +46,8 @@ clobberable versions). If the \code{versions_end} values differ, the \code{sync}
 parameter controls what is done.
 }
 \details{
-In all cases, \code{additional_metadata} will be an empty list, and
-\code{clobberable_versions_start} will be set to the earliest version that could
-be clobbered in either input archive.
+In all cases, \code{clobberable_versions_start} will be set to the
+earliest version that could be clobbered in either input archive.
 }
 \examples{
 # Example 1

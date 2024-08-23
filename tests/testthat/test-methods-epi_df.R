@@ -10,8 +10,7 @@ toy_epi_df <- tibble::tibble(
   indic_var1 = as.factor(rep(1:2, times = 5)),
   indic_var2 = as.factor(rep(letters[1:5], times = 2))
 ) %>% as_epi_df(
-  additional_metadata =
-    list(other_keys = c("indic_var1", "indic_var2"))
+  other_keys = c("indic_var1", "indic_var2")
 )
 
 att_toy <- attr(toy_epi_df, "metadata")
@@ -79,12 +78,12 @@ test_that("Subsetting drops & does not drop the epi_df class appropriately", {
   expect_identical(att_row_col_subset2$geo_type, att_toy$geo_type)
   expect_identical(att_row_col_subset2$time_type, att_toy$time_type)
   expect_identical(att_row_col_subset2$as_of, att_toy$as_of)
-  expect_identical(att_row_col_subset2$other_keys, character(0))
+  expect_identical(att_row_col_subset2$other_keys, att_toy$other_keys[1])
 })
 
 test_that("When duplicate cols in subset should abort", {
   expect_error(toy_epi_df[, c(2, 2:3, 4, 4, 4)],
-    "Duplicated column names: time_value, y",
+    "Duplicated column names: time_value, indic_var2",
     fixed = TRUE
   )
   expect_error(toy_epi_df[1:4, c(1, 2:4, 1)],
@@ -95,7 +94,7 @@ test_that("When duplicate cols in subset should abort", {
 
 test_that("Correct metadata when subset includes some of other_keys", {
   # Only include other_var of indic_var1
-  only_indic_var1 <- toy_epi_df[, 1:5]
+  only_indic_var1 <- toy_epi_df[, c(1:3, 5:6)]
   att_only_indic_var1 <- attr(only_indic_var1, "metadata")
 
   expect_true(is_epi_df(only_indic_var1))
@@ -107,7 +106,7 @@ test_that("Correct metadata when subset includes some of other_keys", {
   expect_identical(att_only_indic_var1$other_keys, att_toy$other_keys[-2])
 
   # Only include other_var of indic_var2
-  only_indic_var2 <- toy_epi_df[, c(1:4, 6)]
+  only_indic_var2 <- toy_epi_df[, c(1:2, 4:6)]
   att_only_indic_var2 <- attr(only_indic_var2, "metadata")
 
   expect_true(is_epi_df(only_indic_var2))
@@ -142,7 +141,7 @@ test_that("Grouping are dropped by `as_tibble`", {
 
 test_that("Renaming columns gives appropriate colnames and metadata", {
   edf <- tibble::tibble(geo_value = "ak", time_value = as.Date("2020-01-01"), age = 1, value = 1) %>%
-    as_epi_df(additional_metadata = list(other_keys = "age"))
+    as_epi_df(other_keys = "age")
   # renaming using base R
   renamed_edf1 <- edf %>%
     `[`(c("geo_value", "time_value", "age", "value")) %>%
@@ -151,14 +150,14 @@ test_that("Renaming columns gives appropriate colnames and metadata", {
   expect_identical(attr(renamed_edf1, "metadata")$other_keys, c("age_group"))
   # renaming using select
   renamed_edf2 <- edf %>%
-    as_epi_df(additional_metadata = list(other_keys = "age")) %>%
+    as_epi_df(other_keys = "age") %>%
     select(geo_value, time_value, age_group = age, value)
   expect_identical(renamed_edf1, renamed_edf2)
 })
 
 test_that("Renaming columns while grouped gives appropriate colnames and metadata", {
   gedf <- tibble::tibble(geo_value = "ak", time_value = as.Date("2020-01-01"), age = 1, value = 1) %>%
-    as_epi_df(additional_metadata = list(other_keys = "age")) %>%
+    as_epi_df(other_keys = "age") %>%
     group_by(geo_value)
   # renaming using base R
   renamed_gedf1 <- gedf %>%
@@ -178,7 +177,7 @@ test_that("Renaming columns while grouped gives appropriate colnames and metadat
 
 test_that("Additional `select` on `epi_df` tests", {
   edf <- tibble::tibble(geo_value = "ak", time_value = as.Date("2020-01-01"), age = 1, value = 1) %>%
-    as_epi_df(additional_metadata = list(other_keys = "age"))
+    as_epi_df(other_keys = "age")
 
   # Dropping a non-geo_value epikey column doesn't decay, though maybe it
   # should, since you'd expect that to possibly result in multiple rows per

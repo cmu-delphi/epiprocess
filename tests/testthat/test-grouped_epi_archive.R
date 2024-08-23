@@ -80,7 +80,7 @@ test_that("Grouping, regrouping, and ungrouping archives works as intended", {
         time_value = as.Date(time_value)
       ) %>%
       # as_epi_df(as_of = as.Date("2000-01-03"),
-      #           additional_metadata = list(other_keys = "age_group")) %>%
+      #           other_keys = "age_group") %>%
       # # put back in expected order; see issue #166:
       # select(geo_value, age_group, time_value, s) %>%
       group_by(geo_value, age_group, .drop = FALSE)

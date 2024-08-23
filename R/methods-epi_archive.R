@@ -65,7 +65,6 @@ epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FAL
     key(x$DT),
     c("geo_value", "time_value", "version")
   )
-  if (length(other_keys) == 0) other_keys <- NULL
 
   # Check a few things on max_version
   if (!identical(class(max_version), class(x$DT$version))) {
@@ -112,10 +111,7 @@ epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FAL
     dplyr::select(-"version") %>%
     as_epi_df(
       as_of = max_version,
-      additional_metadata = c(
-        x$additional_metadata,
-        list(other_keys = other_keys)
-      )
+      other_keys = other_keys
     )
 
   return(as_of_epi_df)
@@ -240,9 +236,8 @@ epix_fill_through_version <- function(x, fill_versions_end,
 #'   Default here is `TRUE`.
 #' @return the resulting `epi_archive`
 #'
-#' @details In all cases, `additional_metadata` will be an empty list, and
-#'   `clobberable_versions_start` will be set to the earliest version that could
-#'   be clobbered in either input archive.
+#' @details In all cases, `clobberable_versions_start` will be set to the
+#'   earliest version that could be clobbered in either input archive.
 #'
 #' @examples
 #' # Example 1
@@ -330,18 +325,6 @@ epix_merge <- function(x, y,
   if (!identical(x$time_type, y$time_type)) {
     cli_abort("`x` and `y` must share data type on their `time_value` column.")
   }
-
-  if (length(x$additional_metadata) != 0L) {
-    cli_warn("x$additional_metadata won't appear in merge result",
-      class = "epiprocess__epix_merge_ignores_additional_metadata"
-    )
-  }
-  if (length(y$additional_metadata) != 0L) {
-    cli_warn("y$additional_metadata won't appear in merge result",
-      class = "epiprocess__epix_merge_ignores_additional_metadata"
-    )
-  }
-  result_additional_metadata <- list()
 
   result_clobberable_versions_start <-
     if (all(is.na(c(x$clobberable_versions_start, y$clobberable_versions_start)))) {
@@ -508,7 +491,6 @@ epix_merge <- function(x, y,
   return(as_epi_archive(
     result_dt[], # clear data.table internal invisibility flag if set
     other_keys = setdiff(key(result_dt), c("geo_value", "time_value", "version")),
-    additional_metadata = result_additional_metadata,
     # It'd probably be better to pre-compactify before the merge, and might be
     # guaranteed not to be necessary to compactify the merge result if the
     # inputs are already compactified, but at time of writing we don't have

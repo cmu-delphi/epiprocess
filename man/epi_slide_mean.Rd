@@ -8,7 +8,7 @@ epi_slide_mean(
   .x,
   .col_names,
   ...,
-  .window_size = 0,
+  .window_size = 1,
   .align = c("right", "center", "left"),
   .ref_time_values = NULL,
   .all_rows = FALSE
