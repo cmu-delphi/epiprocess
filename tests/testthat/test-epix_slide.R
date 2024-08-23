@@ -1,11 +1,6 @@
 suppressPackageStartupMessages(library(dplyr))
 
 test_date <- as.Date("2020-01-01")
-
-test_that("epix_slide only works on an epi_archive", {
-  expect_error(epix_slide(data.frame(x = 1)))
-})
-
 x <- tibble::tribble(
   ~version, ~time_value, ~binary,
   test_date + 4, test_date + c(1:3), 2^(1:3),
@@ -14,9 +9,12 @@ x <- tibble::tribble(
   test_date + 7, test_date + 2:6, 2^(11:15)
 ) %>%
   tidyr::unnest(c(time_value, binary))
-
 xx <- bind_cols(geo_value = rep("ak", 15), x) %>%
   as_epi_archive()
+
+test_that("epix_slide only works on an epi_archive", {
+  expect_error(epix_slide(data.frame(x = 1)))
+})
 
 test_that("epix_slide works as intended", {
   xx1 <- xx %>%
@@ -204,7 +202,6 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
       new_col_name = "case_rate_3d_av"
     )
   reference_by_neither <- ea %>%
-    group_by() %>%
     epix_slide(
       f = ~ mean(.x$case_rate_7d_av),
       before = 2,
@@ -340,7 +337,6 @@ test_that("epix_slide with all_versions option has access to all older versions"
   ea_orig_mirror <- ea %>% clone()
 
   result1 <- ea %>%
-    group_by() %>%
     epix_slide(
       f = slide_fn,
       before = 10^3,
@@ -362,7 +358,6 @@ test_that("epix_slide with all_versions option has access to all older versions"
   expect_identical(result1, result2) # *
 
   result3 <- ea %>%
-    group_by() %>%
     epix_slide(
       f = slide_fn,
       before = 10^3,
@@ -373,7 +368,6 @@ test_that("epix_slide with all_versions option has access to all older versions"
 
   # formula interface
   result4 <- ea %>%
-    group_by() %>%
     epix_slide(
       f = ~ slide_fn(.x, .y),
       before = 10^3,
@@ -384,7 +378,6 @@ test_that("epix_slide with all_versions option has access to all older versions"
 
   # tidyeval interface
   result5 <- ea %>%
-    group_by() %>%
     epix_slide(
       # unfortunately, we can't pass this directly as `f` and need an extra comma
       ,
