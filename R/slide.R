@@ -8,15 +8,20 @@
 #' @param .f Function, formula, or missing; together with `...` specifies the
 #'   computation to slide. To "slide" means to apply a computation within a
 #'   sliding (a.k.a. "rolling") time window for each data group. The window is
-#'   determined by the `before` and `after` parameters described below. One time
-#'   step is typically one day or one week; see details for more explanation. If
-#'   a function, `.f` must take a data frame with the same column names as the
-#'   original object, minus any grouping variables, containing the time window
-#'   data for one group-`.ref_time_value` combination; followed by a one-row
-#'   tibble containing the values of the grouping variables for the associated
-#'   group; followed by any number of named arguments. If a formula, `.f` can
-#'   operate directly on columns accessed via `.x$var` or `.$var`, as in
-#'   `~mean(.x$var)` to compute a mean of a column `var` for each
+#'   determined by the `.window_size` and `.align` parameters, see the details
+#'   section for more. If a function, `.f` must have the form `function(x, g, t,
+#'   ...)`, where
+#'
+#'   - "x" is a data frame with the same column names as the original object,
+#'   minus any grouping variables, with only the windowed data for one
+#'   group-`.ref_time_value` combination
+#'   - "g" is a one-row tibble containing the values of the grouping variables
+#'   for the associated group
+#'   - "t" is the ref_time_value for the current window
+#'   - "..." are additional arguments
+#'
+#'   If a formula, `.f` can operate directly on columns accessed via `.x$var` or
+#'   `.$var`, as in `~mean(.x$var)` to compute a mean of a column `var` for each
 #'   `ref_time_value`-group combination. The group key can be accessed via `.y`.
 #'   If `.f` is missing, then `...` will specify the computation.
 #' @param ... Additional arguments to pass to the function or formula specified
@@ -24,8 +29,8 @@
 #'   as a ["data-masking"][rlang::args_data_masking] expression or expressions
 #'   for tidy evaluation; in addition to referring columns directly by name, the
 #'   expressions have access to `.data` and `.env` pronouns as in `dplyr` verbs,
-#'   and can also refer to `.x`, `.group_key`, and `.ref_time_value`. See
-#'   details.
+#'   and can also refer to `.x` (not the same as the input epi_df),
+#'   `.group_key`, and `.ref_time_value`. See details.
 #' @param .new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. Default is "slide_value"; note that setting
 #'   `new_col_name` equal to an existing column name will overwrite this column.

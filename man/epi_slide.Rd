@@ -23,15 +23,20 @@ single data group.}
 \item{.f}{Function, formula, or missing; together with \code{...} specifies the
 computation to slide. To "slide" means to apply a computation within a
 sliding (a.k.a. "rolling") time window for each data group. The window is
-determined by the \code{before} and \code{after} parameters described below. One time
-step is typically one day or one week; see details for more explanation. If
-a function, \code{.f} must take a data frame with the same column names as the
-original object, minus any grouping variables, containing the time window
-data for one group-\code{.ref_time_value} combination; followed by a one-row
-tibble containing the values of the grouping variables for the associated
-group; followed by any number of named arguments. If a formula, \code{.f} can
-operate directly on columns accessed via \code{.x$var} or \code{.$var}, as in
-\code{~mean(.x$var)} to compute a mean of a column \code{var} for each
+determined by the \code{.window_size} and \code{.align} parameters, see the details
+section for more. If a function, \code{.f} must have the form \verb{function(x, g, t, ...)}, where
+\itemize{
+\item "x" is a data frame with the same column names as the original object,
+minus any grouping variables, with only the windowed data for one
+group-\code{.ref_time_value} combination
+\item "g" is a one-row tibble containing the values of the grouping variables
+for the associated group
+\item "t" is the ref_time_value for the current window
+\item "..." are additional arguments
+}
+
+If a formula, \code{.f} can operate directly on columns accessed via \code{.x$var} or
+\code{.$var}, as in \code{~mean(.x$var)} to compute a mean of a column \code{var} for each
 \code{ref_time_value}-group combination. The group key can be accessed via \code{.y}.
 If \code{.f} is missing, then \code{...} will specify the computation.}
 
@@ -40,8 +45,8 @@ via \code{.f}. Alternatively, if \code{.f} is missing, then the \code{...} is in
 as a \link[rlang:args_data_masking]{"data-masking"} expression or expressions
 for tidy evaluation; in addition to referring columns directly by name, the
 expressions have access to \code{.data} and \code{.env} pronouns as in \code{dplyr} verbs,
-and can also refer to \code{.x}, \code{.group_key}, and \code{.ref_time_value}. See
-details.}
+and can also refer to \code{.x} (not the same as the input epi_df),
+\code{.group_key}, and \code{.ref_time_value}. See details.}
 
 \item{.window_size}{The size of the sliding window. By default, this is 1,
 meaning that only the current ref_time_value is included. The accepted values

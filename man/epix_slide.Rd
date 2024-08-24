@@ -43,27 +43,31 @@ all data in \code{x} will be treated as part of a single data group.}
 \item{.f}{Function, formula, or missing; together with \code{...} specifies the
 computation to slide. To "slide" means to apply a computation over a
 sliding (a.k.a. "rolling") time window for each data group. The window is
-determined by the \code{before} parameter described below. One time step is
-typically one day or one week; see \code{\link{epi_slide}} details for more
-explanation. If a function, \code{.f} must take an \code{epi_df} with the same
-column names as the archive's \code{DT}, minus the \code{version} column; followed
-by a one-row tibble containing the values of the grouping variables for
-the associated group; followed by a reference time value, usually as a
-\code{Date} object; followed by any number of named arguments. If a formula,
-\code{.f} can operate directly on columns accessed via \code{.x$var} or \code{.$var}, as
-in \code{~ mean (.x$var)} to compute a mean of a column \code{var} for each
-group-\code{ref_time_value} combination. The group key can be accessed via
-\code{.y} or \code{.group_key}, and the reference time value can be accessed via
-\code{.z} or \code{.ref_time_value}. If \code{.f} is missing, then \code{...} will specify the
+determined by the \code{.before} parameter (see details for more). If a
+function, \code{.f} must have the form \verb{function(x, g, t, ...)}, where
+\itemize{
+\item "x" is an epi_df with the same column names as the archive's \code{DT}, minus
+the \code{version} column
+\item "g" is a one-row tibble containing the values of the grouping variables
+for the associated group
+\item "t" is the ref_time_value for the current window
+\item "..." are additional arguments
+}
+
+If a formula, \code{.f} can operate directly on columns accessed via \code{.x$var} or
+\code{.$var}, as in \code{~ mean (.x$var)} to compute a mean of a column \code{var} for
+each group-\code{ref_time_value} combination. The group key can be accessed via
+\code{.y} or \code{.group_key}, and the reference time value can be accessed via \code{.z}
+or \code{.ref_time_value}. If \code{.f} is missing, then \code{...} will specify the
 computation.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
-via \code{f}. Alternatively, if \code{.f} is missing, then the \code{...} is interpreted as
-a \link[rlang:args_data_masking]{"data-masking"} expression or expressions for
-tidy evaluation; in addition to referring columns directly by name, the
+via \code{f}. Alternatively, if \code{.f} is missing, then the \code{...} is interpreted
+as a \link[rlang:args_data_masking]{"data-masking"} expression or expressions
+for tidy evaluation; in addition to referring columns directly by name, the
 expressions have access to \code{.data} and \code{.env} pronouns as in \code{dplyr} verbs,
-and can also refer to \code{.x}, \code{.group_key}, and \code{.ref_time_value}. See
-details.}
+and can also refer to \code{.x} (not the same as the input epi_archive),
+\code{.group_key}, and \code{.ref_time_value}. See details for more.}
 
 \item{.before}{How many time values before the \code{.ref_time_value}
 should each snapshot handed to the function \code{.f} contain? If provided, it
