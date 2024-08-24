@@ -59,14 +59,14 @@
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
 #'   ungroup()
 #'
-#' # slide a 7-day centre-aligned average
+#' # slide a 7-day center-aligned average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), .window_size = 7, .align = "center") %>%
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
 #'   ungroup()
 #'
-#' # slide a 14-day centre-aligned average
+#' # slide a 14-day center-aligned average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_14dav = mean(cases), .window_size = 14, .align = "center") %>%
@@ -118,6 +118,7 @@ epi_slide <- function(
 
   # Function body starts
   assert_class(.x, "epi_df")
+  assert_class(.x, "grouped_df")
 
   if (nrow(.x) == 0L) {
     return(.x)
