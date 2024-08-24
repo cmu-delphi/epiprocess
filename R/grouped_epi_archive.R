@@ -270,11 +270,14 @@ epix_slide.grouped_epi_archive <- function(
     ref_time_values <- sort(.ref_time_values)
   }
 
-  validate_slide_window_arg(.before, .x$private$ungrouped$time_type)
+  validate_slide_window_arg(.before, .x$private$ungrouped$time_type, lower = 0) # nolint: object_usage_linter
 
   checkmate::assert_string(.new_col_name, null.ok = TRUE)
   if (identical(.new_col_name, "time_value")) {
-    cli_abort('`new_col_name` must not be `"time_value"`; `epix_slide()` uses that column name to attach the `ref_time_value` associated with each slide computation') # nolint: line_length_linter
+    cli_abort(
+      '`new_col_name` must not be `"time_value"`; `epix_slide()` uses that column name
+      to attach the `ref_time_value` associated with each slide computation'
+    )
   }
 
   assert_logical(.all_versions, len = 1L)

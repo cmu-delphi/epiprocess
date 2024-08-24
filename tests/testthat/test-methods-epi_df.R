@@ -310,3 +310,21 @@ test_that("complete.epi_df works", {
       group_by(geo_value)
   )
 })
+
+test_that("aggregate_epi_df works", {
+  out <- toy_epi_df %>% aggregate_epi_df(value_col = "x")
+  expected_out <- toy_epi_df %>%
+    group_by(time_value) %>%
+    summarize(x = sum(x)) %>%
+    mutate(geo_value = "total") %>%
+    as_epi_df(as_of = attr(toy_epi_df, "metadata")$as_of)
+  expect_equal(out, expected_out)
+
+  out <- toy_epi_df %>% aggregate_epi_df(value_col = "y", group_cols = c("time_value", "geo_value", "indic_var1"))
+  expected_out <- toy_epi_df %>%
+    group_by(time_value, geo_value, indic_var1) %>%
+    summarize(y = sum(y)) %>%
+    ungroup() %>%
+    as_epi_df(as_of = attr(toy_epi_df, "metadata")$as_of)
+  expect_equal(out, expected_out)
+})

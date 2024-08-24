@@ -383,3 +383,36 @@ arrange_canonical.epi_df <- function(x, ...) {
     dplyr::relocate(dplyr::all_of(keys), .before = 1) %>%
     dplyr::arrange(dplyr::across(dplyr::all_of(keys)))
 }
+
+#' Aggregate an `epi_df` object
+#'
+#' Aggregates an `epi_df` object by the specified group columns, summing the
+#' `value` column, and returning an `epi_df`. If aggregating over `geo_value`,
+#' the resulting `epi_df` will have `geo_value` set to `"total"`.
+#'
+#' @param .x an `epi_df`
+#' @param value_col character name of the column to aggregate
+#' @param group_cols character vector of column names to group by
+#' @return an `epi_df` object
+#'
+#' @export
+aggregate_epi_df <- function(.x, value_col = "value", group_cols = "time_value") {
+  assert_class(.x, "epi_df")
+  assert_character(value_col, len = 1)
+  assert_character(group_cols)
+  checkmate::assert_subset(value_col, names(.x))
+  checkmate::assert_subset(group_cols, names(.x))
+
+  .x %>%
+    group_by(across(all_of(group_cols))) %>%
+    dplyr::summarize(!!(value_col) := sum(!!sym(value_col))) %>%
+    ungroup() %>%
+    {
+      if (!"geo_value" %in% group_cols) {
+        mutate(., geo_value = "total") %>% relocate(geo_value, .before = 1)
+      } else {
+        .
+      }
+    } %>%
+    as_epi_df(as_of = attr(.x, "metadata")$as_of)
+}

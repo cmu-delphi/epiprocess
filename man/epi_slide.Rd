@@ -8,11 +8,12 @@ epi_slide(
   .x,
   .f,
   ...,
-  .window_size = 1,
+  .window_size = NULL,
   .align = c("right", "center", "left"),
   .ref_time_values = NULL,
   .new_col_name = NULL,
-  .all_rows = FALSE
+  .all_rows = FALSE,
+  .complete_only = FALSE
 )
 }
 \arguments{
@@ -85,6 +86,12 @@ outside \code{.ref_time_values}; otherwise, there will be one row for each row i
 \code{.x} that had a \code{time_value} in \code{.ref_time_values}. Default is \code{FALSE}. The
 missing value marker is the result of \code{vctrs::vec_cast}ing \code{NA} to the type
 of the slide computation output.}
+
+\item{.complete_only}{Logical; if \code{TRUE}, only slide values that have a
+complete window of \code{before} and \code{after} values are returned. If \code{FALSE}, the
+function \code{f} may be given a reduced window size, commonly at the beginning
+of the time series, but also possibly in the interior if the \code{time_value}
+column has gaps (see \code{complete.epi_df} to address the latter).}
 }
 \value{
 An \code{epi_df} object given by appending one or more new columns to \code{.x},

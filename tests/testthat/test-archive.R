@@ -159,7 +159,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
 
   # Keyed epi_df
   edf2 <- data.frame(
-    geo_value = "al",
+    geo_value = c(rep("al", 10), rep("ak", 10)),
     time_value = rep(d + 0:9, 2),
     version = c(
       rep(as.Date("2020-01-25"), 10),
