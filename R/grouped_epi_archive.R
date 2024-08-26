@@ -219,7 +219,6 @@ epix_slide.grouped_epi_archive <- function(
     .versions = NULL,
     .new_col_name = NULL,
     .all_versions = FALSE) {
-
   # Perform some deprecated argument checks without using `<param> =
   # deprecated()` in the function signature, because they are from
   # early development versions and much more likely to be clutter than
