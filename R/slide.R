@@ -30,7 +30,8 @@
 #'   contain the derivative values. The default is "slide_value" unless your
 #'   slide computations output data frames, in which case they will be unpacked
 #'   into the constituent columns and those names used. Note that setting
-#'   `new_col_name` equal to an existing column name will overwrite this column.
+#'   `.new_col_name` equal to an existing column name will overwrite this
+#'   column.
 #'
 #' @template basic-slide-details
 #'
@@ -191,8 +192,8 @@ epi_slide <- function(
   .x <- arrange(.x, .data$time_value)
 
   # Now set up starts and stops for sliding/hopping
-  starts <- .ref_time_values - before
-  stops <- .ref_time_values + after
+  .starts <- .ref_time_values - before
+  .stops <- .ref_time_values + after
 
   # If `.f` is missing, interpret ... as an expression for tidy evaluation
   if (missing(.f)) {
@@ -211,27 +212,27 @@ epi_slide <- function(
     used_data_masking <- FALSE
   }
 
-  f <- as_time_slide_computation(.f, ...)
+  .slide_comp <- as_time_slide_computation(.f, ...)
 
   # Create a wrapper that calculates and passes `.ref_time_value` to the
-  # computation. `i` is contained in the `f_wrapper_factory` environment such
+  # computation. `i` is contained in the `slide_comp_wrapper_factory` environment such
   # that when called within `slide_one_grp` `i` is reset for every group.
-  f_wrapper_factory <- function(kept_ref_time_values) {
+  slide_comp_wrapper_factory <- function(kept_ref_time_values) {
     # Use `i` to advance through list of start dates.
     i <- 1L
-    f_wrapper <- function(.x, .group_key, ...) {
+    slide_comp_wrapper <- function(.x, .group_key, ...) {
       .ref_time_value <- kept_ref_time_values[[i]]
       i <<- i + 1L
-      f(.x, .group_key, .ref_time_value, ...)
+      .slide_comp(.x, .group_key, .ref_time_value, ...)
     }
-    return(f_wrapper)
+    return(slide_comp_wrapper)
   }
 
   # Computation for one group, all time values
   slide_one_grp <- function(.data_group,
                             .group_key, # see `?group_modify`
                             ..., # `...` to `epi_slide` forwarded here
-                            .f_factory,
+                            .slide_comp_factory,
                             .starts,
                             .stops,
                             .ref_time_values,
@@ -246,7 +247,7 @@ epi_slide <- function(
     .stops <- .stops[o]
     kept_ref_time_values <- .ref_time_values[o]
 
-    f <- .f_factory(kept_ref_time_values)
+    .slide_comp <- .slide_comp_factory(kept_ref_time_values)
 
     # Compute the slide values
     slide_values_list <- slider::hop_index(
@@ -254,7 +255,7 @@ epi_slide <- function(
       .i = .data_group$time_value,
       .starts = .starts,
       .stops = .stops,
-      .f = f,
+      .f = .slide_comp,
       .group_key, ...
     )
 
@@ -338,9 +339,9 @@ epi_slide <- function(
 
   .x <- group_modify(.x, slide_one_grp,
     ...,
-    .f_factory = f_wrapper_factory,
-    .starts = starts,
-    .stops = stops,
+    .slide_comp_factory = slide_comp_wrapper_factory,
+    .starts = .starts,
+    .stops = .stops,
     .ref_time_values = .ref_time_values,
     .all_rows = .all_rows,
     .new_col_name = .new_col_name,
@@ -489,7 +490,7 @@ epi_slide_opt <- function(
     )
   }
 
-  # Check that slide function `f` is one of those short-listed from
+  # Check that slide function `.f` is one of those short-listed from
   # `data.table` and `slider` (or a function that has the exact same
   # definition, e.g. if the function has been reexported or defined
   # locally).

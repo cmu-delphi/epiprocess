@@ -101,17 +101,25 @@ epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
     )
   }
 
+  # We can't disable nonstandard evaluation nor use the `..` feature in the `i`
+  # argument of `[.data.table` below; try to avoid problematic names and abort
+  # if we fail to do so:
+  .min_time_value <- min_time_value
+  .version <- version
+  if (any(c(".min_time_value", ".version") %in% names(x$DT))) {
+    cli_abort("epi_archives can't contain a `.min_time_value` or `.version` column")
+  }
+
   # Filter by version and return
   if (all_versions) {
     # epi_archive is copied into result, so we can modify result directly
     result <- epix_truncate_versions_after(x, version)
-    result$DT <- result$DT[time_value >= min_time_value, ] # nolint: object_usage_linter
+    result$DT <- result$DT[time_value >= .min_time_value, ] # nolint: object_usage_linter
     return(result)
   }
 
   # Make sure to use data.table ways of filtering and selecting
-  .version <- version # workaround for `i` arg not supporting `..` feature
-  as_of_epi_df <- x$DT[time_value >= min_time_value & version <= .version, ] %>% # nolint: object_usage_linter
+  as_of_epi_df <- x$DT[time_value >= .min_time_value & version <= .version, ] %>% # nolint: object_usage_linter
     unique(
       by = c("geo_value", "time_value", other_keys),
       fromLast = TRUE
@@ -658,12 +666,12 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   used for labeling the computations, which are `group_vars(x)` and
 #'   `"version"`, then the values for these columns must be identical to the
 #'   labels we assign.
-#' @param .all_versions (Not the same as `.all_rows` parameter of `epi_slide`.) If
-#'   `.all_versions = TRUE`, then `.f` will be passed the version history (all
-#'   `version <= .ref_time_value`) for rows having `time_value` of at least
-#'   `.version - before`. Otherwise, `.f` will be
-#'   passed only the most recent `version` for every unique `time_value`.
-#'   Default is `FALSE`.
+#' @param .all_versions (Not the same as `.all_rows` parameter of `epi_slide`.)
+#'   If `.all_versions = TRUE`, then the slide computation will be passed the
+#'   version history (all `version <= .version` where `.version` is one of the
+#'   requested `.versions`) for rows having a `time_value` of at least `.version
+#'   - before`. Otherwise, the slide computation will be passed only the most
+#'   recent `version` for every unique `time_value`. Default is `FALSE`.
 #' @return A tibble whose columns are: the grouping variables, `time_value`,
 #'   containing the reference time values for the slide computation, and a
 #'   column named according to the `.new_col_name` argument, containing the slide
