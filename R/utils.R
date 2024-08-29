@@ -494,9 +494,9 @@ as_slide_computation <- function(f, ..., .ref_time_value_long_varnames, .ref_tim
 #' @rdname as_slide_computation
 #' @export
 #' @noRd
-as_time_slide_computation <- function(f, ...) {
+as_time_slide_computation <- function(.f, ...) {
   as_slide_computation(
-    f, ...,
+    .f, ...,
     .ref_time_value_long_varnames = ".ref_time_value",
     .ref_time_value_label = "reference time value"
   )
@@ -505,9 +505,9 @@ as_time_slide_computation <- function(f, ...) {
 #' @rdname as_slide_computation
 #' @export
 #' @noRd
-as_diagonal_slide_computation <- function(f, ...) {
+as_diagonal_slide_computation <- function(.f, ...) {
   as_slide_computation(
-    f, ...,
+    .f, ...,
     .ref_time_value_long_varnames = c(".version", ".ref_time_value"),
     .ref_time_value_label = "version"
   )

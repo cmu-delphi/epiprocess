@@ -171,9 +171,9 @@ epi_slide <- function(
     }
   }
 
-  checkmate::assert_string(new_col_name, null.ok = TRUE)
-  if (!is.null(new_col_name)) {
-    if (new_col_name %in% group_vars(x)) {
+  checkmate::assert_string(.new_col_name, null.ok = TRUE)
+  if (!is.null(.new_col_name)) {
+    if (.new_col_name %in% group_vars(.x)) {
       cli_abort(c("`.new_col_name` must not be one of the grouping column name(s);
                    `epi_slide()` uses these column name(s) to label what group
                    each slide computation came from.",
@@ -182,24 +182,24 @@ epi_slide <- function(
         "x" = "`.new_col_name` was {format_chr_with_quotes(.new_col_name)}"
       ))
     }
-    if (identical(new_col_name, "time_value")) {
+    if (identical(.new_col_name, "time_value")) {
       cli_abort('`.new_col_name` must not be `"time_value"`; `epi_slide()` uses that column name to attach the element of `.ref_time_values` associated with each slide computation') # nolint: line_length_linter
     }
   }
 
   # Arrange by increasing time_value
-  x <- arrange(.x, .data$time_value)
+  .x <- arrange(.x, .data$time_value)
 
   # Now set up starts and stops for sliding/hopping
   starts <- .ref_time_values - before
   stops <- .ref_time_values + after
 
-  # If `f` is missing, interpret ... as an expression for tidy evaluation
+  # If `.f` is missing, interpret ... as an expression for tidy evaluation
   if (missing(.f)) {
     used_data_masking <- TRUE
     quosures <- enquos(...)
     if (length(quosures) == 0) {
-      cli_abort("If `f` is missing then a computation must be specified via `...`.")
+      cli_abort("If `.f` is missing then a computation must be specified via `...`.")
     }
 
     .f <- quosures
@@ -231,29 +231,29 @@ epi_slide <- function(
   slide_one_grp <- function(.data_group,
                             .group_key, # see `?group_modify`
                             ..., # `...` to `epi_slide` forwarded here
-                            f_factory,
-                            starts,
-                            stops,
-                            ref_time_values,
-                            all_rows,
-                            new_col_name) {
+                            .f_factory,
+                            .starts,
+                            .stops,
+                            .ref_time_values,
+                            .all_rows,
+                            .new_col_name) {
     # Figure out which reference time values appear in the data group in the
     # first place (we need to do this because it could differ based on the
     # group, hence the setup/checks for the reference time values based on all
     # the data could still be off):
-    o <- ref_time_values %in% .data_group$time_value
-    starts <- starts[o]
-    stops <- stops[o]
-    kept_ref_time_values <- ref_time_values[o]
+    o <- .ref_time_values %in% .data_group$time_value
+    .starts <- .starts[o]
+    .stops <- .stops[o]
+    kept_ref_time_values <- .ref_time_values[o]
 
-    f <- f_factory(kept_ref_time_values)
+    f <- .f_factory(kept_ref_time_values)
 
     # Compute the slide values
     slide_values_list <- slider::hop_index(
       .x = .data_group,
       .i = .data_group$time_value,
-      .starts = starts,
-      .stops = stops,
+      .starts = .starts,
+      .stops = .stops,
       .f = f,
       .group_key, ...
     )
@@ -309,7 +309,7 @@ epi_slide <- function(
     }
 
     # If all rows, then pad slide values with NAs, else filter down data group
-    if (all_rows) {
+    if (.all_rows) {
       orig_values <- slide_values
       slide_values <- vctrs::vec_rep(vctrs::vec_cast(NA, orig_values), nrow(.data_group))
       vctrs::vec_slice(slide_values, o) <- orig_values
@@ -318,7 +318,7 @@ epi_slide <- function(
     }
 
     result <-
-      if (is.null(new_col_name)) {
+      if (is.null(.new_col_name)) {
         if (inherits(slide_values, "data.frame")) {
           # unpack into separate columns (without name prefix) and, if there are
           # re-bindings, make the last one win for determining column value &
@@ -330,25 +330,25 @@ epi_slide <- function(
         }
       } else {
         # vector or packed data.frame-type column:
-        mutate(.data_group, !!new_col_name := slide_values)
+        mutate(.data_group, !!.new_col_name := slide_values)
       }
 
     return(result)
   }
 
-  x <- group_modify(x, slide_one_grp,
+  .x <- group_modify(.x, slide_one_grp,
     ...,
-    f_factory = f_wrapper_factory,
-    starts = starts,
-    stops = stops,
-    ref_time_values = .ref_time_values,
-    all_rows = .all_rows,
-    new_col_name = .new_col_name,
+    .f_factory = f_wrapper_factory,
+    .starts = starts,
+    .stops = stops,
+    .ref_time_values = .ref_time_values,
+    .all_rows = .all_rows,
+    .new_col_name = .new_col_name,
     .keep = FALSE
   )
 
 
-  return(x)
+  return(.x)
 }
 
 #' Optimized slide function for performing common rolling computations on an
@@ -480,9 +480,9 @@ epi_slide_opt <- function(
   if (nrow(.x) == 0L) {
     cli_abort(
       c(
-        "input data `x` unexpectedly has 0 rows",
+        "input data `.x` unexpectedly has 0 rows",
         "i" = "If this computation is occuring within an `epix_slide` call,
-          check that `epix_slide` `.ref_time_values` argument was set appropriately"
+          check that `epix_slide` `.versions` argument was set appropriately"
       ),
       class = "epiprocess__epi_slide_opt__0_row_input",
       epiprocess__x = .x
@@ -577,13 +577,13 @@ epi_slide_opt <- function(
     }
   }
 
-  # Make a complete date sequence between min(x$time_value) and max(x$time_value).
+  # Make a complete date sequence between min(.x$time_value) and max(.x$time_value).
   date_seq_list <- full_date_seq(.x, before, after, time_type)
   all_dates <- date_seq_list$all_dates
   pad_early_dates <- date_seq_list$pad_early_dates
   pad_late_dates <- date_seq_list$pad_late_dates
 
-  # The position of a given column can be differ between input `x` and
+  # The position of a given column can be differ between input `.x` and
   # `.data_group` since the grouping step by default drops grouping columns.
   # To avoid rerunning `eval_select` for every `.data_group`, convert
   # positions of user-provided `col_names` into string column names. We avoid
@@ -621,7 +621,7 @@ epi_slide_opt <- function(
               group will result in incorrect results",
             "i" = "Please change the grouping structure of the input data so that
               each group has non-duplicate time values (e.g. `x %>% group_by(geo_value)
-              %>% epi_slide_opt(f = frollmean)`)",
+              %>% epi_slide_opt(.f = frollmean)`)",
             "i" = "Use `epi_slide` to aggregate across groups"
           ),
           class = "epiprocess__epi_slide_opt__duplicate_time_values",

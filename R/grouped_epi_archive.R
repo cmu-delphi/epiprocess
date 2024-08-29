@@ -224,7 +224,7 @@ epix_slide.grouped_epi_archive <- function(
   # early development versions and much more likely to be clutter than
   # informative in the signature.
   provided_args <- rlang::call_args_names(rlang::call_match())
-  if (any(provided_args %in% c("x", "f", "before", "ref_time_values", "new_col_name", "all_versions", "group_by"))) {
+  if (any(provided_args %in% c("x", "f", "before", "ref_time_values", "new_col_name", "all_versions"))) {
     cli::cli_abort(
       "epix_slide: you are using one of the following old argument names: `x`, `f`, `before`, `ref_time_values`,
       `new_col_name`, `all_versions`. Please use the new names: `.x`, `.f`, `.before`, `.ref_time_values`,
@@ -276,20 +276,18 @@ epix_slide.grouped_epi_archive <- function(
     # Sort, for consistency with `epi_slide`, although the current
     # implementation doesn't take advantage of it.
     .versions <- sort(.versions)
-    ref_time_values <- sort(ref_time_values)
-    .versions <- sort(.versions)
   }
 
   validate_slide_window_arg(.before, .x$private$ungrouped$time_type)
 
   checkmate::assert_string(.new_col_name, null.ok = TRUE)
   if (!is.null(.new_col_name)) {
-    if (.new_col_name %in% x$private$vars) {
-      cli_abort(c("`new_col_name` must not be one of the grouping column name(s);
+    if (.new_col_name %in% .x$private$vars) {
+      cli_abort(c("`.new_col_name` must not be one of the grouping column name(s);
                    `epix_slide()` uses these column name(s) to label what group
                    each slide computation came from.",
-        "i" = "{cli::qty(length(x$private$vars))} grouping column name{?s}
-                         {?was/were} {format_chr_with_quotes(x$private$vars)}",
+        "i" = "{cli::qty(length(.x$private$vars))} grouping column name{?s}
+                         {?was/were} {format_chr_with_quotes(.x$private$vars)}",
         "x" = "`new_col_name` was {format_chr_with_quotes(new_col_name)}"
       ))
     }
@@ -321,10 +319,10 @@ epix_slide.grouped_epi_archive <- function(
   # Computation for one group, one time value
   comp_one_grp <- function(.data_group, .group_key,
                            f, ...,
-                           ref_time_value,
+                           version,
                            new_col_name) {
     # Carry out the specified computation
-    comp_value <- f(.data_group, .group_key, ref_time_value, ...)
+    comp_value <- f(.data_group, .group_key, version, ...)
 
     # If this wasn't a tidyeval computation, we still need to check the output
     # types. We'll let `group_modify` and `vec_rbind` deal with checking for
@@ -347,7 +345,7 @@ epix_slide.grouped_epi_archive <- function(
     # redundant work. `group_modify()` provides the group key, we provide the
     # ref time value (appropriately recycled) and comp_value (appropriately
     # named / unpacked, for quick feedback)
-    res <- list(version = vctrs::vec_rep(ref_time_value, vctrs::vec_size(comp_value)))
+    res <- list(version = vctrs::vec_rep(version, vctrs::vec_size(comp_value)))
 
     if (is.null(new_col_name)) {
       if (inherits(comp_value, "data.frame")) {
@@ -371,12 +369,12 @@ epix_slide.grouped_epi_archive <- function(
     return(validate_tibble(new_tibble(res)))
   }
 
-  out <- lapply(versions, function(ref_time_value) {
+  out <- lapply(.versions, function(version) {
     # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
     # `epi_archive` if `all_versions` is `TRUE`:
     as_of_raw <- .x$private$ungrouped %>% epix_as_of(
-      ref_time_value,
-      min_time_value = ref_time_value - .before,
+      version,
+      min_time_value = version - .before,
       all_versions = .all_versions
     )
 
@@ -412,7 +410,7 @@ epix_slide.grouped_epi_archive <- function(
       # Convert each subgroup chunk to an archive before running the calculation.
       group_modify_fn <- function(.data_group, .group_key,
                                   f, ...,
-                                  ref_time_value,
+                                  version,
                                   new_col_name) {
         # .data_group is coming from as_of_df as a tibble, but we
         # want to feed `comp_one_grp` an `epi_archive` backed by a
@@ -423,7 +421,7 @@ epix_slide.grouped_epi_archive <- function(
         .data_group_archive$DT <- .data_group
         comp_one_grp(.data_group_archive, .group_key,
           f = f, ...,
-          ref_time_value = ref_time_value,
+          version = version,
           new_col_name = new_col_name
         )
       }
@@ -434,7 +432,7 @@ epix_slide.grouped_epi_archive <- function(
         dplyr::group_by(as_of_df, !!!syms(.x$private$vars), .drop = .x$private$drop),
         group_modify_fn,
         f = f, ...,
-        ref_time_value = ref_time_value,
+        version = version,
         new_col_name = .new_col_name,
         .keep = TRUE
       )
