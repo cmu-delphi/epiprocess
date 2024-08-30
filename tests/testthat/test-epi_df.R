@@ -25,7 +25,7 @@ test_that("new_epi_df works as intended", {
 
 test_that("as_epi_df errors when additional_metadata is not a list", {
   # This is the 3rd example from as_epi_df
-  ex_input <- jhu_csse_county_level_subset %>%
+  ex_input <- covid_incidence_county_subset %>%
     dplyr::filter(time_value > "2021-12-01", state_name == "Massachusetts") %>%
     dplyr::slice_tail(n = 6) %>%
     tsibble::as_tsibble() %>%

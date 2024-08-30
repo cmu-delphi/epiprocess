@@ -45,8 +45,8 @@ library(covidcast)
 library(epiprocess)
 library(dplyr)
 
-data(jhu_csse_county_level_subset)
-x <- jhu_csse_county_level_subset
+data(covid_incidence_county_subset)
+x <- covid_incidence_county_subset
 ```
 
 ## Converting to `tsibble` format
