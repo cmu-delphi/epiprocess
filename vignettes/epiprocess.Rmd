@@ -110,14 +110,8 @@ library(dplyr)
 library(tidyr)
 library(withr)
 
-cases <- pub_covidcast(
-  source = "jhu-csse",
-  signals = "confirmed_cumulative_num",
-  geo_type = "state",
-  time_type = "day",
-  geo_values = "ca,fl,ny,tx",
-  time_values = epirange(20200301, 20220131),
-)
+data(jhu_confirmed_cumulative_num)
+cases <- jhu_confirmed_cumulative_num
 
 colnames(cases)
 ```
