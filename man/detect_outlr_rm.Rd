@@ -59,7 +59,7 @@ terms of multiples of the rolling interquartile range (IQR).
 }
 \examples{
 # Detect outliers based on a rolling median
-incidence_num_outlier_example \%>\%
+covid_incidence_outliers \%>\%
   dplyr::select(geo_value, time_value, cases) \%>\%
   as_epi_df() \%>\%
   group_by(geo_value) \%>\%

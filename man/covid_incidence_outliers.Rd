@@ -3,7 +3,7 @@
 \docType{data}
 \name{covid_incidence_outliers}
 \alias{covid_incidence_outliers}
-\title{Subset of JHU daily COVID-19 cases from California and Florida}
+\title{Subset of JHU daily COVID-19 cases from New Jersey and Florida}
 \format{
 An object of class \code{epi_df} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 730 rows and 3 columns.
 }
@@ -32,8 +32,10 @@ This data source of confirmed COVID-19 cases is based on reports made
 available by the Center for Systems Science and Engineering at Johns
 Hopkins University. This example data is downloaded from the CMU Delphi
 COVIDcast Epidata API. It is a snapshot as of Oct 28, 2021 and captures the
-cases from June 1, 2020 to May 31, 2021 and is limited to California and
-Florida. This data set is used in the {epiprocess} vignette on outliers.
+cases from June 1, 2020 to May 31, 2021 and is limited to New Jersey and
+Florida.
+
+This data set is used in the {epiprocess} vignette on outliers.
 }
 \section{Data dictionary}{
 

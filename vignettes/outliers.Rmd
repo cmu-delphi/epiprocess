@@ -14,25 +14,6 @@ so that you can define your own outlier detection and correction routines and
 apply them to `epi_df` objects. We'll demonstrate this using state-level daily
 reported COVID-19 case counts from FL and NJ.
 
-```{r, message = FALSE, eval= FALSE}
-library(epidatr)
-library(epiprocess)
-library(dplyr)
-library(tidyr)
-
-x <- pub_covidcast(
-  source = "jhu-csse",
-  signals = "confirmed_incidence_num",
-  geo_type = "state",
-  time_type = "day",
-  geo_values = "fl,nj",
-  time_values = epirange(20200601, 20210531),
-  as_of = 20211028
-) %>%
-  select(geo_value, time_value, cases = value) %>%
-  as_epi_df()
-```
-
 The dataset has 730 rows and 3 columns.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
@@ -41,8 +22,8 @@ library(epiprocess)
 library(dplyr)
 library(tidyr)
 
-data(incidence_num_outlier_example)
-x <- incidence_num_outlier_example
+data(covid_incidence_outliers)
+x <- covid_incidence_outliers
 ```
 
 ```{r, fig.width = 8, fig.height = 7, warning=FALSE,message=FALSE}
