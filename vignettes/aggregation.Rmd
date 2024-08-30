@@ -12,12 +12,20 @@ epidemiological data sets. This vignette demonstrates how to carry out these
 kinds of tasks with `epi_df` objects. We'll work with county-level reported
 COVID-19 cases in MA and VT.
 
-```{r, message = FALSE, eval= FALSE, warning= FALSE}
+The data is included in this package (via the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/)) and can be loaded with:
+
+```{r, warning=FALSE, message=FALSE}
 library(epidatr)
 library(covidcast)
 library(epiprocess)
 library(dplyr)
 
+data(covid_incidence_county_subset)
+x <- covid_incidence_county_subset
+```
+
+The data can also be fetched from the Delphi API with the following query:
+```{r, message = FALSE, eval= FALSE, warning= FALSE}
 # Use covidcast::county_census to get the county and state names
 y <- covidcast::county_census %>%
   filter(STNAME %in% c("Massachusetts", "Vermont"), STNAME != CTYNAME) %>%
@@ -38,16 +46,6 @@ x <- pub_covidcast(
 ```
 
 The data contains 16,212 rows and 5 columns.
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-library(epidatr)
-library(covidcast)
-library(epiprocess)
-library(dplyr)
-
-data(covid_incidence_county_subset)
-x <- covid_incidence_county_subset
-```
 
 ## Converting to `tsibble` format
 

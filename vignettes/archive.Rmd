@@ -25,7 +25,9 @@ signal is subject to very heavy and regular revision; you can read more about it
 on its [API documentation
 page](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
 
-```{r, message = FALSE, warning = FALSE, eval=FALSE}
+The data is included in this package (via the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/)) and can be loaded with:
+
+```{r, message=FALSE, warning=FALSE}
 library(epidatr)
 library(epiprocess)
 library(data.table)
@@ -33,6 +35,12 @@ library(dplyr)
 library(purrr)
 library(ggplot2)
 
+# This fetches the raw data backing the archive_cases_dv_subset object.
+dv <- archive_cases_dv_subset$DT
+```
+
+The data can also be fetched from the Delphi API with the following query:
+```{r, message = FALSE, warning = FALSE, eval=FALSE}
 dv <- pub_covidcast(
   source = "doctor-visits",
   signals = "smoothed_adj_cli",
@@ -42,15 +50,6 @@ dv <- pub_covidcast(
   time_values = epirange(20200601, 20211201),
   issues = epirange(20200601, 20211201)
 )
-```
-
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
-library(epidatr)
-library(epiprocess)
-library(data.table)
-library(dplyr)
-library(purrr)
-library(ggplot2)
 ```
 
 ## Getting data into `epi_archive` format
@@ -75,15 +74,6 @@ the [compactify vignette](articles/compactify.html).
 ```{r, eval=FALSE}
 x <- dv %>%
   select(geo_value, time_value, version = issue, percent_cli = value) %>%
-  as_epi_archive(compactify = TRUE)
-
-class(x)
-print(x)
-```
-
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
-x <- archive_cases_dv_subset$DT %>%
-  select(geo_value, time_value, version, percent_cli) %>%
   as_epi_archive(compactify = TRUE)
 
 class(x)

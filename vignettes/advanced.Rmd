@@ -285,7 +285,19 @@ vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) in order
 to demonstrate the preceding points regarding forecast evaluation in a more
 realistic setting. First, we fetch the versioned data and build the archive.
 
-```{r, message = FALSE, warning = FALSE, eval =FALSE}
+The data is included in this package (via the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/)) and can be loaded with:
+```{r, message = FALSE}
+library(data.table)
+library(ggplot2)
+theme_set(theme_bw())
+
+x <- archive_cases_dv_subset$DT %>%
+  filter(geo_value %in% c("ca", "fl")) %>%
+  as_epi_archive(compactify = FALSE)
+```
+
+The data can also be fetched from the Delphi API with the following query:
+```{r, eval = FALSE}
 library(epidatr)
 library(data.table)
 library(ggplot2)
@@ -330,16 +342,6 @@ x <- epix_merge(
   sync = "locf",
   compactify = FALSE
 )
-```
-
-```{r, message = FALSE, echo =FALSE}
-library(data.table)
-library(ggplot2)
-theme_set(theme_bw())
-
-x <- archive_cases_dv_subset$DT %>%
-  filter(geo_value %in% c("ca", "fl")) %>%
-  as_epi_archive(compactify = FALSE)
 ```
 
 Next, we extend the ARX function to handle multiple geo values, since in the

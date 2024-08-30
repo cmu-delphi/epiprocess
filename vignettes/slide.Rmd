@@ -34,7 +34,17 @@ library(epiprocess)
 library(dplyr)
 ```
 
-The data is fetched with the following query:
+The data is included in this package (via the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/)) and can be loaded with:
+
+```{r}
+data(cases_deaths_subset)
+x <- cases_deaths_subset %>%
+  select(geo_value, time_value, cases) %>%
+  arrange(geo_value, time_value) %>%
+  as_epi_df()
+```
+
+The data can also be fetched from the Delphi API with the following query:
 ```{r, message = FALSE, eval=F}
 x <- pub_covidcast(
   source = "jhu-csse",
@@ -50,14 +60,6 @@ x <- pub_covidcast(
 ```
 
 The data has 2,684 rows and 3 columns.
-
-```{r, echo=FALSE}
-data(cases_deaths_subset)
-x <- cases_deaths_subset %>%
-  select(geo_value, time_value, cases) %>%
-  arrange(geo_value, time_value) %>%
-  as_epi_df()
-```
 
 ## Optimized rolling mean
 
