@@ -91,9 +91,11 @@ reference:
       - group_by.epi_archive
   - title: Example data
   - contents:
-      - archive_cases_dv_subset
-      - incidence_num_outlier_example
-      - contains("jhu_csse")
+      - cases_deaths_subset
+      - archive_cases_dv_subset_dt
+      - covid_incidence_county_subset
+      - covid_incidence_outliers
+      - jhu_confirmed_cumulative_num
   - title: Basic automatic plotting
   - contents:
       - autoplot.epi_df
