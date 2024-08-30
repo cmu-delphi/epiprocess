@@ -151,7 +151,7 @@ through the \code{new_col_name} argument.
 # slide a 7-day trailing average formula on cases
 # Simple sliding means and sums are much faster to do using
 # the `epi_slide_mean` and `epi_slide_sum` functions instead.
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), before = 6) \%>\%
   # Remove a nonessential var. to ensure new col is printed
@@ -159,7 +159,7 @@ jhu_csse_daily_subset \%>\%
   ungroup()
 
 # slide a 7-day leading average
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), after = 6) \%>\%
   # Remove a nonessential var. to ensure new col is printed
@@ -167,7 +167,7 @@ jhu_csse_daily_subset \%>\%
   ungroup()
 
 # slide a 7-day centre-aligned average
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_7dav = mean(cases), before = 3, after = 3) \%>\%
   # Remove a nonessential var. to ensure new col is printed
@@ -175,7 +175,7 @@ jhu_csse_daily_subset \%>\%
   ungroup()
 
 # slide a 14-day centre-aligned average
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(cases_14dav = mean(cases), before = 6, after = 7) \%>\%
   # Remove a nonessential var. to ensure new col is printed
@@ -183,7 +183,7 @@ jhu_csse_daily_subset \%>\%
   ungroup()
 
 # nested new columns
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(
     a = data.frame(

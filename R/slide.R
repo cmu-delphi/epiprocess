@@ -46,7 +46,7 @@
 #' # slide a 7-day trailing average formula on cases
 #' # Simple sliding means and sums are much faster to do using
 #' # the `epi_slide_mean` and `epi_slide_sum` functions instead.
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), before = 6) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
@@ -54,7 +54,7 @@
 #'   ungroup()
 #'
 #' # slide a 7-day leading average
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), after = 6) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
@@ -62,7 +62,7 @@
 #'   ungroup()
 #'
 #' # slide a 7-day centre-aligned average
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), before = 3, after = 3) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
@@ -70,7 +70,7 @@
 #'   ungroup()
 #'
 #' # slide a 14-day centre-aligned average
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_14dav = mean(cases), before = 6, after = 7) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
@@ -78,7 +78,7 @@
 #'   ungroup()
 #'
 #' # nested new columns
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(
 #'     a = data.frame(
@@ -339,7 +339,7 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
 #' @seealso [`epi_slide`] [`epi_slide_mean`] [`epi_slide_sum`]
 #' @examples
 #' # slide a 7-day trailing average formula on cases. This can also be done with `epi_slide_mean`
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
 #'     cases,
@@ -351,7 +351,7 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
 #'
 #' # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
 #' # and accuracy, and to allow partially-missing windows.
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
 #'     cases,
@@ -363,7 +363,7 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
 #'   ungroup()
 #'
 #' # slide a 7-day leading average
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
 #'     cases,
@@ -374,7 +374,7 @@ epi_slide <- function(x, f, ..., before = NULL, after = NULL, ref_time_values = 
 #'   ungroup()
 #'
 #' # slide a 7-day centre-aligned sum. This can also be done with `epi_slide_sum`
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
 #'     cases,
@@ -638,7 +638,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
 #' @seealso [`epi_slide`] [`epi_slide_opt`] [`epi_slide_sum`]
 #' @examples
 #' # slide a 7-day trailing average formula on cases
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_mean(cases, before = 6) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
@@ -647,7 +647,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
 #'
 #' # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
 #' # and accuracy, and to allow partially-missing windows.
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_mean(
 #'     cases,
@@ -659,7 +659,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
 #'   ungroup()
 #'
 #' # slide a 7-day leading average
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_mean(cases, after = 6) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
@@ -667,7 +667,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
 #'   ungroup()
 #'
 #' # slide a 7-day centre-aligned average
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_mean(cases, before = 3, after = 3) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
@@ -675,7 +675,7 @@ epi_slide_opt <- function(x, col_names, f, ..., before = NULL, after = NULL, ref
 #'   ungroup()
 #'
 #' # slide a 14-day centre-aligned average
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_mean(cases, before = 6, after = 7) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
@@ -720,7 +720,7 @@ epi_slide_mean <- function(x, col_names, ..., before = NULL, after = NULL, ref_t
 #' @seealso [`epi_slide`] [`epi_slide_opt`] [`epi_slide_mean`]
 #' @examples
 #' # slide a 7-day trailing sum formula on cases
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_sum(cases, before = 6) %>%
 #'   # Remove a nonessential var. to ensure new col is printed

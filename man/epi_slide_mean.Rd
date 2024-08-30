@@ -114,7 +114,7 @@ zero-width windows are considered, manually pass both the \code{before} and
 }
 \examples{
 # slide a 7-day trailing average formula on cases
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_mean(cases, before = 6) \%>\%
   # Remove a nonessential var. to ensure new col is printed
@@ -123,7 +123,7 @@ jhu_csse_daily_subset \%>\%
 
 # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
 # and accuracy, and to allow partially-missing windows.
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_mean(
     cases,
@@ -135,7 +135,7 @@ jhu_csse_daily_subset \%>\%
   ungroup()
 
 # slide a 7-day leading average
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_mean(cases, after = 6) \%>\%
   # Remove a nonessential var. to ensure new col is printed
@@ -143,7 +143,7 @@ jhu_csse_daily_subset \%>\%
   ungroup()
 
 # slide a 7-day centre-aligned average
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_mean(cases, before = 3, after = 3) \%>\%
   # Remove a nonessential var. to ensure new col is printed
@@ -151,7 +151,7 @@ jhu_csse_daily_subset \%>\%
   ungroup()
 
 # slide a 14-day centre-aligned average
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_mean(cases, before = 6, after = 7) \%>\%
   # Remove a nonessential var. to ensure new col is printed

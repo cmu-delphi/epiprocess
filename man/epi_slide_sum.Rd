@@ -114,7 +114,7 @@ zero-width windows are considered, manually pass both the \code{before} and
 }
 \examples{
 # slide a 7-day trailing sum formula on cases
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_sum(cases, before = 6) \%>\%
   # Remove a nonessential var. to ensure new col is printed

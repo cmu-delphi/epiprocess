@@ -52,8 +52,8 @@ x <- pub_covidcast(
 The data has 2,684 rows and 3 columns.
 
 ```{r, echo=FALSE}
-data(jhu_csse_daily_subset)
-x <- jhu_csse_daily_subset %>%
+data(cases_deaths_subset)
+x <- cases_deaths_subset %>%
   select(geo_value, time_value, cases) %>%
   arrange(geo_value, time_value) %>%
   as_epi_df()
