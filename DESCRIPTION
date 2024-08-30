@@ -30,6 +30,7 @@ Imports:
     cli,
     data.table,
     dplyr (>= 1.0.8),
+    epidatasets,
     genlasso,
     glue,
     ggplot2,
@@ -58,6 +59,7 @@ Suggests:
 VignetteBuilder:
     knitr
 Remotes:
+    cmu-delphi/epidatasets,
     cmu-delphi/epidatr,
     reconverse/outbreaks,
     glmgen/genlasso
