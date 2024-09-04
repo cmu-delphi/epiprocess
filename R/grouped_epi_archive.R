@@ -342,28 +342,57 @@ epix_slide.grouped_epi_archive <- function(
     }
 
     # Construct result first as list, then tibble-ify, to try to avoid some
-    # redundant work. `group_modify()` provides the group key, we provide the
-    # ref time value (appropriately recycled) and comp_value (appropriately
-    # named / unpacked, for quick feedback)
-    res <- list(version = vctrs::vec_rep(.version, vctrs::vec_size(comp_value)))
+    # redundant work. However, we will sacrifice some performance here doing
+    # checks here in the inner loop, in order to provide immediate feedback on
+    # some formatting errors.
+    # res <- list(version = vctrs::vec_rep(.version, vctrs::vec_size(comp_value)))
+    res <- c(
+      list(), # get list output; a bit faster than `as.list()`-ing `.group_key`
+      .group_key,
+      list(version = .version)
+    )
+    res <- vctrs::vec_recycle_common(!!!res, .size = vctrs::vec_size(comp_value))
 
     if (is.null(.new_col_name)) {
       if (inherits(comp_value, "data.frame")) {
-        # unpack into separate columns (without name prefix):
-        res <- c(res, comp_value)
+        # Sometimes comp_value can parrot back columns already in `res`; allow
+        # this, but balk if a column has the same name as one in `res` but a
+        # different value:
+        comp_nms <- names(comp_value)
+        overlaps_label_names <- comp_nms %in% names(res)
+        for (comp_i in which(overlaps_label_names)) {
+          if (!identical(comp_value[[comp_i]], res[[comp_nms[[comp_i]]]])) {
+            lines <- c(
+              cli::format_error(c(
+              "conflict detected between slide value computation labels and output:",
+              "i" = "we are labeling slide computations with the following columns: {syms(names(res))}",
+              "x" = "a slide computation output included a column {syms(comp_nms[[comp_i]])} that didn't match the label"
+              )),
+              capture.output(print(waldo::compare(res[[comp_nms[[comp_i]]]], comp_value[[comp_i]], x_arg = "label", y_arg = "comp output"))),
+              cli::format_message(c("You likely want to rename or remove this column in your output, or debug why it has a different value."))
+            )
+            rlang::abort(paste(collapse = "\n", lines),
+                         class = "epiprocess__epix_slide_label_vs_output_column_conflict")
+          }
+        }
+        # Unpack into separate columns (without name prefix). If there are
+        # columns duplicating label columns, de-dupe and order them as if they
+        # didn't exist in comp_value.
+        res <- c(res, comp_value[!overlaps_label_names])
       } else {
-        # apply default name (to vector or packed data.frame-type column):
+        # Apply default name (to vector or packed data.frame-type column):
         res[["slide_value"]] <- comp_value
+        # TODO check for bizarre conflicting `slide_value` label col name.
+        # Either here or on entry to `epix_slide` (even if there we don't know
+        # whether vecs will be output). Or just turn this into a special case of
+        # the preceding branch and let the checking code there generate a
+        # complaint.
       }
     } else {
-      # vector or packed data.frame-type column (note: .new_col_name of
-      # "version" is disallowed):
+      # vector or packed data.frame-type column (note: overlaps with label
+      # column names should already be forbidden by earlier validation):
       res[[.new_col_name]] <- comp_value
     }
-
-    # Stop on naming conflicts (names() fine here, non-NULL). Not the
-    # friendliest error messages though.
-    vctrs::vec_as_names(names(res), repair = "check_unique")
 
     # Fast conversion:
     return(validate_tibble(new_tibble(res)))
@@ -380,18 +409,19 @@ epix_slide.grouped_epi_archive <- function(
 
     # Set:
     # * `as_of_df`, the data.frame/tibble/epi_df/etc. that we will
-    #    `group_modify` as the `.data` argument. Might or might not
+    #    `group_map` as the `.data` argument. Might or might not
     #    include version column.
-    # * `group_modify_fn`, the corresponding `.f` argument
+    # * `group_map_fn`, the corresponding `.f` argument for `group_map`
+    #   (not our `.f`)
     if (!.all_versions) {
       as_of_df <- as_of_raw
-      group_modify_fn <- comp_one_grp
+      group_map_fn <- comp_one_grp
     } else {
       as_of_archive <- as_of_raw
       # We essentially want to `group_modify` the archive, but
       # haven't implemented this method yet. Next best would be
       # `group_modify` on its `$DT`, but that has different
-      # behavior based on whether or not `dtplyr` is loaded.
+      # behavior based on whether or not `dtplyr` < 1.3.0 is loaded.
       # Instead, go through an ordinary data frame, trying to avoid
       # copies.
       if (address(as_of_archive$DT) == address(.x$private$ungrouped$DT)) {
@@ -408,7 +438,7 @@ epix_slide.grouped_epi_archive <- function(
       data.table::setDF(as_of_df)
 
       # Convert each subgroup chunk to an archive before running the calculation.
-      group_modify_fn <- function(.data_group, .group_key,
+      group_map_fn <- function(.data_group, .group_key,
                                   .slide_comp, ...,
                                   .version,
                                   .new_col_name) {
@@ -428,14 +458,14 @@ epix_slide.grouped_epi_archive <- function(
     }
 
     return(
-      dplyr::group_modify(
+      dplyr::bind_rows(dplyr::group_map(
         dplyr::group_by(as_of_df, !!!syms(.x$private$vars), .drop = .x$private$drop),
-        group_modify_fn,
+        group_map_fn,
         .slide_comp = .slide_comp, ...,
         .version = .version,
         .new_col_name = .new_col_name,
         .keep = TRUE
-      )
+      ))
     )
   })
   # Combine output into a single tibble (allowing for packed columns)
