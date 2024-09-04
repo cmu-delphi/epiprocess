@@ -137,11 +137,11 @@ test_that("assert_sufficient_f_args alerts if the provided f has defaults for th
   f_x_dots <- function(x = 1, ...) dplyr::tibble(value = mean(x$binary), count = length(x$binary))
 
   expect_error(assert_sufficient_f_args(f_xgt, .ref_time_value_label = "reference time value"),
-    regexp = "pass the group key to `f`'s g argument,",
+    regexp = "pass the group key to `\\.f`'s g argument,",
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults"
   )
   expect_error(assert_sufficient_f_args(f_xgt_dots, .ref_time_value_label = "reference time value"),
-    regexp = "pass the window data to `f`'s x argument,",
+    regexp = "pass the window data to `\\.f`'s x argument,",
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults"
   )
   expect_error(suppressWarnings(assert_sufficient_f_args(f_x_dots, .ref_time_value_label = "reference time value")),
@@ -156,7 +156,7 @@ test_that("assert_sufficient_f_args alerts if the provided f has defaults for th
   expect_no_error(assert_sufficient_f_args(f_xsgt, setting = "b", .ref_time_value_label = "reference time value"))
   expect_no_error(assert_sufficient_f_args(f_xsgt_dots, setting = "b", .ref_time_value_label = "reference time value"))
   expect_error(suppressWarnings(assert_sufficient_f_args(f_xs_dots, setting = "b", .ref_time_value_label = "reference time value")),
-    regexp = "pass the window data to `f`'s x argument",
+    regexp = "pass the window data to `\\.f`'s x argument",
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults"
   )
 
@@ -181,7 +181,7 @@ test_that("assert_sufficient_f_args alerts if the provided f has defaults for th
       assert_sufficient_f_args(f_xs_dots, .ref_time_value_label = "reference time value"),
       class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
     ),
-    regexp = "window data and group key to `f`'s x and setting argument",
+    regexp = "window data and group key to `\\.f`'s x and setting argument",
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults"
   )
 })
@@ -223,7 +223,7 @@ test_that("as_slide_computation raises errors as expected", {
     class = "epiprocess__as_slide_computation__formula_has_no_env"
   )
 
-  # `f` must be a function, formula, or string
+  # `.f` must be a function, formula, or string
   expect_error(as_time_slide_computation(5),
     class = "epiprocess__as_slide_computation__cant_convert_catchall"
   )

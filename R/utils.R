@@ -132,10 +132,10 @@ format_chr_with_quotes <- function(x, empty = "*none*") {
 #' @importFrom utils tail
 #'
 #' @noRd
-assert_sufficient_f_args <- function(f, ..., .ref_time_value_label) {
+assert_sufficient_f_args <- function(.f, ..., .ref_time_value_label) {
   mandatory_f_args_labels <- c("window data", "group key", .ref_time_value_label)
   n_mandatory_f_args <- length(mandatory_f_args_labels)
-  args <- formals(args(f))
+  args <- formals(args(.f))
   args_names <- names(args)
   # Remove named arguments forwarded from `epi[x]_slide`'s `...`:
   forwarded_dots_names <- names(rlang::call_match(dots_expand = FALSE)[["..."]])
@@ -149,7 +149,7 @@ assert_sufficient_f_args <- function(f, ..., .ref_time_value_label) {
   dots_i <- which(remaining_args_names == "...") # integer(0) if no match
   n_f_args_before_dots <- dots_i - 1L
   if (length(dots_i) != 0L) {
-    # `f` has a dots "arg"
+    # `.f` has a dots "arg"
     # Keep all arg names before `...`
     mandatory_args_mapped_names <- remaining_args_names[seq_len(n_f_args_before_dots)] # nolint: object_usage_linter
 
@@ -158,40 +158,40 @@ assert_sufficient_f_args <- function(f, ..., .ref_time_value_label) {
         tail(mandatory_f_args_labels, n_mandatory_f_args - n_f_args_before_dots)
 
       cli::cli_warn(
-        "`f` might not have enough positional arguments before its `...`; in
+        "`.f` might not have enough positional arguments before its `...`; in
         the current `epi[x]_slide` call, the {mandatory_f_args_in_f_dots} will
-        be included in `f`'s `...`; if `f` doesn't expect those arguments, it
+        be included in `.f`'s `...`; if `.f` doesn't expect those arguments, it
         may produce confusing error messages",
         class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots",
-        epiprocess__f = f,
+        epiprocess__f = .f,
         epiprocess__mandatory_f_args_in_f_dots = mandatory_f_args_in_f_dots
       )
     }
-  } else { # `f` doesn't have a dots "arg"
+  } else { # `.f` doesn't have a dots "arg"
     if (length(args_names) < n_mandatory_f_args + rlang::dots_n(...)) {
-      # `f` doesn't take enough args.
+      # `.f` doesn't take enough args.
       if (rlang::dots_n(...) == 0L) {
         # common case; try for friendlier error message
-        cli_abort("`f` must take at least {n_mandatory_f_args} arguments",
+        cli_abort("`.f` must take at least {n_mandatory_f_args} arguments",
           class = "epiprocess__assert_sufficient_f_args__f_needs_min_args",
-          epiprocess__f = f
+          epiprocess__f = .f
         )
       } else {
         # less common; highlight that they are (accidentally?) using dots forwarding
         cli_abort(
-          "`f` must take at least {n_mandatory_f_args} arguments plus the
+          "`.f` must take at least {n_mandatory_f_args} arguments plus the
           {rlang::dots_n(...)} arguments forwarded through `epi[x]_slide`'s
           `...`, or a named argument to `epi[x]_slide` was misspelled",
           class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_plus_forwarded",
-          epiprocess__f = f
+          epiprocess__f = .f
         )
       }
     }
   }
   # Check for args with defaults that are filled with mandatory positional
-  # calling args. If `f` has fewer than n_mandatory_f_args before `...`, then we
+  # calling args. If `.f` has fewer than n_mandatory_f_args before `...`, then we
   # only need to check those args for defaults. Note that `n_f_args_before_dots` is
-  # length 0 if `f` doesn't accept `...`.
+  # length 0 if `.f` doesn't accept `...`.
   n_remaining_args_for_default_check <- min(c(n_f_args_before_dots, n_mandatory_f_args))
   default_check_args <- remaining_args[seq_len(n_remaining_args_for_default_check)]
   default_check_args_names <- names(default_check_args)
@@ -199,18 +199,18 @@ assert_sufficient_f_args <- function(f, ..., .ref_time_value_label) {
   if (any(has_default_replaced_by_mandatory)) {
     default_check_mandatory_args_labels <-
       mandatory_f_args_labels[seq_len(n_remaining_args_for_default_check)]
-    # ^ excludes any mandatory args absorbed by f's `...`'s:
+    # ^ excludes any mandatory args absorbed by .f's `...`'s:
     mandatory_args_replacing_defaults <- default_check_mandatory_args_labels[has_default_replaced_by_mandatory] # nolint: object_usage_linter
     args_with_default_replaced_by_mandatory <- rlang::syms(default_check_args_names[has_default_replaced_by_mandatory]) # nolint: object_usage_linter
     cli::cli_abort(
       "`epi[x]_slide` would pass the {mandatory_args_replacing_defaults} to
-      `f`'s {args_with_default_replaced_by_mandatory} argument{?s}, which
-      {?has a/have} default value{?s}; we suspect that `f` doesn't expect
+      `.f`'s {args_with_default_replaced_by_mandatory} argument{?s}, which
+      {?has a/have} default value{?s}; we suspect that `.f` doesn't expect
       {?this arg/these args} at all and may produce confusing error messages.
-      Please add additional arguments to `f` or remove defaults as
+      Please add additional arguments to `.f` or remove defaults as
       appropriate.",
       class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults",
-      epiprocess__f = f
+      epiprocess__f = .f
     )
   }
 }
@@ -330,14 +330,14 @@ assert_sufficient_f_args <- function(f, ..., .ref_time_value_label) {
 #'  f_rhs is_formula caller_arg caller_env
 #'
 #' @noRd
-as_slide_computation <- function(f, ..., .ref_time_value_long_varnames, .ref_time_value_label) {
-  arg <- caller_arg(f)
+as_slide_computation <- function(.f, ..., .ref_time_value_long_varnames, .ref_time_value_label) {
+  arg <- caller_arg(.f)
   call <- caller_env()
 
-  if (rlang::is_quosures(f)) {
-    quosures <- rlang::quos_auto_name(f) # resolves := among other things
+  if (rlang::is_quosures(.f)) {
+    quosures <- rlang::quos_auto_name(.f) # resolves := among other things
     nms <- names(quosures)
-    manually_named <- rlang::names2(f) != "" | vapply(f, function(quosure) {
+    manually_named <- rlang::names2(.f) != "" | vapply(.f, function(quosure) {
       expression <- rlang::quo_get_expr(quosure)
       is.call(expression) && expression[[1L]] == rlang::sym(":=")
     }, FUN.VALUE = logical(1L))
@@ -363,7 +363,7 @@ as_slide_computation <- function(f, ..., .ref_time_value_long_varnames, .ref_tim
       # seems like it would exclude `NULL` bindings for us but `?new_tibble`
       # doesn't reflect this behavior).
       results_multiorder <- character(0L)
-      for (quosure_i in seq_along(f)) {
+      for (quosure_i in seq_along(.f)) {
         # XXX could capture and improve error messages here at cost of recover()ability
         quosure_result_raw <- rlang::eval_tidy(quosures[[quosure_i]], data_mask)
         if (is.null(quosure_result_raw)) {
@@ -407,7 +407,7 @@ as_slide_computation <- function(f, ..., .ref_time_value_long_varnames, .ref_tim
         } else {
           cli_abort("
             Problem with output of {.code
-            {rlang::expr_deparse(rlang::quo_get_expr(f[[quosure_i]]))}}; it
+            {rlang::expr_deparse(rlang::quo_get_expr(.f[[quosure_i]]))}}; it
             produced a result that was neither NULL, a data.frame, nor a vector
             without unnamed entries (as determined by the vctrs package).
           ", class = "epiprocess__invalid_slide_comp_tidyeval_output")
@@ -424,21 +424,21 @@ as_slide_computation <- function(f, ..., .ref_time_value_long_varnames, .ref_tim
     return(fn)
   }
 
-  if (is_function(f)) {
-    # Check that `f` takes enough args
-    assert_sufficient_f_args(f, ..., .ref_time_value_label = .ref_time_value_label)
-    return(f)
+  if (is_function(.f)) {
+    # Check that `.f` takes enough args
+    assert_sufficient_f_args(.f, ..., .ref_time_value_label = .ref_time_value_label)
+    return(.f)
   }
 
-  if (is_formula(f)) {
-    if (is_quosure(f)) {
-      cli_abort("`f` argument to `as_slide_computation()` cannot be a `quosure`; it should probably be a `quosures`.  This is likely an internal bug in `{{epiprocess}}`.") # nolint: line_length_linter
+  if (is_formula(.f)) {
+    if (is_quosure(.f)) {
+      cli_abort("`.f` argument to `as_slide_computation()` cannot be a `quosure`; it should probably be a `quosures`.  This is likely an internal bug in `{{epiprocess}}`.") # nolint: line_length_linter
     }
 
-    if (length(f) > 2) {
+    if (length(.f) > 2) {
       cli_abort("{.code {arg}} must be a one-sided formula",
         class = "epiprocess__as_slide_computation__formula_is_twosided",
-        epiprocess__f = f,
+        epiprocess__f = .f,
         call = call
       )
     }
@@ -448,16 +448,16 @@ as_slide_computation <- function(f, ..., .ref_time_value_long_varnames, .ref_tim
         are unrecognized/misspelled parameter names, or there is a trailing
         comma in the `epi[x]_slide()` call.",
         class = "epiprocess__as_slide_computation__formula_with_dots",
-        epiprocess__f = f,
+        epiprocess__f = .f,
         epiprocess__enquos_dots = enquos(...)
       )
     }
 
-    env <- f_env(f)
+    env <- f_env(.f)
     if (!is_environment(env)) {
       cli_abort("Formula must carry an environment.",
         class = "epiprocess__as_slide_computation__formula_has_no_env",
-        epiprocess__f = f,
+        epiprocess__f = .f,
         epiprocess__f_env = env,
         arg = arg, call = call
       )
@@ -474,18 +474,18 @@ as_slide_computation <- function(f, ..., .ref_time_value_long_varnames, .ref_tim
         .ref_time_value_long_varnames
       )
     )
-    fn <- new_function(args, f_rhs(f), env)
+    fn <- new_function(args, f_rhs(.f), env)
     fn <- structure(fn, class = c("epiprocess_formula_slide_computation", "function"))
 
     return(fn)
   }
 
   cli_abort(
-    "Can't convert an object of class {format_class_vec(class(f))}
+    "Can't convert an object of class {format_class_vec(class(.f))}
       to a slide computation",
     class = "epiprocess__as_slide_computation__cant_convert_catchall",
-    epiprocess__f = f,
-    epiprocess__f_class = class(f),
+    epiprocess__f = .f,
+    epiprocess__f_class = class(.f),
     arg = arg,
     call = call
   )
