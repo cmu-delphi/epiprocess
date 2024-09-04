@@ -772,8 +772,10 @@ test_that("`epix_slide` works with .before = Inf", {
 })
 
 test_that("`epix_slide` de-dupes labeling & value columns", {
-  expect_identical(xx %>% epix_slide(version = .version),
-                   xx$DT %>% as.data.frame() %>% as_tibble() %>% distinct(version) %>% arrange(version))
+  expect_identical(
+    xx %>% epix_slide(version = .version),
+    xx$DT %>% as.data.frame() %>% as_tibble() %>% distinct(version) %>% arrange(version)
+  )
   expect_error(xx %>% epix_slide(version = .version + 1))
   # FIXME more tests
 })

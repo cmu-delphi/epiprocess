@@ -364,15 +364,16 @@ epix_slide.grouped_epi_archive <- function(
           if (!identical(comp_value[[comp_i]], res[[comp_nms[[comp_i]]]])) {
             lines <- c(
               cli::format_error(c(
-              "conflict detected between slide value computation labels and output:",
-              "i" = "we are labeling slide computations with the following columns: {syms(names(res))}",
-              "x" = "a slide computation output included a column {syms(comp_nms[[comp_i]])} that didn't match the label"
+                "conflict detected between slide value computation labels and output:",
+                "i" = "we are labeling slide computations with the following columns: {syms(names(res))}",
+                "x" = "a slide computation output included a column {syms(comp_nms[[comp_i]])} that didn't match the label"
               )),
               capture.output(print(waldo::compare(res[[comp_nms[[comp_i]]]], comp_value[[comp_i]], x_arg = "label", y_arg = "comp output"))),
               cli::format_message(c("You likely want to rename or remove this column in your output, or debug why it has a different value."))
             )
             rlang::abort(paste(collapse = "\n", lines),
-                         class = "epiprocess__epix_slide_label_vs_output_column_conflict")
+              class = "epiprocess__epix_slide_label_vs_output_column_conflict"
+            )
           }
         }
         # Unpack into separate columns (without name prefix). If there are
@@ -439,9 +440,9 @@ epix_slide.grouped_epi_archive <- function(
 
       # Convert each subgroup chunk to an archive before running the calculation.
       group_map_fn <- function(.data_group, .group_key,
-                                  .slide_comp, ...,
-                                  .version,
-                                  .new_col_name) {
+                               .slide_comp, ...,
+                               .version,
+                               .new_col_name) {
         # .data_group is coming from as_of_df as a tibble, but we
         # want to feed `comp_one_grp` an `epi_archive` backed by a
         # DT; convert and wrap:
