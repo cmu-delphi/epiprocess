@@ -83,12 +83,13 @@ used for labeling the computations, which are \code{group_vars(x)} and
 \code{"version"}, then the values for these columns must be identical to the
 labels we assign.}
 
-\item{.all_versions}{(Not the same as \code{.all_rows} parameter of \code{epi_slide}.) If
-\code{.all_versions = TRUE}, then \code{.f} will be passed the version history (all
-\code{version <= .ref_time_value}) for rows having \code{time_value} of at least
-\code{.version - before}. Otherwise, \code{.f} will be
-passed only the most recent \code{version} for every unique \code{time_value}.
-Default is \code{FALSE}.}
+\item{.all_versions}{(Not the same as \code{.all_rows} parameter of \code{epi_slide}.)
+If \code{.all_versions = TRUE}, then the slide computation will be passed the
+version history (all \code{version <= .version} where \code{.version} is one of the
+requested \code{.versions}) for rows having a \code{time_value} of at least `.version
+\itemize{
+\item before\verb{. Otherwise, the slide computation will be passed only the most   recent }version\verb{for every unique}time_value\verb{. Default is }FALSE`.
+}}
 
 \item{.ref_time_values}{Reference time values / versions for sliding
 computations; each element of this vector serves both as the anchor point

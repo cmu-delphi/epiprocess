@@ -73,7 +73,8 @@ underlying data table, by default.}
 contain the derivative values. The default is "slide_value" unless your
 slide computations output data frames, in which case they will be unpacked
 into the constituent columns and those names used. Note that setting
-\code{new_col_name} equal to an existing column name will overwrite this column.}
+\code{.new_col_name} equal to an existing column name will overwrite this
+column.}
 
 \item{.all_rows}{If \code{.all_rows = TRUE}, then all rows of \code{.x} will be kept in
 the output even with \code{.ref_time_values} provided, with some type of missing
