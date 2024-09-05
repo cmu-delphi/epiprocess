@@ -127,7 +127,7 @@ epi_slide <- function(
     assert_numeric(.ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
     if (!test_subset(.ref_time_values, unique(.x$time_value))) {
       cli_abort(
-        "`ref_time_values` must be a unique subset of the time values in `x`.",
+        "`.ref_time_values` must be a unique subset of the time values in `.x`.",
         class = "epi_slide__invalid_ref_time_values"
       )
     }
