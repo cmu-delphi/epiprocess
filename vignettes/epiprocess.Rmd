@@ -110,8 +110,7 @@ library(dplyr)
 library(tidyr)
 library(withr)
 
-data(jhu_confirmed_cumulative_num)
-cases <- jhu_confirmed_cumulative_num
+cases <- epiprocess::jhu_confirmed_cumulative_num
 
 colnames(cases)
 ```

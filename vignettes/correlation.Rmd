@@ -23,9 +23,8 @@ library(dplyr)
 
 The data is included in this package (via the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/)) and can be loaded with:
 ```{r}
-data(cases_deaths_subset)
 x <- cases_deaths_subset %>%
-  select(geo_value, time_value, case_rate = cases, death_rate = deaths) %>%
+  select(geo_value, time_value, case_rate = case_rate_7d_av, death_rate = death_rate_7d_av) %>%
   arrange(geo_value, time_value) %>%
   as_epi_df()
 ```

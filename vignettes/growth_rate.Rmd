@@ -24,8 +24,7 @@ library(tidyr)
 The data is included in this package (via the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/)) and can be loaded with:
 
 ```{r}
-data(cases_deaths_subset)
-x <- cases_deaths_subset %>%
+x <- epiprocess::cases_deaths_subset %>%
   select(geo_value, time_value, cases = cases_7d_av) %>%
   filter(geo_value %in% c("pa", "ga") & time_value >= "2020-06-01") %>%
   arrange(geo_value, time_value) %>%
@@ -33,7 +32,7 @@ x <- cases_deaths_subset %>%
 ```
 
 The data can also be fetched from the Delphi API with the following query:
-```{r, message = FALSE, eval=F}
+```{r, message = FALSE, eval = FALSE}
 x <- pub_covidcast(
   source = "jhu-csse",
   signals = "confirmed_7dav_incidence_num",

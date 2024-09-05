@@ -27,7 +27,7 @@ page](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-v
 
 The data is included in this package (via the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/)) and can be loaded with:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message = FALSE, warning = FALSE}
 library(epidatr)
 library(epiprocess)
 library(data.table)
@@ -40,7 +40,7 @@ dv <- archive_cases_dv_subset$DT
 ```
 
 The data can also be fetched from the Delphi API with the following query:
-```{r, message = FALSE, warning = FALSE, eval=FALSE}
+```{r, message = FALSE, warning = FALSE, eval = FALSE}
 dv <- pub_covidcast(
   source = "doctor-visits",
   signals = "smoothed_adj_cli",
