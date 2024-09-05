@@ -341,14 +341,29 @@ epix_slide.grouped_epi_archive <- function(
       ", class = "epiprocess__invalid_slide_comp_value")
     }
 
+    .group_key_label <- if (nrow(.group_key) == 0L) {
+      # Edge case: we'll get here if a requested `.version` had 0 rows and we
+      # grouped by a nonzero number of columns using the default `.drop = TRUE`
+      # (or on all non-factor columns with `.drop = FALSE` for some reason,
+      # probably a user bug). Mimicking `dplyr`, we'll let `.group_key` provided
+      # to the computation be 0 rows, but then label it using NAs. (In the
+      # bizarre situation of grouping by a mix of factor and non-factor with
+      # `.drop = FALSE`, `.group_key` will already have 1 row. For ungrouped
+      # epix_slides and 0-variable-grouped epix_slides with either `.drop`
+      # setting, we will have a 1x0 .group_key, although perhaps for the latter
+      # this should be 0x0.)
+      vctrs::vec_cast(NA, .group_key)
+    } else {
+      .group_key
+    }
+
     # Construct result first as list, then tibble-ify, to try to avoid some
     # redundant work. However, we will sacrifice some performance here doing
     # checks here in the inner loop, in order to provide immediate feedback on
     # some formatting errors.
-    # res <- list(version = vctrs::vec_rep(.version, vctrs::vec_size(comp_value)))
     res <- c(
       list(), # get list output; a bit faster than `as.list()`-ing `.group_key`
-      .group_key,
+      .group_key_label,
       list(version = .version)
     )
     res <- vctrs::vec_recycle_common(!!!res, .size = vctrs::vec_size(comp_value))
