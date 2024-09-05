@@ -49,7 +49,8 @@ dv <- pub_covidcast(
   geo_values = "ca,fl,ny,tx",
   time_values = epirange(20200601, 20211201),
   issues = epirange(20200601, 20211201)
-)
+) %>% 
+  rename(version = issue, percent_cli = value)
 ```
 
 ## Getting data into `epi_archive` format
@@ -71,9 +72,9 @@ format, with `issue` playing the role of `version`. We can now use
 redundant version updates in `as_epi_archive` using compactify, please refer to
 the [compactify vignette](articles/compactify.html).
 
-```{r, eval=FALSE}
+```{r}
 x <- dv %>%
-  select(geo_value, time_value, version = issue, percent_cli = value) %>%
+  select(geo_value, time_value, version, percent_cli) %>%
   as_epi_archive(compactify = TRUE)
 
 class(x)
@@ -84,11 +85,6 @@ An `epi_archive` is consists of a primary field `DT`, which is a data table
 (from the `data.table` package) that has the columns `geo_value`, `time_value`,
 `version` (and possibly additional ones), and other metadata fields, such as
 `geo_type`.
-
-```{r}
-class(x$DT)
-head(x$DT)
-```
 
 The variables `geo_value`, `time_value`, `version` serve as **key variables**
 for the data table, as well as any other specified in the metadata (described
