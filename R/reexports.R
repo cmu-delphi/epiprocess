@@ -97,24 +97,6 @@ ggplot2::autoplot
 #' @export
 cases_deaths_subset <- epidatasets::cases_deaths_subset
 
-#' @inherit epidatasets::archive_cases_dv_subset_dt description source references title
-#' @inheritSection epidatasets::archive_cases_dv_subset_dt Data dictionary
-#' @examples
-#'  # Since this is a re-exported dataset, it cannot be loaded using
-#'  # the `data()` function. `data()` looks for a file of the same name
-#'  # in the `data/` directory, which doesn't exist in this package.
-#'  # works
-#'  epiprocess::archive_cases_dv_subset_dt
-#'
-#'  # works
-#'  library(epiprocess)
-#'  archive_cases_dv_subset_dt
-#'
-#'  # fails
-#'  data(archive_cases_dv_subset_dt, package = "epiprocess")
-#' @export
-archive_cases_dv_subset_dt <- epidatasets::archive_cases_dv_subset_dt
-
 #' @inherit epidatasets::covid_incidence_county_subset description source references title
 #' @inheritSection epidatasets::covid_incidence_county_subset Data dictionary
 #' @examples

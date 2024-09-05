@@ -92,7 +92,7 @@ reference:
   - title: Example data
   - contents:
       - cases_deaths_subset
-      - archive_cases_dv_subset_dt
+      - archive_cases_dv_subset
       - covid_incidence_county_subset
       - covid_incidence_outliers
       - jhu_confirmed_cumulative_num
