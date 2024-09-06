@@ -16,9 +16,10 @@
 \item{explicit}{see \code{\link[tidyr:complete]{tidyr::complete}}}
 }
 \description{
-A \code{\link[tidyr:complete]{tidyr::complete()}} analogue for \code{epi_df} objects. This function fills in
-missing combinations of \code{geo_value} and \code{time_value} with \code{NA} values. See
-the examples for usage details.
+A ‘tidyr::complete()’ analogue for ‘epi_df’ objects. This function
+can be used, for example, to add rows for missing combinations
+of ‘geo_value’ and ‘time_value’, filling other columns with \code{NA}s.
+See the examples for usage details.
 }
 \examples{
 start_date <- as.Date("2020-01-01")

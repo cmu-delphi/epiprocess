@@ -255,9 +255,10 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 
 #' Complete epi_df
 #'
-#' A [tidyr::complete()] analogue for `epi_df` objects. This function fills in
-#' missing combinations of `geo_value` and `time_value` with `NA` values. See
-#' the examples for usage details.
+#' A ‘tidyr::complete()’ analogue for ‘epi_df’ objects. This function
+#' can be used, for example, to add rows for missing combinations
+#' of ‘geo_value’ and ‘time_value’, filling other columns with `NA`s.
+#' See the examples for usage details.
 #'
 #' @param data an `epi_df`
 #' @param ... see [`tidyr::complete`]
@@ -391,28 +392,46 @@ arrange_canonical.epi_df <- function(x, ...) {
 #' the resulting `epi_df` will have `geo_value` set to `"total"`.
 #'
 #' @param .x an `epi_df`
-#' @param value_col character name of the column to aggregate
-#' @param group_cols character vector of column names to group by
+#' @param value_col character vector of the columns to aggregate
+#' @param group_cols character vector of column names to group by. "time_value" is
+#' included by default.
 #' @return an `epi_df` object
 #'
 #' @export
-aggregate_epi_df <- function(.x, value_col = "value", group_cols = "time_value") {
+sum_groups_epi_df <- function(.x, sum_cols = "value", group_cols = character()) {
   assert_class(.x, "epi_df")
-  assert_character(value_col, len = 1)
+  assert_character(sum_cols)
   assert_character(group_cols)
-  checkmate::assert_subset(value_col, names(.x))
-  checkmate::assert_subset(group_cols, names(.x))
+  checkmate::assert_subset(sum_cols, setdiff(names(.x), key_colnames(.x)))
+  checkmate::assert_subset(group_cols, key_colnames(.x))
+  if (!"time_value" %in% group_cols) {
+    group_cols <- c("time_value", group_cols)
+  }
 
-  .x %>%
+  out <- .x %>%
     group_by(across(all_of(group_cols))) %>%
-    dplyr::summarize(!!(value_col) := sum(!!sym(value_col))) %>%
-    ungroup() %>%
-    {
-      if (!"geo_value" %in% group_cols) {
-        mutate(., geo_value = "total") %>% relocate(geo_value, .before = 1)
-      } else {
-        .
-      }
-    } %>%
-    as_epi_df(as_of = attr(.x, "metadata")$as_of)
+    dplyr::summarize(across(all_of(sum_cols), sum), .groups = "drop")
+
+  # To preserve epi_df-ness, we need to ensure that the `geo_value` column is
+  # present.
+  out <- if (!"geo_value" %in% group_cols) {
+    out %>%
+      mutate(geo_value = "total") %>%
+      relocate(geo_value, .before = 1)
+  } else {
+    out
+  }
+
+  # The `geo_type` will be correctly inherited here by the following logic:
+  # - if `geo_value` is in `group_cols`, then the constructor will see the
+  #   geo_value here and will correctly read the existing values
+  # - if `geo_value` is not in `group_cols`, then the constructor will see
+  #   the unrecognizeable "total" value and will correctly infer the "custom"
+  #   geo_type.
+  out %>%
+    as_epi_df(
+      as_of = attr(.x, "metadata")$as_of,
+      other_keys = intersect(attr(.x, "metadata")$other_keys, group_cols)
+    ) %>%
+    arrange_canonical()
 }

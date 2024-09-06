@@ -15,8 +15,8 @@ get_test_units <- function(time_type = "day") {
   switch(time_type,
     day = as.difftime(1, units = "days"),
     week = as.difftime(1, units = "weeks"),
-    yearmonth = 1,
-    integer = 1
+    yearmonth = 1L,
+    integer = 1L
   )
 }
 get_test_dataset <- function(n, time_type = "day", other_keys = character()) {
@@ -33,9 +33,9 @@ get_test_dataset <- function(n, time_type = "day", other_keys = character()) {
   # but overlapping time index. Each geo has a missing value somewhere in the middle.
   tibble::tribble(
     ~geo_value, ~time_value, ~value, ~x,
-    "a", test_date + units * 0:n_, 0:n_, rep(c(1, 2), length.out = n),
-    "b", test_date + units * 0:n_, 10 * n + 0:n_, rep(c(1, 2), length.out = n),
-    "c", test_date + units * (floor(n / 2) + 0:n_), 100 * n + 0:n_, rep(c(1, 2), length.out = n)
+    "a", test_date + units * 0:n_, (0:n_)**2, rep(c(1, 2), length.out = n),
+    "b", test_date + units * 0:n_, (10 * n + 0:n_)**2, rep(c(1, 2), length.out = n),
+    "c", test_date + units * (floor(n / 2) + 0:n_), (100 * n + 0:n_)**2, rep(c(1, 2), length.out = n)
   ) %>%
     tidyr::unnest_longer(c(time_value, value, x)) %>%
     slice(-10) %>%
@@ -45,100 +45,106 @@ get_test_dataset <- function(n, time_type = "day", other_keys = character()) {
 test_data <- get_test_dataset(num_rows_per_group, "day")
 
 # TODO: Add a test that uses an 'other_key' grouping column.
+# TODO: Add a case where the data contains NA values (not just gaps in time_value).
 
 epi_slide_sum_test <- function(
     .x,
-    .window_size = 1, .align = "right", .ref_time_values = NULL, .all_rows = FALSE, .complete_only = FALSE) {
+    .window_size = 1, .align = "right", .ref_time_values = NULL, .all_rows = FALSE) {
   time_type <- attr(.x, "metadata")$time_type
   window_args <- get_before_after_from_window(.window_size, .align, time_type)
+  date_seq_list <- full_date_seq(.x, window_args$before, window_args$after, time_type)
+  if (is.null(.ref_time_values)) {
+    .ref_time_values <- date_seq_list$all_dates
+  }
+
   .x %>%
+    mutate(.real = TRUE) %>%
+    group_by(geo_value) %>%
+    complete(time_value = vctrs::vec_c(!!!date_seq_list, .name_spec = rlang::zap())) %>%
+    arrange(geo_value, time_value) %>%
     mutate(
       slide_value = slider::slide_index_sum(
         .data$value,
         .data$time_value,
         before = window_args$before,
-        after = window_args$after,
-        complete = .complete_only
+        after = window_args$after
       )
     ) %>%
     # If .all_rows = TRUE, we need to keep all rows and NA out the ones not in
     # the ref_time_values. Otherwise, we need to return only the rows in
     # ref_time_values.
     group_modify(~ {
-      if (is.null(.ref_time_values)) {
-        .ref_time_values <- unique(.$time_value)
-      }
-      if (.complete_only) {
-        # Filter out any ref_time_values that don't have a complete window.
-        available_ref_time_values <- purrr::keep(.ref_time_values, function(rtv) {
-          filter(., rtv - window_args$before <= time_value & time_value <= rtv + window_args$after) %>%
-            nrow() == window_args$before + window_args$after + 1
-        })
-      } else {
-        # Which of the ref time values are available in this group?
-        available_ref_time_values <- .ref_time_values[.ref_time_values %in% .$time_value]
-      }
+      available_ref_time_values <- .ref_time_values[.ref_time_values %in% .$time_value]
 
       if (.all_rows) {
-        . <- dplyr::mutate(., slide_value = dplyr::if_else(time_value %in% available_ref_time_values, slide_value, NA))
-        if (.complete_only) {
-          filter(
-            .,
-            min(time_value) + window_args$before <= time_value & time_value <= max(time_value) - window_args$after
-          )
-        } else {
-          .
-        }
+        dplyr::mutate(., slide_value = dplyr::if_else(time_value %in% available_ref_time_values, slide_value, NA))
       } else {
         dplyr::filter(., time_value %in% available_ref_time_values)
       }
-    })
+    }) %>%
+    filter(.real) %>%
+    select(-.real)
 }
 concatenate_list_params <- function(p) {
   paste(paste0(names(p), "=", p), collapse = "\n")
 }
-vec_equal_reasonable <- function(x, y) {
-  if (is.null(x) && is.null(y)) {
-    return(TRUE)
-  } else if (is.null(x) && !is.null(y)) {
-    return(FALSE)
-  } else if (!is.null(x) && is.null(y)) {
-    return(FALSE)
-  } else if (length(x) != length(y)) {
-    return(FALSE)
-  }
-  all(x == y)
+is_null_or_na <- function(x) {
+  is.null(x) ||
+    (is.na(x) && (is.logical(x) || is.double(x))) ||
+    identical(x, list(NULL)) ||
+    identical(x, list(NA))
+}
+test_that("is_null_or_na works", {
+  x1 <- NULL
+  x2 <- NA
+  x3 <- NA_real_
+  x4 <- 1
+  x5 <- "NA"
+  x6 <- list(NULL)
+  x7 <- list(NA)
+
+  expect_true(is_null_or_na(x1))
+  expect_true(is_null_or_na(x2))
+  expect_true(is_null_or_na(x3))
+  expect_false(is_null_or_na(x4))
+  expect_false(is_null_or_na(x5))
+  expect_true(is_null_or_na(x6))
+  expect_true(is_null_or_na(x7))
+})
+expect_equal_handle_null <- function(x, y) {
+  x_na_mask <- purrr::map_lgl(x, is_null_or_na)
+  y_na_mask <- purrr::map_lgl(y, is_null_or_na)
+  expect_equal(x_na_mask, y_na_mask)
+  expect_equal(x[!x_na_mask], y[!y_na_mask])
 }
 
 
-# Massive amounts of basic functionality tests across an exhaustive combination
-# of parameters.
+# Core functionality tests across an exhaustive combination of parameters on
+# non-trivial data sets with three geo_groups, with non-identical time indices,
+# with missing time values, and with reported NA values.
+# .ref_time_values can be:
+# - NULL is a special case where we just use all the unique time_values in the
+#   data.
+# - c(1, 2) correspond to test_date + 1 * units and test_date + 2 * units.
+#   This is outside the time_value index for group c and is close to the
+#   left edge for a and b, so if window_size = 7, the output should be
+#   either empty or NA (depending if .all_rows is TRUE or not).
+# - c(8, 9) corresponds to test_date + 8 * units amd test_date + 9 * units.
+#   In this case, groups a and b have values, but c does not.
 param_combinations <- bind_rows(
   tidyr::expand_grid(
     .time_type = c("day", "week", "yearmonth", "integer"),
+    .ref_time_values = list(NULL, c(1, 2), c(8, 9)),
+    .all_rows = c(FALSE, TRUE),
     .align = c("right", "center", "left"),
     .window_size = c(1, 7),
-    # .ref_time_values can be:
-    # - NULL is a special case where we just use all the unique time_values in the
-    #   data.
-    # - c(1, 2) correspond to test_date + 1 * units and test_date + 2 * units.
-    #   This is outside the time_value index for group c and is close to the left
-    #   edge for a and b, so if .complete_only is TRUE, there output should be
-    #   either empty or NA (depending if .all_rows is TRUE or not), otherwise if
-    #   .complete_only is FALSE, only the a and b groups should have values.
-    # - c(8) corresponds to test_date + 8 * units. In this case, groups a and b
-    #   have values, but c does not.
-    .ref_time_values = list(NULL, c(1, 2), c(8, 9)),
-    .complete_only = c(FALSE, TRUE),
-    .all_rows = c(FALSE, TRUE),
   ),
   tidyr::expand_grid(
     .time_type = c("day", "week", "yearmonth", "integer"),
+    .ref_time_values = list(NULL, c(1, 2), c(8, 9)),
+    .all_rows = c(FALSE, TRUE),
     .align = c("right"),
     .window_size = c(Inf),
-    .ref_time_values = list(NULL, c(1, 2), c(8, 9)),
-    .complete_only = c(FALSE),
-    .all_rows = c(FALSE, TRUE),
   )
 )
 for (p in (param_combinations %>% transpose())) {
@@ -149,218 +155,145 @@ for (p in (param_combinations %>% transpose())) {
   if (!is.null(p$.ref_time_values)) {
     p$.ref_time_values <- test_date + units * p$.ref_time_values
   }
-  slide_args <- p[-which(names(p) %in% c(".time_type"))]
   as_of <- attr(test_data, "metadata")$as_of
-  simple_epi_slide_call <- function(.f) {
-    if (
-      vec_equal_reasonable(p$.ref_time_values, c(test_date + 1 * units, test_date + 2 * units)) &&
-        p$.complete_only &&
-        as.numeric(p$.window_size) == 7 &&
-        p$.align != "left"
-    ) {
-      expect_warning(
-        out <- rlang::inject(epi_slide(test_data, .f, !!!slide_args)),
-        class = "epiprocess__epi_slide_no_new_columns"
-      )
-    } else {
-      out <- rlang::inject(epi_slide(test_data, .f, !!!slide_args))
-    }
-    out
-  }
-  expect_equal_mod <- function(x, y) {
-    # This branch occurs if .all_rows = FALSE and the ref_time_values have no
-    # overlaps with the data. In this case, our test function will also return
-    # an empty df, but with slightly different types.
-    if (nrow(x) == 0 && nrow(y) == 0) {
-      expect_equal(names(x), names(y))
-      # This branch occurs if .all_rows = TRUE and the ref_time_values have no
-      # overlaps with the data. In this case epi_slide codes the NA vector as
-      # logical and epi_slide_sum_test codes it as double.
-    } else if (all(is.na(x$slide_value)) || all(is.na(y$slide_value))) {
-      expect_equal(names(x), names(y))
-      expect_equal(x %>% select(-slide_value), y %>% select(-slide_value))
-    } else {
-      expect_equal(x, y)
-    }
-  }
-  expected_out <- rlang::inject(epi_slide_sum_test(test_data, !!!slide_args))
+  slide_args <- p[setdiff(names(p), c(".time_type"))]
 
   test_that(
     format_inline(
-      "epi_slide works with formulas.:\n",
+      "epi_slide works correctly with formula vector output and params:\n",
       concatenate_list_params(p)
     ),
     {
-      expect_equal_mod(
-        simple_epi_slide_call(~ sum(.x$value)),
-        expected_out
-      )
-    }
-  )
-
-  test_that(
-    format_inline(
-      "epi_slide works with data.frame outputs. Params:\n",
-      concatenate_list_params(p)
-    ),
-    {
-      expect_equal_mod(
-        simple_epi_slide_call(~ data.frame(slide_value = sum(.x$value))),
-        expected_out
-      )
-    }
-  )
-
-  test_that(
-    format_inline(
-      "epi_slide works with list outputs. Params:\n",
-      concatenate_list_params(p)
-    ),
-    {
-      expect_equal_mod(
-        simple_epi_slide_call(~ list(sum(.x$value))),
-        expected_out %>%
-          rowwise() %>%
-          mutate(
-            slide_value = if_else(!is.na(slide_value), list(slide_value), list(NULL))
-          ) %>%
-          ungroup() %>%
-          as_epi_df(as_of = as_of) %>%
-          group_by(geo_value)
-      )
-    }
-  )
-
-  test_that(
-    format_inline(
-      "epi_slide works with list data.frame outputs. Params:\n",
-      concatenate_list_params(p)
-    ),
-    {
-      expect_equal_mod(
-        simple_epi_slide_call(~ list(data.frame(slide_value = sum(.x$value)))),
-        expected_out %>%
-          rowwise() %>%
-          mutate(
-            slide_value = if_else(!is.na(slide_value), list(data.frame(slide_value = slide_value)), list(NULL))
-          ) %>%
-          ungroup() %>%
-          as_epi_df(as_of = as_of) %>%
-          group_by(geo_value)
-      )
-    }
-  )
-
-  test_that(
-    format_inline(
-      "epi_slide works with tibble list outputs. Params:\n",
-      concatenate_list_params(p)
-    ),
-    {
-      expect_equal_mod(
-        simple_epi_slide_call(~ tibble(slide_value = list(sum(.x$value)))),
-        expected_out %>%
-          ungroup() %>%
-          rowwise() %>%
-          mutate(
-            slide_value = if_else(!is.na(slide_value), list(slide_value), list(NULL))
-          ) %>%
-          ungroup() %>%
-          as_epi_df(as_of = as_of) %>%
-          group_by(geo_value)
-      )
-    }
-  )
-
-  test_that(
-    format_inline(
-      "epi_slide works with unnamed data-masking data.frame. Params:\n",
-      concatenate_list_params(p)
-    ),
-    {
-      # unfortunately, we can't pass this directly as `f` and need an extra comma
-      if (
-        vec_equal_reasonable(p$.ref_time_values, c(test_date + 1 * units, test_date + 2 * units)) &&
-          p$.complete_only &&
-          as.numeric(p$.window_size) == 7 &&
-          p$.align != "left"
-      ) {
-        expect_warning(
-          out <- rlang::inject(epi_slide(test_data, , data.frame(slide_value = sum(.x$value)), !!!slide_args)),
-          class = "epiprocess__epi_slide_no_new_columns"
-        )
-      } else {
-        out <- rlang::inject(epi_slide(test_data, , data.frame(slide_value = sum(.x$value)), !!!slide_args))
-      }
-      expect_equal_mod(
+      out <- rlang::inject(epi_slide(test_data, .f = ~ sum(.x$value), !!!slide_args))
+      expected_out <- rlang::inject(epi_slide_sum_test(test_data, !!!slide_args))
+      expect_equal(
         out,
         expected_out
       )
     }
   )
 
-  # These are the consistency tests between epi_slide and epi_slide_opt
-  # functions. Only the specific case of .complete_only = FALSE and the opt
-  # functions using na.rm = TRUE is testsed (the two options are equivalent for
-  # our purposes here).
-  # TODO: See if we can include the .complete_only = TRUE case in the future.
-  # TODO: Add a case where the data contains NA values (not just gaps in time_value).
-  if (!p$.complete_only) {
-    opt_slide_args <- p[-which(names(p) %in% c(".complete_only", ".time_type"))]
-    test_that(
-      format_inline(
-        "epi_slide and epi_slide_opt/sum/mean consistency test. Params:\n",
-        concatenate_list_params(p)
-      ),
-      {
-        if (
-          vec_equal_reasonable(p$.ref_time_values, c(test_date + 1 * units, test_date + 2 * units)) &&
-            p$.complete_only &&
-            as.numeric(p$.window_size) == 7 &&
-            p$.align != "left"
-        ) {
-          expect_warning(
-            {
-              out_sum <- rlang::inject(epi_slide(test_data, ~ sum(.x$value), !!!opt_slide_args))
-              out_mean <- rlang::inject(epi_slide(test_data, ~ mean(.x$value), !!!opt_slide_args))
-            },
-            class = "epiprocess__epi_slide_no_new_columns"
-          )
-        } else {
-          out_sum <- rlang::inject(epi_slide(test_data, ~ sum(.x$value), !!!opt_slide_args)) %>%
-            rename(slide_value_value = slide_value)
-          out_mean <- rlang::inject(epi_slide(test_data, ~ mean(.x$value), !!!opt_slide_args)) %>%
-            rename(slide_value_value = slide_value)
-        }
+  test_that(
+    format_inline(
+      "epi_slide works correctly with formula data.frame output and params:\n",
+      concatenate_list_params(p)
+    ),
+    {
+      out <- rlang::inject(epi_slide(test_data, .f = ~ data.frame(slide_value = sum(.x$value)), !!!slide_args))
+      expected_out <- rlang::inject(epi_slide_sum_test(test_data, !!!slide_args))
+      expect_equal(
+        out,
+        expected_out
+      )
+    }
+  )
 
-        expect_equal(
-          out_sum,
-          rlang::inject(epi_slide_opt(test_data, value, .f = data.table::frollsum, !!!opt_slide_args, na.rm = TRUE))
-        )
-        expect_equal(
-          out_sum,
-          rlang::inject(epi_slide_opt(test_data, value, .f = slider::slide_sum, !!!opt_slide_args, na_rm = TRUE))
-        )
-        expect_equal(
-          out_sum,
-          rlang::inject(epi_slide_sum(test_data, value, !!!opt_slide_args, na.rm = TRUE))
-        )
-        expect_equal(
-          out_mean,
-          rlang::inject(epi_slide_opt(test_data, value, .f = data.table::frollmean, !!!opt_slide_args, na.rm = TRUE))
-        )
-        expect_equal(
-          out_mean,
-          rlang::inject(epi_slide_opt(test_data, value, .f = slider::slide_mean, !!!opt_slide_args, na_rm = TRUE))
-        )
-        expect_equal(
-          out_mean,
-          rlang::inject(epi_slide_mean(test_data, value, !!!opt_slide_args, na.rm = TRUE))
-        )
-      }
-    )
-  }
+  test_that(
+    format_inline(
+      "epi_slide works correctly with formula list output and params:\n",
+      concatenate_list_params(p)
+    ),
+    {
+      out <- rlang::inject(epi_slide(test_data, .f = ~ list(sum(.x$value)), !!!slide_args))
+      expected_out <- rlang::inject(epi_slide_sum_test(test_data, !!!slide_args)) %>%
+        rowwise() %>%
+        mutate(slide_value = list(slide_value)) %>%
+        ungroup() %>%
+        as_epi_df(as_of = as_of) %>%
+        group_by(geo_value)
+
+      expect_equal(
+        out %>% select(-slide_value),
+        expected_out %>% select(-slide_value)
+      )
+      expect_equal_handle_null(out$slide_value, expected_out$slide_value)
+    }
+  )
+
+  test_that(
+    format_inline(
+      "epi_slide works correctly with formula tibble list output and params:\n",
+      concatenate_list_params(p)
+    ),
+    {
+      out <- rlang::inject(epi_slide(test_data, .f = ~ tibble(slide_value = list(sum(.x$value))), !!!slide_args))
+      expected_out <- rlang::inject(epi_slide_sum_test(test_data, !!!slide_args)) %>%
+        rowwise() %>%
+        mutate(slide_value = list(slide_value)) %>%
+        ungroup() %>%
+        as_epi_df(as_of = as_of) %>%
+        group_by(geo_value)
+      expect_equal(
+        out %>% select(-slide_value),
+        expected_out %>% select(-slide_value)
+      )
+      expect_equal_handle_null(out$slide_value, expected_out$slide_value)
+    }
+  )
+
+  test_that(
+    format_inline(
+      "epi_slide works with unnamed data-masking data.frame and params:\n",
+      concatenate_list_params(p)
+    ),
+    {
+      expected_out <- rlang::inject(epi_slide_sum_test(test_data, !!!slide_args))
+      expect_equal_mod(
+        rlang::inject(epi_slide(
+          test_data, , data.frame(slide_value = sum(.x$value)),
+          !!!slide_args
+        )),
+        expected_out
+      )
+    }
+  )
+
+  test_that(
+    format_inline(
+      "epi_slide and epi_slide_opt/sum/mean outputs are consistent. Params:\n",
+      concatenate_list_params(p)
+    ),
+    {
+      out_sum <- rlang::inject(epi_slide(test_data, ~ sum(.x$value), !!!slide_args)) %>%
+        rename(slide_value_value = slide_value)
+      out_mean <- rlang::inject(epi_slide(test_data, ~ mean(.x$value), !!!slide_args)) %>%
+        rename(slide_value_value = slide_value)
+
+      expect_equal(
+        out_sum,
+        rlang::inject(epi_slide_opt(test_data, value, .f = data.table::frollsum, !!!slide_args))
+      )
+      expect_equal(
+        out_sum,
+        rlang::inject(epi_slide_opt(test_data, value, .f = slider::slide_sum, !!!slide_args))
+      )
+      expect_equal(
+        out_sum,
+        rlang::inject(epi_slide_sum(test_data, value, !!!slide_args))
+      )
+      expect_equal(
+        out_mean,
+        rlang::inject(epi_slide_opt(test_data, value, .f = data.table::frollmean, !!!slide_args))
+      )
+      expect_equal(
+        out_mean,
+        rlang::inject(epi_slide_opt(test_data, value, .f = slider::slide_mean, !!!slide_args))
+      )
+      expect_equal(
+        out_mean,
+        rlang::inject(epi_slide_mean(test_data, value, !!!slide_args))
+      )
+    }
+  )
 }
+
+# TODO: This.
+test_that(".window_size as integer works", {
+  expect_equal(
+    epi_slide(test_data, ~ sum(.x$value), .window_size = 7),
+    epi_slide_sum_test(test_data, .window_size = 7)
+  )
+})
 
 bad_values <- list(
   "a", 0.5, -1L, -1.5, 1.5, NA, c(0, 1)
@@ -370,11 +303,11 @@ for (bad_value in bad_values) {
     format_inline("`.window_size` fails on {bad_value}"),
     {
       expect_error(
-        epi_slide(test_data, .window_size = bad_value),
+        epi_slide(test_data, ~ sum(.x), .window_size = bad_value),
         class = "epiprocess__validate_slide_window_arg"
       )
       expect_error(
-        epi_slide_mean(test_data, .col_names = value, .window_size = bad_value),
+        epi_slide_mean(test_data, ~ sum(.x), .col_names = value, .window_size = bad_value),
         class = "epiprocess__validate_slide_window_arg"
       )
     }
@@ -385,11 +318,11 @@ test_that(format_inline("epi_slide should fail when `.ref_time_values` is out of
   bad_values <- c(min(test_data$time_value) - 1, max(test_data$time_value) + 1)
   expect_error(
     epi_slide(test_data, ~ sum(.x), .ref_time_values = bad_values),
-    class = "epi_slide__invalid_ref_time_values"
+    class = "epiprocess__epi_slide_invalid_ref_time_values"
   )
   expect_error(
     epi_slide_mean(test_data, .col_names = value, .ref_time_values = bad_values),
-    class = "epi_slide_opt__invalid_ref_time_values"
+    class = "epiprocess__epi_slide_opt_invalid_ref_time_values"
   )
 })
 

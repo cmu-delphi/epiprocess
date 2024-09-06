@@ -275,7 +275,7 @@ epix_slide.grouped_epi_archive <- function(
   checkmate::assert_string(.new_col_name, null.ok = TRUE)
   if (identical(.new_col_name, "time_value")) {
     cli_abort(
-      '`new_col_name` must not be `"time_value"`; `epix_slide()` uses that column name
+      '`.new_col_name` must not be `"time_value"`; `epix_slide()` uses that column name
       to attach the `ref_time_value` associated with each slide computation'
     )
   }

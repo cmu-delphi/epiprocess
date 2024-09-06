@@ -12,8 +12,7 @@ epi_slide(
   .align = c("right", "center", "left"),
   .ref_time_values = NULL,
   .new_col_name = NULL,
-  .all_rows = FALSE,
-  .complete_only = FALSE
+  .all_rows = FALSE
 )
 }
 \arguments{
@@ -27,13 +26,13 @@ sliding (a.k.a. "rolling") time window for each data group. The window is
 determined by the \code{.window_size} and \code{.align} parameters, see the details
 section for more. If a function, \code{.f} must have the form \verb{function(x, g, t, ...)}, where
 \itemize{
-\item "x" is a data frame with the same column names as the original object,
+\item \code{x} is a data frame with the same column names as the original object,
 minus any grouping variables, with only the windowed data for one
 group-\code{.ref_time_value} combination
-\item "g" is a one-row tibble containing the values of the grouping variables
+\item \code{g} is a one-row tibble containing the values of the grouping variables
 for the associated group
-\item "t" is the ref_time_value for the current window
-\item "..." are additional arguments
+\item \code{t} is the \code{.ref_time_value} for the current window
+\item \code{...} are additional arguments
 }
 
 If a formula, \code{.f} can operate directly on columns accessed via \code{.x$var} or
@@ -91,7 +90,7 @@ of the slide computation output.}
 complete window of \code{before} and \code{after} values are returned. If \code{FALSE}, the
 function \code{f} may be given a reduced window size, commonly at the beginning
 of the time series, but also possibly in the interior if the \code{time_value}
-column has gaps (see \code{complete.epi_df} to address the latter).}
+column has gaps (see \code{complete.epi_df()} to address the latter).}
 }
 \value{
 An \code{epi_df} object given by appending one or more new columns to \code{.x},

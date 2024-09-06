@@ -278,11 +278,13 @@ as_epi_df.tbl_df <- function(
 
   assert_character(other_keys)
 
-  # Check one time_value per group
+  if (".time_value_counts" %in% other_keys) {
+    cli_abort("as_epi_df: `other_keys` can't include \".time_value_counts\"")
+  }
   duplicated_time_values <- x %>%
     group_by(across(all_of(c("geo_value", "time_value", other_keys)))) %>%
-    dplyr::summarize(n = dplyr::n(), .groups = "drop") %>%
-    filter(n > 1)
+    filter(dplyr::n() > 1) %>%
+    ungroup()
   if (nrow(duplicated_time_values) > 0) {
     bad_data <- capture.output(duplicated_time_values)
     cli_abort(
@@ -325,5 +327,5 @@ is_epi_df <- function(x) {
 }
 
 group_epi_df <- function(x) {
-  x %>% group_by(group_by(across(all_of(kill_time_value(key_colnames(.))))))
+  x %>% group_by(across(all_of(kill_time_value(key_colnames(.)))))
 }

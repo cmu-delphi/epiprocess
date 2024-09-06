@@ -311,8 +311,8 @@ test_that("complete.epi_df works", {
   )
 })
 
-test_that("aggregate_epi_df works", {
-  out <- toy_epi_df %>% aggregate_epi_df(value_col = "x")
+test_that("sum_groups_epi_df works", {
+  out <- toy_epi_df %>% sum_groups_epi_df(sum_cols = "x")
   expected_out <- toy_epi_df %>%
     group_by(time_value) %>%
     summarize(x = sum(x)) %>%
@@ -320,11 +320,12 @@ test_that("aggregate_epi_df works", {
     as_epi_df(as_of = attr(toy_epi_df, "metadata")$as_of)
   expect_equal(out, expected_out)
 
-  out <- toy_epi_df %>% aggregate_epi_df(value_col = "y", group_cols = c("time_value", "geo_value", "indic_var1"))
+  out <- toy_epi_df %>%
+    sum_groups_epi_df(sum_cols = c("x", "y"), group_cols = c("time_value", "geo_value", "indic_var1"))
   expected_out <- toy_epi_df %>%
     group_by(time_value, geo_value, indic_var1) %>%
-    summarize(y = sum(y)) %>%
-    ungroup() %>%
-    as_epi_df(as_of = attr(toy_epi_df, "metadata")$as_of)
+    summarize(x = sum(x), y = sum(y), .groups = "drop") %>%
+    as_epi_df(as_of = attr(toy_epi_df, "metadata")$as_of, other_keys = "indic_var1") %>%
+    arrange_canonical()
   expect_equal(out, expected_out)
 })
