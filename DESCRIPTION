@@ -74,7 +74,6 @@ Collate:
     'archive.R'
     'autoplot.R'
     'correlation.R'
-    'data.R'
     'epi_df.R'
     'epiprocess.R'
     'group_by_epi_df_methods.R'
