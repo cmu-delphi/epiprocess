@@ -22,7 +22,7 @@ library(epiprocess)
 library(dplyr)
 library(tidyr)
 
-x <- epiprocess::covid_incidence_outliers
+x <- covid_incidence_outliers
 ```
 
 ```{r, fig.width = 8, fig.height = 7, warning=FALSE,message=FALSE}

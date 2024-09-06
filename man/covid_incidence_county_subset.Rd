@@ -36,8 +36,9 @@ covid_incidence_county_subset
 This data source of confirmed COVID-19 cases and deaths
 is based on reports made available by the Center for
 Systems Science and Engineering at Johns Hopkins University.
-This example data ranges from Mar 1, 2020 to Dec 31, 2021,
-and is limited to Massachusetts and Vermont.
+This example data is a snapshot as of March 20, 2024, and
+ranges from March 1, 2020 to December 31, 2021.
+It is limited to Massachusetts and Vermont.
 
 It is used in the {epiprocess} aggregation vignette.
 }

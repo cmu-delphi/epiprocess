@@ -3,7 +3,7 @@
 \docType{data}
 \name{jhu_confirmed_cumulative_num}
 \alias{jhu_confirmed_cumulative_num}
-\title{Subset of COVID-19 Cumulative Cases from 4 states}
+\title{Subset of COVID-19 cumulative case counts from 4 states}
 \format{
 An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 2808 rows and 15 columns.
 }
@@ -18,8 +18,9 @@ jhu_confirmed_cumulative_num
 }
 \description{
 Data set for 4 states containing COVID-19 Cumulative Cases as reported by
-JHU-CSSE and downloaded from the CMU Delphi COVIDcast Epidata API. This
-data set covers the period from March 2020 to January 2022, and is limited
+JHU-CSSE and downloaded from the CMU Delphi COVIDcast Epidata API.
+This example data is a snapshot as of March 20, 2024, and
+ranges from March 1, 2020 to January 31, 2022. It is limited
 to California, Florida, New York, and Texas.
 
 It is used in the {epiprocess} "Getting Started" vignette.

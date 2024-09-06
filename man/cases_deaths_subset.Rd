@@ -3,7 +3,7 @@
 \docType{data}
 \name{cases_deaths_subset}
 \alias{cases_deaths_subset}
-\title{Subset of JHU daily state COVID-19 cases and deaths from 4 states}
+\title{Subset of JHU daily state COVID-19 cases and deaths from 6 states}
 \format{
 An object of class \code{epi_df} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 4026 rows and 6 columns.
 }
@@ -33,11 +33,11 @@ signal names slightly altered, and formatted into a tibble.
 cases_deaths_subset
 }
 \description{
-This data source of confirmed COVID-19 cases and deaths
-is based on reports made available by the Center for
-Systems Science and Engineering at Johns Hopkins University.
-This example data ranges from Mar 1, 2020 to Dec 31, 2021, and is limited to
-California, Florida, Texas, New York, Georgia, and Pennsylvania.
+This data source of confirmed COVID-19 cases and deaths is based on reports
+made available by the Center for Systems Science and Engineering at Johns
+Hopkins University. This example data is a snapshot as of March 20, 2024, and
+ranges from March 1, 2020 to December 31, 2021. It is limited to California,
+Florida, Texas, New York, Georgia, and Pennsylvania.
 
 It is used in the {epiprocess} growth rate and \code{epi_slide} vignettes.
 }
