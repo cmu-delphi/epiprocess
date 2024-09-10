@@ -362,7 +362,7 @@ epix_slide.grouped_epi_archive <- function(
     # checks here in the inner loop, in order to provide immediate feedback on
     # some formatting errors.
     res <- c(
-      list(), # get list output; a bit faster than `as.list()`-ing `.group_key`
+      list(), # get list output; a bit faster than `as.list()`-ing `.group_key_label`
       .group_key_label,
       list(version = .version)
     )
