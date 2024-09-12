@@ -474,7 +474,7 @@ epix_slide.grouped_epi_archive <- function(
     }
 
     return(
-      dplyr::bind_rows(dplyr::group_map(
+      dplyr::bind_rows(dplyr::group_map( # note: output will be ungrouped
         dplyr::group_by(as_of_df, !!!syms(.x$private$vars), .drop = .x$private$drop),
         group_map_fn,
         .slide_comp = .slide_comp, ...,

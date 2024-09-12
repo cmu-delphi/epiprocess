@@ -344,19 +344,14 @@ epi_slide <- function(
     # loop over groups is the outer loop (>= 1 row into the group loop ensures
     # we will have only 1-row `.group_key`s). Further, unlike `epix_slide`, we
     # actually will be using `.group_data` rather than work with `.group_key` at
-    # all, in order to keep the pre-existing non-key columns.
+    # all, in order to keep the pre-existing non-key columns. We will also try
+    # to work directly with `epi_df`s instead of listified tibbles; since we're
+    # not in as tight of a loop, the increased overhead hopefully won't matter.
+    # We'll need to use `bind_cols` rather than `c` to avoid losing
+    # `epi_df`ness.
 
-    # Constructing first as list, then turning into tibble:
-    res <- c(
-      list(), # get list output; a bit faster than `as.list()`-ing `.group_key`
-      .group_key,
-      .data_group # (includes the time_value label col + other pre-existing cols)
-    )
-    res <- vctrs::vec_recycle_common(!!!res, .size = vctrs::vec_size(.data_group))
+    res <- .data_group
 
-    # XXX mapping to columns is the same as in epix_slide, just with different
-    # object and error class messages&names; we might want to refactor this into
-    # a common function if it's not a major performance hit in epix_slide:
     if (is.null(.group_new_col_name)) {
       if (inherits(slide_values, "data.frame")) {
         # Sometimes slide_values can parrot back columns already in `res`; allow
@@ -383,7 +378,7 @@ epi_slide <- function(
         # Unpack into separate columns (without name prefix). If there are
         # columns duplicating existing columns, de-dupe and order them as if they
         # didn't exist in slide_values.
-        res <- c(res, slide_values[!overlaps_existing_names])
+        res <- bind_cols(res, slide_values[!overlaps_existing_names])
       } else {
         # Apply default name (to vector or packed data.frame-type column):
         res[["slide_value"]] <- slide_values
@@ -402,6 +397,7 @@ epi_slide <- function(
     return(res)
   }
 
+  .x_groups <- groups(.x)
   .x <- bind_rows(group_map(.x, slide_one_grp,
     ...,
     .slide_comp_factory = slide_comp_wrapper_factory,
@@ -410,9 +406,9 @@ epi_slide <- function(
     .ref_time_values = .ref_time_values,
     .all_rows = .all_rows,
     .new_col_name = .new_col_name,
-    .keep = FALSE
+    .keep = TRUE
   ))
-
+  .x <- group_by(.x, !!!.x_groups)
 
   return(.x)
 }
