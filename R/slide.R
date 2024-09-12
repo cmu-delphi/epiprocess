@@ -376,7 +376,8 @@ epi_slide <- function(
               cli::format_message(c("You likely want to rename or remove this column from your slide computation's output, or debug why it has a different value."))
             )
             rlang::abort(paste(collapse = "\n", lines),
-                         class = "epiprocess__epi_slide_existing_vs_output_column_conflict")
+              class = "epiprocess__epi_slide_existing_vs_output_column_conflict"
+            )
           }
         }
         # Unpack into separate columns (without name prefix). If there are
