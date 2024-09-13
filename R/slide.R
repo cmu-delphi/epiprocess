@@ -292,8 +292,9 @@ epi_slide <- function(
       # We don't know what .ptype we should be outputting, and we won't try to
       # infer it by running a dummy computation. We should just output something
       # that will combine well with what computations exist. In some edge cases
-      # (zero rows in .x, handled explicitly, or zero ref_time_values), we may
-      # end up just not adding any columns.
+      # (zero rows in .x, zero .ref_time_values) we may end up just not adding
+      # any columns, but those edge cases are currently explicitly handled
+      # earlier (outputting zero columns and aborting, respectively).
 
       # To combine well, we want something of a "super"-.ptype of all possible
       # values. `NULL` almost works but can't be `vec_rep`'d. We'll use a 0-col
