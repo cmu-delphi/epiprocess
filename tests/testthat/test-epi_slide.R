@@ -92,7 +92,8 @@ is_null_or_na <- function(x) {
   is.null(x) ||
     (is.na(x) && (is.logical(x) || is.double(x))) ||
     identical(x, list(NULL)) ||
-    identical(x, list(NA))
+    identical(x, list(NA)) ||
+    identical(x, list(NA_real_))
 }
 test_that("is_null_or_na works", {
   x1 <- NULL
@@ -102,6 +103,7 @@ test_that("is_null_or_na works", {
   x5 <- "NA"
   x6 <- list(NULL)
   x7 <- list(NA)
+  x8 <- list(NA_real_)
 
   expect_true(is_null_or_na(x1))
   expect_true(is_null_or_na(x2))
@@ -110,6 +112,7 @@ test_that("is_null_or_na works", {
   expect_false(is_null_or_na(x5))
   expect_true(is_null_or_na(x6))
   expect_true(is_null_or_na(x7))
+  expect_true(is_null_or_na(x8))
 })
 expect_equal_handle_null <- function(x, y) {
   x_na_mask <- purrr::map_lgl(x, is_null_or_na)
