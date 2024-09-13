@@ -15,7 +15,7 @@ mean.epi_df <- function(x, ...) {
            of a column using `epi_slide`, you probably forgot to
            specify the column name (e.g., ~ mean(.x$colname)). You may
            also prefer to use the specialized `epi_slide_mean` method."
-  ))
+  ), class = "epiprocess__summarizer_on_entire_epi_df")
 }
 
 # Similarly, provide better error messages for some other potentially-common
@@ -43,6 +43,6 @@ Summary.epi_df <- function(..., na.rm = FALSE) {
     "x" = "`{generic}`'s first argument was an `epi_df`",
     "i" = "If you encountered this while trying to take a rolling {generic}
            of a column using `epi_slide`, you probably forgot to
-           specify the column name (e.g., ~ mean(.x$colname)). {opt_pointer}"
-  ))
+           specify the column name (e.g., ~ {generic}(.x$colname)). {opt_pointer}"
+  ), class = "epiprocess__summarizer_on_entire_epi_df")
 }
