@@ -36,7 +36,7 @@
 #' @template basic-slide-details
 #'
 #' @importFrom lubridate days weeks
-#' @importFrom dplyr bind_rows group_vars filter select
+#' @importFrom dplyr bind_rows group_map group_vars filter select
 #' @importFrom rlang .data .env !! enquos sym env missing_arg
 #' @export
 #' @seealso [`epi_slide_opt`] [`epi_slide_mean`] [`epi_slide_sum`]

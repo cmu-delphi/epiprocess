@@ -79,6 +79,7 @@ Collate:
     'correlation.R'
     'data.R'
     'epi_df.R'
+    'epi_df_forbidden_methods.R'
     'epiprocess.R'
     'group_by_epi_df_methods.R'
     'methods-epi_archive.R'
