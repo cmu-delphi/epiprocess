@@ -95,7 +95,7 @@ ggplot2::autoplot
 #'  # fails
 #'  data(cases_deaths_subset, package = "epiprocess")
 #' @export
-cases_deaths_subset <- epidatasets::cases_deaths_subset
+delayedAssign("cases_deaths_subset", epidatasets::cases_deaths_subset)
 
 #' @inherit epidatasets::covid_incidence_county_subset description source references title
 #' @inheritSection epidatasets::covid_incidence_county_subset Data dictionary
@@ -113,7 +113,7 @@ cases_deaths_subset <- epidatasets::cases_deaths_subset
 #'  # fails
 #'  data(covid_incidence_county_subset, package = "epiprocess")
 #' @export
-covid_incidence_county_subset <- epidatasets::covid_incidence_county_subset
+delayedAssign("covid_incidence_county_subset", epidatasets::covid_incidence_county_subset)
 
 #' @inherit epidatasets::covid_incidence_outliers description source references title
 #' @inheritSection epidatasets::covid_incidence_outliers Data dictionary
@@ -131,7 +131,7 @@ covid_incidence_county_subset <- epidatasets::covid_incidence_county_subset
 #'  # fails
 #'  data(covid_incidence_outliers, package = "epiprocess")
 #' @export
-covid_incidence_outliers <- epidatasets::covid_incidence_outliers
+delayedAssign("covid_incidence_outliers", epidatasets::covid_incidence_outliers)
 
 #' @inherit epidatasets::jhu_confirmed_cumulative_num description source references title
 #' @inheritSection epidatasets::jhu_confirmed_cumulative_num Data dictionary
@@ -149,7 +149,7 @@ covid_incidence_outliers <- epidatasets::covid_incidence_outliers
 #'  # fails
 #'  data(jhu_confirmed_cumulative_num, package = "epiprocess")
 #' @export
-jhu_confirmed_cumulative_num <- epidatasets::jhu_confirmed_cumulative_num
+delayedAssign("jhu_confirmed_cumulative_num", epidatasets::jhu_confirmed_cumulative_num)
 
 #' @inherit epidatasets::covid_case_death_rates description source references title
 #' @inheritSection epidatasets::covid_case_death_rates Data dictionary
@@ -167,7 +167,7 @@ jhu_confirmed_cumulative_num <- epidatasets::jhu_confirmed_cumulative_num
 #'  # fails
 #'  data(covid_case_death_rates, package = "epiprocess")
 #' @export
-covid_case_death_rates <- epidatasets::covid_case_death_rates
+delayedAssign("covid_case_death_rates", epidatasets::covid_case_death_rates)
 
 #' @inherit epidatasets::archive_cases_dv_subset description source references title
 #' @inheritSection epidatasets::archive_cases_dv_subset Data dictionary
@@ -186,4 +186,4 @@ covid_case_death_rates <- epidatasets::covid_case_death_rates
 #'  data(archive_cases_dv_subset, package = "epiprocess")
 #'
 #' @export
-archive_cases_dv_subset <- epidatasets::archive_cases_dv_subset
+delayedAssign("archive_cases_dv_subset", epidatasets::archive_cases_dv_subset)

@@ -18,7 +18,7 @@ Modifications:
 \item \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html}{From the COVIDcast Doctor Visits API}: The signal \code{percent_cli} is taken directly from the API without changes.
 \item \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{From the COVIDcast Epidata API}: \code{case_rate_7d_av} signal was computed by Delphi from the original JHU-CSSE data by calculating moving averages of the preceding 7 days, so the signal for June 7 is the average of the underlying data for June 1 through 7, inclusive.
 \item Furthermore, the data has been limited to a very small number of rows, the
-signal names slightly altered, and formatted into a tibble.
+signal names slightly altered, and formatted into an \code{epi_archive}.
 }
 }
 \usage{
@@ -32,19 +32,19 @@ and Engineering at Johns Hopkins University. This example data ranges from
 June 1, 2020 to December 1, 2021, issued on dates from June 1, 2020 to December 1,
 2021. It is limited to California, Florida, Texas, and New York.
 
-It is used in the {epiprocess} \code{compactify}, \code{epix_archive}, and
-advanced-use vignettes.
+It is used in the {epiprocess} \code{compactify}, \code{epi_archive}, and
+advanced-use (\code{advanced}) vignettes.
 }
 \section{Data dictionary}{
 
 
-An \code{epi_archive$DT} data format with columns:
+The data in the \code{epi_archive$DT} attribute has columns:
 \describe{
 \item{geo_value}{the geographic value associated with each row of measurements.}
 \item{time_value}{the time value associated with each row of measurements.}
 \item{version}{the time value specifying the version for each row of measurements. }
 \item{percent_cli}{percentage of doctor’s visits with CLI (COVID-like illness) computed from medical insurance claims}
-\item{case_rate_7d_av}{7-day average signal of number of new confirmed deaths due to COVID-19 per 100,000 population, daily}
+\item{case_rate_7d_av}{7-day average signal of number of new confirmed cases due to COVID-19 per 100,000 population, daily}
 }
 
 }

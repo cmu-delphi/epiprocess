@@ -5,7 +5,7 @@
 \alias{jhu_confirmed_cumulative_num}
 \title{Subset of COVID-19 cumulative case counts from 4 states}
 \format{
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 2808 rows and 15 columns.
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 2808 rows and 14 columns.
 }
 \source{
 This object contains a modified part of the \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University} as \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{republished in the COVIDcast Epidata API}. This data set is licensed under the terms of the
@@ -28,7 +28,7 @@ It is used in the {epiprocess} "Getting Started" vignette.
 \section{Data dictionary}{
 
 
-A tibble with 2,808 rows and 15 variables:
+The data has columns:
 \describe{
 \item{geo_value}{the geographic value associated with each row of measurements.}
 \item{signal}{name of metric, derived from upstream data.}
@@ -36,15 +36,14 @@ A tibble with 2,808 rows and 15 variables:
 \item{geo_type}{spatial resolution of the signal.}
 \item{time_type}{temporal resolution of the signal.}
 \item{time_value}{the time value associated with each row of measurements.}
-\item{direction}{trend classifier (+1 -> increasing, 0 -> steady or not determined, -1 -> decreasing).}
 \item{issue}{time unit (e.g., date) when the signal data were published.}
 \item{lag}{time delta (e.g. days) between when the underlying events happened and when the data were published.}
 \item{missing_value}{an integer code that is zero when the value field is present and non-zero when the data is missing (see \href{https://cmu-delphi.github.io/delphi-epidata/api/missing_codes.html}{missing codes}).}
 \item{missing_stderr}{an integer code that is zero when the stderr field is present and non-zero when the data is missing (see \href{https://cmu-delphi.github.io/delphi-epidata/api/missing_codes.html}{missing codes}).}
 \item{missing_sample_size}{an integer code that is zero when the sample_size field is present and non-zero when the data is missing (see \href{https://cmu-delphi.github.io/delphi-epidata/api/missing_codes.html}{missing codes}).}
-\item{value}{Cumulative number of confirmed COVID-19 cases, derived from the underlying data source.}
-\item{stderr}{approximate standard error of the statistic with respect to its sampling distribution, null when not applicable.}
-\item{sample_size}{number of “data points” used in computing the statistic, null when not applicable.}
+\item{value}{cumulative number of confirmed COVID-19 cases, derived from the underlying data source.}
+\item{stderr}{approximate standard error of the statistic with respect to its sampling distribution, NA when not applicable.}
+\item{sample_size}{number of “data points” used in computing the statistic, NA when not applicable.}
 }
 
 }

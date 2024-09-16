@@ -41,7 +41,7 @@ includes all states. It is used in the {epiprocess} correlation vignette.
 \section{Data dictionary}{
 
 
-A tibble with columns:
+The data has columns:
 \describe{
 \item{geo_value}{the geographic value associated with each row
 of measurements.}

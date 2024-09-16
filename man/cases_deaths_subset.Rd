@@ -26,7 +26,7 @@ The 7-day average signals were computed by Delphi by calculating moving
 averages of the preceding 7 days, so the signal for June 7 is the
 average of the underlying data for June 1 through 7, inclusive.
 \item Furthermore, the data has been limited to a very small number of rows, the
-signal names slightly altered, and formatted into a tibble.
+signal names slightly altered, and formatted into an \code{epi_df}.
 }
 }
 \usage{
@@ -44,7 +44,7 @@ It is used in the {epiprocess} growth rate and \code{epi_slide} vignettes.
 \section{Data dictionary}{
 
 
-A tibble with columns:
+The data has columns:
 \describe{
 \item{geo_value}{the geographic value associated with each row
 of measurements.}
