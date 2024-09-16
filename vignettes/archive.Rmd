@@ -49,7 +49,7 @@ dv <- pub_covidcast(
   geo_values = "ca,fl,ny,tx",
   time_values = epirange(20200601, 20211201),
   issues = epirange(20200601, 20211201)
-) %>% 
+) %>%
   rename(version = issue, percent_cli = value)
 ```
 
