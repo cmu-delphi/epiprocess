@@ -379,6 +379,49 @@ arrange_canonical.default <- function(x, ...) {
 #' @export
 arrange_canonical.epi_df <- function(x, ...) {
   rlang::check_dots_empty()
+  x %>%
+    arrange_row_canonical() %>%
+    arrange_col_canonical()
+}
+
+arrange_row_canonical <- function(x, ...) {
+  UseMethod("arrange_row_canonical")
+}
+
+#' @export
+arrange_row_canonical.default <- function(x, ...) {
+  rlang::check_dots_empty()
+  cli::cli_abort(c(
+    "`arrange_row_canonical()` is only meaningful for an {.cls epi_df}."
+  ))
+  return(x)
+}
+
+#' @export
+arrange_row_canonical.epi_df <- function(x, ...) {
+  rlang::check_dots_empty()
+  x %>% dplyr::arrange(dplyr::across(dplyr::all_of(key_colnames(.))))
+}
+
+arrange_col_canonical <- function(x, ...) {
+  UseMethod("arrange_col_canonical")
+}
+
+#' @export
+arrange_col_canonical.default <- function(x, ...) {
+  rlang::check_dots_empty()
+  cli::cli_abort(c(
+    "`arrange_col_canonical()` is only meaningful for an {.cls epi_df}."
+  ))
+  return(x)
+}
+
+#' @export
+arrange_col_canonical.epi_df <- function(x, ...) {
+  rlang::check_dots_empty()
+  x %>% dplyr::relocate(dplyr::all_of(key_colnames(.)), .before = 1)
+}
+
 #' @export
 group_epi_df <- function(x) {
   x %>% group_by(across(all_of(kill_time_value(key_colnames(.)))))

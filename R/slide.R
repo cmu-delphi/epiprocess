@@ -206,7 +206,6 @@ epi_slide <- function(
   # time values within a group and then resets back to 1 when switching groups.
   f_wrapper_factory <- function(kept_ref_time_values) {
     i <- 1L
-    # TODO: This is where we would do the debug wrapper.
     f_wrapper <- function(.x, .group_key, ...) {
       .ref_time_value <- kept_ref_time_values[[i]]
       i <<- i + 1L
@@ -241,7 +240,8 @@ epi_slide <- function(
     .keep = FALSE
   ) %>%
     filter(.real) %>%
-    select(-.real)
+    select(-.real) %>%
+    arrange_col_canonical()
 
   # If every group in epi_slide_one_group takes the
   # length(available_ref_time_values) == 0 branch then we end up here.
@@ -737,10 +737,10 @@ epi_slide_opt <- function(
   }
 
   result <- mutate(.x, .real = TRUE) %>%
-    group_modify(slide_one_grp, ..., .keep = FALSE)
-
-  result <- result[result$.real, ]
-  result$.real <- NULL
+    group_modify(slide_one_grp, ..., .keep = FALSE) %>%
+    filter(.real) %>%
+    select(-.real) %>%
+    arrange_col_canonical()
 
   if (.all_rows) {
     result[!(result$time_value %in% ref_time_values), result_col_names] <- NA
@@ -749,7 +749,7 @@ epi_slide_opt <- function(
   }
 
   if (!is_epi_df(result)) {
-    # `.all_rows`handling strips epi_df format and metadata.
+    # `.all_rows` handling strips epi_df format and metadata.
     # Restore them.
     result <- reclass(result, attributes(.x)$metadata)
   }
