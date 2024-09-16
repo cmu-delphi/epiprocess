@@ -379,10 +379,9 @@ arrange_canonical.default <- function(x, ...) {
 #' @export
 arrange_canonical.epi_df <- function(x, ...) {
   rlang::check_dots_empty()
-  keys <- key_colnames(x)
-  x %>%
-    dplyr::relocate(dplyr::all_of(keys), .before = 1) %>%
-    dplyr::arrange(dplyr::across(dplyr::all_of(keys)))
+#' @export
+group_epi_df <- function(x) {
+  x %>% group_by(across(all_of(kill_time_value(key_colnames(.)))))
 }
 
 #' Aggregate an `epi_df` object

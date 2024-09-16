@@ -325,7 +325,3 @@ as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(), ...) {
 is_epi_df <- function(x) {
   inherits(x, "epi_df")
 }
-
-group_epi_df <- function(x) {
-  x %>% group_by(across(all_of(kill_time_value(key_colnames(.)))))
-}
