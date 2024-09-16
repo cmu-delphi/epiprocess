@@ -37,9 +37,7 @@ test_that("Grouping, regrouping, and ungrouping archives works as intended", {
   expect_error(toy_archive %>% group_by(.drop = "bogus"),
     regexp = "Must be of type 'logical', not 'character'"
   )
-  expect_warning(toy_archive %>% group_by(.drop = FALSE),
-    class = "epiprocess__group_by_epi_archive__drop_FALSE_no_factors"
-  )
+  expect_no_warning(toy_archive %>% group_by(.drop = FALSE))
   expect_warning(toy_archive %>% group_by(geo_value, .drop = FALSE),
     class = "epiprocess__group_by_epi_archive__drop_FALSE_no_factors"
   )

@@ -36,7 +36,7 @@
 #' @template basic-slide-details
 #'
 #' @importFrom lubridate days weeks
-#' @importFrom dplyr bind_rows group_vars filter select
+#' @importFrom dplyr bind_rows group_map group_vars filter select
 #' @importFrom rlang .data .env !! enquos sym env missing_arg
 #' @export
 #' @seealso [`epi_slide_opt`] [`epi_slide_mean`] [`epi_slide_sum`]
@@ -127,7 +127,7 @@ epi_slide <- function(
     assert_numeric(.ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
     if (!test_subset(.ref_time_values, unique(.x$time_value))) {
       cli_abort(
-        "`ref_time_values` must be a unique subset of the time values in `x`.",
+        "`.ref_time_values` must be a unique subset of the time values in `.x`.",
         class = "epi_slide__invalid_ref_time_values"
       )
     }
@@ -260,8 +260,8 @@ epi_slide <- function(
     )
 
     # If this wasn't a tidyeval computation, we still need to check the output
-    # types. We'll let `list_unchop` deal with checking for type compatibility
-    # between the outputs.
+    # types. We'll let `list_unchop`/`bind_rows` deal with checking for type
+    # compatibility between the outputs.
     if (!used_data_masking &&
       !all(vapply(slide_values_list, function(comp_value) {
         # vctrs considers data.frames to be vectors, but we still check
@@ -288,8 +288,26 @@ epi_slide <- function(
       dplyr::count(.data$time_value) %>%
       `[[`("n")
 
-    slide_values <- vctrs::list_unchop(slide_values_list)
+    if (length(slide_values_list) == 0L) {
+      # We don't know what .ptype we should be outputting, and we won't try to
+      # infer it by running a dummy computation. We should just output something
+      # that will combine well with what computations exist. In some edge cases
+      # (zero rows in .x, zero .ref_time_values) we may end up just not adding
+      # any columns, but those edge cases are currently explicitly handled
+      # earlier (outputting zero columns and aborting, respectively).
 
+      # To combine well, we want something of a "super"-.ptype of all possible
+      # values. `NULL` almost works but can't be `vec_rep`'d. We'll use a 0-col
+      # data.frame instead, but will have to ensure it's unpacked into its 0
+      # columns in case other computations return vectors by introducing a
+      # .group_new_col_name.
+      .group_new_col_name <- NULL
+      slide_values_list <- vctrs::new_list_of(slide_values_list, data.frame())
+    } else {
+      .group_new_col_name <- .new_col_name
+    }
+
+    slide_values <- vctrs::list_unchop(slide_values_list)
 
     if (
       all(purrr::map_int(slide_values_list, vctrs::vec_size) == 1L) &&
@@ -318,26 +336,70 @@ epi_slide <- function(
       .data_group <- filter(.data_group, o)
     }
 
-    result <-
-      if (is.null(.new_col_name)) {
-        if (inherits(slide_values, "data.frame")) {
-          # unpack into separate columns (without name prefix) and, if there are
-          # re-bindings, make the last one win for determining column value &
-          # column placement:
-          mutate(.data_group, slide_values)
-        } else {
-          # apply default name:
-          mutate(.data_group, slide_value = slide_values)
-        }
-      } else {
-        # vector or packed data.frame-type column:
-        mutate(.data_group, !!.new_col_name := slide_values)
-      }
+    # To label the result, we will parallel some code from `epix_slide`, though
+    # some logic is different and some optimizations are less likely to be
+    # needed as we're at a different loop depth.
 
-    return(result)
+    # Unlike `epix_slide`, we will not every have to deal with a 0-row
+    # `.group_key`: we return early if `epi_slide`'s `.x` has 0 rows, and our
+    # loop over groups is the outer loop (>= 1 row into the group loop ensures
+    # we will have only 1-row `.group_key`s). Further, unlike `epix_slide`, we
+    # actually will be using `.group_data` rather than work with `.group_key` at
+    # all, in order to keep the pre-existing non-key columns. We will also try
+    # to work directly with `epi_df`s instead of listified tibbles; since we're
+    # not in as tight of a loop, the increased overhead hopefully won't matter.
+    # We'll need to use `bind_cols` rather than `c` to avoid losing
+    # `epi_df`ness.
+
+    res <- .data_group
+
+    if (is.null(.group_new_col_name)) {
+      if (inherits(slide_values, "data.frame")) {
+        # Sometimes slide_values can parrot back columns already in `res`; allow
+        # this, but balk if a column has the same name as one in `res` but a
+        # different value:
+        comp_nms <- names(slide_values)
+        overlaps_existing_names <- comp_nms %in% names(res)
+        for (comp_i in which(overlaps_existing_names)) {
+          if (!identical(slide_values[[comp_i]], res[[comp_nms[[comp_i]]]])) {
+            lines <- c(
+              cli::format_error(c(
+                "conflict detected between existing columns and slide computation output:",
+                "i" = "pre-existing columns: {syms(names(res))}",
+                "x" = "slide computation output included a column {syms(comp_nms[[comp_i]])} that didn't match the pre-existing value"
+              )),
+              capture.output(print(waldo::compare(res[[comp_nms[[comp_i]]]], slide_values[[comp_i]], x_arg = "existing", y_arg = "comp output"))),
+              cli::format_message(c("You likely want to rename or remove this column from your slide computation's output, or debug why it has a different value."))
+            )
+            rlang::abort(paste(collapse = "\n", lines),
+              class = "epiprocess__epi_slide_existing_vs_output_column_conflict"
+            )
+          }
+        }
+        # Unpack into separate columns (without name prefix). If there are
+        # columns duplicating existing columns, de-dupe and order them as if they
+        # didn't exist in slide_values.
+        res <- bind_cols(res, slide_values[!overlaps_existing_names])
+      } else {
+        # Apply default name (to vector or packed data.frame-type column):
+        res[["slide_value"]] <- slide_values
+        # TODO check for bizarre conflicting `slide_value` existing col name.
+        # Either here or on entry to `epi_slide` (even if there we don't know
+        # whether vecs will be output). Or just turn this into a special case of
+        # the preceding branch and let the checking code there generate a
+        # complaint.
+      }
+    } else {
+      # vector or packed data.frame-type column (note: overlaps with existing
+      # column names should already be forbidden by earlier validation):
+      res[[.group_new_col_name]] <- slide_values
+    }
+
+    return(res)
   }
 
-  .x <- group_modify(.x, slide_one_grp,
+  .x_groups <- groups(.x)
+  .x <- bind_rows(group_map(.x, slide_one_grp,
     ...,
     .slide_comp_factory = slide_comp_wrapper_factory,
     .starts = .starts,
@@ -345,9 +407,9 @@ epi_slide <- function(
     .ref_time_values = .ref_time_values,
     .all_rows = .all_rows,
     .new_col_name = .new_col_name,
-    .keep = FALSE
-  )
-
+    .keep = TRUE
+  ))
+  .x <- group_by(.x, !!!.x_groups)
 
   return(.x)
 }
