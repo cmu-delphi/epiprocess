@@ -49,17 +49,17 @@ The data has columns:
 }
 
 \examples{
- # Since this is a re-exported dataset, it cannot be loaded using
- # the `data()` function. `data()` looks for a file of the same name
- # in the `data/` directory, which doesn't exist in this package.
- # works
- epiprocess::jhu_confirmed_cumulative_num
+# Since this is a re-exported dataset, it cannot be loaded using
+# the `data()` function. `data()` looks for a file of the same name
+# in the `data/` directory, which doesn't exist in this package.
+# works
+epiprocess::jhu_confirmed_cumulative_num
 
- # works
- library(epiprocess)
- jhu_confirmed_cumulative_num
+# works
+library(epiprocess)
+jhu_confirmed_cumulative_num
 
- # fails
- data(jhu_confirmed_cumulative_num, package = "epiprocess")
+# fails
+data(jhu_confirmed_cumulative_num, package = "epiprocess")
 }
 \keyword{datasets}

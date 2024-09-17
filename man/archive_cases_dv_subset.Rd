@@ -50,18 +50,18 @@ The data in the \code{epi_archive$DT} attribute has columns:
 }
 
 \examples{
- # Since this is a re-exported dataset, it cannot be loaded using
- # the `data()` function. `data()` looks for a file of the same name
- # in the `data/` directory, which doesn't exist in this package.
- # works
- epiprocess::archive_cases_dv_subset
+# Since this is a re-exported dataset, it cannot be loaded using
+# the `data()` function. `data()` looks for a file of the same name
+# in the `data/` directory, which doesn't exist in this package.
+# works
+epiprocess::archive_cases_dv_subset
 
- # works
- library(epiprocess)
- archive_cases_dv_subset
+# works
+library(epiprocess)
+archive_cases_dv_subset
 
- # fails
- data(archive_cases_dv_subset, package = "epiprocess")
+# fails
+data(archive_cases_dv_subset, package = "epiprocess")
 
 }
 \keyword{datasets}

@@ -61,17 +61,17 @@ COVID-19 cases, daily}
 }
 
 \examples{
- # Since this is a re-exported dataset, it cannot be loaded using
- # the `data()` function. `data()` looks for a file of the same name
- # in the `data/` directory, which doesn't exist in this package.
- # works
- epiprocess::cases_deaths_subset
+# Since this is a re-exported dataset, it cannot be loaded using
+# the `data()` function. `data()` looks for a file of the same name
+# in the `data/` directory, which doesn't exist in this package.
+# works
+epiprocess::cases_deaths_subset
 
- # works
- library(epiprocess)
- cases_deaths_subset
+# works
+library(epiprocess)
+cases_deaths_subset
 
- # fails
- data(cases_deaths_subset, package = "epiprocess")
+# fails
+data(cases_deaths_subset, package = "epiprocess")
 }
 \keyword{datasets}

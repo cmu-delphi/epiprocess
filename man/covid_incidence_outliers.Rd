@@ -50,17 +50,17 @@ The data has columns:
 }
 
 \examples{
- # Since this is a re-exported dataset, it cannot be loaded using
- # the `data()` function. `data()` looks for a file of the same name
- # in the `data/` directory, which doesn't exist in this package.
- # works
- epiprocess::covid_incidence_outliers
+# Since this is a re-exported dataset, it cannot be loaded using
+# the `data()` function. `data()` looks for a file of the same name
+# in the `data/` directory, which doesn't exist in this package.
+# works
+epiprocess::covid_incidence_outliers
 
- # works
- library(epiprocess)
- covid_incidence_outliers
+# works
+library(epiprocess)
+covid_incidence_outliers
 
- # fails
- data(covid_incidence_outliers, package = "epiprocess")
+# fails
+data(covid_incidence_outliers, package = "epiprocess")
 }
 \keyword{datasets}
