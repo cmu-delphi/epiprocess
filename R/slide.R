@@ -366,10 +366,17 @@ epi_slide <- function(
               cli::format_error(c(
                 "conflict detected between existing columns and slide computation output:",
                 "i" = "pre-existing columns: {syms(names(res))}",
-                "x" = "slide computation output included a column {syms(comp_nms[[comp_i]])} that didn't match the pre-existing value"
+                "x" = "slide computation output included a column {syms(comp_nms[[comp_i]])} that didn't match the
+                pre-existing value"
               )),
-              capture.output(print(waldo::compare(res[[comp_nms[[comp_i]]]], slide_values[[comp_i]], x_arg = "existing", y_arg = "comp output"))),
-              cli::format_message(c("You likely want to rename or remove this column from your slide computation's output, or debug why it has a different value."))
+              capture.output(print(waldo::compare(
+                res[[comp_nms[[comp_i]]]], slide_values[[comp_i]],
+                x_arg = "existing", y_arg = "comp output"
+              ))),
+              cli::format_message(c(
+                "You likely want to rename or remove this column from your slide computation's output, or
+                debug why it has a different value."
+              ))
             )
             rlang::abort(paste(collapse = "\n", lines),
               class = "epiprocess__epi_slide_existing_vs_output_column_conflict"
