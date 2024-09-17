@@ -11,7 +11,7 @@ epix_slide(
   .f,
   ...,
   .before = Inf,
-  .ref_time_values = NULL,
+  .versions = NULL,
   .new_col_name = NULL,
   .all_versions = FALSE
 )
@@ -21,7 +21,7 @@ epix_slide(
   .f,
   ...,
   .before = Inf,
-  .ref_time_values = NULL,
+  .versions = NULL,
   .new_col_name = NULL,
   .all_versions = FALSE
 )
@@ -31,7 +31,7 @@ epix_slide(
   .f,
   ...,
   .before = Inf,
-  .ref_time_values = NULL,
+  .versions = NULL,
   .new_col_name = NULL,
   .all_versions = FALSE
 )
@@ -78,6 +78,23 @@ in the archive is "day", and the \code{.ref_time_value} is January 8, then the
 smallest time_value in the snapshot will be January 1. If missing, then the
 default is no limit on the time values, so the full snapshot is given.}
 
+\item{.new_col_name}{Either \code{NULL} or a string indicating the name of the new
+column that will contain the derived values. The default, \code{NULL}, will use
+the name "slide_value" unless your slide computations output data frames,
+in which case they will be unpacked into the constituent columns and those
+names used. If the resulting column name(s) overlap with the column names
+used for labeling the computations, which are \code{group_vars(x)} and
+\code{"version"}, then the values for these columns must be identical to the
+labels we assign.}
+
+\item{.all_versions}{(Not the same as \code{.all_rows} parameter of \code{epi_slide}.)
+If \code{.all_versions = TRUE}, then the slide computation will be passed the
+version history (all \code{version <= .version} where \code{.version} is one of the
+requested \code{.versions}) for rows having a \code{time_value} of at least `.version
+\itemize{
+\item before\verb{. Otherwise, the slide computation will be passed only the most   recent }version\verb{for every unique}time_value\verb{. Default is }FALSE`.
+}}
+
 \item{.ref_time_values}{Reference time values / versions for sliding
 computations; each element of this vector serves both as the anchor point
 for the \code{time_value} window for the computation and the \code{max_version}
@@ -85,19 +102,6 @@ for the \code{time_value} window for the computation and the \code{max_version}
 set to a regularly-spaced sequence of values set to cover the range of
 \code{version}s in the \code{DT} plus the \code{versions_end}; the spacing of values will
 be guessed (using the GCD of the skips between values).}
-
-\item{.new_col_name}{String indicating the name of the new column that will
-contain the derivative values. The default is "slide_value" unless your
-slide computations output data frames, in which case they will be unpacked
-into the constituent columns and those names used. Note that setting
-\code{.new_col_name} equal to an existing column name will overwrite this column.}
-
-\item{.all_versions}{(Not the same as \code{.all_rows} parameter of \code{epi_slide}.) If
-TRUE, then \code{.f} will be passed the version history (all
-\code{version <= .ref_time_value}) for rows having \code{time_value} between
-\code{.ref_time_value - before} and \code{.ref_time_value}. Otherwise, \code{.f} will be
-passed only the most recent \code{version} for every unique \code{time_value}.
-Default is \code{FALSE}.}
 }
 \value{
 A tibble whose columns are: the grouping variables, \code{time_value},

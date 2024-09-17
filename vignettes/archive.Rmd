@@ -159,7 +159,7 @@ of the archive in `epi_df` format. This represents the most up-to-date values of
 the signal variables as of a given version.
 
 ```{r}
-x_snapshot <- epix_as_of(x, max_version = as.Date("2021-06-01"))
+x_snapshot <- epix_as_of(x, as.Date("2021-06-01"))
 class(x_snapshot)
 head(x_snapshot)
 max(x_snapshot$time_value)
@@ -172,16 +172,6 @@ date was June 1, 2021. From this we can infer that the doctor's visits signal
 was 2 days latent on June 1. Also, we can see that the metadata in the `epi_df`
 object has the version date recorded in the `as_of` field.
 
-By default, using the maximum of the `version` column in the underlying data table in an
-`epi_archive` object itself generates a snapshot of the latest values of signal
-variables in the entire archive. The `epix_as_of()` function issues a warning in
-this case, since updates to the current version may still come in at a later
-point in time, due to various reasons, such as synchronization issues.
-
-```{r}
-x_latest <- epix_as_of(x, max_version = max(x$DT$version))
-```
-
 Below, we pull several snapshots from the archive, spaced one month apart. We
 overlay the corresponding signal curves as colored lines, with the version dates
 marked by dotted vertical lines, and draw the latest curve in black (from the
@@ -193,7 +183,7 @@ theme_set(theme_bw())
 self_max <- max(x$DT$version)
 versions <- seq(as.Date("2020-06-01"), self_max - 1, by = "1 month")
 snapshots <- map_dfr(versions, function(v) {
-  epix_as_of(x, max_version = v) %>% mutate(version = v)
+  epix_as_of(x, v) %>% mutate(version = v)
 }) %>%
   bind_rows(
     x_latest %>% mutate(version = self_max)
@@ -384,7 +374,7 @@ points in time and forecast horizons. The former comes from using
 `epi_slide()` to the latest snapshot of the data `x_latest`.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
-x_latest <- epix_as_of(x, max_version = max(x$DT$version))
+x_latest <- epix_as_of(x, x$versions_end)
 
 # Simple function to produce forecasts k weeks ahead
 k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {

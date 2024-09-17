@@ -2,7 +2,7 @@
 
     Code
       res <- dumb_ex %>% as_epi_archive()
-    Condition
+    Condition <epiprocess__compactify_default_removed_rows>
       Warning:
       Found rows that appear redundant based on last (version of each) observation carried forward; these rows have been removed to 'compactify' and save space:
       Key: <geo_value, time_value, version>

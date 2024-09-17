@@ -5,6 +5,7 @@
 \alias{grouped_epi_archive}
 \alias{group_by.grouped_epi_archive}
 \alias{group_by_drop_default.grouped_epi_archive}
+\alias{group_vars.grouped_epi_archive}
 \alias{groups.grouped_epi_archive}
 \alias{ungroup.grouped_epi_archive}
 \alias{is_grouped_epi_archive}
@@ -15,6 +16,8 @@
 \method{group_by}{grouped_epi_archive}(.data, ..., .add = FALSE, .drop = dplyr::group_by_drop_default(.data))
 
 \method{group_by_drop_default}{grouped_epi_archive}(.tbl)
+
+\method{group_vars}{grouped_epi_archive}(x)
 
 \method{groups}{grouped_epi_archive}(x)
 
@@ -52,8 +55,8 @@ factor columns.}
 
 \item{.tbl}{A \code{grouped_epi_archive} object.}
 
-\item{x}{For \code{groups} or \code{ungroup}: a \code{grouped_epi_archive}; for
-\code{is_grouped_epi_archive}: any object}
+\item{x}{For \code{groups}, \code{group_vars}, or \code{ungroup}: a \code{grouped_epi_archive};
+for \code{is_grouped_epi_archive}: any object}
 }
 \description{
 \code{group_by} and related methods for \code{epi_archive}, \code{grouped_epi_archive}
@@ -130,6 +133,11 @@ toy_archive \%>\% group_by(geo_value)
 toy_archive \%>\%
   group_by(geo_value, age_group) \%>\%
   ungroup(age_group)
+
+# To get the grouping variable names as a character vector:
+toy_archive \%>\%
+  group_by(geo_value) \%>\%
+  group_vars()
 
 # To get the grouping variable names as a `list` of `name`s (a.k.a. symbols):
 toy_archive \%>\%

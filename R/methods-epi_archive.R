@@ -6,26 +6,28 @@
 #' examples.
 #'
 #' @param x An `epi_archive` object
-#' @param max_version Time value specifying the max version to permit in the
+#' @param version Time value specifying the max version to permit in the
 #'   snapshot. That is, the snapshot will comprise the unique rows of the
 #'   current archive data that represent the most up-to-date signal values, as
-#'   of the specified `max_version` (and whose time values are at least
+#'   of the specified `version` (and whose time values are at least
 #'   `min_time_value`.)
 #' @param min_time_value Time value specifying the min time value to permit in
 #'   the snapshot. Default is `-Inf`, which effectively means that there is no
 #'   minimum considered.
 #' @param all_versions If `all_versions = TRUE`, then the output will be in
 #'   `epi_archive` format, and contain rows in the specified `time_value` range
-#'   having `version <= max_version`. The resulting object will cover a
+#'   having `version <= version`. The resulting object will cover a
 #'   potentially narrower `version` and `time_value` range than `x`, depending
 #'   on user-provided arguments. Otherwise, there will be one row in the output
-#'   for the `max_version` of each `time_value`. Default is `FALSE`.
+#'   for the `version` of each `time_value`. Default is `FALSE`.
+#' @param max_version `r lifecycle::badge("deprecated")` please use `version`
+#'   argument instead.
 #' @return An `epi_df` object.
 #'
 #' @examples
 #' epix_as_of(
 #'   archive_cases_dv_subset,
-#'   max_version = max(archive_cases_dv_subset$DT$version)
+#'   version = max(archive_cases_dv_subset$DT$version)
 #' )
 #'
 #' range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
@@ -58,31 +60,37 @@
 #'
 #' @importFrom data.table between key
 #' @export
-epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FALSE) {
+epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
+                       max_version = deprecated()) {
   assert_class(x, "epi_archive")
+
+  if (lifecycle::is_present(max_version)) {
+    lifecycle::deprecate_warn("0.8.1", "epix_as_of(max_version =)", "epix_as_of(version =)")
+    version <- max_version
+  }
 
   other_keys <- setdiff(
     key(x$DT),
     c("geo_value", "time_value", "version")
   )
 
-  # Check a few things on max_version
-  if (!identical(class(max_version), class(x$DT$version))) {
+  # Check a few things on version
+  if (!identical(class(version), class(x$DT$version))) {
     cli_abort(
-      "`max_version` must have the same `class` vector as `epi_archive$DT$version`."
+      "`version` must have the same `class` vector as `epi_archive$DT$version`."
     )
   }
-  if (!identical(typeof(max_version), typeof(x$DT$version))) {
+  if (!identical(typeof(version), typeof(x$DT$version))) {
     cli_abort(
-      "`max_version` must have the same `typeof` as `epi_archive$DT$version`."
+      "`version` must have the same `typeof` as `epi_archive$DT$version`."
     )
   }
-  assert_scalar(max_version, na.ok = FALSE)
-  if (max_version > x$versions_end) {
-    cli_abort("`max_version` must be at most `epi_archive$versions_end`.")
+  assert_scalar(version, na.ok = FALSE)
+  if (version > x$versions_end) {
+    cli_abort("`version` must be at most `epi_archive$versions_end`.")
   }
   assert_logical(all_versions, len = 1)
-  if (!is.na(x$clobberable_versions_start) && max_version >= x$clobberable_versions_start) {
+  if (!is.na(x$clobberable_versions_start) && version >= x$clobberable_versions_start) {
     cli_warn(
       'Getting data as of some recent version which could still be
       overwritten (under routine circumstances) without assigning a new
@@ -93,16 +101,25 @@ epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FAL
     )
   }
 
+  # We can't disable nonstandard evaluation nor use the `..` feature in the `i`
+  # argument of `[.data.table` below; try to avoid problematic names and abort
+  # if we fail to do so:
+  .min_time_value <- min_time_value
+  .version <- version
+  if (any(c(".min_time_value", ".version") %in% names(x$DT))) {
+    cli_abort("epi_archives can't contain a `.min_time_value` or `.version` column")
+  }
+
   # Filter by version and return
   if (all_versions) {
     # epi_archive is copied into result, so we can modify result directly
-    result <- epix_truncate_versions_after(x, max_version)
-    result$DT <- result$DT[time_value >= min_time_value, ] # nolint: object_usage_linter
+    result <- epix_truncate_versions_after(x, version)
+    result$DT <- result$DT[time_value >= .min_time_value, ] # nolint: object_usage_linter
     return(result)
   }
 
   # Make sure to use data.table ways of filtering and selecting
-  as_of_epi_df <- x$DT[time_value >= min_time_value & version <= max_version, ] %>% # nolint: object_usage_linter
+  as_of_epi_df <- x$DT[time_value >= .min_time_value & version <= .version, ] %>% # nolint: object_usage_linter
     unique(
       by = c("geo_value", "time_value", other_keys),
       fromLast = TRUE
@@ -110,7 +127,7 @@ epix_as_of <- function(x, max_version, min_time_value = -Inf, all_versions = FAL
     tibble::as_tibble() %>%
     dplyr::select(-"version") %>%
     as_epi_df(
-      as_of = max_version,
+      as_of = version,
       other_keys = other_keys
     )
 
@@ -644,17 +661,20 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   set to a regularly-spaced sequence of values set to cover the range of
 #'   `version`s in the `DT` plus the `versions_end`; the spacing of values will
 #'   be guessed (using the GCD of the skips between values).
-#' @param .new_col_name String indicating the name of the new column that will
-#'   contain the derivative values. The default is "slide_value" unless your
-#'   slide computations output data frames, in which case they will be unpacked
-#'   into the constituent columns and those names used. Note that setting
-#'   `.new_col_name` equal to an existing column name will overwrite this column.
-#' @param .all_versions (Not the same as `.all_rows` parameter of `epi_slide`.) If
-#'   TRUE, then `.f` will be passed the version history (all
-#'   `version <= .ref_time_value`) for rows having `time_value` between
-#'   `.ref_time_value - before` and `.ref_time_value`. Otherwise, `.f` will be
-#'   passed only the most recent `version` for every unique `time_value`.
-#'   Default is `FALSE`.
+#' @param .new_col_name Either `NULL` or a string indicating the name of the new
+#'   column that will contain the derived values. The default, `NULL`, will use
+#'   the name "slide_value" unless your slide computations output data frames,
+#'   in which case they will be unpacked into the constituent columns and those
+#'   names used. If the resulting column name(s) overlap with the column names
+#'   used for labeling the computations, which are `group_vars(x)` and
+#'   `"version"`, then the values for these columns must be identical to the
+#'   labels we assign.
+#' @param .all_versions (Not the same as `.all_rows` parameter of `epi_slide`.)
+#'   If `.all_versions = TRUE`, then the slide computation will be passed the
+#'   version history (all `version <= .version` where `.version` is one of the
+#'   requested `.versions`) for rows having a `time_value` of at least `.version
+#'   - before`. Otherwise, the slide computation will be passed only the most
+#'   recent `version` for every unique `time_value`. Default is `FALSE`.
 #' @return A tibble whose columns are: the grouping variables, `time_value`,
 #'   containing the reference time values for the slide computation, and a
 #'   column named according to the `.new_col_name` argument, containing the slide
@@ -805,7 +825,7 @@ epix_slide <- function(
     .f,
     ...,
     .before = Inf,
-    .ref_time_values = NULL,
+    .versions = NULL,
     .new_col_name = NULL,
     .all_versions = FALSE) {
   UseMethod("epix_slide")
@@ -819,7 +839,7 @@ epix_slide.epi_archive <- function(
     .f,
     ...,
     .before = Inf,
-    .ref_time_values = NULL,
+    .versions = NULL,
     .new_col_name = NULL,
     .all_versions = FALSE) {
   # For an "ungrouped" slide, treat all rows as belonging to one big
@@ -829,7 +849,7 @@ epix_slide.epi_archive <- function(
     group_by(.x),
     .f,
     ...,
-    .before = .before, .ref_time_values = .ref_time_values,
+    .before = .before, .versions = .versions,
     .new_col_name = .new_col_name, .all_versions = .all_versions
   ) %>%
     # We want a slide on ungrouped archives to output something
@@ -844,7 +864,7 @@ epix_slide.epi_archive <- function(
 #' Default value for `ref_time_values` in an `epix_slide`
 #'
 #' @noRd
-epix_slide_ref_time_values_default <- function(ea) {
+epix_slide_versions_default <- function(ea) {
   versions_with_updates <- c(ea$DT$version, ea$versions_end)
   ref_time_values <- tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
   return(ref_time_values)
