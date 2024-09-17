@@ -236,7 +236,7 @@ epi_slide <- function(
     .f = function(.data_group, .group_key, ...) {
       epi_slide_one_group(
         .data_group, .group_key, ...,
-        .f_factory = slide_comp_wrapper_factory,
+        .slide_comp_factory = slide_comp_wrapper_factory,
         .before = window_args$before,
         .after = window_args$after,
         .ref_time_values = .ref_time_values,

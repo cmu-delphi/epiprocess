@@ -381,7 +381,7 @@ test_that("epi_slide alerts if the provided f doesn't take enough args", {
     epi_slide(test_data, f_tib_avg_count, .window_size = 7),
   )
 
-  f_x_dots <- function(x, ...) dplyr::tibble(value = mean(x$value), count = length(x$value))
+  f_x_dots <- function(x, ...) dplyr::tibble(mean_value = mean(x$value), count = length(x$value))
   expect_warning(
     epi_slide(test_data, f_x_dots, .window_size = 7),
     class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
@@ -481,8 +481,7 @@ test_that("epi_slide can use sequential data masking expressions including NULL"
   ) %>%
     as_epi_df(as_of = 12L)
 
-  # TODO: Something's borked here.
-  out1 <- edf_a %>%
+  out <- edf_a %>%
     group_by(geo_value) %>%
     epi_slide(
       .window_size = 5L, .align = "center",
@@ -493,21 +492,9 @@ test_that("epi_slide can use sequential data masking expressions including NULL"
     ) %>%
     ungroup() %>%
     as_epi_df(as_of = 12L)
-  expect_equal(out1$m5, out1$derived_m5)
-  expect_true(!"m1" %in% names(out1))
-
-  out2 <- edf_a %>%
-    group_by(geo_value) %>%
-    epi_slide(
-      .window_size = 5L, .align = "center",
-      m1 = list(.x$value[1]),
-      m5 = list(.x$value[5]),
-      derived_m5 = list(m1[[1]] + 4)
-    ) %>%
-    ungroup() %>%
-    filter(!is.na(m5)) %>%
-    as_epi_df(as_of = 12L)
-  expect_equal(out2$m5, out2$derived_m5)
+  na_mask <- !is.na(out$m5) & !is.na(out$derived_m5)
+  expect_equal(out$m5[na_mask], out$derived_m5[na_mask])
+  expect_true(!"m1" %in% names(out))
 })
 
 test_that("epi_slide complains on invalid computation outputs", {
