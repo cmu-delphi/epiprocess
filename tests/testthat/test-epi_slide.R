@@ -2,7 +2,7 @@ library(cli)
 library(dplyr)
 library(purrr)
 
-num_rows_per_group <- 20
+num_rows_per_group <- 30
 get_test_date <- function(time_type = "day") {
   switch(time_type,
     day = as.Date("2020-01-01"),
@@ -19,49 +19,74 @@ get_test_units <- function(time_type = "day") {
     integer = 1L
   )
 }
-get_test_dataset <- function(n, time_type = "day", other_keys = character()) {
+# Returns a tibble with two geos on the same time index and one geo with a
+# different but overlapping time index. Each geo has a missing value somewhere
+# in the middle and a separate reported NA elsewhere.
+get_test_dataset <- function(n, time_type = "day", other_keys = FALSE) {
   checkmate::assert_integerish(n, lower = 1)
   checkmate::assert_character(time_type)
-  checkmate::assert_character(other_keys)
-  checkmate::assert_subset(other_keys, "x")
+  checkmate::assert_logical(other_keys)
   # Do this to actually get n rows per group.
   n_ <- n - 1
 
+  values <- vctrs::vec_assign(0:n_, floor(n * 2 / 3), value = NA_real_)
   test_date <- get_test_date(time_type)
   units <- get_test_units(time_type)
-  # A tibble with two geos on the same time index and one geo with a different
-  # but overlapping time index. Each geo has a missing value somewhere in the middle.
-  tibble::tribble(
-    ~geo_value, ~time_value, ~value, ~x,
-    "a", test_date + units * 0:n_, (0:n_)**2, rep(c(1, 2), length.out = n),
-    "b", test_date + units * 0:n_, (10 * n + 0:n_)**2, rep(c(1, 2), length.out = n),
-    "c", test_date + units * (floor(n / 2) + 0:n_), (100 * n + 0:n_)**2, rep(c(1, 2), length.out = n)
+  df <- tibble::tribble(
+    ~geo_value, ~time_value, ~value,
+    "a", test_date + units * 0:n_, values**2,
+    "b", test_date + units * 0:n_, (10 * n + values)**2,
+    "c", test_date + units * (floor(n / 2) + 0:n_), (100 * n + values)**2,
   ) %>%
-    tidyr::unnest_longer(c(time_value, value, x)) %>%
-    slice(-10) %>%
-    as_epi_df(as_of = test_date + n, other_keys = other_keys) %>%
-    group_by(geo_value)
+    tidyr::unnest_longer(c(time_value, value)) %>%
+    slice(-10)
+
+  if (other_keys) {
+    df <- bind_rows(
+      df %>% mutate(x = 1, value = value + 1),
+      df %>% mutate(x = 2, value = value + 2),
+    ) %>%
+      as_epi_df(as_of = test_date + n, other_keys = "x")
+  } else {
+    df <- df %>%
+      as_epi_df(as_of = test_date + n)
+  }
+  df %>%
+    arrange_canonical() %>%
+    group_epi_df()
 }
 test_data <- get_test_dataset(num_rows_per_group, "day")
 
-# TODO: Add a test that uses an 'other_key' grouping column.
-# TODO: Add a case where the data contains NA values (not just gaps in time_value).
-
 epi_slide_sum_test <- function(
     .x,
-    .window_size = 1, .align = "right", .ref_time_values = NULL, .all_rows = FALSE) {
+    .window_size = 7, .align = "right", .ref_time_values = NULL, .all_rows = FALSE) {
+  checkmate::assert_class(.x, "epi_df")
+  if (!(checkmate::test_integerish(.window_size, lower = 1, upper = Inf) || identical(as.numeric(.window_size), Inf))) {
+    cli::cli_abort("`.window_size` must be a positive integer or Inf.")
+  }
+  checkmate::assert_character(.align)
+  checkmate::assert_subset(.align, c("right", "center", "left"))
+  checkmate::assert(
+    checkmate::checkClass(.ref_time_values, "Date", null.ok = TRUE),
+    checkmate::checkClass(.ref_time_values, "yearmonth"),
+    checkmate::checkClass(.ref_time_values, "numeric")
+  )
+  checkmate::assert_logical(.all_rows)
+
   time_type <- attr(.x, "metadata")$time_type
   window_args <- get_before_after_from_window(.window_size, .align, time_type)
   date_seq_list <- full_date_seq(.x, window_args$before, window_args$after, time_type)
   if (is.null(.ref_time_values)) {
     .ref_time_values <- date_seq_list$all_dates
   }
+  group_keys <- setdiff(key_colnames(.x), "time_value")
 
   .x %>%
     mutate(.real = TRUE) %>%
-    group_by(geo_value) %>%
+    group_epi_df() %>%
     complete(time_value = vctrs::vec_c(!!!date_seq_list, .name_spec = rlang::zap())) %>%
-    arrange(geo_value, time_value) %>%
+    arrange_canonical() %>%
+    group_epi_df() %>%
     mutate(
       slide_value = slider::slide_index_sum(
         .data$value,
@@ -83,7 +108,8 @@ epi_slide_sum_test <- function(
       }
     }) %>%
     filter(.real) %>%
-    select(-.real)
+    select(-.real) %>%
+    relocate(all_of(key_colnames(.x)), .before = 1)
 }
 concatenate_list_params <- function(p) {
   paste(paste0(names(p), "=", p), collapse = "\n")
@@ -125,6 +151,7 @@ expect_equal_handle_null <- function(x, y) {
 # Core functionality tests across an exhaustive combination of parameters on
 # non-trivial data sets with three geo_groups, with non-identical time indices,
 # with missing time values, and with reported NA values.
+#
 # .ref_time_values can be:
 # - NULL is a special case where we just use all the unique time_values in the
 #   data.
@@ -134,32 +161,49 @@ expect_equal_handle_null <- function(x, y) {
 #   either empty or NA (depending if .all_rows is TRUE or not).
 # - c(8, 9) corresponds to test_date + 8 * units amd test_date + 9 * units.
 #   In this case, groups a and b have values, but c does not.
+#
+# We filter down to reduce the number of combinations:
+# - Since time_types only interact with .ref_time_values, we fix all the other
+#   parameters to a single common value.
+# - We separate out .window_size=Inf, because it is only defined for
+#   .align="right".
+# - We test .align and .all_rows separately, with a fixed .time_Type and
+#   .other_keys.
 param_combinations <- bind_rows(
   tidyr::expand_grid(
     .time_type = c("day", "week", "yearmonth", "integer"),
+    .other_keys = c(TRUE),
     .ref_time_values = list(NULL, c(1, 2), c(8, 9)),
-    .all_rows = c(FALSE, TRUE),
-    .align = c("right", "center", "left"),
-    .window_size = c(1, 7),
+    .all_rows = c(TRUE),
+    .align = c("right"),
+    .window_size = c(7),
   ),
   tidyr::expand_grid(
     .time_type = c("day", "week", "yearmonth", "integer"),
+    .other_keys = c(TRUE),
     .ref_time_values = list(NULL, c(1, 2), c(8, 9)),
-    .all_rows = c(FALSE, TRUE),
+    .all_rows = c(TRUE),
     .align = c("right"),
     .window_size = c(Inf),
-  )
+  ),
+  tidyr::expand_grid(
+    .time_type = c("day"),
+    .other_keys = c(FALSE),
+    .ref_time_values = list(NULL, c(1, 2), c(8, 9)),
+    .all_rows = c(FALSE, TRUE),
+    .align = c("right", "center", "left"),
+    .window_size = c(7),
+  ),
 )
 for (p in (param_combinations %>% transpose())) {
-  test_data <- get_test_dataset(num_rows_per_group, p$.time_type)
+  test_data <- get_test_dataset(num_rows_per_group, p$.time_type, p$.other_keys)
   units <- get_test_units(p$.time_type)
   test_date <- get_test_date(p$.time_type)
   p$.window_size <- p$.window_size * units
   if (!is.null(p$.ref_time_values)) {
     p$.ref_time_values <- test_date + units * p$.ref_time_values
   }
-  as_of <- attr(test_data, "metadata")$as_of
-  slide_args <- p[setdiff(names(p), c(".time_type"))]
+  slide_args <- p[setdiff(names(p), c(".time_type", ".other_keys"))]
 
   test_that(
     format_inline(
@@ -202,8 +246,8 @@ for (p in (param_combinations %>% transpose())) {
         rowwise() %>%
         mutate(slide_value = list(slide_value)) %>%
         ungroup() %>%
-        as_epi_df(as_of = as_of) %>%
-        group_by(geo_value)
+        as_epi_df(as_of = attr(test_data, "metadata")$as_of, other_keys = attr(test_data, "metadata")$other_keys) %>%
+        group_epi_df()
 
       expect_equal(
         out %>% select(-slide_value),
@@ -224,8 +268,8 @@ for (p in (param_combinations %>% transpose())) {
         rowwise() %>%
         mutate(slide_value = list(slide_value)) %>%
         ungroup() %>%
-        as_epi_df(as_of = as_of) %>%
-        group_by(geo_value)
+        as_epi_df(as_of = attr(test_data, "metadata")$as_of, other_keys = attr(test_data, "metadata")$other_keys) %>%
+        group_epi_df()
       expect_equal(
         out %>% select(-slide_value),
         expected_out %>% select(-slide_value)
@@ -241,7 +285,7 @@ for (p in (param_combinations %>% transpose())) {
     ),
     {
       expected_out <- rlang::inject(epi_slide_sum_test(test_data, !!!slide_args))
-      expect_equal_mod(
+      expect_equal(
         rlang::inject(epi_slide(
           test_data, , data.frame(slide_value = sum(.x$value)),
           !!!slide_args
@@ -290,7 +334,6 @@ for (p in (param_combinations %>% transpose())) {
   )
 }
 
-# TODO: This.
 test_that(".window_size as integer works", {
   expect_equal(
     epi_slide(test_data, ~ sum(.x$value), .window_size = 7),
@@ -320,11 +363,11 @@ for (bad_value in bad_values) {
 test_that(format_inline("epi_slide should fail when `.ref_time_values` is out of range for all groups "), {
   bad_values <- c(min(test_data$time_value) - 1, max(test_data$time_value) + 1)
   expect_error(
-    epi_slide(test_data, ~ sum(.x), .ref_time_values = bad_values),
+    epi_slide(test_data, ~ sum(.x), .ref_time_values = bad_values, .window_size = 7),
     class = "epiprocess__epi_slide_invalid_ref_time_values"
   )
   expect_error(
-    epi_slide_mean(test_data, .col_names = value, .ref_time_values = bad_values),
+    epi_slide_mean(test_data, .col_names = value, .ref_time_values = bad_values, .window_size = 7),
     class = "epiprocess__epi_slide_opt_invalid_ref_time_values"
   )
 })
@@ -332,14 +375,15 @@ test_that(format_inline("epi_slide should fail when `.ref_time_values` is out of
 test_that("epi_slide alerts if the provided f doesn't take enough args", {
   f_tib_avg_count <- function(x, g, t) dplyr::tibble(avg = mean(x$value), count = length(x$value))
   expect_no_error(
-    epi_slide(test_data, f_tib_avg_count),
+    epi_slide(test_data, f_tib_avg_count, .window_size = 7),
   )
   expect_no_warning(
-    epi_slide(test_data, f_tib_avg_count),
+    epi_slide(test_data, f_tib_avg_count, .window_size = 7),
   )
 
   f_x_dots <- function(x, ...) dplyr::tibble(value = mean(x$value), count = length(x$value))
-  expect_warning(epi_slide(test_data, f_x_dots),
+  expect_warning(
+    epi_slide(test_data, f_x_dots, .window_size = 7),
     class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
   )
 })
@@ -347,19 +391,19 @@ test_that("epi_slide alerts if the provided f doesn't take enough args", {
 test_that("epi_slide computation via f can use ref_time_value", {
   expected_out <- test_data %>% mutate(slide_value = time_value)
   expect_equal(
-    test_data %>% epi_slide(~.ref_time_value),
+    epi_slide(test_data, ~.ref_time_value, .window_size = 7),
     expected_out
   )
   expect_equal(
-    test_data %>% epi_slide(~.z),
+    epi_slide(test_data, ~.z, .window_size = 7),
     expected_out
   )
   expect_equal(
-    test_data %>% epi_slide(~..3),
+    epi_slide(test_data, ~..3, .window_size = 7),
     expected_out
   )
   expect_equal(
-    test_data %>% epi_slide(.f = function(x, g, t) t),
+    epi_slide(test_data, .f = function(x, g, t) t, .window_size = 7),
     expected_out
   )
 })
@@ -367,66 +411,64 @@ test_that("epi_slide computation via f can use ref_time_value", {
 test_that("epi_slide computation via f can use group", {
   expected_out <- test_data %>% mutate(slide_value = geo_value)
   expect_equal(
-    test_data %>% epi_slide(~ .group_key$geo_value),
+    epi_slide(test_data, .f = ~ .group_key$geo_value, .window_size = 7),
     expected_out
   )
   expect_equal(
-    test_data %>% epi_slide(~ .y$geo_value),
+    epi_slide(test_data, .f = ~ .y$geo_value, .window_size = 7),
     expected_out
   )
   expect_equal(
-    test_data %>% epi_slide(~ ..2$geo_value),
+    epi_slide(test_data, .f = ~ ..2$geo_value, .window_size = 7),
     expected_out
   )
   expect_equal(
-    test_data %>% epi_slide(.f = function(x, g, t) g$geo_value),
+    epi_slide(test_data, .f = function(x, g, t) g$geo_value, .window_size = 7),
     expected_out
   )
 })
 
 test_that("epi_slide computation via dots can use ref_time_value", {
   expect_equal(
-    test_data %>% epi_slide(slide_value = .ref_time_value),
-    test_data %>% mutate(slide_value = time_value)
+    epi_slide(test_data, slide_value = .ref_time_value, .window_size = 7),
+    mutate(test_data, slide_value = time_value)
   )
 })
 
 test_that("epi_slide computation via dots can use group", {
   expect_equal(
-    test_data %>% epi_slide(slide_value = nrow(.group_key)),
-    test_data %>% mutate(slide_value = 1L)
+    epi_slide(test_data, slide_value = nrow(.group_key), .window_size = 7),
+    mutate(test_data, slide_value = 1L)
   )
   expect_equal(
-    test_data %>% epi_slide(slide_value = .group_key$geo_value),
-    test_data %>% mutate(slide_value = geo_value)
+    epi_slide(test_data, slide_value = .group_key$geo_value, .window_size = 7),
+    mutate(test_data, slide_value = geo_value)
   )
 })
 
 test_that("epi_slide computation should not allow access from .data and .env", {
-  expect_error(test_data %>% epi_slide(slide_value = .env$.ref_time_value))
-  expect_error(test_data %>% epi_slide(slide_value = .data$.ref_time_value))
-  expect_error(test_data %>% epi_slide(slide_value = .env$.group_key))
-  expect_error(test_data %>% epi_slide(slide_value = .data$.group_key))
+  expect_error(epi_slide(test_data, slide_value = .env$.ref_time_value, .window_size = 7))
+  expect_error(epi_slide(test_data, slide_value = .data$.ref_time_value, .window_size = 7))
+  expect_error(epi_slide(test_data, slide_value = .env$.group_key, .window_size = 7))
+  expect_error(epi_slide(test_data, slide_value = .data$.group_key, .window_size = 7))
 })
 
 test_that("epi_slide computation via dots outputs the same result using col names and the data var", {
-  expected_output <- test_data %>% epi_slide(slide_value = max(time_value))
+  expected_output <- epi_slide(test_data, slide_value = max(time_value), .window_size = 7)
 
   expect_equal(
-    test_data %>% epi_slide(slide_value = max(.x$time_value)),
+    epi_slide(test_data, slide_value = max(.x$time_value), .window_size = 7),
     expected_output
   )
   expect_equal(
-    test_data %>% epi_slide(slide_value = max(.data$time_value)),
+    epi_slide(test_data, slide_value = max(.data$time_value), .window_size = 7),
     expected_output
   )
 })
 
 test_that("`epi_slide` can access objects inside of helper functions", {
   helper <- function(archive_haystack, time_value_needle) {
-    archive_haystack %>% epi_slide(
-      has_needle = time_value_needle %in% time_value, .window_size = Inf
-    )
+    epi_slide(archive_haystack, has_needle = time_value_needle %in% time_value, .window_size = 7)
   }
   expect_no_error(helper(test_data, as.Date("2021-01-01")))
 })
@@ -439,6 +481,7 @@ test_that("epi_slide can use sequential data masking expressions including NULL"
   ) %>%
     as_epi_df(as_of = 12L)
 
+  # TODO: Something's borked here.
   out1 <- edf_a %>%
     group_by(geo_value) %>%
     epi_slide(
@@ -449,9 +492,9 @@ test_that("epi_slide can use sequential data masking expressions including NULL"
       m1 = NULL
     ) %>%
     ungroup() %>%
-    tidyr::drop_na() %>%
     as_epi_df(as_of = 12L)
   expect_equal(out1$m5, out1$derived_m5)
+  expect_true(!"m1" %in% names(out1))
 
   out2 <- edf_a %>%
     group_by(geo_value) %>%
@@ -469,34 +512,31 @@ test_that("epi_slide can use sequential data masking expressions including NULL"
 
 test_that("epi_slide complains on invalid computation outputs", {
   expect_error(
-    test_data %>% epi_slide(~ lm(value ~ time_value, .x)),
+    epi_slide(test_data, .f = ~ lm(value ~ time_value, .x), .window_size = 7),
     class = "epiprocess__invalid_slide_comp_value"
   )
   expect_no_error(
-    test_data %>% epi_slide(~ list(lm(value ~ time_value, .x))),
+    epi_slide(test_data, .f = ~ list(lm(value ~ time_value, .x)), .window_size = 7),
     class = "epiprocess__invalid_slide_comp_value"
   )
   expect_error(
-    test_data %>% epi_slide(model = lm(value ~ time_value, .x)),
+    epi_slide(test_data, model = lm(value ~ time_value, .x), .window_size = 7),
     class = "epiprocess__invalid_slide_comp_tidyeval_output"
   )
   expect_no_error(
-    test_data %>% epi_slide(model = list(lm(value ~ time_value, .x))),
+    epi_slide(test_data, model = list(lm(value ~ time_value, .x)), .window_size = 7),
     class = "epiprocess__invalid_slide_comp_tidyeval_output"
   )
   expect_error(
-    test_data %>%
-      epi_slide(.window_size = 6, ~ sum(.x$value) + c(0, 0, 0)),
+    epi_slide(test_data, .f = ~ sum(.x$value) + c(0, 0, 0), .window_size = 7),
     class = "epiprocess__invalid_slide_comp_value"
   )
   expect_error(
-    test_data %>%
-      epi_slide(.window_size = 6, ~ as.list(sum(.x$value) + c(0, 0, 0))),
+    epi_slide(test_data, .f = ~ as.list(sum(.x$value) + c(0, 0, 0)), .window_size = 7),
     class = "epiprocess__invalid_slide_comp_value"
   )
   expect_error(
-    test_data %>%
-      epi_slide(.window_size = 6, ~ data.frame(slide_value = sum(.x$value) + c(0, 0, 0))),
+    epi_slide(test_data, .f = ~ data.frame(slide_value = sum(.x$value) + c(0, 0, 0)), .window_size = 7),
     class = "epiprocess__invalid_slide_comp_value"
   )
 })
@@ -505,7 +545,7 @@ test_that("epi_slide can use {nm} :=", {
   nm <- "slide_value"
   expect_identical(
     # unfortunately, we can't pass this directly as `f` and need an extra comma
-    test_data %>% epi_slide(, !!nm := sum(value), .window_size = 7),
+    epi_slide(test_data, , !!nm := sum(value), .window_size = 7),
     epi_slide_sum_test(test_data, .window_size = 7)
   )
 })
@@ -700,14 +740,13 @@ test_that("`epi_slide_opt` errors when passed non-`data.table`, non-`slider` fun
   )
 })
 
-multi_columns <- dplyr::bind_rows(
-  dplyr::tibble(geo_value = "ak", time_value = test_date + 1:200, value = 1:200, value2 = -1:-200),
-  dplyr::tibble(geo_value = "al", time_value = test_date + 1:5, value = -(1:5), value2 = 1:5)
-) %>%
-  as_epi_df() %>%
-  group_by(geo_value)
-
 test_that("no dplyr warnings from selecting multiple columns", {
+  multi_columns <- dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = test_date + 1:200, value = 1:200, value2 = -1:-200),
+    dplyr::tibble(geo_value = "al", time_value = test_date + 1:5, value = -(1:5), value2 = 1:5)
+  ) %>%
+    as_epi_df() %>%
+    group_by(geo_value)
   expect_no_warning(
     multi_slid <- epi_slide_mean(multi_columns, .col_names = c("value", "value2"), .window_size = 7)
   )
