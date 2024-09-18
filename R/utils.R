@@ -555,11 +555,13 @@ guess_time_type <- function(time_value, time_value_arg = rlang::caller_arg(time_
   if (inherits(time_value, "Date")) {
     unique_time_gaps <- as.numeric(diff(sort(unique(time_value))))
     # Gaps in a weekly date sequence will cause some diffs to be larger than 7
-    # days, so check modulo 7 equality, rather than equality with 7.
-    if (all(unique_time_gaps %% 7 == 0)) {
+    # days, so check modulo 7 equality, rather than equality with 7. The length
+    # check is there so that we don't classify epi_df with a single data point
+    # per geo as "week".
+    if (all(unique_time_gaps %% 7 == 0) && length(unique_time_gaps) > 0) {
       return("week")
     }
-    if (all(unique_time_gaps >= 28)) {
+    if (all(unique_time_gaps >= 28) && length(unique_time_gaps) > 0) {
       cli_abort(
         "Found a monthly or longer cadence in the time column `{time_value_arg}`.
         Consider using tsibble::yearmonth for monthly data and 'YYYY' integers for year data."
@@ -955,17 +957,10 @@ guess_period.POSIXt <- function(time_values, time_values_arg = rlang::caller_arg
   as.numeric(NextMethod(), units = "secs")
 }
 
-validate_slide_window_arg <- function(arg, time_type, allow_inf = TRUE, arg_name = rlang::caller_arg(arg)) {
-  if (is.null(arg)) {
+validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRUE, arg_name = rlang::caller_arg(arg)) {
+  if (!checkmate::test_scalar(arg) || arg < lower) {
     cli_abort(
-      "`{arg_name}` is a required argument for slide functions.",
-      class = "epiprocess__validate_slide_window_arg"
-    )
-  }
-
-  if (!checkmate::test_scalar(arg)) {
-    cli_abort(
-      "Slide function expected `{arg_name}` to be a scalar value.",
+      "Slide function expected `{arg_name}` to be a non-null, scalar integer >= {lower}.",
       class = "epiprocess__validate_slide_window_arg"
     )
   }

@@ -8,15 +8,20 @@
 #' @param .f Function, formula, or missing; together with `...` specifies the
 #'   computation to slide. To "slide" means to apply a computation within a
 #'   sliding (a.k.a. "rolling") time window for each data group. The window is
-#'   determined by the `before` and `after` parameters described below. One time
-#'   step is typically one day or one week; see details for more explanation. If
-#'   a function, `.f` must take a data frame with the same column names as the
-#'   original object, minus any grouping variables, containing the time window
-#'   data for one group-`.ref_time_value` combination; followed by a one-row
-#'   tibble containing the values of the grouping variables for the associated
-#'   group; followed by any number of named arguments. If a formula, `.f` can
-#'   operate directly on columns accessed via `.x$var` or `.$var`, as in
-#'   `~mean(.x$var)` to compute a mean of a column `var` for each
+#'   determined by the `.window_size` and `.align` parameters, see the details
+#'   section for more. If a function, `.f` must have the form `function(x, g, t,
+#'   ...)`, where
+#'
+#'   - `x` is a data frame with the same column names as the original object,
+#'   minus any grouping variables, with only the windowed data for one
+#'   group-`.ref_time_value` combination
+#'   - `g` is a one-row tibble containing the values of the grouping variables
+#'   for the associated group
+#'   - `t` is the `.ref_time_value` for the current window
+#'   - `...` are additional arguments
+#'
+#'   If a formula, `.f` can operate directly on columns accessed via `.x$var` or
+#'   `.$var`, as in `~mean(.x$var)` to compute a mean of a column `var` for each
 #'   `ref_time_value`-group combination. The group key can be accessed via `.y`.
 #'   If `.f` is missing, then `...` will specify the computation.
 #' @param ... Additional arguments to pass to the function or formula specified
@@ -24,8 +29,8 @@
 #'   as a ["data-masking"][rlang::args_data_masking] expression or expressions
 #'   for tidy evaluation; in addition to referring columns directly by name, the
 #'   expressions have access to `.data` and `.env` pronouns as in `dplyr` verbs,
-#'   and can also refer to `.x`, `.group_key`, and `.ref_time_value`. See
-#'   details.
+#'   and can also refer to `.x` (not the same as the input epi_df),
+#'   `.group_key`, and `.ref_time_value`. See details.
 #' @param .new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. The default is "slide_value" unless your
 #'   slide computations output data frames, in which case they will be unpacked
@@ -57,14 +62,14 @@
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
 #'   ungroup()
 #'
-#' # slide a 7-day centre-aligned average
+#' # slide a 7-day center-aligned average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), .window_size = 7, .align = "center") %>%
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
 #'   ungroup()
 #'
-#' # slide a 14-day centre-aligned average
+#' # slide a 14-day center-aligned average
 #' jhu_csse_daily_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_14dav = mean(cases), .window_size = 14, .align = "center") %>%
@@ -84,11 +89,11 @@
 #'   ungroup()
 epi_slide <- function(
     .x, .f, ...,
-    .window_size = 1, .align = c("right", "center", "left"),
+    .window_size = NULL, .align = c("right", "center", "left"),
     .ref_time_values = NULL, .new_col_name = NULL, .all_rows = FALSE) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
-  if (any(purrr::map_lgl(provided_args, ~ .x %in% c("x", "f", "ref_time_values", "new_col_name", "all_rows")))) {
+  if (any(provided_args %in% c("x", "f", "ref_time_values", "new_col_name", "all_rows"))) {
     cli::cli_abort(
       "epi_slide: you are using one of the following old argument names: `x`, `f`, `ref_time_values`,
       `new_col_name`, or `all_rows`. Please use the new dot-prefixed names: `.x`, `.f`, `.ref_time_values`,
@@ -114,86 +119,27 @@ epi_slide <- function(
     )
   }
 
-  # Function body starts
+  # Validate arguments
   assert_class(.x, "epi_df")
-
+  if (checkmate::test_class(.x, "grouped_df")) {
+    expected_group_keys <- .x %>%
+      key_colnames() %>%
+      kill_time_value() %>%
+      sort()
+    if (!identical(.x %>% group_vars() %>% sort(), expected_group_keys)) {
+      cli_abort(
+        "epi_slide: `.x` must be either grouped by {expected_group_keys}. (Or you can just ungroup
+        `.x` and we'll do this grouping automatically.) You may need to aggregate your data first,
+        see aggregate_epi_df().",
+        class = "epiprocess__epi_slide__invalid_grouping"
+      )
+    }
+  } else {
+    .x <- group_epi_df(.x)
+  }
   if (nrow(.x) == 0L) {
     return(.x)
   }
-
-  if (is.null(.ref_time_values)) {
-    .ref_time_values <- unique(.x$time_value)
-  } else {
-    assert_numeric(.ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
-    if (!test_subset(.ref_time_values, unique(.x$time_value))) {
-      cli_abort(
-        "`.ref_time_values` must be a unique subset of the time values in `.x`.",
-        class = "epi_slide__invalid_ref_time_values"
-      )
-    }
-
-    if (anyDuplicated(.ref_time_values) != 0L) {
-      cli_abort(
-        "`.ref_time_values` must not contain any duplicates; use `unique` if appropriate.",
-        class = "epi_slide__invalid_ref_time_values"
-      )
-    }
-  }
-  .ref_time_values <- sort(.ref_time_values)
-
-  # Handle window arguments
-  align <- rlang::arg_match(.align)
-  time_type <- attr(.x, "metadata")$time_type
-  validate_slide_window_arg(.window_size, time_type)
-  if (identical(.window_size, Inf)) {
-    if (align == "right") {
-      before <- Inf
-      if (time_type %in% c("day", "week")) {
-        after <- as.difftime(0, units = glue::glue("{time_type}s"))
-      } else {
-        after <- 0
-      }
-    } else {
-      cli_abort(
-        "`epi_slide`: center and left alignment are not supported with an infinite window size."
-      )
-    }
-  } else {
-    if (align == "right") {
-      before <- .window_size - 1
-      after <- 0
-    } else if (align == "center") {
-      # For .window_size = 5, before = 2, after = 2. For .window_size = 4, before = 2, after = 1.
-      before <- floor(.window_size / 2)
-      after <- .window_size - before - 1
-    } else if (align == "left") {
-      before <- 0
-      after <- .window_size - 1
-    }
-  }
-
-  checkmate::assert_string(.new_col_name, null.ok = TRUE)
-  if (!is.null(.new_col_name)) {
-    if (.new_col_name %in% group_vars(.x)) {
-      cli_abort(c("`.new_col_name` must not be one of the grouping column name(s);
-                   `epi_slide()` uses these column name(s) to label what group
-                   each slide computation came from.",
-        "i" = "{cli::qty(length(group_vars(.x)))} grouping column name{?s}
-                         {?was/were} {format_chr_with_quotes(group_vars(.x))}",
-        "x" = "`.new_col_name` was {format_chr_with_quotes(.new_col_name)}"
-      ))
-    }
-    if (identical(.new_col_name, "time_value")) {
-      cli_abort('`.new_col_name` must not be `"time_value"`; `epi_slide()` uses that column name to attach the element of `.ref_time_values` associated with each slide computation') # nolint: line_length_linter
-    }
-  }
-
-  # Arrange by increasing time_value
-  .x <- arrange(.x, .data$time_value)
-
-  # Now set up starts and stops for sliding/hopping
-  .starts <- .ref_time_values - before
-  .stops <- .ref_time_values + after
 
   # If `.f` is missing, interpret ... as an expression for tidy evaluation
   if (missing(.f)) {
@@ -205,20 +151,70 @@ epi_slide <- function(
 
     .f <- quosures
     # Magic value that passes zero args as dots in calls below. Equivalent to
-    # `... <- missing_arg()`, but use `assign` to avoid warning about
-    # improper use of dots.
+    # `... <- missing_arg()`, but `assign` avoids warning about improper use of
+    # dots.
     assign("...", missing_arg())
   } else {
     used_data_masking <- FALSE
   }
-
   .slide_comp <- as_time_slide_computation(.f, ...)
 
+  .align <- rlang::arg_match(.align)
+  time_type <- attr(.x, "metadata")$time_type
+  if (is.null(.window_size)) {
+    cli_abort("epi_slide: `.window_size` must be specified.")
+  }
+  validate_slide_window_arg(.window_size, time_type)
+  window_args <- get_before_after_from_window(.window_size, .align, time_type)
+
+  if (is.null(.ref_time_values)) {
+    .ref_time_values <- unique(.x$time_value)
+  } else {
+    assert_numeric(.ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE, unique = TRUE)
+    if (!test_subset(.ref_time_values, unique(.x$time_value))) {
+      cli_abort(
+        "epi_slide: `ref_time_values` must be a unique subset of the time values in `x`.",
+        class = "epiprocess__epi_slide_invalid_ref_time_values"
+      )
+    }
+  }
+  .ref_time_values <- sort(.ref_time_values)
+
+  assert_character(.new_col_name, null.ok = TRUE)
+  if (!is.null(.new_col_name)) {
+    if (.new_col_name %in% group_vars(.x)) {
+      cli_abort(c("`.new_col_name` must not be one of the grouping column name(s);
+                   `epi_slide()` uses these column name(s) to label what group
+                   each slide computation came from.",
+        "i" = "{cli::qty(length(group_vars(.x)))} grouping column name{?s}
+                         {?was/were} {format_chr_with_quotes(group_vars(.x))}",
+        "x" = "`.new_col_name` was {format_chr_with_quotes(.new_col_name)}"
+      ))
+    }
+    if (any(.new_col_name %in% c("geo_value", "time_value"))) {
+      cli_abort(
+        "epi_slide: `.new_col_name` cannot be one of 'geo_value' or 'time_value'.",
+        class = "epiprocess__epi_slide_invalid_new_col_name"
+      )
+    }
+  }
+
+  assert_logical(.all_rows, len = 1)
+
+  # Begin handling completion. This will create a complete time index between
+  # the smallest and largest time values in the data. This is used to ensure
+  # that the slide function is called with a complete window of data. Each slide
+  # group will filter this down to between its min and max time values. We also
+  # mark which dates were in the data and which were added by our completion.
+  date_seq_list <- full_date_seq(.x, window_args$before, window_args$after, time_type)
+  .x$.real <- TRUE
+
   # Create a wrapper that calculates and passes `.ref_time_value` to the
-  # computation. `i` is contained in the `slide_comp_wrapper_factory` environment such
-  # that when called within `slide_one_grp` `i` is reset for every group.
+  # computation. `i` is contained in the `slide_comp_wrapper_factory`
+  # environment such that when called within `slide_one_grp` `i` advances
+  # through the list of reference time values within a group and then resets
+  # back to 1 when switching groups.
   slide_comp_wrapper_factory <- function(kept_ref_time_values) {
-    # Use `i` to advance through list of start dates.
     i <- 1L
     slide_comp_wrapper <- function(.x, .group_key, ...) {
       .ref_time_value <- kept_ref_time_values[[i]]
@@ -228,197 +224,259 @@ epi_slide <- function(
     return(slide_comp_wrapper)
   }
 
-  # Computation for one group, all time values
-  slide_one_grp <- function(.data_group,
-                            .group_key, # see `?group_modify`
-                            ..., # `...` to `epi_slide` forwarded here
-                            .slide_comp_factory,
-                            .starts,
-                            .stops,
-                            .ref_time_values,
-                            .all_rows,
-                            .new_col_name) {
-    # Figure out which reference time values appear in the data group in the
-    # first place (we need to do this because it could differ based on the
-    # group, hence the setup/checks for the reference time values based on all
-    # the data could still be off):
-    o <- .ref_time_values %in% .data_group$time_value
-    .starts <- .starts[o]
-    .stops <- .stops[o]
-    kept_ref_time_values <- .ref_time_values[o]
+  # - If .x is not grouped, then the trivial group is applied:
+  #   https://dplyr.tidyverse.org/reference/group_map.html
+  # - We create a lambda that forwards the necessary slide arguments to
+  #   `epi_slide_one_group`.
+  # - `...` from top of `epi_slide` are forwarded to `.f` here through
+  #   group_modify and through the lambda.
+  .x_groups <- groups(.x)
+  result <- group_map(
+    .x,
+    .f = function(.data_group, .group_key, ...) {
+      epi_slide_one_group(
+        .data_group, .group_key, ...,
+        .slide_comp_factory = slide_comp_wrapper_factory,
+        .before = window_args$before,
+        .after = window_args$after,
+        .ref_time_values = .ref_time_values,
+        .all_rows = .all_rows,
+        .new_col_name = .new_col_name,
+        .used_data_masking = used_data_masking,
+        .time_type = time_type,
+        .date_seq_list = date_seq_list
+      )
+    },
+    ...,
+    .keep = TRUE
+  ) %>%
+    bind_rows() %>%
+    filter(.real) %>%
+    select(-.real) %>%
+    arrange_col_canonical() %>%
+    group_by(!!!.x_groups)
 
-    .slide_comp <- .slide_comp_factory(kept_ref_time_values)
-
-    # Compute the slide values
-    slide_values_list <- slider::hop_index(
-      .x = .data_group,
-      .i = .data_group$time_value,
-      .starts = .starts,
-      .stops = .stops,
-      .f = .slide_comp,
-      .group_key, ...
+  # If every group in epi_slide_one_group takes the
+  # length(available_ref_time_values) == 0 branch then we end up here.
+  if (ncol(result) == ncol(.x %>% select(-.real))) {
+    cli_abort(
+      "epi_slide: no new columns were created. This can happen if every group has no available ref_time_values.
+      This is likely a mistake in your data, in the slide computation, or in the ref_time_values argument.",
+      class = "epiprocess__epi_slide_no_new_columns"
     )
+  }
+  return(result)
+}
 
-    # If this wasn't a tidyeval computation, we still need to check the output
-    # types. We'll let `list_unchop`/`bind_rows` deal with checking for type
-    # compatibility between the outputs.
-    if (!used_data_masking &&
-      !all(vapply(slide_values_list, function(comp_value) {
-        # vctrs considers data.frames to be vectors, but we still check
-        # separately for them because certain base operations output data frames
-        # with rownames, which we will allow (but might drop)
-        is.data.frame(comp_value) ||
-          vctrs::obj_is_vector(comp_value) && is.null(vctrs::vec_names(comp_value))
-      }, logical(1L)))
-    ) {
-      cli_abort("
-        the slide computations must always return either data frames without rownames
-        or unnamed vectors (as determined by the vctrs package) (and not a mix
-        of these two structures).
-      ", class = "epiprocess__invalid_slide_comp_value")
-    }
+# Slide applied to one group.  See `?group_modify` for the expected structure. The dots
+# `...` forward their inputs to the function `f`.
+epi_slide_one_group <- function(
+    .data_group, .group_key,
+    ...,
+    .slide_comp_factory, .before, .after, .ref_time_values, .all_rows,
+    .new_col_name, .used_data_masking, .time_type, .date_seq_list) {
+  available_ref_time_values <- .ref_time_values[
+    .ref_time_values >= min(.data_group$time_value) & .ref_time_values <= max(.data_group$time_value)
+  ]
 
-    # Now figure out which rows in the data group are in the reference time
-    # values; this will be useful for all sorts of checks that follow
-    o <- .data_group$time_value %in% kept_ref_time_values
-    num_ref_rows <- sum(o)
+  # Unpack the date_seq_list argument and complete the data group with missing
+  # time values, padding on the left and right as needed.
+  all_dates <- .date_seq_list$all_dates
+  missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
+  .data_group <- bind_rows(
+    .data_group,
+    tibble(time_value = c(
+      missing_times,
+      .date_seq_list$pad_early_dates,
+      .date_seq_list$pad_late_dates
+    ), .real = FALSE)
+  ) %>%
+    arrange(.data$time_value)
 
-    # Count the number of appearances of each kept reference time value.
-    counts <- dplyr::filter(.data_group, .data$time_value %in% kept_ref_time_values) %>%
-      dplyr::count(.data$time_value) %>%
-      `[[`("n")
-
-    if (length(slide_values_list) == 0L) {
-      # We don't know what .ptype we should be outputting, and we won't try to
-      # infer it by running a dummy computation. We should just output something
-      # that will combine well with what computations exist. In some edge cases
-      # (zero rows in .x, zero .ref_time_values) we may end up just not adding
-      # any columns, but those edge cases are currently explicitly handled
-      # earlier (outputting zero columns and aborting, respectively).
-
-      # To combine well, we want something of a "super"-.ptype of all possible
-      # values. `NULL` almost works but can't be `vec_rep`'d. We'll use a 0-col
-      # data.frame instead, but will have to ensure it's unpacked into its 0
-      # columns in case other computations return vectors by introducing a
-      # .group_new_col_name.
-      .group_new_col_name <- NULL
-      slide_values_list <- vctrs::new_list_of(slide_values_list, data.frame())
-    } else {
-      .group_new_col_name <- .new_col_name
-    }
-
-    slide_values <- vctrs::list_unchop(slide_values_list)
-
-    if (
-      all(purrr::map_int(slide_values_list, vctrs::vec_size) == 1L) &&
-        length(slide_values_list) != 0L
-    ) {
-      # Recycle to make size stable (one slide value per ref time value).
-      # (Length-0 case also could be handled here, but causes difficulties;
-      # leave it to the next branch, where it also belongs.)
-      slide_values <- vctrs::vec_rep_each(slide_values, times = counts)
-    } else {
-      # (Loose) check on number of rows:
-      if (vctrs::vec_size(slide_values) != num_ref_rows) {
-        cli_abort(
-          "The slide computations must either (a) output a single element/row each, or
-          (b) one element/row per appearance of the reference time value in the local window."
-        )
-      }
-    }
-
-    # If all rows, then pad slide values with NAs, else filter down data group
+  # If the data group does not contain any of the reference time values, return
+  # the original .data_group without slide columns and let bind_rows at the end
+  # of group_modify handle filling the empty data frame with NA values.
+  if (length(available_ref_time_values) == 0L) {
     if (.all_rows) {
-      orig_values <- slide_values
-      slide_values <- vctrs::vec_rep(vctrs::vec_cast(NA, orig_values), nrow(.data_group))
-      vctrs::vec_slice(slide_values, o) <- orig_values
-    } else {
-      .data_group <- filter(.data_group, o)
+      return(.data_group)
     }
-
-    # To label the result, we will parallel some code from `epix_slide`, though
-    # some logic is different and some optimizations are less likely to be
-    # needed as we're at a different loop depth.
-
-    # Unlike `epix_slide`, we will not every have to deal with a 0-row
-    # `.group_key`: we return early if `epi_slide`'s `.x` has 0 rows, and our
-    # loop over groups is the outer loop (>= 1 row into the group loop ensures
-    # we will have only 1-row `.group_key`s). Further, unlike `epix_slide`, we
-    # actually will be using `.group_data` rather than work with `.group_key` at
-    # all, in order to keep the pre-existing non-key columns. We will also try
-    # to work directly with `epi_df`s instead of listified tibbles; since we're
-    # not in as tight of a loop, the increased overhead hopefully won't matter.
-    # We'll need to use `bind_cols` rather than `c` to avoid losing
-    # `epi_df`ness.
-
-    res <- .data_group
-
-    if (is.null(.group_new_col_name)) {
-      if (inherits(slide_values, "data.frame")) {
-        # Sometimes slide_values can parrot back columns already in `res`; allow
-        # this, but balk if a column has the same name as one in `res` but a
-        # different value:
-        comp_nms <- names(slide_values)
-        overlaps_existing_names <- comp_nms %in% names(res)
-        for (comp_i in which(overlaps_existing_names)) {
-          if (!identical(slide_values[[comp_i]], res[[comp_nms[[comp_i]]]])) {
-            lines <- c(
-              cli::format_error(c(
-                "conflict detected between existing columns and slide computation output:",
-                "i" = "pre-existing columns: {syms(names(res))}",
-                "x" = "slide computation output included a column {syms(comp_nms[[comp_i]])} that didn't match the
-                pre-existing value"
-              )),
-              capture.output(print(waldo::compare(
-                res[[comp_nms[[comp_i]]]], slide_values[[comp_i]],
-                x_arg = "existing", y_arg = "comp output"
-              ))),
-              cli::format_message(c(
-                "You likely want to rename or remove this column from your slide computation's output, or
-                debug why it has a different value."
-              ))
-            )
-            rlang::abort(paste(collapse = "\n", lines),
-              class = "epiprocess__epi_slide_existing_vs_output_column_conflict"
-            )
-          }
-        }
-        # Unpack into separate columns (without name prefix). If there are
-        # columns duplicating existing columns, de-dupe and order them as if they
-        # didn't exist in slide_values.
-        res <- bind_cols(res, slide_values[!overlaps_existing_names])
-      } else {
-        # Apply default name (to vector or packed data.frame-type column):
-        res[["slide_value"]] <- slide_values
-        # TODO check for bizarre conflicting `slide_value` existing col name.
-        # Either here or on entry to `epi_slide` (even if there we don't know
-        # whether vecs will be output). Or just turn this into a special case of
-        # the preceding branch and let the checking code there generate a
-        # complaint.
-      }
-    } else {
-      # vector or packed data.frame-type column (note: overlaps with existing
-      # column names should already be forbidden by earlier validation):
-      res[[.group_new_col_name]] <- slide_values
-    }
-
-    return(res)
+    return(.data_group %>% filter(FALSE))
   }
 
-  .x_groups <- groups(.x)
-  .x <- bind_rows(group_map(.x, slide_one_grp,
-    ...,
-    .slide_comp_factory = slide_comp_wrapper_factory,
-    .starts = .starts,
-    .stops = .stops,
-    .ref_time_values = .ref_time_values,
-    .all_rows = .all_rows,
-    .new_col_name = .new_col_name,
-    .keep = TRUE
-  ))
-  .x <- group_by(.x, !!!.x_groups)
+  # Get stateful function that tracks ref_time_value per group and sends it to
+  # `f` when called.
+  .slide_comp <- .slide_comp_factory(available_ref_time_values)
 
-  return(.x)
+  if (.time_type == "yearmonth" && identical(.before, Inf)) {
+    # <yearmonth> - Inf is NA(s) rather than -Inf as a yearmonth; feed in -Inf manually
+    # (it will successfully be cast to -Inf as a yearmonth)
+    starts <- rep(-Inf, length(available_ref_time_values))
+    stops <- available_ref_time_values + .after
+  } else {
+    starts <- available_ref_time_values - .before
+    stops <- available_ref_time_values + .after
+  }
+
+  # Compute the slide values. slider::hop_index will return a list of f outputs
+  # e.g. list(f(.slide_group_1, .group_key, .ref_time_value_1),
+  # f(.slide_group_1, .group_key, .ref_time_value_2), ...)
+  slide_values_list <- slider::hop_index(
+    .x = .data_group,
+    .i = .data_group$time_value,
+    .starts = starts,
+    .stops = stops,
+    .f = .slide_comp,
+    .group_key, ...
+  )
+
+  # Validate returned values. This used to only happen when
+  # .used_data_masking=FALSE, so if it seems too slow, consider bringing that
+  # back.
+  return_types <- purrr::map_chr(slide_values_list, function(x) {
+    if (is.data.frame(x)) {
+      return("data.frame")
+    } else if (vctrs::obj_is_vector(x) && is.null(vctrs::vec_names(x))) {
+      return("vector")
+    } else {
+      return("other")
+    }
+  }) %>% unique()
+  # Returned values must be data.frame or vector.
+  if ("other" %in% return_types) {
+    cli_abort(
+      "epi_slide: slide computations must always return either data frames without rownames
+      or unnamed vectors (as determined by the vctrs package).",
+      class = "epiprocess__invalid_slide_comp_value"
+    )
+  }
+  # Returned values must all be the same type.
+  if (length(return_types) != 1L) {
+    cli_abort(
+      "epi_slide: slide computations must always return either a data.frame or a vector (as determined by the
+      vctrs package), but not a mix of the two.",
+      class = "epiprocess__invalid_slide_comp_value"
+    )
+  }
+  # Returned values must always be a scalar vector or a data frame with one row.
+  if (any(vctrs::list_sizes(slide_values_list) != 1L)) {
+    cli_abort(
+      "epi_slide: slide computations must return a single element (e.g. a scalar value, a single data.frame row,
+      or a list).",
+      class = "epiprocess__invalid_slide_comp_value"
+    )
+  }
+  # Flatten the output list. This will also error if the user's slide function
+  # returned inconsistent types.
+  slide_values <- slide_values_list %>% vctrs::list_unchop()
+
+  # If all rows, then pad slide values with NAs, else filter down data group
+  if (.all_rows) {
+    orig_values <- slide_values
+    slide_values <- vctrs::vec_rep(vctrs::vec_cast(NA, orig_values), nrow(.data_group))
+    vctrs::vec_slice(slide_values, .data_group$time_value %in% available_ref_time_values) <- orig_values
+  } else {
+    .data_group <- .data_group %>% filter(time_value %in% available_ref_time_values)
+  }
+
+  # To label the result, we will parallel some code from `epix_slide`, though
+  # some logic is different and some optimizations are less likely to be
+  # needed as we're at a different loop depth.
+
+  # Unlike `epix_slide`, we will not every have to deal with a 0-row
+  # `.group_key`: we return early if `epi_slide`'s `.x` has 0 rows, and our
+  # loop over groups is the outer loop (>= 1 row into the group loop ensures
+  # we will have only 1-row `.group_key`s). Further, unlike `epix_slide`, we
+  # actually will be using `.group_data` rather than work with `.group_key` at
+  # all, in order to keep the pre-existing non-key columns. We will also try
+  # to work directly with `epi_df`s instead of listified tibbles; since we're
+  # not in as tight of a loop, the increased overhead hopefully won't matter.
+  # We'll need to use `bind_cols` rather than `c` to avoid losing
+  # `epi_df`ness.
+
+  res <- .data_group
+
+  if (is.null(.new_col_name)) {
+    if (inherits(slide_values, "data.frame")) {
+      # Sometimes slide_values can parrot back columns already in `res`; allow
+      # this, but balk if a column has the same name as one in `res` but a
+      # different value:
+      comp_nms <- names(slide_values)
+      overlaps_existing_names <- comp_nms %in% names(res)
+      for (comp_i in which(overlaps_existing_names)) {
+        if (!identical(slide_values[[comp_i]], res[[comp_nms[[comp_i]]]])) {
+          lines <- c(
+            cli::format_error(c(
+              "conflict detected between existing columns and slide computation output:",
+              "i" = "pre-existing columns: {syms(names(res))}",
+              "x" = "slide computation output included a column {syms(comp_nms[[comp_i]])} that didn't match the
+                pre-existing value"
+            )),
+            capture.output(print(waldo::compare(
+              res[[comp_nms[[comp_i]]]], slide_values[[comp_i]],
+              x_arg = "existing", y_arg = "comp output"
+            ))),
+            cli::format_message(c(
+              "You likely want to rename or remove this column from your slide computation's output, or
+                debug why it has a different value."
+            ))
+          )
+          rlang::abort(paste(collapse = "\n", lines),
+            class = "epiprocess__epi_slide_existing_vs_output_column_conflict"
+          )
+        }
+      }
+      # Unpack into separate columns (without name prefix). If there are
+      # columns duplicating existing columns, de-dupe and order them as if they
+      # didn't exist in slide_values.
+      res <- bind_cols(res, slide_values[!overlaps_existing_names])
+    } else {
+      # Apply default name (to vector or packed data.frame-type column):
+      res[["slide_value"]] <- slide_values
+      # TODO check for bizarre conflicting `slide_value` existing col name.
+      # Either here or on entry to `epi_slide` (even if there we don't know
+      # whether vecs will be output). Or just turn this into a special case of
+      # the preceding branch and let the checking code there generate a
+      # complaint.
+    }
+  } else {
+    # vector or packed data.frame-type column (note: overlaps with existing
+    # column names should already be forbidden by earlier validation):
+    res[[.new_col_name]] <- slide_values
+  }
+
+  return(res)
+}
+
+get_before_after_from_window <- function(window_size, align, time_type) {
+  if (identical(window_size, Inf)) {
+    if (align == "right") {
+      before <- Inf
+      # styler: off
+      after <- switch(time_type,
+        day = , week = as.difftime(0, units = glue::glue("{time_type}s")),
+        yearmonth = , integer = 0L,
+        cli_abort("Unrecognized time_type: {time_type}.")
+      )
+      # styler: on
+    } else {
+      cli_abort(
+        "`epi_slide`: center and left alignment are not supported with an infinite window size."
+      )
+    }
+  } else {
+    if (align == "right") {
+      before <- window_size - 1
+      after <- 0
+    } else if (align == "center") {
+      # For window_size = 5, before = 2, after = 2. For window_size = 4, before = 2, after = 1.
+      before <- floor(window_size / 2)
+      after <- window_size - before - 1
+    } else if (align == "left") {
+      before <- 0
+      after <- window_size - 1
+    }
+  }
+  return(list(before = before, after = after))
 }
 
 #' Optimized slide function for performing common rolling computations on an
@@ -596,13 +654,13 @@ epi_slide_opt <- function(
     if (!test_subset(.ref_time_values, unique(.x$time_value))) {
       cli_abort(
         "`ref_time_values` must be a unique subset of the time values in `x`.",
-        class = "epi_slide_opt__invalid_ref_time_values"
+        class = "epiprocess__epi_slide_opt_invalid_ref_time_values"
       )
     }
     if (anyDuplicated(.ref_time_values) != 0L) {
       cli_abort(
         "`ref_time_values` must not contain any duplicates; use `unique` if appropriate.",
-        class = "epi_slide_opt__invalid_ref_time_values"
+        class = "epiprocess__epi_slide_opt_invalid_ref_time_values"
       )
     }
   }
@@ -747,10 +805,10 @@ epi_slide_opt <- function(
   }
 
   result <- mutate(.x, .real = TRUE) %>%
-    group_modify(slide_one_grp, ..., .keep = FALSE)
-
-  result <- result[result$.real, ]
-  result$.real <- NULL
+    group_modify(slide_one_grp, ..., .keep = FALSE) %>%
+    filter(.real) %>%
+    select(-.real) %>%
+    arrange_col_canonical()
 
   if (.all_rows) {
     result[!(result$time_value %in% ref_time_values), result_col_names] <- NA
@@ -759,7 +817,7 @@ epi_slide_opt <- function(
   }
 
   if (!is_epi_df(result)) {
-    # `.all_rows`handling strips epi_df format and metadata.
+    # `.all_rows` handling strips epi_df format and metadata.
     # Restore them.
     result <- reclass(result, attributes(.x)$metadata)
   }

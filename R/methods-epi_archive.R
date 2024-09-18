@@ -623,26 +623,29 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #' @param .f Function, formula, or missing; together with `...` specifies the
 #'   computation to slide. To "slide" means to apply a computation over a
 #'   sliding (a.k.a. "rolling") time window for each data group. The window is
-#'   determined by the `before` parameter described below. One time step is
-#'   typically one day or one week; see [`epi_slide`] details for more
-#'   explanation. If a function, `.f` must take an `epi_df` with the same
-#'   column names as the archive's `DT`, minus the `version` column; followed
-#'   by a one-row tibble containing the values of the grouping variables for
-#'   the associated group; followed by a reference time value, usually as a
-#'   `Date` object; followed by any number of named arguments. If a formula,
-#'   `.f` can operate directly on columns accessed via `.x$var` or `.$var`, as
-#'   in `~ mean (.x$var)` to compute a mean of a column `var` for each
-#'   group-`ref_time_value` combination. The group key can be accessed via
-#'   `.y` or `.group_key`, and the reference time value can be accessed via
-#'   `.z` or `.ref_time_value`. If `.f` is missing, then `...` will specify the
+#'   determined by the `.before` parameter (see details for more). If a
+#'   function, `.f` must have the form `function(x, g, t, ...)`, where
+#'
+#'   - "x" is an epi_df with the same column names as the archive's `DT`, minus
+#'     the `version` column
+#'   - "g" is a one-row tibble containing the values of the grouping variables
+#'   for the associated group
+#'   - "t" is the ref_time_value for the current window
+#'   - "..." are additional arguments
+#'
+#'   If a formula, `.f` can operate directly on columns accessed via `.x$var` or
+#'   `.$var`, as in `~ mean (.x$var)` to compute a mean of a column `var` for
+#'   each group-`ref_time_value` combination. The group key can be accessed via
+#'   `.y` or `.group_key`, and the reference time value can be accessed via `.z`
+#'   or `.ref_time_value`. If `.f` is missing, then `...` will specify the
 #'   computation.
 #' @param ... Additional arguments to pass to the function or formula specified
-#'   via `f`. Alternatively, if `.f` is missing, then the `...` is interpreted as
-#'   a ["data-masking"][rlang::args_data_masking] expression or expressions for
-#'   tidy evaluation; in addition to referring columns directly by name, the
+#'   via `f`. Alternatively, if `.f` is missing, then the `...` is interpreted
+#'   as a ["data-masking"][rlang::args_data_masking] expression or expressions
+#'   for tidy evaluation; in addition to referring columns directly by name, the
 #'   expressions have access to `.data` and `.env` pronouns as in `dplyr` verbs,
-#'   and can also refer to `.x`, `.group_key`, and `.ref_time_value`. See
-#'   details.
+#'   and can also refer to `.x` (not the same as the input epi_archive),
+#'   `.group_key`, and `.ref_time_value`. See details for more.
 #' @param .before How many time values before the `.ref_time_value`
 #'   should each snapshot handed to the function `.f` contain? If provided, it
 #'   should be a single value that is compatible with the time_type of the

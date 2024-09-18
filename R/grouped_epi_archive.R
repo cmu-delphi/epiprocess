@@ -278,7 +278,7 @@ epix_slide.grouped_epi_archive <- function(
     .versions <- sort(.versions)
   }
 
-  validate_slide_window_arg(.before, .x$private$ungrouped$time_type)
+  validate_slide_window_arg(.before, .x$private$ungrouped$time_type, lower = 0) # nolint: object_usage_linter
 
   checkmate::assert_string(.new_col_name, null.ok = TRUE)
   if (!is.null(.new_col_name)) {
@@ -292,7 +292,8 @@ epix_slide.grouped_epi_archive <- function(
       ))
     }
     if (identical(.new_col_name, "version")) {
-      cli_abort('`.new_col_name` must not be `"version"`; `epix_slide()` uses that column name to attach the element of `.versions` associated with each slide computation') # nolint: line_length_linter
+      cli_abort('`.new_col_name` must not be `"version"`; `epix_slide()` uses that column name to attach the element
+      of `.versions` associated with each slide computation')
     }
   }
 

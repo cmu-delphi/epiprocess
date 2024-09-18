@@ -245,10 +245,10 @@ as_epi_df.tbl_df <- function(
     )
   }
   if (lifecycle::is_present(geo_type)) {
-    cli_warn("epi_archive constructor argument `geo_type` is now ignored. Consider removing.")
+    cli_warn("epi_df constructor argument `geo_type` is now ignored. Consider removing.")
   }
   if (lifecycle::is_present(time_type)) {
-    cli_warn("epi_archive constructor argument `time_type` is now ignored. Consider removing.")
+    cli_warn("epi_df constructor argument `time_type` is now ignored. Consider removing.")
   }
 
   # If geo type is missing, then try to guess it
@@ -277,6 +277,22 @@ as_epi_df.tbl_df <- function(
   }
 
   assert_character(other_keys)
+
+  if (".time_value_counts" %in% other_keys) {
+    cli_abort("as_epi_df: `other_keys` can't include \".time_value_counts\"")
+  }
+  duplicated_time_values <- x %>%
+    group_by(across(all_of(c("geo_value", "time_value", other_keys)))) %>%
+    filter(dplyr::n() > 1) %>%
+    ungroup()
+  if (nrow(duplicated_time_values) > 0) {
+    bad_data <- capture.output(duplicated_time_values)
+    cli_abort(
+      "as_epi_df: some groups in the data have duplicated time values. epi_df requires a unique time_value per group.",
+      body = c("Sample groups:", bad_data)
+    )
+  }
+
   new_epi_df(x, geo_type, time_type, as_of, other_keys)
 }
 
