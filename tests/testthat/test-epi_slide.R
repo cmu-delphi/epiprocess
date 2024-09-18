@@ -38,13 +38,13 @@ get_test_dataset <- function(n, time_type = "day", other_keys = FALSE) {
     "b", test_date + units * 0:n_, (10 * n + values)**2,
     "c", test_date + units * (floor(n / 2) + 0:n_), (100 * n + values)**2,
   ) %>%
-    tidyr::unnest_longer(c(time_value, value)) %>%
+    tidyr::unnest_longer(c("time_value", "value")) %>%
     slice(-10)
 
   if (other_keys) {
     df <- bind_rows(
-      df %>% mutate(x = 1, value = value + 1),
-      df %>% mutate(x = 2, value = value + 2),
+      df %>% mutate(x = 1, value = .data$value + 1),
+      df %>% mutate(x = 2, value = .data$value + 2),
     ) %>%
       as_epi_df(as_of = test_date + n, other_keys = "x")
   } else {
@@ -79,7 +79,6 @@ epi_slide_sum_test <- function(
   if (is.null(.ref_time_values)) {
     .ref_time_values <- date_seq_list$all_dates
   }
-  group_keys <- setdiff(key_colnames(.x), "time_value")
 
   .x %>%
     mutate(.real = TRUE) %>%
@@ -107,7 +106,7 @@ epi_slide_sum_test <- function(
         dplyr::filter(., time_value %in% available_ref_time_values)
       }
     }) %>%
-    filter(.real) %>%
+    dplyr::filter(.real) %>%
     select(-.real) %>%
     relocate(all_of(key_colnames(.x)), .before = 1)
 }
@@ -143,8 +142,8 @@ test_that("is_null_or_na works", {
 expect_equal_handle_null <- function(x, y) {
   x_na_mask <- purrr::map_lgl(x, is_null_or_na)
   y_na_mask <- purrr::map_lgl(y, is_null_or_na)
-  expect_equal(x_na_mask, y_na_mask)
-  expect_equal(x[!x_na_mask], y[!y_na_mask])
+  testthat::expect_equal(x_na_mask, y_na_mask)
+  testthat::expect_equal(x[!x_na_mask], y[!y_na_mask])
 }
 
 

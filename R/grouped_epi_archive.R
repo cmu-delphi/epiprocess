@@ -382,10 +382,15 @@ epix_slide.grouped_epi_archive <- function(
               cli::format_error(c(
                 "conflict detected between slide value computation labels and output:",
                 "i" = "we are labeling slide computations with the following columns: {syms(names(res))}",
-                "x" = "a slide computation output included a column {syms(comp_nms[[comp_i]])} that didn't match the label"
+                "x" = "a slide computation output included a column {syms(comp_nms[[comp_i]])} that didn't
+                match the label"
               )),
-              capture.output(print(waldo::compare(res[[comp_nms[[comp_i]]]], comp_value[[comp_i]], x_arg = "label", y_arg = "comp output"))),
-              cli::format_message(c("You likely want to rename or remove this column in your output, or debug why it has a different value."))
+              capture.output(print(
+                waldo::compare(res[[comp_nms[[comp_i]]]], comp_value[[comp_i]], x_arg = "label", y_arg = "comp output")
+              )),
+              cli::format_message(c(
+                "You likely want to rename or remove this column in your output, or debug why it has a different value."
+              ))
             )
             rlang::abort(paste(collapse = "\n", lines),
               class = "epiprocess__epix_slide_label_vs_output_column_conflict"

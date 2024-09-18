@@ -400,7 +400,8 @@ arrange_row_canonical.default <- function(x, ...) {
 #' @export
 arrange_row_canonical.epi_df <- function(x, ...) {
   rlang::check_dots_empty()
-  x %>% dplyr::arrange(dplyr::across(dplyr::all_of(key_colnames(.))))
+  cols <- key_colnames(x)
+  x %>% dplyr::arrange(dplyr::across(dplyr::all_of(cols)))
 }
 
 arrange_col_canonical <- function(x, ...) {
@@ -419,12 +420,14 @@ arrange_col_canonical.default <- function(x, ...) {
 #' @export
 arrange_col_canonical.epi_df <- function(x, ...) {
   rlang::check_dots_empty()
-  x %>% dplyr::relocate(dplyr::all_of(key_colnames(.)), .before = 1)
+  cols <- key_colnames(x)
+  x %>% dplyr::relocate(dplyr::all_of(cols), .before = 1)
 }
 
 #' @export
 group_epi_df <- function(x) {
-  x %>% group_by(across(all_of(kill_time_value(key_colnames(.)))))
+  cols <- kill_time_value(key_colnames(x))
+  x %>% group_by(across(all_of(cols)))
 }
 
 #' Aggregate an `epi_df` object

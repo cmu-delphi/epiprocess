@@ -155,7 +155,10 @@ test_that("assert_sufficient_f_args alerts if the provided f has defaults for th
   # forwarding named dots should prevent some complaints:
   expect_no_error(assert_sufficient_f_args(f_xsgt, setting = "b", .ref_time_value_label = "reference time value"))
   expect_no_error(assert_sufficient_f_args(f_xsgt_dots, setting = "b", .ref_time_value_label = "reference time value"))
-  expect_error(suppressWarnings(assert_sufficient_f_args(f_xs_dots, setting = "b", .ref_time_value_label = "reference time value")),
+  expect_error(
+    suppressWarnings(
+      assert_sufficient_f_args(f_xs_dots, setting = "b", .ref_time_value_label = "reference time value")
+    ),
     regexp = "pass the window data to `\\.f`'s x argument",
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults"
   )

@@ -22,10 +22,10 @@ mean.epi_df <- function(x, ...) {
 # slide operations (sum, prod, min, max, all, any, range):
 
 #' @export
-Summary.epi_df <- function(..., na.rm = FALSE) {
+Summary.epi_df <- function(..., na.rm = FALSE) { # nolint: object_name_linter
   # cli uses dot prefixes for special purpose; use alias to avoid confusion during interpolation
-  generic <- .Generic
-  opt_pointer <- switch(.Generic,
+  generic <- .Generic # nolint: object_usage_linter
+  opt_pointer <- switch(generic, # nolint: object_usage_linter
     sum = "You may also prefer to use the specialized `epi_slide_sum` method.",
     prod = ,
     min = ,
