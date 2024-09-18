@@ -161,15 +161,15 @@ format_tibble_row <- function(x, empty = "*none*") {
   if (length(x) == 0L) {
     empty
   } else {
-    formatted_names <- as.character(syms(names(bindings)))
+    formatted_names <- as.character(syms(names(x)))
     # Deparse values (e.g., surround strings with quotes & escaping) so this
     # can be more easily copy-paste-edited into a `dplyr::filter` for
     # debugging.
-    formatted_values <- map_chr(bindings, function(binding_value) {
+    formatted_values <- map_chr(x, function(binding_value) {
       paste(collapse = " ", deparse(binding_value))
     })
-    formatted_bindings <- paste(formatted_names, "=", formatted_values)
-    formatted_bindings
+    formatted_x <- paste(formatted_names, "=", formatted_values)
+    formatted_x
   }
 }
 
