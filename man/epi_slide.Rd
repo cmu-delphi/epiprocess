@@ -77,9 +77,8 @@ underlying data table, by default.}
 \item{.new_col_name}{String indicating the name of the new column that will
 contain the derivative values. The default is "slide_value" unless your
 slide computations output data frames, in which case they will be unpacked
-into the constituent columns and those names used. Note that setting
-\code{.new_col_name} equal to an existing column name will overwrite this
-column.}
+into the constituent columns and those names used. New columns should not
+be given names that clash with the existing columns of \code{.x}; see details.}
 
 \item{.all_rows}{If \code{.all_rows = TRUE}, then all rows of \code{.x} will be kept in
 the output even with \code{.ref_time_values} provided, with some type of missing

@@ -15,3 +15,4 @@ string
 \description{
 Format a class vector as a string via deparsing it
 }
+\keyword{internal}

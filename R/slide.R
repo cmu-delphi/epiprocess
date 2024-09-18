@@ -34,9 +34,8 @@
 #' @param .new_col_name String indicating the name of the new column that will
 #'   contain the derivative values. The default is "slide_value" unless your
 #'   slide computations output data frames, in which case they will be unpacked
-#'   into the constituent columns and those names used. Note that setting
-#'   `.new_col_name` equal to an existing column name will overwrite this
-#'   column.
+#'   into the constituent columns and those names used. New columns should not
+#'   be given names that clash with the existing columns of `.x`; see details.
 #'
 #' @template basic-slide-details
 #'
@@ -182,20 +181,11 @@ epi_slide <- function(
 
   assert_character(.new_col_name, null.ok = TRUE)
   if (!is.null(.new_col_name)) {
-    if (.new_col_name %in% group_vars(.x)) {
-      cli_abort(c("`.new_col_name` must not be one of the grouping column name(s);
-                   `epi_slide()` uses these column name(s) to label what group
-                   each slide computation came from.",
-        "i" = "{cli::qty(length(group_vars(.x)))} grouping column name{?s}
-                         {?was/were} {format_chr_with_quotes(group_vars(.x))}",
-        "x" = "`.new_col_name` was {format_chr_with_quotes(.new_col_name)}"
+    if (.new_col_name %in% names(.x)) {
+      cli_abort(c("`.new_col_name` cannot overlap with existing column names",
+        "x" = "{sym(.new_col_name)} already exists in `.x`",
+        ">" = "Try using a different `.new_col_name` instead."
       ))
-    }
-    if (any(.new_col_name %in% c("geo_value", "time_value"))) {
-      cli_abort(
-        "epi_slide: `.new_col_name` cannot be one of 'geo_value' or 'time_value'.",
-        class = "epiprocess__epi_slide_invalid_new_col_name"
-      )
     }
   }
 
@@ -406,18 +396,20 @@ epi_slide_one_group <- function(
         if (!identical(slide_values[[comp_i]], res[[comp_nms[[comp_i]]]])) {
           lines <- c(
             cli::format_error(c(
-              "conflict detected between existing columns and slide computation output:",
-              "i" = "pre-existing columns: {syms(names(res))}",
-              "x" = "slide computation output included a column {syms(comp_nms[[comp_i]])} that didn't match the
-                pre-existing value"
+              "New column and old column clash",
+              "x" = "slide computation output included a
+                     {format_varname(comp_nms[[comp_i]])} column, but `.x` already had a
+                     {format_varname(comp_nms[[comp_i]])} column with differing values",
+              "Here are examples of differing values, where the grouping variables were
+               {format_tibble_row(.group_key)}:"
             )),
             capture.output(print(waldo::compare(
               res[[comp_nms[[comp_i]]]], slide_values[[comp_i]],
               x_arg = "existing", y_arg = "comp output"
             ))),
             cli::format_message(c(
-              "You likely want to rename or remove this column from your slide computation's output, or
-                debug why it has a different value."
+              ">" = "You likely want to rename or remove this column from your slide
+                     computation's output, or debug why it has a different value."
             ))
           )
           rlang::abort(paste(collapse = "\n", lines),
@@ -431,15 +423,16 @@ epi_slide_one_group <- function(
       res <- bind_cols(res, slide_values[!overlaps_existing_names])
     } else {
       # Apply default name (to vector or packed data.frame-type column):
+      if ("slide_value" %in% names(res)) {
+        cli_abort(c("Cannot guess a good column name for your output",
+          "x" = "`slide_value` already exists in `.x`",
+          ">" = "Please provide a `.new_col_name`."
+        ))
+      }
       res[["slide_value"]] <- slide_values
-      # TODO check for bizarre conflicting `slide_value` existing col name.
-      # Either here or on entry to `epi_slide` (even if there we don't know
-      # whether vecs will be output). Or just turn this into a special case of
-      # the preceding branch and let the checking code there generate a
-      # complaint.
     }
   } else {
-    # vector or packed data.frame-type column (note: overlaps with existing
+    # Vector or packed data.frame-type column (note: overlaps with existing
     # column names should already be forbidden by earlier validation):
     res[[.new_col_name]] <- slide_values
   }

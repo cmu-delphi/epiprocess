@@ -17,3 +17,4 @@ string
 \description{
 Format a character vector as a string via deparsing/quoting each
 }
+\keyword{internal}

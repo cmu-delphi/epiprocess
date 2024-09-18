@@ -22,7 +22,7 @@
 #'   `initial` is long or the printing width is very narrow.
 #' @return `chr`; to print, use [`base::writeLines`].
 #'
-#' @noRd
+#' @keywords internal
 wrap_symbolics <- function(symbolics,
                            initial = "", common_prefix = "", none_str = "<none>",
                            width = getOption("width", 80L)) {
@@ -69,7 +69,7 @@ wrap_symbolics <- function(symbolics,
 #' @inheritParams wrap_symbolics
 #' @return `chr`; to print, use [`base::writeLines`].
 #'
-#' @noRd
+#' @keywords internal
 wrap_varnames <- function(nms,
                           initial = "", common_prefix = "", none_str = "<none>",
                           width = getOption("width", 80L)) {
@@ -84,7 +84,7 @@ wrap_varnames <- function(nms,
 #' @param lines `chr`
 #' @return string
 #'
-#' @noRd
+#' @keywords internal
 paste_lines <- function(lines) {
   paste(paste0(lines, "\n"), collapse = "")
 }
@@ -93,6 +93,7 @@ paste_lines <- function(lines) {
 #'
 #' @param class_vec `chr`; output of `class(object)` for some `object`
 #' @return string
+#' @keywords internal
 format_class_vec <- function(class_vec) {
   paste(collapse = "", deparse(class_vec))
 }
@@ -102,6 +103,7 @@ format_class_vec <- function(class_vec) {
 #' @param x `chr`; e.g., `colnames` of some data frame
 #' @param empty string; what should be output if `x` is of length 0?
 #' @return string
+#' @keywords internal
 format_chr_with_quotes <- function(x, empty = "*none*") {
   if (length(x) == 0L) {
     empty
@@ -116,6 +118,58 @@ format_chr_with_quotes <- function(x, empty = "*none*") {
       # remove surrounding `c()`:
       substr(deparsed_collapsed, 3L, nchar(deparsed_collapsed) - 1L)
     }
+  }
+}
+
+#' "Format" a character vector of column/variable names for cli interpolation
+#'
+#' Designed to give good output if interpolated with cli. Main purpose is to add
+#' backticks around variable names when necessary, and something other than an
+#' empty string if length 0.
+#'
+#' @param x `chr`; e.g., `colnames` of some data frame
+#' @param empty string; what should be output if `x` is of length 0?
+#' @return `chr`
+#' @keywords internal
+format_varnames <- function(x, empty = "*none*") {
+  if (length(x) == 0L) {
+    empty
+  } else {
+    as.character(syms(x))
+  }
+}
+
+#' "Format" column/variable name for cli interpolation
+#'
+#' Designed to give good output if interpolated with cli. Main purpose is to add
+#' backticks around variable names when necessary.
+#'
+#' @param x string; e.g., a colname
+#' @return string
+#' @keywords internal
+format_varname <- function(x) {
+  # `syms` provides backticks if necessary; `sym` does not
+  as.character(syms(x))
+}
+
+#' Format a tibble row as chr
+#'
+#' @param x a tibble with a single row
+#' @return `chr` with one entry per column, of form "<colname> = <deparsed col value>"
+#' @keywords internal
+format_tibble_row <- function(x, empty = "*none*") {
+  if (length(x) == 0L) {
+    empty
+  } else {
+    formatted_names <- as.character(syms(names(bindings)))
+    # Deparse values (e.g., surround strings with quotes & escaping) so this
+    # can be more easily copy-paste-edited into a `dplyr::filter` for
+    # debugging.
+    formatted_values <- map_chr(bindings, function(binding_value) {
+      paste(collapse = " ", deparse(binding_value))
+    })
+    formatted_bindings <- paste(formatted_names, "=", formatted_values)
+    formatted_bindings
   }
 }
 
