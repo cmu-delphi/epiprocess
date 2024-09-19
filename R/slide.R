@@ -421,7 +421,7 @@ epi_slide_one_group <- function(
       # Unpack into separate columns (without name prefix). If there are
       # columns duplicating existing columns, de-dupe and order them as if they
       # didn't exist in slide_values.
-      res <- bind_cols(res, slide_values[!overlaps_existing_names])
+      res <- dplyr::bind_cols(res, slide_values[!overlaps_existing_names])
     } else {
       # Apply default name (to vector or packed data.frame-type column):
       if ("slide_value" %in% names(res)) {

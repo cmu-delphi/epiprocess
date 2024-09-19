@@ -162,7 +162,7 @@ format_tibble_row <- function(x, empty = "*none*") {
     empty
   } else {
     formatted_names <- as.character(syms(names(x)))
-    formatted_values <- map_chr(x, function(binding_value) {
+    formatted_values <- purrr::map_chr(x, function(binding_value) {
       paste(collapse = "\n", format(binding_value))
     })
     formatted_x <- paste(formatted_names, "=", formatted_values)

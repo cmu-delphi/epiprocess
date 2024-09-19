@@ -106,7 +106,7 @@ epi_slide_sum_test <- function(
         dplyr::filter(., time_value %in% available_ref_time_values)
       }
     }) %>%
-    dplyr::filter(.real) %>%
+    dplyr::filter(.data$.real) %>%
     select(-.real) %>%
     relocate(all_of(key_colnames(.x)), .before = 1)
 }
