@@ -654,7 +654,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   in the archive is "day", and the `.ref_time_value` is January 8, then the
 #'   smallest time_value in the snapshot will be January 1. If missing, then the
 #'   default is no limit on the time values, so the full snapshot is given.
-#' @param .ref_time_values Reference time values / versions for sliding
+#' @param .versions Reference time values / versions for sliding
 #'   computations; each element of this vector serves both as the anchor point
 #'   for the `time_value` window for the computation and the `max_version`
 #'   `epix_as_of` which we fetch data in this window. If missing, then this will
@@ -712,7 +712,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   computations are allowed more flexibility in their outputs than in
 #'   `epi_slide`, we can't guess a good representation for missing computations
 #'   for excluded group-`.ref_time_value` pairs.
-#'   76. The `.ref_time_values` default for `epix_slide` is based on making an
+#'   76. The `.versions` default for `epix_slide` is based on making an
 #'   evenly-spaced sequence out of the `version`s in the `DT` plus the
 #'   `versions_end`, rather than the `time_value`s.
 #'
@@ -731,7 +731,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #' library(dplyr)
 #'
 #' # Reference time points for which we want to compute slide values:
-#' ref_time_values <- seq(as.Date("2020-06-01"),
+#' versions <- seq(as.Date("2020-06-01"),
 #'   as.Date("2020-06-15"),
 #'   by = "1 day"
 #' )
@@ -743,7 +743,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   epix_slide(
 #'     .f = ~ mean(.x$case_rate_7d_av),
 #'     .before = 2,
-#'     .ref_time_values = ref_time_values,
+#'     .versions = versions,
 #'     .new_col_name = "case_rate_7d_av_recent_av"
 #'   ) %>%
 #'   ungroup()
@@ -777,7 +777,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'       )
 #'     },
 #'     .before = 5, .all_versions = FALSE,
-#'     .ref_time_values = ref_time_values
+#'     .versions = versions
 #'   ) %>%
 #'   ungroup() %>%
 #'   arrange(geo_value, time_value)
@@ -812,7 +812,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'       )
 #'     },
 #'     .before = 5, .all_versions = TRUE,
-#'     .ref_time_values = ref_time_values
+#'     .versions = versions
 #'   ) %>%
 #'   ungroup() %>%
 #'   # Focus on one geo_value so we can better see the columns above:

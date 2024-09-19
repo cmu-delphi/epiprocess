@@ -626,7 +626,7 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
 #'   epix_slide(
 #'     .f = ~ mean(.x$case_rate_7d_av),
 #'     .before = 2,
-#'     .ref_time_values = as.Date("2020-06-11") + 0:2,
+#'     .versions = as.Date("2020-06-11") + 0:2,
 #'     .new_col_name = "case_rate_3d_av"
 #'   ) %>%
 #'   ungroup()

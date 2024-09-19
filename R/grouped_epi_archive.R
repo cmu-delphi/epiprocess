@@ -224,11 +224,18 @@ epix_slide.grouped_epi_archive <- function(
   # early development versions and much more likely to be clutter than
   # informative in the signature.
   provided_args <- rlang::call_args_names(rlang::call_match())
-  if (any(provided_args %in% c("x", "f", "before", "ref_time_values", "new_col_name", "all_versions"))) {
+  if (any(provided_args %in% c(
+    "x", "f", "before", "new_col_name", "all_versions",
+  ))) {
     cli::cli_abort(
-      "epix_slide: you are using one of the following old argument names: `x`, `f`, `before`, `ref_time_values`,
-      `new_col_name`, `all_versions`. Please use the new names: `.x`, `.f`, `.before`, `.ref_time_values`,
+      "epix_slide: you are using one of the following old argument names: `x`, `f`, `before`,
+      `new_col_name`, `all_versions`. Please use the new names: `.x`, `.f`, `.before`,
       `.new_col_name`, `.all_versions`."
+    )
+  }
+  if (any(provided_args %in% c("ref_time_values", ".ref_time_values"))) {
+    cli::cli_abort(
+      "epix_slide: the argument `ref_time_values` is deprecated. Please use `.versions` instead."
     )
   }
   if ("group_by" %in% provided_args) {
