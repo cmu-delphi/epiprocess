@@ -16,5 +16,6 @@
 "_PACKAGE"
 utils::globalVariables(c(
   ".x", ".group_key", ".ref_time_value", "resid",
-  "fitted", ".response", "geo_value", "time_value"
+  "fitted", ".response", "geo_value", "time_value",
+  ".real"
 ))
