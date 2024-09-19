@@ -380,20 +380,27 @@ epix_slide.grouped_epi_archive <- function(
           if (!identical(comp_value[[comp_i]], res[[comp_nms[[comp_i]]]])) {
             lines <- c(
               cli::format_error(c(
-                "conflict detected between slide value computation labels and output:",
-                "i" = "we are labeling slide computations with the following columns: {syms(names(res))}",
-                "x" = "a slide computation output included a column {syms(comp_nms[[comp_i]])} that didn't
-                match the label"
+                "New column and labeling column clash",
+                "i" = "`epix_slide` is attaching labeling columns
+                       {format_varnames(names(res))}",
+                "x" = "slide computation output included a
+                       {format_varname(comp_nms[[comp_i]])} column, but it
+                       didn't match the labeling column",
+                "i" = "Here are examples of differing values, for a computation
+                       where the labels were:
+                       {format_tibble_row(as_tibble(res)[1L,])}:"
               )),
-              capture.output(print(
-                waldo::compare(res[[comp_nms[[comp_i]]]], comp_value[[comp_i]], x_arg = "label", y_arg = "comp output")
-              )),
+              capture.output(print(waldo::compare(
+                res[[comp_nms[[comp_i]]]], comp_value[[comp_i]],
+                x_arg = rlang::expr_deparse(expr(`$`(label, !!sym(comp_nms[[comp_i]])))),
+                y_arg = rlang::expr_deparse(expr(`$`(comp_value, !!sym(comp_nms[[comp_i]]))))
+              ))),
               cli::format_message(c(
                 "You likely want to rename or remove this column in your output, or debug why it has a different value."
               ))
             )
             rlang::abort(paste(collapse = "\n", lines),
-              class = "epiprocess__epix_slide_label_vs_output_column_conflict"
+              class = "epiprocess__epix_slide_output_vs_label_column_conflict"
             )
           }
         }

@@ -405,7 +405,8 @@ epi_slide_one_group <- function(
             )),
             capture.output(print(waldo::compare(
               res[[comp_nms[[comp_i]]]], slide_values[[comp_i]],
-              x_arg = "existing", y_arg = "comp output"
+              x_arg = rlang::expr_deparse(expr(`$`(existing, !!sym(comp_nms[[comp_i]])))),
+              y_arg = rlang::expr_deparse(expr(`$`(comp_value, !!sym(comp_nms[[comp_i]]))))
             ))),
             cli::format_message(c(
               ">" = "You likely want to rename or remove this column from your slide
@@ -413,7 +414,7 @@ epi_slide_one_group <- function(
             ))
           )
           rlang::abort(paste(collapse = "\n", lines),
-            class = "epiprocess__epi_slide_existing_vs_output_column_conflict"
+            class = "epiprocess__epi_slide_output_vs_existing_column_conflict"
           )
         }
       }
