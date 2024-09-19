@@ -78,6 +78,14 @@ in the archive is "day", and the \code{.ref_time_value} is January 8, then the
 smallest time_value in the snapshot will be January 1. If missing, then the
 default is no limit on the time values, so the full snapshot is given.}
 
+\item{.versions}{Reference time values / versions for sliding
+computations; each element of this vector serves both as the anchor point
+for the \code{time_value} window for the computation and the \code{max_version}
+\code{epix_as_of} which we fetch data in this window. If missing, then this will
+set to a regularly-spaced sequence of values set to cover the range of
+\code{version}s in the \code{DT} plus the \code{versions_end}; the spacing of values will
+be guessed (using the GCD of the skips between values).}
+
 \item{.new_col_name}{Either \code{NULL} or a string indicating the name of the new
 column that will contain the derived values. The default, \code{NULL}, will use
 the name "slide_value" unless your slide computations output data frames,
@@ -94,14 +102,6 @@ requested \code{.versions}) for rows having a \code{time_value} of at least `.ve
 \itemize{
 \item before\verb{. Otherwise, the slide computation will be passed only the most   recent }version\verb{for every unique}time_value\verb{. Default is }FALSE`.
 }}
-
-\item{.ref_time_values}{Reference time values / versions for sliding
-computations; each element of this vector serves both as the anchor point
-for the \code{time_value} window for the computation and the \code{max_version}
-\code{epix_as_of} which we fetch data in this window. If missing, then this will
-set to a regularly-spaced sequence of values set to cover the range of
-\code{version}s in the \code{DT} plus the \code{versions_end}; the spacing of values will
-be guessed (using the GCD of the skips between values).}
 }
 \value{
 A tibble whose columns are: the grouping variables, \code{time_value},
@@ -150,7 +150,7 @@ in the "advanced" vignette.
 computations are allowed more flexibility in their outputs than in
 \code{epi_slide}, we can't guess a good representation for missing computations
 for excluded group-\code{.ref_time_value} pairs.
-\item The \code{.ref_time_values} default for \code{epix_slide} is based on making an
+\item The \code{.versions} default for \code{epix_slide} is based on making an
 evenly-spaced sequence out of the \code{version}s in the \code{DT} plus the
 \code{versions_end}, rather than the \code{time_value}s.
 }
@@ -170,7 +170,7 @@ necessary (as it its purpose).
 library(dplyr)
 
 # Reference time points for which we want to compute slide values:
-ref_time_values <- seq(as.Date("2020-06-01"),
+versions <- seq(as.Date("2020-06-01"),
   as.Date("2020-06-15"),
   by = "1 day"
 )
@@ -182,7 +182,7 @@ archive_cases_dv_subset \%>\%
   epix_slide(
     .f = ~ mean(.x$case_rate_7d_av),
     .before = 2,
-    .ref_time_values = ref_time_values,
+    .versions = versions,
     .new_col_name = "case_rate_7d_av_recent_av"
   ) \%>\%
   ungroup()
@@ -216,7 +216,7 @@ archive_cases_dv_subset \%>\%
       )
     },
     .before = 5, .all_versions = FALSE,
-    .ref_time_values = ref_time_values
+    .versions = versions
   ) \%>\%
   ungroup() \%>\%
   arrange(geo_value, time_value)
@@ -251,7 +251,7 @@ archive_cases_dv_subset \%>\%
       )
     },
     .before = 5, .all_versions = TRUE,
-    .ref_time_values = ref_time_values
+    .versions = versions
   ) \%>\%
   ungroup() \%>\%
   # Focus on one geo_value so we can better see the columns above:
