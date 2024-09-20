@@ -772,10 +772,69 @@ test_that("`epix_slide` works with .before = Inf", {
 })
 
 test_that("`epix_slide` de-dupes labeling & value columns", {
-  expect_identical(
-    xx %>% epix_slide(version = .version),
-    xx$DT %>% as.data.frame() %>% as_tibble() %>% distinct(version) %>% arrange(version)
+  # Deduping `version`:
+  #   When comp is formula -> unpacked tibble:
+  forecasts1a <- xx %>% epix_slide(~ tibble(
+    version = .version,
+    geo_value = "not a group label, can be anything",
+    time_value = .version + c(0, 7),
+    value = 42
+  ))
+  #   When comp is data-masking:
+  forecasts1b <- xx %>% epix_slide(
+    version = .version,
+    geo_value = "not a group label, can be anything",
+    time_value = .version + c(0, 7),
+    value = 42
   )
-  expect_error(xx %>% epix_slide(version = .version + 1))
-  # FIXME more tests
+  #   Expected value:
+  forecasts1ref <- tibble(
+    version = rep(test_date + 4:7, each = 2L),
+    geo_value = "not a group label, can be anything",
+    time_value = version + c(0, 7),
+    value = 42
+  )
+  expect_equal(forecasts1a, forecasts1ref)
+  expect_equal(forecasts1b, forecasts1ref)
+  #   Mismatch not accepted:
+  expect_error(xx %>% epix_slide(
+    version = .version - 1,
+    time_value = version + c(0, 7),
+    value = 42
+  ))
+  #   Solely parroting back values without any new columns seems likely to be
+  #   nonsense (though this example would sort of act like a `distinct`
+  #   operation if we accepted it):
+  expect_error(xx %>% epix_slide(~ .version, .new_col_name = "version"))
+
+  # Deduping group label:
+  #   When comp is formula -> unpacked tibble:
+  forecasts2a <- xx %>% group_by(geo_value) %>% epix_slide(~ tibble(
+    geo_value = .group_key$geo_value,
+    version = .version,
+    time_value = .version + c(0, 7),
+    value = 42
+  ))
+  #   When comp is data-masking:
+  forecasts2b <- xx %>% group_by(geo_value) %>% epix_slide(
+    geo_value = .group_key$geo_value,
+    version = .version,
+    time_value = .version + c(0, 7),
+    value = 42
+  )
+  #   Expected value:
+  forecasts2ref <- tibble(
+    geo_value = "ak",
+    version = rep(test_date + 4:7, each = 2L),
+    time_value = version + c(0, 7),
+    value = 42
+  ) %>% group_by(geo_value)
+  expect_equal(forecasts2a, forecasts2ref)
+  expect_equal(forecasts2b, forecasts2ref)
+  #   Mismatch not accepted:
+  expect_error(xx %>% group_by(geo_value) %>% epix_slide(geo_value = "bogus"))
+  #   Solely parroting back values without any new columns seems likely to be
+  #   nonsense (though this example would sort of act like a `distinct`
+  #   operation if we accepted it):
+  expect_error(xx %>% group_by(geo_value) %>% epix_slide(~ .group_key$geo_value, .new_col_name = "geo_value"))
 })
