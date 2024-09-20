@@ -53,7 +53,7 @@ get_test_dataset <- function(n, time_type = "day", other_keys = FALSE) {
   }
   df %>%
     arrange_canonical() %>%
-    group_epi_df()
+    group_epi_df(exclude = "time_value")
 }
 test_data <- get_test_dataset(num_rows_per_group, "day")
 
@@ -82,10 +82,10 @@ epi_slide_sum_test <- function(
 
   .x %>%
     mutate(.real = TRUE) %>%
-    group_epi_df() %>%
+    group_epi_df(exclude = "time_value") %>%
     complete(time_value = vctrs::vec_c(!!!date_seq_list, .name_spec = rlang::zap())) %>%
     arrange_canonical() %>%
-    group_epi_df() %>%
+    group_epi_df(exclude = "time_value") %>%
     mutate(
       slide_value = slider::slide_index_sum(
         .data$value,
@@ -246,7 +246,7 @@ for (p in (param_combinations %>% transpose())) {
         mutate(slide_value = list(slide_value)) %>%
         ungroup() %>%
         as_epi_df(as_of = attr(test_data, "metadata")$as_of, other_keys = attr(test_data, "metadata")$other_keys) %>%
-        group_epi_df()
+        group_epi_df(exclude = "time_value")
 
       expect_equal(
         out %>% select(-slide_value),
@@ -268,7 +268,7 @@ for (p in (param_combinations %>% transpose())) {
         mutate(slide_value = list(slide_value)) %>%
         ungroup() %>%
         as_epi_df(as_of = attr(test_data, "metadata")$as_of, other_keys = attr(test_data, "metadata")$other_keys) %>%
-        group_epi_df()
+        group_epi_df(exclude = "time_value")
       expect_equal(
         out %>% select(-slide_value),
         expected_out %>% select(-slide_value)

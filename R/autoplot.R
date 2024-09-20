@@ -55,7 +55,7 @@ autoplot.epi_df <- function(
 
   key_cols <- key_colnames(object)
   non_key_cols <- setdiff(names(object), key_cols)
-  geo_and_other_keys <- kill_time_value(key_cols)
+  geo_and_other_keys <- key_colnames(object, exclude = "time_value")
 
   # --- check for numeric variables
   allowed <- purrr::map_lgl(object[non_key_cols], is.numeric)

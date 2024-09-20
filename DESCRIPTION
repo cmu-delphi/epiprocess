@@ -50,7 +50,8 @@ Imports:
     tidyselect (>= 1.2.0),
     tsibble,
     utils,
-    vctrs
+    vctrs,
+    waldo
 Suggests:
     covidcast,
     devtools,

@@ -184,18 +184,14 @@ new_epi_df <- function(x = tibble::tibble(geo_value = character(), time_value = 
   metadata$other_keys <- other_keys
 
   # Reorder columns (geo_value, time_value, ...)
-  if (sum(dim(x)) != 0) {
-    cols_to_put_first <- c("geo_value", "time_value", other_keys)
-    x <- x[, c(
-      cols_to_put_first,
-      # All other columns
-      names(x)[!(names(x) %in% cols_to_put_first)]
-    )]
+  if (nrow(x) > 0) {
+    x <- x %>% relocate(all_of(c("geo_value", other_keys, "time_value")), .before = 1)
   }
 
   # Apply epi_df class, attach metadata, and return
   class(x) <- c("epi_df", class(x))
   attributes(x)$metadata <- metadata
+
   return(x)
 }
 
@@ -281,6 +277,7 @@ as_epi_df.tbl_df <- function(
   if (".time_value_counts" %in% other_keys) {
     cli_abort("as_epi_df: `other_keys` can't include \".time_value_counts\"")
   }
+
   duplicated_time_values <- x %>%
     group_by(across(all_of(c("geo_value", "time_value", other_keys)))) %>%
     filter(dplyr::n() > 1) %>%

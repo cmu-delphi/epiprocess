@@ -109,7 +109,7 @@ keep NAs around.
 boundary of the dataset) and will attempt to perform the computation
 anyway. The issue of what to do with partial computations (those run on
 incomplete windows) is therefore left up to the user, either through the
-specified function or formula \code{f}, or through post-processing.
+specified function or formula, or through post-processing.
 
 Let's look at some window examples, assuming that the reference time value
 is "tv". With .align = "right" and .window_size = 3, the window will be:
@@ -165,8 +165,8 @@ In addition to \code{\link{.data}} and \code{\link{.env}}, we make some addition
 \itemize{
 \item .x, which is like \code{.x} in \code{\link[dplyr:group_map]{dplyr::group_modify}}; an ordinary object
 like an \code{epi_df} rather than an rlang \link[rlang:as_data_mask]{pronoun}
-like \code{\link{.data}}; this allows you to use additional {dplyr}, {tidyr}, and
-{epiprocess} operations. If you have multiple expressions in \code{...}, this
+like \code{\link{.data}}; this allows you to use additional \code{dplyr}, \code{tidyr}, and
+\code{epiprocess} operations. If you have multiple expressions in \code{...}, this
 won't let you refer to the output of the earlier expressions, but \code{.data}
 will.
 \item .group_key, which is like \code{.y} in \code{\link[dplyr:group_map]{dplyr::group_modify}}.

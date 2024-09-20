@@ -13,3 +13,4 @@ docs
 renv/
 renv.lock
 .Rprofile
+sandbox.R

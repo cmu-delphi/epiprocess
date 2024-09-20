@@ -51,6 +51,10 @@ library(data.table)
 library(dplyr)
 library(purrr)
 library(ggplot2)
+dv <- archive_cases_dv_subset$DT %>%
+  select(-case_rate_7d_av) %>%
+  rename(issue = version, value = percent_cli) %>%
+  tibble()
 ```
 
 ## Getting data into `epi_archive` format
@@ -72,18 +76,9 @@ format, with `issue` playing the role of `version`. We can now use
 redundant version updates in `as_epi_archive` using compactify, please refer to
 the [compactify vignette](articles/compactify.html).
 
-```{r, eval=FALSE}
+```{r}
 x <- dv %>%
   select(geo_value, time_value, version = issue, percent_cli = value) %>%
-  as_epi_archive(compactify = TRUE)
-
-class(x)
-print(x)
-```
-
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
-x <- archive_cases_dv_subset$DT %>%
-  select(geo_value, time_value, version, percent_cli) %>%
   as_epi_archive(compactify = TRUE)
 
 class(x)
@@ -127,17 +122,27 @@ object is instantiated, if they are not explicitly specified in the function
 call (as it did in the case above).
 
 ## Summarizing Revision Behavior
-There are many ways to examine the ways that signals change across different revisions.
-The simplest that is included directly in epiprocess is `revision_summary()`, which computes simple summary statistics for each key (by default, `(geo_value,time_value)` pairs), such as the lag to the first value (latency). In addition to the per key summary, it also returns an overall summary:
+
+There are many ways to examine the ways that signals change across different
+revisions. The simplest that is included directly in epiprocess is
+`revision_summary()`, which computes simple summary statistics for each key (by
+default, `(geo_value,time_value)` pairs), such as the lag to the first value
+(latency). In addition to the per key summary, it also returns an overall
+summary:
+
 ```{r}
 revision_details <- revision_summary(x, print_inform = TRUE)
 ```
 
-So as was mentioned at the top, this is clearly a data set where basically everything has some amount of revisions, only 0.37% have no revision at all, and 0.92 have fewer than 3.
-Over 94% change by more than 10%.
-On the other hand, most are within plus or minus 20% within 5-9 days, so the revisions converge relatively quickly, even if the revisions continue for longer.
+So as was mentioned at the top, this is clearly a data set where basically
+everything has some amount of revisions, only 0.37% have no revision at all, and
+0.92 have fewer than 3. Over 94% change by more than 10%. On the other hand,
+most are within plus or minus 20% within 5-9 days, so the revisions converge
+relatively quickly, even if the revisions continue for longer.
 
-To do more detailed analysis than is possible with the above printing, we have `revision_details`:
+To do more detailed analysis than is possible with the above printing, we have
+`revision_details`:
+
 ```{r}
 revision_details %>%
   group_by(geo_value) %>%
@@ -150,13 +155,16 @@ revision_details %>%
     time_near_latest = mean(time_near_latest)
   )
 ```
-Most of the states have similar stats on most of these features, except for Florida, which takes nearly double the amount of time to get close to the right value, with California not too far behind.
+
+Most of the states have similar stats on most of these features, except for
+Florida, which takes nearly double the amount of time to get close to the right
+value, with California not too far behind.
 
 ## Producing snapshots in `epi_df` form
 
-A key method of an `epi_archive` class is `epix_as_of()`, which generates a snapshot
-of the archive in `epi_df` format. This represents the most up-to-date values of
-the signal variables as of a given version.
+A key method of an `epi_archive` class is `epix_as_of()`, which generates a
+snapshot of the archive in `epi_df` format. This represents the most up-to-date
+values of the signal variables as of a given version.
 
 ```{r}
 x_snapshot <- epix_as_of(x, as.Date("2021-06-01"))
@@ -180,6 +188,7 @@ latest snapshot `x_latest` that the archive can provide).
 ```{r, fig.width = 8, fig.height = 7}
 theme_set(theme_bw())
 
+x_latest <- epix_as_of(x, x$versions_end)
 self_max <- max(x$DT$version)
 versions <- seq(as.Date("2020-06-01"), self_max - 1, by = "1 month")
 snapshots <- map_dfr(versions, function(v) {
@@ -237,7 +246,7 @@ When merging archives, unless the archives have identical data release patterns,
   download the currently available version data for one of the archives, but not
   the other).
 
-```{r, message = FALSE, warning = FALSE,eval=FALSE}
+```{r, message = FALSE, warning = FALSE, eval=FALSE}
 y <- pub_covidcast(
   source = "jhu-csse",
   signals = "confirmed_7dav_incidence_prop",
@@ -337,23 +346,19 @@ Next we slide this forecaster over the working `epi_archive` object, in order to
 forecast COVID-19 case rates 7 days into the future.
 
 ```{r}
-fc_time_values <- seq(as.Date("2020-08-01"),
-  as.Date("2021-11-30"),
-  by = "1 month"
-)
+fc_time_values <- seq(as.Date("2020-08-01"), as.Date("2021-11-30"), by = "1 month")
 
 z <- x %>%
   group_by(geo_value) %>%
   epix_slide(
-    fc = prob_arx(x = percent_cli, y = case_rate_7d_av), .before = 119,
+    fc = prob_arx(x = percent_cli, y = case_rate_7d_av, ahead = 7),
+    .before = 119,
     .versions = fc_time_values
   ) %>%
   ungroup()
 
 head(z, 10)
 ```
-
-
 
 We get back a tibble `z` with the grouping variables (here geo value), the
 (reference) time values, and a ["packed"][tidyr::pack] data frame column `fc`
@@ -377,22 +382,22 @@ points in time and forecast horizons. The former comes from using
 x_latest <- epix_as_of(x, x$versions_end)
 
 # Simple function to produce forecasts k weeks ahead
-k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
+forecast_k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
     x %>%
-      group_by(.data$geo_value) %>%
+      group_by(geo_value) %>%
       epix_slide(
         fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, ahead = ahead), .before = 119,
         .versions = fc_time_values
       ) %>%
-      mutate(target_date = .data$time_value + ahead, as_of = TRUE) %>%
+      mutate(target_date = .data$version + ahead, as_of = TRUE) %>%
       ungroup()
   } else {
     x_latest %>%
-      group_by(.data$geo_value) %>%
+      group_by(geo_value) %>%
       epi_slide(
         fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, ahead = ahead), .window_size = 120,
-        .versions = fc_time_values
+        .ref_time_values = fc_time_values
       ) %>%
       mutate(target_date = .data$time_value + ahead, as_of = FALSE) %>%
       ungroup()
@@ -401,14 +406,14 @@ k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
 
 # Generate the forecasts, and bind them together
 fc <- bind_rows(
-  k_week_ahead(x, ahead = 7, as_of = TRUE),
-  k_week_ahead(x, ahead = 14, as_of = TRUE),
-  k_week_ahead(x, ahead = 21, as_of = TRUE),
-  k_week_ahead(x, ahead = 28, as_of = TRUE),
-  k_week_ahead(x, ahead = 7, as_of = FALSE),
-  k_week_ahead(x, ahead = 14, as_of = FALSE),
-  k_week_ahead(x, ahead = 21, as_of = FALSE),
-  k_week_ahead(x, ahead = 28, as_of = FALSE)
+  forecast_k_week_ahead(x, ahead = 7, as_of = TRUE),
+  forecast_k_week_ahead(x, ahead = 14, as_of = TRUE),
+  forecast_k_week_ahead(x, ahead = 21, as_of = TRUE),
+  forecast_k_week_ahead(x, ahead = 28, as_of = TRUE),
+  forecast_k_week_ahead(x, ahead = 7, as_of = FALSE),
+  forecast_k_week_ahead(x, ahead = 14, as_of = FALSE),
+  forecast_k_week_ahead(x, ahead = 21, as_of = FALSE),
+  forecast_k_week_ahead(x, ahead = 28, as_of = FALSE)
 )
 
 # Plot them, on top of latest COVID-19 case rates
@@ -447,9 +452,250 @@ to look for more robust forecasting methodology. The forecasters that appear in
 the vignettes in the current package are only meant to demo the slide
 functionality with some of the most basic forecasting methodology possible.
 
+## Sliding version-aware computations with geo-pooling
+
+First, we fetch the versioned data and build the archive.
+
+```{r, message = FALSE, warning = FALSE, eval =FALSE}
+library(epidatr)
+library(data.table)
+library(ggplot2)
+theme_set(theme_bw())
+
+y1 <- pub_covidcast(
+  source = "doctor-visits",
+  signals = "smoothed_adj_cli",
+  geo_type = "state",
+  time_type = "day",
+  geo_values = "ca,fl",
+  time_values = epirange(20200601, 20211201),
+  issues = epirange(20200601, 20211201)
+)
+
+y2 <- pub_covidcast(
+  source = "jhu-csse",
+  signal = "confirmed_7dav_incidence_prop",
+  geo_type = "state",
+  time_type = "day",
+  geo_values = "ca,fl",
+  time_values = epirange(20200601, 20211201),
+  issues = epirange(20200601, 20211201)
+)
+
+x <- y1 %>%
+  select(geo_value, time_value,
+    version = issue,
+    percent_cli = value
+  ) %>%
+  as_epi_archive(compactify = FALSE)
+
+# mutating merge operation:
+x <- epix_merge(
+  x,
+  y2 %>%
+    select(geo_value, time_value,
+      version = issue,
+      case_rate_7d_av = value
+    ) %>%
+    as_epi_archive(compactify = FALSE),
+  sync = "locf",
+  compactify = FALSE
+)
+```
+
+```{r, message = FALSE, echo =FALSE}
+library(data.table)
+library(ggplot2)
+theme_set(theme_bw())
+
+x <- archive_cases_dv_subset$DT %>%
+  filter(geo_value %in% c("ca", "fl")) %>%
+  as_epi_archive(compactify = FALSE)
+```
+
+Next, we extend the ARX function to handle multiple geo values, since in the
+present case, we will not be grouping by geo value and each slide computation
+will be run on multiple geo values at once. Note that, because `epix_slide()`
+only returns the grouping variables, `time_value`, and the slide computations in
+the eventual returned tibble, we need to include `geo_value` as a column in the
+output data frame from our ARX computation.
+
+```{r}
+library(tidyr)
+library(purrr)
+
+prob_arx_args <- function(lags = c(0, 7, 14),
+                          ahead = 7,
+                          min_train_window = 20,
+                          lower_level = 0.05,
+                          upper_level = 0.95,
+                          symmetrize = TRUE,
+                          intercept = FALSE,
+                          nonneg = TRUE) {
+  return(list(
+    lags = lags,
+    ahead = ahead,
+    min_train_window = min_train_window,
+    lower_level = lower_level,
+    upper_level = upper_level,
+    symmetrize = symmetrize,
+    intercept = intercept,
+    nonneg = nonneg
+  ))
+}
+
+prob_arx <- function(x, y, geo_value, time_value, args = prob_arx_args()) {
+  # Return NA if insufficient training data
+  if (length(y) < args$min_train_window + max(args$lags) + args$ahead) {
+    return(data.frame(
+      geo_value = unique(geo_value), # Return geo value!
+      point = NA, lower = NA, upper = NA
+    ))
+  }
+
+  # Set up x, y, lags list
+  if (!missing(x)) {
+    x <- data.frame(x, y)
+  } else {
+    x <- data.frame(y)
+  }
+  if (!is.list(args$lags)) args$lags <- list(args$lags)
+  args$lags <- rep(args$lags, length.out = ncol(x))
+
+  # Build features and response for the AR model, and then fit it
+  dat <- tibble(i = seq_len(ncol(x)), lag = args$lags) %>%
+    unnest(lag) %>%
+    mutate(name = paste0("x", seq_len(nrow(.)))) %>% # nolint: object_usage_linter
+    # One list element for each lagged feature
+    pmap(function(i, lag, name) {
+      tibble(
+        geo_value = geo_value,
+        time_value = time_value + lag, # Shift back
+        !!name := x[, i]
+      )
+    }) %>%
+    # One list element for the response vector
+    c(list(
+      tibble(
+        geo_value = geo_value,
+        time_value = time_value - args$ahead, # Shift forward
+        y = y
+      )
+    )) %>%
+    # Combine them together into one data frame
+    reduce(full_join, by = c("geo_value", "time_value")) %>%
+    arrange(time_value)
+  if (args$intercept) dat$x0 <- rep(1, nrow(dat))
+  obj <- lm(y ~ . + 0, data = select(dat, -geo_value, -time_value))
+
+  # Use LOCF to fill NAs in the latest feature values (do this by geo value)
+  setDT(dat) # Convert to a data.table object by reference
+  cols <- setdiff(names(dat), c("geo_value", "time_value"))
+  dat[, (cols) := nafill(.SD, type = "locf"), .SDcols = cols, by = "geo_value"]
+
+  # Make predictions
+  test_time_value <- max(time_value)
+  point <- predict(
+    obj,
+    newdata = dat %>%
+      dplyr::group_by(geo_value) %>%
+      dplyr::filter(time_value == test_time_value)
+  )
+
+  # Compute bands
+  r <- residuals(obj)
+  s <- ifelse(args$symmetrize, -1, NA) # Should the residuals be symmetrized?
+  q <- quantile(c(r, s * r), probs = c(args$lower, args$upper), na.rm = TRUE)
+  lower <- point + q[1]
+  upper <- point + q[2]
+
+  # Clip at zero if we need to, then return
+  if (args$nonneg) {
+    point <- pmax(point, 0)
+    lower <- pmax(lower, 0)
+    upper <- pmax(upper, 0)
+  }
+  return(data.frame(
+    geo_value = unique(geo_value), # Return geo value!
+    point = point, lower = lower, upper = upper
+  ))
+}
+```
+
+We now make forecasts on the archive and compare to forecasts on the latest
+data.
+
+```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
+# Latest snapshot of data, and forecast dates
+x_latest <- epix_as_of(x, version = max(x$DT$version))
+fc_time_values <- seq(as.Date("2020-08-01"),
+  as.Date("2021-11-30"),
+  by = "1 month"
+)
+
+# Simple function to produce forecasts k weeks ahead
+forecast_k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
+  if (as_of) {
+    x %>%
+      epix_slide(
+        fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, .data$geo_value, .data$time_value,
+          args = prob_arx_args(ahead = ahead)
+        ),
+        .before = 219, .versions = fc_time_values
+      ) %>%
+      mutate(
+        target_date = .data$version + ahead, as_of = TRUE,
+        geo_value = .data$fc$geo_value
+      )
+  } else {
+    x_latest %>%
+      epi_slide(
+        fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, .data$geo_value, .data$time_value,
+          args = prob_arx_args(ahead = ahead)
+        ),
+        .window_size = 220, .ref_time_values = fc_time_values
+      ) %>%
+      mutate(target_date = .data$time_value + ahead, as_of = FALSE)
+  }
+}
+
+# Generate the forecasts, and bind them together
+fc <- bind_rows(
+  forecast_k_week_ahead(x, ahead = 7, as_of = TRUE),
+  forecast_k_week_ahead(x, ahead = 14, as_of = TRUE),
+  forecast_k_week_ahead(x, ahead = 21, as_of = TRUE),
+  forecast_k_week_ahead(x, ahead = 28, as_of = TRUE),
+  forecast_k_week_ahead(x, ahead = 7, as_of = FALSE),
+  forecast_k_week_ahead(x, ahead = 14, as_of = FALSE),
+  forecast_k_week_ahead(x, ahead = 21, as_of = FALSE),
+  forecast_k_week_ahead(x, ahead = 28, as_of = FALSE)
+)
+
+# Plot them, on top of latest COVID-19 case rates
+ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
+  geom_ribbon(aes(ymin = fc$lower, ymax = fc$upper), alpha = 0.4) +
+  geom_line(
+    data = x_latest, aes(x = time_value, y = case_rate_7d_av),
+    inherit.aes = FALSE, color = "gray50"
+  ) +
+  geom_line(aes(y = fc$point)) +
+  geom_point(aes(y = fc$point), size = 0.5) +
+  geom_vline(aes(xintercept = time_value), linetype = 2, alpha = 0.5) +
+  facet_grid(vars(geo_value), vars(as_of), scales = "free") +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Reported COVID-19 case rates") +
+  theme(legend.position = "none")
+```
+
+We can see that these forecasts, which come from training an ARX model jointly
+over CA and FL, exhibit generally less variability and wider prediction bands
+compared to the ones from the archive vignette, which come from training a
+separate ARX model on each state. As in the archive vignette, we can see a
+difference between version-aware (right column) and -unaware (left column)
+forecasting, as well.
+
 ## Attribution
+
 This document contains a dataset that is a modified part of the [COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) as [republished in the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html). This data set is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.
 
 The `percent_cli` data is a modified part of the [COVIDcast Epidata API Doctor Visits data](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html). This dataset is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/). Copyright Delphi Research Group at Carnegie Mellon University 2020.
-
-

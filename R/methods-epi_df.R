@@ -41,10 +41,13 @@ as_tibble.epi_df <- function(x, ...) {
 #' @export
 as_tsibble.epi_df <- function(x, key, ...) {
   if (missing(key)) key <- c("geo_value", attributes(x)$metadata$other_keys)
-  return(as_tsibble(tibble::as_tibble(x),
-    key = tidyselect::all_of(key), index = "time_value",
-    ...
-  ))
+  return(
+    as_tsibble(
+      tibble::as_tibble(x),
+      key = tidyselect::all_of(key), index = "time_value",
+      ...
+    )
+  )
 }
 
 #' Base S3 methods for an `epi_df` object
@@ -150,10 +153,10 @@ dplyr_reconstruct.epi_df <- function(data, template) {
   # keep any grouping that has been applied:
   res <- NextMethod()
 
-  cn <- names(res)
+  col_names <- names(res)
 
   # Duplicate columns, cli_abort
-  dup_col_names <- cn[duplicated(cn)]
+  dup_col_names <- col_names[duplicated(col_names)]
   if (length(dup_col_names) != 0) {
     cli_abort(c(
       "Duplicate column names are not allowed",
@@ -163,7 +166,7 @@ dplyr_reconstruct.epi_df <- function(data, template) {
     ))
   }
 
-  not_epi_df <- !("time_value" %in% cn) || !("geo_value" %in% cn)
+  not_epi_df <- !("time_value" %in% col_names) || !("geo_value" %in% col_names)
 
   if (not_epi_df) {
     # If we're calling on an `epi_df` from one of our own functions, we need to
@@ -182,7 +185,7 @@ dplyr_reconstruct.epi_df <- function(data, template) {
 
   # Amend additional metadata if some other_keys cols are dropped in the subset
   old_other_keys <- attr(template, "metadata")$other_keys
-  attr(res, "metadata")$other_keys <- old_other_keys[old_other_keys %in% cn]
+  attr(res, "metadata")$other_keys <- old_other_keys[old_other_keys %in% col_names]
 
   res
 }
@@ -424,9 +427,13 @@ arrange_col_canonical.epi_df <- function(x, ...) {
   x %>% dplyr::relocate(dplyr::all_of(cols), .before = 1)
 }
 
+#' Group an `epi_df` object by default keys
+#' @param x an `epi_df`
+#' @param exclude character vector of column names to exclude from grouping
+#' @return a grouped `epi_df`
 #' @export
-group_epi_df <- function(x) {
-  cols <- kill_time_value(key_colnames(x))
+group_epi_df <- function(x, exclude = character()) {
+  cols <- key_colnames(x, exclude = exclude)
   x %>% group_by(across(all_of(cols)))
 }
 
@@ -437,7 +444,7 @@ group_epi_df <- function(x) {
 #' the resulting `epi_df` will have `geo_value` set to `"total"`.
 #'
 #' @param .x an `epi_df`
-#' @param value_col character vector of the columns to aggregate
+#' @param sum_cols character vector of the columns to aggregate
 #' @param group_cols character vector of column names to group by. "time_value" is
 #' included by default.
 #' @return an `epi_df` object

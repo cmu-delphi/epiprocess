@@ -69,21 +69,20 @@ test_that("Subsetting drops & does not drop the epi_df class appropriately", {
   expect_equal(ncol(col_subset2), 2L)
 
   # Row and col subset that contains geo_value and time_value - should be epi_df
-  row_col_subset2 <- toy_epi_df[2:3, 1:3]
+  row_col_subset2 <- toy_epi_df[2:3, c(1, 4)]
   att_row_col_subset2 <- attr(row_col_subset2, "metadata")
 
   expect_true(is_epi_df(row_col_subset2))
   expect_equal(nrow(row_col_subset2), 2L)
-  expect_equal(ncol(row_col_subset2), 3L)
+  expect_equal(ncol(row_col_subset2), 2L)
   expect_identical(att_row_col_subset2$geo_type, att_toy$geo_type)
   expect_identical(att_row_col_subset2$time_type, att_toy$time_type)
   expect_identical(att_row_col_subset2$as_of, att_toy$as_of)
-  expect_identical(att_row_col_subset2$other_keys, att_toy$other_keys[1])
 })
 
 test_that("When duplicate cols in subset should abort", {
   expect_error(toy_epi_df[, c(2, 2:3, 4, 4, 4)],
-    "Duplicated column names: time_value, indic_var2",
+    "Duplicated column names: indic_var1, time_value",
     fixed = TRUE
   )
   expect_error(toy_epi_df[1:4, c(1, 2:4, 1)],
@@ -94,7 +93,7 @@ test_that("When duplicate cols in subset should abort", {
 
 test_that("Correct metadata when subset includes some of other_keys", {
   # Only include other_var of indic_var1
-  only_indic_var1 <- toy_epi_df[, c(1:3, 5:6)]
+  only_indic_var1 <- toy_epi_df[, c(1:2, 4:6)]
   att_only_indic_var1 <- attr(only_indic_var1, "metadata")
 
   expect_true(is_epi_df(only_indic_var1))
@@ -106,7 +105,7 @@ test_that("Correct metadata when subset includes some of other_keys", {
   expect_identical(att_only_indic_var1$other_keys, att_toy$other_keys[-2])
 
   # Only include other_var of indic_var2
-  only_indic_var2 <- toy_epi_df[, c(1:2, 4:6)]
+  only_indic_var2 <- toy_epi_df[, c(1, 3:6)]
   att_only_indic_var2 <- attr(only_indic_var2, "metadata")
 
   expect_true(is_epi_df(only_indic_var2))

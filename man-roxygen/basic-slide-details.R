@@ -9,7 +9,7 @@
 #'   boundary of the dataset) and will attempt to perform the computation
 #'   anyway. The issue of what to do with partial computations (those run on
 #'   incomplete windows) is therefore left up to the user, either through the
-#'   specified function or formula `f`, or through post-processing.
+#'   specified function or formula, or through post-processing.
 #'
 #'   Let's look at some window examples, assuming that the reference time value
 #'   is "tv". With .align = "right" and .window_size = 3, the window will be:
@@ -60,8 +60,8 @@
 #'   "pronoun"-like bindings available:
 #'   * .x, which is like `.x` in [`dplyr::group_modify`]; an ordinary object
 #'     like an `epi_df` rather than an rlang [pronoun][rlang::as_data_pronoun]
-#'     like [`.data`]; this allows you to use additional {dplyr}, {tidyr}, and
-#'     {epiprocess} operations. If you have multiple expressions in `...`, this
+#'     like [`.data`]; this allows you to use additional `dplyr`, `tidyr`, and
+#'     `epiprocess` operations. If you have multiple expressions in `...`, this
 #'     won't let you refer to the output of the earlier expressions, but `.data`
 #'     will.
 #'   * .group_key, which is like `.y` in [`dplyr::group_modify`].

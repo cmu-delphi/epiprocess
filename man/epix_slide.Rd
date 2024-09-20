@@ -170,7 +170,7 @@ necessary (as it its purpose).
 library(dplyr)
 
 # Reference time points for which we want to compute slide values:
-versions <- seq(as.Date("2020-06-01"),
+versions <- seq(as.Date("2020-06-02"),
   as.Date("2020-06-15"),
   by = "1 day"
 )
@@ -219,7 +219,7 @@ archive_cases_dv_subset \%>\%
     .versions = versions
   ) \%>\%
   ungroup() \%>\%
-  arrange(geo_value, time_value)
+  arrange(geo_value, version)
 
 # --- Advanced: ---
 

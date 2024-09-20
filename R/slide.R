@@ -122,8 +122,7 @@ epi_slide <- function(
   assert_class(.x, "epi_df")
   if (checkmate::test_class(.x, "grouped_df")) {
     expected_group_keys <- .x %>%
-      key_colnames() %>%
-      kill_time_value() %>%
+      key_colnames(exclude = "time_value") %>%
       sort()
     if (!identical(.x %>% group_vars() %>% sort(), expected_group_keys)) {
       cli_abort(
@@ -134,12 +133,11 @@ epi_slide <- function(
       )
     }
   } else {
-    .x <- group_epi_df(.x)
+    .x <- group_epi_df(.x, exclude = "time_value")
   }
   if (nrow(.x) == 0L) {
     return(.x)
   }
-
   # If `.f` is missing, interpret ... as an expression for tidy evaluation
   if (missing(.f)) {
     used_data_masking <- TRUE
@@ -191,6 +189,20 @@ epi_slide <- function(
 
   assert_logical(.all_rows, len = 1)
 
+  # Check for duplicated time values within groups
+  duplicated_time_values <- .x %>%
+    group_epi_df() %>%
+    filter(dplyr::n() > 1) %>%
+    ungroup()
+  if (nrow(duplicated_time_values) > 0) {
+    bad_data <- capture.output(duplicated_time_values)
+    cli_abort(
+      "as_epi_df: some groups in a resulting dplyr computation have duplicated time values.
+      epi_df requires a unique time_value per group.",
+      body = c("Sample groups:", bad_data)
+    )
+  }
+
   # Begin handling completion. This will create a complete time index between
   # the smallest and largest time values in the data. This is used to ensure
   # that the slide function is called with a complete window of data. Each slide
@@ -241,7 +253,7 @@ epi_slide <- function(
     .keep = TRUE
   ) %>%
     bind_rows() %>%
-    filter(.data$.real) %>%
+    filter(.real) %>%
     select(-.real) %>%
     arrange_col_canonical() %>%
     group_by(!!!.x_groups)
@@ -275,11 +287,16 @@ epi_slide_one_group <- function(
   missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
   .data_group <- bind_rows(
     .data_group,
-    tibble(time_value = c(
-      missing_times,
-      .date_seq_list$pad_early_dates,
-      .date_seq_list$pad_late_dates
-    ), .real = FALSE)
+    dplyr::bind_cols(
+      .group_key,
+      tibble(
+        time_value = c(
+          missing_times,
+          .date_seq_list$pad_early_dates,
+          .date_seq_list$pad_late_dates
+        ), .real = FALSE
+      )
+    )
   ) %>%
     arrange(.data$time_value)
 
@@ -405,8 +422,8 @@ epi_slide_one_group <- function(
             )),
             capture.output(print(waldo::compare(
               res[[comp_nms[[comp_i]]]], slide_values[[comp_i]],
-              x_arg = rlang::expr_deparse(expr(`$`(existing, !!sym(comp_nms[[comp_i]])))),
-              y_arg = rlang::expr_deparse(expr(`$`(comp_value, !!sym(comp_nms[[comp_i]]))))
+              x_arg = rlang::expr_deparse(dplyr::expr(`$`(existing, !!sym(comp_nms[[comp_i]])))), # nolint: object_usage_linter
+              y_arg = rlang::expr_deparse(dplyr::expr(`$`(comp_value, !!sym(comp_nms[[comp_i]])))) # nolint: object_usage_linter
             ))),
             cli::format_message(c(
               ">" = "You likely want to rename or remove this column from your slide
@@ -711,7 +728,7 @@ epi_slide_opt <- function(
   # positions of user-provided `col_names` into string column names. We avoid
   # using `names(pos)` directly for robustness and in case we later want to
   # allow users to rename fields via tidyselection.
-  if (class(quo_get_expr(enquo(.col_names))) == "character") {
+  if (inherits(quo_get_expr(enquo(.col_names)), "character")) {
     pos <- eval_select(dplyr::all_of(.col_names), data = .x, allow_rename = FALSE)
   } else {
     pos <- eval_select(enquo(.col_names), data = .x, allow_rename = FALSE)

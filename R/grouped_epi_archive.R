@@ -397,8 +397,8 @@ epix_slide.grouped_epi_archive <- function(
               )),
               capture.output(print(waldo::compare(
                 res[[comp_nms[[comp_i]]]], comp_value[[comp_i]],
-                x_arg = rlang::expr_deparse(expr(`$`(label, !!sym(comp_nms[[comp_i]])))),
-                y_arg = rlang::expr_deparse(expr(`$`(comp_value, !!sym(comp_nms[[comp_i]]))))
+                x_arg = rlang::expr_deparse(dplyr::expr(`$`(label, !!sym(comp_nms[[comp_i]])))), # nolint: object_usage_linter
+                y_arg = rlang::expr_deparse(dplyr::expr(`$`(comp_value, !!sym(comp_nms[[comp_i]]))))
               ))),
               cli::format_message(c(
                 "You likely want to rename or remove this column in your output, or debug why it has a different value."

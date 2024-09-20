@@ -355,32 +355,9 @@ assert_sufficient_f_args <- function(.f, ..., .ref_time_value_label) {
 #'
 #' @template ref-time-value-label
 #'
-#' @examples
-#' f1 <- as_slide_computation(~ .z - .x$time_value,
-#'   .ref_time_value_long_varnames = character(0L),
-#'   .ref_time_value_label = "third argument"
-#' )
-#' f1(tibble::tibble(time_value = 10), tibble::tibble(), 12)
-#'
-#' f2 <- as_time_slide_computation(~ .ref_time_value - .x$time_value)
-#' f2(tibble::tibble(time_value = 10), tibble::tibble(), 12)
-#'
-#' f3 <- as_diagonal_slide_computation(~ .version - .x$time_value)
-#' f3(tibble::tibble(time_value = 10), tibble::tibble(), 12)
-#'
-#' f4 <- as_diagonal_slide_computation(~ .ref_time_value - .x$time_value)
-#' f4(tibble::tibble(time_value = 10), tibble::tibble(), 12)
-#'
-#' g <- as_time_slide_computation(~ -1 * .)
-#' g(4)
-#'
-#' h <- as_time_slide_computation(~ .x - .group_key)
-#' h(6, 3)
-#'
 #' @importFrom rlang is_function new_function f_env is_environment missing_arg
 #'  f_rhs is_formula caller_arg caller_env
-#'
-#' @noRd
+#' @keywords internal
 as_slide_computation <- function(.f, ..., .ref_time_value_long_varnames, .ref_time_value_label) {
   arg <- caller_arg(.f)
   call <- caller_env()
@@ -542,8 +519,7 @@ as_slide_computation <- function(.f, ..., .ref_time_value_long_varnames, .ref_ti
 }
 
 #' @rdname as_slide_computation
-#' @export
-#' @noRd
+#' @keywords internal
 as_time_slide_computation <- function(.f, ...) {
   as_slide_computation(
     .f, ...,
@@ -553,8 +529,7 @@ as_time_slide_computation <- function(.f, ...) {
 }
 
 #' @rdname as_slide_computation
-#' @export
-#' @noRd
+#' @keywords internal
 as_diagonal_slide_computation <- function(.f, ...) {
   as_slide_computation(
     .f, ...,

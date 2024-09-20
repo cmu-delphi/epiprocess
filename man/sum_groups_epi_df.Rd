@@ -9,10 +9,10 @@ sum_groups_epi_df(.x, sum_cols = "value", group_cols = character())
 \arguments{
 \item{.x}{an \code{epi_df}}
 
+\item{sum_cols}{character vector of the columns to aggregate}
+
 \item{group_cols}{character vector of column names to group by. "time_value" is
 included by default.}
-
-\item{value_col}{character vector of the columns to aggregate}
 }
 \value{
 an \code{epi_df} object

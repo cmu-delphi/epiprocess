@@ -232,6 +232,24 @@ test_that("as_slide_computation raises errors as expected", {
   )
 })
 
+test_that("as_slide_computation works", {
+  f1 <- as_slide_computation(~ .z - .x$time_value,
+    .ref_time_value_long_varnames = character(0L),
+    .ref_time_value_label = "third argument"
+  )
+  expect_equal(f1(tibble::tibble(time_value = 10), tibble::tibble(), 12), 2)
+  f2 <- as_time_slide_computation(~ .ref_time_value - .x$time_value)
+  expect_equal(f2(tibble::tibble(time_value = 10), tibble::tibble(), 12), 2)
+  f3 <- as_diagonal_slide_computation(~ .version - .x$time_value)
+  expect_equal(f3(tibble::tibble(time_value = 10), tibble::tibble(), 12), 2)
+  f4 <- as_diagonal_slide_computation(~ .ref_time_value - .x$time_value)
+  expect_equal(f4(tibble::tibble(time_value = 10), tibble::tibble(), 12), 2)
+  g <- as_time_slide_computation(~ -1 * .)
+  expect_equal(g(4), -4)
+  h <- as_time_slide_computation(~ .x - .group_key)
+  expect_equal(h(6, 3), 3)
+})
+
 test_that("guess_period works", {
   # Error cases:
   expect_error(guess_period(numeric(0L)), class = "epiprocess__guess_period__not_enough_times")

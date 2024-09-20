@@ -22,6 +22,7 @@ library(tidyr)
 ```
 
 The data is fetched with the following query:
+
 ```{r, message = FALSE, eval=F}
 x <- pub_covidcast(
   source = "jhu-csse",
@@ -37,7 +38,6 @@ x <- pub_covidcast(
 ```
 
 The data has 1,158 rows and 3 columns.
-
 
 ```{r, echo=FALSE}
 data(jhu_csse_daily_subset)
