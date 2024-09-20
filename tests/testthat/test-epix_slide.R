@@ -805,23 +805,27 @@ test_that("`epix_slide` de-dupes labeling & value columns", {
   #   Solely parroting back values without any new columns seems likely to be
   #   nonsense (though this example would sort of act like a `distinct`
   #   operation if we accepted it):
-  expect_error(xx %>% epix_slide(~ .version, .new_col_name = "version"))
+  expect_error(xx %>% epix_slide(~.version, .new_col_name = "version"))
 
   # Deduping group label:
   #   When comp is formula -> unpacked tibble:
-  forecasts2a <- xx %>% group_by(geo_value) %>% epix_slide(~ tibble(
-    geo_value = .group_key$geo_value,
-    version = .version,
-    time_value = .version + c(0, 7),
-    value = 42
-  ))
+  forecasts2a <- xx %>%
+    group_by(geo_value) %>%
+    epix_slide(~ tibble(
+      geo_value = .group_key$geo_value,
+      version = .version,
+      time_value = .version + c(0, 7),
+      value = 42
+    ))
   #   When comp is data-masking:
-  forecasts2b <- xx %>% group_by(geo_value) %>% epix_slide(
-    geo_value = .group_key$geo_value,
-    version = .version,
-    time_value = .version + c(0, 7),
-    value = 42
-  )
+  forecasts2b <- xx %>%
+    group_by(geo_value) %>%
+    epix_slide(
+      geo_value = .group_key$geo_value,
+      version = .version,
+      time_value = .version + c(0, 7),
+      value = 42
+    )
   #   Expected value:
   forecasts2ref <- tibble(
     geo_value = "ak",
