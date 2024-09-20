@@ -415,7 +415,6 @@ as_slide_computation <- function(.f, ..., .ref_time_value_long_varnames, .ref_ti
       # doesn't reflect this behavior).
       results_multiorder <- character(0L)
       for (quosure_i in seq_along(.f)) {
-        # XXX could capture and improve error messages here at cost of recover()ability
         quosure_result_raw <- rlang::eval_tidy(quosures[[quosure_i]], data_mask)
         if (is.null(quosure_result_raw)) {
           nm <- nms[[quosure_i]]
