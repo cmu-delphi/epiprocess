@@ -415,15 +415,16 @@ epix_slide.grouped_epi_archive <- function(
         res <- c(res, comp_value[!overlaps_label_names])
       } else {
         # Apply default name (to vector or packed data.frame-type column):
+        if ("slide_value" %in% names(res)) {
+          cli_abort(c("Cannot guess a good column name for your output",
+            "x" = "`slide_value` already exists in `.x`",
+            ">" = "Please provide a `.new_col_name`."
+          ))
+        }
         res[["slide_value"]] <- comp_value
-        # TODO check for bizarre conflicting `slide_value` label col name.
-        # Either here or on entry to `epix_slide` (even if there we don't know
-        # whether vecs will be output). Or just turn this into a special case of
-        # the preceding branch and let the checking code there generate a
-        # complaint.
       }
     } else {
-      # vector or packed data.frame-type column (note: overlaps with label
+      # Vector or packed data.frame-type column (note: overlaps with label
       # column names should already be forbidden by earlier validation):
       res[[.new_col_name]] <- comp_value
     }
