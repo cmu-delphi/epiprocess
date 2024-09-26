@@ -12,9 +12,15 @@
 #'   Saturday.
 daily_to_weekly <- function(epi_arch,
                             agg_columns,
-                            agg_method = c("total", "mean", "median"),
+                            agg_method = c("sum", "mean"),
                             day_of_week = 4L,
                             day_of_week_end = 6L) {
+  agg_method <- arg_match(agg_method)
+  if (agg_method =="total") {
+    agg_fun <- epi_slide_sum
+  } else if (agg_method == "mean") {
+    agg_fun <- epi_slide_mean
+  }
   keys <- grep("time_value", key_colnames(epi_arch), invert = TRUE, value = TRUE)
   too_many_tibbles <- epix_slide(
     epi_arch,
@@ -23,7 +29,7 @@ daily_to_weekly <- function(epi_arch,
     function(x, group, ref_time) {
       x %>%
         group_by(across(all_of(keys))) %>%
-        epi_slide_sum(agg_columns, before = 6L) %>%
+        agg_fun(agg_columns, before = 6L) %>%
         select(-all_of(agg_columns)) %>%
         rename_with(~ gsub("slide_value_", "", .x)) %>%
         # only keep 1/week
@@ -38,6 +44,7 @@ daily_to_weekly <- function(epi_arch,
     rename_with(~ gsub("slide_value_", "", .x)) %>%
     as_epi_archive(compactify = TRUE)
 }
+
 
 
 
