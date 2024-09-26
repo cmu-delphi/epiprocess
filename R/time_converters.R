@@ -16,7 +16,7 @@ daily_to_weekly <- function(epi_arch,
                             day_of_week = 4L,
                             day_of_week_end = 6L) {
   agg_method <- arg_match(agg_method)
-  if (agg_method =="total") {
+  if (agg_method == "total") {
     agg_fun <- epi_slide_sum
   } else if (agg_method == "mean") {
     agg_fun <- epi_slide_mean
@@ -106,7 +106,7 @@ epiweeks_in_year <- function(year) {
 #' get the week in a season
 #' @keywords internal
 convert_epiweek_to_season_week <- function(epiyear, epiweek, season_start = 40) {
-  season_week <- epiweek - season_start+1
+  season_week <- epiweek - season_start + 1
 
   update_inds <- season_week <= 0
   # last year's # of epiweeks determines which week in the season we're at at
