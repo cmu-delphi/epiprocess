@@ -70,3 +70,51 @@ convert_to_period_upsample <- function(to_complete, groups, columns_to_complete,
     arrange(geo_value, time_value) %>%
     as_epi_archive(compactify = TRUE)
 }
+
+
+
+
+
+#' get a season e.g. "2020/21" for a given year-week pair
+#' @keywords internal
+convert_epiweek_to_season <- function(epiyear, epiweek, season_start_week = 40) {
+  # Convert epiweek to season
+  update_inds <- epiweek < season_start_week
+  epiyear <- ifelse(update_inds, epiyear - 1, epiyear)
+
+  season <- paste0(epiyear, "/", substr((epiyear + 1), 3, 4))
+  return(season)
+}
+
+#' get a total count of the epiweeks in a given year
+#' @keywords internal
+epiweeks_in_year <- function(year) {
+  last_week_of_year <- seq.Date(as.Date(paste0(year, "-12-24")),
+    as.Date(paste0(year, "-12-31")),
+    by = 1
+  )
+  return(max(as.numeric(MMWRweek(last_week_of_year)$MMWRweek)))
+}
+
+#' get the week in a season
+#' @keywords internal
+convert_epiweek_to_season_week <- function(epiyear, epiweek, season_start = 40) {
+  season_week <- epiweek - season_start+1
+
+  update_inds <- season_week <= 0
+  # last year's # of epiweeks determines which week in the season we're at at
+  # the beginning of the year
+  season_week[update_inds] <- season_week[update_inds] +
+    sapply(epiyear[update_inds] - 1, epiweeks_in_year)
+
+  return(season_week)
+}
+
+#' get a canonical date to represent a given epiweek
+#' @keywords internal
+convert_epiweek_to_date <- function(epiyear, epiweek,
+                                    day_of_week = 1) {
+  end_date <- MMWRweek2Date(epiyear, epiweek, day_of_week)
+
+  return(end_date)
+}
