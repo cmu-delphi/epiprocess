@@ -10,7 +10,7 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   - All variables are now dot-prefixed to be more consistent with tidyverse
     style for functions that allow tidyeval.
   - The `before/after` arguments have been replaced with the `.window_size` and
-    `.align` arguments. See documentation for how to translate.
+    `.align` arguments.
   - `names_sep` has been removed. If you return data frames from your
     computations:
     - without a name, they will be unpacked into separate columns without name
@@ -20,7 +20,13 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   - `as_list_col` has been removed. You can now directly return a list from your
     slide computations instead. If you were using `as_list_col=TRUE`, you will
     need to wrap your output in a list.
+  - Ungrouped slides are no longer allowed in `epi_slide`. If you used this for
+    geographic aggregation up to national, consider using `sum_groups_epi_df`.
+  - Added `sum_groups_epi_df` to allow aggregation across key columns prior to
+    sliding.
 - `epix_slide` interface has major changes.
+  - All variables are now dot-prefixed to be more consistent with tidyverse
+    style for functions that allow tidyeval.
   - `names_sep` has been removed. If you return data frames from your
     computations:
     - without a name, they will be unpacked into separate columns without name
@@ -30,6 +36,10 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   - `as_list_col` has been removed. You can now directly return a list from your
     slide computations instead. If you were using `as_list_col=TRUE`, you will
     need to wrap your output in a list.
+- `as_epi_df()` now checks that every group has unique time values and errors if
+  this is not the case. The same check is performed at the beginning of
+  `epi_slide()`. This check is currently not enforced in dplyr operations (like
+  for joins, mutates, or select), but we plan to add it in the future.
 - `as_epi_df()` or `as_epi_archive()` no longer accept `additional_metadata`.
   Use the new `other_keys` arg to specify additional key columns, such as age
   group columns or other demographic breakdowns. Miscellaneous metadata are no
