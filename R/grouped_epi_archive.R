@@ -55,7 +55,7 @@ new_grouped_epi_archive <- function(x, vars, drop) {
         or `ungroup` first.",
       class = "epiprocess__grouped_epi_archive__ungrouped_arg_is_already_grouped",
       epiprocess__ungrouped_class = class(x),
-      epiprocess__ungrouped_groups = groups(x)
+      epiprocess__ungrouped_group_vars = group_vars(x)
     )
   }
   assert_class(x, "epi_archive")
@@ -160,6 +160,14 @@ group_by_drop_default.grouped_epi_archive <- function(.tbl) {
   .tbl$private$drop
 }
 
+#' @include methods-epi_archive.R
+#' @rdname group_by.epi_archive
+#'
+#' @importFrom dplyr group_vars
+#' @export
+group_vars.grouped_epi_archive <- function(x) {
+  x$private$vars
+}
 
 #' @include methods-epi_archive.R
 #' @rdname group_by.epi_archive
@@ -169,7 +177,6 @@ group_by_drop_default.grouped_epi_archive <- function(.tbl) {
 groups.grouped_epi_archive <- function(x) {
   rlang::syms(x$private$vars)
 }
-
 
 #' @include methods-epi_archive.R
 #' @rdname group_by.epi_archive
@@ -205,20 +212,31 @@ ungroup.grouped_epi_archive <- function(x, ...) {
 #'  env missing_arg
 #' @export
 epix_slide.grouped_epi_archive <- function(
-    x,
-    f,
+    .x,
+    .f,
     ...,
-    before = Inf,
-    ref_time_values = NULL,
-    new_col_name = "slide_value",
-    as_list_col = FALSE,
-    names_sep = "_",
-    all_versions = FALSE) {
+    .before = Inf,
+    .versions = NULL,
+    .new_col_name = NULL,
+    .all_versions = FALSE) {
   # Perform some deprecated argument checks without using `<param> =
   # deprecated()` in the function signature, because they are from
   # early development versions and much more likely to be clutter than
   # informative in the signature.
-  if ("group_by" %in% nse_dots_names(...)) {
+  provided_args <- rlang::call_args_names(rlang::call_match())
+  if (any(provided_args %in% c("x", "f", "before", "new_col_name", "all_versions"))) {
+    cli::cli_abort(
+      "epix_slide: you are using one of the following old argument names: `x`, `f`, `before`,
+      `new_col_name`, `all_versions`. Please use the new names: `.x`, `.f`, `.before`,
+      `.new_col_name`, `.all_versions`."
+    )
+  }
+  if (any(provided_args %in% c("ref_time_values", ".ref_time_values"))) {
+    cli::cli_abort(
+      "epix_slide: the argument `ref_time_values` is deprecated. Please use `.versions` instead."
+    )
+  }
+  if ("group_by" %in% provided_args) {
     cli_abort("
           The `group_by` argument to `slide` has been removed; please use
           the `group_by()` S3 generic function
@@ -229,120 +247,219 @@ epix_slide.grouped_epi_archive <- function(
           the slide.)
         ", class = "epiprocess__epix_slide_group_by_parameter_deprecated")
   }
-  if ("all_rows" %in% nse_dots_names(...)) {
+  if ("all_rows" %in% provided_args) {
     cli_abort("
           The `all_rows` argument has been removed from `epix_slide` (but
           is still supported in `epi_slide`). Add rows for excluded
           results with a manual join instead.
         ", class = "epiprocess__epix_slide_all_rows_parameter_deprecated")
   }
+  if ("as_list_col" %in% provided_args) {
+    cli::cli_abort(
+      "epix_slide: the argument `as_list_col` is deprecated. If FALSE, you can just remove it.
+      If TRUE, have your given computation wrap its result using `list(result)` instead."
+    )
+  }
+  if ("names_sep" %in% provided_args) {
+    cli::cli_abort(
+      "epix_slide: the argument `names_sep` is deprecated. If NULL, you can remove it, it is now default.
+      If a string, please manually prefix your column names instead."
+    )
+  }
 
-  if (is.null(ref_time_values)) {
-    ref_time_values <- epix_slide_ref_time_values_default(x$private$ungrouped)
+  # Argument validation
+  if (is.null(.versions)) {
+    .versions <- epix_slide_versions_default(.x$private$ungrouped)
   } else {
-    assert_numeric(ref_time_values, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
-    if (any(ref_time_values > x$private$ungrouped$versions_end)) {
-      cli_abort("Some `ref_time_values` are greater than the latest version in the archive.")
+    assert_numeric(.versions, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
+    if (any(.versions > .x$private$ungrouped$versions_end)) {
+      cli_abort("All `.versions` must be less than or equal to the latest version in the archive.")
     }
-    if (anyDuplicated(ref_time_values) != 0L) {
-      cli_abort("Some `ref_time_values` are duplicated.")
+    if (anyDuplicated(.versions) != 0L) {
+      cli_abort("All `.versions` must be unique.")
     }
     # Sort, for consistency with `epi_slide`, although the current
     # implementation doesn't take advantage of it.
-    ref_time_values <- sort(ref_time_values)
+    .versions <- sort(.versions)
   }
 
-  validate_slide_window_arg(before, x$private$ungrouped$time_type)
+  validate_slide_window_arg(.before, .x$private$ungrouped$time_type, lower = 0) # nolint: object_usage_linter
 
-  # Symbolize column name
-  new_col <- sym(new_col_name)
-
-  # Validate rest of parameters:
-  assert_logical(as_list_col, len = 1L)
-  assert_logical(all_versions, len = 1L)
-  assert_character(names_sep, len = 1L, null.ok = TRUE)
-
-  # Computation for one group, one time value
-  comp_one_grp <- function(.data_group, .group_key,
-                           f, ...,
-                           ref_time_value,
-                           new_col) {
-    # Carry out the specified computation
-    comp_value <- f(.data_group, .group_key, ref_time_value, ...)
-
-    if (all_versions) {
-      # Extract data from archive so we can do length checks below. When
-      # `all_versions = TRUE`, `.data_group` will always be an ungrouped
-      # archive because of the preceding `epix_as_of` step.
-      .data_group <- .data_group$DT
+  checkmate::assert_string(.new_col_name, null.ok = TRUE)
+  if (!is.null(.new_col_name)) {
+    if (.new_col_name %in% .x$private$vars) {
+      cli_abort(c("`.new_col_name` must not be one of the grouping column name(s);
+                   `epix_slide()` uses these column name(s) to label what group
+                   each slide computation came from.",
+        "i" = "{cli::qty(length(.x$private$vars))} grouping column name{?s}
+                         {?was/were} {format_chr_with_quotes(.x$private$vars)}",
+        "x" = "`.new_col_name` was {format_chr_with_quotes(.new_col_name)}"
+      ))
     }
-
-    assert(
-      check_atomic(comp_value, any.missing = TRUE),
-      check_data_frame(comp_value),
-      combine = "or",
-      .var.name = vname(comp_value)
-    )
-
-    # Label every result row with the `ref_time_value`
-    res <- list(time_value = ref_time_value)
-
-    # Wrap the computation output in a list and unchop/unnest later if
-    # `as_list_col = FALSE`. This approach means that we will get a
-    # list-class col rather than a data.frame-class col when
-    # `as_list_col = TRUE` and the computations outputs are data
-    # frames.
-    res[[new_col]] <- list(comp_value)
-
-    # Convert the list to a tibble all at once for speed.
-    return(validate_tibble(new_tibble(res)))
+    if (identical(.new_col_name, "version")) {
+      cli_abort('`.new_col_name` must not be `"version"`; `epix_slide()` uses that column name to attach the element
+      of `.versions` associated with each slide computation')
+    }
   }
 
-  # If `f` is missing, interpret ... as an expression for tidy evaluation
-  if (missing(f)) {
-    quos <- enquos(...)
-    if (length(quos) == 0) {
+  assert_logical(.all_versions, len = 1L)
+
+  # If `.f` is missing, interpret ... as an expression for tidy evaluation
+  if (missing(.f)) {
+    used_data_masking <- TRUE
+    quosures <- enquos(...)
+    if (length(quosures) == 0) {
       cli_abort("If `f` is missing then a computation must be specified via `...`.")
     }
-    if (length(quos) > 1) {
-      cli_abort("If `f` is missing then only a single computation can be specified via `...`.")
-    }
 
-    f <- quos[[1]]
-    new_col <- sym(names(rlang::quos_auto_name(quos)))
+    .slide_comp <- as_diagonal_slide_computation(quosures)
     # Magic value that passes zero args as dots in calls below. Equivalent to
     # `... <- missing_arg()`, but use `assign` to avoid warning about
     # improper use of dots.
     assign("...", missing_arg())
+  } else {
+    used_data_masking <- FALSE
+    .slide_comp <- as_diagonal_slide_computation(.f, ...)
   }
 
-  f <- as_slide_computation(f, ...)
-  out <- lapply(ref_time_values, function(ref_time_value) {
+  # Computation for one group, one time value
+  comp_one_grp <- function(.data_group, .group_key,
+                           .slide_comp, ...,
+                           .version,
+                           .new_col_name) {
+    # Carry out the specified computation
+    comp_value <- .slide_comp(.data_group, .group_key, .version, ...)
+
+    # If this wasn't a tidyeval computation, we still need to check the output
+    # types. We'll let `group_modify` and `vec_rbind` deal with checking for
+    # type compatibility between the outputs.
+    if (!used_data_masking && !(
+      # vctrs considers data.frames to be vectors, but we still check
+      # separately for them because certain base operations output data frames
+      # with rownames, which we will allow (but might drop)
+      is.data.frame(comp_value) ||
+        vctrs::obj_is_vector(comp_value) && is.null(vctrs::vec_names(comp_value))
+    )) {
+      cli_abort("
+        the slide computations must always return data frames or unnamed vectors
+        (as determined by the vctrs package) (and not a mix of these two
+        structures).
+      ", class = "epiprocess__invalid_slide_comp_value")
+    }
+
+    .group_key_label <- if (nrow(.group_key) == 0L) {
+      # Edge case: we'll get here if a requested `.version` had 0 rows and we
+      # grouped by a nonzero number of columns using the default `.drop = TRUE`
+      # (or on all non-factor columns with `.drop = FALSE` for some reason,
+      # probably a user bug). Mimicking `dplyr`, we'll let `.group_key` provided
+      # to the computation be 0 rows, but then label it using NAs. (In the
+      # bizarre situation of grouping by a mix of factor and non-factor with
+      # `.drop = FALSE`, `.group_key` will already have 1 row. For ungrouped
+      # epix_slides and 0-variable-grouped epix_slides with either `.drop`
+      # setting, we will have a 1x0 .group_key, although perhaps for the latter
+      # this should be 0x0.)
+      vctrs::vec_cast(NA, .group_key)
+    } else {
+      .group_key
+    }
+
+    # Construct result first as list, then tibble-ify, to try to avoid some
+    # redundant work. However, we will sacrifice some performance here doing
+    # checks here in the inner loop, in order to provide immediate feedback on
+    # some formatting errors.
+    res <- c(
+      list(), # get list output; a bit faster than `as.list()`-ing `.group_key_label`
+      .group_key_label,
+      list(version = .version)
+    )
+    res <- vctrs::vec_recycle_common(!!!res, .size = vctrs::vec_size(comp_value))
+
+    if (is.null(.new_col_name)) {
+      if (inherits(comp_value, "data.frame")) {
+        # Sometimes comp_value can parrot back columns already in `res`; allow
+        # this, but balk if a column has the same name as one in `res` but a
+        # different value:
+        comp_nms <- names(comp_value)
+        overlaps_label_names <- comp_nms %in% names(res)
+        for (comp_i in which(overlaps_label_names)) {
+          if (!identical(comp_value[[comp_i]], res[[comp_nms[[comp_i]]]])) {
+            lines <- c(
+              cli::format_error(c(
+                "New column and labeling column clash",
+                "i" = "`epix_slide` is attaching labeling columns
+                       {format_varnames(names(res))}",
+                "x" = "slide computation output included a
+                       {format_varname(comp_nms[[comp_i]])} column, but it
+                       didn't match the labeling column",
+                "i" = "Here are examples of differing values, for a computation
+                       where the labels were:
+                       {format_tibble_row(as_tibble(res)[1L,])}:"
+              )),
+              capture.output(print(waldo::compare(
+                res[[comp_nms[[comp_i]]]], comp_value[[comp_i]],
+                x_arg = rlang::expr_deparse(dplyr::expr(`$`(label, !!sym(comp_nms[[comp_i]])))), # nolint: object_usage_linter
+                y_arg = rlang::expr_deparse(dplyr::expr(`$`(comp_value, !!sym(comp_nms[[comp_i]]))))
+              ))),
+              cli::format_message(c(
+                "You likely want to rename or remove this column in your output, or debug why it has a different value."
+              ))
+            )
+            rlang::abort(paste(collapse = "\n", lines),
+              class = "epiprocess__epix_slide_output_vs_label_column_conflict"
+            )
+          }
+        }
+        # Unpack into separate columns (without name prefix). If there are
+        # columns duplicating label columns, de-dupe and order them as if they
+        # didn't exist in comp_value.
+        res <- c(res, comp_value[!overlaps_label_names])
+      } else {
+        # Apply default name (to vector or packed data.frame-type column):
+        if ("slide_value" %in% names(res)) {
+          cli_abort(c("Cannot guess a good column name for your output",
+            "x" = "`slide_value` already exists in `.x`",
+            ">" = "Please provide a `.new_col_name`."
+          ))
+        }
+        res[["slide_value"]] <- comp_value
+      }
+    } else {
+      # Vector or packed data.frame-type column (note: overlaps with label
+      # column names should already be forbidden by earlier validation):
+      res[[.new_col_name]] <- comp_value
+    }
+
+    # Fast conversion:
+    return(validate_tibble(new_tibble(res)))
+  }
+
+  out <- lapply(.versions, function(.version) {
     # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
     # `epi_archive` if `all_versions` is `TRUE`:
-    as_of_raw <- x$private$ungrouped %>% epix_as_of(
-      ref_time_value,
-      min_time_value = ref_time_value - before,
-      all_versions = all_versions
+    as_of_raw <- .x$private$ungrouped %>% epix_as_of(
+      .version,
+      min_time_value = .version - .before,
+      all_versions = .all_versions
     )
 
     # Set:
     # * `as_of_df`, the data.frame/tibble/epi_df/etc. that we will
-    #    `group_modify` as the `.data` argument. Might or might not
+    #    `group_map` as the `.data` argument. Might or might not
     #    include version column.
-    # * `group_modify_fn`, the corresponding `.f` argument
-    if (!all_versions) {
+    # * `group_map_fn`, the corresponding `.f` argument for `group_map`
+    #   (not our `.f`)
+    if (!.all_versions) {
       as_of_df <- as_of_raw
-      group_modify_fn <- comp_one_grp
+      group_map_fn <- comp_one_grp
     } else {
       as_of_archive <- as_of_raw
       # We essentially want to `group_modify` the archive, but
       # haven't implemented this method yet. Next best would be
       # `group_modify` on its `$DT`, but that has different
-      # behavior based on whether or not `dtplyr` is loaded.
+      # behavior based on whether or not `dtplyr` < 1.3.0 is loaded.
       # Instead, go through an ordinary data frame, trying to avoid
       # copies.
-      if (address(as_of_archive$DT) == address(x$private$ungrouped$DT)) {
+      if (address(as_of_archive$DT) == address(.x$private$ungrouped$DT)) {
         # `as_of` aliased its the full `$DT`; copy before mutating:
         #
         # Note: this step is probably unneeded; we're fine with
@@ -356,10 +473,10 @@ epix_slide.grouped_epi_archive <- function(
       data.table::setDF(as_of_df)
 
       # Convert each subgroup chunk to an archive before running the calculation.
-      group_modify_fn <- function(.data_group, .group_key,
-                                  f, ...,
-                                  ref_time_value,
-                                  new_col) {
+      group_map_fn <- function(.data_group, .group_key,
+                               .slide_comp, ...,
+                               .version,
+                               .new_col_name) {
         # .data_group is coming from as_of_df as a tibble, but we
         # want to feed `comp_one_grp` an `epi_archive` backed by a
         # DT; convert and wrap:
@@ -368,33 +485,28 @@ epix_slide.grouped_epi_archive <- function(
         .data_group_archive <- as_of_archive
         .data_group_archive$DT <- .data_group
         comp_one_grp(.data_group_archive, .group_key,
-          f = f, ...,
-          ref_time_value = ref_time_value,
-          new_col = new_col
+          .slide_comp = .slide_comp, ...,
+          .version = .version,
+          .new_col_name = .new_col_name
         )
       }
     }
 
     return(
-      dplyr::group_modify(
-        dplyr::group_by(as_of_df, !!!syms(x$private$vars), .drop = x$private$drop),
-        group_modify_fn,
-        f = f, ...,
-        ref_time_value = ref_time_value,
-        new_col = new_col,
+      dplyr::bind_rows(dplyr::group_map( # note: output will be ungrouped
+        dplyr::group_by(as_of_df, !!!syms(.x$private$vars), .drop = .x$private$drop),
+        group_map_fn,
+        .slide_comp = .slide_comp, ...,
+        .version = .version,
+        .new_col_name = .new_col_name,
         .keep = TRUE
-      )
+      ))
     )
   })
-  # Combine output into a single tibble
-  out <- as_tibble(setDF(rbindlist(out)))
+  # Combine output into a single tibble (allowing for packed columns)
+  out <- vctrs::vec_rbind(!!!out)
   # Reconstruct groups
-  out <- group_by(out, !!!syms(x$private$vars), .drop = x$private$drop)
-
-  # Unchop/unnest if we need to
-  if (!as_list_col) {
-    out <- tidyr::unnest(out, !!new_col, names_sep = names_sep)
-  }
+  out <- group_by(out, !!!syms(.x$private$vars), .drop = .x$private$drop)
 
   # nolint start: commented_code_linter.
   # if (is_epi_df(x)) {

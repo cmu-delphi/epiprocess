@@ -4,16 +4,16 @@ test_that("first input must be a data.frame", {
   )
 })
 
-dt <- archive_cases_dv_subset$DT
+archive_data <- archive_cases_dv_subset$DT
 
 test_that("data.frame must contain geo_value, time_value and version columns", {
-  expect_error(as_epi_archive(select(dt, -geo_value), compactify = FALSE),
+  expect_error(as_epi_archive(select(archive_data, -geo_value), compactify = FALSE),
     regexp = "There is no geo_value column or similar name"
   )
-  expect_error(as_epi_archive(select(dt, -time_value), compactify = FALSE),
+  expect_error(as_epi_archive(select(archive_data, -time_value), compactify = FALSE),
     regexp = "There is no time_value column or similar name"
   )
-  expect_error(as_epi_archive(select(dt, -version), compactify = FALSE),
+  expect_error(as_epi_archive(select(archive_data, -version), compactify = FALSE),
     regexp = "There is no version column or similar name"
   )
 })
@@ -21,60 +21,62 @@ test_that("data.frame must contain geo_value, time_value and version columns", {
 test_that("as_epi_archive custom name mapping works correctly", {
   # custom name works correctly
   expect_equal(
-    as_epi_archive(rename(dt, weirdName = version),
+    as_epi_archive(rename(archive_data, weirdName = version),
       version = weirdName, compactify = TRUE
     ),
-    as_epi_archive(dt, compactify = TRUE)
+    as_epi_archive(archive_data, compactify = TRUE)
   )
   expect_equal(
-    as_epi_archive(rename(dt, weirdName = geo_value),
+    as_epi_archive(rename(archive_data, weirdName = geo_value),
       geo_value = weirdName, compactify = TRUE
     ),
-    as_epi_archive(dt, compactify = TRUE)
+    as_epi_archive(archive_data, compactify = TRUE)
   )
   expect_equal(
-    as_epi_archive(rename(dt, weirdName = time_value),
+    as_epi_archive(rename(archive_data, weirdName = time_value),
       time_value = weirdName, compactify = TRUE
     ),
-    as_epi_archive(dt, compactify = TRUE)
+    as_epi_archive(archive_data, compactify = TRUE)
   )
 
   expect_error(
     as_epi_archive(
-      rename(dt, weirdName = version),
+      rename(archive_data, weirdName = version),
       version = weirdName,
       version = time_value
     ), "Names must be unique"
   )
 })
 
+dumb_ex <- data.frame(
+  geo_value = c("ca", "ca"),
+  time_value = as.Date(c("2020-01-01", "2020-01-01")),
+  value = c(1, 1),
+  version = as.Date(c("2020-01-01", "2020-01-02"))
+)
+test_that("new_epi_archive correctly detects and warns about compactification", {
+  expect_snapshot(res <- dumb_ex %>% as_epi_archive(), cnd_class = TRUE)
+})
+
 test_that("other_keys can only contain names of the data.frame columns", {
-  expect_error(as_epi_archive(dt, other_keys = "xyz", compactify = FALSE),
+  expect_error(as_epi_archive(archive_data, other_keys = "xyz", compactify = FALSE),
     regexp = "`other_keys` must be contained in the column names of `x`."
   )
-  expect_error(as_epi_archive(dt, other_keys = "percent_cli", compactify = FALSE), NA)
+  expect_error(as_epi_archive(archive_data, other_keys = "percent_cli", compactify = FALSE), NA)
 })
 
 test_that("other_keys cannot contain names geo_value, time_value or version", {
-  expect_error(as_epi_archive(dt, other_keys = "geo_value", compactify = FALSE),
+  expect_error(as_epi_archive(archive_data, other_keys = "geo_value", compactify = FALSE),
     regexp = "`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\"."
   )
-  expect_error(as_epi_archive(dt, other_keys = "time_value", compactify = FALSE),
+  expect_error(as_epi_archive(archive_data, other_keys = "time_value", compactify = FALSE),
     regexp = "`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\"."
   )
-  expect_error(as_epi_archive(dt, other_keys = "version", compactify = FALSE),
+  expect_error(as_epi_archive(archive_data, other_keys = "version", compactify = FALSE),
     regexp = "`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\"."
   )
 })
 
-test_that("Warning thrown when other_metadata contains overlapping names with geo_type field", {
-  expect_warning(as_epi_archive(dt, additional_metadata = list(geo_type = 1), compactify = FALSE),
-    regexp = "`additional_metadata` names overlap with existing metadata fields"
-  )
-  expect_warning(as_epi_archive(dt, additional_metadata = list(time_type = 1), compactify = FALSE),
-    regexp = "`additional_metadata` names overlap with existing metadata fields"
-  )
-})
 
 test_that("epi_archives are correctly instantiated with a variety of data types", {
   d <- as.Date("2020-01-01")
@@ -88,22 +90,22 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
 
   ea1 <- as_epi_archive(df, compactify = FALSE)
   expect_equal(key(ea1$DT), c("geo_value", "time_value", "version"))
-  expect_equal(ea1$additional_metadata, list())
+  expect_null(ea1$additional_metadata)
 
-  ea2 <- as_epi_archive(df, other_keys = "value", additional_metadata = list(value = df$value), compactify = FALSE)
+  ea2 <- as_epi_archive(df, other_keys = "value", compactify = FALSE)
   expect_equal(key(ea2$DT), c("geo_value", "time_value", "value", "version"))
-  expect_equal(ea2$additional_metadata, list(value = df$value))
+  expect_null(ea2$additional_metadata)
 
   # Tibble
   tib <- tibble::tibble(df, code = "x")
 
   ea3 <- as_epi_archive(tib, compactify = FALSE)
   expect_equal(key(ea3$DT), c("geo_value", "time_value", "version"))
-  expect_equal(ea3$additional_metadata, list())
+  expect_null(ea3$additional_metadata)
 
-  ea4 <- as_epi_archive(tib, other_keys = "code", additional_metadata = list(value = df$value), compactify = FALSE)
+  ea4 <- as_epi_archive(tib, other_keys = "code", compactify = FALSE)
   expect_equal(key(ea4$DT), c("geo_value", "time_value", "code", "version"))
-  expect_equal(ea4$additional_metadata, list(value = df$value))
+  expect_null(ea4$additional_metadata)
 
   # Keyed data.table
   kdt <- data.table::data.table(
@@ -118,12 +120,12 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   ea5 <- as_epi_archive(kdt, compactify = FALSE)
   # Key from data.table isn't absorbed when as_epi_archive is used
   expect_equal(key(ea5$DT), c("geo_value", "time_value", "version"))
-  expect_equal(ea5$additional_metadata, list())
+  expect_null(ea5$additional_metadata)
 
-  ea6 <- as_epi_archive(kdt, other_keys = "value", additional_metadata = list(value = df$value), compactify = FALSE)
+  ea6 <- as_epi_archive(kdt, other_keys = "value", compactify = FALSE)
   # Mismatched keys, but the one from as_epi_archive overrides
   expect_equal(key(ea6$DT), c("geo_value", "time_value", "value", "version"))
-  expect_equal(ea6$additional_metadata, list(value = df$value))
+  expect_null(ea6$additional_metadata)
 
   # Unkeyed data.table
   udt <- data.table::data.table(
@@ -136,11 +138,11 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
 
   ea7 <- as_epi_archive(udt, compactify = FALSE)
   expect_equal(key(ea7$DT), c("geo_value", "time_value", "version"))
-  expect_equal(ea7$additional_metadata, list())
+  expect_null(ea7$additional_metadata)
 
-  ea8 <- as_epi_archive(udt, other_keys = "code", additional_metadata = list(value = df$value), compactify = FALSE)
+  ea8 <- as_epi_archive(udt, other_keys = "code", compactify = FALSE)
   expect_equal(key(ea8$DT), c("geo_value", "time_value", "code", "version"))
-  expect_equal(ea8$additional_metadata, list(value = df$value))
+  expect_null(ea8$additional_metadata)
 
   # epi_df
   edf1 <- jhu_csse_daily_subset %>%
@@ -149,15 +151,15 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
 
   ea9 <- as_epi_archive(edf1, compactify = FALSE)
   expect_equal(key(ea9$DT), c("geo_value", "time_value", "version"))
-  expect_equal(ea9$additional_metadata, list())
+  expect_null(ea9$additional_metadata)
 
-  ea10 <- as_epi_archive(edf1, other_keys = "code", additional_metadata = list(value = df$value), compactify = FALSE)
+  ea10 <- as_epi_archive(edf1, other_keys = "code", compactify = FALSE)
   expect_equal(key(ea10$DT), c("geo_value", "time_value", "code", "version"))
-  expect_equal(ea10$additional_metadata, list(value = df$value))
+  expect_null(ea10$additional_metadata)
 
   # Keyed epi_df
   edf2 <- data.frame(
-    geo_value = "al",
+    geo_value = c(rep("al", 10), rep("ak", 10)),
     time_value = rep(d + 0:9, 2),
     version = c(
       rep(as.Date("2020-01-25"), 10),
@@ -166,15 +168,15 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
     cases = 1:20,
     misc = "USA"
   ) %>%
-    as_epi_df(additional_metadata = list(other_keys = "misc"))
+    as_epi_df(other_keys = "misc")
 
   ea11 <- as_epi_archive(edf2, compactify = FALSE)
   expect_equal(key(ea11$DT), c("geo_value", "time_value", "version"))
-  expect_equal(ea11$additional_metadata, list())
+  expect_null(ea11$additional_metadata)
 
-  ea12 <- as_epi_archive(edf2, other_keys = "misc", additional_metadata = list(value = df$misc), compactify = FALSE)
+  ea12 <- as_epi_archive(edf2, other_keys = "misc", compactify = FALSE)
   expect_equal(key(ea12$DT), c("geo_value", "time_value", "misc", "version"))
-  expect_equal(ea12$additional_metadata, list(value = df$misc))
+  expect_null(ea12$additional_metadata)
 })
 
 test_that("`epi_archive` rejects nonunique keys", {
@@ -225,4 +227,10 @@ test_that("`epi_archive` rejects dataframes where time_value and version columns
       age_group = ordered(age_group, c("pediatric", "adult")),
     )
   expect_error(as_epi_archive(tbl3), class = "epiprocess__time_value_version_mismatch")
+})
+
+test_that("is_locf works as expected", {
+  vec <- c(1, 1, 1e-10, 1.1e-10, NA, NA, NaN, NaN)
+  is_repeated <- c(0, 1, 0, 1, 0, 1, 1, 1)
+  expect_equal(is_locf(vec, .Machine$double.eps^0.5), as.logical(is_repeated))
 })

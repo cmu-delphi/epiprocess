@@ -11,9 +11,11 @@
 #'             test_int
 #' @importFrom cli cli_abort cli_warn
 #' @importFrom rlang %||%
+#' @importFrom lifecycle deprecated
 #' @name epiprocess
 "_PACKAGE"
 utils::globalVariables(c(
   ".x", ".group_key", ".ref_time_value", "resid",
-  "fitted", ".response", "geo_value", "time_value"
+  "fitted", ".response", "geo_value", "time_value",
+  "value", ".real"
 ))

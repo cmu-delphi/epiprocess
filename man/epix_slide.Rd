@@ -7,86 +7,78 @@
 \title{Slide a function over variables in an \code{epi_archive} or \code{grouped_epi_archive}}
 \usage{
 epix_slide(
-  x,
-  f,
+  .x,
+  .f,
   ...,
-  before = Inf,
-  ref_time_values = NULL,
-  new_col_name = "slide_value",
-  as_list_col = FALSE,
-  names_sep = "_",
-  all_versions = FALSE
+  .before = Inf,
+  .versions = NULL,
+  .new_col_name = NULL,
+  .all_versions = FALSE
 )
 
 \method{epix_slide}{epi_archive}(
-  x,
-  f,
+  .x,
+  .f,
   ...,
-  before = Inf,
-  ref_time_values = NULL,
-  new_col_name = "slide_value",
-  as_list_col = FALSE,
-  names_sep = "_",
-  all_versions = FALSE
+  .before = Inf,
+  .versions = NULL,
+  .new_col_name = NULL,
+  .all_versions = FALSE
 )
 
 \method{epix_slide}{grouped_epi_archive}(
-  x,
-  f,
+  .x,
+  .f,
   ...,
-  before = Inf,
-  ref_time_values = NULL,
-  new_col_name = "slide_value",
-  as_list_col = FALSE,
-  names_sep = "_",
-  all_versions = FALSE
+  .before = Inf,
+  .versions = NULL,
+  .new_col_name = NULL,
+  .all_versions = FALSE
 )
 }
 \arguments{
-\item{x}{An \code{\link{epi_archive}} or \code{\link{grouped_epi_archive}} object. If ungrouped,
+\item{.x}{An \code{\link{epi_archive}} or \code{\link{grouped_epi_archive}} object. If ungrouped,
 all data in \code{x} will be treated as part of a single data group.}
 
-\item{f}{Function, formula, or missing; together with \code{...} specifies the
+\item{.f}{Function, formula, or missing; together with \code{...} specifies the
 computation to slide. To "slide" means to apply a computation over a
 sliding (a.k.a. "rolling") time window for each data group. The window is
-determined by the \code{before} parameter described below. One time step is
-typically one day or one week; see \code{\link{epi_slide}} details for more
-explanation. If a function, \code{f} must take an \code{epi_df} with the same
-column names as the archive's \code{DT}, minus the \code{version} column; followed
-by a one-row tibble containing the values of the grouping variables for
-the associated group; followed by a reference time value, usually as a
-\code{Date} object; followed by any number of named arguments. If a formula,
-\code{f} can operate directly on columns accessed via \code{.x$var} or \code{.$var}, as
-in \code{~ mean (.x$var)} to compute a mean of a column \code{var} for each
-group-\code{ref_time_value} combination. The group key can be accessed via
-\code{.y} or \code{.group_key}, and the reference time value can be accessed via
-\code{.z} or \code{.ref_time_value}. If \code{f} is missing, then \code{...} will specify the
+determined by the \code{.before} parameter (see details for more). If a
+function, \code{.f} must have the form \verb{function(x, g, t, ...)}, where
+\itemize{
+\item "x" is an epi_df with the same column names as the archive's \code{DT}, minus
+the \code{version} column
+\item "g" is a one-row tibble containing the values of the grouping variables
+for the associated group
+\item "t" is the ref_time_value for the current window
+\item "..." are additional arguments
+}
+
+If a formula, \code{.f} can operate directly on columns accessed via \code{.x$var} or
+\code{.$var}, as in \code{~ mean (.x$var)} to compute a mean of a column \code{var} for
+each group-\code{ref_time_value} combination. The group key can be accessed via
+\code{.y} or \code{.group_key}, and the reference time value can be accessed via \code{.z}
+or \code{.ref_time_value}. If \code{.f} is missing, then \code{...} will specify the
 computation.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
-via \code{f}. Alternatively, if \code{f} is missing, then \code{...} is interpreted as an
-expression for tidy evaluation; in addition to referring to columns
-directly by name, the expression has access to \code{.data} and \code{.env} pronouns
-as in \code{dplyr} verbs, and can also refer to the \code{.group_key} and
-\code{.ref_time_value}. See details of \code{\link{epi_slide}}.}
+via \code{f}. Alternatively, if \code{.f} is missing, then the \code{...} is interpreted
+as a \link[rlang:args_data_masking]{"data-masking"} expression or expressions
+for tidy evaluation; in addition to referring columns directly by name, the
+expressions have access to \code{.data} and \code{.env} pronouns as in \code{dplyr} verbs,
+and can also refer to \code{.x} (not the same as the input epi_archive),
+\code{.group_key}, and \code{.ref_time_value}. See details for more.}
 
-\item{before}{How far \code{before} each \code{ref_time_value} should the sliding
-window extend? If provided, should be a single, non-NA,
-\link[vctrs:vec_cast]{integer-compatible} number of time steps. This window
-endpoint is inclusive. For example, if \code{before = 7}, and one time step is
-one day, then to produce a value for a \code{ref_time_value} of January 8, we
-apply the given function or formula to data (for each group present) with
-\code{time_value}s from January 1 onward, as they were reported on January 8.
-For typical disease surveillance sources, this will not include any data
-with a \code{time_value} of January 8, and, depending on the amount of reporting
-latency, may not include January 7 or even earlier \code{time_value}s. (If
-instead the archive were to hold nowcasts instead of regular surveillance
-data, then we would indeed expect data for \code{time_value} January 8. If it
-were to hold forecasts, then we would expect data for \code{time_value}s after
-January 8, and the sliding window would extend as far after each
-\code{ref_time_value} as needed to include all such \code{time_value}s.)}
+\item{.before}{How many time values before the \code{.ref_time_value}
+should each snapshot handed to the function \code{.f} contain? If provided, it
+should be a single value that is compatible with the time_type of the
+time_value column (more below), but most commonly an integer. This window
+endpoint is inclusive. For example, if \code{.before = 7}, \code{time_type}
+in the archive is "day", and the \code{.ref_time_value} is January 8, then the
+smallest time_value in the snapshot will be January 1. If missing, then the
+default is no limit on the time values, so the full snapshot is given.}
 
-\item{ref_time_values}{Reference time values / versions for sliding
+\item{.versions}{Reference time values / versions for sliding
 computations; each element of this vector serves both as the anchor point
 for the \code{time_value} window for the computation and the \code{max_version}
 \code{epix_as_of} which we fetch data in this window. If missing, then this will
@@ -94,32 +86,27 @@ set to a regularly-spaced sequence of values set to cover the range of
 \code{version}s in the \code{DT} plus the \code{versions_end}; the spacing of values will
 be guessed (using the GCD of the skips between values).}
 
-\item{new_col_name}{String indicating the name of the new column that will
-contain the derivative values. Default is "slide_value"; note that setting
-\code{new_col_name} equal to an existing column name will overwrite this column.}
+\item{.new_col_name}{Either \code{NULL} or a string indicating the name of the new
+column that will contain the derived values. The default, \code{NULL}, will use
+the name "slide_value" unless your slide computations output data frames,
+in which case they will be unpacked into the constituent columns and those
+names used. If the resulting column name(s) overlap with the column names
+used for labeling the computations, which are \code{group_vars(x)} and
+\code{"version"}, then the values for these columns must be identical to the
+labels we assign.}
 
-\item{as_list_col}{Should the slide results be held in a list column, or be
-\link[tidyr:chop]{unchopped}/\link[tidyr:unnest]{unnested}? Default is \code{FALSE},
-in which case a list object returned by \code{f} would be unnested (using
-\code{\link[tidyr:unnest]{tidyr::unnest()}}), and, if the slide computations output data frames,
-the names of the resulting columns are given by prepending \code{new_col_name}
-to the names of the list elements.}
-
-\item{names_sep}{String specifying the separator to use in \code{tidyr::unnest()}
-when \code{as_list_col = FALSE}. Default is "_". Using \code{NULL} drops the prefix
-from \code{new_col_name} entirely.}
-
-\item{all_versions}{(Not the same as \code{all_rows} parameter of \code{epi_slide}.) If
-\code{all_versions = TRUE}, then \code{f} will be passed the version history (all
-\code{version <= ref_time_value}) for rows having \code{time_value} between
-\code{ref_time_value - before} and \code{ref_time_value}. Otherwise, \code{f} will be
-passed only the most recent \code{version} for every unique \code{time_value}.
-Default is \code{FALSE}.}
+\item{.all_versions}{(Not the same as \code{.all_rows} parameter of \code{epi_slide}.)
+If \code{.all_versions = TRUE}, then the slide computation will be passed the
+version history (all \code{version <= .version} where \code{.version} is one of the
+requested \code{.versions}) for rows having a \code{time_value} of at least `.version
+\itemize{
+\item before\verb{. Otherwise, the slide computation will be passed only the most   recent }version\verb{for every unique}time_value\verb{. Default is }FALSE`.
+}}
 }
 \value{
 A tibble whose columns are: the grouping variables, \code{time_value},
 containing the reference time values for the slide computation, and a
-column named according to the \code{new_col_name} argument, containing the slide
+column named according to the \code{.new_col_name} argument, containing the slide
 values.
 }
 \description{
@@ -133,26 +120,18 @@ examples.
 \details{
 A few key distinctions between the current function and \code{epi_slide()}:
 \enumerate{
-\item In \code{f} functions for \code{epix_slide}, one should not assume that the input
+\item In \code{.f} functions for \code{epix_slide}, one should not assume that the input
 data to contain any rows with \code{time_value} matching the computation's
-\code{ref_time_value} (accessible via \verb{attributes(<data>)$metadata$as_of}); for
+\code{.ref_time_value} (accessible via \verb{attributes(<data>)$metadata$as_of}); for
 typical epidemiological surveillance data, observations pertaining to a
 particular time period (\code{time_value}) are first reported \code{as_of} some
 instant after that time period has ended.
-\item \code{epix_slide()} doesn't accept an \code{after} argument; its windows extend
-from \code{before} time steps before a given \code{ref_time_value} through the last
-\code{time_value} available as of version \code{ref_time_value} (typically, this
-won't include \code{ref_time_value} itself, as observations about a particular
-time interval (e.g., day) are only published after that time interval
-ends); \code{epi_slide} windows extend from \code{before} time steps before a
-\code{ref_time_value} through \code{after} time steps after \code{ref_time_value}.
 \item The input class and columns are similar but different: \code{epix_slide}
-(with the default \code{all_versions=FALSE}) keeps all columns and the
+(with the default \code{.all_versions=FALSE}) keeps all columns and the
 \code{epi_df}-ness of the first argument to each computation; \code{epi_slide} only
 provides the grouping variables in the second input, and will convert the
 first input into a regular tibble if the grouping variables include the
-essential \code{geo_value} column. (With \code{all_versions=TRUE}, \code{epix_slide} will
-will provide an \code{epi_archive} rather than an \code{epi-df} to each
+essential \code{geo_value} column. (With .all_versions=TRUE\verb{, }epix_slide\verb{will   will provide an}epi_archive\verb{rather than an}epi-df` to each
 computation.)
 \item The output class and columns are similar but different: \code{epix_slide()}
 returns a tibble containing only the grouping variables, \code{time_value}, and
@@ -167,11 +146,11 @@ size stability in \code{epix_slide}, unlike in \code{epi_slide}. (\code{epix_sli
 roughly analogous to \code{\link[dplyr:group_map]{dplyr::group_modify}}, while \code{epi_slide} is roughly
 analogous to \code{dplyr::mutate} followed by \code{dplyr::arrange}) This is detailed
 in the "advanced" vignette.
-\item \code{all_rows} is not supported in \code{epix_slide}; since the slide
+\item \code{.all_rows} is not supported in \code{epix_slide}; since the slide
 computations are allowed more flexibility in their outputs than in
 \code{epi_slide}, we can't guess a good representation for missing computations
-for excluded group-\code{ref_time_value} pairs.
-\item The \code{ref_time_values} default for \code{epix_slide} is based on making an
+for excluded group-\code{.ref_time_value} pairs.
+\item The \code{.versions} default for \code{epix_slide} is based on making an
 evenly-spaced sequence out of the \code{version}s in the \code{DT} plus the
 \code{versions_end}, rather than the \code{time_value}s.
 }
@@ -191,7 +170,7 @@ necessary (as it its purpose).
 library(dplyr)
 
 # Reference time points for which we want to compute slide values:
-ref_time_values <- seq(as.Date("2020-06-01"),
+versions <- seq(as.Date("2020-06-02"),
   as.Date("2020-06-15"),
   by = "1 day"
 )
@@ -201,10 +180,10 @@ ref_time_values <- seq(as.Date("2020-06-01"),
 archive_cases_dv_subset \%>\%
   group_by(geo_value) \%>\%
   epix_slide(
-    f = ~ mean(.x$case_rate_7d_av),
-    before = 2,
-    ref_time_values = ref_time_values,
-    new_col_name = "case_rate_7d_av_recent_av"
+    .f = ~ mean(.x$case_rate_7d_av),
+    .before = 2,
+    .versions = versions,
+    .new_col_name = "case_rate_7d_av_recent_av"
   ) \%>\%
   ungroup()
 # We requested time windows that started 2 days before the corresponding time
@@ -217,7 +196,7 @@ archive_cases_dv_subset \%>\%
 # * 2 `time_value`s, for the rest of the results
 # * never the 3 `time_value`s we would get from `epi_slide`, since, because
 #   of data latency, we'll never have an observation
-#   `time_value == ref_time_value` as of `ref_time_value`.
+#   `time_value == .ref_time_value` as of `.ref_time_value`.
 # The example below shows this type of behavior in more detail.
 
 # Examining characteristics of the data passed to each computation with
@@ -236,17 +215,17 @@ archive_cases_dv_subset \%>\%
         class1 = class(x)[[1L]]
       )
     },
-    before = 5, all_versions = FALSE,
-    ref_time_values = ref_time_values, names_sep = NULL
+    .before = 5, .all_versions = FALSE,
+    .versions = versions
   ) \%>\%
   ungroup() \%>\%
-  arrange(geo_value, time_value)
+  arrange(geo_value, version)
 
 # --- Advanced: ---
 
 # `epix_slide` with `all_versions=FALSE` (the default) applies a
 # version-unaware computation to several versions of the data. We can also
-# use `all_versions=TRUE` to apply a version-*aware* computation to several
+# use `.all_versions=TRUE` to apply a version-*aware* computation to several
 # versions of the data, again looking at characteristics of the data passed
 # to each computation. In this case, each computation should expect an
 # `epi_archive` containing the relevant version data:
@@ -271,8 +250,8 @@ archive_cases_dv_subset \%>\%
         class1 = class(x)[[1L]]
       )
     },
-    before = 5, all_versions = TRUE,
-    ref_time_values = ref_time_values, names_sep = NULL
+    .before = 5, .all_versions = TRUE,
+    .versions = versions
   ) \%>\%
   ungroup() \%>\%
   # Focus on one geo_value so we can better see the columns above:

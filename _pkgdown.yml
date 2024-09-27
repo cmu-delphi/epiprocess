@@ -48,7 +48,6 @@ articles:
       - aggregation
       - outliers
       - archive
-      - advanced
       - compactify
 
 repo:
@@ -83,6 +82,7 @@ reference:
     desc: Details on `epi_archive`, and basic functionality.
   - contents:
       - matches("archive")
+      - revision_summary
   - title: "`epix_*()` functions"
     desc: Functions that act on an `epi_archive` and/or `grouped_epi_archive` object.
   - contents:

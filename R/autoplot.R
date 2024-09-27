@@ -47,15 +47,15 @@ autoplot.epi_df <- function(
     .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
     .base_color = "#3A448F",
     .max_facets = Inf) {
-  .color_by <- match.arg(.color_by)
-  .facet_by <- match.arg(.facet_by)
+  .color_by <- rlang::arg_match(.color_by)
+  .facet_by <- rlang::arg_match(.facet_by)
 
   assert(anyInfinite(.max_facets), checkInt(.max_facets), combine = "or")
   assert_character(.base_color, len = 1)
 
   key_cols <- key_colnames(object)
   non_key_cols <- setdiff(names(object), key_cols)
-  geo_and_other_keys <- kill_time_value(key_cols)
+  geo_and_other_keys <- key_colnames(object, exclude = "time_value")
 
   # --- check for numeric variables
   allowed <- purrr::map_lgl(object[non_key_cols], is.numeric)

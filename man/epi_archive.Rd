@@ -12,16 +12,15 @@ new_epi_archive(
   geo_type,
   time_type,
   other_keys,
-  additional_metadata,
   compactify,
   clobberable_versions_start,
-  versions_end
+  versions_end,
+  compactify_tol = .Machine$double.eps^0.5
 )
 
 validate_epi_archive(
   x,
   other_keys,
-  additional_metadata,
   compactify,
   clobberable_versions_start,
   versions_end
@@ -31,8 +30,7 @@ as_epi_archive(
   x,
   geo_type = deprecated(),
   time_type = deprecated(),
-  other_keys = character(0L),
-  additional_metadata = list(),
+  other_keys = character(),
   compactify = NULL,
   clobberable_versions_start = NA,
   .versions_end = max_version_with_row_in(x),
@@ -53,11 +51,8 @@ if the time type is not recognized.}
 
 \item{other_keys}{Character vector specifying the names of variables in \code{x}
 that should be considered key variables (in the language of \code{data.table})
-apart from "geo_value", "time_value", and "version".}
-
-\item{additional_metadata}{List of additional metadata to attach to the
-\code{epi_archive} object. The metadata will have the \code{geo_type} field; named
-entries from the passed list or will be included as well.}
+apart from "geo_value", "time_value", and "version". Typical examples
+are "age" or more granular geographies.}
 
 \item{compactify}{Optional; Boolean. \code{TRUE} will remove some
 redundant rows, \code{FALSE} will not, and missing or \code{NULL} will remove
@@ -88,6 +83,8 @@ beyond \code{max(x$version)}, but they all contained empty updates. (The default
 value of \code{clobberable_versions_start} does not fully trust these empty
 updates, and assumes that any version \verb{>= max(x$version)} could be
 clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
+
+\item{compactify_tol}{double. the tolerance used to detect approximate equality for compactification}
 
 \item{.versions_end}{location based versions_end, used to avoid prefix
 \code{version = issue} from being assigned to \code{versions_end} instead of being
@@ -133,7 +130,8 @@ object:
 \itemize{
 \item \code{geo_type}: the type for the geo values.
 \item \code{time_type}: the type for the time values.
-\item \code{additional_metadata}: list of additional metadata for the data archive.
+\item \code{other_keys}: any additional keys as a character vector.
+Typical examples are "age" or sub-geographies.
 }
 
 While this metadata is not protected, it is generally recommended to treat it

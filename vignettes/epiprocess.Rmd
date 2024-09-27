@@ -128,9 +128,7 @@ columns required for an `epi_df` object (along with many others). We can use
 frame into `epi_df` format.
 
 ```{r, message = FALSE}
-x <- as_epi_df(cases,
-  as_of = max(cases$issue)
-) %>%
+x <- as_epi_df(cases, as_of = max(cases$issue)) %>%
   select(geo_value, time_value, total_cases = value)
 
 class(x)
@@ -176,9 +174,11 @@ attributes(x)$metadata
 ```
 
 ## Using additional key columns in `epi_df`
+
 In the following examples we will show how to create an `epi_df` with additional keys.
 
 ### Converting a `tsibble` that has county code as an extra key
+
 ```{r}
 ex1 <- tibble(
   geo_value = rep(c("ca", "fl", "pa"), each = 3),
@@ -200,10 +200,10 @@ The metadata now includes `county_code` as an extra key.
 attr(ex1, "metadata")
 ```
 
-
 ### Dealing with misspecified column names
 
 `epi_df` requires there to be columns `geo_value` and `time_value`, if they do not exist then `as_epi_df()` throws an error.
+
 ```{r, error = TRUE}
 data.frame(
   # misnamed
@@ -211,12 +211,13 @@ data.frame(
   # extra key
   pol = rep(c("blue", "swing", "swing"), each = 3),
   # misnamed
-  reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"), by = "day"), length.out = length(geo_value)),
-  value = seq_along(geo_value) + 0.01 * withr::with_rng_version("3.0.0", withr::with_seed(42, length(geo_value)))
+  reported_date = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"), by = "day"), length.out = 9),
+  value = 1:9 + 0.01 * withr::with_rng_version("3.0.0", withr::with_seed(42, 9))
 ) %>% as_epi_df(as_of = as.Date("2024-03-20"))
 ```
 
 The columns can be renamed to match `epi_df` format. In the example below, notice there is also an additional key `pol`.
+
 ```{r}
 ex2 <- tibble(
   # misnamed
@@ -234,12 +235,11 @@ ex2 <- ex2 %>%
   rename(geo_value = state, time_value = reported_date) %>%
   as_epi_df(
     as_of = "2020-06-03",
-    additional_metadata = list(other_keys = "pol")
+    other_keys = "pol"
   )
 
 attr(ex2, "metadata")
 ```
-
 
 ### Adding additional keys to an `epi_df` object
 
@@ -264,12 +264,12 @@ ex3 <- ex3 %>%
     state = rep(tolower("MA"), 6),
     pol = rep(c("blue", "swing", "swing"), each = 2)
   ) %>%
-  as_epi_df(additional_metadata = list(other_keys = c("state", "pol")), as_of = as.Date("2024-03-20"))
+  as_epi_df(other_keys = c("state", "pol"), as_of = as.Date("2024-03-20"))
 
 attr(ex3, "metadata")
 ```
 
-Note that the two additional keys we added, `state` and `pol`, are specified as a character vector in the `other_keys` component of the `additional_metadata` list. They must be specified in this manner so that downstream actions on the `epi_df`, like model fitting and prediction, can recognize and use these keys.
+Note that the two additional keys we added, `state` and `pol`, are specified as a character vector in the `other_keys` argument. They must be specified in this manner so that downstream actions on the `epi_df`, like model fitting and prediction, can recognize and use these keys.
 
 Currently `other_keys` metadata in `epi_df` doesn't impact `epi_slide()`, contrary to `other_keys` in `as_epi_archive` which affects how the update data is interpreted.
 

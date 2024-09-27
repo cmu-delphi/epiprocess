@@ -46,19 +46,77 @@ clobberable versions). If the \code{versions_end} values differ, the \code{sync}
 parameter controls what is done.
 }
 \details{
-In all cases, \code{additional_metadata} will be an empty list, and
-\code{clobberable_versions_start} will be set to the earliest version that could
-be clobbered in either input archive.
+In all cases, \code{clobberable_versions_start} will be set to the
+earliest version that could be clobbered in either input archive.
 }
 \examples{
-# create two example epi_archive datasets
-x <- archive_cases_dv_subset$DT \%>\%
-  dplyr::select(geo_value, time_value, version, case_rate_7d_av) \%>\%
-  as_epi_archive(compactify = TRUE)
-y <- archive_cases_dv_subset$DT \%>\%
-  dplyr::select(geo_value, time_value, version, percent_cli) \%>\%
-  as_epi_archive(compactify = TRUE)
-# merge results stored in a third object:
-xy <- epix_merge(x, y)
+# Example 1
+# The s1 signal at August 1st gets revised from 10 to 11 on August 2nd
+s1 <- tibble::tibble(
+  geo_value = c("ca", "ca", "ca"),
+  time_value = as.Date(c("2024-08-01", "2024-08-01", "2024-08-02")),
+  version = as.Date(c("2024-08-01", "2024-08-02", "2024-08-02")),
+  signal1 = c(10, 11, 7)
+)
 
+s2 <- tibble::tibble(
+  geo_value = c("ca", "ca"),
+  time_value = as.Date(c("2024-08-01", "2024-08-02")),
+  version = as.Date(c("2024-08-03", "2024-08-03")),
+  signal2 = c(2, 3)
+)
+
+
+s1 <- s1 \%>\% as_epi_archive()
+s2 <- s2 \%>\% as_epi_archive()
+
+merged <- epix_merge(s1, s2, sync = "locf")
+merged[["DT"]]
+
+# Example 2
+# The s1 signal at August 1st gets revised from 12 to 13 on August 3rd
+s1 <- tibble::tibble(
+  geo_value = c("ca", "ca", "ca", "ca"),
+  time_value = as.Date(c("2024-08-01", "2024-08-01", "2024-08-02", "2024-08-03")),
+  version = as.Date(c("2024-08-01", "2024-08-03", "2024-08-03", "2024-08-03")),
+  signal1 = c(12, 13, 22, 19)
+)
+
+s2 <- tibble::tibble(
+  geo_value = c("ca", "ca"),
+  time_value = as.Date(c("2024-08-01", "2024-08-02")),
+  version = as.Date(c("2024-08-02", "2024-08-02")),
+  signal2 = c(4, 5),
+)
+
+
+s1 <- s1 \%>\% as_epi_archive()
+s2 <- s2 \%>\% as_epi_archive()
+
+merged <- epix_merge(s1, s2, sync = "locf")
+merged[["DT"]]
+
+
+# Example 3:
+s1 <- tibble::tibble(
+  geo_value = c("ca", "ca", "ca"),
+  time_value = as.Date(c("2024-08-01", "2024-08-02", "2024-08-03")),
+  version = as.Date(c("2024-08-01", "2024-08-02", "2024-08-03")),
+  signal1 = c(14, 11, 9)
+)
+
+# The s2 signal at August 1st gets revised from 3 to 5 on August 3rd
+s2 <- tibble::tibble(
+  geo_value = c("ca", "ca", "ca"),
+  time_value = as.Date(c("2024-08-01", "2024-08-01", "2024-08-02")),
+  version = as.Date(c("2024-08-02", "2024-08-03", "2024-08-03")),
+  signal2 = c(3, 5, 2),
+)
+
+s1 <- s1 \%>\% as_epi_archive()
+s2 <- s2 \%>\% as_epi_archive()
+
+# Some LOCF for signal 1 as signal 2 gets updated
+merged <- epix_merge(s1, s2, sync = "locf")
+merged[["DT"]]
 }

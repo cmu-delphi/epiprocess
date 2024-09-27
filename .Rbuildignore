@@ -16,3 +16,5 @@
 ^.lintr$
 ^DEVELOPMENT.md$
 man-roxygen
+^.venv$
+^sandbox.R$

@@ -1,10 +1,10 @@
 Type: Package
 Package: epiprocess
 Title: Tools for basic signal processing in epidemiology
-Version: 0.8.0
+Version: 0.9.0
 Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
-    person("Logan", "Brooks", email = "lcbrooks@andrew.cmu.edu", role = c("aut", "cre")),
+    person("Logan", "Brooks", , "lcbrooks@andrew.cmu.edu", role = c("aut", "cre")),
     person("Rafael", "Catoia", role = "ctb"),
     person("Nat", "DeFries", role = "ctb"),
     person("Daniel", "McDonald", role = "aut"),
@@ -15,23 +15,30 @@ Authors@R: c(
     person("Evan", "Ray", role = "aut"),
     person("Dmitry", "Shemetov", role = "ctb"),
     person("Ryan", "Tibshirani", role = "aut"),
-    person("Lionel", "Henry", role = "ctb", comment = "Author of included rlang fragments"),
-    person("Hadley", "Wickham", role = "ctb", comment = "Author of included rlang fragments"),
-    person("Posit", role = "cph", comment = "Copyright holder of included rlang fragments")
+    person("Lionel", "Henry", role = "ctb",
+           comment = "Author of included rlang fragments"),
+    person("Hadley", "Wickham", role = "ctb",
+           comment = "Author of included rlang fragments"),
+    person("Posit", role = "cph",
+           comment = "Copyright holder of included rlang fragments")
   )
-Description: This package introduces a common data structure for epidemiological
-    data reported by location and time, provides another data structure to
-    work with revisions to these data sets over time, and offers associated
-    utilities to perform basic signal processing tasks.
+Description: This package introduces a common data structure for
+    epidemiological data reported by location and time, provides another
+    data structure to work with revisions to these data sets over time,
+    and offers associated utilities to perform basic signal processing
+    tasks.
 License: MIT + file LICENSE
-Copyright: file inst/COPYRIGHTS
+URL: https://cmu-delphi.github.io/epiprocess/
+Depends:
+    R (>= 3.6)
 Imports:
     checkmate,
     cli,
     data.table,
-    dplyr (>= 1.0.0),
+    dplyr (>= 1.0.8),
     genlasso,
     ggplot2,
+    glue,
     lifecycle (>= 1.0.1),
     lubridate,
     magrittr,
@@ -43,7 +50,8 @@ Imports:
     tidyselect (>= 1.2.0),
     tsibble,
     utils,
-    vctrs
+    vctrs,
+    waldo
 Suggests:
     covidcast,
     devtools,
@@ -57,22 +65,22 @@ VignetteBuilder:
     knitr
 Remotes:
     cmu-delphi/epidatr,
-    reconverse/outbreaks,
-    glmgen/genlasso
+    glmgen/genlasso,
+    reconverse/outbreaks
 Config/testthat/edition: 3
+Config/testthat/parallel: true
+Copyright: file inst/COPYRIGHTS
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-Depends:
-    R (>= 2.10)
-URL: https://cmu-delphi.github.io/epiprocess/
 Collate:
     'archive.R'
     'autoplot.R'
     'correlation.R'
     'data.R'
     'epi_df.R'
+    'epi_df_forbidden_methods.R'
     'epiprocess.R'
     'group_by_epi_df_methods.R'
     'methods-epi_archive.R'
@@ -82,6 +90,7 @@ Collate:
     'methods-epi_df.R'
     'outliers.R'
     'reexports.R'
+    'revision_analysis.R'
     'slide.R'
     'utils.R'
     'utils_pipe.R'
