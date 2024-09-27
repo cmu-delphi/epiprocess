@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-light me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-light me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,7 +40,6 @@
     <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a></li>
     <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
   </ul>
 </li>
@@ -140,9 +139,10 @@ format. For removal of redundant version updates in
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, version <span class="op">=</span> <span class="va">issue</span>, percent_cli <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span>compactify <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "epi_archive"</span></span></code></pre>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## → An `epi_archive` object, with metadata:</span></span>
 <span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-06-01 / 2021-11-30</span></span>
 <span><span class="co">## <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2020-06-02 / 2021-12-01</span></span>
@@ -167,10 +167,10 @@ format. For removal of redundant version updates in
 package) that has the columns <code>geo_value</code>,
 <code>time_value</code>, <code>version</code> (and possibly additional
 ones), and other metadata fields, such as <code>geo_type</code>.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "data.table" "data.frame"</span></span></code></pre>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Key: &lt;geo_value, time_value, version&gt;</span></span>
 <span><span class="co">##    geo_value time_value    version percent_cli</span></span>
@@ -188,7 +188,7 @@ below). There can only be a single row per unique combination of key
 variables, and therefore the key variables are critical for figuring out
 how to generate a snapshot of data from the archive, as of a given
 version (also described below).</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/setkey.html" class="external-link">key</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "geo_value"  "time_value" "version"</span></span></code></pre>
 <p>In general, the last version of each observation is carried forward
@@ -202,9 +202,6 @@ version (also described below).</p>
 <ul>
 <li>
 <code>geo_type</code>: the type for the geo values.</li>
-<li>
-<code>additional_metadata</code>: list of additional metadata for
-the data archive.</li>
 </ul>
 <p>Metadata for an <code>epi_archive</code> object <code>x</code> can be
 accessed (and altered) directly, as in <code>x$geo_type</code>, etc.
@@ -215,17 +212,83 @@ explicitly specified in the function call (as it did in the case
 above).</p>
 </div>
 <div class="section level2">
+<h2 id="summarizing-revision-behavior">Summarizing Revision Behavior<a class="anchor" aria-label="anchor" href="#summarizing-revision-behavior"></a>
+</h2>
+<p>There are many ways to examine the ways that signals change across
+different revisions. The simplest that is included directly in
+epiprocess is <code><a href="../reference/revision_summary.html">revision_summary()</a></code>, which computes simple
+summary statistics for each key (by default,
+<code>(geo_value,time_value)</code> pairs), such as the lag to the first
+value (latency). In addition to the per key summary, it also returns an
+overall summary:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">revision_details</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/revision_summary.html">revision_summary</a></span><span class="op">(</span><span class="va">x</span>, print_inform <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Min lag (time to first version):</span></span></code></pre>
+<pre><code><span><span class="co">##      min median     mean     max</span></span>
+<span><span class="co">##   3 days 3 days 3.5 days 12 days</span></span></code></pre>
+<pre><code><span><span class="co">## Fraction of epi_key+time_values with</span></span>
+<span><span class="co">## No revisions:</span></span>
+<span><span class="co">## • 0 out of 1,956 (0%)</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Quick revisions (last revision within 3 days of the `time_value`):</span></span>
+<span><span class="co">## • 0 out of 1,956 (0%)</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Few revisions (At most 3 revisions for that `time_value`):</span></span>
+<span><span class="co">## • 0 out of 1,956 (0%)</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Fraction of revised epi_key+time_values which have:</span></span>
+<span><span class="co">## Less than 0.1 spread in relative value:</span></span>
+<span><span class="co">## • 91 out of 1,956 (4.65%)</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Spread of more than 2.22056495 in actual value (when revised):</span></span>
+<span><span class="co">## • 671 out of 1,956 (34.3%)</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## days until within 20% of the latest value:</span></span></code></pre>
+<pre><code><span><span class="co">##      min median     mean     max</span></span>
+<span><span class="co">##   3 days 5 days 9.1 days 67 days</span></span></code></pre>
+<p>So as was mentioned at the top, this is clearly a data set where
+basically everything has some amount of revisions, only 0.37% have no
+revision at all, and 0.92 have fewer than 3. Over 94% change by more
+than 10%. On the other hand, most are within plus or minus 20% within
+5-9 days, so the revisions converge relatively quickly, even if the
+revisions continue for longer.</p>
+<p>To do more detailed analysis than is possible with the above
+printing, we have <code>revision_details</code>:</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">revision_details</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    n_rev <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">n_revisions</span><span class="op">)</span>,</span>
+<span>    min_lag <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">min_lag</span><span class="op">)</span>,</span>
+<span>    max_lag <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">max_lag</span><span class="op">)</span>,</span>
+<span>    spread <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">spread</span><span class="op">)</span>,</span>
+<span>    rel_spread <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">rel_spread</span><span class="op">)</span>,</span>
+<span>    time_near_latest <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">time_near_latest</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 4 × 7</span></span></span>
+<span><span class="co">##   geo_value n_rev min_lag max_lag spread rel_spread time_near_latest</span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>          </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> ca         56.4 3 days  74 days   2.53      0.304 11.278119 days  </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> fl         56.4 3 days  74 days   2.29      0.280 10.830266 days  </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> ny         56.4 3 days  74 days   1.98      0.206  6.977505 days  </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span> tx         56.4 3 days  74 days   1.63      0.218  7.398773 days</span></span></code></pre>
+<p>Most of the states have similar stats on most of these features,
+except for Florida, which takes nearly double the amount of time to get
+close to the right value, with California not too far behind.</p>
+</div>
+<div class="section level2">
 <h2 id="producing-snapshots-in-epi_df-form">Producing snapshots in <code>epi_df</code> form<a class="anchor" aria-label="anchor" href="#producing-snapshots-in-epi_df-form"></a>
 </h2>
 <p>A key method of an <code>epi_archive</code> class is
 <code><a href="../reference/epix_as_of.html">epix_as_of()</a></code>, which generates a snapshot of the archive in
 <code>epi_df</code> format. This represents the most up-to-date values
 of the signal variables as of a given version.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x_snapshot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span><span class="op">(</span><span class="va">x</span>, max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2021-06-01"</span><span class="op">)</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">x_snapshot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2021-06-01"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">x_snapshot</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "epi_df"     "tbl_df"     "tbl"        "data.frame"</span></span></code></pre>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x_snapshot</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## An `epi_df` object, 6 x 3 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
@@ -241,10 +304,10 @@ of the signal variables as of a given version.</p>
 <span><span class="co">## <span style="color: #BCBCBC;">4</span> ca        2020-06-04        2.41</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">5</span> ca        2020-06-05        2.57</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">6</span> ca        2020-06-06        2.63</span></span></code></pre>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x_snapshot</span><span class="op">$</span><span class="va">time_value</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "2021-05-31"</span></span></code></pre>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/attributes.html" class="external-link">attributes</a></span><span class="op">(</span><span class="va">x_snapshot</span><span class="op">)</span><span class="op">$</span><span class="va">metadata</span><span class="op">$</span><span class="va">as_of</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "2021-06-01"</span></span></code></pre>
 <p>We can see that the max time value in the <code>epi_df</code> object
@@ -253,27 +316,19 @@ of the signal variables as of a given version.</p>
 we can infer that the doctor’s visits signal was 2 days latent on June
 1. Also, we can see that the metadata in the <code>epi_df</code> object
 has the version date recorded in the <code>as_of</code> field.</p>
-<p>By default, using the maximum of the <code>version</code> column in
-the underlying data table in an <code>epi_archive</code> object itself
-generates a snapshot of the latest values of signal variables in the
-entire archive. The <code><a href="../reference/epix_as_of.html">epix_as_of()</a></code> function issues a warning
-in this case, since updates to the current version may still come in at
-a later point in time, due to various reasons, such as synchronization
-issues.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x_latest</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span><span class="op">(</span><span class="va">x</span>, max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Below, we pull several snapshots from the archive, spaced one month
 apart. We overlay the corresponding signal curves as colored lines, with
 the version dates marked by dotted vertical lines, and draw the latest
 curve in black (from the latest snapshot <code>x_latest</code> that the
 archive can provide).</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
+<span><span class="va">x_latest</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">x</span><span class="op">$</span><span class="va">versions_end</span><span class="op">)</span></span>
 <span><span class="va">self_max</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span></span>
 <span><span class="va">versions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-01"</span><span class="op">)</span>, <span class="va">self_max</span> <span class="op">-</span> <span class="fl">1</span>, by <span class="op">=</span> <span class="st">"1 month"</span><span class="op">)</span></span>
 <span><span class="va">snapshots</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://purrr.tidyverse.org/reference/map_dfr.html" class="external-link">map_dfr</a></span><span class="op">(</span><span class="va">versions</span>, <span class="kw">function</span><span class="op">(</span><span class="va">v</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span><span class="op">(</span><span class="va">x</span>, max_version <span class="op">=</span> <span class="va">v</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>version <span class="op">=</span> <span class="va">v</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">v</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>version <span class="op">=</span> <span class="va">v</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span></span>
 <span>    <span class="va">x_latest</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>version <span class="op">=</span> <span class="va">self_max</span><span class="op">)</span></span>
@@ -328,7 +383,7 @@ versions at all (in the same sort of situation) - if requested via
 not yet have access to (e.g., due to encountering issues while
 attempting to download the currently available version data for one of
 the archives, but not the other).</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/pub_covidcast.html" class="external-link">pub_covidcast</a></span><span class="op">(</span></span>
 <span>  source <span class="op">=</span> <span class="st">"jhu-csse"</span>,</span>
 <span>  signals <span class="op">=</span> <span class="st">"confirmed_7dav_incidence_prop"</span>,</span>
@@ -391,7 +446,7 @@ rates, as well as current and past values of the outpatient CLI signal
 from medical claims. We’ll extend the <code>prob_ar()</code> function
 from the slide vignette to accomodate exogenous variables in the
 autoregressive model, which is often referred to as an ARX model.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prob_arx</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">lags</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">7</span>, <span class="fl">14</span><span class="op">)</span>, <span class="va">ahead</span> <span class="op">=</span> <span class="fl">7</span>, <span class="va">min_train_window</span> <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>                     <span class="va">lower_level</span> <span class="op">=</span> <span class="fl">0.05</span>, <span class="va">upper_level</span> <span class="op">=</span> <span class="fl">0.95</span>, <span class="va">symmetrize</span> <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                     <span class="va">intercept</span> <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">nonneg</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span></span>
@@ -447,44 +502,43 @@ autoregressive model, which is often referred to as an ARX model.</p>
 <p>Next we slide this forecaster over the working
 <code>epi_archive</code> object, in order to forecast COVID-19 case
 rates 7 days into the future.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fc_time_values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-08-01"</span><span class="op">)</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2021-11-30"</span><span class="op">)</span>,</span>
-<span>  by <span class="op">=</span> <span class="st">"1 month"</span></span>
-<span><span class="op">)</span></span>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fc_time_values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-08-01"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2021-11-30"</span><span class="op">)</span>, by <span class="op">=</span> <span class="st">"1 month"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">z</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span><span class="op">(</span></span>
-<span>    fc <span class="op">=</span> <span class="fu">prob_arx</span><span class="op">(</span>x <span class="op">=</span> <span class="va">percent_cli</span>, y <span class="op">=</span> <span class="va">case_rate_7d_av</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">119</span>,</span>
-<span>    ref_time_values <span class="op">=</span> <span class="va">fc_time_values</span></span>
+<span>    fc <span class="op">=</span> <span class="fu">prob_arx</span><span class="op">(</span>x <span class="op">=</span> <span class="va">percent_cli</span>, y <span class="op">=</span> <span class="va">case_rate_7d_av</span>, ahead <span class="op">=</span> <span class="fl">7</span><span class="op">)</span>,</span>
+<span>    .before <span class="op">=</span> <span class="fl">119</span>,</span>
+<span>    .versions <span class="op">=</span> <span class="va">fc_time_values</span></span>
 <span>  <span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">z</span>, <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 5</span></span></span>
-<span><span class="co">##    geo_value time_value fc_point fc_lower fc_upper</span></span>
-<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> ca        2020-08-01    21.0     19.1     23.0 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> fl        2020-08-01    44.5     38.9     50.0 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> ny        2020-08-01     3.10     2.89     3.31</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> tx        2020-08-01    35.5     33.6     37.4 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> ca        2020-09-01    22.9     20.1     25.8 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> fl        2020-09-01    15.5     10.5     20.6 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> ny        2020-09-01     3.16     2.93     3.39</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> tx        2020-09-01    17.5     14.3     20.7 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> ca        2020-10-01    12.8      9.21    16.5 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> fl        2020-10-01    14.7      8.72    20.6</span></span></code></pre>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 3</span></span></span>
+<span><span class="co">##    geo_value version    fc$point $lower $upper</span></span>
+<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> ca        2020-08-01    21.0   19.1   23.0 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> fl        2020-08-01    44.5   38.9   50.0 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> ny        2020-08-01     3.10   2.89   3.31</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> tx        2020-08-01    35.5   33.6   37.4 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> ca        2020-09-01    22.9   20.1   25.8 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> fl        2020-09-01    15.5   10.5   20.6 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> ny        2020-09-01     3.16   2.93   3.39</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> tx        2020-09-01    17.5   14.3   20.7 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> ca        2020-10-01    12.8    9.21  16.5 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> fl        2020-10-01    14.7    8.72  20.6</span></span></code></pre>
 <p>We get back a tibble <code>z</code> with the grouping variables (here
-geo value), the time values, and three columns <code>fc_point</code>,
-<code>fc_lower</code>, and <code>fc_upper</code> produced by the slide
-computation that correspond to the point forecast, and the lower and
-upper endpoints of the 95% prediction band, respectively. (If instead we
-had set <code>as_list_col = TRUE</code> in the call to
-<code><a href="../reference/epix_slide.html">epix_slide()</a></code>, then we would have gotten a list column
-<code>fc</code>, where each element of <code>fc</code> is a data frame
-with named columns <code>point</code>, <code>lower</code>, and
-<code>upper</code>.)</p>
+geo value), the (reference) time values, and a [“packed”][tidyr::pack]
+data frame column <code>fc</code> containing <code>fc$point</code>,
+<code>fc$lower</code>, and <code>fc$upper</code> that correspond to the
+point forecast, and the lower and upper endpoints of the 95% prediction
+band, respectively. (We could also have used
+<code>, prob_ar(cases_7dav)</code> to get three separate columns
+<code>point</code>, <code>lower</code>, and <code>upper</code>, or used
+<code>fc = list(prob_ar(cases_7dav))</code> to make an <code>fc</code>
+column with a [“nested”][tidyr::nest] format (list of data frames)
+instead.)</p>
 <p>On the whole, <code><a href="../reference/epix_slide.html">epix_slide()</a></code> works similarly to
 <code><a href="../reference/epix_slide.html">epix_slide()</a></code>, though there are a few notable differences,
 even apart from the version-aware aspect. You can read the documentation
@@ -494,26 +548,26 @@ various points in time and forecast horizons. The former comes from
 using <code><a href="../reference/epix_slide.html">epix_slide()</a></code> with the <code>epi_archive</code> object
 <code>x</code>, and the latter from applying <code><a href="../reference/epi_slide.html">epi_slide()</a></code> to
 the latest snapshot of the data <code>x_latest</code>.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x_latest</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span><span class="op">(</span><span class="va">x</span>, max_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">x_latest</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">x</span><span class="op">$</span><span class="va">versions_end</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Simple function to produce forecasts k weeks ahead</span></span>
-<span><span class="va">k_week_ahead</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">ahead</span> <span class="op">=</span> <span class="fl">7</span>, <span class="va">as_of</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span></span>
+<span><span class="va">forecast_k_week_ahead</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">ahead</span> <span class="op">=</span> <span class="fl">7</span>, <span class="va">as_of</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="va">as_of</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>      <span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span><span class="op">(</span></span>
-<span>        fc <span class="op">=</span> <span class="fu">prob_arx</span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">percent_cli</span>, <span class="va">.data</span><span class="op">$</span><span class="va">case_rate_7d_av</span>, ahead <span class="op">=</span> <span class="va">ahead</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">119</span>,</span>
-<span>        ref_time_values <span class="op">=</span> <span class="va">fc_time_values</span></span>
+<span>        fc <span class="op">=</span> <span class="fu">prob_arx</span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">percent_cli</span>, <span class="va">.data</span><span class="op">$</span><span class="va">case_rate_7d_av</span>, ahead <span class="op">=</span> <span class="va">ahead</span><span class="op">)</span>, .before <span class="op">=</span> <span class="fl">119</span>,</span>
+<span>        .versions <span class="op">=</span> <span class="va">fc_time_values</span></span>
 <span>      <span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>target_date <span class="op">=</span> <span class="va">.data</span><span class="op">$</span><span class="va">time_value</span> <span class="op">+</span> <span class="va">ahead</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>target_date <span class="op">=</span> <span class="va">.data</span><span class="op">$</span><span class="va">version</span> <span class="op">+</span> <span class="va">ahead</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
 <span>    <span class="va">x_latest</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>      <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span></span>
-<span>        fc <span class="op">=</span> <span class="fu">prob_arx</span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">percent_cli</span>, <span class="va">.data</span><span class="op">$</span><span class="va">case_rate_7d_av</span>, ahead <span class="op">=</span> <span class="va">ahead</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">119</span>,</span>
-<span>        ref_time_values <span class="op">=</span> <span class="va">fc_time_values</span></span>
+<span>        fc <span class="op">=</span> <span class="fu">prob_arx</span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">percent_cli</span>, <span class="va">.data</span><span class="op">$</span><span class="va">case_rate_7d_av</span>, ahead <span class="op">=</span> <span class="va">ahead</span><span class="op">)</span>, .window_size <span class="op">=</span> <span class="fl">120</span>,</span>
+<span>        .ref_time_values <span class="op">=</span> <span class="va">fc_time_values</span></span>
 <span>      <span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>target_date <span class="op">=</span> <span class="va">.data</span><span class="op">$</span><span class="va">time_value</span> <span class="op">+</span> <span class="va">ahead</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -522,25 +576,25 @@ the latest snapshot of the data <code>x_latest</code>.</p>
 <span></span>
 <span><span class="co"># Generate the forecasts, and bind them together</span></span>
 <span><span class="va">fc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span></span>
-<span>  <span class="fu">k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">7</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>  <span class="fu">k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">14</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>  <span class="fu">k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">21</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>  <span class="fu">k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">28</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>  <span class="fu">k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">7</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
-<span>  <span class="fu">k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">14</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
-<span>  <span class="fu">k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">21</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
-<span>  <span class="fu">k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">28</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">7</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">14</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">21</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">28</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">7</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">14</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">21</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">28</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Plot them, on top of latest COVID-19 case rates</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">fc</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">target_date</span>, group <span class="op">=</span> <span class="va">time_value</span>, fill <span class="op">=</span> <span class="va">as_of</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">fc_lower</span>, ymax <span class="op">=</span> <span class="va">fc_upper</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">fc</span><span class="op">$</span><span class="va">lower</span>, ymax <span class="op">=</span> <span class="va">fc</span><span class="op">$</span><span class="va">upper</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span></span>
 <span>    data <span class="op">=</span> <span class="va">x_latest</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time_value</span>, y <span class="op">=</span> <span class="va">case_rate_7d_av</span><span class="op">)</span>,</span>
 <span>    inherit.aes <span class="op">=</span> <span class="cn">FALSE</span>, color <span class="op">=</span> <span class="st">"gray50"</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">fc_point</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">fc_point</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">fc</span><span class="op">$</span><span class="va">point</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">fc</span><span class="op">$</span><span class="va">point</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="va">time_value</span><span class="op">)</span>, linetype <span class="op">=</span> <span class="fl">2</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_grid.html" class="external-link">facet_grid</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, <span class="fu"><a href="https://dplyr.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">as_of</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
@@ -566,6 +620,232 @@ current package, is the place to look for more robust forecasting
 methodology. The forecasters that appear in the vignettes in the current
 package are only meant to demo the slide functionality with some of the
 most basic forecasting methodology possible.</p>
+</div>
+<div class="section level2">
+<h2 id="sliding-version-aware-computations-with-geo-pooling">Sliding version-aware computations with geo-pooling<a class="anchor" aria-label="anchor" href="#sliding-version-aware-computations-with-geo-pooling"></a>
+</h2>
+<p>First, we fetch the versioned data and build the archive.</p>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epidatr/" class="external-link">epidatr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">y1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/pub_covidcast.html" class="external-link">pub_covidcast</a></span><span class="op">(</span></span>
+<span>  source <span class="op">=</span> <span class="st">"doctor-visits"</span>,</span>
+<span>  signals <span class="op">=</span> <span class="st">"smoothed_adj_cli"</span>,</span>
+<span>  geo_type <span class="op">=</span> <span class="st">"state"</span>,</span>
+<span>  time_type <span class="op">=</span> <span class="st">"day"</span>,</span>
+<span>  geo_values <span class="op">=</span> <span class="st">"ca,fl"</span>,</span>
+<span>  time_values <span class="op">=</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20211201</span><span class="op">)</span>,</span>
+<span>  issues <span class="op">=</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20211201</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">y2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/pub_covidcast.html" class="external-link">pub_covidcast</a></span><span class="op">(</span></span>
+<span>  source <span class="op">=</span> <span class="st">"jhu-csse"</span>,</span>
+<span>  signal <span class="op">=</span> <span class="st">"confirmed_7dav_incidence_prop"</span>,</span>
+<span>  geo_type <span class="op">=</span> <span class="st">"state"</span>,</span>
+<span>  time_type <span class="op">=</span> <span class="st">"day"</span>,</span>
+<span>  geo_values <span class="op">=</span> <span class="st">"ca,fl"</span>,</span>
+<span>  time_values <span class="op">=</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20211201</span><span class="op">)</span>,</span>
+<span>  issues <span class="op">=</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20211201</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">y1</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>,</span>
+<span>    version <span class="op">=</span> <span class="va">issue</span>,</span>
+<span>    percent_cli <span class="op">=</span> <span class="va">value</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span>compactify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># mutating merge operation:</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_merge.html">epix_merge</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">y2</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>,</span>
+<span>      version <span class="op">=</span> <span class="va">issue</span>,</span>
+<span>      case_rate_7d_av <span class="op">=</span> <span class="va">value</span></span>
+<span>    <span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span>compactify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>  sync <span class="op">=</span> <span class="st">"locf"</span>,</span>
+<span>  compactify <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>Next, we extend the ARX function to handle multiple geo values, since
+in the present case, we will not be grouping by geo value and each slide
+computation will be run on multiple geo values at once. Note that,
+because <code><a href="../reference/epix_slide.html">epix_slide()</a></code> only returns the grouping variables,
+<code>time_value</code>, and the slide computations in the eventual
+returned tibble, we need to include <code>geo_value</code> as a column
+in the output data frame from our ARX computation.</p>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://purrr.tidyverse.org/" class="external-link">purrr</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">prob_arx_args</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">lags</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">7</span>, <span class="fl">14</span><span class="op">)</span>,</span>
+<span>                          <span class="va">ahead</span> <span class="op">=</span> <span class="fl">7</span>,</span>
+<span>                          <span class="va">min_train_window</span> <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>                          <span class="va">lower_level</span> <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>                          <span class="va">upper_level</span> <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>                          <span class="va">symmetrize</span> <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                          <span class="va">intercept</span> <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>                          <span class="va">nonneg</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    lags <span class="op">=</span> <span class="va">lags</span>,</span>
+<span>    ahead <span class="op">=</span> <span class="va">ahead</span>,</span>
+<span>    min_train_window <span class="op">=</span> <span class="va">min_train_window</span>,</span>
+<span>    lower_level <span class="op">=</span> <span class="va">lower_level</span>,</span>
+<span>    upper_level <span class="op">=</span> <span class="va">upper_level</span>,</span>
+<span>    symmetrize <span class="op">=</span> <span class="va">symmetrize</span>,</span>
+<span>    intercept <span class="op">=</span> <span class="va">intercept</span>,</span>
+<span>    nonneg <span class="op">=</span> <span class="va">nonneg</span></span>
+<span>  <span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">prob_arx</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">args</span> <span class="op">=</span> <span class="fu">prob_arx_args</span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># Return NA if insufficient training data</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="op">&lt;</span> <span class="va">args</span><span class="op">$</span><span class="va">min_train_window</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">args</span><span class="op">$</span><span class="va">lags</span><span class="op">)</span> <span class="op">+</span> <span class="va">args</span><span class="op">$</span><span class="va">ahead</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>      geo_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, <span class="co"># Return geo value!</span></span>
+<span>      point <span class="op">=</span> <span class="cn">NA</span>, lower <span class="op">=</span> <span class="cn">NA</span>, upper <span class="op">=</span> <span class="cn">NA</span></span>
+<span>    <span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span></span>
+<span>  <span class="co"># Set up x, y, lags list</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/missing.html" class="external-link">missing</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
+<span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>    <span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">is.list</a></span><span class="op">(</span><span class="va">args</span><span class="op">$</span><span class="va">lags</span><span class="op">)</span><span class="op">)</span> <span class="va">args</span><span class="op">$</span><span class="va">lags</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">args</span><span class="op">$</span><span class="va">lags</span><span class="op">)</span></span>
+<span>  <span class="va">args</span><span class="op">$</span><span class="va">lags</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">args</span><span class="op">$</span><span class="va">lags</span>, length.out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Build features and response for the AR model, and then fit it</span></span>
+<span>  <span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>i <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>, lag <span class="op">=</span> <span class="va">args</span><span class="op">$</span><span class="va">lags</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">lag</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">.</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="co"># nolint: object_usage_linter</span></span>
+<span>    <span class="co"># One list element for each lagged feature</span></span>
+<span>    <span class="fu"><a href="https://purrr.tidyverse.org/reference/pmap.html" class="external-link">pmap</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">i</span>, <span class="va">lag</span>, <span class="va">name</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
+<span>        geo_value <span class="op">=</span> <span class="va">geo_value</span>,</span>
+<span>        time_value <span class="op">=</span> <span class="va">time_value</span> <span class="op">+</span> <span class="va">lag</span>, <span class="co"># Shift back</span></span>
+<span>        <span class="op">!</span><span class="op">!</span><span class="va">name</span> <span class="op">:=</span> <span class="va">x</span><span class="op">[</span>, <span class="va">i</span><span class="op">]</span></span>
+<span>      <span class="op">)</span></span>
+<span>    <span class="op">}</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>    <span class="co"># One list element for the response vector</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
+<span>        geo_value <span class="op">=</span> <span class="va">geo_value</span>,</span>
+<span>        time_value <span class="op">=</span> <span class="va">time_value</span> <span class="op">-</span> <span class="va">args</span><span class="op">$</span><span class="va">ahead</span>, <span class="co"># Shift forward</span></span>
+<span>        y <span class="op">=</span> <span class="va">y</span></span>
+<span>      <span class="op">)</span></span>
+<span>    <span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>    <span class="co"># Combine them together into one data frame</span></span>
+<span>    <span class="fu"><a href="https://purrr.tidyverse.org/reference/reduce.html" class="external-link">reduce</a></span><span class="op">(</span><span class="va">full_join</span>, by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"geo_value"</span>, <span class="st">"time_value"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">time_value</span><span class="op">)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="va">args</span><span class="op">$</span><span class="va">intercept</span><span class="op">)</span> <span class="va">dat</span><span class="op">$</span><span class="va">x0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">dat</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span> <span class="op">+</span> <span class="fl">0</span>, data <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">dat</span>, <span class="op">-</span><span class="va">geo_value</span>, <span class="op">-</span><span class="va">time_value</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Use LOCF to fill NAs in the latest feature values (do this by geo value)</span></span>
+<span>  <span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/setDT.html" class="external-link">setDT</a></span><span class="op">(</span><span class="va">dat</span><span class="op">)</span> <span class="co"># Convert to a data.table object by reference</span></span>
+<span>  <span class="va">cols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/setops.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dat</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"geo_value"</span>, <span class="st">"time_value"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">dat</span><span class="op">[</span>, <span class="op">(</span><span class="va">cols</span><span class="op">)</span> <span class="op">:=</span> <span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/nafill.html" class="external-link">nafill</a></span><span class="op">(</span><span class="va">.SD</span>, type <span class="op">=</span> <span class="st">"locf"</span><span class="op">)</span>, .SDcols <span class="op">=</span> <span class="va">cols</span>, by <span class="op">=</span> <span class="st">"geo_value"</span><span class="op">]</span></span>
+<span></span>
+<span>  <span class="co"># Make predictions</span></span>
+<span>  <span class="va">test_time_value</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">time_value</span><span class="op">)</span></span>
+<span>  <span class="va">point</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span></span>
+<span>    <span class="va">obj</span>,</span>
+<span>    newdata <span class="op">=</span> <span class="va">dat</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>      <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>      <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">time_value</span> <span class="op">==</span> <span class="va">test_time_value</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Compute bands</span></span>
+<span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/residuals.html" class="external-link">residuals</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
+<span>  <span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">args</span><span class="op">$</span><span class="va">symmetrize</span>, <span class="op">-</span><span class="fl">1</span>, <span class="cn">NA</span><span class="op">)</span> <span class="co"># Should the residuals be symmetrized?</span></span>
+<span>  <span class="va">q</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">r</span>, <span class="va">s</span> <span class="op">*</span> <span class="va">r</span><span class="op">)</span>, probs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">args</span><span class="op">$</span><span class="va">lower</span>, <span class="va">args</span><span class="op">$</span><span class="va">upper</span><span class="op">)</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="va">lower</span> <span class="op">&lt;-</span> <span class="va">point</span> <span class="op">+</span> <span class="va">q</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span>  <span class="va">upper</span> <span class="op">&lt;-</span> <span class="va">point</span> <span class="op">+</span> <span class="va">q</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
+<span></span>
+<span>  <span class="co"># Clip at zero if we need to, then return</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="va">args</span><span class="op">$</span><span class="va">nonneg</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">point</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="va">point</span>, <span class="fl">0</span><span class="op">)</span></span>
+<span>    <span class="va">lower</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="va">lower</span>, <span class="fl">0</span><span class="op">)</span></span>
+<span>    <span class="va">upper</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="va">upper</span>, <span class="fl">0</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    geo_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, <span class="co"># Return geo value!</span></span>
+<span>    point <span class="op">=</span> <span class="va">point</span>, lower <span class="op">=</span> <span class="va">lower</span>, upper <span class="op">=</span> <span class="va">upper</span></span>
+<span>  <span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>We now make forecasts on the archive and compare to forecasts on the
+latest data.</p>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Latest snapshot of data, and forecast dates</span></span>
+<span><span class="va">x_latest</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_as_of.html">epix_as_of</a></span><span class="op">(</span><span class="va">x</span>, version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">fc_time_values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-08-01"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2021-11-30"</span><span class="op">)</span>,</span>
+<span>  by <span class="op">=</span> <span class="st">"1 month"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Simple function to produce forecasts k weeks ahead</span></span>
+<span><span class="va">forecast_k_week_ahead</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">ahead</span> <span class="op">=</span> <span class="fl">7</span>, <span class="va">as_of</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="va">as_of</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>      <span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span><span class="op">(</span></span>
+<span>        fc <span class="op">=</span> <span class="fu">prob_arx</span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">percent_cli</span>, <span class="va">.data</span><span class="op">$</span><span class="va">case_rate_7d_av</span>, <span class="va">.data</span><span class="op">$</span><span class="va">geo_value</span>, <span class="va">.data</span><span class="op">$</span><span class="va">time_value</span>,</span>
+<span>          args <span class="op">=</span> <span class="fu">prob_arx_args</span><span class="op">(</span>ahead <span class="op">=</span> <span class="va">ahead</span><span class="op">)</span></span>
+<span>        <span class="op">)</span>,</span>
+<span>        .before <span class="op">=</span> <span class="fl">219</span>, .versions <span class="op">=</span> <span class="va">fc_time_values</span></span>
+<span>      <span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>        target_date <span class="op">=</span> <span class="va">.data</span><span class="op">$</span><span class="va">version</span> <span class="op">+</span> <span class="va">ahead</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>        geo_value <span class="op">=</span> <span class="va">.data</span><span class="op">$</span><span class="va">fc</span><span class="op">$</span><span class="va">geo_value</span></span>
+<span>      <span class="op">)</span></span>
+<span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>    <span class="va">x_latest</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>      <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span></span>
+<span>        fc <span class="op">=</span> <span class="fu">prob_arx</span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">percent_cli</span>, <span class="va">.data</span><span class="op">$</span><span class="va">case_rate_7d_av</span>, <span class="va">.data</span><span class="op">$</span><span class="va">geo_value</span>, <span class="va">.data</span><span class="op">$</span><span class="va">time_value</span>,</span>
+<span>          args <span class="op">=</span> <span class="fu">prob_arx_args</span><span class="op">(</span>ahead <span class="op">=</span> <span class="va">ahead</span><span class="op">)</span></span>
+<span>        <span class="op">)</span>,</span>
+<span>        .window_size <span class="op">=</span> <span class="fl">220</span>, .ref_time_values <span class="op">=</span> <span class="va">fc_time_values</span></span>
+<span>      <span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>target_date <span class="op">=</span> <span class="va">.data</span><span class="op">$</span><span class="va">time_value</span> <span class="op">+</span> <span class="va">ahead</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co"># Generate the forecasts, and bind them together</span></span>
+<span><span class="va">fc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span></span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">7</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">14</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">21</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">28</span>, as_of <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">7</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">14</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">21</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>  <span class="fu">forecast_k_week_ahead</span><span class="op">(</span><span class="va">x</span>, ahead <span class="op">=</span> <span class="fl">28</span>, as_of <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Plot them, on top of latest COVID-19 case rates</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">fc</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">target_date</span>, group <span class="op">=</span> <span class="va">time_value</span>, fill <span class="op">=</span> <span class="va">as_of</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">fc</span><span class="op">$</span><span class="va">lower</span>, ymax <span class="op">=</span> <span class="va">fc</span><span class="op">$</span><span class="va">upper</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">x_latest</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time_value</span>, y <span class="op">=</span> <span class="va">case_rate_7d_av</span><span class="op">)</span>,</span>
+<span>    inherit.aes <span class="op">=</span> <span class="cn">FALSE</span>, color <span class="op">=</span> <span class="st">"gray50"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">fc</span><span class="op">$</span><span class="va">point</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">fc</span><span class="op">$</span><span class="va">point</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="va">time_value</span><span class="op">)</span>, linetype <span class="op">=</span> <span class="fl">2</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_grid.html" class="external-link">facet_grid</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">as_of</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 case rates"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="archive_files/figure-html/unnamed-chunk-18-1.png" width="864"></p>
+<p>We can see that these forecasts, which come from training an ARX
+model jointly over CA and FL, exhibit generally less variability and
+wider prediction bands compared to the ones from the archive vignette,
+which come from training a separate ARX model on each state. As in the
+archive vignette, we can see a difference between version-aware (right
+column) and -unaware (left column) forecasting, as well.</p>
 </div>
 <div class="section level2">
 <h2 id="attribution">Attribution<a class="anchor" aria-label="anchor" href="#attribution"></a>
@@ -595,7 +875,7 @@ Group at Carnegie Mellon University 2020.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
     </footer>

@@ -13,7 +13,7 @@ for examples."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-light me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-light me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,7 +31,6 @@ for examples."></head><body>
     <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a></li>
     <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -61,17 +60,14 @@ for examples.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">epi_slide_opt</span><span class="op">(</span></span>
-<span>  <span class="va">x</span>,</span>
-<span>  <span class="va">col_names</span>,</span>
-<span>  <span class="va">f</span>,</span>
+<span>  <span class="va">.x</span>,</span>
+<span>  <span class="va">.col_names</span>,</span>
+<span>  <span class="va">.f</span>,</span>
 <span>  <span class="va">...</span>,</span>
-<span>  before <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  after <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  ref_time_values <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  new_col_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  as_list_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  names_sep <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  all_rows <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  .window_size <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  .align <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"right"</span>, <span class="st">"center"</span>, <span class="st">"left"</span><span class="op">)</span>,</span>
+<span>  .ref_time_values <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  .all_rows <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -79,130 +75,116 @@ for examples.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dl><dt id="arg--x">.x<a class="anchor" aria-label="anchor" href="#arg--x"></a></dt>
 <dd><p>The <code>epi_df</code> object under consideration, <a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">grouped</a>
-or ungrouped. If ungrouped, all data in <code>x</code> will be treated as part of a
+or ungrouped. If ungrouped, all data in <code>.x</code> will be treated as part of a
 single data group.</p></dd>
 
 
-<dt id="arg-col-names">col_names<a class="anchor" aria-label="anchor" href="#arg-col-names"></a></dt>
+<dt id="arg--col-names">.col_names<a class="anchor" aria-label="anchor" href="#arg--col-names"></a></dt>
 <dd><p>&lt;<code>tidy-select</code>&gt; An unquoted column
-name(e.g., <code>cases</code>), multiple column names (e.g., <code>c(cases, deaths)</code>), or
-<a href="https://tidyselect.r-lib.org/reference/language.html" class="external-link">other tidy-select expression</a>. Variable names can
-be used as if they were positions in the data frame, so expressions like
-<code>x:y</code> can be used to select a range of variables. If you have the desired
-column names stored in a vector <code>vars</code>, use <code>col_names = all_of(vars)</code>.</p>
+name(e.g., <code>cases</code>), multiple column names (e.g., <code>c(cases, deaths)</code>),
+<a href="https://tidyselect.r-lib.org/reference/language.html" class="external-link">other tidy-select expression</a>, or a vector of
+characters (e.g. <code>c("cases", "deaths")</code>). Variable names can be used as if
+they were positions in the data frame, so expressions like <code>x:y</code> can be
+used to select a range of variables.</p>
 <p>The tidy-selection renaming interface is not supported, and cannot be used
 to provide output column names; if you want to customize the output column
 names, use <code><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">dplyr::rename</a></code> after the slide.</p></dd>
 
 
-<dt id="arg-f">f<a class="anchor" aria-label="anchor" href="#arg-f"></a></dt>
+<dt id="arg--f">.f<a class="anchor" aria-label="anchor" href="#arg--f"></a></dt>
 <dd><p>Function; together with <code>...</code> specifies the computation to slide.
-<code>f</code> must be one of <code>data.table</code>'s rolling functions
+<code>.f</code> must be one of <code>data.table</code>'s rolling functions
 (<code>frollmean</code>, <code>frollsum</code>, <code>frollapply</code>. See <a href="https://rdatatable.gitlab.io/data.table/reference/froll.html" class="external-link">data.table::roll</a>) or one
 of <code>slider</code>'s specialized sliding functions (<code>slide_mean</code>, <code>slide_sum</code>,
-etc. See <a href="https://slider.r-lib.org/reference/summary-slide.html" class="external-link">slider::summary-slide</a>). To "slide" means to apply a
-computation within a sliding (a.k.a. "rolling") time window for each data
-group. The window is determined by the <code>before</code> and <code>after</code> parameters
-described below. One time step is typically one day or one week; see
-details for more explanation.</p>
+etc. See <a href="https://slider.r-lib.org/reference/summary-slide.html" class="external-link">slider::summary-slide</a>).</p>
 <p>The optimized <code>data.table</code> and <code>slider</code> functions can't be directly passed
-as the computation function in <code>epi_slide</code> without careful handling to
-make sure each computation group is made up of the <code>n</code> dates rather than
-<code>n</code> points. <code>epi_slide_opt</code> (and wrapper functions <code>epi_slide_mean</code> and
-<code>epi_slide_sum</code>) take care of window completion automatically to prevent
-associated errors.</p></dd>
+as the computation function in <code>epi_slide</code> without careful handling to make
+sure each computation group is made up of the <code>.window_size</code> dates rather
+than <code>.window_size</code> points. <code>epi_slide_opt</code> (and wrapper functions
+<code>epi_slide_mean</code> and <code>epi_slide_sum</code>) take care of window completion
+automatically to prevent associated errors.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments to pass to the slide computation <code>f</code>, for
-example, <code>na.rm</code> and <code>algo</code> if <code>f</code> is a <code>data.table</code> function. If <code>f</code> is
-a <code>data.table</code> function, it is automatically passed the data <code>x</code> to
-operate on, the window size <code>n</code>, and the alignment <code>align</code>. Providing
-these args via <code>...</code> will cause an error. If <code>f</code> is a <code>slider</code> function,
-it is automatically passed the data <code>x</code> to operate on, and number of
-points <code>before</code> and <code>after</code> to use in the computation.</p></dd>
+<dd><p>Additional arguments to pass to the slide computation <code>.f</code>, for
+example, <code>algo</code> or <code>na.rm</code> in data.table functions. You don't need to
+specify <code>.x</code>, <code>.window_size</code>, or <code>.align</code> (or <code>before</code>/<code>after</code> for slider
+functions).</p></dd>
 
 
-<dt id="arg-before-after">before, after<a class="anchor" aria-label="anchor" href="#arg-before-after"></a></dt>
-<dd><p>How far <code>before</code> and <code>after</code> each <code>ref_time_value</code> should
-the sliding window extend? At least one of these two arguments must be
-provided; the other's default will be 0. The accepted values for these
-depend on the type of the <code>time_value</code> column:</p><ul><li><p>if it is a Date and the cadence is daily, then they can be integers
-(which will be interpreted in units of days) or difftimes with units
-"days"</p></li>
-<li><p>if it is a Date and the cadence is weekly, then they must be difftimes
-with units "weeks"</p></li>
-<li><p>if it is an integer, then they must be integers</p></li>
-</ul><p>Endpoints of the window are inclusive. Common settings:</p><ul><li><p>For trailing/right-aligned windows from <code>ref_time_value - k</code> to
-<code>ref_time_value</code>: either pass <code>before=k</code> by itself, or pass <code>before=k, after=0</code>.</p></li>
-<li><p>For center-aligned windows from <code>ref_time_value - k</code> to
-<code>ref_time_value + k</code>: pass <code>before=k, after=k</code>.</p></li>
-<li><p>For leading/left-aligned windows from <code>ref_time_value</code> to
-<code>ref_time_value + k</code>: either pass pass <code>after=k</code> by itself,
-or pass <code>before=0, after=k</code>.</p></li>
-</ul><p>See "Details:" on how missing rows are handled within the window.</p></dd>
+<dt id="arg--window-size">.window_size<a class="anchor" aria-label="anchor" href="#arg--window-size"></a></dt>
+<dd><p>The size of the sliding window. By default, this is 1,
+meaning that only the current ref_time_value is included. The accepted values
+here depend on the <code>time_value</code> column:</p><ul><li><p>if time_type is Date and the cadence is daily, then <code>.window_size</code> can be
+an integer (which will be interpreted in units of days) or a difftime
+with units "days"</p></li>
+<li><p>if time_type is Date and the cadence is weekly, then <code>.window_size</code> must
+be a difftime with units "weeks"</p></li>
+<li><p>if time_type is an integer, then <code>.window_size</code> must be an integer</p></li>
+</ul></dd>
 
 
-<dt id="arg-ref-time-values">ref_time_values<a class="anchor" aria-label="anchor" href="#arg-ref-time-values"></a></dt>
+<dt id="arg--align">.align<a class="anchor" aria-label="anchor" href="#arg--align"></a></dt>
+<dd><p>The alignment of the sliding window. If <code>right</code> (default), then
+the window has its end at the reference time; if <code>center</code>, then the window is
+centered at the reference time; if <code>left</code>, then the window has its start at
+the reference time. If the alignment is <code>center</code> and the window size is odd,
+then the window will have floor(window_size/2) points before and after the
+reference time. If the window size is even, then the window will be
+asymmetric and have one less value on the right side of the reference time
+(assuming time increases from left to right).</p></dd>
+
+
+<dt id="arg--ref-time-values">.ref_time_values<a class="anchor" aria-label="anchor" href="#arg--ref-time-values"></a></dt>
 <dd><p>Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
 window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.</p></dd>
 
 
-<dt id="arg-new-col-name">new_col_name<a class="anchor" aria-label="anchor" href="#arg-new-col-name"></a></dt>
-<dd><p>Character vector indicating the name(s) of the new
-column(s) that will contain the derivative values. Default
-is "slide_value"; note that setting <code>new_col_name</code> equal to any existing
-column names will overwrite those columns. If <code>names_sep</code> is <code>NULL</code>,
-<code>new_col_name</code> must be the same length as <code>col_names</code>.</p></dd>
-
-
-<dt id="arg-as-list-col">as_list_col<a class="anchor" aria-label="anchor" href="#arg-as-list-col"></a></dt>
-<dd><p>Not supported. Included to match <code>epi_slide</code> interface.</p></dd>
-
-
-<dt id="arg-names-sep">names_sep<a class="anchor" aria-label="anchor" href="#arg-names-sep"></a></dt>
-<dd><p>String specifying the separator to use in <code><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">tidyr::unnest()</a></code>
-when <code>as_list_col = FALSE</code>. Default is "_". Using <code>NULL</code> drops the prefix
-from <code>new_col_name</code> entirely.</p></dd>
-
-
-<dt id="arg-all-rows">all_rows<a class="anchor" aria-label="anchor" href="#arg-all-rows"></a></dt>
-<dd><p>If <code>all_rows = TRUE</code>, then all rows of <code>x</code> will be kept in
-the output even with <code>ref_time_values</code> provided, with some type of missing
+<dt id="arg--all-rows">.all_rows<a class="anchor" aria-label="anchor" href="#arg--all-rows"></a></dt>
+<dd><p>If <code>.all_rows = TRUE</code>, then all rows of <code>.x</code> will be kept in
+the output even with <code>.ref_time_values</code> provided, with some type of missing
 value marker for the slide computation output column(s) for <code>time_value</code>s
-outside <code>ref_time_values</code>; otherwise, there will be one row for each row in
-<code>x</code> that had a <code>time_value</code> in <code>ref_time_values</code>. Default is <code>FALSE</code>. The
+outside <code>.ref_time_values</code>; otherwise, there will be one row for each row in
+<code>.x</code> that had a <code>time_value</code> in <code>.ref_time_values</code>. Default is <code>FALSE</code>. The
 missing value marker is the result of <code><a href="https://vctrs.r-lib.org/reference/vec_cast.html" class="external-link">vctrs::vec_cast</a></code>ing <code>NA</code> to the type
-of the slide computation output. If using <code>as_list_col = TRUE</code>, note that
-the missing marker is a <code>NULL</code> entry in the list column; for certain
-operations, you might want to replace these <code>NULL</code> entries with a different
-<code>NA</code> marker.</p></dd>
+of the slide computation output.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An <code>epi_df</code> object given by appending one or more new columns to
-<code>x</code>, named according to the <code>new_col_name</code> argument.</p>
+    <p>An <code>epi_df</code> object given by appending one or more new columns to <code>.x</code>,
+named according to the <code>.new_col_name</code> argument.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>To "slide" means to apply a function over a rolling window of time
-steps for each data group, where the window is centered at a reference time
-and left and right endpoints are given by the <code>before</code> and <code>after</code>
-arguments.
-If there are not enough time steps available to complete the window at any
-given reference time, then <code>epi_slide_*()</code> will fail; it requires a
-complete window to perform the computation. For a centrally-aligned slide
-of <code>n</code> <code>time_value</code>s in a sliding window, set <code>before = (n-1)/2</code> and <code>after = (n-1)/2</code> when the number of <code>time_value</code>s in a sliding window is odd and
-<code>before = n/2-1</code> and <code>after = n/2</code> when <code>n</code> is even.</p>
-<p>Sometimes, we want to experiment with various trailing or leading window
-widths and compare the slide outputs. In the (uncommon) case where
-zero-width windows are considered, manually pass both the <code>before</code> and
-<code>after</code> arguments.</p>
+    <p>To "slide" means to apply a function or formula over a rolling
+window. The <code>.window_size</code> arg determines the width of the window
+(including the reference time) and the <code>.align</code> arg governs how the window
+is aligned (see below for examples). The <code>.ref_time_values</code> arg controls
+which time values to consider for the slide and <code>.all_rows</code> allows you to
+keep NAs around.</p>
+<p><code>epi_slide_*()</code> does not require a complete window (such as on the left
+boundary of the dataset) and will attempt to perform the computation
+anyway. The issue of what to do with partial computations (those run on
+incomplete windows) is therefore left up to the user, either through the
+specified function or formula <code>f</code>, or through post-processing.</p>
+<p>Let's look at some window examples, assuming that the reference time value
+is "tv". With .align = "right" and .window_size = 3, the window will be:</p>
+<p>time_values: tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:              tv - 2, tv - 1, tv</p>
+<p>With .align = "center" and .window_size = 3, the window will be:</p>
+<p>time_values: tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:                      tv - 1, tv, tv + 1</p>
+<p>With .align = "center" and .window_size = 4, the window will be:</p>
+<p>time_values: tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:              tv - 2, tv - 1, tv, tv + 1</p>
+<p>With .align = "left" and .window_size = 3, the window will be:</p>
+<p>time_values: ttv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:                               tv, tv + 1, tv + 2</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -216,7 +198,7 @@ zero-width windows are considered, manually pass both the <code>before</code> an
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">epi_slide_opt</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="va">cases</span>,</span></span>
-<span class="r-in"><span>    f <span class="op">=</span> <span class="fu">data.table</span><span class="fu">::</span><span class="va"><a href="https://rdatatable.gitlab.io/data.table/reference/froll.html" class="external-link">frollmean</a></span>, before <span class="op">=</span> <span class="fl">6</span></span></span>
+<span class="r-in"><span>    .f <span class="op">=</span> <span class="fu">data.table</span><span class="fu">::</span><span class="va"><a href="https://rdatatable.gitlab.io/data.table/reference/froll.html" class="external-link">frollmean</a></span>, .window_size <span class="op">=</span> <span class="fl">7</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="co"># Remove a nonessential var. to ensure new col is printed, and rename new col</span></span></span>
 <span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, cases_7dav <span class="op">=</span> <span class="va">slide_value_cases</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
@@ -224,7 +206,7 @@ zero-width windows are considered, manually pass both the <code>before</code> an
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-01-26 17:27:32.755949</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-08-23 02:40:48.296938</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_7dav</span>
@@ -247,16 +229,16 @@ zero-width windows are considered, manually pass both the <code>before</code> an
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">epi_slide_opt</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="va">cases</span>,</span></span>
-<span class="r-in"><span>    f <span class="op">=</span> <span class="fu">data.table</span><span class="fu">::</span><span class="va"><a href="https://rdatatable.gitlab.io/data.table/reference/froll.html" class="external-link">frollmean</a></span>, before <span class="op">=</span> <span class="fl">6</span>,</span></span>
+<span class="r-in"><span>    .f <span class="op">=</span> <span class="fu">data.table</span><span class="fu">::</span><span class="va"><a href="https://rdatatable.gitlab.io/data.table/reference/froll.html" class="external-link">frollmean</a></span>, .window_size <span class="op">=</span> <span class="fl">7</span>,</span></span>
 <span class="r-in"><span>    <span class="co"># `frollmean` options</span></span></span>
-<span class="r-in"><span>    na.rm <span class="op">=</span> <span class="cn">TRUE</span>, algo <span class="op">=</span> <span class="st">"exact"</span>, hasNA <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>    algo <span class="op">=</span> <span class="st">"exact"</span>, hasNA <span class="op">=</span> <span class="cn">TRUE</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, cases_7dav <span class="op">=</span> <span class="va">slide_value_cases</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-01-26 17:27:32.755949</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-08-23 02:40:48.296938</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_7dav</span>
@@ -278,7 +260,7 @@ zero-width windows are considered, manually pass both the <code>before</code> an
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">epi_slide_opt</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="va">cases</span>,</span></span>
-<span class="r-in"><span>    f <span class="op">=</span> <span class="fu">slider</span><span class="fu">::</span><span class="va"><a href="https://slider.r-lib.org/reference/summary-slide.html" class="external-link">slide_mean</a></span>, after <span class="op">=</span> <span class="fl">6</span></span></span>
+<span class="r-in"><span>    .f <span class="op">=</span> <span class="fu">slider</span><span class="fu">::</span><span class="va"><a href="https://slider.r-lib.org/reference/summary-slide.html" class="external-link">slide_mean</a></span>, .window_size <span class="op">=</span> <span class="fl">7</span>, .align <span class="op">=</span> <span class="st">"left"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="co"># Remove a nonessential var. to ensure new col is printed</span></span></span>
 <span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, cases_7dav <span class="op">=</span> <span class="va">slide_value_cases</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
@@ -286,7 +268,7 @@ zero-width windows are considered, manually pass both the <code>before</code> an
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-01-26 17:27:32.755949</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-08-23 02:40:48.296938</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_7dav</span>
@@ -303,12 +285,12 @@ zero-width windows are considered, manually pass both the <code>before</code> an
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22       56.7</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4,016 more rows</span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># slide a 7-day centre-aligned sum. This can also be done with `epi_slide_sum`</span></span></span>
+<span class="r-in"><span><span class="co"># slide a 7-day center-aligned sum. This can also be done with `epi_slide_sum`</span></span></span>
 <span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">epi_slide_opt</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="va">cases</span>,</span></span>
-<span class="r-in"><span>    f <span class="op">=</span> <span class="fu">data.table</span><span class="fu">::</span><span class="va"><a href="https://rdatatable.gitlab.io/data.table/reference/froll.html" class="external-link">frollsum</a></span>, before <span class="op">=</span> <span class="fl">3</span>, after <span class="op">=</span> <span class="fl">3</span></span></span>
+<span class="r-in"><span>    .f <span class="op">=</span> <span class="fu">data.table</span><span class="fu">::</span><span class="va"><a href="https://rdatatable.gitlab.io/data.table/reference/froll.html" class="external-link">frollsum</a></span>, .window_size <span class="op">=</span> <span class="fl">6</span>, .align <span class="op">=</span> <span class="st">"center"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="co"># Remove a nonessential var. to ensure new col is printed</span></span></span>
 <span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, cases_7dav <span class="op">=</span> <span class="va">slide_value_cases</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
@@ -316,7 +298,7 @@ zero-width windows are considered, manually pass both the <code>before</code> an
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-01-26 17:27:32.755949</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-08-23 02:40:48.296938</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_7dav</span>
@@ -324,13 +306,13 @@ zero-width windows are considered, manually pass both the <code>before</code> an
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6         <span style="color: #BB0000;">NA</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02     4         <span style="color: #BB0000;">NA</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03     6         <span style="color: #BB0000;">NA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-03-04    11         81</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-03-05    10         94</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-03-06    18        113</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-03-07    26        129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-03-08    19        143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09    23        176</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22        211</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-03-04    11         55</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-03-05    10         75</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-03-06    18         90</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-03-07    26        107</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-03-08    19        118</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09    23        133</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22        158</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4,016 more rows</span></span>
 </code></pre></div>
     </div>
@@ -343,7 +325,7 @@ zero-width windows are considered, manually pass both the <code>before</code> an
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
     </footer></div>

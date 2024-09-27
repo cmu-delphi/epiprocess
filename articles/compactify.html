@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-light me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-light me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,7 +40,6 @@
     <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a></li>
     <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
   </ul>
 </li>
@@ -114,9 +113,9 @@ dataset differs from the second from the third value included.</p>
 <span><span class="co">##    2:        ca 2020-06-01 2020-06-23    2.498918        6.628329</span></span>
 <span><span class="co">##    3:        ca 2020-06-01 2020-07-23    2.698157        6.603020</span></span>
 <span><span class="co">##   ---                                                            </span></span>
-<span><span class="co">## 4793:        tx 2021-10-18 2021-10-22          NA       23.819450</span></span>
-<span><span class="co">## 4794:        tx 2021-10-19 2021-10-22          NA       24.705959</span></span>
-<span><span class="co">## 4795:        tx 2021-10-20 2021-10-22          NA       16.464639</span></span>
+<span><span class="co">## 4949:        tx 2021-10-18 2021-10-22          NA       23.819450</span></span>
+<span><span class="co">## 4950:        tx 2021-10-19 2021-10-22          NA       24.705959</span></span>
+<span><span class="co">## 4951:        tx 2021-10-20 2021-10-22          NA       16.464639</span></span>
 <span><span class="co">## Built-in `epi_archive` functionality should be unaffected, but results may change if you work directly with its fields (such as `DT`). See `?as_epi_archive` for details. To silence this warning but keep compactification, you can pass `compactify=TRUE` when constructing the archive.</span></span></code></pre>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">locf_included</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="va">dt</span>, compactify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -160,7 +159,7 @@ between data sets, so we won’t always be this lucky.</p>
 <pre><code><span><span class="co">## [1] 129638</span></span></code></pre>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">locf_omitted_2</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 9355</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 9055</span></span></code></pre>
 <p>As we would expect, performing 1000 iterations of
 <code><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">dplyr::filter</a></code> is faster when the LOCF values are
 omitted.</p>
@@ -197,7 +196,7 @@ methods.</p>
 <span></span>
 <span><span class="co"># Performance of slide</span></span>
 <span><span class="va">slide_median</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">my_ea</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">my_ea</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span><span class="op">(</span>median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">case_rate_7d_av</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span>
+<span>  <span class="va">my_ea</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span><span class="op">(</span>median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">case_rate_7d_av</span><span class="op">)</span>, .before <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="va">speeds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">speeds</span>, <span class="fu">speed_test</span><span class="op">(</span><span class="va">slide_median</span>, <span class="st">"slide_median"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
@@ -221,7 +220,7 @@ methods.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
     </footer>
