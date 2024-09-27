@@ -4,15 +4,21 @@
 \alias{epix_as_of}
 \title{Generate a snapshot from an \code{epi_archive} object}
 \usage{
-epix_as_of(x, max_version, min_time_value = -Inf, all_versions = FALSE)
+epix_as_of(
+  x,
+  version,
+  min_time_value = -Inf,
+  all_versions = FALSE,
+  max_version = deprecated()
+)
 }
 \arguments{
 \item{x}{An \code{epi_archive} object}
 
-\item{max_version}{Time value specifying the max version to permit in the
+\item{version}{Time value specifying the max version to permit in the
 snapshot. That is, the snapshot will comprise the unique rows of the
 current archive data that represent the most up-to-date signal values, as
-of the specified \code{max_version} (and whose time values are at least
+of the specified \code{version} (and whose time values are at least
 \code{min_time_value}.)}
 
 \item{min_time_value}{Time value specifying the min time value to permit in
@@ -21,10 +27,13 @@ minimum considered.}
 
 \item{all_versions}{If \code{all_versions = TRUE}, then the output will be in
 \code{epi_archive} format, and contain rows in the specified \code{time_value} range
-having \code{version <= max_version}. The resulting object will cover a
+having \code{version <= version}. The resulting object will cover a
 potentially narrower \code{version} and \code{time_value} range than \code{x}, depending
 on user-provided arguments. Otherwise, there will be one row in the output
-for the \code{max_version} of each \code{time_value}. Default is \code{FALSE}.}
+for the \code{version} of each \code{time_value}. Default is \code{FALSE}.}
+
+\item{max_version}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} please use \code{version}
+argument instead.}
 }
 \value{
 An \code{epi_df} object.
@@ -37,7 +46,7 @@ examples.
 \examples{
 epix_as_of(
   archive_cases_dv_subset,
-  max_version = max(archive_cases_dv_subset$DT$version)
+  version = max(archive_cases_dv_subset$DT$version)
 )
 
 range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01

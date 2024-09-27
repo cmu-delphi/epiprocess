@@ -77,41 +77,56 @@ test_that("assert_sufficient_f_args alerts if the provided f doesn't take enough
   f_xgt_dots <- function(x, g, t, ...) dplyr::tibble(value = mean(x$binary), count = length(x$binary))
 
   # If `regexp` is NA, asserts that there should be no errors/messages.
-  expect_error(assert_sufficient_f_args(f_xgt), regexp = NA)
-  expect_warning(assert_sufficient_f_args(f_xgt), regexp = NA)
-  expect_error(assert_sufficient_f_args(f_xgt_dots), regexp = NA)
-  expect_warning(assert_sufficient_f_args(f_xgt_dots), regexp = NA)
+  expect_no_error(assert_sufficient_f_args(f_xgt, .ref_time_value_label = "reference time value"))
+  expect_no_warning(assert_sufficient_f_args(f_xgt, .ref_time_value_label = "reference time value"))
+  expect_no_error(assert_sufficient_f_args(f_xgt_dots, .ref_time_value_label = "reference time value"))
+  expect_no_warning(assert_sufficient_f_args(f_xgt_dots, .ref_time_value_label = "reference time value"))
 
   f_x_dots <- function(x, ...) dplyr::tibble(value = mean(x$binary), count = length(x$binary))
   f_dots <- function(...) dplyr::tibble(value = c(5), count = c(2))
   f_x <- function(x) dplyr::tibble(value = mean(x$binary), count = length(x$binary))
   f <- function() dplyr::tibble(value = c(5), count = c(2))
 
-  expect_warning(assert_sufficient_f_args(f_x_dots),
+  expect_warning(assert_sufficient_f_args(f_x_dots, .ref_time_value_label = "reference time value"),
     regexp = ", the group key and reference time value will be included",
     class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
   )
-  expect_warning(assert_sufficient_f_args(f_dots),
+  expect_warning(assert_sufficient_f_args(f_dots, .ref_time_value_label = "reference time value"),
     regexp = ", the window data, group key, and reference time value will be included",
     class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
   )
-  expect_error(assert_sufficient_f_args(f_x),
+  expect_error(assert_sufficient_f_args(f_x, .ref_time_value_label = "reference time value"),
     class = "epiprocess__assert_sufficient_f_args__f_needs_min_args"
   )
-  expect_error(assert_sufficient_f_args(f),
+  expect_error(assert_sufficient_f_args(f, .ref_time_value_label = "reference time value"),
     class = "epiprocess__assert_sufficient_f_args__f_needs_min_args"
+  )
+
+  # Make sure we generate the same sort of conditions on some external functions
+  # that have caused surprises in the past:
+  expect_warning(assert_sufficient_f_args(mean, .ref_time_value_label = "reference time value"),
+    regexp = ", the group key and reference time value will be included",
+    class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
+  )
+  expect_warning(assert_sufficient_f_args(sum, .ref_time_value_label = "reference time value"),
+    regexp = ", the window data, group key, and reference time value will be included",
+    class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
+  )
+  expect_warning(assert_sufficient_f_args(dplyr::slice, .ref_time_value_label = "reference time value"),
+    regexp = ", the group key and reference time value will be included",
+    class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
   )
 
   f_xs_dots <- function(x, setting = "a", ...) dplyr::tibble(value = mean(x$binary), count = length(x$binary))
   f_xs <- function(x, setting = "a") dplyr::tibble(value = mean(x$binary), count = length(x$binary))
-  expect_warning(assert_sufficient_f_args(f_xs_dots, setting = "b"),
+  expect_warning(assert_sufficient_f_args(f_xs_dots, setting = "b", .ref_time_value_label = "reference time value"),
     class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
   )
-  expect_error(assert_sufficient_f_args(f_xs, setting = "b"),
+  expect_error(assert_sufficient_f_args(f_xs, setting = "b", .ref_time_value_label = "reference time value"),
     class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_plus_forwarded"
   )
 
-  expect_error(assert_sufficient_f_args(f_xgt, "b"),
+  expect_error(assert_sufficient_f_args(f_xgt, "b", .ref_time_value_label = "reference time value"),
     class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_plus_forwarded"
   )
 })
@@ -121,15 +136,15 @@ test_that("assert_sufficient_f_args alerts if the provided f has defaults for th
   f_xgt_dots <- function(x = 1, g, t, ...) dplyr::tibble(value = mean(x$binary), count = length(x$binary))
   f_x_dots <- function(x = 1, ...) dplyr::tibble(value = mean(x$binary), count = length(x$binary))
 
-  expect_error(assert_sufficient_f_args(f_xgt),
-    regexp = "pass the group key to `f`'s g argument,",
+  expect_error(assert_sufficient_f_args(f_xgt, .ref_time_value_label = "reference time value"),
+    regexp = "pass the group key to `\\.f`'s g argument,",
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults"
   )
-  expect_error(assert_sufficient_f_args(f_xgt_dots),
-    regexp = "pass the window data to `f`'s x argument,",
+  expect_error(assert_sufficient_f_args(f_xgt_dots, .ref_time_value_label = "reference time value"),
+    regexp = "pass the window data to `\\.f`'s x argument,",
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults"
   )
-  expect_error(suppressWarnings(assert_sufficient_f_args(f_x_dots)),
+  expect_error(suppressWarnings(assert_sufficient_f_args(f_x_dots, .ref_time_value_label = "reference time value")),
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults"
   )
 
@@ -138,23 +153,26 @@ test_that("assert_sufficient_f_args alerts if the provided f has defaults for th
   f_xs_dots <- function(x = 1, setting = "a", ...) dplyr::tibble(value = mean(x$binary), count = length(x$binary))
 
   # forwarding named dots should prevent some complaints:
-  expect_no_error(assert_sufficient_f_args(f_xsgt, setting = "b"))
-  expect_no_error(assert_sufficient_f_args(f_xsgt_dots, setting = "b"))
-  expect_error(suppressWarnings(assert_sufficient_f_args(f_xs_dots, setting = "b")),
-    regexp = "pass the window data to `f`'s x argument",
+  expect_no_error(assert_sufficient_f_args(f_xsgt, setting = "b", .ref_time_value_label = "reference time value"))
+  expect_no_error(assert_sufficient_f_args(f_xsgt_dots, setting = "b", .ref_time_value_label = "reference time value"))
+  expect_error(
+    suppressWarnings(
+      assert_sufficient_f_args(f_xs_dots, setting = "b", .ref_time_value_label = "reference time value")
+    ),
+    regexp = "pass the window data to `\\.f`'s x argument",
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults"
   )
 
   # forwarding unnamed dots should not:
-  expect_error(assert_sufficient_f_args(f_xsgt, "b"),
+  expect_error(assert_sufficient_f_args(f_xsgt, "b", .ref_time_value_label = "reference time value"),
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults"
   )
-  expect_error(assert_sufficient_f_args(f_xsgt_dots, "b"),
+  expect_error(assert_sufficient_f_args(f_xsgt_dots, "b", .ref_time_value_label = "reference time value"),
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults"
   )
   expect_error(
     expect_warning(
-      assert_sufficient_f_args(f_xs_dots, "b"),
+      assert_sufficient_f_args(f_xs_dots, "b", .ref_time_value_label = "reference time value"),
       class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
     ),
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults"
@@ -163,55 +181,73 @@ test_that("assert_sufficient_f_args alerts if the provided f has defaults for th
   # forwarding no dots should produce a different error message in some cases:
   expect_error(
     expect_warning(
-      assert_sufficient_f_args(f_xs_dots),
+      assert_sufficient_f_args(f_xs_dots, .ref_time_value_label = "reference time value"),
       class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots"
     ),
-    regexp = "window data and group key to `f`'s x and setting argument",
+    regexp = "window data and group key to `\\.f`'s x and setting argument",
     class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults"
   )
 })
 
 test_that("computation formula-derived functions take all argument types", {
   # positional
-  expect_identical(as_slide_computation(~ ..2 + ..3)(1, 2, 3), 5)
-  expect_identical(as_slide_computation(~..1)(1, 2, 3), 1)
+  expect_identical(as_time_slide_computation(~ ..2 + ..3)(1, 2, 3), 5)
+  expect_identical(as_time_slide_computation(~..1)(1, 2, 3), 1)
   # Matching rlang, purr, dplyr usage
-  expect_identical(as_slide_computation(~ .x + .z)(1, 2, 3), 4)
-  expect_identical(as_slide_computation(~ .x + .y)(1, 2, 3), 3)
+  expect_identical(as_time_slide_computation(~ .x + .z)(1, 2, 3), 4)
+  expect_identical(as_time_slide_computation(~ .x + .y)(1, 2, 3), 3)
   # named
-  expect_identical(as_slide_computation(~ . + .ref_time_value)(1, 2, 3), 4)
-  expect_identical(as_slide_computation(~.group_key)(1, 2, 3), 2)
+  expect_identical(as_time_slide_computation(~ . + .ref_time_value)(1, 2, 3), 4)
+  expect_identical(as_time_slide_computation(~.group_key)(1, 2, 3), 2)
 })
 
 test_that("as_slide_computation passes functions unaltered", {
   f <- function(a, b, c) {
     a * b * c + 5
   }
-  expect_identical(as_slide_computation(f), f)
+  expect_identical(as_time_slide_computation(f), f)
 })
 
 test_that("as_slide_computation raises errors as expected", {
   # Formulas must be one-sided
-  expect_error(as_slide_computation(y ~ ..1),
+  expect_error(as_time_slide_computation(y ~ ..1),
     class = "epiprocess__as_slide_computation__formula_is_twosided"
   )
 
   # Formulas can't be paired with ...
-  expect_error(as_slide_computation(~..1, method = "fn"),
+  expect_error(as_time_slide_computation(~..1, method = "fn"),
     class = "epiprocess__as_slide_computation__formula_with_dots"
   )
 
   # `f_env` must be an environment
   formula_without_env <- stats::as.formula(~..1)
   rlang::f_env(formula_without_env) <- 5
-  expect_error(as_slide_computation(formula_without_env),
+  expect_error(as_time_slide_computation(formula_without_env),
     class = "epiprocess__as_slide_computation__formula_has_no_env"
   )
 
-  # `f` must be a function, formula, or string
-  expect_error(as_slide_computation(5),
+  # `.f` must be a function, formula, or string
+  expect_error(as_time_slide_computation(5),
     class = "epiprocess__as_slide_computation__cant_convert_catchall"
   )
+})
+
+test_that("as_slide_computation works", {
+  f1 <- as_slide_computation(~ .z - .x$time_value,
+    .ref_time_value_long_varnames = character(0L),
+    .ref_time_value_label = "third argument"
+  )
+  expect_equal(f1(tibble::tibble(time_value = 10), tibble::tibble(), 12), 2)
+  f2 <- as_time_slide_computation(~ .ref_time_value - .x$time_value)
+  expect_equal(f2(tibble::tibble(time_value = 10), tibble::tibble(), 12), 2)
+  f3 <- as_diagonal_slide_computation(~ .version - .x$time_value)
+  expect_equal(f3(tibble::tibble(time_value = 10), tibble::tibble(), 12), 2)
+  f4 <- as_diagonal_slide_computation(~ .ref_time_value - .x$time_value)
+  expect_equal(f4(tibble::tibble(time_value = 10), tibble::tibble(), 12), 2)
+  g <- as_time_slide_computation(~ -1 * .)
+  expect_equal(g(4), -4)
+  h <- as_time_slide_computation(~ .x - .group_key)
+  expect_equal(h(6, 3), 3)
 })
 
 test_that("guess_period works", {
@@ -251,8 +287,8 @@ test_that("guess_period works", {
     weekly_posixcts
   )
   # On POSIXlts:
-  daily_posixlts <- as.POSIXlt(daily_dates, tz = "US/Aleutian") + 3600
-  weekly_posixlts <- as.POSIXlt(weekly_dates, tz = "US/Aleutian") + 3600
+  daily_posixlts <- as.POSIXlt(daily_dates, tz = "UTC") + 3600
+  weekly_posixlts <- as.POSIXlt(weekly_dates, tz = "UTC") + 3600
   expect_identical(
     daily_posixlts[[1L]] + guess_period(daily_posixlts) * (seq_along(daily_posixlts) - 1L),
     daily_posixlts

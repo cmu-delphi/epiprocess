@@ -5,6 +5,7 @@
 \alias{grouped_epi_archive}
 \alias{group_by.grouped_epi_archive}
 \alias{group_by_drop_default.grouped_epi_archive}
+\alias{group_vars.grouped_epi_archive}
 \alias{groups.grouped_epi_archive}
 \alias{ungroup.grouped_epi_archive}
 \alias{is_grouped_epi_archive}
@@ -15,6 +16,8 @@
 \method{group_by}{grouped_epi_archive}(.data, ..., .add = FALSE, .drop = dplyr::group_by_drop_default(.data))
 
 \method{group_by_drop_default}{grouped_epi_archive}(.tbl)
+
+\method{group_vars}{grouped_epi_archive}(x)
 
 \method{groups}{grouped_epi_archive}(x)
 
@@ -52,8 +55,8 @@ factor columns.}
 
 \item{.tbl}{A \code{grouped_epi_archive} object.}
 
-\item{x}{For \code{groups} or \code{ungroup}: a \code{grouped_epi_archive}; for
-\code{is_grouped_epi_archive}: any object}
+\item{x}{For \code{groups}, \code{group_vars}, or \code{ungroup}: a \code{grouped_epi_archive};
+for \code{is_grouped_epi_archive}: any object}
 }
 \description{
 \code{group_by} and related methods for \code{epi_archive}, \code{grouped_epi_archive}
@@ -90,10 +93,10 @@ grouped_archive \%>\% print()
 archive_cases_dv_subset \%>\%
   group_by(geo_value) \%>\%
   epix_slide(
-    f = ~ mean(.x$case_rate_7d_av),
-    before = 2,
-    ref_time_values = as.Date("2020-06-11") + 0:2,
-    new_col_name = "case_rate_3d_av"
+    .f = ~ mean(.x$case_rate_7d_av),
+    .before = 2,
+    .versions = as.Date("2020-06-11") + 0:2,
+    .new_col_name = "case_rate_3d_av"
   ) \%>\%
   ungroup()
 
@@ -131,6 +134,11 @@ toy_archive \%>\%
   group_by(geo_value, age_group) \%>\%
   ungroup(age_group)
 
+# To get the grouping variable names as a character vector:
+toy_archive \%>\%
+  group_by(geo_value) \%>\%
+  group_vars()
+
 # To get the grouping variable names as a `list` of `name`s (a.k.a. symbols):
 toy_archive \%>\%
   group_by(geo_value) \%>\%
@@ -138,7 +146,7 @@ toy_archive \%>\%
 
 toy_archive \%>\%
   group_by(geo_value, age_group, .drop = FALSE) \%>\%
-  epix_slide(f = ~ sum(.x$value), before = 20) \%>\%
+  epix_slide(.f = ~ sum(.x$value), .before = 20) \%>\%
   ungroup()
 
 }

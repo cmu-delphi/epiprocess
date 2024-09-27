@@ -22,7 +22,7 @@
 #'   `initial` is long or the printing width is very narrow.
 #' @return `chr`; to print, use [`base::writeLines`].
 #'
-#' @noRd
+#' @keywords internal
 wrap_symbolics <- function(symbolics,
                            initial = "", common_prefix = "", none_str = "<none>",
                            width = getOption("width", 80L)) {
@@ -69,7 +69,7 @@ wrap_symbolics <- function(symbolics,
 #' @inheritParams wrap_symbolics
 #' @return `chr`; to print, use [`base::writeLines`].
 #'
-#' @noRd
+#' @keywords internal
 wrap_varnames <- function(nms,
                           initial = "", common_prefix = "", none_str = "<none>",
                           width = getOption("width", 80L)) {
@@ -84,28 +84,109 @@ wrap_varnames <- function(nms,
 #' @param lines `chr`
 #' @return string
 #'
-#' @noRd
+#' @keywords internal
 paste_lines <- function(lines) {
   paste(paste0(lines, "\n"), collapse = "")
 }
 
+#' Format a class vector as a string via deparsing it
+#'
+#' @param class_vec `chr`; output of `class(object)` for some `object`
+#' @return string
+#' @keywords internal
+format_class_vec <- function(class_vec) {
+  paste(collapse = "", deparse(class_vec))
+}
+
+#' Format a character vector as a string via deparsing/quoting each
+#'
+#' @param x `chr`; e.g., `colnames` of some data frame
+#' @param empty string; what should be output if `x` is of length 0?
+#' @return string
+#' @keywords internal
+format_chr_with_quotes <- function(x, empty = "*none*") {
+  if (length(x) == 0L) {
+    empty
+  } else {
+    # Deparse to get quoted + escape-sequenced versions of varnames; collapse to
+    # single line (assuming no newlines in `x`). Though if we hand this to cli
+    # it may insert them (even in middle of quotes) while wrapping lines.
+    deparsed_collapsed <- paste(collapse = "", deparse(x))
+    if (length(x) == 1L) {
+      deparsed_collapsed
+    } else {
+      # remove surrounding `c()`:
+      substr(deparsed_collapsed, 3L, nchar(deparsed_collapsed) - 1L)
+    }
+  }
+}
+
+#' "Format" a character vector of column/variable names for cli interpolation
+#'
+#' Designed to give good output if interpolated with cli. Main purpose is to add
+#' backticks around variable names when necessary, and something other than an
+#' empty string if length 0.
+#'
+#' @param x `chr`; e.g., `colnames` of some data frame
+#' @param empty string; what should be output if `x` is of length 0?
+#' @return `chr`
+#' @keywords internal
+format_varnames <- function(x, empty = "*none*") {
+  if (length(x) == 0L) {
+    empty
+  } else {
+    as.character(syms(x))
+  }
+}
+
+#' "Format" column/variable name for cli interpolation
+#'
+#' Designed to give good output if interpolated with cli. Main purpose is to add
+#' backticks around variable names when necessary.
+#'
+#' @param x string; e.g., a colname
+#' @return string
+#' @keywords internal
+format_varname <- function(x) {
+  # `syms` provides backticks if necessary; `sym` does not
+  as.character(syms(x))
+}
+
+#' Format a tibble row as chr
+#'
+#' @param x a tibble with a single row
+#' @return `chr` with one entry per column, of form "<colname> = <deparsed col value>"
+#' @keywords internal
+format_tibble_row <- function(x, empty = "*none*") {
+  if (length(x) == 0L) {
+    empty
+  } else {
+    formatted_names <- as.character(syms(names(x)))
+    formatted_values <- purrr::map_chr(x, function(binding_value) {
+      paste(collapse = "\n", format(binding_value))
+    })
+    formatted_x <- paste(formatted_names, "=", formatted_values)
+    formatted_x
+  }
+}
 
 #' Assert that a sliding computation function takes enough args
 #'
 #' @param f Function; specifies a computation to slide over an `epi_df` or
-#'  `epi_archive` in `epi_slide` or `epix_slide`.
+#'   `epi_archive` in `epi_slide` or `epix_slide`.
 #' @param ... Dots that will be forwarded to `f` from the dots of `epi_slide` or
 #'   `epix_slide`.
+#' @template ref-time-value-label
 #'
 #' @importFrom rlang is_missing
 #' @importFrom purrr map_lgl
 #' @importFrom utils tail
 #'
 #' @noRd
-assert_sufficient_f_args <- function(f, ...) {
-  mandatory_f_args_labels <- c("window data", "group key", "reference time value")
+assert_sufficient_f_args <- function(.f, ..., .ref_time_value_label) {
+  mandatory_f_args_labels <- c("window data", "group key", .ref_time_value_label)
   n_mandatory_f_args <- length(mandatory_f_args_labels)
-  args <- formals(args(f))
+  args <- formals(args(.f))
   args_names <- names(args)
   # Remove named arguments forwarded from `epi[x]_slide`'s `...`:
   forwarded_dots_names <- names(rlang::call_match(dots_expand = FALSE)[["..."]])
@@ -119,7 +200,7 @@ assert_sufficient_f_args <- function(f, ...) {
   dots_i <- which(remaining_args_names == "...") # integer(0) if no match
   n_f_args_before_dots <- dots_i - 1L
   if (length(dots_i) != 0L) {
-    # `f` has a dots "arg"
+    # `.f` has a dots "arg"
     # Keep all arg names before `...`
     mandatory_args_mapped_names <- remaining_args_names[seq_len(n_f_args_before_dots)] # nolint: object_usage_linter
 
@@ -128,40 +209,40 @@ assert_sufficient_f_args <- function(f, ...) {
         tail(mandatory_f_args_labels, n_mandatory_f_args - n_f_args_before_dots)
 
       cli::cli_warn(
-        "`f` might not have enough positional arguments before its `...`; in
+        "`.f` might not have enough positional arguments before its `...`; in
         the current `epi[x]_slide` call, the {mandatory_f_args_in_f_dots} will
-        be included in `f`'s `...`; if `f` doesn't expect those arguments, it
+        be included in `.f`'s `...`; if `.f` doesn't expect those arguments, it
         may produce confusing error messages",
         class = "epiprocess__assert_sufficient_f_args__mandatory_f_args_passed_to_f_dots",
-        epiprocess__f = f,
+        epiprocess__f = .f,
         epiprocess__mandatory_f_args_in_f_dots = mandatory_f_args_in_f_dots
       )
     }
-  } else { # `f` doesn't have a dots "arg"
+  } else { # `.f` doesn't have a dots "arg"
     if (length(args_names) < n_mandatory_f_args + rlang::dots_n(...)) {
-      # `f` doesn't take enough args.
+      # `.f` doesn't take enough args.
       if (rlang::dots_n(...) == 0L) {
         # common case; try for friendlier error message
-        cli_abort("`f` must take at least {n_mandatory_f_args} arguments",
+        cli_abort("`.f` must take at least {n_mandatory_f_args} arguments",
           class = "epiprocess__assert_sufficient_f_args__f_needs_min_args",
-          epiprocess__f = f
+          epiprocess__f = .f
         )
       } else {
         # less common; highlight that they are (accidentally?) using dots forwarding
         cli_abort(
-          "`f` must take at least {n_mandatory_f_args} arguments plus the
+          "`.f` must take at least {n_mandatory_f_args} arguments plus the
           {rlang::dots_n(...)} arguments forwarded through `epi[x]_slide`'s
           `...`, or a named argument to `epi[x]_slide` was misspelled",
           class = "epiprocess__assert_sufficient_f_args__f_needs_min_args_plus_forwarded",
-          epiprocess__f = f
+          epiprocess__f = .f
         )
       }
     }
   }
   # Check for args with defaults that are filled with mandatory positional
-  # calling args. If `f` has fewer than n_mandatory_f_args before `...`, then we
+  # calling args. If `.f` has fewer than n_mandatory_f_args before `...`, then we
   # only need to check those args for defaults. Note that `n_f_args_before_dots` is
-  # length 0 if `f` doesn't accept `...`.
+  # length 0 if `.f` doesn't accept `...`.
   n_remaining_args_for_default_check <- min(c(n_f_args_before_dots, n_mandatory_f_args))
   default_check_args <- remaining_args[seq_len(n_remaining_args_for_default_check)]
   default_check_args_names <- names(default_check_args)
@@ -169,18 +250,18 @@ assert_sufficient_f_args <- function(f, ...) {
   if (any(has_default_replaced_by_mandatory)) {
     default_check_mandatory_args_labels <-
       mandatory_f_args_labels[seq_len(n_remaining_args_for_default_check)]
-    # ^ excludes any mandatory args absorbed by f's `...`'s:
+    # ^ excludes any mandatory args absorbed by .f's `...`'s:
     mandatory_args_replacing_defaults <- default_check_mandatory_args_labels[has_default_replaced_by_mandatory] # nolint: object_usage_linter
     args_with_default_replaced_by_mandatory <- rlang::syms(default_check_args_names[has_default_replaced_by_mandatory]) # nolint: object_usage_linter
     cli::cli_abort(
       "`epi[x]_slide` would pass the {mandatory_args_replacing_defaults} to
-      `f`'s {args_with_default_replaced_by_mandatory} argument{?s}, which
-      {?has a/have} default value{?s}; we suspect that `f` doesn't expect
+      `.f`'s {args_with_default_replaced_by_mandatory} argument{?s}, which
+      {?has a/have} default value{?s}; we suspect that `.f` doesn't expect
       {?this arg/these args} at all and may produce confusing error messages.
-      Please add additional arguments to `f` or remove defaults as
+      Please add additional arguments to `.f` or remove defaults as
       appropriate.",
       class = "epiprocess__assert_sufficient_f_args__required_args_contain_defaults",
-      epiprocess__f = f
+      epiprocess__f = .f
     )
   }
 }
@@ -265,101 +346,197 @@ assert_sufficient_f_args <- function(f, ...) {
 #' @param ... Additional arguments to pass to the function or formula
 #'  specified via `x`. If `x` is a quosure, any arguments passed via `...`
 #'  will be ignored.
-#' @examples
-#' f <- as_slide_computation(~ .x + 1)
-#' f(10)
 #'
-#' g <- as_slide_computation(~ -1 * .)
-#' g(4)
+#' @param .ref_time_value_long_varnames `r lifecycle::badge("experimental")`
+#'   Character vector. What variable names should we allow formulas and
+#'   data-masking tidy evaluation to use to refer to `ref_time_value` for the
+#'   computation (in addition to `.z` in formulas)? E.g., `".ref_time_value"` or
+#'   `c(".ref_time_value", ".version")`.
 #'
-#' h <- as_slide_computation(~ .x - .group_key)
-#' h(6, 3)
+#' @template ref-time-value-label
 #'
 #' @importFrom rlang is_function new_function f_env is_environment missing_arg
 #'  f_rhs is_formula caller_arg caller_env
-#'
-#' @noRd
-as_slide_computation <- function(f, ...) {
-  arg <- caller_arg(f)
+#' @keywords internal
+as_slide_computation <- function(.f, ..., .ref_time_value_long_varnames, .ref_time_value_label) {
+  arg <- caller_arg(.f)
   call <- caller_env()
 
-  # A quosure is a type of formula, so be careful with the order and contents
-  # of the conditional logic here.
-  if (is_quosure(f)) {
+  if (rlang::is_quosures(.f)) {
+    quosures <- rlang::quos_auto_name(.f) # resolves := among other things
+    nms <- names(quosures)
+    manually_named <- rlang::names2(.f) != "" | vapply(.f, function(quosure) {
+      expression <- rlang::quo_get_expr(quosure)
+      is.call(expression) && expression[[1L]] == rlang::sym(":=")
+    }, FUN.VALUE = logical(1L))
     fn <- function(.x, .group_key, .ref_time_value) {
-      # Convert to environment to standardize between tibble and R6
-      # based inputs. In both cases, we should get a simple
-      # environment with the empty environment as its parent.
-      data_env <- rlang::as_environment(.x)
-      data_mask <- rlang::new_data_mask(bottom = data_env, top = data_env)
+      x_as_env <- rlang::as_environment(.x)
+      results_env <- new.env(parent = x_as_env)
+      data_mask <- rlang::new_data_mask(bottom = results_env, top = x_as_env)
       data_mask$.data <- rlang::as_data_pronoun(data_mask)
       # We'll also install `.x` directly, not as an `rlang_data_pronoun`, so
-      # that we can, e.g., use more dplyr and epiprocess operations.
+      # that we can, e.g., use more dplyr and epiprocess operations. It won't be
+      # (and doesn't make sense nrow-wise to be) updated with results as we loop
+      # through the quosures.
       data_mask$.x <- .x
       data_mask$.group_key <- .group_key
-      data_mask$.ref_time_value <- .ref_time_value
-      rlang::eval_tidy(f, data_mask)
+      for (ref_time_value_long_varname in .ref_time_value_long_varnames) {
+        data_mask[[ref_time_value_long_varname]] <- .ref_time_value
+      }
+      common_size <- NULL
+      # The data mask is an environment; it doesn't track the binding order.
+      # We'll track that separately. For efficiency, we'll use `c` to add to
+      # this order, and deal with binding redefinitions at the end. We'll
+      # reflect deletions immediately (current implementation of `new_tibble`
+      # seems like it would exclude `NULL` bindings for us but `?new_tibble`
+      # doesn't reflect this behavior).
+      results_multiorder <- character(0L)
+      for (quosure_i in seq_along(.f)) {
+        quosure_result_raw <- rlang::eval_tidy(quosures[[quosure_i]], data_mask)
+        if (is.null(quosure_result_raw)) {
+          nm <- nms[[quosure_i]]
+          results_multiorder <- results_multiorder[results_multiorder != nm]
+          rlang::env_unbind(results_env, nm)
+        } else if (
+          # vctrs considers data.frames to be vectors, but we still check
+          # separately for them because certain base operations output data frames
+          # with rownames, which we will allow (but might drop)
+          is.data.frame(quosure_result_raw) ||
+            vctrs::obj_is_vector(quosure_result_raw) && is.null(vctrs::vec_names(quosure_result_raw))
+        ) {
+          # We want something like `dplyr_col_modify()` but allowing recycling
+          # of previous computations and updating `results_env` and unpacking
+          # tibbles if not manually named.
+          if (!is.null(common_size)) {
+            # XXX could improve error messages here
+            quosure_result_recycled <- vctrs::vec_recycle(quosure_result_raw, common_size)
+          } else {
+            quosure_result_recycled <- quosure_result_raw
+            quosure_result_size <- vctrs::vec_size(quosure_result_raw)
+            if (quosure_result_size != 1L) {
+              common_size <- quosure_result_size
+              for (previous_result_nm in names(results_env)) {
+                results_env[[previous_result_nm]] <- vctrs::vec_recycle(results_env[[previous_result_nm]], common_size)
+              }
+            } # else `common_size` remains NULL
+          }
+          if (inherits(quosure_result_recycled, "data.frame") && !manually_named[[quosure_i]]) {
+            new_results_multiorder <- names(quosure_result_recycled)
+            results_multiorder <- c(results_multiorder, new_results_multiorder)
+            for (new_result_i in seq_along(quosure_result_recycled)) {
+              results_env[[new_results_multiorder[[new_result_i]]]] <- quosure_result_recycled[[new_result_i]]
+            }
+          } else {
+            nm <- nms[[quosure_i]]
+            results_multiorder <- c(results_multiorder, nm)
+            results_env[[nm]] <- quosure_result_recycled
+          }
+        } else {
+          cli_abort("
+            Problem with output of {.code
+            {rlang::expr_deparse(rlang::quo_get_expr(.f[[quosure_i]]))}}; it
+            produced a result that was neither NULL, a data.frame, nor a vector
+            without unnamed entries (as determined by the vctrs package).
+          ", class = "epiprocess__invalid_slide_comp_tidyeval_output")
+        }
+      }
+      # If a binding was defined and redefined, we may have duplications within
+      # `results_multiorder`. `unique(results_multiorder, fromLast = TRUE)` is
+      # actually quite slow, so we'll keep the duplicates (--> duplicate result
+      # columns) and leave it to various `mutate` in epi[x]_slide to resolve
+      # this to the appropriate placement:
+      validate_tibble(new_tibble(as.list(results_env, all.names = TRUE)[results_multiorder]))
     }
 
     return(fn)
   }
 
-  if (is_function(f)) {
-    # Check that `f` takes enough args
-    assert_sufficient_f_args(f, ...)
-    return(f)
+  if (is_function(.f)) {
+    # Check that `.f` takes enough args
+    assert_sufficient_f_args(.f, ..., .ref_time_value_label = .ref_time_value_label)
+    return(.f)
   }
 
-  if (is_formula(f)) {
-    if (length(f) > 2) {
+  if (is_formula(.f)) {
+    if (is_quosure(.f)) {
+      cli_abort("`.f` argument to `as_slide_computation()` cannot be a `quosure`; it should probably be a `quosures`.  This is likely an internal bug in `{{epiprocess}}`.") # nolint: line_length_linter
+    }
+
+    if (length(.f) > 2) {
       cli_abort("{.code {arg}} must be a one-sided formula",
         class = "epiprocess__as_slide_computation__formula_is_twosided",
-        epiprocess__f = f,
+        epiprocess__f = .f,
         call = call
       )
     }
     if (rlang::dots_n(...) > 0L) {
       cli_abort(
         "No arguments can be passed via `...` when `f` is a formula, or there
-        are unrecognized/misspelled parameter names.",
+        are unrecognized/misspelled parameter names, or there is a trailing
+        comma in the `epi[x]_slide()` call.",
         class = "epiprocess__as_slide_computation__formula_with_dots",
-        epiprocess__f = f,
+        epiprocess__f = .f,
         epiprocess__enquos_dots = enquos(...)
       )
     }
 
-    env <- f_env(f)
+    env <- f_env(.f)
     if (!is_environment(env)) {
       cli_abort("Formula must carry an environment.",
         class = "epiprocess__as_slide_computation__formula_has_no_env",
-        epiprocess__f = f,
+        epiprocess__f = .f,
         epiprocess__f_env = env,
         arg = arg, call = call
       )
     }
 
-    args <- list(
-      ... = missing_arg(),
-      .x = quote(..1), .y = quote(..2), .z = quote(..3),
-      . = quote(..1), .group_key = quote(..2), .ref_time_value = quote(..3)
+    args <- c(
+      list(
+        ... = missing_arg(),
+        .x = quote(..1), .y = quote(..2), .z = quote(..3),
+        . = quote(..1), .group_key = quote(..2)
+      ),
+      `names<-`(
+        rep(list(quote(..3)), length(.ref_time_value_long_varnames)),
+        .ref_time_value_long_varnames
+      )
     )
-    fn <- new_function(args, f_rhs(f), env)
-    fn <- structure(fn, class = c("epiprocess_slide_computation", "function"))
+    fn <- new_function(args, f_rhs(.f), env)
+    fn <- structure(fn, class = c("epiprocess_formula_slide_computation", "function"))
 
     return(fn)
   }
 
   cli_abort(
-    "Can't convert an object of class {paste(collapse = ' ', deparse(class(f)))}
+    "Can't convert an object of class {format_class_vec(class(.f))}
       to a slide computation",
     class = "epiprocess__as_slide_computation__cant_convert_catchall",
-    epiprocess__f = f,
-    epiprocess__f_class = class(f),
+    epiprocess__f = .f,
+    epiprocess__f_class = class(.f),
     arg = arg,
     call = call
   )
 }
 
+#' @rdname as_slide_computation
+#' @keywords internal
+as_time_slide_computation <- function(.f, ...) {
+  as_slide_computation(
+    .f, ...,
+    .ref_time_value_long_varnames = ".ref_time_value",
+    .ref_time_value_label = "reference time value"
+  )
+}
+
+#' @rdname as_slide_computation
+#' @keywords internal
+as_diagonal_slide_computation <- function(.f, ...) {
+  as_slide_computation(
+    .f, ...,
+    .ref_time_value_long_varnames = c(".version", ".ref_time_value"),
+    .ref_time_value_label = "version"
+  )
+}
 
 guess_geo_type <- function(geo_value) {
   if (is.character(geo_value)) {
@@ -403,11 +580,13 @@ guess_time_type <- function(time_value, time_value_arg = rlang::caller_arg(time_
   if (inherits(time_value, "Date")) {
     unique_time_gaps <- as.numeric(diff(sort(unique(time_value))))
     # Gaps in a weekly date sequence will cause some diffs to be larger than 7
-    # days, so check modulo 7 equality, rather than equality with 7.
-    if (all(unique_time_gaps %% 7 == 0)) {
+    # days, so check modulo 7 equality, rather than equality with 7. The length
+    # check is there so that we don't classify epi_df with a single data point
+    # per geo as "week".
+    if (all(unique_time_gaps %% 7 == 0) && length(unique_time_gaps) > 0) {
       return("week")
     }
-    if (all(unique_time_gaps >= 28)) {
+    if (all(unique_time_gaps >= 28) && length(unique_time_gaps) > 0) {
       cli_abort(
         "Found a monthly or longer cadence in the time column `{time_value_arg}`.
         Consider using tsibble::yearmonth for monthly data and 'YYYY' integers for year data."
@@ -803,18 +982,20 @@ guess_period.POSIXt <- function(time_values, time_values_arg = rlang::caller_arg
   as.numeric(NextMethod(), units = "secs")
 }
 
-validate_slide_window_arg <- function(arg, time_type, allow_inf = TRUE, arg_name = rlang::caller_arg(arg)) {
-  if (is.null(arg)) {
-    cli_abort("`{arg_name}` is a required argument for slide functions.")
-  }
-
-  if (!checkmate::test_scalar(arg)) {
-    cli_abort("Slide function expected `{arg_name}` to be a scalar value.")
+validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRUE, arg_name = rlang::caller_arg(arg)) {
+  if (!checkmate::test_scalar(arg) || arg < lower) {
+    cli_abort(
+      "Slide function expected `{arg_name}` to be a non-null, scalar integer >= {lower}.",
+      class = "epiprocess__validate_slide_window_arg"
+    )
   }
 
   if (time_type == "custom") {
-    cli_abort("Unsure how to interpret slide units with a custom time type. Consider converting your time
-    column to a Date, yearmonth, or integer type.")
+    cli_abort(
+      "Unsure how to interpret slide units with a custom time type. Consider converting your time
+      column to a Date, yearmonth, or integer type.",
+      class = "epiprocess__validate_slide_window_arg"
+    )
   }
 
   msg <- ""
@@ -844,6 +1025,9 @@ validate_slide_window_arg <- function(arg, time_type, allow_inf = TRUE, arg_name
     }
   }
   if (msg != "") {
-    cli_abort("Slide function expected `{arg_name}` to be a {msg}.")
+    cli_abort(
+      "Slide function expected `{arg_name}` to be a {msg}.",
+      class = "epiprocess__validate_slide_window_arg"
+    )
   }
 }

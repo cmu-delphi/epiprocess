@@ -25,13 +25,13 @@ test_that("Errors are thrown due to bad epix_as_of inputs", {
 
 test_that("Warning against max_version being clobberable", {
   # none by default
-  expect_warning(regexp = NA, ea %>% epix_as_of(max_version = max(ea$DT$version)))
-  expect_warning(regexp = NA, ea %>% epix_as_of(max_version = min(ea$DT$version)))
+  expect_warning(regexp = NA, ea %>% epix_as_of(max(ea$DT$version)))
+  expect_warning(regexp = NA, ea %>% epix_as_of(min(ea$DT$version)))
   # but with `clobberable_versions_start` non-`NA`, yes
   ea_with_clobberable <- ea
   ea_with_clobberable$clobberable_versions_start <- max(ea_with_clobberable$DT$version)
-  expect_warning(ea_with_clobberable %>% epix_as_of(max_version = max(ea$DT$version)))
-  expect_warning(regexp = NA, ea_with_clobberable %>% epix_as_of(max_version = min(ea$DT$version)))
+  expect_warning(ea_with_clobberable %>% epix_as_of(max(ea$DT$version)))
+  expect_warning(regexp = NA, ea_with_clobberable %>% epix_as_of(min(ea$DT$version)))
 })
 
 test_that("epix_as_of properly grabs the data and doesn't mutate key", {
@@ -43,7 +43,7 @@ test_that("epix_as_of properly grabs the data and doesn't mutate key", {
   old_key <- data.table::key(ea2$DT)
 
   edf_as_of <- ea2 %>%
-    epix_as_of(max_version = as.Date("2020-06-03"))
+    epix_as_of(as.Date("2020-06-03"))
 
   edf_expected <- as_epi_df(tibble(
     geo_value = "ca",
@@ -110,7 +110,6 @@ test_that("epix_truncate_version_after returns the same grouping type as input e
   expect_true(is_grouped_epi_archive(ea_as_of))
 })
 
-
 test_that("epix_truncate_version_after returns the same groups as input grouped_epi_archive", {
   ea2 <- ea2_data %>%
     as_epi_archive()
@@ -121,4 +120,11 @@ test_that("epix_truncate_version_after returns the same groups as input grouped_
   ea_as_of <- ea2 %>%
     epix_truncate_versions_after(max_version = as.Date("2020-06-04"))
   expect_equal(ea_as_of %>% groups(), ea_expected %>% groups())
+})
+
+test_that("group_vars works as expected", {
+  expect_equal(
+    ea2_data %>% as_epi_archive() %>% group_by(geo_value) %>% group_vars(),
+    "geo_value"
+  )
 })

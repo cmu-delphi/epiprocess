@@ -4,11 +4,54 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 # epiprocess 0.9
 
+## Breaking changes
+
+- `epi_slide` interface has major breaking changes.
+  - All variables are now dot-prefixed to be more consistent with tidyverse
+    style for functions that allow tidyeval.
+  - The `before/after` arguments have been replaced with the `.window_size` and
+    `.align` arguments.
+  - `names_sep` has been removed. If you return data frames from your
+    computations:
+    - without a name, they will be unpacked into separate columns without name
+      prefixes
+    - with a name, it will become a packed data.frame-class column (see
+      `tidyr::pack`).
+  - `as_list_col` has been removed. You can now directly return a list from your
+    slide computations instead. If you were using `as_list_col=TRUE`, you will
+    need to wrap your output in a list.
+  - Ungrouped slides are no longer allowed in `epi_slide`. If you used this for
+    geographic aggregation up to national, consider using `sum_groups_epi_df`.
+  - Added `sum_groups_epi_df` to allow aggregation across key columns prior to
+    sliding.
+- `epix_slide` interface has major changes.
+  - All variables are now dot-prefixed to be more consistent with tidyverse
+    style for functions that allow tidyeval.
+  - `names_sep` has been removed. If you return data frames from your
+    computations:
+    - without a name, they will be unpacked into separate columns without name
+      prefixes
+    - with a name, it will become a packed data.frame-class column (see
+      `tidyr::pack`).
+  - `as_list_col` has been removed. You can now directly return a list from your
+    slide computations instead. If you were using `as_list_col=TRUE`, you will
+    need to wrap your output in a list.
+- `as_epi_df()` now checks that every group has unique time values and errors if
+  this is not the case. The same check is performed at the beginning of
+  `epi_slide()`. This check is currently not enforced in dplyr operations (like
+  for joins, mutates, or select), but we plan to add it in the future.
+- `as_epi_df()` or `as_epi_archive()` no longer accept `additional_metadata`.
+  Use the new `other_keys` arg to specify additional key columns, such as age
+  group columns or other demographic breakdowns. Miscellaneous metadata are no
+  longer handled by `epiprocess`, but you can use R's built-in `attr<-` instead
+  for a similar feature.
+
 ## Improvements
 
 - Added `complete.epi_df`, which fills in missing values in an `epi_df` with
   `NA`s. Uses `tidyr::complete` underneath and preserves `epi_df` metadata.
-- Inclusion of the function `revision_summary` to provide basic revision information for `epi_archive`s out of the box. (#492)
+- Inclusion of the function `revision_summary` to provide basic revision
+  information for `epi_archive`s out of the box. (#492)
 
 ## Bug fixes
 
@@ -21,6 +64,14 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 ## Breaking changes
 
+- `epi_df`'s are now more strict about what types they allow in the time column.
+  Namely, we are explicit about only supporting `Date` at the daily and weekly
+  cadence and generic integer types (for yearly cadence).
+- `epi_slide` `before` and `after` arguments are now require the user to
+  specific time units in certain cases. The `time_step` argument has been
+  removed.
+- `epix_slide` `before` argument now defaults to `Inf`, and requires the user to
+  specify units in some cases. The `time_step` argument has been removed.
 - `detect_outlr_stl(seasonal_period = NULL)` is no longer accepted. Use
   `detect_outlr_stl(seasonal_period = <value>, seasonal_as_residual = TRUE)`
   instead. See `?detect_outlr_stl` for more details.
@@ -63,6 +114,12 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   are similar functions for `geo` and `version`).
 - Fixed bug where `epix_slide_ref_time_values_default()` on datetimes would
   output a huge number of `ref_time_values` spaced apart by mere seconds.
+- In `epi_slide()` and `epix_slide()`:
+  - Multiple "data-masking" tidy evaluation expressions can be passed in via
+    `...`, rather than just one.
+  - Additional tidy evaluation features from `dplyr::mutate` are supported: `!!
+name_var := value`, unnamed expressions evaluating to data frames, and `=
+NULL`; see `?epi_slide` for more details.
 
 ## Cleanup
 
@@ -70,17 +127,6 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - Added optional `decay_to_tibble` attribute controlling `as_tibble()` behavior
   of `epi_df`s to let `{epipredict}` work more easily with other libraries (#471).
 - Removed some external package dependencies.
-
-## Breaking Changes
-
-- `epi_df`'s are now more strict about what types they allow in the time column.
-  Namely, we are explicit about only supporting `Date` at the daily and weekly
-  cadence and generic integer types (for yearly cadence).
-- `epi_slide` `before` and `after` arguments are now require the user to
-  specific time units in certain cases. The `time_step` argument has been
-  removed.
-- `epix_slide` `before` argument now defaults to `Inf`, and requires the user to
-  specify units in some cases. The `time_step` argument has been removed.
 
 # epiprocess 0.7.0
 

@@ -49,7 +49,7 @@ validate_version_bound <- function(version_bound, x, na_ok = FALSE,
     if (!identical(class(version_bound), class(x[["version"]]))) {
       cli_abort(
         "{version_bound_arg} must have the same `class` vector as x$version,
-        which has a `class` of {paste(collapse = ' ', deparse(class(x$version)))}",
+        which has a `class` of {format_class_vec(class(x$version))}",
         class = "epiprocess__version_bound_mismatched_class"
       )
     }
@@ -179,7 +179,8 @@ NULL
 #'
 #' * `geo_type`: the type for the geo values.
 #' * `time_type`: the type for the time values.
-#' * `additional_metadata`: list of additional metadata for the data archive.
+#' * `other_keys`: any additional keys as a character vector.
+#'    Typical examples are "age" or sub-geographies.
 #'
 #' While this metadata is not protected, it is generally recommended to treat it
 #'  as read-only, and to use the `epi_archive` methods to interact with the data
@@ -209,10 +210,8 @@ NULL
 #' if the time type is not recognized.
 #' @param other_keys Character vector specifying the names of variables in `x`
 #'   that should be considered key variables (in the language of `data.table`)
-#'   apart from "geo_value", "time_value", and "version".
-#' @param additional_metadata List of additional metadata to attach to the
-#'   `epi_archive` object. The metadata will have the `geo_type` field; named
-#'   entries from the passed list or will be included as well.
+#'   apart from "geo_value", "time_value", and "version". Typical examples
+#'   are "age" or more granular geographies.
 #' @param compactify Optional; Boolean. `TRUE` will remove some
 #'   redundant rows, `FALSE` will not, and missing or `NULL` will remove
 #'   redundant rows, but issue a warning. See more information at `compactify`.
@@ -293,7 +292,6 @@ new_epi_archive <- function(
     geo_type,
     time_type,
     other_keys,
-    additional_metadata,
     compactify,
     clobberable_versions_start,
     versions_end,
@@ -350,7 +348,7 @@ new_epi_archive <- function(
       DT = compactified,
       geo_type = geo_type,
       time_type = time_type,
-      additional_metadata = additional_metadata,
+      other_keys = other_keys,
       clobberable_versions_start = clobberable_versions_start,
       versions_end = versions_end
     ),
@@ -423,7 +421,6 @@ is_locf <- function(vec, tolerance) { # nolint: object_usage_linter
 validate_epi_archive <- function(
     x,
     other_keys,
-    additional_metadata,
     compactify,
     clobberable_versions_start,
     versions_end) {
@@ -433,9 +430,6 @@ validate_epi_archive <- function(
   }
   if (any(c("geo_value", "time_value", "version") %in% other_keys)) {
     cli_abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
-  }
-  if (any(names(additional_metadata) %in% c("geo_type", "time_type"))) {
-    cli_warn("`additional_metadata` names overlap with existing metadata fields \"geo_type\" or \"time_type\".")
   }
 
   # Conduct checks and apply defaults for `compactify`
@@ -485,8 +479,7 @@ as_epi_archive <- function(
     x,
     geo_type = deprecated(),
     time_type = deprecated(),
-    other_keys = character(0L),
-    additional_metadata = list(),
+    other_keys = character(),
     compactify = NULL,
     clobberable_versions_start = NA,
     .versions_end = max_version_with_row_in(x), ...,
@@ -518,11 +511,10 @@ as_epi_archive <- function(
   time_type <- guess_time_type(x$time_value)
 
   validate_epi_archive(
-    x, other_keys, additional_metadata,
-    compactify, clobberable_versions_start, versions_end
+    x, other_keys, compactify, clobberable_versions_start, versions_end
   )
   new_epi_archive(
-    x, geo_type, time_type, other_keys, additional_metadata,
+    x, geo_type, time_type, other_keys,
     compactify, clobberable_versions_start, versions_end
   )
 }
@@ -551,7 +543,7 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
     c(
       ">" = if (class) "An `epi_archive` object, with metadata:",
       "i" = if (length(setdiff(key(x$DT), c("geo_value", "time_value", "version"))) > 0) {
-        "Non-standard DT keys: {setdiff(key(x$DT), c('geo_value', 'time_value', 'version'))}"
+        "Other DT keys: {setdiff(key(x$DT), c('geo_value', 'time_value', 'version'))}"
       },
       "i" = if (nrow(x$DT) != 0L) {
         "Min/max time values: {min(x$DT$time_value)} / {max(x$DT$time_value)}"
@@ -593,8 +585,8 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
 #'   `...`.
 #' @param .drop As described in [`dplyr::group_by`]; determines treatment of
 #'   factor columns.
-#' @param x For `groups` or `ungroup`: a `grouped_epi_archive`; for
-#'   `is_grouped_epi_archive`: any object
+#' @param x For `groups`, `group_vars`, or `ungroup`: a `grouped_epi_archive`;
+#'   for `is_grouped_epi_archive`: any object
 #' @param .tbl (For `group_by_drop_default`:) an `epi_archive` or
 #'   `grouped_epi_archive` (`epi_archive` dispatches to the S3 default method;
 #'   `grouped_epi_archive` dispatches its own S3 method)
@@ -632,10 +624,10 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
 #' archive_cases_dv_subset %>%
 #'   group_by(geo_value) %>%
 #'   epix_slide(
-#'     f = ~ mean(.x$case_rate_7d_av),
-#'     before = 2,
-#'     ref_time_values = as.Date("2020-06-11") + 0:2,
-#'     new_col_name = "case_rate_3d_av"
+#'     .f = ~ mean(.x$case_rate_7d_av),
+#'     .before = 2,
+#'     .versions = as.Date("2020-06-11") + 0:2,
+#'     .new_col_name = "case_rate_3d_av"
 #'   ) %>%
 #'   ungroup()
 #'
@@ -673,6 +665,11 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
 #'   group_by(geo_value, age_group) %>%
 #'   ungroup(age_group)
 #'
+#' # To get the grouping variable names as a character vector:
+#' toy_archive %>%
+#'   group_by(geo_value) %>%
+#'   group_vars()
+#'
 #' # To get the grouping variable names as a `list` of `name`s (a.k.a. symbols):
 #' toy_archive %>%
 #'   group_by(geo_value) %>%
@@ -680,14 +677,15 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
 #'
 #' toy_archive %>%
 #'   group_by(geo_value, age_group, .drop = FALSE) %>%
-#'   epix_slide(f = ~ sum(.x$value), before = 20) %>%
+#'   epix_slide(.f = ~ sum(.x$value), .before = 20) %>%
 #'   ungroup()
 #'
 #' @importFrom dplyr group_by
 #' @export
 #'
 #' @aliases grouped_epi_archive
-group_by.epi_archive <- function(.data, ..., .add = FALSE, .drop = dplyr::group_by_drop_default(.data)) {
+group_by.epi_archive <- function(.data, ..., .add = FALSE,
+                                 .drop = dplyr::group_by_drop_default(.data)) {
   # `add` makes no difference; this is an ungrouped `epi_archive`.
   detailed_mutate <- epix_detailed_restricted_mutate(.data, ...)
   assert_logical(.drop)
@@ -695,9 +693,9 @@ group_by.epi_archive <- function(.data, ..., .add = FALSE, .drop = dplyr::group_
     grouping_cols <- as.list(detailed_mutate[["archive"]][["DT"]])[detailed_mutate[["request_names"]]]
     grouping_col_is_factor <- purrr::map_lgl(grouping_cols, is.factor)
     # ^ Use `as.list` to try to avoid any possibility of a deep copy.
-    if (!any(grouping_col_is_factor)) {
+    if (length(grouping_cols) != 0L && !any(grouping_col_is_factor)) {
       cli_warn(
-        "`.drop=FALSE` but there are no factor grouping columns;
+        "`.drop=FALSE` but none of the grouping columns are factors;
         did you mean to convert one of the columns to a factor beforehand?",
         class = "epiprocess__group_by_epi_archive__drop_FALSE_no_factors"
       )
@@ -705,10 +703,10 @@ group_by.epi_archive <- function(.data, ..., .add = FALSE, .drop = dplyr::group_
       cli_warn(
         "`.drop=FALSE` but there are one or more non-factor grouping columns listed
         after a factor grouping column; this may produce groups with `NA`s for these
-        columns; see https://github.com/tidyverse/dplyr/issues/5369#issuecomment-683762553;
+        non-factor columns; see https://github.com/tidyverse/dplyr/issues/5369#issuecomment-683762553;
         depending on how you want completion to work, you might instead want to convert all
         grouping columns to factors beforehand, specify the non-factor grouping columns first,
-        or use `.drop=TRUE` and add a call to `tidyr::complete`.",
+        or use `.drop=TRUE` and add a call to `tidyr::complete()`.",
         class = "epiprocess__group_by_epi_archive__drop_FALSE_nonfactor_after_factor"
       )
     }

@@ -127,7 +127,7 @@
 #'   dplyr::rename(geo_value = state, time_value = reported_date) %>%
 #'   as_epi_df(
 #'     as_of = "2020-06-03",
-#'     additional_metadata = list(other_keys = "pol")
+#'     other_keys = "pol"
 #'   )
 #'
 #' attr(ex2, "metadata")
@@ -146,61 +146,57 @@
 #'     state = rep("MA", 6),
 #'     pol = rep(c("blue", "swing", "swing"), each = 2)
 #'   ) %>%
-#'   # the 2 extra keys we added have to be specified in the other_keys
-#'   # component of additional_metadata.
-#'   as_epi_df(additional_metadata = list(other_keys = c("state", "pol")))
+#'   as_epi_df(other_keys = c("state", "pol"))
 #'
 #' attr(ex3, "metadata")
 NULL
 
-#' Create an `epi_df` object
-#'
-#' @rdname epi_df
-#' @param geo_type DEPRECATED Has no effect. Geo value type is inferred from the
-#' location column and set to "custom" if not recognized.
-#' @param time_type DEPRECATED Has no effect. Time value type inferred from the time
-#' column and set to "custom" if not recognized. Unpredictable behavior may result
-#' if the time type is not recognized.
+#' @describeIn epi_df Lower-level constructor for `epi_df` object
+#' @order 2
+#' @param geo_type `r lifecycle::badge("deprecated")` in `as_epi_df()`, has no
+#'   effect; the geo value type is inferred from the location column and set to
+#'   "custom" if not recognized. In `new_epi_df()`, should be set to the same
+#'   value that would be inferred.
+#' @param time_type `r lifecycle::badge("deprecated")` in `as_epi_df()`, has no
+#'   effect: the time value type inferred from the time column and set to
+#'   "custom" if not recognized. Unpredictable behavior may result if the time
+#'   type is not recognized. In `new_epi_df()`, should be set to the same value
+#'   that would be inferred.
 #' @param as_of Time value representing the time at which the given data were
 #'   available. For example, if `as_of` is January 31, 2022, then the `epi_df`
 #'   object that is created would represent the most up-to-date version of the
 #'   data available as of January 31, 2022. If the `as_of` argument is missing,
 #'   then the current day-time will be used.
-#' @param additional_metadata List of additional metadata to attach to the
-#'   `epi_df` object. The metadata will have `geo_type`, `time_type`, and
-#'   `as_of` fields; named entries from the passed list will be included as
-#'   well. If your tibble has additional keys, be sure to specify them as a
-#'   character vector in the `other_keys` component of `additional_metadata`.
+#' @param other_keys If your tibble has additional keys, be sure to specify them
+#'   as a character vector here (typical examples are "age" or sub-geographies).
 #' @param ... Additional arguments passed to methods.
 #' @return An `epi_df` object.
 #'
 #' @export
-new_epi_df <- function(x = tibble::tibble(), geo_type, time_type, as_of,
-                       additional_metadata = list()) {
+new_epi_df <- function(x = tibble::tibble(geo_value = character(), time_value = as.Date(integer())),
+                       geo_type, time_type, as_of,
+                       other_keys = character(), ...) {
   # Define metadata fields
   metadata <- list()
   metadata$geo_type <- geo_type
   metadata$time_type <- time_type
   metadata$as_of <- as_of
-  metadata <- c(metadata, additional_metadata)
+  metadata$other_keys <- other_keys
 
   # Reorder columns (geo_value, time_value, ...)
-  if (sum(dim(x)) != 0) {
-    cols_to_put_first <- c("geo_value", "time_value")
-    x <- x[, c(
-      cols_to_put_first,
-      # All other columns
-      names(x)[!(names(x) %in% cols_to_put_first)]
-    )]
+  if (nrow(x) > 0) {
+    x <- x %>% relocate(all_of(c("geo_value", other_keys, "time_value")), .before = 1)
   }
 
   # Apply epi_df class, attach metadata, and return
   class(x) <- c("epi_df", class(x))
   attributes(x)$metadata <- metadata
+
   return(x)
 }
 
-#' @rdname epi_df
+#' @describeIn epi_df The preferred way of constructing `epi_df`s
+#' @order 1
 #' @param x An `epi_df`, `data.frame`, [tibble::tibble], or [tsibble::tsibble]
 #'   to be converted
 #' @param ... used for specifying column names, as in [`dplyr::rename`]. For
@@ -211,6 +207,7 @@ as_epi_df <- function(x, ...) {
 }
 
 #' @rdname epi_df
+#' @order 1
 #' @method as_epi_df epi_df
 #' @export
 as_epi_df.epi_df <- function(x, ...) {
@@ -218,17 +215,18 @@ as_epi_df.epi_df <- function(x, ...) {
 }
 
 #' @rdname epi_df
-#' @method as_epi_df tbl_df
+#' @order 1
 #' @importFrom rlang .data
 #' @importFrom tidyselect any_of
 #' @importFrom cli cli_inform
+#' @method as_epi_df tbl_df
 #' @export
 as_epi_df.tbl_df <- function(
     x,
     geo_type = deprecated(),
     time_type = deprecated(),
     as_of,
-    additional_metadata = list(),
+    other_keys = character(),
     ...) {
   # possible standard substitutions for time_value
   x <- rename(x, ...)
@@ -243,10 +241,10 @@ as_epi_df.tbl_df <- function(
     )
   }
   if (lifecycle::is_present(geo_type)) {
-    cli_warn("epi_archive constructor argument `geo_type` is now ignored. Consider removing.")
+    cli_warn("epi_df constructor argument `geo_type` is now ignored. Consider removing.")
   }
   if (lifecycle::is_present(time_type)) {
-    cli_warn("epi_archive constructor argument `time_type` is now ignored. Consider removing.")
+    cli_warn("epi_df constructor argument `time_type` is now ignored. Consider removing.")
   }
 
   # If geo type is missing, then try to guess it
@@ -274,29 +272,45 @@ as_epi_df.tbl_df <- function(
     } # Use the current day-time
   }
 
-  assert_list(additional_metadata)
-  additional_metadata[["other_keys"]] <- additional_metadata[["other_keys"]] %||% character(0L)
-  new_epi_df(x, geo_type, time_type, as_of, additional_metadata)
-}
+  assert_character(other_keys)
 
-#' @method as_epi_df data.frame
-#' @rdname epi_df
-#' @export
-as_epi_df.data.frame <- function(x, as_of, additional_metadata = list(), ...) {
-  as_epi_df.tbl_df(x = tibble::as_tibble(x), as_of = as_of, additional_metadata = additional_metadata, ...)
-}
+  if (".time_value_counts" %in% other_keys) {
+    cli_abort("as_epi_df: `other_keys` can't include \".time_value_counts\"")
+  }
 
-#' @method as_epi_df tbl_ts
-#' @rdname epi_df
-#' @export
-as_epi_df.tbl_ts <- function(x, as_of, additional_metadata = list(), ...) {
-  tsibble_other_keys <- setdiff(tsibble::key_vars(x), "geo_value")
-  if (length(tsibble_other_keys) != 0) {
-    additional_metadata$other_keys <- unique(
-      c(additional_metadata$other_keys, tsibble_other_keys)
+  duplicated_time_values <- x %>%
+    group_by(across(all_of(c("geo_value", "time_value", other_keys)))) %>%
+    filter(dplyr::n() > 1) %>%
+    ungroup()
+  if (nrow(duplicated_time_values) > 0) {
+    bad_data <- capture.output(duplicated_time_values)
+    cli_abort(
+      "as_epi_df: some groups in the data have duplicated time values. epi_df requires a unique time_value per group.",
+      body = c("Sample groups:", bad_data)
     )
   }
-  as_epi_df.tbl_df(x = tibble::as_tibble(x), as_of = as_of, additional_metadata = additional_metadata, ...)
+
+  new_epi_df(x, geo_type, time_type, as_of, other_keys)
+}
+
+#' @rdname epi_df
+#' @order 1
+#' @method as_epi_df data.frame
+#' @export
+as_epi_df.data.frame <- function(x, as_of, other_keys = character(), ...) {
+  as_epi_df.tbl_df(x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys, ...)
+}
+
+#' @rdname epi_df
+#' @order 1
+#' @method as_epi_df tbl_ts
+#' @export
+as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(), ...) {
+  tsibble_other_keys <- setdiff(tsibble::key_vars(x), "geo_value")
+  if (length(tsibble_other_keys) > 0) {
+    other_keys <- unique(c(other_keys, tsibble_other_keys))
+  }
+  as_epi_df.tbl_df(x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys, ...)
 }
 
 #' Test for `epi_df` format
