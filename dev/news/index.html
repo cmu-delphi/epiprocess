@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.8.4</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -25,7 +25,6 @@
     <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a></li>
     <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -47,6 +46,38 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9" id="epiprocess-09">epiprocess 0.9<a class="anchor" aria-label="anchor" href="#epiprocess-09"></a></h2>
 <div class="section level3">
+<h3 id="breaking-changes-0-9">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-9"></a></h3>
+<ul><li>
+<code>epi_slide</code> interface has major breaking changes.
+<ul><li>All variables are now dot-prefixed to be more consistent with tidyverse style for functions that allow tidyeval.</li>
+<li>The <code>before/after</code> arguments have been replaced with the <code>.window_size</code> and <code>.align</code> arguments.</li>
+<li>
+<code>names_sep</code> has been removed. If you return data frames from your computations:
+<ul><li>without a name, they will be unpacked into separate columns without name prefixes</li>
+<li>with a name, it will become a packed data.frame-class column (see <code><a href="https://tidyr.tidyverse.org/reference/pack.html" class="external-link">tidyr::pack</a></code>).</li>
+</ul></li>
+<li>
+<code>as_list_col</code> has been removed. You can now directly return a list from your slide computations instead. If you were using <code>as_list_col=TRUE</code>, you will need to wrap your output in a list.</li>
+<li>Ungrouped slides are no longer allowed in <code>epi_slide</code>. If you used this for geographic aggregation up to national, consider using <code>sum_groups_epi_df</code>.</li>
+<li>Added <code>sum_groups_epi_df</code> to allow aggregation across key columns prior to sliding.</li>
+</ul></li>
+<li>
+<code>epix_slide</code> interface has major changes.
+<ul><li>All variables are now dot-prefixed to be more consistent with tidyverse style for functions that allow tidyeval.</li>
+<li>
+<code>names_sep</code> has been removed. If you return data frames from your computations:
+<ul><li>without a name, they will be unpacked into separate columns without name prefixes</li>
+<li>with a name, it will become a packed data.frame-class column (see <code><a href="https://tidyr.tidyverse.org/reference/pack.html" class="external-link">tidyr::pack</a></code>).</li>
+</ul></li>
+<li>
+<code>as_list_col</code> has been removed. You can now directly return a list from your slide computations instead. If you were using <code>as_list_col=TRUE</code>, you will need to wrap your output in a list.</li>
+</ul></li>
+<li>
+<code><a href="../reference/epi_df.html">as_epi_df()</a></code> now checks that every group has unique time values and errors if this is not the case. The same check is performed at the beginning of <code><a href="../reference/epi_slide.html">epi_slide()</a></code>. This check is currently not enforced in dplyr operations (like for joins, mutates, or select), but we plan to add it in the future.</li>
+<li>
+<code><a href="../reference/epi_df.html">as_epi_df()</a></code> or <code><a href="../reference/epi_archive.html">as_epi_archive()</a></code> no longer accept <code>additional_metadata</code>. Use the new <code>other_keys</code> arg to specify additional key columns, such as age group columns or other demographic breakdowns. Miscellaneous metadata are no longer handled by <code>epiprocess</code>, but you can use R’s built-in <code>attr&lt;-</code> instead for a similar feature.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="improvements-0-9">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-9"></a></h3>
 <ul><li>Added <code>complete.epi_df</code>, which fills in missing values in an <code>epi_df</code> with <code>NA</code>s. Uses <code><a href="https://tidyr.tidyverse.org/reference/complete.html" class="external-link">tidyr::complete</a></code> underneath and preserves <code>epi_df</code> metadata.</li>
 <li>Inclusion of the function <code>revision_summary</code> to provide basic revision information for <code>epi_archive</code>s out of the box. (<a href="https://github.com/cmu-delphi/epiprocess/issues492" class="external-link">#492</a>)</li>
@@ -62,6 +93,12 @@
 <div class="section level3">
 <h3 id="breaking-changes-0-8">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-8"></a></h3>
 <ul><li>
+<code>epi_df</code>’s are now more strict about what types they allow in the time column. Namely, we are explicit about only supporting <code>Date</code> at the daily and weekly cadence and generic integer types (for yearly cadence).</li>
+<li>
+<code>epi_slide</code> <code>before</code> and <code>after</code> arguments are now require the user to specific time units in certain cases. The <code>time_step</code> argument has been removed.</li>
+<li>
+<code>epix_slide</code> <code>before</code> argument now defaults to <code>Inf</code>, and requires the user to specify units in some cases. The <code>time_step</code> argument has been removed.</li>
+<li>
 <code>detect_outlr_stl(seasonal_period = NULL)</code> is no longer accepted. Use <code>detect_outlr_stl(seasonal_period = &lt;value&gt;, seasonal_as_residual = TRUE)</code> instead. See <code><a href="../reference/detect_outlr_stl.html">?detect_outlr_stl</a></code> for more details.</li>
 </ul></div>
 <div class="section level3">
@@ -87,21 +124,16 @@
 <li>
 <code>as_epi_df</code> and <code>as_epi_archive</code> now support arguments to specify column names e.g. <code>as_epi_df(some_tibble, geo_value=state)</code>. In addition, there is a list of default conversions, see <code>time_column_names</code> for a list of columns that will automatically be recognized and converted to <code>time_value</code> column (there are similar functions for <code>geo</code> and <code>version</code>).</li>
 <li>Fixed bug where <code>epix_slide_ref_time_values_default()</code> on datetimes would output a huge number of <code>ref_time_values</code> spaced apart by mere seconds.</li>
+<li>In <code><a href="../reference/epi_slide.html">epi_slide()</a></code> and <code><a href="../reference/epix_slide.html">epix_slide()</a></code>:
+<ul><li>Multiple “data-masking” tidy evaluation expressions can be passed in via <code>...</code>, rather than just one.</li>
+<li>Additional tidy evaluation features from <code><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">dplyr::mutate</a></code> are supported: <code>!! name_var := value</code>, unnamed expressions evaluating to data frames, and <code>= NULL</code>; see <code><a href="../reference/epi_slide.html">?epi_slide</a></code> for more details.</li>
+</ul></li>
 </ul></div>
 <div class="section level3">
 <h3 id="cleanup-0-8">Cleanup<a class="anchor" aria-label="anchor" href="#cleanup-0-8"></a></h3>
 <ul><li>Resolved some linting messages in package checks (<a href="https://github.com/cmu-delphi/epiprocess/issues468" class="external-link">#468</a>).</li>
 <li>Added optional <code>decay_to_tibble</code> attribute controlling <code><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble()</a></code> behavior of <code>epi_df</code>s to let <code>{epipredict}</code> work more easily with other libraries (<a href="https://github.com/cmu-delphi/epiprocess/issues471" class="external-link">#471</a>).</li>
 <li>Removed some external package dependencies.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="breaking-changes-0-8-1">Breaking Changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-8-1"></a></h3>
-<ul><li>
-<code>epi_df</code>’s are now more strict about what types they allow in the time column. Namely, we are explicit about only supporting <code>Date</code> at the daily and weekly cadence and generic integer types (for yearly cadence).</li>
-<li>
-<code>epi_slide</code> <code>before</code> and <code>after</code> arguments are now require the user to specific time units in certain cases. The <code>time_step</code> argument has been removed.</li>
-<li>
-<code>epix_slide</code> <code>before</code> argument now defaults to <code>Inf</code>, and requires the user to specify units in some cases. The <code>time_step</code> argument has been removed.</li>
 </ul></div>
 </div>
     <div class="section level2">
@@ -421,7 +453,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
     </footer></div>

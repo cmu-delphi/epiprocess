@@ -2,7 +2,6 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/DEVELOPMENT.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/LICENSE-text.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/LICENSE.html</loc></url>
-<url><loc>https://cmu-delphi.github.io/epiprocess/dev/articles/advanced.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/articles/aggregation.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/articles/archive.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/articles/compactify.html</loc></url>
@@ -18,6 +17,7 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/apply_compactify.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/archive_cases_dv_subset.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/arrange_canonical.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/as_slide_computation.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/as_tibble.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/as_tsibble.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/autoplot.epi_df.html</loc></url>
@@ -42,9 +42,15 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/epix_slide.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/epix_truncate_versions_after.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/f_no_na.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/format_chr_with_quotes.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/format_class_vec.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/format_tibble_row.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/format_varname.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/format_varnames.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/geo_column_names.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/get_last_run.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/group_by.epi_archive.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/group_epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/growth_rate.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/guess_column_name.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/guess_period.html</loc></url>
@@ -58,16 +64,20 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/max_version_with_row_in.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/next_after.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/num_percent.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/paste_lines.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/pipe.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/print.epi_archive.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/print.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/reexports.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/removed_by_compactify.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/revision_summary.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/sum_groups_epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/summary.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_column_names.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_within_x_latest.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/upcase_snake_case.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/version_column_names.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/wrap_symbolics.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/wrap_varnames.html</loc></url>
 </urlset>
 

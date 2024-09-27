@@ -13,7 +13,7 @@ interest."><meta name="robots" content="noindex"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.8.4</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,7 +31,6 @@ interest."><meta name="robots" content="noindex"></head><body>
     <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a></li>
     <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -65,7 +64,6 @@ interest.</p>
 <span>  <span class="va">geo_type</span>,</span>
 <span>  <span class="va">time_type</span>,</span>
 <span>  <span class="va">other_keys</span>,</span>
-<span>  <span class="va">additional_metadata</span>,</span>
 <span>  <span class="va">compactify</span>,</span>
 <span>  <span class="va">clobberable_versions_start</span>,</span>
 <span>  <span class="va">versions_end</span>,</span>
@@ -75,7 +73,6 @@ interest.</p>
 <span><span class="fu">validate_epi_archive</span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
 <span>  <span class="va">other_keys</span>,</span>
-<span>  <span class="va">additional_metadata</span>,</span>
 <span>  <span class="va">compactify</span>,</span>
 <span>  <span class="va">clobberable_versions_start</span>,</span>
 <span>  <span class="va">versions_end</span></span>
@@ -85,8 +82,7 @@ interest.</p>
 <span>  <span class="va">x</span>,</span>
 <span>  geo_type <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  time_type <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  other_keys <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0L</span><span class="op">)</span>,</span>
-<span>  additional_metadata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  other_keys <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  compactify <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  clobberable_versions_start <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  .versions_end <span class="op">=</span> <span class="fu"><a href="max_version_with_row_in.html">max_version_with_row_in</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>,</span>
@@ -118,13 +114,8 @@ if the time type is not recognized.</p></dd>
 <dt id="arg-other-keys">other_keys<a class="anchor" aria-label="anchor" href="#arg-other-keys"></a></dt>
 <dd><p>Character vector specifying the names of variables in <code>x</code>
 that should be considered key variables (in the language of <code>data.table</code>)
-apart from "geo_value", "time_value", and "version".</p></dd>
-
-
-<dt id="arg-additional-metadata">additional_metadata<a class="anchor" aria-label="anchor" href="#arg-additional-metadata"></a></dt>
-<dd><p>List of additional metadata to attach to the
-<code>epi_archive</code> object. The metadata will have the <code>geo_type</code> field; named
-entries from the passed list or will be included as well.</p></dd>
+apart from "geo_value", "time_value", and "version". Typical examples
+are "age" or more granular geographies.</p></dd>
 
 
 <dt id="arg-compactify">compactify<a class="anchor" aria-label="anchor" href="#arg-compactify"></a></dt>
@@ -206,7 +197,8 @@ combination of key variables.</p>
 <p>The following pieces of metadata are included as fields in an <code>epi_archive</code>
 object:</p><ul><li><p><code>geo_type</code>: the type for the geo values.</p></li>
 <li><p><code>time_type</code>: the type for the time values.</p></li>
-<li><p><code>additional_metadata</code>: list of additional metadata for the data archive.</p></li>
+<li><p><code>other_keys</code>: any additional keys as a character vector.
+Typical examples are "age" or sub-geographies.</p></li>
 </ul><p>While this metadata is not protected, it is generally recommended to treat it
 as read-only, and to use the <code>epi_archive</code> methods to interact with the data
 archive. Unexpected behavior may result from modifying the metadata
@@ -303,7 +295,7 @@ sliding computation at any given reference time point t is performed on
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
     </footer></div>

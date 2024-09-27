@@ -11,7 +11,7 @@ for examples."><meta name="robots" content="noindex"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.8.4</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,7 +29,6 @@ for examples."><meta name="robots" content="noindex"></head><body>
     <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a></li>
     <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -58,16 +57,14 @@ for examples.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">epi_slide</span><span class="op">(</span></span>
-<span>  <span class="va">x</span>,</span>
-<span>  <span class="va">f</span>,</span>
+<span>  <span class="va">.x</span>,</span>
+<span>  <span class="va">.f</span>,</span>
 <span>  <span class="va">...</span>,</span>
-<span>  before <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  after <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  ref_time_values <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  new_col_name <span class="op">=</span> <span class="st">"slide_value"</span>,</span>
-<span>  as_list_col <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  names_sep <span class="op">=</span> <span class="st">"_"</span>,</span>
-<span>  all_rows <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  .window_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  .align <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"right"</span>, <span class="st">"center"</span>, <span class="st">"left"</span><span class="op">)</span>,</span>
+<span>  .ref_time_values <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  .new_col_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  .all_rows <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -75,133 +72,148 @@ for examples.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dl><dt id="arg--x">.x<a class="anchor" aria-label="anchor" href="#arg--x"></a></dt>
 <dd><p>The <code>epi_df</code> object under consideration, <a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">grouped</a>
-or ungrouped. If ungrouped, all data in <code>x</code> will be treated as part of a
+or ungrouped. If ungrouped, all data in <code>.x</code> will be treated as part of a
 single data group.</p></dd>
 
 
-<dt id="arg-f">f<a class="anchor" aria-label="anchor" href="#arg-f"></a></dt>
+<dt id="arg--f">.f<a class="anchor" aria-label="anchor" href="#arg--f"></a></dt>
 <dd><p>Function, formula, or missing; together with <code>...</code> specifies the
 computation to slide. To "slide" means to apply a computation within a
 sliding (a.k.a. "rolling") time window for each data group. The window is
-determined by the <code>before</code> and <code>after</code> parameters described below. One time
-step is typically one day or one week; see details for more explanation. If
-a function, <code>f</code> must take a data frame with the same column names as
-the original object, minus any grouping variables, containing the time
-window data for one group-<code>ref_time_value</code> combination; followed by a
-one-row tibble containing the values of the grouping variables for the
-associated group; followed by any number of named arguments. If a formula,
-<code>f</code> can operate directly on columns accessed via <code>.x$var</code> or <code>.$var</code>, as
-in <code>~mean(.x$var)</code> to compute a mean of a column <code>var</code> for each
+determined by the <code>.window_size</code> and <code>.align</code> parameters, see the details
+section for more. If a function, <code>.f</code> must have the form <code>function(x, g, t, ...)</code>, where</p><ul><li><p><code>x</code> is a data frame with the same column names as the original object,
+minus any grouping variables, with only the windowed data for one
+group-<code>.ref_time_value</code> combination</p></li>
+<li><p><code>g</code> is a one-row tibble containing the values of the grouping variables
+for the associated group</p></li>
+<li><p><code>t</code> is the <code>.ref_time_value</code> for the current window</p></li>
+<li><p><code>...</code> are additional arguments</p></li>
+</ul><p>If a formula, <code>.f</code> can operate directly on columns accessed via <code>.x$var</code> or
+<code>.$var</code>, as in <code>~mean(.x$var)</code> to compute a mean of a column <code>var</code> for each
 <code>ref_time_value</code>-group combination. The group key can be accessed via <code>.y</code>.
-If <code>f</code> is missing, then <code>...</code> will specify the computation.</p></dd>
+If <code>.f</code> is missing, then <code>...</code> will specify the computation.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments to pass to the function or formula specified
-via <code>f</code>. Alternatively, if <code>f</code> is missing, then the <code>...</code> is interpreted as
-an expression for tidy evaluation; in addition to referring to columns
-directly by name, the expression has access to <code>.data</code> and <code>.env</code> pronouns
-as in <code>dplyr</code> verbs, and can also refer to <code>.x</code>, <code>.group_key</code>, and
-<code>.ref_time_value</code>. See details.</p></dd>
+via <code>.f</code>. Alternatively, if <code>.f</code> is missing, then the <code>...</code> is interpreted
+as a <a href="https://rlang.r-lib.org/reference/args_data_masking.html" class="external-link">"data-masking"</a> expression or expressions
+for tidy evaluation; in addition to referring columns directly by name, the
+expressions have access to <code>.data</code> and <code>.env</code> pronouns as in <code>dplyr</code> verbs,
+and can also refer to <code>.x</code> (not the same as the input epi_df),
+<code>.group_key</code>, and <code>.ref_time_value</code>. See details.</p></dd>
 
 
-<dt id="arg-before-after">before, after<a class="anchor" aria-label="anchor" href="#arg-before-after"></a></dt>
-<dd><p>How far <code>before</code> and <code>after</code> each <code>ref_time_value</code> should
-the sliding window extend? At least one of these two arguments must be
-provided; the other's default will be 0. The accepted values for these
-depend on the type of the <code>time_value</code> column:</p><ul><li><p>if it is a Date and the cadence is daily, then they can be integers
-(which will be interpreted in units of days) or difftimes with units
-"days"</p></li>
-<li><p>if it is a Date and the cadence is weekly, then they must be difftimes
-with units "weeks"</p></li>
-<li><p>if it is an integer, then they must be integers</p></li>
-</ul><p>Endpoints of the window are inclusive. Common settings:</p><ul><li><p>For trailing/right-aligned windows from <code>ref_time_value - k</code> to
-<code>ref_time_value</code>: either pass <code>before=k</code> by itself, or pass <code>before=k, after=0</code>.</p></li>
-<li><p>For center-aligned windows from <code>ref_time_value - k</code> to
-<code>ref_time_value + k</code>: pass <code>before=k, after=k</code>.</p></li>
-<li><p>For leading/left-aligned windows from <code>ref_time_value</code> to
-<code>ref_time_value + k</code>: either pass pass <code>after=k</code> by itself,
-or pass <code>before=0, after=k</code>.</p></li>
-</ul><p>See "Details:" on how missing rows are handled within the window.</p></dd>
+<dt id="arg--window-size">.window_size<a class="anchor" aria-label="anchor" href="#arg--window-size"></a></dt>
+<dd><p>The size of the sliding window. By default, this is 1,
+meaning that only the current ref_time_value is included. The accepted values
+here depend on the <code>time_value</code> column:</p><ul><li><p>if time_type is Date and the cadence is daily, then <code>.window_size</code> can be
+an integer (which will be interpreted in units of days) or a difftime
+with units "days"</p></li>
+<li><p>if time_type is Date and the cadence is weekly, then <code>.window_size</code> must
+be a difftime with units "weeks"</p></li>
+<li><p>if time_type is an integer, then <code>.window_size</code> must be an integer</p></li>
+</ul></dd>
 
 
-<dt id="arg-ref-time-values">ref_time_values<a class="anchor" aria-label="anchor" href="#arg-ref-time-values"></a></dt>
+<dt id="arg--align">.align<a class="anchor" aria-label="anchor" href="#arg--align"></a></dt>
+<dd><p>The alignment of the sliding window. If <code>right</code> (default), then
+the window has its end at the reference time; if <code>center</code>, then the window is
+centered at the reference time; if <code>left</code>, then the window has its start at
+the reference time. If the alignment is <code>center</code> and the window size is odd,
+then the window will have floor(window_size/2) points before and after the
+reference time. If the window size is even, then the window will be
+asymmetric and have one less value on the right side of the reference time
+(assuming time increases from left to right).</p></dd>
+
+
+<dt id="arg--ref-time-values">.ref_time_values<a class="anchor" aria-label="anchor" href="#arg--ref-time-values"></a></dt>
 <dd><p>Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
 window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.</p></dd>
 
 
-<dt id="arg-new-col-name">new_col_name<a class="anchor" aria-label="anchor" href="#arg-new-col-name"></a></dt>
+<dt id="arg--new-col-name">.new_col_name<a class="anchor" aria-label="anchor" href="#arg--new-col-name"></a></dt>
 <dd><p>String indicating the name of the new column that will
-contain the derivative values. Default is "slide_value"; note that setting
-<code>new_col_name</code> equal to an existing column name will overwrite this column.</p></dd>
+contain the derivative values. The default is "slide_value" unless your
+slide computations output data frames, in which case they will be unpacked
+into the constituent columns and those names used. New columns should not
+be given names that clash with the existing columns of <code>.x</code>; see details.</p></dd>
 
 
-<dt id="arg-as-list-col">as_list_col<a class="anchor" aria-label="anchor" href="#arg-as-list-col"></a></dt>
-<dd><p>Should the slide results be held in a list column, or be
-<a href="https://tidyr.tidyverse.org/reference/chop.html" class="external-link">unchopped</a>/<a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnested</a>? Default is <code>FALSE</code>,
-in which case a list object returned by <code>f</code> would be unnested (using
-<code><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">tidyr::unnest()</a></code>), and, if the slide computations output data frames,
-the names of the resulting columns are given by prepending <code>new_col_name</code>
-to the names of the list elements.</p></dd>
-
-
-<dt id="arg-names-sep">names_sep<a class="anchor" aria-label="anchor" href="#arg-names-sep"></a></dt>
-<dd><p>String specifying the separator to use in <code><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">tidyr::unnest()</a></code>
-when <code>as_list_col = FALSE</code>. Default is "_". Using <code>NULL</code> drops the prefix
-from <code>new_col_name</code> entirely.</p></dd>
-
-
-<dt id="arg-all-rows">all_rows<a class="anchor" aria-label="anchor" href="#arg-all-rows"></a></dt>
-<dd><p>If <code>all_rows = TRUE</code>, then all rows of <code>x</code> will be kept in
-the output even with <code>ref_time_values</code> provided, with some type of missing
+<dt id="arg--all-rows">.all_rows<a class="anchor" aria-label="anchor" href="#arg--all-rows"></a></dt>
+<dd><p>If <code>.all_rows = TRUE</code>, then all rows of <code>.x</code> will be kept in
+the output even with <code>.ref_time_values</code> provided, with some type of missing
 value marker for the slide computation output column(s) for <code>time_value</code>s
-outside <code>ref_time_values</code>; otherwise, there will be one row for each row in
-<code>x</code> that had a <code>time_value</code> in <code>ref_time_values</code>. Default is <code>FALSE</code>. The
+outside <code>.ref_time_values</code>; otherwise, there will be one row for each row in
+<code>.x</code> that had a <code>time_value</code> in <code>.ref_time_values</code>. Default is <code>FALSE</code>. The
 missing value marker is the result of <code><a href="https://vctrs.r-lib.org/reference/vec_cast.html" class="external-link">vctrs::vec_cast</a></code>ing <code>NA</code> to the type
-of the slide computation output. If using <code>as_list_col = TRUE</code>, note that
-the missing marker is a <code>NULL</code> entry in the list column; for certain
-operations, you might want to replace these <code>NULL</code> entries with a different
-<code>NA</code> marker.</p></dd>
+of the slide computation output.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An <code>epi_df</code> object given by appending one or more new columns to
-<code>x</code>, named according to the <code>new_col_name</code> argument.</p>
+    <p>An <code>epi_df</code> object given by appending one or more new columns to <code>.x</code>,
+named according to the <code>.new_col_name</code> argument.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>To "slide" means to apply a function or formula over a rolling
-window of time steps for each data group, where the window is centered at a
-reference time and left and right endpoints are given by the <code>before</code> and
-<code>after</code> arguments.</p>
-<p>If there are not enough time steps available to complete the window at any
-given reference time, then <code>epi_slide()</code> still attempts to perform the
-computation anyway (it does not require a complete window). The issue of
-what to do with partial computations (those run on incomplete windows) is
-therefore left up to the user, either through the specified function or
-formula <code>f</code>, or through post-processing. For a centrally-aligned slide of
-<code>n</code> <code>time_value</code>s in a sliding window, set <code>before = (n-1)/2</code> and <code>after = (n-1)/2</code> when the number of <code>time_value</code>s in a sliding window is odd and
-<code>before = n/2-1</code> and <code>after = n/2</code> when <code>n</code> is even.</p>
-<p>Sometimes, we want to experiment with various trailing or leading window
-widths and compare the slide outputs. In the (uncommon) case where
-zero-width windows are considered, manually pass both the <code>before</code> and
-<code>after</code> arguments.</p>
-<p>If <code>f</code> is missing, then an expression for tidy evaluation can be specified,
-for example, as in:</p>
-<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">epi_slide</span>(x, <span class="at">cases_7dav =</span> <span class="fu">mean</span>(cases), <span class="at">before =</span> <span class="dv">6</span>)</span></code></pre><p></p></div>
+window. The <code>.window_size</code> arg determines the width of the window
+(including the reference time) and the <code>.align</code> arg governs how the window
+is aligned (see below for examples). The <code>.ref_time_values</code> arg controls
+which time values to consider for the slide and <code>.all_rows</code> allows you to
+keep NAs around.</p>
+<p><code>epi_slide()</code> does not require a complete window (such as on the left
+boundary of the dataset) and will attempt to perform the computation
+anyway. The issue of what to do with partial computations (those run on
+incomplete windows) is therefore left up to the user, either through the
+specified function or formula, or through post-processing.</p>
+<p>Let's look at some window examples, assuming that the reference time value
+is "tv". With .align = "right" and .window_size = 3, the window will be:</p>
+<p>time_values: tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:              tv - 2, tv - 1, tv</p>
+<p>With .align = "center" and .window_size = 3, the window will be:</p>
+<p>time_values: tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:                      tv - 1, tv, tv + 1</p>
+<p>With .align = "center" and .window_size = 4, the window will be:</p>
+<p>time_values: tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:              tv - 2, tv - 1, tv, tv + 1</p>
+<p>With .align = "left" and .window_size = 3, the window will be:</p>
+<p>time_values: ttv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:                               tv, tv + 1, tv + 2</p>
+<p>If <code>.f</code> is missing, then <a href="https://rlang.r-lib.org/reference/args_data_masking.html" class="external-link">"data-masking"</a>
+expression(s) for tidy evaluation can be specified, for example, as in:</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">epi_slide</span>(x, <span class="at">cases_7dav =</span> <span class="fu">mean</span>(cases), <span class="at">.window_size =</span> <span class="dv">7</span>)</span></code></pre><p></p></div>
 <p>which would be equivalent to:</p>
-<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">epi_slide</span>(x, <span class="cf">function</span>(x, g) <span class="fu">mean</span>(x<span class="sc">$</span>cases), <span class="at">before =</span> <span class="dv">6</span>,</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>          <span class="at">new_col_name =</span> <span class="st">"cases_7dav"</span>)</span></code></pre><p></p></div>
-<p>Thus, to be clear, when the computation is specified via an expression for
-tidy evaluation (first example, above), then the name for the new column is
-inferred from the given expression and overrides any name passed explicitly
-through the <code>new_col_name</code> argument.</p>
-    </div>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">epi_slide</span>(x, <span class="cf">function</span>(x, g, t) <span class="fu">mean</span>(x<span class="sc">$</span>cases), <span class="at">.window_size =</span> <span class="dv">7</span>,</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>          <span class="at">.new_col_name =</span> <span class="st">"cases_7dav"</span>)</span></code></pre><p></p></div>
+<p>In a manner similar to <code><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">dplyr::mutate</a></code>:</p><ul><li><p>Expressions evaluating to length-1 vectors will be recycled to
+appropriate lengths.</p></li>
+<li><p><code>, name_var := value</code> can be used to set the output column name based on
+a variable <code>name_var</code> rather than requiring you to use a hard-coded
+name. (The leading comma is needed to make sure that <code>.f</code> is treated as
+missing.)</p></li>
+<li><p><code>= NULL</code> can be used to remove results from previous expressions (though
+we don't allow it to remove pre-existing columns).</p></li>
+<li><p><code>, fn_returning_a_data_frame(.x)</code> will unpack the output of the function
+into multiple columns in the result.</p></li>
+<li><p>Named expressions evaluating to data frames will be placed into
+<code><a href="https://tidyr.tidyverse.org/reference/pack.html" class="external-link">tidyr::pack</a></code>ed columns.</p></li>
+</ul><p>In addition to <code>.data</code> and <code>.env</code>, we make some additional
+"pronoun"-like bindings available:</p><ul><li><p>.x, which is like <code>.x</code> in <code><a href="https://dplyr.tidyverse.org/reference/group_map.html" class="external-link">dplyr::group_modify</a></code>; an ordinary object
+like an <code>epi_df</code> rather than an rlang <a href="https://rlang.r-lib.org/reference/as_data_mask.html" class="external-link">pronoun</a>
+like <code>.data</code>; this allows you to use additional <code>dplyr</code>, <code>tidyr</code>, and
+<code>epiprocess</code> operations. If you have multiple expressions in <code>...</code>, this
+won't let you refer to the output of the earlier expressions, but <code>.data</code>
+will.</p></li>
+<li><p>.group_key, which is like <code>.y</code> in <code><a href="https://dplyr.tidyverse.org/reference/group_map.html" class="external-link">dplyr::group_modify</a></code>.</p></li>
+<li><p>.ref_time_value, which is the element of <code>.ref_time_values</code> that
+determined the time window for the current computation.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="epi_slide_opt.html">epi_slide_opt</a></code> <code><a href="epi_slide_mean.html">epi_slide_mean</a></code> <code><a href="epi_slide_sum.html">epi_slide_sum</a></code></p></div>
@@ -214,41 +226,39 @@ through the <code>new_col_name</code> argument.</p>
 <span class="r-in"><span><span class="co"># the `epi_slide_mean` and `epi_slide_sum` functions instead.</span></span></span>
 <span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu">epi_slide</span><span class="op">(</span>cases_7dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="co"># Remove a nonessential var. to ensure new col is printed</span></span></span>
+<span class="r-in"><span>  <span class="fu">epi_slide</span><span class="op">(</span>cases_7dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, .window_size <span class="op">=</span> <span class="fl">7</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, <span class="va">cases_7dav</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-01-26 17:27:32.755949</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-08-23 02:40:48.296938</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_7dav</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6       6   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02     4       5   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03     6       5.33</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-03-04    11       6.75</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-03-05    10       7.4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-03-06    18       9.17</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-03-07    26      11.6 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-03-08    19      13.4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09    23      16.1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22      18.4 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6       <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02     4       <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03     6       <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-03-04    11       <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-03-05    10       <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-03-06    18       <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-03-07    26       11.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-03-08    19       13.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09    23       16.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22       18.4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4,016 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># slide a 7-day leading average</span></span></span>
 <span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu">epi_slide</span><span class="op">(</span>cases_7dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, after <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="co"># Remove a nonessential var. to ensure new col is printed</span></span></span>
+<span class="r-in"><span>  <span class="fu">epi_slide</span><span class="op">(</span>cases_7dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, .window_size <span class="op">=</span> <span class="fl">7</span>, .align <span class="op">=</span> <span class="st">"left"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, <span class="va">cases_7dav</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-01-26 17:27:32.755949</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-08-23 02:40:48.296938</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_7dav</span>
@@ -265,90 +275,89 @@ through the <code>new_col_name</code> argument.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22       56.7</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4,016 more rows</span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># slide a 7-day centre-aligned average</span></span></span>
+<span class="r-in"><span><span class="co"># slide a 7-day center-aligned average</span></span></span>
 <span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu">epi_slide</span><span class="op">(</span>cases_7dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">3</span>, after <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="co"># Remove a nonessential var. to ensure new col is printed</span></span></span>
+<span class="r-in"><span>  <span class="fu">epi_slide</span><span class="op">(</span>cases_7dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, .window_size <span class="op">=</span> <span class="fl">7</span>, .align <span class="op">=</span> <span class="st">"center"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, <span class="va">cases_7dav</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-01-26 17:27:32.755949</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-08-23 02:40:48.296938</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_7dav</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6       6.75</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02     4       7.4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03     6       9.17</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-03-04    11      11.6 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-03-05    10      13.4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-03-06    18      16.1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-03-07    26      18.4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-03-08    19      20.4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09    23      25.1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22      30.1 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6       <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02     4       <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03     6       <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-03-04    11       11.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-03-05    10       13.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-03-06    18       16.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-03-07    26       18.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-03-08    19       20.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09    23       25.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22       30.1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4,016 more rows</span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># slide a 14-day centre-aligned average</span></span></span>
+<span class="r-in"><span><span class="co"># slide a 14-day center-aligned average</span></span></span>
 <span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu">epi_slide</span><span class="op">(</span>cases_14dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">6</span>, after <span class="op">=</span> <span class="fl">7</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="co"># Remove a nonessential var. to ensure new col is printed</span></span></span>
+<span class="r-in"><span>  <span class="fu">epi_slide</span><span class="op">(</span>cases_14dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, .window_size <span class="op">=</span> <span class="fl">14</span>, .align <span class="op">=</span> <span class="st">"center"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, <span class="va">cases_14dav</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-01-26 17:27:32.755949</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-08-23 02:40:48.296938</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_14dav</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6        12.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02     4        13.7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03     6        14.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-03-04    11        15.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-03-05    10        17.8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-03-06    18        20.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-03-07    26        23  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-03-08    19        25.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09    23        36.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22        42  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6        <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02     4        <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03     6        <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-03-04    11        <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-03-05    10        <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-03-06    18        <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-03-07    26        <span style="color: #BB0000;">NA</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-03-08    19        23  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09    23        25.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22        36.4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4,016 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># nested new columns</span></span></span>
 <span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">epi_slide</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    a <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    cases_2d <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>      cases_2dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>      cases_2dma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/mad.html" class="external-link">mad</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span></span></span>
-<span class="r-in"><span>    <span class="op">)</span>,</span></span>
-<span class="r-in"><span>    before <span class="op">=</span> <span class="fl">1</span>, as_list_col <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    .window_size <span class="op">=</span> <span class="fl">2</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 7 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-01-26 17:27:32.755949</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-08-23 02:40:48.296938</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 7</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_7d_av case_rate_7d_av death_rate_7d_av a    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lis&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6        1.29         0.003<span style="text-decoration: underline;">27</span>         0        <span style="color: #949494;">&lt;df&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02     4        1.71         0.004<span style="text-decoration: underline;">35</span>         0        <span style="color: #949494;">&lt;df&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03     6        2.43         0.006<span style="text-decoration: underline;">17</span>         0        <span style="color: #949494;">&lt;df&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-03-04    11        3.86         0.009<span style="text-decoration: underline;">80</span>         0.000<span style="text-decoration: underline;">363</span> <span style="color: #949494;">&lt;df&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-03-05    10        5.29         0.013<span style="text-decoration: underline;">4</span>          0.000<span style="text-decoration: underline;">363</span> <span style="color: #949494;">&lt;df&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-03-06    18        7.86         0.020<span style="text-decoration: underline;">0</span>          0.000<span style="text-decoration: underline;">363</span> <span style="color: #949494;">&lt;df&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-03-07    26       11.6          0.029<span style="text-decoration: underline;">4</span>          0.000<span style="text-decoration: underline;">363</span> <span style="color: #949494;">&lt;df&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-03-08    19       13.4          0.034<span style="text-decoration: underline;">1</span>          0.000<span style="text-decoration: underline;">363</span> <span style="color: #949494;">&lt;df&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09    23       16.1          0.041<span style="text-decoration: underline;">0</span>          0.000<span style="text-decoration: underline;">726</span> <span style="color: #949494;">&lt;df&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22       18.4          0.046<span style="text-decoration: underline;">8</span>          0.000<span style="text-decoration: underline;">726</span> <span style="color: #949494;">&lt;df&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_7d_av case_rate_7d_av death_rate_7d_av</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6        1.29         0.003<span style="text-decoration: underline;">27</span>         0       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02     4        1.71         0.004<span style="text-decoration: underline;">35</span>         0       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03     6        2.43         0.006<span style="text-decoration: underline;">17</span>         0       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> ca        2020-03-04    11        3.86         0.009<span style="text-decoration: underline;">80</span>         0.000<span style="text-decoration: underline;">363</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ca        2020-03-05    10        5.29         0.013<span style="text-decoration: underline;">4</span>          0.000<span style="text-decoration: underline;">363</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> ca        2020-03-06    18        7.86         0.020<span style="text-decoration: underline;">0</span>          0.000<span style="text-decoration: underline;">363</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> ca        2020-03-07    26       11.6          0.029<span style="text-decoration: underline;">4</span>          0.000<span style="text-decoration: underline;">363</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> ca        2020-03-08    19       13.4          0.034<span style="text-decoration: underline;">1</span>          0.000<span style="text-decoration: underline;">363</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09    23       16.1          0.041<span style="text-decoration: underline;">0</span>          0.000<span style="text-decoration: underline;">726</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22       18.4          0.046<span style="text-decoration: underline;">8</span>          0.000<span style="text-decoration: underline;">726</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4,016 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: cases_2d &lt;list&gt;</span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -360,7 +369,7 @@ through the <code>new_col_name</code> argument.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
     </footer></div>

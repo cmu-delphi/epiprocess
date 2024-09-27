@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.8.4</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -25,7 +25,6 @@
     <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a></li>
     <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -59,6 +58,9 @@
 <span></span>
 <span><span class="co"># S3 method for class 'grouped_epi_archive'</span></span>
 <span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by_drop_default.html" class="external-link">group_by_drop_default</a></span><span class="op">(</span><span class="va">.tbl</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'grouped_epi_archive'</span></span>
+<span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_data.html" class="external-link">group_vars</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'grouped_epi_archive'</span></span>
 <span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_data.html" class="external-link">groups</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
@@ -109,8 +111,8 @@ factor columns.</p></dd>
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>For <code>groups</code> or <code>ungroup</code>: a <code>grouped_epi_archive</code>; for
-<code>is_grouped_epi_archive</code>: any object</p></dd>
+<dd><p>For <code>groups</code>, <code>group_vars</code>, or <code>ungroup</code>: a <code>grouped_epi_archive</code>;
+for <code>is_grouped_epi_archive</code>: any object</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -166,14 +168,14 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-in"><span><span class="va">archive_cases_dv_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="epix_slide.html">epix_slide</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    f <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">.x</span><span class="op">$</span><span class="va">case_rate_7d_av</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    before <span class="op">=</span> <span class="fl">2</span>,</span></span>
-<span class="r-in"><span>    ref_time_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-11"</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0</span><span class="op">:</span><span class="fl">2</span>,</span></span>
-<span class="r-in"><span>    new_col_name <span class="op">=</span> <span class="st">"case_rate_3d_av"</span></span></span>
+<span class="r-in"><span>    .f <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">.x</span><span class="op">$</span><span class="va">case_rate_7d_av</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    .before <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span>    .versions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-11"</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0</span><span class="op">:</span><span class="fl">2</span>,</span></span>
+<span class="r-in"><span>    .new_col_name <span class="op">=</span> <span class="st">"case_rate_3d_av"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 12 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value case_rate_3d_av</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value version    case_rate_3d_av</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-06-11            7.19</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> fl        2020-06-11            5.71</span>
@@ -214,7 +216,7 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value, age_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Drops groups formed by factor levels that don't appear in the data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Other DT keys: age_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
@@ -233,7 +235,7 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value, age_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Drops groups formed by factor levels that don't appear in the data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Other DT keys: age_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
@@ -251,7 +253,7 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value, age_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Drops groups formed by factor levels that don't appear in the data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Other DT keys: age_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
@@ -269,7 +271,7 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> A `grouped_epi_archive` object:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Other DT keys: age_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
@@ -287,7 +289,7 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> A `grouped_epi_archive` object:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * Groups: geo_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> It wraps an ungrouped `epi_archive`, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Non-standard DT keys: age_group</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Other DT keys: age_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2000-01-01 / 2000-01-02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2000-01-02 / 2000-01-03</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2000-01-03</span>
@@ -300,6 +302,12 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3:        us pediatric 2000-01-02 2000-01-03     5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4:        us     adult 2000-01-02 2000-01-03   130</span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># To get the grouping variable names as a character vector:</span></span></span>
+<span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_data.html" class="external-link">group_vars</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "geo_value"</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># To get the grouping variable names as a `list` of `name`s (a.k.a. symbols):</span></span></span>
 <span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
@@ -310,10 +318,10 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">toy_archive</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">age_group</span>, .drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="epix_slide.html">epix_slide</a></span><span class="op">(</span>f <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">.x</span><span class="op">$</span><span class="va">value</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">20</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="epix_slide.html">epix_slide</a></span><span class="op">(</span>.f <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">.x</span><span class="op">$</span><span class="va">value</span><span class="op">)</span>, .before <span class="op">=</span> <span class="fl">20</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   geo_value age_group time_value slide_value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   geo_value age_group version    slide_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;ord&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> us        pediatric 2000-01-02           0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> us        adult     2000-01-02         121</span>
@@ -331,7 +339,7 @@ to <code>group_by_drop_default.default</code> (but there is a dedicated method f
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
     </footer></div>

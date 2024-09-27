@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.8.4</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,7 +41,6 @@
     <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a></li>
     <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
   </ul>
 </li>
@@ -106,13 +105,13 @@ We’ll work with county-level reported COVID-19 cases in MA and VT.</p>
 <h2 id="converting-to-tsibble-format">Converting to <code>tsibble</code> format<a class="anchor" aria-label="anchor" href="#converting-to-tsibble-format"></a>
 </h2>
 <p>For manipulating and wrangling time series data, the <a href="https://tsibble.tidyverts.org/index.html" class="external-link"><code>tsibble</code></a>
-already provides a whole bunch of useful tools. A tsibble object
-(formerly, of class <code>tbl_ts</code>) is basically a tibble (data
-frame) but with two specially-marked columns: an <strong>index</strong>
-column representing the time variable (defining an order from past to
-present), and a <strong>key</strong> column identifying a unique
-observational unit for each time point. In fact, the key can be made up
-of any number of columns, not just a single one.</p>
+already provides a host of useful tools. A tsibble object (formerly, of
+class <code>tbl_ts</code>) is basically a tibble (data frame) but with
+two specially-marked columns: an <strong>index</strong> column
+representing the time variable (defining an order from past to present),
+and a <strong>key</strong> column identifying a unique observational
+unit for each time point. In fact, the key can be made up of any number
+of columns, not just a single one.</p>
 <p>In an <code>epi_df</code> object, the index variable is
 <code>time_value</code>, and the key variable is typically
 <code>geo_value</code> (though this need not always be the case: for
@@ -131,11 +130,11 @@ these defaults.</p>
 <span><span class="co">##   geo_value time_value cases county_name       state_name   </span></span>
 <span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">1</span> 25001     2020-06-01     4 Barnstable County Massachusetts</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> 25001     2020-06-02     6 Barnstable County Massachusetts</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> 25001     2020-06-03     5 Barnstable County Massachusetts</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> 25001     2020-06-04     8 Barnstable County Massachusetts</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> 25001     2020-06-05     3 Barnstable County Massachusetts</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> 25001     2020-06-06     4 Barnstable County Massachusetts</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> 25001     2020-06-02     2 Barnstable County Massachusetts</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> 25001     2020-06-03     6 Barnstable County Massachusetts</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span> 25001     2020-06-04     4 Barnstable County Massachusetts</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">5</span> 25001     2020-06-05     2 Barnstable County Massachusetts</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">6</span> 25001     2020-06-06     2 Barnstable County Massachusetts</span></span></code></pre>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/key.html" class="external-link">key</a></span><span class="op">(</span><span class="va">xt</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [[1]]</span></span>
@@ -164,11 +163,11 @@ and Vermont, which caused the error.</p>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 5</span></span></span>
 <span><span class="co">##   geo_value time_value cases county_name     state_name   </span></span>
 <span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> 25009     2020-06-01    63 Essex County    Massachusetts</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> 25009     2020-06-01    92 Essex County    Massachusetts</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">2</span> 25011     2020-06-01     0 Franklin County Massachusetts</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">3</span> 50009     2020-06-01     0 Essex County    Vermont      </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">4</span> 50011     2020-06-01     0 Franklin County Vermont      </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> 25009     2020-06-02    74 Essex County    Massachusetts</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">5</span> 25009     2020-06-02    90 Essex County    Massachusetts</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">6</span> 25011     2020-06-02     0 Franklin County Massachusetts</span></span></code></pre>
 <p>Keying by both county name and state name, however, does work:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
@@ -200,11 +199,13 @@ gaps:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># First make geo value more readable for tables, plots, etc.</span></span>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>geo_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">county_name</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nchar</a></span><span class="op">(</span><span class="va">county_name</span><span class="op">)</span> <span class="op">-</span> <span class="fl">7</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://cmu-delphi.github.io/covidcast/covidcastR/reference/name_to_abbr.html" class="external-link">name_to_abbr</a></span><span class="op">(</span><span class="va">state_name</span><span class="op">)</span>,</span>
-<span>    sep <span class="op">=</span> <span class="st">", "</span></span>
-<span>  <span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    geo_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">county_name</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nchar</a></span><span class="op">(</span><span class="va">county_name</span><span class="op">)</span> <span class="op">-</span> <span class="fl">7</span><span class="op">)</span>,</span>
+<span>      <span class="fu"><a href="https://cmu-delphi.github.io/covidcast/covidcastR/reference/name_to_abbr.html" class="external-link">name_to_abbr</a></span><span class="op">(</span><span class="va">state_name</span><span class="op">)</span>,</span>
+<span>      sep <span class="op">=</span> <span class="st">", "</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">xt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">cases</span> <span class="op">&gt;=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
@@ -311,10 +312,10 @@ important for protecting against bugs in all sorts of downstream tasks.
 For example, even something as simple as a 7-day trailing average is
 complicated by missingness. The function <code><a href="../reference/epi_slide.html">epi_slide()</a></code> looks
 for all rows within a window of 7 days anchored on the right at the
-reference time point (when <code>before = 6</code>). But when some days
-in a given week are missing because they were censored because they had
-small case counts, taking an average of the observed case counts can be
-misleading and is unintentionally biased upwards. Meanwhile, running
+reference time point (when <code>.window_size = 7</code>). But when some
+days in a given week are missing because they were censored because they
+had small case counts, taking an average of the observed case counts can
+be misleading and is unintentionally biased upwards. Meanwhile, running
 <code><a href="../reference/epi_slide.html">epi_slide()</a></code> on the zero-filled data brings these trailing
 averages (appropriately) downwards, as we can see inspecting Plymouth,
 MA around July 1, 2021.</p>
@@ -322,7 +323,7 @@ MA around July 1, 2021.</p>
 <code class="sourceCode R"><span><span class="va">xt</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_df.html">as_epi_df</a></span><span class="op">(</span>as_of <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-03-20"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span>cases_7dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span>cases_7dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, .window_size <span class="op">=</span> <span class="fl">7</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">geo_value</span> <span class="op">==</span> <span class="st">"Plymouth, MA"</span>,</span>
@@ -337,15 +338,15 @@ MA around July 1, 2021.</p>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 4 × 4</span></span></span>
 <span><span class="co">##   geo_value    time_value cases cases_7dav</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> Plymouth, MA 2021-06-28     3       4.25</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> Plymouth, MA 2021-06-30     7       5   </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> Plymouth, MA 2021-07-01     6       5   </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> Plymouth, MA 2021-07-02     6       5.2</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> Plymouth, MA 2021-06-28     3         <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> Plymouth, MA 2021-06-30     7         <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> Plymouth, MA 2021-07-01     6         <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span> Plymouth, MA 2021-07-02     6         <span style="color: #BB0000;">NA</span></span></span></code></pre>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">xt_filled</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_df.html">as_epi_df</a></span><span class="op">(</span>as_of <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-03-20"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span>cases_7dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span>cases_7dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, .window_size <span class="op">=</span> <span class="fl">7</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">geo_value</span> <span class="op">==</span> <span class="st">"Plymouth, MA"</span>,</span>
@@ -400,7 +401,7 @@ GitHub repository</a> without changes.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
     </footer>

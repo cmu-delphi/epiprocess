@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.8.4</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,7 +41,6 @@
     <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a></li>
     <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
   </ul>
 </li>
@@ -198,7 +197,7 @@ methods.</p>
 <span></span>
 <span><span class="co"># Performance of slide</span></span>
 <span><span class="va">slide_median</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">my_ea</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">my_ea</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span><span class="op">(</span>median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">case_rate_7d_av</span><span class="op">)</span>, before <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span>
+<span>  <span class="va">my_ea</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/epix_slide.html">epix_slide</a></span><span class="op">(</span>median <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">case_rate_7d_av</span><span class="op">)</span>, .before <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="va">speeds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">speeds</span>, <span class="fu">speed_test</span><span class="op">(</span><span class="va">slide_median</span>, <span class="st">"slide_median"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
@@ -222,7 +221,7 @@ methods.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
     </footer>

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.8.4</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -25,7 +25,6 @@
     <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/advanced.html">Advanced sliding with nonstandard outputs</a></li>
     <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -80,10 +79,16 @@
         <dd>Complete epi_df</dd>
       </dl><dl><dt>
 
-          <code><a href="epi_df.html">new_epi_df()</a></code> <code><a href="epi_df.html">as_epi_df()</a></code>
+          <code><a href="epi_df.html">as_epi_df()</a></code> <code><a href="epi_df.html">new_epi_df()</a></code>
 
         </dt>
         <dd><code>epi_df</code> object</dd>
+      </dl><dl><dt>
+
+          <code><a href="group_epi_df.html">group_epi_df()</a></code>
+
+        </dt>
+        <dd>Group an <code>epi_df</code> object by default keys</dd>
       </dl><dl><dt>
 
           <code><a href="is_epi_df.html">is_epi_df()</a></code>
@@ -96,6 +101,12 @@
 
         </dt>
         <dd>Base S3 methods for an <code>epi_df</code> object</dd>
+      </dl><dl><dt>
+
+          <code><a href="sum_groups_epi_df.html">sum_groups_epi_df()</a></code>
+
+        </dt>
+        <dd>Aggregate an <code>epi_df</code> object</dd>
       </dl><dl><dt>
 
           <code><a href="summary.epi_df.html">summary(<i>&lt;epi_df&gt;</i>)</a></code>
@@ -239,7 +250,7 @@
         <dd>Filter an <code>epi_archive</code> object to keep only older versions</dd>
       </dl><dl><dt>
 
-          <code><a href="group_by.epi_archive.html">group_by(<i>&lt;epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by_drop_default(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">groups(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">ungroup(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">is_grouped_epi_archive()</a></code>
+          <code><a href="group_by.epi_archive.html">group_by(<i>&lt;epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by_drop_default(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_vars(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">groups(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">ungroup(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">is_grouped_epi_archive()</a></code>
 
         </dt>
         <dd><code>group_by</code> and related methods for <code>epi_archive</code>, <code>grouped_epi_archive</code></dd>
@@ -298,7 +309,7 @@
         <dd>Filter an <code>epi_archive</code> object to keep only older versions</dd>
       </dl><dl><dt>
 
-          <code><a href="group_by.epi_archive.html">group_by(<i>&lt;epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by_drop_default(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">groups(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">ungroup(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">is_grouped_epi_archive()</a></code>
+          <code><a href="group_by.epi_archive.html">group_by(<i>&lt;epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by_drop_default(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_vars(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">groups(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">ungroup(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">is_grouped_epi_archive()</a></code>
 
         </dt>
         <dd><code>group_by</code> and related methods for <code>epi_archive</code>, <code>grouped_epi_archive</code></dd>
@@ -378,7 +389,7 @@
 
       <dl><dt>
 
-          <code><a href="epiprocess.html">epiprocess</a></code> <code><a href="epiprocess.html">epiprocess-package</a></code>
+          <code><a href="epiprocess.html">epiprocess-package</a></code> <code><a href="epiprocess.html">epiprocess</a></code>
 
         </dt>
         <dd>epiprocess: Tools for basic signal processing in epidemiology</dd>
@@ -416,7 +427,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
     </footer></div>
