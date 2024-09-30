@@ -25,7 +25,7 @@
 #' @noRd
 validate_version_bound <- function(version_bound, x, na_ok = FALSE,
                                    version_bound_arg = rlang::caller_arg(version_bound),
-                                   x_arg = rlang::caller_arg(version_bound)) {
+                                   x_arg = rlang::caller_arg(x)) {
   if (is.null(version_bound)) {
     cli_abort(
       "{version_bound_arg} cannot be NULL",
