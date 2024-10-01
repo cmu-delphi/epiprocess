@@ -147,14 +147,16 @@ epi_slide <- function(
     }
 
     .f <- quosures
+    .f_arg <- ".f" # dummy val, shouldn't be used since we're not using `.f`
     # Magic value that passes zero args as dots in calls below. Equivalent to
     # `... <- missing_arg()`, but `assign` avoids warning about improper use of
     # dots.
     assign("...", missing_arg())
   } else {
     used_data_masking <- FALSE
+    .f_arg <- caller_arg(.f)
   }
-  .slide_comp <- as_time_slide_computation(.f, ...)
+  .slide_comp <- as_time_slide_computation(.f, ..., .f_arg = .f_arg, .call = caller_env())
 
   .align <- rlang::arg_match(.align)
   time_type <- attr(.x, "metadata")$time_type

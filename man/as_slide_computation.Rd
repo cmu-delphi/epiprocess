@@ -58,13 +58,25 @@ for evaluating quosures
 as_slide_computation(
   .f,
   ...,
+  .f_arg = caller_arg(.f),
+  .call = caller_env(),
   .ref_time_value_long_varnames,
   .ref_time_value_label
 )
 
-as_time_slide_computation(.f, ...)
+as_time_slide_computation(
+  .f,
+  ...,
+  .f_arg = caller_arg(.f),
+  .call = caller_env()
+)
 
-as_diagonal_slide_computation(.f, ...)
+as_diagonal_slide_computation(
+  .f,
+  ...,
+  .f_arg = caller_arg(.f),
+  .call = caller_env()
+)
 }
 \arguments{
 \item{...}{Additional arguments to pass to the function or formula

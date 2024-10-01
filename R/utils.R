@@ -358,9 +358,24 @@ assert_sufficient_f_args <- function(.f, ..., .ref_time_value_label) {
 #' @importFrom rlang is_function new_function f_env is_environment missing_arg
 #'  f_rhs is_formula caller_arg caller_env
 #' @keywords internal
-as_slide_computation <- function(.f, ..., .ref_time_value_long_varnames, .ref_time_value_label) {
-  arg <- caller_arg(.f)
-  call <- caller_env()
+as_slide_computation <- function(.f, ..., .f_arg = caller_arg(.f), .call = caller_env(), .ref_time_value_long_varnames, .ref_time_value_label) {
+  f_arg <- .f_arg # for cli interpolation, avoid dot prefix
+  withCallingHandlers(
+    {
+      force(.f)
+    },
+    error = function(e) {
+      cli_abort(
+        c("Failed to convert {.code {f_arg}} to a slide computation.",
+          "*" = "If you were trying to use the formula interface, maybe you forgot a tilde at the beginning.",
+          "*" = "If you were trying to use the tidyeval interface, maybe you forgot to specify the name, e.g.: `my_output_col_name =`.",
+          "*" = "If you were trying to use advanced features of the tidyeval interface such as `!! name_variable :=`, you might have forgotten the required leading comma."
+        ),
+        parent = e,
+        class = "epiprocess__as_slide_computation__error_forcing_.f"
+      )
+    }
+  )
 
   if (rlang::is_quosures(.f)) {
     quosures <- rlang::quos_auto_name(.f) # resolves := among other things
@@ -463,10 +478,10 @@ as_slide_computation <- function(.f, ..., .ref_time_value_long_varnames, .ref_ti
     }
 
     if (length(.f) > 2) {
-      cli_abort("{.code {arg}} must be a one-sided formula",
+      cli_abort("{.code {f_arg}} must be a one-sided formula",
         class = "epiprocess__as_slide_computation__formula_is_twosided",
         epiprocess__f = .f,
-        call = call
+        .call = .call
       )
     }
     if (rlang::dots_n(...) > 0L) {
@@ -486,7 +501,7 @@ as_slide_computation <- function(.f, ..., .ref_time_value_long_varnames, .ref_ti
         class = "epiprocess__as_slide_computation__formula_has_no_env",
         epiprocess__f = .f,
         epiprocess__f_env = env,
-        arg = arg, call = call
+        .f_arg = .f_arg, .call = .call
       )
     }
 
@@ -513,26 +528,32 @@ as_slide_computation <- function(.f, ..., .ref_time_value_long_varnames, .ref_ti
     class = "epiprocess__as_slide_computation__cant_convert_catchall",
     epiprocess__f = .f,
     epiprocess__f_class = class(.f),
-    arg = arg,
-    call = call
+    .f_arg = .f_arg,
+    .call = .call
   )
 }
 
 #' @rdname as_slide_computation
+#' @importFrom rlang caller_arg caller_env
 #' @keywords internal
-as_time_slide_computation <- function(.f, ...) {
+as_time_slide_computation <- function(.f, ..., .f_arg = caller_arg(.f), .call = caller_env()) {
   as_slide_computation(
     .f, ...,
+    .f_arg = .f_arg,
+    .call = .call,
     .ref_time_value_long_varnames = ".ref_time_value",
     .ref_time_value_label = "reference time value"
   )
 }
 
 #' @rdname as_slide_computation
+#' @importFrom rlang caller_arg caller_env
 #' @keywords internal
-as_diagonal_slide_computation <- function(.f, ...) {
+as_diagonal_slide_computation <- function(.f, ..., .f_arg = caller_arg(.f), .call = caller_env()) {
   as_slide_computation(
     .f, ...,
+    .f_arg = .f_arg,
+    .call = .call,
     .ref_time_value_long_varnames = c(".version", ".ref_time_value"),
     .ref_time_value_label = "version"
   )
