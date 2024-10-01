@@ -576,7 +576,7 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #'   ungroup()
 epi_slide_opt <- function(
     .x, .col_names, .f, ...,
-    .window_size = 1, .align = c("right", "center", "left"),
+    .window_size = NULL, .align = c("right", "center", "left"),
     .ref_time_values = NULL, .all_rows = FALSE) {
   assert_class(.x, "epi_df")
 
@@ -902,7 +902,7 @@ epi_slide_opt <- function(
 #'   ungroup()
 epi_slide_mean <- function(
     .x, .col_names, ...,
-    .window_size = 1, .align = c("right", "center", "left"),
+    .window_size = NULL, .align = c("right", "center", "left"),
     .ref_time_values = NULL, .all_rows = FALSE) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
@@ -979,7 +979,7 @@ epi_slide_mean <- function(
 #'   ungroup()
 epi_slide_sum <- function(
     .x, .col_names, ...,
-    .window_size = 1, .align = c("right", "center", "left"),
+    .window_size = NULL, .align = c("right", "center", "left"),
     .ref_time_values = NULL, .all_rows = FALSE) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())

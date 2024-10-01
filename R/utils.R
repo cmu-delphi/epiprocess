@@ -982,14 +982,31 @@ guess_period.POSIXt <- function(time_values, time_values_arg = rlang::caller_arg
   as.numeric(NextMethod(), units = "secs")
 }
 
-validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRUE, arg_name = rlang::caller_arg(arg)) {
-  if (!checkmate::test_scalar(arg) || arg < lower) {
-    cli_abort(
-      "Slide function expected `{arg_name}` to be a non-null, scalar integer >= {lower}.",
-      class = "epiprocess__validate_slide_window_arg"
+#' Is `x` an "int" with a sensible class? TRUE/FALSE
+#'
+#' Like [`checkmate::test_int`] but disallowing some non-sensible classes that
+#' `test_int` accepts, such as `difftime`s. We rely on [`is.numeric`] to
+#' determine class appropriateness; note that `is.numeric` is NOT simply
+#' checking for the class to be "numeric" (or else we'd fail on integer class).
+#'
+#' @param x object
+#' @return Boolean
+#'
+#' @importFrom checkmate test_int
+#' @keywords internal
+test_sensible_int <- function(x, na.ok = FALSE, lower = -Inf, upper = Inf,
+                              tol = sqrt(.Machine$double.eps), null.ok = FALSE) {
+  if (null.ok && is.null(x)) {
+    TRUE
+  } else {
+    is.numeric(x) && test_int(x,
+      na.ok = FALSE, lower = -Inf, upper = Inf,
+      tol = sqrt(.Machine$double.eps)
     )
   }
+}
 
+validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRUE, arg_name = rlang::caller_arg(arg)) {
   if (time_type == "custom") {
     cli_abort(
       "Unsure how to interpret slide units with a custom time type. Consider converting your time
@@ -999,31 +1016,43 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
   }
 
   msg <- ""
-  if (!identical(arg, Inf)) {
-    if (time_type == "day") {
-      if (!test_int(arg, lower = 0L) || inherits(arg, "difftime") && units(arg) != "days") {
-        msg <- glue::glue_collapse(c("difftime with units in days", "non-negative integer", "Inf"), " or ")
-      }
-    } else if (time_type == "week") {
-      if (!(inherits(arg, "difftime") && units(arg) == "weeks")) {
-        msg <- glue::glue_collapse(c("difftime with units in weeks", "Inf"), " or ")
-      }
-    } else if (time_type == "yearmonth") {
-      if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
-        msg <- glue::glue_collapse(c("non-negative integer", "Inf"), " or ")
-      }
-    } else if (time_type == "integer") {
-      if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
-        msg <- glue::glue_collapse(c("non-negative integer", "Inf"), " or ")
-      }
-    } else {
-      msg <- glue::glue_collapse(c("difftime", "non-negative integer", "Inf"), " or ")
+  inf_if_okay <- if (allow_inf) {
+    "Inf"
+  } else {
+    character(0L)
+  }
+
+  if (time_type == "day") {
+    if (!(test_sensible_int(arg, lower = 0L) ||
+      inherits(arg, "difftime") && length(arg) == 1L && units(arg) == "days" ||
+      allow_inf && identical(arg, Inf)
+    )) {
+      msg <- glue::glue_collapse(c("length-1 difftime with units in days", "non-negative integer", inf_if_okay), " or ")
+    }
+  } else if (time_type == "week") {
+    if (!(inherits(arg, "difftime") && length(arg) == 1L && units(arg) == "weeks" ||
+      allow_inf && identical(arg, Inf)
+    )) {
+      msg <- glue::glue_collapse(c("length-1 difftime with units in weeks", inf_if_okay), " or ")
+    }
+  } else if (time_type == "yearmonth") {
+    if (!(test_sensible_int(arg, lower = 0L) ||
+      allow_inf && identical(arg, Inf)
+    )) {
+      msg <- glue::glue_collapse(c("non-negative integer", inf_if_okay), " or ")
+    }
+  } else if (time_type == "integer") {
+    if (!(test_sensible_int(arg, lower = 0L) ||
+      allow_inf && identical(arg, Inf)
+    )) {
+      msg <- glue::glue_collapse(c("non-negative integer", inf_if_okay), " or ")
     }
   } else {
-    if (!allow_inf) {
-      msg <- glue::glue_collapse(c("a difftime", "a non-negative integer"), " or ")
-    }
+    cli_abort('`epiprocess` internal error: unrecognized time_type: "{time_type}"',
+      class = "epiprocess__unrecognized_time_type"
+    )
   }
+
   if (msg != "") {
     cli_abort(
       "Slide function expected `{arg_name}` to be a {msg}.",
