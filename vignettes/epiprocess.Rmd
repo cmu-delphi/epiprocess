@@ -104,7 +104,6 @@ to fetch this data from the [COVIDcast
 API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html).
 
 ```{r, message = FALSE}
-library(epidatr)
 library(epiprocess)
 library(dplyr)
 library(tidyr)

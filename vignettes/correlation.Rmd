@@ -16,7 +16,6 @@ state-level COVID-19 case and death rates, smoothed using 7-day trailing
 averages.
 
 ```{r, message = FALSE, warning = FALSE}
-library(epidatr)
 library(epiprocess)
 library(dplyr)
 ```
@@ -30,6 +29,8 @@ x <- cases_deaths_subset %>%
 
 The data can also be fetched from the Delphi API with the following query:
 ```{r, eval = FALSE}
+library(epidatr)
+
 d <- as.Date("2024-03-20")
 
 x <- pub_covidcast(

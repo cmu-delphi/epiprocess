@@ -29,7 +29,6 @@ FL, NY, and TX (note: here we're using new, not cumulative cases) using the
 and then convert this to `epi_df` format.
 
 ```{r, message = FALSE, warning = FALSE}
-library(epidatr)
 library(epiprocess)
 library(dplyr)
 ```
@@ -44,7 +43,10 @@ x <- cases_deaths_subset %>%
 
 The data can also be fetched from the Delphi API with the following query:
 ```{r, message = FALSE, eval = FALSE}
+library(epidatr)
+
 d <- as.Date("2024-03-20")
+
 x <- pub_covidcast(
   source = "jhu-csse",
   signals = "confirmed_incidence_num",

@@ -15,7 +15,6 @@ current vignette, applied to state-level daily reported COVID-19 cases from GA
 and PA, smoothed using a 7-day trailing average.
 
 ```{r, message = FALSE, warning = FALSE}
-library(epidatr)
 library(epiprocess)
 library(dplyr)
 library(tidyr)
@@ -32,7 +31,10 @@ x <- cases_deaths_subset %>%
 
 The data can also be fetched from the Delphi API with the following query:
 ```{r, message = FALSE, eval = FALSE}
+library(epidatr)
+
 d <- as.Date("2024-03-20")
+
 x <- pub_covidcast(
   source = "jhu-csse",
   signals = "confirmed_7dav_incidence_num",
