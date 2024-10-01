@@ -306,7 +306,8 @@ test_that("validate_slide_window_arg works", {
   }
   expect_no_error(validate_slide_window_arg(as.difftime(1, units = "days"), "day"))
   expect_no_error(validate_slide_window_arg(1, "day"))
-  expect_no_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "day"))
+  expect_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "day"))
+  expect_error(validate_slide_window_arg(as.difftime(1, units = "secs"), "day"))
 
   expect_no_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "week"))
   expect_error(validate_slide_window_arg(1, "week"))

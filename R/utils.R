@@ -1001,7 +1001,7 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
   msg <- ""
   if (!identical(arg, Inf)) {
     if (time_type == "day") {
-      if (!test_int(arg, lower = 0L) && !(inherits(arg, "difftime") && units(arg) == "days")) {
+      if (!test_int(arg, lower = 0L) || inherits(arg, "difftime") && units(arg) != "days") {
         msg <- glue::glue_collapse(c("difftime with units in days", "non-negative integer", "Inf"), " or ")
       }
     } else if (time_type == "week") {
