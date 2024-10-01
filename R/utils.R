@@ -994,8 +994,8 @@ guess_period.POSIXt <- function(time_values, time_values_arg = rlang::caller_arg
 #'
 #' @importFrom checkmate test_int
 #' @keywords internal
-test_sensible_int <- function(x, na.ok = FALSE, lower = -Inf, upper = Inf,
-                              tol = sqrt(.Machine$double.eps), null.ok = FALSE) {
+test_sensible_int <- function(x, na.ok = FALSE, lower = -Inf, upper = Inf, # nolint: object_name_linter
+                              tol = sqrt(.Machine$double.eps), null.ok = FALSE) { # nolint: object_name_linter
   if (null.ok && is.null(x)) {
     TRUE
   } else {
@@ -1022,6 +1022,7 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
     character(0L)
   }
 
+  # nolint start: indentation_linter.
   if (time_type == "day") {
     if (!(test_sensible_int(arg, lower = 0L) ||
       inherits(arg, "difftime") && length(arg) == 1L && units(arg) == "days" ||
@@ -1052,6 +1053,7 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
       class = "epiprocess__unrecognized_time_type"
     )
   }
+  # nolint end
 
   if (msg != "") {
     cli_abort(
