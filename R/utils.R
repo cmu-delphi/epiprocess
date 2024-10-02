@@ -999,10 +999,7 @@ test_sensible_int <- function(x, na.ok = FALSE, lower = -Inf, upper = Inf, # nol
   if (null.ok && is.null(x)) {
     TRUE
   } else {
-    is.numeric(x) && test_int(x,
-      na.ok = FALSE, lower = -Inf, upper = Inf,
-      tol = sqrt(.Machine$double.eps)
-    )
+    is.numeric(x) && test_int(x, na.ok = na.ok, lower = lower, upper = upper, tol = tol)
   }
 }
 
@@ -1024,7 +1021,7 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
 
   # nolint start: indentation_linter.
   if (time_type == "day") {
-    if (!(test_sensible_int(arg, lower = 0L) ||
+    if (!(test_sensible_int(arg, lower = lower) ||
       inherits(arg, "difftime") && length(arg) == 1L && units(arg) == "days" ||
       allow_inf && identical(arg, Inf)
     )) {
@@ -1037,13 +1034,13 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
       msg <- glue::glue_collapse(c("length-1 difftime with units in weeks", inf_if_okay), " or ")
     }
   } else if (time_type == "yearmonth") {
-    if (!(test_sensible_int(arg, lower = 0L) ||
+    if (!(test_sensible_int(arg, lower = lower) ||
       allow_inf && identical(arg, Inf)
     )) {
       msg <- glue::glue_collapse(c("non-negative integer", inf_if_okay), " or ")
     }
   } else if (time_type == "integer") {
-    if (!(test_sensible_int(arg, lower = 0L) ||
+    if (!(test_sensible_int(arg, lower = lower) ||
       allow_inf && identical(arg, Inf)
     )) {
       msg <- glue::glue_collapse(c("non-negative integer", inf_if_okay), " or ")
