@@ -2,12 +2,12 @@
 % Please edit documentation in R/archive.R
 \name{apply_compactify}
 \alias{apply_compactify}
-\title{given a tibble as would be found in an epi_archive, remove duplicate entries.}
+\title{Given a tibble as would be found in an epi_archive, remove duplicate entries.}
 \usage{
 apply_compactify(df, keys, tolerance = .Machine$double.eps^0.5)
 }
 \description{
-works by shifting all rows except the version, then comparing values to see
+Works by shifting all rows except the version, then comparing values to see
 if they've changed. We need to arrange in descending order, but note that
 we don't need to group, since at least one column other than version has
 changed, and so is kept.
