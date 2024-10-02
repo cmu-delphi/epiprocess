@@ -45,6 +45,7 @@ Imports:
     epidatasets,
     genlasso,
     ggplot2,
+    glue,
     lifecycle (>= 1.0.1),
     lubridate,
     magrittr,
