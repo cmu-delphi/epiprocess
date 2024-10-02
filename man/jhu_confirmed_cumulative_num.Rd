@@ -69,7 +69,7 @@ jhu_confirmed_cumulative_num
 
 # fails
 \dontrun{
-  data(jhu_confirmed_cumulative_num, package = "epiprocess")
+data(jhu_confirmed_cumulative_num, package = "epiprocess")
 }
 }
 \keyword{datasets}

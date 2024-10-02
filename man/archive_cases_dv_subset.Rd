@@ -77,7 +77,7 @@ archive_cases_dv_subset
 
 # fails
 \dontrun{
-  data(archive_cases_dv_subset, package = "epiprocess")
+data(archive_cases_dv_subset, package = "epiprocess")
 }
 
 }

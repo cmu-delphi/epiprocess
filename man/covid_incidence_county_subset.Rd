@@ -69,7 +69,7 @@ covid_incidence_county_subset
 
 # fails
 \dontrun{
-  data(covid_incidence_county_subset, package = "epiprocess")
+data(covid_incidence_county_subset, package = "epiprocess")
 }
 }
 \keyword{datasets}

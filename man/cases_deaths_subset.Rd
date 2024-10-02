@@ -73,7 +73,7 @@ cases_deaths_subset
 
 # fails
 \dontrun{
-  data(cases_deaths_subset, package = "epiprocess")
+data(cases_deaths_subset, package = "epiprocess")
 }
 }
 \keyword{datasets}
