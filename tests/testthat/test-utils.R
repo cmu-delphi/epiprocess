@@ -306,15 +306,28 @@ test_that("validate_slide_window_arg works", {
   }
   expect_no_error(validate_slide_window_arg(as.difftime(1, units = "days"), "day"))
   expect_no_error(validate_slide_window_arg(1, "day"))
-  expect_no_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "day"))
+  expect_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "day"),
+    class = "epiprocess__validate_slide_window_arg"
+  )
+  expect_error(validate_slide_window_arg(as.difftime(1, units = "secs"), "day"),
+    class = "epiprocess__validate_slide_window_arg"
+  )
 
   expect_no_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "week"))
-  expect_error(validate_slide_window_arg(1, "week"))
+  expect_error(validate_slide_window_arg(1, "week"),
+    class = "epiprocess__validate_slide_window_arg"
+  )
 
   expect_no_error(validate_slide_window_arg(1, "integer"))
-  expect_error(validate_slide_window_arg(as.difftime(1, units = "days"), "integer"))
-  expect_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "integer"))
+  expect_error(validate_slide_window_arg(as.difftime(1, units = "days"), "integer"),
+    class = "epiprocess__validate_slide_window_arg"
+  )
+  expect_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "integer"),
+    class = "epiprocess__validate_slide_window_arg"
+  )
 
   expect_no_error(validate_slide_window_arg(1, "yearmonth"))
-  expect_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "yearmonth"))
+  expect_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "yearmonth"),
+    class = "epiprocess__validate_slide_window_arg"
+  )
 })

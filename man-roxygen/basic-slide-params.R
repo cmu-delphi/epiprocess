@@ -10,7 +10,8 @@
 #'     with units "days"
 #'   - if time_type is Date and the cadence is weekly, then `.window_size` must
 #'     be a difftime with units "weeks"
-#'   - if time_type is an integer, then `.window_size` must be an integer
+#'   - if time_type is an yearmonth or integer, then `.window_size` must be an
+#'     integer
 #'
 #' @param .align The alignment of the sliding window. If `right` (default), then
 #' the window has its end at the reference time; if `center`, then the window is

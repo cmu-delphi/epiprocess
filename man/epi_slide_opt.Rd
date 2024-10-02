@@ -10,7 +10,7 @@ epi_slide_opt(
   .col_names,
   .f,
   ...,
-  .window_size = 1,
+  .window_size = NULL,
   .align = c("right", "center", "left"),
   .ref_time_values = NULL,
   .all_rows = FALSE
@@ -59,7 +59,8 @@ an integer (which will be interpreted in units of days) or a difftime
 with units "days"
 \item if time_type is Date and the cadence is weekly, then \code{.window_size} must
 be a difftime with units "weeks"
-\item if time_type is an integer, then \code{.window_size} must be an integer
+\item if time_type is an yearmonth or integer, then \code{.window_size} must be an
+integer
 }}
 
 \item{.align}{The alignment of the sliding window. If \code{right} (default), then
