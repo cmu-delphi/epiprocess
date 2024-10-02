@@ -84,7 +84,8 @@ value of \code{clobberable_versions_start} does not fully trust these empty
 updates, and assumes that any version \verb{>= max(x$version)} could be
 clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
 
-\item{compactify_tol}{double. the tolerance used to detect approximate equality for compactification}
+\item{compactify_tol}{double. the tolerance used to detect approximate
+equality for compactification}
 
 \item{.versions_end}{location based versions_end, used to avoid prefix
 \code{version = issue} from being assigned to \code{versions_end} instead of being
@@ -97,14 +98,15 @@ example \code{version = release_date}}
 An \code{epi_archive} object.
 }
 \description{
-An \code{epi_archive} is an S3 class which contains a data table
-along with several relevant pieces of metadata. The data table can be seen
-as the full archive (version history) for some signal variables of
-interest.
+The second main data structure for storing time series in \code{epiprocess}. It is
+similar to \code{epi_df} in that it fundamentally a table with a few required
+columns that stores epidemiological time series data. An \code{epi_archive}
+requires a \code{geo_value}, \code{time_value}, and \code{version} column (and possibly
+other key columns) along with measurement values. In brief, an \code{epi_archive}
+is a history of the time series data, where the \code{version} column tracks the
+time at which the data was available. This allows for version-aware forecasting.
 }
 \details{
-Epi Archive
-
 An \code{epi_archive} contains a data table \code{DT}, of class \code{data.table}
 from the \code{data.table} package, with (at least) the following columns:
 \itemize{
@@ -122,8 +124,31 @@ as well as any others (these can be specified when instantiating the
 \code{epi_archive} object via the \code{other_keys} argument, and/or set by operating
 on \code{DT} directly). Note that there can only be a single row per unique
 combination of key variables.
+\subsection{Compactify}{
+
+This section describes the internals of how compactification works in an
+\code{epi_archive()}. Compactification can potentially improve code speed or
+memory usage, depending on your data.
+
+In general, the last version of each observation is carried forward (LOCF) to
+fill in data between recorded versions, and between the last recorded
+update and the \code{versions_end}. One consequence is that the \code{DT} doesn't
+have to contain a full snapshot of every version (although this generally
+works), but can instead contain only the rows that are new or changed from
+the previous version (see \code{compactify}, which does this automatically).
+Currently, deletions must be represented as revising a row to a special
+state (e.g., making the entries \code{NA} or including a special column that
+flags the data as removed and performing some kind of post-processing), and
+the archive is unaware of what this state is. Note that \code{NA}s \emph{can} be
+introduced by \code{epi_archive} methods for other reasons, e.g., in
+\code{\link{epix_fill_through_version}} and \code{\link{epix_merge}}, if requested, to
+represent potential update data that we do not yet have access to; or in
+\code{\link{epix_merge}} to represent the "value" of an observation before the
+version in which it was first released, or if no version of that
+observation appears in the archive data at all.
 }
-\section{Metadata}{
+
+\subsection{Metadata}{
 
 The following pieces of metadata are included as fields in an \code{epi_archive}
 object:
@@ -140,14 +165,14 @@ archive. Unexpected behavior may result from modifying the metadata
 directly.
 }
 
-\section{Generating Snapshots}{
+\subsection{Generating Snapshots}{
 
 An \code{epi_archive} object can be used to generate a snapshot of the data in
 \code{epi_df} format, which represents the most up-to-date time series values up
 to a point in time. This is accomplished by calling \code{epix_as_of()}.
 }
 
-\section{Sliding Computations}{
+\subsection{Sliding Computations}{
 
 We can run a sliding computation over an \code{epi_archive} object, much like
 \code{epi_slide()} does for an \code{epi_df} object. This is accomplished by calling
@@ -157,7 +182,7 @@ difference: it is version-aware. That is, for an \code{epi_archive} object, the
 sliding computation at any given reference time point t is performed on
 \strong{data that would have been available as of t}.
 }
-
+}
 \examples{
 # Simple ex. with necessary keys
 tib <- tibble::tibble(

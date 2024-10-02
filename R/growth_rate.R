@@ -56,7 +56,8 @@
 #'   `genlasso::trendfilter()`, divided by the fitted value of the discrete
 #'   spline at `x0`.
 #'
-#' @section Log Scale:
+#' ## Log Scale
+#'
 #'  An alternative view for the growth rate of a function f in general is given
 #'   by defining g(t) = log(f(t)), and then observing that g'(t) = f'(t) /
 #'   f(t). Therefore, any method that estimates the derivative can be simply
@@ -65,7 +66,8 @@
 #'   "trend_filter") has a log scale analog, which can be used by setting
 #'   `log_scale = TRUE`.
 #'
-#' @section Sliding Windows:
+#' ## Sliding Windows
+#'
 #' For the local methods, "rel_change" and "linear_reg", we use a sliding window
 #'   centered at the reference point of bandiwidth `h`. In other words, the
 #'   sliding window consists of all points in `x` whose distance to the
@@ -75,7 +77,8 @@
 #'   sliding window contains all data in between January 1 and 14 (matching the
 #'   behavior of `epi_slide()` with `before = h - 1` and `after = h`).
 #'
-#' @section Additional Arguments:
+#' ## Additional Arguments
+#'
 #' For the global methods, "smooth_spline" and "trend_filter", additional
 #'   arguments can be specified via `...` for the underlying estimation
 #'   function. For the smoothing spline case, these additional arguments are

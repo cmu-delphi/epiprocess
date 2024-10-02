@@ -1,91 +1,124 @@
 #' Slide a function over variables in an `epi_df` object
 #'
-#' Slides a given function over variables in an `epi_df` object. See the
-#' [slide vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html)
-#' for examples.
+#' @description Slides a given function over variables in an `epi_df` object.
+#' This is useful for computations like rolling averages. The function supports
+#' many ways to specify the computation, but by far the most common use case is
+#' as follows:
+#'
+#' ```
+#' # To compute the 7-day trailing average of cases
+#' epi_slide(edf, cases_7dav = mean(cases), .window_size = 7)
+#' ```
+#'
+#' This will create the new column `cases_7dav` that contains a 7-day rolling
+#' average of values in "cases". See `vignette("epi_df")` for more examples.
 #'
 #' @template basic-slide-params
 #' @param .f Function, formula, or missing; together with `...` specifies the
-#'   computation to slide. To "slide" means to apply a computation within a
-#'   sliding (a.k.a. "rolling") time window for each data group. The window is
-#'   determined by the `.window_size` and `.align` parameters, see the details
-#'   section for more. If a function, `.f` must have the form `function(x, g, t,
-#'   ...)`, where
+#'   computation to slide. The return of the computation should either be a
+#'   scalar or a 1-row data frame. Data frame returns will be
+#'    `tidyr::unpack()`-ed, if named, and will be [`tidyr::pack`]-ed columns, if
+#'    not named. See examples.
 #'
-#'   - `x` is a data frame with the same column names as the original object,
-#'   minus any grouping variables, with only the windowed data for one
-#'   group-`.ref_time_value` combination
-#'   - `g` is a one-row tibble containing the values of the grouping variables
-#'   for the associated group
-#'   - `t` is the `.ref_time_value` for the current window
-#'   - `...` are additional arguments
+#'   - If `.f` is missing, then `...` will specify the computation via
+#'     tidy-evaluation. This is usually the most convenient way to use
+#'     `epi_slide`. See examples.
+#'   - If `.f` is a formula, then the formula should use `.x` (not the same as
+#'     the input `epi_df`) to operate on the columns of the input `epi_df`, e.g.
+#'     `~mean(.x$var)` to compute a mean of `var`.
+#'   - If a function, `.f` must have the form `function(x, g, t, ...)`, where:
+#'     - `x` is a data frame with the same column names as the original object,
+#'     minus any grouping variables, with only the windowed data for one
+#'     group-`.ref_time_value` combination
+#'     - `g` is a one-row tibble containing the values of the grouping variables
+#'     for the associated group
+#'     - `t` is the `.ref_time_value` for the current window
+#'     - `...` are additional arguments
 #'
-#'   If a formula, `.f` can operate directly on columns accessed via `.x$var` or
-#'   `.$var`, as in `~mean(.x$var)` to compute a mean of a column `var` for each
-#'   `ref_time_value`-group combination. The group key can be accessed via `.y`.
-#'   If `.f` is missing, then `...` will specify the computation.
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `.f`. Alternatively, if `.f` is missing, then the `...` is interpreted
 #'   as a ["data-masking"][rlang::args_data_masking] expression or expressions
-#'   for tidy evaluation; in addition to referring columns directly by name, the
-#'   expressions have access to `.data` and `.env` pronouns as in `dplyr` verbs,
-#'   and can also refer to `.x` (not the same as the input epi_df),
-#'   `.group_key`, and `.ref_time_value`. See details.
-#' @param .new_col_name String indicating the name of the new column that will
-#'   contain the derivative values. The default is "slide_value" unless your
-#'   slide computations output data frames, in which case they will be unpacked
+#'   for tidy evaluation.
+#' @param .new_col_name Name for the new column that will contain the computed
+#'   values. The default is "slide_value" unless your slide computations output
+#'   data frames, in which case they will be unpacked (as in `tidyr::unpack()`)
 #'   into the constituent columns and those names used. New columns should not
-#'   be given names that clash with the existing columns of `.x`; see details.
+#'   be given names that clash with the existing columns of `.x`.
 #'
-#' @template basic-slide-details
+#' @details
+#' ## Advanced uses of `.f` via tidy evaluation
+#'
+#' If specifying `.f` via tidy evaluation, in addition to the standard [`.data`]
+#' and [`.env`], we make some additional "pronoun"-like bindings available:
+#'
+#'   - .x, which is like `.x` in [`dplyr::group_modify`]; an ordinary object
+#'     like an `epi_df` rather than an rlang [pronoun][rlang::as_data_pronoun]
+#'     like [`.data`]; this allows you to use additional `dplyr`, `tidyr`, and
+#'     `epiprocess` operations. If you have multiple expressions in `...`, this
+#'     won't let you refer to the output of the earlier expressions, but `.data`
+#'     will.
+#'   - .group_key, which is like `.y` in [`dplyr::group_modify`].
+#'   - .ref_time_value, which is the element of `.ref_time_values` that
+#'     determined the time window for the current computation.
 #'
 #' @importFrom lubridate days weeks
 #' @importFrom dplyr bind_rows group_map group_vars filter select
 #' @importFrom rlang .data .env !! enquos sym env missing_arg
 #' @export
-#' @seealso [`epi_slide_opt`] [`epi_slide_mean`] [`epi_slide_sum`]
+#' @seealso [`epi_slide_opt`] for optimized slide functions
 #' @examples
-#' # slide a 7-day trailing average formula on cases
-#' # Simple sliding means and sums are much faster to do using
-#' # the `epi_slide_mean` and `epi_slide_sum` functions instead.
+#' # Get the 7-day trailing standard deviation of cases and the 7-day trailing mean of cases
 #' cases_deaths_subset %>%
-#'   group_by(geo_value) %>%
-#'   epi_slide(cases_7dav = mean(cases), .window_size = 7) %>%
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
-#'   ungroup()
+#'   epi_slide(
+#'     cases_7sd = sd(cases, na.rm = TRUE),
+#'     cases_7dav = mean(cases, na.rm = TRUE),
+#'     .window_size = 7
+#'   ) %>%
+#'   dplyr::select(geo_value, time_value, cases, cases_7sd, cases_7dav)
 #'
-#' # slide a 7-day leading average
+#' # The same as above, but unpacking using an unnamed data.frame with a formula
 #' cases_deaths_subset %>%
-#'   group_by(geo_value) %>%
-#'   epi_slide(cases_7dav = mean(cases), .window_size = 7, .align = "left") %>%
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
-#'   ungroup()
+#'   epi_slide(
+#'     ~ data.frame(
+#'       cases_7sd = sd(.x$cases, na.rm = TRUE),
+#'       cases_7dav = mean(.x$cases, na.rm = TRUE)
+#'     ),
+#'     .window_size = 7
+#'   ) %>%
+#'   dplyr::select(geo_value, time_value, cases, cases_7sd, cases_7dav)
 #'
-#' # slide a 7-day centre-aligned average
+#' # The same as above, but packing using a named data.frame with a tidy evaluation
+#' # expression
 #' cases_deaths_subset %>%
-#'   group_by(geo_value) %>%
-#'   epi_slide(cases_7dav = mean(cases), .window_size = 7, .align = "center") %>%
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
-#'   ungroup()
-#'
-#' # slide a 14-day centre-aligned average
-#' cases_deaths_subset %>%
-#'   group_by(geo_value) %>%
-#'   epi_slide(cases_14dav = mean(cases), .window_size = 14, .align = "center") %>%
-#'   dplyr::select(geo_value, time_value, cases, cases_14dav) %>%
-#'   ungroup()
+#'   epi_slide(
+#'     slide_packed = data.frame(
+#'       cases_7sd = sd(.x$cases, na.rm = TRUE),
+#'       cases_7dav = mean(.x$cases, na.rm = TRUE)
+#'     ),
+#'     .window_size = 7
+#'   ) %>%
+#'   dplyr::select(geo_value, time_value, cases, slide_packed)
 #'
 #' # nested new columns
 #' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(
-#'     cases_2d = list(data.frame(
-#'       cases_2dav = mean(cases),
-#'       cases_2dma = mad(cases)
-#'     )),
-#'     .window_size = 2
+#'     function(x, g, t) {
+#'       data.frame(
+#'         cases_7sd = sd(x$cases, na.rm = TRUE),
+#'         cases_7dav = mean(x$cases, na.rm = TRUE)
+#'       )
+#'     },
+#'     .window_size = 7
 #'   ) %>%
-#'   ungroup()
+#'   dplyr::select(geo_value, time_value, cases, cases_7sd, cases_7dav)
+#'
+#' # Use the geo_value or the ref_time_value in the slide computation
+#' cases_deaths_subset %>%
+#'   epi_slide(~ .x$geo_value[[1]], .window_size = 7)
+#'
+#' cases_deaths_subset %>%
+#'   epi_slide(~ .x$time_value[[1]], .window_size = 7)
 epi_slide <- function(
     .x, .f, ...,
     .window_size = NULL, .align = c("right", "center", "left"),
@@ -492,16 +525,24 @@ get_before_after_from_window <- function(window_size, align, time_type) {
   return(list(before = before, after = after))
 }
 
-#' Optimized slide function for performing common rolling computations on an
-#' `epi_df` object
+#' Optimized slide functions for common cases
 #'
-#' Slides an n-timestep [data.table::froll] or [slider::summary-slide] function
-#' over variables in an `epi_df` object. See the
-#' [slide vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html)
-#' for examples.
+#' @description `epi_slide_opt` allows sliding an n-timestep [data.table::froll]
+#' or [slider::summary-slide] function over variables in an `epi_df` object.
+#' These functions tend to be much faster than `epi_slide()`. See
+#' `vignette("epi_df")` for more examples.
 #'
 #' @template basic-slide-params
-#' @template opt-slide-params
+#' @param .col_names <[`tidy-select`][dplyr_tidy_select]> An unquoted column
+#'   name(e.g., `cases`), multiple column names (e.g., `c(cases, deaths)`),
+#'   [other tidy-select expression][tidyselect::language], or a vector of
+#'   characters (e.g. `c("cases", "deaths")`). Variable names can be used as if
+#'   they were positions in the data frame, so expressions like `x:y` can be
+#'   used to select a range of variables.
+#'
+#'   The tidy-selection renaming interface is not supported, and cannot be used
+#'   to provide output column names; if you want to customize the output column
+#'   names, use [`dplyr::rename`] after the slide.
 #' @param .f Function; together with `...` specifies the computation to slide.
 #'  `.f` must be one of `data.table`'s rolling functions
 #'  (`frollmean`, `frollsum`, `frollapply`. See [data.table::roll]) or one
@@ -518,7 +559,6 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #'  example, `algo` or `na.rm` in data.table functions. You don't need to
 #'  specify `.x`, `.window_size`, or `.align` (or `before`/`after` for slider
 #'  functions).
-#' @template opt-slide-details
 #'
 #' @importFrom dplyr bind_rows mutate %>% arrange tibble select all_of
 #' @importFrom rlang enquo quo_get_expr as_label expr_label caller_arg
@@ -529,53 +569,24 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #' @importFrom checkmate assert_function
 #' @importFrom slider slide_sum slide_prod slide_mean slide_min slide_max slide_all slide_any
 #' @export
-#' @seealso [`epi_slide`] [`epi_slide_mean`] [`epi_slide_sum`]
+#' @seealso [`epi_slide`] for the more general slide function
 #' @examples
-#' # slide a 7-day trailing average formula on cases. This can also be done with `epi_slide_mean`
+#' # Compute a 7-day trailing average on cases.
 #' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_opt(
-#'     cases,
-#'     .f = data.table::frollmean, .window_size = 7
-#'   ) %>%
-#'   # Remove a nonessential var. to ensure new col is printed, and rename new col
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
-#'   ungroup()
+#'   epi_slide_opt(cases, .f = data.table::frollmean, .window_size = 7) %>%
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
 #'
-#' # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
-#' # and accuracy, and to allow partially-missing windows.
+#' # Same as above, but adjust `frollmean` settings for speed, accuracy, and
+#' # to allow partially-missing windows.
 #' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
 #'     cases,
 #'     .f = data.table::frollmean, .window_size = 7,
-#'     # `frollmean` options
 #'     algo = "exact", hasNA = TRUE, na.rm = TRUE
 #'   ) %>%
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
-#'   ungroup()
-#'
-#' # slide a 7-day leading average
-#' cases_deaths_subset %>%
-#'   group_by(geo_value) %>%
-#'   epi_slide_opt(
-#'     cases,
-#'     .f = slider::slide_mean, .window_size = 7, .align = "left"
-#'   ) %>%
-#'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
-#'   ungroup()
-#'
-#' # slide a 7-day centre-aligned sum. This can also be done with `epi_slide_sum`
-#' cases_deaths_subset %>%
-#'   group_by(geo_value) %>%
-#'   epi_slide_opt(
-#'     cases,
-#'     .f = data.table::frollsum, .window_size = 6, .align = "center"
-#'   ) %>%
-#'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
-#'   ungroup()
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
 epi_slide_opt <- function(
     .x, .col_names, .f, ...,
     .window_size = NULL, .align = c("right", "center", "left"),
@@ -808,70 +819,28 @@ epi_slide_opt <- function(
   return(result)
 }
 
-#' Optimized slide function for performing rolling averages on an `epi_df` object
-#'
-#' Slides an n-timestep mean over variables in an `epi_df` object. See the [slide
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
-#' examples.
-#'
-#' Wrapper around `epi_slide_opt` with `.f = datatable::frollmean`.
-#'
-#' @template basic-slide-params
-#' @template opt-slide-params
-#' @param ... Additional arguments to pass to the slide computation `.f`, for
-#'  example, `algo` or `na.rm` in data.table functions. You don't need to
-#'  specify `.x`, `.window_size`, or `.align` (or `before`/`after` for slider
-#'  functions).
-#'
-#' @template opt-slide-details
+#' @rdname epi_slide_opt
+#' @description `epi_slide_mean` is a wrapper around `epi_slide_opt` with `.f =
+#' datatable::frollmean`.
 #'
 #' @export
-#' @seealso [`epi_slide`] [`epi_slide_opt`] [`epi_slide_sum`]
 #' @examples
-#' # slide a 7-day trailing average formula on cases
+#' # Compute a 7-day trailing average on cases.
 #' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_mean(cases, .window_size = 7) %>%
-#'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
-#'   ungroup()
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
 #'
-#' # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
-#' # and accuracy, and to allow partially-missing windows.
+#' # Same as above, but adjust `frollmean` settings for speed, accuracy, and
+#' # to allow partially-missing windows.
 #' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_mean(
 #'     cases,
 #'     .window_size = 7,
-#'     # `frollmean` options
 #'     na.rm = TRUE, algo = "exact", hasNA = TRUE
 #'   ) %>%
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
-#'   ungroup()
-#'
-#' # slide a 7-day leading average
-#' cases_deaths_subset %>%
-#'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, .window_size = 7, .align = "right") %>%
-#'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
-#'   ungroup()
-#'
-#' # slide a 7-day centre-aligned average
-#' cases_deaths_subset %>%
-#'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, .window_size = 7, .align = "center") %>%
-#'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
-#'   ungroup()
-#'
-#' # slide a 14-day centre-aligned average
-#' cases_deaths_subset %>%
-#'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, .window_size = 14, .align = "center") %>%
-#'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_14dav = slide_value_cases) %>%
-#'   ungroup()
+#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
 epi_slide_mean <- function(
     .x, .col_names, ...,
     .window_size = NULL, .align = c("right", "center", "left"),
@@ -922,33 +891,17 @@ epi_slide_mean <- function(
   )
 }
 
-#' Optimized slide function for performing rolling sums on an `epi_df` object
-#'
-#' Slides an n-timestep sum over variables in an `epi_df` object. See the [slide
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/slide.html) for
-#' examples.
-#'
-#' Wrapper around `epi_slide_opt` with `.f = datatable::frollsum`.
-#'
-#' @template basic-slide-params
-#' @template opt-slide-params
-#' @param ... Additional arguments to pass to the slide computation `.f`, for
-#'  example, `algo` or `na.rm` in data.table functions. You don't need to
-#'  specify `.x`, `.window_size`, or `.align` (or `before`/`after` for slider
-#'  functions).
-#'
-#' @template opt-slide-details
+#' @rdname epi_slide_opt
+#' @description `epi_slide_sum` is a wrapper around `epi_slide_opt` with `.f =
+#' datatable::frollsum`.
 #'
 #' @export
-#' @seealso [`epi_slide`] [`epi_slide_opt`] [`epi_slide_mean`]
 #' @examples
-#' # slide a 7-day trailing sum formula on cases
+#' # Compute a 7-day trailing sum on cases.
 #' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_sum(cases, .window_size = 7) %>%
-#'   # Remove a nonessential var. to ensure new col is printed
-#'   dplyr::select(geo_value, time_value, cases, cases_7dsum = slide_value_cases) %>%
-#'   ungroup()
+#'   dplyr::select(geo_value, time_value, cases, cases_7dsum = slide_value_cases)
 epi_slide_sum <- function(
     .x, .col_names, ...,
     .window_size = NULL, .align = c("right", "center", "left"),
@@ -1006,7 +959,7 @@ epi_slide_sum <- function(
 #' function (using `validate_slide_window_arg`).
 #'
 #' @importFrom checkmate assert_function
-#' @noRd
+#' @keywords internal
 full_date_seq <- function(x, before, after, time_type) {
   if (!time_type %in% c("day", "week", "yearmonth", "integer")) {
     cli_abort(
