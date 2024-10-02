@@ -578,7 +578,7 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #'   ungroup()
 epi_slide_opt <- function(
     .x, .col_names, .f, ...,
-    .window_size = 1, .align = c("right", "center", "left"),
+    .window_size = NULL, .align = c("right", "center", "left"),
     .ref_time_values = NULL, .all_rows = FALSE) {
   assert_class(.x, "epi_df")
 
@@ -680,46 +680,16 @@ epi_slide_opt <- function(
   ref_time_values <- sort(.ref_time_values)
 
   # Handle window arguments
-  align <- rlang::arg_match(.align)
+  .align <- rlang::arg_match(.align)
   time_type <- attr(.x, "metadata")$time_type
-  validate_slide_window_arg(.window_size, time_type)
-  if (identical(.window_size, Inf)) {
-    if (align == "right") {
-      before <- Inf
-      if (time_type %in% c("day", "week")) {
-        after <- as.difftime(0, units = glue::glue("{time_type}s"))
-      } else {
-        after <- 0
-      }
-    } else {
-      cli_abort(
-        "`epi_slide`: center and left alignment are not supported with an infinite window size."
-      )
-    }
-  } else {
-    if (align == "right") {
-      before <- .window_size - 1
-      if (time_type %in% c("day", "week")) {
-        after <- as.difftime(0, units = glue::glue("{time_type}s"))
-      } else {
-        after <- 0
-      }
-    } else if (align == "center") {
-      # For .window_size = 5, before = 2, after = 2. For .window_size = 4, before = 2, after = 1.
-      before <- floor(.window_size / 2)
-      after <- .window_size - before - 1
-    } else if (align == "left") {
-      if (time_type %in% c("day", "week")) {
-        before <- as.difftime(0, units = glue::glue("{time_type}s"))
-      } else {
-        before <- 0
-      }
-      after <- .window_size - 1
-    }
+  if (is.null(.window_size)) {
+    cli_abort("epi_slide_opt: `.window_size` must be specified.")
   }
+  validate_slide_window_arg(.window_size, time_type)
+  window_args <- get_before_after_from_window(.window_size, .align, time_type)
 
   # Make a complete date sequence between min(.x$time_value) and max(.x$time_value).
-  date_seq_list <- full_date_seq(.x, before, after, time_type)
+  date_seq_list <- full_date_seq(.x, window_args$before, window_args$after, time_type)
   all_dates <- date_seq_list$all_dates
   pad_early_dates <- date_seq_list$pad_early_dates
   pad_late_dates <- date_seq_list$pad_late_dates
@@ -788,16 +758,16 @@ epi_slide_opt <- function(
       # `before` and `after` params. Right-aligned `frollmean` results'
       # `ref_time_value`s will be `after` timesteps ahead of where they should
       # be; shift results to the left by `after` timesteps.
-      if (before != Inf) {
-        window_size <- before + after + 1L
+      if (window_args$before != Inf) {
+        window_size <- window_args$before + window_args$after + 1L
         roll_output <- .f(x = .data_group[, col_names_chr], n = window_size, ...)
       } else {
         window_size <- list(seq_along(.data_group$time_value))
         roll_output <- .f(x = .data_group[, col_names_chr], n = window_size, adaptive = TRUE, ...)
       }
-      if (after >= 1) {
+      if (window_args$after >= 1) {
         .data_group[, result_col_names] <- purrr::map(roll_output, function(.x) {
-          c(.x[(after + 1L):length(.x)], rep(NA, after))
+          c(.x[(window_args$after + 1L):length(.x)], rep(NA, window_args$after))
         })
       } else {
         .data_group[, result_col_names] <- roll_output
@@ -807,8 +777,8 @@ epi_slide_opt <- function(
       for (i in seq_along(col_names_chr)) {
         .data_group[, result_col_names[i]] <- .f(
           x = .data_group[[col_names_chr[i]]],
-          before = as.numeric(before),
-          after = as.numeric(after),
+          before = as.numeric(window_args$before),
+          after = as.numeric(window_args$after),
           ...
         )
       }
@@ -904,7 +874,7 @@ epi_slide_opt <- function(
 #'   ungroup()
 epi_slide_mean <- function(
     .x, .col_names, ...,
-    .window_size = 1, .align = c("right", "center", "left"),
+    .window_size = NULL, .align = c("right", "center", "left"),
     .ref_time_values = NULL, .all_rows = FALSE) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
@@ -981,7 +951,7 @@ epi_slide_mean <- function(
 #'   ungroup()
 epi_slide_sum <- function(
     .x, .col_names, ...,
-    .window_size = 1, .align = c("right", "center", "left"),
+    .window_size = NULL, .align = c("right", "center", "left"),
     .ref_time_values = NULL, .all_rows = FALSE) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
