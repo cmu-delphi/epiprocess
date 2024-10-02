@@ -2,6 +2,21 @@
 
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicate PR's.
 
+# epiprocess 0.10
+
+## Breaking changes
+
+- Moved example datasets from being hosted in the package to being reexported
+  from the `epidatasets` package. The datasets can no longer be loaded with
+  `data()` but can be accessed with `epiprocess::` or just the name of the
+  dataset, after loading the package (#520).
+
+## Improvements
+
+
+## Bug fixes
+
+
 # epiprocess 0.9
 
 ## Breaking changes
