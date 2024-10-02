@@ -156,7 +156,7 @@ epi_slide <- function(
     used_data_masking <- FALSE
     .f_arg <- caller_arg(.f)
   }
-  .slide_comp <- as_time_slide_computation(.f, ..., .f_arg = .f_arg, .call = caller_env())
+  .slide_comp <- as_time_slide_computation(.f, ..., .f_arg = .f_arg)
 
   .align <- rlang::arg_match(.align)
   time_type <- attr(.x, "metadata")$time_type

@@ -372,6 +372,7 @@ as_slide_computation <- function(.f, ..., .f_arg = caller_arg(.f), .call = calle
           "*" = "If you were trying to use advanced features of the tidyeval interface such as `!! name_variable :=`, you might have forgotten the required leading comma."
         ),
         parent = e,
+        call = .call,
         class = "epiprocess__as_slide_computation__error_forcing_.f"
       )
     }
