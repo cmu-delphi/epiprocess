@@ -1,21 +1,47 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
 # epiprocess
 
-<!-- badges: start -->
+The `{epiprocess}` package works with epidemiological time series data
+and provides tools to manage, analyze, and process the data in
+preparation for modeling. It is designed to work in tandem with
+`{epipredict}`, which provides pre-built epiforecasting models and as
+well as tools to build custom models. Both packages are designed to
+lower the barrier to entry and implementation cost for epidemiological
+time series analysis and forecasting.
 
-[![R-CMD-check](https://github.com/cmu-delphi/epiprocess/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/cmu-delphi/epiprocess/actions/workflows/R-CMD-check.yaml)
+`{epiprocess}` contains:
 
-<!-- badges: end -->
+  - `epi_df()` and `epi_archive()`, two data frame classes (that work
+    like a `{tibble}` with `{dplyr}` verbs) for working with
+    epidemiological time series data;
+  - signal processing tools building on these data structures such as
+      - `epi_slide()` for sliding window operations;
+      - `epix_slide()` for sliding window operations on archives;
+      - `growth_rate()` for computing growth rates;
+      - `detect_outlr()` for outlier detection;
+      - `epi_cor()` for computing correlations;
 
-This package introduces a common data structure for epidemiological data sets
-measured over space and time, and offers associated utilities to perform basic
-signal processing tasks. See the getting started guide and vignettes for
-examples.
+If you are new to this set of tools, you may be interested learning
+through a book format: [Introduction to Epidemiological
+Forecasting](https://cmu-delphi.github.io/delphi-tooling-book/).
+
+You may also be interested in:
+
+  - `{epidatr}`, for accessing wide range of epidemiological data sets,
+    including COVID-19 data, flu data, and more.
+  - `{rtestim}`, a package for estimating the time-varying reproduction
+    number of an epidemic.
+
+This package is provided by the [Delphi group](https://delphi.cmu.edu/)
+at Carnegie Mellon University.
 
 ## Installation
 
-To install (unless you're making changes to the package, use the stable version):
+To install:
 
-```r
+``` r
 # Stable version
 pak::pkg_install("cmu-delphi/epiprocess@main")
 
@@ -23,56 +49,109 @@ pak::pkg_install("cmu-delphi/epiprocess@main")
 pak::pkg_install("cmu-delphi/epiprocess@dev")
 ```
 
-## `epi_df`: snapshot of a data set
+The package is not yet on CRAN.
 
-The first main data structure in the `epiprocess` package is called
-[`epi_df`](reference/epi_df.html). This is simply a tibble with a couple of
-required columns, `geo_value` and `time_value`. It can have any other number of
-columns, which can be seen as measured variables, which we also call signal
-variables. In brief, an `epi_df` object represents a snapshot of a data set that
-contains the most up-to-date values of the signals variables, as of a given
-time.
+## Usage
 
-By convention, functions in the `epiprocess` package that operate on `epi_df`
-objects begin with `epi`. For example:
+Once `epiprocess` and `epidatr` are installed, you can use the following
+code to get started:
 
--   `epi_slide()`, for iteratively applying a custom computation to a variable in
-    an `epi_df` object over sliding windows in time;
--   `epi_cor()`, for computing lagged correlations between variables in an
-    `epi_df` object, (allowing for grouping by geo value, time value, or any other
-    variables).
+``` r
+library(epiprocess)
+library(epidatr)
+library(dplyr)
+library(magrittr)
+```
 
-Functions in the package that operate directly on given variables do not begin
-with `epi`. For example:
+Get COVID-19 confirmed cumulative case data from JHU CSSE for
+California, Florida, New York, and Texas, from March 1, 2020 to January
+31, 2022
 
--   `growth_rate()`, for estimating the growth rate of a given signal at given
-    time values, using various methodologies;
--   `detect_outlr()`, for detecting outliers in a given signal over time, using
-    either built-in or custom methodologies.
+``` r
+df <- pub_covidcast(
+  source = "jhu-csse",
+  signals = "confirmed_cumulative_num",
+  geo_type = "state",
+  time_type = "day",
+  geo_values = "ca,fl,ny,tx",
+  time_values = epirange(20200301, 20220131),
+  as_of = as.Date("2024-01-01")
+) %>%
+  select(geo_value, time_value, cases_cumulative = value)
+df
+#> # A tibble: 2,808 × 3
+#>   geo_value time_value cases_cumulative
+#>   <chr>     <date>                <dbl>
+#> 1 ca        2020-03-01               19
+#> 2 fl        2020-03-01                0
+#> 3 ny        2020-03-01                0
+#> 4 tx        2020-03-01                0
+#> 5 ca        2020-03-02               23
+#> 6 fl        2020-03-02                1
+#> # ℹ 2,802 more rows
+```
 
-## `epi_archive`: full version history of a data set
+Convert the data to an epi\_df object and sort by geo\_value and
+time\_value. You can work with an `epi_df` like you can with a
+`{tibble}` by using `{dplyr}` verbs
 
-The second main data structure in the package is called
-[`epi_archive`](reference/epi_archive.html). This is a special class (R6 format)
-wrapped around a data table that stores the archive (version history) of some
-signal variables of interest.
+``` r
+edf <- df %>%
+  as_epi_df(as_of = as.Date("2024-01-01")) %>%
+  arrange_canonical() %>%
+  group_by(geo_value) %>%
+  mutate(cases_daily = cases_cumulative - lag(cases_cumulative, default = 0))
+edf
+#> An `epi_df` object, 2,808 x 4 with metadata:
+#> * geo_type  = state
+#> * time_type = day
+#> * as_of     = 2024-01-01
+#> 
+#> # A tibble: 2,808 × 4
+#> # Groups:   geo_value [4]
+#>   geo_value time_value cases_cumulative cases_daily
+#> * <chr>     <date>                <dbl>       <dbl>
+#> 1 ca        2020-03-01               19          19
+#> 2 ca        2020-03-02               23           4
+#> 3 ca        2020-03-03               29           6
+#> 4 ca        2020-03-04               40          11
+#> 5 ca        2020-03-05               50          10
+#> 6 ca        2020-03-06               68          18
+#> # ℹ 2,802 more rows
+```
 
-By convention, functions in the `epiprocess` package that operate on
-`epi_archive` objects begin with `epix` (the "x" is meant to remind you of
-"archive"). These are just wrapper functions around the public methods for the
-`epi_archive` R6 class. For example:
+Compute the 7 day moving average of the confirmed daily cases for each
+geo\_value
 
--   `epix_as_of()`, for generating a snapshot in `epi_df` format from the data
-    archive, which represents the most up-to-date values of the signal variables,
-    as of the specified version;
--   `epix_fill_through_version()`, for filling in some fake version data following
-    simple rules, for use when downstream methods expect an archive that is more
-    up-to-date (e.g., if it is a forecasting deadline date and one of our data
-    sources cannot be accessed to provide the latest versions of its data)
--   `epix_merge()`, for merging two data archives with each other, with support
-    for various approaches to handling when one of the archives is more up-to-date
-    version-wise than the other;
--   `epix_slide()`, for sliding a custom computation to a data archive over local
-    windows in time, much like `epi_slide` for an `epi_df` object, but with one
-    key difference: the sliding computation at any given reference time t is
-    performed only on the **data that would have been available as of t**.
+``` r
+edf <- edf %>%
+  group_by(geo_value) %>%
+  epi_slide_mean(cases_daily, .window_size = 7, na.rm = TRUE) %>%
+  rename(smoothed_cases_daily = slide_value_cases_daily)
+edf
+#> An `epi_df` object, 2,808 x 5 with metadata:
+#> * geo_type  = state
+#> * time_type = day
+#> * as_of     = 2024-01-01
+#> 
+#> # A tibble: 2,808 × 5
+#> # Groups:   geo_value [4]
+#>   geo_value time_value cases_cumulative cases_daily smoothed_cases_daily
+#> * <chr>     <date>                <dbl>       <dbl>                <dbl>
+#> 1 ca        2020-03-01               19          19                19   
+#> 2 ca        2020-03-02               23           4                11.5 
+#> 3 ca        2020-03-03               29           6                 9.67
+#> 4 ca        2020-03-04               40          11                10   
+#> 5 ca        2020-03-05               50          10                10   
+#> 6 ca        2020-03-06               68          18                11.3 
+#> # ℹ 2,802 more rows
+```
+
+Autoplot the confirmed daily cases for each geo\_value
+
+``` r
+edf %>%
+  autoplot(smoothed_cases_daily)
+```
+
+<img src="man/figures/README-unnamed-chunk-7-1.svg" width="90%" style="display: block; margin: auto;" />

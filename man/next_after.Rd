@@ -15,3 +15,4 @@ same class, typeof, and length as \code{x}
 \description{
 Get the next possible value greater than \code{x} of the same type
 }
+\keyword{internal}

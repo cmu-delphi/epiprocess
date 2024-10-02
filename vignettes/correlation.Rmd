@@ -1,14 +1,18 @@
 ---
-title: Correlate signals over space and time
+title: Correlate signals across locations and time
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Correlate signals over space and time}
+  %\VignetteIndexEntry{Correlate signals across locations and time}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r, include = FALSE}
+source(here::here("vignettes", "_common.R"))
+```
+
 The `epiprocess` package provides some simple functionality for computing lagged
-correlations between two signals, over space or time (or other variables), via
+correlations between two signals, across locations or time (or other variables), via
 `epi_cor()`. This function is really just a convenience wrapper over some basic
 commands: it first performs specified time shifts, then computes correlations,
 grouped in a specified way. In this vignette, we'll examine correlations between
@@ -27,6 +31,7 @@ x <- covid_case_death_rates_extended %>%
 ```
 
 The data can also be fetched from the Delphi Epidata API with the following query:
+
 ```{r, eval = FALSE}
 library(epidatr)
 
@@ -73,7 +78,6 @@ time value, and by geo value. The former is obtained via `cor_by = time_value`.
 
 ```{r, message = FALSE, warning = FALSE}
 library(ggplot2)
-theme_set(theme_bw())
 
 z1 <- epi_cor(x, case_rate, death_rate, cor_by = "time_value")
 

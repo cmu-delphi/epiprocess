@@ -1,10 +1,8 @@
 ## Setting up the development environment
 
 ```r
-install.packages(c('devtools', 'pkgdown', 'styler', 'lintr')) # install dev dependencies
-devtools::install_deps(dependencies = TRUE) # install package dependencies
-devtools::document() # generate package meta data and man files
-devtools::build() # build package
+install.packages(c('devtools', 'pkgdown', 'styler', 'lintr', 'pak')) # install dev dependencies
+pak::pkg_install(".") # install package and dependencies
 ```
 
 ## Validating the package
@@ -13,8 +11,12 @@ devtools::build() # build package
 styler::style_pkg() # format code
 lintr::lint_package() # lint code
 
+devtools::check() # run R CMD check, which runs everything below
+devtools::document() # generate package meta data and man files
 devtools::test() # test package
-devtools::check() # check package for errors
+devtools::build_vignettes() # build vignettes only
+devtools::run_examples() # run doc examples
+devtools::check(vignettes = FALSE) # check package without vignettes
 ```
 
 ## Developing the documentation site
@@ -24,20 +26,16 @@ Our CI builds two version of the documentation:
 - https://cmu-delphi.github.io/epiprocess/ from the `main` branch and
 - https://cmu-delphi.github.io/epiprocess/dev from the `dev` branch.
 
-The documentation site can be previewed locally by running in R:
+We include the script `pkgdown-watch.R` that will automatically rebuild the
+documentation locally and preview it. It can be used with:
 
-```r
-# Should automatically open a browser
-pkgdown::build_site(preview=TRUE)
-```
-
-If the above does not open a browser, you can try using a Python server from the
-command line:
-
-```bash
-R -e 'devtools::document()'
-R -e 'pkgdown::build_site()'
-python -m http.server -d docs
+```sh
+# Make sure you have servr installed
+R -e 'renv::install("servr")'
+# Will start a local server
+Rscript pkgdown-watch.R
+# You may need to first build the site with
+R -e 'pkgdown::build_site(".", examples = FALSE, devel = TRUE, preview = FALSE)'
 ```
 
 ## Versioning

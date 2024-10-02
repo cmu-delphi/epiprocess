@@ -182,7 +182,7 @@ format_tibble_row <- function(x, empty = "*none*") {
 #' @importFrom purrr map_lgl
 #' @importFrom utils tail
 #'
-#' @noRd
+#' @keywords internal
 assert_sufficient_f_args <- function(.f, ..., .ref_time_value_label) {
   mandatory_f_args_labels <- c("window data", "group key", .ref_time_value_label)
   n_mandatory_f_args <- length(mandatory_f_args_labels)
@@ -670,6 +670,7 @@ upcase_snake_case <- function(vec) {
 #' the full list of potential substitutions for the `time_value` column name:
 #' `r time_column_names()`
 #' @export
+#' @keywords internal
 time_column_names <- function() {
   substitutions <- c(
     "time_value", "date", "time", "datetime", "dateTime", "date_time", "target_date",
@@ -686,6 +687,7 @@ time_column_names <- function() {
 #' the full list of potential substitutions for the `geo_value` column name:
 #' `r geo_column_names()`
 #' @export
+#' @keywords internal
 geo_column_names <- function() {
   substitutions <- c(
     "geo_value", "geo_values", "geo_id", "geos", "location", "jurisdiction", "fips", "zip",
@@ -702,6 +704,7 @@ geo_column_names <- function() {
 #' the full list of potential substitutions for the `version` column name:
 #' `r version_column_names()`
 #' @export
+#' @keywords internal
 version_column_names <- function() {
   substitutions <- c(
     "version", "issue", "release"
@@ -833,7 +836,8 @@ list2var <- function(x) {
 #'
 #' @importFrom lifecycle deprecated
 #'
-#' @noRd
+#' @export
+#' @keywords internal
 deprecated_quo_is_present <- function(quo) {
   if (!rlang::is_quosure(quo)) {
     cli_abort("`quo` must be a quosure; `enquo` the arg first",
@@ -991,6 +995,7 @@ gcd_num <- function(dividends, ..., rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
 #'   by adding `k * result` for an integer k, and such that there is no smaller
 #'   `result` that can achieve this.
 #'
+#' @keywords internal
 #' @export
 guess_period <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
   UseMethod("guess_period")

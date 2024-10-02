@@ -16,9 +16,7 @@
 \item{explicit}{see \code{\link[tidyr:complete]{tidyr::complete}}}
 }
 \description{
-A ‘tidyr::complete()’ analogue for ‘epi_df’ objects. This function
-can be used, for example, to add rows for missing combinations
-of ‘geo_value’ and ‘time_value’, filling other columns with \code{NA}s.
+A \code{tidyr::complete()} analogue for \verb{epi_df`` objects. This function can be used, for example, to add rows for missing combinations of }geo_value\code{and}time_value\verb{, filling other columns with }NA`s.
 See the examples for usage details.
 }
 \examples{

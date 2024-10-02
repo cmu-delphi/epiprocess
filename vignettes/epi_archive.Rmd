@@ -1,0 +1,472 @@
+---
+title: Working with epi_archive objects and data revisions
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Working with epi_archive objects and data revisions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+source(here::here("vignettes", "_common.R"))
+```
+
+The `epi_archive` data structure provided by `epiprocess` provides convenient
+ways to work with data sets that are subject to revision (a common occurrence in
+the public health space, as situational awareness improves). In comparison to an
+`epi_df` object, which can viewed as a data snapshot at a point in time, an
+`epi_archive` object stores the full version history of a data set. Paying
+attention to data revisions can be important for all sorts of downstream data
+analysis and modeling tasks.
+
+In this vignette we will:
+
+- construct an `epi_archive` object from a data frame,
+- summarize revision behavior in the archive,
+- produce snapshots of the data in `epi_df` form,
+- merge `epi_archive` objects together,
+- run a simple autoregressive forecaster (version-unaware) on a single date,
+- slide a simple autoregressive forecaster (version-unaware),
+- slide a simple autoregressive forecaster (version-aware),
+- compare version-aware and -unaware forecasts.
+
+## Getting data into `epi_archive` format
+
+We will work with a signal on the percentage of doctor's visits with CLI
+(COVID-like illness) computed from medical insurance claims, available through
+the [COVIDcast
+API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html). This
+signal is subject to very heavy and regular revision; you can read more about it
+on its [API documentation
+page](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
+
+The data is included in this package (via the [`epidatasets`
+package](https://cmu-delphi.github.io/epidatasets/)) and can be loaded with:
+
+```{r, message = FALSE, warning = FALSE}
+library(epiprocess)
+library(data.table)
+library(dplyr)
+library(purrr)
+library(ggplot2)
+
+# This fetches the raw data backing the archive_cases_dv_subset object.
+dv <- archive_cases_dv_subset$DT %>%
+  as_tibble()
+```
+
+The data can also be fetched from the Delphi Epidata API with the following query:
+
+```{r, message = FALSE, warning = FALSE, eval = FALSE}
+library(epidatr)
+
+dv <- pub_covidcast(
+  source = "doctor-visits",
+  signals = "smoothed_adj_cli",
+  geo_type = "state",
+  time_type = "day",
+  geo_values = "ca,fl,ny,tx",
+  time_values = epirange(20200601, 20211201),
+  issues = epirange(20200601, 20211201)
+) %>%
+  rename(version = issue, percent_cli = value)
+```
+
+An `epi_archive()` object can be constructed from a data frame, data table, or
+tibble, provided that it has (at least) the following columns:
+
+* `geo_value`: the geographic value associated with each row of measurements.
+* `time_value`: the time value associated with each row of measurements.
+* `version`: the time value specifying the version for each row of measurements.
+  For example, if in a given row the `version` is January 15, 2022 and
+  `time_value` is January 14, 2022, then this row contains the measurements of
+  the data for January 14, 2022 that were available one day later.
+
+As we can see from the above, the data frame returned by
+`epidatr::pub_covidcast()` has the columns required for the `epi_archive`
+format, with `issue` playing the role of `version`. We can now use
+`as_epi_archive()` to bring it into `epi_archive` format.
+
+```{r}
+dv_archive <- dv %>%
+  select(geo_value, time_value, version, percent_cli) %>%
+  as_epi_archive(compactify = TRUE)
+dv_archive
+```
+
+See the `epi_archive()` documentation for more information about its internal
+structure.
+
+## Producing snapshots in `epi_df` form
+
+A key method of an `epi_archive` class is `epix_as_of()`, which generates a
+snapshot of the archive in `epi_df` format. This represents the most up-to-date
+values of the signal variables as of a given version.
+
+```{r}
+edf <- epix_as_of(dv_archive, as.Date("2021-06-01"))
+print(edf)
+print(max(edf$time_value))
+```
+
+Note that that the max time value in the `epi_df` object is May 29, 2021, even
+though the specified version date was June 1, 2021 (note that the `as_of` field
+printed above helps us see the date of the snapshot). From this we can infer
+that the doctor's visits signal was 2 days latent on June 1.
+
+Now, let's investigate how much this data was revised. We will plot the most
+up-to-date version of the time series in black (`edf_latest` below) and then
+overlay several revisions from the archive, spaced one month apart, as colored
+lines (`snapshots` below). We will also mark the version dates with dotted
+vertical lines.
+
+```{r}
+edf_latest <- epix_as_of(dv_archive, dv_archive$versions_end)
+max_version <- max(dv_archive$DT$version)
+versions <- seq(as.Date("2020-06-01"), max_version - 1, by = "1 month")
+monthly_snapshots <- map(versions, function(v) {
+  epix_as_of(dv_archive, v) %>% mutate(version = v)
+}) %>%
+  bind_rows(
+    edf_latest %>% mutate(version = max_version)
+  ) %>%
+  mutate(latest = version == max_version)
+
+ggplot(
+  monthly_snapshots %>% filter(!latest),
+  aes(x = time_value, y = percent_cli)
+) +
+  geom_line(aes(color = factor(version)), na.rm = TRUE) +
+  geom_vline(aes(color = factor(version), xintercept = version), lty = 2) +
+  facet_wrap(~geo_value, scales = "free_y", ncol = 1) +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "% of doctor's visits with CLI") +
+  theme(legend.position = "none") +
+  geom_line(
+    data = monthly_snapshots %>% filter(latest),
+    aes(x = time_value, y = percent_cli),
+    inherit.aes = FALSE, color = "black", na.rm = TRUE
+  )
+```
+
+We can see some interesting and highly nontrivial revision behavior: at some
+points in time the provisional data snapshots grossly underestimate the latest
+curve (look in particular at Florida close to the end of 2021), and at others
+they overestimate it (both states towards the beginning of 2021), though not
+quite as dramatically. Modeling the revision process, which is often called
+*backfill modeling*, is an important statistical problem in it of itself.
+
+## Summarizing revision behavior
+
+There are many ways to examine how signals change across revisions. We provide
+the convenient analysis wrapper `revision_summary()`, which computes simple
+summary statistics for each key (by default, `(geo_value,time_value)` pairs). In
+addition to the per key summary, it also returns an overall summary. Here is an
+a sample of the output:
+
+```{r}
+revision_details <- revision_summary(dv_archive, print_inform = TRUE)
+```
+
+We can see from the output that, as mentioned above, this data set has a lot of
+revisions: there are no keys that have no revision at all and 34% of the keys
+change by 10% or more when revised.
+
+To do more detailed analysis than is possible with the above printing, we can
+inspect the returned `revision_details` tibble. Here we collect a number of
+statistics for each state:
+
+```{r}
+revision_details %>%
+  group_by(geo_value) %>%
+  summarise(
+    n_rev = mean(n_revisions),
+    min_lag = min(min_lag),
+    max_lag = max(max_lag),
+    spread = mean(spread),
+    rel_spread = mean(rel_spread),
+    time_near_latest = mean(time_near_latest)
+  )
+```
+
+Most of the states have similar stats on most of these features, except for the
+`time_near_latest` stat, which is the amount of time that it takes for the
+revisions to converge to within 20% of the final value and stay there. It is the
+highest for CA and the lowest for TX.
+
+## Merging `epi_archive` objects
+
+A common operation on datasets is merging (or joining) them together, such as
+when we grab data from multiple sources for joint analysis or modeling. Merging
+two `epi_archive` objects together is a bit tricky however, since we need to handle
+datasets that might get revised at different times. The function `epix_merge()`
+is made to smooth this out. Below we merge the working `epi_archive` of versioned
+percentage CLI from outpatient visits to another one of versioned COVID-19 case
+reporting data, which we fetch the from the [COVIDcast
+API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/), on the
+rate scale (counts per 100,000 people in the population).
+
+```{r, message = FALSE, warning = FALSE, eval=FALSE}
+library(epidatr)
+
+y <- pub_covidcast(
+  source = "jhu-csse",
+  signals = "confirmed_7dav_incidence_prop",
+  geo_type = "state",
+  time_type = "day",
+  geo_values = "ca,fl,ny,tx",
+  time_values = epirange(20200601, 20211201),
+  issues = epirange(20200601, 20211201)
+) %>%
+  select(geo_value, time_value, version = issue, case_rate_7d_av = value) %>%
+  as_epi_archive(compactify = TRUE)
+
+dv_cases_archive <- epix_merge(dv_archive, y, sync = "locf", compactify = TRUE)
+print(dv_cases_archive)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+dv_cases_archive <- archive_cases_dv_subset
+print(dv_cases_archive)
+```
+
+Note that we have used the `sync = "locf"` argument to specify that we want to
+synchronize the two datasets on their disjoint revisions by using the last
+observation carried forward (LOCF). For more information, see `epix_merge()`.
+
+## Backtesting a simple autoregressive forecaster
+
+One of the most common use cases of the `epi_archive` object is for accurate
+model backtesting. In this section we will:
+
+- develop a simple autoregressive forecaster that predicts the next value of the
+signal based on the current and past values of the signal itself, and
+- demonstrate how to slide this forecaster over the `epi_archive` object to
+produce forecasts at a few dates date, using version-unaware and -aware
+computations,
+- compare the two approaches.
+
+Before we get started, we should mention that all the work of constructing the
+forecaster that we're about to do is just a simple demo. The `epipredict`
+package, which is a companion package to `epiprocess`, offers a suite of
+predictive modeling tools that can improve on some of the shortcomings of the
+simple AR model we will use here, while also allowing the forecasters to be
+built from building blocks. A better version of the function below exists as
+`epipredict::arx_forecaster()`. See `vignette("backtesting",
+package="epipredict")` for a similar demo, but using the forecasters in
+that package.
+
+First, let's define the forecaster. While AR models can be fit in numerous ways
+(using base R or external packages), here we define it "by hand"  because we
+would like to demonstrate a *probabilistic* forecaster: one that outputs not
+just a point prediction, but a notion of uncertainty around this. In particular,
+our forecaster will output a point prediction along with an 90\% uncertainty
+band, represented by a predictive quantiles at the 5\% and 95\% levels (lower
+and upper endpoints of the uncertainty band).
+
+The function defined below, `prob_ar()`, is our probabilistic AR forecaster. Our
+forecasting target will be the `percent_cli` signal. The function is as follows:
+
+```{r}
+#' `ahead` - the number of time units ahead to forecast (in this case days),
+#' `lags` - the autoregressive lags to use in the model (in this case, the
+#' current value and the values from 7 and 14 days ago),
+#' `min_train_window` - the minimum number of observations required to fit the
+#' forecaster (used to control for edge cases),
+#' `lower_level` and `upper_level` - the quantiles to use for the uncertainty
+#' bands
+#' `symmetrize` - whether to symmetrize the residuals when computing the
+#' uncertainty bands,
+#' `intercept` - whether to include an intercept in the model,
+#' `nonneg` - whether to clip the forecasts at zero.
+prob_ar <- function(y, ahead = 7, lags = c(0, 7, 14), min_train_window = 90,
+                    lower_level = 0.05, upper_level = 0.95, symmetrize = TRUE,
+                    intercept = FALSE, nonneg = TRUE) {
+  # Return NA if insufficient training data
+  if (length(y) < min_train_window + max(lags) + ahead) {
+    return(data.frame(point = NA, lower = NA, upper = NA))
+  }
+
+  # Filter down the edge-NAs
+  y <- y[!is.na(y)]
+
+  # Build features and response for the AR model
+  dat <- do.call(
+    data.frame,
+    purrr::map(lags, function(j) lag(y, n = j))
+  )
+  names(dat) <- paste0("x", seq_len(ncol(dat)))
+  if (intercept) dat$x0 <- rep(1, nrow(dat))
+  dat$y <- lead(y, n = ahead)
+
+  # Now fit the AR model and make a prediction
+  obj <- lm(y ~ . + 0, data = dat)
+  point <- predict(obj, newdata = tail(dat, 1))
+
+  # Compute a band
+  r <- residuals(obj)
+  s <- ifelse(symmetrize, -1, NA) # Should the residuals be symmetrized?
+  q <- quantile(c(r, s * r), probs = c(lower_level, upper_level), na.rm = TRUE)
+  lower <- point + q[1]
+  upper <- point + q[2]
+
+  # Clip at zero if we need to, then return
+  if (nonneg) {
+    point <- max(point, 0)
+    lower <- max(lower, 0)
+    upper <- max(upper, 0)
+  }
+  return(data.frame(point = point, lower = lower, upper = upper))
+}
+```
+
+To start, let's run this forecaster on a single date (say, the last date in the
+archive) to see how it performs. We will use the `epix_as_of()` method to
+generate a snapshot of the archive at the last date, and then run the forecaster.
+
+```{r}
+edf_latest <- epix_as_of(dv_archive, dv_archive$versions_end) %>%
+  tidyr::drop_na() %>%
+  as_tibble()
+edf_latest %>%
+  group_by(geo_value) %>%
+  summarize(fc = prob_ar(percent_cli), time_value = last(time_value), percent_cli = last(percent_cli))
+```
+
+The resulting epi_df now contains three new columns: `fc$point`, `fc$lower`, and
+`fc$upper` corresponding to the point forecast, and the lower and upper
+endpoints of the 95\% prediction band, respectively. The forecasts look
+reasonable and in line with the data. The point forecast is close to the last
+observed value, and the uncertainty bands are wide enough to capture the
+variability in the data.
+
+Note that the same can be achieved wth `epix_slide` using the following code:
+
+```{r}
+dv_archive %>%
+  group_by(geo_value) %>%
+  epix_slide(fc = prob_ar(percent_cli), .versions = dv_archive$versions_end)
+```
+
+Here we used `epix_slide()` to slide the forecaster over the `epi_archive`, but
+by specifying the `.versions` argument to be the last version in the archive, we
+effectively ran the forecaster on the last date in the archive.
+
+Now let's go ahead and slide this forecaster in a version unaware way. First, we
+need to snapshot the latest version of the data, and then make a faux archive by
+setting `version = time_value`. This has the effect of simulating a data set
+that receives the final version updates every day.
+
+```{r}
+dv_archive_faux <- edf_latest %>%
+  mutate(version = time_value) %>%
+  as_epi_archive()
+```
+
+Now we can slide the forecaster over the faux archive to produce forecasts at a
+number of dates in the past, spaced a month apart. Note that we will use the
+`case_rate_7d_av` signal from the merged archive, which is the smoothed COVID-19
+case rate. This is clearly equivalent, up to a constant, to modeling weekly sums
+of COVID-19 cases. We will forecast 7, 14, 21, and 28 days ahead, so to reduce
+typing, we create the wrapper function `k_week_ahead()`. We also produce
+forecasts in a version-aware way, which simply requires us to use the true
+`epi_archive` object instead of the faux one.
+
+```{r}
+# Generate a sequence of forecast dates. Starting 3 months into the data, so we have
+# enough data to train the AR model.
+forecast_dates <- seq(as.Date("2020-10-01"), as.Date("2021-11-01"), by = "1 months")
+k_week_ahead <- function(archive, ahead = 7) {
+  archive %>%
+    group_by(geo_value) %>%
+    epix_slide(fc = prob_ar(.data$percent_cli, ahead = ahead), .versions = forecast_dates) %>%
+    ungroup() %>%
+    mutate(target_date = version + ahead)
+}
+
+aheads <- 1:28
+forecasts <- bind_rows(
+  map(aheads, ~ k_week_ahead(dv_archive_faux, ahead = .x) %>% mutate(version_aware = FALSE)),
+  map(aheads, ~ k_week_ahead(dv_archive, ahead = .x) %>% mutate(version_aware = TRUE))
+)
+```
+
+Now let's plot the forecasts at each forecast date at multiple horizons: 7, 14,
+21, and 28 days ahead. The grey line represents the finalized COVID-19 case
+rates, and the colored lines represent the forecasts. The left column shows the
+version aware forecasts, and the right column shows the version unaware
+forecasts. They grey vertical lines mark the forecast dates.
+
+```{r}
+edf_latest <- epix_as_of(dv_archive, dv_archive$versions_end)
+max_version <- max(dv_archive$DT$version)
+geo_choose <- "tx"
+
+forecasts_filtered <- forecasts %>%
+  filter(geo_value == geo_choose) %>%
+  mutate(time_value = version)
+percent_cli_data <- bind_rows(
+  # Snapshotted data for the version-aware forecasts
+  map(
+    forecast_dates,
+    ~ epix_as_of(dv_archive, .x) %>%
+      mutate(version = .x)
+  ) %>%
+    bind_rows() %>%
+    mutate(version_aware = TRUE),
+  # Latest data for the version-unaware forecasts
+  edf_latest %>% mutate(version_aware = FALSE)
+) %>%
+  filter(geo_value == geo_choose)
+
+ggplot(data = forecasts_filtered, aes(x = target_date, group = time_value)) +
+  geom_ribbon(aes(ymin = fc$lower, ymax = fc$upper, fill = factor(time_value)), alpha = 0.4) +
+  geom_line(aes(y = fc$point, color = factor(time_value)), linetype = 2L) +
+  geom_point(aes(y = fc$point, color = factor(time_value)), size = 0.75) +
+  geom_vline(data = percent_cli_data, aes(color = factor(version), xintercept = version), lty = 2) +
+  geom_line(
+    data = percent_cli_data,
+    aes(x = time_value, y = percent_cli, color = factor(version)),
+    inherit.aes = FALSE, na.rm = TRUE
+  ) +
+  facet_grid(version_aware ~ geo_value, scales = "free") +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  scale_y_continuous(expand = expansion(c(0, 0.05))) +
+  labs(x = "Date", y = "smoothed, day of week adjusted covid-like doctors visits") +
+  theme(legend.position = "none")
+```
+
+A few points are worth making. First, it's clear that training and making
+predictions on finalized data can lead to an overly optimistic sense of accuracy
+(see, for example, [McDonald et al.
+(2021)](https://www.pnas.org/content/118/51/e2111453118/), and references
+therein). Second, we can see that the properly-versioned forecaster is, at some
+points in time, more problematic; for example, it massively overpredicts the
+peak in both locations in winter wave of 2020. However, performance is pretty
+poor across the board here, whether or not properly-versioned data is used, with
+volatile and overconfident forecasts in various places.
+
+As mentioned previously, this forecaster is meant only as a demo of the slide
+functionality with some of the most basic forecasting methodology possible. The
+[`epipredict`](https://cmu-delphi.github.io/epipredict/) package, which builds
+off the data structures and functionality in the current package, is the place
+to look for more robust forecasting methodology.
+
+## Attribution
+
+This document contains a dataset that is a modified part of the [COVID-19 Data
+Repository by the Center for Systems Science and Engineering (CSSE) at Johns
+Hopkins University](https://github.com/CSSEGISandData/COVID-19) as [republished
+in the COVIDcast Epidata
+API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html).
+This data set is licensed under the terms of the [Creative Commons Attribution
+4.0 International license](https://creativecommons.org/licenses/by/4.0/) by the
+Johns Hopkins University on behalf of its Center for Systems Science in
+Engineering. Copyright Johns Hopkins University 2020.
+
+The `percent_cli` data is a modified part of the [COVIDcast Epidata API Doctor
+Visits
+data](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
+This dataset is licensed under the terms of the [Creative Commons Attribution
+4.0 International license](https://creativecommons.org/licenses/by/4.0/).
+Copyright Delphi Research Group at Carnegie Mellon University 2020.

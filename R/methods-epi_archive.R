@@ -138,33 +138,45 @@ epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
 #' Fill `epi_archive` unobserved history
 #'
 #' @description
-#' Sometimes, due to upstream data pipeline issues, we have to work with a
-#' version history that isn't completely up to date, but with functions that
-#' expect archives that are completely up to date, or equally as up-to-date as
-#' another archive. This function provides one way to approach such mismatches:
-#' pretend that we've "observed" additional versions, filling in these versions
-#' with NAs or extrapolated values.
+#' This function fills in missing version history in an `epi_archive` object up
+#' to a specified version, updating the `versions_end` field as necessary. Note
+#' that the filling is done in a compactified way, see details.
 #'
 #' @param x An `epi_archive`
-#' @param fill_versions_end Length-1, same class&type as `x$version`: the
-#'   version through which to fill in missing version history; this will be the
-#'   result's `$versions_end` unless it already had a later
-#'   `$versions_end`.
-#' @param how Optional; `"na"` or `"locf"`: `"na"` will fill in any missing
-#'   required version history with `NA`s, by inserting (if necessary) an update
-#'   immediately after the current `$versions_end` that revises all
-#'   existing measurements to be `NA` (this is only supported for `version`
-#'   classes with a `next_after` implementation); `"locf"` will fill in missing
-#'   version history with the last version of each observation carried forward
-#'   (LOCF), by leaving the update `$DT` alone (other `epi_archive` methods are
-#'   based on LOCF).  Default is `"na"`.
+#' @param fill_versions_end a scalar of the same class&type as `x$version`: the
+#'   version through which to fill in missing version history; the
+#'   `epi_archive`'s `versions_end` attribute will be set to this, unless it
+#'   already had a later `$versions_end`.
+#' @param how Optional; `"na"` or `"locf"`: `"na"` fills missing version history
+#'   with `NA`s, `"locf"` fills missing version history with the last version of
+#'   each observation carried forward (LOCF). Default is `"na"`.
+#' @return An `epi_archive`
+#' @details
+#' Note that we generally store `epi_archive`'s in a compacted form, meaning
+#' that, implciitly, if a version does not exist, but the `version_end`
+#' attribute is greater, then it is understood that all the versions in between
+#' had the same value as the last observed version. This affects the behavior of
+#' this function in the following ways:
+#'
+#' - if `how = "na"`, then the function will fill in at most one missing version
+#'   with `NA` and the rest will be implicit.
+#' - if `how = "locf"`, then the function will not fill any values.
 #'
 #' @importFrom data.table copy ":="
 #' @importFrom rlang arg_match
 #' @return An `epi_archive`
 #' @export
-epix_fill_through_version <- function(x, fill_versions_end,
-                                      how = c("na", "locf")) {
+#' @examples
+#' test_date <- as.Date("2020-01-01")
+#' ea_orig <- as_epi_archive(data.table::data.table(
+#'   geo_value = "ak",
+#'   time_value = test_date + c(rep(0L, 5L), 1L),
+#'   version = test_date + c(1:5, 2L),
+#'   value = 1:6
+#' ))
+#' epix_fill_through_version(ea_orig, test_date + 8, "na")
+#' epix_fill_through_version(ea_orig, test_date + 8, "locf")
+epix_fill_through_version <- function(x, fill_versions_end, how = c("na", "locf")) {
   assert_class(x, "epi_archive")
 
   validate_version_bound(fill_versions_end, x$DT, na_ok = FALSE)
@@ -233,24 +245,38 @@ epix_fill_through_version <- function(x, fill_versions_end,
 #' parameter controls what is done.
 #'
 #' @param x,y Two `epi_archive` objects to join together.
-#' @param sync Optional; `"forbid"`, `"na"`, `"locf"`, or `"truncate"`; in the
-#'   case that `x$versions_end` doesn't match `y$versions_end`, what do we do?:
-#'   `"forbid"`: emit an error; "na": use `max(x$versions_end, y$versions_end)`
-#'   as the result's `versions_end`, but ensure that, if we request a snapshot
-#'   as of a version after `min(x$versions_end, y$versions_end)`, the
-#'   observation columns from the less up-to-date archive will be all NAs (i.e.,
-#'   imagine there was an update immediately after its `versions_end` which
-#'   revised all observations to be `NA`); `"locf"`: use `max(x$versions_end,
-#'   y$versions_end)` as the result's `versions_end`, allowing the last version
-#'   of each observation to be carried forward to extrapolate unavailable
-#'   versions for the less up-to-date input archive (i.e., imagining that in the
-#'   less up-to-date archive's data set remained unchanged between its actual
-#'   `versions_end` and the other archive's `versions_end`); or `"truncate"`:
-#'   use `min(x$versions_end, y$versions_end)` as the result's `versions_end`,
-#'   and discard any rows containing update rows for later versions.
-#' @param compactify Optional; `TRUE`, `FALSE`, or `NULL`; should the result be
-#'   compactified? See `as_epi_archive()` for an explanation of what this means.
-#'   Default here is `TRUE`.
+#' @param sync Optional; character. The argument that decides how to handle the
+#'   situation when one signal has a more recent revision than another signal
+#'   for a key that they have both already observed. The options are:
+#'
+#'   - `"forbid"`: the default and the strictest option, throws an error; this
+#'   is likely not what you want, but it is strict to make the user aware of the
+#'   issues,
+#'   - `"locf"`: carry forward the last observed version of the missing signal
+#'   to the new version and use `max(x$versions_end, y$versions_end)` as the
+#'   result's `versions_end`,
+#'   - `"na"`: fill the unobserved values with `NA`'s (this can be handy when
+#'   you know that source data is truly missing upstream and you want to
+#'   represent the lack of information accurately, for instance) and use
+#'   `max(x$versions_end, y$versions_end)` as the result's `versions_end`,
+#'   - `"truncate"`: discard any rows containing update rows for later versions
+#'   and use `min(x$versions_end, y$versions_end)` as the result's
+#'   `versions_end`.
+#'
+#' @param compactify Optional; `TRUE` (default), `FALSE`, or `NULL`; should the
+#'   result be compactified? See `as_epi_archive()` for details.
+#' @details
+#' When merging archives, unless the archives have identical data release
+#' patterns, we often have to handle the situation when one signal has a more
+#' recent observation for a key than another signal. In this case, we have two
+#' options:
+#'
+#' - if the the other signal has never observed that key, we need to introduce
+#' `NA`s in the non-key variables for the missing signal,
+#' - if the other signal has observed that key previously, but at an ealier
+#' revision date, then we need to decide how to handle the missing value in the
+#' more recent signal; the `sync` argument controls this behavior.
+#'
 #' @return the resulting `epi_archive`
 #'
 #' @details In all cases, `clobberable_versions_start` will be set to the
@@ -265,18 +291,14 @@ epix_fill_through_version <- function(x, fill_versions_end,
 #'   version = as.Date(c("2024-08-01", "2024-08-02", "2024-08-02")),
 #'   signal1 = c(10, 11, 7)
 #' )
-#'
 #' s2 <- tibble::tibble(
 #'   geo_value = c("ca", "ca"),
 #'   time_value = as.Date(c("2024-08-01", "2024-08-02")),
 #'   version = as.Date(c("2024-08-03", "2024-08-03")),
 #'   signal2 = c(2, 3)
 #' )
-#'
-#'
 #' s1 <- s1 %>% as_epi_archive()
 #' s2 <- s2 %>% as_epi_archive()
-#'
 #' merged <- epix_merge(s1, s2, sync = "locf")
 #' merged[["DT"]]
 #'
@@ -288,18 +310,14 @@ epix_fill_through_version <- function(x, fill_versions_end,
 #'   version = as.Date(c("2024-08-01", "2024-08-03", "2024-08-03", "2024-08-03")),
 #'   signal1 = c(12, 13, 22, 19)
 #' )
-#'
 #' s2 <- tibble::tibble(
 #'   geo_value = c("ca", "ca"),
 #'   time_value = as.Date(c("2024-08-01", "2024-08-02")),
 #'   version = as.Date(c("2024-08-02", "2024-08-02")),
 #'   signal2 = c(4, 5),
 #' )
-#'
-#'
 #' s1 <- s1 %>% as_epi_archive()
 #' s2 <- s2 %>% as_epi_archive()
-#'
 #' merged <- epix_merge(s1, s2, sync = "locf")
 #' merged[["DT"]]
 #'
@@ -311,7 +329,6 @@ epix_fill_through_version <- function(x, fill_versions_end,
 #'   version = as.Date(c("2024-08-01", "2024-08-02", "2024-08-03")),
 #'   signal1 = c(14, 11, 9)
 #' )
-#'
 #' # The s2 signal at August 1st gets revised from 3 to 5 on August 3rd
 #' s2 <- tibble::tibble(
 #'   geo_value = c("ca", "ca", "ca"),
@@ -319,11 +336,8 @@ epix_fill_through_version <- function(x, fill_versions_end,
 #'   version = as.Date(c("2024-08-02", "2024-08-03", "2024-08-03")),
 #'   signal2 = c(3, 5, 2),
 #' )
-#'
 #' s1 <- s1 %>% as_epi_archive()
 #' s2 <- s2 %>% as_epi_archive()
-#'
-#' # Some LOCF for signal 1 as signal 2 gets updated
 #' merged <- epix_merge(s1, s2, sync = "locf")
 #' merged[["DT"]]
 #' @importFrom data.table key set setkeyv

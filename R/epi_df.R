@@ -1,8 +1,10 @@
 #' `epi_df` object
 #'
-#' An `epi_df` is a tibble with certain minimal column structure and metadata.
-#'   It can be seen as a snapshot of a data set that contains the most
-#'   up-to-date values of some signal variables of interest, as of a given time.
+#' One of the two main data structures for storing time series in `epiprocess`.
+#' It is simply tibble with at least two columns, `geo_value` and `time_value`,
+#' that provide the keys for the time series. It can have any other columns,
+#' which can be seen as measured variables at each key. In brief, an `epi_df`
+#' represents a snapshot of an epidemiological data set at a point in time.
 #'
 #' @details An `epi_df` is a tibble with (at least) the following columns:
 #'
@@ -40,6 +42,9 @@
 #'   single snapshot of a data set that contains the most up-to-date values of
 #'   the signals variables, as of the time specified in the `as_of` field.
 #'
+#' If an `epi_df` ever loses its `geo_value` or `time_value` columns, it will
+#'   decay into a regular tibble.
+#'
 #' A companion object is the `epi_archive` object, which contains the full
 #'   version history of a given data set. Revisions are common in many types of
 #'   epidemiological data streams, and paying attention to data revisions can be
@@ -49,7 +54,8 @@
 #'   generate `epi_df` objects, as data snapshots, from an `epi_archive`
 #'   object).
 #'
-#' @section Geo Types:
+#' ## Geo Types
+#'
 #' The following geo types are recognized in an `epi_df`.
 #'
 #' * `"county"`: each observation corresponds to a U.S. county; coded by 5-digit
@@ -67,7 +73,8 @@
 #'
 #' An unrecognizable geo type is labeled "custom".
 #'
-#' @section Time Types:
+#' ## Time Types
+#'
 #' The following time types are recognized in an `epi_df`.
 #'
 #' * `"day"`: each observation corresponds to a day; coded as a `Date` object,
@@ -85,33 +92,30 @@
 #' @examples
 #' # Convert a `tsibble` that has county code as an extra key
 #' # Notice that county code should be a character string to preserve any leading zeroes
-#'
 #' ex1_input <- tibble::tibble(
-#'   geo_value = rep(c("ca", "fl", "pa"), each = 3),
-#'   county_code = c(
+#'   geo_value = c(
 #'     "06059", "06061", "06067",
 #'     "12111", "12113", "12117",
 #'     "42101", "42103", "42105"
 #'   ),
+#'   state_name = rep(c("ca", "fl", "pa"), each = 3),
 #'   time_value = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
 #'     by = "day"
 #'   ), length.out = length(geo_value)),
 #'   value = 1:length(geo_value) + 0.01 * rnorm(length(geo_value))
 #' ) %>%
-#'   tsibble::as_tsibble(index = time_value, key = c(geo_value, county_code))
+#'   tsibble::as_tsibble(index = time_value, key = c(geo_value, state_name))
 #'
-#' # The `other_keys` metadata (`"county_code"` in this case) is automatically
+#' # The `other_keys` metadata (`"state_name"` in this case) is automatically
 #' # inferred from the `tsibble`'s `key`:
 #' ex1 <- as_epi_df(x = ex1_input, as_of = "2020-06-03")
 #' attr(ex1, "metadata")[["other_keys"]]
-#'
 #'
 #' # Dealing with misspecified column names:
 #' # Geographical and temporal information must be provided in columns named
 #' # `geo_value` and `time_value`; if we start from a data frame with a
 #' # different format, it must be converted to use `geo_value` and `time_value`
 #' # before calling `as_epi_df`.
-#'
 #' ex2_input <- tibble::tibble(
 #'   state = rep(c("ca", "fl", "pa"), each = 3), # misnamed
 #'   pol = rep(c("blue", "swing", "swing"), each = 3), # extra key
@@ -120,7 +124,6 @@
 #'   ), length.out = length(state)), # misnamed
 #'   value = 1:length(state) + 0.01 * rnorm(length(state))
 #' )
-#'
 #' print(ex2_input)
 #'
 #' ex2 <- ex2_input %>%
@@ -129,12 +132,9 @@
 #'     as_of = "2020-06-03",
 #'     other_keys = "pol"
 #'   )
-#'
 #' attr(ex2, "metadata")
 #'
-#'
 #' # Adding additional keys to an `epi_df` object
-#'
 #' ex3_input <- covid_incidence_county_subset %>%
 #'   dplyr::filter(time_value > "2021-12-01", state_name == "Massachusetts") %>%
 #'   dplyr::slice_tail(n = 6)
@@ -149,6 +149,10 @@
 #'   as_epi_df(other_keys = c("state", "pol"))
 #'
 #' attr(ex3, "metadata")
+#'
+#' # Decays to a tibble
+#' covid_incidence_county_subset %>%
+#'   dplyr::select(-geo_value)
 NULL
 
 #' @describeIn epi_df Lower-level constructor for `epi_df` object
@@ -298,7 +302,7 @@ as_epi_df.tbl_df <- function(
 #' @method as_epi_df data.frame
 #' @export
 as_epi_df.data.frame <- function(x, as_of, other_keys = character(), ...) {
-  as_epi_df.tbl_df(x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys, ...)
+  as_epi_df(x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys, ...)
 }
 
 #' @rdname epi_df
@@ -310,7 +314,7 @@ as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(), ...) {
   if (length(tsibble_other_keys) > 0) {
     other_keys <- unique(c(other_keys, tsibble_other_keys))
   }
-  as_epi_df.tbl_df(x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys, ...)
+  as_epi_df(x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys, ...)
 }
 
 #' Test for `epi_df` format
@@ -318,6 +322,7 @@ as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(), ...) {
 #' @param x An object.
 #' @return `TRUE` if the object inherits from `epi_df`.
 #'
+#' @rdname epi_df
 #' @export
 is_epi_df <- function(x) {
   inherits(x, "epi_df")
