@@ -66,9 +66,11 @@ as a character vector here (typical examples are "age" or sub-geographies).}
 An \code{epi_df} object.
 }
 \description{
-An \code{epi_df} is a tibble with certain minimal column structure and metadata.
-It can be seen as a snapshot of a data set that contains the most
-up-to-date values of some signal variables of interest, as of a given time.
+One of the two main data structures for storing time series in \code{epiprocess}.
+It is simply tibble with at least two columns, \code{geo_value} and \code{time_value},
+that provide the keys for the time series. It can have any other columns,
+which can be seen as measured variables at each key. In brief, an \code{epi_df}
+represents a snapshot of an epidemiological data set at a point in time.
 }
 \details{
 An \code{epi_df} is a tibble with (at least) the following columns:

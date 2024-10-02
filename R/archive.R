@@ -147,14 +147,15 @@ next_after.Date <- function(x) x + 1L
 NULL
 
 
-#' Epi Archive
+#' `epi_archive` object
 #'
-#' @title `epi_archive` object
-#'
-#' @description An `epi_archive` is an S3 class which contains a data table
-#'   along with several relevant pieces of metadata. The data table can be seen
-#'   as the full archive (version history) for some signal variables of
-#'   interest.
+#' The second main data structure for storing time series in `epiprocess`. It is
+#' similar to `epi_df` in that it fundamentally a table with a few required
+#' columns that stores epidemiological time series data. An `epi_archive`
+#' requires a `geo_value`, `time_value`, and `version` column (and possibly
+#' other key columns) along with measurement values. In brief, an `epi_archive`
+#' is a history of the time series data, where the `version` column tracks the
+#' time at which the data was available. This allows for version-aware forecasting.
 #'
 #' @details An `epi_archive` contains a data table `DT`, of class `data.table`
 #'   from the `data.table` package, with (at least) the following columns:

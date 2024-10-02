@@ -77,12 +77,12 @@ redundant version updates in `as_epi_archive` using compactify, please refer to
 the [compactify vignette](articles/compactify.html).
 
 ```{r}
-x <- dv %>%
+epi_archive <- dv %>%
   select(geo_value, time_value, version = issue, percent_cli = value) %>%
   as_epi_archive(compactify = TRUE)
 
-class(x)
-print(x)
+class(epi_archive)
+print(epi_archive)
 ```
 
 An `epi_archive` is consists of a primary field `DT`, which is a data table
@@ -91,8 +91,8 @@ An `epi_archive` is consists of a primary field `DT`, which is a data table
 `geo_type`.
 
 ```{r}
-class(x$DT)
-head(x$DT)
+class(epi_archive$DT)
+head(epi_archive$DT)
 ```
 
 The variables `geo_value`, `time_value`, `version` serve as **key variables**
@@ -102,7 +102,7 @@ and therefore the key variables are critical for figuring out how to generate a
 snapshot of data from the archive, as of a given version (also described below).
 
 ```{r, error=TRUE}
-key(x$DT)
+key(epi_archive$DT)
 ```
 
 In general, the last version of each observation is carried forward (LOCF) to
@@ -130,8 +130,8 @@ default, `(geo_value,time_value)` pairs), such as the lag to the first value
 (latency). In addition to the per key summary, it also returns an overall
 summary:
 
-```{r}
-revision_details <- revision_summary(x, print_inform = TRUE)
+```{r cache=TRUE}
+revision_details <- revision_summary(epi_archive, print_inform = TRUE)
 ```
 
 So as was mentioned at the top, this is clearly a data set where basically
@@ -167,11 +167,8 @@ snapshot of the archive in `epi_df` format. This represents the most up-to-date
 values of the signal variables as of a given version.
 
 ```{r}
-x_snapshot <- epix_as_of(x, as.Date("2021-06-01"))
-class(x_snapshot)
-head(x_snapshot)
-max(x_snapshot$time_value)
-attributes(x_snapshot)$metadata$as_of
+epi_snapshot <- epix_as_of(epi_archive, as.Date("2021-06-01"))
+print(epi_snapshot)
 ```
 
 We can see that the max time value in the `epi_df` object `x_snapshot` that was
@@ -185,17 +182,17 @@ overlay the corresponding signal curves as colored lines, with the version dates
 marked by dotted vertical lines, and draw the latest curve in black (from the
 latest snapshot `x_latest` that the archive can provide).
 
-```{r, fig.width = 8, fig.height = 7}
+```{r, cache=TRUE, fig.width = 8, fig.height = 7}
 theme_set(theme_bw())
 
-x_latest <- epix_as_of(x, x$versions_end)
-self_max <- max(x$DT$version)
+edf_latest <- epix_as_of(epi_archive, epi_archive$versions_end)
+self_max <- max(epi_archive$DT$version)
 versions <- seq(as.Date("2020-06-01"), self_max - 1, by = "1 month")
 snapshots <- map_dfr(versions, function(v) {
-  epix_as_of(x, v) %>% mutate(version = v)
+  epix_as_of(epi_archive, v) %>% mutate(version = v)
 }) %>%
   bind_rows(
-    x_latest %>% mutate(version = self_max)
+    edf_latest %>% mutate(version = self_max)
   ) %>%
   mutate(latest = version == self_max)
 
@@ -259,16 +256,169 @@ y <- pub_covidcast(
   select(geo_value, time_value, version = issue, case_rate_7d_av = value) %>%
   as_epi_archive(compactify = TRUE)
 
-x <- epix_merge(x, y, sync = "locf", compactify = TRUE)
-print(x)
-head(x$DT)
+archive_merged <- epix_merge(epi_archive, y, sync = "locf", compactify = TRUE)
+print(archive_merged)
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-x <- archive_cases_dv_subset
-print(x)
-head(x$DT)
+archive_merged <- archive_cases_dv_subset
+print(archive_merged)
 ```
+
+## Running a simple autoregressive forecaster (version-unaware)
+
+As a more complex example, we create a forecaster based on an autoregression or
+AR model. AR models can be fit in numerous ways (using base R functions and
+various packages), but here we define it "by hand" both because it provides a
+more advanced example of sliding a function over an `epi_df` object, and because
+it allows us to be a bit more flexible in defining a *probabilistic* forecaster:
+one that outputs not just a point prediction, but a notion of uncertainty around
+this. In particular, our forecaster will output a point prediction along with an
+90\% uncertainty band, represented by a predictive quantiles at the 5\% and 95\%
+levels (lower and upper endpoints of the uncertainty band).
+
+The function defined below, `prob_ar()`, is our probabilistic AR forecaster. The
+`lags`argument indicates which lags to use in the model, and `ahead` indicates
+how far ahead in the future to make forecasts (both are encoded in terms of the
+units of the `time_value` column; so, days, in the working `epi_df` being
+considered in this vignette).
+
+```{r}
+prob_ar <- function(y, lags = c(0, 7, 14), ahead = 6, min_train_window = 20,
+                    lower_level = 0.05, upper_level = 0.95, symmetrize = TRUE,
+                    intercept = FALSE, nonneg = TRUE) {
+  # Return NA if insufficient training data
+  if (length(y) < min_train_window + max(lags) + ahead) {
+    return(data.frame(point = NA, lower = NA, upper = NA))
+  }
+
+  # Filter down the edge-NAs
+  y <- y[!is.na(y)]
+
+  # Build features and response for the AR model
+  dat <- do.call(
+    data.frame,
+    purrr::map(lags, function(j) lag(y, n = j))
+  )
+  names(dat) <- paste0("x", seq_len(ncol(dat)))
+  if (intercept) dat$x0 <- rep(1, nrow(dat))
+  dat$y <- lead(y, n = ahead)
+
+  # Now fit the AR model and make a prediction
+  obj <- lm(y ~ . + 0, data = dat)
+  point <- predict(obj, newdata = tail(dat, 1))
+
+  # Compute a band
+  r <- residuals(obj)
+  s <- ifelse(symmetrize, -1, NA) # Should the residuals be symmetrized?
+  q <- quantile(c(r, s * r), probs = c(lower_level, upper_level), na.rm = TRUE)
+  lower <- point + q[1]
+  upper <- point + q[2]
+
+  # Clip at zero if we need to, then return
+  if (nonneg) {
+    point <- max(point, 0)
+    lower <- max(lower, 0)
+    upper <- max(upper, 0)
+  }
+  return(data.frame(point = point, lower = lower, upper = upper))
+}
+```
+
+We go ahead and slide this AR forecaster over the working `epi_df` of COVID-19
+cases. Note that we actually model the `cases_7dav` column, to operate on the
+scale of smoothed COVID-19 cases. This is clearly equivalent, up to a constant,
+to modeling weekly sums of COVID-19 cases.
+
+```{r cache=TRUE}
+edf_latest <- epix_as_of(archive_merged, archive_merged$versions_end)
+
+fc_time_values <- seq(as.Date("2020-09-01"), as.Date("2021-11-01"), by = "1 months")
+edf_latest %>%
+  group_by(geo_value) %>%
+  epi_slide(fc = prob_ar(.data$case_rate_7d_av), .window_size = 120, .ref_time_values = fc_time_values) %>%
+  ungroup() %>%
+  head(10)
+```
+
+Note that here we have utilized an argument `.ref_time_values` to perform the
+sliding computation (here, compute a forecast) at a specific subset of reference
+time values (the start of every month from mid 2020 to the end of 2021). The
+resulting epi_df now contains three new columns: `fc$point`, `fc$lower`, and
+`fc$upper` corresponding to the point forecast, and the lower and upper
+endpoints of the 95\% prediction band, respectively.
+
+To finish off, we plot the forecasts at some times (spaced out by a few months)
+over the last year, at multiple horizons: 7, 14, 21, and 28 days ahead. To do
+so, we encapsulate the process of generating forecasts into a simple function,
+so that we can call it a few times.
+
+```{r, cache=TRUE, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
+# Note the use of .all_rows = TRUE (keeps all original rows in the output)
+k_week_ahead <- function(epi_df, ahead = 7) {
+  epi_df %>%
+    group_by(geo_value) %>%
+    epi_slide(
+      fc = prob_ar(.data$case_rate_7d_av, ahead = ahead),
+      .window_size = 120,
+      .ref_time_values = fc_time_values,
+      .all_rows = TRUE
+    ) %>%
+    ungroup() %>%
+    mutate(target_date = .data$time_value + ahead)
+}
+
+# First generate the forecasts, and bind them together
+z <- bind_rows(
+  k_week_ahead(edf_latest, ahead = 7),
+  k_week_ahead(edf_latest, ahead = 14),
+  k_week_ahead(edf_latest, ahead = 21),
+  k_week_ahead(edf_latest, ahead = 28)
+)
+
+# Now plot them, on top of actual COVID-19 case counts
+ggplot(z) +
+  geom_line(aes(x = time_value, y = case_rate_7d_av), color = "gray50") +
+  geom_ribbon(aes(
+    x = target_date, ymin = fc$lower, ymax = fc$upper,
+    group = time_value
+  ), fill = 6, alpha = 0.4) +
+  geom_line(aes(x = target_date, y = fc$point, group = time_value)) +
+  geom_point(aes(x = target_date, y = fc$point, group = time_value),
+    size = 0.5
+  ) +
+  geom_vline(
+    data = tibble(x = fc_time_values), aes(xintercept = edf),
+    linetype = 2, alpha = 0.5
+  ) +
+  facet_wrap(vars(geo_value), scales = "free_y") +
+  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+  labs(x = "Date", y = "Reported COVID-19 cases")
+```
+
+Two points are worth making. First, the AR model's performance here is pretty
+spotty. At various points in time, we can see that its forecasts are volatile
+(its point predictions are all over the place), or overconfident (its bands are
+too narrow), or both at the same time. This is only meant as a simple demo and
+not entirely unexpected given the way the AR model is set up. The
+[`epipredict`](https://cmu-delphi.github.io/epipredict) package, which is a
+companion package to `epiprocess`, offers a suite of predictive modeling tools
+that can improve on some of the shortcomings of the above simple AR model.
+
+Second, the AR forecaster here is using finalized data, meaning, it uses the
+latest versions of signal values (reported COVID-19 cases) available, for both
+training models and making predictions historically. However, this is not
+reflective of the provisional nature of the data that it must cope with in a
+true forecast task. Training and making predictions on finalized data can lead
+to an overly optimistic sense of accuracy; see, for example, [McDonald et al.
+(2021)](https://www.pnas.org/content/118/51/e2111453118/), and references
+therein. Fortunately, the `epiprocess` package provides a data structure called
+`epi_archive` that can be used to store all data revisions, and furthermore, an
+`epi_archive` object knows how to slide computations in the correct
+version-aware sense (for the computation at each reference time $t$, it uses
+only data that would have been available as of $t$). We will revisit this
+example in the [archive
+vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html).
 
 ## Sliding version-aware computations
 
@@ -348,7 +498,7 @@ forecast COVID-19 case rates 7 days into the future.
 ```{r}
 fc_time_values <- seq(as.Date("2020-08-01"), as.Date("2021-11-30"), by = "1 month")
 
-z <- x %>%
+z <- archive_merged %>%
   group_by(geo_value) %>%
   epix_slide(
     fc = prob_arx(x = percent_cli, y = case_rate_7d_av, ahead = 7),
@@ -378,9 +528,7 @@ points in time and forecast horizons. The former comes from using
 `epix_slide()` with the `epi_archive` object `x`, and the latter from applying
 `epi_slide()` to the latest snapshot of the data `x_latest`.
 
-```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
-x_latest <- epix_as_of(x, x$versions_end)
-
+```{r, cache=TRUE, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
 # Simple function to produce forecasts k weeks ahead
 forecast_k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
   if (as_of) {
@@ -393,7 +541,7 @@ forecast_k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
       mutate(target_date = .data$version + ahead, as_of = TRUE) %>%
       ungroup()
   } else {
-    x_latest %>%
+    edf_latest %>%
       group_by(geo_value) %>%
       epi_slide(
         fc = prob_arx(.data$percent_cli, .data$case_rate_7d_av, ahead = ahead), .window_size = 120,
@@ -406,21 +554,21 @@ forecast_k_week_ahead <- function(x, ahead = 7, as_of = TRUE) {
 
 # Generate the forecasts, and bind them together
 fc <- bind_rows(
-  forecast_k_week_ahead(x, ahead = 7, as_of = TRUE),
-  forecast_k_week_ahead(x, ahead = 14, as_of = TRUE),
-  forecast_k_week_ahead(x, ahead = 21, as_of = TRUE),
-  forecast_k_week_ahead(x, ahead = 28, as_of = TRUE),
-  forecast_k_week_ahead(x, ahead = 7, as_of = FALSE),
-  forecast_k_week_ahead(x, ahead = 14, as_of = FALSE),
-  forecast_k_week_ahead(x, ahead = 21, as_of = FALSE),
-  forecast_k_week_ahead(x, ahead = 28, as_of = FALSE)
+  forecast_k_week_ahead(archive_merged, ahead = 7, as_of = TRUE),
+  forecast_k_week_ahead(archive_merged, ahead = 14, as_of = TRUE),
+  forecast_k_week_ahead(archive_merged, ahead = 21, as_of = TRUE),
+  forecast_k_week_ahead(archive_merged, ahead = 28, as_of = TRUE),
+  forecast_k_week_ahead(archive_merged, ahead = 7, as_of = FALSE),
+  forecast_k_week_ahead(archive_merged, ahead = 14, as_of = FALSE),
+  forecast_k_week_ahead(archive_merged, ahead = 21, as_of = FALSE),
+  forecast_k_week_ahead(archive_merged, ahead = 28, as_of = FALSE)
 )
 
 # Plot them, on top of latest COVID-19 case rates
 ggplot(fc, aes(x = target_date, group = time_value, fill = as_of)) +
   geom_ribbon(aes(ymin = fc$lower, ymax = fc$upper), alpha = 0.4) +
   geom_line(
-    data = x_latest, aes(x = time_value, y = case_rate_7d_av),
+    data = edf_latest, aes(x = time_value, y = case_rate_7d_av),
     inherit.aes = FALSE, color = "gray50"
   ) +
   geom_line(aes(y = fc$point)) +
@@ -625,7 +773,7 @@ prob_arx <- function(x, y, geo_value, time_value, args = prob_arx_args()) {
 We now make forecasts on the archive and compare to forecasts on the latest
 data.
 
-```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
+```{r, cache=TRUE, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
 # Latest snapshot of data, and forecast dates
 x_latest <- epix_as_of(x, version = max(x$DT$version))
 fc_time_values <- seq(as.Date("2020-08-01"),

@@ -14,3 +14,7 @@ renv/
 renv.lock
 .Rprofile
 sandbox.R
+# Vignette caches
+*_cache/
+vignettes/*.html
+vignettes/*.R
