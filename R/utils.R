@@ -358,8 +358,24 @@ assert_sufficient_f_args <- function(.f, ..., .ref_time_value_label) {
 #' @importFrom rlang is_function new_function f_env is_environment missing_arg
 #'  f_rhs is_formula caller_arg caller_env
 #' @keywords internal
-as_slide_computation <- function(.f, ..., .f_arg = caller_arg(.f), .call = caller_env(), .ref_time_value_long_varnames, .ref_time_value_label) {
-  f_arg <- .f_arg # for cli interpolation, avoid dot prefix
+as_slide_computation <- function(.f, ...,
+                                 .f_arg = caller_arg(.f), .call = caller_env(),
+                                 .ref_time_value_long_varnames, .ref_time_value_label) {
+  if (".col_names" %in% rlang::call_args_names(rlang::call_match())) {
+    cli_abort(
+      c("{.code epi_slide} and {.code epix_slide} do not support `.col_names`;
+         consider:",
+        "*" = "using {.code epi_slide_mean}, {.code epi_slide_sum}, or
+               {.code epi_slide_opt}, if applicable",
+        "*" = "using {.code .f = ~ .x %>%
+               dplyr::reframe(across(your_col_names, list(your_func_name = your_func)))}"
+      ),
+      call = .call,
+      class = "epiprocess__as_slide_computation__given_.col_names"
+    )
+  }
+
+  f_arg <- .f_arg # for cli interpolation, avoid dot prefix; # nolint: object_usage_linter
   withCallingHandlers(
     {
       force(.f)
@@ -367,9 +383,16 @@ as_slide_computation <- function(.f, ..., .f_arg = caller_arg(.f), .call = calle
     error = function(e) {
       cli_abort(
         c("Failed to convert {.code {f_arg}} to a slide computation.",
-          "*" = "If you were trying to use the formula interface, maybe you forgot a tilde at the beginning.",
-          "*" = "If you were trying to use the tidyeval interface, maybe you forgot to specify the name, e.g.: `my_output_col_name =`.",
-          "*" = "If you were trying to use advanced features of the tidyeval interface such as `!! name_variable :=`, you might have forgotten the required leading comma."
+          "*" = "If you were trying to use the formula interface,
+                 maybe you forgot a tilde at the beginning.",
+          "*" = "If you were trying to use the tidyeval interface,
+                 maybe you forgot to specify the name,
+                 e.g.: `my_output_col_name =`.  Note that `.col_names`
+                 is not supported.",
+          "*" = "If you were trying to use advanced features of the
+                 tidyeval interface such as `!! name_variable :=`,
+                 maybe you forgot the required leading comma.",
+          "*" = "Something else could have gone wrong; see below."
         ),
         parent = e,
         call = .call,

@@ -231,33 +231,35 @@ test_that("as_slide_computation raises errors as expected", {
     class = "epiprocess__as_slide_computation__cant_convert_catchall"
   )
 
+  # helper to make initial snapshots less error-prone:
+  expect_error_snapshot <- function(x, class) {
+    x_quo <- rlang::enquo(x)
+    rlang::inject(expect_error(!!x_quo, class = class)) # quick sanity check on class
+    rlang::inject(expect_snapshot(!!x_quo, error = TRUE)) # don't need cnd_class = TRUE since checked above
+  }
+
   # If `.f` doesn't look like tidyeval and we fail to force it, then we hint to
   # the user some potential problems:
   toy_edf <- tibble(geo_value = 1, time_value = c(1, 2), value = 1:2) %>%
     as_epi_df(as_of = 1)
   toy_archive <- tibble(version = c(1, 2, 2), geo_value = 1, time_value = c(1, 1, 2), value = 1:3) %>%
     as_epi_archive()
-  expect_error(
+  expect_error_snapshot(
     toy_edf %>%
       group_by(geo_value) %>%
-      epi_slide(.window_size = 6, tibble(slide_value = mean(.x$value))),
+      epi_slide(.window_size = 7, mean, .col_names = "value"),
+    class = "epiprocess__as_slide_computation__given_.col_names"
+  )
+  expect_error_snapshot(
+    toy_edf %>%
+      group_by(geo_value) %>%
+      epi_slide(.window_size = 7, tibble(slide_value = mean(.x$value))),
     class = "epiprocess__as_slide_computation__error_forcing_.f"
   )
-  expect_snapshot(
-    error = TRUE,
-    toy_edf %>%
-      group_by(geo_value) %>%
-      epi_slide(.window_size = 6, tibble(slide_value = mean(.x$value)))
-  )
-  expect_error(
+  expect_error_snapshot(
     toy_archive %>%
       epix_slide(tibble(slide_value = mean(.x$value))),
     class = "epiprocess__as_slide_computation__error_forcing_.f"
-  )
-  expect_snapshot(
-    error = TRUE,
-    toy_archive %>%
-      epix_slide(tibble(slide_value = mean(.x$value)))
   )
 })
 
