@@ -2,6 +2,18 @@
 
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicate PR's.
 
+# epiprocess 0.10
+
+## Breaking changes
+
+- Removed `.window_size = 1` default from `epi_slide_{mean,sum,opt}`; this
+  argument is now mandatory, and should nearly always be greater than 1 except
+  for testing purposes.
+
+## Improvements
+
+- Improved validation of `.window_size` arguments.
+
 # epiprocess 0.9
 
 ## Breaking changes
