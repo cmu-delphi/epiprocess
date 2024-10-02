@@ -12,6 +12,14 @@ This object contains a modified part of the \href{https://github.com/CSSEGISandD
 \href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons Attribution 4.0 International license}
 by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering.
 Copyright Johns Hopkins University 2020.
+
+Modifications:
+\itemize{
+\item \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{From the COVIDcast Epidata API}:
+These signals are taken directly from the JHU CSSE \href{https://github.com/CSSEGISandData/COVID-19}{COVID-19 GitHub repository} without changes.
+\item Furthermore, the data has been limited to a very small number of rows,
+formatted into an \code{epi_df}, and the signal names slightly altered.
+}
 }
 \usage{
 jhu_confirmed_cumulative_num
@@ -60,6 +68,8 @@ library(epiprocess)
 jhu_confirmed_cumulative_num
 
 # fails
-data(jhu_confirmed_cumulative_num, package = "epiprocess")
+\dontrun{
+  data(jhu_confirmed_cumulative_num, package = "epiprocess")
+}
 }
 \keyword{datasets}

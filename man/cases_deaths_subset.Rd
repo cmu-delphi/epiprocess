@@ -39,7 +39,7 @@ Hopkins University. This example data is a snapshot as of March 20, 2024, and
 ranges from March 1, 2020 to December 31, 2021. It is limited to California,
 Florida, Texas, New York, Georgia, and Pennsylvania.
 
-It is used in the {epiprocess} growth rate and \code{epi_slide} vignettes.
+It is used in the {epiprocess} growth rate, correlation, \code{epi_slide} vignettes.
 }
 \section{Data dictionary}{
 
@@ -72,6 +72,8 @@ library(epiprocess)
 cases_deaths_subset
 
 # fails
-data(cases_deaths_subset, package = "epiprocess")
+\dontrun{
+  data(cases_deaths_subset, package = "epiprocess")
+}
 }
 \keyword{datasets}

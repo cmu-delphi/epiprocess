@@ -61,6 +61,8 @@ library(epiprocess)
 covid_incidence_outliers
 
 # fails
-data(covid_incidence_outliers, package = "epiprocess")
+\dontrun{
+  data(covid_incidence_outliers, package = "epiprocess")
+}
 }
 \keyword{datasets}

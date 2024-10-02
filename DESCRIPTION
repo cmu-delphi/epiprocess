@@ -17,7 +17,10 @@ Authors@R: c(
     person("Ryan", "Tibshirani", role = "aut"),
     person("Lionel", "Henry", role = "ctb", comment = "Author of included rlang fragments"),
     person("Hadley", "Wickham", role = "ctb", comment = "Author of included rlang fragments"),
-    person("Posit", role = "cph", comment = "Copyright holder of included rlang fragments")
+    person("Posit", role = "cph", comment = "Copyright holder of included rlang fragments"),
+    person("Johns Hopkins University Center for Systems Science and Engineering", role = "dtc", comment = "Owner of COVID-19 cases and deaths data from the COVID-19 Data Repository"),
+    person("Johns Hopkins University", role = "cph", comment = "Copyright holder of COVID-19 cases and deaths data from the COVID-19 Data Repository"),
+    person("Carnegie Mellon University Delphi Group", role = "dtc", comment = "Owner of claims-based CLI data from the Delphi Epidata API")
   )
 Description: This package introduces a common data structure for epidemiological
     data reported by location and time, provides another data structure to

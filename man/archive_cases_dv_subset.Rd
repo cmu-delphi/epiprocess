@@ -15,8 +15,23 @@ Copyright Johns Hopkins University 2020.
 
 Modifications:
 \itemize{
-\item \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html}{From the COVIDcast Doctor Visits API}: The signal \code{percent_cli} is taken directly from the API without changes.
 \item \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html}{From the COVIDcast Epidata API}: \code{case_rate_7d_av} signal was computed by Delphi from the original JHU-CSSE data by calculating moving averages of the preceding 7 days, so the signal for June 7 is the average of the underlying data for June 1 through 7, inclusive.
+\item Furthermore, the data has been limited to a very small number of rows, the
+signal names slightly altered, and formatted into an \code{epi_archive}.
+}
+
+This object contains a modified part of the
+\href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html}{Delphi \code{doctor-visits} indicator}.
+This data source is computed by the Delphi
+Group from information about outpatient visits, provided to Delphi by
+health system partners, and published in the COVIDcast Epidata API. This
+data set is licensed under the terms of the
+\href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons Attribution 4.0 International license}
+by the Delphi group.
+
+Modifications:
+\itemize{
+\item \href{https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html}{From the COVIDcast Doctor Visits signal}: The signal \code{smoothed_adj_cli} is taken directly from the API without changes.
 \item Furthermore, the data has been limited to a very small number of rows, the
 signal names slightly altered, and formatted into an \code{epi_archive}.
 }
@@ -61,7 +76,9 @@ library(epiprocess)
 archive_cases_dv_subset
 
 # fails
-data(archive_cases_dv_subset, package = "epiprocess")
+\dontrun{
+  data(archive_cases_dv_subset, package = "epiprocess")
+}
 
 }
 \keyword{datasets}

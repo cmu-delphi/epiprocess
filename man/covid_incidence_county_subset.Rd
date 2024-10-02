@@ -38,7 +38,7 @@ is based on reports made available by the Center for
 Systems Science and Engineering at Johns Hopkins University.
 This example data is a snapshot as of March 20, 2024, and
 ranges from March 1, 2020 to December 31, 2021.
-It is limited to Massachusetts and Vermont.
+It is limited to counties from Massachusetts and Vermont.
 
 It is used in the {epiprocess} aggregation vignette.
 }
@@ -68,6 +68,8 @@ library(epiprocess)
 covid_incidence_county_subset
 
 # fails
-data(covid_incidence_county_subset, package = "epiprocess")
+\dontrun{
+  data(covid_incidence_county_subset, package = "epiprocess")
+}
 }
 \keyword{datasets}
