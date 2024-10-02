@@ -53,7 +53,6 @@ dv <- pub_covidcast(
   issues = epirange(20200601, 20211201)
 ) %>%
   rename(version = issue, percent_cli = value)
-)
 ```
 
 ## Getting data into `epi_archive` format
