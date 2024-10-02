@@ -17,6 +17,7 @@ The data is included in this package (via the [`epidatasets` package](https://cm
 ```{r, warning = FALSE, message = FALSE}
 library(epiprocess)
 library(dplyr)
+library(covidcast)
 
 x <- covid_incidence_county_subset
 ```
@@ -24,7 +25,6 @@ x <- covid_incidence_county_subset
 The data can also be fetched from the Delphi API with the following query:
 ```{r, message = FALSE, eval = FALSE, warning = FALSE}
 library(epidatr)
-library(covidcast)
 
 d <- as.Date("2024-03-20")
 
