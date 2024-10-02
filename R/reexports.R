@@ -94,7 +94,7 @@ ggplot2::autoplot
 #'
 #' # fails
 #' \dontrun{
-#'   data(cases_deaths_subset, package = "epiprocess")
+#' data(cases_deaths_subset, package = "epiprocess")
 #' }
 #' @export
 delayedAssign("cases_deaths_subset", epidatasets::cases_deaths_subset)
@@ -114,7 +114,7 @@ delayedAssign("cases_deaths_subset", epidatasets::cases_deaths_subset)
 #'
 #' # fails
 #' \dontrun{
-#'   data(covid_incidence_county_subset, package = "epiprocess")
+#' data(covid_incidence_county_subset, package = "epiprocess")
 #' }
 #' @export
 delayedAssign("covid_incidence_county_subset", epidatasets::covid_incidence_county_subset)
@@ -134,7 +134,7 @@ delayedAssign("covid_incidence_county_subset", epidatasets::covid_incidence_coun
 #'
 #' # fails
 #' \dontrun{
-#'   data(covid_incidence_outliers, package = "epiprocess")
+#' data(covid_incidence_outliers, package = "epiprocess")
 #' }
 #' @export
 delayedAssign("covid_incidence_outliers", epidatasets::covid_incidence_outliers)
@@ -154,7 +154,7 @@ delayedAssign("covid_incidence_outliers", epidatasets::covid_incidence_outliers)
 #'
 #' # fails
 #' \dontrun{
-#'   data(jhu_confirmed_cumulative_num, package = "epiprocess")
+#' data(jhu_confirmed_cumulative_num, package = "epiprocess")
 #' }
 #' @export
 delayedAssign("jhu_confirmed_cumulative_num", epidatasets::jhu_confirmed_cumulative_num)
@@ -174,7 +174,7 @@ delayedAssign("jhu_confirmed_cumulative_num", epidatasets::jhu_confirmed_cumulat
 #'
 #' # fails
 #' \dontrun{
-#'   data(archive_cases_dv_subset, package = "epiprocess")
+#' data(archive_cases_dv_subset, package = "epiprocess")
 #' }
 #'
 #' @export
