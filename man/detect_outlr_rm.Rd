@@ -65,6 +65,5 @@ covid_incidence_outliers \%>\%
   group_by(geo_value) \%>\%
   mutate(outlier_info = detect_outlr_rm(
     x = time_value, y = cases
-  )) \%>\%
-  unnest(outlier_info)
+  ))
 }

@@ -81,8 +81,8 @@ revision_summary <- function(epi_arch,
                              should_compactify = TRUE) {
   arg <- names(eval_select(rlang::expr(c(...)), allow_rename = FALSE, data = epi_arch$DT))
   if (length(arg) == 0) {
-    first_non_key <- !(names(epi_arch$DT) %in% c(key_colnames(epi_arch), "version"))
-    arg <- names(epi_arch$DT)[first_non_key][1]
+    # Choose the first column that's not a key or version
+    arg <- setdiff(names(epi_arch$DT), c(key_colnames(epi_arch), "version"))[[1]]
   } else if (length(arg) > 1) {
     cli_abort("Not currently implementing more than one column at a time. Run each separately")
   }
@@ -99,11 +99,9 @@ revision_summary <- function(epi_arch,
   #
   # revision_tibble
   keys <- key_colnames(epi_arch)
-  names(epi_arch$DT)
 
-  revision_behavior <-
-    epi_arch$DT %>%
-    select(c(geo_value, time_value, all_of(keys), version, !!arg))
+  revision_behavior <- epi_arch$DT %>%
+    select(all_of(unique(c("geo_value", "time_value", keys, "version", arg))))
   if (!is.null(min_waiting_period)) {
     revision_behavior <- revision_behavior %>%
       filter(abs(time_value - as.Date(epi_arch$versions_end)) >= min_waiting_period)

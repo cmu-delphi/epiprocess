@@ -5,24 +5,21 @@
 \title{Optimized slide function for performing rolling averages on an \code{epi_df} object}
 \usage{
 epi_slide_mean(
-  x,
-  col_names,
+  .x,
+  .col_names,
   ...,
-  before = NULL,
-  after = NULL,
-  ref_time_values = NULL,
-  new_col_name = NULL,
-  as_list_col = NULL,
-  names_sep = NULL,
-  all_rows = FALSE
+  .window_size = 1,
+  .align = c("right", "center", "left"),
+  .ref_time_values = NULL,
+  .all_rows = FALSE
 )
 }
 \arguments{
-\item{x}{The \code{epi_df} object under consideration, \link[dplyr:group_by]{grouped}
-or ungrouped. If ungrouped, all data in \code{x} will be treated as part of a
+\item{.x}{The \code{epi_df} object under consideration, \link[dplyr:group_by]{grouped}
+or ungrouped. If ungrouped, all data in \code{.x} will be treated as part of a
 single data group.}
 
-\item{col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
+\item{.col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
 name(e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}),
 \link[tidyselect:language]{other tidy-select expression}, or a vector of
 characters (e.g. \code{c("cases", "deaths")}). Variable names can be used as if
@@ -33,90 +30,95 @@ The tidy-selection renaming interface is not supported, and cannot be used
 to provide output column names; if you want to customize the output column
 names, use \code{\link[dplyr:rename]{dplyr::rename}} after the slide.}
 
-\item{...}{Additional arguments to pass to \code{data.table::frollmean}, for
-example, \code{na.rm} and \code{algo}. \code{data.table::frollmean} is automatically
-passed the data \code{x} to operate on, the window size \code{n}, and the alignment
-\code{align}. Providing these args via \code{...} will cause an error.}
+\item{...}{Additional arguments to pass to the slide computation \code{.f}, for
+example, \code{algo} or \code{na.rm} in data.table functions. You don't need to
+specify \code{.x}, \code{.window_size}, or \code{.align} (or \code{before}/\code{after} for slider
+functions).}
 
-\item{before, after}{How far \code{before} and \code{after} each \code{ref_time_value} should
-the sliding window extend? At least one of these two arguments must be
-provided; the other's default will be 0. The accepted values for these
-depend on the type of the \code{time_value} column:
+\item{.window_size}{The size of the sliding window. By default, this is 1,
+meaning that only the current ref_time_value is included. The accepted values
+here depend on the \code{time_value} column:
 \itemize{
-\item if it is a Date and the cadence is daily, then they can be integers
-(which will be interpreted in units of days) or difftimes with units
-"days"
-\item if it is a Date and the cadence is weekly, then they must be difftimes
-with units "weeks"
-\item if it is an integer, then they must be integers
-}
+\item if time_type is Date and the cadence is daily, then \code{.window_size} can be
+an integer (which will be interpreted in units of days) or a difftime
+with units "days"
+\item if time_type is Date and the cadence is weekly, then \code{.window_size} must
+be a difftime with units "weeks"
+\item if time_type is an integer, then \code{.window_size} must be an integer
+}}
 
-Endpoints of the window are inclusive. Common settings:
-\itemize{
-\item For trailing/right-aligned windows from \code{ref_time_value - k} to
-\code{ref_time_value}: either pass \code{before=k} by itself, or pass \verb{before=k, after=0}.
-\item For center-aligned windows from \code{ref_time_value - k} to
-\code{ref_time_value + k}: pass \verb{before=k, after=k}.
-\item For leading/left-aligned windows from \code{ref_time_value} to
-\code{ref_time_value + k}: either pass pass \code{after=k} by itself,
-or pass \verb{before=0, after=k}.
-}
+\item{.align}{The alignment of the sliding window. If \code{right} (default), then
+the window has its end at the reference time; if \code{center}, then the window is
+centered at the reference time; if \code{left}, then the window has its start at
+the reference time. If the alignment is \code{center} and the window size is odd,
+then the window will have floor(window_size/2) points before and after the
+reference time. If the window size is even, then the window will be
+asymmetric and have one less value on the right side of the reference time
+(assuming time increases from left to right).}
 
-See "Details:" on how missing rows are handled within the window.}
-
-\item{ref_time_values}{Time values for sliding computations, meaning, each
+\item{.ref_time_values}{Time values for sliding computations, meaning, each
 element of this vector serves as the reference time point for one sliding
 window. If missing, then this will be set to all unique time values in the
 underlying data table, by default.}
 
-\item{new_col_name}{Not supported. Included to match \code{epi_slide} interface.}
-
-\item{as_list_col}{Not supported. Included to match \code{epi_slide} interface.}
-
-\item{names_sep}{Not supported. Included to match \code{epi_slide} interface.}
-
-\item{all_rows}{If \code{all_rows = TRUE}, then all rows of \code{x} will be kept in
-the output even with \code{ref_time_values} provided, with some type of missing
+\item{.all_rows}{If \code{.all_rows = TRUE}, then all rows of \code{.x} will be kept in
+the output even with \code{.ref_time_values} provided, with some type of missing
 value marker for the slide computation output column(s) for \code{time_value}s
-outside \code{ref_time_values}; otherwise, there will be one row for each row in
-\code{x} that had a \code{time_value} in \code{ref_time_values}. Default is \code{FALSE}. The
+outside \code{.ref_time_values}; otherwise, there will be one row for each row in
+\code{.x} that had a \code{time_value} in \code{.ref_time_values}. Default is \code{FALSE}. The
 missing value marker is the result of \code{vctrs::vec_cast}ing \code{NA} to the type
-of the slide computation output. If using \code{as_list_col = TRUE}, note that
-the missing marker is a \code{NULL} entry in the list column; for certain
-operations, you might want to replace these \code{NULL} entries with a different
-\code{NA} marker.}
+of the slide computation output.}
 }
 \value{
-An \code{epi_df} object given by appending one or more new columns to
-\code{x}, named according to the \code{new_col_name} argument.
+An \code{epi_df} object given by appending one or more new columns to \code{.x},
+named according to the \code{.new_col_name} argument.
 }
 \description{
 Slides an n-timestep mean over variables in an \code{epi_df} object. See the \href{https://cmu-delphi.github.io/epiprocess/articles/slide.html}{slide vignette} for
 examples.
 }
 \details{
-Wrapper around \code{epi_slide_opt} with \code{f = datatable::frollmean}.
+Wrapper around \code{epi_slide_opt} with \code{.f = datatable::frollmean}.
 
-To "slide" means to apply a function over a rolling window of time
-steps for each data group, where the window is centered at a reference time
-and left and right endpoints are given by the \code{before} and \code{after}
-arguments.
-If there are not enough time steps available to complete the window at any
-given reference time, then \verb{epi_slide_*()} will fail; it requires a
-complete window to perform the computation. For a centrally-aligned slide
-of \code{n} \code{time_value}s in a sliding window, set \code{before = (n-1)/2} and \code{after = (n-1)/2} when the number of \code{time_value}s in a sliding window is odd and
-\code{before = n/2-1} and \code{after = n/2} when \code{n} is even.
+To "slide" means to apply a function or formula over a rolling
+window. The \code{.window_size} arg determines the width of the window
+(including the reference time) and the \code{.align} arg governs how the window
+is aligned (see below for examples). The \code{.ref_time_values} arg controls
+which time values to consider for the slide and \code{.all_rows} allows you to
+keep NAs around.
 
-Sometimes, we want to experiment with various trailing or leading window
-widths and compare the slide outputs. In the (uncommon) case where
-zero-width windows are considered, manually pass both the \code{before} and
-\code{after} arguments.
+\verb{epi_slide_*()} does not require a complete window (such as on the left
+boundary of the dataset) and will attempt to perform the computation
+anyway. The issue of what to do with partial computations (those run on
+incomplete windows) is therefore left up to the user, either through the
+specified function or formula \code{f}, or through post-processing.
+
+Let's look at some window examples, assuming that the reference time value
+is "tv". With .align = "right" and .window_size = 3, the window will be:
+
+time_values: tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:              tv - 2, tv - 1, tv
+
+With .align = "center" and .window_size = 3, the window will be:
+
+time_values: tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:                      tv - 1, tv, tv + 1
+
+With .align = "center" and .window_size = 4, the window will be:
+
+time_values: tv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:              tv - 2, tv - 1, tv, tv + 1
+
+With .align = "left" and .window_size = 3, the window will be:
+
+time_values: ttv - 3, tv - 2, tv - 1, tv, tv + 1, tv + 2, tv + 3
+window:                               tv, tv + 1, tv + 2
 }
 \examples{
 # slide a 7-day trailing average formula on cases
 cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(cases, before = 6) \%>\%
+  epi_slide_mean(cases, .window_size = 7) \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
@@ -127,7 +129,7 @@ cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_mean(
     cases,
-    before = 6,
+    .window_size = 7,
     # `frollmean` options
     na.rm = TRUE, algo = "exact", hasNA = TRUE
   ) \%>\%
@@ -137,7 +139,7 @@ cases_deaths_subset \%>\%
 # slide a 7-day leading average
 cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(cases, after = 6) \%>\%
+  epi_slide_mean(cases, .window_size = 7, .align = "right") \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
@@ -145,7 +147,7 @@ cases_deaths_subset \%>\%
 # slide a 7-day centre-aligned average
 cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(cases, before = 3, after = 3) \%>\%
+  epi_slide_mean(cases, .window_size = 7, .align = "center") \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
@@ -153,7 +155,7 @@ cases_deaths_subset \%>\%
 # slide a 14-day centre-aligned average
 cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(cases, before = 6, after = 7) \%>\%
+  epi_slide_mean(cases, .window_size = 14, .align = "center") \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_14dav = slide_value_cases) \%>\%
   ungroup()

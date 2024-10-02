@@ -11,22 +11,19 @@ A central tool in the `epiprocess` package is `epi_slide()`, which is based on
 the powerful functionality provided in the
 [`slider`](https://cran.r-project.org/web/packages/slider) package. In
 `epiprocess`, to "slide" means to apply a computation---represented as a
-function or formula---over a sliding/rolling data window. Suitable
-groupings can always be achieved by a preliminary call to `group_by()`.
+function or formula---over a sliding/rolling data window. The function always
+applies the slide inside each group and the grouping is assumed to be across all
+group keys of the `epi_df` (this is the grouping used by default if you do not
+group the `epi_df` with a `group_by()`).
 
-By default, the meaning of one time step is inferred from the `time_value`
-column of the `epi_df` object under consideration, based on the way this column
-understands addition and subtraction. For example, if the time values are coded
-as `Date` objects, then one time step is one day, since `as.Date("2022-01-01") +
-1` equals `as.Date("2022-01-02")`. Alternatively, the time step can be specified
-manually in the call to `epi_slide()`; you can read the documentation for more
-details. Furthermore, the alignment of the running window used in `epi_slide()`
-is specified by `before` and `after`. 
+By default, the `.window_size` units depend on the `time_type` of the `epi_df`,
+which is determined from the types in the `time_value` column of the `epi_df`.
+See the "Details" in `epi_slide()` for more.
 
 As in getting started guide, we'll fetch daily reported COVID-19 cases from CA,
 FL, NY, and TX (note: here we're using new, not cumulative cases) using the
-[`epidatr`](https://github.com/cmu-delphi/epidatr) package,
-and then convert this to `epi_df` format.
+[`epidatr`](https://github.com/cmu-delphi/epidatr) package, and then convert
+this to `epi_df` format.
 
 ```{r, message = FALSE, warning = FALSE}
 library(epiprocess)
@@ -36,7 +33,7 @@ library(dplyr)
 The data is included in this package (via the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/)) and can be loaded with:
 
 ```{r}
-x <- cases_deaths_subset %>%
+edf <- cases_deaths_subset %>%
   select(geo_value, time_value, cases) %>%
   arrange(geo_value, time_value)
 ```
@@ -47,7 +44,7 @@ library(epidatr)
 
 d <- as.Date("2024-03-20")
 
-x <- pub_covidcast(
+edf <- pub_covidcast(
   source = "jhu-csse",
   signals = "confirmed_incidence_num",
   geo_type = "state",
@@ -63,58 +60,73 @@ x <- pub_covidcast(
 
 The data has 2,684 rows and 3 columns.
 
-## Optimized rolling mean
+## Optimized rolling mean and sums
 
-We first demonstrate how to apply a 7-day trailing average to the daily cases
-in order to smooth the signal, by passing in the name of the column(s) we
-want to average for the first argument of `epi_slide_mean()`. `epi_slide_mean
-()` can only be used for averaging. To do this computation per state, we
-first call `group_by()`.
+For the two most common sliding operations, we offer two optimized versions:
+`epi_slide_mean()` and `epi_slide_sum()`. This example gets the 7-day trailing
+average of the daily cases. Note that the name of the column(s) that we want to
+average is specified as the first argument of `epi_slide_mean()`.
 
 ```{r}
-x %>%
+edf %>%
   group_by(geo_value) %>%
-  epi_slide_mean("cases", before = 6) %>%
+  epi_slide_mean("cases", .window_size = 7, na.rm = TRUE) %>%
   ungroup() %>%
   head(10)
 ```
 
-The calculation is done using `data.table::frollmean`, whose behavior can be
-adjusted by passing relevant arguments via `...`.
+Note that we passed `na.rm = TRUE` to `data.table::frollmean()` via `...` to
+`epi_slide_mean`.
 
-## Slide with a formula
+The following computes the 7-day trailing sum of daily cases (and passed `na.rm`
+to `data.table::frollsum()` similarly):
 
-The previous computation can also be performed using `epi_slide()`, which is
-more flexible but quite a bit slower than `epi_slide_mean()`. It is
-recommended to use `epi_slide_mean()` when possible.
+```{r}
+edf %>%
+  group_by(geo_value) %>%
+  epi_slide_sum("cases", .window_size = 7, na.rm = TRUE) %>%
+  ungroup() %>%
+  head(10)
+```
+
+## General sliding with a formula
+
+The previous computations can also be performed using `epi_slide()`, which can
+be used for more general sliding computations (but is much slower for the
+specific cases of mean and sum).
 
 The same 7-day trailing average of daily cases can be computed by passing in a
-formula for the first argument of `epi_slide()`. To do this per state, we
-first call `group_by()`.
+formula for the first argument of `epi_slide()`:
 
 ```{r}
-x %>%
+edf %>%
   group_by(geo_value) %>%
-  epi_slide(~ mean(.x$cases), before = 6) %>%
+  epi_slide(~ mean(.x$cases, na.rm = TRUE), .window_size = 7) %>%
   ungroup() %>%
   head(10)
 ```
 
-The formula specified has access to all non-grouping columns present in the
-original `epi_df` object (and must refer to them with the prefix `.x$`). As we
-can see, the function `epi_slide()` returns an `epi_df` object with a new column
-appended that contains the results (from sliding), named `slide_value` as the
-default. We can of course change this post hoc, or we can instead specify a new
-name up front using the `new_col_name` argument:
+If your formula returns a data.frame, then the columns of the data.frame
+will be unpacked into the resulting `epi_df`. For example, the following
+computes the 7-day trailing average of daily cases and the 7-day trailing sum of
+daily cases:
 
 ```{r}
-x <- x %>%
+edf %>%
   group_by(geo_value) %>%
-  epi_slide(~ mean(.x$cases), before = 6, new_col_name = "cases_7dav") %>%
-  ungroup()
-
-head(x, 10)
+  epi_slide(
+    ~ data.frame(cases_mean = mean(.x$cases, na.rm = TRUE), cases_sum = sum(.x$cases, na.rm = TRUE)),
+    .window_size = 7
+  ) %>%
+  ungroup() %>%
+  head(10)
 ```
+
+Note that this formula has access to all non-grouping columns present in the
+original `epi_df` object and must refer to them with the prefix `.x$...`. As we
+can see, the function `epi_slide()` returns an `epi_df` object with a new column
+appended that contains the results (from sliding), named `slide_value` as the
+default.
 
 Some other information is available in additional variables:
 
@@ -122,52 +134,46 @@ Some other information is available in additional variables:
   variables for the associated group
 * `.ref_time_value` is the reference time value the time window was based on
 
-Like in `group_modify()`, there are alternative names for these variables as
-well: `.` can be used instead of `.x`, `.y` instead of `.group_key`, and `.z`
-instead of `.ref_time_value`.
-
-## Slide with a function
-
-We can also pass a function for the first argument in `epi_slide()`. In this
-case, the passed function must accept the following arguments:
-
-In this case, the passed function `f` must accept the following arguments: a
-data frame with the same column names as the original object, minus any grouping
-variables, containing the time window data for one group-`ref_time_value`
-combination; followed by a one-row tibble containing the values of the grouping
-variables for the associated group; followed by the associated `ref_time_value`.
-It can accept additional arguments; `epi_slide()` will forward any `...` args it
-receives to `f`.
-
-Recreating the last example of a 7-day trailing average:
-
 ```{r}
-x <- x %>%
+# Returning geo_value in the formula
+edf %>%
   group_by(geo_value) %>%
-  epi_slide(function(x, gk, rtv) mean(x$cases), before = 6, new_col_name = "cases_7dav") %>%
-  ungroup()
+  epi_slide(~ .x$geo_value[[1]], .window_size = 7) %>%
+  ungroup() %>%
+  head(10)
 
-head(x, 10)
+# Returning time_value in the formula
+edf %>%
+  group_by(geo_value) %>%
+  epi_slide(~ .x$time_value[[1]], .window_size = 7) %>%
+  ungroup() %>%
+  head(10)
 ```
+
+While the computations above do not look very useful, these can be used as
+building blocks for computations that do something different depending on the
+geo_value or ref_time_value.
 
 ## Slide the tidy way
 
 Perhaps the most convenient way to setup a computation in `epi_slide()` is to
 pass in an expression for tidy evaluation. In this case, we can simply define
 the name of the new column directly as part of the expression, setting it equal
-to a computation in which we can access any columns of `x` by name, just as we
+to a computation in which we can access any columns of `.x` by name, just as we
 would in a call to `dplyr::mutate()`, or any of the `dplyr` verbs. For example:
 
 ```{r}
-x <- x %>%
+slide_output <- edf %>%
   group_by(geo_value) %>%
-  epi_slide(cases_7dav = mean(cases), before = 6) %>%
-  ungroup()
-
-head(x, 10)
+  epi_slide(cases_7dav = mean(cases, na.rm = TRUE), .window_size = 7) %>%
+  ungroup() %>%
+  head(10)
 ```
-In addition to referring to individual columns by name, you can refer to the
-time window data as an `epi_df` or `tibble` using `.x`.  Similarly, the other arguments of the function format are available through the magic names `.group_key` and `.ref_time_value`, and the tidyverse "pronouns" `.data` and `.env` can also be used.
+
+In addition to referring to individual columns by name, you can refer to
+`epi_df` time window as `.x` (`.group_key` and `.ref_time_value` are still
+available). Also, the tidyverse "pronouns" `.data` and `.env` can also be used
+if you need distinguish between the data and environment.
 
 As a simple sanity check, we visualize the 7-day trailing averages computed on
 top of the original counts:
@@ -176,7 +182,7 @@ top of the original counts:
 library(ggplot2)
 theme_set(theme_bw())
 
-ggplot(x, aes(x = time_value)) +
+ggplot(slide_output, aes(x = time_value)) +
   geom_col(aes(y = cases, fill = geo_value), alpha = 0.5, show.legend = FALSE) +
   geom_line(aes(y = cases_7dav, col = geo_value), show.legend = FALSE) +
   facet_wrap(~geo_value, scales = "free_y") +
@@ -187,18 +193,40 @@ ggplot(x, aes(x = time_value)) +
 As we can see from the top right panel, it looks like Texas moved to weekly
 reporting of COVID-19 cases in summer of 2021.
 
-## Running a local forecaster
+## Slide with a function
 
-As a more complex example, we create a forecaster based on a local (in time)
-autoregression or AR model. AR models can be fit in numerous ways (using base R
-functions and various packages), but here we define it "by hand" both because it
-provides a more advanced example of sliding a function over an `epi_df` object,
-and because it allows us to be a bit more flexible in defining a *probabilistic*
-forecaster: one that outputs not just a point prediction, but a notion of
-uncertainty around this. In particular, our forecaster will output a point
-prediction along with an 90\% uncertainty band, represented by a predictive
-quantiles at the 5\% and 95\% levels (lower and upper endpoints of the
-uncertainty band).
+We can also pass a function to the second argument in `epi_slide()`. In this
+case, the passed function `.f` must have the form `function(x, g, t, ...)`,
+where
+
+- "x" is an epi_df with the same column names as the archive's `DT`, minus
+  the `version` column
+- "g" is a one-row tibble containing the values of the grouping variables
+for the associated group
+- "t" is the ref_time_value for the current window
+- "..." are additional arguments
+
+Recreating the last example of a 7-day trailing average:
+
+```{r}
+edf %>%
+  group_by(geo_value) %>%
+  epi_slide(function(x, g, t) mean(x$cases, na.rm = TRUE), .window_size = 7) %>%
+  ungroup() %>%
+  head(10)
+```
+
+## Running a simple autoregressive forecaster
+
+As a more complex example, we create a forecaster based on an autoregression or
+AR model. AR models can be fit in numerous ways (using base R functions and
+various packages), but here we define it "by hand" both because it provides a
+more advanced example of sliding a function over an `epi_df` object, and because
+it allows us to be a bit more flexible in defining a *probabilistic* forecaster:
+one that outputs not just a point prediction, but a notion of uncertainty around
+this. In particular, our forecaster will output a point prediction along with an
+90\% uncertainty band, represented by a predictive quantiles at the 5\% and 95\%
+levels (lower and upper endpoints of the uncertainty band).
 
 The function defined below, `prob_ar()`, is our probabilistic AR forecaster. The
 `lags`argument indicates which lags to use in the model, and `ahead` indicates
@@ -214,6 +242,9 @@ prob_ar <- function(y, lags = c(0, 7, 14), ahead = 6, min_train_window = 20,
   if (length(y) < min_train_window + max(lags) + ahead) {
     return(data.frame(point = NA, lower = NA, upper = NA))
   }
+
+  # Filter down the edge-NAs
+  y <- y[!is.na(y)]
 
   # Build features and response for the AR model
   dat <- do.call(
@@ -251,28 +282,21 @@ scale of smoothed COVID-19 cases. This is clearly equivalent, up to a constant,
 to modeling weekly sums of COVID-19 cases.
 
 ```{r}
-fc_time_values <- seq(as.Date("2020-06-01"),
-  as.Date("2021-12-01"),
-  by = "1 months"
-)
-x %>%
+fc_time_values <- seq(as.Date("2020-06-01"), as.Date("2021-12-01"), by = "1 months")
+edf %>%
   group_by(geo_value) %>%
-  epi_slide(
-    fc = prob_ar(cases_7dav), before = 119,
-    ref_time_values = fc_time_values
-  ) %>%
+  epi_slide(cases_7dav = mean(.data$cases, na.rm = TRUE), .window_size = 7) %>%
+  epi_slide(fc = prob_ar(.data$cases_7dav), .window_size = 120, .ref_time_values = fc_time_values) %>%
   ungroup() %>%
   head(10)
 ```
 
-Note that here we have utilized an argument `ref_time_values` to perform the
+Note that here we have utilized an argument `.ref_time_values` to perform the
 sliding computation (here, compute a forecast) at a specific subset of reference
-time values. We get out three columns `fc_point`, `fc_lower`, and `fc_upper`
-that correspond to the point forecast, and the lower and upper endpoints of the
-95\% prediction band, respectively. (If instead we had set `as_list_col = TRUE`
-in the call to `epi_slide()`, then we would have gotten a list column `fc`,
-where each element of `fc` is a data frame with named columns `point`, `lower`,
-and `upper`.)
+time values (the start of every month from mid 2020 to the end of 2021). The
+resulting epi_df now contains three new columns: `fc$point`, `fc$lower`, and
+`fc$upper` corresponding to the point forecast, and the lower and upper
+endpoints of the 95\% prediction band, respectively.
 
 To finish off, we plot the forecasts at some times (spaced out by a few months)
 over the last year, at multiple horizons: 7, 14, 21, and 28 days ahead. To do
@@ -280,13 +304,16 @@ so, we encapsulate the process of generating forecasts into a simple function,
 so that we can call it a few times.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6}
-# Note the use of all_rows = TRUE (keeps all original rows in the output)
+# Note the use of .all_rows = TRUE (keeps all original rows in the output)
 k_week_ahead <- function(x, ahead = 7) {
   x %>%
-    group_by(.data$geo_value) %>%
+    group_by(geo_value) %>%
+    epi_slide(cases_7dav = mean(.data$cases, na.rm = TRUE), .window_size = 7) %>%
     epi_slide(
-      fc = prob_ar(.data$cases_7dav, ahead = ahead), before = 119,
-      ref_time_values = fc_time_values, all_rows = TRUE
+      fc = prob_ar(.data$cases_7dav, ahead = ahead),
+      .window_size = 120,
+      .ref_time_values = fc_time_values,
+      .all_rows = TRUE
     ) %>%
     ungroup() %>%
     mutate(target_date = .data$time_value + ahead)
@@ -294,21 +321,21 @@ k_week_ahead <- function(x, ahead = 7) {
 
 # First generate the forecasts, and bind them together
 z <- bind_rows(
-  k_week_ahead(x, ahead = 7),
-  k_week_ahead(x, ahead = 14),
-  k_week_ahead(x, ahead = 21),
-  k_week_ahead(x, ahead = 28)
+  k_week_ahead(edf, ahead = 7),
+  k_week_ahead(edf, ahead = 14),
+  k_week_ahead(edf, ahead = 21),
+  k_week_ahead(edf, ahead = 28)
 )
 
 # Now plot them, on top of actual COVID-19 case counts
 ggplot(z) +
   geom_line(aes(x = time_value, y = cases_7dav), color = "gray50") +
   geom_ribbon(aes(
-    x = target_date, ymin = fc_lower, ymax = fc_upper,
+    x = target_date, ymin = fc$lower, ymax = fc$upper,
     group = time_value
   ), fill = 6, alpha = 0.4) +
-  geom_line(aes(x = target_date, y = fc_point, group = time_value)) +
-  geom_point(aes(x = target_date, y = fc_point, group = time_value),
+  geom_line(aes(x = target_date, y = fc$point, group = time_value)) +
+  geom_point(aes(x = target_date, y = fc$point, group = time_value),
     size = 0.5
   ) +
   geom_vline(
@@ -345,8 +372,10 @@ example in the [archive
 vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html).
 
 ## Attribution
+
+The `percent_cli` data is a modified part of the [COVIDcast Epidata API Doctor Visits data](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html). This dataset is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/). Copyright Delphi Research Group at Carnegie Mellon University 2020.
+
 This document contains a dataset that is a modified part of the [COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) as [republished in the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html). This data set is licensed under the terms of the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020.
 
 [From the COVIDcast Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html):
- These signals are taken directly from the JHU CSSE [COVID-19 GitHub repository](https://github.com/CSSEGISandData/COVID-19) without changes.
-
+These signals are taken directly from the JHU CSSE [COVID-19 GitHub repository](https://github.com/CSSEGISandData/COVID-19) without changes.

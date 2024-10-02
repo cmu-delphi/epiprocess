@@ -48,7 +48,6 @@ articles:
       - aggregation
       - outliers
       - archive
-      - advanced
       - compactify
 
 repo:

@@ -96,7 +96,6 @@ covid_incidence_outliers \%>\%
   group_by(geo_value) \%>\%
   mutate(outlier_info = detect_outlr_stl(
     x = time_value, y = cases,
-    seasonal_period = 7
-  )) \%>\% # weekly seasonality for daily data
-  unnest(outlier_info)
+    seasonal_period = 7 # weekly seasonality for daily data
+  ))
 }

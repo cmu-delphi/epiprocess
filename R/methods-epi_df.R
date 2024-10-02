@@ -14,14 +14,17 @@
 #' @importFrom tibble as_tibble
 #' @export
 as_tibble.epi_df <- function(x, ...) {
-  # Decaying drops the class and metadata. `as_tibble.grouped_df` drops the
-  # grouping and should be called by `NextMethod()` in the current design.
-  # See #223 for discussion of alternatives.
+  # Note that some versions of `tsibble` overwrite `as_tibble.grouped_df`, which
+  # also impacts grouped `epi_df`s don't rely on `NextMethod()`. Destructure
+  # first instead.
+  destructured <- tibble::as_tibble(vctrs::vec_data(x), ...)
   if (attr(x, "decay_to_tibble") %||% TRUE) {
-    return(decay_epi_df(NextMethod()))
+    return(destructured)
+  } else {
+    # We specially requested via attr not to decay epi_df-ness but to drop any
+    # grouping.
+    reclass(destructured, attr(x, "metadata"))
   }
-  metadata <- attr(x, "metadata")
-  reclass(NextMethod(), metadata)
 }
 
 #' Convert to tsibble format
@@ -38,10 +41,13 @@ as_tibble.epi_df <- function(x, ...) {
 #' @export
 as_tsibble.epi_df <- function(x, key, ...) {
   if (missing(key)) key <- c("geo_value", attributes(x)$metadata$other_keys)
-  return(as_tsibble(tibble::as_tibble(x),
-    key = tidyselect::all_of(key), index = "time_value",
-    ...
-  ))
+  return(
+    as_tsibble(
+      tibble::as_tibble(x),
+      key = tidyselect::all_of(key), index = "time_value",
+      ...
+    )
+  )
 }
 
 #' Base S3 methods for an `epi_df` object
@@ -60,6 +66,10 @@ print.epi_df <- function(x, ...) {
   )
   cat(sprintf("* %-9s = %s\n", "geo_type", attributes(x)$metadata$geo_type))
   cat(sprintf("* %-9s = %s\n", "time_type", attributes(x)$metadata$time_type))
+  ok <- attributes(x)$metadata$other_keys
+  if (length(ok) > 0) {
+    cat(sprintf("* %-9s = %s\n", "other_keys", paste(ok, collapse = ", ")))
+  }
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(x)$metadata$as_of))
   # Conditional output (silent if attribute is NULL):
   cat(sprintf("* %-9s = %s\n", "decay_to_tibble", attr(x, "decay_to_tibble")))
@@ -83,6 +93,10 @@ print.epi_df <- function(x, ...) {
 summary.epi_df <- function(object, ...) {
   cat("An `epi_df` x, with metadata:\n")
   cat(sprintf("* %-9s = %s\n", "geo_type", attributes(object)$metadata$geo_type))
+  ok <- attributes(object)$metadata$other_keys
+  if (length(ok) > 0) {
+    cat(sprintf("* %-9s = %s\n", "other_keys", paste(ok, collapse = ", ")))
+  }
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(object)$metadata$as_of))
   cat("----------\n")
   cat(sprintf("* %-27s = %s\n", "min time value", min(object$time_value)))
@@ -139,10 +153,10 @@ dplyr_reconstruct.epi_df <- function(data, template) {
   # keep any grouping that has been applied:
   res <- NextMethod()
 
-  cn <- names(res)
+  col_names <- names(res)
 
   # Duplicate columns, cli_abort
-  dup_col_names <- cn[duplicated(cn)]
+  dup_col_names <- col_names[duplicated(col_names)]
   if (length(dup_col_names) != 0) {
     cli_abort(c(
       "Duplicate column names are not allowed",
@@ -152,7 +166,7 @@ dplyr_reconstruct.epi_df <- function(data, template) {
     ))
   }
 
-  not_epi_df <- !("time_value" %in% cn) || !("geo_value" %in% cn)
+  not_epi_df <- !("time_value" %in% col_names) || !("geo_value" %in% col_names)
 
   if (not_epi_df) {
     # If we're calling on an `epi_df` from one of our own functions, we need to
@@ -171,7 +185,7 @@ dplyr_reconstruct.epi_df <- function(data, template) {
 
   # Amend additional metadata if some other_keys cols are dropped in the subset
   old_other_keys <- attr(template, "metadata")$other_keys
-  attr(res, "metadata")$other_keys <- old_other_keys[old_other_keys %in% cn]
+  attr(res, "metadata")$other_keys <- old_other_keys[old_other_keys %in% col_names]
 
   res
 }
@@ -203,12 +217,13 @@ dplyr_row_slice.epi_df <- function(data, i, ...) {
 `names<-.epi_df` <- function(x, value) {
   old_names <- names(x)
   old_metadata <- attr(x, "metadata")
-  old_other_keys <- old_metadata[["other_keys"]]
-  new_other_keys <- value[match(old_other_keys, old_names)]
   new_metadata <- old_metadata
-  new_metadata[["other_keys"]] <- new_other_keys
+  old_other_keys <- old_metadata[["other_keys"]]
+  if (!is.null(old_other_keys)) {
+    new_other_keys <- value[match(old_other_keys, old_names)]
+    new_metadata[["other_keys"]] <- new_other_keys
+  }
   result <- reclass(NextMethod(), new_metadata)
-  # decay to non-`epi_df` if needed:
   dplyr::dplyr_reconstruct(result, result)
 }
 
@@ -243,9 +258,10 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 
 #' Complete epi_df
 #'
-#' A [tidyr::complete()] analogue for `epi_df` objects. This function fills in
-#' missing combinations of `geo_value` and `time_value` with `NA` values. See
-#' the examples for usage details.
+#' A ‘tidyr::complete()’ analogue for ‘epi_df’ objects. This function
+#' can be used, for example, to add rows for missing combinations
+#' of ‘geo_value’ and ‘time_value’, filling other columns with `NA`s.
+#' See the examples for usage details.
 #'
 #' @param data an `epi_df`
 #' @param ... see [`tidyr::complete`]
@@ -366,8 +382,108 @@ arrange_canonical.default <- function(x, ...) {
 #' @export
 arrange_canonical.epi_df <- function(x, ...) {
   rlang::check_dots_empty()
-  keys <- key_colnames(x)
   x %>%
-    dplyr::relocate(dplyr::all_of(keys), .before = 1) %>%
-    dplyr::arrange(dplyr::across(dplyr::all_of(keys)))
+    arrange_row_canonical() %>%
+    arrange_col_canonical()
+}
+
+arrange_row_canonical <- function(x, ...) {
+  UseMethod("arrange_row_canonical")
+}
+
+#' @export
+arrange_row_canonical.default <- function(x, ...) {
+  rlang::check_dots_empty()
+  cli::cli_abort(c(
+    "`arrange_row_canonical()` is only meaningful for an {.cls epi_df}."
+  ))
+  return(x)
+}
+
+#' @export
+arrange_row_canonical.epi_df <- function(x, ...) {
+  rlang::check_dots_empty()
+  cols <- key_colnames(x)
+  x %>% dplyr::arrange(dplyr::across(dplyr::all_of(cols)))
+}
+
+arrange_col_canonical <- function(x, ...) {
+  UseMethod("arrange_col_canonical")
+}
+
+#' @export
+arrange_col_canonical.default <- function(x, ...) {
+  rlang::check_dots_empty()
+  cli::cli_abort(c(
+    "`arrange_col_canonical()` is only meaningful for an {.cls epi_df}."
+  ))
+  return(x)
+}
+
+#' @export
+arrange_col_canonical.epi_df <- function(x, ...) {
+  rlang::check_dots_empty()
+  cols <- key_colnames(x)
+  x %>% dplyr::relocate(dplyr::all_of(cols), .before = 1)
+}
+
+#' Group an `epi_df` object by default keys
+#' @param x an `epi_df`
+#' @param exclude character vector of column names to exclude from grouping
+#' @return a grouped `epi_df`
+#' @export
+group_epi_df <- function(x, exclude = character()) {
+  cols <- key_colnames(x, exclude = exclude)
+  x %>% group_by(across(all_of(cols)))
+}
+
+#' Aggregate an `epi_df` object
+#'
+#' Aggregates an `epi_df` object by the specified group columns, summing the
+#' `value` column, and returning an `epi_df`. If aggregating over `geo_value`,
+#' the resulting `epi_df` will have `geo_value` set to `"total"`.
+#'
+#' @param .x an `epi_df`
+#' @param sum_cols character vector of the columns to aggregate
+#' @param group_cols character vector of column names to group by. "time_value" is
+#' included by default.
+#' @return an `epi_df` object
+#'
+#' @export
+sum_groups_epi_df <- function(.x, sum_cols = "value", group_cols = character()) {
+  assert_class(.x, "epi_df")
+  assert_character(sum_cols)
+  assert_character(group_cols)
+  checkmate::assert_subset(sum_cols, setdiff(names(.x), key_colnames(.x)))
+  checkmate::assert_subset(group_cols, key_colnames(.x))
+  if (!"time_value" %in% group_cols) {
+    group_cols <- c("time_value", group_cols)
+  }
+
+  out <- .x %>%
+    group_by(across(all_of(group_cols))) %>%
+    dplyr::summarize(across(all_of(sum_cols), sum), .groups = "drop")
+
+  # To preserve epi_df-ness, we need to ensure that the `geo_value` column is
+  # present.
+  out <- if (!"geo_value" %in% group_cols) {
+    out %>%
+      mutate(geo_value = "total") %>%
+      relocate(geo_value, .before = 1)
+  } else {
+    out
+  }
+
+  # The `geo_type` will be correctly inherited here by the following logic:
+  # - if `geo_value` is in `group_cols`, then the constructor will see the
+  #   geo_value here and will correctly read the existing values
+  # - if `geo_value` is not in `group_cols`, then the constructor will see
+  #   the unrecognizeable "total" value and will correctly infer the "custom"
+  #   geo_type.
+  out %>%
+    as_epi_df(
+      as_of = attr(.x, "metadata")$as_of,
+      other_keys = intersect(attr(.x, "metadata")$other_keys, group_cols)
+    ) %>%
+    arrange_canonical()
 }

@@ -89,7 +89,7 @@ detect_outlr <- function(x = seq_along(y), y,
                          ),
                          combiner = c("median", "mean", "none")) {
   # Validate combiner
-  combiner <- match.arg(combiner)
+  combiner <- rlang::arg_match(combiner)
 
   # Validate that x contains all distinct values
   if (any(duplicated(x))) {
@@ -161,8 +161,7 @@ detect_outlr <- function(x = seq_along(y), y,
 #'   group_by(geo_value) %>%
 #'   mutate(outlier_info = detect_outlr_rm(
 #'     x = time_value, y = cases
-#'   )) %>%
-#'   unnest(outlier_info)
+#'   ))
 detect_outlr_rm <- function(x = seq_along(y), y, n = 21,
                             log_transform = FALSE,
                             detect_negatives = FALSE,
@@ -189,7 +188,7 @@ detect_outlr_rm <- function(x = seq_along(y), y, n = 21,
 
   # Calculate lower and upper thresholds and replacement value
   z <- z %>%
-    epi_slide(fitted = median(y), before = floor((n - 1) / 2), after = ceiling((n - 1) / 2)) %>%
+    epi_slide(fitted = median(y, na.rm = TRUE), .window_size = n, .align = "center") %>%
     dplyr::mutate(resid = y - fitted) %>%
     roll_iqr(
       n = n,
@@ -256,9 +255,8 @@ detect_outlr_rm <- function(x = seq_along(y), y, n = 21,
 #'   group_by(geo_value) %>%
 #'   mutate(outlier_info = detect_outlr_stl(
 #'     x = time_value, y = cases,
-#'     seasonal_period = 7
-#'   )) %>% # weekly seasonality for daily data
-#'   unnest(outlier_info)
+#'     seasonal_period = 7 # weekly seasonality for daily data
+#'   ))
 detect_outlr_stl <- function(x = seq_along(y), y,
                              n_trend = 21,
                              n_seasonal = 21,
@@ -359,9 +357,8 @@ roll_iqr <- function(z, n, detection_multiplier, min_radius,
 
   z %>%
     epi_slide(
-      roll_iqr = stats::IQR(resid),
-      before = floor((n - 1) / 2),
-      after = ceiling((n - 1) / 2)
+      roll_iqr = stats::IQR(resid, na.rm = TRUE),
+      .window_size = n, .align = "center"
     ) %>%
     dplyr::mutate(
       lower = pmax(
