@@ -681,7 +681,7 @@ epi_slide_opt <- function(
   .align <- rlang::arg_match(.align)
   time_type <- attr(.x, "metadata")$time_type
   if (is.null(.window_size)) {
-    cli_abort("epi_slide: `.window_size` must be specified.")
+    cli_abort("epi_slide_opt: `.window_size` must be specified.")
   }
   validate_slide_window_arg(.window_size, time_type)
   window_args <- get_before_after_from_window(.window_size, .align, time_type)
