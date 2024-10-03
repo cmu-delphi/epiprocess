@@ -94,7 +94,6 @@ reference:
       - archive_cases_dv_subset
       - covid_incidence_county_subset
       - covid_incidence_outliers
-      - jhu_confirmed_cumulative_num
   - title: Basic automatic plotting
   - contents:
       - autoplot.epi_df
