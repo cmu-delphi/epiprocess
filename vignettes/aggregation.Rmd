@@ -18,7 +18,7 @@ library(epiprocess)
 library(dplyr)
 
 # Use covidcast::county_census to get the county and state names
-y <- read_csv("https://github.com/cmu-delphi/covidcast/raw/c89e4d295550ba1540d64d2cc991badf63ad04e5/Python-packages/covidcast-py/covidcast/geo_mappings/county_census.csv") %>% # nolint: line_length_linter
+y <- readr::read_csv("https://github.com/cmu-delphi/covidcast/raw/c89e4d295550ba1540d64d2cc991badf63ad04e5/Python-packages/covidcast-py/covidcast/geo_mappings/county_census.csv") %>% # nolint: line_length_linter
   filter(STNAME %in% c("Massachusetts", "Vermont"), STNAME != CTYNAME) %>%
   select(geo_value = FIPS, county_name = CTYNAME, state_name = STNAME)
 
@@ -108,7 +108,7 @@ help avoid bugs in further downstream data processing tasks.
 Let's first remove certain dates from our data set to create gaps:
 
 ```{r}
-state_census <- read_csv("https://github.com/cmu-delphi/covidcast/raw/c89e4d295550ba1540d64d2cc991badf63ad04e5/Python-packages/covidcast-py/covidcast/geo_mappings/state_census.csv") %>% # nolint: line_length_linter
+state_census <- readr::read_csv("https://github.com/cmu-delphi/covidcast/raw/c89e4d295550ba1540d64d2cc991badf63ad04e5/Python-packages/covidcast-py/covidcast/geo_mappings/state_census.csv") %>% # nolint: line_length_linter
   select(STATE, NAME, POPESTIMATE2019, ABBR) %>%
   rename(abbr = ABBR, name = NAME, pop = POPESTIMATE2019, fips = STATE) %>%
   mutate(abbr = tolower(abbr)) %>%

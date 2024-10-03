@@ -57,6 +57,7 @@ Suggests:
     epidatr,
     knitr,
     outbreaks,
+    readr,
     rmarkdown,
     testthat (>= 3.1.5),
     withr
