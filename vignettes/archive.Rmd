@@ -36,10 +36,10 @@ library(ggplot2)
 
 # This fetches the raw data backing the archive_cases_dv_subset object.
 dv <- archive_cases_dv_subset$DT %>%
-  tibble()
+  as_tibble()
 ```
 
-The data can also be fetched from the Delphi API with the following query:
+The data can also be fetched from the Delphi Epidata API with the following query:
 ```{r, message = FALSE, warning = FALSE, eval = FALSE}
 library(epidatr)
 
@@ -84,8 +84,8 @@ print(x)
 ```
 
 An `epi_archive` is consists of a primary field `DT`, which is a data table
-(from the `data.table` package) that has the columns `geo_value`, `time_value`,
-`version` (and possibly additional ones), and other metadata fields, such as
+(from the `data.table` package) that has at least the required columns
+`geo_value`, `time_value`, and `version`; and other metadata fields, such as
 `geo_type`.
 
 The variables `geo_value`, `time_value`, `version` serve as **key variables**

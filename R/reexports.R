@@ -139,26 +139,6 @@ delayedAssign("covid_incidence_county_subset", epidatasets::covid_incidence_coun
 #' @export
 delayedAssign("covid_incidence_outliers", epidatasets::covid_incidence_outliers)
 
-#' @inherit epidatasets::jhu_confirmed_cumulative_num description source references title
-#' @inheritSection epidatasets::jhu_confirmed_cumulative_num Data dictionary
-#' @examples
-#' # Since this is a re-exported dataset, it cannot be loaded using
-#' # the `data()` function. `data()` looks for a file of the same name
-#' # in the `data/` directory, which doesn't exist in this package.
-#' # works
-#' epiprocess::jhu_confirmed_cumulative_num
-#'
-#' # works
-#' library(epiprocess)
-#' jhu_confirmed_cumulative_num
-#'
-#' # fails
-#' \dontrun{
-#' data(jhu_confirmed_cumulative_num, package = "epiprocess")
-#' }
-#' @export
-delayedAssign("jhu_confirmed_cumulative_num", epidatasets::jhu_confirmed_cumulative_num)
-
 #' @inherit epidatasets::archive_cases_dv_subset description source references title
 #' @inheritSection epidatasets::archive_cases_dv_subset Data dictionary
 #' @examples

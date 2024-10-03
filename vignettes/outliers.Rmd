@@ -16,7 +16,7 @@ reported COVID-19 case counts from FL and NJ.
 
 The dataset has 730 rows and 3 columns.
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 library(epiprocess)
 library(dplyr)
 library(tidyr)

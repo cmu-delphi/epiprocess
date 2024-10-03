@@ -22,7 +22,7 @@ library(covidcast)
 x <- covid_incidence_county_subset
 ```
 
-The data can also be fetched from the Delphi API with the following query:
+The data can also be fetched from the Delphi Epidata API with the following query:
 ```{r, message = FALSE, eval = FALSE, warning = FALSE}
 library(epidatr)
 

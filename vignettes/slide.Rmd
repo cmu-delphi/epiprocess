@@ -38,7 +38,7 @@ edf <- cases_deaths_subset %>%
   arrange(geo_value, time_value)
 ```
 
-The data can also be fetched from the Delphi API with the following query:
+The data can also be fetched from the Delphi Epidata API with the following query:
 ```{r, message = FALSE, eval = FALSE}
 library(epidatr)
 
