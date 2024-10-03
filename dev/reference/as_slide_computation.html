@@ -21,7 +21,7 @@ extended to include ..3; and also by epi[x]_slide-specific names
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.2</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,13 +74,25 @@ extended to include <code>..3</code>; and also by <code>epi[x]_slide</code>-spec
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">as_slide_computation</span><span class="op">(</span></span>
 <span>  <span class="va">.f</span>,</span>
 <span>  <span class="va">...</span>,</span>
+<span>  .f_arg <span class="op">=</span> <span class="fu">caller_arg</span><span class="op">(</span><span class="va">.f</span><span class="op">)</span>,</span>
+<span>  .call <span class="op">=</span> <span class="fu">caller_env</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  <span class="va">.ref_time_value_long_varnames</span>,</span>
 <span>  <span class="va">.ref_time_value_label</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">as_time_slide_computation</span><span class="op">(</span><span class="va">.f</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">as_time_slide_computation</span><span class="op">(</span></span>
+<span>  <span class="va">.f</span>,</span>
+<span>  <span class="va">...</span>,</span>
+<span>  .f_arg <span class="op">=</span> <span class="fu">caller_arg</span><span class="op">(</span><span class="va">.f</span><span class="op">)</span>,</span>
+<span>  .call <span class="op">=</span> <span class="fu">caller_env</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">as_diagonal_slide_computation</span><span class="op">(</span><span class="va">.f</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">as_diagonal_slide_computation</span><span class="op">(</span></span>
+<span>  <span class="va">.f</span>,</span>
+<span>  <span class="va">...</span>,</span>
+<span>  .f_arg <span class="op">=</span> <span class="fu">caller_arg</span><span class="op">(</span><span class="va">.f</span><span class="op">)</span>,</span>
+<span>  .call <span class="op">=</span> <span class="fu">caller_env</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
