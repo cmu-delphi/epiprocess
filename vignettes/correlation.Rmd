@@ -24,7 +24,8 @@ The data is included in this package (via the [`epidatasets` package](https://cm
 ```{r}
 x <- cases_deaths_subset %>%
   select(geo_value, time_value,
-         case_rate = case_rate_7d_av, death_rate = death_rate_7d_av) %>%
+    case_rate = case_rate_7d_av, death_rate = death_rate_7d_av
+  ) %>%
   arrange(geo_value, time_value)
 ```
 
