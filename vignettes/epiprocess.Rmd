@@ -99,7 +99,7 @@ A data frame or tibble that has `geo_value` and `time_value` columns can be
 converted into an `epi_df` object, using the function `as_epi_df()`. As an
 example, we'll work with daily cumulative COVID-19 cases from four U.S. states:
 CA, FL, NY, and TX, over time span from mid 2020 to early 2022. We have included
-this example data in the `epidatasets::jhu_confirmed_cumulative_num` object,
+this example data in the `epidatasets::covid_confirmed_cumulative_num` object,
 which we prepared by downloading the data using `epidatr::pub_covidcast()`.
 
 ```{r, message = FALSE}
@@ -109,7 +109,7 @@ library(dplyr)
 library(tidyr)
 library(withr)
 
-cases <- jhu_confirmed_cumulative_num
+cases <- covid_confirmed_cumulative_num
 
 class(cases)
 colnames(cases)

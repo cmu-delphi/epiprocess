@@ -159,3 +159,24 @@ delayedAssign("covid_incidence_outliers", epidatasets::covid_incidence_outliers)
 #'
 #' @export
 delayedAssign("archive_cases_dv_subset", epidatasets::archive_cases_dv_subset)
+
+#' @inherit epidatasets::covid_case_death_rates_extended description source references title
+#' @inheritSection epidatasets::covid_case_death_rates_extended Data dictionary
+#' @examples
+#' # Since this is a re-exported dataset, it cannot be loaded using
+#' # the `data()` function. `data()` looks for a file of the same name
+#' # in the `data/` directory, which doesn't exist in this package.
+#' # works
+#' epiprocess::covid_case_death_rates_extended
+#'
+#' # works
+#' library(epiprocess)
+#' covid_case_death_rates_extended
+#'
+#' # fails
+#' \dontrun{
+#' data(covid_case_death_rates_extended, package = "epiprocess")
+#' }
+#'
+#' @export
+delayedAssign("covid_case_death_rates_extended", epidatasets::covid_case_death_rates_extended)
