@@ -124,7 +124,7 @@ state_naming <- read_csv("https://github.com/cmu-delphi/covidcast/raw/c89e4d2955
 
 # First make geo value more readable for tables, plots, etc.
 x <- x %>%
-  inner_join(state_naming, by = "state_name", relationship = "many-to-one", unmatched = "error") %>%
+  inner_join(state_naming, by = "state_name", relationship = "many-to-one", unmatched = c("error", "drop")) %>%
   mutate(geo_value = paste(substr(county_name, 1, nchar(county_name) - 7), state_name, sep = ", ")) %>%
   select(geo_value, time_value, cases)
 

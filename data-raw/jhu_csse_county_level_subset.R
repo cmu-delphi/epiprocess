@@ -23,7 +23,7 @@ jhu_csse_county_level_subset <- pub_covidcast(
   time_values = epirange(20200601, 20211231),
 ) %>%
   select(geo_value, time_value, cases = value) %>%
-  inner_join(y, by = "geo_value", relationship = "many-to-one", unmatched = "error") %>%
+  inner_join(y, by = "geo_value", relationship = "many-to-one", unmatched = c("error", "drop")) %>%
   as_epi_df()
 
 usethis::use_data(jhu_csse_county_level_subset, overwrite = TRUE)
