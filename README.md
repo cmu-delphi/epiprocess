@@ -1,19 +1,22 @@
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # epiprocess
+
+## TODO: Condense these paragraphs
 
 The [`{epiprocess}`](https://cmu-delphi.github.io/epiprocess/) package
 works with epidemiological time series data to provide situational
 awareness, processing, and transformations in preparation for modeling,
 and version-faithful model backtesting. It contains:
 
-- `epi_df`, a class for working with epidemiological time series data
-  which behaves like a tibble (and can be manipulated with
-  [`{dplyr}`](https://dplyr.tidyverse.org/)-esque “verbs”) but with
-  some additional structure;
-- `epi_archive`, a class for working with the version history of such
-  time series data;
-- sample epidemiological data in these formats;
+  - `epi_df`, a class for working with epidemiological time series data
+    which behaves like a tibble (and can be manipulated with
+    [`{dplyr}`](https://dplyr.tidyverse.org/)-esque “verbs”) but with
+    some additional structure;
+  - `epi_archive`, a class for working with the version history of such
+    time series data;
+  - sample epidemiological data in these formats;
 
 This package is provided by the Delphi group at Carnegie Mellon
 University. The Delphi group provides many tools also hosts the Delphi
@@ -48,7 +51,7 @@ many common tasks instead.
 
 To install:
 
-```r
+``` r
 # Stable version
 pak::pkg_install("cmu-delphi/epiprocess@main")
 
@@ -63,7 +66,7 @@ The package is not yet on CRAN.
 Once `epiprocess` and `epidatr` are installed, you can use the following
 code to get started:
 
-```r
+``` r
 library(epiprocess)
 library(epidatr)
 library(dplyr)
@@ -74,7 +77,7 @@ Get COVID-19 confirmed cumulative case data from JHU CSSE for
 California, Florida, New York, and Texas, from March 1, 2020 to January
 31, 2022
 
-```r
+``` r
 df <- pub_covidcast(
   source = "jhu-csse",
   signals = "confirmed_cumulative_num",
@@ -101,11 +104,11 @@ df
 #> # ℹ 2,798 more rows
 ```
 
-Convert the data to an epi_df object and sort by geo_value and
-time_value. You can work with the epi_df object like a tibble using
+Convert the data to an epi\_df object and sort by geo\_value and
+time\_value. You can work with the epi\_df object like a tibble using
 dplyr
 
-```r
+``` r
 edf <- df %>%
   as_epi_df() %>%
   arrange_canonical() %>%
@@ -115,8 +118,8 @@ edf
 #> An `epi_df` object, 2,808 x 4 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2024-10-04 13:32:23.730165
-#>
+#> * as_of     = 2024-10-04 22:33:55.95561
+#> 
 #> # A tibble: 2,808 × 4
 #> # Groups:   geo_value [4]
 #>    geo_value time_value cases_cumulative cases_daily
@@ -134,9 +137,9 @@ edf
 #> # ℹ 2,798 more rows
 ```
 
-Autoplot the confirmed daily cases for each geo_value
+Autoplot the confirmed daily cases for each geo\_value
 
-```r
+``` r
 edf %>%
   autoplot(cases_cumulative)
 ```
@@ -144,46 +147,46 @@ edf %>%
 <img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
 
 Compute the 7 day moving average of the confirmed daily cases for each
-geo_value
+geo\_value
 
-```r
+``` r
 edf %>%
   group_by(geo_value) %>%
   epi_slide_mean(cases_daily, .window_size = 7, na.rm = TRUE)
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2024-10-04 13:32:23.730165
-#>
+#> * as_of     = 2024-10-04 22:33:55.95561
+#> 
 #> # A tibble: 2,808 × 5
 #> # Groups:   geo_value [4]
 #>    geo_value time_value cases_cumulative cases_daily slide_value_cases_daily
 #>  * <chr>     <date>                <dbl>       <dbl>                   <dbl>
-#>  1 ca        2020-03-01               19          19                   19
-#>  2 ca        2020-03-02               23           4                   11.5
+#>  1 ca        2020-03-01               19          19                   19   
+#>  2 ca        2020-03-02               23           4                   11.5 
 #>  3 ca        2020-03-03               29           6                    9.67
-#>  4 ca        2020-03-04               40          11                   10
-#>  5 ca        2020-03-05               50          10                   10
-#>  6 ca        2020-03-06               68          18                   11.3
-#>  7 ca        2020-03-07               94          26                   13.4
-#>  8 ca        2020-03-08              113          19                   13.4
-#>  9 ca        2020-03-09              136          23                   16.1
-#> 10 ca        2020-03-10              158          22                   18.4
+#>  4 ca        2020-03-04               40          11                   10   
+#>  5 ca        2020-03-05               50          10                   10   
+#>  6 ca        2020-03-06               68          18                   11.3 
+#>  7 ca        2020-03-07               94          26                   13.4 
+#>  8 ca        2020-03-08              113          19                   13.4 
+#>  9 ca        2020-03-09              136          23                   16.1 
+#> 10 ca        2020-03-10              158          22                   18.4 
 #> # ℹ 2,798 more rows
 ```
 
 Compute the growth rate of the confirmed cumulative cases for each
-geo_value
+geo\_value
 
-```r
+``` r
 edf %>%
   group_by(geo_value) %>%
   mutate(cases_growth = growth_rate(x = time_value, y = cases_cumulative, method = "rel_change", h = 7))
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2024-10-04 13:32:23.730165
-#>
+#> * as_of     = 2024-10-04 22:33:55.95561
+#> 
 #> # A tibble: 2,808 × 5
 #> # Groups:   geo_value [4]
 #>    geo_value time_value cases_cumulative cases_daily cases_growth
@@ -204,7 +207,7 @@ edf %>%
 Detect outliers in the growth rate of the confirmed cumulative cases for
 each
 
-```r
+``` r
 edf %>%
   group_by(geo_value) %>%
   mutate(outlier_info = detect_outlr(x = time_value, y = cases_daily)) %>%
@@ -228,8 +231,8 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2024-10-04 13:32:23.730165
-#>
+#> * as_of     = 2024-10-04 22:33:55.95561
+#> 
 #> # A tibble: 2,808 × 5
 #>    geo_value time_value cases_cumulative cases_daily outlier_info$rm_geo_value
 #>  * <chr>     <date>                <dbl>       <dbl>                     <dbl>
@@ -249,11 +252,11 @@ edf %>%
 #> #   $combined_replacement <dbl>
 ```
 
-Add a column to the epi_df object with the daily deaths for each
-geo_value and compute the correlations between cases and deaths for
-each geo_value
+Add a column to the epi\_df object with the daily deaths for each
+geo\_value and compute the correlations between cases and deaths for
+each geo\_value
 
-```r
+``` r
 df <- pub_covidcast(
   source = "jhu-csse",
   signals = "deaths_incidence_num",
