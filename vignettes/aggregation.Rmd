@@ -28,8 +28,14 @@ library(epidatr)
 
 d <- as.Date("2024-03-20")
 
-# Use covidcast::county_census to get the county and state names
-y <- covidcast::county_census %>%
+# Get mapping between FIPS codes and county&state names:
+y <- read_csv("https://github.com/cmu-delphi/covidcast/raw/c89e4d295550ba1540d64d2cc991badf63ad04e5/Python-packages/covidcast-py/covidcast/geo_mappings/county_census.csv", # nolint: line_length_linter
+  col_types = c(
+    FIPS = col_character(),
+    CTYNAME = col_character(),
+    STNAME = col_character()
+  )
+) %>%
   filter(STNAME %in% c("Massachusetts", "Vermont"), STNAME != CTYNAME) %>%
   select(geo_value = FIPS, county_name = CTYNAME, state_name = STNAME)
 
@@ -44,7 +50,7 @@ x <- pub_covidcast(
   as_of = d
 ) %>%
   select(geo_value, time_value, cases = value) %>%
-  full_join(y, by = "geo_value") %>%
+  inner_join(y, by = "geo_value", relationship = "many-to-one", unmatched = c("error", "drop")) %>%
   as_epi_df(as_of = d)
 ```
 
@@ -111,15 +117,16 @@ help avoid bugs in further downstream data processing tasks.
 Let's first remove certain dates from our data set to create gaps:
 
 ```{r}
+state_naming <- read_csv("https://github.com/cmu-delphi/covidcast/raw/c89e4d295550ba1540d64d2cc991badf63ad04e5/Python-packages/covidcast-py/covidcast/geo_mappings/state_census.csv", # nolint: line_length_linter
+  col_types = c(NAME = col_character(), ABBR = col_character())
+) %>%
+  transmute(state_name = NAME, abbr = tolower(ABBR)) %>%
+  as_tibble()
+
 # First make geo value more readable for tables, plots, etc.
 x <- x %>%
-  mutate(
-    geo_value = paste(
-      substr(county_name, 1, nchar(county_name) - 7),
-      name_to_abbr(state_name),
-      sep = ", "
-    )
-  ) %>%
+  inner_join(state_naming, by = "state_name", relationship = "many-to-one", unmatched = c("error", "drop")) %>%
+  mutate(geo_value = paste(substr(county_name, 1, nchar(county_name) - 7), state_name, sep = ", ")) %>%
   select(geo_value, time_value, cases)
 
 xt <- as_tsibble(x) %>% filter(cases >= 3)

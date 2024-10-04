@@ -19,7 +19,14 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 ## Improvements
 
+- `epi_slide` and `epix_slide` now provide some hints if you forget a `~` when
+  using a formula to specify the slide computation, and other bits of forgotten
+  syntax.
 - Improved validation of `.window_size` arguments.
+
+## Cleanup
+
+- Removed vignette dependency on `covidcast`.
 
 # epiprocess 0.9
 
