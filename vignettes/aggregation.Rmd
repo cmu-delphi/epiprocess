@@ -39,7 +39,7 @@ x <- pub_covidcast(
   time_values = epirange(20200601, 20211231),
 ) %>%
   select(geo_value, time_value, cases = value) %>%
-  full_join(y, by = "geo_value") %>%
+  inner_join(y, by = "geo_value", relationship = "many-to-one", unmatched = c("error", "drop")) %>%
   as_epi_df(as_of = as.Date("2024-03-20"))
 ```
 
