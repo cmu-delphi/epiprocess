@@ -17,6 +17,10 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   syntax.
 - Improved validation of `.window_size` arguments.
 
+## Cleanup
+
+- Removed vignette dependency on `covidcast`.
+
 # epiprocess 0.9
 
 ## Breaking changes
