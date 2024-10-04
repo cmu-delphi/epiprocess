@@ -312,14 +312,15 @@ epix_slide.grouped_epi_archive <- function(
       cli_abort("If `f` is missing then a computation must be specified via `...`.")
     }
 
-    .slide_comp <- as_diagonal_slide_computation(quosures)
+    .f_arg <- ".f" # dummy val, shouldn't be used since we're not using `.f`
+    .slide_comp <- as_diagonal_slide_computation(quosures, .f_arg = .f_arg)
     # Magic value that passes zero args as dots in calls below. Equivalent to
     # `... <- missing_arg()`, but use `assign` to avoid warning about
     # improper use of dots.
     assign("...", missing_arg())
   } else {
     used_data_masking <- FALSE
-    .slide_comp <- as_diagonal_slide_computation(.f, ...)
+    .slide_comp <- as_diagonal_slide_computation(.f, ..., .f_arg = caller_arg(.f))
   }
 
   # Computation for one group, one time value
