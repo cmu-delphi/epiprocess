@@ -117,7 +117,7 @@ window:                               tv, tv + 1, tv + 2
 }
 \examples{
 # slide a 7-day trailing sum formula on cases
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_sum(cases, .window_size = 7) \%>\%
   # Remove a nonessential var. to ensure new col is printed

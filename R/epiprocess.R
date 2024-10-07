@@ -12,6 +12,7 @@
 #' @importFrom cli cli_abort cli_warn
 #' @importFrom rlang %||%
 #' @importFrom lifecycle deprecated
+#' @import epidatasets
 #' @name epiprocess
 "_PACKAGE"
 utils::globalVariables(c(

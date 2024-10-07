@@ -132,7 +132,7 @@ window:                               tv, tv + 1, tv + 2
 }
 \examples{
 # slide a 7-day trailing average formula on cases. This can also be done with `epi_slide_mean`
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
     cases,
@@ -144,7 +144,7 @@ jhu_csse_daily_subset \%>\%
 
 # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
 # and accuracy, and to allow partially-missing windows.
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
     cases,
@@ -156,7 +156,7 @@ jhu_csse_daily_subset \%>\%
   ungroup()
 
 # slide a 7-day leading average
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
     cases,
@@ -166,8 +166,8 @@ jhu_csse_daily_subset \%>\%
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 
-# slide a 7-day center-aligned sum. This can also be done with `epi_slide_sum`
-jhu_csse_daily_subset \%>\%
+# slide a 7-day centre-aligned sum. This can also be done with `epi_slide_sum`
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
     cases,

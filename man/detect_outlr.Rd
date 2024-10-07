@@ -94,7 +94,7 @@ detection_methods <- dplyr::bind_rows(
   )
 )
 
-x <- incidence_num_outlier_example \%>\%
+x <- covid_incidence_outliers \%>\%
   dplyr::select(geo_value, time_value, cases) \%>\%
   as_epi_df() \%>\%
   group_by(geo_value) \%>\%

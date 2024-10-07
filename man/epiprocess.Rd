@@ -40,6 +40,9 @@ Other contributors:
   \item Lionel Henry (Author of included rlang fragments) [contributor]
   \item Hadley Wickham (Author of included rlang fragments) [contributor]
   \item Posit (Copyright holder of included rlang fragments) [copyright holder]
+  \item Johns Hopkins University Center for Systems Science and Engineering (Owner of COVID-19 cases and deaths data from the COVID-19 Data Repository) [data contributor]
+  \item Johns Hopkins University (Copyright holder of COVID-19 cases and deaths data from the COVID-19 Data Repository) [copyright holder]
+  \item Carnegie Mellon University Delphi Group (Owner of claims-based CLI data from the Delphi Epidata API) [data contributor]
 }
 
 }

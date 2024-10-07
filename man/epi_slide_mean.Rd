@@ -117,7 +117,7 @@ window:                               tv, tv + 1, tv + 2
 }
 \examples{
 # slide a 7-day trailing average formula on cases
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_mean(cases, .window_size = 7) \%>\%
   # Remove a nonessential var. to ensure new col is printed
@@ -126,7 +126,7 @@ jhu_csse_daily_subset \%>\%
 
 # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
 # and accuracy, and to allow partially-missing windows.
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_mean(
     cases,
@@ -138,23 +138,23 @@ jhu_csse_daily_subset \%>\%
   ungroup()
 
 # slide a 7-day leading average
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_mean(cases, .window_size = 7, .align = "right") \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 
-# slide a 7-day center-aligned average
-jhu_csse_daily_subset \%>\%
+# slide a 7-day centre-aligned average
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_mean(cases, .window_size = 7, .align = "center") \%>\%
   # Remove a nonessential var. to ensure new col is printed
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) \%>\%
   ungroup()
 
-# slide a 14-day center-aligned average
-jhu_csse_daily_subset \%>\%
+# slide a 14-day centre-aligned average
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_mean(cases, .window_size = 14, .align = "center") \%>\%
   # Remove a nonessential var. to ensure new col is printed

@@ -98,27 +98,20 @@ which we also broadly refer to as signal variables. The documentation for
 A data frame or tibble that has `geo_value` and `time_value` columns can be
 converted into an `epi_df` object, using the function `as_epi_df()`. As an
 example, we'll work with daily cumulative COVID-19 cases from four U.S. states:
-CA, FL, NY, and TX, over time span from mid 2020 to early 2022, and we'll use
-the [`epidatr`](https://github.com/cmu-delphi/epidatr) package
-to fetch this data from the [COVIDcast
-API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html).
+CA, FL, NY, and TX, over time span from mid 2020 to early 2022. We have included
+this example data in the `epidatasets::covid_confirmed_cumulative_num` object,
+which we prepared by downloading the data using `epidatr::pub_covidcast()`.
 
 ```{r, message = FALSE}
-library(epidatr)
+library(epidatasets)
 library(epiprocess)
 library(dplyr)
 library(tidyr)
 library(withr)
 
-cases <- pub_covidcast(
-  source = "jhu-csse",
-  signals = "confirmed_cumulative_num",
-  geo_type = "state",
-  time_type = "day",
-  geo_values = "ca,fl,ny,tx",
-  time_values = epirange(20200301, 20220131),
-)
+cases <- covid_confirmed_cumulative_num
 
+class(cases)
 colnames(cases)
 ```
 
@@ -248,7 +241,7 @@ In the above examples, all the keys are added to objects that are not `epi_df` o
 We use a toy data set included in `epiprocess` prepared using the `covidcast` library and are filtering to a single state for simplicity.
 
 ```{r}
-ex3 <- jhu_csse_county_level_subset %>%
+ex3 <- covid_incidence_county_subset %>%
   filter(time_value > "2021-12-01", state_name == "Massachusetts") %>%
   slice_tail(n = 6)
 

@@ -11,13 +11,13 @@ test_that("epi_cor requires two var arguments, var1 and var2", {
 test_that("epi_cor functions as intended", {
   expect_equal(
     epi_cor(
-      x = jhu_csse_daily_subset,
+      x = cases_deaths_subset,
       var1 = case_rate_7d_av,
       var2 = death_rate_7d_av,
       cor_by = geo_value,
       dt1 = -2
     )[1],
-    tibble(geo_value = unique(jhu_csse_daily_subset$geo_value))
+    tibble(geo_value = unique(cases_deaths_subset$geo_value))
   )
 
   edf <- as_epi_df(data.frame(

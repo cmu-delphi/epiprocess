@@ -145,7 +145,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_null(ea8$additional_metadata)
 
   # epi_df
-  edf1 <- jhu_csse_daily_subset %>%
+  edf1 <- cases_deaths_subset %>%
     select(geo_value, time_value, cases) %>%
     mutate(version = max(time_value), code = "USA")
 
