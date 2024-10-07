@@ -18,6 +18,7 @@ The data is included in this package (via the [`epidatasets` package](https://cm
 library(epiprocess)
 library(dplyr)
 library(covidcast)
+library(readr)
 
 x <- covid_incidence_county_subset
 ```
