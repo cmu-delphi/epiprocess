@@ -82,6 +82,7 @@ revision_summary <- function(epi_arch,
                              rel_spread_threshold = 0.1,
                              compactify_tol = .Machine$double.eps^0.5,
                              should_compactify = TRUE) {
+  assert_class(epi_arch, "epi_archive")
   arg <- names(eval_select(rlang::expr(c(...)), allow_rename = FALSE, data = epi_arch$DT))
   if (length(arg) == 0) {
     # Choose the first column that's not a key or version
@@ -91,7 +92,7 @@ revision_summary <- function(epi_arch,
   }
   if (is.null(abs_spread_threshold)) {
     abs_spread_threshold <- .05 * epi_arch$DT %>%
-      pull(...) %>%
+      pull(!!arg) %>%
       max(na.rm = TRUE)
   }
   # for each time_value, get
