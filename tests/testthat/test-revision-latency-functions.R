@@ -35,7 +35,17 @@ test_that("revision_summary works for a dummy dataset", {
   expect_snapshot(dummy_ex %>% revision_summary(drop_nas = FALSE) %>% print(n = 10, width = 300))
 })
 test_that("tidyselect is functional", {
-  expect_no_error(revision_summary(dummy_ex, value))
-  expect_no_error(revision_summary(dummy_ex, starts_with("val")))
+  expect_no_error(quiet(revision_summary(dummy_ex, value)))
+  expect_no_error(quiet(revision_summary(dummy_ex, starts_with("val"))))
+  with_later_key_col <- dummy_ex$DT %>%
+    select(geo_value, time_value, value, version) %>%
+    as_epi_archive(versions_end = dummy_ex$versions_end, compactify = FALSE)
+  expect_equal(quiet(revision_summary(with_later_key_col)),
+               quiet(revision_summary(dummy_ex)))
+  with_later_val_col <- dummy_ex$DT %>%
+    mutate(value2 = 0) %>%
+    as_epi_archive(versions_end = dummy_ex$versions_end, compactify = FALSE)
+  expect_equal(quiet(revision_summary(with_later_val_col, value)),
+               quiet(revision_summary(dummy_ex, value)))
 })
 test_that("revision_summary works for various timetypes", {})
