@@ -19,10 +19,10 @@
 #'  8. `rel_spread`: `spread` divided by the largest value (so it will
 #'   always be less than 1). Note that this need not be the final value. It will
 #'   be `NA` whenever `spread` is 0.
-#'  9. `time_near_latest`: the time taken for the revisions to settle to within
+#'  9. `lag_near_latest`: the time taken for the revisions to settle to within
 #'   `within_latest` (default 20%) of the final value and stay there. For
 #'   example, consider the series (0, 20, 99, 150, 102, 100); then
-#'   `time_near_latest` is 5, since even though 99 is within 20%, it is outside
+#'   `lag_near_latest` is 5, since even though 99 is within 20%, it is outside
 #'   the window afterwards at 150.
 #'
 #' @param epi_arch an epi_archive to be analyzed
@@ -42,7 +42,7 @@
 #'   final value for case counts as reported in the context of insurance. To
 #'   avoid this filtering, either set to `NULL` or 0.
 #' @param within_latest double between 0 and 1. Determines the threshold
-#'   used for the `time_to`
+#'   used for the `lag_to`
 #' @param quick_revision difftime or integer (integer is treated as days), for
 #'   the printed summary, the amount of time between the final revision and the
 #'   actual time_value to consider the revision quickly resolved. Default of 3
@@ -143,7 +143,7 @@ revision_summary <- function(epi_arch,
       min_value = f_no_na(min, .data[[arg]]),
       max_value = f_no_na(max, .data[[arg]]),
       median_value = f_no_na(median, .data[[arg]]),
-      time_to = time_within_x_latest(lag, .data[[arg]], prop = within_latest),
+      lag_to = lag_within_x_latest(lag, .data[[arg]], prop = within_latest),
       .groups = "drop"
     ) %>%
     mutate(
@@ -152,12 +152,12 @@ revision_summary <- function(epi_arch,
       # TODO the units here may be a problem
       min_lag = as.difftime(min_lag, units = "days"), # nolint: object_usage_linter
       max_lag = as.difftime(max_lag, units = "days"), # nolint: object_usage_linter
-      time_near_latest = as.difftime(time_to, units = "days") # nolint: object_usage_linter
+      lag_near_latest = as.difftime(lag_to, units = "days") # nolint: object_usage_linter
     ) %>%
-    select(-time_to) %>%
+    select(-lag_to) %>%
     relocate(
       time_value, geo_value, all_of(epikey_names), n_revisions, min_lag, max_lag, # nolint: object_usage_linter
-      time_near_latest, spread, rel_spread, min_value, max_value, median_value # nolint: object_usage_linter
+      lag_near_latest, spread, rel_spread, min_value, max_value, median_value # nolint: object_usage_linter
     )
   if (print_inform) {
     cli_inform("Min lag (time to first version):")
@@ -208,15 +208,17 @@ revision_summary <- function(epi_arch,
     cli_li(num_percent(abs_spread, n_real_revised, ""))
 
     cli_inform("{units(quick_revision)} until within {within_latest*100}% of the latest value:")
-    difftime_summary(revision_behavior[["time_near_latest"]]) %>% print()
+    difftime_summary(revision_behavior[["lag_near_latest"]]) %>% print()
   }
   return(revision_behavior)
 }
 
-#' pull the value from lags when values starts indefinitely being within prop of it's last value.
-#' @param values this should be a vector (e.g., a column). errors may occur otherwise
+#' pull the value from lags when values starts indefinitely being within prop of its latest value.
+#' @param lags vector of lags; should be sorted
+#' @param values this should be a vector (e.g., a column) with length matching that of `lags`
+#' @param prop optional length-1 double; proportion
 #' @keywords internal
-time_within_x_latest <- function(lags, values, prop = .2) {
+lag_within_x_latest <- function(lags, values, prop = .2) {
   latest_value <- values[[length(values)]]
   close_enough <- abs(values - latest_value) < prop * latest_value
   # we want to ignore any stretches where it's close, but goes farther away later
