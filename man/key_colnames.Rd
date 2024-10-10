@@ -2,35 +2,36 @@
 % Please edit documentation in R/key_colnames.R
 \name{key_colnames}
 \alias{key_colnames}
-\alias{key_colnames.default}
 \alias{key_colnames.data.frame}
 \alias{key_colnames.epi_df}
 \alias{key_colnames.epi_archive}
-\title{Grab any keys associated to an epi_df}
+\title{Get names of columns that form a (unique) key associated with an object}
 \usage{
-key_colnames(x, ...)
+key_colnames(x, ..., exclude = character(0L))
 
-\method{key_colnames}{default}(x, ...)
+\method{key_colnames}{data.frame}(x, other_keys, ..., exclude = character(0L))
 
-\method{key_colnames}{data.frame}(x, other_keys = character(0L), exclude = character(0L), ...)
+\method{key_colnames}{epi_df}(x, ..., exclude = character(0L))
 
-\method{key_colnames}{epi_df}(x, exclude = character(0L), ...)
-
-\method{key_colnames}{epi_archive}(x, exclude = character(0L), ...)
+\method{key_colnames}{epi_archive}(x, ..., exclude = character(0L))
 }
 \arguments{
-\item{x}{a data.frame, tibble, or epi_df}
+\item{x}{an object, such as an \code{\link{epi_df}}}
 
 \item{...}{additional arguments passed on to methods}
 
-\item{other_keys}{an optional character vector of other keys to include}
+\item{exclude}{an optional character vector of key column names to exclude
+from the result}
 
-\item{exclude}{an optional character vector of keys to exclude}
+\item{other_keys}{character vector; what besides \code{geo_value} and \code{time_value}
+(if present) should we consider to be key columns?  Used, e.g., if we}
 }
 \value{
-If an \code{epi_df}, this returns all "keys". Otherwise \code{NULL}.
+character vector
 }
 \description{
-Grab any keys associated to an epi_df
+This is entirely based on metadata and arguments passed; there are no
+explicit checks that the key actually is unique in any associated data
+structures.
 }
 \keyword{internal}
