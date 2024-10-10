@@ -88,7 +88,7 @@ always be less than 1). Note that this need not be the final value. It will
 be \code{NA} whenever \code{spread} is 0.
 \item \code{time_near_latest}: This gives the lag when the value is within
 \code{within_latest} (default 20\%) of the value at the latest time. For example,
-consider the series (0,20, 99, 150, 102, 100); then \code{time_near_latest} is
+consider the series (0, 20, 99, 150, 102, 100); then \code{time_near_latest} is
 the 5th index, since even though 99 is within 20\%, it is outside the window
 afterwards at 150.
 }
