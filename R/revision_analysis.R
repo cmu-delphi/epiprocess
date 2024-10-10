@@ -67,7 +67,7 @@
 #'
 #' @export
 #' @importFrom cli cli_inform cli_abort cli_li
-#' @importFrom rlang list2 syms
+#' @importFrom rlang list2 syms dots_n
 #' @importFrom dplyr mutate group_by arrange filter if_any all_of across pull pick c_across
 #'   everything ungroup summarize if_else %>%
 revision_summary <- function(epi_arch,
@@ -83,12 +83,19 @@ revision_summary <- function(epi_arch,
                              compactify_tol = .Machine$double.eps^0.5,
                              should_compactify = TRUE) {
   assert_class(epi_arch, "epi_archive")
-  arg <- names(eval_select(rlang::expr(c(...)), allow_rename = FALSE, data = epi_arch$DT))
-  if (length(arg) == 0) {
-    # Choose the first column that's not a key or version
+  if (dots_n(...) == 0) {
+    # Choose the first column that's not a key:
     arg <- setdiff(names(epi_arch$DT), key_colnames(epi_arch))[[1]]
-  } else if (length(arg) > 1) {
-    cli_abort("Not currently implementing more than one column at a time. Run each separately")
+  } else {
+    arg <- names(eval_select(rlang::expr(c(...)), allow_rename = FALSE, data = epi_arch$DT))
+    if (length(arg) == 0) {
+      cli_abort("Could not find any columns matching the selection in `...`.",
+        class = "epiprocess__revision_summary__selected_zero_columns"
+      )
+    }
+    if (length(arg) > 1) {
+      cli_abort("Not currently implementing more than one column at a time. Run each separately.")
+    }
   }
   if (is.null(abs_spread_threshold)) {
     abs_spread_threshold <- .05 * epi_arch$DT %>%
@@ -102,10 +109,12 @@ revision_summary <- function(epi_arch,
   #   the max lag
   #
   # revision_tibble
-  keys <- key_colnames(epi_arch, exclude = "version")
+  epikey_names <- key_colnames(epi_arch, exclude = c("time_value", "version"))
+  epikeytime_names <- c(epikey_names, "time_value")
+  keys <- c(epikeytime_names, "version")
 
   revision_behavior <- epi_arch$DT %>%
-    select(all_of(unique(c("geo_value", "time_value", keys, "version", arg))))
+    select(all_of(unique(c(keys, arg))))
   if (!is.null(min_waiting_period)) {
     revision_behavior <- revision_behavior %>%
       filter(abs(time_value - as.Date(epi_arch$versions_end)) >= min_waiting_period)
@@ -115,27 +124,26 @@ revision_summary <- function(epi_arch,
     # if we're dropping NA's, we should recompactify
     revision_behavior <-
       revision_behavior %>%
-      filter(!is.na(c_across(!!arg)))
+      filter(!is.na(.data[[arg]]))
   } else {
     revision_behavior <- epi_arch$DT
   }
   if (should_compactify) {
     revision_behavior <- revision_behavior %>%
-      arrange(across(c(geo_value, time_value, all_of(keys), version))) %>% # need to sort before compactifying
-      apply_compactify(c(keys, version), compactify_tol)
+      apply_compactify(keys, compactify_tol)
   }
   revision_behavior <-
     revision_behavior %>%
     mutate(lag = as.integer(version) - as.integer(time_value)) %>% # nolint: object_usage_linter
-    group_by(across(all_of(keys))) %>% # group by all the keys
+    group_by(across(all_of(epikeytime_names))) %>% # group = versions of one measurement
     summarize(
       n_revisions = dplyr::n() - 1,
       min_lag = min(lag), # nolint: object_usage_linter
       max_lag = max(lag), # nolint: object_usage_linter
-      min_value = f_no_na(min, pick(!!arg)),
-      max_value = f_no_na(max, pick(!!arg)),
-      median_value = f_no_na(median, pick(!!arg)),
-      time_to = time_within_x_latest(lag, pick(!!arg), prop = within_latest), # nolint: object_usage_linter
+      min_value = f_no_na(min, .data[[arg]]),
+      max_value = f_no_na(max, .data[[arg]]),
+      median_value = f_no_na(median, .data[[arg]]),
+      time_to = time_within_x_latest(lag, .data[[arg]], prop = within_latest),
       .groups = "drop"
     ) %>%
     mutate(
@@ -148,7 +156,7 @@ revision_summary <- function(epi_arch,
     ) %>%
     select(-time_to) %>%
     relocate(
-      time_value, geo_value, all_of(keys), n_revisions, min_lag, max_lag, # nolint: object_usage_linter
+      time_value, geo_value, all_of(epikey_names), n_revisions, min_lag, max_lag, # nolint: object_usage_linter
       time_near_latest, spread, rel_spread, min_value, max_value, median_value # nolint: object_usage_linter
     )
   if (print_inform) {
@@ -206,10 +214,9 @@ revision_summary <- function(epi_arch,
 }
 
 #' pull the value from lags when values starts indefinitely being within prop of it's last value.
-#' @param values this should be a 1 column tibble. errors may occur otherwise
+#' @param values this should be a vector (e.g., a column). errors may occur otherwise
 #' @keywords internal
 time_within_x_latest <- function(lags, values, prop = .2) {
-  values <- values[[1]]
   latest_value <- values[[length(values)]]
   close_enough <- abs(values - latest_value) < prop * latest_value
   # we want to ignore any stretches where it's close, but goes farther away later
@@ -225,11 +232,10 @@ time_within_x_latest <- function(lags, values, prop = .2) {
 #' @keywords internal
 get_last_run <- function(bool_vec, values_from) {
   runs <- rle(bool_vec)
-  length(bool_vec) - tail(runs$lengths, n = 1)
   values_from[[length(bool_vec) - tail(runs$lengths, n = 1) + 1]]
 }
 
-#' use when the default behavior returns a warning on empty lists, which we do
+#' use when the default behavior returns a warning on empty vectors, which we do
 #' not want, and there is no super clean way of preventing this
 #' @keywords internal
 f_no_na <- function(f, x) {

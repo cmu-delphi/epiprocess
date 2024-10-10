@@ -7,7 +7,7 @@
 time_within_x_latest(lags, values, prop = 0.2)
 }
 \arguments{
-\item{values}{this should be a 1 column tibble. errors may occur otherwise}
+\item{values}{this should be a vector (e.g., a column). errors may occur otherwise}
 }
 \description{
 pull the value from lags when values starts indefinitely being within prop of it's last value.
