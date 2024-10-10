@@ -7,7 +7,7 @@
 #' @param x an object, such as an [`epi_df`]
 #' @param ... additional arguments passed on to methods
 #' @param other_keys character vector; what besides `geo_value` and `time_value`
-#'   (if present) should we consider to be key columns?  Used, e.g., if we 
+#'   (if present) should we consider to be key columns?  Used, e.g., if we
 #' @param exclude an optional character vector of key column names to exclude
 #'   from the result
 #' @return character vector
