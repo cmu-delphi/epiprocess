@@ -424,8 +424,8 @@ epi_slide_one_group <- function(
             )),
             capture.output(print(waldo::compare(
               res[[comp_nms[[comp_i]]]], slide_values[[comp_i]],
-              x_arg = rlang::expr_deparse(dplyr::expr(`$`(existing, !!sym(comp_nms[[comp_i]])))), # nolint: object_usage_linter
-              y_arg = rlang::expr_deparse(dplyr::expr(`$`(comp_value, !!sym(comp_nms[[comp_i]])))) # nolint: object_usage_linter
+              x_arg = rlang::expr_deparse(dplyr::expr(`$`(!!"existing", !!sym(comp_nms[[comp_i]])))), # nolint: object_usage_linter
+              y_arg = rlang::expr_deparse(dplyr::expr(`$`(!!"comp_value", !!sym(comp_nms[[comp_i]])))) # nolint: object_usage_linter
             ))),
             cli::format_message(c(
               ">" = "You likely want to rename or remove this column from your slide
