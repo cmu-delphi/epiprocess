@@ -13,7 +13,7 @@ for examples."><meta name="robots" content="noindex"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.4</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -195,7 +195,7 @@ window:                               tv, tv + 1, tv + 2</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># slide a 7-day trailing average formula on cases. This can also be done with `epi_slide_mean`</span></span></span>
-<span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="va">cases_deaths_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">epi_slide_opt</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="va">cases</span>,</span></span>
@@ -207,7 +207,7 @@ window:                               tv, tv + 1, tv + 2</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-08-23 02:40:48.296938</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-03-20</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_7dav</span>
@@ -226,7 +226,7 @@ window:                               tv, tv + 1, tv + 2</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed</span></span></span>
 <span class="r-in"><span><span class="co"># and accuracy, and to allow partially-missing windows.</span></span></span>
-<span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="va">cases_deaths_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">epi_slide_opt</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="va">cases</span>,</span></span>
@@ -239,7 +239,7 @@ window:                               tv, tv + 1, tv + 2</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-08-23 02:40:48.296938</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-03-20</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_7dav</span>
@@ -257,7 +257,7 @@ window:                               tv, tv + 1, tv + 2</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4,016 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># slide a 7-day leading average</span></span></span>
-<span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="va">cases_deaths_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">epi_slide_opt</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="va">cases</span>,</span></span>
@@ -269,7 +269,7 @@ window:                               tv, tv + 1, tv + 2</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-08-23 02:40:48.296938</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-03-20</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_7dav</span>
@@ -286,8 +286,8 @@ window:                               tv, tv + 1, tv + 2</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22       56.7</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4,016 more rows</span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># slide a 7-day center-aligned sum. This can also be done with `epi_slide_sum`</span></span></span>
-<span class="r-in"><span><span class="va">jhu_csse_daily_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="co"># slide a 7-day centre-aligned sum. This can also be done with `epi_slide_sum`</span></span></span>
+<span class="r-in"><span><span class="va">cases_deaths_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">epi_slide_opt</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="va">cases</span>,</span></span>
@@ -299,7 +299,7 @@ window:                               tv, tv + 1, tv + 2</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 4 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-08-23 02:40:48.296938</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> * as_of     = 2024-03-20</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value cases cases_7dav</span>

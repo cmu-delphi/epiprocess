@@ -21,9 +21,13 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/as_tibble.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/as_tsibble.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/autoplot.epi_df.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/cases_deaths_subset.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/clone.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/compactify.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/complete.epi_df.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/covid_case_death_rates_extended.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/covid_incidence_county_subset.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/covid_incidence_outliers.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/detect_outlr.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/detect_outlr_rm.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/detect_outlr_stl.html</loc></url>
@@ -54,12 +58,9 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/growth_rate.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/guess_column_name.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/guess_period.html</loc></url>
-<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/incidence_num_outlier_example.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/index.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/is_epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/is_locf.html</loc></url>
-<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/jhu_csse_county_level_subset.html</loc></url>
-<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/jhu_csse_daily_subset.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/key_colnames.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/max_version_with_row_in.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/next_after.html</loc></url>

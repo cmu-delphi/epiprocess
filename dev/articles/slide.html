@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.4</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,22 +92,33 @@ cases from CA, FL, NY, and TX (note: here we’re using new, not
 cumulative cases) using the <a href="https://github.com/cmu-delphi/epidatr" class="external-link"><code>epidatr</code></a>
 package, and then convert this to <code>epi_df</code> format.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epidatr/" class="external-link">epidatr</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></code></pre></div>
-<p>The data is fetched with the following query:</p>
+<p>The data is included in this package (via the <a href="https://cmu-delphi.github.io/epidatasets/" class="external-link"><code>epidatasets</code>
+package</a>) and can be loaded with:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">edf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/pub_covidcast.html" class="external-link">pub_covidcast</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">edf</span> <span class="op">&lt;-</span> <span class="va">cases_deaths_subset</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span><span class="op">)</span></span></code></pre></div>
+<p>The data can also be fetched from the Delphi Epidata API with the
+following query:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epidatr/" class="external-link">epidatr</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-03-20"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">edf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/pub_covidcast.html" class="external-link">pub_covidcast</a></span><span class="op">(</span></span>
 <span>  source <span class="op">=</span> <span class="st">"jhu-csse"</span>,</span>
 <span>  signals <span class="op">=</span> <span class="st">"confirmed_incidence_num"</span>,</span>
 <span>  geo_type <span class="op">=</span> <span class="st">"state"</span>,</span>
 <span>  time_type <span class="op">=</span> <span class="st">"day"</span>,</span>
 <span>  geo_values <span class="op">=</span> <span class="st">"ca,fl,ny,tx,ga,pa"</span>,</span>
 <span>  time_values <span class="op">=</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200301</span>, <span class="fl">20211231</span><span class="op">)</span>,</span>
+<span>  as_of <span class="op">=</span> <span class="va">d</span></span>
 <span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, cases <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/epi_df.html">as_epi_df</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="../reference/epi_df.html">as_epi_df</a></span><span class="op">(</span>as_of <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span></code></pre></div>
 <p>The data has 2,684 rows and 3 columns.</p>
 <div class="section level2">
 <h2 id="optimized-rolling-mean-and-sums">Optimized rolling mean and sums<a class="anchor" aria-label="anchor" href="#optimized-rolling-mean-and-sums"></a>
@@ -118,7 +129,7 @@ versions: <code><a href="../reference/epi_slide_mean.html">epi_slide_mean()</a><
 average of the daily cases. Note that the name of the column(s) that we
 want to average is specified as the first argument of
 <code><a href="../reference/epi_slide_mean.html">epi_slide_mean()</a></code>.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_slide_mean.html">epi_slide_mean</a></span><span class="op">(</span><span class="st">"cases"</span>, .window_size <span class="op">=</span> <span class="fl">7</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -127,7 +138,7 @@ want to average is specified as the first argument of
 <pre><code><span><span class="co">## An `epi_df` object, 10 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2024-08-23 02:40:48.296938</span></span>
+<span><span class="co">## * as_of     = 2024-03-20</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
 <span><span class="co">##    geo_value time_value cases slide_value_cases</span></span>
@@ -148,7 +159,7 @@ want to average is specified as the first argument of
 <p>The following computes the 7-day trailing sum of daily cases (and
 passed <code>na.rm</code> to <code><a href="https://rdatatable.gitlab.io/data.table/reference/froll.html" class="external-link">data.table::frollsum()</a></code>
 similarly):</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_slide_sum.html">epi_slide_sum</a></span><span class="op">(</span><span class="st">"cases"</span>, .window_size <span class="op">=</span> <span class="fl">7</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -157,7 +168,7 @@ similarly):</p>
 <pre><code><span><span class="co">## An `epi_df` object, 10 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2024-08-23 02:40:48.296938</span></span>
+<span><span class="co">## * as_of     = 2024-03-20</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
 <span><span class="co">##    geo_value time_value cases slide_value_cases</span></span>
@@ -183,7 +194,7 @@ sum).</p>
 <p>The same 7-day trailing average of daily cases can be computed by
 passing in a formula for the first argument of
 <code><a href="../reference/epi_slide.html">epi_slide()</a></code>:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span><span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">.x</span><span class="op">$</span><span class="va">cases</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, .window_size <span class="op">=</span> <span class="fl">7</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -192,7 +203,7 @@ passing in a formula for the first argument of
 <pre><code><span><span class="co">## An `epi_df` object, 10 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2024-08-23 02:40:48.296938</span></span>
+<span><span class="co">## * as_of     = 2024-03-20</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
 <span><span class="co">##    geo_value time_value cases slide_value</span></span>
@@ -211,7 +222,7 @@ passing in a formula for the first argument of
 data.frame will be unpacked into the resulting <code>epi_df</code>. For
 example, the following computes the 7-day trailing average of daily
 cases and the 7-day trailing sum of daily cases:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span></span>
@@ -223,7 +234,7 @@ cases and the 7-day trailing sum of daily cases:</p>
 <pre><code><span><span class="co">## An `epi_df` object, 10 x 5 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2024-08-23 02:40:48.296938</span></span>
+<span><span class="co">## * as_of     = 2024-03-20</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 5</span></span></span>
 <span><span class="co">##    geo_value time_value cases cases_mean cases_sum</span></span>
@@ -253,7 +264,7 @@ the grouping variables for the associated group</li>
 <code>.ref_time_value</code> is the reference time value the time
 window was based on</li>
 </ul>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Returning geo_value in the formula</span></span>
 <span><span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -263,7 +274,7 @@ window was based on</li>
 <pre><code><span><span class="co">## An `epi_df` object, 10 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2024-08-23 02:40:48.296938</span></span>
+<span><span class="co">## * as_of     = 2024-03-20</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
 <span><span class="co">##    geo_value time_value cases slide_value</span></span>
@@ -278,7 +289,7 @@ window was based on</li>
 <span><span class="co">## <span style="color: #BCBCBC;"> 8</span> ca        2020-03-08    19 ca         </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 9</span> ca        2020-03-09    23 ca         </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">10</span> ca        2020-03-10    22 ca</span></span></code></pre>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Returning time_value in the formula</span></span>
 <span><span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -288,7 +299,7 @@ window was based on</li>
 <pre><code><span><span class="co">## An `epi_df` object, 10 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2024-08-23 02:40:48.296938</span></span>
+<span><span class="co">## * as_of     = 2024-03-20</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
 <span><span class="co">##    geo_value time_value cases slide_value</span></span>
@@ -317,7 +328,7 @@ column directly as part of the expression, setting it equal to a
 computation in which we can access any columns of <code>.x</code> by
 name, just as we would in a call to <code><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">dplyr::mutate()</a></code>, or any
 of the <code>dplyr</code> verbs. For example:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">slide_output</span> <span class="op">&lt;-</span> <span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span>cases_7dav <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cases</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, .window_size <span class="op">=</span> <span class="fl">7</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -331,7 +342,7 @@ available). Also, the tidyverse “pronouns” <code>.data</code> and
 data and environment.</p>
 <p>As a simple sanity check, we visualize the 7-day trailing averages
 computed on top of the original counts:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -361,7 +372,7 @@ variables for the associated group</li>
 <li>“…” are additional arguments</li>
 </ul>
 <p>Recreating the last example of a 7-day trailing average:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">g</span>, <span class="va">t</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">cases</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, .window_size <span class="op">=</span> <span class="fl">7</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -370,7 +381,7 @@ variables for the associated group</li>
 <pre><code><span><span class="co">## An `epi_df` object, 10 x 4 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2024-08-23 02:40:48.296938</span></span>
+<span><span class="co">## * as_of     = 2024-03-20</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
 <span><span class="co">##    geo_value time_value cases slide_value</span></span>
@@ -406,7 +417,7 @@ which lags to use in the model, and <code>ahead</code> indicates how far
 ahead in the future to make forecasts (both are encoded in terms of the
 units of the <code>time_value</code> column; so, days, in the working
 <code>epi_df</code> being considered in this vignette).</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prob_ar</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">y</span>, <span class="va">lags</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">7</span>, <span class="fl">14</span><span class="op">)</span>, <span class="va">ahead</span> <span class="op">=</span> <span class="fl">6</span>, <span class="va">min_train_window</span> <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>                    <span class="va">lower_level</span> <span class="op">=</span> <span class="fl">0.05</span>, <span class="va">upper_level</span> <span class="op">=</span> <span class="fl">0.95</span>, <span class="va">symmetrize</span> <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                    <span class="va">intercept</span> <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">nonneg</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span></span>
@@ -451,7 +462,7 @@ units of the <code>time_value</code> column; so, days, in the working
 <code>cases_7dav</code> column, to operate on the scale of smoothed
 COVID-19 cases. This is clearly equivalent, up to a constant, to
 modeling weekly sums of COVID-19 cases.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fc_time_values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-01"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2021-12-01"</span><span class="op">)</span>, by <span class="op">=</span> <span class="st">"1 months"</span><span class="op">)</span></span>
 <span><span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -462,7 +473,7 @@ modeling weekly sums of COVID-19 cases.</p>
 <pre><code><span><span class="co">## An `epi_df` object, 10 x 5 with metadata:</span></span>
 <span><span class="co">## * geo_type  = state</span></span>
 <span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2024-08-23 02:40:48.296938</span></span>
+<span><span class="co">## * as_of     = 2024-03-20</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 5</span></span></span>
 <span><span class="co">##    geo_value time_value cases cases_7dav fc$point $lower $upper</span></span>
@@ -489,7 +500,7 @@ band, respectively.</p>
 few months) over the last year, at multiple horizons: 7, 14, 21, and 28
 days ahead. To do so, we encapsulate the process of generating forecasts
 into a simple function, so that we can call it a few times.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Note the use of .all_rows = TRUE (keeps all original rows in the output)</span></span>
 <span><span class="va">k_week_ahead</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">ahead</span> <span class="op">=</span> <span class="fl">7</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
