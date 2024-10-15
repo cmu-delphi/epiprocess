@@ -12,10 +12,13 @@
 #' @importFrom cli cli_abort cli_warn
 #' @importFrom rlang %||%
 #' @importFrom lifecycle deprecated
+#' @import epidatasets
 #' @name epiprocess
 "_PACKAGE"
 utils::globalVariables(c(
   ".x", ".group_key", ".ref_time_value", "resid",
   "fitted", ".response", "geo_value", "time_value",
-  "value", ".real"
+  "value", ".real", "lag", "max_value", "min_value",
+  "median_value", "spread", "rel_spread", "time_to",
+  "time_near_latest", "n_revisions"
 ))

@@ -44,7 +44,7 @@
 #'
 #' # linear association of case and death rates on any given day
 #' epi_cor(
-#'   x = jhu_csse_daily_subset,
+#'   x = cases_deaths_subset,
 #'   var1 = case_rate_7d_av,
 #'   var2 = death_rate_7d_av,
 #'   cor_by = "time_value"
@@ -52,7 +52,7 @@
 #'
 #' # correlation of death rates and lagged case rates
 #' epi_cor(
-#'   x = jhu_csse_daily_subset,
+#'   x = cases_deaths_subset,
 #'   var1 = case_rate_7d_av,
 #'   var2 = death_rate_7d_av,
 #'   cor_by = time_value,
@@ -61,7 +61,7 @@
 #'
 #' # correlation grouped by location
 #' epi_cor(
-#'   x = jhu_csse_daily_subset,
+#'   x = cases_deaths_subset,
 #'   var1 = case_rate_7d_av,
 #'   var2 = death_rate_7d_av,
 #'   cor_by = geo_value
@@ -69,7 +69,7 @@
 #'
 #' # correlation grouped by location and incorporates lagged cases rates
 #' epi_cor(
-#'   x = jhu_csse_daily_subset,
+#'   x = cases_deaths_subset,
 #'   var1 = case_rate_7d_av,
 #'   var2 = death_rate_7d_av,
 #'   cor_by = geo_value,

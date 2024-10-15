@@ -48,35 +48,35 @@
 #' # slide a 7-day trailing average formula on cases
 #' # Simple sliding means and sums are much faster to do using
 #' # the `epi_slide_mean` and `epi_slide_sum` functions instead.
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), .window_size = 7) %>%
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
 #'   ungroup()
 #'
 #' # slide a 7-day leading average
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), .window_size = 7, .align = "left") %>%
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
 #'   ungroup()
 #'
-#' # slide a 7-day center-aligned average
-#' jhu_csse_daily_subset %>%
+#' # slide a 7-day centre-aligned average
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_7dav = mean(cases), .window_size = 7, .align = "center") %>%
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav) %>%
 #'   ungroup()
 #'
-#' # slide a 14-day center-aligned average
-#' jhu_csse_daily_subset %>%
+#' # slide a 14-day centre-aligned average
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(cases_14dav = mean(cases), .window_size = 14, .align = "center") %>%
 #'   dplyr::select(geo_value, time_value, cases, cases_14dav) %>%
 #'   ungroup()
 #'
 #' # nested new columns
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide(
 #'     cases_2d = list(data.frame(
@@ -424,8 +424,8 @@ epi_slide_one_group <- function(
             )),
             capture.output(print(waldo::compare(
               res[[comp_nms[[comp_i]]]], slide_values[[comp_i]],
-              x_arg = rlang::expr_deparse(dplyr::expr(`$`(existing, !!sym(comp_nms[[comp_i]])))), # nolint: object_usage_linter
-              y_arg = rlang::expr_deparse(dplyr::expr(`$`(comp_value, !!sym(comp_nms[[comp_i]])))) # nolint: object_usage_linter
+              x_arg = rlang::expr_deparse(dplyr::expr(`$`(!!"existing", !!sym(comp_nms[[comp_i]])))), # nolint: object_usage_linter
+              y_arg = rlang::expr_deparse(dplyr::expr(`$`(!!"comp_value", !!sym(comp_nms[[comp_i]])))) # nolint: object_usage_linter
             ))),
             cli::format_message(c(
               ">" = "You likely want to rename or remove this column from your slide
@@ -532,7 +532,7 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #' @seealso [`epi_slide`] [`epi_slide_mean`] [`epi_slide_sum`]
 #' @examples
 #' # slide a 7-day trailing average formula on cases. This can also be done with `epi_slide_mean`
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
 #'     cases,
@@ -544,7 +544,7 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #'
 #' # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
 #' # and accuracy, and to allow partially-missing windows.
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
 #'     cases,
@@ -556,7 +556,7 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #'   ungroup()
 #'
 #' # slide a 7-day leading average
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
 #'     cases,
@@ -566,8 +566,8 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
 #'   ungroup()
 #'
-#' # slide a 7-day center-aligned sum. This can also be done with `epi_slide_sum`
-#' jhu_csse_daily_subset %>%
+#' # slide a 7-day centre-aligned sum. This can also be done with `epi_slide_sum`
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_opt(
 #'     cases,
@@ -829,7 +829,7 @@ epi_slide_opt <- function(
 #' @seealso [`epi_slide`] [`epi_slide_opt`] [`epi_slide_sum`]
 #' @examples
 #' # slide a 7-day trailing average formula on cases
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_mean(cases, .window_size = 7) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
@@ -838,7 +838,7 @@ epi_slide_opt <- function(
 #'
 #' # slide a 7-day trailing average formula on cases. Adjust `frollmean` settings for speed
 #' # and accuracy, and to allow partially-missing windows.
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_mean(
 #'     cases,
@@ -850,23 +850,23 @@ epi_slide_opt <- function(
 #'   ungroup()
 #'
 #' # slide a 7-day leading average
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_mean(cases, .window_size = 7, .align = "right") %>%
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
 #'   ungroup()
 #'
-#' # slide a 7-day center-aligned average
-#' jhu_csse_daily_subset %>%
+#' # slide a 7-day centre-aligned average
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_mean(cases, .window_size = 7, .align = "center") %>%
 #'   # Remove a nonessential var. to ensure new col is printed
 #'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases) %>%
 #'   ungroup()
 #'
-#' # slide a 14-day center-aligned average
-#' jhu_csse_daily_subset %>%
+#' # slide a 14-day centre-aligned average
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_mean(cases, .window_size = 14, .align = "center") %>%
 #'   # Remove a nonessential var. to ensure new col is printed
@@ -943,7 +943,7 @@ epi_slide_mean <- function(
 #' @seealso [`epi_slide`] [`epi_slide_opt`] [`epi_slide_mean`]
 #' @examples
 #' # slide a 7-day trailing sum formula on cases
-#' jhu_csse_daily_subset %>%
+#' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   epi_slide_sum(cases, .window_size = 7) %>%
 #'   # Remove a nonessential var. to ensure new col is printed
