@@ -121,14 +121,14 @@ These functions tend to be much faster than \code{epi_slide()}. See
 }
 \examples{
 # Compute a 7-day trailing average on cases.
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(cases, .f = data.table::frollmean, .window_size = 7) \%>\%
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
 
 # Same as above, but adjust `frollmean` settings for speed, accuracy, and
 # to allow partially-missing windows.
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_opt(
     cases,
@@ -137,14 +137,14 @@ jhu_csse_daily_subset \%>\%
   ) \%>\%
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
 # Compute a 7-day trailing average on cases.
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_mean(cases, .window_size = 7) \%>\%
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
 
 # Same as above, but adjust `frollmean` settings for speed, accuracy, and
 # to allow partially-missing windows.
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_mean(
     cases,
@@ -153,7 +153,7 @@ jhu_csse_daily_subset \%>\%
   ) \%>\%
   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
 # Compute a 7-day trailing sum on cases.
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide_sum(cases, .window_size = 7) \%>\%
   dplyr::select(geo_value, time_value, cases, cases_7dsum = slide_value_cases)

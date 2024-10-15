@@ -126,7 +126,7 @@ determined the time window for the current computation.
 }
 \examples{
 # Get the 7-day trailing standard deviation of cases and the 7-day trailing mean of cases
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   epi_slide(
     cases_7sd = sd(cases, na.rm = TRUE),
     cases_7dav = mean(cases, na.rm = TRUE),
@@ -135,7 +135,7 @@ jhu_csse_daily_subset \%>\%
   dplyr::select(geo_value, time_value, cases, cases_7sd, cases_7dav)
 
 # The same as above, but unpacking using an unnamed data.frame with a formula
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   epi_slide(
     ~ data.frame(
       cases_7sd = sd(.x$cases, na.rm = TRUE),
@@ -147,7 +147,7 @@ jhu_csse_daily_subset \%>\%
 
 # The same as above, but packing using a named data.frame with a tidy evaluation
 # expression
-jhu_csse_daily_subset \%>\%
+cases_deaths_subset \%>\%
   epi_slide(
     slide_packed = data.frame(
       cases_7sd = sd(.x$cases, na.rm = TRUE),
@@ -157,8 +157,9 @@ jhu_csse_daily_subset \%>\%
   ) \%>\%
   dplyr::select(geo_value, time_value, cases, slide_packed)
 
-# The same as above, but using a function
-jhu_csse_daily_subset \%>\%
+# nested new columns
+cases_deaths_subset \%>\%
+  group_by(geo_value) \%>\%
   epi_slide(
     function(x, g, t) {
       data.frame(

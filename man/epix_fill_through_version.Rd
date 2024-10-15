@@ -9,28 +9,45 @@ epix_fill_through_version(x, fill_versions_end, how = c("na", "locf"))
 \arguments{
 \item{x}{An \code{epi_archive}}
 
-\item{fill_versions_end}{Length-1, same class&type as \code{x$version}: the
-version through which to fill in missing version history; this will be the
-result's \verb{$versions_end} unless it already had a later
-\verb{$versions_end}.}
+\item{fill_versions_end}{a scalar of the same class&type as \code{x$version}: the
+version through which to fill in missing version history; the
+\code{epi_archive}'s \code{versions_end} attribute will be set to this, unless it
+already had a later \verb{$versions_end}.}
 
-\item{how}{Optional; \code{"na"} or \code{"locf"}: \code{"na"} will fill in any missing
-required version history with \code{NA}s, by inserting (if necessary) an update
-immediately after the current \verb{$versions_end} that revises all
-existing measurements to be \code{NA} (this is only supported for \code{version}
-classes with a \code{next_after} implementation); \code{"locf"} will fill in missing
-version history with the last version of each observation carried forward
-(LOCF), by leaving the update \verb{$DT} alone (other \code{epi_archive} methods are
-based on LOCF).  Default is \code{"na"}.}
+\item{how}{Optional; \code{"na"} or \code{"locf"}: \code{"na"} fills missing version history
+with \code{NA}s, \code{"locf"} fills missing version history with the last version of
+each observation carried forward (LOCF). Default is \code{"na"}.}
 }
 \value{
 An \code{epi_archive}
+
+An \code{epi_archive}
 }
 \description{
-Sometimes, due to upstream data pipeline issues, we have to work with a
-version history that isn't completely up to date, but with functions that
-expect archives that are completely up to date, or equally as up-to-date as
-another archive. This function provides one way to approach such mismatches:
-pretend that we've "observed" additional versions, filling in these versions
-with NAs or extrapolated values.
+This function fills in missing version history in an \code{epi_archive} object up
+to a specified version, updating the \code{versions_end} field as necessary. Note
+that the filling is done in a compactified way, see details.
+}
+\details{
+Note that we generally store \code{epi_archive}'s in a compacted form, meaning
+that, implciitly, if a version does not exist, but the \code{version_end}
+attribute is greater, then it is understood that all the versions in between
+had the same value as the last observed version. This affects the behavior of
+this function in the following ways:
+\itemize{
+\item if \code{how = "na"}, then the function will fill in at most one missing version
+with \code{NA} and the rest will be implicit.
+\item if \code{how = "locf"}, then the function will not fill any values.
+}
+}
+\examples{
+test_date <- as.Date("2020-01-01")
+ea_orig <- as_epi_archive(data.table::data.table(
+  geo_value = "ak",
+  time_value = test_date + c(rep(0L, 5L), 1L),
+  version = test_date + c(1:5, 2L),
+  value = 1:6
+))
+epix_fill_through_version(ea_orig, test_date + 8, "na")
+epix_fill_through_version(ea_orig, test_date + 8, "locf")
 }
