@@ -138,33 +138,45 @@ epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
 #' Fill `epi_archive` unobserved history
 #'
 #' @description
-#' Sometimes, due to upstream data pipeline issues, we have to work with a
-#' version history that isn't completely up to date, but with functions that
-#' expect archives that are completely up to date, or equally as up-to-date as
-#' another archive. This function provides one way to approach such mismatches:
-#' pretend that we've "observed" additional versions, filling in these versions
-#' with NAs or extrapolated values.
+#' This function fills in missing version history in an `epi_archive` object up
+#' to a specified version, updating the `versions_end` field as necessary. Note
+#' that the filling is done in a compactified way, see details.
 #'
 #' @param x An `epi_archive`
-#' @param fill_versions_end Length-1, same class&type as `x$version`: the
-#'   version through which to fill in missing version history; this will be the
-#'   result's `$versions_end` unless it already had a later
-#'   `$versions_end`.
-#' @param how Optional; `"na"` or `"locf"`: `"na"` will fill in any missing
-#'   required version history with `NA`s, by inserting (if necessary) an update
-#'   immediately after the current `$versions_end` that revises all
-#'   existing measurements to be `NA` (this is only supported for `version`
-#'   classes with a `next_after` implementation); `"locf"` will fill in missing
-#'   version history with the last version of each observation carried forward
-#'   (LOCF), by leaving the update `$DT` alone (other `epi_archive` methods are
-#'   based on LOCF).  Default is `"na"`.
+#' @param fill_versions_end a scalar of the same class&type as `x$version`: the
+#'   version through which to fill in missing version history; the
+#'   `epi_archive`'s `versions_end` attribute will be set to this, unless it
+#'   already had a later `$versions_end`.
+#' @param how Optional; `"na"` or `"locf"`: `"na"` fills missing version history
+#'   with `NA`s, `"locf"` fills missing version history with the last version of
+#'   each observation carried forward (LOCF). Default is `"na"`.
+#' @return An `epi_archive`
+#' @details
+#' Note that we generally store `epi_archive`'s in a compacted form, meaning
+#' that, implciitly, if a version does not exist, but the `version_end`
+#' attribute is greater, then it is understood that all the versions in between
+#' had the same value as the last observed version. This affects the behavior of
+#' this function in the following ways:
+#'
+#' - if `how = "na"`, then the function will fill in at most one missing version
+#'   with `NA` and the rest will be implicit.
+#' - if `how = "locf"`, then the function will not fill any values.
 #'
 #' @importFrom data.table copy ":="
 #' @importFrom rlang arg_match
 #' @return An `epi_archive`
 #' @export
-epix_fill_through_version <- function(x, fill_versions_end,
-                                      how = c("na", "locf")) {
+#' @examples
+#' test_date <- as.Date("2020-01-01")
+#' ea_orig <- as_epi_archive(data.table::data.table(
+#'   geo_value = "ak",
+#'   time_value = test_date + c(rep(0L, 5L), 1L),
+#'   version = test_date + c(1:5, 2L),
+#'   value = 1:6
+#' ))
+#' epix_fill_through_version(ea_orig, test_date + 8, "na")
+#' epix_fill_through_version(ea_orig, test_date + 8, "locf")
+epix_fill_through_version <- function(x, fill_versions_end, how = c("na", "locf")) {
   assert_class(x, "epi_archive")
 
   validate_version_bound(fill_versions_end, x$DT, na_ok = FALSE)

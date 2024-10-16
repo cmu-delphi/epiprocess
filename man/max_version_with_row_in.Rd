@@ -16,3 +16,4 @@ an \code{NA} version value
 \description{
 Exported to make defaults more easily copyable.
 }
+\keyword{internal}

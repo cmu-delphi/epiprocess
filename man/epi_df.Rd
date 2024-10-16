@@ -8,6 +8,7 @@
 \alias{as_epi_df.tbl_ts}
 \alias{new_epi_df}
 \alias{epi_df}
+\alias{is_epi_df}
 \title{\code{epi_df} object}
 \usage{
 as_epi_df(x, ...)
@@ -35,10 +36,11 @@ new_epi_df(
   other_keys = character(),
   ...
 )
+
+is_epi_df(x)
 }
 \arguments{
-\item{x}{An \code{epi_df}, \code{data.frame}, \link[tibble:tibble]{tibble::tibble}, or \link[tsibble:tsibble]{tsibble::tsibble}
-to be converted}
+\item{x}{An object.}
 
 \item{...}{Additional arguments passed to methods.}
 
@@ -64,11 +66,15 @@ as a character vector here (typical examples are "age" or sub-geographies).}
 }
 \value{
 An \code{epi_df} object.
+
+\code{TRUE} if the object inherits from \code{epi_df}.
 }
 \description{
-An \code{epi_df} is a tibble with certain minimal column structure and metadata.
-It can be seen as a snapshot of a data set that contains the most
-up-to-date values of some signal variables of interest, as of a given time.
+One of the two main data structures for storing time series in \code{epiprocess}.
+It is simply tibble with at least two columns, \code{geo_value} and \code{time_value},
+that provide the keys for the time series. It can have any other columns,
+which can be seen as measured variables at each key. In brief, an \code{epi_df}
+represents a snapshot of an epidemiological data set at a point in time.
 }
 \details{
 An \code{epi_df} is a tibble with (at least) the following columns:
@@ -117,15 +123,7 @@ the documentation for \code{\link{epi_archive}} for more details on how
 data versioning works in the \code{epiprocess} package (including how to
 generate \code{epi_df} objects, as data snapshots, from an \code{epi_archive}
 object).
-}
-\section{Functions}{
-\itemize{
-\item \code{as_epi_df()}: The preferred way of constructing \code{epi_df}s
-
-\item \code{new_epi_df()}: Lower-level constructor for \code{epi_df} object
-
-}}
-\section{Geo Types}{
+\subsection{Geo Types}{
 
 The following geo types are recognized in an \code{epi_df}.
 \itemize{
@@ -146,7 +144,7 @@ alpha-2 country codes (lowercase).
 An unrecognizable geo type is labeled "custom".
 }
 
-\section{Time Types}{
+\subsection{Time Types}{
 
 The following time types are recognized in an \code{epi_df}.
 \itemize{
@@ -162,7 +160,14 @@ arbitrary (as to whether a week starts on a Monday, Tuesday); coded as a
 
 An unrecognizable time type is labeled "custom".
 }
+}
+\section{Functions}{
+\itemize{
+\item \code{as_epi_df()}: The preferred way of constructing \code{epi_df}s
 
+\item \code{new_epi_df()}: Lower-level constructor for \code{epi_df} object
+
+}}
 \examples{
 # Convert a `tsibble` that has county code as an extra key
 # Notice that county code should be a character string to preserve any leading zeroes

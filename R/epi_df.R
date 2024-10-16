@@ -1,8 +1,10 @@
 #' `epi_df` object
 #'
-#' An `epi_df` is a tibble with certain minimal column structure and metadata.
-#'   It can be seen as a snapshot of a data set that contains the most
-#'   up-to-date values of some signal variables of interest, as of a given time.
+#' One of the two main data structures for storing time series in `epiprocess`.
+#' It is simply tibble with at least two columns, `geo_value` and `time_value`,
+#' that provide the keys for the time series. It can have any other columns,
+#' which can be seen as measured variables at each key. In brief, an `epi_df`
+#' represents a snapshot of an epidemiological data set at a point in time.
 #'
 #' @details An `epi_df` is a tibble with (at least) the following columns:
 #'
@@ -49,7 +51,8 @@
 #'   generate `epi_df` objects, as data snapshots, from an `epi_archive`
 #'   object).
 #'
-#' @section Geo Types:
+#' ## Geo Types
+#'
 #' The following geo types are recognized in an `epi_df`.
 #'
 #' * `"county"`: each observation corresponds to a U.S. county; coded by 5-digit
@@ -67,7 +70,8 @@
 #'
 #' An unrecognizable geo type is labeled "custom".
 #'
-#' @section Time Types:
+#' ## Time Types
+#'
 #' The following time types are recognized in an `epi_df`.
 #'
 #' * `"day"`: each observation corresponds to a day; coded as a `Date` object,
@@ -318,6 +322,7 @@ as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(), ...) {
 #' @param x An object.
 #' @return `TRUE` if the object inherits from `epi_df`.
 #'
+#' @rdname epi_df
 #' @export
 is_epi_df <- function(x) {
   inherits(x, "epi_df")
