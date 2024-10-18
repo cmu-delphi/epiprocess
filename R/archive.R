@@ -369,6 +369,23 @@ removed_by_compactify <- function(df, keys, tolerance) {
     )) # nolint: object_usage_linter
 }
 
+#' Lag entries in a vctrs-style vector by their position in the vector
+#'
+#' @importFrom checkmate assert_count
+#' @importFrom vctrs obj_check_vector vec_slice vec_size
+#' @keywords internal
+#' @importFrom vctrs vec_c vec_slice vec_size
+#' @export
+vec_position_lag <- function(x, n) {
+  # obj_check_vector(x)
+  assert_count(n)
+  if (length(x) == 0L) {
+    x
+  } else {
+    vec_c(rep(NA, n), vec_slice(x, seq_len(vec_size(x) - 1L)))
+  }
+}
+
 #' Checks to see if a value in a vector is LOCF
 #' @description
 #' LOCF meaning last observation carried forward. lags the vector by 1, then
@@ -378,8 +395,8 @@ removed_by_compactify <- function(df, keys, tolerance) {
 #' @importFrom dplyr lag if_else near
 #' @keywords internal
 is_locf <- function(vec, tolerance) { # nolint: object_usage_linter
-  lag_vec <- dplyr::lag(vec)
-  if (typeof(vec) == "double") {
+  lag_vec <- vec_position_lag(vec, 1L)
+  if (inherits(vec, "numeric")) { # (no matrix/array/general support)
     res <- if_else(
       !is.na(vec) & !is.na(lag_vec),
       near(vec, lag_vec, tol = tolerance),
