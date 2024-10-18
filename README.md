@@ -104,7 +104,7 @@ edf
 #> An `epi_df` object, 2,808 x 4 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2024-10-15 02:26:30.787809
+#> * as_of     = 2024-10-18 22:27:02.421602
 #> 
 #> # A tibble: 2,808 × 4
 #> # Groups:   geo_value [4]
