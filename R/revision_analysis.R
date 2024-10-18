@@ -68,6 +68,7 @@
 #' @export
 #' @importFrom cli cli_inform cli_abort cli_li
 #' @importFrom rlang list2 syms dots_n
+#' @importFrom vctrs vec_cast
 #' @importFrom dplyr mutate group_by arrange filter if_any all_of across pull pick c_across
 #'   everything ungroup summarize if_else %>%
 revision_summary <- function(epi_arch,
@@ -117,7 +118,7 @@ revision_summary <- function(epi_arch,
     select(all_of(unique(c(keys, arg))))
   if (!is.null(min_waiting_period)) {
     revision_behavior <- revision_behavior %>%
-      filter(abs(time_value - as.Date(epi_arch$versions_end)) >= min_waiting_period)
+      filter(vec_cast(epi_arch$versions_end - time_value, min_waiting_period) >= min_waiting_period)
   }
 
   if (drop_nas) {
