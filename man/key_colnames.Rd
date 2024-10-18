@@ -4,16 +4,33 @@
 \alias{key_colnames}
 \alias{key_colnames.data.frame}
 \alias{key_colnames.epi_df}
+\alias{key_colnames.tbl_ts}
 \alias{key_colnames.epi_archive}
 \title{Get names of columns that form a (unique) key associated with an object}
 \usage{
-key_colnames(x, ..., exclude = character(0L))
+key_colnames(x, ..., exclude = character())
 
-\method{key_colnames}{data.frame}(x, other_keys, ..., exclude = character(0L))
+\method{key_colnames}{data.frame}(
+  x,
+  ...,
+  geo_keys = intersect("geo_value", names(x)),
+  other_keys,
+  time_keys = intersect("time_value", names(x)),
+  exclude = character()
+)
 
-\method{key_colnames}{epi_df}(x, ..., exclude = character(0L))
+\method{key_colnames}{epi_df}(
+  x,
+  ...,
+  geo_keys = "geo_value",
+  other_keys = NULL,
+  time_keys = "time_value",
+  exclude = character()
+)
 
-\method{key_colnames}{epi_archive}(x, ..., exclude = character(0L))
+\method{key_colnames}{tbl_ts}(x, ..., exclude = character())
+
+\method{key_colnames}{epi_archive}(x, ..., exclude = character())
 }
 \arguments{
 \item{x}{an object, such as an \code{\link{epi_df}}}
@@ -23,8 +40,23 @@ key_colnames(x, ..., exclude = character(0L))
 \item{exclude}{an optional character vector of key column names to exclude
 from the result}
 
-\item{other_keys}{character vector; what besides \code{geo_value} and \code{time_value}
-(if present) should we consider to be key columns?  Used, e.g., if we}
+\item{geo_keys}{optional character vector; which columns (if any) to consider
+keys specifying the geographical region? Defaults to \code{"geo_value"} if
+present; must be \code{"geo_value"} if \code{x} is an \code{epi_df}.}
+
+\item{other_keys}{character vector; which columns (if any) to consider keys
+specifying demographical or identifying/grouping information besides the
+geographical region and time interval? Mandatory if \code{x} is a vanilla
+\code{data.frame} or \code{tibble}. Optional if \code{x} is an \code{epi_df}; default is the
+\code{epi_df}'s \code{other_keys}; if you provide \code{other_keys}, they must match the
+default. (This behavior is to enable consistent and sane results when you
+can't guarantee whether \code{x} is an \code{epi_df} or just a
+\code{tibble}/\code{data.frame}.)}
+
+\item{time_keys}{optional character vector; which columns (if any) to
+consider keys specifying the time interval during which associated events
+occurred? Defaults to \code{"time_value"} if present; must be \code{"time_value"} if
+\code{x} is an \code{epi_df}.}
 }
 \value{
 character vector
