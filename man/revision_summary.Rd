@@ -2,7 +2,7 @@
 % Please edit documentation in R/revision_analysis.R
 \name{revision_summary}
 \alias{revision_summary}
-\title{A function to describe revision behavior for an archive}
+\title{A function to describe revision behavior for an archive.}
 \usage{
 revision_summary(
   epi_arch,
@@ -70,8 +70,9 @@ threshold for when two floats are considered identical.}
 \description{
 \code{revision_summary} removes all missing values (if requested), and then
 computes some basic statistics about the revision behavior of an archive,
-returning a tibble summarizing the revisions per time_value+epi_key features. If \code{print_inform} is true, it
-prints a concise summary. The columns returned are:
+returning a tibble summarizing the revisions per time_value+epi_key
+features. If \code{print_inform} is true, it prints a concise summary. The
+columns returned are:
 \enumerate{
 \item \code{n_revisions}: the total number of revisions for that entry
 \item \code{min_lag}: the minimum time to any value (if \code{drop_nas=FALSE}, this
@@ -86,16 +87,15 @@ always excludes \code{NA} values)
 \item \code{rel_spread}: \code{spread} divided by the largest value (so it will
 always be less than 1). Note that this need not be the final value. It will
 be \code{NA} whenever \code{spread} is 0.
-\item \code{time_near_latest}: This gives the lag when the value is within
-\code{within_latest} (default 20\%) of the value at the latest time. For example,
-consider the series (0,20, 99, 150, 102, 100); then \code{time_near_latest} is
-the 5th index, since even though 99 is within 20\%, it is outside the window
-afterwards at 150.
+\item \code{time_near_latest}: the time taken for the revisions to settle to within
+\code{within_latest} (default 20\%) of the final value and stay there. For
+example, consider the series (0, 20, 99, 150, 102, 100); then
+\code{time_near_latest} is 5, since even though 99 is within 20\%, it is outside
+the window afterwards at 150.
 }
 }
 \examples{
-
 revision_example <- revision_summary(archive_cases_dv_subset, percent_cli)
-
 revision_example \%>\% arrange(desc(spread))
+
 }

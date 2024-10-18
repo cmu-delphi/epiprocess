@@ -84,8 +84,7 @@ filtering (a discrete spline) fit to \code{x} and \code{y}, via
 \code{genlasso::trendfilter()}, divided by the fitted value of the discrete
 spline at \code{x0}.
 }
-}
-\section{Log Scale}{
+\subsection{Log Scale}{
 
 An alternative view for the growth rate of a function f in general is given
 by defining g(t) = log(f(t)), and then observing that g'(t) = f'(t) /
@@ -96,7 +95,7 @@ method above ("rel_change", "linear_reg", "smooth_spline", and
 \code{log_scale = TRUE}.
 }
 
-\section{Sliding Windows}{
+\subsection{Sliding Windows}{
 
 For the local methods, "rel_change" and "linear_reg", we use a sliding window
 centered at the reference point of bandiwidth \code{h}. In other words, the
@@ -108,7 +107,7 @@ sliding window contains all data in between January 1 and 14 (matching the
 behavior of \code{epi_slide()} with \code{before = h - 1} and \code{after = h}).
 }
 
-\section{Additional Arguments}{
+\subsection{Additional Arguments}{
 
 For the global methods, "smooth_spline" and "trend_filter", additional
 arguments can be specified via \code{...} for the underlying estimation
@@ -133,7 +132,7 @@ rule, respectively. Default is "min" (going along with the default \code{cv = TR
 user.
 }
 }
-
+}
 \examples{
 # COVID cases growth rate by state using default method relative change
 cases_deaths_subset \%>\%
