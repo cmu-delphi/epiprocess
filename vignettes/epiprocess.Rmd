@@ -167,7 +167,10 @@ dv <- pub_covidcast(
   geo_values = "ca,fl,ny,tx",
   time_values = epirange(20200601, 20211201),
   issues = epirange(20200601, 20211201)
-)
+) %>%
+  select(geo_value, time_value, issue, percent_cli = value) %>%
+  as_epi_archive(compactify = TRUE)
+dv
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
@@ -179,9 +182,12 @@ library(purrr)
 library(ggplot2)
 dv <- archive_cases_dv_subset$DT %>%
   select(-case_rate_7d_av) %>%
-  rename(issue = version, value = percent_cli) %>%
-  tibble()
+  tidyr::drop_na() %>%
+  as_epi_archive(compactify = TRUE)
+dv
 ```
+
+See `vignette("epi_arcive")` for a more in-depth guide to `epi_archive` objects.
 
 ## Data attribution
 
