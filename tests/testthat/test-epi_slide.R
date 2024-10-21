@@ -711,17 +711,9 @@ test_that("epi_slide_opt helper `full_date_seq` returns expected date values", {
 
 test_that("`epi_slide_opt` errors when passed non-`data.table`, non-`slider` functions", {
   reexport_frollmean <- data.table::frollmean
-  expect_no_error(
-    epi_slide_opt(
-      test_data,
-      .col_names = value, .f = reexport_frollmean
-    )
-  )
+  expect_no_error(epi_slide_opt(test_data, .col_names = value, .f = reexport_frollmean, .window_size = 7))
   expect_error(
-    epi_slide_opt(
-      test_data,
-      .col_names = value, .f = mean
-    ),
+    epi_slide_opt(test_data, .col_names = value, .f = mean),
     class = "epiprocess__epi_slide_opt__unsupported_slide_function"
   )
 })

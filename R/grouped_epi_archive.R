@@ -312,14 +312,15 @@ epix_slide.grouped_epi_archive <- function(
       cli_abort("If `f` is missing then a computation must be specified via `...`.")
     }
 
-    .slide_comp <- as_diagonal_slide_computation(quosures)
+    .f_arg <- ".f" # dummy val, shouldn't be used since we're not using `.f`
+    .slide_comp <- as_diagonal_slide_computation(quosures, .f_arg = .f_arg)
     # Magic value that passes zero args as dots in calls below. Equivalent to
     # `... <- missing_arg()`, but use `assign` to avoid warning about
     # improper use of dots.
     assign("...", missing_arg())
   } else {
     used_data_masking <- FALSE
-    .slide_comp <- as_diagonal_slide_computation(.f, ...)
+    .slide_comp <- as_diagonal_slide_computation(.f, ..., .f_arg = caller_arg(.f))
   }
 
   # Computation for one group, one time value
@@ -397,8 +398,8 @@ epix_slide.grouped_epi_archive <- function(
               )),
               capture.output(print(waldo::compare(
                 res[[comp_nms[[comp_i]]]], comp_value[[comp_i]],
-                x_arg = rlang::expr_deparse(dplyr::expr(`$`(label, !!sym(comp_nms[[comp_i]])))), # nolint: object_usage_linter
-                y_arg = rlang::expr_deparse(dplyr::expr(`$`(comp_value, !!sym(comp_nms[[comp_i]]))))
+                x_arg = rlang::expr_deparse(rlang::expr(`$`(!!"label", !!sym(comp_nms[[comp_i]])))),
+                y_arg = rlang::expr_deparse(rlang::expr(`$`(!!"comp_value", !!sym(comp_nms[[comp_i]]))))
               ))),
               cli::format_message(c(
                 "You likely want to rename or remove this column in your output, or debug why it has a different value."

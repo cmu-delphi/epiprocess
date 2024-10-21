@@ -10,3 +10,4 @@ geo_column_names()
 the full list of potential substitutions for the \code{geo_value} column name:
 geo_value, geo_values, geo_id, geos, location, jurisdiction, fips, zip, county, hrr, msa, state, province, nation, states, provinces, counties, geo_Value, Geo_Value, Geo_Values, Geo_Id, Geos, Location, Jurisdiction, Fips, Zip, County, Hrr, Msa, State, Province, Nation, States, Provinces, Counties, Geo_Value
 }
+\keyword{internal}

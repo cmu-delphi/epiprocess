@@ -1,9 +1,11 @@
-#' A function to describe revision behavior for an archive
+#' A function to describe revision behavior for an archive.
+#'
 #' @description
 #' `revision_summary` removes all missing values (if requested), and then
 #'   computes some basic statistics about the revision behavior of an archive,
-#'   returning a tibble summarizing the revisions per time_value+epi_key features. If `print_inform` is true, it
-#'   prints a concise summary. The columns returned are:
+#'   returning a tibble summarizing the revisions per time_value+epi_key
+#'   features. If `print_inform` is true, it prints a concise summary. The
+#'   columns returned are:
 #'  1. `n_revisions`: the total number of revisions for that entry
 #'  2. `min_lag`: the minimum time to any value (if `drop_nas=FALSE`, this
 #'   includes `NA`'s)
@@ -17,11 +19,12 @@
 #'  8. `rel_spread`: `spread` divided by the largest value (so it will
 #'   always be less than 1). Note that this need not be the final value. It will
 #'   be `NA` whenever `spread` is 0.
-#'  9. `time_near_latest`: This gives the lag when the value is within
-#'   `within_latest` (default 20%) of the value at the latest time. For example,
-#'   consider the series (0,20, 99, 150, 102, 100); then `time_near_latest` is
-#'   the 5th index, since even though 99 is within 20%, it is outside the window
-#'   afterwards at 150.
+#'  9. `time_near_latest`: the time taken for the revisions to settle to within
+#'   `within_latest` (default 20%) of the final value and stay there. For
+#'   example, consider the series (0, 20, 99, 150, 102, 100); then
+#'   `time_near_latest` is 5, since even though 99 is within 20%, it is outside
+#'   the window afterwards at 150.
+#'
 #' @param epi_arch an epi_archive to be analyzed
 #' @param ... <[`tidyselect`][dplyr_tidy_select]>, used to choose the column to
 #'   summarize. If empty, it chooses the first. Currently only implemented for
@@ -57,11 +60,11 @@
 #' @param compactify_tol float, used if `drop_nas=TRUE`, it determines the
 #'   threshold for when two floats are considered identical.
 #' @param should_compactify bool. Compactify if `TRUE`.
+#'
 #' @examples
-#'
 #' revision_example <- revision_summary(archive_cases_dv_subset, percent_cli)
-#'
 #' revision_example %>% arrange(desc(spread))
+#'
 #' @export
 #' @importFrom cli cli_inform cli_abort cli_li
 #' @importFrom rlang list2 syms

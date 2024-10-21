@@ -182,7 +182,7 @@ format_tibble_row <- function(x, empty = "*none*") {
 #' @importFrom purrr map_lgl
 #' @importFrom utils tail
 #'
-#' @noRd
+#' @keywords internal
 assert_sufficient_f_args <- function(.f, ..., .ref_time_value_label) {
   mandatory_f_args_labels <- c("window data", "group key", .ref_time_value_label)
   n_mandatory_f_args <- length(mandatory_f_args_labels)
@@ -358,9 +358,48 @@ assert_sufficient_f_args <- function(.f, ..., .ref_time_value_label) {
 #' @importFrom rlang is_function new_function f_env is_environment missing_arg
 #'  f_rhs is_formula caller_arg caller_env
 #' @keywords internal
-as_slide_computation <- function(.f, ..., .ref_time_value_long_varnames, .ref_time_value_label) {
-  arg <- caller_arg(.f)
-  call <- caller_env()
+as_slide_computation <- function(.f, ...,
+                                 .f_arg = caller_arg(.f), .call = caller_env(),
+                                 .ref_time_value_long_varnames, .ref_time_value_label) {
+  if (".col_names" %in% rlang::call_args_names(rlang::call_match())) {
+    cli_abort(
+      c("{.code epi_slide} and {.code epix_slide} do not support `.col_names`;
+         consider:",
+        "*" = "using {.code epi_slide_mean}, {.code epi_slide_sum}, or
+               {.code epi_slide_opt}, if applicable",
+        "*" = "using {.code .f = ~ .x %>%
+               dplyr::reframe(across(your_col_names, list(your_func_name = your_func)))}"
+      ),
+      call = .call,
+      class = "epiprocess__as_slide_computation__given_.col_names"
+    )
+  }
+
+  f_arg <- .f_arg # for cli interpolation, avoid dot prefix; # nolint: object_usage_linter
+  withCallingHandlers(
+    {
+      force(.f)
+    },
+    error = function(e) {
+      cli_abort(
+        c("Failed to convert {.code {f_arg}} to a slide computation.",
+          "*" = "If you were trying to use the formula interface,
+                 maybe you forgot a tilde at the beginning.",
+          "*" = "If you were trying to use the tidyeval interface,
+                 maybe you forgot to specify the name,
+                 e.g.: `my_output_col_name =`.  Note that `.col_names`
+                 is not supported.",
+          "*" = "If you were trying to use advanced features of the
+                 tidyeval interface such as `!! name_variable :=`,
+                 maybe you forgot the required leading comma.",
+          "*" = "Something else could have gone wrong; see below."
+        ),
+        parent = e,
+        call = .call,
+        class = "epiprocess__as_slide_computation__error_forcing_.f"
+      )
+    }
+  )
 
   if (rlang::is_quosures(.f)) {
     quosures <- rlang::quos_auto_name(.f) # resolves := among other things
@@ -463,10 +502,10 @@ as_slide_computation <- function(.f, ..., .ref_time_value_long_varnames, .ref_ti
     }
 
     if (length(.f) > 2) {
-      cli_abort("{.code {arg}} must be a one-sided formula",
+      cli_abort("{.code {f_arg}} must be a one-sided formula",
         class = "epiprocess__as_slide_computation__formula_is_twosided",
         epiprocess__f = .f,
-        call = call
+        .call = .call
       )
     }
     if (rlang::dots_n(...) > 0L) {
@@ -486,7 +525,7 @@ as_slide_computation <- function(.f, ..., .ref_time_value_long_varnames, .ref_ti
         class = "epiprocess__as_slide_computation__formula_has_no_env",
         epiprocess__f = .f,
         epiprocess__f_env = env,
-        arg = arg, call = call
+        .f_arg = .f_arg, .call = .call
       )
     }
 
@@ -513,26 +552,32 @@ as_slide_computation <- function(.f, ..., .ref_time_value_long_varnames, .ref_ti
     class = "epiprocess__as_slide_computation__cant_convert_catchall",
     epiprocess__f = .f,
     epiprocess__f_class = class(.f),
-    arg = arg,
-    call = call
+    .f_arg = .f_arg,
+    .call = .call
   )
 }
 
 #' @rdname as_slide_computation
+#' @importFrom rlang caller_arg caller_env
 #' @keywords internal
-as_time_slide_computation <- function(.f, ...) {
+as_time_slide_computation <- function(.f, ..., .f_arg = caller_arg(.f), .call = caller_env()) {
   as_slide_computation(
     .f, ...,
+    .f_arg = .f_arg,
+    .call = .call,
     .ref_time_value_long_varnames = ".ref_time_value",
     .ref_time_value_label = "reference time value"
   )
 }
 
 #' @rdname as_slide_computation
+#' @importFrom rlang caller_arg caller_env
 #' @keywords internal
-as_diagonal_slide_computation <- function(.f, ...) {
+as_diagonal_slide_computation <- function(.f, ..., .f_arg = caller_arg(.f), .call = caller_env()) {
   as_slide_computation(
     .f, ...,
+    .f_arg = .f_arg,
+    .call = .call,
     .ref_time_value_long_varnames = c(".version", ".ref_time_value"),
     .ref_time_value_label = "version"
   )
@@ -625,6 +670,7 @@ upcase_snake_case <- function(vec) {
 #' the full list of potential substitutions for the `time_value` column name:
 #' `r time_column_names()`
 #' @export
+#' @keywords internal
 time_column_names <- function() {
   substitutions <- c(
     "time_value", "date", "time", "datetime", "dateTime", "date_time", "target_date",
@@ -641,6 +687,7 @@ time_column_names <- function() {
 #' the full list of potential substitutions for the `geo_value` column name:
 #' `r geo_column_names()`
 #' @export
+#' @keywords internal
 geo_column_names <- function() {
   substitutions <- c(
     "geo_value", "geo_values", "geo_id", "geos", "location", "jurisdiction", "fips", "zip",
@@ -657,6 +704,7 @@ geo_column_names <- function() {
 #' the full list of potential substitutions for the `version` column name:
 #' `r version_column_names()`
 #' @export
+#' @keywords internal
 version_column_names <- function() {
   substitutions <- c(
     "version", "issue", "release"
@@ -788,7 +836,8 @@ list2var <- function(x) {
 #'
 #' @importFrom lifecycle deprecated
 #'
-#' @noRd
+#' @export
+#' @keywords internal
 deprecated_quo_is_present <- function(quo) {
   if (!rlang::is_quosure(quo)) {
     cli_abort("`quo` must be a quosure; `enquo` the arg first",
@@ -946,6 +995,7 @@ gcd_num <- function(dividends, ..., rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
 #'   by adding `k * result` for an integer k, and such that there is no smaller
 #'   `result` that can achieve this.
 #'
+#' @keywords internal
 #' @export
 guess_period <- function(time_values, time_values_arg = rlang::caller_arg(time_values), ...) {
   UseMethod("guess_period")
@@ -982,14 +1032,28 @@ guess_period.POSIXt <- function(time_values, time_values_arg = rlang::caller_arg
   as.numeric(NextMethod(), units = "secs")
 }
 
-validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRUE, arg_name = rlang::caller_arg(arg)) {
-  if (!checkmate::test_scalar(arg) || arg < lower) {
-    cli_abort(
-      "Slide function expected `{arg_name}` to be a non-null, scalar integer >= {lower}.",
-      class = "epiprocess__validate_slide_window_arg"
-    )
+#' Is `x` an "int" with a sensible class? TRUE/FALSE
+#'
+#' Like [`checkmate::test_int`] but disallowing some non-sensible classes that
+#' `test_int` accepts, such as `difftime`s. We rely on [`is.numeric`] to
+#' determine class appropriateness; note that `is.numeric` is NOT simply
+#' checking for the class to be "numeric" (or else we'd fail on integer class).
+#'
+#' @param x object
+#' @return Boolean
+#'
+#' @importFrom checkmate test_int
+#' @keywords internal
+test_sensible_int <- function(x, na.ok = FALSE, lower = -Inf, upper = Inf, # nolint: object_name_linter
+                              tol = sqrt(.Machine$double.eps), null.ok = FALSE) { # nolint: object_name_linter
+  if (null.ok && is.null(x)) {
+    TRUE
+  } else {
+    is.numeric(x) && test_int(x, na.ok = na.ok, lower = lower, upper = upper, tol = tol)
   }
+}
 
+validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRUE, arg_name = rlang::caller_arg(arg)) {
   if (time_type == "custom") {
     cli_abort(
       "Unsure how to interpret slide units with a custom time type. Consider converting your time
@@ -999,31 +1063,45 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
   }
 
   msg <- ""
-  if (!identical(arg, Inf)) {
-    if (time_type == "day") {
-      if (!test_int(arg, lower = 0L) && !(inherits(arg, "difftime") && units(arg) == "days")) {
-        msg <- glue::glue_collapse(c("difftime with units in days", "non-negative integer", "Inf"), " or ")
-      }
-    } else if (time_type == "week") {
-      if (!(inherits(arg, "difftime") && units(arg) == "weeks")) {
-        msg <- glue::glue_collapse(c("difftime with units in weeks", "Inf"), " or ")
-      }
-    } else if (time_type == "yearmonth") {
-      if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
-        msg <- glue::glue_collapse(c("non-negative integer", "Inf"), " or ")
-      }
-    } else if (time_type == "integer") {
-      if (!test_int(arg, lower = 0L) || inherits(arg, "difftime")) {
-        msg <- glue::glue_collapse(c("non-negative integer", "Inf"), " or ")
-      }
-    } else {
-      msg <- glue::glue_collapse(c("difftime", "non-negative integer", "Inf"), " or ")
+  inf_if_okay <- if (allow_inf) {
+    "Inf"
+  } else {
+    character(0L)
+  }
+
+  # nolint start: indentation_linter.
+  if (time_type == "day") {
+    if (!(test_sensible_int(arg, lower = lower) ||
+      inherits(arg, "difftime") && length(arg) == 1L && units(arg) == "days" ||
+      allow_inf && identical(arg, Inf)
+    )) {
+      msg <- glue::glue_collapse(c("length-1 difftime with units in days", "non-negative integer", inf_if_okay), " or ")
+    }
+  } else if (time_type == "week") {
+    if (!(inherits(arg, "difftime") && length(arg) == 1L && units(arg) == "weeks" ||
+      allow_inf && identical(arg, Inf)
+    )) {
+      msg <- glue::glue_collapse(c("length-1 difftime with units in weeks", inf_if_okay), " or ")
+    }
+  } else if (time_type == "yearmonth") {
+    if (!(test_sensible_int(arg, lower = lower) ||
+      allow_inf && identical(arg, Inf)
+    )) {
+      msg <- glue::glue_collapse(c("non-negative integer", inf_if_okay), " or ")
+    }
+  } else if (time_type == "integer") {
+    if (!(test_sensible_int(arg, lower = lower) ||
+      allow_inf && identical(arg, Inf)
+    )) {
+      msg <- glue::glue_collapse(c("non-negative integer", inf_if_okay), " or ")
     }
   } else {
-    if (!allow_inf) {
-      msg <- glue::glue_collapse(c("a difftime", "a non-negative integer"), " or ")
-    }
+    cli_abort('`epiprocess` internal error: unrecognized time_type: "{time_type}"',
+      class = "epiprocess__unrecognized_time_type"
+    )
   }
+  # nolint end
+
   if (msg != "") {
     cli_abort(
       "Slide function expected `{arg_name}` to be a {msg}.",

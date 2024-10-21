@@ -1,12 +1,15 @@
 #' Detect outliers
 #'
-#' Applies one or more outlier detection methods to a given signal variable, and
+#' @description Applies one or more outlier detection methods to a given signal variable, and
 #' optionally aggregates the outputs to create a consensus result. See the
 #' [outliers
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/outliers.html) for
 #' examples.
 #'
-#' @template x-y
+#' @param x Design points corresponding to the signal values `y`. Default is
+#'   `seq_along(y)` (that is, equally-spaced points from 1 to the length of
+#'   `y`).
+#' @param y Signal values.
 #' @param methods A tibble specifying the method(s) to use for outlier
 #'   detection, with one row per method, and the following columns:
 #'   * `method`: Either "rm" or "stl", or a custom function for outlier
@@ -22,7 +25,9 @@
 #'   summarized results are calculated. Note that if the number of `methods`
 #'   (number of rows) is odd, then "median" is equivalent to a majority vote for
 #'   purposes of determining whether a given observation is an outlier.
-#' @template detect-outlr-return
+#' @return An tibble with number of rows equal to `length(y)` and columns
+#'  giving the outlier detection thresholds (`lower` and `upper`) and
+#'  replacement values from each detection method (`replacement`).
 #'
 #' @details Each outlier detection method, one per row of the passed `methods`
 #'   tibble, is a function that must take as its first two arguments `x` and
@@ -38,6 +43,7 @@
 #'   "stl", shorthand for `detect_outlr_stl()`, which detects outliers via an
 #'   STL decomposition.
 #'
+#' @rdname detect_outlr
 #' @export
 #' @importFrom dplyr select
 #' @examples
@@ -71,7 +77,7 @@
 #'   )
 #' )
 #'
-#' x <- incidence_num_outlier_example %>%
+#' x <- covid_incidence_outliers %>%
 #'   dplyr::select(geo_value, time_value, cases) %>%
 #'   as_epi_df() %>%
 #'   group_by(geo_value) %>%
@@ -138,24 +144,22 @@ detect_outlr <- function(x = seq_along(y), y,
   return(results)
 }
 
-#' Detect outliers based on a rolling median
+#' @description `detect_outlr_rm` detects outliers based on a distance from the
+#' rolling median specified in terms of multiples of the rolling interquartile
+#' range (IQR).
 #'
-#' Detects outliers based on a distance from the rolling median specified in
-#' terms of multiples of the rolling interquartile range (IQR).
-#'
-#' @template x-y
 #' @param n Number of time steps to use in the rolling window. Default is 21.
 #'   This value is centrally aligned. When `n` is an odd number, the rolling
 #'   window extends from `(n-1)/2` time steps before each design point to `(n-1)/2`
 #'   time steps after. When `n` is even, then the rolling range extends from
 #'   `n/2-1` time steps before to `n/2` time steps after.
 #' @template outlier-detection-options
-#' @template detect-outlr-return
 #'
+#' @rdname detect_outlr
 #' @export
 #' @examples
 #' # Detect outliers based on a rolling median
-#' incidence_num_outlier_example %>%
+#' covid_incidence_outliers %>%
 #'   dplyr::select(geo_value, time_value, cases) %>%
 #'   as_epi_df() %>%
 #'   group_by(geo_value) %>%
@@ -208,11 +212,9 @@ detect_outlr_rm <- function(x = seq_along(y), y, n = 21,
   return(z)
 }
 
-#' Detect outliers based on an STL decomposition
+#' @description `detect_outlr_stl` detects outliers based on a seasonal-trend
+#' decomposition using LOESS (STL).
 #'
-#' Detects outliers based on a seasonal-trend decomposition using LOESS (STL).
-#'
-#' @template x-y
 #' @param n_trend Number of time steps to use in the rolling window for trend.
 #'   Default is 21.
 #' @param n_seasonal Number of time steps to use in the rolling window for
@@ -233,7 +235,6 @@ detect_outlr_rm <- function(x = seq_along(y), y, n = 21,
 #'   `seasonal_period` will still have an impact on the result, though, by
 #'   impacting the estimation of the trend component.
 #' @template outlier-detection-options
-#' @template detect-outlr-return
 #'
 #' @details The STL decomposition is computed using [`stats::stl()`]. Once
 #'   computed, the outlier detection method is analogous to the rolling median
@@ -244,12 +245,13 @@ detect_outlr_rm <- function(x = seq_along(y), y, n = 21,
 #' The last set of arguments, `log_transform` through `replacement_multiplier`,
 #'   are exactly as in `detect_outlr_rm()`.
 #'
+#' @rdname detect_outlr
 #' @importFrom stats median
 #' @importFrom tidyselect starts_with
 #' @export
 #' @examples
 #' # Detects outliers based on a seasonal-trend decomposition using LOESS
-#' incidence_num_outlier_example %>%
+#' covid_incidence_outliers %>%
 #'   dplyr::select(geo_value, time_value, cases) %>%
 #'   as_epi_df() %>%
 #'   group_by(geo_value) %>%

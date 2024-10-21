@@ -230,6 +230,37 @@ test_that("as_slide_computation raises errors as expected", {
   expect_error(as_time_slide_computation(5),
     class = "epiprocess__as_slide_computation__cant_convert_catchall"
   )
+
+  # helper to make initial snapshots less error-prone:
+  expect_error_snapshot <- function(x, class) {
+    x_quo <- rlang::enquo(x)
+    rlang::inject(expect_error(!!x_quo, class = class)) # quick sanity check on class
+    rlang::inject(expect_snapshot(!!x_quo, error = TRUE)) # don't need cnd_class = TRUE since checked above
+  }
+
+  # If `.f` doesn't look like tidyeval and we fail to force it, then we hint to
+  # the user some potential problems:
+  toy_edf <- tibble(geo_value = 1, time_value = c(1, 2), value = 1:2) %>%
+    as_epi_df(as_of = 1)
+  toy_archive <- tibble(version = c(1, 2, 2), geo_value = 1, time_value = c(1, 1, 2), value = 1:3) %>%
+    as_epi_archive()
+  expect_error_snapshot(
+    toy_edf %>%
+      group_by(geo_value) %>%
+      epi_slide(.window_size = 7, mean, .col_names = "value"),
+    class = "epiprocess__as_slide_computation__given_.col_names"
+  )
+  expect_error_snapshot(
+    toy_edf %>%
+      group_by(geo_value) %>%
+      epi_slide(.window_size = 7, tibble(slide_value = mean(.x$value))),
+    class = "epiprocess__as_slide_computation__error_forcing_.f"
+  )
+  expect_error_snapshot(
+    toy_archive %>%
+      epix_slide(tibble(slide_value = mean(.x$value))),
+    class = "epiprocess__as_slide_computation__error_forcing_.f"
+  )
 })
 
 test_that("as_slide_computation works", {
@@ -306,15 +337,28 @@ test_that("validate_slide_window_arg works", {
   }
   expect_no_error(validate_slide_window_arg(as.difftime(1, units = "days"), "day"))
   expect_no_error(validate_slide_window_arg(1, "day"))
-  expect_no_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "day"))
+  expect_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "day"),
+    class = "epiprocess__validate_slide_window_arg"
+  )
+  expect_error(validate_slide_window_arg(as.difftime(1, units = "secs"), "day"),
+    class = "epiprocess__validate_slide_window_arg"
+  )
 
   expect_no_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "week"))
-  expect_error(validate_slide_window_arg(1, "week"))
+  expect_error(validate_slide_window_arg(1, "week"),
+    class = "epiprocess__validate_slide_window_arg"
+  )
 
   expect_no_error(validate_slide_window_arg(1, "integer"))
-  expect_error(validate_slide_window_arg(as.difftime(1, units = "days"), "integer"))
-  expect_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "integer"))
+  expect_error(validate_slide_window_arg(as.difftime(1, units = "days"), "integer"),
+    class = "epiprocess__validate_slide_window_arg"
+  )
+  expect_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "integer"),
+    class = "epiprocess__validate_slide_window_arg"
+  )
 
   expect_no_error(validate_slide_window_arg(1, "yearmonth"))
-  expect_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "yearmonth"))
+  expect_error(validate_slide_window_arg(as.difftime(1, units = "weeks"), "yearmonth"),
+    class = "epiprocess__validate_slide_window_arg"
+  )
 })

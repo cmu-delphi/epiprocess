@@ -2,6 +2,38 @@
 
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicate PR's.
 
+# epiprocess 0.10
+
+## Breaking changes
+
+- Moved example datasets from being hosted in the package to being reexported
+  from the `epidatasets` package. The datasets can no longer be loaded with
+  `data()` but can be accessed with `epiprocess::` or, after loading the
+  package, just the name of the dataset (#520). Those with names starting with
+  `jhu` have been renamed to a more uniform scheme and now have names starting
+  with `covid`. The data set previously named `jhu_confirmed_cumulative_num` has
+  been removed from the package, but a renamed version is has been removed from
+  the package, but a renamed version is still available in `epidatasets`.
+
+## Bug fixes
+
+- Removed `.window_size = 1` default from `epi_slide_{mean,sum,opt}`; this
+  argument is now mandatory, and should nearly always be greater than 1 except
+  for testing purposes.
+
+## Improvements
+
+- `epi_slide` and `epix_slide` now provide some hints if you forget a `~` when
+  using a formula to specify the slide computation, and other bits of forgotten
+  syntax.
+- Improved validation of `.window_size` arguments.
+- Rewrote a lot of the package documentation to be more consistent and
+  informative. Simplified and streamlined the vignettes.
+
+## Cleanup
+
+- Removed vignette dependency on `covidcast`.
+
 # epiprocess 0.9
 
 ## Breaking changes

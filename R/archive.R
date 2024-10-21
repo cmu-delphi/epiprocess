@@ -9,8 +9,9 @@
 
 #' Validate a version bound arg
 #'
-#' Expected to be used on `clobberable_versions_start`, `versions_end`,
-#' and similar arguments. Some additional context-specific checks may be needed.
+#' Expected to be used on `clobberable_versions_start`, `versions_end`, and
+#' similar arguments. Some additional context-specific checks may be needed.
+#' Side effects: raises an error if version bound appears invalid.
 #'
 #' @param version_bound the version bound to validate
 #' @param x a data frame containing a version column with which to check
@@ -20,12 +21,10 @@
 #' @param version_bound_arg optional string; what to call the version bound in
 #'   error messages
 #'
-#' @section Side effects: raises an error if version bound appears invalid
-#'
-#' @noRd
+#' @keywords internal
 validate_version_bound <- function(version_bound, x, na_ok = FALSE,
                                    version_bound_arg = rlang::caller_arg(version_bound),
-                                   x_arg = rlang::caller_arg(version_bound)) {
+                                   x_arg = rlang::caller_arg(x)) {
   if (is.null(version_bound)) {
     cli_abort(
       "{version_bound_arg} cannot be NULL",
@@ -75,9 +74,7 @@ validate_version_bound <- function(version_bound, x, na_ok = FALSE,
 #' @return `max(x$version)` if it has any rows; raises error if it has 0 rows or
 #'   an `NA` version value
 #'
-#' @importFrom checkmate check_names
-#'
-#' @export
+#' @keywords internal
 max_version_with_row_in <- function(x) {
   if (nrow(x) == 0L) {
     cli_abort(
@@ -108,72 +105,71 @@ max_version_with_row_in <- function(x) {
 #' @param x the starting "value"(s)
 #' @return same class, typeof, and length as `x`
 #'
-#' @export
+#' @keywords internal
 next_after <- function(x) UseMethod("next_after")
 
 
-#' @export
+#' @keywords internal
 next_after.integer <- function(x) x + 1L
 
 
-#' @export
+#' @keywords internal
 next_after.Date <- function(x) x + 1L
 
 
-#' Compactify
+#' `epi_archive` object
 #'
-#' This section describes the internals of how compactification works in an
-#' `epi_archive()`. Compactification can potentially improve code speed or
-#' memory usage, depending on your data.
+#' @description The second main data structure for storing time series in
+#' `epiprocess`. It is similar to `epi_df` in that it fundamentally a table with
+#' a few required columns that stores epidemiological time series data. An
+#' `epi_archive` requires a `geo_value`, `time_value`, and `version` column (and
+#' possibly other key columns) along with measurement values. In brief, an
+#' `epi_archive` is a history of the time series data, where the `version`
+#' column tracks the time at which the data was available. This allows for
+#' version-aware forecasting.
 #'
-#' In general, the last version of each observation is carried forward (LOCF) to
-#' fill in data between recorded versions, and between the last recorded
-#' update and the `versions_end`. One consequence is that the `DT` doesn't
-#' have to contain a full snapshot of every version (although this generally
-#' works), but can instead contain only the rows that are new or changed from
-#' the previous version (see `compactify`, which does this automatically).
-#' Currently, deletions must be represented as revising a row to a special
-#' state (e.g., making the entries `NA` or including a special column that
-#' flags the data as removed and performing some kind of post-processing), and
-#' the archive is unaware of what this state is. Note that `NA`s *can* be
-#' introduced by `epi_archive` methods for other reasons, e.g., in
-#' [`epix_fill_through_version`] and [`epix_merge`], if requested, to
-#' represent potential update data that we do not yet have access to; or in
-#' [`epix_merge`] to represent the "value" of an observation before the
-#' version in which it was first released, or if no version of that
-#' observation appears in the archive data at all.
+#' `new_epi_archive` is the constructor for `epi_archive` objects that assumes
+#' all arguments have been validated. Most users should use `as_epi_archive`.
 #'
-#' @name compactify
-NULL
-
-
-#' Epi Archive
+#' @details An `epi_archive` contains a `data.table` object `DT` (from the
+#' `{data.table}` package), with (at least) the following columns:
 #'
-#' @title `epi_archive` object
-#'
-#' @description An `epi_archive` is an S3 class which contains a data table
-#'   along with several relevant pieces of metadata. The data table can be seen
-#'   as the full archive (version history) for some signal variables of
-#'   interest.
-#'
-#' @details An `epi_archive` contains a data table `DT`, of class `data.table`
-#'   from the `data.table` package, with (at least) the following columns:
-#'
-#' * `geo_value`: the geographic value associated with each row of measurements.
-#' * `time_value`: the time value associated with each row of measurements.
+#' * `geo_value`: the geographic value associated with each row of measurements,
+#' * `time_value`: the time value associated with each row of measurements,
 #' * `version`: the time value specifying the version for each row of
 #'   measurements. For example, if in a given row the `version` is January 15,
 #'   2022 and `time_value` is January 14, 2022, then this row contains the
 #'   measurements of the data for January 14, 2022 that were available one day
 #'   later.
 #'
-#' The data table `DT` has key variables `geo_value`, `time_value`, `version`,
-#'   as well as any others (these can be specified when instantiating the
-#'   `epi_archive` object via the `other_keys` argument, and/or set by operating
-#'   on `DT` directly). Note that there can only be a single row per unique
-#'   combination of key variables.
+#' The variables `geo_value`, `time_value`, `version` serve as key variables for
+#'   the data table (in addition to any other keys specified in the metadata).
+#'   There can only be a single row per unique combination of key variables. The
+#'   keys for an `epi_archive` can be viewed with `key(epi_archive$DT)`.
 #'
-#' @section Metadata:
+#' ## Compactification
+#'
+#' By default, an `epi_archive` will compactify the data table to remove
+#' redundant rows. This is done by not storing rows that have the same value,
+#' except for the `version` column (this is essentially a last observation
+#' carried forward, but along the version index). This is done to save space and
+#' improve performance. If you do not want to compactify the data, you can set
+#' `compactify = FALSE` in `as_epi_archive()`.
+#'
+#' Note that in some data scenarios, LOCF may not be appropriate. For instance,
+#' if you expected data to be updated on a given day, but your data source did
+#' not update, then it could be reasonable to code the data as `NA` for that
+#' day, instead of assuming LOCF.
+#'
+#' `NA`s *can* be introduced by `epi_archive` methods for other
+#' reasons, e.g., in [`epix_fill_through_version`] and [`epix_merge`], if
+#' requested, to represent potential update data that we do not yet have access
+#' to; or in [`epix_merge`] to represent the "value" of an observation before
+#' the version in which it was first released, or if no version of that
+#' observation appears in the archive data at all.
+#'
+#' ## Metadata
+#'
 #' The following pieces of metadata are included as fields in an `epi_archive`
 #'   object:
 #'
@@ -186,20 +182,6 @@ NULL
 #'  as read-only, and to use the `epi_archive` methods to interact with the data
 #'  archive. Unexpected behavior may result from modifying the metadata
 #'  directly.
-#'
-#' @section Generating Snapshots:
-#' An `epi_archive` object can be used to generate a snapshot of the data in
-#'   `epi_df` format, which represents the most up-to-date time series values up
-#'   to a point in time. This is accomplished by calling `epix_as_of()`.
-#'
-#' @section Sliding Computations:
-#' We can run a sliding computation over an `epi_archive` object, much like
-#'   `epi_slide()` does for an `epi_df` object. This is accomplished by calling
-#'   the `slide()` method for an `epi_archive` object, which works similarly to
-#'   the way `epi_slide()` works for an `epi_df` object, but with one key
-#'   difference: it is version-aware. That is, for an `epi_archive` object, the
-#'   sliding computation at any given reference time point t is performed on
-#'   **data that would have been available as of t**.
 #'
 #' @param x A data.frame, data.table, or tibble, with columns `geo_value`,
 #'   `time_value`, `version`, and then any additional number of columns.
@@ -239,10 +221,11 @@ NULL
 #'   value of `clobberable_versions_start` does not fully trust these empty
 #'   updates, and assumes that any version `>= max(x$version)` could be
 #'   clobbered.) If `nrow(x) == 0`, then this argument is mandatory.
-#' @param compactify_tol double. the tolerance used to detect approximate equality for compactification
+#' @param compactify_tol double. the tolerance used to detect approximate
+#'   equality for compactification
 #' @return An `epi_archive` object.
 #'
-#' @importFrom data.table as.data.table key setkeyv
+#' @seealso [`epix_as_of`] [`epix_merge`] [`epix_slide`]
 #' @importFrom dplyr if_any if_all everything
 #' @importFrom utils capture.output
 #'
@@ -356,12 +339,13 @@ new_epi_archive <- function(
   )
 }
 
-#' given a tibble as would be found in an epi_archive, remove duplicate entries.
-#' @description
-#' works by shifting all rows except the version, then comparing values to see
+#' Given a tibble as would be found in an epi_archive, remove duplicate entries.
+#'
+#' Works by shifting all rows except the version, then comparing values to see
 #'   if they've changed. We need to arrange in descending order, but note that
 #'   we don't need to group, since at least one column other than version has
 #'   changed, and so is kept.
+#'
 #' @keywords internal
 #' @importFrom dplyr filter
 apply_compactify <- function(df, keys, tolerance = .Machine$double.eps^.5) {
@@ -466,6 +450,7 @@ validate_epi_archive <- function(
 
 #' `as_epi_archive` converts a data frame, data table, or tibble into an
 #' `epi_archive` object.
+#'
 #' @param ... used for specifying column names, as in [`dplyr::rename`]. For
 #'   example `version = release_date`
 #' @param .versions_end location based versions_end, used to avoid prefix

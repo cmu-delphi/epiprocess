@@ -2,6 +2,8 @@
 % Please edit documentation in R/outliers.R
 \name{detect_outlr}
 \alias{detect_outlr}
+\alias{detect_outlr_rm}
+\alias{detect_outlr_stl}
 \title{Detect outliers}
 \usage{
 detect_outlr(
@@ -9,6 +11,32 @@ detect_outlr(
   y,
   methods = tibble::tibble(method = "rm", args = list(list()), abbr = "rm"),
   combiner = c("median", "mean", "none")
+)
+
+detect_outlr_rm(
+  x = seq_along(y),
+  y,
+  n = 21,
+  log_transform = FALSE,
+  detect_negatives = FALSE,
+  detection_multiplier = 2,
+  min_radius = 0,
+  replacement_multiplier = 0
+)
+
+detect_outlr_stl(
+  x = seq_along(y),
+  y,
+  n_trend = 21,
+  n_seasonal = 21,
+  n_threshold = 21,
+  seasonal_period,
+  seasonal_as_residual = FALSE,
+  log_transform = FALSE,
+  detect_negatives = FALSE,
+  detection_multiplier = 2,
+  min_radius = 0,
+  replacement_multiplier = 0
 )
 }
 \arguments{
@@ -36,6 +64,56 @@ as well as a replacement value for any outliers.  If "none", then no
 summarized results are calculated. Note that if the number of \code{methods}
 (number of rows) is odd, then "median" is equivalent to a majority vote for
 purposes of determining whether a given observation is an outlier.}
+
+\item{n}{Number of time steps to use in the rolling window. Default is 21.
+This value is centrally aligned. When \code{n} is an odd number, the rolling
+window extends from \code{(n-1)/2} time steps before each design point to \code{(n-1)/2}
+time steps after. When \code{n} is even, then the rolling range extends from
+\code{n/2-1} time steps before to \code{n/2} time steps after.}
+
+\item{log_transform}{Should a log transform be applied before running outlier
+detection? Default is \code{FALSE}. If \code{TRUE}, and zeros are present, then the
+log transform will be padded by 1.}
+
+\item{detect_negatives}{Should negative values automatically count as
+outliers? Default is \code{FALSE}.}
+
+\item{detection_multiplier}{Value determining how far the outlier detection
+thresholds are from the rolling median, which are calculated as (rolling
+median) +/- (detection multiplier) * (rolling IQR). Default is 2.}
+
+\item{min_radius}{Minimum distance between rolling median and threshold, on
+transformed scale. Default is 0.}
+
+\item{replacement_multiplier}{Value determining how far the replacement
+values are from the rolling median. The replacement is the original value
+if it is within the detection thresholds, or otherwise it is rounded to the
+nearest (rolling median) +/- (replacement multiplier) * (rolling IQR).
+Default is 0.}
+
+\item{n_trend}{Number of time steps to use in the rolling window for trend.
+Default is 21.}
+
+\item{n_seasonal}{Number of time steps to use in the rolling window for
+seasonality. Default is 21. Can also be the string "periodic". See
+\code{s.window} in \code{\link[stats:stl]{stats::stl}}.}
+
+\item{n_threshold}{Number of time steps to use in rolling window for the IQR
+outlier thresholds.}
+
+\item{seasonal_period}{Integer specifying period of "seasonality". For
+example, for daily data, a period 7 means weekly seasonality. It must be
+strictly larger than 1. Also impacts the size of the low-pass filter
+window; see \code{l.window} in \code{\link[stats:stl]{stats::stl}}.}
+
+\item{seasonal_as_residual}{Boolean specifying whether the seasonal(/weekly)
+component should be treated as part of the residual component instead of as
+part of the predictions. The default, FALSE, treats them as part of the
+predictions, so large seasonal(/weekly) components will not lead to
+flagging points as outliers. \code{TRUE} may instead consider the extrema of
+large seasonal variations to be outliers; \code{n_seasonal} and
+\code{seasonal_period} will still have an impact on the result, though, by
+impacting the estimation of the trend component.}
 }
 \value{
 An tibble with number of rows equal to \code{length(y)} and columns
@@ -47,6 +125,13 @@ Applies one or more outlier detection methods to a given signal variable, and
 optionally aggregates the outputs to create a consensus result. See the
 \href{https://cmu-delphi.github.io/epiprocess/articles/outliers.html}{outliers vignette} for
 examples.
+
+\code{detect_outlr_rm} detects outliers based on a distance from the
+rolling median specified in terms of multiples of the rolling interquartile
+range (IQR).
+
+\code{detect_outlr_stl} detects outliers based on a seasonal-trend
+decomposition using LOESS (STL).
 }
 \details{
 Each outlier detection method, one per row of the passed \code{methods}
@@ -62,6 +147,15 @@ For convenience, the outlier detection method can be specified (in the
 \code{detect_outlr_rm()}, which detects outliers via a rolling median; or by
 "stl", shorthand for \code{detect_outlr_stl()}, which detects outliers via an
 STL decomposition.
+
+The STL decomposition is computed using \code{\link[stats:stl]{stats::stl()}}. Once
+computed, the outlier detection method is analogous to the rolling median
+method in \code{\link[=detect_outlr_rm]{detect_outlr_rm()}}, except with the fitted values and residuals
+from the STL decomposition taking the place of the rolling median and
+residuals to the rolling median, respectively.
+
+The last set of arguments, \code{log_transform} through \code{replacement_multiplier},
+are exactly as in \code{detect_outlr_rm()}.
 }
 \examples{
 detection_methods <- dplyr::bind_rows(
@@ -94,7 +188,7 @@ detection_methods <- dplyr::bind_rows(
   )
 )
 
-x <- incidence_num_outlier_example \%>\%
+x <- covid_incidence_outliers \%>\%
   dplyr::select(geo_value, time_value, cases) \%>\%
   as_epi_df() \%>\%
   group_by(geo_value) \%>\%
@@ -104,4 +198,21 @@ x <- incidence_num_outlier_example \%>\%
     combiner = "median"
   )) \%>\%
   unnest(outlier_info)
+# Detect outliers based on a rolling median
+covid_incidence_outliers \%>\%
+  dplyr::select(geo_value, time_value, cases) \%>\%
+  as_epi_df() \%>\%
+  group_by(geo_value) \%>\%
+  mutate(outlier_info = detect_outlr_rm(
+    x = time_value, y = cases
+  ))
+# Detects outliers based on a seasonal-trend decomposition using LOESS
+covid_incidence_outliers \%>\%
+  dplyr::select(geo_value, time_value, cases) \%>\%
+  as_epi_df() \%>\%
+  group_by(geo_value) \%>\%
+  mutate(outlier_info = detect_outlr_stl(
+    x = time_value, y = cases,
+    seasonal_period = 7 # weekly seasonality for daily data
+  ))
 }

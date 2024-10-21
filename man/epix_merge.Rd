@@ -14,24 +14,27 @@ epix_merge(
 \arguments{
 \item{x, y}{Two \code{epi_archive} objects to join together.}
 
-\item{sync}{Optional; \code{"forbid"}, \code{"na"}, \code{"locf"}, or \code{"truncate"}; in the
-case that \code{x$versions_end} doesn't match \code{y$versions_end}, what do we do?:
-\code{"forbid"}: emit an error; "na": use \code{max(x$versions_end, y$versions_end)}
-as the result's \code{versions_end}, but ensure that, if we request a snapshot
-as of a version after \code{min(x$versions_end, y$versions_end)}, the
-observation columns from the less up-to-date archive will be all NAs (i.e.,
-imagine there was an update immediately after its \code{versions_end} which
-revised all observations to be \code{NA}); \code{"locf"}: use \code{max(x$versions_end, y$versions_end)} as the result's \code{versions_end}, allowing the last version
-of each observation to be carried forward to extrapolate unavailable
-versions for the less up-to-date input archive (i.e., imagining that in the
-less up-to-date archive's data set remained unchanged between its actual
-\code{versions_end} and the other archive's \code{versions_end}); or \code{"truncate"}:
-use \code{min(x$versions_end, y$versions_end)} as the result's \code{versions_end},
-and discard any rows containing update rows for later versions.}
+\item{sync}{Optional; character. The argument that decides how to handle the
+situation when one signal has a more recent revision than another signal
+for a key that they have both already observed. The options are:
+\itemize{
+\item \code{"forbid"}: the default and the strictest option, throws an error; this
+is likely not what you want, but it is strict to make the user aware of the
+issues,
+\item \code{"locf"}: carry forward the last observed version of the missing signal
+to the new version and use \code{max(x$versions_end, y$versions_end)} as the
+result's \code{versions_end},
+\item \code{"na"}: fill the unobserved values with \code{NA}'s (this can be handy when
+you know that source data is truly missing upstream and you want to
+represent the lack of information accurately, for instance) and use
+\code{max(x$versions_end, y$versions_end)} as the result's \code{versions_end},
+\item \code{"truncate"}: discard any rows containing update rows for later versions
+and use \code{min(x$versions_end, y$versions_end)} as the result's
+\code{versions_end}.
+}}
 
-\item{compactify}{Optional; \code{TRUE}, \code{FALSE}, or \code{NULL}; should the result be
-compactified? See \code{as_epi_archive()} for an explanation of what this means.
-Default here is \code{TRUE}.}
+\item{compactify}{Optional; \code{TRUE} (default), \code{FALSE}, or \code{NULL}; should the
+result be compactified? See \code{as_epi_archive()} for details.}
 }
 \value{
 the resulting \code{epi_archive}
@@ -46,6 +49,18 @@ clobberable versions). If the \code{versions_end} values differ, the \code{sync}
 parameter controls what is done.
 }
 \details{
+When merging archives, unless the archives have identical data release
+patterns, we often have to handle the situation when one signal has a more
+recent observation for a key than another signal. In this case, we have two
+options:
+\itemize{
+\item if the the other signal has never observed that key, we need to introduce
+\code{NA}s in the non-key variables for the missing signal,
+\item if the other signal has observed that key previously, but at an ealier
+revision date, then we need to decide how to handle the missing value in the
+more recent signal; the \code{sync} argument controls this behavior.
+}
+
 In all cases, \code{clobberable_versions_start} will be set to the
 earliest version that could be clobbered in either input archive.
 }
@@ -58,18 +73,14 @@ s1 <- tibble::tibble(
   version = as.Date(c("2024-08-01", "2024-08-02", "2024-08-02")),
   signal1 = c(10, 11, 7)
 )
-
 s2 <- tibble::tibble(
   geo_value = c("ca", "ca"),
   time_value = as.Date(c("2024-08-01", "2024-08-02")),
   version = as.Date(c("2024-08-03", "2024-08-03")),
   signal2 = c(2, 3)
 )
-
-
 s1 <- s1 \%>\% as_epi_archive()
 s2 <- s2 \%>\% as_epi_archive()
-
 merged <- epix_merge(s1, s2, sync = "locf")
 merged[["DT"]]
 
@@ -81,18 +92,14 @@ s1 <- tibble::tibble(
   version = as.Date(c("2024-08-01", "2024-08-03", "2024-08-03", "2024-08-03")),
   signal1 = c(12, 13, 22, 19)
 )
-
 s2 <- tibble::tibble(
   geo_value = c("ca", "ca"),
   time_value = as.Date(c("2024-08-01", "2024-08-02")),
   version = as.Date(c("2024-08-02", "2024-08-02")),
   signal2 = c(4, 5),
 )
-
-
 s1 <- s1 \%>\% as_epi_archive()
 s2 <- s2 \%>\% as_epi_archive()
-
 merged <- epix_merge(s1, s2, sync = "locf")
 merged[["DT"]]
 
@@ -104,7 +111,6 @@ s1 <- tibble::tibble(
   version = as.Date(c("2024-08-01", "2024-08-02", "2024-08-03")),
   signal1 = c(14, 11, 9)
 )
-
 # The s2 signal at August 1st gets revised from 3 to 5 on August 3rd
 s2 <- tibble::tibble(
   geo_value = c("ca", "ca", "ca"),
@@ -112,11 +118,8 @@ s2 <- tibble::tibble(
   version = as.Date(c("2024-08-02", "2024-08-03", "2024-08-03")),
   signal2 = c(3, 5, 2),
 )
-
 s1 <- s1 \%>\% as_epi_archive()
 s2 <- s2 \%>\% as_epi_archive()
-
-# Some LOCF for signal 1 as signal 2 gets updated
 merged <- epix_merge(s1, s2, sync = "locf")
 merged[["DT"]]
 }

@@ -7,6 +7,10 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r, include = FALSE}
+source(here::here("vignettes", "_common.R"))
+```
+
 A basic way of assessing growth in a signal is to look at its relative change
 over two neighboring time windows. The `epiprocess` package provides a function
 `growth_rate()` to compute such relative changes, as well as more sophisticated
@@ -15,15 +19,26 @@ current vignette, applied to state-level daily reported COVID-19 cases from GA
 and PA, smoothed using a 7-day trailing average.
 
 ```{r, message = FALSE, warning = FALSE}
-library(epidatr)
 library(epiprocess)
 library(dplyr)
 library(tidyr)
 ```
 
-The data is fetched with the following query:
+The data is included in this package (via the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/)) and can be loaded with:
 
-```{r, message = FALSE, eval=F}
+```{r}
+x <- cases_deaths_subset %>%
+  select(geo_value, time_value, cases = cases_7d_av) %>%
+  filter(geo_value %in% c("pa", "ga") & time_value >= "2020-06-01") %>%
+  arrange(geo_value, time_value)
+```
+
+The data can also be fetched from the Delphi Epidata API with the following query:
+```{r, message = FALSE, eval = FALSE}
+library(epidatr)
+
+d <- as.Date("2024-03-20")
+
 x <- pub_covidcast(
   source = "jhu-csse",
   signals = "confirmed_7dav_incidence_num",
@@ -31,22 +46,14 @@ x <- pub_covidcast(
   time_type = "day",
   geo_values = "ga,pa",
   time_values = epirange(20200601, 20211231),
+  as_of = d
 ) %>%
   select(geo_value, time_value, cases = value) %>%
   arrange(geo_value, time_value) %>%
-  as_epi_df()
+  as_epi_df(as_of = d)
 ```
 
 The data has 1,158 rows and 3 columns.
-
-```{r, echo=FALSE}
-data(jhu_csse_daily_subset)
-x <- jhu_csse_daily_subset %>%
-  select(geo_value, time_value, cases = cases_7d_av) %>%
-  filter(geo_value %in% c("pa", "ga") & time_value >= "2020-06-01") %>%
-  arrange(geo_value, time_value) %>%
-  as_epi_df()
-```
 
 ## Growth rate basics
 
@@ -102,7 +109,6 @@ red) and below -1% (in blue), faceting by geo value.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 4}
 library(ggplot2)
-theme_set(theme_bw())
 
 upper <- 0.01
 lower <- -0.01
