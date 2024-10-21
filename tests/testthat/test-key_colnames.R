@@ -1,4 +1,5 @@
 test_that("`key_colnames` on non-`epi_df`-like tibbles works as expected", {
+  withr::local_options(list(lifecycle_verbosity = "warning")) # for extra_keys tests
 
   k1k2_tbl <- tibble::tibble(k1 = 1, k2 = 1)
 
@@ -35,11 +36,9 @@ test_that("`key_colnames` on non-`epi_df`-like tibbles works as expected", {
     key_colnames(k1k2_tbl, geo_keys = c("k1", "k2"), other_keys = character(0L)),
     c("k1", "k2")
   )
-
 })
 
 test_that("`key_colnames` on `epi_df`s and similar tibbles works as expected", {
-
   gat_tbl <- tibble::tibble(geo_value = 1, age_group = 1, time_value = 1)
   gat_edf <- as_epi_df(gat_tbl, other_keys = "age_group", as_of = 2)
 
@@ -76,16 +75,6 @@ test_that("`key_colnames` on `epi_df`s and similar tibbles works as expected", {
     class = "epiprocess__key_colnames__mismatched_time_keys"
   )
 
-  # For either class, `extra_keys` is not accepted:
-  expect_error(
-    key_colnames(gat_tbl, extra_keys = "age_group"),
-    class = "rlib_error_dots_nonempty"
-  )
-  expect_error(
-    key_colnames(gat_edf, extra_keys = "age_group"),
-    class = "rlib_error_dots_nonempty"
-  )
-
   # We can exclude keys:
   expect_equal(
     key_colnames(gat_tbl, other_keys = "age_group", exclude = c("time_value")),
@@ -104,10 +93,22 @@ test_that("`key_colnames` on `epi_df`s and similar tibbles works as expected", {
     c("age_group")
   )
 
+  # Using `extra_keys =` is soft-deprecated and routes to `other_keys =`:
+  expect_warning(
+    gat_tbl_extra_keys_res <- key_colnames(gat_tbl, extra_keys = "age_group"),
+    class = "lifecycle_warning_deprecated"
+  )
+  expect_equal(gat_tbl_extra_keys_res, c("geo_value", "age_group", "time_value"))
+
+  expect_warning(
+    gat_edf_extra_keys_exclude_res <-
+      key_colnames(gat_edf, extra_keys = "age_group", exclude = c("geo_value", "time_value")),
+    class = "lifecycle_warning_deprecated"
+  )
+  expect_equal(gat_edf_extra_keys_exclude_res, c("age_group"))
 })
 
 test_that("`key_colnames` on tsibbles works as expected", {
-
   k1k2i_tsbl <- tsibble::tsibble(k1 = 1, k2 = 1, i = 1, key = c(k1, k2), index = i)
 
   # Normal operation:
@@ -133,11 +134,9 @@ test_that("`key_colnames` on tsibbles works as expected", {
     key_colnames(k1k2i_tsbl %>% tsibble::index_by(fake_coarser_i = i)),
     class = "epiprocess__key_colnames__incomplete_reindexing_operation"
   )
-
 })
 
 test_that("`key_colnames` on `epi_archive`s works as expected", {
-
   gatv_ea <- tibble(geo_value = 1, age_group = 1, time_value = 1, version = 2) %>%
     as_epi_archive(other_keys = "age_group")
 
@@ -168,5 +167,4 @@ test_that("`key_colnames` on `epi_archive`s works as expected", {
     key_colnames(gatv_ea, exclude = c("version", "time_value")),
     c("geo_value", "age_group")
   )
-
 })
