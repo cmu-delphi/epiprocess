@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-light me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-light me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -19,13 +19,13 @@
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/slide.html">Slide a computation over signal values</a></li>
-    <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
-    <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals over space and time</a></li>
-    <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/epi_df.html">Working with epi_df objects and time series data</a></li>
+    <li><a class="dropdown-item" href="../articles/epi_archive.html">Working with epi_archive objects and data revisions</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
-    <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
+    <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
+    <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals across locations and time</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -43,6 +43,28 @@
       <small>Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.10" id="epiprocess-010">epiprocess 0.10<a class="anchor" aria-label="anchor" href="#epiprocess-010"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-0-10">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-10"></a></h3>
+<ul><li>Moved example datasets from being hosted in the package to being reexported from the <code>epidatasets</code> package. The datasets can no longer be loaded with <code><a href="https://rdrr.io/r/utils/data.html" class="external-link">data()</a></code> but can be accessed with <code>epiprocess::</code> or, after loading the package, just the name of the dataset (<a href="https://github.com/cmu-delphi/epiprocess/issues520" class="external-link">#520</a>). Those with names starting with <code>jhu</code> have been renamed to a more uniform scheme and now have names starting with <code>covid</code>. The data set previously named <code>jhu_confirmed_cumulative_num</code> has been removed from the package, but a renamed version is has been removed from the package, but a renamed version is still available in <code>epidatasets</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-10">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-10"></a></h3>
+<ul><li>Removed <code>.window_size = 1</code> default from <code>epi_slide_{mean,sum,opt}</code>; this argument is now mandatory, and should nearly always be greater than 1 except for testing purposes.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="improvements-0-10">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-10"></a></h3>
+<ul><li>
+<code>epi_slide</code> and <code>epix_slide</code> now provide some hints if you forget a <code>~</code> when using a formula to specify the slide computation, and other bits of forgotten syntax.</li>
+<li>Improved validation of <code>.window_size</code> arguments.</li>
+<li>Rewrote a lot of the package documentation to be more consistent and informative. Simplified and streamlined the vignettes.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="cleanup-0-10">Cleanup<a class="anchor" aria-label="anchor" href="#cleanup-0-10"></a></h3>
+<ul><li>Removed vignette dependency on <code>covidcast</code>.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9" id="epiprocess-09">epiprocess 0.9<a class="anchor" aria-label="anchor" href="#epiprocess-09"></a></h2>
 <div class="section level3">
@@ -99,7 +121,7 @@
 <li>
 <code>epix_slide</code> <code>before</code> argument now defaults to <code>Inf</code>, and requires the user to specify units in some cases. The <code>time_step</code> argument has been removed.</li>
 <li>
-<code>detect_outlr_stl(seasonal_period = NULL)</code> is no longer accepted. Use <code>detect_outlr_stl(seasonal_period = &lt;value&gt;, seasonal_as_residual = TRUE)</code> instead. See <code><a href="../reference/detect_outlr_stl.html">?detect_outlr_stl</a></code> for more details.</li>
+<code>detect_outlr_stl(seasonal_period = NULL)</code> is no longer accepted. Use <code>detect_outlr_stl(seasonal_period = &lt;value&gt;, seasonal_as_residual = TRUE)</code> instead. See <code><a href="../reference/detect_outlr.html">?detect_outlr_stl</a></code> for more details.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="improvements-0-8">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-8"></a></h3>
@@ -403,7 +425,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.1.0" id="epiprocess-010">epiprocess 0.1.0<a class="anchor" aria-label="anchor" href="#epiprocess-010"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.1.0" id="epiprocess-010-1">epiprocess 0.1.0<a class="anchor" aria-label="anchor" href="#epiprocess-010-1"></a></h2>
 <div class="section level3">
 <h3 id="implemented-core-functionality-vignettes-0-1-0">Implemented core functionality, vignettes<a class="anchor" aria-label="anchor" href="#implemented-core-functionality-vignettes-0-1-0"></a></h3>
 <ul><li>Classes:

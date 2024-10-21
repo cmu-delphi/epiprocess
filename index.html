@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Tools for basic signal processing in epidemiology">
-<meta name="description" content="This package introduces a common data structure for epidemiological data reported by location and time, provides another data structure to work with revisions to these data sets over time, and offers associated utilities to perform basic signal processing tasks.">
-<meta property="og:description" content="This package introduces a common data structure for epidemiological data reported by location and time, provides another data structure to work with revisions to these data sets over time, and offers associated utilities to perform basic signal processing tasks.">
+<meta name="description" content="This package introduces common data structures for working with epidemiological data reported by location and time and offers associated utilities to perform basic signal processing tasks. The package is designed to be used in conjunction with `epipredict` for building and evaluating epidemiological models.">
+<meta property="og:description" content="This package introduces common data structures for working with epidemiological data reported by location and time and offers associated utilities to perform basic signal processing tasks. The package is designed to be used in conjunction with `epipredict` for building and evaluating epidemiological models.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">epiprocess</a>
 
-    <small class="nav-text text-light me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-light me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,13 +36,13 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/slide.html">Slide a computation over signal values</a></li>
-    <li><a class="dropdown-item" href="articles/growth_rate.html">Estimate growth rates in signals</a></li>
-    <li><a class="dropdown-item" href="articles/correlation.html">Correlate signals over space and time</a></li>
-    <li><a class="dropdown-item" href="articles/aggregation.html">Aggregate signals over space and time</a></li>
+<li><a class="dropdown-item" href="articles/epi_df.html">Working with epi_df objects and time series data</a></li>
+    <li><a class="dropdown-item" href="articles/epi_archive.html">Working with epi_archive objects and data revisions</a></li>
     <li><a class="dropdown-item" href="articles/outliers.html">Detect and correct outliers in signals</a></li>
-    <li><a class="dropdown-item" href="articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="articles/compactify.html">Compactify to remove redundant archive data</a></li>
+    <li><a class="dropdown-item" href="articles/growth_rate.html">Estimate growth rates in signals</a></li>
+    <li><a class="dropdown-item" href="articles/correlation.html">Correlate signals across locations and time</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
@@ -62,57 +62,131 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="epiprocess">epiprocess<a class="anchor" aria-label="anchor" href="#epiprocess"></a>
 </h1></div>
-<!-- badges: start -->
-
-<!-- badges: end -->
-<p>This package introduces a common data structure for epidemiological data sets measured over space and time, and offers associated utilities to perform basic signal processing tasks. See the getting started guide and vignettes for examples.</p>
+<p>The <a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a> package works with epidemiological time series data and provides tools to manage, analyze, and process the data in preparation for modeling. It is designed to work in tandem with <code>{epipredict}</code>, which provides pre-built epiforecasting models and as well as tools to build custom models. Both packages are designed to lower the barrier to entry and implementation cost for epidemiological time series analysis and forecasting.</p>
+<p><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a> contains:</p>
+<ul>
+<li>
+<code><a href="reference/epi_df.html">epi_df()</a></code> and <code><a href="reference/epi_archive.html">epi_archive()</a></code>, two data frame classes (that work like a <a href="https://tibble.tidyverse.org/" class="external-link">tibble</a> with <a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a> verbs) for working with epidemiological time series data;</li>
+<li>signal processing tools building on these data structures such as
+<ul>
+<li>
+<code><a href="reference/epi_slide.html">epi_slide()</a></code> for sliding window operations;</li>
+<li>
+<code><a href="reference/epix_slide.html">epix_slide()</a></code> for sliding window operations on archives;</li>
+<li>
+<code><a href="reference/growth_rate.html">growth_rate()</a></code> for computing growth rates;</li>
+<li>
+<code><a href="reference/detect_outlr.html">detect_outlr()</a></code> for outlier detection;</li>
+<li>
+<code><a href="reference/epi_cor.html">epi_cor()</a></code> for computing correlations;</li>
+</ul>
+</li>
+</ul>
+<p>If you are new to this set of tools, you may be interested learning through a book format: <a href="https://cmu-delphi.github.io/delphi-tooling-book/" class="external-link">Introduction to Epidemiological Forecasting</a>.</p>
+<p>You may also be interested in:</p>
+<ul>
+<li>
+<a href="https://cmu-delphi.github.io/epidatr/" class="external-link">epidatr</a>, for accessing wide range of epidemiological data sets, including COVID-19 data, flu data, and more.</li>
+<li>
+<code>{rtestim}</code>, a package for estimating the time-varying reproduction number of an epidemic.</li>
+</ul>
+<p>This package is provided by the <a href="https://delphi.cmu.edu/" class="external-link">Delphi group</a> at Carnegie Mellon University.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>To install (unless you’re making changes to the package, use the stable version):</p>
+<p>To install:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Stable version</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"cmu-delphi/epiprocess@main"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Dev version</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"cmu-delphi/epiprocess@dev"</span><span class="op">)</span></span></code></pre></div>
+<p>The package is not yet on CRAN.</p>
 </div>
 <div class="section level2">
-<h2 id="epi_df-snapshot-of-a-data-set">
-<code>epi_df</code>: snapshot of a data set<a class="anchor" aria-label="anchor" href="#epi_df-snapshot-of-a-data-set"></a>
+<h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h2>
-<p>The first main data structure in the <code>epiprocess</code> package is called <a href="reference/epi_df.html"><code>epi_df</code></a>. This is simply a tibble with a couple of required columns, <code>geo_value</code> and <code>time_value</code>. It can have any other number of columns, which can be seen as measured variables, which we also call signal variables. In brief, an <code>epi_df</code> object represents a snapshot of a data set that contains the most up-to-date values of the signals variables, as of a given time.</p>
-<p>By convention, functions in the <code>epiprocess</code> package that operate on <code>epi_df</code> objects begin with <code>epi</code>. For example:</p>
-<ul>
-<li>
-<code><a href="reference/epi_slide.html">epi_slide()</a></code>, for iteratively applying a custom computation to a variable in an <code>epi_df</code> object over sliding windows in time;</li>
-<li>
-<code><a href="reference/epi_cor.html">epi_cor()</a></code>, for computing lagged correlations between variables in an <code>epi_df</code> object, (allowing for grouping by geo value, time value, or any other variables).</li>
-</ul>
-<p>Functions in the package that operate directly on given variables do not begin with <code>epi</code>. For example:</p>
-<ul>
-<li>
-<code><a href="reference/growth_rate.html">growth_rate()</a></code>, for estimating the growth rate of a given signal at given time values, using various methodologies;</li>
-<li>
-<code><a href="reference/detect_outlr.html">detect_outlr()</a></code>, for detecting outliers in a given signal over time, using either built-in or custom methodologies.</li>
-</ul>
-</div>
-<div class="section level2">
-<h2 id="epi_archive-full-version-history-of-a-data-set">
-<code>epi_archive</code>: full version history of a data set<a class="anchor" aria-label="anchor" href="#epi_archive-full-version-history-of-a-data-set"></a>
-</h2>
-<p>The second main data structure in the package is called <a href="reference/epi_archive.html"><code>epi_archive</code></a>. This is a special class (R6 format) wrapped around a data table that stores the archive (version history) of some signal variables of interest.</p>
-<p>By convention, functions in the <code>epiprocess</code> package that operate on <code>epi_archive</code> objects begin with <code>epix</code> (the “x” is meant to remind you of “archive”). These are just wrapper functions around the public methods for the <code>epi_archive</code> R6 class. For example:</p>
-<ul>
-<li>
-<code><a href="reference/epix_as_of.html">epix_as_of()</a></code>, for generating a snapshot in <code>epi_df</code> format from the data archive, which represents the most up-to-date values of the signal variables, as of the specified version;</li>
-<li>
-<code><a href="reference/epix_fill_through_version.html">epix_fill_through_version()</a></code>, for filling in some fake version data following simple rules, for use when downstream methods expect an archive that is more up-to-date (e.g., if it is a forecasting deadline date and one of our data sources cannot be accessed to provide the latest versions of its data)</li>
-<li>
-<code><a href="reference/epix_merge.html">epix_merge()</a></code>, for merging two data archives with each other, with support for various approaches to handling when one of the archives is more up-to-date version-wise than the other;</li>
-<li>
-<code><a href="reference/epix_slide.html">epix_slide()</a></code>, for sliding a custom computation to a data archive over local windows in time, much like <code>epi_slide</code> for an <code>epi_df</code> object, but with one key difference: the sliding computation at any given reference time t is performed only on the <strong>data that would have been available as of t</strong>.</li>
-</ul>
+<p>Once <code>epiprocess</code> and <code>epidatr</code> are installed, you can use the following code to get started:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epidatr/" class="external-link">epidatr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://magrittr.tidyverse.org" class="external-link">magrittr</a></span><span class="op">)</span></span></code></pre></div>
+<p>Get COVID-19 confirmed cumulative case data from JHU CSSE for California, Florida, New York, and Texas, from March 1, 2020 to January 31, 2022</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/pub_covidcast.html" class="external-link">pub_covidcast</a></span><span class="op">(</span></span>
+<span>  source <span class="op">=</span> <span class="st">"jhu-csse"</span>,</span>
+<span>  signals <span class="op">=</span> <span class="st">"confirmed_cumulative_num"</span>,</span>
+<span>  geo_type <span class="op">=</span> <span class="st">"state"</span>,</span>
+<span>  time_type <span class="op">=</span> <span class="st">"day"</span>,</span>
+<span>  geo_values <span class="op">=</span> <span class="st">"ca,fl,ny,tx"</span>,</span>
+<span>  time_values <span class="op">=</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200301</span>, <span class="fl">20220131</span><span class="op">)</span>,</span>
+<span>  as_of <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-01-01"</span><span class="op">)</span></span>
+<span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, cases_cumulative <span class="op">=</span> <span class="va">value</span><span class="op">)</span></span>
+<span><span class="va">df</span></span>
+<span><span class="co">#&gt; # A tibble: 2,808 × 3</span></span>
+<span><span class="co">#&gt;   geo_value time_value cases_cumulative</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;     &lt;date&gt;                &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 ca        2020-03-01               19</span></span>
+<span><span class="co">#&gt; 2 fl        2020-03-01                0</span></span>
+<span><span class="co">#&gt; 3 ny        2020-03-01                0</span></span>
+<span><span class="co">#&gt; 4 tx        2020-03-01                0</span></span>
+<span><span class="co">#&gt; 5 ca        2020-03-02               23</span></span>
+<span><span class="co">#&gt; 6 fl        2020-03-02                1</span></span>
+<span><span class="co">#&gt; # ℹ 2,802 more rows</span></span></code></pre></div>
+<p>Convert the data to an epi_df object and sort by geo_value and time_value. You can work with an <code>epi_df</code> like you can with a <a href="https://tibble.tidyverse.org/" class="external-link">tibble</a> by using <a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a> verbs</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">edf</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="reference/epi_df.html">as_epi_df</a></span><span class="op">(</span>as_of <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-01-01"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="reference/arrange_canonical.html">arrange_canonical</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cases_daily <span class="op">=</span> <span class="va">cases_cumulative</span> <span class="op">-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/lead-lag.html" class="external-link">lag</a></span><span class="op">(</span><span class="va">cases_cumulative</span>, default <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">edf</span></span>
+<span><span class="co">#&gt; An `epi_df` object, 2,808 x 4 with metadata:</span></span>
+<span><span class="co">#&gt; * geo_type  = state</span></span>
+<span><span class="co">#&gt; * time_type = day</span></span>
+<span><span class="co">#&gt; * as_of     = 2024-01-01</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; # A tibble: 2,808 × 4</span></span>
+<span><span class="co">#&gt; # Groups:   geo_value [4]</span></span>
+<span><span class="co">#&gt;   geo_value time_value cases_cumulative cases_daily</span></span>
+<span><span class="co">#&gt; * &lt;chr&gt;     &lt;date&gt;                &lt;dbl&gt;       &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 ca        2020-03-01               19          19</span></span>
+<span><span class="co">#&gt; 2 ca        2020-03-02               23           4</span></span>
+<span><span class="co">#&gt; 3 ca        2020-03-03               29           6</span></span>
+<span><span class="co">#&gt; 4 ca        2020-03-04               40          11</span></span>
+<span><span class="co">#&gt; 5 ca        2020-03-05               50          10</span></span>
+<span><span class="co">#&gt; 6 ca        2020-03-06               68          18</span></span>
+<span><span class="co">#&gt; # ℹ 2,802 more rows</span></span></code></pre></div>
+<p>Compute the 7 day moving average of the confirmed daily cases for each geo_value</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">edf</span> <span class="op">&lt;-</span> <span class="va">edf</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="reference/epi_slide_opt.html">epi_slide_mean</a></span><span class="op">(</span><span class="va">cases_daily</span>, .window_size <span class="op">=</span> <span class="fl">7</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>smoothed_cases_daily <span class="op">=</span> <span class="va">slide_value_cases_daily</span><span class="op">)</span></span>
+<span><span class="va">edf</span></span>
+<span><span class="co">#&gt; An `epi_df` object, 2,808 x 5 with metadata:</span></span>
+<span><span class="co">#&gt; * geo_type  = state</span></span>
+<span><span class="co">#&gt; * time_type = day</span></span>
+<span><span class="co">#&gt; * as_of     = 2024-01-01</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; # A tibble: 2,808 × 5</span></span>
+<span><span class="co">#&gt; # Groups:   geo_value [4]</span></span>
+<span><span class="co">#&gt;   geo_value time_value cases_cumulative cases_daily smoothed_cases_daily</span></span>
+<span><span class="co">#&gt; * &lt;chr&gt;     &lt;date&gt;                &lt;dbl&gt;       &lt;dbl&gt;                &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 ca        2020-03-01               19          19                19   </span></span>
+<span><span class="co">#&gt; 2 ca        2020-03-02               23           4                11.5 </span></span>
+<span><span class="co">#&gt; 3 ca        2020-03-03               29           6                 9.67</span></span>
+<span><span class="co">#&gt; 4 ca        2020-03-04               40          11                10   </span></span>
+<span><span class="co">#&gt; 5 ca        2020-03-05               50          10                10   </span></span>
+<span><span class="co">#&gt; 6 ca        2020-03-06               68          18                11.3 </span></span>
+<span><span class="co">#&gt; # ℹ 2,802 more rows</span></span></code></pre></div>
+<p>Autoplot the confirmed daily cases for each geo_value</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">edf</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">smoothed_cases_daily</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-unnamed-chunk-7-1.png" width="90%" style="display: block; margin: auto;"></p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

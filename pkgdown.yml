@@ -2,15 +2,14 @@ pandoc: 3.1.11
 pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
-  aggregation: aggregation.html
-  archive: archive.html
   compactify: compactify.html
   correlation: correlation.html
+  epi_archive: epi_archive.html
+  epi_df: epi_df.html
   epiprocess: epiprocess.html
   growth_rate: growth_rate.html
   outliers: outliers.html
-  slide: slide.html
-last_built: 2024-09-27T21:11Z
+last_built: 2024-10-21T20:34Z
 urls:
   reference: https://cmu-delphi.github.io/epiprocess/reference
   article: https://cmu-delphi.github.io/epiprocess/articles

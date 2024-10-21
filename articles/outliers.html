@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-light me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-light me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,13 +34,13 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/slide.html">Slide a computation over signal values</a></li>
-    <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
-    <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals over space and time</a></li>
-    <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
+<li><a class="dropdown-item" href="../articles/epi_df.html">Working with epi_df objects and time series data</a></li>
+    <li><a class="dropdown-item" href="../articles/epi_archive.html">Working with epi_archive objects and data revisions</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
-    <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
+    <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
+    <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals across locations and time</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -75,32 +75,20 @@
 <p>This vignette describes functionality for detecting and correcting
 outliers in signals in the <code><a href="../reference/detect_outlr.html">detect_outlr()</a></code> and
 <code>correct_outlr()</code> functions provided in the
-<code>epiprocess</code> package. These functions is designed to be
+<code>epiprocess</code> package. These functions are designed to be
 modular and extendable, so that you can define your own outlier
 detection and correction routines and apply them to <code>epi_df</code>
 objects. We’ll demonstrate this using state-level daily reported
 COVID-19 case counts from FL and NJ.</p>
+<p>The dataset has 730 rows and 3 columns.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epidatr/" class="external-link">epidatr</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/pub_covidcast.html" class="external-link">pub_covidcast</a></span><span class="op">(</span></span>
-<span>  source <span class="op">=</span> <span class="st">"jhu-csse"</span>,</span>
-<span>  signals <span class="op">=</span> <span class="st">"confirmed_incidence_num"</span>,</span>
-<span>  geo_type <span class="op">=</span> <span class="st">"state"</span>,</span>
-<span>  time_type <span class="op">=</span> <span class="st">"day"</span>,</span>
-<span>  geo_values <span class="op">=</span> <span class="st">"fl,nj"</span>,</span>
-<span>  time_values <span class="op">=</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20210531</span><span class="op">)</span>,</span>
-<span>  as_of <span class="op">=</span> <span class="fl">20211028</span></span>
-<span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, cases <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/epi_df.html">as_epi_df</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>The dataset has 730 rows and 3 columns.</p>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">covid_incidence_outliers</span></span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time_value</span>, y <span class="op">=</span> <span class="va">cases</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
@@ -108,7 +96,7 @@ COVID-19 case counts from FL and NJ.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 counts"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="outliers_files/figure-html/unnamed-chunk-3-1.png" width="768"></p>
+<p><img src="outliers_files/figure-html/unnamed-chunk-3-1.png" width="90%" style="display: block; margin: auto;"></p>
 <p>There are multiple outliers in these data that a modeler may want to
 detect and correct. We’ll discuss those two tasks in turn.</p>
 <div class="section level2">
@@ -120,12 +108,12 @@ combine the results from those methods. Here, we’ll investigate outlier
 detection results from the following methods.</p>
 <ol style="list-style-type: decimal">
 <li>Detection based on a rolling median, using
-<code><a href="../reference/detect_outlr_rm.html">detect_outlr_rm()</a></code>, which computes a rolling median on with
+<code><a href="../reference/detect_outlr.html">detect_outlr_rm()</a></code>, which computes a rolling median on with
 a default window size of <code>n</code> time points centered at the time
 point under consideration, and then computes thresholds based on a
 multiplier times a rolling IQR computed on the residuals.</li>
 <li>Detection based on a seasonal-trend decomposition using LOESS (STL),
-using <code><a href="../reference/detect_outlr_stl.html">detect_outlr_stl()</a></code>, which is similar to the rolling
+using <code><a href="../reference/detect_outlr.html">detect_outlr_stl()</a></code>, which is similar to the rolling
 median method but replaces the rolling median with fitted values from
 STL.</li>
 <li>Detection based on an STL decomposition, but subtracting out the
@@ -138,8 +126,8 @@ one row per method, and whose columms specify the outlier detection
 function, any input arguments (only nondefault values need to be
 supplied), and an abbreviated name for the method used in tracking
 results. Abbreviations “rm” and “stl” can be used for the built-in
-detection functions <code><a href="../reference/detect_outlr_rm.html">detect_outlr_rm()</a></code> and
-<code><a href="../reference/detect_outlr_stl.html">detect_outlr_stl()</a></code>, respectively.</p>
+detection functions <code><a href="../reference/detect_outlr.html">detect_outlr_rm()</a></code> and
+<code><a href="../reference/detect_outlr.html">detect_outlr_stl()</a></code>, respectively.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">detection_methods</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
@@ -171,19 +159,19 @@ detection functions <code><a href="../reference/detect_outlr_rm.html">detect_out
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">detection_methods</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 3 × 3</span></span></span>
-<span><span class="co">##   method args             abbr          </span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> rm     <span style="color: #949494;">&lt;named list [2]&gt;</span> rm            </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> stl    <span style="color: #949494;">&lt;named list [3]&gt;</span> stl_seasonal  </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> stl    <span style="color: #949494;">&lt;named list [4]&gt;</span> stl_reseasonal</span></span></code></pre>
+<span><span class="va">detection_methods</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 3</span></span></span>
+<span><span class="co">#&gt;   <span style="font-weight: bold;">method</span> <span style="font-weight: bold;">args</span>             <span style="font-weight: bold;">abbr</span>          </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> rm     <span style="color: #949494;">&lt;named list [2]&gt;</span> rm            </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> stl    <span style="color: #949494;">&lt;named list [3]&gt;</span> stl_seasonal  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> stl    <span style="color: #949494;">&lt;named list [4]&gt;</span> stl_reseasonal</span></span></code></pre></div>
 <p>Additionally, we’ll form combined lower and upper thresholds,
 calculated as the median of the lower and upper thresholds from the
 methods at each time point. Note that using this combined median
 threshold is equivalent to using a majority vote across the base methods
 to determine whether a value is an outlier.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
@@ -195,43 +183,40 @@ to determine whether a value is an outlier.</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">outlier_info</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Adding missing grouping variables: `geo_value`</span></span>
-<span><span class="co">## Adding missing grouping variables: `geo_value`</span></span>
-<span><span class="co">## Adding missing grouping variables: `geo_value`</span></span>
-<span><span class="co">## Adding missing grouping variables: `rm_geo_value`</span></span>
-<span><span class="co">## Adding missing grouping variables: `rm_geo_value`</span></span>
-<span><span class="co">## Adding missing grouping variables: `rm_geo_value`</span></span>
-<span><span class="co">## Adding missing grouping variables: `geo_value`</span></span>
-<span><span class="co">## Adding missing grouping variables: `geo_value`</span></span>
-<span><span class="co">## Adding missing grouping variables: `geo_value`</span></span>
-<span><span class="co">## Adding missing grouping variables: `rm_geo_value`</span></span>
-<span><span class="co">## Adding missing grouping variables: `rm_geo_value`</span></span>
-<span><span class="co">## Adding missing grouping variables: `rm_geo_value`</span></span></code></pre>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## An `epi_df` object, 6 x 18 with metadata:</span></span>
-<span><span class="co">## * geo_type  = state</span></span>
-<span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2024-08-23 02:40:18.860591</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 18</span></span></span>
-<span><span class="co">##   geo_value time_value cases rm_geo_value rm_lower rm_upper rm_replacement</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> fl        2020-06-01   667            0    345      <span style="text-decoration: underline;">2</span>195             667</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> nj        2020-06-01   486            0     64.4     926.            486</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> fl        2020-06-02   617            0    406.     <span style="text-decoration: underline;">2</span>169.            617</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> nj        2020-06-02   658            0    140.      841.            658</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> fl        2020-06-03  <span style="text-decoration: underline;">1</span>317            0    468.     <span style="text-decoration: underline;">2</span>142.           <span style="text-decoration: underline;">1</span>317</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> nj        2020-06-03   541            0    216       756             541</span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ 11 more variables: stl_seasonal_geo_value &lt;dbl&gt;, stl_seasonal_lower &lt;dbl&gt;,</span></span></span>
-<span><span class="co">## <span style="color: #949494;">#   stl_seasonal_upper &lt;dbl&gt;, stl_seasonal_replacement &lt;dbl&gt;,</span></span></span>
-<span><span class="co">## <span style="color: #949494;">#   stl_reseasonal_geo_value &lt;dbl&gt;, stl_reseasonal_lower &lt;dbl&gt;,</span></span></span>
-<span><span class="co">## <span style="color: #949494;">#   stl_reseasonal_upper &lt;dbl&gt;, stl_reseasonal_replacement &lt;dbl&gt;,</span></span></span>
-<span><span class="co">## <span style="color: #949494;">#   combined_lower &lt;dbl&gt;, combined_upper &lt;dbl&gt;, combined_replacement &lt;dbl&gt;</span></span></span></code></pre>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">outlier_info</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Adding missing grouping variables: `geo_value`</span></span>
+<span><span class="co">#&gt; Adding missing grouping variables: `geo_value`</span></span>
+<span><span class="co">#&gt; Adding missing grouping variables: `geo_value`</span></span>
+<span><span class="co">#&gt; Adding missing grouping variables: `rm_geo_value`</span></span>
+<span><span class="co">#&gt; Adding missing grouping variables: `rm_geo_value`</span></span>
+<span><span class="co">#&gt; Adding missing grouping variables: `rm_geo_value`</span></span>
+<span><span class="co">#&gt; Adding missing grouping variables: `geo_value`</span></span>
+<span><span class="co">#&gt; Adding missing grouping variables: `geo_value`</span></span>
+<span><span class="co">#&gt; Adding missing grouping variables: `geo_value`</span></span>
+<span><span class="co">#&gt; Adding missing grouping variables: `rm_geo_value`</span></span>
+<span><span class="co">#&gt; Adding missing grouping variables: `rm_geo_value`</span></span>
+<span><span class="co">#&gt; Adding missing grouping variables: `rm_geo_value`</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="co">#&gt; An `epi_df` object, 6 x 18 with metadata:</span></span>
+<span><span class="co">#&gt; * geo_type  = state</span></span>
+<span><span class="co">#&gt; * time_type = day</span></span>
+<span><span class="co">#&gt; * as_of     = 2021-10-28</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 18</span></span></span>
+<span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">rm_geo_value</span> <span style="font-weight: bold;">rm_lower</span> <span style="font-weight: bold;">rm_upper</span> <span style="font-weight: bold;">rm_replacement</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> fl        2020-06-01   667            0    345      <span style="text-decoration: underline;">2</span>195             667</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> nj        2020-06-01   486            0     64.4     926.            486</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> fl        2020-06-02   617            0    406.     <span style="text-decoration: underline;">2</span>169.            617</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> nj        2020-06-02   658            0    140.      841.            658</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> fl        2020-06-03  <span style="text-decoration: underline;">1</span>317            0    468.     <span style="text-decoration: underline;">2</span>142.           <span style="text-decoration: underline;">1</span>317</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> nj        2020-06-03   541            0    216       756             541</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 11 more variables: </span><span style="color: #949494; font-weight: bold;">stl_seasonal_geo_value</span><span style="color: #949494;"> &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   </span><span style="color: #949494; font-weight: bold;">stl_seasonal_lower</span><span style="color: #949494;"> &lt;dbl&gt;, </span><span style="color: #949494; font-weight: bold;">stl_seasonal_upper</span><span style="color: #949494;"> &lt;dbl&gt;, …</span></span></span></code></pre></div>
 <p>To visualize the results, we first define a convenience function for
 plotting.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plot outlier detection bands and/or points identified as outliers</span></span>
 <span><span class="va">plot_outlr</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">signal</span>, <span class="va">method_abbr</span>, <span class="va">bands</span> <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">points</span> <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                       <span class="va">facet_vars</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">geo_value</span><span class="op">)</span>, <span class="va">nrow</span> <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">ncol</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -281,7 +266,7 @@ plotting.</p>
 <span><span class="op">}</span></span></code></pre></div>
 <p>Now we produce plots for each state at a time, faceting by the
 detection method.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">method_abbr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">detection_methods</span><span class="op">$</span><span class="va">abbr</span>, <span class="st">"combined"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">plot_outlr</span><span class="op">(</span><span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">geo_value</span> <span class="op">==</span> <span class="st">"fl"</span><span class="op">)</span>, <span class="va">cases</span>, <span class="va">method_abbr</span>,</span>
@@ -291,30 +276,31 @@ detection method.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
 <span>    x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 counts"</span>, color <span class="op">=</span> <span class="st">"Method"</span>,</span>
 <span>    shape <span class="op">=</span> <span class="st">"Method"</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning</span></span>
-<span><span class="co">## -Inf</span></span>
-<span><span class="co">## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning</span></span>
-<span><span class="co">## -Inf</span></span>
-<span><span class="co">## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning</span></span>
-<span><span class="co">## -Inf</span></span></code></pre>
-<p><img src="outliers_files/figure-html/unnamed-chunk-7-1.png" width="864"></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">plot_outlr</span><span class="op">(</span><span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">geo_value</span> <span class="op">==</span> <span class="st">"nj"</span><span class="op">)</span>, <span class="va">cases</span>, <span class="va">method_abbr</span>,</span>
+<span>  <span class="op">)</span></span>
+<span><span class="co">#&gt; Warning in max(ids, na.rm = TRUE): no non-missing arguments to max;</span></span>
+<span><span class="co">#&gt; returning -Inf</span></span>
+<span><span class="co">#&gt; Warning in max(ids, na.rm = TRUE): no non-missing arguments to max;</span></span>
+<span><span class="co">#&gt; returning -Inf</span></span>
+<span><span class="co">#&gt; Warning in max(ids, na.rm = TRUE): no non-missing arguments to max;</span></span>
+<span><span class="co">#&gt; returning -Inf</span></span></code></pre></div>
+<p><img src="outliers_files/figure-html/unnamed-chunk-7-1.png" width="90%" style="display: block; margin: auto;"></p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu">plot_outlr</span><span class="op">(</span><span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">geo_value</span> <span class="op">==</span> <span class="st">"nj"</span><span class="op">)</span>, <span class="va">cases</span>, <span class="va">method_abbr</span>,</span>
 <span>  facet_vars <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">method</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
 <span>    x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 counts"</span>, color <span class="op">=</span> <span class="st">"Method"</span>,</span>
 <span>    shape <span class="op">=</span> <span class="st">"Method"</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning</span></span>
-<span><span class="co">## -Inf</span></span>
-<span><span class="co">## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning</span></span>
-<span><span class="co">## -Inf</span></span>
-<span><span class="co">## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning</span></span>
-<span><span class="co">## -Inf</span></span></code></pre>
-<p><img src="outliers_files/figure-html/unnamed-chunk-7-2.png" width="864"></p>
+<span>  <span class="op">)</span></span>
+<span><span class="co">#&gt; Warning in max(ids, na.rm = TRUE): no non-missing arguments to max;</span></span>
+<span><span class="co">#&gt; returning -Inf</span></span>
+<span><span class="co">#&gt; Warning in max(ids, na.rm = TRUE): no non-missing arguments to max;</span></span>
+<span><span class="co">#&gt; returning -Inf</span></span>
+<span><span class="co">#&gt; Warning in max(ids, na.rm = TRUE): no non-missing arguments to max;</span></span>
+<span><span class="co">#&gt; returning -Inf</span></span></code></pre></div>
+<p><img src="outliers_files/figure-html/unnamed-chunk-7-2.png" width="90%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
 <h2 id="outlier-correction">Outlier correction<a class="anchor" aria-label="anchor" href="#outlier-correction"></a>
@@ -324,40 +310,36 @@ replacement values returned by each outlier detection method. Below we
 use the replacement value from the combined method, which is defined by
 the median of replacement values from the base methods at each time
 point.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cases_corrected <span class="op">=</span> <span class="va">combined_replacement</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span>, <span class="va">cases_corrected</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">y</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">cases</span> <span class="op">!=</span> <span class="va">cases_corrected</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## An `epi_df` object, 36 x 4 with metadata:</span></span>
-<span><span class="co">## * geo_type  = state</span></span>
-<span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2024-08-23 02:40:18.860591</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 36 × 4</span></span></span>
-<span><span class="co">##    geo_value time_value cases cases_corrected</span></span>
-<span><span class="co">##  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> fl        2020-07-12 <span style="text-decoration: underline;">15</span>300           <span style="text-decoration: underline;">9</span>673.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> nj        2020-07-19    -<span style="color: #BB0000;">8</span>            284.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> nj        2020-07-31   748            576.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> fl        2020-08-12  <span style="text-decoration: underline;">8</span>109           <span style="text-decoration: underline;">6</span>956.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> nj        2020-08-13   694            392.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> nj        2020-08-14   619            389.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> nj        2020-08-16    40            203 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> nj        2020-08-22   555            345.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> fl        2020-09-01  <span style="text-decoration: underline;">7</span>569           <span style="text-decoration: underline;">2</span>759.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> nj        2020-09-25   962            784 </span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ 26 more rows</span></span></span></code></pre>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">y</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time_value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="va">y</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">cases</span> <span class="op">!=</span> <span class="va">cases_corrected</span><span class="op">)</span></span>
+<span><span class="co">#&gt; An `epi_df` object, 36 x 4 with metadata:</span></span>
+<span><span class="co">#&gt; * geo_type  = state</span></span>
+<span><span class="co">#&gt; * time_type = day</span></span>
+<span><span class="co">#&gt; * as_of     = 2021-10-28</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 36 × 4</span></span></span>
+<span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">cases_corrected</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> fl        2020-07-12 <span style="text-decoration: underline;">15</span>300           <span style="text-decoration: underline;">9</span>673.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> nj        2020-07-19    -<span style="color: #BB0000;">8</span>            284.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> nj        2020-07-31   748            576.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> fl        2020-08-12  <span style="text-decoration: underline;">8</span>109           <span style="text-decoration: underline;">6</span>956.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> nj        2020-08-13   694            392.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> nj        2020-08-14   619            389.</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 30 more rows</span></span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">y</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time_value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">cases</span><span class="op">)</span>, linetype <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">cases_corrected</span><span class="op">)</span>, col <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fl">0</span>, linetype <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 counts"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="outliers_files/figure-html/unnamed-chunk-8-1.png" width="768"></p>
+<p><img src="outliers_files/figure-html/unnamed-chunk-8-1.png" width="90%" style="display: block; margin: auto;"></p>
 <p>More advanced correction functionality will be coming at some point
 in the future.</p>
 </div>

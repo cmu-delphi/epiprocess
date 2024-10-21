@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-light me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-light me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -19,13 +19,13 @@
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/slide.html">Slide a computation over signal values</a></li>
-    <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
-    <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals over space and time</a></li>
-    <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/epi_df.html">Working with epi_df objects and time series data</a></li>
+    <li><a class="dropdown-item" href="../articles/epi_archive.html">Working with epi_archive objects and data revisions</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
-    <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
+    <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
+    <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals across locations and time</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -45,7 +45,7 @@
     <div class="section level2">
       <h2 id="-epi-df-basics"><code>epi_df</code> basics<a class="anchor" aria-label="anchor" href="#-epi-df-basics"></a></h2>
 
-      <div class="section-desc"><p>Details on <code>epi_df</code> format, and basic functionality.</p></div>
+      <div class="section-desc"><p>Constructors and information for <code>epi_df</code> objects.</p></div>
 
 
     </div><div class="section level2">
@@ -54,6 +54,83 @@
 
 
       <dl><dt>
+
+          <code><a href="epi_df.html">as_epi_df()</a></code> <code><a href="epi_df.html">new_epi_df()</a></code> <code><a href="epi_df.html">is_epi_df()</a></code>
+
+        </dt>
+        <dd><code>epi_df</code> object</dd>
+      </dl><dl><dt>
+
+          <code><a href="print.epi_df.html">print(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">summary(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">group_by(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">ungroup(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">group_modify(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">unnest(<i>&lt;epi_df&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Base S3 methods for an <code>epi_df</code> object</dd>
+      </dl><dl><dt>
+
+          <code><a href="group_epi_df.html">group_epi_df()</a></code>
+
+        </dt>
+        <dd>Group an <code>epi_df</code> object by default keys</dd>
+      </dl><dl><dt>
+
+          <code><a href="autoplot.epi_df.html">autoplot(<i>&lt;epi_df&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Automatically plot an epi_df</dd>
+      </dl></div><div class="section level2">
+      <h2 id="-epi-df-manipulation"><code>epi_df</code> manipulation<a class="anchor" aria-label="anchor" href="#-epi-df-manipulation"></a></h2>
+
+      <div class="section-desc"><p>Functions operating on <code>epi_df</code> objects.</p></div>
+
+
+    </div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="complete.epi_df.html">complete(<i>&lt;epi_df&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Complete epi_df</dd>
+      </dl><dl><dt>
+
+          <code><a href="epi_slide.html">epi_slide()</a></code>
+
+        </dt>
+        <dd>Slide a function over variables in an <code>epi_df</code> object</dd>
+      </dl><dl><dt>
+
+          <code><a href="epi_slide_opt.html">epi_slide_opt()</a></code> <code><a href="epi_slide_opt.html">epi_slide_mean()</a></code> <code><a href="epi_slide_opt.html">epi_slide_sum()</a></code>
+
+        </dt>
+        <dd>Optimized slide functions for common cases</dd>
+      </dl><dl><dt>
+
+          <code><a href="sum_groups_epi_df.html">sum_groups_epi_df()</a></code>
+
+        </dt>
+        <dd>Aggregate an <code>epi_df</code> object</dd>
+      </dl><dl><dt>
+
+          <code><a href="epi_cor.html">epi_cor()</a></code>
+
+        </dt>
+        <dd>Compute correlations between variables in an <code>epi_df</code> object</dd>
+      </dl><dl><dt>
+
+          <code><a href="detect_outlr.html">detect_outlr()</a></code> <code><a href="detect_outlr.html">detect_outlr_rm()</a></code> <code><a href="detect_outlr.html">detect_outlr_stl()</a></code>
+
+        </dt>
+        <dd>Detect outliers</dd>
+      </dl><dl><dt>
+
+          <code><a href="growth_rate.html">growth_rate()</a></code>
+
+        </dt>
+        <dd>Estimate growth rate</dd>
+      </dl><dl><dt>
 
           <code><a href="as_tibble.epi_df.html">as_tibble(<i>&lt;epi_df&gt;</i>)</a></code>
 
@@ -65,152 +142,10 @@
 
         </dt>
         <dd>Convert to tsibble format</dd>
-      </dl><dl><dt>
-
-          <code><a href="autoplot.epi_df.html">autoplot(<i>&lt;epi_df&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Automatically plot an epi_df</dd>
-      </dl><dl><dt>
-
-          <code><a href="complete.epi_df.html">complete(<i>&lt;epi_df&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Complete epi_df</dd>
-      </dl><dl><dt>
-
-          <code><a href="epi_df.html">as_epi_df()</a></code> <code><a href="epi_df.html">new_epi_df()</a></code>
-
-        </dt>
-        <dd><code>epi_df</code> object</dd>
-      </dl><dl><dt>
-
-          <code><a href="group_epi_df.html">group_epi_df()</a></code>
-
-        </dt>
-        <dd>Group an <code>epi_df</code> object by default keys</dd>
-      </dl><dl><dt>
-
-          <code><a href="is_epi_df.html">is_epi_df()</a></code>
-
-        </dt>
-        <dd>Test for <code>epi_df</code> format</dd>
-      </dl><dl><dt>
-
-          <code><a href="print.epi_df.html">print(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">group_by(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">ungroup(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">group_modify(<i>&lt;epi_df&gt;</i>)</a></code> <code><a href="print.epi_df.html">unnest(<i>&lt;epi_df&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Base S3 methods for an <code>epi_df</code> object</dd>
-      </dl><dl><dt>
-
-          <code><a href="sum_groups_epi_df.html">sum_groups_epi_df()</a></code>
-
-        </dt>
-        <dd>Aggregate an <code>epi_df</code> object</dd>
-      </dl><dl><dt>
-
-          <code><a href="summary.epi_df.html">summary(<i>&lt;epi_df&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize <code>epi_df</code> object</dd>
-      </dl><dl><dt>
-
-          <code><a href="geo_column_names.html">geo_column_names()</a></code>
-
-        </dt>
-        <dd>potential geo_value columns</dd>
-      </dl><dl><dt>
-
-          <code><a href="time_column_names.html">time_column_names()</a></code>
-
-        </dt>
-        <dd>potential time_value columns</dd>
-      </dl><dl><dt>
-
-          <code><a href="version_column_names.html">version_column_names()</a></code>
-
-        </dt>
-        <dd>potential version columns</dd>
-      </dl></div><div class="section level2">
-      <h2 id="-epi-functions"><code>epi_*()</code> functions<a class="anchor" aria-label="anchor" href="#-epi-functions"></a></h2>
-
-      <div class="section-desc"><p>Functions that act on <code>epi_df</code> objects.</p></div>
-
-
-    </div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="epi_slide.html">epi_slide()</a></code>
-
-        </dt>
-        <dd>Slide a function over variables in an <code>epi_df</code> object</dd>
-      </dl><dl><dt>
-
-          <code><a href="epi_slide_mean.html">epi_slide_mean()</a></code>
-
-        </dt>
-        <dd>Optimized slide function for performing rolling averages on an <code>epi_df</code> object</dd>
-      </dl><dl><dt>
-
-          <code><a href="epi_slide_sum.html">epi_slide_sum()</a></code>
-
-        </dt>
-        <dd>Optimized slide function for performing rolling sums on an <code>epi_df</code> object</dd>
-      </dl><dl><dt>
-
-          <code><a href="epi_slide_opt.html">epi_slide_opt()</a></code>
-
-        </dt>
-        <dd>Optimized slide function for performing common rolling computations on an <code>epi_df</code> object</dd>
-      </dl><dl><dt>
-
-          <code><a href="epi_cor.html">epi_cor()</a></code>
-
-        </dt>
-        <dd>Compute correlations between variables in an <code>epi_df</code> object</dd>
-      </dl></div><div class="section level2">
-      <h2 id="vector-functions">Vector functions<a class="anchor" aria-label="anchor" href="#vector-functions"></a></h2>
-
-      <div class="section-desc"><p>Functions that act directly on signal variables.</p></div>
-
-
-    </div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="growth_rate.html">growth_rate()</a></code>
-
-        </dt>
-        <dd>Estimate growth rate</dd>
-      </dl><dl><dt>
-
-          <code><a href="detect_outlr.html">detect_outlr()</a></code>
-
-        </dt>
-        <dd>Detect outliers</dd>
-      </dl><dl><dt>
-
-          <code><a href="detect_outlr_rm.html">detect_outlr_rm()</a></code>
-
-        </dt>
-        <dd>Detect outliers based on a rolling median</dd>
-      </dl><dl><dt>
-
-          <code><a href="detect_outlr_stl.html">detect_outlr_stl()</a></code>
-
-        </dt>
-        <dd>Detect outliers based on an STL decomposition</dd>
       </dl></div><div class="section level2">
       <h2 id="-epi-archive-basics"><code>epi_archive</code> basics<a class="anchor" aria-label="anchor" href="#-epi-archive-basics"></a></h2>
 
-      <div class="section-desc"><p>Details on <code>epi_archive</code>, and basic functionality.</p></div>
+      <div class="section-desc"><p>Constructors and information for <code>epi_archive</code> objects.</p></div>
 
 
     </div><div class="section level2">
@@ -219,41 +154,11 @@
 
 
       <dl><dt>
-
-          <code><a href="archive_cases_dv_subset.html">archive_cases_dv_subset</a></code>
-
-        </dt>
-        <dd>Subset of daily doctor visits and cases in archive format</dd>
-      </dl><dl><dt>
-
-          <code><a href="clone.html">clone()</a></code>
-
-        </dt>
-        <dd>Clone an <code>epi_archive</code> object.</dd>
-      </dl><dl><dt>
 
           <code><a href="epi_archive.html">new_epi_archive()</a></code> <code><a href="epi_archive.html">validate_epi_archive()</a></code> <code><a href="epi_archive.html">as_epi_archive()</a></code>
 
         </dt>
         <dd><code>epi_archive</code> object</dd>
-      </dl><dl><dt>
-
-          <code><a href="epix_slide.html">epix_slide()</a></code>
-
-        </dt>
-        <dd>Slide a function over variables in an <code>epi_archive</code> or <code>grouped_epi_archive</code></dd>
-      </dl><dl><dt>
-
-          <code><a href="epix_truncate_versions_after.html">epix_truncate_versions_after()</a></code>
-
-        </dt>
-        <dd>Filter an <code>epi_archive</code> object to keep only older versions</dd>
-      </dl><dl><dt>
-
-          <code><a href="group_by.epi_archive.html">group_by(<i>&lt;epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by_drop_default(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_vars(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">groups(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">ungroup(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">is_grouped_epi_archive()</a></code>
-
-        </dt>
-        <dd><code>group_by</code> and related methods for <code>epi_archive</code>, <code>grouped_epi_archive</code></dd>
       </dl><dl><dt>
 
           <code><a href="print.epi_archive.html">print(<i>&lt;epi_archive&gt;</i>)</a></code>
@@ -262,14 +167,20 @@
         <dd>Print information about an <code>epi_archive</code> object</dd>
       </dl><dl><dt>
 
-          <code><a href="revision_summary.html">revision_summary()</a></code>
+          <code><a href="clone.html">clone()</a></code>
 
         </dt>
-        <dd>A function to describe revision behavior for an archive</dd>
-      </dl></div><div class="section level2">
-      <h2 id="-epix-functions"><code>epix_*()</code> functions<a class="anchor" aria-label="anchor" href="#-epix-functions"></a></h2>
+        <dd>Clone an <code>epi_archive</code> object.</dd>
+      </dl><dl><dt>
 
-      <div class="section-desc"><p>Functions that act on an <code>epi_archive</code> and/or <code>grouped_epi_archive</code> object.</p></div>
+          <code><a href="group_by.epi_archive.html">group_by(<i>&lt;epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by_drop_default(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_vars(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">groups(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">ungroup(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">is_grouped_epi_archive()</a></code>
+
+        </dt>
+        <dd><code>group_by</code> and related methods for <code>epi_archive</code>, <code>grouped_epi_archive</code></dd>
+      </dl></div><div class="section level2">
+      <h2 id="-epi-archive-manipulation"><code>epi_archive</code> manipulation<a class="anchor" aria-label="anchor" href="#-epi-archive-manipulation"></a></h2>
+
+      <div class="section-desc"><p>Functions operating on <code>epi_archive</code> objects.</p></div>
 
 
     </div><div class="section level2">
@@ -285,10 +196,10 @@
         <dd>Generate a snapshot from an <code>epi_archive</code> object</dd>
       </dl><dl><dt>
 
-          <code><a href="epix_fill_through_version.html">epix_fill_through_version()</a></code>
+          <code><a href="epix_slide.html">epix_slide()</a></code>
 
         </dt>
-        <dd>Fill <code>epi_archive</code> unobserved history</dd>
+        <dd>Slide a function over variables in an <code>epi_archive</code> or <code>grouped_epi_archive</code></dd>
       </dl><dl><dt>
 
           <code><a href="epix_merge.html">epix_merge()</a></code>
@@ -297,22 +208,22 @@
         <dd>Merge two <code>epi_archive</code> objects</dd>
       </dl><dl><dt>
 
-          <code><a href="epix_slide.html">epix_slide()</a></code>
+          <code><a href="revision_summary.html">revision_summary()</a></code>
 
         </dt>
-        <dd>Slide a function over variables in an <code>epi_archive</code> or <code>grouped_epi_archive</code></dd>
+        <dd>A function to describe revision behavior for an archive.</dd>
+      </dl><dl><dt>
+
+          <code><a href="epix_fill_through_version.html">epix_fill_through_version()</a></code>
+
+        </dt>
+        <dd>Fill <code>epi_archive</code> unobserved history</dd>
       </dl><dl><dt>
 
           <code><a href="epix_truncate_versions_after.html">epix_truncate_versions_after()</a></code>
 
         </dt>
         <dd>Filter an <code>epi_archive</code> object to keep only older versions</dd>
-      </dl><dl><dt>
-
-          <code><a href="group_by.epi_archive.html">group_by(<i>&lt;epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_by_drop_default(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">group_vars(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">groups(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">ungroup(<i>&lt;grouped_epi_archive&gt;</i>)</a></code> <code><a href="group_by.epi_archive.html">is_grouped_epi_archive()</a></code>
-
-        </dt>
-        <dd><code>group_by</code> and related methods for <code>epi_archive</code>, <code>grouped_epi_archive</code></dd>
       </dl></div><div class="section level2">
       <h2 id="example-data">Example data<a class="anchor" aria-label="anchor" href="#example-data"></a></h2>
 
@@ -326,98 +237,41 @@
 
       <dl><dt>
 
+          <code><a href="cases_deaths_subset.html">cases_deaths_subset</a></code>
+
+        </dt>
+        <dd>Subset of JHU daily state COVID-19 cases and deaths from 6 states</dd>
+      </dl><dl><dt>
+
           <code><a href="archive_cases_dv_subset.html">archive_cases_dv_subset</a></code>
 
         </dt>
-        <dd>Subset of daily doctor visits and cases in archive format</dd>
+        <dd>Subset of daily COVID-19 doctor visits and cases from 6 states in archive format</dd>
       </dl><dl><dt>
 
-          <code><a href="incidence_num_outlier_example.html">incidence_num_outlier_example</a></code>
+          <code><a href="covid_incidence_county_subset.html">covid_incidence_county_subset</a></code>
 
         </dt>
-        <dd>Subset of JHU daily cases from California and Florida</dd>
+        <dd>Subset of JHU daily COVID-19 cases from counties in Massachusetts and Vermont</dd>
       </dl><dl><dt>
 
-          <code><a href="jhu_csse_county_level_subset.html">jhu_csse_county_level_subset</a></code>
+          <code><a href="covid_incidence_outliers.html">covid_incidence_outliers</a></code>
 
         </dt>
-        <dd>Subset of JHU daily cases from counties in Massachusetts and Vermont</dd>
+        <dd>Subset of JHU daily COVID-19 cases from New Jersey and Florida</dd>
       </dl><dl><dt>
 
-          <code><a href="jhu_csse_daily_subset.html">jhu_csse_daily_subset</a></code>
+          <code><a href="covid_case_death_rates_extended.html">covid_case_death_rates_extended</a></code>
 
         </dt>
-        <dd>Subset of JHU daily state cases and deaths</dd>
-      </dl></div><div class="section level2">
-      <h2 id="basic-automatic-plotting">Basic automatic plotting<a class="anchor" aria-label="anchor" href="#basic-automatic-plotting"></a></h2>
-
-
-
-
-    </div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="autoplot.epi_df.html">autoplot(<i>&lt;epi_df&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Automatically plot an epi_df</dd>
-      </dl></div><div class="section level2">
-      <h2 id="advanced-internals">Advanced internals<a class="anchor" aria-label="anchor" href="#advanced-internals"></a></h2>
-
-
-
-
-    </div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="compactify.html">compactify</a></code>
-
-        </dt>
-        <dd>Compactify</dd>
+        <dd>JHU daily COVID-19 cases and deaths rates from all states</dd>
       </dl></div><div class="section level2">
 
 
 
 
-      <dl><dt>
 
-          <code><a href="epiprocess.html">epiprocess-package</a></code> <code><a href="epiprocess.html">epiprocess</a></code>
-
-        </dt>
-        <dd>epiprocess: Tools for basic signal processing in epidemiology</dd>
-      </dl><dl><dt>
-
-          <code><a href="max_version_with_row_in.html">max_version_with_row_in()</a></code>
-
-        </dt>
-        <dd><code>max(x$version)</code>, with error if <code>x</code> has 0 rows</dd>
-      </dl><dl><dt>
-
-          <code><a href="next_after.html">next_after()</a></code>
-
-        </dt>
-        <dd>Get the next possible value greater than <code>x</code> of the same type</dd>
-      </dl><dl><dt>
-
-          <code><a href="guess_period.html">guess_period()</a></code>
-          <span class="badge lifecycle lifecycle-experimental">experimental</span>
-        </dt>
-        <dd>Use max valid period as guess for <code>period</code> of <code>time_values</code></dd>
-      </dl><dl><dt>
-
-          <code><a href="key_colnames.html">key_colnames()</a></code>
-
-        </dt>
-        <dd>Grab any keys associated to an epi_df</dd>
-      </dl></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
