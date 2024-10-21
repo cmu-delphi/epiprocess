@@ -1,7 +1,7 @@
-Type: Package
 Package: epiprocess
+Type: Package
 Title: Tools for basic signal processing in epidemiology
-Version: 0.9.5
+Version: 0.9.6
 Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", , "lcbrooks@andrew.cmu.edu", role = c("aut", "cre")),
@@ -28,11 +28,11 @@ Authors@R: c(
     person("Carnegie Mellon University Delphi Group", role = "dtc",
             comment = "Owner of claims-based CLI data from the Delphi Epidata API")
   )
-Description: This package introduces a common data structure for
-    epidemiological data reported by location and time, provides another
-    data structure to work with revisions to these data sets over time,
-    and offers associated utilities to perform basic signal processing
-    tasks.
+Description: This package introduces common data structures for working with
+    epidemiological data reported by location and time and offers associated
+    utilities to perform basic signal processing tasks. The package is designed
+    to be used in conjunction with `epipredict` for building and evaluating
+    epidemiological models.
 License: MIT + file LICENSE
 URL: https://cmu-delphi.github.io/epiprocess/
 Depends:
@@ -62,6 +62,7 @@ Imports:
 Suggests:
     devtools,
     epidatr,
+    here,
     knitr,
     outbreaks,
     readr,
@@ -88,7 +89,7 @@ Collate:
     'correlation.R'
     'epi_df.R'
     'epi_df_forbidden_methods.R'
-    'epiprocess.R'
+    'epiprocess-package.R'
     'group_by_epi_df_methods.R'
     'methods-epi_archive.R'
     'grouped_epi_archive.R'

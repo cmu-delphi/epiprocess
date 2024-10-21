@@ -7,6 +7,10 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r, include = FALSE}
+source(here::here("vignettes", "_common.R"))
+```
+
 ## Removing redundant update data to save space
 
 We do not need to store version update rows that look like the last version of

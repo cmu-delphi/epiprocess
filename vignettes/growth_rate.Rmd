@@ -7,6 +7,10 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r, include = FALSE}
+source(here::here("vignettes", "_common.R"))
+```
+
 A basic way of assessing growth in a signal is to look at its relative change
 over two neighboring time windows. The `epiprocess` package provides a function
 `growth_rate()` to compute such relative changes, as well as more sophisticated
@@ -105,7 +109,6 @@ red) and below -1% (in blue), faceting by geo value.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 4}
 library(ggplot2)
-theme_set(theme_bw())
 
 upper <- 0.01
 lower <- -0.01

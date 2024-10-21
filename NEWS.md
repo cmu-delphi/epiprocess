@@ -27,6 +27,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   using a formula to specify the slide computation, and other bits of forgotten
   syntax.
 - Improved validation of `.window_size` arguments.
+- Rewrote a lot of the package documentation to be more consistent and
+  informative. Simplified and streamlined the vignettes.
 
 ## Cleanup
 

@@ -8,6 +8,7 @@
 \alias{as_epi_df.tbl_ts}
 \alias{new_epi_df}
 \alias{epi_df}
+\alias{is_epi_df}
 \title{\code{epi_df} object}
 \usage{
 as_epi_df(x, ...)
@@ -35,10 +36,11 @@ new_epi_df(
   other_keys = character(),
   ...
 )
+
+is_epi_df(x)
 }
 \arguments{
-\item{x}{An \code{epi_df}, \code{data.frame}, \link[tibble:tibble]{tibble::tibble}, or \link[tsibble:tsibble]{tsibble::tsibble}
-to be converted}
+\item{x}{An object.}
 
 \item{...}{Additional arguments passed to methods.}
 
@@ -64,11 +66,15 @@ as a character vector here (typical examples are "age" or sub-geographies).}
 }
 \value{
 An \code{epi_df} object.
+
+\code{TRUE} if the object inherits from \code{epi_df}.
 }
 \description{
-An \code{epi_df} is a tibble with certain minimal column structure and metadata.
-It can be seen as a snapshot of a data set that contains the most
-up-to-date values of some signal variables of interest, as of a given time.
+One of the two main data structures for storing time series in \code{epiprocess}.
+It is simply tibble with at least two columns, \code{geo_value} and \code{time_value},
+that provide the keys for the time series. It can have any other columns,
+which can be seen as measured variables at each key. In brief, an \code{epi_df}
+represents a snapshot of an epidemiological data set at a point in time.
 }
 \details{
 An \code{epi_df} is a tibble with (at least) the following columns:
@@ -109,6 +115,9 @@ of an \code{epi_df} object. In brief, we can think of an \code{epi_df} object as
 single snapshot of a data set that contains the most up-to-date values of
 the signals variables, as of the time specified in the \code{as_of} field.
 
+If an \code{epi_df} ever loses its \code{geo_value} or \code{time_value} columns, it will
+decay into a regular tibble.
+
 A companion object is the \code{epi_archive} object, which contains the full
 version history of a given data set. Revisions are common in many types of
 epidemiological data streams, and paying attention to data revisions can be
@@ -117,15 +126,7 @@ the documentation for \code{\link{epi_archive}} for more details on how
 data versioning works in the \code{epiprocess} package (including how to
 generate \code{epi_df} objects, as data snapshots, from an \code{epi_archive}
 object).
-}
-\section{Functions}{
-\itemize{
-\item \code{as_epi_df()}: The preferred way of constructing \code{epi_df}s
-
-\item \code{new_epi_df()}: Lower-level constructor for \code{epi_df} object
-
-}}
-\section{Geo Types}{
+\subsection{Geo Types}{
 
 The following geo types are recognized in an \code{epi_df}.
 \itemize{
@@ -146,7 +147,7 @@ alpha-2 country codes (lowercase).
 An unrecognizable geo type is labeled "custom".
 }
 
-\section{Time Types}{
+\subsection{Time Types}{
 
 The following time types are recognized in an \code{epi_df}.
 \itemize{
@@ -162,37 +163,41 @@ arbitrary (as to whether a week starts on a Monday, Tuesday); coded as a
 
 An unrecognizable time type is labeled "custom".
 }
+}
+\section{Functions}{
+\itemize{
+\item \code{as_epi_df()}: The preferred way of constructing \code{epi_df}s
 
+\item \code{new_epi_df()}: Lower-level constructor for \code{epi_df} object
+
+}}
 \examples{
 # Convert a `tsibble` that has county code as an extra key
 # Notice that county code should be a character string to preserve any leading zeroes
-
 ex1_input <- tibble::tibble(
-  geo_value = rep(c("ca", "fl", "pa"), each = 3),
-  county_code = c(
+  geo_value = c(
     "06059", "06061", "06067",
     "12111", "12113", "12117",
     "42101", "42103", "42105"
   ),
+  state_name = rep(c("ca", "fl", "pa"), each = 3),
   time_value = rep(seq(as.Date("2020-06-01"), as.Date("2020-06-03"),
     by = "day"
   ), length.out = length(geo_value)),
   value = 1:length(geo_value) + 0.01 * rnorm(length(geo_value))
 ) \%>\%
-  tsibble::as_tsibble(index = time_value, key = c(geo_value, county_code))
+  tsibble::as_tsibble(index = time_value, key = c(geo_value, state_name))
 
-# The `other_keys` metadata (`"county_code"` in this case) is automatically
+# The `other_keys` metadata (`"state_name"` in this case) is automatically
 # inferred from the `tsibble`'s `key`:
 ex1 <- as_epi_df(x = ex1_input, as_of = "2020-06-03")
 attr(ex1, "metadata")[["other_keys"]]
-
 
 # Dealing with misspecified column names:
 # Geographical and temporal information must be provided in columns named
 # `geo_value` and `time_value`; if we start from a data frame with a
 # different format, it must be converted to use `geo_value` and `time_value`
 # before calling `as_epi_df`.
-
 ex2_input <- tibble::tibble(
   state = rep(c("ca", "fl", "pa"), each = 3), # misnamed
   pol = rep(c("blue", "swing", "swing"), each = 3), # extra key
@@ -201,7 +206,6 @@ ex2_input <- tibble::tibble(
   ), length.out = length(state)), # misnamed
   value = 1:length(state) + 0.01 * rnorm(length(state))
 )
-
 print(ex2_input)
 
 ex2 <- ex2_input \%>\%
@@ -210,12 +214,9 @@ ex2 <- ex2_input \%>\%
     as_of = "2020-06-03",
     other_keys = "pol"
   )
-
 attr(ex2, "metadata")
 
-
 # Adding additional keys to an `epi_df` object
-
 ex3_input <- covid_incidence_county_subset \%>\%
   dplyr::filter(time_value > "2021-12-01", state_name == "Massachusetts") \%>\%
   dplyr::slice_tail(n = 6)
@@ -230,4 +231,8 @@ ex3 <- ex3_input \%>\%
   as_epi_df(other_keys = c("state", "pol"))
 
 attr(ex3, "metadata")
+
+# Decays to a tibble
+covid_incidence_county_subset \%>\%
+  dplyr::select(-geo_value)
 }

@@ -18,3 +18,7 @@
 man-roxygen
 ^.venv$
 ^sandbox.R$
+^README.Rmd$
+^README_cache$
+^pkgdown-watch.R$
+^.editorconfig$

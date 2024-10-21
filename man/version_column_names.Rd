@@ -10,3 +10,4 @@ version_column_names()
 the full list of potential substitutions for the \code{version} column name:
 version, issue, release, Version, Issue, Release
 }
+\keyword{internal}

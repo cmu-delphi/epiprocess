@@ -7,10 +7,8 @@
 #' `as_tibble()` on `epi_df`s but you actually want them to remain `epi_df`s,
 #' use `attr(your_epi_df, "decay_to_tibble") <- FALSE` beforehand.
 #'
-#' @template x
-#'
+#' @param x an `epi_df`
 #' @inheritParams tibble::as_tibble
-#'
 #' @importFrom tibble as_tibble
 #' @export
 as_tibble.epi_df <- function(x, ...) {
@@ -34,7 +32,7 @@ as_tibble.epi_df <- function(x, ...) {
 #' others in the `other_keys` field of the metadata, or else explicitly set.
 #'
 #' @method as_tsibble epi_df
-#' @template x
+#' @param x an `epi_df`
 #' @param key Optional. Any additional keys (other than `geo_value`) to add to
 #'   the `tsibble`.
 #' @param ... additional arguments passed on to `tsibble::as_tsibble()`
@@ -54,8 +52,7 @@ as_tsibble.epi_df <- function(x, key, ...) {
 #'
 #' Print and summary functions for an `epi_df` object.
 #'
-#' @template x
-#'
+#' @param x an `epi_df`
 #' @method print epi_df
 #' @param ... additional arguments to forward to `NextMethod()`, or unused
 #' @export
@@ -89,6 +86,7 @@ print.epi_df <- function(x, ...) {
 #' @method summary epi_df
 #' @importFrom rlang .data
 #' @importFrom stats median
+#' @rdname print.epi_df
 #' @export
 summary.epi_df <- function(object, ...) {
   cat("An `epi_df` x, with metadata:\n")
@@ -123,7 +121,7 @@ summary.epi_df <- function(object, ...) {
 #' @return `x` with any metadata dropped and the `"epi_df"` class, if previously
 #'   present, dropped
 #'
-#' @noRd
+#' @keywords internal
 decay_epi_df <- function(x) {
   attributes(x)$metadata <- NULL
   class(x) <- class(x)[class(x) != "epi_df"]
@@ -140,6 +138,8 @@ decay_epi_df <- function(x) {
 # We'll implement `[` to allow either 1d or 2d. We'll also implement some other
 # methods where we want to (try to) maintain an `epi_df`.
 
+#' dplyr_reconstruct
+#'
 #' @param data tibble or `epi_df` (`dplyr` feeds in former, but we may
 #'   directly feed in latter from our other methods)
 #' @param template `epi_df` template to use to restore
@@ -147,7 +147,7 @@ decay_epi_df <- function(x) {
 #' @importFrom dplyr dplyr_reconstruct
 #' @importFrom cli cli_vec
 #' @export
-#' @noRd
+#' @keywords internal
 dplyr_reconstruct.epi_df <- function(data, template) {
   # Start from a reconstruction for the backing S3 classes; this ensures that we
   # keep any grouping that has been applied:
@@ -258,9 +258,9 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 
 #' Complete epi_df
 #'
-#' A ‘tidyr::complete()’ analogue for ‘epi_df’ objects. This function
+#' A `tidyr::complete()` analogue for `epi_df`` objects. This function
 #' can be used, for example, to add rows for missing combinations
-#' of ‘geo_value’ and ‘time_value’, filling other columns with `NA`s.
+#' of `geo_value` and `time_value`, filling other columns with `NA`s.
 #' See the examples for usage details.
 #'
 #' @param data an `epi_df`
