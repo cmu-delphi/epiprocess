@@ -107,7 +107,7 @@ edf %>%
 Detect outliers in daily reported cases for each geo_value. For a more in-depth
 guide to outlier detection, see `vignette("outliers")`.
 
-```{r}
+```{r message=FALSE}
 edf %>%
   group_by(geo_value) %>%
   mutate(outlier_info = detect_outlr(x = time_value, y = cases_daily)) %>%

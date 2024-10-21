@@ -3,7 +3,6 @@ knitr::opts_chunk$set(
   comment = "#>",
   collapse = TRUE,
   cache = TRUE,
-  dev = "svg",
   dev.args = list(bg = "transparent"),
   dpi = 300,
   cache.lazy = FALSE,

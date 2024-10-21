@@ -154,4 +154,4 @@ edf %>%
   autoplot(smoothed_cases_daily)
 ```
 
-<img src="man/figures/README-unnamed-chunk-7-1.svg" width="90%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-7-1.png" width="90%" style="display: block; margin: auto;" />
