@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.5</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,13 +35,13 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/slide.html">Slide a computation over signal values</a></li>
-    <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
-    <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals over space and time</a></li>
-    <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
+<li><a class="dropdown-item" href="../articles/epi_df.html">Working with epi_df objects and time series data</a></li>
+    <li><a class="dropdown-item" href="../articles/epi_archive.html">Working with epi_archive objects and data revisions</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
-    <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
+    <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
+    <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals across locations and time</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -105,48 +105,46 @@ dataset differs from the second from the third value included.</p>
 <span></span>
 <span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span></span>
 <span></span>
-<span><span class="va">locf_omitted</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="va">dt</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning: Found rows that appear redundant based on last (version of each) observation carried forward; these rows have been removed to 'compactify' and save space:</span></span>
-<span><span class="co">## Key: &lt;geo_value, time_value, version&gt;</span></span>
-<span><span class="co">##       geo_value time_value    version percent_cli case_rate_7d_av</span></span>
-<span><span class="co">##          &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;           &lt;num&gt;</span></span>
-<span><span class="co">##    1:        ca 2020-06-01 2020-06-07    2.140116        6.628329</span></span>
-<span><span class="co">##    2:        ca 2020-06-01 2020-06-23    2.498918        6.628329</span></span>
-<span><span class="co">##    3:        ca 2020-06-01 2020-07-23    2.698157        6.603020</span></span>
-<span><span class="co">##   ---                                                            </span></span>
-<span><span class="co">## 4949:        tx 2021-10-18 2021-10-22          NA       23.819450</span></span>
-<span><span class="co">## 4950:        tx 2021-10-19 2021-10-22          NA       24.705959</span></span>
-<span><span class="co">## 4951:        tx 2021-10-20 2021-10-22          NA       16.464639</span></span>
-<span><span class="co">## Built-in `epi_archive` functionality should be unaffected, but results may change if you work directly with its fields (such as `DT`). See `?as_epi_archive` for details. To silence this warning but keep compactification, you can pass `compactify=TRUE` when constructing the archive.</span></span></code></pre>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">locf_included</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="va">dt</span>, compactify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">locf_omitted</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="va">dt</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: Found rows that appear redundant based on last (version of each) observation carried forward; these rows have been removed to 'compactify' and save space:</span></span>
+<span><span class="co">#&gt; Key: &lt;geo_value, time_value, version&gt;</span></span>
+<span><span class="co">#&gt;       geo_value time_value    version percent_cli case_rate_7d_av</span></span>
+<span><span class="co">#&gt;          &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;           &lt;num&gt;</span></span>
+<span><span class="co">#&gt;    1:        ca 2020-06-01 2020-06-07    2.140116        6.628329</span></span>
+<span><span class="co">#&gt;    2:        ca 2020-06-01 2020-06-23    2.498918        6.628329</span></span>
+<span><span class="co">#&gt;    3:        ca 2020-06-01 2020-07-23    2.698157        6.603020</span></span>
+<span><span class="co">#&gt;   ---                                                            </span></span>
+<span><span class="co">#&gt; 4949:        tx 2021-10-18 2021-10-22          NA       23.819450</span></span>
+<span><span class="co">#&gt; 4950:        tx 2021-10-19 2021-10-22          NA       24.705959</span></span>
+<span><span class="co">#&gt; 4951:        tx 2021-10-20 2021-10-22          NA       16.464639</span></span>
+<span><span class="co">#&gt; Built-in `epi_archive` functionality should be unaffected, but results may change if you work directly with its fields (such as `DT`). See `?as_epi_archive` for details. To silence this warning but keep compactification, you can pass `compactify=TRUE` when constructing the archive.</span></span>
+<span><span class="va">locf_included</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="va">dt</span>, compactify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">locf_omitted</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Key: &lt;geo_value, time_value, version&gt;</span></span>
-<span><span class="co">##    geo_value time_value    version percent_cli case_rate_7d_av</span></span>
-<span><span class="co">##       &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;           &lt;num&gt;</span></span>
-<span><span class="co">## 1:        ca 2020-06-01 2020-06-02          NA        6.628329</span></span>
-<span><span class="co">## 2:        ca 2020-06-01 2020-06-06    2.140116        6.628329</span></span>
-<span><span class="co">## 3:        ca 2020-06-01 2020-06-08    2.140379        6.628329</span></span>
-<span><span class="co">## 4:        ca 2020-06-01 2020-06-09    2.114430        6.628329</span></span>
-<span><span class="co">## 5:        ca 2020-06-01 2020-06-10    2.133677        6.628329</span></span>
-<span><span class="co">## 6:        ca 2020-06-01 2020-06-11    2.197207        6.628329</span></span></code></pre>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">locf_included</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Key: &lt;geo_value, time_value, version&gt;</span></span>
-<span><span class="co">##    geo_value time_value    version percent_cli case_rate_7d_av</span></span>
-<span><span class="co">##       &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;           &lt;num&gt;</span></span>
-<span><span class="co">## 1:        ca 2020-06-01 2020-06-02          NA        6.628329</span></span>
-<span><span class="co">## 2:        ca 2020-06-01 2020-06-06    2.140116        6.628329</span></span>
-<span><span class="co">## 3:        ca 2020-06-01 2020-06-07    2.140116        6.628329</span></span>
-<span><span class="co">## 4:        ca 2020-06-01 2020-06-08    2.140379        6.628329</span></span>
-<span><span class="co">## 5:        ca 2020-06-01 2020-06-09    2.114430        6.628329</span></span>
-<span><span class="co">## 6:        ca 2020-06-01 2020-06-10    2.133677        6.628329</span></span></code></pre>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">locf_omitted</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Key: &lt;geo_value, time_value, version&gt;</span></span>
+<span><span class="co">#&gt;    geo_value time_value    version percent_cli case_rate_7d_av</span></span>
+<span><span class="co">#&gt;       &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;           &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1:        ca 2020-06-01 2020-06-02          NA        6.628329</span></span>
+<span><span class="co">#&gt; 2:        ca 2020-06-01 2020-06-06    2.140116        6.628329</span></span>
+<span><span class="co">#&gt; 3:        ca 2020-06-01 2020-06-08    2.140379        6.628329</span></span>
+<span><span class="co">#&gt; 4:        ca 2020-06-01 2020-06-09    2.114430        6.628329</span></span>
+<span><span class="co">#&gt; 5:        ca 2020-06-01 2020-06-10    2.133677        6.628329</span></span>
+<span><span class="co">#&gt; 6:        ca 2020-06-01 2020-06-11    2.197207        6.628329</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">locf_included</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Key: &lt;geo_value, time_value, version&gt;</span></span>
+<span><span class="co">#&gt;    geo_value time_value    version percent_cli case_rate_7d_av</span></span>
+<span><span class="co">#&gt;       &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;           &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1:        ca 2020-06-01 2020-06-02          NA        6.628329</span></span>
+<span><span class="co">#&gt; 2:        ca 2020-06-01 2020-06-06    2.140116        6.628329</span></span>
+<span><span class="co">#&gt; 3:        ca 2020-06-01 2020-06-07    2.140116        6.628329</span></span>
+<span><span class="co">#&gt; 4:        ca 2020-06-01 2020-06-08    2.140379        6.628329</span></span>
+<span><span class="co">#&gt; 5:        ca 2020-06-01 2020-06-09    2.114430        6.628329</span></span>
+<span><span class="co">#&gt; 6:        ca 2020-06-01 2020-06-10    2.133677        6.628329</span></span></code></pre></div>
 <p>LOCF-redundant values can mar the performance of dataset operations.
 As the column <code>case_rate_7d_av</code> has many more LOCF-redundant
 values than <code>percent_cli</code>, we will omit the
 <code>percent_cli</code> column for comparing performance.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dt2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">dt</span>, <span class="op">-</span><span class="va">percent_cli</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">locf_included_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="va">dt2</span>, compactify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -155,16 +153,15 @@ values than <code>percent_cli</code>, we will omit the
 data were LOCF-redundant, and compactifying saves a large amount of
 space. The proportion of data that is LOCF-redundant can vary widely
 between data sets, so we won’t always be this lucky.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">locf_included_2</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 129638</span></span></code></pre>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">locf_omitted_2</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 9055</span></span></code></pre>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">locf_included_2</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 129638</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">locf_omitted_2</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 9055</span></span></code></pre></div>
 <p>As we would expect, performing 1000 iterations of
 <code><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">dplyr::filter</a></code> is faster when the LOCF values are
 omitted.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Performance of filtering</span></span>
 <span><span class="va">iterate_filter</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">my_ea</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">1000</span><span class="op">)</span> <span class="op">{</span></span>
@@ -185,7 +182,7 @@ omitted.</p>
 <span><span class="va">speeds</span> <span class="op">&lt;-</span> <span class="fu">speed_test</span><span class="op">(</span><span class="va">iterate_filter</span>, <span class="st">"filter_1000x"</span><span class="op">)</span></span></code></pre></div>
 <p>We would also like to measure the speed of <code>epi_archive</code>
 methods.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Performance of as_of iterated 200 times</span></span>
 <span><span class="va">iterate_as_of</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">my_ea</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">1000</span><span class="op">)</span> <span class="op">{</span></span>
@@ -202,14 +199,14 @@ methods.</p>
 <span></span>
 <span><span class="va">speeds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">speeds</span>, <span class="fu">speed_test</span><span class="op">(</span><span class="va">slide_median</span>, <span class="st">"slide_median"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Here is a detailed performance comparison:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">speeds_tidy</span> <span class="op">&lt;-</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/gather.html" class="external-link">gather</a></span><span class="op">(</span><span class="va">speeds</span>, key <span class="op">=</span> <span class="st">"is_locf"</span>, value <span class="op">=</span> <span class="st">"time_in_s"</span>, <span class="va">locf</span>, <span class="va">no_locf</span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">speeds_tidy</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_bar</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">is_locf</span>, y <span class="op">=</span> <span class="va">time_in_s</span>, fill <span class="op">=</span> <span class="va">operation</span><span class="op">)</span>, stat <span class="op">=</span> <span class="st">"identity"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="compactify_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
+<p><img src="compactify_files/figure-html/unnamed-chunk-7-1.png" width="90%" style="display: block; margin: auto;"></p>
 </div>
   </main>
 </div>

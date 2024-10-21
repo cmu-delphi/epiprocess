@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.5</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,13 +35,13 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/slide.html">Slide a computation over signal values</a></li>
-    <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
-    <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals over space and time</a></li>
-    <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
+<li><a class="dropdown-item" href="../articles/epi_df.html">Working with epi_df objects and time series data</a></li>
+    <li><a class="dropdown-item" href="../articles/epi_archive.html">Working with epi_archive objects and data revisions</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
-    <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
+    <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
+    <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals across locations and time</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -180,33 +180,29 @@ adjacent weeks. We can wrap <code><a href="../reference/growth_rate.html">growth
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cases_gr1 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">time_value</span>, <span class="va">cases</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## An `epi_df` object, 10 x 4 with metadata:</span></span>
-<span><span class="co">## * geo_type  = state</span></span>
-<span><span class="co">## * time_type = day</span></span>
-<span><span class="co">## * as_of     = 2024-03-20</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
-<span><span class="co">## <span style="color: #949494;"># Groups:   geo_value [1]</span></span></span>
-<span><span class="co">##    geo_value time_value cases cases_gr1</span></span>
-<span><span class="co">##  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> ga        2020-06-01  643.   0.006<span style="text-decoration: underline;">01</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> ga        2020-06-02  603.   0.018<span style="text-decoration: underline;">5</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> ga        2020-06-03  608    0.024<span style="text-decoration: underline;">0</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> ga        2020-06-04  656.   0.021<span style="text-decoration: underline;">8</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> ga        2020-06-05  677.   0.019<span style="text-decoration: underline;">3</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> ga        2020-06-06  718.   0.016<span style="text-decoration: underline;">3</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> ga        2020-06-07  691.   0.018<span style="text-decoration: underline;">0</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> ga        2020-06-08  656.   0.023<span style="text-decoration: underline;">4</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> ga        2020-06-09  720.   0.022<span style="text-decoration: underline;">7</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> ga        2020-06-10  727.   0.022<span style="text-decoration: underline;">7</span></span></span></code></pre>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="co">#&gt; An `epi_df` object, 10 x 4 with metadata:</span></span>
+<span><span class="co">#&gt; * geo_type  = state</span></span>
+<span><span class="co">#&gt; * time_type = day</span></span>
+<span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># Groups:   geo_value [1]</span></span></span>
+<span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">cases_gr1</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> ga        2020-06-01  643.   0.006<span style="text-decoration: underline;">01</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> ga        2020-06-02  603.   0.018<span style="text-decoration: underline;">5</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> ga        2020-06-03  608    0.024<span style="text-decoration: underline;">0</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> ga        2020-06-04  656.   0.021<span style="text-decoration: underline;">8</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> ga        2020-06-05  677.   0.019<span style="text-decoration: underline;">3</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> ga        2020-06-06  718.   0.016<span style="text-decoration: underline;">3</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4 more rows</span></span></span></code></pre></div>
 <p>We can visualize these growth rate estimates by plotting the signal
 values and highlighting the periods in time for which the relative
 change is above 1% (in red) and below -1% (in blue), faceting by geo
 value.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">upper</span> <span class="op">&lt;-</span> <span class="fl">0.01</span></span>
 <span><span class="va">lower</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fl">0.01</span></span>
@@ -226,10 +222,10 @@ value.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 cases"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="growth_rate_files/figure-html/unnamed-chunk-5-1.png" width="864"></p>
+<p><img src="growth_rate_files/figure-html/unnamed-chunk-6-1.png" width="90%" style="display: block; margin: auto;"></p>
 <p>As a more direct visualization, we plot the estimated growth rates
 themselves, overlaying the curves for the two states on one plot.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time_value</span>, y <span class="op">=</span> <span class="va">cases_gr1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>col <span class="op">=</span> <span class="va">geo_value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">upper</span>, linetype <span class="op">=</span> <span class="fl">2</span>, col <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
@@ -237,7 +233,7 @@ themselves, overlaying the curves for the two states on one plot.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">6</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Growth rate"</span>, col <span class="op">=</span> <span class="st">"State"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="growth_rate_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
+<p><img src="growth_rate_files/figure-html/unnamed-chunk-7-1.png" width="90%" style="display: block; margin: auto;"></p>
 <p>We can see that the estimated growth rates from the relative change
 method are somewhat volatile, and there appears to be some bias towards
 towards the right boundary of the time span—look at the estimated growth
@@ -255,7 +251,7 @@ approach, one of these halves will be truncated near a boundary.</p>
 bandwidth is again <code>h = 7</code>. Compared to “rel_change”, it
 appears to behave similarly overall, but thankfully avoids some of the
 troublesome spikes:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cases_gr2 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">time_value</span>, <span class="va">cases</span>, method <span class="op">=</span> <span class="st">"linear_reg"</span><span class="op">)</span><span class="op">)</span></span>
@@ -276,7 +272,7 @@ troublesome spikes:</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Growth rate"</span>, col <span class="op">=</span> <span class="st">"Method"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="growth_rate_files/figure-html/unnamed-chunk-7-1.png" width="864"></p>
+<p><img src="growth_rate_files/figure-html/unnamed-chunk-8-1.png" width="90%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
 <h2 id="nonparametric-estimation">Nonparametric estimation<a class="anchor" aria-label="anchor" href="#nonparametric-estimation"></a>
@@ -291,7 +287,7 @@ path algorithm provided in the <code>genlasso</code> package, and
 performs cross-validation by default in order to pick the level of
 regularization; read the documentation for <code><a href="../reference/growth_rate.html">growth_rate()</a></code>
 more details.)</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
@@ -316,7 +312,7 @@ more details.)</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Growth rate"</span>, col <span class="op">=</span> <span class="st">"Method"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="growth_rate_files/figure-html/unnamed-chunk-8-1.png" width="864"></p>
+<p><img src="growth_rate_files/figure-html/unnamed-chunk-9-1.png" width="90%" style="display: block; margin: auto;"></p>
 <p>In this particular example, the trend filtering estimates of growth
 rate appear to be much more stable than those from the smoothing spline,
 and also much more stable than the estimates from local relative changes
@@ -347,7 +343,7 @@ method above (“rel_change”, “linear_reg”, “smooth_spline”, and
 “trend_filter”) has a log scale analog, which can be used by setting the
 argument <code>log_scale = TRUE</code> in the call to
 <code><a href="../reference/growth_rate.html">growth_rate()</a></code>.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
@@ -386,9 +382,10 @@ argument <code>log_scale = TRUE</code> in the call to
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Growth rate"</span>, col <span class="op">=</span> <span class="st">"Method"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="growth_rate_files/figure-html/unnamed-chunk-9-1.png" width="864"></p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<p><img src="growth_rate_files/figure-html/unnamed-chunk-10-1.png" width="90%" style="display: block; margin: auto;"></p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases_gr7</span>, <span class="va">cases_gr8</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span></span>
 <span>    cols <span class="op">=</span> <span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="st">"cases_gr"</span><span class="op">)</span>,</span>
@@ -405,7 +402,7 @@ argument <code>log_scale = TRUE</code> in the call to
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Growth rate"</span>, col <span class="op">=</span> <span class="st">"Method"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="growth_rate_files/figure-html/unnamed-chunk-9-2.png" width="864"></p>
+<p><img src="growth_rate_files/figure-html/unnamed-chunk-10-2.png" width="90%" style="display: block; margin: auto;"></p>
 <p>Comparing the <code>rel_change_log</code> curves with their
 <code>rel_change</code> counterparts (shown in earlier figures), we see
 that the former curves appear less volatile and match the linear

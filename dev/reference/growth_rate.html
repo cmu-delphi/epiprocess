@@ -11,7 +11,7 @@ for examples."><meta name="robots" content="noindex"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.5</small>
+    <small class="nav-text text-success me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -23,13 +23,13 @@ for examples."><meta name="robots" content="noindex"></head><body>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/slide.html">Slide a computation over signal values</a></li>
-    <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
-    <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals over space and time</a></li>
-    <li><a class="dropdown-item" href="../articles/aggregation.html">Aggregate signals over space and time</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/epi_df.html">Working with epi_df objects and time series data</a></li>
+    <li><a class="dropdown-item" href="../articles/epi_archive.html">Working with epi_archive objects and data revisions</a></li>
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
-    <li><a class="dropdown-item" href="../articles/archive.html">Work with archive objects and data revisions</a></li>
-    <li><a class="dropdown-item" href="../articles/compactify.html">Compactify to remove redundant archive data</a></li>
+    <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
+    <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals across locations and time</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -151,9 +151,8 @@ fitted value of the spline at <code>x0</code>.</p></li>
 filtering (a discrete spline) fit to <code>x</code> and <code>y</code>, via
 <code><a href="https://rdrr.io/pkg/genlasso/man/trendfilter.html" class="external-link">genlasso::trendfilter()</a></code>, divided by the fitted value of the discrete
 spline at <code>x0</code>.</p></li>
-</ul></div>
-    <div class="section level2">
-    <h2 id="log-scale">Log Scale<a class="anchor" aria-label="anchor" href="#log-scale"></a></h2>
+</ul><div class="section">
+<h3 id="log-scale">Log Scale<a class="anchor" aria-label="anchor" href="#log-scale"></a></h3>
 
 
 <p>An alternative view for the growth rate of a function f in general is given
@@ -163,9 +162,10 @@ applied to the log of the signal of interest, and in this light, each
 method above ("rel_change", "linear_reg", "smooth_spline", and
 "trend_filter") has a log scale analog, which can be used by setting
 <code>log_scale = TRUE</code>.</p>
-    </div>
-    <div class="section level2">
-    <h2 id="sliding-windows">Sliding Windows<a class="anchor" aria-label="anchor" href="#sliding-windows"></a></h2>
+</div>
+
+<div class="section">
+<h3 id="sliding-windows">Sliding Windows<a class="anchor" aria-label="anchor" href="#sliding-windows"></a></h3>
 
 
 <p>For the local methods, "rel_change" and "linear_reg", we use a sliding window
@@ -176,9 +176,10 @@ implicitly defined by the <code>x</code> variable; for example, if <code>x</code
 <code>Date</code> objects, <code>h = 7</code>, and the reference point is January 7, then the
 sliding window contains all data in between January 1 and 14 (matching the
 behavior of <code><a href="epi_slide.html">epi_slide()</a></code> with <code>before = h - 1</code> and <code>after = h</code>).</p>
-    </div>
-    <div class="section level2">
-    <h2 id="additional-arguments">Additional Arguments<a class="anchor" aria-label="anchor" href="#additional-arguments"></a></h2>
+</div>
+
+<div class="section">
+<h3 id="additional-arguments">Additional Arguments<a class="anchor" aria-label="anchor" href="#additional-arguments"></a></h3>
 
 
 <p>For the global methods, "smooth_spline" and "trend_filter", additional
@@ -201,6 +202,8 @@ based on the cross-validation error curve: minimum or 1-standard-error
 rule, respectively. Default is "min" (going along with the default <code>cv = TRUE</code>). Note that if <code>cv = FALSE</code>, then we require <code>df</code> to be set by the
 user.</p></li>
 </ul></div>
+
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
