@@ -27,7 +27,16 @@
 #' @keywords internal
 #' @export
 key_colnames <- function(x, ..., exclude = character()) {
-  UseMethod("key_colnames")
+  provided_args <- rlang::call_args_names(rlang::call_match())
+  if ("extra_keys" %in% provided_args) {
+    lifecycle::deprecate_soft("0.9.6", "key_colnames(extra_keys=)", "key_colnames(other_keys=)")
+    redispatch <- function(..., extra_keys) {
+      key_colnames(..., other_keys = extra_keys)
+    }
+    redispatch(x, ..., exclude = exclude)
+  } else {
+    UseMethod("key_colnames")
+  }
 }
 
 #' @rdname key_colnames
@@ -44,7 +53,7 @@ key_colnames.data.frame <- function(x, ...,
   assert_character(time_keys)
   assert_character(other_keys)
   assert_character(exclude)
-  keys = c(geo_keys, other_keys, time_keys)
+  keys <- c(geo_keys, other_keys, time_keys)
   if (!all(keys %in% names(x))) {
     cli_abort(c(
       "Some of the specified key columns aren't present in `x`",
@@ -67,11 +76,13 @@ key_colnames.epi_df <- function(x, ...,
   check_dots_empty0(...)
   if (!identical(geo_keys, "geo_value")) {
     cli_abort('If `x` is an `epi_df`, then `geo_keys` must be `"geo_value"`',
-              class = "epiprocess__key_colnames__mismatched_geo_keys")
+      class = "epiprocess__key_colnames__mismatched_geo_keys"
+    )
   }
   if (!identical(time_keys, "time_value")) {
     cli_abort('If `x` is an `epi_df`, then `time_keys` must be `"time_value"`',
-              class = "epiprocess__key_colnames__mismatched_time_keys")
+      class = "epiprocess__key_colnames__mismatched_time_keys"
+    )
   }
   expected_other_keys <- attr(x, "metadata")$other_keys
   if (is.null(other_keys)) {
