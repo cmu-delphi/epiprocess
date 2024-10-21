@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 The `{epiprocess}` package works with epidemiological time series data and
 provides tools to manage, analyze, and process the data in preparation for
 modeling. It is designed to work in tandem with
-`{epipredict}`, which provides
+[`{epipredict}`](https://cmu-delphi.github.io/epipredict/), which provides
 pre-built epiforecasting models and as well as tools to build custom models.
 Both packages are designed to lower the barrier to entry and implementation cost
 for epidemiological time series analysis and forecasting.
