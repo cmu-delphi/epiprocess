@@ -513,13 +513,11 @@ updates every day.</p>
 <span>  <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>Now we can slide the forecaster over the faux archive to produce
 forecasts at a number of dates in the past, spaced a month apart. Note
-that we will use the <code>case_rate_7d_av</code> signal from the merged
-archive, which is the smoothed COVID-19 case rate. This is clearly
-equivalent, up to a constant, to modeling weekly sums of COVID-19 cases.
-We will forecast 7, 14, 21, and 28 days ahead, so to reduce typing, we
-create the wrapper function <code>k_week_ahead()</code>. We also produce
-forecasts in a version-aware way, which simply requires us to use the
-true <code>epi_archive</code> object instead of the faux one.</p>
+that we will use the <code>percent_cli</code> signal from the merged
+archive, which is the smoothed COVID-19 case rate. We will forecast 7,
+14, 21, and 28 days ahead. We produce forecasts in a version-aware way,
+which simply requires us to use the true <code>epi_archive</code> object
+instead of the faux one.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Generate a sequence of forecast dates. Starting 3 months into the data, so we have</span></span>
 <span><span class="co"># enough data to train the AR model.</span></span>
