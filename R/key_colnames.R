@@ -82,9 +82,10 @@ key_colnames.epi_df <- function(x, ...,
         "The provided `other_keys` argument didn't match the `other_keys` of `x`",
         "*" = "`other_keys` was {format_chr_with_quotes(other_keys)}",
         "*" = "`expected_other_keys` was {format_chr_with_quotes(expected_other_keys)}",
-        "i" = "If you resolve this discrepancy by adjusting the metadata of `x`, you
-               shouldn't have to pass `other_keys =` here anymore unless you want to
-               continue to perform this check."
+        "i" = "If you know that `x` will always be an `epi_df` and
+               resolve this discrepancy by adjusting the metadata of `x`, you
+               shouldn't have to pass `other_keys =` here anymore,
+               unless you want to continue to perform this check."
       ), class = "epiprocess__key_colnames__mismatched_other_keys")
     }
   }
