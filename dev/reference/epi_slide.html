@@ -3,19 +3,23 @@
 This is useful for computations like rolling averages. The function supports
 many ways to specify the computation, but by far the most common use case is
 as follows:
-# To compute the 7-day trailing average of cases
-epi_slide(edf, cases_7dav = mean(cases), .window_size = 7)
+# Create new column `cases_7dm` that contains a 7-day trailing median of cases
+epi_slide(edf, cases_7dav = median(cases), .window_size = 7)
 
-This will create the new column cases_7dav that contains a 7-day rolling
-average of values in "cases". See vignette("epi_df") for more examples.'><meta property="og:description" content='Slides a given function over variables in an epi_df object.
+For two very common use cases, we provide optimized functions that are much
+faster than epi_slide: epi_slide_mean() and epi_slide_sum(). We
+recommend using these functions when possible.
+See vignette("epi_df") for more examples.'><meta property="og:description" content='Slides a given function over variables in an epi_df object.
 This is useful for computations like rolling averages. The function supports
 many ways to specify the computation, but by far the most common use case is
 as follows:
-# To compute the 7-day trailing average of cases
-epi_slide(edf, cases_7dav = mean(cases), .window_size = 7)
+# Create new column `cases_7dm` that contains a 7-day trailing median of cases
+epi_slide(edf, cases_7dav = median(cases), .window_size = 7)
 
-This will create the new column cases_7dav that contains a 7-day rolling
-average of values in "cases". See vignette("epi_df") for more examples.'><meta name="robots" content="noindex"></head><body>
+For two very common use cases, we provide optimized functions that are much
+faster than epi_slide: epi_slide_mean() and epi_slide_sum(). We
+recommend using these functions when possible.
+See vignette("epi_df") for more examples.'><meta name="robots" content="noindex"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -65,10 +69,12 @@ average of values in "cases". See vignette("epi_df") for more examples.'><meta n
 This is useful for computations like rolling averages. The function supports
 many ways to specify the computation, but by far the most common use case is
 as follows:</p>
-<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># To compute the 7-day trailing average of cases</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">epi_slide</span>(edf, <span class="at">cases_7dav =</span> <span class="fu">mean</span>(cases), <span class="at">.window_size =</span> <span class="dv">7</span>)</span></code></pre><p></p></div>
-<p>This will create the new column <code>cases_7dav</code> that contains a 7-day rolling
-average of values in "cases". See <code><a href="../articles/epi_df.html">vignette("epi_df")</a></code> for more examples.</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Create new column `cases_7dm` that contains a 7-day trailing median of cases</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">epi_slide</span>(edf, <span class="at">cases_7dav =</span> <span class="fu">median</span>(cases), <span class="at">.window_size =</span> <span class="dv">7</span>)</span></code></pre><p></p></div>
+<p>For two very common use cases, we provide optimized functions that are much
+faster than <code>epi_slide</code>: <code><a href="epi_slide_opt.html">epi_slide_mean()</a></code> and <code><a href="epi_slide_opt.html">epi_slide_sum()</a></code>. We
+recommend using these functions when possible.</p>
+<p>See <code><a href="../articles/epi_df.html">vignette("epi_df")</a></code> for more examples.</p>
     </div>
 
     <div class="section level2">
