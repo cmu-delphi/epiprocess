@@ -6,23 +6,32 @@
 The `{epiprocess}` package works with epidemiological time series data
 and provides tools to manage, analyze, and process the data in
 preparation for modeling. It is designed to work in tandem with
-[`{epipredict}`](https://cmu-delphi.github.io/epipredict/), which
-provides pre-built epiforecasting models and as well as tools to build
-custom models. Both packages are designed to lower the barrier to entry
-and implementation cost for epidemiological time series analysis and
+[epipredict](https://cmu-delphi.github.io/epipredict/), which provides
+pre-built epiforecasting models and as well as tools to build custom
+models. Both packages are designed to lower the barrier to entry and
+implementation cost for epidemiological time series analysis and
 forecasting.
 
 `{epiprocess}` contains:
 
   - `epi_df()` and `epi_archive()`, two data frame classes (that work
     like a `{tibble}` with `{dplyr}` verbs) for working with
-    epidemiological time series data;
+    epidemiological time series data
+      - `epi_df` is for working with a snapshot of data at a single
+        point in time
+      - `epi_archive` is for working with histories of data that changes
+        over time
+      - one of the most common uses of `epi_archive` is for accurate
+        backtesting of forecasting models, see `vignette("backtesting",
+        package="epipredict")`
   - signal processing tools building on these data structures such as
-      - `epi_slide()` for sliding window operations;
-      - `epix_slide()` for sliding window operations on archives;
-      - `growth_rate()` for computing growth rates;
-      - `detect_outlr()` for outlier detection;
-      - `epi_cor()` for computing correlations;
+      - `epi_slide()` for sliding window operations (aids with feature
+        creation)
+      - `epix_slide()` for sliding window operations on archives (aids
+        with backtesting)
+      - `growth_rate()` for computing growth rates
+      - `detect_outlr()` for outlier detection
+      - `epi_cor()` for computing correlations
 
 If you are new to this set of tools, you may be interested learning
 through a book format: [Introduction to Epidemiological
@@ -32,8 +41,8 @@ You may also be interested in:
 
   - `{epidatr}`, for accessing wide range of epidemiological data sets,
     including COVID-19 data, flu data, and more.
-  - `{rtestim}`, a package for estimating the time-varying reproduction
-    number of an epidemic.
+  - [rtestim](https://github.com/dajmcdon/rtestim), a package for
+    estimating the time-varying reproduction number of an epidemic.
 
 This package is provided by the [Delphi group](https://delphi.cmu.edu/)
 at Carnegie Mellon University.

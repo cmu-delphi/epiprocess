@@ -36,7 +36,7 @@ servr::httw(
     refs <- grep("man.+R(m?d)?$", files, value = TRUE)
     if (length(refs)) {
       # Doesn't work for me, so I run it manually.
-      # pkgdown::build_reference(pkg, preview = FALSE, examples = FALSE, lazy = FALSE)
+      # pkgdown::build_reference(pkg, preview = FALSE, examples = FALSE, lazy = FALSE) # nolint: commented_code_linter
     }
 
     pkgdown <- grep("pkgdown", files, value = TRUE)

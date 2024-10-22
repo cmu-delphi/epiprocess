@@ -99,12 +99,15 @@ This is useful for computations like rolling averages. The function supports
 many ways to specify the computation, but by far the most common use case is
 as follows:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{# To compute the 7-day trailing average of cases
-epi_slide(edf, cases_7dav = mean(cases), .window_size = 7)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{# Create new column `cases_7dm` that contains a 7-day trailing median of cases
+epi_slide(edf, cases_7dav = median(cases), .window_size = 7)
 }\if{html}{\out{</div>}}
 
-This will create the new column \code{cases_7dav} that contains a 7-day rolling
-average of values in "cases". See \code{vignette("epi_df")} for more examples.
+For two very common use cases, we provide optimized functions that are much
+faster than \code{epi_slide}: \code{epi_slide_mean()} and \code{epi_slide_sum()}. We
+recommend using these functions when possible.
+
+See \code{vignette("epi_df")} for more examples.
 }
 \details{
 \subsection{Advanced uses of \code{.f} via tidy evaluation}{
