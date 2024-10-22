@@ -62,23 +62,32 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="epiprocess">epiprocess<a class="anchor" aria-label="anchor" href="#epiprocess"></a>
 </h1></div>
-<p>The <a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a> package works with epidemiological time series data and provides tools to manage, analyze, and process the data in preparation for modeling. It is designed to work in tandem with <a href="https://cmu-delphi.github.io/epipredict/" class="external-link"><code>{epipredict}</code></a>, which provides pre-built epiforecasting models and as well as tools to build custom models. Both packages are designed to lower the barrier to entry and implementation cost for epidemiological time series analysis and forecasting.</p>
+<p>The <a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a> package works with epidemiological time series data and provides tools to manage, analyze, and process the data in preparation for modeling. It is designed to work in tandem with <a href="https://cmu-delphi.github.io/epipredict/" class="external-link">epipredict</a>, which provides pre-built epiforecasting models and as well as tools to build custom models. Both packages are designed to lower the barrier to entry and implementation cost for epidemiological time series analysis and forecasting.</p>
 <p><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a> contains:</p>
 <ul>
 <li>
-<code><a href="reference/epi_df.html">epi_df()</a></code> and <code><a href="reference/epi_archive.html">epi_archive()</a></code>, two data frame classes (that work like a <a href="https://tibble.tidyverse.org/" class="external-link">tibble</a> with <a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a> verbs) for working with epidemiological time series data;</li>
+<code><a href="reference/epi_df.html">epi_df()</a></code> and <code><a href="reference/epi_archive.html">epi_archive()</a></code>, two data frame classes (that work like a <a href="https://tibble.tidyverse.org/" class="external-link">tibble</a> with <a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a> verbs) for working with epidemiological time series data
+<ul>
+<li>
+<code>epi_df</code> is for working with a snapshot of data at a single point in time</li>
+<li>
+<code>epi_archive</code> is for working with histories of data that changes over time</li>
+<li>one of the most common uses of <code>epi_archive</code> is for accurate backtesting of forecasting models, see <code>vignette("backtesting",     package="epipredict")</code>
+</li>
+</ul>
+</li>
 <li>signal processing tools building on these data structures such as
 <ul>
 <li>
-<code><a href="reference/epi_slide.html">epi_slide()</a></code> for sliding window operations;</li>
+<code><a href="reference/epi_slide.html">epi_slide()</a></code> for sliding window operations (aids with feature creation)</li>
 <li>
-<code><a href="reference/epix_slide.html">epix_slide()</a></code> for sliding window operations on archives;</li>
+<code><a href="reference/epix_slide.html">epix_slide()</a></code> for sliding window operations on archives (aids with backtesting)</li>
 <li>
-<code><a href="reference/growth_rate.html">growth_rate()</a></code> for computing growth rates;</li>
+<code><a href="reference/growth_rate.html">growth_rate()</a></code> for computing growth rates</li>
 <li>
-<code><a href="reference/detect_outlr.html">detect_outlr()</a></code> for outlier detection;</li>
+<code><a href="reference/detect_outlr.html">detect_outlr()</a></code> for outlier detection</li>
 <li>
-<code><a href="reference/epi_cor.html">epi_cor()</a></code> for computing correlations;</li>
+<code><a href="reference/epi_cor.html">epi_cor()</a></code> for computing correlations</li>
 </ul>
 </li>
 </ul>
@@ -88,7 +97,7 @@
 <li>
 <a href="https://cmu-delphi.github.io/epidatr/" class="external-link">epidatr</a>, for accessing wide range of epidemiological data sets, including COVID-19 data, flu data, and more.</li>
 <li>
-<code>{rtestim}</code>, a package for estimating the time-varying reproduction number of an epidemic.</li>
+<a href="https://github.com/dajmcdon/rtestim" class="external-link">rtestim</a>, a package for estimating the time-varying reproduction number of an epidemic.</li>
 </ul>
 <p>This package is provided by the <a href="https://delphi.cmu.edu/" class="external-link">Delphi group</a> at Carnegie Mellon University.</p>
 <div class="section level2">

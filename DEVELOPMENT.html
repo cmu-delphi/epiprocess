@@ -53,7 +53,7 @@
 <div class="section level2">
 <h2 id="validating-the-package">Validating the package<a class="anchor" aria-label="anchor" href="#validating-the-package"></a></h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">styler</span><span class="fu">::</span><span class="fu">style_pkg</span><span class="op">(</span><span class="op">)</span> <span class="co"># format code</span></span>
+<code class="sourceCode R"><span><span class="fu">styler</span><span class="fu">::</span><span class="fu"><a href="https://styler.r-lib.org/reference/style_pkg.html" class="external-link">style_pkg</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># format code</span></span>
 <span><span class="fu">lintr</span><span class="fu">::</span><span class="fu">lint_package</span><span class="op">(</span><span class="op">)</span> <span class="co"># lint code</span></span>
 <span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/check.html" class="external-link">check</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># run R CMD check, which runs everything below</span></span>
@@ -70,13 +70,18 @@
 <a href="https://cmu-delphi.github.io/epiprocess/" class="uri">https://cmu-delphi.github.io/epiprocess/</a> from the <code>main</code> branch and</li>
 <li>
 <a href="https://cmu-delphi.github.io/epiprocess/dev" class="uri">https://cmu-delphi.github.io/epiprocess/dev</a> from the <code>dev</code> branch.</li>
-</ul><p>We include the script <code>pkgdown-watch.R</code> that will automatically rebuild the documentation locally and preview it. It can be used with:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Make sure you have servr installed</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">'renv::install("servr")'</span></span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co"># Will start a local server</span></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="ex">Rscript</span> pkgdown-watch.R</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co"># You may need to first build the site with</span></span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">'pkgdown::build_site(".", examples = FALSE, devel = TRUE, preview = FALSE)'</span></span></code></pre></div>
+</ul><p>Commands for developing the documentation site:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Basic build and preview</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">'pkgdown::clean_site()'</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">'devtools::document()'</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">'pkgdown::build_site()'</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co"># A smart rebuild workflow for non-RStudio users.</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co"># You may need to first build the site.</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">'pkgdown::build_site(".", examples = FALSE, devel = TRUE, preview = FALSE)'</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">'renv::install("servr")'</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co"># Will start a local docs server and monitor for changes.</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="ex">Rscript</span> inst/pkgdown-watch.R</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="versioning">Versioning<a class="anchor" aria-label="anchor" href="#versioning"></a></h2>
