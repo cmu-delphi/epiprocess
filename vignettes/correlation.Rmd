@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-source(here::here("vignettes", "_common.R"))
+source("_common.R")
 ```
 
 The `epiprocess` package provides some simple functionality for computing lagged

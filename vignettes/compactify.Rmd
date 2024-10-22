@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-source(here::here("vignettes", "_common.R"))
+source("_common.R")
 ```
 
 ## Removing redundant update data to save space

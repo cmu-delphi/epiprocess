@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-source(here::here("vignettes", "_common.R"))
+source("_common.R")
 ```
 
 This vignette describes functionality for detecting and correcting outliers in

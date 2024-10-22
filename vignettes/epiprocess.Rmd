@@ -10,7 +10,7 @@ editor_options:
 ---
 
 ```{r, include = FALSE}
-source(here::here("vignettes", "_common.R"))
+source("_common.R")
 ```
 
 ## Overview
@@ -187,7 +187,7 @@ dv <- archive_cases_dv_subset$DT %>%
 dv
 ```
 
-See `vignette("epi_arcive")` for a more in-depth guide to `epi_archive` objects.
+See `vignette("epi_archive")` for a more in-depth guide to `epi_archive` objects.
 
 ## Data attribution
 
