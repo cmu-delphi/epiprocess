@@ -627,10 +627,9 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #' Slides a given function over variables in an `epi_archive` object. This
 #' behaves similarly to `epi_slide()`, with the key exception that it is
 #' version-aware: the sliding computation at any given reference time t is
-#' performed on **data that would have been available as of t**. See the
-#' [archive
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
-#' examples.
+#' performed on **data that would have been available as of t**. This function
+#' is intended for use in accurate backtesting of models; see
+#' `vignette("backtesting", package="epipredict")` for a walkthrough.
 #'
 #' @param .x An [`epi_archive`] or [`grouped_epi_archive`] object. If ungrouped,
 #'   all data in `x` will be treated as part of a single data group.

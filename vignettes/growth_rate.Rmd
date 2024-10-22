@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-source(here::here("vignettes", "_common.R"))
+source("_common.R")
 ```
 
 A basic way of assessing growth in a signal is to look at its relative change

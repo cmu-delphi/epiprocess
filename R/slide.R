@@ -6,12 +6,15 @@
 #' as follows:
 #'
 #' ```
-#' # To compute the 7-day trailing average of cases
-#' epi_slide(edf, cases_7dav = mean(cases), .window_size = 7)
+#' # Create new column `cases_7dm` that contains a 7-day trailing median of cases
+#' epi_slide(edf, cases_7dav = median(cases), .window_size = 7)
 #' ```
 #'
-#' This will create the new column `cases_7dav` that contains a 7-day rolling
-#' average of values in "cases". See `vignette("epi_df")` for more examples.
+#' For two very common use cases, we provide optimized functions that are much
+#' faster than `epi_slide`: `epi_slide_mean()` and `epi_slide_sum()`. We
+#' recommend using these functions when possible.
+#'
+#' See `vignette("epi_df")` for more examples.
 #'
 #' @template basic-slide-params
 #' @param .f Function, formula, or missing; together with `...` specifies the

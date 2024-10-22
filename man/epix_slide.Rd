@@ -113,9 +113,9 @@ values.
 Slides a given function over variables in an \code{epi_archive} object. This
 behaves similarly to \code{epi_slide()}, with the key exception that it is
 version-aware: the sliding computation at any given reference time t is
-performed on \strong{data that would have been available as of t}. See the
-\href{https://cmu-delphi.github.io/epiprocess/articles/archive.html}{archive vignette} for
-examples.
+performed on \strong{data that would have been available as of t}. This function
+is intended for use in accurate backtesting of models; see
+\code{vignette("backtesting", package="epipredict")} for a walkthrough.
 }
 \details{
 A few key distinctions between the current function and \code{epi_slide()}:
