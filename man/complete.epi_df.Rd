@@ -2,7 +2,7 @@
 % Please edit documentation in R/methods-epi_df.R
 \name{complete.epi_df}
 \alias{complete.epi_df}
-\title{Complete epi_df}
+\title{Complete an \code{epi_df} with additional rows for missing key combinations}
 \usage{
 \method{complete}{epi_df}(data, ..., fill = list(), explicit = TRUE)
 }
@@ -16,7 +16,9 @@
 \item{explicit}{see \code{\link[tidyr:complete]{tidyr::complete}}}
 }
 \description{
-A \code{tidyr::complete()} analogue for \verb{epi_df`` objects. This function can be used, for example, to add rows for missing combinations of }geo_value\code{and}time_value\verb{, filling other columns with }NA`s.
+A \code{tidyr::complete()} analogue for \code{epi_df} objects. This function
+can be used, for example, to add rows for missing combinations
+of \code{geo_value} and \code{time_value}, filling other columns with \code{NA}s.
 See the examples for usage details.
 }
 \examples{
