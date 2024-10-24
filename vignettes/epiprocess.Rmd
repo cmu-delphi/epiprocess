@@ -86,7 +86,7 @@ edf %>%
 ```
 
 We can compute the 7 day moving average of the confirmed daily cases for each
-geo_value by using the `epi_slide_mean()` function. For a more in-depth guide to
+`geo_value` by using the `epi_slide_mean()` function. For a more in-depth guide to
 sliding, see `vignette("epi_df")`.
 
 ```{r}
@@ -96,7 +96,7 @@ edf %>%
 ```
 
 We can compute the growth rate of the confirmed cumulative cases for each
-geo_value. For a more in-depth guide to growth rates, see `vignette("growth_rate")`.
+`geo_value`. For a more in-depth guide to growth rates, see `vignette("growth_rate")`.
 
 ```{r}
 edf %>%
@@ -104,7 +104,7 @@ edf %>%
   mutate(cases_growth = growth_rate(x = time_value, y = cases_cumulative, method = "rel_change", h = 7))
 ```
 
-Detect outliers in daily reported cases for each geo_value. For a more in-depth
+Detect outliers in daily reported cases for each `geo_value`. For a more in-depth
 guide to outlier detection, see `vignette("outliers")`.
 
 ```{r message=FALSE}
@@ -114,8 +114,8 @@ edf %>%
   ungroup()
 ```
 
-Add a column to the epi_df object with the daily deaths for each geo_value and
-compute the correlations between cases and deaths for each geo_value. For a more
+Add a column to the epi_df object with the daily deaths for each `geo_value` and
+compute the correlations between cases and deaths for each `geo_value`. For a more
 in-depth guide to correlations, see `vignette("correlation")`.
 
 ```{r}
