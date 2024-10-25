@@ -256,9 +256,9 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
   dplyr::dplyr_reconstruct(NextMethod(), .data)
 }
 
-#' Complete epi_df
+#' "Complete" an `epi_df`, adding missing rows and/or replacing `NA`s
 #'
-#' A `tidyr::complete()` analogue for `epi_df`` objects. This function
+#' A `tidyr::complete()` analogue for `epi_df` objects. This function
 #' can be used, for example, to add rows for missing combinations
 #' of `geo_value` and `time_value`, filling other columns with `NA`s.
 #' See the examples for usage details.
