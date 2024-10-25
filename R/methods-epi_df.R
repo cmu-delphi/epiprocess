@@ -256,7 +256,7 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
   dplyr::dplyr_reconstruct(NextMethod(), .data)
 }
 
-#' Complete an `epi_df` with additional rows for missing key combinations
+#' "Complete" an `epi_df`, adding missing rows and/or replacing `NA`s
 #'
 #' A `tidyr::complete()` analogue for `epi_df` objects. This function
 #' can be used, for example, to add rows for missing combinations

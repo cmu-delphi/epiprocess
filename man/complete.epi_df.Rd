@@ -2,7 +2,7 @@
 % Please edit documentation in R/methods-epi_df.R
 \name{complete.epi_df}
 \alias{complete.epi_df}
-\title{Complete an \code{epi_df} with additional rows for missing key combinations}
+\title{"Complete" an \code{epi_df}, adding missing rows and/or replacing \code{NA}s}
 \usage{
 \method{complete}{epi_df}(data, ..., fill = list(), explicit = TRUE)
 }
