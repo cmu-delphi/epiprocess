@@ -300,34 +300,48 @@ for (p in (param_combinations %>% transpose())) {
       concatenate_list_params(p)
     ),
     {
-      out_sum <- rlang::inject(epi_slide(test_data, ~ sum(.x$value), !!!slide_args)) %>%
-        rename(slide_value_value = slide_value)
-      out_mean <- rlang::inject(epi_slide(test_data, ~ mean(.x$value), !!!slide_args)) %>%
-        rename(slide_value_value = slide_value)
+      out_sum <- rlang::inject(epi_slide(test_data, ~ sum(.x$value), !!!slide_args))
+      out_mean <- rlang::inject(epi_slide(test_data, ~ mean(.x$value), !!!slide_args))
 
       expect_equal(
         out_sum,
-        rlang::inject(epi_slide_opt(test_data, value, .f = data.table::frollsum, !!!slide_args))
+        rlang::inject(epi_slide_opt(test_data, value,
+          .f = data.table::frollsum, !!!slide_args,
+          .new_col_names = "slide_value"
+        ))
       )
       expect_equal(
         out_sum,
-        rlang::inject(epi_slide_opt(test_data, value, .f = slider::slide_sum, !!!slide_args))
+        rlang::inject(epi_slide_opt(test_data, value,
+          .f = slider::slide_sum, !!!slide_args,
+          .new_col_names = "slide_value"
+        ))
       )
       expect_equal(
         out_sum,
-        rlang::inject(epi_slide_sum(test_data, value, !!!slide_args))
+        rlang::inject(epi_slide_sum(test_data, value, !!!slide_args,
+          .new_col_names = "slide_value"
+        ))
       )
       expect_equal(
         out_mean,
-        rlang::inject(epi_slide_opt(test_data, value, .f = data.table::frollmean, !!!slide_args))
+        rlang::inject(epi_slide_opt(test_data, value,
+          .f = data.table::frollmean, !!!slide_args,
+          .new_col_names = "slide_value"
+        ))
       )
       expect_equal(
         out_mean,
-        rlang::inject(epi_slide_opt(test_data, value, .f = slider::slide_mean, !!!slide_args))
+        rlang::inject(epi_slide_opt(test_data, value,
+          .f = slider::slide_mean, !!!slide_args,
+          .new_col_names = "slide_value"
+        ))
       )
       expect_equal(
         out_mean,
-        rlang::inject(epi_slide_mean(test_data, value, !!!slide_args))
+        rlang::inject(epi_slide_mean(test_data, value, !!!slide_args,
+          .new_col_names = "slide_value"
+        ))
       )
     }
   )
@@ -730,7 +744,7 @@ test_that("no dplyr warnings from selecting multiple columns", {
   )
   expect_equal(
     names(multi_slid),
-    c("geo_value", "time_value", "value", "value2", "slide_value_value", "slide_value_value2")
+    c("geo_value", "time_value", "value", "value2", "value_7dav", "value2_7dav")
   )
   expect_no_warning(
     multi_slid_select <- epi_slide_mean(multi_columns, c(value, value2), .window_size = 7)
@@ -740,4 +754,123 @@ test_that("no dplyr warnings from selecting multiple columns", {
     multi_slid_select <- epi_slide_mean(multi_columns, starts_with("value"), .window_size = 7)
   )
   expect_equal(multi_slid_select, multi_slid)
+})
+
+test_that("epi_slide_opt output naming features", {
+  multi_columns <- dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = test_date + 1:200, value = 1:200, value2 = -1:-200),
+    dplyr::tibble(geo_value = "al", time_value = test_date + 1:5, value = -(1:5), value2 = 1:5)
+  ) %>%
+    as_epi_df() %>%
+    group_by(geo_value)
+  multi_columns_weekly <- dplyr::bind_rows(
+    dplyr::tibble(geo_value = "ak", time_value = test_date + 7 * (1:200), value = 1:200, value2 = -1:-200),
+    dplyr::tibble(geo_value = "al", time_value = test_date + 7 * (1:5), value = -(1:5), value2 = 1:5)
+  ) %>%
+    as_epi_df() %>%
+    group_by(geo_value)
+  yearmonthly <-
+    tibble::tibble(
+      geo_value = 1,
+      time_value = tsibble::make_yearmonth(2000, 1) + 1:30 - 1,
+      value = 1:30 %% 2 == 0
+    ) %>%
+    as_epi_df() %>%
+    group_by(geo_value)
+
+  # Auto-naming:
+  # * Changing .f and .window_size:
+  expect_equal(
+    multi_columns %>% epi_slide_opt(value2, frollmean, .window_size = 14) %>% names(),
+    c(names(multi_columns), "value2_14dav")
+  )
+  expect_equal(
+    multi_columns %>% epi_slide_opt(value2, slide_mean, .window_size = as.difftime(14, units = "days")) %>% names(),
+    c(names(multi_columns), "value2_14dav")
+  )
+  expect_equal(
+    multi_columns %>% epi_slide_opt(value2, slide_sum, .window_size = Inf) %>% names(),
+    c(names(multi_columns), "value2_running_sum")
+  )
+  # * Changing .f and .align:
+  expect_equal(
+    multi_columns %>% epi_slide_opt(value2, slide_min, .window_size = 14, .align = "center") %>% names(),
+    c(names(multi_columns), "value2_14dcmin")
+  )
+  expect_equal(
+    multi_columns %>% epi_slide_opt(value2, slide_max, .window_size = 14, .align = "left") %>% names(),
+    c(names(multi_columns), "value2_14dlmax")
+  )
+  # * Changing .f, time_type(, .window_size):
+  expect_equal(
+    multi_columns_weekly %>%
+      epi_slide_opt(value2, slide_prod, .window_size = as.difftime(2, units = "weeks")) %>%
+      names(),
+    c(names(multi_columns_weekly), "value2_2wprod")
+  )
+  expect_equal(
+    yearmonthly %>% epi_slide_opt(value, slide_any, .window_size = 3) %>% names(),
+    c(names(yearmonthly), "value_3many") # not the best name, but super unlikely anyway
+  )
+
+  # Manual naming:
+  expect_equal(
+    multi_columns %>%
+      epi_slide_opt(starts_with("value"), slide_sum, .window_size = 7, .suffix = "_s{.n}") %>%
+      names(),
+    c(names(multi_columns), "value_s7", "value2_s7")
+  )
+  expect_equal(
+    multi_columns %>%
+      epi_slide_opt(starts_with("value"), slide_sum, .window_size = 7, .prefix = "{.f_abbr}_", .suffix = "_{.n}") %>%
+      names(),
+    c(names(multi_columns), "sum_value_7", "sum_value2_7")
+  )
+  expect_equal(
+    multi_columns %>%
+      epi_slide_opt(starts_with("value"), slide_sum, .window_size = 7, .prefix = "slide_value_") %>%
+      names(),
+    c(names(multi_columns), "slide_value_value", "slide_value_value2")
+  )
+  expect_equal(
+    multi_columns %>%
+      epi_slide_opt(starts_with("value"), slide_sum, .window_size = 7, .new_col_names = c("slide_value", "sv2")) %>%
+      names(),
+    c(names(multi_columns), "slide_value", "sv2")
+  )
+
+  # Validation errors:
+  # * Wrong sizes:
+  expect_error(
+    multi_columns %>% epi_slide_opt(starts_with("value"), slide_sum,
+      .window_size = 7,
+      .suffix = c("a", "b")
+    )
+  )
+  expect_error(
+    multi_columns %>% epi_slide_opt(starts_with("value"), slide_sum,
+      .window_size = 7,
+      .new_col_names = "slide_value"
+    )
+  )
+  expect_error(
+    multi_columns %>% epi_slide_mean(starts_with("value"), .window_size = 7, .new_col_names = "output")
+  )
+  # * Incompatible args:
+  expect_error(
+    multi_columns %>% epi_slide_opt(value, slide_sum,
+      .window_size = 7,
+      .prefix = "a", .suffix = "b", .new_col_names = "slide_value"
+    ),
+    class = "epiprocess__epi_slide_opt_incompatible_naming_args"
+  )
+  # * Bad resulting output names:
+  expect_error(
+    multi_columns %>% epi_slide_mean(value, .window_size = 7, .new_col_names = "value"),
+    class = "epiprocess__epi_slide_opt_old_new_name_conflict"
+  )
+  expect_error(
+    multi_columns %>% epi_slide_mean(value:value2, .window_size = 7, .new_col_names = c("output", "output")),
+    class = "epiprocess__epi_slide_opt_new_name_duplicated"
+  )
 })

@@ -537,7 +537,7 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #'
 #' @template basic-slide-params
 #' @param .col_names <[`tidy-select`][dplyr_tidy_select]> An unquoted column
-#'   name(e.g., `cases`), multiple column names (e.g., `c(cases, deaths)`),
+#'   name (e.g., `cases`), multiple column names (e.g., `c(cases, deaths)`),
 #'   [other tidy-select expression][tidyselect::language], or a vector of
 #'   characters (e.g. `c("cases", "deaths")`). Variable names can be used as if
 #'   they were positions in the data frame, so expressions like `x:y` can be
@@ -559,13 +559,40 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #'  `epi_slide_mean` and `epi_slide_sum`) take care of window completion
 #'  automatically to prevent associated errors.
 #' @param ... Additional arguments to pass to the slide computation `.f`, for
-#'  example, `algo` or `na.rm` in data.table functions. You don't need to
-#'  specify `.x`, `.window_size`, or `.align` (or `before`/`after` for slider
-#'  functions).
+#'   example, `algo` or `na.rm` in data.table functions. You don't need to
+#'   specify `.x`, `.window_size`, or `.align` (or `before`/`after` for slider
+#'   functions).
+#' @param .prefix Optional [`glue::glue`] format string; name the slide result
+#'   column(s) by attaching this prefix to the corresponding input column(s).
+#'   Some shorthand is supported for basing the output names on `.window_size`
+#'   or other arguments; see "Prefix and suffix shorthand" below.
+#' @param .suffix Optional [`glue::glue`] format string; like `.prefix`. The
+#'   default naming behavior is equivalent to `.suffix =
+#'   "_{.n}{.time_unit_abbr}{.align_abbr}{.f_abbr}"`. Can be used in combination
+#'   with `.prefix`.
+#' @param .new_col_names Optional character vector with length matching the
+#'   number of input columns from `.col_names`; name the slide result column(s)
+#'   with these names. Cannot be used in combination with `.prefix` and/or
+#'   `.suffix`.
+#'
+#' @section Prefix and suffix shorthand:
+#'
+#' [`glue::glue`] format strings specially interpret content within curly
+#' braces. E.g., `glue::glue("ABC{2 + 2}")` evaluates to `"ABC4"`. For `.prefix`
+#' and `.suffix`, we provide `glue` with some additional variable bindings:
+#'
+#' - `{.n}` will be the number of time steps in the computation
+#'    corresponding to the `.window_size`.
+#' - `{.time_unit_abbr}` will be a lower-case letter corresponding to the
+#'     `time_type` of `.x`
+#' - `{.align_abbr}` will be `""` if `.align` is the default of `"right"`;
+#'    otherwise, it will be the first letter of `.align`
+#' - `{.f_abbr}` will be a short string based on what `.f`
 #'
 #' @importFrom dplyr bind_rows mutate %>% arrange tibble select all_of
-#' @importFrom rlang enquo expr_label caller_arg
+#' @importFrom rlang enquo expr_label caller_arg quo_get_env
 #' @importFrom tidyselect eval_select
+#' @importFrom glue glue
 #' @importFrom purrr map map_lgl
 #' @importFrom data.table frollmean frollsum frollapply
 #' @importFrom lubridate as.period
@@ -577,8 +604,7 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #' # Compute a 7-day trailing average on cases.
 #' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_opt(cases, .f = data.table::frollmean, .window_size = 7) %>%
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
+#'   epi_slide_opt(cases, .f = data.table::frollmean, .window_size = 7)
 #'
 #' # Same as above, but adjust `frollmean` settings for speed, accuracy, and
 #' # to allow partially-missing windows.
@@ -588,11 +614,11 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #'     cases,
 #'     .f = data.table::frollmean, .window_size = 7,
 #'     algo = "exact", hasNA = TRUE, na.rm = TRUE
-#'   ) %>%
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
+#'   )
 epi_slide_opt <- function(
     .x, .col_names, .f, ...,
     .window_size = NULL, .align = c("right", "center", "left"),
+    .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
     .ref_time_values = NULL, .all_rows = FALSE) {
   assert_class(.x, "epi_df")
 
@@ -620,7 +646,7 @@ epi_slide_opt <- function(
   if ("new_col_name" %in% provided_args || ".new_col_name" %in% provided_args) {
     cli::cli_abort(
       "epi_slide_opt: the argument `new_col_name` is not supported for `epi_slide_opt`. If you want to customize
-      the output column names, use `dplyr::rename` after the slide.",
+      the output column names, use `.prefix =`, `.suffix =`, or `.new_col_**names** =`.",
       class = "epiprocess__epi_slide_opt__new_name_not_supported"
     )
   }
@@ -644,21 +670,37 @@ epi_slide_opt <- function(
     )
   }
 
+  # The position of a given column can be differ between input `.x` and
+  # `.data_group` since the grouping step by default drops grouping columns.
+  # To avoid rerunning `eval_select` for every `.data_group`, convert
+  # positions of user-provided `col_names` into string column names. We avoid
+  # using `names(pos)` directly for robustness and in case we later want to
+  # allow users to rename fields via tidyselection.
+  col_names_quo <- enquo(.col_names)
+  pos <- eval_select(col_names_quo, data = .x, allow_rename = FALSE)
+  col_names_chr <- names(.x)[pos]
+
   # Check that slide function `.f` is one of those short-listed from
   # `data.table` and `slider` (or a function that has the exact same
   # definition, e.g. if the function has been reexported or defined
   # locally).
-  if (any(map_lgl(
-    list(frollmean, frollsum, frollapply),
-    ~ identical(.f, .x)
-  ))) {
-    f_from_package <- "data.table"
-  } else if (any(map_lgl(
-    list(slide_sum, slide_prod, slide_mean, slide_min, slide_max, slide_all, slide_any),
-    ~ identical(.f, .x)
-  ))) {
-    f_from_package <- "slider"
-  } else {
+  f_possibilities <-
+    tibble::tribble(
+      ~f, ~package, ~abbr,
+      frollmean, "data.table", "av",
+      frollsum, "data.table", "sum",
+      frollapply, "data.table", "slide",
+      slide_sum, "slider", "sum",
+      slide_prod, "slider", "prod",
+      slide_mean, "slider", "av",
+      slide_min, "slider", "min",
+      slide_max, "slider", "max",
+      slide_all, "slider", "all",
+      slide_any, "slider", "any",
+    )
+  f_info <- f_possibilities %>%
+    filter(map_lgl(.data$f, ~ identical(.f, .x)))
+  if (nrow(f_info) == 0L) {
     # `f` is from somewhere else and not supported
     cli_abort(
       c(
@@ -672,6 +714,7 @@ epi_slide_opt <- function(
       epiprocess__f = .f
     )
   }
+  f_from_package <- f_info$package
 
   user_provided_rtvs <- !is.null(.ref_time_values)
   if (!user_provided_rtvs) {
@@ -702,22 +745,72 @@ epi_slide_opt <- function(
   validate_slide_window_arg(.window_size, time_type)
   window_args <- get_before_after_from_window(.window_size, .align, time_type)
 
+  # Handle output naming
+  if ((!is.null(.prefix) || !is.null(.suffix)) && !is.null(.new_col_names)) {
+    cli_abort(
+      "Can't use both .prefix/.suffix and .new_col_names at the same time.",
+      class = "epiprocess__epi_slide_opt_incompatible_naming_args"
+    )
+  }
+  assert_string(.prefix, null.ok = TRUE)
+  assert_string(.suffix, null.ok = TRUE)
+  assert_character(.new_col_names, len = length(col_names_chr), null.ok = TRUE)
+  if (is.null(.prefix) && is.null(.suffix) && is.null(.new_col_names)) {
+    .suffix <- "_{.n}{.time_unit_abbr}{.align_abbr}{.f_abbr}"
+    # ^ does not account for any arguments specified to underlying functions via
+    # `...` such as `na.rm =`, nor does it distinguish between functions from
+    # different packages accomplishing the same type of computation. Those are
+    # probably only set one way per task, so this probably produces cleaner
+    # names without clashes (though maybe some confusion if switching between
+    # code with different settings).
+  }
+  if (!is.null(.prefix) || !is.null(.suffix)) {
+    .prefix <- .prefix %||% ""
+    .suffix <- .suffix %||% ""
+    if (identical(.window_size, Inf)) {
+      n <- "running_"
+      time_unit_abbr <- ""
+      align_abbr <- ""
+    } else {
+      n <- time_delta_to_n_steps(.window_size, time_type)
+      time_unit_abbr <- time_type_unit_abbr(time_type)
+      align_abbr <- c(right = "", center = "c", left = "l")[[.align]]
+    }
+    glue_env <- rlang::env(
+      .n = n,
+      .time_unit_abbr = time_unit_abbr,
+      .align_abbr = align_abbr,
+      .f_abbr = f_info$abbr,
+      quo_get_env(col_names_quo)
+    )
+    .new_col_names <- unclass(
+      glue(.prefix, .envir = glue_env) +
+        col_names_chr +
+        glue(.suffix, .envir = glue_env)
+    )
+  } else {
+    # `.new_col_names` was provided by user; we don't need to do anything.
+  }
+  if (any(.new_col_names %in% names(.x))) {
+    cli_abort(c(
+      "Naming conflict between new columns and existing columns",
+      "x" = "Overlapping names: {format_varnames(intersect(.new_col_names, names(.x)))}"
+    ), class = "epiprocess__epi_slide_opt_old_new_name_conflict")
+  }
+  if (anyDuplicated(.new_col_names)) {
+    cli_abort(c(
+      "New column names contain duplicates",
+      "x" = "Duplicated names: {format_varnames(unique(.new_col_names[duplicated(.new_col_names)]))}"
+    ), class = "epiprocess__epi_slide_opt_new_name_duplicated")
+  }
+  result_col_names <- .new_col_names
+
   # Make a complete date sequence between min(.x$time_value) and max(.x$time_value).
   date_seq_list <- full_date_seq(.x, window_args$before, window_args$after, time_type)
   all_dates <- date_seq_list$all_dates
   pad_early_dates <- date_seq_list$pad_early_dates
   pad_late_dates <- date_seq_list$pad_late_dates
 
-  # The position of a given column can be differ between input `.x` and
-  # `.data_group` since the grouping step by default drops grouping columns.
-  # To avoid rerunning `eval_select` for every `.data_group`, convert
-  # positions of user-provided `col_names` into string column names. We avoid
-  # using `names(pos)` directly for robustness and in case we later want to
-  # allow users to rename fields via tidyselection.
-  pos <- eval_select(enquo(.col_names), data = .x, allow_rename = FALSE)
-  col_names_chr <- names(.x)[pos]
-  # Always rename results to "slide_value_<original column name>".
-  result_col_names <- paste0("slide_value_", col_names_chr)
   slide_one_grp <- function(.data_group, .group_key, ...) {
     missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
     # `frollmean` requires a full window to compute a result. Add NA values
@@ -827,8 +920,7 @@ epi_slide_opt <- function(
 #' # Compute a 7-day trailing average on cases.
 #' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_mean(cases, .window_size = 7) %>%
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
+#'   epi_slide_mean(cases, .window_size = 7)
 #'
 #' # Same as above, but adjust `frollmean` settings for speed, accuracy, and
 #' # to allow partially-missing windows.
@@ -838,11 +930,11 @@ epi_slide_opt <- function(
 #'     cases,
 #'     .window_size = 7,
 #'     na.rm = TRUE, algo = "exact", hasNA = TRUE
-#'   ) %>%
-#'   dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
+#'   )
 epi_slide_mean <- function(
     .x, .col_names, ...,
     .window_size = NULL, .align = c("right", "center", "left"),
+    .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
     .ref_time_values = NULL, .all_rows = FALSE) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
@@ -885,6 +977,9 @@ epi_slide_mean <- function(
     ...,
     .window_size = .window_size,
     .align = .align,
+    .prefix = .prefix,
+    .suffix = .suffix,
+    .new_col_names = .new_col_names,
     .ref_time_values = .ref_time_values,
     .all_rows = .all_rows
   )
@@ -899,11 +994,11 @@ epi_slide_mean <- function(
 #' # Compute a 7-day trailing sum on cases.
 #' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
-#'   epi_slide_sum(cases, .window_size = 7) %>%
-#'   dplyr::select(geo_value, time_value, cases, cases_7dsum = slide_value_cases)
+#'   epi_slide_sum(cases, .window_size = 7)
 epi_slide_sum <- function(
     .x, .col_names, ...,
     .window_size = NULL, .align = c("right", "center", "left"),
+    .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
     .ref_time_values = NULL, .all_rows = FALSE) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
@@ -945,6 +1040,9 @@ epi_slide_sum <- function(
     ...,
     .window_size = .window_size,
     .align = .align,
+    .prefix = .prefix,
+    .suffix = .suffix,
+    .new_col_names = .new_col_names,
     .ref_time_values = .ref_time_values,
     .all_rows = .all_rows
   )

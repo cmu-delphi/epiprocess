@@ -99,8 +99,8 @@ This is useful for computations like rolling averages. The function supports
 many ways to specify the computation, but by far the most common use case is
 as follows:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{# Create new column `cases_7dm` that contains a 7-day trailing median of cases
-epi_slide(edf, cases_7dav = median(cases), .window_size = 7)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{# Create new column `cases_7dmed` that contains a 7-day trailing median of cases
+epi_slide(edf, cases_7dmed = median(cases), .window_size = 7)
 }\if{html}{\out{</div>}}
 
 For two very common use cases, we provide optimized functions that are much

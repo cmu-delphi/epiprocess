@@ -136,8 +136,7 @@ geo\_value
 ``` r
 edf <- edf %>%
   group_by(geo_value) %>%
-  epi_slide_mean(cases_daily, .window_size = 7, na.rm = TRUE) %>%
-  rename(smoothed_cases_daily = slide_value_cases_daily)
+  epi_slide_mean(cases_daily, .window_size = 7, na.rm = TRUE, .prefix = "smoothed_")
 edf
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state

@@ -640,7 +640,7 @@ guess_time_type <- function(time_value, time_value_arg = rlang::caller_arg(time_
     return("day")
   } else if (inherits(time_value, "yearmonth")) {
     return("yearmonth")
-  } else if (rlang::is_integerish(time_value)) {
+  } else if (is_bare_integerish(time_value)) {
     return("integer")
   }
 
@@ -1108,4 +1108,69 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
       class = "epiprocess__validate_slide_window_arg"
     )
   }
+}
+
+
+#' Convert a time delta to a compatible integerish number of steps between time values
+#'
+#' @param time_delta a vector that can be added to time values of time type
+#'   `time_type` to arrive at other time values of that time type, or
+#'   `r lifecycle::badge("experimental")` such a vector with Inf/-Inf entries mixed
+#'   in, if supported by the class of `time_delta`, even if `time_type` doesn't
+#'   necessarily support Inf/-Inf entries. Basically a slide window arg but
+#'   without sign and length restrictions.
+#' @param time_type as in [`validate_slide_window_arg`]
+#' @return [bare integerish][rlang::is_integerish] vector (with possible
+#'   infinite values) that produces the same result as `time_delta` when added
+#'   to time values of time type `time_type`. If the given time type does not
+#'   support infinite values, then it should produce +Inf or -Inf for analogous
+#'   entries of `time_delta`, and match the addition result match the addition
+#'   result for non-infinite values, and product +Inf / -Inf when match the sign
+#'   and of `time_delta`.
+#'
+#' @keywords internal
+time_delta_to_n_steps <- function(time_delta, time_type) {
+  # could be S3 if we're willing to export
+  if (inherits(time_delta, "difftime")) {
+    output_units <- switch(time_type,
+      day = "days",
+      week = "weeks",
+      cli_abort("difftime objects not supported for time_type {format_chr_with_quotes(time_type)}")
+    )
+    units(time_delta) <- output_units # converts number to represent same duration; not just attr<-
+    n_steps <- vec_data(time_delta)
+    if (!is_bare_integerish(n_steps)) {
+      cli_abort("`time_delta` did not appear to contain only integerish numbers
+                 of steps between time values of time type {format_chr_with_quotes(time_type)}")
+    }
+    n_steps
+  } else if (is_bare_integerish(time_delta)) { # (allows infinite values)
+    switch(time_type,
+      day = ,
+      week = ,
+      yearmonth = ,
+      integer = time_delta,
+      cli_abort("Invalid or unsupported time_type {format_chr_with_quotes(time_type)}")
+    )
+  } else {
+    cli_abort("Invalid or unsupported kind of `time_delta`")
+  }
+}
+
+# Using these unit abbreviations happens to make our automatic slide output
+# naming look like taking ISO-8601 duration designations, removing the P, and
+# lowercasing any characters. Fortnightly or sub-daily time types would need an
+# adjustment to remain consistent.
+time_type_unit_abbrs <- c(
+  day = "d",
+  week = "w",
+  yearmonth = "m"
+)
+
+time_type_unit_abbr <- function(time_type) {
+  maybe_unit_abbr <- time_type_unit_abbrs[time_type]
+  if (is.na(maybe_unit_abbr)) {
+    cli_abort("Cannot determine the units of time type {format_chr_with_quotes(time_type)}")
+  }
+  maybe_unit_abbr
 }

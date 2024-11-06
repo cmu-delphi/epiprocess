@@ -232,7 +232,6 @@ as_epi_df.tbl_df <- function(
     as_of,
     other_keys = character(),
     ...) {
-  # possible standard substitutions for time_value
   x <- rename(x, ...)
   x <- guess_column_name(x, "time_value", time_column_names())
   x <- guess_column_name(x, "geo_value", geo_column_names())
@@ -282,11 +281,11 @@ as_epi_df.tbl_df <- function(
     cli_abort("as_epi_df: `other_keys` can't include \".time_value_counts\"")
   }
 
-  duplicated_time_values <- x %>%
-    group_by(across(all_of(c("geo_value", "time_value", other_keys)))) %>%
-    filter(dplyr::n() > 1) %>%
-    ungroup()
-  if (nrow(duplicated_time_values) > 0) {
+  if (anyDuplicated(x[c("geo_value", "time_value", other_keys)])) {
+    duplicated_time_values <- x %>%
+      group_by(across(all_of(c("geo_value", "time_value", other_keys)))) %>%
+      filter(dplyr::n() > 1) %>%
+      ungroup()
     bad_data <- capture.output(duplicated_time_values)
     cli_abort(
       "as_epi_df: some groups in the data have duplicated time values. epi_df requires a unique time_value per group.",
