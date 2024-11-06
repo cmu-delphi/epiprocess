@@ -564,7 +564,7 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #'  functions).
 #'
 #' @importFrom dplyr bind_rows mutate %>% arrange tibble select all_of
-#' @importFrom rlang enquo quo_get_expr as_label expr_label caller_arg
+#' @importFrom rlang enquo expr_label caller_arg
 #' @importFrom tidyselect eval_select
 #' @importFrom purrr map map_lgl
 #' @importFrom data.table frollmean frollsum frollapply
@@ -714,11 +714,7 @@ epi_slide_opt <- function(
   # positions of user-provided `col_names` into string column names. We avoid
   # using `names(pos)` directly for robustness and in case we later want to
   # allow users to rename fields via tidyselection.
-  if (inherits(quo_get_expr(enquo(.col_names)), "character")) {
-    pos <- eval_select(dplyr::all_of(.col_names), data = .x, allow_rename = FALSE)
-  } else {
-    pos <- eval_select(enquo(.col_names), data = .x, allow_rename = FALSE)
-  }
+  pos <- eval_select(enquo(.col_names), data = .x, allow_rename = FALSE)
   col_names_chr <- names(.x)[pos]
   # Always rename results to "slide_value_<original column name>".
   result_col_names <- paste0("slide_value_", col_names_chr)
