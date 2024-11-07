@@ -6,8 +6,8 @@
 #' as follows:
 #'
 #' ```
-#' # Create new column `cases_7dm` that contains a 7-day trailing median of cases
-#' epi_slide(edf, cases_7dav = median(cases), .window_size = 7)
+#' # Create new column `cases_7dmed` that contains a 7-day trailing median of cases
+#' epi_slide(edf, cases_7dmed = median(cases), .window_size = 7)
 #' ```
 #'
 #' For two very common use cases, we provide optimized functions that are much
