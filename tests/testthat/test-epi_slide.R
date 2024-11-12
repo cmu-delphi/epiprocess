@@ -812,8 +812,24 @@ test_that("epi_slide_opt output naming features", {
     yearmonthly %>% epi_slide_opt(value, slide_any, .window_size = 3) %>% names(),
     c(names(yearmonthly), "value_3many") # not the best name, but super unlikely anyway
   )
+  # * Through forwarding functions:
+  expect_equal(
+    # XXX perhaps this should be an auto-naming feature?
+    yearmonthly %>%
+      epi_slide_mean(value, .window_size = Inf) %>%
+      names(),
+    c(names(yearmonthly), "value_running_prop")
+  )
+  expect_equal(
+    # XXX perhaps this should be an auto-naming feature?
+    yearmonthly %>%
+      epi_slide_sum(value, .window_size = Inf) %>%
+      names(),
+    c(names(yearmonthly), "value_running_count")
+  )
 
   # Manual naming:
+  # * Various combinations of args:
   expect_equal(
     multi_columns %>%
       epi_slide_opt(starts_with("value"), slide_sum, .window_size = 7, .suffix = "_s{.n}") %>%
@@ -837,6 +853,15 @@ test_that("epi_slide_opt output naming features", {
       epi_slide_opt(starts_with("value"), slide_sum, .window_size = 7, .new_col_names = c("slide_value", "sv2")) %>%
       names(),
     c(names(multi_columns), "slide_value", "sv2")
+  )
+  # * Through forwarding functions:
+  expect_equal(
+    yearmonthly %>% epi_slide_mean(value, .window_size = Inf, .suffix = "_{.f_abbr}") %>% names(),
+    c(names(yearmonthly), "value_prop")
+  )
+  expect_equal(
+    yearmonthly %>% epi_slide_sum(value, .window_size = Inf, .suffix = "_{.f_abbr}") %>% names(),
+    c(names(yearmonthly), "value_count")
   )
 
   # Validation errors:

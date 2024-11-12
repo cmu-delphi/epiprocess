@@ -155,7 +155,8 @@ corresponding to the \code{.window_size}.
 \code{time_type} of \code{.x}
 \item \code{{.align_abbr}} will be \code{""} if \code{.align} is the default of \code{"right"};
 otherwise, it will be the first letter of \code{.align}
-\item \code{{.f_abbr}} will be a short string based on what \code{.f}
+\item \code{{.f_abbr}} will be a character vector containing a short abbreviation
+for \code{.f} factoring in the input column type(s) for \code{.col_names}
 }
 }
 

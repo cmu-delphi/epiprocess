@@ -1174,3 +1174,8 @@ time_type_unit_abbr <- function(time_type) {
   }
   maybe_unit_abbr
 }
+
+unwrap <- function(x) {
+  checkmate::assert_list(x, len = 1L, names = "unnamed")
+  x[[1L]]
+}

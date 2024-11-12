@@ -587,7 +587,8 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #'     `time_type` of `.x`
 #' - `{.align_abbr}` will be `""` if `.align` is the default of `"right"`;
 #'    otherwise, it will be the first letter of `.align`
-#' - `{.f_abbr}` will be a short string based on what `.f`
+#' - `{.f_abbr}` will be a character vector containing a short abbreviation
+#'    for `.f` factoring in the input column type(s) for `.col_names`
 #'
 #' @importFrom dplyr bind_rows mutate %>% arrange tibble select all_of
 #' @importFrom rlang enquo expr_label caller_arg quo_get_env
@@ -681,22 +682,23 @@ epi_slide_opt <- function(
   col_names_chr <- names(.x)[pos]
 
   # Check that slide function `.f` is one of those short-listed from
-  # `data.table` and `slider` (or a function that has the exact same
-  # definition, e.g. if the function has been reexported or defined
-  # locally).
+  # `data.table` and `slider` (or a function that has the exact same definition,
+  # e.g. if the function has been reexported or defined locally). Extract some
+  # metadata. `namer` will be mapped over columns (.x will be a column, not the
+  # entire edf).
   f_possibilities <-
     tibble::tribble(
-      ~f, ~package, ~abbr,
-      frollmean, "data.table", "av",
-      frollsum, "data.table", "sum",
-      frollapply, "data.table", "slide",
-      slide_sum, "slider", "sum",
-      slide_prod, "slider", "prod",
-      slide_mean, "slider", "av",
-      slide_min, "slider", "min",
-      slide_max, "slider", "max",
-      slide_all, "slider", "all",
-      slide_any, "slider", "any",
+      ~f, ~package, ~namer,
+      frollmean, "data.table", ~ if (is.logical(.x)) "prop" else "av",
+      frollsum, "data.table", ~ if (is.logical(.x)) "count" else "sum",
+      frollapply, "data.table", ~"slide",
+      slide_sum, "slider", ~ if (is.logical(.x)) "count" else "sum",
+      slide_prod, "slider", ~"prod",
+      slide_mean, "slider", ~ if (is.logical(.x)) "prop" else "av",
+      slide_min, "slider", ~"min",
+      slide_max, "slider", ~"max",
+      slide_all, "slider", ~"all",
+      slide_any, "slider", ~"any",
     )
   f_info <- f_possibilities %>%
     filter(map_lgl(.data$f, ~ identical(.f, .x)))
@@ -780,7 +782,7 @@ epi_slide_opt <- function(
       .n = n,
       .time_unit_abbr = time_unit_abbr,
       .align_abbr = align_abbr,
-      .f_abbr = f_info$abbr,
+      .f_abbr = purrr::map_chr(.x[col_names_chr], unwrap(f_info$namer)),
       quo_get_env(col_names_quo)
     )
     .new_col_names <- unclass(
