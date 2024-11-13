@@ -1,5 +1,5 @@
 development:
-  mode: auto
+  mode: devel
 
 template:
   package: delphidocs
