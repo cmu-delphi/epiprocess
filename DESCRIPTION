@@ -72,7 +72,7 @@ Suggests:
 VignetteBuilder:
     knitr
 Remotes:
-    cmu-delphi/delphidocs
+    cmu-delphi/delphidocs,
     cmu-delphi/epidatasets,
     cmu-delphi/epidatr,
     glmgen/genlasso,
