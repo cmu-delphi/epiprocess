@@ -42,7 +42,7 @@ jobs:
           needs: website
 
       - name: Build site
-# our versioning system+dev branch doesn't match the requirements for
+        # our versioning system+dev branch doesn't match the requirements for
         # develop mode = auto
         run: |
           target_ref <- "${{ github.event_name == 'pull_request' && github.base_ref || github.ref }}"
