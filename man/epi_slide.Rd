@@ -16,8 +16,8 @@ epi_slide(
 )
 }
 \arguments{
-\item{.x}{An \code{epi_df} object. If ungrouped, we group by \code{geo_value} and any
-columns in \code{other_keys}. If grouped, we make sure the grouping is by
+\item{.x}{An \code{epi_df} object. If ungrouped, we temporarily group by \code{geo_value}
+and any columns in \code{other_keys}. If grouped, we make sure the grouping is by
 \code{geo_value} and \code{other_keys}.}
 
 \item{.f}{Function, formula, or missing; together with \code{...} specifies the

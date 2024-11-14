@@ -47,8 +47,8 @@ epi_slide_sum(
 )
 }
 \arguments{
-\item{.x}{An \code{epi_df} object. If ungrouped, we group by \code{geo_value} and any
-columns in \code{other_keys}. If grouped, we make sure the grouping is by
+\item{.x}{An \code{epi_df} object. If ungrouped, we temporarily group by \code{geo_value}
+and any columns in \code{other_keys}. If grouped, we make sure the grouping is by
 \code{geo_value} and \code{other_keys}.}
 
 \item{.col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
@@ -198,8 +198,10 @@ covid_case_death_rates_extended \%>\%
 # output column names:
 covid_case_death_rates_extended \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(c(case_rate, death_rate), .window_size = 7,
-                 .new_col_names = c("smoothed_case_rate", "smoothed_death_rate")) \%>\%
+  epi_slide_mean(c(case_rate, death_rate),
+    .window_size = 7,
+    .new_col_names = c("smoothed_case_rate", "smoothed_death_rate")
+  ) \%>\%
   ungroup()
 covid_case_death_rates_extended \%>\%
   group_by(geo_value) \%>\%

@@ -1,5 +1,5 @@
-#' @param .x An `epi_df` object. If ungrouped, we group by `geo_value` and any
-#'   columns in `other_keys`. If grouped, we make sure the grouping is by
+#' @param .x An `epi_df` object. If ungrouped, we temporarily group by `geo_value`
+#'   and any columns in `other_keys`. If grouped, we make sure the grouping is by
 #'   `geo_value` and `other_keys`.
 #' @param .window_size The size of the sliding window. The accepted values
 #' depend on the type of the `time_value` column in `.x`:

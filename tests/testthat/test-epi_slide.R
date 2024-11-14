@@ -899,3 +899,41 @@ test_that("epi_slide_opt output naming features", {
     class = "epiprocess__epi_slide_opt_new_name_duplicated"
   )
 })
+
+test_that("epi_slide* output grouping matches input grouping", {
+  toy_edf <- as_epi_df(bind_rows(list(
+    tibble(geo_value = 1, age_group = 1, time_value = as.Date("2020-01-01") + 1:10 - 1, value = 1:10),
+    tibble(geo_value = 1, age_group = 2, time_value = as.Date("2020-01-01") + 1:10 - 1, value = 20:11),
+    tibble(geo_value = 2, age_group = 2, time_value = as.Date("2020-01-01") + 1:10 - 1, value = 31:40)
+  )), other_keys = "age_group", as_of = as.Date("2020-01-01") + 20)
+
+  # Preserving existing grouping:
+  expect_equal(
+    toy_edf %>%
+      group_by(age_group, geo_value) %>%
+      epi_slide(value_7dsum = sum(value), .window_size = 7) %>%
+      group_vars(),
+    c("age_group", "geo_value")
+  )
+  expect_equal(
+    toy_edf %>%
+      group_by(age_group, geo_value) %>%
+      epi_slide_sum(value, .window_size = 7) %>%
+      group_vars(),
+    c("age_group", "geo_value")
+  )
+
+  # Removing automatic grouping:
+  expect_equal(
+    toy_edf %>%
+      epi_slide(value_7dsum = sum(value), .window_size = 7) %>%
+      group_vars(),
+    character(0)
+  )
+  expect_equal(
+    toy_edf %>%
+      epi_slide_sum(value, .window_size = 7) %>%
+      group_vars(),
+    character(0)
+  )
+})
