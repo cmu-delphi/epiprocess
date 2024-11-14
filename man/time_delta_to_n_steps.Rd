@@ -22,8 +22,7 @@ infinite values) that produces the same result as \code{time_delta} when added
 to time values of time type \code{time_type}. If the given time type does not
 support infinite values, then it should produce +Inf or -Inf for analogous
 entries of \code{time_delta}, and match the addition result match the addition
-result for non-infinite values, and product +Inf / -Inf when match the sign
-and of \code{time_delta}.
+result for non-infinite entries.
 }
 \description{
 Convert a time delta to a compatible integerish number of steps between time values

@@ -1125,8 +1125,7 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
 #'   to time values of time type `time_type`. If the given time type does not
 #'   support infinite values, then it should produce +Inf or -Inf for analogous
 #'   entries of `time_delta`, and match the addition result match the addition
-#'   result for non-infinite values, and product +Inf / -Inf when match the sign
-#'   and of `time_delta`.
+#'   result for non-infinite entries.
 #'
 #' @keywords internal
 time_delta_to_n_steps <- function(time_delta, time_type) {
