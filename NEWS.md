@@ -14,12 +14,10 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   with `covid`. The data set previously named `jhu_confirmed_cumulative_num` has
   been removed from the package, but a renamed version is has been removed from
   the package, but a renamed version is still available in `epidatasets`.
-
-## Bug fixes
-
-- Removed `.window_size = 1` default from `epi_slide_{mean,sum,opt}`; this
-  argument is now mandatory, and should nearly always be greater than 1 except
-  for testing purposes.
+- `epi_slide_{sum,mean,opt}` have improved default output column names, and
+  additional arguments for specifying names: `.prefix`, `.suffix`,
+  `.new_col_names`. To obtain the old naming behavior, use `.prefix =
+  "slide_value_"`.
 
 ## Improvements
 
@@ -29,6 +27,18 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - Improved validation of `.window_size` arguments.
 - Rewrote a lot of the package documentation to be more consistent and
   informative. Simplified and streamlined the vignettes.
+- `epi_slide_{sum,mean,opt}` on ungrouped `epi_df`s will now temporarily group
+  by `geo_value` and any `other_keys` for the slide operation rather than raise
+  an error about duplicated time values. `epi_slide`'s analogous automatic
+  grouping has been made temporary in order to match.
+
+## Bug fixes
+
+- Removed `.window_size = 1` default from `epi_slide_{mean,sum,opt}`; this
+  argument is now mandatory, and should nearly always be greater than 1 except
+  for testing purposes.
+- Fixed `epi_slide_{sum,mean,opt}` raising an error on certain tidyselect
+  expressions.
 
 ## Cleanup
 
