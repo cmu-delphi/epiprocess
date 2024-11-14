@@ -14,16 +14,16 @@ in, if supported by the class of \code{time_delta}, even if \code{time_type} doe
 necessarily support Inf/-Inf entries. Basically a slide window arg but
 without sign and length restrictions.}
 
-\item{time_type}{as in \code{\link{validate_slide_window_arg}}}
+\item{time_type}{as in \code{validate_slide_window_arg}}
 }
 \value{
 \link[rlang:is_integerish]{bare integerish} vector (with possible
 infinite values) that produces the same result as \code{time_delta} when
-multiplied by some "unit time step" for that time type and added to time
-values of time type \code{time_type}. If the given time type does not support
-infinite values, then it should produce +Inf or -Inf for analogous entries
-of \code{time_delta}, and match the addition result match the addition result
-for non-infinite entries.
+multiplied by the "natural" "unit time delta" (not yet implemented) for
+that time type and added to time values of time type \code{time_type}. If the
+given time type does not support infinite values, then it should produce
++Inf or -Inf for analogous entries of \code{time_delta}, and match the addition
+result match the addition result for non-infinite entries.
 }
 \description{
 Convert a time delta to a integerish number of "unit" steps between time values

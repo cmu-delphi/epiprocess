@@ -1119,14 +1119,14 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
 #'   in, if supported by the class of `time_delta`, even if `time_type` doesn't
 #'   necessarily support Inf/-Inf entries. Basically a slide window arg but
 #'   without sign and length restrictions.
-#' @param time_type as in [`validate_slide_window_arg`]
+#' @param time_type as in `validate_slide_window_arg`
 #' @return [bare integerish][rlang::is_integerish] vector (with possible
 #'   infinite values) that produces the same result as `time_delta` when
-#'   multiplied by some "unit time step" for that time type and added to time
-#'   values of time type `time_type`. If the given time type does not support
-#'   infinite values, then it should produce +Inf or -Inf for analogous entries
-#'   of `time_delta`, and match the addition result match the addition result
-#'   for non-infinite entries.
+#'   multiplied by the "natural" "unit time delta" (not yet implemented) for
+#'   that time type and added to time values of time type `time_type`. If the
+#'   given time type does not support infinite values, then it should produce
+#'   +Inf or -Inf for analogous entries of `time_delta`, and match the addition
+#'   result match the addition result for non-infinite entries.
 #'
 #' @keywords internal
 time_delta_to_n_steps <- function(time_delta, time_type) {
