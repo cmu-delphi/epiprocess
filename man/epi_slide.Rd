@@ -172,6 +172,7 @@ cases_deaths_subset \%>\%
     },
     .window_size = 7
   ) \%>\%
+  ungroup() \%>\%
   dplyr::select(geo_value, time_value, cases, cases_7sd, cases_7dav)
 
 # Use the geo_value or the ref_time_value in the slide computation

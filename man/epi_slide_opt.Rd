@@ -164,7 +164,8 @@ for \code{.f} factoring in the input column type(s) for \code{.col_names}
 # Compute a 7-day trailing average on cases.
 cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_opt(cases, .f = data.table::frollmean, .window_size = 7)
+  epi_slide_opt(cases, .f = data.table::frollmean, .window_size = 7) \%>\%
+  ungroup()
 
 # Same as above, but adjust `frollmean` settings for speed, accuracy, and
 # to allow partially-missing windows.
@@ -174,25 +175,56 @@ cases_deaths_subset \%>\%
     cases,
     .f = data.table::frollmean, .window_size = 7,
     algo = "exact", hasNA = TRUE, na.rm = TRUE
-  )
-# Compute a 7-day trailing average on cases.
-cases_deaths_subset \%>\%
+  ) \%>\%
+  ungroup()
+# Compute a 7-day trailing average of case rates.
+covid_case_death_rates_extended \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(cases, .window_size = 7)
+  epi_slide_mean(case_rate, .window_size = 7) \%>\%
+  ungroup()
 
 # Same as above, but adjust `frollmean` settings for speed, accuracy, and
 # to allow partially-missing windows.
-cases_deaths_subset \%>\%
+covid_case_death_rates_extended \%>\%
   group_by(geo_value) \%>\%
   epi_slide_mean(
-    cases,
+    case_rate,
     .window_size = 7,
     na.rm = TRUE, algo = "exact", hasNA = TRUE
-  )
+  ) \%>\%
+  ungroup()
+
+# Compute a 7-day trailing average of case rates and death rates, with custom
+# output column names:
+covid_case_death_rates_extended \%>\%
+  group_by(geo_value) \%>\%
+  epi_slide_mean(c(case_rate, death_rate),
+    .window_size = 7,
+    .new_col_names = c("smoothed_case_rate", "smoothed_death_rate")
+  ) \%>\%
+  ungroup()
+covid_case_death_rates_extended \%>\%
+  group_by(geo_value) \%>\%
+  epi_slide_mean(c(case_rate, death_rate), .window_size = 7, .suffix = "_{.n}{.time_unit_abbr}_avg") \%>\%
+  ungroup()
 # Compute a 7-day trailing sum on cases.
 cases_deaths_subset \%>\%
+  select(geo_value, time_value, cases) \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_sum(cases, .window_size = 7)
+  epi_slide_sum(cases, .window_size = 7) \%>\%
+  ungroup()
+
+# Specify output column names and/or naming scheme:
+cases_deaths_subset \%>\%
+  select(geo_value, time_value, cases) \%>\%
+  group_by(geo_value) \%>\%
+  epi_slide_sum(cases, .window_size = 7, .new_col_names = "case_sum") \%>\%
+  ungroup()
+cases_deaths_subset \%>\%
+  select(geo_value, time_value, cases) \%>\%
+  group_by(geo_value) \%>\%
+  epi_slide_sum(cases, .window_size = 7, .prefix = "sum_") \%>\%
+  ungroup()
 }
 \seealso{
 \code{\link{epi_slide}} for the more general slide function
