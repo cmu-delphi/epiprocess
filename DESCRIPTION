@@ -72,10 +72,12 @@ Suggests:
 VignetteBuilder:
     knitr
 Remotes:
+    cmu-delphi/delphidocs,
     cmu-delphi/epidatasets,
     cmu-delphi/epidatr,
     glmgen/genlasso,
     reconverse/outbreaks
+Config/Needs/website: cmu-delphi/delphidocs
 Config/testthat/edition: 3
 Config/testthat/parallel: true
 Copyright: file inst/COPYRIGHTS
