@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{time_delta_to_n_steps}
 \alias{time_delta_to_n_steps}
-\title{Convert a time delta to a compatible integerish number of steps between time values}
+\title{Convert a time delta to a integerish number of "unit" steps between time values}
 \usage{
 time_delta_to_n_steps(time_delta, time_type)
 }
@@ -18,13 +18,14 @@ without sign and length restrictions.}
 }
 \value{
 \link[rlang:is_integerish]{bare integerish} vector (with possible
-infinite values) that produces the same result as \code{time_delta} when added
-to time values of time type \code{time_type}. If the given time type does not
-support infinite values, then it should produce +Inf or -Inf for analogous
-entries of \code{time_delta}, and match the addition result match the addition
-result for non-infinite entries.
+infinite values) that produces the same result as \code{time_delta} when
+multiplied by some "unit time step" for that time type and added to time
+values of time type \code{time_type}. If the given time type does not support
+infinite values, then it should produce +Inf or -Inf for analogous entries
+of \code{time_delta}, and match the addition result match the addition result
+for non-infinite entries.
 }
 \description{
-Convert a time delta to a compatible integerish number of steps between time values
+Convert a time delta to a integerish number of "unit" steps between time values
 }
 \keyword{internal}
