@@ -198,10 +198,8 @@ covid_case_death_rates_extended \%>\%
 # output column names:
 covid_case_death_rates_extended \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(c(case_rate, death_rate),
-    .window_size = 7,
-    .new_col_names = c("smoothed_case_rate", "smoothed_death_rate")
-  ) \%>\%
+  epi_slide_mean(c(case_rate, death_rate), .window_size = 7,
+                 .new_col_names = c("smoothed_case_rate", "smoothed_death_rate")) \%>\%
   ungroup()
 covid_case_death_rates_extended \%>\%
   group_by(geo_value) \%>\%
