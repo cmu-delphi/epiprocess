@@ -205,7 +205,10 @@ covid_case_death_rates_extended \%>\%
   ungroup()
 covid_case_death_rates_extended \%>\%
   group_by(geo_value) \%>\%
-  epi_slide_mean(c(case_rate, death_rate), .window_size = 7, .suffix = "_{.n}{.time_unit_abbr}_avg") \%>\%
+  epi_slide_mean(c(case_rate, death_rate),
+    .window_size = 7,
+    .suffix = "_{.n}{.time_unit_abbr}_avg"
+  ) \%>\%
   ungroup()
 # Compute a 7-day trailing sum on cases.
 cases_deaths_subset \%>\%
