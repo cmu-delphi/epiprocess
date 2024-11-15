@@ -1122,7 +1122,7 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
 #' @param time_type as in `validate_slide_window_arg`
 #' @return [bare integerish][rlang::is_integerish] vector (with possible
 #'   infinite values) that produces the same result as `time_delta` when
-#'   multiplied by the "natural" "unit time delta" (not yet implemented) for
+#'   multiplied by the natural [`unit_time_delta`] for
 #'   that time type and added to time values of time type `time_type`. If the
 #'   given time type does not support infinite values, then it should produce
 #'   +Inf or -Inf for analogous entries of `time_delta`, and match the addition
@@ -1155,6 +1155,26 @@ time_delta_to_n_steps <- function(time_delta, time_type) {
   } else {
     cli_abort("Invalid or unsupported kind of `time_delta`")
   }
+}
+
+#' Object that, added to time_values of time_type, advances by one time step/interval
+#'
+#' @param time_type string; `epi_df`'s or `epi_archive`'s `time_type`
+#' @return an object `u` such that `time_values + u` represents advancing by one
+#'   time step / moving to the subsequent time interval for any `time_values`
+#'   object of time type `time_type`, and such that `time_values + k * u` for
+#'   integerish vector `k` advances by `k` steps (with vectorization,
+#'   recycling).
+#'
+#' @export
+unit_time_delta <- function(time_type) {
+  switch(time_type,
+    day = as.difftime(1, units = "days"),
+    week = as.difftime(1, units = "weeks"),
+    yearmonth = 1,
+    integer = 1L,
+    cli_abort("Unsupported time_type: {time_type}")
+  )
 }
 
 # Using these unit abbreviations happens to make our automatic slide output
