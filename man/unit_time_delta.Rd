@@ -19,3 +19,4 @@ recycling).
 \description{
 Object that, added to time_values of time_type, advances by one time step/interval
 }
+\keyword{internal}

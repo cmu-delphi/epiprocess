@@ -1166,7 +1166,7 @@ time_delta_to_n_steps <- function(time_delta, time_type) {
 #'   integerish vector `k` advances by `k` steps (with vectorization,
 #'   recycling).
 #'
-#' @export
+#' @keywords internal
 unit_time_delta <- function(time_type) {
   switch(time_type,
     day = as.difftime(1, units = "days"),
