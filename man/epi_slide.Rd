@@ -91,7 +91,8 @@ a missing value marker (typically NA, but more technically the result of
 }
 \value{
 An \code{epi_df} object with one or more new slide computation columns
-added.
+added. It will be ungrouped if \code{.x} was ungrouped, and have the same groups
+as \code{.x} if \code{.x} was grouped.
 }
 \description{
 Slides a given function over variables in an \code{epi_df} object.

@@ -130,7 +130,8 @@ a missing value marker (typically NA, but more technically the result of
 }
 \value{
 An \code{epi_df} object with one or more new slide computation columns
-added.
+added. It will be ungrouped if \code{.x} was ungrouped, and have the same groups
+as \code{.x} if \code{.x} was grouped.
 }
 \description{
 \code{epi_slide_opt} allows sliding an n-timestep \link[data.table:froll]{data.table::froll}

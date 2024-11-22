@@ -32,4 +32,5 @@
 #'   a missing value marker (typically NA, but more technically the result of
 #'   `vctrs::vec_cast`-ing `NA` to the type of the slide computation output).
 #' @return An `epi_df` object with one or more new slide computation columns
-#'   added.
+#'   added. It will be ungrouped if `.x` was ungrouped, and have the same groups
+#'   as `.x` if `.x` was grouped.
