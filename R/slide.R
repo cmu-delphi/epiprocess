@@ -702,7 +702,7 @@ epi_slide_opt <- function(
         "`.x` must be either grouped by {expected_group_keys} or ungrouped; if the latter,
          we'll temporarily group by {expected_group_keys} for this operation. You may need
         to aggregate your data first, see aggregate_epi_df().",
-        class = "epiprocess__epi_slide__invalid_grouping"
+        class = "epiprocess__epi_slide_opt__invalid_grouping"
       )
     }
   } else {
