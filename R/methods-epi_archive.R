@@ -688,10 +688,10 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   requested `.versions`) for rows having a `time_value` of at least `.version
 #'   - before`. Otherwise, the slide computation will be passed only the most
 #'   recent `version` for every unique `time_value`. Default is `FALSE`.
-#' @return A tibble whose columns are: the grouping variables, `time_value`,
-#'   containing the reference time values for the slide computation, and a
-#'   column named according to the `.new_col_name` argument, containing the slide
-#'   values.
+#' @return A tibble whose columns are: the grouping variables (if any),
+#'   `time_value`, containing the reference time values for the slide
+#'   computation, and a column named according to the `.new_col_name` argument,
+#'   containing the slide values. It will be grouped by the grouping variables.
 #'
 #' @details A few key distinctions between the current function and `epi_slide()`:
 #'   1. In `.f` functions for `epix_slide`, one should not assume that the input

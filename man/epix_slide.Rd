@@ -104,10 +104,10 @@ requested \code{.versions}) for rows having a \code{time_value} of at least `.ve
 }}
 }
 \value{
-A tibble whose columns are: the grouping variables, \code{time_value},
-containing the reference time values for the slide computation, and a
-column named according to the \code{.new_col_name} argument, containing the slide
-values.
+A tibble whose columns are: the grouping variables (if any),
+\code{time_value}, containing the reference time values for the slide
+computation, and a column named according to the \code{.new_col_name} argument,
+containing the slide values. It will be grouped by the grouping variables.
 }
 \description{
 Slides a given function over variables in an \code{epi_archive} object. This
