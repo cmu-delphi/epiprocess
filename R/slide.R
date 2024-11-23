@@ -797,6 +797,12 @@ epi_slide_opt <- function(
       epiprocess__f = .f
     )
   }
+  if (nrow(f_info) > 1L) {
+    cli_abort('epiprocess internal error: looking up `.f` in table of possible
+               functions yielded multiple matches. Please report it using "New
+               issue" at https://github.com/cmu-delphi/epiprocess/issues, using
+               reprex::reprex to provide a minimal reproducible example.')
+  }
   f_from_package <- f_info$package
 
   user_provided_rtvs <- !is.null(.ref_time_values)
