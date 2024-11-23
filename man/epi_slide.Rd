@@ -165,8 +165,8 @@ cases_deaths_subset \%>\%
 
 # The tidyverse supports ["packing"][tidyr::pack] multiple columns into a
 # single tibble-type column contained within some larger tibble. Like dplyr,
-# we normally don't pack output columns together, but will if you provide a
-# name for a tibble-type output:
+# we normally don't pack output columns together. However, packing behavior can be turned on
+# by providing a name for a tibble-type output:
 cases_deaths_subset \%>\%
   epi_slide(
     slide_packed = tibble(
