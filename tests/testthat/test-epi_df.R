@@ -40,6 +40,20 @@ test_that("as_epi_df errors for non-character other_keys", {
   expect_silent(as_epi_df(ex_input, other_keys = c("state", "pol")))
 })
 
+test_that("as_epi_df errors on nonunique epikeytime", {
+  expect_snapshot(
+    as_epi_df(tibble::tibble(
+      geo_value = 1, time_value = 1, value = 1:2
+    ), as_of = 5),
+    error = TRUE
+  )
+  expect_no_error(
+    as_epi_df(tibble::tibble(
+      geo_value = 1, age_group = 1:2, time_value = 1, value = 1:2
+    ), other_keys = "age_group", as_of = 5)
+  )
+})
+
 test_that("as_epi_df works for nonstandard input", {
   tib <- tibble::tibble(
     x = 1:10, y = 1:10,

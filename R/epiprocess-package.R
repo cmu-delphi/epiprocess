@@ -5,8 +5,11 @@
 #' @import epidatasets
 #' @importFrom checkmate anyInfinite anyMissing assert assert_character
 #' @importFrom checkmate assert_class assert_data_frame assert_int assert_list
+#' @importFrom checkmate assert_false
 #' @importFrom checkmate assert_logical assert_numeric assert_scalar checkInt
 #' @importFrom checkmate assert_string
+#' @importFrom checkmate assert_subset
+#' @importFrom checkmate assert_tibble
 #' @importFrom checkmate check_atomic check_data_frame expect_class test_int
 #' @importFrom checkmate check_names
 #' @importFrom checkmate test_subset test_set_equal vname
@@ -14,11 +17,14 @@
 #' @importFrom data.table as.data.table
 #' @importFrom data.table key
 #' @importFrom data.table setkeyv
+#' @importFrom dplyr arrange
+#' @importFrom dplyr is_grouped_df
 #' @importFrom dplyr select
 #' @importFrom lifecycle deprecated
 #' @importFrom rlang %||%
 #' @importFrom rlang is_bare_integerish
 #' @importFrom vctrs vec_data
+#' @importFrom vctrs vec_equal
 ## usethis namespace: end
 NULL
 

@@ -18,6 +18,7 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   additional arguments for specifying names: `.prefix`, `.suffix`,
   `.new_col_names`. To obtain the old naming behavior, use `.prefix =
   "slide_value_"`.
+- `as_epi_df` now removes any grouping that `x` had applied.
 
 ## Improvements
 
@@ -31,6 +32,7 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   by `geo_value` and any `other_keys` for the slide operation rather than raise
   an error about duplicated time values. `epi_slide`'s analogous automatic
   grouping has been made temporary in order to match.
+- Improved speed of key-uniqueness checks.
 
 ## Bug fixes
 

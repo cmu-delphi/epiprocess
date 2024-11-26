@@ -1195,7 +1195,61 @@ time_type_unit_abbr <- function(time_type) {
   maybe_unit_abbr
 }
 
+#' Extract singular element of a length-1 unnamed list (validated)
+#'
+#' Inverse of `list(elt)`.
+#'
+#' @param x a length-1 list
+#' @return x[[1L]], if x actually was a length-1 list; error otherwise
+#'
+#' @keywords internal
 unwrap <- function(x) {
   checkmate::assert_list(x, len = 1L, names = "unnamed")
   x[[1L]]
+}
+
+#' Check that a unique key is indeed unique in a tibble (TRUE/str)
+#'
+#' A `checkmate`-style check function.
+#'
+#' @param x a tibble, with no particular row or column order (if you have a
+#'   guaranteed row order based on the ukey you can probably do something more
+#'   efficient)
+#' @param ukey_names character vector; subset of column names of `x` denoting a
+#'   unique key.
+#' @param end_cli_message optional character vector, a cli message format
+#'   string/vector; information/advice to tack onto any error messages.
+#' @return `TRUE` if no ukey is duplicated (i.e., `x[ukey_names]` has no
+#'   duplicated rows); string with an error message if there are errors.
+#'
+#' @keywords internal
+check_ukey_unique <- function(x, ukey_names, end_cli_message = character()) {
+  assert_tibble(x) # to not have to think about `data.table` perf, xface
+  assert_false(is_grouped_df(x)) # to not have to think about `grouped_df` perf, xface
+  assert_character(ukey_names)
+  assert_subset(ukey_names, names(x))
+  #
+  if (nrow(x) <= 1L) {
+    TRUE
+  } else {
+    # Fast check, slow error message.
+    arranged_ukeys <- arrange(x[ukey_names], across(all_of(ukey_names)))
+    if (!any(vec_equal(arranged_ukeys[-1L, ], arranged_ukeys[-nrow(arranged_ukeys), ]))) {
+      TRUE
+    } else {
+      bad_data <- x %>%
+        group_by(across(all_of(ukey_names))) %>%
+        filter(dplyr::n() > 1) %>%
+        ungroup()
+      lines <- c(
+        cli::format_error("
+          There cannot be more than one row with the same combination of
+          {format_varnames(ukey_names)}.  Problematic rows:
+        "),
+        capture.output(bad_data),
+        cli::format_message(end_cli_message)
+      )
+      paste(collapse = "\n", lines)
+    }
+  }
 }

@@ -259,18 +259,7 @@ epi_slide <- function(
   assert_logical(.all_rows, len = 1)
 
   # Check for duplicated time values within groups
-  duplicated_time_values <- .x %>%
-    group_epi_df() %>%
-    filter(dplyr::n() > 1) %>%
-    ungroup()
-  if (nrow(duplicated_time_values) > 0) {
-    bad_data <- capture.output(duplicated_time_values)
-    cli_abort(
-      "as_epi_df: some groups in a resulting dplyr computation have duplicated time values.
-      epi_df requires a unique time_value per group.",
-      body = c("Sample groups:", bad_data)
-    )
-  }
+  assert(check_ukey_unique(ungroup(.x), c(group_vars(.x), "time_value")))
 
   # Begin handling completion. This will create a complete time index between
   # the smallest and largest time values in the data. This is used to ensure
@@ -751,6 +740,9 @@ epi_slide_opt <- function(
       epiprocess__x = .x
     )
   }
+
+  # Check for duplicated time values within groups
+  assert(check_ukey_unique(ungroup(.x), c(group_vars(.x), "time_value")))
 
   # The position of a given column can be differ between input `.x` and
   # `.data_group` since the grouping step by default drops grouping columns.

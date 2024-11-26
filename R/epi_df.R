@@ -279,22 +279,20 @@ as_epi_df.tbl_df <- function(
   }
 
   assert_character(other_keys)
+  assert_subset(other_keys, names(x))
+  # Fix up if given more than just other keys, at least until epipredict#428
+  # merged:
+  other_keys <- other_keys[!other_keys %in% c("geo_value", "time_value")]
 
   if (".time_value_counts" %in% other_keys) {
     cli_abort("as_epi_df: `other_keys` can't include \".time_value_counts\"")
   }
 
-  if (anyDuplicated(x[c("geo_value", "time_value", other_keys)])) {
-    duplicated_time_values <- x %>%
-      group_by(across(all_of(c("geo_value", "time_value", other_keys)))) %>%
-      filter(dplyr::n() > 1) %>%
-      ungroup()
-    bad_data <- capture.output(duplicated_time_values)
-    cli_abort(
-      "as_epi_df: some groups in the data have duplicated time values. epi_df requires a unique time_value per group.",
-      body = c("Sample groups:", bad_data)
-    )
-  }
+  assert(check_ukey_unique(x, c("geo_value", other_keys, "time_value"), c(
+    ">" = "If this is line list data, convert it to counts/rates first.",
+    ">" = "If this contains a demographic breakdown, check that you have
+           specified appropriate `other_keys`" # . from checkmate
+  )))
 
   new_epi_df(x, geo_type, time_type, as_of, other_keys)
 }
