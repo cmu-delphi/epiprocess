@@ -79,17 +79,36 @@ ggplot2::autoplot
 
 # epidatasets -------------------------------------------------------------------
 
+#' @rdname epidatasets_reexports
+#'
+#' @title Selected example data sets from `epidatasets`
+#'
+#' @description Data sets re-exported from `epidatasets`; please see
+#'   documentation for each of these objects in `epidatasets`.
+#'
+#' A brief description of the format of each of the objects above are described
+#' in matching order below.
+#'
+#' @keywords internal
 #' @export
 delayedAssign("cases_deaths_subset", epidatasets::cases_deaths_subset)
 
+#' @rdname epidatasets_reexports
+#' @keywords internal
 #' @export
 delayedAssign("covid_incidence_county_subset", epidatasets::covid_incidence_county_subset)
 
+#' @rdname epidatasets_reexports
+#' @keywords internal
 #' @export
 delayedAssign("covid_incidence_outliers", epidatasets::covid_incidence_outliers)
 
+#' @rdname epidatasets_reexports
+#' @keywords internal
 #' @export
 delayedAssign("archive_cases_dv_subset", epidatasets::archive_cases_dv_subset)
 
+#' @rdname epidatasets_reexports
+#' @keywords internal
 #' @export
 delayedAssign("covid_case_death_rates_extended", epidatasets::covid_case_death_rates_extended)
