@@ -75,6 +75,22 @@ test_that("as_epi_df works for nonstandard input", {
   )
 })
 
+test_that("as_epi_df ungroups", {
+  expect_false(
+    tibble::tibble(geo_value = 1, time_value = 1) %>%
+      dplyr::group_by(geo_value) %>%
+      as_epi_df(as_of = 2) %>%
+      dplyr::is_grouped_df()
+  )
+  expect_false(
+    tibble::tibble(geo_value = 1, time_value = 1) %>%
+      as_epi_df(as_of = 2) %>%
+      dplyr::group_by(geo_value) %>%
+      as_epi_df(as_of = 2) %>%
+      dplyr::is_grouped_df()
+  )
+})
+
 # select fixes
 tib <- tibble::tibble(
   x = 1:10, y = 1:10,

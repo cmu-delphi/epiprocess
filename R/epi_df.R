@@ -174,7 +174,7 @@ NULL
 #' @param other_keys If your tibble has additional keys, be sure to specify them
 #'   as a character vector here (typical examples are "age" or sub-geographies).
 #' @param ... Additional arguments passed to methods.
-#' @return An `epi_df` object.
+#' @return * Of `new_epi_df()`: an `epi_df`
 #'
 #' @export
 new_epi_df <- function(x = tibble::tibble(geo_value = character(), time_value = as.Date(integer())),
@@ -205,6 +205,8 @@ new_epi_df <- function(x = tibble::tibble(geo_value = character(), time_value = 
 #'   to be converted
 #' @param ... used for specifying column names, as in [`dplyr::rename`]. For
 #'   example, `geo_value = STATEFP, time_value = end_date`.
+#' @return * Of `as_epi_df()`: an (ungrouped) `epi_df`
+#'
 #' @export
 as_epi_df <- function(x, ...) {
   UseMethod("as_epi_df")
@@ -215,6 +217,7 @@ as_epi_df <- function(x, ...) {
 #' @method as_epi_df epi_df
 #' @export
 as_epi_df.epi_df <- function(x, ...) {
+  x <- ungroup(x)
   return(x)
 }
 
@@ -298,6 +301,14 @@ as_epi_df.tbl_df <- function(
 
 #' @rdname epi_df
 #' @order 1
+#' @method as_epi_df grouped_df
+#' @export
+as_epi_df.grouped_df <- function(x, ...) {
+  as_epi_df(ungroup(x), ...)
+}
+
+#' @rdname epi_df
+#' @order 1
 #' @method as_epi_df data.frame
 #' @export
 as_epi_df.data.frame <- function(x, as_of, other_keys = character(), ...) {
@@ -319,9 +330,11 @@ as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(), ...) {
 #' Test for `epi_df` format
 #'
 #' @param x An object.
-#' @return `TRUE` if the object inherits from `epi_df`.
+#' @return * Of `is_epi_df`: `TRUE` if the object inherits from `epi_df`,
+#'           otherwise `FALSE`.
 #'
 #' @rdname epi_df
+#' @order 1
 #' @export
 is_epi_df <- function(x) {
   inherits(x, "epi_df")
