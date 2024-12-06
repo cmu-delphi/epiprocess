@@ -105,63 +105,64 @@ normalize <- function(x) {
 # and prints out the corresponding days (using annotations got a little messy)
 # that they start as well in the console
 # also returns the number of gaps in the signal
-plot_signals <- function(x, version=NULL, verbose=TRUE){
-  title = "Normalized Signals Comparison"
-  if (!is.null(version)){
-    if(verbose){
+plot_signals <- function(x, version = NULL, verbose = TRUE) {
+  title <- "Normalized Signals Comparison"
+  if (!is.null(version)) {
+    if (verbose) {
       print(paste0("Version: ", version))
     }
-    title = paste0("Normalized Signals Comparison\tVersion ", version)
+    title <- paste0("Normalized Signals Comparison\tVersion ", version)
   }
-  
+
   # x <- x %>% filter(geo_value == "ca")
   num_signals <- length(colnames(x)) - 2
   first_non_nas <- list()
   na_regions_list <- list()
-  
-  for (col in colnames(x)){
+
+  for (col in colnames(x)) {
     if (col == "geo_value" | col == "time_value") {
       next
-    }
-    else{
+    } else {
       x[[col]] <- normalize(x[[col]])
       pair <- list(col, na.omit(x[, c("time_value", col)])[1, ]$time_value)
       first_non_nas <- c(first_non_nas, list(pair))
-      
+
       na_regions <- x %>%
         select(time_value, !!sym(col))
-      
-      na_regions <- na_regions %>% 
-        mutate(is_na = is.na(!!sym(col))) 
-      
-      na_regions <- na_regions %>% 
-        group_by(group = cumsum(!is_na))
-      
-      na_regions <- na_regions %>% 
-        filter(is_na == TRUE)
-      
+
       na_regions <- na_regions %>%
-        summarize(start = min(time_value), end = max(time_value), signal = col) 
-      
+        mutate(is_na = is.na(!!sym(col)))
+
+      na_regions <- na_regions %>%
+        group_by(group = cumsum(!is_na))
+
+      na_regions <- na_regions %>%
+        filter(is_na == TRUE)
+
+      na_regions <- na_regions %>%
+        summarize(start = min(time_value), end = max(time_value), signal = col)
+
       na_regions <- na_regions %>%
         ungroup()
-      
+
       na_regions_list[[col]] <- na_regions
     }
   }
-  
-  x <- x %>% select(-geo_value) %>% gather(key = "signal", value = "value", -time_value)
-  
-  if(verbose){
+
+  x <- x %>%
+    select(-geo_value) %>%
+    gather(key = "signal", value = "value", -time_value)
+
+  if (verbose) {
     plot <- ggplot(x, aes(x = time_value, y = value, color = signal)) +
       geom_line() +
       labs(title = title, x = "Time", y = "Normalized Value") +
       theme_minimal()
-    
+
     for (col in names(na_regions_list)) {
       cat(paste0("Signal: ", col, "\n"))
       na_regions <- na_regions_list[[col]]
-      
+
       if (nrow(na_regions) > 0) {
         for (i in 1:nrow(na_regions)) {
           cat(paste0("  Gap: ", na_regions$start[i], " to ", na_regions$end[i], "\n"))
@@ -172,10 +173,12 @@ plot_signals <- function(x, version=NULL, verbose=TRUE){
     }
     for (col in names(na_regions_list)) {
       plot <- plot +
-        geom_rect(data = na_regions_list[[col]], 
-                  aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf, fill = signal), 
-                  color = NA, alpha = 0.2, inherit.aes = FALSE)
-      
+        geom_rect(
+          data = na_regions_list[[col]],
+          aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf, fill = signal),
+          color = NA, alpha = 0.2, inherit.aes = FALSE
+        )
+
       lines <- na_regions_list[[col]] %>% filter(start == end)
       plot <- plot +
         geom_vline(data = lines, aes(xintercept = as.numeric(start)), color = alpha("red", 0.2), linetype = "solid")
@@ -183,14 +186,16 @@ plot_signals <- function(x, version=NULL, verbose=TRUE){
     cat("\n")
     print(plot)
   }
-  
+
   max_num_gaps <- max(sapply(na_regions_list, function(x) length(x[["start"]])))
   max_num_gaps
 }
 ```
 
 ```{r visualize_signal, warning=FALSE}
-aux_signal_latest_ca <- aux_signal %>% latest() %>% filter(geo_value == 'ca')
+aux_signal_latest_ca <- aux_signal %>%
+  latest() %>%
+  filter(geo_value == "ca")
 plot_signals(aux_signal_latest_ca)
 ```
 
@@ -202,10 +207,10 @@ However, NAs can arise in different settings as well. For example if we look at 
 
 ```{r, warning=FALSE, echo=FALSE}
 # Generating False Data
-# initially thought to be real data, however issue dates were incorrect, and 
+# initially thought to be real data, however issue dates were incorrect, and
 # once fixed, there were not many NA values as I had hoped for
 
-generate_signal <- function(){
+generate_signal <- function() {
   cov_adm <- pub_covidcast(
     source = "hhs",
     signals = "confirmed_admissions_covid_1d",
@@ -217,7 +222,7 @@ generate_signal <- function(){
   ) %>%
     select(geo_value, time_value, version = issue, confirmed_cov = value) %>%
     as_epi_archive()
-  
+
   versions <- unique(cov_adm[["DT"]][["version"]])
   # random_dates <- sample(versions, 100, replace = FALSE)
   max_gaps <- 0
@@ -225,19 +230,20 @@ generate_signal <- function(){
   max_version <- NULL
   for (date in sort(versions)) {
     date <- as.Date(date)
-    for(geo_val in unlist(strsplit(states, split = ","))){
-      current <- epix_as_of(cov_adm, max_version = date) %>% filter(geo_value == geo_val) %>%
+    for (geo_val in unlist(strsplit(states, split = ","))) {
+      current <- epix_as_of(cov_adm, max_version = date) %>%
+        filter(geo_value == geo_val) %>%
         na.omit()
       daily <- tibble(time_value = seq(
         from = as.Date(min(current$time_value)),
         to = as.Date(max(current$time_value)),
         by = "1 day"
       ))
-  
+
       current <- daily %>% left_join(current, by = "time_value")
       current$geo_value <- geo_val
-      num_gaps <- plot_signals(current, version=date, verbose=FALSE)
-  
+      num_gaps <- plot_signals(current, version = date, verbose = FALSE)
+
       if (num_gaps > max_gaps) {
         max_gaps <- num_gaps
         max_df <- current
@@ -269,7 +275,7 @@ data <- tibble(
 
 data_completed <- data %>%
   complete(
-    geo, 
+    geo,
     time = seq.Date(from = min(time), to = max(time), by = "day")
   )
 
@@ -315,10 +321,10 @@ No more NAs in our final signal! But this a little bit of a naive approach. Rath
 impute_moving_average <- function(col, window_size = 3) {
   n <- length(col)
   for (i in seq(window_size, n - 1)) {
-    curr_sum <- sum(col[max(1, i-window_size+1):i])
+    curr_sum <- sum(col[max(1, i - window_size + 1):i])
     average <- curr_sum / window_size
     if (col[i + 1] %>% is.na()) {
-      col[i + 1] = average
+      col[i + 1] <- average
     }
   }
   col
@@ -329,7 +335,7 @@ We will plot it so you can see how the NAs were filled in. The red background is
 
 ```{r, warning=FALSE}
 cov_NAs_subset_ma <- cov_NAs_subset
-cov_NAs_subset_ma$confirmed_cov_ma <- cov_NAs_subset_ma$confirmed_cov %>% impute_moving_average
+cov_NAs_subset_ma$confirmed_cov_ma <- cov_NAs_subset_ma$confirmed_cov %>% impute_moving_average()
 plot_signals(cov_NAs_subset_ma)
 ```
 
@@ -342,14 +348,13 @@ cov_NAs_subset
 Let's do this by hand to verify that our results are correct, by taking the previous 3 values (window size specified) and computing the average
 
 ```{r}
-jul_31 = (944+848+863)/3
-aug_01 = (848+863+jul_31)/3
-aug_04 = (aug_01+704+761)/3
+jul_31 <- (944 + 848 + 863) / 3
+aug_01 <- (848 + 863 + jul_31) / 3
+aug_04 <- (aug_01 + 704 + 761) / 3
 
 paste0("Value for Jul 31st: ", jul_31)
 paste0("Value for Aug 1st: ", aug_01)
 paste0("Value for Aug 4th: ", aug_04)
-
 ```
 
 ```{r}
@@ -359,12 +364,12 @@ cov_NAs_subset_ma
 Note that we can do this exact same appraoch also using multiple calls to `epi_slide_mean()`. Because we have to continually update the average each time we update an NA, especially for NAs that occur within the window range.
 
 ```{r}
-cov_NAs_subset_epi_ma <- cov_NAs_subset %>% as_epi_df() 
+cov_NAs_subset_epi_ma <- cov_NAs_subset %>% as_epi_df()
 first <- TRUE
 curr_pass <- cov_NAs_subset_epi_ma %>% epi_slide_mean(confirmed_cov, before = 3, na.rm = TRUE)
 
 for (i in 1:length(cov_NAs_subset_epi_ma$confirmed_cov)) {
-  curr_val = cov_NAs_subset_epi_ma$confirmed_cov[i]
+  curr_val <- cov_NAs_subset_epi_ma$confirmed_cov[i]
   if (is.na(curr_val)) {
     cov_NAs_subset_epi_ma$confirmed_cov[i] <- curr_pass$slide_value_confirmed_cov[i]
     curr_pass <- cov_NAs_subset_epi_ma %>% epi_slide_mean(confirmed_cov, before = 3, na.rm = TRUE)
@@ -387,7 +392,7 @@ The next step is linear interpolation. Here we can think of this as using linear
 # second passes goes through and runs the regressions between each end point
 linear_interpolate_2pass <- function(values) {
   interpolated_values <- values
-  
+
   # first pass
   na_gaps <- list()
   in_gap <- FALSE
@@ -407,7 +412,7 @@ linear_interpolate_2pass <- function(values) {
       }
     }
   }
-  
+
   # second pass
   for (gap in na_gaps) {
     start <- gap[1]
@@ -419,7 +424,7 @@ linear_interpolate_2pass <- function(values) {
       interpolated_values[(start + 1):(end - 1)] <- interpolated_section[-c(1, length(interpolated_section))]
     }
   }
-  
+
   return(interpolated_values)
 }
 ```
@@ -509,9 +514,8 @@ example_archive_y <- tribble(
     version = as.Date(version)
   ) %>%
   as_epi_archive(compactify = FALSE)
-
 ```
 
 ```{r}
-epix_merge(example_archive_x, example_archive_y, sync='locf')
+epix_merge(example_archive_x, example_archive_y, sync = "locf")
 ```
