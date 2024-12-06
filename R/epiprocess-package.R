@@ -2,7 +2,6 @@
 "_PACKAGE"
 
 ## usethis namespace: start
-#' @import epidatasets
 #' @importFrom checkmate anyInfinite anyMissing assert assert_character
 #' @importFrom checkmate assert_class assert_data_frame assert_int assert_list
 #' @importFrom checkmate assert_logical assert_numeric assert_scalar checkInt

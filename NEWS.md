@@ -6,14 +6,15 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 ## Breaking changes
 
-- Moved example datasets from being hosted in the package to being reexported
-  from the `epidatasets` package. The datasets can no longer be loaded with
-  `data()` but can be accessed with `epiprocess::` or, after loading the
-  package, just the name of the dataset (#520). Those with names starting with
+- Moved example datasets from being hosted in the package to being fetched
+  from `epidatasets`. The `epidatasets` package is now auto-loaded as a
+  dependency of `epiprocess`. The datasets can still be fetched, after loading
+  the package, with `data()` or the name of the dataset alone, or can be
+  accessed with `epidatasets::`. Datasets with names starting
   `jhu` have been renamed to a more uniform scheme and now have names starting
   with `covid`. The data set previously named `jhu_confirmed_cumulative_num` has
   been removed from the package, but a renamed version is has been removed from
-  the package, but a renamed version is still available in `epidatasets`.
+  the package, but a renamed version is still available in `epidatasets` (#520, #568).
 
 ## Bug fixes
 

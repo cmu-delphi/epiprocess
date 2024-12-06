@@ -32,8 +32,8 @@ library(epiprocess)
 library(dplyr)
 ```
 
-The data is included in this package (via the [`epidatasets`
-package](https://cmu-delphi.github.io/epidatasets/)) and can be loaded with:
+The data is included in the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/),
+which is loaded along with `epiprocess`, and can be accessed with:
 
 ```{r}
 edf <- cases_deaths_subset %>%
@@ -276,8 +276,8 @@ edf_missing %>%
 We can also use the `tsibble` package to detect and fill time gaps. We'll work
 with county-level reported COVID-19 cases in MA and VT.
 
-The data is included in this package (via the [`epidatasets`
-package](https://cmu-delphi.github.io/epidatasets/)) and can be loaded with:
+The data is included in the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/),
+which is loaded along with `epiprocess`, and can be accessed with:
 
 ```{r, warning = FALSE, message = FALSE}
 library(epiprocess)

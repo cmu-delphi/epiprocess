@@ -36,13 +36,13 @@ Description: This package introduces common data structures for working with
 License: MIT + file LICENSE
 URL: https://cmu-delphi.github.io/epiprocess/
 Depends:
+    epidatasets,
     R (>= 3.6)
 Imports:
     checkmate,
     cli,
     data.table,
     dplyr (>= 1.1.0),
-    epidatasets,
     genlasso,
     ggplot2,
     glue,
