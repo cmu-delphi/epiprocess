@@ -14,7 +14,7 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   `jhu` have been renamed to a more uniform scheme and now have names starting
   with `covid`. The data set previously named `jhu_confirmed_cumulative_num` has
   been removed from the package, but a renamed version is has been removed from
-  the package, but a renamed version is still available in `epidatasets` (#520, #568).
+  the package, but a renamed version is still available in `epidatasets` (#520, #577).
 
 ## Bug fixes
 
