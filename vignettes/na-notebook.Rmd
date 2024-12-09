@@ -1,8 +1,9 @@
 ---
-title: "Handling Missing Data in Epi Signals"
-author: "Ryan Nayebi"
-date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+title: "na-notebook"
+output:
+  pdf_document: default
+  html_document: default
+date: "2024-08-19"
 ---
 
 ```{r setup, warning=FALSE, echo=FALSE}
