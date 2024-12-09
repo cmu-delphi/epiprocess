@@ -16,8 +16,8 @@ epi_slide(
 )
 }
 \arguments{
-\item{.x}{An \code{epi_df} object. If ungrouped, we group by \code{geo_value} and any
-columns in \code{other_keys}. If grouped, we make sure the grouping is by
+\item{.x}{An \code{epi_df} object. If ungrouped, we temporarily group by \code{geo_value}
+and any columns in \code{other_keys}. If grouped, we make sure the grouping is by
 \code{geo_value} and \code{other_keys}.}
 
 \item{.f}{Function, formula, or missing; together with \code{...} specifies the
@@ -91,7 +91,8 @@ a missing value marker (typically NA, but more technically the result of
 }
 \value{
 An \code{epi_df} object with one or more new slide computation columns
-added.
+added. It will be ungrouped if \code{.x} was ungrouped, and have the same groups
+as \code{.x} if \code{.x} was grouped.
 }
 \description{
 Slides a given function over variables in an \code{epi_df} object.
@@ -99,8 +100,8 @@ This is useful for computations like rolling averages. The function supports
 many ways to specify the computation, but by far the most common use case is
 as follows:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{# Create new column `cases_7dm` that contains a 7-day trailing median of cases
-epi_slide(edf, cases_7dav = median(cases), .window_size = 7)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{# Create new column `cases_7dmed` that contains a 7-day trailing median of cases
+epi_slide(edf, cases_7dmed = median(cases), .window_size = 7)
 }\if{html}{\out{</div>}}
 
 For two very common use cases, we provide optimized functions that are much
@@ -128,6 +129,8 @@ determined the time window for the current computation.
 }
 }
 \examples{
+library(dplyr)
+
 # Get the 7-day trailing standard deviation of cases and the 7-day trailing mean of cases
 cases_deaths_subset \%>\%
   epi_slide(
@@ -135,44 +138,72 @@ cases_deaths_subset \%>\%
     cases_7dav = mean(cases, na.rm = TRUE),
     .window_size = 7
   ) \%>\%
-  dplyr::select(geo_value, time_value, cases, cases_7sd, cases_7dav)
+  select(geo_value, time_value, cases, cases_7sd, cases_7dav)
+# Note that epi_slide_mean could be used to more quickly calculate cases_7dav.
 
-# The same as above, but unpacking using an unnamed data.frame with a formula
+# In addition to the [`dplyr::mutate`]-like syntax, you can feed in a function or
+# formula in a way similar to [`dplyr::group_modify`]:
+my_summarizer <- function(window_data) {
+  window_data \%>\%
+    summarize(
+      cases_7sd = sd(cases, na.rm = TRUE),
+      cases_7dav = mean(cases, na.rm = TRUE)
+    )
+}
 cases_deaths_subset \%>\%
   epi_slide(
-    ~ data.frame(
+    ~ my_summarizer(.x),
+    .window_size = 7
+  ) \%>\%
+  select(geo_value, time_value, cases, cases_7sd, cases_7dav)
+
+
+
+
+
+#### Advanced: ####
+
+# The tidyverse supports ["packing"][tidyr::pack] multiple columns into a
+# single tibble-type column contained within some larger tibble. Like dplyr,
+# we normally don't pack output columns together. However, packing behavior can be turned on
+# by providing a name for a tibble-type output:
+cases_deaths_subset \%>\%
+  epi_slide(
+    slide_packed = tibble(
       cases_7sd = sd(.x$cases, na.rm = TRUE),
       cases_7dav = mean(.x$cases, na.rm = TRUE)
     ),
     .window_size = 7
   ) \%>\%
-  dplyr::select(geo_value, time_value, cases, cases_7sd, cases_7dav)
-
-# The same as above, but packing using a named data.frame with a tidy evaluation
-# expression
+  select(geo_value, time_value, cases, slide_packed)
 cases_deaths_subset \%>\%
   epi_slide(
-    slide_packed = data.frame(
+    ~ tibble(
       cases_7sd = sd(.x$cases, na.rm = TRUE),
       cases_7dav = mean(.x$cases, na.rm = TRUE)
     ),
+    .new_col_name = "slide_packed",
     .window_size = 7
   ) \%>\%
-  dplyr::select(geo_value, time_value, cases, slide_packed)
+  select(geo_value, time_value, cases, slide_packed)
 
-# nested new columns
+# You can also get ["nested"][tidyr::nest] format by wrapping your results in
+# a list:
 cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   epi_slide(
     function(x, g, t) {
-      data.frame(
+      list(tibble(
         cases_7sd = sd(x$cases, na.rm = TRUE),
         cases_7dav = mean(x$cases, na.rm = TRUE)
-      )
+      ))
     },
     .window_size = 7
   ) \%>\%
-  dplyr::select(geo_value, time_value, cases, cases_7sd, cases_7dav)
+  ungroup() \%>\%
+  select(geo_value, time_value, slide_value)
+
+
 
 # Use the geo_value or the ref_time_value in the slide computation
 cases_deaths_subset \%>\%

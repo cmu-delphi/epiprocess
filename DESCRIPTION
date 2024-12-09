@@ -1,7 +1,7 @@
 Package: epiprocess
 Type: Package
 Title: Tools for basic signal processing in epidemiology
-Version: 0.9.6
+Version: 0.9.7
 Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", , "lcbrooks@andrew.cmu.edu", role = c("aut", "cre")),

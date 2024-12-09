@@ -1,5 +1,5 @@
-#' @param .x An `epi_df` object. If ungrouped, we group by `geo_value` and any
-#'   columns in `other_keys`. If grouped, we make sure the grouping is by
+#' @param .x An `epi_df` object. If ungrouped, we temporarily group by `geo_value`
+#'   and any columns in `other_keys`. If grouped, we make sure the grouping is by
 #'   `geo_value` and `other_keys`.
 #' @param .window_size The size of the sliding window. The accepted values
 #' depend on the type of the `time_value` column in `.x`:
@@ -32,4 +32,5 @@
 #'   a missing value marker (typically NA, but more technically the result of
 #'   `vctrs::vec_cast`-ing `NA` to the type of the slide computation output).
 #' @return An `epi_df` object with one or more new slide computation columns
-#'   added.
+#'   added. It will be ungrouped if `.x` was ungrouped, and have the same groups
+#'   as `.x` if `.x` was grouped.

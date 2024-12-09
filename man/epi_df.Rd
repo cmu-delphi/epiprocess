@@ -4,12 +4,13 @@
 \alias{as_epi_df}
 \alias{as_epi_df.epi_df}
 \alias{as_epi_df.tbl_df}
+\alias{as_epi_df.grouped_df}
 \alias{as_epi_df.data.frame}
 \alias{as_epi_df.tbl_ts}
+\alias{is_epi_df}
 \alias{new_epi_df}
 \alias{epi_df}
-\alias{is_epi_df}
-\title{\code{epi_df} object}
+\title{Test for \code{epi_df} format}
 \usage{
 as_epi_df(x, ...)
 
@@ -24,9 +25,13 @@ as_epi_df(x, ...)
   ...
 )
 
+\method{as_epi_df}{grouped_df}(x, ...)
+
 \method{as_epi_df}{data.frame}(x, as_of, other_keys = character(), ...)
 
 \method{as_epi_df}{tbl_ts}(x, as_of, other_keys = character(), ...)
+
+is_epi_df(x)
 
 new_epi_df(
   x = tibble::tibble(geo_value = character(), time_value = as.Date(integer())),
@@ -36,8 +41,6 @@ new_epi_df(
   other_keys = character(),
   ...
 )
-
-is_epi_df(x)
 }
 \arguments{
 \item{x}{An object.}
@@ -65,9 +68,18 @@ then the current day-time will be used.}
 as a character vector here (typical examples are "age" or sub-geographies).}
 }
 \value{
-An \code{epi_df} object.
+\itemize{
+\item Of \code{as_epi_df()}: an (ungrouped) \code{epi_df}
+}
 
-\code{TRUE} if the object inherits from \code{epi_df}.
+\itemize{
+\item Of \code{is_epi_df}: \code{TRUE} if the object inherits from \code{epi_df},
+otherwise \code{FALSE}.
+}
+
+\itemize{
+\item Of \code{new_epi_df()}: an \code{epi_df}
+}
 }
 \description{
 One of the two main data structures for storing time series in \code{epiprocess}.

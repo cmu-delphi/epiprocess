@@ -174,7 +174,7 @@ NULL
 #' @param other_keys If your tibble has additional keys, be sure to specify them
 #'   as a character vector here (typical examples are "age" or sub-geographies).
 #' @param ... Additional arguments passed to methods.
-#' @return An `epi_df` object.
+#' @return * Of `new_epi_df()`: an `epi_df`
 #'
 #' @export
 new_epi_df <- function(x = tibble::tibble(geo_value = character(), time_value = as.Date(integer())),
@@ -205,6 +205,8 @@ new_epi_df <- function(x = tibble::tibble(geo_value = character(), time_value = 
 #'   to be converted
 #' @param ... used for specifying column names, as in [`dplyr::rename`]. For
 #'   example, `geo_value = STATEFP, time_value = end_date`.
+#' @return * Of `as_epi_df()`: an (ungrouped) `epi_df`
+#'
 #' @export
 as_epi_df <- function(x, ...) {
   UseMethod("as_epi_df")
@@ -215,6 +217,7 @@ as_epi_df <- function(x, ...) {
 #' @method as_epi_df epi_df
 #' @export
 as_epi_df.epi_df <- function(x, ...) {
+  x <- ungroup(x)
   return(x)
 }
 
@@ -232,7 +235,6 @@ as_epi_df.tbl_df <- function(
     as_of,
     other_keys = character(),
     ...) {
-  # possible standard substitutions for time_value
   x <- rename(x, ...)
   x <- guess_column_name(x, "time_value", time_column_names())
   x <- guess_column_name(x, "geo_value", geo_column_names())
@@ -277,24 +279,30 @@ as_epi_df.tbl_df <- function(
   }
 
   assert_character(other_keys)
+  assert_subset(other_keys, names(x))
+  # Fix up if given more than just other keys, at least until epipredict#428
+  # merged:
+  other_keys <- other_keys[!other_keys %in% c("geo_value", "time_value")]
 
   if (".time_value_counts" %in% other_keys) {
     cli_abort("as_epi_df: `other_keys` can't include \".time_value_counts\"")
   }
 
-  duplicated_time_values <- x %>%
-    group_by(across(all_of(c("geo_value", "time_value", other_keys)))) %>%
-    filter(dplyr::n() > 1) %>%
-    ungroup()
-  if (nrow(duplicated_time_values) > 0) {
-    bad_data <- capture.output(duplicated_time_values)
-    cli_abort(
-      "as_epi_df: some groups in the data have duplicated time values. epi_df requires a unique time_value per group.",
-      body = c("Sample groups:", bad_data)
-    )
-  }
+  assert(check_ukey_unique(x, c("geo_value", other_keys, "time_value"), c(
+    ">" = "If this is line list data, convert it to counts/rates first.",
+    ">" = "If this contains a demographic breakdown, check that you have
+           specified appropriate `other_keys`" # . from checkmate
+  )))
 
   new_epi_df(x, geo_type, time_type, as_of, other_keys)
+}
+
+#' @rdname epi_df
+#' @order 1
+#' @method as_epi_df grouped_df
+#' @export
+as_epi_df.grouped_df <- function(x, ...) {
+  as_epi_df(ungroup(x), ...)
 }
 
 #' @rdname epi_df
@@ -320,9 +328,11 @@ as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(), ...) {
 #' Test for `epi_df` format
 #'
 #' @param x An object.
-#' @return `TRUE` if the object inherits from `epi_df`.
+#' @return * Of `is_epi_df`: `TRUE` if the object inherits from `epi_df`,
+#'           otherwise `FALSE`.
 #'
 #' @rdname epi_df
+#' @order 1
 #' @export
 is_epi_df <- function(x) {
   inherits(x, "epi_df")
