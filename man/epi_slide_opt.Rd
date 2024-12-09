@@ -162,6 +162,8 @@ for \code{.f} factoring in the input column type(s) for \code{.col_names}
 }
 
 \examples{
+library(dplyr)
+
 # Add a column (`cases_7dsum`) containing a 7-day trailing sum on `cases`:
 cases_deaths_subset \%>\%
   select(geo_value, time_value, cases) \%>\%

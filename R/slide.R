@@ -621,6 +621,8 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #' @export
 #' @seealso [`epi_slide`] for the more general slide function
 #' @examples
+#' library(dplyr)
+#'
 #' # Add a column (`cases_7dsum`) containing a 7-day trailing sum on `cases`:
 #' cases_deaths_subset %>%
 #'   select(geo_value, time_value, cases) %>%
