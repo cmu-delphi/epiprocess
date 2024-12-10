@@ -13,6 +13,9 @@ epi_slide_opt(
   ...,
   .window_size = NULL,
   .align = c("right", "center", "left"),
+  .prefix = NULL,
+  .suffix = NULL,
+  .new_col_names = NULL,
   .ref_time_values = NULL,
   .all_rows = FALSE
 )
@@ -23,6 +26,9 @@ epi_slide_mean(
   ...,
   .window_size = NULL,
   .align = c("right", "center", "left"),
+  .prefix = NULL,
+  .suffix = NULL,
+  .new_col_names = NULL,
   .ref_time_values = NULL,
   .all_rows = FALSE
 )
@@ -33,17 +39,20 @@ epi_slide_sum(
   ...,
   .window_size = NULL,
   .align = c("right", "center", "left"),
+  .prefix = NULL,
+  .suffix = NULL,
+  .new_col_names = NULL,
   .ref_time_values = NULL,
   .all_rows = FALSE
 )
 }
 \arguments{
-\item{.x}{An \code{epi_df} object. If ungrouped, we group by \code{geo_value} and any
-columns in \code{other_keys}. If grouped, we make sure the grouping is by
+\item{.x}{An \code{epi_df} object. If ungrouped, we temporarily group by \code{geo_value}
+and any columns in \code{other_keys}. If grouped, we make sure the grouping is by
 \code{geo_value} and \code{other_keys}.}
 
 \item{.col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
-name(e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}),
+name (e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}),
 \link[tidyselect:language]{other tidy-select expression}, or a vector of
 characters (e.g. \code{c("cases", "deaths")}). Variable names can be used as if
 they were positions in the data frame, so expressions like \code{x:y} can be
@@ -96,6 +105,20 @@ window will be asymmetric and have one more value before the reference time
 than after.
 }}
 
+\item{.prefix}{Optional \code{\link[glue:glue]{glue::glue}} format string; name the slide result
+column(s) by attaching this prefix to the corresponding input column(s).
+Some shorthand is supported for basing the output names on \code{.window_size}
+or other arguments; see "Prefix and suffix shorthand" below.}
+
+\item{.suffix}{Optional \code{\link[glue:glue]{glue::glue}} format string; like \code{.prefix}. The
+default naming behavior is equivalent to \code{.suffix = "_{.n}{.time_unit_abbr}{.align_abbr}{.f_abbr}"}. Can be used in combination
+with \code{.prefix}.}
+
+\item{.new_col_names}{Optional character vector with length matching the
+number of input columns from \code{.col_names}; name the slide result column(s)
+with these names. Cannot be used in combination with \code{.prefix} and/or
+\code{.suffix}.}
+
 \item{.ref_time_values}{The time values at which to compute the slides
 values. By default, this is all the unique time values in \code{.x}.}
 
@@ -107,7 +130,8 @@ a missing value marker (typically NA, but more technically the result of
 }
 \value{
 An \code{epi_df} object with one or more new slide computation columns
-added.
+added. It will be ungrouped if \code{.x} was ungrouped, and have the same groups
+as \code{.x} if \code{.x} was grouped.
 }
 \description{
 \code{epi_slide_opt} allows sliding an n-timestep \link[data.table:froll]{data.table::froll}
@@ -119,44 +143,74 @@ These functions tend to be much faster than \code{epi_slide()}. See
 
 \code{epi_slide_sum} is a wrapper around \code{epi_slide_opt} with \code{.f = datatable::frollsum}.
 }
+\section{Prefix and suffix shorthand}{
+
+
+\code{\link[glue:glue]{glue::glue}} format strings specially interpret content within curly
+braces. E.g., \code{glue::glue("ABC{2 + 2}")} evaluates to \code{"ABC4"}. For \code{.prefix}
+and \code{.suffix}, we provide \code{glue} with some additional variable bindings:
+\itemize{
+\item \code{{.n}} will be the number of time steps in the computation
+corresponding to the \code{.window_size}.
+\item \code{{.time_unit_abbr}} will be a lower-case letter corresponding to the
+\code{time_type} of \code{.x}
+\item \code{{.align_abbr}} will be \code{""} if \code{.align} is the default of \code{"right"};
+otherwise, it will be the first letter of \code{.align}
+\item \code{{.f_abbr}} will be a character vector containing a short abbreviation
+for \code{.f} factoring in the input column type(s) for \code{.col_names}
+}
+}
+
 \examples{
-# Compute a 7-day trailing average on cases.
-cases_deaths_subset \%>\%
-  group_by(geo_value) \%>\%
-  epi_slide_opt(cases, .f = data.table::frollmean, .window_size = 7) \%>\%
-  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
+library(dplyr)
 
-# Same as above, but adjust `frollmean` settings for speed, accuracy, and
-# to allow partially-missing windows.
+# Add a column (`cases_7dsum`) containing a 7-day trailing sum on `cases`:
 cases_deaths_subset \%>\%
-  group_by(geo_value) \%>\%
-  epi_slide_opt(
-    cases,
-    .f = data.table::frollmean, .window_size = 7,
-    algo = "exact", hasNA = TRUE, na.rm = TRUE
-  ) \%>\%
-  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
-# Compute a 7-day trailing average on cases.
-cases_deaths_subset \%>\%
-  group_by(geo_value) \%>\%
-  epi_slide_mean(cases, .window_size = 7) \%>\%
-  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
+  select(geo_value, time_value, cases) \%>\%
+  epi_slide_sum(cases, .window_size = 7)
 
-# Same as above, but adjust `frollmean` settings for speed, accuracy, and
-# to allow partially-missing windows.
+# Add a column (`cases_rate_7dav`) containing a 7-day trailing average on `case_rate`:
+covid_case_death_rates_extended \%>\%
+  epi_slide_mean(case_rate, .window_size = 7)
+
+# Use a less common specialized slide function:
 cases_deaths_subset \%>\%
+  epi_slide_opt(cases, slider::slide_min, .window_size = 7)
+
+# Specify output column names and/or a naming scheme:
+cases_deaths_subset \%>\%
+  select(geo_value, time_value, cases) \%>\%
   group_by(geo_value) \%>\%
+  epi_slide_sum(cases, .window_size = 7, .new_col_names = "case_sum") \%>\%
+  ungroup()
+cases_deaths_subset \%>\%
+  select(geo_value, time_value, cases) \%>\%
+  group_by(geo_value) \%>\%
+  epi_slide_sum(cases, .window_size = 7, .prefix = "sum_") \%>\%
+  ungroup()
+
+# Additional settings can be sent to the {data.table} and {slider} functions
+# via `...`. This example passes some arguments to `frollmean` settings for
+# speed, accuracy, and to allow partially-missing windows:
+covid_case_death_rates_extended \%>\%
   epi_slide_mean(
-    cases,
+    case_rate,
     .window_size = 7,
     na.rm = TRUE, algo = "exact", hasNA = TRUE
-  ) \%>\%
-  dplyr::select(geo_value, time_value, cases, cases_7dav = slide_value_cases)
-# Compute a 7-day trailing sum on cases.
+  )
+
+# If the more specialized possibilities for `.f` don't cover your needs, you
+# can use `epi_slide_opt` with `.f = data.table::frollapply` to apply a
+# custom function at the cost of more computation time. See also `epi_slide`
+# if you need something even more general.
 cases_deaths_subset \%>\%
-  group_by(geo_value) \%>\%
-  epi_slide_sum(cases, .window_size = 7) \%>\%
-  dplyr::select(geo_value, time_value, cases, cases_7dsum = slide_value_cases)
+  select(geo_value, time_value, case_rate_7d_av, death_rate_7d_av) \%>\%
+  epi_slide_opt(c(case_rate_7d_av, death_rate_7d_av),
+    data.table::frollapply,
+    FUN = median, .window_size = 28,
+    .suffix = "_{.n}{.time_unit_abbr}_median"
+  ) \%>\%
+  print(n = 40)
 }
 \seealso{
 \code{\link{epi_slide}} for the more general slide function

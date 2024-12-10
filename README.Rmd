@@ -113,8 +113,7 @@ Compute the 7 day moving average of the confirmed daily cases for each geo_value
 ```{r}
 edf <- edf %>%
   group_by(geo_value) %>%
-  epi_slide_mean(cases_daily, .window_size = 7, na.rm = TRUE) %>%
-  rename(smoothed_cases_daily = slide_value_cases_daily)
+  epi_slide_mean(cases_daily, .window_size = 7, na.rm = TRUE, .prefix = "smoothed_")
 edf
 ```
 

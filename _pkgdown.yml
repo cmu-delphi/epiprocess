@@ -1,40 +1,25 @@
-# Colors should stay consistent across epipredict, epiprocess, and epidatr,
-# using Carnegie Red
-# https://www.cmu.edu/brand/brand-guidelines/visual-identity/colors.html
-
-# This is to give a default value to the `mode` parameter in the
-# `pkgdown::build_site` function. This is useful when building the site locally,
-# as it will default to `devel` mode. In practice, this should all be handled
-# dynamically by the CI/CD pipeline.
 development:
   mode: devel
-  version_label: success
 
 template:
-  bootstrap: 5
-  bootswatch: cosmo
-  bslib:
-    font_scale: 1.0
-    primary: "#C41230"
-    success: "#B4D43C"
-    link-color: "#C41230"
-
-navbar:
-  bg: primary
-  type: light
+  package: delphidocs
 
 url: https://cmu-delphi.github.io/epiprocess/
 
 home:
   links:
-    - text: Introduction to Delphi's Tooling Work
-      href: https://cmu-delphi.github.io/delphi-tooling-book/
-    - text: Get the epipredict R package
+    - text: The epipredict package
       href: https://cmu-delphi.github.io/epipredict/
-    - text: Get the epidatr R package
-      href: https://github.com/cmu-delphi/epidatr
-    - text: Get the epidatasets R package
-      href: https://cmu-delphi.github.io/epidatasets/
+  sidebar:
+    structure: [links, license, community, citation, authors, dev, related]
+    components:
+      related:
+        title: Delphi packages and resources
+        text: |
+          * [The epidatr package](https://github.com/cmu-delphi/epidatr/)
+          * [The epipredict package](https://cmu-delphi.github.io/epipredict/)
+          * [The epidatasets package](https://cmu-delphi.github.io/epidatasets/)
+          * [Introduction to Delphi's Tooling Work](https://cmu-delphi.github.io/delphi-tooling-book/)
 
 articles:
   - title: Using the package
@@ -54,10 +39,9 @@ articles:
 
 repo:
   url:
-    home: https://github.com/cmu-delphi/epiprocess/tree/main/
-    source: https://github.com/cmu-delphi/epiprocess/blob/main/
+    home: https://github.com/cmu-delphi/epiprocess/
+    source: https://github.com/cmu-delphi/epiprocess/
     issue: https://github.com/cmu-delphi/epiprocess/issues
-    user: https://github.com/
 
 reference:
   - title: "`epi_df` basics"
@@ -103,11 +87,11 @@ reference:
 
   - title: Example data
   - contents:
-      - cases_deaths_subset
-      - archive_cases_dv_subset
-      - covid_incidence_county_subset
-      - covid_incidence_outliers
-      - covid_case_death_rates_extended
+      - epidatasets::cases_deaths_subset
+      - epidatasets::archive_cases_dv_subset
+      - epidatasets::covid_incidence_county_subset
+      - epidatasets::covid_incidence_outliers
+      - epidatasets::covid_case_death_rates_extended
 
   - title: internal
   - contents:
