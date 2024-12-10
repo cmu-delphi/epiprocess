@@ -1010,8 +1010,9 @@ epi_slide_mean <- function(
   }
   if ("new_col_name" %in% provided_args || ".new_col_name" %in% provided_args) {
     cli::cli_abort(
-      "epi_slide_mean: the argument `new_col_name` is not supported. If you want to customize
-      the output column names, use `dplyr::rename` after the slide."
+      "epi_slide_opt: the argument `new_col_name` is not supported for `epi_slide_opt`. If you want to customize
+      the output column names, use `.prefix =`, `.suffix =`, or `.new_col_**names** =`.",
+      class = "epiprocess__epi_slide_opt__new_name_not_supported"
     )
   }
   if ("names_sep" %in% provided_args || ".names_sep" %in% provided_args) {
@@ -1069,8 +1070,9 @@ epi_slide_sum <- function(
   }
   if ("new_col_name" %in% provided_args || ".new_col_name" %in% provided_args) {
     cli::cli_abort(
-      "epi_slide_sum: the argument `new_col_name` is not supported. If you want to customize
-      the output column names, use `dplyr::rename` after the slide."
+      "epi_slide_opt: the argument `new_col_name` is not supported for `epi_slide_opt`. If you want to customize
+      the output column names, use `.prefix =`, `.suffix =`, or `.new_col_**names** =`.",
+      class = "epiprocess__epi_slide_opt__new_name_not_supported"
     )
   }
   if ("names_sep" %in% provided_args || ".names_sep" %in% provided_args) {
