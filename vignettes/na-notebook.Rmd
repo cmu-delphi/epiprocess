@@ -14,6 +14,7 @@ suppressPackageStartupMessages({
   library(tidyr)
   library(ggplot2)
 })
+utils::globalVariables(c("is_na", "signal", "issue"))
 ```
 
 # How Different NAs Arise and Strategies for Handling Them
@@ -115,7 +116,7 @@ plot_signals <- function(x, version = NULL, verbose = TRUE) {
   na_regions_list <- list()
 
   for (col in colnames(x)) {
-    if (col == "geo_value" | col == "time_value") {
+    if (col == "geo_value" || col == "time_value") {
       next
     } else {
       x[[col]] <- normalize(x[[col]])
@@ -159,7 +160,7 @@ plot_signals <- function(x, version = NULL, verbose = TRUE) {
       na_regions <- na_regions_list[[col]]
 
       if (nrow(na_regions) > 0) {
-        for (i in 1:nrow(na_regions)) {
+        for (i in seq_len(nrow(na_regions))) {
           cat(paste0("  Gap: ", na_regions$start[i], " to ", na_regions$end[i], "\n"))
         }
       } else {
@@ -361,7 +362,7 @@ cov_nas_subset_epi_ma <- cov_nas_subset %>% as_epi_df()
 first <- TRUE
 curr_pass <- cov_nas_subset_epi_ma %>% epi_slide_mean(confirmed_cov, before = 3, na.rm = TRUE)
 
-for (i in 1:length(cov_nas_subset_epi_ma$confirmed_cov)) {
+for (i in seq_along(cov_nas_subset_epi_ma$confirmed_cov)) {
   curr_val <- cov_nas_subset_epi_ma$confirmed_cov[i]
   if (is.na(curr_val)) {
     cov_nas_subset_epi_ma$confirmed_cov[i] <- curr_pass$slide_value_confirmed_cov[i]
