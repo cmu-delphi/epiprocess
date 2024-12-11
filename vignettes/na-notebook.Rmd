@@ -111,7 +111,7 @@ plot_signals <- function(x, version = NULL, verbose = TRUE) {
     }
     title <- paste0("Normalized Signals Comparison\tVersion ", version)
   }
-  
+
   num_signals <- length(colnames(x)) - 2
   first_non_nas <- list()
   na_regions_list <- list()
