@@ -10,12 +10,9 @@ date: "2024-08-19"
 suppressPackageStartupMessages({
   library(epidatr)
   library(epiprocess)
-  library(epipredict)
   library(dplyr)
   library(tidyr)
-  library(purrr)
   library(ggplot2)
-  library(scoringutils)
 })
 ```
 
@@ -114,8 +111,7 @@ plot_signals <- function(x, version = NULL, verbose = TRUE) {
     }
     title <- paste0("Normalized Signals Comparison\tVersion ", version)
   }
-
-  # x <- x %>% filter(geo_value == "ca")
+  
   num_signals <- length(colnames(x)) - 2
   first_non_nas <- list()
   na_regions_list <- list()
@@ -225,7 +221,6 @@ generate_signal <- function() {
     as_epi_archive()
 
   versions <- unique(cov_adm[["DT"]][["version"]])
-  # random_dates <- sample(versions, 100, replace = FALSE)
   max_gaps <- 0
   max_df <- NULL
   max_version <- NULL
