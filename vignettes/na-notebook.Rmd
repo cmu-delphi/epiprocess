@@ -111,8 +111,6 @@ plot_signals <- function(x, version = NULL, verbose = TRUE) {
     }
     title <- paste0("Normalized Signals Comparison\tVersion ", version)
   }
-
-  num_signals <- length(colnames(x)) - 2
   first_non_nas <- list()
   na_regions_list <- list()
 
@@ -249,14 +247,13 @@ generate_signal <- function() {
   }
   return(list(max_df = max_df, max_version = max_version))
 }
-# saveRDS(cov_NAs, "cov_NAs.rds")
 ```
 
 ```{r}
-cov_NAs <- readRDS("cov_NAs.rds") # simulated data, not real
-paste0("geo_value: ", unique(cov_NAs$geo_value))
+cov_nas <- readRDS("cov_nas.rds") # simulated data, not real
+paste0("geo_value: ", unique(cov_nas$geo_value))
 paste0("version: ", "2022-02-04")
-plot_signals(complete(cov_NAs))
+plot_signals(complete(cov_nas))
 ```
 
 As a side note, notice how we use the `complete()` function here from the `tidyr` package. It is commonly used as a way to standardize our data as it ensures that all combinations of specified keys such as the time value and geos are present, even if this results in some missing values. If certain combinations are missing in the original data, `complete()` fills them in with rows containing NA values. 
@@ -299,15 +296,15 @@ impute_locf <- function(data) {
 Now let's apply this to the first few weeks of our data, where we have a lot of smaller gaps.
 
 ```{r}
-cov_NAs_subset <- cov_NAs %>% filter(time_value <= as.Date("2020-08-19"))
-plot_signals(cov_NAs_subset)
+cov_nas_subset <- cov_nas %>% filter(time_value <= as.Date("2020-08-19"))
+plot_signals(cov_nas_subset)
 ```
 
 Now let's apply the LOCF function that we wrote to our data and visualize it. We will plot it so you can see how the NAs were filled in. The red background is where the values were NA previosuly prior to the correction.
 
 ```{r}
-cov_NAs_subset_locf <- cov_NAs_subset %>% impute_locf()
-plot_signals(cov_NAs_subset_locf)
+cov_nas_subset_locf <- cov_nas_subset %>% impute_locf()
+plot_signals(cov_nas_subset_locf)
 ```
 
 No more NAs in our final signal! But this a little bit of a naive approach. Rather than simply using the previous time step, perhaps we can utilize multiple previous values to come up with a prediction for our missing data using a moving average.
@@ -330,15 +327,15 @@ impute_moving_average <- function(col, window_size = 3) {
 We will plot it so you can see how the NAs were filled in. The red background is where the values were NA previously prior to the correction.
 
 ```{r, warning=FALSE}
-cov_NAs_subset_ma <- cov_NAs_subset
-cov_NAs_subset_ma$confirmed_cov_ma <- cov_NAs_subset_ma$confirmed_cov %>% impute_moving_average()
-plot_signals(cov_NAs_subset_ma)
+cov_nas_subset_ma <- cov_nas_subset
+cov_nas_subset_ma$confirmed_cov_ma <- cov_nas_subset_ma$confirmed_cov %>% impute_moving_average()
+plot_signals(cov_nas_subset_ma)
 ```
 
 We can confirm this is taking the average as looking at the original data we have:
 
 ```{r}
-cov_NAs_subset
+cov_nas_subset
 ```
 
 Let's do this by hand to verify that our results are correct, by taking the previous 3 values (window size specified) and computing the average
@@ -354,24 +351,24 @@ paste0("Value for Aug 4th: ", aug_04)
 ```
 
 ```{r}
-cov_NAs_subset_ma
+cov_nas_subset_ma
 ```
 
 Note that we can do this exact same appraoch also using multiple calls to `epi_slide_mean()`. Because we have to continually update the average each time we update an NA, especially for NAs that occur within the window range.
 
 ```{r}
-cov_NAs_subset_epi_ma <- cov_NAs_subset %>% as_epi_df()
+cov_nas_subset_epi_ma <- cov_nas_subset %>% as_epi_df()
 first <- TRUE
-curr_pass <- cov_NAs_subset_epi_ma %>% epi_slide_mean(confirmed_cov, before = 3, na.rm = TRUE)
+curr_pass <- cov_nas_subset_epi_ma %>% epi_slide_mean(confirmed_cov, before = 3, na.rm = TRUE)
 
-for (i in 1:length(cov_NAs_subset_epi_ma$confirmed_cov)) {
-  curr_val <- cov_NAs_subset_epi_ma$confirmed_cov[i]
+for (i in 1:length(cov_nas_subset_epi_ma$confirmed_cov)) {
+  curr_val <- cov_nas_subset_epi_ma$confirmed_cov[i]
   if (is.na(curr_val)) {
-    cov_NAs_subset_epi_ma$confirmed_cov[i] <- curr_pass$slide_value_confirmed_cov[i]
-    curr_pass <- cov_NAs_subset_epi_ma %>% epi_slide_mean(confirmed_cov, before = 3, na.rm = TRUE)
+    cov_nas_subset_epi_ma$confirmed_cov[i] <- curr_pass$slide_value_confirmed_cov[i]
+    curr_pass <- cov_nas_subset_epi_ma %>% epi_slide_mean(confirmed_cov, before = 3, na.rm = TRUE)
   }
 }
-cov_NAs_subset_epi_ma
+cov_nas_subset_epi_ma
 ```
 
 And as we can see we get the same results.
@@ -379,14 +376,10 @@ And as we can see we get the same results.
 The next step is linear interpolation. Here we can think of this as using linear regression to be able to connect the dots between our NA points.
 
 ```{r}
-# linear_interpolate <- function(values) {
-#   approx(x = seq_along(values), y = values, xout = seq_along(values), method = "linear", rule = 3)$y
-# }
-
 # my implementation base R
 # first pass create a list of tuples that are end points for each NA
 # second passes goes through and runs the regressions between each end point
-linear_interpolate_2pass <- function(values) {
+linear_interpolate_two_pass <- function(values) {
   interpolated_values <- values
 
   # first pass
@@ -426,15 +419,15 @@ linear_interpolate_2pass <- function(values) {
 ```
 
 ```{r}
-cov_NAs_subset_linear_int <- cov_NAs_subset
-cov_NAs_subset_linear_int$confirmed_cov_interpolated <- linear_interpolate_2pass(cov_NAs_subset$confirmed_cov)
-cov_NAs_subset_linear_int
+cov_nas_subset_linear_int <- cov_nas_subset
+cov_nas_subset_linear_int$confirmed_cov_interpolated <- linear_interpolate_two_pass(cov_nas_subset$confirmed_cov)
+cov_nas_subset_linear_int
 ```
 
 We can also plot it so you can see how the NAs were filled in. The red background is where the values were NA previously prior to the correction.
 
 ```{r, warning=FALSE}
-plot_signals(cov_NAs_subset_linear_int)
+plot_signals(cov_nas_subset_linear_int)
 ```
 
 As we discussed earlier. These approaches can also be done in version rather than in time. We will show how to do the LOCF method in version to get a sense of how this works. The benefit of doing imputation in version is that we can fill in larger gaps of data that might exist in the time domain, but don't necessarily exist in the version domain.
