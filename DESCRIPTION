@@ -44,7 +44,6 @@ Imports:
     data.table,
     dplyr (>= 1.1.0),
     epidatasets,
-    genlasso,
     ggplot2,
     glue,
     lifecycle (>= 1.0.1),
@@ -63,6 +62,7 @@ Imports:
 Suggests:
     devtools,
     epidatr,
+    genlasso,
     here,
     knitr,
     outbreaks,
