@@ -1,7 +1,7 @@
 Package: epiprocess
 Type: Package
 Title: Tools for basic signal processing in epidemiology
-Version: 0.10.0
+Version: 0.10.1
 Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", , "lcbrooks+github@andrew.cmu.edu", role = c("aut", "cre")),
@@ -37,13 +37,13 @@ Description: This package introduces common data structures for working with
 License: MIT + file LICENSE
 URL: https://cmu-delphi.github.io/epiprocess/
 Depends:
+    epidatasets,
     R (>= 3.6)
 Imports:
     checkmate,
     cli,
     data.table,
     dplyr (>= 1.1.0),
-    epidatasets,
     genlasso,
     ggplot2,
     glue,

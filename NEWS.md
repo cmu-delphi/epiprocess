@@ -6,6 +6,25 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 ## Breaking changes
 
+
+## Improvements
+
+
+## Bug fixes
+
+
+## Cleanup
+
+- Moved example datasets from being reexported in the package to being fetched
+  from `epidatasets`. The `epidatasets` package is now auto-loaded as a
+  dependency of `epiprocess`. The datasets can still be accessed, after loading
+  the package, with `data()` or the name of the dataset alone, or with
+  `epidatasets::` (#577).
+
+# epiprocess 0.10
+
+## Breaking changes
+
 - Moved example datasets from being hosted in the package to being reexported
   from the `epidatasets` package. The datasets can no longer be loaded with
   `data()` but can be accessed with `epiprocess::` or, after loading the
