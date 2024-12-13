@@ -85,6 +85,14 @@ reference:
       - epix_fill_through_version
       - epix_truncate_versions_after
 
+  - title: Example data
+  - contents:
+      - epidatasets::cases_deaths_subset
+      - epidatasets::archive_cases_dv_subset
+      - epidatasets::covid_incidence_county_subset
+      - epidatasets::covid_incidence_outliers
+      - epidatasets::covid_case_death_rates_extended
+
   - title: internal
   - contents:
       - starts_with("internal")

@@ -1,10 +1,10 @@
 Package: epiprocess
 Type: Package
 Title: Tools for basic signal processing in epidemiology
-Version: 0.9.7
+Version: 0.10.1
 Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
-    person("Logan", "Brooks", , "lcbrooks@andrew.cmu.edu", role = c("aut", "cre")),
+    person("Logan", "Brooks", , "lcbrooks+github@andrew.cmu.edu", role = c("aut", "cre")),
     person("Rafael", "Catoia", role = "ctb"),
     person("Nat", "DeFries", role = "ctb"),
     person("Daniel", "McDonald", role = "aut"),
@@ -13,8 +13,9 @@ Authors@R: c(
     person("Chloe", "You", role = "ctb"),
     person("Quang", "Nguyen", role = "ctb"),
     person("Evan", "Ray", role = "aut"),
-    person("Dmitry", "Shemetov", role = "ctb"),
+    person("Dmitry", "Shemetov", role = "aut"),
     person("Ryan", "Tibshirani", role = "aut"),
+    person("David", "Weber", , "davidweb@andrew.cmu.edu", role = "ctb"),
     person("Lionel", "Henry", role = "ctb",
            comment = "Author of included rlang fragments"),
     person("Hadley", "Wickham", role = "ctb",

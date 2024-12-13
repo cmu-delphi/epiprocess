@@ -16,12 +16,13 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Logan Brooks \email{lcbrooks@andrew.cmu.edu}
+\strong{Maintainer}: Logan Brooks \email{lcbrooks+github@andrew.cmu.edu}
 
 Authors:
 \itemize{
   \item Daniel McDonald
   \item Evan Ray
+  \item Dmitry Shemetov
   \item Ryan Tibshirani
 }
 
@@ -34,7 +35,7 @@ Other contributors:
   \item Ken Mawer [contributor]
   \item Chloe You [contributor]
   \item Quang Nguyen [contributor]
-  \item Dmitry Shemetov [contributor]
+  \item David Weber \email{davidweb@andrew.cmu.edu} [contributor]
   \item Lionel Henry (Author of included rlang fragments) [contributor]
   \item Hadley Wickham (Author of included rlang fragments) [contributor]
   \item Posit (Copyright holder of included rlang fragments) [copyright holder]

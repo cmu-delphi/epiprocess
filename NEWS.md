@@ -6,21 +6,38 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 ## Breaking changes
 
-- Moved example datasets from being hosted in the package to being fetched
-  from `epidatasets`. The `epidatasets` package is now auto-loaded as a
-  dependency of `epiprocess`. The datasets can still be fetched, after loading
-  the package, with `data()` or the name of the dataset alone, or can be
-  accessed with `epidatasets::`. Datasets with names starting
-  `jhu` have been renamed to a more uniform scheme and now have names starting
-  with `covid`. The data set previously named `jhu_confirmed_cumulative_num` has
-  been removed from the package, but a renamed version is has been removed from
-  the package, but a renamed version is still available in `epidatasets` (#520, #577).
+
+## Improvements
+
 
 ## Bug fixes
 
-- Removed `.window_size = 1` default from `epi_slide_{mean,sum,opt}`; this
-  argument is now mandatory, and should nearly always be greater than 1 except
-  for testing purposes.
+
+## Cleanup
+
+- Moved example datasets from being reexported in the package to being fetched
+  from `epidatasets`. The `epidatasets` package is now auto-loaded as a
+  dependency of `epiprocess`. The datasets can still be accessed, after loading
+  the package, with `data()` or the name of the dataset alone, or with
+  `epidatasets::` (#577).
+
+# epiprocess 0.10
+
+## Breaking changes
+
+- Moved example datasets from being hosted in the package to being reexported
+  from the `epidatasets` package. The datasets can no longer be loaded with
+  `data()` but can be accessed with `epiprocess::` or, after loading the
+  package, just the name of the dataset (#520). Those with names starting with
+  `jhu` have been renamed to a more uniform scheme and now have names starting
+  with `covid`. The data set previously named `jhu_confirmed_cumulative_num` has
+  been removed from the package, but a renamed version is has been removed from
+  the package, but a renamed version is still available in `epidatasets`.
+- `epi_slide_{sum,mean,opt}` have improved default output column names, and
+  additional arguments for specifying names: `.prefix`, `.suffix`,
+  `.new_col_names`. To obtain the old naming behavior, use `.prefix =
+  "slide_value_"`.
+- `as_epi_df` now removes any grouping that `x` had applied.
 
 ## Improvements
 
@@ -30,6 +47,19 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - Improved validation of `.window_size` arguments.
 - Rewrote a lot of the package documentation to be more consistent and
   informative. Simplified and streamlined the vignettes.
+- `epi_slide_{sum,mean,opt}` on ungrouped `epi_df`s will now temporarily group
+  by `geo_value` and any `other_keys` for the slide operation rather than raise
+  an error about duplicated time values. `epi_slide`'s analogous automatic
+  grouping has been made temporary in order to match.
+- Improved speed of key-uniqueness checks.
+
+## Bug fixes
+
+- Removed `.window_size = 1` default from `epi_slide_{mean,sum,opt}`; this
+  argument is now mandatory, and should nearly always be greater than 1 except
+  for testing purposes.
+- Fixed `epi_slide_{sum,mean,opt}` raising an error on certain tidyselect
+  expressions.
 
 ## Cleanup
 
