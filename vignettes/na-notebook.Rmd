@@ -43,7 +43,6 @@ Now let's take a look at some real data, and see how the same issue arises when 
 
 ```{r data_collection, warning=FALSE}
 # Gathering the Data
-print(getwd())
 states <- "ca,fl,ny,tx"
 today <- 20240725
 
@@ -130,10 +129,10 @@ plot_signals <- function(x, version = NULL, verbose = TRUE) {
         mutate(is_na = is.na(!!sym(col)))
 
       na_regions <- na_regions %>%
-        group_by(group = cumsum(!is_na))
+        group_by(group = cumsum(!is_na)) # nolint: object_usage_linter
 
       na_regions <- na_regions %>%
-        filter(is_na == TRUE)
+        filter(is_na == TRUE) # nolint: object_usage_linter
 
       na_regions <- na_regions %>%
         summarize(start = min(time_value), end = max(time_value), signal = col)
@@ -150,7 +149,7 @@ plot_signals <- function(x, version = NULL, verbose = TRUE) {
     gather(key = "signal", value = "value", -time_value)
 
   if (verbose) {
-    plot <- ggplot(x, aes(x = time_value, y = value, color = signal)) +
+    plot <- ggplot(x, aes(x = time_value, y = value, color = signal)) + # nolint: object_usage_linter
       geom_line() +
       labs(title = title, x = "Time", y = "Normalized Value") +
       theme_minimal()
@@ -171,7 +170,7 @@ plot_signals <- function(x, version = NULL, verbose = TRUE) {
       plot <- plot +
         geom_rect(
           data = na_regions_list[[col]],
-          aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf, fill = signal),
+          aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf, fill = signal), # nolint: object_usage_linter
           color = NA, alpha = 0.2, inherit.aes = FALSE
         )
 
@@ -216,7 +215,7 @@ generate_signal <- function() {
     geo_values = states,
     issues = epirange(20210920, today)
   ) %>%
-    select(geo_value, time_value, version = issue, confirmed_cov = value) %>%
+    select(geo_value, time_value, version = issue, confirmed_cov = value) %>% # nolint: object_usage_linter
     as_epi_archive()
 
   versions <- unique(cov_adm[["DT"]][["version"]])
