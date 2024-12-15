@@ -69,7 +69,8 @@ Suggests:
     readr,
     rmarkdown,
     testthat (>= 3.1.5),
-    withr
+    withr,
+    zoo
 VignetteBuilder:
     knitr
 Remotes:
