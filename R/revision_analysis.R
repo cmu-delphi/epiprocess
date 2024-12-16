@@ -135,7 +135,7 @@ revision_summary <- function(epi_arch,
   }
   revision_behavior <-
     revision_behavior %>%
-    mutate(lag = as.integer(version) - as.integer(time_value)) %>% # nolint: object_usage_linter
+    mutate(lag = time_delta_to_n_steps(version - time_value, epi_arch$time_type)) %>% # nolint: object_usage_linter
     group_by(across(all_of(epikeytime_names))) %>% # group = versions of one measurement
     summarize(
       n_revisions = dplyr::n() - 1,
@@ -150,10 +150,9 @@ revision_summary <- function(epi_arch,
     mutate(
       spread = max_value - min_value, # nolint: object_usage_linter
       rel_spread = spread / max_value, # nolint: object_usage_linter
-      # TODO the units here may be a problem
-      min_lag = as.difftime(min_lag, units = "days"), # nolint: object_usage_linter
-      max_lag = as.difftime(max_lag, units = "days"), # nolint: object_usage_linter
-      lag_near_latest = as.difftime(lag_to, units = "days") # nolint: object_usage_linter
+      min_lag = min_lag * unit_time_delta(epi_arch$time_type), # nolint: object_usage_linter
+      max_lag = max_lag * unit_time_delta(epi_arch$time_type), # nolint: object_usage_linter
+      lag_near_latest = lag_to * unit_time_delta(epi_arch$time_type) # nolint: object_usage_linter
     ) %>%
     select(-lag_to) %>%
     relocate(
@@ -162,7 +161,7 @@ revision_summary <- function(epi_arch,
     )
   if (print_inform) {
     cli_inform("Min lag (time to first version):")
-    difftime_summary(revision_behavior$min_lag) %>% print()
+    time_delta_summary(revision_behavior$min_lag, epi_arch$time_type) %>% print()
     if (!drop_nas) {
       total_na <- epi_arch$DT %>%
         filter(is.na(c_across(!!arg))) %>% # nolint: object_usage_linter
@@ -177,8 +176,8 @@ revision_summary <- function(epi_arch,
     cli_inform("No revisions:")
     cli_li(num_percent(total_num_unrevised, total_num, ""))
     total_quickly_revised <- sum( # nolint: object_usage_linter
-      revision_behavior$max_lag <=
-        as.difftime(quick_revision, units = "days")
+      time_delta_to_n_steps(revision_behavior$max_lag, epi_arch$time_type) <=
+        time_delta_to_n_steps(quick_revision, epi_arch$time_type)
     )
     cli_inform("Quick revisions (last revision within {quick_revision}
 {units(quick_revision)} of the `time_value`):")
@@ -209,7 +208,7 @@ revision_summary <- function(epi_arch,
     cli_li(num_percent(abs_spread, n_real_revised, ""))
 
     cli_inform("{units(quick_revision)} until within {within_latest*100}% of the latest value:")
-    difftime_summary(revision_behavior[["lag_near_latest"]]) %>% print()
+    time_delta_summary(revision_behavior[["lag_near_latest"]], epi_arch$time_type) %>% print()
   }
   return(revision_behavior)
 }
@@ -258,18 +257,25 @@ num_percent <- function(a, b, b_description) {
 ({round(a/b*100,digits=2)}%)")
 }
 
-#' summary doesn't work on difftimes
+#' Like `summary` but working across all "time deltas", including difftimes
+#'
+#' Also standardizes units of difftimes to the natural unit for the given
+#' `time_type` (via conversion to and from a corresponding number of time
+#' steps).
+#'
 #' @keywords internal
-difftime_summary <- function(diff_time_val) {
-  if (length(diff_time_val) > 0) {
+time_delta_summary <- function(time_delta, time_type) {
+  if (length(time_delta) > 0) {
+    n_steps <- time_delta_to_n_steps(time_delta, time_type)
     res <- data.frame(
-      min = min(diff_time_val),
-      median = median(diff_time_val),
-      mean = round(mean(diff_time_val), 1),
-      max = max(diff_time_val),
+      min = min(n_steps),
+      median = median(n_steps),
+      mean = round(mean(n_steps), 1),
+      max = max(n_steps),
       row.names = " ",
       check.names = FALSE
-    )
+    ) %>%
+      mutate(across(c(min, median, mean, max), ~ .x * unit_time_delta(time_type)))
     return(res)
   } else {
     return(data.frame())
