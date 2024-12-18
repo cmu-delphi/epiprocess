@@ -209,12 +209,65 @@ Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/flusurv.html)
 
 ```{r}
 library(epidatr)
-flu_data <- pub_flusurv(
+flu_data_api <- pub_flusurv(
   locations = "ca",
   epiweeks = epirange(201801, 202001),
-) %>%
-  select(location, epiweek, issue, rate_age_0, rate_age_1, rate_age_2, rate_age_3, rate_age_4) %>%
-  tidyr::pivot_longer(cols = starts_with("rate_age_"), names_to = "age_group", values_to = "rate")
+)
+flu_data <- flu_data_api %>%
+  select(location, epiweek, issue, rate_age_0, rate_age_1, rate_age_2, rate_age_3, rate_age_4, rate_overall) %>%
+  tidyr::pivot_longer(
+    cols = starts_with("rate_age_"), names_to = "age_group",
+    names_prefix = "rate_age_", names_transform = function(x) paste0("age_group_", x),
+    values_to = "rate"
+  ) %>%
+  inner_join(
+    # tibble(
+    #   location = "CA",
+    #   age_group = paste0("age_group_", 0:4),
+    #   # population_proportion = c(0.06187, 0.16343, 0.43359, 0.19666, 0.14445)
+    #   # ^ (estimated via single regression)
+    #   # population_proportion = c(201265, 520077, 1725382, 699145, 551243) %>% {. / sum(.)}
+    #   # ^ (from https://www.cdc.gov/nchs/nvss/bridged_race.htm vintage 2020 year 2018 data alone)
+    #   population_proportion = c(198705, 518211, 1724467, 696784, 568237) %>% {. / sum(.)}
+    #   # ^ (from https://www.census.gov/data/tables/time-series/demo/popest/2010s-counties-detail.html, only taking estimates for one year)
+    # ),
+    # by = c("location", "age_group"),
+    # prepared from https://www.cdc.gov/nchs/nvss/bridged_race.htm vintage 2020(?) years 2017 and 2018 data:
+    # tribble(
+    #   ~location, ~age_group,    ~epiweek,              ~pop,
+    #   "CA",      "age_group_0", as.Date("2017-07-01"), 203813,
+    #   "CA",      "age_group_1", as.Date("2017-07-01"), 521827,
+    #   "CA",      "age_group_2", as.Date("2017-07-01"), 1722399,
+    #   "CA",      "age_group_3", as.Date("2017-07-01"), 700090,
+    #   "CA",      "age_group_4", as.Date("2017-07-01"), 534789,
+    #   "CA",      "age_group_0", as.Date("2018-07-01"), 201265,
+    #   "CA",      "age_group_1", as.Date("2018-07-01"), 520077,
+    #   "CA",      "age_group_2", as.Date("2018-07-01"), 1725382,
+    #   "CA",      "age_group_3", as.Date("2018-07-01"), 699145,
+    #   "CA",      "age_group_4", as.Date("2018-07-01"), 551243,
+    #   ),
+    # join_by(location, closest(y$epiweek <= x$epiweek), age_group),
+    # suffix = c("", "_for_pop"),
+    # relationship = "many-to-one", unmatched = "error"
+    # prepared from https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-county-detail.html vintage 2020(?) years 2017 and 2018 data (identical to above)
+    tribble(
+      ~location, ~age_group,    ~epiweek,              ~pop,
+      "CA",      "age_group_0", as.Date("2017-07-01"), 203813,
+      "CA",      "age_group_1", as.Date("2017-07-01"), 521827,
+      "CA",      "age_group_2", as.Date("2017-07-01"), 1722399,
+      "CA",      "age_group_3", as.Date("2017-07-01"), 700090,
+      "CA",      "age_group_4", as.Date("2017-07-01"), 534789,
+      "CA",      "age_group_0", as.Date("2018-07-01"), 201265,
+      "CA",      "age_group_1", as.Date("2018-07-01"), 520077,
+      "CA",      "age_group_2", as.Date("2018-07-01"), 1725382,
+      "CA",      "age_group_3", as.Date("2018-07-01"), 699145,
+      "CA",      "age_group_4", as.Date("2018-07-01"), 551243,
+    ),
+    join_by(location, closest(y$epiweek <= x$epiweek), age_group),
+    suffix = c("", "_for_pop"),
+    relationship = "many-to-one", unmatched = "error"
+  ) %>%
+  select(-epiweek_for_pop)
 flu_data
 ```
 
@@ -234,9 +287,26 @@ time).
 Now we can aggregate the data by `age_group`, if we want to compute the total:
 
 ```{r}
-group_cols <- key_colnames(exclude = "age_group")
-flu_data %>%
-  sum_groups_epi_df("rate", group_cols = group_cols)
+group_cols <- key_colnames(flu_data, exclude = "age_group")
+rate_overall_recalc_edf <-
+  flu_data %>%
+  # mutate(weighted_rate = rate * population_proportion) %>%
+  group_by(geo_value, time_value) %>%
+  mutate(weighted_rate = rate * pop / sum(pop)) %>%
+  ungroup() %>%
+  sum_groups_epi_df("weighted_rate", group_cols = group_cols) %>%
+  rename(rate_overall_recalc = weighted_rate) %>%
+  mutate(rate_overall_recalc = round(rate_overall_recalc, 1)) %>%
+  # compare to published overall rates:
+  inner_join(
+    flu_data_api %>%
+      select(geo_value = location, time_value = epiweek, rate_overall),
+    by = c("geo_value", "time_value"),
+    relationship = "one-to-one", unmatched = "error"
+  )
+max(abs(rate_overall_recalc_edf$rate_overall - rate_overall_recalc_edf$rate_overall_recalc))
+rate_overall_recalc_edf %>%
+  slice_max(abs(rate_overall_recalc_edf$rate_overall - rate_overall_recalc_edf$rate_overall_recalc))
 ```
 
 ## Detecting and filling time gaps with `complete.epi_df`
@@ -515,4 +585,3 @@ Engineering. Copyright Johns Hopkins University 2020.
 API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html):
 These signals are taken directly from the JHU CSSE [COVID-19 GitHub
 repository](https://github.com/CSSEGISandData/COVID-19) without changes.
-
