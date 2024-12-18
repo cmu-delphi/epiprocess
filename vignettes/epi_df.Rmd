@@ -211,63 +211,39 @@ Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/flusurv.html)
 library(epidatr)
 flu_data_api <- pub_flusurv(
   locations = "ca",
-  epiweeks = epirange(201801, 202001),
+  epiweeks = epirange(201801, 202001)
 )
+```
+
+We're interested in the age-specific rates:
+```{r}
 flu_data <- flu_data_api %>%
-  select(location, epiweek, issue, rate_age_0, rate_age_1, rate_age_2, rate_age_3, rate_age_4, rate_overall) %>%
+  select(location, epiweek, rate_age_0, rate_age_1, rate_age_2, rate_age_3, rate_age_4) %>%
+  # Turn `rate_age_0`..`rate_age_4` columns into an `age_group` and `rate`
+  # column (with 5x as many rows):
   tidyr::pivot_longer(
-    cols = starts_with("rate_age_"), names_to = "age_group",
-    names_prefix = "rate_age_", names_transform = function(x) paste0("age_group_", x),
-    values_to = "rate"
+    cols = starts_with("rate_age_"), names_to = "age_group", values_to = "rate",
+    # When converting column names to entries in `age_group`, remove this prefix:
+    names_prefix = "rate_age_",
+    # And add a better prefix:
+    names_transform = function(age_group) paste0("age_group_", age_group)
   ) %>%
-  inner_join(
-    # tibble(
-    #   location = "CA",
-    #   age_group = paste0("age_group_", 0:4),
-    #   # population_proportion = c(0.06187, 0.16343, 0.43359, 0.19666, 0.14445)
-    #   # ^ (estimated via single regression)
-    #   # population_proportion = c(201265, 520077, 1725382, 699145, 551243) %>% {. / sum(.)}
-    #   # ^ (from https://www.cdc.gov/nchs/nvss/bridged_race.htm vintage 2020 year 2018 data alone)
-    #   population_proportion = c(198705, 518211, 1724467, 696784, 568237) %>% {. / sum(.)}
-    #   # ^ (from https://www.census.gov/data/tables/time-series/demo/popest/2010s-counties-detail.html, only taking estimates for one year)
-    # ),
-    # by = c("location", "age_group"),
-    # prepared from https://www.cdc.gov/nchs/nvss/bridged_race.htm vintage 2020(?) years 2017 and 2018 data:
-    # tribble(
-    #   ~location, ~age_group,    ~epiweek,              ~pop,
-    #   "CA",      "age_group_0", as.Date("2017-07-01"), 203813,
-    #   "CA",      "age_group_1", as.Date("2017-07-01"), 521827,
-    #   "CA",      "age_group_2", as.Date("2017-07-01"), 1722399,
-    #   "CA",      "age_group_3", as.Date("2017-07-01"), 700090,
-    #   "CA",      "age_group_4", as.Date("2017-07-01"), 534789,
-    #   "CA",      "age_group_0", as.Date("2018-07-01"), 201265,
-    #   "CA",      "age_group_1", as.Date("2018-07-01"), 520077,
-    #   "CA",      "age_group_2", as.Date("2018-07-01"), 1725382,
-    #   "CA",      "age_group_3", as.Date("2018-07-01"), 699145,
-    #   "CA",      "age_group_4", as.Date("2018-07-01"), 551243,
-    #   ),
-    # join_by(location, closest(y$epiweek <= x$epiweek), age_group),
-    # suffix = c("", "_for_pop"),
-    # relationship = "many-to-one", unmatched = "error"
-    # prepared from https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-county-detail.html vintage 2020(?) years 2017 and 2018 data (identical to above)
-    tribble(
-      ~location, ~age_group,    ~epiweek,              ~pop,
-      "CA",      "age_group_0", as.Date("2017-07-01"), 203813,
-      "CA",      "age_group_1", as.Date("2017-07-01"), 521827,
-      "CA",      "age_group_2", as.Date("2017-07-01"), 1722399,
-      "CA",      "age_group_3", as.Date("2017-07-01"), 700090,
-      "CA",      "age_group_4", as.Date("2017-07-01"), 534789,
-      "CA",      "age_group_0", as.Date("2018-07-01"), 201265,
-      "CA",      "age_group_1", as.Date("2018-07-01"), 520077,
-      "CA",      "age_group_2", as.Date("2018-07-01"), 1725382,
-      "CA",      "age_group_3", as.Date("2018-07-01"), 699145,
-      "CA",      "age_group_4", as.Date("2018-07-01"), 551243,
-    ),
-    join_by(location, closest(y$epiweek <= x$epiweek), age_group),
-    suffix = c("", "_for_pop"),
-    relationship = "many-to-one", unmatched = "error"
+  # Improve `age_group` labels a bit more:
+  mutate(
+    age_group = case_match(
+      age_group,
+      "age_group_0" ~ "0--4 yr",
+      "age_group_1" ~ "5--17 yr",
+      "age_group_2" ~ "18--49 yr",
+      "age_group_3" ~ "50--64 yr",
+      "age_group_4" ~ ">= 65 yr",
+      # Make this a factor with appropriate level ordering:
+      .ptype = factor(levels = c("0--4 yr", "5--17 yr", "18--49 yr", "50--64 yr", ">= 65 yr"))
+    )
   ) %>%
-  select(-epiweek_for_pop)
+  # The API currently outputs `epiweek` in Date format (the constituent Sunday);
+  # rename it to remind us that it's not in YYYYww format:
+  rename(time_value = epiweek)
 flu_data
 ```
 
@@ -275,27 +251,60 @@ We can now convert this data to an `epi_df` object and set the `age_group`
 column as an additional group key:
 
 ```{r}
-flu_data <- flu_data %>% as_epi_df(other_keys = "age_group", as_of = as.Date("2024-03-20"))
+flu_data <- flu_data %>% as_epi_df(other_keys = "age_group")
 flu_data
 ```
 
 Note that the `epi_df` object now has an additional key column `age_group`. This
 means that there should only be one row for each combination of `geo_value`,
-`time_value`, and `age_group` in the dataset (this is enforced at construction
+`age_group`, and `time_value` in the dataset (this is enforced at construction
 time).
 
-Now we can aggregate the data by `age_group`, if we want to compute the total:
-
+Now we can aggregate the data by `age_group`, if we want to compute the total.
+Since we are working with rates, we need to attach some population data in order
+to do this aggregation. It's somewhat ambiguous whether FluSurv-NET reporting
+uses either [NCHS](https://www.cdc.gov/nchs/nvss/bridged_race.htm) or
+[Census](https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-county-detail.html)
+populations for `time_value`s before 2020 included in reports from 2020 onward,
+but in this case, the two sources agreed exactly. FluSurv-NET also directly
+reports an overall rate, so we can check our work.
 ```{r}
 group_cols <- key_colnames(flu_data, exclude = "age_group")
 rate_overall_recalc_edf <-
   flu_data %>%
-  # mutate(weighted_rate = rate * population_proportion) %>%
+  inner_join(
+    # Population estimates for FluSurv-NET-covered part of CA on 2017-07-01 and
+    # 2018-07-01, extracted and aggregated from "vintage 2020" estimates (actually
+    # released by Census in June 2021 and by NCHS in September 2021), which is the
+    # last available reporting found with population estimates for 2017 and 2018:
+    tribble(
+      ~geo_value, ~age_group,  ~time_value,           ~pop,
+      "CA",       "0--4 yr",   as.Date("2017-07-01"), 203813,
+      "CA",       "5--17 yr",  as.Date("2017-07-01"), 521827,
+      "CA",       "18--49 yr", as.Date("2017-07-01"), 1722399,
+      "CA",       "50--64 yr", as.Date("2017-07-01"), 700090,
+      "CA",       ">= 65 yr",  as.Date("2017-07-01"), 534789,
+      "CA",       "0--4 yr",   as.Date("2018-07-01"), 201265,
+      "CA",       "5--17 yr",  as.Date("2018-07-01"), 520077,
+      "CA",       "18--49 yr", as.Date("2018-07-01"), 1725382,
+      "CA",       "50--64 yr", as.Date("2018-07-01"), 699145,
+      "CA",       ">= 65 yr",  as.Date("2018-07-01"), 551243,
+    ),
+    # Simple population interpolation/extrapolation scheme: last observation
+    # carried forward. Use the estimated population on 2017-07-01 for
+    # time_values 2017-07-01 through 2018-06-30, and the estimated population on
+    # 2018-07-01 for all subsequent time_values:
+    join_by(geo_value, closest(y$time_value <= x$time_value), age_group),
+    suffix = c("", "_for_pop"),
+    relationship = "many-to-one", unmatched = "error"
+  ) %>%
+  select(-time_value_for_pop) %>%
   group_by(geo_value, time_value) %>%
-  mutate(weighted_rate = rate * pop / sum(pop)) %>%
+  mutate(count = rate * pop / 100e3) %>%
   ungroup() %>%
-  sum_groups_epi_df("weighted_rate", group_cols = group_cols) %>%
-  rename(rate_overall_recalc = weighted_rate) %>%
+  sum_groups_epi_df(c("count", "pop"), group_cols = group_cols) %>%
+  mutate(rate_overall_recalc = count / pop * 100e3) %>%
+  # match rounding of original data:
   mutate(rate_overall_recalc = round(rate_overall_recalc, 1)) %>%
   # compare to published overall rates:
   inner_join(
@@ -304,10 +313,13 @@ rate_overall_recalc_edf <-
     by = c("geo_value", "time_value"),
     relationship = "one-to-one", unmatched = "error"
   )
+# What's our maximum error vs. the official overall estimates?
 max(abs(rate_overall_recalc_edf$rate_overall - rate_overall_recalc_edf$rate_overall_recalc))
-rate_overall_recalc_edf %>%
-  slice_max(abs(rate_overall_recalc_edf$rate_overall - rate_overall_recalc_edf$rate_overall_recalc))
 ```
+This small amount of difference is expected, since all the age-specific rates
+were rounded to the first decimal place, and population data might have been
+interpolated and extrapolated a bit differently in the official source, limiting
+our ability to precisely recreate its estimates from an age group breakdown.
 
 ## Detecting and filling time gaps with `complete.epi_df`
 
