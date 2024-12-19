@@ -336,7 +336,8 @@ First, let's create a data set with some missing data. We will reuse the dataset
 edf_missing <- edf %>%
   filter(geo_value %in% c("ca", "tx")) %>%
   group_by(geo_value) %>%
-  slice(1:3, 5:6)
+  slice(1:3, 5:6) %>%
+  ungroup()
 
 edf_missing %>%
   print(n = 10)
@@ -346,12 +347,17 @@ Now let's fill in the missing data with explicit zeros:
 
 ```{r}
 edf_missing %>%
+  group_by(geo_value) %>%
   complete(
     time_value = seq.Date(min(time_value), max(time_value), by = "day"),
     fill = list(cases = 0)
   ) %>%
+  ungroup() %>%
   print(n = 12)
 ```
+We see that rows have been added for the missing `time_value` 2020-03-04 for
+both of the states, with `cases` set to `0`. If there were explicit `NA`s in the
+`cases` column, those would have been replaced by `0` as well.
 
 ### Detecting and filling time gaps with `tsibble`
 
