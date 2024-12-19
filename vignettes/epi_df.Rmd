@@ -135,7 +135,8 @@ where
 - `g` is a one-row tibble containing the values of the grouping variables
   for the associated group, for instance `g$geo_value`
 - `t` is the ref_time_value for the current window
-- `...` are additional arguments
+- `...` (optional) are any additional arguments you'd like to be able to forward
+  to your function
 
 The same computation as above can be done with a function:
 
@@ -159,8 +160,8 @@ formula or function case. This can be adjusted with `.new_col_name`.
 
 ### Rolling computations with multiple column outputs
 
-If your formula (or function) returns a data.frame, then the columns of the
-data.frame will be unpacked into the resulting `epi_df` (in the sense of
+If your formula (or function) returns a tibble (or other kind of data frame),
+then its columns will be unpacked into the resulting `epi_df` (in the sense of
 `tidyr::unpack()`). For example, the following computes the 7-day trailing
 average of daily cases as well as the the 7-day trailing standard deviation of
 daily cases:
@@ -168,7 +169,10 @@ daily cases:
 ```{r}
 edf %>%
   epi_slide(
-    ~ data.frame(cases_mean = mean(.x$cases, na.rm = TRUE), cases_sd = sd(.x$cases, na.rm = TRUE)),
+    ~ tibble(
+      cases_mean = mean(.x$cases, na.rm = TRUE),
+      cases_sd = sd(.x$cases, na.rm = TRUE)
+    ),
     .window_size = 7
   )
 ```
@@ -179,14 +183,13 @@ For the two most common sliding operations, we offer two optimized versions:
 `epi_slide_mean()` and `epi_slide_sum()`. These are much faster than
 `epi_slide()`, so we recommend using them when you are only interested in the
 mean or sum of a column. The following computes the 7-day trailing mean of daily
-cases:
+cases, allowing means and sums to be taken over fewer than 7 observations if
+there is missingness (`na.rm = TRUE`):
 
 ```{r}
 edf %>%
-  group_by(geo_value) %>%
   epi_slide_mean("cases", .window_size = 7, na.rm = TRUE)
 edf %>%
-  group_by(geo_value) %>%
   epi_slide_sum("cases", .window_size = 7, na.rm = TRUE)
 ```
 
