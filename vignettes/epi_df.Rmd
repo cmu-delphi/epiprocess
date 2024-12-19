@@ -205,7 +205,7 @@ An `epi_df` object can have more key columns than just `geo_value` and
 can add this as a key column. We can then aggregate the data by these key
 columns using `sum_groups_epi_df()`. Let's use influenza hospitalization rate
 data from the CDC system FluSurv as an example. We can get it from the [Delphi
-Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/flusurv.html)
+Epidata API](https://cmu-delphi.github.io/delphi-epidata/api/flusurv.html).
 
 ```{r}
 library(epidatr)
@@ -238,7 +238,10 @@ flu_data <- flu_data_api %>%
       "age_group_3" ~ "50--64 yr",
       "age_group_4" ~ ">= 65 yr",
       # Make this a factor with appropriate level ordering:
-      .ptype = factor(levels = c("0--4 yr", "5--17 yr", "18--49 yr", "50--64 yr", ">= 65 yr"))
+      .ptype = factor(levels = c(
+        "0--4 yr", "5--17 yr", "18--49 yr",
+        "50--64 yr", ">= 65 yr"
+      ))
     )
   ) %>%
   # The API currently outputs `epiweek` in Date format (the constituent Sunday);
@@ -261,13 +264,14 @@ means that there should only be one row for each combination of `geo_value`,
 time).
 
 Now we can aggregate the data by `age_group`, if we want to compute the total.
-Since we are working with rates, we need to attach some population data in order
-to do this aggregation. It's somewhat ambiguous whether FluSurv-NET reporting
-uses either [NCHS](https://www.cdc.gov/nchs/nvss/bridged_race.htm) or
+For count data, this would be just a single call to `sum_groups_epi_df()`. Since we
+are working with rates, we need to attach some population data in order to do
+this aggregation. It's somewhat ambiguous whether FluSurv-NET reporting uses
+either [NCHS](https://www.cdc.gov/nchs/nvss/bridged_race.htm) or
 [Census](https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-county-detail.html)
-populations for `time_value`s before 2020 included in reports from 2020 onward,
-but in this case, the two sources agreed exactly. FluSurv-NET also directly
-reports an overall rate, so we can check our work.
+populations for `time_value`s before 2020 included in reports published in 2020
+onward, but at least for this example, these two sources agree exactly.
+FluSurv-NET also directly reports an overall rate, so we can check our work.
 ```{r}
 group_cols <- key_colnames(flu_data, exclude = "age_group")
 rate_overall_recalc_edf <-
@@ -295,15 +299,18 @@ rate_overall_recalc_edf <-
     # time_values 2017-07-01 through 2018-06-30, and the estimated population on
     # 2018-07-01 for all subsequent time_values:
     join_by(geo_value, closest(y$time_value <= x$time_value), age_group),
-    suffix = c("", "_for_pop"),
-    relationship = "many-to-one", unmatched = "error"
+    # Generate errors if the two data sets don't line up as expected:
+    relationship = "many-to-one", unmatched = "error",
+    # We'll get a second time column indicating which population estimate
+    # was carried forward; name it time_value_for_pop:
+    suffix = c("", "_for_pop")
   ) %>%
   select(-time_value_for_pop) %>%
   group_by(geo_value, time_value) %>%
-  mutate(count = rate * pop / 100e3) %>%
+  mutate(approx_count = rate * pop / 100e3) %>%
   ungroup() %>%
-  sum_groups_epi_df(c("count", "pop"), group_cols = group_cols) %>%
-  mutate(rate_overall_recalc = count / pop * 100e3) %>%
+  sum_groups_epi_df(c("approx_count", "pop"), group_cols = group_cols) %>%
+  mutate(rate_overall_recalc = approx_count / pop * 100e3) %>%
   # match rounding of original data:
   mutate(rate_overall_recalc = round(rate_overall_recalc, 1)) %>%
   # compare to published overall rates:
