@@ -418,3 +418,19 @@ test_that("unit_time_delta works", {
     6L
   )
 })
+
+test_that("time_delta_to_approx_difftime works as expected", {
+  expect_equal(time_delta_to_approx_difftime(as.difftime(3, units = "days"), "day"),
+               as.difftime(3, units = "days"))
+  expect_equal(time_delta_to_approx_difftime(3, "day"),
+               as.difftime(3, units = "days"))
+  expect_equal(time_delta_to_approx_difftime(3, "week"),
+               as.difftime(3, units = "weeks"))
+  expect_true(time_delta_to_approx_difftime(3, "yearmonth") %>%
+                `units<-`("days") %>%
+                as.numeric() %>%
+                `-`(90) %>%
+                abs() %>%
+                `<=`(5))
+  expect_error(time_delta_to_approx_difftime(3, "integer"))
+})

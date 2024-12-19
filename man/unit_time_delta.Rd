@@ -14,7 +14,9 @@ an object \code{u} such that \code{time_values + u} represents advancing by one
 time step / moving to the subsequent time interval for any \code{time_values}
 object of time type \code{time_type}, and such that \code{time_values + k * u} for
 integerish vector \code{k} advances by \code{k} steps (with vectorization,
-recycling).
+recycling). At time of writing, these objects also all support
+multiplication by nonintegerish numeric vectors, \code{mean}, and \code{median},
+which are useful for summarizing vector time_deltas.
 }
 \description{
 Object that, added to time_values of time_type, advances by one time step/interval
