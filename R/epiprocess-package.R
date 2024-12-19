@@ -33,5 +33,5 @@ utils::globalVariables(c(
   "fitted", ".response", "geo_value", "time_value",
   "value", ".real", "lag", "max_value", "min_value",
   "median_value", "spread", "rel_spread", "time_to",
-  "time_near_latest", "n_revisions", "min_lag", "max_lag"
+  "lag_near_latest", "n_revisions", "min_lag", "max_lag"
 ))

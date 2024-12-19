@@ -42,7 +42,7 @@ final value for case counts as reported in the context of insurance. To
 avoid this filtering, either set to \code{NULL} or 0.}
 
 \item{within_latest}{double between 0 and 1. Determines the threshold
-used for the \code{time_to}}
+used for the \code{lag_to}}
 
 \item{quick_revision}{difftime or integer (integer is treated as days), for
 the printed summary, the amount of time between the final revision and the
@@ -87,10 +87,10 @@ always excludes \code{NA} values)
 \item \code{rel_spread}: \code{spread} divided by the largest value (so it will
 always be less than 1). Note that this need not be the final value. It will
 be \code{NA} whenever \code{spread} is 0.
-\item \code{time_near_latest}: the time taken for the revisions to settle to within
+\item \code{lag_near_latest}: the time taken for the revisions to settle to within
 \code{within_latest} (default 20\%) of the final value and stay there. For
 example, consider the series (0, 20, 99, 150, 102, 100); then
-\code{time_near_latest} is 5, since even though 99 is within 20\%, it is outside
+\code{lag_near_latest} is 5, since even though 99 is within 20\%, it is outside
 the window afterwards at 150.
 }
 }

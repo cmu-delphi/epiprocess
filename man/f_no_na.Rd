@@ -2,13 +2,13 @@
 % Please edit documentation in R/revision_analysis.R
 \name{f_no_na}
 \alias{f_no_na}
-\title{use when the default behavior returns a warning on empty lists, which we do
+\title{use when the default behavior returns a warning on empty vectors, which we do
 not want, and there is no super clean way of preventing this}
 \usage{
 f_no_na(f, x)
 }
 \description{
-use when the default behavior returns a warning on empty lists, which we do
+use when the default behavior returns a warning on empty vectors, which we do
 not want, and there is no super clean way of preventing this
 }
 \keyword{internal}
