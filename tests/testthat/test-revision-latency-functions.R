@@ -51,6 +51,17 @@ test_that("tidyselect is functional", {
     quiet(revision_summary(with_later_val_col, value)),
     quiet(revision_summary(dummy_ex, value))
   )
+  expect_error(
+    dummy_ex$DT %>%
+      copy() %>%
+      mutate(value2 = value) %>%
+      as_epi_archive(
+        versions_end = dummy_ex$versions_end,
+        compactify = FALSE
+      ) %>%
+      revision_summary(),
+    class = "epiprocess__revision_summary_cannot_determine_default_selection"
+  )
   expect_error(revision_summary(with_later_val_col, !everything()),
     class = "epiprocess__revision_summary__selected_zero_columns"
   )

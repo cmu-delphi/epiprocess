@@ -27,8 +27,9 @@
 #'
 #' @param epi_arch an epi_archive to be analyzed
 #' @param ... <[`tidyselect`][dplyr_tidy_select]>, used to choose the column to
-#'   summarize. If empty, it chooses the first. Currently only implemented for
-#'   one column at a time.
+#'   summarize. If empty and there is only one value/measurement column (i.e.,
+#'   not in [`key_colnames`]) in the archive, it will automatically select it.
+#'   If supplied, `...` must select exactly one column.
 #' @param drop_nas bool, drop any `NA` values from the archive? After dropping
 #'   `NA`'s compactify is run again to make sure there are no duplicate values
 #'   from occasions when the signal is revised to `NA`, and then back to its
@@ -86,7 +87,16 @@ revision_summary <- function(epi_arch,
   assert_class(epi_arch, "epi_archive")
   if (dots_n(...) == 0) {
     # Choose the first column that's not a key:
-    arg <- setdiff(names(epi_arch$DT), key_colnames(epi_arch))[[1]]
+    value_colnames <- setdiff(names(epi_arch$DT), key_colnames(epi_arch))
+    if (length(value_colnames) != 1) {
+      cli_abort(c(
+        "Cannot determine which column to summarize.",
+        "i" = "Value/measurement columns appear to be: {format_varnames(value_colnames)}",
+        ">" = "Please specify which column to summarize in `...` (with tidyselect syntax)."
+      ), class = "epiprocess__revision_summary_cannot_determine_default_selection")
+    } else {
+      arg <- value_colnames
+    }
   } else {
     arg <- names(eval_select(rlang::expr(c(...)), allow_rename = FALSE, data = epi_arch$DT))
     if (length(arg) == 0) {
