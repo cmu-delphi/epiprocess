@@ -1164,7 +1164,9 @@ time_delta_to_n_steps <- function(time_delta, time_type) {
 #'   time step / moving to the subsequent time interval for any `time_values`
 #'   object of time type `time_type`, and such that `time_values + k * u` for
 #'   integerish vector `k` advances by `k` steps (with vectorization,
-#'   recycling).
+#'   recycling). At time of writing, these objects also all support
+#'   multiplication by nonintegerish numeric vectors, `mean`, and `median`,
+#'   which are useful for summarizing vector time_deltas.
 #'
 #' @keywords internal
 unit_time_delta <- function(time_type) {
@@ -1187,12 +1189,54 @@ time_type_unit_abbrs <- c(
   yearmonth = "m"
 )
 
+#' Get an abbreviation for the "units" of `unit_time_delta(time_type)`
+#'
+#' For use in formatting or automatically naming things based on
+#' `time_delta_to_n_steps(time_delta)` for a `time_delta` between times of time
+#' type `time_type`.
+#'
+#' @param time_type str
+#' @return str
+#'
+#' @keywords internal
 time_type_unit_abbr <- function(time_type) {
   maybe_unit_abbr <- time_type_unit_abbrs[time_type]
   if (is.na(maybe_unit_abbr)) {
     cli_abort("Cannot determine the units of time type {format_chr_with_quotes(time_type)}")
   }
   maybe_unit_abbr
+}
+
+#' Convert `time_delta` to an approximate difftime
+#'
+#' `r lifecycle::badge("experimental")`
+#'
+#' To assist in comparing `time_delta`s to default `difftime` thresholds when we
+#' want to reduce friction.
+#'
+#' It may be better to try to do something like make `time_delta` validation
+#' more accommodating (e.g., of difftimes with units of "days" when working on
+#' weekly scale), and remain rigid on yearmonths. Applying deltas and comparing
+#' time_values might also be an approach but seems more fraught as the least
+#' common denominator would be start/mid/end datetimes of time intervals, but
+#' those are also ambiguous (starting&representation wdays of weeks are unknown,
+#' timezone of dates are unknown).
+#'
+#' @keywords internal
+time_delta_to_approx_difftime <- function(time_delta, time_type) {
+  switch(time_type,
+    day = ,
+    week = {
+      if (inherits(time_delta, "difftime")) {
+        time_delta
+      } else {
+        time_delta_to_n_steps(time_delta, time_type) * unit_time_delta(time_type)
+      }
+    },
+    yearmonth = time_delta * as.difftime((365 + 1 / 4 - 1 / 100 + 1 / 400) / 12, units = "days"),
+    integer = ,
+    cli_abort("Unsupported time_type for this operation: {time_type}")
+  )
 }
 
 #' Extract singular element of a length-1 unnamed list (validated)
