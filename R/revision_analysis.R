@@ -128,7 +128,7 @@ revision_summary <- function(epi_arch,
     select(all_of(unique(c(keys, arg))))
   if (!is.null(min_waiting_period)) {
     revision_behavior <- revision_behavior %>%
-      filter(vec_cast(epi_arch$versions_end - time_value, min_waiting_period) >= min_waiting_period)
+      filter(vec_cast(epi_arch$versions_end - time_value, min_waiting_period) > min_waiting_period)
   }
 
   if (drop_nas) {
