@@ -80,60 +80,60 @@ test_that("validate_slide_window_arg works", {
 })
 
 test_that("unit_time_delta works", {
-  for (unit_time_delta in list(unit_time_delta_friendly, unit_time_delta_fast)) {
-  expect_equal(
-    as.Date("2020-01-01") + 5 * unit_time_delta("day"),
-    as.Date("2020-01-06")
-  )
-  expect_equal(
-    as.Date("2020-01-01") + 2 * unit_time_delta("week"),
-    as.Date("2020-01-15")
-  )
-  expect_equal(
-    tsibble::make_yearmonth(2000, 1) + 5 * unit_time_delta("yearmonth"),
-    tsibble::make_yearmonth(2000, 6)
-  )
-  expect_equal(
-    1L + 5L * unit_time_delta("integer"),
-    6L
-  )
-  #
-  expect_equal(
-    as.Date("2020-01-01") +
-      time_delta_to_n_steps(as.Date("2020-01-06") - as.Date("2020-01-01"), "day") *
-        unit_time_delta("day"),
-    as.Date("2020-01-06")
-  )
-  expect_equal(
-    as.Date("2020-01-01") +
-      time_delta_to_n_steps(as.integer(as.Date("2020-01-06") - as.Date("2020-01-01")), "day") *
-        unit_time_delta("day"),
-    as.Date("2020-01-06")
-  )
-  expect_equal(
-    as.Date("2020-01-01") +
-      time_delta_to_n_steps(as.Date("2020-01-15") - as.Date("2020-01-01"), "week") *
-        unit_time_delta("week"),
-    as.Date("2020-01-15")
-  )
-  expect_equal(
-    as.Date("2020-01-01") +
-      time_delta_to_n_steps(as.difftime(2, units = "weeks"), "week") *
-        unit_time_delta("week"),
-    as.Date("2020-01-15")
-  )
-  expect_equal(
-    tsibble::make_yearmonth(2000, 1) +
-      time_delta_to_n_steps(5, "yearmonth") *
-        unit_time_delta("yearmonth"),
-    tsibble::make_yearmonth(2000, 6)
-  )
-  expect_equal(
-    1L +
-      time_delta_to_n_steps(5, "integer") *
-        unit_time_delta("integer"),
-    6L
-  )
+  for (format in c("friendly", "fast")) {
+    expect_equal(
+      as.Date("2020-01-01") + 5 * unit_time_delta("day", format = format),
+      as.Date("2020-01-06")
+    )
+    expect_equal(
+      as.Date("2020-01-01") + 2 * unit_time_delta("week", format = format),
+      as.Date("2020-01-15")
+    )
+    expect_equal(
+      tsibble::make_yearmonth(2000, 1) + 5 * unit_time_delta("yearmonth", format = format),
+      tsibble::make_yearmonth(2000, 6)
+    )
+    expect_equal(
+      1L + 5L * unit_time_delta("integer", format = format),
+      6L
+    )
+    #
+    expect_equal(
+      as.Date("2020-01-01") +
+        time_delta_to_n_steps(as.Date("2020-01-06") - as.Date("2020-01-01"), "day") *
+          unit_time_delta("day", format = format),
+      as.Date("2020-01-06")
+    )
+    expect_equal(
+      as.Date("2020-01-01") +
+        time_delta_to_n_steps(as.integer(as.Date("2020-01-06") - as.Date("2020-01-01")), "day") *
+          unit_time_delta("day", format = format),
+      as.Date("2020-01-06")
+    )
+    expect_equal(
+      as.Date("2020-01-01") +
+        time_delta_to_n_steps(as.Date("2020-01-15") - as.Date("2020-01-01"), "week") *
+          unit_time_delta("week", format = format),
+      as.Date("2020-01-15")
+    )
+    expect_equal(
+      as.Date("2020-01-01") +
+        time_delta_to_n_steps(as.difftime(2, units = "weeks"), "week") *
+          unit_time_delta("week", format = format),
+      as.Date("2020-01-15")
+    )
+    expect_equal(
+      tsibble::make_yearmonth(2000, 1) +
+        time_delta_to_n_steps(5, "yearmonth") *
+          unit_time_delta("yearmonth", format = format),
+      tsibble::make_yearmonth(2000, 6)
+    )
+    expect_equal(
+      1L +
+        time_delta_to_n_steps(5, "integer") *
+          unit_time_delta("integer", format = format),
+      6L
+    )
   }
 })
 

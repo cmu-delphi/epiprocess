@@ -161,9 +161,9 @@ revision_summary <- function(epi_arch,
     mutate(
       spread = max_value - min_value, # nolint: object_usage_linter
       rel_spread = spread / max_value, # nolint: object_usage_linter
-      min_lag = min_lag * unit_time_delta_friendly(epi_arch$time_type), # nolint: object_usage_linter
-      max_lag = max_lag * unit_time_delta_friendly(epi_arch$time_type), # nolint: object_usage_linter
-      lag_near_latest = lag_to * unit_time_delta_friendly(epi_arch$time_type) # nolint: object_usage_linter
+      min_lag = min_lag * unit_time_delta(epi_arch$time_type), # nolint: object_usage_linter
+      max_lag = max_lag * unit_time_delta(epi_arch$time_type), # nolint: object_usage_linter
+      lag_near_latest = lag_to * unit_time_delta(epi_arch$time_type) # nolint: object_usage_linter
     ) %>%
     select(-lag_to) %>%
     relocate(
@@ -286,7 +286,7 @@ time_delta_summary <- function(time_delta, time_type) {
       row.names = " ",
       check.names = FALSE
     ) %>%
-      mutate(across(c(min, median, mean, max), ~ .x * unit_time_delta_friendly(time_type)))
+      mutate(across(c(min, median, mean, max), ~ .x * unit_time_delta(time_type)))
     return(res)
   } else {
     return(data.frame())

@@ -108,6 +108,43 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
   }
 }
 
+#' Object that, added to time_values of time_type, advances by one time step/interval
+#'
+#' @param time_type string; `epi_df`'s or `epi_archive`'s `time_type`
+#' @param format "friendly" or "fast"; for some time_types, there are multiple
+#'   ways to represent time_deltas. "friendly" tries to output a format that
+#'   will be more informative when printed, and produce errors in more cases
+#'   when used in unexpected ways. "fast" tries to output a time_delta that will
+#'   be faster in downstream operations.
+#' @return an object `u` such that `time_values + u` represents advancing by one
+#'   time step / moving to the subsequent time interval for any `time_values`
+#'   object of time type `time_type`, and such that `time_values + k * u` for
+#'   integerish vector `k` advances by `k` steps (with vectorization,
+#'   recycling). At time of writing, these objects also all support
+#'   multiplication by nonintegerish numeric vectors, `mean`, and `median`,
+#'   which are useful for summarizing vector time_deltas, but these fractional
+#'   time_deltas are not allowed in time_delta-specific operations.
+#'
+#' @keywords internal
+unit_time_delta <- function(time_type, format = c("friendly", "fast")) {
+  format <- rlang::arg_match(format)
+  switch(format,
+    friendly = switch(time_type,
+      day = as.difftime(1, units = "days"),
+      week = as.difftime(1, units = "weeks"),
+      yearmonth = 1,
+      integer = 1L,
+      cli_abort("Unsupported time_type: {time_type}")
+    ),
+    fast = switch(time_type,
+      day = 1,
+      week = 7,
+      yearmonth = 1,
+      integer = 1L,
+      cli_abort("Unsupported time_type: {time_type}")
+    )
+  )
+}
 
 #' Convert a time delta to a integerish number of "unit" steps between time values
 #'
@@ -155,61 +192,19 @@ time_delta_to_n_steps <- function(time_delta, time_type) {
   }
 }
 
-#' Object that, added to time_values of time_type, advances by one time step/interval
-#'
-#' For some time_types, there are multiple ways to represent time_deltas.
-#' `unit_time_delta_friendly()` tries to output a "friendly" time_delta that
-#' will be more informative when printed, and produce errors in more cases when
-#' it is used in unexpected ways. `unit_time_delta_fast()` tries to output a
-#' time_delta with faster operations.
-#'
-#' @param time_type string; `epi_df`'s or `epi_archive`'s `time_type`
-#' @return an object `u` such that `time_values + u` represents advancing by one
-#'   time step / moving to the subsequent time interval for any `time_values`
-#'   object of time type `time_type`, and such that `time_values + k * u` for
-#'   integerish vector `k` advances by `k` steps (with vectorization,
-#'   recycling). At time of writing, these objects also all support
-#'   multiplication by nonintegerish numeric vectors, `mean`, and `median`,
-#'   which are useful for summarizing vector time_deltas, but these fractional
-#'   time_deltas are not allowed in time_delta-specific operations.
+#' Convert from integerish/infinite/mix to time_delta
+n_steps_to_time_delta <- function(n_steps, time_type, format = c("friendly", "fast")) {
+  if (!is_bare_integerish(n_steps)) {
+    cli_abort("`n_steps` did not appear to be integerish (or infinite, or a mix)")
+  }
+  n_steps * unit_time_delta(time_type, format)
+}
+
+#' Standardize time_deltas to a multiple of [`unit_time_delta()`]
 #'
 #' @keywords internal
-unit_time_delta_friendly <- function(time_type) {
-  switch(time_type,
-    day = as.difftime(1, units = "days"),
-    week = as.difftime(1, units = "weeks"),
-    yearmonth = 1,
-    integer = 1L,
-    cli_abort("Unsupported time_type: {time_type}")
-  )
-}
-
-#' @rdname unit_time_delta_friendly
-unit_time_delta_fast <- function(time_type) {
-  switch(time_type,
-    day = 1,
-    week = 7,
-    yearmonth = 1,
-    integer = 1L,
-    cli_abort("Unsupported time_type: {time_type}")
-  )
-}
-
-#' Standardize time_deltas to a specific format
-#'
-#' `time_delta_standardize_friendly` standardizes to a multiple of
-#' [`unit_time_delta_friendly()`]. `time_delta_standardize_fast` standardizes to
-#' a multiple of [`unit_time_delta_fast()`]. For some time_types, these are the
-#' same thing.
-#'
-#' @keywords internal
-time_delta_standardize_friendly <- function(time_delta, time_type) {
-  time_delta_to_n_steps(time_delta, time_type) * unit_time_delta_friendly(time_type)
-}
-
-#' @rdname time_delta_standardize_friendly
-time_delta_standardize_fast <- function(time_delta, time_type) {
-  time_delta_to_n_steps(time_delta, time_type) * unit_time_delta_fast(time_type)
+time_delta_standardize <- function(time_delta, time_type, format = c("friendly", "fast")) {
+  time_delta_to_n_steps(time_delta, time_type) * unit_time_delta(time_type, format)
 }
 
 # Using these unit abbreviations happens to make our automatic slide output
@@ -266,7 +261,7 @@ time_type_unit_abbr <- function(time_type) {
 time_delta_to_approx_difftime <- function(time_delta, time_type) {
   switch(time_type,
     day = ,
-    week = time_delta_standardize_friendly(time_delta, time_type),
+    week = time_delta_standardize(time_delta, time_type, "friendly"),
     yearmonth = time_delta * as.difftime(30, units = "days"),
     integer = ,
     cli_abort("Unsupported time_type for this operation: {time_type}")
