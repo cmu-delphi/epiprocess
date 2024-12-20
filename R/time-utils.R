@@ -157,6 +157,12 @@ time_delta_to_n_steps <- function(time_delta, time_type) {
 
 #' Object that, added to time_values of time_type, advances by one time step/interval
 #'
+#' For some time_types, there are multiple ways to represent time_deltas.
+#' `unit_time_delta_friendly()` tries to output a "friendly" time_delta that
+#' will be more informative when printed, and produce errors in more cases when
+#' it is used in unexpected ways. `unit_time_delta_fast()` tries to output a
+#' time_delta with faster operations.
+#'
 #' @param time_type string; `epi_df`'s or `epi_archive`'s `time_type`
 #' @return an object `u` such that `time_values + u` represents advancing by one
 #'   time step / moving to the subsequent time interval for any `time_values`
@@ -168,10 +174,21 @@ time_delta_to_n_steps <- function(time_delta, time_type) {
 #'   time_deltas are not allowed in time_delta-specific operations.
 #'
 #' @keywords internal
-unit_time_delta <- function(time_type) {
+unit_time_delta_friendly <- function(time_type) {
   switch(time_type,
     day = as.difftime(1, units = "days"),
     week = as.difftime(1, units = "weeks"),
+    yearmonth = 1,
+    integer = 1L,
+    cli_abort("Unsupported time_type: {time_type}")
+  )
+}
+
+#' @rdname unit_time_delta_friendly
+unit_time_delta_fast <- function(time_type) {
+  switch(time_type,
+    day = 1,
+    week = 7,
     yearmonth = 1,
     integer = 1L,
     cli_abort("Unsupported time_type: {time_type}")
@@ -270,4 +287,16 @@ difftime_approx_ceiling_time_delta <- function(difftime, time_type) {
     integer = ,
     cli_abort("Unsupported time_type for this operation: {time_type}")
   )
+}
+
+time_minus_time_in_n_steps <- function(x, y, time_type) {
+  time_delta_to_n_steps(x - y, time_type)
+}
+
+time_plus_n_steps <- function(x, y, time_type) {
+  x + y * unit_time_delta_fast(time_type)
+}
+
+time_minus_n_steps <- function(x, y, time_type) {
+  x - y * unit_time_delta_fast(time_type)
 }
