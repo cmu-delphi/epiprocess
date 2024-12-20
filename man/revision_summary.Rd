@@ -9,9 +9,11 @@ revision_summary(
   ...,
   drop_nas = TRUE,
   print_inform = TRUE,
-  min_waiting_period = as.difftime(60, units = "days"),
+  min_waiting_period = as.difftime(60, units = "days") \%>\%
+    difftime_approx_ceiling_time_delta(epi_arch$time_type),
   within_latest = 0.2,
-  quick_revision = as.difftime(3, units = "days"),
+  quick_revision = as.difftime(3, units = "days") \%>\%
+    difftime_approx_ceiling_time_delta(epi_arch$time_type),
   few_revisions = 3,
   abs_spread_threshold = NULL,
   rel_spread_threshold = 0.1,
