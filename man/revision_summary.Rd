@@ -36,11 +36,12 @@ immediately-preceding value.}
 only return the full summary tibble}
 
 \item{min_waiting_period}{\code{difftime}, integer or \code{NULL}. Sets a cutoff: any
-time_values not earlier than \code{min_waiting_period} before \code{versions_end} are
-removed. \code{min_waiting_period} should characterize the typical time during
-which revisions occur.  The default of 60 days corresponds to a typical
-final value for case counts as reported in the context of insurance. To
-avoid this filtering, either set to \code{NULL} or 0.}
+time_values that have not had at least \code{min_waiting_period} to stabilize as
+of the \code{versions_end} are removed. \code{min_waiting_period} should characterize
+the typical time during which most significant revisions occur. The default
+of 60 days corresponds to a typical near-final value for case counts as
+reported in the context of insurance. To avoid this filtering, either set
+to \code{NULL} or 0.}
 
 \item{within_latest}{double between 0 and 1. Determines the threshold
 used for the \code{lag_to}}
