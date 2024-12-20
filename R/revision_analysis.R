@@ -37,11 +37,12 @@
 #' @param print_inform bool, determines whether to print summary information, or
 #'   only return the full summary tibble
 #' @param min_waiting_period `difftime`, integer or `NULL`. Sets a cutoff: any
-#'   time_values not earlier than `min_waiting_period` before `versions_end` are
-#'   removed. `min_waiting_period` should characterize the typical time during
-#'   which revisions occur.  The default of 60 days corresponds to a typical
-#'   final value for case counts as reported in the context of insurance. To
-#'   avoid this filtering, either set to `NULL` or 0.
+#'   time_values that have not had at least `min_waiting_period` to stabilize as
+#'   of the `versions_end` are removed. `min_waiting_period` should characterize
+#'   the typical time during which most significant revisions occur. The default
+#'   of 60 days corresponds to a typical near-final value for case counts as
+#'   reported in the context of insurance. To avoid this filtering, either set
+#'   to `NULL` or 0.
 #' @param within_latest double between 0 and 1. Determines the threshold
 #'   used for the `lag_to`
 #' @param quick_revision difftime or integer (integer is treated as days), for
@@ -128,7 +129,7 @@ revision_summary <- function(epi_arch,
     select(all_of(unique(c(keys, arg))))
   if (!is.null(min_waiting_period)) {
     revision_behavior <- revision_behavior %>%
-      filter(vec_cast(epi_arch$versions_end - time_value, min_waiting_period) > min_waiting_period)
+      filter(vec_cast(epi_arch$versions_end - time_value, min_waiting_period) >= min_waiting_period)
   }
 
   if (drop_nas) {
