@@ -295,14 +295,34 @@ difftime_approx_ceiling_time_delta <- function(difftime, time_type) {
   )
 }
 
+#' Difference between two time value vectors in terms of number of time "steps"
+#'
+#' @param x a time_value (vector) of time type `time_type`
+#' @param y a time_value (vector) of time type `time_type`
+#' @param time_type as in [`validate_slide_window_arg()`]
+#' @return integerish vector such that `x + n_steps_to_time_delta_fast(result)`
+#'   should equal `y`.
+#'
+#' @keywords internal
 time_minus_time_in_n_steps <- function(x, y, time_type) {
   time_delta_to_n_steps(x - y, time_type)
 }
 
+#' Advance/retreat time_values by specified number of time "steps"
+#'
+#' Here, a "step" is based on the `time_type`, not just the class of `x`.
+#'
+#' @param x a time_value (vector) of time type `time_type`
+#' @param y integerish (vector)
+#' @param time_type as in [`validate_slide_window_arg()`]
+#' @return a time_value (vector) of time type `time_type`
+#'
+#' @keywords internal
 time_plus_n_steps <- function(x, y, time_type) {
   x + y * unit_time_delta(time_type, "fast")
 }
 
+#' @rdname time_plus_n_steps
 time_minus_n_steps <- function(x, y, time_type) {
   x - y * unit_time_delta(time_type, "fast")
 }
