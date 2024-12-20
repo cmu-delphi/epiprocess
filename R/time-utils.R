@@ -195,6 +195,23 @@ unit_time_delta_fast <- function(time_type) {
   )
 }
 
+#' Standardize time_deltas to a specific format
+#'
+#' `time_delta_standardize_friendly` standardizes to a multiple of
+#' [`unit_time_delta_friendly()`]. `time_delta_standardize_fast` standardizes to
+#' a multiple of [`unit_time_delta_fast()`]. For some time_types, these are the
+#' same thing.
+#'
+#' @keywords internal
+time_delta_standardize_friendly <- function(time_delta, time_type) {
+  time_delta_to_n_steps(time_delta, time_type) * unit_time_delta_friendly(time_type)
+}
+
+#' @rdname time_delta_standardize_friendly
+time_delta_standardize_fast <- function(time_delta, time_type) {
+  time_delta_to_n_steps(time_delta, time_type) * unit_time_delta_fast(time_type)
+}
+
 # Using these unit abbreviations happens to make our automatic slide output
 # naming look like taking ISO-8601 duration designations, removing the P, and
 # lowercasing any characters. Fortnightly or sub-daily time types would need an
@@ -249,13 +266,7 @@ time_type_unit_abbr <- function(time_type) {
 time_delta_to_approx_difftime <- function(time_delta, time_type) {
   switch(time_type,
     day = ,
-    week = {
-      if (inherits(time_delta, "difftime")) {
-        time_delta
-      } else {
-        time_delta_to_n_steps(time_delta, time_type) * unit_time_delta(time_type)
-      }
-    },
+    week = time_delta_standardize_friendly(time_delta, time_type),
     yearmonth = time_delta * as.difftime(30, units = "days"),
     integer = ,
     cli_abort("Unsupported time_type for this operation: {time_type}")
