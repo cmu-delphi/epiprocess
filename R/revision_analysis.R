@@ -77,9 +77,11 @@ revision_summary <- function(epi_arch,
                              ...,
                              drop_nas = TRUE,
                              print_inform = TRUE,
-                             min_waiting_period = as.difftime(60, units = "days"),
+                             min_waiting_period = as.difftime(60, units = "days") %>%
+                               difftime_approx_ceiling_time_delta(epi_arch$time_type),
                              within_latest = 0.2,
-                             quick_revision = as.difftime(3, units = "days"),
+                             quick_revision = as.difftime(3, units = "days") %>%
+                               difftime_approx_ceiling_time_delta(epi_arch$time_type),
                              few_revisions = 3,
                              abs_spread_threshold = NULL,
                              rel_spread_threshold = 0.1,
@@ -124,12 +126,18 @@ revision_summary <- function(epi_arch,
   epikey_names <- key_colnames(epi_arch, exclude = c("time_value", "version"))
   epikeytime_names <- c(epikey_names, "time_value")
   keys <- c(epikeytime_names, "version")
+  time_type <- epi_arch$time_type
 
   revision_behavior <- epi_arch$DT %>%
     select(all_of(unique(c(keys, arg))))
   if (!is.null(min_waiting_period)) {
+    last_semistable_time_value <- time_minus_n_steps(
+      epi_arch$versions_end,
+      time_delta_to_n_steps(min_waiting_period, time_type),
+      time_type
+    )
     revision_behavior <- revision_behavior %>%
-      filter(vec_cast(epi_arch$versions_end - time_value, min_waiting_period) >= min_waiting_period)
+      filter(time_value <= last_semistable_time_value)
   }
 
   if (drop_nas) {
@@ -146,7 +154,7 @@ revision_summary <- function(epi_arch,
   }
   revision_behavior <-
     revision_behavior %>%
-    mutate(lag = time_minus_time_in_n_steps(version, time_value, epi_arch$time_type)) %>% # nolint: object_usage_linter
+    mutate(lag = time_minus_time_in_n_steps(version, time_value, time_type)) %>% # nolint: object_usage_linter
     group_by(across(all_of(epikeytime_names))) %>% # group = versions of one measurement
     summarize(
       n_revisions = dplyr::n() - 1,
@@ -161,9 +169,9 @@ revision_summary <- function(epi_arch,
     mutate(
       spread = max_value - min_value, # nolint: object_usage_linter
       rel_spread = spread / max_value, # nolint: object_usage_linter
-      min_lag = n_steps_to_time_delta(min_lag, epi_arch$time_type), # nolint: object_usage_linter
-      max_lag = n_steps_to_time_delta(max_lag, epi_arch$time_type), # nolint: object_usage_linter
-      lag_near_latest = n_steps_to_time_delta(lag_to, epi_arch$time_type) # nolint: object_usage_linter
+      min_lag = n_steps_to_time_delta(min_lag, time_type), # nolint: object_usage_linter
+      max_lag = n_steps_to_time_delta(max_lag, time_type), # nolint: object_usage_linter
+      lag_near_latest = n_steps_to_time_delta(lag_to, time_type) # nolint: object_usage_linter
     ) %>%
     select(-lag_to) %>%
     relocate(
@@ -172,7 +180,7 @@ revision_summary <- function(epi_arch,
     )
   if (print_inform) {
     cli_inform("Min lag (time to first version):")
-    time_delta_summary(revision_behavior$min_lag, epi_arch$time_type) %>% print()
+    time_delta_summary(revision_behavior$min_lag, time_type) %>% print()
     if (!drop_nas) {
       total_na <- epi_arch$DT %>%
         filter(is.na(c_across(!!arg))) %>% # nolint: object_usage_linter
@@ -187,8 +195,8 @@ revision_summary <- function(epi_arch,
     cli_inform("No revisions:")
     cli_li(num_percent(total_num_unrevised, total_num, ""))
     total_quickly_revised <- sum( # nolint: object_usage_linter
-      time_delta_to_n_steps(revision_behavior$max_lag, epi_arch$time_type) <=
-        time_delta_to_n_steps(quick_revision, epi_arch$time_type)
+      time_delta_to_n_steps(revision_behavior$max_lag, time_type) <=
+        time_delta_to_n_steps(quick_revision, time_type)
     )
     cli_inform("Quick revisions (last revision within {quick_revision}
 {units(quick_revision)} of the `time_value`):")
@@ -219,7 +227,7 @@ revision_summary <- function(epi_arch,
     cli_li(num_percent(abs_spread, n_real_revised, ""))
 
     cli_inform("{units(quick_revision)} until within {within_latest*100}% of the latest value:")
-    time_delta_summary(revision_behavior[["lag_near_latest"]], epi_arch$time_type) %>% print()
+    time_delta_summary(revision_behavior[["lag_near_latest"]], time_type) %>% print()
   }
   return(revision_behavior)
 }

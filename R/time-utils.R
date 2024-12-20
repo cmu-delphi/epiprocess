@@ -300,9 +300,9 @@ time_minus_time_in_n_steps <- function(x, y, time_type) {
 }
 
 time_plus_n_steps <- function(x, y, time_type) {
-  x + y * unit_time_delta_fast(time_type)
+  x + y * unit_time_delta(time_type, "fast")
 }
 
 time_minus_n_steps <- function(x, y, time_type) {
-  x - y * unit_time_delta_fast(time_type)
+  x - y * unit_time_delta(time_type, "fast")
 }
