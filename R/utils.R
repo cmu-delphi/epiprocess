@@ -1166,7 +1166,8 @@ time_delta_to_n_steps <- function(time_delta, time_type) {
 #'   integerish vector `k` advances by `k` steps (with vectorization,
 #'   recycling). At time of writing, these objects also all support
 #'   multiplication by nonintegerish numeric vectors, `mean`, and `median`,
-#'   which are useful for summarizing vector time_deltas.
+#'   which are useful for summarizing vector time_deltas, but these fractional
+#'   time_deltas are not allowed in time_delta-specific operations.
 #'
 #' @keywords internal
 unit_time_delta <- function(time_type) {
@@ -1222,6 +1223,13 @@ time_type_unit_abbr <- function(time_type) {
 #' those are also ambiguous (starting&representation wdays of weeks are unknown,
 #' timezone of dates are unknown).
 #'
+#' Another alternative approach, below, converts difftimes to time_deltas
+#' instead. It requires knowledge of which way to round in order to get
+#' time_deltas representing an integer number of time steps, but avoids some
+#' potential inconsistencies of the time-delta-to-difftime approach when we
+#' think about applying it to, e.g., months / spans of months with varying
+#' numbers of days, and also makes it easier to avoid "magical defaults".
+#'
 #' @keywords internal
 time_delta_to_approx_difftime <- function(time_delta, time_type) {
   switch(time_type,
@@ -1233,7 +1241,34 @@ time_delta_to_approx_difftime <- function(time_delta, time_type) {
         time_delta_to_n_steps(time_delta, time_type) * unit_time_delta(time_type)
       }
     },
-    yearmonth = time_delta * as.difftime((365 + 1 / 4 - 1 / 100 + 1 / 400) / 12, units = "days"),
+    yearmonth = time_delta * as.difftime(30, units = "days"),
+    integer = ,
+    cli_abort("Unsupported time_type for this operation: {time_type}")
+  )
+}
+
+#' Closest time_delta that's approximately greater than given difftime
+#'
+#' `r lifecycle::badge("experimental")`
+#'
+#' @param difftime a difftime object
+#' @param time_type as in `validate_slide_window_arg`
+#' @return An object representing an integerish number (or vector of numbers) of
+#'   time steps between consecutive time_values of type `time_type`.
+#'
+#' @keywords internal
+difftime_approx_ceiling_time_delta <- function(difftime, time_type) {
+  assert_class(difftime, "difftime")
+  switch(time_type,
+    day = ,
+    week = {
+      units(difftime) <- paste0(time_type, "s")
+      ceiling(difftime)
+    },
+    yearmonth = {
+      units(difftime) <- "days"
+      ceiling(as.numeric(difftime) / 30)
+    },
     integer = ,
     cli_abort("Unsupported time_type for this operation: {time_type}")
   )
