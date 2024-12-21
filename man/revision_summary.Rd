@@ -9,9 +9,11 @@ revision_summary(
   ...,
   drop_nas = TRUE,
   print_inform = TRUE,
-  min_waiting_period = as.difftime(60, units = "days"),
+  min_waiting_period = as.difftime(60, units = "days") \%>\%
+    difftime_approx_ceiling_time_delta(epi_arch$time_type),
   within_latest = 0.2,
-  quick_revision = as.difftime(3, units = "days"),
+  quick_revision = as.difftime(3, units = "days") \%>\%
+    difftime_approx_ceiling_time_delta(epi_arch$time_type),
   few_revisions = 3,
   abs_spread_threshold = NULL,
   rel_spread_threshold = 0.1,
@@ -23,8 +25,9 @@ revision_summary(
 \item{epi_arch}{an epi_archive to be analyzed}
 
 \item{...}{<\code{\link[=dplyr_tidy_select]{tidyselect}}>, used to choose the column to
-summarize. If empty, it chooses the first. Currently only implemented for
-one column at a time.}
+summarize. If empty and there is only one value/measurement column (i.e.,
+not in \code{\link{key_colnames}}) in the archive, it will automatically select it.
+If supplied, \code{...} must select exactly one column.}
 
 \item{drop_nas}{bool, drop any \code{NA} values from the archive? After dropping
 \code{NA}'s compactify is run again to make sure there are no duplicate values
@@ -35,14 +38,15 @@ immediately-preceding value.}
 only return the full summary tibble}
 
 \item{min_waiting_period}{\code{difftime}, integer or \code{NULL}. Sets a cutoff: any
-time_values not earlier than \code{min_waiting_period} before \code{versions_end} are
-removed. \code{min_waiting_period} should characterize the typical time during
-which revisions occur.  The default of 60 days corresponds to a typical
-final value for case counts as reported in the context of insurance. To
-avoid this filtering, either set to \code{NULL} or 0.}
+time_values that have not had at least \code{min_waiting_period} to stabilize as
+of the \code{versions_end} are removed. \code{min_waiting_period} should characterize
+the typical time during which most significant revisions occur. The default
+of 60 days corresponds to a typical near-final value for case counts as
+reported in the context of insurance. To avoid this filtering, either set
+to \code{NULL} or 0.}
 
 \item{within_latest}{double between 0 and 1. Determines the threshold
-used for the \code{time_to}}
+used for the \code{lag_to}}
 
 \item{quick_revision}{difftime or integer (integer is treated as days), for
 the printed summary, the amount of time between the final revision and the
@@ -87,10 +91,10 @@ always excludes \code{NA} values)
 \item \code{rel_spread}: \code{spread} divided by the largest value (so it will
 always be less than 1). Note that this need not be the final value. It will
 be \code{NA} whenever \code{spread} is 0.
-\item \code{time_near_latest}: the time taken for the revisions to settle to within
+\item \code{lag_near_latest}: the time taken for the revisions to settle to within
 \code{within_latest} (default 20\%) of the final value and stay there. For
 example, consider the series (0, 20, 99, 150, 102, 100); then
-\code{time_near_latest} is 5, since even though 99 is within 20\%, it is outside
+\code{lag_near_latest} is 5, since even though 99 is within 20\%, it is outside
 the window afterwards at 150.
 }
 }
