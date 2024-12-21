@@ -66,4 +66,53 @@ test_that("tidyselect is functional", {
     class = "epiprocess__revision_summary__selected_zero_columns"
   )
 })
-test_that("revision_summary works for various timetypes", {})
+
+test_that("revision_summary default min_waiting_period works as expected", {
+  expect_equal(
+    tibble(
+      geo_value = 1,
+      time_value = as.Date("2020-01-01") + 0:1,
+      version = time_value + 1,
+      value = 1:2
+    ) %>%
+      as_epi_archive(versions_end = as.Date("2020-01-01") + 1 + 59) %>%
+      revision_summary(print_inform = FALSE) %>%
+      pull(time_value),
+    as.Date("2020-01-01")
+  )
+  expect_equal(
+    tibble(
+      geo_value = 1,
+      time_value = as.Date("2020-01-01") + 7 * (0:1),
+      version = time_value + 35,
+      value = 1:2
+    ) %>%
+      as_epi_archive(versions_end = as.Date("2020-01-01") + 7 + 56) %>%
+      revision_summary(print_inform = FALSE) %>%
+      pull(time_value),
+    as.Date("2020-01-01")
+  )
+  expect_equal(
+    tibble(
+      geo_value = 1,
+      time_value = tsibble::make_yearmonth(2000, 1:2),
+      version = time_value + 1,
+      value = 1:2
+    ) %>%
+      as_epi_archive(versions_end = tsibble::make_yearmonth(2000, 3)) %>%
+      revision_summary(print_inform = FALSE) %>%
+      pull(time_value),
+    tsibble::make_yearmonth(2000, 1)
+  )
+  expect_error(
+    tibble(
+      geo_value = 1,
+      time_value = 1:2 + 0,
+      version = time_value + 1,
+      value = 1:2
+    ) %>%
+      as_epi_archive(versions_end = 1 + 1 + 59) %>%
+      revision_summary(print_inform = FALSE),
+    regexp = "Unsupported time_type"
+  )
+})
