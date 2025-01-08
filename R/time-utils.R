@@ -51,6 +51,8 @@ guess_period.POSIXt <- function(time_values, time_values_arg = rlang::caller_arg
   as.numeric(NextMethod(), units = "secs")
 }
 
+#' Validate `.before` or `.window_size` argument
+#' @keywords internal
 validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRUE, arg_name = rlang::caller_arg(arg)) {
   if (time_type == "custom") {
     cli_abort(
