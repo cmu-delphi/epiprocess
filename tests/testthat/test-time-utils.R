@@ -151,7 +151,7 @@ test_that("time_delta_to_approx_difftime works as expected", {
     as.difftime(3, units = "weeks")
   )
   expect_true(time_delta_to_approx_difftime(3, "yearmonth") %>%
-    `units<-`("days") %>%
+    `units<-`("days") %>% # nolint: indentation_linter
     as.numeric() %>%
     `-`(90) %>%
     abs() %>%
