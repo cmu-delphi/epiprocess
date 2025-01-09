@@ -377,7 +377,7 @@ removed_by_compactify <- function(df, keys, tolerance) {
 #' @importFrom vctrs vec_c vec_slice vec_size
 #' @export
 vec_position_lag <- function(x, n) {
-  # obj_check_vector(x)
+  obj_check_vector(x)
   assert_count(n)
   if (length(x) == 0L) {
     x
