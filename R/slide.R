@@ -979,7 +979,7 @@ epi_slide_opt <- function(
 
 #' @rdname epi_slide_opt
 #' @description `epi_slide_mean` is a wrapper around `epi_slide_opt` with `.f =
-#' datatable::frollmean`.
+#' data.table::frollmean`.
 #'
 #' @export
 epi_slide_mean <- function(
@@ -1039,7 +1039,7 @@ epi_slide_mean <- function(
 
 #' @rdname epi_slide_opt
 #' @description `epi_slide_sum` is a wrapper around `epi_slide_opt` with `.f =
-#' datatable::frollsum`.
+#' data.table::frollsum`.
 #'
 #' @export
 epi_slide_sum <- function(
