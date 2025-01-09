@@ -30,9 +30,9 @@ not in \code{\link{key_colnames}}) in the archive, it will automatically select 
 If supplied, \code{...} must select exactly one column.}
 
 \item{drop_nas}{bool, drop any \code{NA} values from the archive? After dropping
-\code{NA}'s compactify is run again to make sure there are no duplicate values
-from occasions when the signal is revised to \code{NA}, and then back to its
-immediately-preceding value.}
+\code{NA}'s compactify is run again if \code{should_compactify} is \code{TRUE} to make
+sure there are no duplicate values from occasions when the signal is
+revised to \code{NA}, and then back to its immediately-preceding value.}
 
 \item{print_inform}{bool, determines whether to print summary information, or
 only return the full summary tibble}
@@ -56,20 +56,25 @@ days}
 \item{few_revisions}{integer, for the printed summary, the upper bound on the
 number of revisions to consider "few". Default is 3.}
 
-\item{abs_spread_threshold}{numeric, for the printed summary, the maximum
-spread used to characterize revisions which don't actually change very
-much. Default is 5\% of the maximum value in the dataset, but this is the
-most unit dependent of values, and likely needs to be chosen appropriate
-for the scale of the dataset.}
+\item{abs_spread_threshold}{length-1 numeric, for the printed summary, the
+maximum spread used to characterize revisions which don't actually change
+very much. Default is 5\% of the maximum value in the dataset, but this is
+the most unit dependent of values, and likely needs to be chosen
+appropriate for the scale of the dataset.}
 
-\item{rel_spread_threshold}{float between 0 and 1, for the printed summary,
-the relative spread fraction used to characterize revisions which don't
-actually change very much. Default is .1, or 10\% of the final value}
+\item{rel_spread_threshold}{length-1 double between 0 and 1, for the printed
+summary, the relative spread fraction used to characterize revisions which
+don't actually change very much. Default is .1, or 10\% of the final value}
 
-\item{compactify_tol}{float, used if \code{drop_nas=TRUE}, it determines the
-threshold for when two floats are considered identical.}
+\item{compactify_tol}{length-1 double, used if \code{should_compactify} is \code{TRUE}, it
+determines the threshold for when two doubles are considered identical.}
 
-\item{should_compactify}{bool. Compactify if \code{TRUE}.}
+\item{should_compactify}{bool. If \code{TRUE}, we will compactify after the signal
+requested in \code{...} has been selected on its own and the \code{drop_nas} step.
+This helps, for example, to give similar results when called on
+\link[=epix_merge]{merged} and single-signal archives, since merged archives
+record an update when any of the other signals change, not just the
+requested signal. The default is \code{TRUE}.}
 }
 \description{
 \code{revision_summary} removes all missing values (if requested), and then
