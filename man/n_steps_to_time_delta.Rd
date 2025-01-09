@@ -6,6 +6,17 @@
 \usage{
 n_steps_to_time_delta(n_steps, time_type, format = c("friendly", "fast"))
 }
+\arguments{
+\item{n_steps}{integerish vector that can mix in infinite values}
+
+\item{time_type}{as in \code{\link{validate_slide_window_arg}}}
+
+\item{format}{optional; \code{"friendly"} to output a more descriptive/friendly
+class like \code{"difftime"} when possible; \code{"fast"} to output a class that's
+generally faster to work with when possible, like a vanilla \code{"numeric"}.
+Default is \code{"friendly"}.}
+}
 \description{
 Convert from integerish/infinite/mix to time_delta
 }
+\keyword{internal}

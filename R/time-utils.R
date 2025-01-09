@@ -195,6 +195,15 @@ time_delta_to_n_steps <- function(time_delta, time_type) {
 }
 
 #' Convert from integerish/infinite/mix to time_delta
+#'
+#' @param n_steps integerish vector that can mix in infinite values
+#' @param time_type as in [`validate_slide_window_arg`]
+#' @param format optional; `"friendly"` to output a more descriptive/friendly
+#'   class like `"difftime"` when possible; `"fast"` to output a class that's
+#'   generally faster to work with when possible, like a vanilla `"numeric"`.
+#'   Default is `"friendly"`.
+#'
+#' @keywords internal
 n_steps_to_time_delta <- function(n_steps, time_type, format = c("friendly", "fast")) {
   if (!is_bare_integerish(n_steps)) {
     cli_abort("`n_steps` did not appear to be integerish (or infinite, or a mix)")
@@ -275,7 +284,7 @@ time_delta_to_approx_difftime <- function(time_delta, time_type) {
 #' `r lifecycle::badge("experimental")`
 #'
 #' @param difftime a difftime object
-#' @param time_type as in `validate_slide_window_arg`
+#' @param time_type as in [`validate_slide_window_arg`]
 #' @return An object representing an integerish number (or vector of numbers) of
 #'   time steps between consecutive time_values of type `time_type`.
 #'

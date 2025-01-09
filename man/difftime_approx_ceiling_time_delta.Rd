@@ -9,7 +9,7 @@ difftime_approx_ceiling_time_delta(difftime, time_type)
 \arguments{
 \item{difftime}{a difftime object}
 
-\item{time_type}{as in \code{validate_slide_window_arg}}
+\item{time_type}{as in \code{\link{validate_slide_window_arg}}}
 }
 \value{
 An object representing an integerish number (or vector of numbers) of
