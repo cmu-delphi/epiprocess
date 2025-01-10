@@ -93,19 +93,21 @@ revision_summary <- function(epi_arch,
                              compactify_tol = .Machine$double.eps^0.5,
                              should_compactify = TRUE) {
   assert_class(epi_arch, "epi_archive")
+  # if the column to summarize isn't specified, use the only one if there is only one
   if (dots_n(...) == 0) {
     # Choose the first column that's not a key:
     value_colnames <- setdiff(names(epi_arch$DT), key_colnames(epi_arch))
-    if (length(value_colnames) != 1) {
+    if (length(value_colnames) == 1) {
+      arg <- value_colnames
+    } else {
       cli_abort(c(
         "Cannot determine which column to summarize.",
         "i" = "Value/measurement columns appear to be: {format_varnames(value_colnames)}",
         ">" = "Please specify which column to summarize in `...` (with tidyselect syntax)."
       ), class = "epiprocess__revision_summary_cannot_determine_default_selection")
-    } else {
-      arg <- value_colnames
     }
   } else {
+    # get the names of columns matching any tidyselect used in `...`
     arg <- names(eval_select(rlang::expr(c(...)), allow_rename = FALSE, data = epi_arch$DT))
     if (length(arg) == 0) {
       cli_abort("Could not find any columns matching the selection in `...`.",

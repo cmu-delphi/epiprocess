@@ -37,6 +37,7 @@ test_that("revision_summary works for a dummy dataset", {
 test_that("tidyselect is functional", {
   expect_no_error(quiet(revision_summary(dummy_ex, value)))
   expect_no_error(quiet(revision_summary(dummy_ex, starts_with("val"))))
+  # column order shouldn't matter
   with_later_key_col <- dummy_ex$DT %>%
     select(geo_value, time_value, value, version) %>%
     as_epi_archive(versions_end = dummy_ex$versions_end, compactify = FALSE)
@@ -44,6 +45,7 @@ test_that("tidyselect is functional", {
     quiet(revision_summary(with_later_key_col)),
     quiet(revision_summary(dummy_ex))
   )
+  # extra column shouldn't interfere
   with_later_val_col <- dummy_ex$DT %>%
     mutate(value2 = 0) %>%
     as_epi_archive(versions_end = dummy_ex$versions_end, compactify = FALSE)
@@ -51,6 +53,7 @@ test_that("tidyselect is functional", {
     quiet(revision_summary(with_later_val_col, value)),
     quiet(revision_summary(dummy_ex, value))
   )
+  # error when which column we're summarizing is ambiguous
   expect_error(
     dummy_ex$DT %>%
       copy() %>%
@@ -68,6 +71,7 @@ test_that("tidyselect is functional", {
 })
 
 test_that("revision_summary default min_waiting_period works as expected", {
+  # just outside the window
   expect_equal(
     tibble(
       geo_value = 1,
@@ -92,6 +96,7 @@ test_that("revision_summary default min_waiting_period works as expected", {
       pull(time_value),
     as.Date("2020-01-01")
   )
+  # just outside the window for monthly data
   expect_equal(
     tibble(
       geo_value = 1,
