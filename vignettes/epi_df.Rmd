@@ -269,27 +269,39 @@ populations for `time_value`s before 2020 included in reports from 2020 onward,
 but in this case, the two sources agreed exactly. FluSurv-NET also directly
 reports an overall rate, so we can check our work.
 ```{r}
+# Population estimates for FluSurv-NET-covered part of CA on 2017-07-01 and
+# 2018-07-01, extracted and aggregated from "vintage 2020" estimates (actually
+# released by Census in June 2021 and by NCHS in September 2021), which is the
+# last available reporting found with population estimates for 2017 and 2018:
+pop <- tribble(
+  ~geo_value, ~age_group,  ~time_value,           ~pop,
+  "CA",       "0--4 yr",   as.Date("2017-07-01"), 203813,
+  "CA",       "5--17 yr",  as.Date("2017-07-01"), 521827,
+  "CA",       "18--49 yr", as.Date("2017-07-01"), 1722399,
+  "CA",       "50--64 yr", as.Date("2017-07-01"), 700090,
+  "CA",       ">= 65 yr",  as.Date("2017-07-01"), 534789,
+  "CA",       "0--4 yr",   as.Date("2018-07-01"), 201265,
+  "CA",       "5--17 yr",  as.Date("2018-07-01"), 520077,
+  "CA",       "18--49 yr", as.Date("2018-07-01"), 1725382,
+  "CA",       "50--64 yr", as.Date("2018-07-01"), 699145,
+  "CA",       ">= 65 yr",  as.Date("2018-07-01"), 551243,
+)
+# Calculate fraction of total population in each age group.
+pop <- pop %>% 
+  group_by(geo_value, time_value) %>% 
+  mutate(frac_pop = pop / sum(pop))
+```
+
+After joining population onto the rate data, we can calculate the
+population-weighted rate for each age group, that is, the portion of each
+`age_group`'s rate that it contributes to the overall rate.
+
+```{r}
 group_cols <- key_colnames(flu_data, exclude = "age_group")
-rate_overall_recalc_edf <-
+fractional_rate_by_age_group <-
   flu_data %>%
   inner_join(
-    # Population estimates for FluSurv-NET-covered part of CA on 2017-07-01 and
-    # 2018-07-01, extracted and aggregated from "vintage 2020" estimates (actually
-    # released by Census in June 2021 and by NCHS in September 2021), which is the
-    # last available reporting found with population estimates for 2017 and 2018:
-    tribble(
-      ~geo_value, ~age_group,  ~time_value,           ~pop,
-      "CA",       "0--4 yr",   as.Date("2017-07-01"), 203813,
-      "CA",       "5--17 yr",  as.Date("2017-07-01"), 521827,
-      "CA",       "18--49 yr", as.Date("2017-07-01"), 1722399,
-      "CA",       "50--64 yr", as.Date("2017-07-01"), 700090,
-      "CA",       ">= 65 yr",  as.Date("2017-07-01"), 534789,
-      "CA",       "0--4 yr",   as.Date("2018-07-01"), 201265,
-      "CA",       "5--17 yr",  as.Date("2018-07-01"), 520077,
-      "CA",       "18--49 yr", as.Date("2018-07-01"), 1725382,
-      "CA",       "50--64 yr", as.Date("2018-07-01"), 699145,
-      "CA",       ">= 65 yr",  as.Date("2018-07-01"), 551243,
-    ),
+    pop,
     # Simple population interpolation/extrapolation scheme: last observation
     # carried forward. Use the estimated population on 2017-07-01 for
     # time_values 2017-07-01 through 2018-06-30, and the estimated population on
@@ -298,14 +310,27 @@ rate_overall_recalc_edf <-
     suffix = c("", "_for_pop"),
     relationship = "many-to-one", unmatched = "error"
   ) %>%
-  select(-time_value_for_pop) %>%
-  group_by(geo_value, time_value) %>%
-  mutate(count = rate * pop / 100e3) %>%
-  ungroup() %>%
-  sum_groups_epi_df(c("count", "pop"), group_cols = group_cols) %>%
-  mutate(rate_overall_recalc = count / pop * 100e3) %>%
+  mutate(frac_rate = rate * frac_pop)
+```
+
+We can then use `sum_groups_epi_df` to sum population-weighted rate across all
+age groups to get the overall rate.
+
+```{r}
+rate_overall_recalc_edf <-
+  fractional_rate_by_age_group %>% 
+  sum_groups_epi_df("frac_rate", group_cols = group_cols) %>%
+  rename(rate_overall_recalc = frac_rate) %>% 
   # match rounding of original data:
-  mutate(rate_overall_recalc = round(rate_overall_recalc, 1)) %>%
+  mutate(rate_overall_recalc = round(rate_overall_recalc, 1))
+rate_overall_recalc_edf
+```
+
+Let's compare our calculated rate to the overall rate reported by FluSurv-NET.
+
+```{r}
+rate_overall_recalc_edf <-
+  rate_overall_recalc_edf %>% 
   # compare to published overall rates:
   inner_join(
     flu_data_api %>%
