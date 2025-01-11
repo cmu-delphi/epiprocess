@@ -287,8 +287,8 @@ pop <- tribble(
   "CA",       ">= 65 yr",  as.Date("2018-07-01"), 551243,
 )
 # Calculate fraction of total population in each age group.
-pop <- pop %>% 
-  group_by(geo_value, time_value) %>% 
+pop <- pop %>%
+  group_by(geo_value, time_value) %>%
   mutate(frac_pop = pop / sum(pop))
 ```
 
@@ -318,9 +318,9 @@ age groups to get the overall rate.
 
 ```{r}
 rate_overall_recalc_edf <-
-  fractional_rate_by_age_group %>% 
+  fractional_rate_by_age_group %>%
   sum_groups_epi_df("frac_rate", group_cols = group_cols) %>%
-  rename(rate_overall_recalc = frac_rate) %>% 
+  rename(rate_overall_recalc = frac_rate) %>%
   # match rounding of original data:
   mutate(rate_overall_recalc = round(rate_overall_recalc, 1))
 rate_overall_recalc_edf
@@ -330,7 +330,7 @@ Let's compare our calculated rate to the overall rate reported by FluSurv-NET.
 
 ```{r}
 rate_overall_recalc_edf <-
-  rate_overall_recalc_edf %>% 
+  rate_overall_recalc_edf %>%
   # compare to published overall rates:
   inner_join(
     flu_data_api %>%
