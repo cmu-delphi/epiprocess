@@ -63,6 +63,7 @@ Imports:
 Suggests:
     devtools,
     epidatr,
+    epipredict,
     here,
     knitr,
     outbreaks,
@@ -76,6 +77,7 @@ Remotes:
     cmu-delphi/delphidocs,
     cmu-delphi/epidatasets,
     cmu-delphi/epidatr,
+    cmu-delphi/epipredict,
     glmgen/genlasso,
     reconverse/outbreaks
 Config/Needs/website: cmu-delphi/delphidocs

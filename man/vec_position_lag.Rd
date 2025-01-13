@@ -7,6 +7,19 @@
 vec_position_lag(x, n)
 }
 \description{
-Lag entries in a vctrs-style vector by their position in the vector
+This is meant to be more general than \code{\link[dplyr:lead-lag]{dplyr::lag()}} in terms of the kinds
+of \code{x} that it accepts, allowing any \code{{vctrs}}-sense vector.
+}
+\examples{
+
+vec_position_lag(1:5, 3)
+dplyr::lag(1:5, 3)
+
+
+vec_position_lag(epipredict::dist_quantiles(list(1:6, 11:16), 0:5 / 5), 1)
+\dontrun{
+dplyr::lag(epipredict::dist_quantiles(list(1:6, 11:16), 0:5 / 5), 1)
+}
+
 }
 \keyword{internal}
