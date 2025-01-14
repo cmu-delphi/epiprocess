@@ -384,15 +384,18 @@ removed_by_compactify <- function(df, keys, tolerance) {
 #' dplyr::lag(epipredict::dist_quantiles(list(1:6, 11:16), 0:5 / 5), 1)
 #'
 #' @importFrom checkmate assert_count
-#' @importFrom vctrs obj_check_vector vec_c vec_slice vec_size
+#' @importFrom vctrs obj_check_vector vec_c vec_rep vec_slice vec_size
 #' @keywords internal
 vec_position_lag <- function(x, n) {
   obj_check_vector(x)
   assert_count(n)
   if (length(x) <= n) {
-    vec_slice(x, rep(NA_integer_, vec_size(x)))
+    vec_rep(vec_slice(x, NA_integer_), vec_size(x))
   } else {
-    vec_slice(x, c(rep(NA_integer_, n), seq_len(vec_size(x) - n)))
+    vec_c(
+      vec_rep(vec_slice(x, NA_integer_), n),
+      vec_slice(x, seq_len(vec_size(x) - n))
+    )
   }
 }
 
