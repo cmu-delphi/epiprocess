@@ -371,35 +371,28 @@ removed_by_compactify <- function(df, keys, tolerance) {
 
 #' Lag entries in a vctrs-style vector by their position in the vector
 #'
-#' This is meant to be more general than [`dplyr::lag()`] in terms of the kinds
-#' of `x` that it accepts, allowing any `{vctrs}`-sense vector.
+#' This is like [`dplyr::lag`], though it has different performance
+#' characteristics. It's unclear whether we want to use this.
 #'
 #' @examples
 #'
 #' vec_position_lag(1:5, 3)
 #' dplyr::lag(1:5, 3)
 #'
-#'
+#' # Try on a more exotic class:
 #' vec_position_lag(epipredict::dist_quantiles(list(1:6, 11:16), 0:5 / 5), 1)
-#' \dontrun{
-#' # XXX We were having trouble with something like this. dplyr 1.1.0 seems like it
-#' # fixes this, but our troubles were too recent for dplyr 1.1.0 to have fixed,
-#' # I would have thought.  Need to check for what the failing example actually was.
 #' dplyr::lag(epipredict::dist_quantiles(list(1:6, 11:16), 0:5 / 5), 1)
-#' }
 #'
 #' @importFrom checkmate assert_count
-#' @importFrom vctrs obj_check_vector vec_slice vec_size
+#' @importFrom vctrs obj_check_vector vec_c vec_slice vec_size
 #' @keywords internal
-#' @importFrom vctrs vec_c vec_slice vec_size
-#' @export
 vec_position_lag <- function(x, n) {
   obj_check_vector(x)
   assert_count(n)
   if (length(x) <= n) {
-    vec_c(rep(NA, length(x)), vec_slice(x, integer()))
+    vec_slice(x, rep(NA_integer_, vec_size(x)))
   } else {
-    vec_c(rep(NA, n), vec_slice(x, seq_len(vec_size(x) - n)))
+    vec_slice(x, c(rep(NA_integer_, n), seq_len(vec_size(x) - n)))
   }
 }
 

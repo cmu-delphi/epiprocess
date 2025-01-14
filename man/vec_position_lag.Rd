@@ -7,19 +7,17 @@
 vec_position_lag(x, n)
 }
 \description{
-This is meant to be more general than \code{\link[dplyr:lead-lag]{dplyr::lag()}} in terms of the kinds
-of \code{x} that it accepts, allowing any \code{{vctrs}}-sense vector.
+This is like \code{\link[dplyr:lead-lag]{dplyr::lag}}, though it has different performance
+characteristics. It's unclear whether we want to use this.
 }
 \examples{
 
 vec_position_lag(1:5, 3)
 dplyr::lag(1:5, 3)
 
-
+# Try on a more exotic class:
 vec_position_lag(epipredict::dist_quantiles(list(1:6, 11:16), 0:5 / 5), 1)
-\dontrun{
 dplyr::lag(epipredict::dist_quantiles(list(1:6, 11:16), 0:5 / 5), 1)
-}
 
 }
 \keyword{internal}
