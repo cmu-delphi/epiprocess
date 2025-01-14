@@ -369,36 +369,6 @@ removed_by_compactify <- function(df, keys, tolerance) {
     )) # nolint: object_usage_linter
 }
 
-#' Lag entries in a vctrs-style vector by their position in the vector
-#'
-#' This is like [`dplyr::lag`], though it has different performance
-#' characteristics. It's unclear whether we want to use this.
-#'
-#' @examples
-#'
-#' vec_position_lag(1:5, 3)
-#' dplyr::lag(1:5, 3)
-#'
-#' # Try on a more exotic class:
-#' vec_position_lag(epipredict::dist_quantiles(list(1:6, 11:16), 0:5 / 5), 1)
-#' dplyr::lag(epipredict::dist_quantiles(list(1:6, 11:16), 0:5 / 5), 1)
-#'
-#' @importFrom checkmate assert_count
-#' @importFrom vctrs obj_check_vector vec_c vec_rep vec_slice vec_size
-#' @keywords internal
-vec_position_lag <- function(x, n) {
-  obj_check_vector(x)
-  assert_count(n)
-  if (length(x) <= n) {
-    vec_rep(vec_slice(x, NA_integer_), vec_size(x))
-  } else {
-    vec_c(
-      vec_rep(vec_slice(x, NA_integer_), n),
-      vec_slice(x, seq_len(vec_size(x) - n))
-    )
-  }
-}
-
 #' Checks to see if a value in a vector is LOCF
 #' @description
 #' LOCF meaning last observation carried forward. lags the vector by 1, then
@@ -408,7 +378,7 @@ vec_position_lag <- function(x, n) {
 #' @importFrom dplyr lag if_else near
 #' @keywords internal
 is_locf <- function(vec, tolerance) { # nolint: object_usage_linter
-  lag_vec <- vec_position_lag(vec, 1L)
+  lag_vec <- lag(vec, 1L)
   if (inherits(vec, "numeric")) { # (no matrix/array/general support)
     res <- if_else(
       !is.na(vec) & !is.na(lag_vec),
