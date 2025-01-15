@@ -14,6 +14,8 @@
 #' @importFrom checkmate check_names
 #' @importFrom checkmate test_subset test_set_equal vname
 #' @importFrom cli cli_abort cli_warn
+#' @importFrom cli pluralize
+#' @importFrom cli qty
 #' @importFrom data.table as.data.table
 #' @importFrom data.table key
 #' @importFrom data.table setkeyv
@@ -23,6 +25,7 @@
 #' @importFrom lifecycle deprecated
 #' @importFrom rlang %||%
 #' @importFrom rlang is_bare_integerish
+#' @importFrom tools toTitleCase
 #' @importFrom vctrs vec_data
 #' @importFrom vctrs vec_equal
 ## usethis namespace: end

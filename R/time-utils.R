@@ -218,15 +218,18 @@ time_delta_standardize <- function(time_delta, time_type, format = c("friendly",
   time_delta_to_n_steps(time_delta, time_type) * unit_time_delta(time_type, format)
 }
 
-# Using these unit abbreviations happens to make our automatic slide output
-# naming look like taking ISO-8601 duration designations, removing the P, and
-# lowercasing any characters. Fortnightly or sub-daily time types would need an
-# adjustment to remain consistent.
+#' Helper data for [`time_type_unit_abbr`]
+#'
+#' @keywords internal
 time_type_unit_abbrs <- c(
   day = "d",
   week = "w",
   yearmonth = "m"
 )
+# ^ Using these unit abbreviations happens to make our automatic slide output
+# naming look like taking ISO-8601 duration designations, removing the P, and
+# lowercasing any characters. Fortnightly or sub-daily time types would need an
+# adjustment to remain consistent.
 
 #' Get an abbreviation for the "units" of `unit_time_delta(time_type)`
 #'
@@ -244,6 +247,34 @@ time_type_unit_abbr <- function(time_type) {
     cli_abort("Cannot determine the units of time type {format_chr_with_quotes(time_type)}")
   }
   maybe_unit_abbr
+}
+
+#' Helper data for [`format_time_delta`]
+#'
+#' Should not be altered on the basis of untrusted user input, as it is used as
+#' a cli format string and may run code.
+#'
+#' @keywords internal
+time_type_unit_pluralizer <- c(
+  day = "day{?s}",
+  week = "week{?s}",
+  yearmonth = "month{?s}",
+  integer = "time step{?s}"
+)
+
+#' Format a length-1 time delta to a character to assist messaging
+#'
+#' This is meant to address the following:
+#' - glue::glue("{as.difftime(1, units = 'days')}") is "1"
+#' - glue::glue("{format(as.difftime(1, units = 'days'))}") is "1 days"
+#' - time deltas for yearmonths and integers don't have units attached at all
+#'
+#' @keywords internal
+format_time_delta <- function(x, time_type) {
+  n_steps <- time_delta_to_n_steps(x, time_type)
+  # time_type_unit_pluralizer[[time_type]] is a format string controlled by us
+  # and/or downstream devs, so we can paste it onto our format string safely:
+  pluralize(paste0("{n_steps} ", time_type_unit_pluralizer[[time_type]]))
 }
 
 #' Convert `time_delta` to an approximate difftime

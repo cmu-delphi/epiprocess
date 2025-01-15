@@ -68,6 +68,14 @@
 #'   record an update when any of the other signals change, not just the
 #'   requested signal. The default is `TRUE`.
 #'
+#' @details Applies to `epi_archive`s with `time_type`s of `"day"`, `"week"`,
+#'   and `"yearmonth"`. It can also work with a `time_type` of `"integer"` if
+#'   the possible `time_values` are all consecutive integers; you will need to
+#'   manually specify the `min_waiting_period` and `quick_revision`, though.
+#'   Using a `time_type` of `"integer"` with week numbers like 202501 will
+#'   produce incorrect results for some calculations, since week numbering
+#'   contains jumps at year boundaries.
+#'
 #' @examples
 #' revision_example <- revision_summary(archive_cases_dv_subset, percent_cli)
 #' revision_example %>% arrange(desc(spread))
@@ -205,8 +213,8 @@ revision_summary <- function(epi_arch,
       time_delta_to_n_steps(revision_behavior$max_lag, time_type) <=
         time_delta_to_n_steps(quick_revision, time_type)
     )
-    cli_inform("Quick revisions (last revision within {quick_revision}
-{units(quick_revision)} of the `time_value`):")
+    cli_inform("Quick revisions (last revision within {format_time_delta(quick_revision, time_type)}
+                of the `time_value`):")
     cli_li(num_percent(total_quickly_revised, total_num, ""))
     total_barely_revised <- sum( # nolint: object_usage_linter
       revision_behavior$n_revisions <=
@@ -233,7 +241,10 @@ revision_summary <- function(epi_arch,
     cli_inform("Spread of more than {abs_spread_threshold} in actual value (when revised):")
     cli_li(num_percent(abs_spread, n_real_revised, ""))
 
-    cli_inform("{units(quick_revision)} until within {within_latest*100}% of the latest value:")
+    # time_type_unit_pluralizer[[time_type]] is a format string controlled by us
+    # and/or downstream devs, so we can paste it onto our format string safely:
+    units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[time_type]]))
+    cli_inform("{toTitleCase(units_plural)} until within {within_latest*100}% of the latest value:")
     time_delta_summary(revision_behavior[["lag_near_latest"]], time_type) %>% print()
   }
   return(revision_behavior)

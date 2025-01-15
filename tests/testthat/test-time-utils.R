@@ -159,6 +159,64 @@ test_that("time_delta_to_approx_difftime works as expected", {
   expect_error(time_delta_to_approx_difftime(3, "integer"))
 })
 
+test_that("format_time_delta works as expected", {
+  # time_type "day":
+  expect_equal(
+    format_time_delta(as.difftime(1, units = "days"), "day"),
+    "1 day"
+  )
+  expect_equal(
+    format_time_delta(as.difftime(2, units = "days"), "day"),
+    "2 days"
+  )
+  expect_equal(
+    format_time_delta(1, "day"),
+    "1 day"
+  )
+  expect_equal(
+    format_time_delta(2, "day"),
+    "2 days"
+  )
+  # time_type "week":
+  expect_equal(
+    format_time_delta(as.difftime(1, units = "weeks"), "week"),
+    "1 week"
+  )
+  expect_equal(
+    format_time_delta(as.difftime(7, units = "days"), "week"),
+    "1 week"
+  )
+  expect_equal(
+    format_time_delta(1, "week"),
+    "1 week"
+  )
+  expect_equal(
+    format_time_delta(as.difftime(2, units = "weeks"), "week"),
+    "2 weeks"
+  )
+  # time_type "yearmonth":
+  expect_equal(
+    format_time_delta(1, "yearmonth"),
+    "1 month"
+  )
+  expect_equal(
+    format_time_delta(2, "yearmonth"),
+    "2 months"
+  )
+  # time_type "integer":
+  expect_equal(
+    format_time_delta(1, "integer"),
+    "1 time step"
+  )
+  expect_equal(
+    format_time_delta(2, "integer"),
+    "2 time steps"
+  )
+  # we don't handle length != 1; pluralize will raise error for us:
+  expect_error(format_time_delta(numeric(0), "day")) # we don't handle length != 0
+  expect_error(format_time_delta(1:5, "day")) # we don't handle length != 0
+})
+
 test_that("difftime_approx_ceiling_time_delta works as expected", {
   # At time of writing, docs don't guarantee difftime_approx_ceiling_time_delta
   # will output friendly time_deltas, so we'll include a standardization step in

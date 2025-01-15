@@ -30,10 +30,63 @@ dummy_ex <- tibble::tribble(
 ) %>%
   as_epi_archive(versions_end = as.Date("2022-01-01"), compactify = FALSE)
 
-test_that("revision_summary works for a dummy dataset", {
+dummy_ex_weekly <- dummy_ex$DT %>%
+  mutate(across(
+    c(time_value, version),
+    ~ as.Date("2020-01-01") + 7 * as.numeric(.x - as.Date("2020-01-01"))
+  )) %>%
+  as_epi_archive(
+    versions_end = as.Date("2022-01-01") + as.numeric(as.Date("2022-01-01") - as.Date("2020-01-01")) %% 7,
+    compactify = FALSE
+  )
+stopifnot(dummy_ex_weekly$time_type == "week")
+
+dummy_ex_yearmonthly <- dummy_ex$DT %>%
+  mutate(across(
+    c(time_value, version),
+    ~ tsibble::make_yearmonth(2020, 1) + as.numeric(.x - as.Date("2020-01-01"))
+  )) %>%
+  as_epi_archive(
+    versions_end = tsibble::make_yearmonth(2020, 1) + as.numeric(as.Date("2022-01-01") - as.Date("2020-01-01")),
+    compactify = FALSE
+  )
+stopifnot(dummy_ex_yearmonthly$time_type == "yearmonth")
+
+dummy_ex_integerly <- dummy_ex$DT %>%
+  mutate(across(
+    c(time_value, version),
+    ~ 1 + as.numeric(.x - as.Date("2020-01-01"))
+  )) %>%
+  as_epi_archive(
+    versions_end = 1 + as.numeric(as.Date("2022-01-01") - as.Date("2020-01-01")),
+    compactify = FALSE
+  )
+stopifnot(dummy_ex_integerly$time_type == "integer")
+
+test_that("revision_summary works for dummy datasets", {
   expect_snapshot(dummy_ex %>% revision_summary() %>% print(n = 10, width = 300))
   expect_snapshot(dummy_ex %>% revision_summary(drop_nas = FALSE) %>% print(n = 10, width = 300))
+
+  # Weekly dummy is mostly just "day" -> "week", but quick-revision summary changes:
+  expect_snapshot(dummy_ex_weekly %>% revision_summary(drop_nas = FALSE) %>% print(n = 10, width = 300))
+  # Yearmonthly has the same story. It would have been close to encountering
+  # min_waiting_period-based filtering but we actually set its versions_end to
+  # sometime in 2080 rather than 2022:
+  expect_snapshot(dummy_ex_yearmonthly %>% revision_summary(drop_nas = FALSE) %>% print(n = 10, width = 300))
+  # Integer is very much like daily. We have to provide some of the
+  # configuration arguments since we have no idea about what the integers
+  # represent. If the possible integers being used have large jumps like
+  # YYYYww-as-integer epiweek labels (e.g., 200053 jumps to 200101) or are
+  # regularly spaced apart but by more than 1, we'll still be producing
+  # something nonsensical, but we tried.
+  expect_snapshot(dummy_ex_integerly %>%
+    revision_summary(
+      min_waiting_period = 60, quick_revision = 3,
+      drop_nas = FALSE
+    ) %>%
+    print(n = 10, width = 300))
 })
+
 test_that("tidyselect is functional", {
   expect_no_error(quiet(revision_summary(dummy_ex, value)))
   expect_no_error(quiet(revision_summary(dummy_ex, starts_with("val"))))

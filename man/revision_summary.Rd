@@ -103,6 +103,15 @@ example, consider the series (0, 20, 99, 150, 102, 100); then
 the window afterwards at 150.
 }
 }
+\details{
+Applies to \code{epi_archive}s with \code{time_type}s of \code{"day"}, \code{"week"},
+and \code{"yearmonth"}. It can also work with a \code{time_type} of \code{"integer"} if
+the possible \code{time_values} are all consecutive integers; you will need to
+manually specify the \code{min_waiting_period} and \code{quick_revision}, though.
+Using a \code{time_type} of \code{"integer"} with week numbers like 202501 will
+produce incorrect results for some calculations, since week numbering
+contains jumps at year boundaries.
+}
 \examples{
 revision_example <- revision_summary(archive_cases_dv_subset, percent_cli)
 revision_example \%>\% arrange(desc(spread))
