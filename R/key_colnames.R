@@ -6,21 +6,19 @@
 #'
 #' @param x an object, such as an [`epi_df`]
 #' @param ... additional arguments passed on to methods
-#' @param geo_keys optional character vector; which columns (if any) to consider
-#'   keys specifying the geographical region? Defaults to `"geo_value"` if
-#'   present; must be `"geo_value"` if `x` is an `epi_df`.
-#' @param other_keys character vector; which columns (if any) to consider keys
-#'   specifying demographical or identifying/grouping information besides the
-#'   geographical region and time interval? Mandatory if `x` is a vanilla
-#'   `data.frame` or `tibble`. Optional if `x` is an `epi_df`; default is the
-#'   `epi_df`'s `other_keys`; if you provide `other_keys`, they must match the
-#'   default. (This behavior is to enable consistent and sane results when you
-#'   can't guarantee whether `x` is an `epi_df` or just a
-#'   `tibble`/`data.frame`.)
-#' @param time_keys optional character vector; which columns (if any) to
-#'   consider keys specifying the time interval during which associated events
-#'   occurred? Defaults to `"time_value"` if present; must be `"time_value"` if
-#'   `x` is an `epi_df`.
+#' @param geo_keys,other_keys,time_keys character vectors, sometimes optional;
+#'   which variables (if any) should be considered as part of a unique
+#'   key/identifier for data in `x`, dealing respectively with the associated
+#'   geographical region, demographic/strain/other information needed in
+#'   addition to the geographical region to identify individual time series in
+#'   `x`, and time interval during which associated events occurred. Mandatory
+#'   if `x` is a regular `data.frame` or `tibble`. Optional if `x` is an
+#'   `epi_df`; the defaults are `"geo_value"`, the `epi_df`'s `other_keys`
+#'   metadata, and `"time_value"`, respectively; if you provide these manually,
+#'   they must match the defaults. (This behavior is to enable consistent and
+#'   sane results when you can't guarantee whether `x` is an `epi_df` or just a
+#'   `tibble`/`data.frame`. You don't need to use it if you know that `x` is
+#'   definitely an `epi_df`.)
 #' @param exclude an optional character vector of key column names to exclude
 #'   from the result
 #' @return character vector
@@ -44,9 +42,9 @@ key_colnames <- function(x, ..., exclude = character()) {
 #' @method key_colnames data.frame
 #' @export
 key_colnames.data.frame <- function(x, ...,
-                                    geo_keys = intersect("geo_value", names(x)),
+                                    geo_keys,
                                     other_keys,
-                                    time_keys = intersect("time_value", names(x)),
+                                    time_keys,
                                     exclude = character()) {
   check_dots_empty0(...)
   assert_character(geo_keys)

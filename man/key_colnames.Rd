@@ -10,14 +10,7 @@
 \usage{
 key_colnames(x, ..., exclude = character())
 
-\method{key_colnames}{data.frame}(
-  x,
-  ...,
-  geo_keys = intersect("geo_value", names(x)),
-  other_keys,
-  time_keys = intersect("time_value", names(x)),
-  exclude = character()
-)
+\method{key_colnames}{data.frame}(x, ..., geo_keys, other_keys, time_keys, exclude = character())
 
 \method{key_colnames}{epi_df}(
   x,
@@ -40,23 +33,19 @@ key_colnames(x, ..., exclude = character())
 \item{exclude}{an optional character vector of key column names to exclude
 from the result}
 
-\item{geo_keys}{optional character vector; which columns (if any) to consider
-keys specifying the geographical region? Defaults to \code{"geo_value"} if
-present; must be \code{"geo_value"} if \code{x} is an \code{epi_df}.}
-
-\item{other_keys}{character vector; which columns (if any) to consider keys
-specifying demographical or identifying/grouping information besides the
-geographical region and time interval? Mandatory if \code{x} is a vanilla
-\code{data.frame} or \code{tibble}. Optional if \code{x} is an \code{epi_df}; default is the
-\code{epi_df}'s \code{other_keys}; if you provide \code{other_keys}, they must match the
-default. (This behavior is to enable consistent and sane results when you
-can't guarantee whether \code{x} is an \code{epi_df} or just a
-\code{tibble}/\code{data.frame}.)}
-
-\item{time_keys}{optional character vector; which columns (if any) to
-consider keys specifying the time interval during which associated events
-occurred? Defaults to \code{"time_value"} if present; must be \code{"time_value"} if
-\code{x} is an \code{epi_df}.}
+\item{geo_keys, other_keys, time_keys}{character vectors, sometimes optional;
+which variables (if any) should be considered as part of a unique
+key/identifier for data in \code{x}, dealing respectively with the associated
+geographical region, demographic/strain/other information needed in
+addition to the geographical region to identify individual time series in
+\code{x}, and time interval during which associated events occurred. Mandatory
+if \code{x} is a regular \code{data.frame} or \code{tibble}. Optional if \code{x} is an
+\code{epi_df}; the defaults are \code{"geo_value"}, the \code{epi_df}'s \code{other_keys}
+metadata, and \code{"time_value"}, respectively; if you provide these manually,
+they must match the defaults. (This behavior is to enable consistent and
+sane results when you can't guarantee whether \code{x} is an \code{epi_df} or just a
+\code{tibble}/\code{data.frame}. You don't need to use it if you know that \code{x} is
+definitely an \code{epi_df}.)}
 }
 \value{
 character vector
