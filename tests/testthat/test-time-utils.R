@@ -158,3 +158,8 @@ test_that("time_delta_to_approx_difftime works as expected", {
     `<=`(5))
   expect_error(time_delta_to_approx_difftime(3, "integer"))
 })
+
+test_that("difftime_approx_ceiling_time_delta works as expected", {
+  expect_equal(
+  )
+})

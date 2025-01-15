@@ -2,7 +2,7 @@
 % Please edit documentation in R/time-utils.R
 \name{difftime_approx_ceiling_time_delta}
 \alias{difftime_approx_ceiling_time_delta}
-\title{Closest time_delta that's approximately greater than given difftime}
+\title{Closest time_delta that's approximately greater than or equal to given difftime}
 \usage{
 difftime_approx_ceiling_time_delta(difftime, time_type)
 }
