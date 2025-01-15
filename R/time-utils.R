@@ -279,7 +279,7 @@ time_delta_to_approx_difftime <- function(time_delta, time_type) {
   )
 }
 
-#' Closest time_delta that's approximately greater than given difftime
+#' Closest time_delta that's approximately greater than or equal to given difftime
 #'
 #' `r lifecycle::badge("experimental")`
 #'

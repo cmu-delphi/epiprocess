@@ -160,6 +160,42 @@ test_that("time_delta_to_approx_difftime works as expected", {
 })
 
 test_that("difftime_approx_ceiling_time_delta works as expected", {
+  # At time of writing, docs don't guarantee difftime_approx_ceiling_time_delta
+  # will output friendly time_deltas, so we'll include a standardization step in
+  # these tests. Prevent eye-glazing repetitition by testing a bunch of cases
+  # simultaneously with dplyr:
+  comparisons <- tibble::tribble(
+    ~x_amount, ~x_units, ~time_type, ~expected_wrapped_friendly_result,
+    # days x day:
+    0, "days", "day", list(as.difftime(0.0, units = "days")),
+    1.5, "days", "day", list(as.difftime(2.0, units = "days")),
+    2.0, "days", "day", list(as.difftime(2.0, units = "days")),
+    # days x week:
+    2.0, "days", "week", list(as.difftime(1.0, units = "weeks")),
+    7.0, "days", "week", list(as.difftime(1.0, units = "weeks")),
+    8.0, "days", "week", list(as.difftime(2.0, units = "weeks")),
+    # weeks x week:
+    1.0, "weeks", "week", list(as.difftime(1.0, units = "weeks")),
+    1.1, "weeks", "week", list(as.difftime(2.0, units = "weeks")),
+    # days x yearmonth:
+    2.0, "days", "yearmonth", list(1.0),
+    32.0, "days", "yearmonth", list(2.0),
+  ) %>%
+    mutate(across(expected_wrapped_friendly_result, purrr::list_flatten)) %>%
+    rowwise() %>%
+    mutate(wrapped_friendly_result = as.difftime(x_amount, units = x_units) %>%
+      difftime_approx_ceiling_time_delta(time_type) %>%
+      time_delta_standardize(time_type, format = "friendly") %>%
+      list()) %>%
+    ungroup()
+
   expect_equal(
+    comparisons$wrapped_friendly_result,
+    comparisons$expected_wrapped_friendly_result
+  )
+
+  # days x integer:
+  expect_error(difftime_approx_ceiling_time_delta(as.difftime(1, units = "days"), "integer"),
+    regexp = "Unsupported time_type"
   )
 })
