@@ -23,7 +23,7 @@ key_colnames(x, ..., exclude = character())
   x,
   ...,
   geo_keys = "geo_value",
-  other_keys = NULL,
+  other_keys = attr(x, "metadata")$other_keys,
   time_keys = "time_value",
   exclude = character()
 )
