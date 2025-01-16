@@ -124,7 +124,7 @@ test_that("tidyselect is functional", {
 })
 
 test_that("revision_summary default min_waiting_period works as expected", {
-  # just outside the window
+  # just outside the window for daily data
   expect_equal(
     tibble(
       geo_value = 1,
@@ -137,6 +137,7 @@ test_that("revision_summary default min_waiting_period works as expected", {
       pull(time_value),
     as.Date("2020-01-01")
   )
+  # just outside the window for weekly data
   expect_equal(
     tibble(
       geo_value = 1,
@@ -162,6 +163,7 @@ test_that("revision_summary default min_waiting_period works as expected", {
       pull(time_value),
     tsibble::make_yearmonth(2000, 1)
   )
+  # we don't know how to interpret the default in terms of "integer" time_type
   expect_error(
     tibble(
       geo_value = 1,
