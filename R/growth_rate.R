@@ -27,8 +27,8 @@
 #'   or loudly). Default is `FALSE`.
 #' @param na_rm Should missing values be removed before the computation? Default
 #'   is `FALSE`.
-#' @param ... Additional arguments to pass to the method used to estimate the
-#'   derivative.
+#' @param params Additional arguments to pass to the method used to estimate the
+#'   derivative. This should be created with `growth_rate_global_params()`.
 #' @return Vector of growth rate estimates at the specified points `x0`.
 #'
 #' @details The growth rate of a function f defined over a continuously-valued
@@ -49,12 +49,15 @@
 #'   sliding window centered at the reference point `x0`, divided by the fitted
 #'   value from this linear regression at `x0`.
 #' * "smooth_spline": uses the estimated derivative at `x0` from a smoothing
-#'   spline fit to `x` and `y`, via `stats::smooth.spline()`, divided by the
+#'   spline fit to `x` and `y`, via [stats::smooth.spline()], divided by the
 #'   fitted value of the spline at `x0`.
 #' * "trend_filter": uses the estimated derivative at `x0` from polynomial trend
 #'   filtering (a discrete spline) fit to `x` and `y`, via
-#'   `trendfilter::trendfilter()`, divided by the fitted value of the discrete
-#'   spline at `x0`.
+#'   [trendfilter::trendfilter()], divided by the fitted value of the discrete
+#'   spline at `x0`. This method requires the 
+#'   [`{trendfilter}` package](https://github.com/glmgen/trendfilter) 
+#'   to be installed (if it isn't, `method = "rel_change"` will be used and a 
+#'   warning issued).
 #'
 #' ## Log Scale
 #'
@@ -80,25 +83,30 @@
 #' ## Additional Arguments
 #'
 #' For the global methods, "smooth_spline" and "trend_filter", additional
-#'   arguments can be specified via `...` for the underlying estimation
-#'   function. For the smoothing spline case, these additional arguments are
-#'   passed directly to `stats::smooth.spline()` (and the defaults are exactly
-#'   as in this function). The trend filtering case works a bit differently:
-#'   here, a custom set of arguments is allowed (which are distributed
-#'   internally to `trendfilter::trendfilter()` and `trendfilter::cv_trendfilter()`):
-#'
-#' * `ord`: order of piecewise polynomial for the trend filtering fit. Default
-#'   is 3.
-#' * `cv`: should cross-validation be used to choose an effective degrees of
-#'   freedom for the fit? Default is `TRUE`.
-#' * `nfolds`: number of folds if cross-validation is to be used. Default is 5.
-#' * `df`: desired effective degrees of freedom for the trend filtering fit. If
-#'   `cv = FALSE`, then `df` must be a positive integer; if `cv = TRUE`, then
-#'   `df` must be one of "min" or "1se" indicating the selection rule to use
+#'   arguments can be specified via `params` for the underlying estimation
+#'   function. These additional arguments are
+#'   passed to [`stats::smooth.spline()`], [`trendfilter::trendfilter()`], or 
+#'   [`trendfilter::cv_trendfilter()`]. The defaults are exactly
+#'   as specified in those functions, except when the arguments are shared
+#'   between these. These cases are as follows:  
+#'   
+#' * `df`: desired effective degrees of freedom. For "smooth_spline", this must be numeric (or `NULL`) and will
+#'   be passed along to the underlying function. For "trend_filter", if
+#'   `cv = FALSE`, then `df` must be a positive number (integer is most sensible);
+#'   if `cv = TRUE`, then `df` must be one of "min" or "1se" indicating the 
+#'   selection rule to use
 #'   based on the cross-validation error curve: minimum or 1-standard-error
-#'   rule, respectively. Default is "min" (going along with the default `cv =
-#'   TRUE`). Note that if `cv = FALSE`, then we require `df` to be set by the
-#'   user.
+#'   rule, respectively. The default is "min" (going along with the default 
+#'   `cv = TRUE`). 
+#' * `lambda`: For "smooth_spline", this should be a scalar value or `NULL`. 
+#'   For "trend_filter", this is allowed to also be a vector, as long as either 
+#'   `cv = TRUE` or `df` is specified.
+#' * `cv`: should cross-validation be used to choose an effective degrees of
+#'   freedom for the fit? The default is `FALSE` to match [stats::smooth.spline()].
+#'   In that case, as in that function, GCV is used instead.
+#'   For :trend_filter", this will be coerced to `TRUE` if neither
+#'   `df` nor `lambda` are specified (the default). 
+#'   Note that passing both `df` and a scalar `lambda` will always be an error.
 #'
 #' @export
 #' @examples
@@ -113,17 +121,19 @@
 #'   mutate(gr_poly = growth_rate(
 #'     x = time_value, y = cases, method = "trend_filter", log_scale = TRUE
 #'   ))
-growth_rate <- function(x = seq_along(y), y, x0 = x,
+growth_rate <- function(y, x = seq_along(y), x0 = x,
                         method = c(
                           "rel_change", "linear_reg",
                           "smooth_spline", "trend_filter"
                         ),
                         h = 7, log_scale = FALSE,
-                        dup_rm = FALSE, na_rm = FALSE, ...) {
+                        dup_rm = FALSE, na_rm = FALSE, 
+                        params = growth_rate_global_params()
+                        ) {
   # Check x, y, x0
   if (length(x) != length(y)) cli_abort("`x` and `y` must have the same length.")
-  if (!all(x0 %in% x)) cli_abort("`x0` must be a subset of `x`.")
   method <- rlang::arg_match(method)
+  assert_class(params, "growth_rate_params")
   if (method == "trend_filter" && !requireNamespace("trendfilter", quietly = TRUE)) {
     method <- "rel_change"
     cli_warn(c(
@@ -140,7 +150,12 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
 
   # Convert to log(y) if we need to
   y <- as.numeric(y)
-  if (log_scale) y <- log(y)
+  if (log_scale) {
+    if (any(y <= 0)) {
+      cli_warn("`y` contains 0 or negative values. Taking logs may produce strange results.")
+    }
+    y <- suppressWarnings(log(y))
+  }
 
   # Remove duplicates if we need to
   if (dup_rm) {
@@ -155,15 +170,15 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
     y <- y[o]
   }
 
-
   # Remove NAs if we need to
-  if (na_rm || method == "trend_filter") {
+  if (na_rm) {
     o <- !(is.na(x) | is.na(y))
     x <- x[o]
     y <- y[o]
   }
 
   # Useful indices for later
+  if (!all(x0 %in% x)) cli_abort("`x0` must be a subset of `x`.")
   i0 <- x %in% x0
 
   # Local methods
@@ -203,7 +218,6 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
         }
       }
     })
-
     return(g[i0])
   }
 
@@ -212,15 +226,23 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
     # Convert to numerics
     x <- as.numeric(x)
     x0 <- as.numeric(x0)
-
-    # Collect parameters
-    params <- list(...)
+    if (any(is.na(x) | is.na(y) | !is.finite(x) | !is.finite(y))) {
+      cli_abort(c(
+        "{.val {method}} requires all real values without missingness.",
+        i = "Set `na_rm = TRUE` and / or check for infinite values.",
+        i = "Using `log_scale = TRUE` may induce either case."
+      ))
+    }
 
     # Smoothing spline
     if (method == "smooth_spline") {
-      params$x <- x
-      params$y <- y
-      obj <- do.call(stats::smooth.spline, params)
+      if (is.character(params$df)) params$df <- NULL
+      if (length(params$lambda) > 1L) {
+        cli_abort("{.val smooth_spline} requires 1 `lambda` but more were used.")
+      }
+      params <- params[c("df", "spar", "lambda", "cv", "all.knots", "df.offset", "penalty")]
+      params <- params[!sapply(params, is.null)]
+      obj <- rlang::inject(stats::smooth.spline(x = x, y = y, !!!params))
       f0 <- stats::predict(obj, x = x0)$y
       d0 <- stats::predict(obj, x = x0, deriv = 1)$y
       if (log_scale) {
@@ -228,27 +250,40 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
       } else {
         return(d0 / f0)
       }
-    } else {
-      # Trend filtering
-      ord <- params$ord %||% 3
-      assert_numeric(ord, lower = 0, upper = length(y) - 2, len = 1L)
-      cv <- params$cv %||% TRUE
-      assert_logical(cv, len = 1L)
-      df <- params$df %||% "min"
-      if (length(df) > 1) cli_abort("`df` must have length = 1.")
-      if (is.numeric(df)) cv <- FALSE
-      nfolds <- params$nfolds %||% 5L
-      assert_numeric(nfolds, lower = 1, upper = length(y) - 2, len = 1L)
+    } else { # Trend filtering
+      cv <- params$cv
+      single_lambda <- is.numeric(params$lambda) & length(params$lambda) == 1L
+      lambda_seq <- is.numeric(params$lambda) & length(params$lambda) > 1L
+      if (is.null(params$df) && params$lambda) {
+        cv <- TRUE
+        params$df <- "min"
+      } else if (is.numeric(params$df) && single_lambda) {
+        cli_abort("Only one of {.val lambda} or {.val df} may be specified.")
+      }
       
       # Estimate growth rate and return
       if (cv) {
-        df <- rlang::arg_match0(df, c("min", "1se"))
-        lam <- paste0("lambda_", df)
-        obj <- trendfilter::cv_trendfilter(y, x, k = ord, nfolds = nfolds)
+        if (is.numeric(params$df)) params$df <- "min"
+        if (length(params$lambda) == 1L) params$lambda <- NULL
+        which_lambda <- rlang::arg_match0(df, c("min", "1se"))
+        lam <- paste0("lambda_", which_lambda)
+        obj <- trendfilter::cv_trendfilter(
+          y, x, k = params$k, error_measure = params$error_measure,
+          nfolds = params$nfolds, family = params$family, lambda = params$lambda,
+          nlambda = params$nlambda, lambda_max = params$lambda_max,
+          lambda_min = params$lambda_min, lambda_min_ratio = params$lambda_min_ratio
+        )
       } else {
-        assert_numeric(df, len = 1L, lower = 0, upper = length(y))
-        obj <- trendfilter::trendfilter(y, x, k = ord)
-        lam <- obj$lambda[which.min(abs(df - obj$dof))]
+        if (!single_lambda || !is.numeric(params$df)) {
+          cli_abort("If a sequence of `lambda` is used, `df` must be specified.")
+        }
+        obj <- trendfilter::trendfilter(
+          y, x, 
+          k = params$k, family = params$family, lambda = params$lambda,
+          nlambda = params$nlambda, lambda_max = params$lambda_max,
+          lambda_min = params$lambda_min, lambda_min_ratio = params$lambda_min_ratio
+        )
+        lam <- if (single_lambda) obj$lambda else obj$lambda[which.min(abs(df - obj$dof))]
       }
 
       f <- stats::predict(obj, newx = x0, which_lambda = lam)
@@ -262,4 +297,57 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
       }
     }
   }
+}
+
+#' @importFrom checkmate assert_number
+#' @describeIn growth_rate Optional parameters for global growth rate methods
+growth_rate_global_params <- function(
+    df = NULL,
+    lambda = NULL,
+    cv = FALSE,
+    spar = NULL,
+    all.knots = FALSE,
+    df.offset = 0,
+    penalty = 1,
+    k = 2L,
+    family = c("gaussian", "logistic", "poisson"),
+    nlambda = 50L,
+    lambda_max = NULL,
+    lambda_min = NULL,
+    lambda_min_ratio = 1e-5,
+    error_measure = c("deviance", "mse", "mae"),
+    nfolds = 5L
+) {
+  if (is.character(df)) {
+    df <- rlang::arg_match0(df, c("min", "1se"))
+    cv <- TRUE
+  } else {
+    assert_number(df, lower = 0, null.ok = TRUE, finite = TRUE)
+  }
+  assert_number(spar, null.ok = TRUE, finite = TRUE)
+  assert_numeric(lambda, lower = 0, null.ok = TRUE, finite = TRUE)
+  assert_logical(cv, len = 1)
+  assert_logical(all.knots, len = 1)
+  assert_number(df.offset, lower = 0, finite = TRUE)
+  assert_number(penalty, lower = 0, finite = TRUE)
+  checkmate::assert_integerish(k, lower = 0, len = 1)
+  family <- arg_match(family)
+  assert_number(nlambda, lower = 0, finite = TRUE)
+  assert_number(lambda_max, lower = 0, finite = TRUE, null.ok = TRUE)
+  assert_number(lambda_min, lower = 0, finite = TRUE, null.ok = TRUE)
+  assert_number(lambda_min_ratio, lower = 0, upper = 1)
+  error_measure <- arg_match(error_measure)
+  checkmate::assert_integerish(nfolds, lower = 2, len = 1)
+  
+  structure(enlist(
+    df, lambda, cv, # shared by all
+    spar, all.knots, df.offset, penalty, # smooth.spline
+    k, family, nlambda, lambda_max, lambda_min, lambda_min_ratio, # all TF
+    error_measure, nfolds # cv_trendfilter
+  ), class = "growth_rate_params")
+}
+
+#' @export
+print.growth_rate_params <- function(x, ...) {
+  str(x, give.attr = FALSE)
 }
