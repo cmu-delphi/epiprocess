@@ -62,7 +62,7 @@ Imports:
 Suggests:
     devtools,
     epidatr,
-    genlasso,
+    trendfilter,
     here,
     knitr,
     outbreaks,
@@ -76,7 +76,7 @@ Remotes:
     cmu-delphi/delphidocs,
     cmu-delphi/epidatasets,
     cmu-delphi/epidatr,
-    glmgen/genlasso,
+    glmgen/trendfilter,
     reconverse/outbreaks
 Config/Needs/website: cmu-delphi/delphidocs
 Config/testthat/edition: 3

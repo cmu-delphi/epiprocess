@@ -53,7 +53,7 @@
 #'   fitted value of the spline at `x0`.
 #' * "trend_filter": uses the estimated derivative at `x0` from polynomial trend
 #'   filtering (a discrete spline) fit to `x` and `y`, via
-#'   `genlasso::trendfilter()`, divided by the fitted value of the discrete
+#'   `trendfilter::trendfilter()`, divided by the fitted value of the discrete
 #'   spline at `x0`.
 #'
 #' ## Log Scale
@@ -85,15 +85,13 @@
 #'   passed directly to `stats::smooth.spline()` (and the defaults are exactly
 #'   as in this function). The trend filtering case works a bit differently:
 #'   here, a custom set of arguments is allowed (which are distributed
-#'   internally to `genlasso::trendfilter()` and `genlasso::cv.trendfilter()`):
+#'   internally to `trendfilter::trendfilter()` and `trendfilter::cv_trendfilter()`):
 #'
 #' * `ord`: order of piecewise polynomial for the trend filtering fit. Default
 #'   is 3.
-#' * `maxsteps`: maximum number of steps to take in the solution path before
-#'   terminating. Default is 1000.
 #' * `cv`: should cross-validation be used to choose an effective degrees of
 #'   freedom for the fit? Default is `TRUE`.
-#' * `k`: number of folds if cross-validation is to be used. Default is 3.
+#' * `nfolds`: number of folds if cross-validation is to be used. Default is 5.
 #' * `df`: desired effective degrees of freedom for the trend filtering fit. If
 #'   `cv = FALSE`, then `df` must be a positive integer; if `cv = TRUE`, then
 #'   `df` must be one of "min" or "1se" indicating the selection rule to use
@@ -109,10 +107,12 @@
 #'   group_by(geo_value) %>%
 #'   mutate(cases_gr = growth_rate(x = time_value, y = cases))
 #'
-#' # Log scale, degree 4 polynomial and 6-fold cross validation
+#' # Log scale, degree 3 polynomial and 5-fold cross validation
 #' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
-#'   mutate(gr_poly = growth_rate(x = time_value, y = cases, log_scale = TRUE, ord = 4, k = 6))
+#'   mutate(gr_poly = growth_rate(
+#'     x = time_value, y = cases, method = "trend_filter", log_scale = TRUE
+#'   ))
 growth_rate <- function(x = seq_along(y), y, x0 = x,
                         method = c(
                           "rel_change", "linear_reg",
@@ -124,6 +124,14 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
   if (length(x) != length(y)) cli_abort("`x` and `y` must have the same length.")
   if (!all(x0 %in% x)) cli_abort("`x0` must be a subset of `x`.")
   method <- rlang::arg_match(method)
+  if (method == "trend_filter" && !requireNamespace("trendfilter", quietly = TRUE)) {
+    method <- "rel_change"
+    cli_warn(c(
+      'The {.pkg trendfilter} package must be installed to use this option.',
+      i = 'It is available at {.url https://github.com/glmgen/trendfilter}.',
+      i = 'The computation will proceed using `method = "rel_change"` instead.'
+    ))
+  }
 
   # Arrange in increasing order of x
   o <- order(x)
@@ -149,8 +157,8 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
 
 
   # Remove NAs if we need to
-  if (na_rm) {
-    o <- !(is.na(x) & is.na(y))
+  if (na_rm || method == "trend_filter") {
+    o <- !(is.na(x) | is.na(y))
     x <- x[o]
     y <- y[o]
   }
@@ -222,43 +230,35 @@ growth_rate <- function(x = seq_along(y), y, x0 = x,
       }
     } else {
       # Trend filtering
-      ord <- params$ord
-      maxsteps <- params$maxsteps
-      cv <- params$cv
-      df <- params$df
-      k <- params$k
-
-      # Default parameters
-      ord <- ord %||% 3
-      maxsteps <- maxsteps %||% 1000
-      cv <- cv %||% TRUE
-      df <- df %||% "min"
-      k <- k %||% 3
-
-      # Check cv and df combo
+      ord <- params$ord %||% 3
+      assert_numeric(ord, lower = 0, upper = length(y) - 2, len = 1L)
+      cv <- params$cv %||% TRUE
+      assert_logical(cv, len = 1L)
+      df <- params$df %||% "min"
+      if (length(df) > 1) cli_abort("`df` must have length = 1.")
       if (is.numeric(df)) cv <- FALSE
-      if (!cv && !(is.numeric(df) && df == round(df))) {
-        cli_abort("If `cv = FALSE`, then `df` must be an integer.")
-      }
-
-      # Compute trend filtering path
-      obj <- genlasso::trendfilter(y = y, pos = x, ord = ord, max = maxsteps)
-
-      # Use CV to find df, if we need to
-      if (cv) {
-        cv_obj <- quiet(genlasso::cv.trendfilter(obj, k = k, mode = "df"))
-        df <- ifelse(df == "min", cv_obj$df.min, cv_obj$df.1se)
-      }
-
+      nfolds <- params$nfolds %||% 5L
+      assert_numeric(nfolds, lower = 1, upper = length(y) - 2, len = 1L)
+      
       # Estimate growth rate and return
-      f <- genlasso::coef.genlasso(obj, df = df)$beta
-      d <- diff(f) / diff(x)
+      if (cv) {
+        df <- rlang::arg_match0(df, c("min", "1se"))
+        lam <- paste0("lambda_", df)
+        obj <- trendfilter::cv_trendfilter(y, x, k = ord, nfolds = nfolds)
+      } else {
+        assert_numeric(df, len = 1L, lower = 0, upper = length(y))
+        obj <- trendfilter::trendfilter(y, x, k = ord)
+        lam <- obj$lambda[which.min(abs(df - obj$dof))]
+      }
+
+      f <- stats::predict(obj, newx = x0, which_lambda = lam)
+      d <- diff(f) / diff(x0)
       # Extend by one element
       d <- c(d, d[length(d)])
       if (log_scale) {
-        return(d[i0])
+        return(d)
       } else {
-        return((d / f)[i0])
+        return(d / f)
       }
     }
   }

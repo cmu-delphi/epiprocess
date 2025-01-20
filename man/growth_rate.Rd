@@ -81,7 +81,7 @@ spline fit to \code{x} and \code{y}, via \code{stats::smooth.spline()}, divided 
 fitted value of the spline at \code{x0}.
 \item "trend_filter": uses the estimated derivative at \code{x0} from polynomial trend
 filtering (a discrete spline) fit to \code{x} and \code{y}, via
-\code{genlasso::trendfilter()}, divided by the fitted value of the discrete
+\code{trendfilter::trendfilter()}, divided by the fitted value of the discrete
 spline at \code{x0}.
 }
 \subsection{Log Scale}{
@@ -115,15 +115,13 @@ function. For the smoothing spline case, these additional arguments are
 passed directly to \code{stats::smooth.spline()} (and the defaults are exactly
 as in this function). The trend filtering case works a bit differently:
 here, a custom set of arguments is allowed (which are distributed
-internally to \code{genlasso::trendfilter()} and \code{genlasso::cv.trendfilter()}):
+internally to \code{trendfilter::trendfilter()} and \code{trendfilter::cv_trendfilter()}):
 \itemize{
 \item \code{ord}: order of piecewise polynomial for the trend filtering fit. Default
 is 3.
-\item \code{maxsteps}: maximum number of steps to take in the solution path before
-terminating. Default is 1000.
 \item \code{cv}: should cross-validation be used to choose an effective degrees of
 freedom for the fit? Default is \code{TRUE}.
-\item \code{k}: number of folds if cross-validation is to be used. Default is 3.
+\item \code{nfolds}: number of folds if cross-validation is to be used. Default is 5.
 \item \code{df}: desired effective degrees of freedom for the trend filtering fit. If
 \code{cv = FALSE}, then \code{df} must be a positive integer; if \code{cv = TRUE}, then
 \code{df} must be one of "min" or "1se" indicating the selection rule to use
