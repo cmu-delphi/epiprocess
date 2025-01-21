@@ -81,7 +81,7 @@ the following methods for estimating the growth rate at a given reference point
   of the spline at `x0`.
 * "trend_filter": uses the estimated derivative at `x0` from polynomial trend
   filtering (a discrete spline) fit to `x` and `y`, via
-  `genlasso::trendfilter()`, divided by the fitted value of the discrete spline
+  `trendfilter::trendfilter()`, divided by the fitted value of the discrete spline
   at `x0`.
 
 The default in `growth_rate()` is `x0 = x`, so that it returns an estimate of
@@ -188,8 +188,8 @@ We can also use a nonparametric method to estimate the derivative, through
 computationally expensive, but it is also able to adapt better to the local
 level of smoothness. (The apparent efficiency is actually compounded by the
 particular implementations and default settings for these methods:
-"trend_filter" is based on a full solution path algorithm provided in the
-`genlasso` package, and performs cross-validation by default in order to pick
+"trend_filter" is based on a sequence of solutions provided in the
+`trendfilter` package, and performs cross-validation by default in order to pick
 the level of regularization; read the documentation for `growth_rate()` more
 details.)
 
@@ -227,9 +227,9 @@ stable than the estimates from local relative changes and linear regressions.
 The smoothing spline growth rate estimates are based on the default settings in
 `stats::smooth.spline()`, and appear severely under-regularized here. Any of the
 arguments to `stats::smooth.spline()` can be customized by passing them as
-additional arguments `...` in the call to `growth_rate()`; similarly, we can
+additional arguments to `growth_rate_global_params()`; similarly, we can
 also use additional arguments to customize the settings in the underlying trend
-filtering functions `genlasso::trendfilter()`, `genlasso::cv.trendfilter()`, and
+filtering functions `trendfilter::trendfilter()`, `trendfilter::cv_trendfilter()`, and
 the documentation for `growth_rate()` gives the full details.
 
 ## Log scale estimation
