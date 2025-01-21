@@ -54,9 +54,9 @@
 #' * "trend_filter": uses the estimated derivative at `x0` from polynomial trend
 #'   filtering (a discrete spline) fit to `x` and `y`, via
 #'   [trendfilter::trendfilter()], divided by the fitted value of the discrete
-#'   spline at `x0`. This method requires the 
-#'   [`{trendfilter}` package](https://github.com/glmgen/trendfilter) 
-#'   to be installed (if it isn't, `method = "rel_change"` will be used and a 
+#'   spline at `x0`. This method requires the
+#'   [`{trendfilter}` package](https://github.com/glmgen/trendfilter)
+#'   to be installed (if it isn't, `method = "rel_change"` will be used and a
 #'   warning issued).
 #'
 #' ## Log Scale
@@ -85,27 +85,27 @@
 #' For the global methods, "smooth_spline" and "trend_filter", additional
 #'   arguments can be specified via `params` for the underlying estimation
 #'   function. These additional arguments are
-#'   passed to [`stats::smooth.spline()`], [`trendfilter::trendfilter()`], or 
+#'   passed to [`stats::smooth.spline()`], [`trendfilter::trendfilter()`], or
 #'   [`trendfilter::cv_trendfilter()`]. The defaults are exactly
 #'   as specified in those functions, except when the arguments are shared
-#'   between these. These cases are as follows:  
-#'   
+#'   between these. These cases are as follows:
+#'
 #' * `df`: desired effective degrees of freedom. For "smooth_spline", this must be numeric (or `NULL`) and will
 #'   be passed along to the underlying function. For "trend_filter", if
 #'   `cv = FALSE`, then `df` must be a positive number (integer is most sensible);
-#'   if `cv = TRUE`, then `df` must be one of "min" or "1se" indicating the 
+#'   if `cv = TRUE`, then `df` must be one of "min" or "1se" indicating the
 #'   selection rule to use
 #'   based on the cross-validation error curve: minimum or 1-standard-error
-#'   rule, respectively. The default is "min" (going along with the default 
-#'   `cv = TRUE`). 
-#' * `lambda`: For "smooth_spline", this should be a scalar value or `NULL`. 
-#'   For "trend_filter", this is allowed to also be a vector, as long as either 
+#'   rule, respectively. The default is "min" (going along with the default
+#'   `cv = TRUE`).
+#' * `lambda`: For "smooth_spline", this should be a scalar value or `NULL`.
+#'   For "trend_filter", this is allowed to also be a vector, as long as either
 #'   `cv = TRUE` or `df` is specified.
 #' * `cv`: should cross-validation be used to choose an effective degrees of
 #'   freedom for the fit? The default is `FALSE` to match [stats::smooth.spline()].
 #'   In that case, as in that function, GCV is used instead.
 #'   For :trend_filter", this will be coerced to `TRUE` if neither
-#'   `df` nor `lambda` are specified (the default). 
+#'   `df` nor `lambda` are specified (the default).
 #'   Note that passing both `df` and a scalar `lambda` will always be an error.
 #'
 #' @export
@@ -127,9 +127,8 @@ growth_rate <- function(y, x = seq_along(y), x0 = x,
                           "smooth_spline", "trend_filter"
                         ),
                         h = 7, log_scale = FALSE,
-                        dup_rm = FALSE, na_rm = FALSE, 
-                        params = growth_rate_global_params()
-                        ) {
+                        dup_rm = FALSE, na_rm = FALSE,
+                        params = growth_rate_global_params()) {
   # Check x, y, x0
   if (length(x) != length(y)) cli_abort("`x` and `y` must have the same length.")
   method <- rlang::arg_match(method)
@@ -137,8 +136,8 @@ growth_rate <- function(y, x = seq_along(y), x0 = x,
   if (method == "trend_filter" && !requireNamespace("trendfilter", quietly = TRUE)) {
     method <- "rel_change"
     cli_warn(c(
-      'The {.pkg trendfilter} package must be installed to use this option.',
-      i = 'It is available at {.url https://github.com/glmgen/trendfilter}.',
+      "The {.pkg trendfilter} package must be installed to use this option.",
+      i = "It is available at {.url https://github.com/glmgen/trendfilter}.",
       i = 'The computation will proceed using `method = "rel_change"` instead.'
     ))
   }
@@ -267,7 +266,8 @@ growth_rate <- function(y, x = seq_along(y), x0 = x,
         lam <- rlang::arg_match0(params$df, c("min", "1se"))
         which_lambda <- paste0("lambda_", lam)
         obj <- trendfilter::cv_trendfilter(
-          y, x, k = params$k, error_measure = params$error_measure,
+          y, x,
+          k = params$k, error_measure = params$error_measure,
           nfolds = params$nfolds, family = params$family, lambda = params$lambda,
           nlambda = params$nlambda, lambda_max = params$lambda_max,
           lambda_min = params$lambda_min, lambda_min_ratio = params$lambda_min_ratio
@@ -275,7 +275,7 @@ growth_rate <- function(y, x = seq_along(y), x0 = x,
         f <- stats::predict(obj, newx = x0, which_lambda = which_lambda)
       } else {
         obj <- trendfilter::trendfilter(
-          y, x, 
+          y, x,
           k = params$k, family = params$family, lambda = params$lambda,
           nlambda = params$nlambda, lambda_max = params$lambda_max,
           lambda_min = params$lambda_min, lambda_min_ratio = params$lambda_min_ratio
@@ -313,8 +313,7 @@ growth_rate_global_params <- function(
     lambda_min = NULL,
     lambda_min_ratio = 1e-5,
     error_measure = c("deviance", "mse", "mae"),
-    nfolds = 5L
-) {
+    nfolds = 5L) {
   if (is.character(df)) {
     df <- rlang::arg_match0(df, c("min", "1se"))
     cv <- TRUE
@@ -335,7 +334,7 @@ growth_rate_global_params <- function(
   assert_number(lambda_min_ratio, lower = 0, upper = 1)
   error_measure <- arg_match(error_measure)
   checkmate::assert_integerish(nfolds, lower = 2, len = 1)
-  
+
   structure(enlist(
     df, lambda, cv, # shared by all
     spar, all.knots, df.offset, penalty, # smooth.spline
