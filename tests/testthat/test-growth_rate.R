@@ -54,5 +54,57 @@ test_that("new setup args and warnings are as expected", {
 
 test_that("trendfilter growth_rate implementation", {
   skip_if_not_installed("trendfilter", "0.0.2")
+  # tf with multiple lambdas, no df
+  expect_length(
+    growth_rate(y = 1:20, method = "trend_filter", 
+                params = growth_rate_global_params(lambda = 20:1)),
+    20L
+  )
+  # specifying lambda seq and df (numeric) is ok
+  expect_length(
+    growth_rate(y = 1:20, method = "trend_filter", 
+                params = growth_rate_global_params(lambda = 20:1, df = 4)),
+    20L
+  )
+  # single lambda and fixed df is bad
+  expect_snapshot(
+    error = TRUE,
+    growth_rate(y = 1:20, method = "trend_filter", 
+                params = growth_rate_global_params(lambda = 1, df = 4))
+  )
   
+  
+  # other tf args give output (correctness not checked)
+  z <- rnorm(30)
+  expect_length(growth_rate(z, method = "trend_filter"), 30L)
+  expect_length(growth_rate(
+    z, method = "trend_filter", params = growth_rate_global_params(lambda = 10)
+  ), 30L)
+  expect_length(growth_rate(
+    z, method = "trend_filter", params = growth_rate_global_params(df = 14)
+  ), 30L)
+  expect_length(growth_rate(
+    z, method = "trend_filter", params = growth_rate_global_params(cv = TRUE)
+  ), 30L)
+  expect_length(growth_rate(
+    z, method = "trend_filter", params = growth_rate_global_params(k = 3)
+  ), 30L)
+  expect_length(growth_rate(
+    z, method = "trend_filter", params = growth_rate_global_params(nlambda = 10)
+  ), 30L)
+  expect_length(growth_rate(
+    z, method = "trend_filter", params = growth_rate_global_params(lambda_max = 10)
+  ), 30L)
+  expect_length(growth_rate(
+    z, method = "trend_filter", params = growth_rate_global_params(lambda_min = 10)
+  ), 30L)
+  expect_length(growth_rate(
+    z, method = "trend_filter", params = growth_rate_global_params(lambda_min_ratio = .1)
+  ), 30L)
+  expect_length(growth_rate(
+    z, method = "trend_filter", params = growth_rate_global_params(error_measure = "mse")
+  ), 30L)
+  expect_length(growth_rate(
+    z, method = "trend_filter", params = growth_rate_global_params(nfolds = 3)
+  ), 30L)
 })

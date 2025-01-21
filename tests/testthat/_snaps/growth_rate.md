@@ -79,3 +79,12 @@
       Error in `growth_rate()`:
       ! "smooth_spline" requires 1 `lambda` but more were used.
 
+# trendfilter growth_rate implementation
+
+    Code
+      growth_rate(y = 1:20, method = "trend_filter", params = growth_rate_global_params(
+        lambda = 1, df = 4))
+    Condition
+      Error in `growth_rate()`:
+      ! Only one of "lambda" or "df" may be specified.
+

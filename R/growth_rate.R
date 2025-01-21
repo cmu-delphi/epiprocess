@@ -254,39 +254,36 @@ growth_rate <- function(y, x = seq_along(y), x0 = x,
       cv <- params$cv
       single_lambda <- is.numeric(params$lambda) & length(params$lambda) == 1L
       lambda_seq <- is.numeric(params$lambda) & length(params$lambda) > 1L
-      if (is.null(params$df) && params$lambda) {
+      if (is.null(params$df) && lambda_seq) {
         cv <- TRUE
         params$df <- "min"
       } else if (is.numeric(params$df) && single_lambda) {
         cli_abort("Only one of {.val lambda} or {.val df} may be specified.")
       }
-      
       # Estimate growth rate and return
       if (cv) {
-        if (is.numeric(params$df)) params$df <- "min"
+        if (!is.character(params$df)) params$df <- "min"
         if (length(params$lambda) == 1L) params$lambda <- NULL
-        which_lambda <- rlang::arg_match0(df, c("min", "1se"))
-        lam <- paste0("lambda_", which_lambda)
+        lam <- rlang::arg_match0(params$df, c("min", "1se"))
+        which_lambda <- paste0("lambda_", lam)
         obj <- trendfilter::cv_trendfilter(
           y, x, k = params$k, error_measure = params$error_measure,
           nfolds = params$nfolds, family = params$family, lambda = params$lambda,
           nlambda = params$nlambda, lambda_max = params$lambda_max,
           lambda_min = params$lambda_min, lambda_min_ratio = params$lambda_min_ratio
         )
+        f <- stats::predict(obj, newx = x0, which_lambda = which_lambda)
       } else {
-        if (!single_lambda || !is.numeric(params$df)) {
-          cli_abort("If a sequence of `lambda` is used, `df` must be specified.")
-        }
         obj <- trendfilter::trendfilter(
           y, x, 
           k = params$k, family = params$family, lambda = params$lambda,
           nlambda = params$nlambda, lambda_max = params$lambda_max,
           lambda_min = params$lambda_min, lambda_min_ratio = params$lambda_min_ratio
         )
-        lam <- if (single_lambda) obj$lambda else obj$lambda[which.min(abs(df - obj$dof))]
+        lam <- ifelse(single_lambda, obj$lambda, obj$lambda[which.min(abs(params$df - obj$dof))])
+        f <- stats::predict(obj, newx = x0, lambda = lam)
       }
 
-      f <- stats::predict(obj, newx = x0, which_lambda = lam)
       d <- diff(f) / diff(x0)
       # Extend by one element
       d <- c(d, d[length(d)])
