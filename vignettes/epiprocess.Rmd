@@ -37,7 +37,6 @@ object, which we prepared by downloading the data using
 `epidatr::pub_covidcast()`.
 
 ```{r, results=FALSE, warning=FALSE, message=FALSE}
-library(epidatasets)
 library(epidatr)
 library(epiprocess)
 library(dplyr)
