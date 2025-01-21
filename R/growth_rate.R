@@ -85,8 +85,8 @@
 #' For the global methods, "smooth_spline" and "trend_filter", additional
 #'   arguments can be specified via `params` for the underlying estimation
 #'   function. These additional arguments are
-#'   passed to [`stats::smooth.spline()`], [`trendfilter::trendfilter()`], or
-#'   [`trendfilter::cv_trendfilter()`]. The defaults are exactly
+#'   passed to [stats::smooth.spline()], [trendfilter::trendfilter()], or
+#'   [trendfilter::cv_trendfilter()]. The defaults are exactly
 #'   as specified in those functions, except when the arguments are shared
 #'   between these. These cases are as follows:
 #'
