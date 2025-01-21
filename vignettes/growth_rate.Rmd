@@ -193,6 +193,9 @@ particular implementations and default settings for these methods:
 the level of regularization; read the documentation for `growth_rate()` more
 details.)
 
+Note: The `trendfilter` package is not automatically installed with `epiprocess`.
+To install it from GitHub, you can use `pak::pkg_install("glmgen/trendfilter")`.
+
 ```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 7}
 x <- x %>%
   group_by(geo_value) %>%
