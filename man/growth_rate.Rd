@@ -6,8 +6,8 @@
 \title{Estimate growth rate}
 \usage{
 growth_rate(
-  x = seq_along(y),
   y,
+  x = seq_along(y),
   x0 = x,
   method = c("rel_change", "linear_reg", "smooth_spline", "trend_filter"),
   h = 7,
@@ -36,11 +36,11 @@ growth_rate_global_params(
 )
 }
 \arguments{
+\item{y}{Signal values.}
+
 \item{x}{Design points corresponding to the signal values \code{y}. Default is
 \code{seq_along(y)} (that is, equally-spaced points from 1 to the length of
 \code{y}).}
-
-\item{y}{Signal values.}
 
 \item{x0}{Points at which we should estimate the growth rate. Must be a
 subset of \code{x} (no extrapolation allowed). Default is \code{x}.}
