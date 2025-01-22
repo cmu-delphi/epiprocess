@@ -60,7 +60,7 @@ test_that("new_epi_archive correctly detects and warns about compactification", 
 
 test_that("other_keys can only contain names of the data.frame columns", {
   expect_error(as_epi_archive(archive_data, other_keys = "xyz", compactify = FALSE),
-    regexp = "`other_keys` must be contained in the column names of `x`."
+    regexp = "missing the following expected columns: xyz"
   )
   expect_error(as_epi_archive(archive_data, other_keys = "percent_cli", compactify = FALSE), NA)
 })

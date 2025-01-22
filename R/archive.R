@@ -48,7 +48,7 @@ validate_version_bound <- function(version_bound, x, na_ok = FALSE,
     if (!identical(class(version_bound), class(x[["version"]]))) {
       cli_abort(
         "{version_bound_arg} must have the same `class` vector as x$version,
-        which has a `class` of {format_class_vec(class(x$version))}",
+        which has a `class` of {format_chr_deparse(class(x$version))}",
         class = "epiprocess__version_bound_mismatched_class"
       )
     }
@@ -128,8 +128,11 @@ next_after.Date <- function(x) x + 1L
 #' column tracks the time at which the data was available. This allows for
 #' version-aware forecasting.
 #'
-#' `new_epi_archive` is the constructor for `epi_archive` objects that assumes
-#' all arguments have been validated. Most users should use `as_epi_archive`.
+#' `new_epi_archive` is the low-level constructor for `epi_archive` objects that
+#' only performs some fast, basic checks on the inputs. `validate_epi_archive`
+#' can perform more costly validation checks on its output. But most users
+#' should use `as_epi_archive`, which performs all necessary checks and has some
+#' additional features.
 #'
 #' @details An `epi_archive` contains a `data.table` object `DT` (from the
 #' `{data.table}` package), with (at least) the following columns:
@@ -275,60 +278,41 @@ new_epi_archive <- function(
     geo_type,
     time_type,
     other_keys,
-    compactify,
     clobberable_versions_start,
-    versions_end,
-    compactify_tol = .Machine$double.eps^0.5) {
+    versions_end) {
+  assert_data_frame(x)
+  assert_string(geo_type)
+  assert_string(time_type)
+  assert_character(other_keys, any.missing = FALSE)
+  if (any(c("geo_value", "time_value", "version") %in% other_keys)) {
+    cli_abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
+  }
+  validate_version_bound(clobberable_versions_start, x, na_ok = TRUE)
+  validate_version_bound(versions_end, x, na_ok = FALSE)
+
+  key_vars <- c("geo_value", "time_value", other_keys, "version")
+  if (!all(key_vars %in% names(x))) {
+    # Give a more tailored error message than as.data.table would:
+    cli_abort(c(
+      "`x` is missing the following expected columns:
+       {format_varnames(setdiff(key_vars, names(x)))}.",
+      ">" = "You might need to `dplyr::rename()` beforehand
+                       or use `as_epi_archive()`'s renaming feature.",
+      ">" = if (!all(other_keys %in% names(x))) {
+        "Check also for typos in `other_keys`."
+      }
+    ))
+  }
+
   # Create the data table; if x was an un-keyed data.table itself,
   # then the call to as.data.table() will fail to set keys, so we
   # need to check this, then do it manually if needed
-  key_vars <- c("geo_value", "time_value", other_keys, "version")
-  data_table <- as.data.table(x, key = key_vars) # nolint: object_name_linter
+  data_table <- as.data.table(x, key = key_vars)
   if (!identical(key_vars, key(data_table))) setkeyv(data_table, cols = key_vars)
-
-  if (anyDuplicated(data_table, by = key(data_table)) != 0L) {
-    cli_abort("`x` must have one row per unique combination of the key variables. If you
-            have additional key variables other than `geo_value`, `time_value`, and
-            `version`, such as an age group column, please specify them in `other_keys`.
-            Otherwise, check for duplicate rows and/or conflicting values for the same
-            measurement.",
-      class = "epiprocess__epi_archive_requires_unique_key"
-    )
-  }
-
-  nrow_before_compactify <- nrow(data_table)
-  # Runs compactify on data frame
-  if (is.null(compactify) || compactify == TRUE) {
-    compactified <- apply_compactify(data_table, key_vars, compactify_tol)
-  } else {
-    compactified <- data_table
-  }
-  # Warns about redundant rows if the number of rows decreased, and we didn't
-  # explicitly say to compactify
-  if (is.null(compactify) && nrow(compactified) < nrow_before_compactify) {
-    elim <- removed_by_compactify(data_table, key_vars, compactify_tol)
-    warning_intro <- cli::format_inline(
-      "Found rows that appear redundant based on
-            last (version of each) observation carried forward;
-            these rows have been removed to 'compactify' and save space:",
-      keep_whitespace = FALSE
-    )
-    warning_data <- paste(collapse = "\n", capture.output(print(elim, topn = 3L, nrows = 7L)))
-    warning_outro <- cli::format_inline(
-      "Built-in `epi_archive` functionality should be unaffected,
-            but results may change if you work directly with its fields (such as `DT`).
-            See `?as_epi_archive` for details.
-            To silence this warning but keep compactification,
-            you can pass `compactify=TRUE` when constructing the archive.",
-      keep_whitespace = FALSE
-    )
-    warning_message <- paste(sep = "\n", warning_intro, warning_data, warning_outro)
-    rlang::warn(warning_message, class = "epiprocess__compactify_default_removed_rows")
-  }
 
   structure(
     list(
-      DT = compactified,
+      DT = data_table,
       geo_type = geo_type,
       time_type = time_type,
       other_keys = other_keys,
@@ -338,6 +322,66 @@ new_epi_archive <- function(
     class = "epi_archive"
   )
 }
+
+#' Perform second (costly) round of validation that `x` is a proper `epi_archive`
+#'
+#' @rdname epi_archive
+#' @export
+validate_epi_archive <- function(x) {
+  assert_class(x, "epi_archive")
+
+  ukey_vars1 <- c("geo_value", "time_value", x$other_keys, "version")
+  ukey_vars2 <- key(x$DT)
+  if (!identical(ukey_vars1, ukey_vars2)) {
+    cli_abort(c("`data.table::key(x$DT)` not as expected",
+      "*" = "Based on `x$other_keys` the key should be {format_chr_deparse(ukey_vars1)}",
+      "*" = "But `key(x$DT)` is {format_chr_deparse(ukey_vars2)}",
+      ">" = "Consider reconstructing the archive from `x$DT` specifying
+                       the appropriate `other_keys`."
+    ))
+  }
+  # Rely on data.table to ensure that these key columns exist.
+
+  if (anyDuplicated(x$DT, by = key(x$DT)) != 0L) {
+    cli_abort("`x$DT` must have one row per unique combination of the key variables. If you
+            have additional key variables other than `geo_value`, `time_value`, and
+            `version`, such as an age group column, please specify them in `other_keys`.
+            Otherwise, check for duplicate rows and/or conflicting values for the same
+            measurement.",
+      class = "epiprocess__epi_archive_requires_unique_key"
+    )
+  }
+
+  if (!identical(class(x$DT$time_value), class(x$DT$version))) {
+    cli_abort(
+      "`x$DT$time_value` and `x$DT$version` must have the same class.",
+      class = "epiprocess__time_value_version_mismatch"
+    )
+  }
+
+  if (anyMissing(x$DT$version)) {
+    cli_abort("Column `version` must not contain missing values.")
+  }
+
+  if (nrow(x$DT) > 0L && x$versions_end < max(x$DT$version)) {
+    cli_abort(
+      "`x$versions_end` was {x$versions_end}, but `x$DT` contained
+        updates for a later version or versions, up through {max(x$DT$version)}",
+      class = "epiprocess__versions_end_earlier_than_updates"
+    )
+  }
+  if (!is.na(x$clobberable_versions_start) && x$clobberable_versions_start > x$versions_end) {
+    cli_abort(
+      "`x$versions_end` was {x$versions_end}; however, `x$clobberable_versions_start`
+        was {x$clobberable_versions_start}, indicating that there were later observed versions",
+      class = "epiprocess__versions_end_earlier_than_clobberable_versions_start"
+    )
+  }
+
+  # Return x visibly due to popular `validate_...(new_...())` pattern:
+  x
+}
+
 
 #' Given a tibble as would be found in an epi_archive, remove duplicate entries.
 #'
@@ -393,58 +437,6 @@ is_locf <- function(vec, tolerance) { # nolint: object_usage_linter
   }
 }
 
-
-#' `validate_epi_archive` ensures correctness of arguments fed to `as_epi_archive`.
-#'
-#' @rdname epi_archive
-#'
-#' @export
-validate_epi_archive <- function(
-    x,
-    other_keys,
-    compactify,
-    clobberable_versions_start,
-    versions_end) {
-  # Finish off with small checks on keys variables and metadata
-  if (!test_subset(other_keys, names(x))) {
-    cli_abort("`other_keys` must be contained in the column names of `x`.")
-  }
-  if (any(c("geo_value", "time_value", "version") %in% other_keys)) {
-    cli_abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
-  }
-
-  # Conduct checks and apply defaults for `compactify`
-  assert_logical(compactify, len = 1, any.missing = FALSE, null.ok = TRUE)
-
-  # Make sure `time_value` and `version` have the same time type
-  if (!identical(class(x[["time_value"]]), class(x[["version"]]))) {
-    cli_abort(
-      "`time_value` and `version` must have the same class.",
-      class = "epiprocess__time_value_version_mismatch"
-    )
-  }
-
-  # Apply defaults and conduct checks for
-  # `clobberable_versions_start`, `versions_end`:
-  validate_version_bound(clobberable_versions_start, x, na_ok = TRUE)
-  validate_version_bound(versions_end, x, na_ok = FALSE)
-  if (nrow(x) > 0L && versions_end < max(x[["version"]])) {
-    cli_abort(
-      "`versions_end` was {versions_end}, but `x` contained
-        updates for a later version or versions, up through {max(x$version)}",
-      class = "epiprocess__versions_end_earlier_than_updates"
-    )
-  }
-  if (!is.na(clobberable_versions_start) && clobberable_versions_start > versions_end) {
-    cli_abort(
-      "`versions_end` was {versions_end}, but a `clobberable_versions_start`
-        of {clobberable_versions_start} indicated that there were later observed versions",
-      class = "epiprocess__versions_end_earlier_than_clobberable_versions_start"
-    )
-  }
-}
-
-
 #' `as_epi_archive` converts a data frame, data table, or tibble into an
 #' `epi_archive` object.
 #'
@@ -463,6 +455,7 @@ as_epi_archive <- function(
     time_type = deprecated(),
     other_keys = character(),
     compactify = NULL,
+    compactify_abs_tol = .Machine$double.eps^0.5,
     clobberable_versions_start = NA,
     .versions_end = max_version_with_row_in(x), ...,
     versions_end = .versions_end) {
@@ -471,17 +464,7 @@ as_epi_archive <- function(
   x <- guess_column_name(x, "time_value", time_column_names())
   x <- guess_column_name(x, "geo_value", geo_column_names())
   x <- guess_column_name(x, "version", version_column_names())
-  if (!test_subset(c("geo_value", "time_value", "version"), names(x))) {
-    cli_abort(
-      "Either columns `geo_value`, `time_value`, and `version`, or related columns
-      (see the internal functions `guess_time_column_name()`,
-      `guess_geo_column_name()` and/or `guess_geo_version_name()` for complete
-      list) must be present in `x`."
-    )
-  }
-  if (anyMissing(x$version)) {
-    cli_abort("Column `version` must not contain missing values.")
-  }
+
   if (lifecycle::is_present(geo_type)) {
     cli_warn("epi_archive constructor argument `geo_type` is now ignored. Consider removing.")
   }
@@ -492,13 +475,49 @@ as_epi_archive <- function(
   geo_type <- guess_geo_type(x$geo_value)
   time_type <- guess_time_type(x$time_value)
 
-  validate_epi_archive(
-    x, other_keys, compactify, clobberable_versions_start, versions_end
-  )
-  new_epi_archive(
+  result <- validate_epi_archive(new_epi_archive(
     x, geo_type, time_type, other_keys,
-    compactify, clobberable_versions_start, versions_end
-  )
+    clobberable_versions_start, versions_end
+  ))
+
+  # Compactification:
+  assert_logical(compactify, len = 1, any.missing = FALSE, null.ok = TRUE)
+
+  data_table <- result$DT
+  key_vars <- key(data_table)
+
+  nrow_before_compactify <- nrow(data_table)
+  # Runs compactify on data frame
+  if (is.null(compactify) || compactify == TRUE) {
+    compactified <- apply_compactify(data_table, key_vars, compactify_abs_tol)
+  } else {
+    compactified <- data_table
+  }
+  # Warns about redundant rows if the number of rows decreased, and we didn't
+  # explicitly say to compactify
+  if (is.null(compactify) && nrow(compactified) < nrow_before_compactify) {
+    elim <- removed_by_compactify(data_table, key_vars, compactify_abs_tol)
+    warning_intro <- cli::format_inline(
+      "Found rows that appear redundant based on
+       last (version of each) observation carried forward;
+       these rows have been removed to 'compactify' and save space:",
+      keep_whitespace = FALSE
+    )
+    warning_data <- paste(collapse = "\n", capture.output(print(elim, topn = 3L, nrows = 7L)))
+    warning_outro <- cli::format_inline(
+      "Built-in `epi_archive` functionality should be unaffected,
+       but results may change if you work directly with its fields (such as `DT`).
+       See `?as_epi_archive` for details.
+       To silence this warning but keep compactification,
+       you can pass `compactify=TRUE` when constructing the archive.",
+      keep_whitespace = FALSE
+    )
+    warning_message <- paste(sep = "\n", warning_intro, warning_data, warning_outro)
+    rlang::warn(warning_message, class = "epiprocess__compactify_default_removed_rows")
+  }
+
+  result$DT <- compactified
+  result
 }
 
 
