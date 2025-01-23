@@ -59,9 +59,9 @@ test_that("new setup args and warnings are as expected", {
 test_that("parser sees all cases", {
   skip_if_not_installed("trendfilter", "0.0.2")
   # 18 total cases
-  # lambda = NULL, scalar, vector
-  # df = NULL, character, numeric
-  # cv = T/F
+  # lambda in {NULL, scalar, vector}
+  # df in {NULL, character, numeric}
+  # cv in {T/F}
 
   grab_l <- function(l) list(cv = l$cv, df = l$df, lambda = l$lambda)
 

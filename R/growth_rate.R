@@ -314,8 +314,8 @@ growth_rate_global_params <- function(
     lambda = NULL,
     cv = FALSE,
     spar = NULL,
-    all.knots = FALSE,
-    df.offset = 0,
+    all.knots = FALSE, # nolint
+    df.offset = 0, # nolint
     penalty = 1,
     k = 3L,
     family = c("gaussian", "logistic", "poisson"),
