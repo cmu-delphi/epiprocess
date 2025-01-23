@@ -10,7 +10,7 @@
 #'   `y`).
 #' @param y Signal values.
 #' @param x0 Points at which we should estimate the growth rate. Must be a
-#'   subset of `x` (no extrapolation allowed). Default is `x`.
+#'   contained in the range of `x` (no extrapolation allowed). Default is `x`.
 #' @param method Either "rel_change", "linear_reg", "smooth_spline", or
 #'   "trend_filter", indicating the method to use for the growth rate
 #'   calculation. The first two are local methods: they are run in a sliding
@@ -21,10 +21,6 @@
 #'   "linear_reg". See details for more explanation.
 #' @param log_scale Should growth rates be estimated using the parametrization
 #'   on the log scale? See details for an explanation. Default is `FALSE`.
-#' @param dup_rm Should we check and remove duplicates in `x` (and corresponding
-#'   elements of `y`) before the computation? Some methods might handle
-#'   duplicate `x` values gracefully, whereas others might fail (either quietly
-#'   or loudly). Default is `FALSE`.
 #' @param na_rm Should missing values be removed before the computation? Default
 #'   is `FALSE`.
 #' @param params Additional arguments to pass to the method used to estimate the
@@ -115,24 +111,34 @@
 #'   group_by(geo_value) %>%
 #'   mutate(cases_gr = growth_rate(x = time_value, y = cases))
 #'
-#' # Log scale, degree 3 polynomial and 5-fold cross validation
+#' # Degree 3 polynomial and 5-fold cross validation on the log scale
+#' # some locations report 0 cases, so we replace these with 1
 #' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   mutate(gr_poly = growth_rate(
-#'     x = time_value, y = cases, method = "trend_filter", log_scale = TRUE
+#'     x = time_value, y = pmax(cases, 1), method = "trend_filter",
+#'     log_scale = TRUE, na_rm = TRUE
 #'   ))
-growth_rate <- function(y, x = seq_along(y), x0 = x,
-                        method = c(
-                          "rel_change", "linear_reg",
-                          "smooth_spline", "trend_filter"
-                        ),
-                        h = 7, log_scale = FALSE,
-                        dup_rm = FALSE, na_rm = FALSE,
-                        params = growth_rate_global_params()) {
+growth_rate <- function(
+    y, x = seq_along(y), x0 = x,
+    method = c("rel_change", "linear_reg", "smooth_spline", "trend_filter"),
+    h = 7, log_scale = FALSE, na_rm = FALSE,
+    params = growth_rate_global_params()
+) {
   # Check x, y, x0
   if (length(x) != length(y)) cli_abort("`x` and `y` must have the same length.")
   method <- rlang::arg_match(method)
   assert_class(params, "growth_rate_params")
+  if (any(is.na(x)) || any(is.na(x0))) {
+    cli_abort("Neither `x` nor `x0` may contain `NA`s.")
+  }
+  dups <- duplicated(x)
+  if (any(dups)) {
+    cli_abort(
+      "`x` contains duplicate values. (If being run on a
+        column in an `epi_df`, did you group by relevant key variables?)"
+    )
+  }
   if (method == "trend_filter" && !requireNamespace("trendfilter", quietly = TRUE)) {
     method <- "rel_change"
     cli_warn(c(
@@ -143,43 +149,35 @@ growth_rate <- function(y, x = seq_along(y), x0 = x,
   }
 
   # Arrange in increasing order of x
+  if (min(x0) < min(x) || max(x0) > max(x)) {
+    cli_abort("`x0` must be contained in `[min(x), max(x)]`.")
+  }
   o <- order(x)
   x <- x[o]
   y <- y[o]
-
+  n <- length(y)
+  x0 <- sort(x0)
+  
   # Convert to log(y) if we need to
   y <- as.numeric(y)
   if (log_scale) {
     if (any(y <= 0)) {
-      cli_warn("`y` contains 0 or negative values. Taking logs may produce strange results.")
+      cli_warn("`y` contains 0 or negative values. Taking logs may produce 
+               strange results.")
     }
     y <- suppressWarnings(log(y))
   }
 
-  # Remove duplicates if we need to
-  if (dup_rm) {
-    o <- !duplicated(x)
-    if (any(!o)) {
-      cli_warn(
-        "`x` contains duplicate values. (If being run on a
-        column in an `epi_df`, did you group by relevant key variables?)"
-      )
-    }
-    x <- x[o]
-    y <- y[o]
+  if (!is.finite(y[1]) || !is.finite(y[n])) {
+    cli_abort("Either the first or last `y` values are not finite. This may be
+              due to `log_scale = TRUE`.")
   }
-
-  # Remove NAs if we need to
-  if (na_rm) {
-    o <- !(is.na(x) | is.na(y))
-    x <- x[o]
-    y <- y[o]
-  }
-
-  # Useful indices for later
-  if (!all(x0 %in% x)) cli_abort("`x0` must be a subset of `x`.")
-  i0 <- x %in% x0
-
+  good_obs <- (!is.na(y) | !na_rm) & is.finite(y)
+  x <- x[good_obs]
+  y <- y[good_obs]
+  x <- as.numeric(x)
+  x0 <- as.numeric(x0)
+  
   # Local methods
   if (method == "rel_change" || method == "linear_reg") {
     g <- purrr::map_dbl(x, function(x_ref) {
@@ -217,14 +215,11 @@ growth_rate <- function(y, x = seq_along(y), x0 = x,
         }
       }
     })
-    return(g[i0])
+    return(stats::approx(x, g, x0)$y)
   }
 
   # Global methods
   if (method == "smooth_spline" || method == "trend_filter") {
-    # Convert to numerics
-    x <- as.numeric(x)
-    x0 <- as.numeric(x0)
     if (any(is.na(x) | is.na(y) | !is.finite(x) | !is.finite(y))) {
       cli_abort(c(
         "{.val {method}} requires all real values without missingness.",
@@ -233,7 +228,6 @@ growth_rate <- function(y, x = seq_along(y), x0 = x,
       ))
     }
 
-    # Smoothing spline
     if (method == "smooth_spline") {
       if (is.character(params$df)) params$df <- NULL
       if (length(params$lambda) > 1L) {
@@ -250,21 +244,10 @@ growth_rate <- function(y, x = seq_along(y), x0 = x,
         return(d0 / f0)
       }
     } else { # Trend filtering
-      cv <- params$cv
-      single_lambda <- is.numeric(params$lambda) & length(params$lambda) == 1L
-      lambda_seq <- is.numeric(params$lambda) & length(params$lambda) > 1L
-      if (is.null(params$df) && lambda_seq) {
-        cv <- TRUE
-        params$df <- "min"
-      } else if (is.numeric(params$df) && single_lambda) {
-        cli_abort("Only one of {.val lambda} or {.val df} may be specified.")
-      }
-      # Estimate growth rate and return
-      if (cv) {
-        if (!is.character(params$df)) params$df <- "min"
-        if (length(params$lambda) == 1L) params$lambda <- NULL
-        lam <- rlang::arg_match0(params$df, c("min", "1se"))
-        which_lambda <- paste0("lambda_", lam)
+      params <- parse_trendfilter_params(params)
+      sdy <- stats::sd(y) # speeds computation significantly
+      y <- y / sdy
+      if (params$cv) {
         obj <- trendfilter::cv_trendfilter(
           y, x,
           k = params$k, error_measure = params$error_measure,
@@ -272,7 +255,9 @@ growth_rate <- function(y, x = seq_along(y), x0 = x,
           nlambda = params$nlambda, lambda_max = params$lambda_max,
           lambda_min = params$lambda_min, lambda_min_ratio = params$lambda_min_ratio
         )
-        f <- stats::predict(obj, newx = x0, which_lambda = which_lambda)
+        lam <- params$df
+        which_lambda <- paste0("lambda_", lam)
+        f <- stats::predict(obj, newx = x0, which_lambda = which_lambda) * sdy
       } else {
         obj <- trendfilter::trendfilter(
           y, x,
@@ -280,10 +265,11 @@ growth_rate <- function(y, x = seq_along(y), x0 = x,
           nlambda = params$nlambda, lambda_max = params$lambda_max,
           lambda_min = params$lambda_min, lambda_min_ratio = params$lambda_min_ratio
         )
+        single_lambda <- length(obj$lambda == 1L)
         lam <- ifelse(single_lambda, obj$lambda, obj$lambda[which.min(abs(params$df - obj$dof))])
-        f <- stats::predict(obj, newx = x0, lambda = lam)
+        f <- stats::predict(obj, newx = x0, lambda = lam) * sdy
       }
-
+      
       d <- diff(f) / diff(x0)
       # Extend by one element
       d <- c(d, d[length(d)])
@@ -296,8 +282,34 @@ growth_rate <- function(y, x = seq_along(y), x0 = x,
   }
 }
 
+#' Optional parameters for global growth rate methods
+#' 
+#' Construct an object containing non-standard arguments for [growth_rate()].
+#' 
+#' @param df Numeric or NULL for "smooth_spline". May also be one of "min" or 
+#'   "max" in the case of "trend_filter". The desired equivalent number of 
+#'   degrees of freedom of the fit. Lower values give smoother estimates.
+#' @param lambda The desired smoothing parameter. For "smooth_spline", this
+#'   can be specified instead of `spar`. For "trend_filter", this sequence
+#'   determines the balance between data fidelity and smoothness of the
+#'   estimated curve; larger `lambda` results in a smoother estimate. The
+#'   default, `NULL` results in an automatic computation based on `nlambda`,
+#'   the largest value of `lambda` that would result in a maximally smooth
+#'   estimate, and `lambda_min_ratio`. Supplying a value of `lambda` overrides
+#'   this behaviour.
+#' @param cv For "smooth_spline", ordinary leave-one-out (`TRUE`) or ‘generalized’
+#'   cross-validation (GCV) when `FALSE`; is used for smoothing parameter computation
+#'   only when both `spar` and `df` are not specified. For "trend_filter",
+#'   `cv` determines whether or not cross-validation is used to choose the 
+#'   tuning parameter. If `FALSE`, then the user must specify either `lambda`
+#'   or `df`.
+#' @inheritParams stats::smooth.spline
+#' @inheritParams trendfilter::trendfilter
+#' @inheritParams trendfilter::cv_trendfilter
+#' 
+#' @return A list of parameter configurations.
 #' @importFrom checkmate assert_number
-#' @describeIn growth_rate Optional parameters for global growth rate methods
+#' @export
 growth_rate_global_params <- function(
     df = NULL,
     lambda = NULL,
@@ -306,20 +318,16 @@ growth_rate_global_params <- function(
     all.knots = FALSE,
     df.offset = 0,
     penalty = 1,
-    k = 2L,
+    k = 3L,
     family = c("gaussian", "logistic", "poisson"),
     nlambda = 50L,
     lambda_max = NULL,
     lambda_min = NULL,
     lambda_min_ratio = 1e-5,
     error_measure = c("deviance", "mse", "mae"),
-    nfolds = 5L) {
-  if (is.character(df)) {
-    df <- rlang::arg_match0(df, c("min", "1se"))
-    cv <- TRUE
-  } else {
-    assert_number(df, lower = 0, null.ok = TRUE, finite = TRUE)
-  }
+    nfolds = 3L) {
+  if (is.character(df)) df <- rlang::arg_match0(df, c("min", "1se"))
+  else assert_number(df, lower = 0, null.ok = TRUE, finite = TRUE)
   assert_number(spar, null.ok = TRUE, finite = TRUE)
   assert_numeric(lambda, lower = 0, null.ok = TRUE, finite = TRUE)
   assert_logical(cv, len = 1)
@@ -345,5 +353,38 @@ growth_rate_global_params <- function(
 
 #' @export
 print.growth_rate_params <- function(x, ...) {
-  str(x, give.attr = FALSE)
+  utils::str(x, give.attr = FALSE)
+}
+
+parse_trendfilter_params <- function(params) {
+  assert_class(params, "growth_rate_params")
+  vec_lambda <- checkmate::test_numeric(params$lambda, min.len = 2L, null.ok = TRUE)
+  df_cv <- checkmate::test_character(params$df, null.ok = TRUE)
+  if (df_cv && vec_lambda) { 
+    params$cv <- TRUE # Turn CV on (or leave it on)
+    params$df <- params$df %||% "min" # use the original arg or provide the minimizer
+    return(params)
+  }
+  if (params$cv) { # CV = TRUE on input but conflicts with other custom args
+    cli_abort(
+      "When `cv = TRUE`, `df` must be `NULL` or character and `lambda` must be
+      `NULL` or a vector."
+    )
+  } else { # CV should stay FALSE
+    if (!vec_lambda) {
+      if (is.character(params$df)) {
+        cli_abort(
+          "`df` a character implies using CV, but also setting `lambda` to a 
+          single value implies no CV."
+        )
+      }
+      if (is.numeric(params$df)) {
+        cli_abort("`df` and `lambda` cannot both be scalars.")
+      }
+    }
+  }
+  # If we got here, we fit TF. There are two possibilities:
+  # 1. df is NULL and lambda is a scalar
+  # 2. df is numeric and lambda is either NULL or a vector (vec_lambda = TRUE)
+  return(params)
 }

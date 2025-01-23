@@ -2,7 +2,6 @@
 % Please edit documentation in R/growth_rate.R
 \name{growth_rate}
 \alias{growth_rate}
-\alias{growth_rate_global_params}
 \title{Estimate growth rate}
 \usage{
 growth_rate(
@@ -12,27 +11,8 @@ growth_rate(
   method = c("rel_change", "linear_reg", "smooth_spline", "trend_filter"),
   h = 7,
   log_scale = FALSE,
-  dup_rm = FALSE,
   na_rm = FALSE,
   params = growth_rate_global_params()
-)
-
-growth_rate_global_params(
-  df = NULL,
-  lambda = NULL,
-  cv = FALSE,
-  spar = NULL,
-  all.knots = FALSE,
-  df.offset = 0,
-  penalty = 1,
-  k = 2L,
-  family = c("gaussian", "logistic", "poisson"),
-  nlambda = 50L,
-  lambda_max = NULL,
-  lambda_min = NULL,
-  lambda_min_ratio = 1e-05,
-  error_measure = c("deviance", "mse", "mae"),
-  nfolds = 5L
 )
 }
 \arguments{
@@ -43,7 +23,7 @@ growth_rate_global_params(
 \code{y}).}
 
 \item{x0}{Points at which we should estimate the growth rate. Must be a
-subset of \code{x} (no extrapolation allowed). Default is \code{x}.}
+contained in the range of \code{x} (no extrapolation allowed). Default is \code{x}.}
 
 \item{method}{Either "rel_change", "linear_reg", "smooth_spline", or
 "trend_filter", indicating the method to use for the growth rate
@@ -57,11 +37,6 @@ the entire sequence. See details for more explanation.}
 
 \item{log_scale}{Should growth rates be estimated using the parametrization
 on the log scale? See details for an explanation. Default is \code{FALSE}.}
-
-\item{dup_rm}{Should we check and remove duplicates in \code{x} (and corresponding
-elements of \code{y}) before the computation? Some methods might handle
-duplicate \code{x} values gracefully, whereas others might fail (either quietly
-or loudly). Default is \code{FALSE}.}
 
 \item{na_rm}{Should missing values be removed before the computation? Default
 is \code{FALSE}.}
@@ -159,21 +134,18 @@ Note that passing both \code{df} and a scalar \code{lambda} will always be an er
 }
 }
 }
-\section{Functions}{
-\itemize{
-\item \code{growth_rate_global_params()}: Optional parameters for global growth rate methods
-
-}}
 \examples{
 # COVID cases growth rate by state using default method relative change
 cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   mutate(cases_gr = growth_rate(x = time_value, y = cases))
 
-# Log scale, degree 3 polynomial and 5-fold cross validation
+# Degree 3 polynomial and 5-fold cross validation on the log scale
+# some locations report 0 cases, so we replace these with 1
 cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   mutate(gr_poly = growth_rate(
-    x = time_value, y = cases, method = "trend_filter", log_scale = TRUE
+    x = time_value, y = pmax(cases, 1), method = "trend_filter",
+    log_scale = TRUE, na_rm = TRUE
   ))
 }

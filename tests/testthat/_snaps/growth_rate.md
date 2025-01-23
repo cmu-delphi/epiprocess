@@ -17,74 +17,93 @@
 # new setup args and warnings are as expected
 
     Code
-      growth_rate(-10:10, log_scale = TRUE)
-    Condition
-      Warning:
-      `y` contains 0 or negative values. Taking logs may produce strange results.
-    Output
-       [1]       NaN       NaN       NaN       NaN       NaN       NaN       NaN
-       [8]       NaN       NaN       NaN       NaN       NaN       NaN       NaN
-      [15]       NaN       NaN       Inf 0.1950407 0.1633248 0.1431934       NaN
-
----
-
-    Code
-      growth_rate(c(1:20, NA, 22:30), method = "smooth_spline")
-    Condition
-      Error in `growth_rate()`:
-      ! "smooth_spline" requires all real values without missingness.
-      i Set `na_rm = TRUE` and / or check for infinite values.
-      i Using `log_scale = TRUE` may induce either case.
-
----
-
-    Code
-      growth_rate(c(1:20, NA, 22:30), method = "trend_filter")
-    Condition
-      Error in `growth_rate()`:
-      ! "trend_filter" requires all real values without missingness.
-      i Set `na_rm = TRUE` and / or check for infinite values.
-      i Using `log_scale = TRUE` may induce either case.
-
----
-
-    Code
-      growth_rate(c(1:20, -5, 22:30), log_scale = TRUE, method = "smooth_spline")
+      growth_rate(y = -10:10, log_scale = TRUE)
     Condition
       Warning:
       `y` contains 0 or negative values. Taking logs may produce strange results.
       Error in `growth_rate()`:
-      ! "smooth_spline" requires all real values without missingness.
-      i Set `na_rm = TRUE` and / or check for infinite values.
-      i Using `log_scale = TRUE` may induce either case.
+      ! Either the first or last `y` values are not finite. This may be due to `log_scale = TRUE`.
 
 ---
 
     Code
-      growth_rate(c(1:20, -5, 22:30), log_scale = TRUE, method = "trend_filter")
+      growth_rate(y = -10:10, log_scale = TRUE, method = "smooth_spline")
     Condition
       Warning:
       `y` contains 0 or negative values. Taking logs may produce strange results.
       Error in `growth_rate()`:
-      ! "trend_filter" requires all real values without missingness.
-      i Set `na_rm = TRUE` and / or check for infinite values.
-      i Using `log_scale = TRUE` may induce either case.
+      ! Either the first or last `y` values are not finite. This may be due to `log_scale = TRUE`.
 
 ---
 
     Code
-      growth_rate(y = c(1:20), method = "smooth_spline", params = growth_rate_global_params(
+      growth_rate(y = 1:30, x = c(1:20, NA, 22:30), na_rm = TRUE)
+    Condition
+      Error in `growth_rate()`:
+      ! Neither `x` nor `x0` may contain `NA`s.
+
+---
+
+    Code
+      growth_rate(y = 1:20, method = "smooth_spline", params = growth_rate_global_params(
         lambda = 1:20))
     Condition
       Error in `growth_rate()`:
       ! "smooth_spline" requires 1 `lambda` but more were used.
 
-# trendfilter growth_rate implementation
+# parser sees all cases
 
     Code
-      growth_rate(y = 1:20, method = "trend_filter", params = growth_rate_global_params(
-        lambda = 1, df = 4))
+      parse_trendfilter_params(l)
     Condition
-      Error in `growth_rate()`:
-      ! Only one of "lambda" or "df" may be specified.
+      Error in `parse_trendfilter_params()`:
+      ! When `cv = TRUE`, `df` must be `NULL` or character and `lambda` must be `NULL` or a vector.
+
+---
+
+    Code
+      parse_trendfilter_params(l)
+    Condition
+      Error in `parse_trendfilter_params()`:
+      ! When `cv = TRUE`, `df` must be `NULL` or character and `lambda` must be `NULL` or a vector.
+
+---
+
+    Code
+      parse_trendfilter_params(l)
+    Condition
+      Error in `parse_trendfilter_params()`:
+      ! When `cv = TRUE`, `df` must be `NULL` or character and `lambda` must be `NULL` or a vector.
+
+---
+
+    Code
+      parse_trendfilter_params(l)
+    Condition
+      Error in `parse_trendfilter_params()`:
+      ! When `cv = TRUE`, `df` must be `NULL` or character and `lambda` must be `NULL` or a vector.
+
+---
+
+    Code
+      parse_trendfilter_params(l)
+    Condition
+      Error in `parse_trendfilter_params()`:
+      ! When `cv = TRUE`, `df` must be `NULL` or character and `lambda` must be `NULL` or a vector.
+
+---
+
+    Code
+      parse_trendfilter_params(l)
+    Condition
+      Error in `parse_trendfilter_params()`:
+      ! `df` a character implies using CV, but also setting `lambda` to a single value implies no CV.
+
+---
+
+    Code
+      parse_trendfilter_params(l)
+    Condition
+      Error in `parse_trendfilter_params()`:
+      ! `df` and `lambda` cannot both be scalars.
 

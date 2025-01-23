@@ -1,5 +1,5 @@
-Package: epiprocess
 Type: Package
+Package: epiprocess
 Title: Tools for basic signal processing in epidemiology
 Version: 0.10.2
 Authors@R: c(
@@ -23,17 +23,17 @@ Authors@R: c(
     person("Posit", role = "cph",
            comment = "Copyright holder of included rlang fragments"),
     person("Johns Hopkins University Center for Systems Science and Engineering", role = "dtc",
-            comment = "Owner of COVID-19 cases and deaths data from the COVID-19 Data Repository"),
+           comment = "Owner of COVID-19 cases and deaths data from the COVID-19 Data Repository"),
     person("Johns Hopkins University", role = "cph",
-            comment = "Copyright holder of COVID-19 cases and deaths data from the COVID-19 Data Repository"),
+           comment = "Copyright holder of COVID-19 cases and deaths data from the COVID-19 Data Repository"),
     person("Carnegie Mellon University Delphi Group", role = "dtc",
-            comment = "Owner of claims-based CLI data from the Delphi Epidata API")
+           comment = "Owner of claims-based CLI data from the Delphi Epidata API")
   )
-Description: This package introduces common data structures for working with
-    epidemiological data reported by location and time and offers associated
-    utilities to perform basic signal processing tasks. The package is designed
-    to be used in conjunction with `epipredict` for building and evaluating
-    epidemiological models.
+Description: This package introduces common data structures for working
+    with epidemiological data reported by location and time and offers
+    associated utilities to perform basic signal processing tasks. The
+    package is designed to be used in conjunction with `epipredict` for
+    building and evaluating epidemiological models.
 License: MIT + file LICENSE
 URL: https://cmu-delphi.github.io/epiprocess/
 Depends:
@@ -44,7 +44,6 @@ Imports:
     cli,
     data.table,
     dplyr (>= 1.1.0),
-    epidatasets,
     ggplot2,
     glue,
     lifecycle (>= 1.0.1),
@@ -63,13 +62,13 @@ Imports:
 Suggests:
     devtools,
     epidatr,
-    trendfilter,
     here,
     knitr,
     outbreaks,
     readr,
     rmarkdown,
     testthat (>= 3.1.5),
+    trendfilter,
     withr
 VignetteBuilder:
     knitr
