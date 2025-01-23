@@ -117,7 +117,7 @@ edf
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-01-01
-#> 
+#>
 #> # A tibble: 2,808 × 4
 #>   geo_value time_value cases_cumulative cases_daily
 #> * <chr>     <date>                <dbl>       <dbl>
@@ -141,16 +141,16 @@ edf
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-01-01
-#> 
+#>
 #> # A tibble: 2,808 × 5
 #>   geo_value time_value cases_cumulative cases_daily smoothed_cases_daily
 #> * <chr>     <date>                <dbl>       <dbl>                <dbl>
-#> 1 ca        2020-03-01               19          19                19   
-#> 2 ca        2020-03-02               23           4                11.5 
+#> 1 ca        2020-03-01               19          19                19
+#> 2 ca        2020-03-02               23           4                11.5
 #> 3 ca        2020-03-03               29           6                 9.67
-#> 4 ca        2020-03-04               40          11                10   
-#> 5 ca        2020-03-05               50          10                10   
-#> 6 ca        2020-03-06               68          18                11.3 
+#> 4 ca        2020-03-04               40          11                10
+#> 5 ca        2020-03-05               50          10                10
+#> 6 ca        2020-03-06               68          18                11.3
 #> # ℹ 2,802 more rows
 ```
 
@@ -161,4 +161,4 @@ edf %>%
   autoplot(smoothed_cases_daily)
 ```
 
-<img src="man/figures/README-unnamed-chunk-7-1.png" width="90%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-7-1.svg" width="90%" style="display: block; margin: auto;" />
