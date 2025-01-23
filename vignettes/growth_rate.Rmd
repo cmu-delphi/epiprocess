@@ -259,8 +259,8 @@ x <- x %>%
 x %>%
   select(geo_value, time_value, cases_gr5, cases_gr6) %>%
   pivot_longer(
-    cols = starts_with("cases_gr"), 
-    names_to = "method", 
+    cols = starts_with("cases_gr"),
+    names_to = "method",
     values_to = "gr"
   ) %>%
   mutate(method = recode(method,

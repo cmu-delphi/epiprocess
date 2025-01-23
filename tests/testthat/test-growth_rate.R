@@ -62,9 +62,9 @@ test_that("parser sees all cases", {
   # lambda = NULL, scalar, vector
   # df = NULL, character, numeric
   # cv = T/F
-  
+
   grab_l <- function(l) list(cv = l$cv, df = l$df, lambda = l$lambda)
-  
+
   # CV TRUE
   l <- growth_rate_global_params(cv = TRUE)
   expect_identical(
@@ -96,57 +96,55 @@ test_that("parser sees all cases", {
   expect_snapshot(error = TRUE, parse_trendfilter_params(l))
   l <- growth_rate_global_params(cv = TRUE, df = 1, lambda = 1:5)
   expect_snapshot(error = TRUE, parse_trendfilter_params(l))
-  
+
   # CV = FALSE (the default)
   # 5 Cases where we turn CV on
   l <- growth_rate_global_params(df = "1se")
   expect_identical(
-    grab_l(parse_trendfilter_params(l)), 
+    grab_l(parse_trendfilter_params(l)),
     list(cv = TRUE, df = "1se", lambda = NULL)
   )
   l <- growth_rate_global_params(df = "1se", lambda = 1:5)
   expect_identical(
-    grab_l(parse_trendfilter_params(l)), 
+    grab_l(parse_trendfilter_params(l)),
     list(cv = TRUE, df = "1se", lambda = 1:5)
   )
   l <- growth_rate_global_params(lambda = 1:5)
   expect_identical(
-    grab_l(parse_trendfilter_params(l)), 
+    grab_l(parse_trendfilter_params(l)),
     list(cv = TRUE, df = "min", lambda = 1:5)
   )
   expect_identical(
-    grab_l(parse_trendfilter_params(growth_rate_global_params())), 
+    grab_l(parse_trendfilter_params(growth_rate_global_params())),
     list(cv = TRUE, df = "min", lambda = NULL)
   )
   # 3 cases where CV stays False
   l <- growth_rate_global_params(lambda = 1)
   expect_identical(
-    grab_l(parse_trendfilter_params(l)), 
+    grab_l(parse_trendfilter_params(l)),
     list(cv = FALSE, df = NULL, lambda = 1)
   )
   l <- growth_rate_global_params(df = 5)
   expect_identical(
-    grab_l(parse_trendfilter_params(l)), 
+    grab_l(parse_trendfilter_params(l)),
     list(cv = FALSE, df = 5, lambda = NULL)
   )
   l <- growth_rate_global_params(df = 5, lambda = 1:5)
   expect_identical(
-    grab_l(parse_trendfilter_params(l)), 
+    grab_l(parse_trendfilter_params(l)),
     list(cv = FALSE, df = 5, lambda = 1:5)
   )
-  
+
   # 2 error cases
   l <- growth_rate_global_params(df = "min", lambda = 1)
   expect_snapshot(error = TRUE, parse_trendfilter_params(l))
   l <- growth_rate_global_params(df = 1, lambda = 1)
   expect_snapshot(error = TRUE, parse_trendfilter_params(l))
-  
-  
 })
 
 test_that("trendfilter growth_rate implementation", {
   skip_if_not_installed("trendfilter", "0.0.2")
-  
+
   # various tf args give output (correctness not checked)
   z <- rnorm(30)
   expect_length(growth_rate(y = z, method = "trend_filter"), 30L)

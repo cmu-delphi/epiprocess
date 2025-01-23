@@ -123,8 +123,7 @@ growth_rate <- function(
     y, x = seq_along(y), x0 = x,
     method = c("rel_change", "linear_reg", "smooth_spline", "trend_filter"),
     h = 7, log_scale = FALSE, na_rm = FALSE,
-    params = growth_rate_global_params()
-) {
+    params = growth_rate_global_params()) {
   # Check x, y, x0
   if (length(x) != length(y)) cli_abort("`x` and `y` must have the same length.")
   method <- rlang::arg_match(method)
@@ -157,12 +156,12 @@ growth_rate <- function(
   y <- y[o]
   n <- length(y)
   x0 <- sort(x0)
-  
+
   # Convert to log(y) if we need to
   y <- as.numeric(y)
   if (log_scale) {
     if (any(y <= 0)) {
-      cli_warn("`y` contains 0 or negative values. Taking logs may produce 
+      cli_warn("`y` contains 0 or negative values. Taking logs may produce
                strange results.")
     }
     y <- suppressWarnings(log(y))
@@ -177,7 +176,7 @@ growth_rate <- function(
   y <- y[good_obs]
   x <- as.numeric(x)
   x0 <- as.numeric(x0)
-  
+
   # Local methods
   if (method == "rel_change" || method == "linear_reg") {
     g <- purrr::map_dbl(x, function(x_ref) {
@@ -269,7 +268,7 @@ growth_rate <- function(
         lam <- ifelse(single_lambda, obj$lambda, obj$lambda[which.min(abs(params$df - obj$dof))])
         f <- stats::predict(obj, newx = x0, lambda = lam) * sdy
       }
-      
+
       d <- diff(f) / diff(x0)
       # Extend by one element
       d <- c(d, d[length(d)])
@@ -283,11 +282,11 @@ growth_rate <- function(
 }
 
 #' Optional parameters for global growth rate methods
-#' 
+#'
 #' Construct an object containing non-standard arguments for [growth_rate()].
-#' 
-#' @param df Numeric or NULL for "smooth_spline". May also be one of "min" or 
-#'   "max" in the case of "trend_filter". The desired equivalent number of 
+#'
+#' @param df Numeric or NULL for "smooth_spline". May also be one of "min" or
+#'   "max" in the case of "trend_filter". The desired equivalent number of
 #'   degrees of freedom of the fit. Lower values give smoother estimates.
 #' @param lambda The desired smoothing parameter. For "smooth_spline", this
 #'   can be specified instead of `spar`. For "trend_filter", this sequence
@@ -300,13 +299,13 @@ growth_rate <- function(
 #' @param cv For "smooth_spline", ordinary leave-one-out (`TRUE`) or ‘generalized’
 #'   cross-validation (GCV) when `FALSE`; is used for smoothing parameter computation
 #'   only when both `spar` and `df` are not specified. For "trend_filter",
-#'   `cv` determines whether or not cross-validation is used to choose the 
+#'   `cv` determines whether or not cross-validation is used to choose the
 #'   tuning parameter. If `FALSE`, then the user must specify either `lambda`
 #'   or `df`.
 #' @inheritParams stats::smooth.spline
 #' @inheritParams trendfilter::trendfilter
 #' @inheritParams trendfilter::cv_trendfilter
-#' 
+#'
 #' @return A list of parameter configurations.
 #' @importFrom checkmate assert_number
 #' @export
@@ -326,8 +325,11 @@ growth_rate_global_params <- function(
     lambda_min_ratio = 1e-5,
     error_measure = c("deviance", "mse", "mae"),
     nfolds = 3L) {
-  if (is.character(df)) df <- rlang::arg_match0(df, c("min", "1se"))
-  else assert_number(df, lower = 0, null.ok = TRUE, finite = TRUE)
+  if (is.character(df)) {
+    df <- rlang::arg_match0(df, c("min", "1se"))
+  } else {
+    assert_number(df, lower = 0, null.ok = TRUE, finite = TRUE)
+  }
   assert_number(spar, null.ok = TRUE, finite = TRUE)
   assert_numeric(lambda, lower = 0, null.ok = TRUE, finite = TRUE)
   assert_logical(cv, len = 1)
@@ -360,7 +362,7 @@ parse_trendfilter_params <- function(params) {
   assert_class(params, "growth_rate_params")
   vec_lambda <- checkmate::test_numeric(params$lambda, min.len = 2L, null.ok = TRUE)
   df_cv <- checkmate::test_character(params$df, null.ok = TRUE)
-  if (df_cv && vec_lambda) { 
+  if (df_cv && vec_lambda) {
     params$cv <- TRUE # Turn CV on (or leave it on)
     params$df <- params$df %||% "min" # use the original arg or provide the minimizer
     return(params)
@@ -374,7 +376,7 @@ parse_trendfilter_params <- function(params) {
     if (!vec_lambda) {
       if (is.character(params$df)) {
         cli_abort(
-          "`df` a character implies using CV, but also setting `lambda` to a 
+          "`df` a character implies using CV, but also setting `lambda` to a
           single value implies no CV."
         )
       }
