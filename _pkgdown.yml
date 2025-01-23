@@ -63,7 +63,7 @@ reference:
       - sum_groups_epi_df
       - epi_cor
       - detect_outlr
-      - growth_rate
+      - starts_with("growth_rate")
       - as_tibble.epi_df
       - as_tsibble.epi_df
 
