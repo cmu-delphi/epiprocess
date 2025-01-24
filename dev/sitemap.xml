@@ -26,7 +26,7 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/decay_epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/deprecated_quo_is_present.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/detect_outlr.html</loc></url>
-<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/difftime_summary.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/difftime_approx_ceiling_time_delta.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/dplyr_reconstruct.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/epi_archive.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/epi_cor.html</loc></url>
@@ -43,6 +43,7 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/format_chr_with_quotes.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/format_class_vec.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/format_tibble_row.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/format_time_delta.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/format_varname.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/format_varnames.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/full_date_seq.html</loc></url>
@@ -56,7 +57,9 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/index.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/is_locf.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/key_colnames.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/lag_within_x_latest.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/max_version_with_row_in.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/n_steps_to_time_delta.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/next_after.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/num_percent.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/paste_lines.html</loc></url>
@@ -69,11 +72,19 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/sum_groups_epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/test_sensible_int.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_column_names.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_delta_standardize.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_delta_summary.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_delta_to_approx_difftime.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_delta_to_n_steps.html</loc></url>
-<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_within_x_latest.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_minus_time_in_n_steps.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_plus_n_steps.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_type_unit_abbr.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_type_unit_abbrs.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_type_unit_pluralizer.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/unit_time_delta.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/unwrap.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/upcase_snake_case.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/validate_slide_window_arg.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/validate_version_bound.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/version_column_names.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/wrap_symbolics.html</loc></url>

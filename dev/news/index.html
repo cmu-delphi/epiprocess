@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.10.1</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.10.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,25 +44,41 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.10" id="epiprocess-010">epiprocess 0.10<a class="anchor" aria-label="anchor" href="#epiprocess-010"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.11" id="epiprocess-011">epiprocess 0.11<a class="anchor" aria-label="anchor" href="#epiprocess-011"></a></h2>
 <div class="section level3">
-<h3 id="breaking-changes-0-10">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-10"></a></h3>
-</div>
+<h3 id="breaking-changes-0-11">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-11"></a></h3>
+<ul><li>In <code><a href="../reference/revision_summary.html">revision_summary()</a></code>:
+<ul><li>Output now uses the name <code>lag_near_latest</code> instead of <code>time_near_latest</code>. To migrate, update references to <code>time_near_latest</code> to <code>lag_near_latest</code>.</li>
+<li>
+<code>revision_summary(epi_arch)</code> without specifying the measurement column to analyze in <code>...</code> will no longer attempt to guess which one you intended if there are multiple possibilities to choose from (<a href="https://github.com/cmu-delphi/epiprocess/issues571" class="external-link">#571</a>). If you attempt a complicated tidyselection that selects zero columns, this is also now an error. If you encounter such errors, manually specify the measurement column in <code>...</code>.</li>
+<li>
+<code>min_waiting_period</code> now defines a nonstrict inequality instead of a strict one. To obtain the old bounds, bump the <code>min_waiting_period</code> up to the next possible value for your <code>time_type</code>.</li>
+</ul></li>
+<li>In <code><a href="../reference/key_colnames.html">key_colnames()</a></code>:
+<ul><li>On regular (non-<code>epi_df</code>) data frames, now requires manual specification of <code>geo_keys</code>, <code>other_keys</code>, and <code>time_keys</code>.</li>
+<li>The <code>extra_keys</code> argument has been deprecated and replaced with <code>other_keys</code>.</li>
+</ul></li>
+</ul></div>
 <div class="section level3">
-<h3 id="improvements-0-10">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-10"></a></h3>
-</div>
+<h3 id="improvements-0-11">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-11"></a></h3>
+<ul><li>
+<code><a href="../reference/revision_summary.html">revision_summary()</a></code> now supports all <code>time_type</code>s.</li>
+</ul></div>
 <div class="section level3">
-<h3 id="bug-fixes-0-10">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-10"></a></h3>
-</div>
+<h3 id="bug-fixes-0-11">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-11"></a></h3>
+<ul><li>Fixed aggregation of age-group-specific rates to overall rates in <code>epi_df</code> vignette (<a href="https://github.com/cmu-delphi/epiprocess/issues587" class="external-link">#587</a>).</li>
+<li>Fixed <code><a href="../reference/key_colnames.html">key_colnames()</a></code> omitting some key columns on <code>epi_archive</code>s (<a href="https://github.com/cmu-delphi/epiprocess/issues565" class="external-link">#565</a>).</li>
+<li>Fixed <code>epi_archive</code> compactification raising an error on certain value column classes such as <code>"distribution"</code> (<a href="https://github.com/cmu-delphi/epiprocess/issues541" class="external-link">#541</a>); it’s now easier to form an archive of forecasts in that format.</li>
+</ul></div>
 <div class="section level3">
-<h3 id="cleanup-0-10">Cleanup<a class="anchor" aria-label="anchor" href="#cleanup-0-10"></a></h3>
+<h3 id="cleanup-0-11">Cleanup<a class="anchor" aria-label="anchor" href="#cleanup-0-11"></a></h3>
 <ul><li>Moved example datasets from being reexported in the package to being fetched from <code>epidatasets</code>. The <code>epidatasets</code> package is now auto-loaded as a dependency of <code>epiprocess</code>. The datasets can still be accessed, after loading the package, with <code><a href="https://rdrr.io/r/utils/data.html" class="external-link">data()</a></code> or the name of the dataset alone, or with <code>epidatasets::</code> (<a href="https://github.com/cmu-delphi/epiprocess/issues577" class="external-link">#577</a>).</li>
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.10" id="epiprocess-010-1">epiprocess 0.10<a class="anchor" aria-label="anchor" href="#epiprocess-010-1"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.10" id="epiprocess-010">epiprocess 0.10<a class="anchor" aria-label="anchor" href="#epiprocess-010"></a></h2>
 <div class="section level3">
-<h3 id="breaking-changes-0-10-1">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-10-1"></a></h3>
+<h3 id="breaking-changes-0-10">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-10"></a></h3>
 <ul><li>Moved example datasets from being hosted in the package to being reexported from the <code>epidatasets</code> package. The datasets can no longer be loaded with <code><a href="https://rdrr.io/r/utils/data.html" class="external-link">data()</a></code> but can be accessed with <code>epiprocess::</code> or, after loading the package, just the name of the dataset (<a href="https://github.com/cmu-delphi/epiprocess/issues520" class="external-link">#520</a>). Those with names starting with <code>jhu</code> have been renamed to a more uniform scheme and now have names starting with <code>covid</code>. The data set previously named <code>jhu_confirmed_cumulative_num</code> has been removed from the package, but a renamed version is has been removed from the package, but a renamed version is still available in <code>epidatasets</code>.</li>
 <li>
 <code>epi_slide_{sum,mean,opt}</code> have improved default output column names, and additional arguments for specifying names: <code>.prefix</code>, <code>.suffix</code>, <code>.new_col_names</code>. To obtain the old naming behavior, use <code>.prefix =   "slide_value_"</code>.</li>
@@ -70,7 +86,7 @@
 <code>as_epi_df</code> now removes any grouping that <code>x</code> had applied.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="improvements-0-10-1">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-10-1"></a></h3>
+<h3 id="improvements-0-10">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-10"></a></h3>
 <ul><li>
 <code>epi_slide</code> and <code>epix_slide</code> now provide some hints if you forget a <code>~</code> when using a formula to specify the slide computation, and other bits of forgotten syntax.</li>
 <li>Improved validation of <code>.window_size</code> arguments.</li>
@@ -80,12 +96,12 @@
 <li>Improved speed of key-uniqueness checks.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="bug-fixes-0-10-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-10-1"></a></h3>
+<h3 id="bug-fixes-0-10">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-10"></a></h3>
 <ul><li>Removed <code>.window_size = 1</code> default from <code>epi_slide_{mean,sum,opt}</code>; this argument is now mandatory, and should nearly always be greater than 1 except for testing purposes.</li>
 <li>Fixed <code>epi_slide_{sum,mean,opt}</code> raising an error on certain tidyselect expressions.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="cleanup-0-10-1">Cleanup<a class="anchor" aria-label="anchor" href="#cleanup-0-10-1"></a></h3>
+<h3 id="cleanup-0-10">Cleanup<a class="anchor" aria-label="anchor" href="#cleanup-0-10"></a></h3>
 <ul><li>Removed vignette dependency on <code>covidcast</code>.</li>
 </ul></div>
 </div>
@@ -178,7 +194,7 @@
 <div class="section level3">
 <h3 id="cleanup-0-8">Cleanup<a class="anchor" aria-label="anchor" href="#cleanup-0-8"></a></h3>
 <ul><li>Resolved some linting messages in package checks (<a href="https://github.com/cmu-delphi/epiprocess/issues468" class="external-link">#468</a>).</li>
-<li>Added optional <code>decay_to_tibble</code> attribute controlling <code><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble()</a></code> behavior of <code>epi_df</code>s to let <code>{epipredict}</code> work more easily with other libraries (<a href="https://github.com/cmu-delphi/epiprocess/issues471" class="external-link">#471</a>).</li>
+<li>Added optional <code>decay_to_tibble</code> attribute controlling <code><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble()</a></code> behavior of <code>epi_df</code>s to let <a href="https://github.com/cmu-delphi/epipredict/" class="external-link">epipredict</a> work more easily with other libraries (<a href="https://github.com/cmu-delphi/epiprocess/issues471" class="external-link">#471</a>).</li>
 <li>Removed some external package dependencies.</li>
 </ul></div>
 </div>
@@ -430,7 +446,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.1.1" id="epiprocess-011">epiprocess 0.1.1<a class="anchor" aria-label="anchor" href="#epiprocess-011"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.1.1" id="epiprocess-011-1">epiprocess 0.1.1<a class="anchor" aria-label="anchor" href="#epiprocess-011-1"></a></h2>
 <div class="section level3">
 <h3 id="new-features-0-1-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-1-1"></a></h3>
 <ul><li>New example data objects allow one to quickly experiment with <code>epi_df</code>s and <code>epi_archives</code> without relying/waiting on an API to fetch data.</li>
@@ -449,7 +465,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.1.0" id="epiprocess-010-2">epiprocess 0.1.0<a class="anchor" aria-label="anchor" href="#epiprocess-010-2"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.1.0" id="epiprocess-010-1">epiprocess 0.1.0<a class="anchor" aria-label="anchor" href="#epiprocess-010-1"></a></h2>
 <div class="section level3">
 <h3 id="implemented-core-functionality-vignettes-0-1-0">Implemented core functionality, vignettes<a class="anchor" aria-label="anchor" href="#implemented-core-functionality-vignettes-0-1-0"></a></h3>
 <ul><li>Classes:

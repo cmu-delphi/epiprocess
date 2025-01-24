@@ -17,10 +17,10 @@ always excludes NA values)
 rel_spread: spread divided by the largest value (so it will
 always be less than 1). Note that this need not be the final value. It will
 be NA whenever spread is 0.
-time_near_latest: the time taken for the revisions to settle to within
+lag_near_latest: the time taken for the revisions to settle to within
 within_latest (default 20%) of the final value and stay there. For
 example, consider the series (0, 20, 99, 150, 102, 100); then
-time_near_latest is 5, since even though 99 is within 20%, it is outside
+lag_near_latest is 5, since even though 99 is within 20%, it is outside
 the window afterwards at 150.
 
 "><meta property="og:description" content="revision_summary removes all missing values (if requested), and then
@@ -41,10 +41,10 @@ always excludes NA values)
 rel_spread: spread divided by the largest value (so it will
 always be less than 1). Note that this need not be the final value. It will
 be NA whenever spread is 0.
-time_near_latest: the time taken for the revisions to settle to within
+lag_near_latest: the time taken for the revisions to settle to within
 within_latest (default 20%) of the final value and stay there. For
 example, consider the series (0, 20, 99, 150, 102, 100); then
-time_near_latest is 5, since even though 99 is within 20%, it is outside
+lag_near_latest is 5, since even though 99 is within 20%, it is outside
 the window afterwards at 150.
 
 "><meta name="robots" content="noindex"></head><body>
@@ -55,7 +55,7 @@ the window afterwards at 150.
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.10.1</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.10.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -110,10 +110,10 @@ always excludes <code>NA</code> values)</p></li>
 <li><p><code>rel_spread</code>: <code>spread</code> divided by the largest value (so it will
 always be less than 1). Note that this need not be the final value. It will
 be <code>NA</code> whenever <code>spread</code> is 0.</p></li>
-<li><p><code>time_near_latest</code>: the time taken for the revisions to settle to within
+<li><p><code>lag_near_latest</code>: the time taken for the revisions to settle to within
 <code>within_latest</code> (default 20%) of the final value and stay there. For
 example, consider the series (0, 20, 99, 150, 102, 100); then
-<code>time_near_latest</code> is 5, since even though 99 is within 20%, it is outside
+<code>lag_near_latest</code> is 5, since even though 99 is within 20%, it is outside
 the window afterwards at 150.</p></li>
 </ol></div>
 
@@ -124,9 +124,11 @@ the window afterwards at 150.</p></li>
 <span>  <span class="va">...</span>,</span>
 <span>  drop_nas <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  print_inform <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  min_waiting_period <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/difftime.html" class="external-link">as.difftime</a></span><span class="op">(</span><span class="fl">60</span>, units <span class="op">=</span> <span class="st">"days"</span><span class="op">)</span>,</span>
+<span>  min_waiting_period <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/difftime.html" class="external-link">as.difftime</a></span><span class="op">(</span><span class="fl">60</span>, units <span class="op">=</span> <span class="st">"days"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="difftime_approx_ceiling_time_delta.html">difftime_approx_ceiling_time_delta</a></span><span class="op">(</span><span class="va">epi_arch</span><span class="op">$</span><span class="va">time_type</span><span class="op">)</span>,</span>
 <span>  within_latest <span class="op">=</span> <span class="fl">0.2</span>,</span>
-<span>  quick_revision <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/difftime.html" class="external-link">as.difftime</a></span><span class="op">(</span><span class="fl">3</span>, units <span class="op">=</span> <span class="st">"days"</span><span class="op">)</span>,</span>
+<span>  quick_revision <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/difftime.html" class="external-link">as.difftime</a></span><span class="op">(</span><span class="fl">3</span>, units <span class="op">=</span> <span class="st">"days"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="difftime_approx_ceiling_time_delta.html">difftime_approx_ceiling_time_delta</a></span><span class="op">(</span><span class="va">epi_arch</span><span class="op">$</span><span class="va">time_type</span><span class="op">)</span>,</span>
 <span>  few_revisions <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  abs_spread_threshold <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  rel_spread_threshold <span class="op">=</span> <span class="fl">0.1</span>,</span>
@@ -145,15 +147,16 @@ the window afterwards at 150.</p></li>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>&lt;<code><a href="https://dplyr.tidyverse.org/reference/dplyr_tidy_select.html" class="external-link">tidyselect</a></code>&gt;, used to choose the column to
-summarize. If empty, it chooses the first. Currently only implemented for
-one column at a time.</p></dd>
+summarize. If empty and there is only one value/measurement column (i.e.,
+not in <code><a href="key_colnames.html">key_colnames</a></code>) in the archive, it will automatically select it.
+If supplied, <code>...</code> must select exactly one column.</p></dd>
 
 
 <dt id="arg-drop-nas">drop_nas<a class="anchor" aria-label="anchor" href="#arg-drop-nas"></a></dt>
 <dd><p>bool, drop any <code>NA</code> values from the archive? After dropping
-<code>NA</code>'s compactify is run again to make sure there are no duplicate values
-from occasions when the signal is revised to <code>NA</code>, and then back to its
-immediately-preceding value.</p></dd>
+<code>NA</code>'s compactify is run again if <code>should_compactify</code> is <code>TRUE</code> to make
+sure there are no duplicate values from occasions when the signal is
+revised to <code>NA</code>, and then back to its immediately-preceding value.</p></dd>
 
 
 <dt id="arg-print-inform">print_inform<a class="anchor" aria-label="anchor" href="#arg-print-inform"></a></dt>
@@ -163,16 +166,17 @@ only return the full summary tibble</p></dd>
 
 <dt id="arg-min-waiting-period">min_waiting_period<a class="anchor" aria-label="anchor" href="#arg-min-waiting-period"></a></dt>
 <dd><p><code>difftime</code>, integer or <code>NULL</code>. Sets a cutoff: any
-time_values not earlier than <code>min_waiting_period</code> before <code>versions_end</code> are
-removed. <code>min_waiting_period</code> should characterize the typical time during
-which revisions occur.  The default of 60 days corresponds to a typical
-final value for case counts as reported in the context of insurance. To
-avoid this filtering, either set to <code>NULL</code> or 0.</p></dd>
+time_values that have not had at least <code>min_waiting_period</code> to stabilize as
+of the <code>versions_end</code> are removed. <code>min_waiting_period</code> should characterize
+the typical time during which most significant revisions occur. The default
+of 60 days corresponds to a typical near-final value for case counts as
+reported in the context of insurance. To avoid this filtering, either set
+to <code>NULL</code> or 0.</p></dd>
 
 
 <dt id="arg-within-latest">within_latest<a class="anchor" aria-label="anchor" href="#arg-within-latest"></a></dt>
 <dd><p>double between 0 and 1. Determines the threshold
-used for the <code>time_to</code></p></dd>
+used for the <code>lag_to</code></p></dd>
 
 
 <dt id="arg-quick-revision">quick_revision<a class="anchor" aria-label="anchor" href="#arg-quick-revision"></a></dt>
@@ -188,28 +192,43 @@ number of revisions to consider "few". Default is 3.</p></dd>
 
 
 <dt id="arg-abs-spread-threshold">abs_spread_threshold<a class="anchor" aria-label="anchor" href="#arg-abs-spread-threshold"></a></dt>
-<dd><p>numeric, for the printed summary, the maximum
-spread used to characterize revisions which don't actually change very
-much. Default is 5% of the maximum value in the dataset, but this is the
-most unit dependent of values, and likely needs to be chosen appropriate
-for the scale of the dataset.</p></dd>
+<dd><p>length-1 numeric, for the printed summary, the
+maximum spread used to characterize revisions which don't actually change
+very much. Default is 5% of the maximum value in the dataset, but this is
+the most unit dependent of values, and likely needs to be chosen
+appropriate for the scale of the dataset.</p></dd>
 
 
 <dt id="arg-rel-spread-threshold">rel_spread_threshold<a class="anchor" aria-label="anchor" href="#arg-rel-spread-threshold"></a></dt>
-<dd><p>float between 0 and 1, for the printed summary,
-the relative spread fraction used to characterize revisions which don't
-actually change very much. Default is .1, or 10% of the final value</p></dd>
+<dd><p>length-1 double between 0 and 1, for the printed
+summary, the relative spread fraction used to characterize revisions which
+don't actually change very much. Default is .1, or 10% of the final value</p></dd>
 
 
 <dt id="arg-compactify-tol">compactify_tol<a class="anchor" aria-label="anchor" href="#arg-compactify-tol"></a></dt>
-<dd><p>float, used if <code>drop_nas=TRUE</code>, it determines the
-threshold for when two floats are considered identical.</p></dd>
+<dd><p>length-1 double, used if <code>should_compactify</code> is <code>TRUE</code>, it
+determines the threshold for when two doubles are considered identical.</p></dd>
 
 
 <dt id="arg-should-compactify">should_compactify<a class="anchor" aria-label="anchor" href="#arg-should-compactify"></a></dt>
-<dd><p>bool. Compactify if <code>TRUE</code>.</p></dd>
+<dd><p>bool. If <code>TRUE</code>, we will compactify after the signal
+requested in <code>...</code> has been selected on its own and the <code>drop_nas</code> step.
+This helps, for example, to give similar results when called on
+<a href="epix_merge.html">merged</a> and single-signal archives, since merged archives
+record an update when any of the other signals change, not just the
+requested signal. The default is <code>TRUE</code>.</p></dd>
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Applies to <code>epi_archive</code>s with <code>time_type</code>s of <code>"day"</code>, <code>"week"</code>,
+and <code>"yearmonth"</code>. It can also work with a <code>time_type</code> of <code>"integer"</code> if
+the possible <code>time_values</code> are all consecutive integers; you will need to
+manually specify the <code>min_waiting_period</code> and <code>quick_revision</code>, though.
+Using a <code>time_type</code> of <code>"integer"</code> with week numbers like 202501 will
+produce incorrect results for some calculations, since week numbering
+contains jumps at year boundaries.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
@@ -230,23 +249,23 @@ threshold for when two floats are considered identical.</p></dd>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> • 91 out of 1,956 (4.65%)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Spread of more than 2.22056495 in actual value (when revised):</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> • 671 out of 1,956 (34.3%)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> days until within 20% of the latest value:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Days until within 20% of the latest value:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      min median     mean     max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   3 days 5 days 9.1 days 67 days</span>
 <span class="r-in"><span><span class="va">revision_example</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">spread</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1,956 × 11</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    time_value geo_value n_revisions min_lag max_lag time_near_latest spread</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2020-12-26 ca                 62 3 days  73 days  6 days           14.1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2020-12-25 ca                 62 3 days  73 days  7 days           13.2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2020-11-27 fl                 66 3 days  73 days  4 days           12.0 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2021-09-27 fl                 43 3 days  63 days 59 days            9.79</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2020-12-25 fl                 62 3 days  73 days  4 days            9.75</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2021-09-26 fl                 43 4 days  64 days 60 days            9.48</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2021-09-27 ca                 43 3 days  63 days  8 days            9.31</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2021-09-25 fl                 43 5 days  65 days 61 days            8.83</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2020-11-05 ny                 66 3 days  73 days 11 days            8.64</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2020-11-27 tx                 66 3 days  73 days 10 days            8.56</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    time_value geo_value n_revisions min_lag max_lag lag_near_latest spread</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2020-12-26 ca                 62 3 days  73 days  6 days          14.1 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2020-12-25 ca                 62 3 days  73 days  7 days          13.2 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2020-11-27 fl                 66 3 days  73 days  4 days          12.0 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2021-09-27 fl                 43 3 days  63 days 59 days           9.79</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2020-12-25 fl                 62 3 days  73 days  4 days           9.75</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2021-09-26 fl                 43 4 days  64 days 60 days           9.48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2021-09-27 ca                 43 3 days  63 days  8 days           9.31</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2021-09-25 fl                 43 5 days  65 days 61 days           8.83</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2020-11-05 ny                 66 3 days  73 days 11 days           8.64</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2020-11-27 tx                 66 3 days  73 days 10 days           8.56</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1,946 more rows</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4 more variables: rel_spread &lt;dbl&gt;, min_value &lt;dbl&gt;, max_value &lt;dbl&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   median_value &lt;dbl&gt;</span></span>
