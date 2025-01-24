@@ -7,11 +7,14 @@ test_that("`key_colnames` on non-`epi_df`-like tibbles works as expected", {
   )
   # `geo_keys`, `other_keys`, `time_keys` are mandatory:
   expect_error(key_colnames(k1k2_tbl, other_keys = c("k1", "k2"), time_keys = character()),
-               regexp = '"geo_keys" is missing')
+    regexp = '"geo_keys" is missing'
+  )
   expect_error(key_colnames(k1k2_tbl, geo_keys = character(), time_keys = character()),
-               regexp = '"other_keys" is missing')
+    regexp = '"other_keys" is missing'
+  )
   expect_error(key_colnames(k1k2_tbl, geo_keys = character(), other_keys = c("k1", "k2")),
-               regexp = '"time_keys" is missing')
+    regexp = '"time_keys" is missing'
+  )
 
   # Manually specifying keys that aren't there is an error:
   expect_error(
