@@ -4,7 +4,10 @@
 #' explicit checks that the key actually is unique in any associated data
 #' structures.
 #'
-#' @param x an object, such as an [`epi_df`]
+#' @param x an object, often a data frame or something similar. `{epiprocess}`
+#'   includes implementations for [`epi_df`]s, [`epi_archive`]s,
+#'   [`tsibble::tsibble`]s, and other data frames (including
+#'   [`tibble::tibble`]s); other packages, like `{epipredict}`, can add more.
 #' @param ... additional arguments passed on to methods
 #' @param geo_keys,other_keys,time_keys character vectors, sometimes optional;
 #'   which variables (if any) should be considered as part of a unique

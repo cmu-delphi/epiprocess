@@ -26,7 +26,10 @@ key_colnames(x, ..., exclude = character())
 \method{key_colnames}{epi_archive}(x, ..., exclude = character())
 }
 \arguments{
-\item{x}{an object, such as an \code{\link{epi_df}}}
+\item{x}{an object, often a data frame or something similar. \code{{epiprocess}}
+includes implementations for \code{\link{epi_df}}s, \code{\link{epi_archive}}s,
+\code{\link[tsibble:tsibble]{tsibble::tsibble}}s, and other data frames (including
+\code{\link[tibble:tibble]{tibble::tibble}}s); other packages, like \code{{epipredict}}, can add more.}
 
 \item{...}{additional arguments passed on to methods}
 
