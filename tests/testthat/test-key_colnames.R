@@ -2,36 +2,34 @@ test_that("`key_colnames` on non-`epi_df`-like tibbles works as expected", {
   k1k2_tbl <- tibble::tibble(k1 = 1, k2 = 1)
 
   expect_equal(
-    key_colnames(k1k2_tbl, geo_keys = character(0L), time_keys = character(0L), other_keys = c("k1", "k2")),
+    key_colnames(k1k2_tbl, geo_keys = character(), time_keys = character(), other_keys = c("k1", "k2")),
     c("k1", "k2")
   )
-  # `geo_keys` and `time_keys` are optional, and, in this case, inferred to be absent:
-  expect_equal(
-    key_colnames(k1k2_tbl, other_keys = c("k1", "k2")),
-    c("k1", "k2")
-  )
-  # but `other_keys` is mandatory:
-  expect_error(
-    key_colnames(k1k2_tbl)
-  )
+  # `geo_keys`, `other_keys`, `time_keys` are mandatory:
+  expect_error(key_colnames(k1k2_tbl, other_keys = c("k1", "k2"), time_keys = character()),
+               regexp = '"geo_keys" is missing')
+  expect_error(key_colnames(k1k2_tbl, geo_keys = character(), time_keys = character()),
+               regexp = '"other_keys" is missing')
+  expect_error(key_colnames(k1k2_tbl, geo_keys = character(), other_keys = c("k1", "k2")),
+               regexp = '"time_keys" is missing')
 
   # Manually specifying keys that aren't there is an error:
   expect_error(
-    key_colnames(k1k2_tbl, geo_keys = "bogus", other_keys = c("k1", "k2")),
+    key_colnames(k1k2_tbl, geo_keys = "bogus", other_keys = c("k1", "k2"), time_keys = character()),
     class = "epiprocess__key_colnames__keys_not_in_colnames"
   )
   expect_error(
-    key_colnames(k1k2_tbl, time_keys = "bogus", other_keys = c("k1", "k2")),
+    key_colnames(k1k2_tbl, other_keys = "bogus", geo_keys = character(), time_keys = character()),
     class = "epiprocess__key_colnames__keys_not_in_colnames"
   )
   expect_error(
-    key_colnames(k1k2_tbl, other_keys = "bogus"),
+    key_colnames(k1k2_tbl, time_keys = "bogus", geo_keys = character(), other_keys = c("k1", "k2")),
     class = "epiprocess__key_colnames__keys_not_in_colnames"
   )
 
   # We can specify non-`epi_df`-like geo keys:
   expect_equal(
-    key_colnames(k1k2_tbl, geo_keys = c("k1", "k2"), other_keys = character(0L)),
+    key_colnames(k1k2_tbl, geo_keys = c("k1", "k2"), other_keys = character(), time_keys = character()),
     c("k1", "k2")
   )
 })
@@ -42,27 +40,34 @@ test_that("`key_colnames` on `epi_df`s and similar tibbles works as expected", {
   gat_tbl <- tibble::tibble(geo_value = 1, age_group = 1, time_value = 1)
   gat_edf <- as_epi_df(gat_tbl, other_keys = "age_group", as_of = 2)
 
-  # For tbl: `geo_keys` and `time_keys` are optional, and, in this case,
-  # inferred to be (just) `geo_value` and (just) `time_value`:
+  # For tbl: we must provide all key naming arguments:
   expect_equal(
-    key_colnames(gat_tbl, other_keys = "age_group"),
+    key_colnames(gat_tbl, geo_keys = "geo_value", other_keys = "age_group", time_keys = "time_value"),
     c("geo_value", "age_group", "time_value")
   )
-  # and edfs give something compatible:
+  # given same inputs, compatible edfs give something compatible:
   expect_equal(
-    key_colnames(gat_edf, other_keys = "age_group"),
+    key_colnames(gat_edf, geo_keys = "geo_value", other_keys = "age_group", time_keys = "time_value"),
     c("geo_value", "age_group", "time_value")
   )
-  # though edfs don't have to specify the `other_keys`:
+  # though edfs don't have to specify the key settings:
   expect_equal(
     key_colnames(gat_edf),
     c("geo_value", "age_group", "time_value")
   )
   # and they will balk if we write something intended to work for both tbls and
-  # edfs but mis-specify the `other_keys`:
+  # edfs but mis-specify something:
+  expect_error(
+    key_colnames(gat_edf, geo_keys = character(0L)),
+    class = "epiprocess__key_colnames__mismatched_geo_keys"
+  )
   expect_error(
     key_colnames(gat_edf, other_keys = character(0L)),
     class = "epiprocess__key_colnames__mismatched_other_keys"
+  )
+  expect_error(
+    key_colnames(gat_edf, time_keys = character(0L)),
+    class = "epiprocess__key_colnames__mismatched_time_keys"
   )
 
   # edfs also won't let us specify nonstandard geotime keys:
@@ -77,11 +82,11 @@ test_that("`key_colnames` on `epi_df`s and similar tibbles works as expected", {
 
   # We can exclude keys:
   expect_equal(
-    key_colnames(gat_tbl, other_keys = "age_group", exclude = c("time_value")),
+    key_colnames(gat_tbl, geo_keys = "geo_value", other_keys = "age_group", time_keys = "time_value", exclude = c("time_value")),
     c("geo_value", "age_group")
   )
   expect_equal(
-    key_colnames(gat_tbl, other_keys = "age_group", exclude = c("geo_value", "time_value")),
+    key_colnames(gat_tbl, geo_keys = "geo_value", other_keys = "age_group", time_keys = "time_value", exclude = c("geo_value", "time_value")),
     c("age_group")
   )
   expect_equal(
@@ -95,7 +100,7 @@ test_that("`key_colnames` on `epi_df`s and similar tibbles works as expected", {
 
   # Using `extra_keys =` is soft-deprecated and routes to `other_keys =`:
   expect_warning(
-    gat_tbl_extra_keys_res <- key_colnames(gat_tbl, extra_keys = "age_group"),
+    gat_tbl_extra_keys_res <- key_colnames(gat_tbl, geo_keys = "geo_value", time_keys = "time_value", extra_keys = "age_group"),
     class = "lifecycle_warning_deprecated"
   )
   expect_equal(gat_tbl_extra_keys_res, c("geo_value", "age_group", "time_value"))
