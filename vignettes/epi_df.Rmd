@@ -119,7 +119,8 @@ edf %>%
   complete(geo_value, time_value = seq.Date(min(time_value), max(time_value), by = "day")) %>%
   arrange_canonical() %>%
   group_by(geo_value) %>%
-  mutate(cases_7sd = slider::slide_dbl(cases, .f = sd, na.rm = TRUE, .before = 7, .after = 0))
+  mutate(cases_7sd = slider::slide_dbl(cases, .f = sd, na.rm = TRUE, .before = 7, .after = 0)) %>%
+  ungroup()
 ```
 
 Furthermore `epi_slide()` allows for selecting `.ref_time_value`, which the
@@ -276,51 +277,77 @@ populations for `time_value`s before 2020 included in reports published in 2020
 onward, but at least for this example, these two sources agree exactly.
 FluSurv-NET also directly reports an overall rate, so we can check our work.
 ```{r}
-group_cols <- key_colnames(flu_data, exclude = "age_group")
-rate_overall_recalc_edf <-
+# Population estimates for FluSurv-NET-covered part of CA on 2017-07-01 and
+# 2018-07-01, extracted and aggregated from "vintage 2020" estimates (actually
+# released by Census in June 2021 and by NCHS in September 2021), which is the
+# last available reporting found with population estimates for 2017 and 2018:
+pop <- tribble(
+  ~geo_value, ~age_group,  ~time_value,           ~pop,
+  "CA",       "0--4 yr",   as.Date("2017-07-01"), 203813,
+  "CA",       "5--17 yr",  as.Date("2017-07-01"), 521827,
+  "CA",       "18--49 yr", as.Date("2017-07-01"), 1722399,
+  "CA",       "50--64 yr", as.Date("2017-07-01"), 700090,
+  "CA",       ">= 65 yr",  as.Date("2017-07-01"), 534789,
+  "CA",       "0--4 yr",   as.Date("2018-07-01"), 201265,
+  "CA",       "5--17 yr",  as.Date("2018-07-01"), 520077,
+  "CA",       "18--49 yr", as.Date("2018-07-01"), 1725382,
+  "CA",       "50--64 yr", as.Date("2018-07-01"), 699145,
+  "CA",       ">= 65 yr",  as.Date("2018-07-01"), 551243,
+)
+# Calculate fraction of total population in each age group.
+pop <- pop %>%
+  group_by(geo_value, time_value) %>%
+  mutate(frac_pop = pop / sum(pop)) %>%
+  ungroup()
+```
+
+After joining population onto the rate data, we can calculate the
+population-weighted rate for each age group, that is, the portion of each
+`age_group`'s rate that it contributes to the overall rate.
+
+```{r}
+fractional_rate_by_age_group <-
   flu_data %>%
   inner_join(
-    # Population estimates for FluSurv-NET-covered part of CA on 2017-07-01 and
-    # 2018-07-01, extracted and aggregated from "vintage 2020" estimates (actually
-    # released by Census in June 2021 and by NCHS in September 2021), which is the
-    # last available reporting found with population estimates for 2017 and 2018:
-    tribble(
-      ~geo_value, ~age_group,  ~time_value,           ~pop,
-      "CA",       "0--4 yr",   as.Date("2017-07-01"), 203813,
-      "CA",       "5--17 yr",  as.Date("2017-07-01"), 521827,
-      "CA",       "18--49 yr", as.Date("2017-07-01"), 1722399,
-      "CA",       "50--64 yr", as.Date("2017-07-01"), 700090,
-      "CA",       ">= 65 yr",  as.Date("2017-07-01"), 534789,
-      "CA",       "0--4 yr",   as.Date("2018-07-01"), 201265,
-      "CA",       "5--17 yr",  as.Date("2018-07-01"), 520077,
-      "CA",       "18--49 yr", as.Date("2018-07-01"), 1725382,
-      "CA",       "50--64 yr", as.Date("2018-07-01"), 699145,
-      "CA",       ">= 65 yr",  as.Date("2018-07-01"), 551243,
-    ),
+    pop,
     # Simple population interpolation/extrapolation scheme: last observation
     # carried forward. Use the estimated population on 2017-07-01 for
     # time_values 2017-07-01 through 2018-06-30, and the estimated population on
     # 2018-07-01 for all subsequent time_values:
-    join_by(geo_value, closest(y$time_value <= x$time_value), age_group),
+    join_by(geo_value, age_group, closest(y$time_value <= x$time_value)),
     # Generate errors if the two data sets don't line up as expected:
     relationship = "many-to-one", unmatched = "error",
     # We'll get a second time column indicating which population estimate
     # was carried forward; name it time_value_for_pop:
     suffix = c("", "_for_pop")
   ) %>%
-  select(-time_value_for_pop) %>%
-  group_by(geo_value, time_value) %>%
-  mutate(approx_count = rate * pop / 100e3) %>%
-  ungroup() %>%
-  sum_groups_epi_df(c("approx_count", "pop"), group_cols = group_cols) %>%
-  mutate(rate_overall_recalc = approx_count / pop * 100e3) %>%
+  mutate(rate_contrib = rate * frac_pop)
+```
+
+We can then use `sum_groups_epi_df` to sum population-weighted rate across all
+age groups to get the overall rate.
+
+```{r}
+rate_overall_recalc_edf <-
+  fractional_rate_by_age_group %>%
+  sum_groups_epi_df("rate_contrib", group_cols = c("geo_value")) %>%
+  rename(rate_overall_recalc = rate_contrib) %>%
   # match rounding of original data:
-  mutate(rate_overall_recalc = round(rate_overall_recalc, 1)) %>%
+  mutate(rate_overall_recalc = round(rate_overall_recalc, 1))
+rate_overall_recalc_edf
+```
+
+Let's compare our calculated rate to the overall rate reported by FluSurv-NET.
+
+```{r}
+rate_overall_recalc_edf <-
+  rate_overall_recalc_edf %>%
   # compare to published overall rates:
   inner_join(
     flu_data_api %>%
       select(geo_value = location, time_value = epiweek, rate_overall),
     by = c("geo_value", "time_value"),
+    # validate that we have exactly the same set of geo_value x time_value combinations:
     relationship = "one-to-one", unmatched = "error"
   )
 # What's our maximum error vs. the official overall estimates?
@@ -356,13 +383,15 @@ edf_missing %>%
 Now let's fill in the missing data with explicit zeros:
 
 ```{r}
-edf_missing %>%
+edf_missing <- edf_missing %>%
   group_by(geo_value) %>%
   complete(
     time_value = seq.Date(min(time_value), max(time_value), by = "day"),
     fill = list(cases = 0)
   ) %>%
-  ungroup() %>%
+  ungroup()
+
+edf_missing %>%
   print(n = 12)
 ```
 We see that rows have been added for the missing `time_value` 2020-03-04 for

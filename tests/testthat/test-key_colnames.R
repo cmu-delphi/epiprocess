@@ -1,6 +1,4 @@
 test_that("`key_colnames` on non-`epi_df`-like tibbles works as expected", {
-  withr::local_options(list(lifecycle_verbosity = "warning")) # for extra_keys tests
-
   k1k2_tbl <- tibble::tibble(k1 = 1, k2 = 1)
 
   expect_equal(
@@ -39,6 +37,8 @@ test_that("`key_colnames` on non-`epi_df`-like tibbles works as expected", {
 })
 
 test_that("`key_colnames` on `epi_df`s and similar tibbles works as expected", {
+  withr::local_options(list(lifecycle_verbosity = "warning")) # for extra_keys tests
+
   gat_tbl <- tibble::tibble(geo_value = 1, age_group = 1, time_value = 1)
   gat_edf <- as_epi_df(gat_tbl, other_keys = "age_group", as_of = 2)
 
