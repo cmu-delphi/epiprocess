@@ -11,8 +11,9 @@
 #'   key/identifier for data in `x`, dealing respectively with the associated
 #'   geographical region, demographic/strain/other information needed in
 #'   addition to the geographical region to identify individual time series in
-#'   `x`, and time interval during which associated events occurred. Mandatory
-#'   if `x` is a regular `data.frame` or `tibble`. Optional if `x` is an
+#'   `x`, and time interval during which associated events occurred. 
+#' 
+#'   Mandatory if `x` is a regular `data.frame` or `tibble`. Optional if `x` is an
 #'   `epi_df`; the defaults are `"geo_value"`, the `epi_df`'s `other_keys`
 #'   metadata, and `"time_value"`, respectively; if you provide these manually,
 #'   they must match the defaults. (This behavior is to enable consistent and
