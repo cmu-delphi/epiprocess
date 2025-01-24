@@ -17,6 +17,11 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   - `min_waiting_period` now defines a nonstrict inequality instead of a strict
     one. To obtain the old bounds, bump the `min_waiting_period` up to the next
     possible value for your `time_type`.
+- In `key_colnames()`:
+  - On regular (non-`epi_df`) data frames, now requires manual specification of
+    `geo_keys`, `other_keys`, and `time_keys`.
+  - The `extra_keys` argument has been deprecated and replaced with
+    `other_keys`.
 
 ## Improvements
 - `revision_summary()` now supports all `time_type`s.
