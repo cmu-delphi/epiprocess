@@ -376,10 +376,11 @@ removed_by_compactify <- function(df, keys, tolerance) {
 #'   [`dplyr::near`], otherwise it uses equality.  `NA`'s and `NaN`'s are
 #'   considered equal to themselves and each other.
 #' @importFrom dplyr lag if_else near
+#' @importFrom vctrs vec_detect_missing vec_equal
 #' @keywords internal
 is_locf <- function(vec, tolerance) { # nolint: object_usage_linter
-  lag_vec <- dplyr::lag(vec)
-  if (typeof(vec) == "double") {
+  lag_vec <- lag(vec, 1L)
+  if (inherits(vec, "numeric")) { # (no matrix/array/general support)
     res <- if_else(
       !is.na(vec) & !is.na(lag_vec),
       near(vec, lag_vec, tol = tolerance),
@@ -387,11 +388,7 @@ is_locf <- function(vec, tolerance) { # nolint: object_usage_linter
     )
     return(res)
   } else {
-    res <- if_else(
-      !is.na(vec) & !is.na(lag_vec),
-      vec == lag_vec,
-      is.na(vec) & is.na(lag_vec)
-    )
+    res <- vec_equal(vec, lag_vec, na_equal = TRUE)
     return(res)
   }
 }
