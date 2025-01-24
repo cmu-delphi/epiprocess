@@ -43,13 +43,14 @@ geographical region, demographic/strain/other information needed in
 addition to the geographical region to identify individual time series in
 \code{x}, and time interval during which associated events occurred.
 
-Mandatory if \code{x} is a regular \code{data.frame} or \code{tibble}. Optional if \code{x} is an
-\code{epi_df}; the defaults are \code{"geo_value"}, the \code{epi_df}'s \code{other_keys}
+Mandatory if \code{x} is a regular \code{data.frame} or \code{tibble}. Optional if \code{x} is
+an \code{epi_df}; the defaults are \code{"geo_value"}, the \code{epi_df}'s \code{other_keys}
 metadata, and \code{"time_value"}, respectively; if you provide these manually,
 they must match the defaults. (This behavior is to enable consistent and
 sane results when you can't guarantee whether \code{x} is an \code{epi_df} or just a
 \code{tibble}/\code{data.frame}. You don't need to use it if you know that \code{x} is
-definitely an \code{epi_df}.)}
+definitely an \code{epi_df}.) Not accepted when \code{x} is a \code{tsibble} or an
+\code{epi_archive}.}
 }
 \value{
 character vector
