@@ -23,8 +23,8 @@ as_epi_archive(
   geo_type = deprecated(),
   time_type = deprecated(),
   other_keys = character(),
-  compactify = NULL,
-  compactify_abs_tol = .Machine$double.eps^0.5,
+  compactify = TRUE,
+  compactify_abs_tol = 0,
   clobberable_versions_start = NA,
   .versions_end = max_version_with_row_in(x),
   ...,
@@ -73,9 +73,16 @@ value of \code{clobberable_versions_start} does not fully trust these empty
 updates, and assumes that any version \verb{>= max(x$version)} could be
 clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
 
-\item{compactify}{Optional; Boolean. \code{TRUE} will remove some
-redundant rows, \code{FALSE} will not, and missing or \code{NULL} will remove
-redundant rows, but issue a warning. See more information at \code{compactify}.}
+\item{compactify}{Optional; \code{TRUE}, \code{FALSE}, or \code{"message"}. \code{TRUE} will
+remove some redundant rows, \code{FALSE} will not. \code{"message"} is like \code{TRUE}
+but will emit a message if anything was changed. Default is \code{TRUE}. See
+more information below under "Compactification:".}
+
+\item{compactify_abs_tol}{Optional; double. A tolerance level used to detect
+approximate equality for compactification. The default is 0, which
+corresponds to exact equality. Consider using this if your value columns
+undergo tiny nonmeaningful revisions and the archive object with the
+default setting is too large.}
 
 \item{.versions_end}{location based versions_end, used to avoid prefix
 \code{version = issue} from being assigned to \code{versions_end} instead of being
@@ -83,9 +90,6 @@ used to rename columns.}
 
 \item{...}{used for specifying column names, as in \code{\link[dplyr:rename]{dplyr::rename}}. For
 example \code{version = release_date}}
-
-\item{compactify_tol}{double. the tolerance used to detect approximate
-equality for compactification}
 }
 \value{
 An \code{epi_archive} object.

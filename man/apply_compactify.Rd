@@ -4,7 +4,7 @@
 \alias{apply_compactify}
 \title{Given a tibble as would be found in an epi_archive, remove duplicate entries.}
 \usage{
-apply_compactify(df, keys, tolerance = .Machine$double.eps^0.5)
+apply_compactify(df, keys, abs_tol = 0)
 }
 \description{
 Works by shifting all rows except the version, then comparing values to see

@@ -52,14 +52,14 @@ dt <- row_replace(dt, 74, 73, 74) # Not LOCF
 
 dt_true <- as_tibble(as_epi_archive(dt, compactify = TRUE)$DT)
 dt_false <- as_tibble(as_epi_archive(dt, compactify = FALSE)$DT)
-dt_null <- suppressWarnings(as_tibble(as_epi_archive(dt, compactify = NULL)$DT))
+dt_message <- suppressMessages(as_tibble(as_epi_archive(dt, compactify = "message")$DT))
 
-test_that("Warning for LOCF with compactify as NULL", {
-  expect_warning(as_epi_archive(dt, compactify = NULL))
+test_that('Warning for LOCF with compactify as "message"', {
+  expect_message(as_epi_archive(dt, compactify = "message"))
 })
 
 test_that("No warning when there is no LOCF", {
-  expect_warning(as_epi_archive(dt[1:5], compactify = NULL), NA)
+  expect_no_message(as_epi_archive(dt[1:5], compactify = "message"))
 })
 
 test_that("LOCF values are ignored with compactify=FALSE", {
@@ -69,8 +69,8 @@ test_that("LOCF values are ignored with compactify=FALSE", {
 test_that("LOCF values are taken out with compactify=TRUE", {
   dt_test <- as_tibble(as_epi_archive(dt[-c(21, 22, 40), ], compactify = FALSE)$DT)
 
-  expect_identical(dt_true, dt_null)
-  expect_identical(dt_null, dt_test)
+  expect_identical(dt_true, dt_message)
+  expect_identical(dt_message, dt_test)
 })
 
 test_that("as_of produces the same results with compactify=TRUE as with compactify=FALSE", {

@@ -4,12 +4,12 @@
 \alias{is_locf}
 \title{Checks to see if a value in a vector is LOCF}
 \usage{
-is_locf(vec, tolerance)
+is_locf(vec, abs_tol)
 }
 \description{
 LOCF meaning last observation carried forward. lags the vector by 1, then
-compares with itself. For doubles it uses float comparison via
-\code{\link[dplyr:near]{dplyr::near}}, otherwise it uses equality.  \code{NA}'s and \code{NaN}'s are
-considered equal to themselves and each other.
+compares with itself. For doubles it compares whether the absolute
+difference is \verb{<= abs_tol}; otherwise it uses equality. \code{NA}'s and \code{NaN}'s
+are considered equal to themselves and each other.
 }
 \keyword{internal}

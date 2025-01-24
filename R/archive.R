@@ -197,9 +197,15 @@ next_after.Date <- function(x) x + 1L
 #'   that should be considered key variables (in the language of `data.table`)
 #'   apart from "geo_value", "time_value", and "version". Typical examples
 #'   are "age" or more granular geographies.
-#' @param compactify Optional; Boolean. `TRUE` will remove some
-#'   redundant rows, `FALSE` will not, and missing or `NULL` will remove
-#'   redundant rows, but issue a warning. See more information at `compactify`.
+#' @param compactify Optional; `TRUE`, `FALSE`, or `"message"`. `TRUE` will
+#'   remove some redundant rows, `FALSE` will not. `"message"` is like `TRUE`
+#'   but will emit a message if anything was changed. Default is `TRUE`. See
+#'   more information below under "Compactification:".
+#' @param compactify_abs_tol Optional; double. A tolerance level used to detect
+#'   approximate equality for compactification. The default is 0, which
+#'   corresponds to exact equality. Consider using this if your value columns
+#'   undergo tiny nonmeaningful revisions and the archive object with the
+#'   default setting is too large.
 #' @param clobberable_versions_start Optional; `length`-1; either a value of the
 #'   same `class` and `typeof` as `x$version`, or an `NA` of any `class` and
 #'   `typeof`: specifically, either (a) the earliest version that could be
@@ -224,8 +230,6 @@ next_after.Date <- function(x) x + 1L
 #'   value of `clobberable_versions_start` does not fully trust these empty
 #'   updates, and assumes that any version `>= max(x$version)` could be
 #'   clobbered.) If `nrow(x) == 0`, then this argument is mandatory.
-#' @param compactify_tol double. the tolerance used to detect approximate
-#'   equality for compactification
 #' @return An `epi_archive` object.
 #'
 #' @seealso [`epix_as_of`] [`epix_merge`] [`epix_slide`]
@@ -392,42 +396,42 @@ validate_epi_archive <- function(x) {
 #'
 #' @keywords internal
 #' @importFrom dplyr filter
-apply_compactify <- function(df, keys, tolerance = .Machine$double.eps^.5) {
+apply_compactify <- function(df, keys, abs_tol = 0) {
   df %>%
     arrange(!!!keys) %>%
     filter(if_any(
       c(everything(), -version), # all non-version columns
-      ~ !is_locf(., tolerance)
+      ~ !is_locf(., abs_tol)
     ))
 }
 
 #' get the entries that `compactify` would remove
 #' @keywords internal
 #' @importFrom dplyr filter if_all everything
-removed_by_compactify <- function(df, keys, tolerance) {
+removed_by_compactify <- function(df, keys, abs_tol) {
   df %>%
     arrange(!!!keys) %>%
     filter(if_all(
       c(everything(), -version),
-      ~ is_locf(., tolerance)
+      ~ is_locf(., abs_tol)
     )) # nolint: object_usage_linter
 }
 
 #' Checks to see if a value in a vector is LOCF
 #' @description
 #' LOCF meaning last observation carried forward. lags the vector by 1, then
-#'   compares with itself. For doubles it uses float comparison via
-#'   [`dplyr::near`], otherwise it uses equality.  `NA`'s and `NaN`'s are
-#'   considered equal to themselves and each other.
-#' @importFrom dplyr lag if_else near
-#' @importFrom vctrs vec_detect_missing vec_equal
+#'   compares with itself. For doubles it compares whether the absolute
+#'   difference is `<= abs_tol`; otherwise it uses equality. `NA`'s and `NaN`'s
+#'   are considered equal to themselves and each other.
+#' @importFrom dplyr lag if_else
+#' @importFrom vctrs vec_equal
 #' @keywords internal
-is_locf <- function(vec, tolerance) { # nolint: object_usage_linter
+is_locf <- function(vec, abs_tol) { # nolint: object_usage_linter
   lag_vec <- lag(vec, 1L)
   if (inherits(vec, "numeric")) { # (no matrix/array/general support)
     res <- if_else(
       !is.na(vec) & !is.na(lag_vec),
-      near(vec, lag_vec, tol = tolerance),
+      abs(vec - lag_vec) <= abs_tol,
       is.na(vec) & is.na(lag_vec)
     )
     return(res)
@@ -454,8 +458,8 @@ as_epi_archive <- function(
     geo_type = deprecated(),
     time_type = deprecated(),
     other_keys = character(),
-    compactify = NULL,
-    compactify_abs_tol = .Machine$double.eps^0.5,
+    compactify = TRUE,
+    compactify_abs_tol = 0,
     clobberable_versions_start = NA,
     .versions_end = max_version_with_row_in(x), ...,
     versions_end = .versions_end) {
@@ -481,39 +485,41 @@ as_epi_archive <- function(
   ))
 
   # Compactification:
-  assert_logical(compactify, len = 1, any.missing = FALSE, null.ok = TRUE)
+  if (!list(compactify) %in% list(TRUE, FALSE, "message")) {
+    cli_abort('`compactify` must be `TRUE`, `FALSE`, or `"message"`')
+  }
 
   data_table <- result$DT
   key_vars <- key(data_table)
 
   nrow_before_compactify <- nrow(data_table)
   # Runs compactify on data frame
-  if (is.null(compactify) || compactify == TRUE) {
+  if (identical(compactify, TRUE) || identical(compactify, "message")) {
     compactified <- apply_compactify(data_table, key_vars, compactify_abs_tol)
   } else {
     compactified <- data_table
   }
-  # Warns about redundant rows if the number of rows decreased, and we didn't
+  # Messages about redundant rows if the number of rows decreased, and we didn't
   # explicitly say to compactify
-  if (is.null(compactify) && nrow(compactified) < nrow_before_compactify) {
+  if (identical(compactify, "message") && nrow(compactified) < nrow_before_compactify) {
     elim <- removed_by_compactify(data_table, key_vars, compactify_abs_tol)
-    warning_intro <- cli::format_inline(
+    message_intro <- cli::format_inline(
       "Found rows that appear redundant based on
        last (version of each) observation carried forward;
        these rows have been removed to 'compactify' and save space:",
       keep_whitespace = FALSE
     )
-    warning_data <- paste(collapse = "\n", capture.output(print(elim, topn = 3L, nrows = 7L)))
-    warning_outro <- cli::format_inline(
+    message_data <- paste(collapse = "\n", capture.output(print(elim, topn = 3L, nrows = 7L)))
+    message_outro <- cli::format_inline(
       "Built-in `epi_archive` functionality should be unaffected,
        but results may change if you work directly with its fields (such as `DT`).
        See `?as_epi_archive` for details.
-       To silence this warning but keep compactification,
+       To silence this message but keep compactification,
        you can pass `compactify=TRUE` when constructing the archive.",
       keep_whitespace = FALSE
     )
-    warning_message <- paste(sep = "\n", warning_intro, warning_data, warning_outro)
-    rlang::warn(warning_message, class = "epiprocess__compactify_default_removed_rows")
+    message_string <- paste(sep = "\n", message_intro, message_data, message_outro)
+    rlang::inform(message_string, class = "epiprocess__compactify_default_removed_rows")
   }
 
   result$DT <- compactified
