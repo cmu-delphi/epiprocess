@@ -2,16 +2,32 @@
 
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicate PR's.
 
-# epiprocess 0.10
+# epiprocess 0.11
 
 ## Breaking changes
-
+- In `revision_summary()`:
+  - Output now uses the name `lag_near_latest` instead of `time_near_latest`. To
+    migrate, update references to `time_near_latest` to `lag_near_latest`.
+  - `revision_summary(epi_arch)` without specifying the measurement column to
+    analyze in `...` will no longer attempt to guess which one you intended if
+    there are multiple possibilities to choose from (#571). If you attempt a
+    complicated tidyselection that selects zero columns, this is also now an
+    error. If you encounter such errors, manually specify the measurement column
+    in `...`.
+  - `min_waiting_period` now defines a nonstrict inequality instead of a strict
+    one. To obtain the old bounds, bump the `min_waiting_period` up to the next
+    possible value for your `time_type`.
 
 ## Improvements
-
+- `revision_summary()` now supports all `time_type`s.
 
 ## Bug fixes
 
+- Fixed aggregation of age-group-specific rates to overall rates in `epi_df` vignette (#587).
+- Fixed `key_colnames()` omitting some key columns on `epi_archive`s (#565).
+- Fixed `epi_archive` compactification raising an error on certain value column
+  classes such as `"distribution"` (#541); it's now easier to form an archive of
+  forecasts in that format.
 
 ## Cleanup
 
