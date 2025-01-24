@@ -1,3 +1,5 @@
+library(dplyr)
+
 test_that("guess_period works", {
   # Error cases:
   expect_error(guess_period(numeric(0L)), class = "epiprocess__guess_period__not_enough_times")
