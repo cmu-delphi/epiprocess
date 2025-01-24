@@ -243,7 +243,7 @@ revision_summary <- function(epi_arch,
 
     # time_type_unit_pluralizer[[time_type]] is a format string controlled by us
     # and/or downstream devs, so we can paste it onto our format string safely:
-    units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[time_type]]))
+    units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[time_type]])) # nolint: object_usage_linter
     cli_inform("{toTitleCase(units_plural)} until within {within_latest*100}% of the latest value:")
     time_delta_summary(revision_behavior[["lag_near_latest"]], time_type) %>% print()
   }

@@ -271,7 +271,7 @@ time_type_unit_pluralizer <- c(
 #'
 #' @keywords internal
 format_time_delta <- function(x, time_type) {
-  n_steps <- time_delta_to_n_steps(x, time_type)
+  n_steps <- time_delta_to_n_steps(x, time_type) # nolint: object_usage_linter
   # time_type_unit_pluralizer[[time_type]] is a format string controlled by us
   # and/or downstream devs, so we can paste it onto our format string safely:
   pluralize(paste0("{n_steps} ", time_type_unit_pluralizer[[time_type]]))

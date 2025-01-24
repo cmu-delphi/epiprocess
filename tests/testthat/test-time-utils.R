@@ -241,10 +241,12 @@ test_that("difftime_approx_ceiling_time_delta works as expected", {
   ) %>%
     mutate(across(expected_wrapped_friendly_result, purrr::list_flatten)) %>%
     rowwise() %>%
-    mutate(wrapped_friendly_result = as.difftime(x_amount, units = x_units) %>%
-      difftime_approx_ceiling_time_delta(time_type) %>%
-      time_delta_standardize(time_type, format = "friendly") %>%
-      list()) %>%
+    mutate(
+      wrapped_friendly_result = as.difftime(x_amount, units = x_units) %>%
+        difftime_approx_ceiling_time_delta(time_type) %>%
+        time_delta_standardize(time_type, format = "friendly") %>%
+        list()
+    ) %>%
     ungroup()
 
   expect_equal(
