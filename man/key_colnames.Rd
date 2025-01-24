@@ -38,8 +38,9 @@ which variables (if any) should be considered as part of a unique
 key/identifier for data in \code{x}, dealing respectively with the associated
 geographical region, demographic/strain/other information needed in
 addition to the geographical region to identify individual time series in
-\code{x}, and time interval during which associated events occurred. Mandatory
-if \code{x} is a regular \code{data.frame} or \code{tibble}. Optional if \code{x} is an
+\code{x}, and time interval during which associated events occurred.
+
+Mandatory if \code{x} is a regular \code{data.frame} or \code{tibble}. Optional if \code{x} is an
 \code{epi_df}; the defaults are \code{"geo_value"}, the \code{epi_df}'s \code{other_keys}
 metadata, and \code{"time_value"}, respectively; if you provide these manually,
 they must match the defaults. (This behavior is to enable consistent and
