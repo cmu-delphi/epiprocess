@@ -85,7 +85,7 @@ revision_summary <- function(epi_arch,
   arg <- names(eval_select(rlang::expr(c(...)), allow_rename = FALSE, data = epi_arch$DT))
   if (length(arg) == 0) {
     # Choose the first column that's not a key or version
-    arg <- setdiff(names(epi_arch$DT), c(key_colnames(epi_arch), "version"))[[1]]
+    arg <- setdiff(names(epi_arch$DT), key_colnames(epi_arch))[[1]]
   } else if (length(arg) > 1) {
     cli_abort("Not currently implementing more than one column at a time. Run each separately")
   }
@@ -101,7 +101,7 @@ revision_summary <- function(epi_arch,
   #   the max lag
   #
   # revision_tibble
-  keys <- key_colnames(epi_arch)
+  keys <- key_colnames(epi_arch, exclude = "version")
 
   revision_behavior <- epi_arch$DT %>%
     select(all_of(unique(c("geo_value", "time_value", keys, "version", arg))))
