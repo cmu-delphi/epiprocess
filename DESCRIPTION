@@ -1,7 +1,7 @@
 Package: epiprocess
 Type: Package
 Title: Tools for basic signal processing in epidemiology
-Version: 0.10.1
+Version: 0.10.2
 Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", , "lcbrooks+github@andrew.cmu.edu", role = c("aut", "cre")),
@@ -56,6 +56,7 @@ Imports:
     tibble,
     tidyr,
     tidyselect (>= 1.2.0),
+    tools,
     tsibble,
     utils,
     vctrs,
@@ -63,6 +64,7 @@ Imports:
 Suggests:
     devtools,
     epidatr,
+    epipredict,
     here,
     knitr,
     outbreaks,
@@ -76,6 +78,7 @@ Remotes:
     cmu-delphi/delphidocs,
     cmu-delphi/epidatasets,
     cmu-delphi/epidatr,
+    cmu-delphi/epipredict,
     glmgen/genlasso,
     reconverse/outbreaks
 Config/Needs/website: cmu-delphi/delphidocs
@@ -103,5 +106,6 @@ Collate:
     'reexports.R'
     'revision_analysis.R'
     'slide.R'
+    'time-utils.R'
     'utils.R'
     'utils_pipe.R'

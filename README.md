@@ -101,16 +101,17 @@ df
 #> # ℹ 2,802 more rows
 ```
 
-Convert the data to an epi_df object and sort by geo_value and
-time_value. You can work with an `epi_df` like you can with a `{tibble}`
-by using `{dplyr}` verbs
+Convert the data to an `epi_df` object and sort by `geo_value` and
+`time_value`. You can work with an `epi_df` like you can with a
+`{tibble}` by using `{dplyr}` verbs.
 
 ``` r
 edf <- df %>%
   as_epi_df(as_of = as.Date("2024-01-01")) %>%
   arrange_canonical() %>%
   group_by(geo_value) %>%
-  mutate(cases_daily = cases_cumulative - lag(cases_cumulative, default = 0))
+  mutate(cases_daily = cases_cumulative - lag(cases_cumulative, default = 0)) %>%
+  ungroup()
 edf
 #> An `epi_df` object, 2,808 x 4 with metadata:
 #> * geo_type  = state
@@ -118,7 +119,6 @@ edf
 #> * as_of     = 2024-01-01
 #> 
 #> # A tibble: 2,808 × 4
-#> # Groups:   geo_value [4]
 #>   geo_value time_value cases_cumulative cases_daily
 #> * <chr>     <date>                <dbl>       <dbl>
 #> 1 ca        2020-03-01               19          19
@@ -131,11 +131,10 @@ edf
 ```
 
 Compute the 7 day moving average of the confirmed daily cases for each
-geo_value
+`geo_value`
 
 ``` r
 edf <- edf %>%
-  group_by(geo_value) %>%
   epi_slide_mean(cases_daily, .window_size = 7, na.rm = TRUE, .prefix = "smoothed_")
 edf
 #> An `epi_df` object, 2,808 x 5 with metadata:
@@ -144,7 +143,6 @@ edf
 #> * as_of     = 2024-01-01
 #> 
 #> # A tibble: 2,808 × 5
-#> # Groups:   geo_value [4]
 #>   geo_value time_value cases_cumulative cases_daily smoothed_cases_daily
 #> * <chr>     <date>                <dbl>       <dbl>                <dbl>
 #> 1 ca        2020-03-01               19          19                19   
@@ -156,7 +154,7 @@ edf
 #> # ℹ 2,802 more rows
 ```
 
-Autoplot the confirmed daily cases for each geo_value
+Autoplot the confirmed daily cases for each `geo_value`
 
 ``` r
 edf %>%

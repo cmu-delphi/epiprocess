@@ -182,7 +182,7 @@ revision_details %>%
     max_lag = max(max_lag),
     spread = mean(spread),
     rel_spread = mean(rel_spread),
-    time_near_latest = mean(time_near_latest)
+    lag_near_latest = mean(lag_near_latest)
   )
 ```
 

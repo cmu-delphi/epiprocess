@@ -4,30 +4,42 @@
 #' explicit checks that the key actually is unique in any associated data
 #' structures.
 #'
-#' @param x an object, such as an [`epi_df`]
+#' @param x an object, often a data frame or something similar. `{epiprocess}`
+#'   includes implementations for [`epi_df`]s, [`epi_archive`]s,
+#'   [`tsibble::tsibble`]s, and other data frames (including
+#'   [`tibble::tibble`]s); other packages, like `{epipredict}`, can add more.
 #' @param ... additional arguments passed on to methods
-#' @param geo_keys optional character vector; which columns (if any) to consider
-#'   keys specifying the geographical region? Defaults to `"geo_value"` if
-#'   present; must be `"geo_value"` if `x` is an `epi_df`.
-#' @param other_keys character vector; which columns (if any) to consider keys
-#'   specifying demographical or identifying/grouping information besides the
-#'   geographical region and time interval? Mandatory if `x` is a vanilla
-#'   `data.frame` or `tibble`. Optional if `x` is an `epi_df`; default is the
-#'   `epi_df`'s `other_keys`; if you provide `other_keys`, they must match the
-#'   default. (This behavior is to enable consistent and sane results when you
-#'   can't guarantee whether `x` is an `epi_df` or just a
-#'   `tibble`/`data.frame`.)
-#' @param time_keys optional character vector; which columns (if any) to
-#'   consider keys specifying the time interval during which associated events
-#'   occurred? Defaults to `"time_value"` if present; must be `"time_value"` if
-#'   `x` is an `epi_df`.
+#' @param geo_keys,other_keys,time_keys character vectors, sometimes optional;
+#'   which variables (if any) should be considered as part of a unique
+#'   key/identifier for data in `x`, dealing respectively with the associated
+#'   geographical region, demographic/strain/other information needed in
+#'   addition to the geographical region to identify individual time series in
+#'   `x`, and time interval during which associated events occurred.
+#'
+#'   Mandatory if `x` is a regular `data.frame` or `tibble`. Optional if `x` is
+#'   an `epi_df`; the defaults are `"geo_value"`, the `epi_df`'s `other_keys`
+#'   metadata, and `"time_value"`, respectively; if you provide these manually,
+#'   they must match the defaults. (This behavior is to enable consistent and
+#'   sane results when you can't guarantee whether `x` is an `epi_df` or just a
+#'   `tibble`/`data.frame`. You don't need to use it if you know that `x` is
+#'   definitely an `epi_df`.) Not accepted when `x` is a `tsibble` or an
+#'   `epi_archive`.
 #' @param exclude an optional character vector of key column names to exclude
 #'   from the result
 #' @return character vector
 #' @keywords internal
 #' @export
 key_colnames <- function(x, ..., exclude = character()) {
-  UseMethod("key_colnames")
+  provided_args <- rlang::call_args_names(rlang::call_match())
+  if ("extra_keys" %in% provided_args) {
+    lifecycle::deprecate_soft("0.9.6", "key_colnames(extra_keys=)", "key_colnames(other_keys=)")
+    redispatch <- function(..., extra_keys) {
+      key_colnames(..., other_keys = extra_keys)
+    }
+    redispatch(x, ..., exclude = exclude)
+  } else {
+    UseMethod("key_colnames")
+  }
 }
 
 #' @rdname key_colnames
@@ -35,9 +47,9 @@ key_colnames <- function(x, ..., exclude = character()) {
 #' @method key_colnames data.frame
 #' @export
 key_colnames.data.frame <- function(x, ...,
-                                    geo_keys = intersect("geo_value", names(x)),
+                                    geo_keys,
                                     other_keys,
-                                    time_keys = intersect("time_value", names(x)),
+                                    time_keys,
                                     exclude = character()) {
   check_dots_empty0(...)
   assert_character(geo_keys)
@@ -61,7 +73,7 @@ key_colnames.data.frame <- function(x, ...,
 #' @export
 key_colnames.epi_df <- function(x, ...,
                                 geo_keys = "geo_value",
-                                other_keys = NULL,
+                                other_keys = attr(x, "metadata")$other_keys,
                                 time_keys = "time_value",
                                 exclude = character()) {
   check_dots_empty0(...)
@@ -76,20 +88,16 @@ key_colnames.epi_df <- function(x, ...,
     )
   }
   expected_other_keys <- attr(x, "metadata")$other_keys
-  if (is.null(other_keys)) {
-    other_keys <- expected_other_keys
-  } else {
-    if (!identical(other_keys, expected_other_keys)) {
-      cli_abort(c(
-        "The provided `other_keys` argument didn't match the `other_keys` of `x`",
-        "*" = "`other_keys` was {format_chr_with_quotes(other_keys)}",
-        "*" = "`expected_other_keys` was {format_chr_with_quotes(expected_other_keys)}",
-        "i" = "If you know that `x` will always be an `epi_df` and
-               resolve this discrepancy by adjusting the metadata of `x`, you
-               shouldn't have to pass `other_keys =` here anymore,
-               unless you want to continue to perform this check."
-      ), class = "epiprocess__key_colnames__mismatched_other_keys")
-    }
+  if (!identical(other_keys, expected_other_keys)) {
+    cli_abort(c(
+      "The provided `other_keys` argument didn't match the `other_keys` of `x`",
+      "*" = "`other_keys` was {format_chr_with_quotes(other_keys)}",
+      "*" = "`expected_other_keys` was {format_chr_with_quotes(expected_other_keys)}",
+      "i" = "If you know that `x` will always be an `epi_df` and
+             resolve this discrepancy by adjusting the metadata of `x`, you
+             shouldn't have to pass `other_keys =` here anymore,
+             unless you want to continue to perform this check."
+    ), class = "epiprocess__key_colnames__mismatched_other_keys")
   }
   assert_character(exclude)
   setdiff(c("geo_value", other_keys, "time_value"), exclude)
