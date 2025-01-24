@@ -131,7 +131,7 @@ edf
 ```
 
 Compute the 7 day moving average of the confirmed daily cases for each
-`geo_value`:
+`geo_value`
 
 ``` r
 edf <- edf %>%
