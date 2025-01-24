@@ -2,35 +2,62 @@
 % Please edit documentation in R/key_colnames.R
 \name{key_colnames}
 \alias{key_colnames}
-\alias{key_colnames.default}
 \alias{key_colnames.data.frame}
 \alias{key_colnames.epi_df}
+\alias{key_colnames.tbl_ts}
 \alias{key_colnames.epi_archive}
-\title{Grab any keys associated to an epi_df}
+\title{Get names of columns that form a (unique) key associated with an object}
 \usage{
-key_colnames(x, ...)
+key_colnames(x, ..., exclude = character())
 
-\method{key_colnames}{default}(x, ...)
+\method{key_colnames}{data.frame}(x, ..., geo_keys, other_keys, time_keys, exclude = character())
 
-\method{key_colnames}{data.frame}(x, other_keys = character(0L), exclude = character(0L), ...)
+\method{key_colnames}{epi_df}(
+  x,
+  ...,
+  geo_keys = "geo_value",
+  other_keys = attr(x, "metadata")$other_keys,
+  time_keys = "time_value",
+  exclude = character()
+)
 
-\method{key_colnames}{epi_df}(x, exclude = character(0L), ...)
+\method{key_colnames}{tbl_ts}(x, ..., exclude = character())
 
-\method{key_colnames}{epi_archive}(x, exclude = character(0L), ...)
+\method{key_colnames}{epi_archive}(x, ..., exclude = character())
 }
 \arguments{
-\item{x}{a data.frame, tibble, or epi_df}
+\item{x}{an object, often a data frame or something similar. \code{{epiprocess}}
+includes implementations for \code{\link{epi_df}}s, \code{\link{epi_archive}}s,
+\code{\link[tsibble:tsibble]{tsibble::tsibble}}s, and other data frames (including
+\code{\link[tibble:tibble]{tibble::tibble}}s); other packages, like \code{{epipredict}}, can add more.}
 
 \item{...}{additional arguments passed on to methods}
 
-\item{other_keys}{an optional character vector of other keys to include}
+\item{exclude}{an optional character vector of key column names to exclude
+from the result}
 
-\item{exclude}{an optional character vector of keys to exclude}
+\item{geo_keys, other_keys, time_keys}{character vectors, sometimes optional;
+which variables (if any) should be considered as part of a unique
+key/identifier for data in \code{x}, dealing respectively with the associated
+geographical region, demographic/strain/other information needed in
+addition to the geographical region to identify individual time series in
+\code{x}, and time interval during which associated events occurred.
+
+Mandatory if \code{x} is a regular \code{data.frame} or \code{tibble}. Optional if \code{x} is
+an \code{epi_df}; the defaults are \code{"geo_value"}, the \code{epi_df}'s \code{other_keys}
+metadata, and \code{"time_value"}, respectively; if you provide these manually,
+they must match the defaults. (This behavior is to enable consistent and
+sane results when you can't guarantee whether \code{x} is an \code{epi_df} or just a
+\code{tibble}/\code{data.frame}. You don't need to use it if you know that \code{x} is
+definitely an \code{epi_df}.) Not accepted when \code{x} is a \code{tsibble} or an
+\code{epi_archive}.}
 }
 \value{
-If an \code{epi_df}, this returns all "keys". Otherwise \code{NULL}.
+character vector
 }
 \description{
-Grab any keys associated to an epi_df
+This is entirely based on metadata and arguments passed; there are no
+explicit checks that the key actually is unique in any associated data
+structures.
 }
 \keyword{internal}
