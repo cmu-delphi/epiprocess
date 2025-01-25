@@ -140,11 +140,11 @@ revision_summary <- function(epi_arch,
   # revision_tibble
   epikey_names <- key_colnames(epi_arch, exclude = c("time_value", "version"))
   epikeytime_names <- c(epikey_names, "time_value")
-  keys <- c(epikeytime_names, "version")
+  ukey_names <- c(epikeytime_names, "version")
   time_type <- epi_arch$time_type
 
   revision_behavior <- epi_arch$DT %>%
-    select(all_of(unique(c(keys, arg))))
+    select(all_of(unique(c(ukey_names, arg))))
   if (!is.null(min_waiting_period)) {
     last_semistable_time_value <- time_minus_n_steps(
       epi_arch$versions_end,
@@ -165,12 +165,12 @@ revision_summary <- function(epi_arch,
   }
   if (should_compactify) {
     revision_behavior <- revision_behavior %>%
-      apply_compactify(keys, compactify_abs_tol)
+      apply_compactify(ukey_names, compactify_abs_tol)
   }
   revision_behavior <-
     revision_behavior %>%
     mutate(lag = time_minus_time_in_n_steps(version, time_value, time_type)) %>% # nolint: object_usage_linter
-    group_by(across(all_of(epikeytime_names))) %>% # group = versions of one measurement
+    group_by(pick(all_of(epikeytime_names))) %>% # group = versions of one measurement
     summarize(
       n_revisions = dplyr::n() - 1,
       min_lag = min(lag), # nolint: object_usage_linter

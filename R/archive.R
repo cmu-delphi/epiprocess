@@ -394,41 +394,104 @@ validate_epi_archive <- function(x) {
 #'   we don't need to group, since at least one column other than version has
 #'   changed, and so is kept.
 #'
+#' @param updates_df DT of an `epi_archive` or something analogous (though
+#'   potentially unsorted) of another class
+#' @param ukey_names chr; the column names forming a unique key for the
+#'   `updates_df`; "version" must come last. For an `epi_archive`'s `DT`, this
+#'   would be `key(DT)`.
+#' @param abs_tol numeric, >=0; absolute tolerance to use on numeric measurement
+#'   columns when determining whether something can be compactified away; see
+#'   [`is_locf`]
+#'
 #' @keywords internal
-#' @importFrom dplyr filter
-apply_compactify <- function(df, keys, abs_tol = 0) {
-  df %>%
-    arrange(!!!keys) %>%
-    filter(if_any(
-      c(everything(), -version), # all non-version columns
-      ~ !is_locf(., abs_tol)
-    ))
+#' @importFrom data.table is.data.table key
+#' @importFrom dplyr arrange filter
+#' @importFrom vctrs vec_duplicate_any
+apply_compactify <- function(updates_df, ukey_names, abs_tol = 0) {
+  assert_data_frame(updates_df)
+  assert_character(ukey_names)
+  assert_subset(ukey_names, names(updates_df))
+  if (vec_duplicate_any(ukey_names)) {
+    cli_abort('`ukey_names` must not contain duplicates')
+  }
+  if (length(ukey_names) == 0 || ukey_names[[length(ukey_names)]] != "version") {
+    cli_abort('"version" must appear in `ukey_names` and must be last.')
+  }
+  assert_numeric(abs_tol, len = 1, lower = 0)
+
+  if (!is.data.table(updates_df) || !identical(key(updates_df), ukey_names)) {
+    updates_df <- updates_df %>% arrange(!!!ukey_names)
+  }
+  updates_df %>%
+    filter(!update_is_locf(ukey_names, abs_tol))
 }
 
 #' get the entries that `compactify` would remove
 #' @keywords internal
 #' @importFrom dplyr filter if_all everything
-removed_by_compactify <- function(df, keys, abs_tol) {
-  df %>%
-    arrange(!!!keys) %>%
-    filter(if_all(
-      c(everything(), -version),
-      ~ is_locf(., abs_tol)
-    )) # nolint: object_usage_linter
+removed_by_compactify <- function(updates_df, ukey_names, abs_tol) {
+  if (!is.data.table(updates_df) || !identical(key(updates_df), ukey_names)) {
+    updates_df <- updates_df %>% arrange(!!!ukey_names)
+  }
+  updates_df %>%
+    filter(update_is_locf(ukey_names, abs_tol))
+}
+
+#' Internal helper; lgl; which updates are LOCF
+#'
+#' (Not validated:) Must be called inside certain dplyr data masking verbs (e.g.,
+#' `filter` or `mutate`) being run on an `epi_archive`'s `DT` or a data frame
+#' formatted like one.
+#'
+#' @param ukey_names (not validated:) chr; the archive/equivalent
+#'   [`key_colnames`]; must include `"version"`.
+#' @param abs_tol (not validated:) as in [`apply_compactify`]
+#'
+#' @return lgl
+#'
+#' @keywords internal
+update_is_locf <- function(ukey_names, abs_tol) {
+  if_all(
+    all_of(ukey_names) & !"version",
+    ~ is_locf(.x, abs_tol, TRUE)
+  ) &
+    if_all(
+      !all_of(ukey_names), # value/measurement columns
+      ~ is_locf(.x, abs_tol, FALSE)
+    )
 }
 
 #' Checks to see if a value in a vector is LOCF
-#' @description
-#' LOCF meaning last observation carried forward. lags the vector by 1, then
-#'   compares with itself. For doubles it compares whether the absolute
-#'   difference is `<= abs_tol`; otherwise it uses equality. `NA`'s and `NaN`'s
-#'   are considered equal to themselves and each other.
+#' @description LOCF meaning last observation carried forward (to later
+#'   versions). Lags the vector by 1, then compares with itself. If `is_key` is
+#'   `TRUE`, only values that are exactly the same between the lagged and
+#'   original are considered LOCF. If `is_key` is `FALSE` and `vec` is a vector
+#'   of numbers ([`base::is.numeric`]), then approximate equality will be used,
+#'   checking whether the absolute difference between each pair of entries is
+#'   `<= abs_tol`; if `vec` is something else, then exact equality is used
+#'   instead.
+#'
+#' @details
+#'
+#' We include epikey-time columns in LOCF comparisons as part of an optimization
+#' to avoid slower grouped operations while still ensuring that the first
+#' observation for each time series will not be marked as LOCF. We test these
+#' key columns for exact equality to prevent chopping off consecutive
+#' time_values during flat periods when `abs_tol` is high.
+#'
+#' We use exact equality for non-`is.numeric` double/integer columns such as
+#' dates, datetimes, difftimes, `tsibble::yearmonth`s, etc., as these may be
+#' used as part of re-indexing or grouping procedures, and we don't want to
+#' change the number of groups for those operations when we remove LOCF data
+#' during compactification.
+#'
 #' @importFrom dplyr lag if_else
+#' @importFrom rlang is_bare_numeric
 #' @importFrom vctrs vec_equal
 #' @keywords internal
-is_locf <- function(vec, abs_tol) { # nolint: object_usage_linter
-  lag_vec <- lag(vec, 1L)
-  if (inherits(vec, "numeric")) { # (no matrix/array/general support)
+is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
+  lag_vec <- lag(vec)
+  if (is_bare_numeric(vec) && !is_key) {
     res <- if_else(
       !is.na(vec) & !is.na(lag_vec),
       abs(vec - lag_vec) <= abs_tol,

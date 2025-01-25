@@ -53,6 +53,7 @@ dt <- row_replace(dt, 74, 73, 74) # Not LOCF
 dt_true <- as_tibble(as_epi_archive(dt, compactify = TRUE)$DT)
 dt_false <- as_tibble(as_epi_archive(dt, compactify = FALSE)$DT)
 dt_message <- suppressMessages(as_tibble(as_epi_archive(dt, compactify = "message")$DT))
+dt_0 <- as_tibble(as_epi_archive(dt, compactify = TRUE, compactify_abs_tol = 0)$DT)
 
 test_that('Warning for LOCF with compactify as "message"', {
   expect_message(as_epi_archive(dt, compactify = "message"))
@@ -71,6 +72,9 @@ test_that("LOCF values are taken out with compactify=TRUE", {
 
   expect_identical(dt_true, dt_message)
   expect_identical(dt_message, dt_test)
+
+  # Tolerance is nonstrict and tolerance 0 still compactifies:
+  expect_identical(dt_0, dt_test)
 })
 
 test_that("as_of produces the same results with compactify=TRUE as with compactify=FALSE", {
@@ -135,5 +139,50 @@ test_that("compactify works on distributions", {
       as_tibble(),
     forecasts[-8, ] %>%
       rename(time_value = target_end_date, version = forecast_date)
+  )
+})
+
+test_that("Large compactify_abs_tol does not drop edf keys", {
+  # several epikeytimes, each with a single version
+  x <- tibble(
+    geo_value = 1,
+    time_value = 1:5,
+    version = 11:15,
+    value = 1001:1005
+  )
+  # We shouldn't drop epikeytimes:
+  expect_equal(as_tibble(as.data.frame(as_epi_archive(x, compactify_abs_tol = 3)$DT)), x)
+})
+
+test_that("Large compactify_abs_tol does not apply to non-is.numeric columns", {
+  # one epikeytime with many versions:
+  d <- as.Date("2000-01-01")
+  x <- tibble(
+    geo_value = 1,
+    time_value = d + 1,
+    version = d + 11:15,
+    lag = version - time_value, # non-is.numeric
+    value = 1001:1005
+  )
+  expect_equal(as_tibble(as.data.frame(as_epi_archive(x, compactify_abs_tol = 3)$DT)), x)
+})
+
+test_that("Large compactify_abs_tol works on value columns", {
+  # one epikeytime with many versions:
+  d <- as.Date("2000-01-01")
+  x <- tibble(
+    geo_value = 1,
+    time_value = d + 1,
+    version = d + 11:15,
+    value = 1001:1005
+  )
+  expect_equal(
+    as_tibble(as.data.frame(as_epi_archive(x, compactify_abs_tol = 3)$DT)),
+    tibble(
+      geo_value = 1,
+      time_value = d + 1,
+      version = d + 11, # XXX do we want d + c(11,14) instead?
+      value = 1001 # XXX do we want c(1001, 1004) instead?
+    )
   )
 })
