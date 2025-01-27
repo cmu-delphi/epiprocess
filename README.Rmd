@@ -119,7 +119,7 @@ edf
 
 Autoplot the confirmed daily cases for each `geo_value`
 
-```{r}
+```{r, dev='svg'}
 edf %>%
   autoplot(smoothed_cases_daily)
 ```
