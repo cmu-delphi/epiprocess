@@ -5,10 +5,10 @@
 #' vignette](https://cmu-delphi.github.io/epiprocess/articles/growth_rate.html)
 #' for examples.
 #'
+#' @param y Signal values.
 #' @param x Design points corresponding to the signal values `y`. Default is
 #'   `seq_along(y)` (that is, equally-spaced points from 1 to the length of
 #'   `y`).
-#' @param y Signal values.
 #' @param x0 Points at which we should estimate the growth rate. Must be a
 #'   contained in the range of `x` (no extrapolation allowed). Default is `x`.
 #' @param method Either "rel_change", "linear_reg", "smooth_spline", or
