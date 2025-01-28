@@ -11,9 +11,9 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   than before. In order to make `{epiprocess}` installation easier for users
   without a compiler, we have placed `{trendfilter}` in Suggests:; if you want
   to use `method = "trendfilter"` you will need to manually this dependency
-  (e.g., with `remotes::install_github("glmgen/trendfilter")`). The interface for
-  passing arguments to the `"smooth_spline"` and `"trend_filter"` methods has
-  also changed.
+  (e.g., with `remotes::install_github("glmgen/trendfilter")`). The interface
+  for passing arguments to the `"smooth_spline"` and `"trend_filter"` methods
+  has also changed.
 - In `revision_summary()`:
   - Output now uses the name `lag_near_latest` instead of `time_near_latest`. To
     migrate, update references to `time_near_latest` to `lag_near_latest`.

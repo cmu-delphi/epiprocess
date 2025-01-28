@@ -52,8 +52,7 @@
 #'   [trendfilter::trendfilter()], divided by the fitted value of the discrete
 #'   spline at `x0`. This method requires the
 #'   [`{trendfilter}` package](https://github.com/glmgen/trendfilter)
-#'   to be installed (if it isn't, `method = "rel_change"` will be used and a
-#'   warning issued).
+#'   to be installed.
 #'
 #' ## Log Scale
 #'
@@ -139,11 +138,9 @@ growth_rate <- function(
     )
   }
   if (method == "trend_filter" && !requireNamespace("trendfilter", quietly = TRUE)) {
-    method <- "rel_change"
-    cli_warn(c(
+    cli_abort(c(
       "The {.pkg trendfilter} package must be installed to use this option.",
-      i = "It is available at {.url https://github.com/glmgen/trendfilter}.",
-      i = 'The computation will proceed using `method = "rel_change"` instead.'
+      i = "It is available at {.url https://github.com/glmgen/trendfilter}."
     ))
   }
 
