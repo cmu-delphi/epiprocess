@@ -231,7 +231,7 @@ stable than the estimates from local relative changes and linear regressions.
 The smoothing spline growth rate estimates are based on the default settings in
 `stats::smooth.spline()`, and appear severely under-regularized here. Any of the
 arguments to `stats::smooth.spline()` can be customized by passing them as
-additional arguments to `growth_rate_global_params()`; similarly, we can
+additional arguments to `growth_rate_params()`; similarly, we can
 also use additional arguments to customize the settings in the underlying trend
 filtering functions `trendfilter::trendfilter()`, `trendfilter::cv_trendfilter()`, and
 the documentation for `growth_rate()` gives the full details.

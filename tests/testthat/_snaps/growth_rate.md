@@ -1,17 +1,17 @@
 # global param constructor errors when required
 
     Code
-      growth_rate_global_params(df = -5)
+      growth_rate_params(df = -5)
     Condition
-      Error in `growth_rate_global_params()`:
+      Error in `growth_rate_params()`:
       ! Assertion on 'df' failed: Element 1 is not >= 0.
 
 ---
 
     Code
-      growth_rate_global_params(nlambda = 5:8)
+      growth_rate_params(nlambda = 5:8)
     Condition
-      Error in `growth_rate_global_params()`:
+      Error in `growth_rate_params()`:
       ! Assertion on 'nlambda' failed: Must have length 1.
 
 # new setup args and warnings are as expected
@@ -45,7 +45,7 @@
 ---
 
     Code
-      growth_rate(y = 1:20, method = "smooth_spline", params = growth_rate_global_params(
+      growth_rate(y = 1:20, method = "smooth_spline", params = growth_rate_params(
         lambda = 1:20))
     Condition
       Error in `growth_rate()`:

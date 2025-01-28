@@ -12,7 +12,7 @@ growth_rate(
   h = 7,
   log_scale = FALSE,
   na_rm = FALSE,
-  params = growth_rate_global_params()
+  params = growth_rate_params()
 )
 }
 \arguments{
@@ -42,7 +42,7 @@ on the log scale? See details for an explanation. Default is \code{FALSE}.}
 is \code{FALSE}.}
 
 \item{params}{Additional arguments to pass to the method used to estimate the
-derivative. This should be created with \code{growth_rate_global_params()}.}
+derivative. This should be created with \code{growth_rate_params()}.}
 }
 \value{
 Vector of growth rate estimates at the specified points \code{x0}.

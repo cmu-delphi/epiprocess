@@ -24,7 +24,7 @@
 #' @param na_rm Should missing values be removed before the computation? Default
 #'   is `FALSE`.
 #' @param params Additional arguments to pass to the method used to estimate the
-#'   derivative. This should be created with `growth_rate_global_params()`.
+#'   derivative. This should be created with `growth_rate_params()`.
 #' @return Vector of growth rate estimates at the specified points `x0`.
 #'
 #' @details The growth rate of a function f defined over a continuously-valued
@@ -122,7 +122,7 @@ growth_rate <- function(
     y, x = seq_along(y), x0 = x,
     method = c("rel_change", "linear_reg", "smooth_spline", "trend_filter"),
     h = 7, log_scale = FALSE, na_rm = FALSE,
-    params = growth_rate_global_params()) {
+    params = growth_rate_params()) {
   # Check x, y, x0
   if (length(x) != length(y)) cli_abort("`x` and `y` must have the same length.")
   method <- rlang::arg_match(method)
@@ -277,7 +277,7 @@ growth_rate <- function(
   }
 }
 
-#' Optional parameters for global growth rate methods
+#' Optional parameters for growth rate methods
 #'
 #' Construct an object containing non-standard arguments for [growth_rate()].
 #'
@@ -305,7 +305,7 @@ growth_rate <- function(
 #' @return A list of parameter configurations.
 #' @importFrom checkmate assert_number
 #' @export
-growth_rate_global_params <- function(
+growth_rate_params <- function(
     df = NULL,
     lambda = NULL,
     cv = FALSE,
