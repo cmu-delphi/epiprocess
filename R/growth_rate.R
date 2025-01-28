@@ -260,7 +260,7 @@ growth_rate <- function(
           nlambda = params$nlambda, lambda_max = params$lambda_max,
           lambda_min = params$lambda_min, lambda_min_ratio = params$lambda_min_ratio
         )
-        single_lambda <- length(obj$lambda == 1L)
+        single_lambda <- length(obj$lambda) == 1L
         lam <- ifelse(single_lambda, obj$lambda, obj$lambda[which.min(abs(params$df - obj$dof))])
         f <- stats::predict(obj, newx = x0, lambda = lam) * sdy
       }
