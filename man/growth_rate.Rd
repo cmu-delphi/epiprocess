@@ -111,8 +111,8 @@ arguments can be specified via \code{params} for the underlying estimation
 function. These additional arguments are
 passed to \code{\link[stats:smooth.spline]{stats::smooth.spline()}}, \code{\link[trendfilter:trendfilter]{trendfilter::trendfilter()}}, or
 \code{\link[trendfilter:cv_trendfilter]{trendfilter::cv_trendfilter()}}. The defaults are exactly
-as specified in those functions, except when the arguments are shared
-between these. These cases are as follows:
+as specified in those functions, except when those defaults conflict
+among these functions. These cases are as follows:
 \itemize{
 \item \code{df}: desired effective degrees of freedom. For "smooth_spline", this must be numeric (or \code{NULL}) and will
 be passed along to the underlying function. For "trend_filter", if
@@ -128,7 +128,7 @@ For "trend_filter", this is allowed to also be a vector, as long as either
 \item \code{cv}: should cross-validation be used to choose an effective degrees of
 freedom for the fit? The default is \code{FALSE} to match \code{\link[stats:smooth.spline]{stats::smooth.spline()}}.
 In that case, as in that function, GCV is used instead.
-For :trend_filter", this will be coerced to \code{TRUE} if neither
+For "trend_filter", this will be coerced to \code{TRUE} if neither
 \code{df} nor \code{lambda} are specified (the default).
 Note that passing both \code{df} and a scalar \code{lambda} will always be an error.
 }

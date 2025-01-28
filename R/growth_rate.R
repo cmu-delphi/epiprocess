@@ -83,8 +83,8 @@
 #'   function. These additional arguments are
 #'   passed to [stats::smooth.spline()], [trendfilter::trendfilter()], or
 #'   [trendfilter::cv_trendfilter()]. The defaults are exactly
-#'   as specified in those functions, except when the arguments are shared
-#'   between these. These cases are as follows:
+#'   as specified in those functions, except when those defaults conflict
+#'   among these functions. These cases are as follows:
 #'
 #' * `df`: desired effective degrees of freedom. For "smooth_spline", this must be numeric (or `NULL`) and will
 #'   be passed along to the underlying function. For "trend_filter", if
@@ -100,7 +100,7 @@
 #' * `cv`: should cross-validation be used to choose an effective degrees of
 #'   freedom for the fit? The default is `FALSE` to match [stats::smooth.spline()].
 #'   In that case, as in that function, GCV is used instead.
-#'   For :trend_filter", this will be coerced to `TRUE` if neither
+#'   For "trend_filter", this will be coerced to `TRUE` if neither
 #'   `df` nor `lambda` are specified (the default).
 #'   Note that passing both `df` and a scalar `lambda` will always be an error.
 #'
