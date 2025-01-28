@@ -412,7 +412,7 @@ apply_compactify <- function(updates_df, ukey_names, abs_tol = 0) {
   assert_character(ukey_names)
   assert_subset(ukey_names, names(updates_df))
   if (vec_duplicate_any(ukey_names)) {
-    cli_abort('`ukey_names` must not contain duplicates')
+    cli_abort("`ukey_names` must not contain duplicates")
   }
   if (length(ukey_names) == 0 || ukey_names[[length(ukey_names)]] != "version") {
     cli_abort('"version" must appear in `ukey_names` and must be last.')

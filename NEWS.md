@@ -32,9 +32,18 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
     `geo_keys`, `other_keys`, and `time_keys`.
   - The `extra_keys` argument has been deprecated and replaced with
     `other_keys`.
+- The compactification tolerance argument has been renamed to
+  `compactify_abs_tol` or `abs_tol`, depending on the function; now defines a
+  nonstrict tolerances; and defaults to 0 (requiring exact matches in order to
+  compactify). This argument has been added to `as_epi_archive()` and
+  `epix_merge()` and removed (along with all compactification options) from
+  `new_epi_archive()`.
+- `validate_epi_archive()` now follows the validator convention of operating on
+  an "unvalidated" `epi_archive` (from `new_epi_archive`) rather than arguments.
 
 ## Improvements
 - `revision_summary()` now supports all `time_type`s.
+- The compactification tolerance setting now works with integer-type columns.
 
 ## Bug fixes
 
@@ -43,6 +52,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - Fixed `epi_archive` compactification raising an error on certain value column
   classes such as `"distribution"` (#541); it's now easier to form an archive of
   forecasts in that format.
+- Fixed large compactification tolerances potentially removing all versions of
+  some observations in certain cases when activity was flat.
 
 ## Cleanup
 
