@@ -78,8 +78,7 @@ filtering (a discrete spline) fit to \code{x} and \code{y}, via
 \code{\link[trendfilter:trendfilter]{trendfilter::trendfilter()}}, divided by the fitted value of the discrete
 spline at \code{x0}. This method requires the
 \href{https://github.com/glmgen/trendfilter}{\code{{trendfilter}} package}
-to be installed (if it isn't, \code{method = "rel_change"} will be used and a
-warning issued).
+to be installed.
 }
 \subsection{Log Scale}{
 
