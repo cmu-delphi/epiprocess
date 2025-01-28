@@ -127,11 +127,10 @@ growth_rate <- function(
   if (length(x) != length(y)) cli_abort("`x` and `y` must have the same length.")
   method <- rlang::arg_match(method)
   assert_class(params, "growth_rate_params")
-  if (any(is.na(x)) || any(is.na(x0))) {
+  if (anyNA(x) || anyNA(x0)) {
     cli_abort("Neither `x` nor `x0` may contain `NA`s.")
   }
-  dups <- duplicated(x)
-  if (any(dups)) {
+  if (vctrs::vec_duplicate_any(x)) {
     cli_abort(
       "`x` contains duplicate values. (If being run on a
         column in an `epi_df`, did you group by relevant key variables?)"
