@@ -151,7 +151,6 @@ growth_rate <- function(
   x <- x[o]
   y <- y[o]
   n <- length(y)
-  x0 <- sort(x0)
 
   # Convert to log(y) if we need to
   y <- as.numeric(y)
