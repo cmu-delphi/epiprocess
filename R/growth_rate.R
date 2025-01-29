@@ -249,7 +249,7 @@ growth_rate <- function(
         )
         lam <- params$df
         which_lambda <- paste0("lambda_", lam)
-        f <- stats::predict(obj, newx = x0, which_lambda = which_lambda) * sdy
+        f <- stats::predict(obj, newx = x0, which_lambda = which_lambda)
       } else {
         obj <- trendfilter::trendfilter(
           y, x,
