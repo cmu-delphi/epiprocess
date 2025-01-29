@@ -240,8 +240,6 @@ growth_rate <- function(
       }
     } else { # Trend filtering
       params <- parse_trendfilter_params(params)
-      sdy <- stats::sd(y) # speeds computation significantly
-      y <- y / sdy
       if (params$cv) {
         obj <- trendfilter::cv_trendfilter(
           y, x,
@@ -262,7 +260,7 @@ growth_rate <- function(
         )
         single_lambda <- length(obj$lambda) == 1L
         lam <- ifelse(single_lambda, obj$lambda, obj$lambda[which.min(abs(params$df - obj$dof))])
-        f <- stats::predict(obj, newx = x0, lambda = lam) * sdy
+        f <- stats::predict(obj, newx = x0, lambda = lam)
       }
 
       d <- diff(f) / diff(x0)
