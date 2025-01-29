@@ -9,8 +9,8 @@ format_time_delta(x, time_type)
 \description{
 This is meant to address the following:
 \itemize{
-\item glue::glue("{as.difftime(1, units = 'days')}") is "1"
-\item glue::glue("{format(as.difftime(1, units = 'days'))}") is "1 days"
+\item \code{glue::glue("{as.difftime(1, units = 'days')}")} is "1"
+\item \code{glue::glue("{format(as.difftime(1, units = 'days'))}")} is "1 days"
 \item time deltas for yearmonths and integers don't have units attached at all
 }
 }

@@ -62,6 +62,7 @@ Imports:
     waldo
 Suggests:
     devtools,
+    distributional,
     epidatr,
     epipredict,
     here,
