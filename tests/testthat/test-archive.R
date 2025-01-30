@@ -54,8 +54,8 @@ dumb_ex <- data.frame(
   value = c(1, 1),
   version = as.Date(c("2020-01-01", "2020-01-02"))
 )
-test_that("new_epi_archive correctly detects and warns about compactification", {
-  expect_snapshot(res <- dumb_ex %>% as_epi_archive(), cnd_class = TRUE)
+test_that("as_epi_archive default compactification (no longer messages/warns)", {
+  expect_snapshot(res <- dumb_ex %>% as_epi_archive())
 })
 
 test_that("other_keys can only contain names of the data.frame columns", {

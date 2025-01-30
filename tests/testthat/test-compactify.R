@@ -77,6 +77,16 @@ test_that("LOCF values are taken out with compactify=TRUE", {
   expect_identical(dt_0, dt_test)
 })
 
+test_that("apply_compactify yields compatible results with tibbles and archive DTs", {
+  via_ea_compactified_tbl <- as_tibble(as.data.frame(as_epi_archive(dt)$DT))
+
+  tbl <- as_tibble(as.data.frame(dt))
+  ea_key_names <- key(dt)
+
+  expect_equal(apply_compactify(tbl, ea_key_names), via_ea_compactified_tbl)
+  expect_equal(apply_compactify(arrange(tbl, version), ea_key_names), via_ea_compactified_tbl)
+})
+
 test_that("as_of produces the same results with compactify=TRUE as with compactify=FALSE", {
   ea_true <- as_epi_archive(dt, compactify = TRUE)
   ea_false <- as_epi_archive(dt, compactify = FALSE)
