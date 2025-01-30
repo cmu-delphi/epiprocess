@@ -264,6 +264,7 @@ epix_fill_through_version <- function(x, fill_versions_end, how = c("na", "locf"
 #'
 #' @param compactify Optional; `TRUE` (default), `FALSE`, or `"message"`; should the
 #'   result be compactified? See `as_epi_archive()` for details.
+#' @param compactify_abs_tol As in [`as_epi_archive()`].
 #' @details
 #' When merging archives, unless the archives have identical data release
 #' patterns, we often have to handle the situation when one signal has a more
