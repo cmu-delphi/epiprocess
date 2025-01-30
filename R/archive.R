@@ -420,7 +420,7 @@ apply_compactify <- function(updates_df, ukey_names, abs_tol = 0) {
   assert_numeric(abs_tol, len = 1, lower = 0)
 
   if (!is.data.table(updates_df) || !identical(key(updates_df), ukey_names)) {
-    updates_df <- updates_df %>% arrange(!!!ukey_names)
+    updates_df <- updates_df %>% arrange(pick(all_of(ukey_names)))
   }
   updates_df %>%
     filter(!update_is_locf(ukey_names, abs_tol))
