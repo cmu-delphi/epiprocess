@@ -403,10 +403,11 @@ validate_epi_archive <- function(x) {
 #'   columns when determining whether something can be compactified away; see
 #'   [`is_locf`]
 #'
-#' @keywords internal
 #' @importFrom data.table is.data.table key
 #' @importFrom dplyr arrange filter
 #' @importFrom vctrs vec_duplicate_any
+#'
+#' @keywords internal
 apply_compactify <- function(updates_df, ukey_names, abs_tol = 0) {
   assert_data_frame(updates_df)
   assert_character(ukey_names)
@@ -422,8 +423,7 @@ apply_compactify <- function(updates_df, ukey_names, abs_tol = 0) {
   if (!is.data.table(updates_df) || !identical(key(updates_df), ukey_names)) {
     updates_df <- updates_df %>% arrange(pick(all_of(ukey_names)))
   }
-  updates_df %>%
-    filter(!update_is_locf(ukey_names, abs_tol))
+  updates_df[!update_is_locf(updates_df, ukey_names, abs_tol), ]
 }
 
 #' get the entries that `compactify` would remove
@@ -433,8 +433,7 @@ removed_by_compactify <- function(updates_df, ukey_names, abs_tol) {
   if (!is.data.table(updates_df) || !identical(key(updates_df), ukey_names)) {
     updates_df <- updates_df %>% arrange(!!!ukey_names)
   }
-  updates_df %>%
-    filter(update_is_locf(ukey_names, abs_tol))
+  updates_df[update_is_locf(updates_df, ukey_names, abs_tol), ]
 }
 
 #' Internal helper; lgl; which updates are LOCF
@@ -450,15 +449,18 @@ removed_by_compactify <- function(updates_df, ukey_names, abs_tol) {
 #' @return lgl
 #'
 #' @keywords internal
-update_is_locf <- function(ukey_names, abs_tol) {
-  if_all(
-    all_of(ukey_names) & !"version",
-    ~ is_locf(.x, abs_tol, TRUE)
-  ) &
-    if_all(
-      !all_of(ukey_names), # value/measurement columns
-      ~ is_locf(.x, abs_tol, FALSE)
-    )
+update_is_locf <- function(updates_df, ukey_names, abs_tol) {
+  # Use as.list to get a shallow "copy" in case of data.table, so that column
+  # selection does not copy the column contents. Don't leak these column aliases
+  # or it will break data.table ownership model.
+  updates_col_refs <- as.list(updates_df)
+
+  all_names <- names(updates_df)
+  ekt_names <- ukey_names[ukey_names != "version"]
+  val_names <- all_names[!all_names %in% ukey_names]
+
+  Reduce(`&`, lapply(updates_col_refs[ekt_names], is_locf, abs_tol, TRUE)) &
+    Reduce(`&`, lapply(updates_col_refs[val_names], is_locf, abs_tol, FALSE))
 }
 
 #' Checks to see if a value in a vector is LOCF

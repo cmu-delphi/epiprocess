@@ -4,7 +4,7 @@
 \alias{update_is_locf}
 \title{Internal helper; lgl; which updates are LOCF}
 \usage{
-update_is_locf(ukey_names, abs_tol)
+update_is_locf(updates_df, ukey_names, abs_tol)
 }
 \arguments{
 \item{ukey_names}{(not validated:) chr; the archive/equivalent
