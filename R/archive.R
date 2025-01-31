@@ -442,6 +442,7 @@ removed_by_compactify <- function(updates_df, ukey_names, abs_tol) {
 #' `filter` or `mutate`) being run on an `epi_archive`'s `DT` or a data frame
 #' formatted like one.
 #'
+#' @param arranged_updates_df an arranged update data frame like an `epi_archive` `DT`
 #' @param ukey_names (not validated:) chr; the archive/equivalent
 #'   [`key_colnames`]; must include `"version"`.
 #' @param abs_tol (not validated:) as in [`apply_compactify`]
@@ -449,13 +450,13 @@ removed_by_compactify <- function(updates_df, ukey_names, abs_tol) {
 #' @return lgl
 #'
 #' @keywords internal
-update_is_locf <- function(updates_df, ukey_names, abs_tol) {
+update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol) {
   # Use as.list to get a shallow "copy" in case of data.table, so that column
   # selection does not copy the column contents. Don't leak these column aliases
   # or it will break data.table ownership model.
-  updates_col_refs <- as.list(updates_df)
+  updates_col_refs <- as.list(arranged_updates_df)
 
-  all_names <- names(updates_df)
+  all_names <- names(arranged_updates_df)
   ekt_names <- ukey_names[ukey_names != "version"]
   val_names <- all_names[!all_names %in% ukey_names]
 

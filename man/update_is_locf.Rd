@@ -4,9 +4,11 @@
 \alias{update_is_locf}
 \title{Internal helper; lgl; which updates are LOCF}
 \usage{
-update_is_locf(updates_df, ukey_names, abs_tol)
+update_is_locf(arranged_updates_df, ukey_names, abs_tol)
 }
 \arguments{
+\item{arranged_updates_df}{an arranged update data frame like an \code{epi_archive} \code{DT}}
+
 \item{ukey_names}{(not validated:) chr; the archive/equivalent
 \code{\link{key_colnames}}; must include \code{"version"}.}
 
