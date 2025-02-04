@@ -1,27 +1,38 @@
 #' Convert to tibble
 #'
-#' Converts an `epi_df` object into a tibble, dropping metadata and any
-#' grouping.
+#' Converts an `epi_df` object into a tibble, dropping metadata, any
+#' grouping, and any unrelated classes and attributes.
 #'
 #' Advanced: if you are working with a third-party package that uses
 #' `as_tibble()` on `epi_df`s but you actually want them to remain `epi_df`s,
 #' use `attr(your_epi_df, "decay_to_tibble") <- FALSE` beforehand.
 #'
 #' @param x an `epi_df`
-#' @inheritParams tibble::as_tibble
-#' @importFrom tibble as_tibble
+#' @param ... if present, forwarded to [`tibble::as_tibble`]
+#' @importFrom tibble as_tibble new_tibble
+#' @importFrom rlang dots_n
+#' @importFrom vctrs vec_data vec_size
 #' @export
 as_tibble.epi_df <- function(x, ...) {
   # Note that some versions of `tsibble` overwrite `as_tibble.grouped_df`, which
-  # also impacts grouped `epi_df`s don't rely on `NextMethod()`. Destructure
-  # first instead.
-  destructured <- tibble::as_tibble(vctrs::vec_data(x), ...)
+  # also impacts grouped `epi_df`s, so don't rely on `NextMethod()`. Destructure
+  # and redispatch instead.
+  destructured <- vec_data(x) # -> data.frame, dropping extra attrs
+  tbl <- if (dots_n(...) == 0 &&
+    is.null(pkgconfig::get_config("tibble::rownames"))) {
+    # perf: new_tibble instead of as_tibble.data.frame which performs
+    # extra checks whose defaults should be redundant here:
+    new_tibble(destructured)
+    # (^ We don't need to provide nrow= as we have >0 columns.)
+  } else {
+    as_tibble(destructured, ...)
+  }
   if (attr(x, "decay_to_tibble") %||% TRUE) {
-    destructured
+    tbl
   } else {
     # We specially requested via attr not to decay epi_df-ness but to drop any
-    # grouping.
-    reclass(destructured, attr(x, "metadata"))
+    # grouping. (Miscellaneous attrs are also dropped.)
+    reclass(tbl, attr(x, "metadata"))
   }
 }
 
