@@ -494,12 +494,14 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol) {
 #' @keywords internal
 is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
   lag_vec <- lag(vec)
-  if (is_bare_numeric(vec) && !is_key) {
-    res <- if_else(
+  if (is.vector(vec, mode = "numeric") && !is_key) {
+    # (integer or double vector, no class (& no dims); maybe names, which we'll
+    # ignore like `vec_equal`); not a key column
+    res <- unname(if_else(
       !is.na(vec) & !is.na(lag_vec),
       abs(vec - lag_vec) <= abs_tol,
       is.na(vec) & is.na(lag_vec)
-    )
+    ))
     return(res)
   } else {
     res <- vec_equal(vec, lag_vec, na_equal = TRUE)
