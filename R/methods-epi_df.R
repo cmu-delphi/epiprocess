@@ -162,7 +162,30 @@ dplyr_reconstruct.epi_df <- function(data, template) {
   # keep any grouping that has been applied:
   res <- NextMethod()
 
-  col_names <- names(res)
+  reconstruct_light_edf(res, template)
+}
+
+#' Like `dplyr_reconstruct.epi_df` but not recomputing any grouping
+#'
+#' In the move to our current not-quite-proper/effective "implementation" of
+#' [`dplyr::dplyr_extending`] for `epi_df`s, we moved a lot of checks in
+#' `dplyr_reconstruct` and used it instead of [`reclass()`] in various
+#' operations to prevent operations from outputting invalid metadata/classes,
+#' instead of more careful tailored and relevant checks. However, this actually
+#' introduced extra overhead due to `dplyr_reconstruct.epi_df()` passing off to
+#' `dplyr_reconstruct.grouped_df()` when grouped, which assumes that it will
+#' need to / should for safety recompute the groups, even when it'd be safe for
+#' it not to do so. In many operations, we're using `NextMethod()` to dispatch
+#' to `grouped_df` behavior if needed, and it should output something with valid
+#' groupings.
+#'
+#' This function serves the original purpose of performing `epi_df`-centric
+#' checks rather than just throwing on potentially-incorrect metadata like
+#' `reclass()`, but without unnecessary `dplyr_reconstruct()` delegation.
+#'
+#' @keywords internal
+reconstruct_light_edf <- function(data, template) {
+  col_names <- names(data)
 
   # Duplicate columns, cli_abort
   dup_col_names <- col_names[duplicated(col_names)]
@@ -180,13 +203,13 @@ dplyr_reconstruct.epi_df <- function(data, template) {
   if (not_epi_df) {
     # If we're calling on an `epi_df` from one of our own functions, we need to
     # decay to a non-`epi_df` result. If `dplyr` is calling, `x` is a tibble,
-    # `res` is not an `epi_df` yet (but might, e.g., be a `grouped_df`), and we
+    # `data` is not an `epi_df` yet (but might, e.g., be a `grouped_df`), and we
     # simply need to skip adding the metadata & class. Current `decay_epi_df`
     # should work in both cases.
-    return(decay_epi_df(res))
+    return(decay_epi_df(data))
   }
 
-  res <- reclass(res, attr(template, "metadata"))
+  data <- reclass(data, attr(template, "metadata"))
 
   # XXX we may want verify the `geo_type` and `time_type` here. If it's
   # significant overhead, we may also want to keep this less strict version
@@ -194,9 +217,9 @@ dplyr_reconstruct.epi_df <- function(data, template) {
 
   # Amend additional metadata if some other_keys cols are dropped in the subset
   old_other_keys <- attr(template, "metadata")$other_keys
-  attr(res, "metadata")$other_keys <- old_other_keys[old_other_keys %in% col_names]
+  attr(data, "metadata")$other_keys <- old_other_keys[old_other_keys %in% col_names]
 
-  res
+  data
 }
 
 #' @export
@@ -207,19 +230,19 @@ dplyr_reconstruct.epi_df <- function(data, template) {
     return(res)
   }
 
-  dplyr::dplyr_reconstruct(res, x)
+  reconstruct_light_edf(res, x)
 }
 
 #' @importFrom dplyr dplyr_col_modify
 #' @export
 dplyr_col_modify.epi_df <- function(data, cols) {
-  dplyr::dplyr_reconstruct(NextMethod(), data)
+  reconstruct_light_edf(NextMethod(), data)
 }
 
 #' @importFrom dplyr dplyr_row_slice
 #' @export
 dplyr_row_slice.epi_df <- function(data, i, ...) {
-  dplyr::dplyr_reconstruct(NextMethod(), data)
+  reconstruct_light_edf(NextMethod(), data)
 }
 
 #' @export
@@ -233,7 +256,7 @@ dplyr_row_slice.epi_df <- function(data, i, ...) {
     new_metadata[["other_keys"]] <- new_other_keys
   }
   result <- reclass(NextMethod(), new_metadata)
-  dplyr::dplyr_reconstruct(result, result)
+  reconstruct_light_edf(result, result)
 }
 
 #' @method group_by epi_df
@@ -262,7 +285,7 @@ ungroup.epi_df <- function(x, ...) {
 #' @param .keep Boolean; see [`dplyr::group_modify`]
 #' @export
 group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
-  dplyr::dplyr_reconstruct(NextMethod(), .data)
+  reconstruct_light_edf(NextMethod(), .data)
 }
 
 #' "Complete" an `epi_df`, adding missing rows and/or replacing `NA`s
@@ -342,7 +365,7 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 #'   )
 #' @export
 complete.epi_df <- function(data, ..., fill = list(), explicit = TRUE) {
-  result <- dplyr::dplyr_reconstruct(NextMethod(), data)
+  result <- reconstruct_light_edf(NextMethod(), data)
   if ("time_value" %in% names(rlang::call_match(dots_expand = FALSE)[["..."]])) {
     attr(result, "metadata")$time_type <- guess_time_type(result$time_value)
   }
@@ -354,7 +377,7 @@ complete.epi_df <- function(data, ..., fill = list(), explicit = TRUE) {
 #' @param data an `epi_df`
 #' @export
 unnest.epi_df <- function(data, ...) {
-  dplyr::dplyr_reconstruct(NextMethod(), data)
+  reconstruct_light_edf(NextMethod(), data)
 }
 
 # Simple reclass function
