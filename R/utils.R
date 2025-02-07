@@ -1038,7 +1038,7 @@ check_ukey_unique <- function(x, ukey_names, end_cli_message = character()) {
     TRUE
   } else {
     # Fast check, slow error message.
-    arranged_ukeys <- arrange(x[ukey_names], across(all_of(ukey_names)))
+    arranged_ukeys <- vec_sort(x[ukey_names])
     if (!any(vec_equal(arranged_ukeys[-1L, ], arranged_ukeys[-nrow(arranged_ukeys), ]))) {
       TRUE
     } else {

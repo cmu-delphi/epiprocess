@@ -20,6 +20,7 @@
 #' @importFrom data.table key
 #' @importFrom data.table setkeyv
 #' @importFrom dplyr arrange
+#' @importFrom dplyr grouped_df
 #' @importFrom dplyr is_grouped_df
 #' @importFrom dplyr select
 #' @importFrom lifecycle deprecated
@@ -28,6 +29,9 @@
 #' @importFrom tools toTitleCase
 #' @importFrom vctrs vec_data
 #' @importFrom vctrs vec_equal
+#' @importFrom vctrs vec_order
+#' @importFrom vctrs vec_recycle_common
+#' @importFrom vctrs vec_sort
 ## usethis namespace: end
 NULL
 

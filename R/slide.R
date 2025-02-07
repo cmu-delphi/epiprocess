@@ -310,14 +310,13 @@ epi_slide <- function(
     .keep = TRUE
   ) %>%
     bind_rows() %>%
-    filter(.real) %>%
-    select(-.real) %>%
+    `[`(.$.real, names(.) != ".real") %>%
     arrange_col_canonical() %>%
     group_by(!!!.x_orig_groups)
 
   # If every group in epi_slide_one_group takes the
   # length(available_ref_time_values) == 0 branch then we end up here.
-  if (ncol(result) == ncol(.x %>% select(-.real))) {
+  if (ncol(result) == ncol(.x[names(.x) != ".real"])) {
     cli_abort(
       "epi_slide: no new columns were created. This can happen if every group has no available ref_time_values.
       This is likely a mistake in your data, in the slide computation, or in the ref_time_values argument.",
@@ -346,16 +345,17 @@ epi_slide_one_group <- function(
     .data_group,
     dplyr::bind_cols(
       .group_key,
-      tibble(
+      new_tibble(vec_recycle_common(
         time_value = c(
           missing_times,
           .date_seq_list$pad_early_dates,
           .date_seq_list$pad_late_dates
-        ), .real = FALSE
-      )
+        ),
+        .real = FALSE
+      ))
     )
   ) %>%
-    arrange(.data$time_value)
+    `[`(vec_order(.$time_value), )
 
   # If the data group does not contain any of the reference time values, return
   # the original .data_group without slide columns and let bind_rows at the end
@@ -901,9 +901,12 @@ epi_slide_opt <- function(
     # first `before` and last `after` elements.
     .data_group <- bind_rows(
       .data_group,
-      tibble(time_value = c(missing_times, pad_early_dates, pad_late_dates), .real = FALSE)
+      new_tibble(vec_recycle_common(
+        time_value = c(missing_times, pad_early_dates, pad_late_dates),
+        .real = FALSE
+      ))
     ) %>%
-      arrange(.data$time_value)
+      `[`(vec_order(.$time_value), )
 
     if (f_from_package == "data.table") {
       # Grouping should ensure that we don't have duplicate time values.
@@ -955,10 +958,10 @@ epi_slide_opt <- function(
     .data_group
   }
 
-  result <- mutate(.x, .real = TRUE) %>%
+  result <- .x %>%
+    `[[<-`(".real", value = TRUE) %>%
     group_modify(slide_one_grp, ..., .keep = FALSE) %>%
-    filter(.data$.real) %>%
-    select(-.real) %>%
+    `[`(.$.real, names(.) != ".real") %>%
     arrange_col_canonical() %>%
     group_by(!!!.x_orig_groups)
 

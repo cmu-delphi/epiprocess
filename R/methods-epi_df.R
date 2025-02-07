@@ -457,7 +457,7 @@ arrange_row_canonical.default <- function(x, ...) {
 arrange_row_canonical.epi_df <- function(x, ...) {
   rlang::check_dots_empty()
   cols <- key_colnames(x)
-  x %>% dplyr::arrange(dplyr::across(dplyr::all_of(cols)))
+  x[vctrs::vec_order(x[cols]), ]
 }
 
 arrange_col_canonical <- function(x, ...) {
@@ -476,8 +476,10 @@ arrange_col_canonical.default <- function(x, ...) {
 #' @export
 arrange_col_canonical.epi_df <- function(x, ...) {
   rlang::check_dots_empty()
-  cols <- key_colnames(x)
-  x %>% dplyr::relocate(dplyr::all_of(cols), .before = 1)
+  all_names <- names(x)
+  key_names <- key_colnames(x)
+  val_names <- all_names[!all_names %in% key_names]
+  x[c(key_names, val_names)]
 }
 
 #' Group an `epi_df` object by default keys
@@ -487,7 +489,7 @@ arrange_col_canonical.epi_df <- function(x, ...) {
 #' @export
 group_epi_df <- function(x, exclude = character()) {
   cols <- key_colnames(x, exclude = exclude)
-  x %>% group_by(across(all_of(cols)))
+  reclass(grouped_df(x, cols), attr(x, "metadata"))
 }
 
 #' Aggregate an `epi_df` object
