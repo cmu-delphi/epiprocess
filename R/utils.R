@@ -1038,12 +1038,11 @@ check_ukey_unique <- function(x, ukey_names, end_cli_message = character()) {
     TRUE
   } else {
     # Fast check, slow error message.
-    arranged_ukeys <- vec_sort(x[ukey_names])
-    if (!any(vec_equal(arranged_ukeys[-1L, ], arranged_ukeys[-nrow(arranged_ukeys), ]))) {
+    if (!vctrs::vec_duplicate_any(x[ukey_names])) {
       TRUE
     } else {
       bad_data <- x %>%
-        group_by(across(all_of(ukey_names))) %>%
+        group_by(pick(all_of(ukey_names))) %>%
         filter(dplyr::n() > 1) %>%
         ungroup()
       lines <- c(
