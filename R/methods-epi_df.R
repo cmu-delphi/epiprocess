@@ -233,6 +233,27 @@ reconstruct_light_edf <- function(data, template) {
   reconstruct_light_edf(res, x)
 }
 
+#' @export
+`[<-.epi_df` <- function(x, ...) {
+  res <- NextMethod()
+
+  reconstruct_light_edf(res, x)
+}
+
+#' @export
+`[[<-.epi_df` <- function(x, ...) {
+  res <- NextMethod()
+
+  reconstruct_light_edf(res, x)
+}
+
+#' @export
+`$<-.epi_df` <- function(x, ...) {
+  res <- NextMethod()
+
+  reconstruct_light_edf(res, x)
+}
+
 #' @importFrom dplyr dplyr_col_modify
 #' @export
 dplyr_col_modify.epi_df <- function(data, cols) {
