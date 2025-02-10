@@ -65,7 +65,7 @@
 #'     determined the time window for the current computation.
 #'
 #' @importFrom lubridate days weeks
-#' @importFrom dplyr bind_rows group_map group_vars filter select
+#' @importFrom dplyr group_map group_vars filter select
 #' @importFrom rlang .data .env !! enquos sym env missing_arg
 #' @export
 #' @seealso [`epi_slide_opt`] for optimized slide functions
@@ -309,7 +309,9 @@ epi_slide <- function(
     ...,
     .keep = TRUE
   ) %>%
-    bind_rows() %>%
+    {
+      vec_rbind(!!!.)
+    } %>%
     `[`(.$.real, names(.) != ".real") %>%
     arrange_col_canonical() %>%
     group_by(!!!.x_orig_groups)
@@ -341,9 +343,9 @@ epi_slide_one_group <- function(
   # time values, padding on the left and right as needed.
   all_dates <- .date_seq_list$all_dates
   missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
-  .data_group <- bind_rows(
-    .data_group,
-    dplyr::bind_cols(
+  .data_group <- reclass(vec_rbind(
+    .data_group, # (epi_df; epi_slide uses .keep = TRUE)
+    vec_cbind( # (tibble -> vec_rbind produces tibble)
       .group_key,
       new_tibble(vec_recycle_common(
         time_value = c(
@@ -354,17 +356,19 @@ epi_slide_one_group <- function(
         .real = FALSE
       ))
     )
-  ) %>%
+    # we should be adding time values of the same time_type (and shouldn't be
+    # introducing duplicate epikeytime values); we can reclass without checks:
+  ), attr(.data_group, "metadata")) %>%
     `[`(vec_order(.$time_value), )
 
   # If the data group does not contain any of the reference time values, return
-  # the original .data_group without slide columns and let bind_rows at the end
+  # the original .data_group without slide columns and let vec_rbind at the end
   # of group_modify handle filling the empty data frame with NA values.
   if (length(available_ref_time_values) == 0L) {
     if (.all_rows) {
       return(.data_group)
     }
-    return(.data_group %>% filter(FALSE))
+    return(.data_group[0, ])
   }
 
   # Get stateful function that tracks ref_time_value per group and sends it to
@@ -609,7 +613,7 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #' - `{.f_abbr}` will be a character vector containing a short abbreviation
 #'    for `.f` factoring in the input column type(s) for `.col_names`
 #'
-#' @importFrom dplyr bind_rows mutate %>% arrange tibble select all_of
+#' @importFrom dplyr mutate %>% arrange tibble select all_of
 #' @importFrom rlang enquo expr_label caller_arg quo_get_env
 #' @importFrom tidyselect eval_select
 #' @importFrom glue glue
@@ -899,8 +903,8 @@ epi_slide_opt <- function(
     # `frollmean` requires a full window to compute a result. Add NA values
     # to beginning and end of the group so that we get results for the
     # first `before` and last `after` elements.
-    .data_group <- bind_rows(
-      .data_group,
+    .data_group <- vec_rbind(
+      .data_group, # (tibble; epi_slide_opt uses .keep = FALSE)
       new_tibble(vec_recycle_common(
         time_value = c(missing_times, pad_early_dates, pad_late_dates),
         .real = FALSE
