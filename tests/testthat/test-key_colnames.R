@@ -85,11 +85,19 @@ test_that("`key_colnames` on `epi_df`s and similar tibbles works as expected", {
 
   # We can exclude keys:
   expect_equal(
-    key_colnames(gat_tbl, geo_keys = "geo_value", other_keys = "age_group", time_keys = "time_value", exclude = c("time_value")),
+    key_colnames(
+      gat_tbl,
+      geo_keys = "geo_value", other_keys = "age_group", time_keys = "time_value",
+      exclude = c("time_value")
+    ),
     c("geo_value", "age_group")
   )
   expect_equal(
-    key_colnames(gat_tbl, geo_keys = "geo_value", other_keys = "age_group", time_keys = "time_value", exclude = c("geo_value", "time_value")),
+    key_colnames(
+      gat_tbl,
+      geo_keys = "geo_value", other_keys = "age_group", time_keys = "time_value",
+      exclude = c("geo_value", "time_value")
+    ),
     c("age_group")
   )
   expect_equal(
@@ -103,14 +111,22 @@ test_that("`key_colnames` on `epi_df`s and similar tibbles works as expected", {
 
   # Using `extra_keys =` is soft-deprecated and routes to `other_keys =`:
   expect_warning(
-    gat_tbl_extra_keys_res <- key_colnames(gat_tbl, geo_keys = "geo_value", time_keys = "time_value", extra_keys = "age_group"),
+    gat_tbl_extra_keys_res <- key_colnames(
+      gat_tbl,
+      geo_keys = "geo_value", time_keys = "time_value",
+      extra_keys = "age_group"
+    ),
     class = "lifecycle_warning_deprecated"
   )
   expect_equal(gat_tbl_extra_keys_res, c("geo_value", "age_group", "time_value"))
 
   expect_warning(
     gat_edf_extra_keys_exclude_res <-
-      key_colnames(gat_edf, extra_keys = "age_group", exclude = c("geo_value", "time_value")),
+      key_colnames(
+        gat_edf,
+        extra_keys = "age_group",
+        exclude = c("geo_value", "time_value")
+      ),
     class = "lifecycle_warning_deprecated"
   )
   expect_equal(gat_edf_extra_keys_exclude_res, c("age_group"))
