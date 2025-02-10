@@ -342,7 +342,7 @@ epi_slide_one_group <- function(
   # Unpack the date_seq_list argument and complete the data group with missing
   # time values, padding on the left and right as needed.
   all_dates <- .date_seq_list$all_dates
-  missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
+  missing_times <- all_dates[!vec_in(all_dates, .data_group$time_value)]
   .data_group <- reclass(vec_rbind(
     .data_group, # (epi_df; epi_slide uses .keep = TRUE)
     vec_cbind( # (tibble -> vec_rbind produces tibble)
@@ -440,10 +440,10 @@ epi_slide_one_group <- function(
   # If all rows, then pad slide values with NAs, else filter down data group
   if (.all_rows) {
     orig_values <- slide_values
-    slide_values <- vctrs::vec_rep(vctrs::vec_cast(NA, orig_values), nrow(.data_group))
-    vctrs::vec_slice(slide_values, .data_group$time_value %in% available_ref_time_values) <- orig_values
+    slide_values <- vec_rep(vec_cast(NA, orig_values), nrow(.data_group))
+    vec_slice(slide_values, vec_in(.data_group$time_value, available_ref_time_values)) <- orig_values
   } else {
-    .data_group <- .data_group %>% filter(time_value %in% available_ref_time_values)
+    .data_group <- .data_group[vec_in(.data_group$time_value, available_ref_time_values), ]
   }
 
   # To label the result, we will parallel some code from `epix_slide`, though
@@ -899,7 +899,7 @@ epi_slide_opt <- function(
   pad_late_dates <- date_seq_list$pad_late_dates
 
   slide_one_grp <- function(.data_group, .group_key, ...) {
-    missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
+    missing_times <- all_dates[!vec_in(all_dates, .data_group$time_value)]
     # `frollmean` requires a full window to compute a result. Add NA values
     # to beginning and end of the group so that we get results for the
     # first `before` and last `after` elements.
@@ -970,9 +970,9 @@ epi_slide_opt <- function(
     group_by(!!!.x_orig_groups)
 
   if (.all_rows) {
-    result[!(result$time_value %in% ref_time_values), result_col_names] <- NA
+    result[!vec_in(result$time_value, ref_time_values), result_col_names] <- NA
   } else if (user_provided_rtvs) {
-    result <- result[result$time_value %in% ref_time_values, ]
+    result <- result[vec_in(result$time_value, ref_time_values), ]
   }
 
   if (!is_epi_df(result)) {
