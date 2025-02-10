@@ -31,7 +31,7 @@
 #'   not in [`key_colnames`]) in the archive, it will automatically select it.
 #'   If supplied, `...` must select exactly one column.
 #' @param drop_nas bool, drop any `NA` values from the archive? After dropping
-#'   `NA`'s compactify is run again if `should_compactify` is `TRUE` to make
+#'   `NA`'s compactify is run again if `compactify` is `TRUE` to make
 #'   sure there are no duplicate values from occasions when the signal is
 #'   revised to `NA`, and then back to its immediately-preceding value.
 #' @param print_inform bool, determines whether to print summary information, or
@@ -59,13 +59,13 @@
 #' @param rel_spread_threshold length-1 double between 0 and 1, for the printed
 #'   summary, the relative spread fraction used to characterize revisions which
 #'   don't actually change very much. Default is .1, or 10% of the final value
-#' @param should_compactify bool. If `TRUE`, we will compactify after the signal
+#' @param compactify bool. If `TRUE`, we will compactify after the signal
 #'   requested in `...` has been selected on its own and the `drop_nas` step.
 #'   This helps, for example, to give similar results when called on
 #'   [merged][epix_merge] and single-signal archives, since merged archives
 #'   record an update when any of the other signals change, not just the
 #'   requested signal. The default is `TRUE`.
-#' @param compactify_abs_tol length-1 double, used if `should_compactify` is `TRUE`, it
+#' @param compactify_abs_tol length-1 double, used if `compactify` is `TRUE`, it
 #'   determines the threshold for when two doubles are considered identical.
 #'
 #' @details Applies to `epi_archive`s with `time_type`s of `"day"`, `"week"`,
@@ -98,7 +98,7 @@ revision_summary <- function(epi_arch,
                              few_revisions = 3,
                              abs_spread_threshold = NULL,
                              rel_spread_threshold = 0.1,
-                             should_compactify = TRUE,
+                             compactify = TRUE,
                              compactify_abs_tol = 0) {
   assert_class(epi_arch, "epi_archive")
   # if the column to summarize isn't specified, use the only one if there is only one
@@ -163,7 +163,7 @@ revision_summary <- function(epi_arch,
   } else {
     revision_behavior <- epi_arch$DT
   }
-  if (should_compactify) {
+  if (compactify) {
     revision_behavior <- revision_behavior %>%
       apply_compactify(ukey_names, compactify_abs_tol)
   }

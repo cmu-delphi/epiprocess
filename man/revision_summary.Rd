@@ -17,7 +17,7 @@ revision_summary(
   few_revisions = 3,
   abs_spread_threshold = NULL,
   rel_spread_threshold = 0.1,
-  should_compactify = TRUE,
+  compactify = TRUE,
   compactify_abs_tol = 0
 )
 }
@@ -30,7 +30,7 @@ not in \code{\link{key_colnames}}) in the archive, it will automatically select 
 If supplied, \code{...} must select exactly one column.}
 
 \item{drop_nas}{bool, drop any \code{NA} values from the archive? After dropping
-\code{NA}'s compactify is run again if \code{should_compactify} is \code{TRUE} to make
+\code{NA}'s compactify is run again if \code{compactify} is \code{TRUE} to make
 sure there are no duplicate values from occasions when the signal is
 revised to \code{NA}, and then back to its immediately-preceding value.}
 
@@ -66,14 +66,14 @@ appropriate for the scale of the dataset.}
 summary, the relative spread fraction used to characterize revisions which
 don't actually change very much. Default is .1, or 10\% of the final value}
 
-\item{should_compactify}{bool. If \code{TRUE}, we will compactify after the signal
+\item{compactify}{bool. If \code{TRUE}, we will compactify after the signal
 requested in \code{...} has been selected on its own and the \code{drop_nas} step.
 This helps, for example, to give similar results when called on
 \link[=epix_merge]{merged} and single-signal archives, since merged archives
 record an update when any of the other signals change, not just the
 requested signal. The default is \code{TRUE}.}
 
-\item{compactify_abs_tol}{length-1 double, used if \code{should_compactify} is \code{TRUE}, it
+\item{compactify_abs_tol}{length-1 double, used if \code{compactify} is \code{TRUE}, it
 determines the threshold for when two doubles are considered identical.}
 }
 \description{

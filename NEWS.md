@@ -16,6 +16,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   you want to use `method = "trendfilter"` you will need to manually install
   this dependency (e.g., with `remotes::install_github("glmgen/trendfilter")`).
 - In `revision_summary()`:
+  - The `should_compactify` argument is now called `compactify`. To migrate,
+    change any calls with `should_compactfiy =` to `compactify =`.
   - Output now uses the name `lag_near_latest` instead of `time_near_latest`. To
     migrate, update references to `time_near_latest` to `lag_near_latest`.
   - `revision_summary(epi_arch)` without specifying the measurement column to

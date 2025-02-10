@@ -431,7 +431,7 @@ apply_compactify <- function(updates_df, ukey_names, abs_tol = 0) {
 #' @importFrom dplyr filter if_all everything
 removed_by_compactify <- function(updates_df, ukey_names, abs_tol) {
   if (!is.data.table(updates_df) || !identical(key(updates_df), ukey_names)) {
-    updates_df <- updates_df %>% arrange(!!!ukey_names)
+    updates_df <- updates_df %>% arrange(pick(all_of(ukey_names)))
   }
   updates_df[update_is_locf(updates_df, ukey_names, abs_tol), ]
 }
