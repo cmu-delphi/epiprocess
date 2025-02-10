@@ -23,7 +23,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.10.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.10.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -162,8 +162,8 @@ spline at <code>x0</code>.</li>
 <li>“trend_filter”: uses the estimated derivative at <code>x0</code>
 from polynomial trend filtering (a discrete spline) fit to
 <code>x</code> and <code>y</code>, via
-<code><a href="https://rdrr.io/pkg/genlasso/man/trendfilter.html" class="external-link">genlasso::trendfilter()</a></code>, divided by the fitted value of the
-discrete spline at <code>x0</code>.</li>
+<code><a href="https://rdrr.io/pkg/trendfilter/man/trendfilter.html" class="external-link">trendfilter::trendfilter()</a></code>, divided by the fitted value of
+the discrete spline at <code>x0</code>.</li>
 </ul>
 <p>The default in <code><a href="../reference/growth_rate.html">growth_rate()</a></code> is <code>x0 = x</code>, so
 that it returns an estimate of the growth rate at each underlying design
@@ -181,7 +181,7 @@ adjacent weeks. We can wrap <code><a href="../reference/growth_rate.html">growth
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cases_gr1 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">time_value</span>, <span class="va">cases</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cases_gr1 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="co">#&gt; An `epi_df` object, 10 x 4 with metadata:</span></span>
@@ -257,7 +257,7 @@ troublesome spikes:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cases_gr2 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">time_value</span>, <span class="va">cases</span>, method <span class="op">=</span> <span class="st">"linear_reg"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cases_gr2 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">cases</span>, method <span class="op">=</span> <span class="st">"linear_reg"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span></span>
@@ -285,17 +285,20 @@ through “smooth_spline” or “trend_filter”. The latter is going to be
 generally more computationally expensive, but it is also able to adapt
 better to the local level of smoothness. (The apparent efficiency is
 actually compounded by the particular implementations and default
-settings for these methods: “trend_filter” is based on a full solution
-path algorithm provided in the <code>genlasso</code> package, and
-performs cross-validation by default in order to pick the level of
+settings for these methods: “trend_filter” is based on a sequence of
+solutions provided in the <code>trendfilter</code> package, and performs
+cross-validation by default in order to pick the level of
 regularization; read the documentation for <code><a href="../reference/growth_rate.html">growth_rate()</a></code>
-more details.)</p>
+for more details.)</p>
+<p>Note: The <code>trendfilter</code> package is not automatically
+installed with <code>epiprocess</code>. To install it from GitHub, you
+can use <code>pak::pkg_install("glmgen/trendfilter")</code>.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    cases_gr3 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">time_value</span>, <span class="va">cases</span>, method <span class="op">=</span> <span class="st">"smooth_spline"</span><span class="op">)</span>,</span>
-<span>    cases_gr4 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">time_value</span>, <span class="va">cases</span>, method <span class="op">=</span> <span class="st">"trend_filter"</span><span class="op">)</span></span>
+<span>    cases_gr3 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">cases</span>, method <span class="op">=</span> <span class="st">"smooth_spline"</span><span class="op">)</span>,</span>
+<span>    cases_gr4 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">cases</span>, method <span class="op">=</span> <span class="st">"trend_filter"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -324,11 +327,11 @@ and linear regressions.</p>
 settings in <code><a href="https://rdrr.io/r/stats/smooth.spline.html" class="external-link">stats::smooth.spline()</a></code>, and appear severely
 under-regularized here. Any of the arguments to
 <code><a href="https://rdrr.io/r/stats/smooth.spline.html" class="external-link">stats::smooth.spline()</a></code> can be customized by passing them as
-additional arguments <code>...</code> in the call to
-<code><a href="../reference/growth_rate.html">growth_rate()</a></code>; similarly, we can also use additional
-arguments to customize the settings in the underlying trend filtering
-functions <code><a href="https://rdrr.io/pkg/genlasso/man/trendfilter.html" class="external-link">genlasso::trendfilter()</a></code>,
-<code><a href="https://rdrr.io/pkg/genlasso/man/cv.trendfilter.html" class="external-link">genlasso::cv.trendfilter()</a></code>, and the documentation for
+additional arguments to <code><a href="../reference/growth_rate_params.html">growth_rate_params()</a></code>; similarly, we
+can also use additional arguments to customize the settings in the
+underlying trend filtering functions
+<code><a href="https://rdrr.io/pkg/trendfilter/man/trendfilter.html" class="external-link">trendfilter::trendfilter()</a></code>,
+<code><a href="https://rdrr.io/pkg/trendfilter/man/cv_trendfilter.html" class="external-link">trendfilter::cv_trendfilter()</a></code>, and the documentation for
 <code><a href="../reference/growth_rate.html">growth_rate()</a></code> gives the full details.</p>
 </div>
 <div class="section level2">
@@ -350,22 +353,10 @@ argument <code>log_scale = TRUE</code> in the call to
 <code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    cases_gr5 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">time_value</span>, <span class="va">cases</span>,</span>
-<span>      method <span class="op">=</span> <span class="st">"rel_change"</span>,</span>
-<span>      log_scale <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    cases_gr6 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">time_value</span>, <span class="va">cases</span>,</span>
-<span>      method <span class="op">=</span> <span class="st">"linear_reg"</span>,</span>
-<span>      log_scale <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    cases_gr7 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">time_value</span>, <span class="va">cases</span>,</span>
-<span>      method <span class="op">=</span> <span class="st">"smooth_spline"</span>,</span>
-<span>      log_scale <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    cases_gr8 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">time_value</span>, <span class="va">cases</span>,</span>
-<span>      method <span class="op">=</span> <span class="st">"trend_filter"</span>,</span>
-<span>      log_scale <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span>    <span class="op">)</span></span>
+<span>    cases_gr5 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">cases</span>, method <span class="op">=</span> <span class="st">"rel_change"</span>, log_scale <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    cases_gr6 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">cases</span>, method <span class="op">=</span> <span class="st">"linear_reg"</span>, log_scale <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    cases_gr7 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">cases</span>, method <span class="op">=</span> <span class="st">"smooth_spline"</span>, log_scale <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    cases_gr8 <span class="op">=</span> <span class="fu"><a href="../reference/growth_rate.html">growth_rate</a></span><span class="op">(</span><span class="va">cases</span>, method <span class="op">=</span> <span class="st">"trend_filter"</span>, log_scale <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.10.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.10.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -47,7 +47,9 @@
 <h2 class="pkg-version" data-toc-text="0.11" id="epiprocess-011">epiprocess 0.11<a class="anchor" aria-label="anchor" href="#epiprocess-011"></a></h2>
 <div class="section level3">
 <h3 id="breaking-changes-0-11">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-11"></a></h3>
-<ul><li>In <code><a href="../reference/revision_summary.html">revision_summary()</a></code>:
+<ul><li>
+<code><a href="../reference/growth_rate.html">growth_rate()</a></code> argument order and names have changed. You will need to rewrite <code>growth_rate(x, y)</code> as <code>growth_rate(y, x)</code>. The interface for passing arguments to the <code>"smooth_spline"</code> and <code>"trend_filter"</code> methods has also changed. Finally, <code><a href="../reference/growth_rate.html">growth_rate()</a></code> with <code>method = "trendfilter"</code> now uses the <code>{trendfilter}</code> package rather than <a href="https://github.com/ryantibs/genlasso" class="external-link">genlasso</a>; results for this method will be different than before. In order to make <a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a> installation easier for users without a compiler, we have placed <code>{trendfilter}</code> in Suggests:; if you want to use <code>method = "trendfilter"</code> you will need to manually install this dependency (e.g., with <code>remotes::install_github("glmgen/trendfilter")</code>).</li>
+<li>In <code><a href="../reference/revision_summary.html">revision_summary()</a></code>:
 <ul><li>Output now uses the name <code>lag_near_latest</code> instead of <code>time_near_latest</code>. To migrate, update references to <code>time_near_latest</code> to <code>lag_near_latest</code>.</li>
 <li>
 <code>revision_summary(epi_arch)</code> without specifying the measurement column to analyze in <code>...</code> will no longer attempt to guess which one you intended if there are multiple possibilities to choose from (<a href="https://github.com/cmu-delphi/epiprocess/issues571" class="external-link">#571</a>). If you attempt a complicated tidyselection that selects zero columns, this is also now an error. If you encounter such errors, manually specify the measurement column in <code>...</code>.</li>
