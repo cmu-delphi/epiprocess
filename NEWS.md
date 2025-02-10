@@ -5,6 +5,16 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 # epiprocess 0.11
 
 ## Breaking changes
+
+- `growth_rate()` argument order and names have changed. You will need to
+  rewrite `growth_rate(x, y)` as `growth_rate(y, x)`. The interface for passing
+  arguments to the `"smooth_spline"` and `"trend_filter"` methods has also
+  changed. Finally, `growth_rate()` with `method = "trendfilter"` now uses the
+  `{trendfilter}` package rather than `{genlasso}`; results for this method will
+  be different than before. In order to make `{epiprocess}` installation easier
+  for users without a compiler, we have placed `{trendfilter}` in Suggests:; if
+  you want to use `method = "trendfilter"` you will need to manually install
+  this dependency (e.g., with `remotes::install_github("glmgen/trendfilter")`).
 - In `revision_summary()`:
   - Output now uses the name `lag_near_latest` instead of `time_near_latest`. To
     migrate, update references to `time_near_latest` to `lag_near_latest`.
