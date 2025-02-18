@@ -132,8 +132,8 @@ the window afterwards at 150.</p></li>
 <span>  few_revisions <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  abs_spread_threshold <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  rel_spread_threshold <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span>  compactify_tol <span class="op">=</span> <span class="va">.Machine</span><span class="op">$</span><span class="va">double.eps</span><span class="op">^</span><span class="fl">0.5</span>,</span>
-<span>  should_compactify <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  compactify <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  compactify_abs_tol <span class="op">=</span> <span class="fl">0</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -154,7 +154,7 @@ If supplied, <code>...</code> must select exactly one column.</p></dd>
 
 <dt id="arg-drop-nas">drop_nas<a class="anchor" aria-label="anchor" href="#arg-drop-nas"></a></dt>
 <dd><p>bool, drop any <code>NA</code> values from the archive? After dropping
-<code>NA</code>'s compactify is run again if <code>should_compactify</code> is <code>TRUE</code> to make
+<code>NA</code>'s compactify is run again if <code>compactify</code> is <code>TRUE</code> to make
 sure there are no duplicate values from occasions when the signal is
 revised to <code>NA</code>, and then back to its immediately-preceding value.</p></dd>
 
@@ -205,18 +205,18 @@ summary, the relative spread fraction used to characterize revisions which
 don't actually change very much. Default is .1, or 10% of the final value</p></dd>
 
 
-<dt id="arg-compactify-tol">compactify_tol<a class="anchor" aria-label="anchor" href="#arg-compactify-tol"></a></dt>
-<dd><p>length-1 double, used if <code>should_compactify</code> is <code>TRUE</code>, it
-determines the threshold for when two doubles are considered identical.</p></dd>
-
-
-<dt id="arg-should-compactify">should_compactify<a class="anchor" aria-label="anchor" href="#arg-should-compactify"></a></dt>
+<dt id="arg-compactify">compactify<a class="anchor" aria-label="anchor" href="#arg-compactify"></a></dt>
 <dd><p>bool. If <code>TRUE</code>, we will compactify after the signal
 requested in <code>...</code> has been selected on its own and the <code>drop_nas</code> step.
 This helps, for example, to give similar results when called on
 <a href="epix_merge.html">merged</a> and single-signal archives, since merged archives
 record an update when any of the other signals change, not just the
 requested signal. The default is <code>TRUE</code>.</p></dd>
+
+
+<dt id="arg-compactify-abs-tol">compactify_abs_tol<a class="anchor" aria-label="anchor" href="#arg-compactify-abs-tol"></a></dt>
+<dd><p>length-1 double, used if <code>compactify</code> is <code>TRUE</code>, it
+determines the threshold for when two doubles are considered identical.</p></dd>
 
 </dl></div>
     <div class="section level2">

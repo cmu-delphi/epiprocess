@@ -155,7 +155,7 @@ format.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dv_archive</span> <span class="op">&lt;-</span> <span class="va">dv</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">version</span>, <span class="va">percent_cli</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span>compactify <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">dv_archive</span></span>
 <span><span class="co">#&gt; → An `epi_archive` object, with metadata:</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-06-01 / 2021-11-30</span></span>
@@ -344,9 +344,9 @@ population).</p>
 <span>  issues <span class="op">=</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20211201</span><span class="op">)</span></span>
 <span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, version <span class="op">=</span> <span class="va">issue</span>, case_rate_7d_av <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span>compactify <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">dv_cases_archive</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_merge.html">epix_merge</a></span><span class="op">(</span><span class="va">dv_archive</span>, <span class="va">y</span>, sync <span class="op">=</span> <span class="st">"locf"</span>, compactify <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">dv_cases_archive</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_merge.html">epix_merge</a></span><span class="op">(</span><span class="va">dv_archive</span>, <span class="va">y</span>, sync <span class="op">=</span> <span class="st">"locf"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">dv_cases_archive</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">#&gt; → An `epi_archive` object, with metadata:</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-06-01 / 2021-11-30</span></span>
