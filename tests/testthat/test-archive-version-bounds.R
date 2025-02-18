@@ -110,14 +110,14 @@ test_that("archive version bounds args work as intended", {
       clobberable_versions_start = NA,
       versions_end = measurement_date
     ),
-    regexp = "`x` contained updates for a later version"
+    regexp = "`x\\$DT` contained updates for a later version"
   )
   expect_error(
     as_epi_archive(update_tbl,
       clobberable_versions_start = measurement_date + 6L,
       versions_end = measurement_date + 5L
     ),
-    regexp = "`clobberable_versions_start`.*indicated that there were later observed versions"
+    regexp = "`x\\$clobberable_versions_start`.*indicating that there were later observed versions"
   )
   expect_error(as_epi_archive(update_tbl, versions_end = NA),
     class = "epiprocess__version_bound_na_with_na_not_okay"

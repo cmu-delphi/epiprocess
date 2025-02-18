@@ -16,6 +16,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   you want to use `method = "trendfilter"` you will need to manually install
   this dependency (e.g., with `remotes::install_github("glmgen/trendfilter")`).
 - In `revision_summary()`:
+  - The `should_compactify` argument is now called `compactify`. To migrate,
+    change any calls with `should_compactfiy =` to `compactify =`.
   - Output now uses the name `lag_near_latest` instead of `time_near_latest`. To
     migrate, update references to `time_near_latest` to `lag_near_latest`.
   - `revision_summary(epi_arch)` without specifying the measurement column to
@@ -32,9 +34,18 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
     `geo_keys`, `other_keys`, and `time_keys`.
   - The `extra_keys` argument has been deprecated and replaced with
     `other_keys`.
+- The compactification tolerance argument has been renamed to
+  `compactify_abs_tol` or `abs_tol`, depending on the function; now defines a
+  nonstrict tolerances; and defaults to 0 (requiring exact matches in order to
+  compactify). This argument has been added to `as_epi_archive()` and
+  `epix_merge()` and removed (along with all compactification options) from
+  `new_epi_archive()`.
+- `validate_epi_archive()` now follows the validator convention of operating on
+  an "unvalidated" `epi_archive` (from `new_epi_archive`) rather than arguments.
 
 ## Improvements
 - `revision_summary()` now supports all `time_type`s.
+- The compactification tolerance setting now works with integer-type columns.
 
 ## Bug fixes
 
@@ -43,6 +54,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - Fixed `epi_archive` compactification raising an error on certain value column
   classes such as `"distribution"` (#541); it's now easier to form an archive of
   forecasts in that format.
+- Fixed large compactification tolerances potentially removing all versions of
+  some observations in certain cases when activity was flat.
 
 ## Cleanup
 

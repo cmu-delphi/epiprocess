@@ -168,7 +168,7 @@ dv <- pub_covidcast(
   issues = epirange(20200601, 20211201)
 ) %>%
   select(geo_value, time_value, issue, percent_cli = value) %>%
-  as_epi_archive(compactify = TRUE)
+  as_epi_archive()
 dv
 ```
 
@@ -182,7 +182,7 @@ library(ggplot2)
 dv <- archive_cases_dv_subset$DT %>%
   select(-case_rate_7d_av) %>%
   tidyr::drop_na() %>%
-  as_epi_archive(compactify = TRUE)
+  as_epi_archive()
 dv
 ```
 

@@ -4,7 +4,19 @@
 \alias{apply_compactify}
 \title{Given a tibble as would be found in an epi_archive, remove duplicate entries.}
 \usage{
-apply_compactify(df, keys, tolerance = .Machine$double.eps^0.5)
+apply_compactify(updates_df, ukey_names, abs_tol = 0)
+}
+\arguments{
+\item{updates_df}{DT of an \code{epi_archive} or something analogous (though
+potentially unsorted) of another class}
+
+\item{ukey_names}{chr; the column names forming a unique key for the
+\code{updates_df}; "version" must come last. For an \code{epi_archive}'s \code{DT}, this
+would be \code{key(DT)}.}
+
+\item{abs_tol}{numeric, >=0; absolute tolerance to use on numeric measurement
+columns when determining whether something can be compactified away; see
+\code{\link{is_locf}}}
 }
 \description{
 Works by shifting all rows except the version, then comparing values to see

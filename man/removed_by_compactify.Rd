@@ -4,7 +4,7 @@
 \alias{removed_by_compactify}
 \title{get the entries that \code{compactify} would remove}
 \usage{
-removed_by_compactify(df, keys, tolerance)
+removed_by_compactify(updates_df, ukey_names, abs_tol)
 }
 \description{
 get the entries that \code{compactify} would remove

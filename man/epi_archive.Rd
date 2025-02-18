@@ -12,26 +12,19 @@ new_epi_archive(
   geo_type,
   time_type,
   other_keys,
-  compactify,
-  clobberable_versions_start,
-  versions_end,
-  compactify_tol = .Machine$double.eps^0.5
-)
-
-validate_epi_archive(
-  x,
-  other_keys,
-  compactify,
   clobberable_versions_start,
   versions_end
 )
+
+validate_epi_archive(x)
 
 as_epi_archive(
   x,
   geo_type = deprecated(),
   time_type = deprecated(),
   other_keys = character(),
-  compactify = NULL,
+  compactify = TRUE,
+  compactify_abs_tol = 0,
   clobberable_versions_start = NA,
   .versions_end = max_version_with_row_in(x),
   ...,
@@ -53,10 +46,6 @@ if the time type is not recognized.}
 that should be considered key variables (in the language of \code{data.table})
 apart from "geo_value", "time_value", and "version". Typical examples
 are "age" or more granular geographies.}
-
-\item{compactify}{Optional; Boolean. \code{TRUE} will remove some
-redundant rows, \code{FALSE} will not, and missing or \code{NULL} will remove
-redundant rows, but issue a warning. See more information at \code{compactify}.}
 
 \item{clobberable_versions_start}{Optional; \code{length}-1; either a value of the
 same \code{class} and \code{typeof} as \code{x$version}, or an \code{NA} of any \code{class} and
@@ -84,8 +73,16 @@ value of \code{clobberable_versions_start} does not fully trust these empty
 updates, and assumes that any version \verb{>= max(x$version)} could be
 clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
 
-\item{compactify_tol}{double. the tolerance used to detect approximate
-equality for compactification}
+\item{compactify}{Optional; \code{TRUE}, \code{FALSE}, or \code{"message"}. \code{TRUE} will
+remove some redundant rows, \code{FALSE} will not. \code{"message"} is like \code{TRUE}
+but will emit a message if anything was changed. Default is \code{TRUE}. See
+more information below under "Compactification:".}
+
+\item{compactify_abs_tol}{Optional; double. A tolerance level used to detect
+approximate equality for compactification. The default is 0, which
+corresponds to exact equality. Consider using this if your value columns
+undergo tiny nonmeaningful revisions and the archive object with the
+default setting is too large.}
 
 \item{.versions_end}{location based versions_end, used to avoid prefix
 \code{version = issue} from being assigned to \code{versions_end} instead of being
@@ -107,8 +104,11 @@ possibly other key columns) along with measurement values. In brief, an
 column tracks the time at which the data was available. This allows for
 version-aware forecasting.
 
-\code{new_epi_archive} is the constructor for \code{epi_archive} objects that assumes
-all arguments have been validated. Most users should use \code{as_epi_archive}.
+\code{new_epi_archive} is the low-level constructor for \code{epi_archive} objects that
+only performs some fast, basic checks on the inputs. \code{validate_epi_archive}
+can perform more costly validation checks on its output. But most users
+should use \code{as_epi_archive}, which performs all necessary checks and has some
+additional features.
 }
 \details{
 An \code{epi_archive} contains a \code{data.table} object \code{DT} (from the

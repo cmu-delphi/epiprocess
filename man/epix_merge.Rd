@@ -8,7 +8,8 @@ epix_merge(
   x,
   y,
   sync = c("forbid", "na", "locf", "truncate"),
-  compactify = TRUE
+  compactify = TRUE,
+  compactify_abs_tol = 0
 )
 }
 \arguments{
@@ -33,8 +34,10 @@ and use \code{min(x$versions_end, y$versions_end)} as the result's
 \code{versions_end}.
 }}
 
-\item{compactify}{Optional; \code{TRUE} (default), \code{FALSE}, or \code{NULL}; should the
+\item{compactify}{Optional; \code{TRUE} (default), \code{FALSE}, or \code{"message"}; should the
 result be compactified? See \code{as_epi_archive()} for details.}
+
+\item{compactify_abs_tol}{As in \code{\link[=as_epi_archive]{as_epi_archive()}}.}
 }
 \value{
 the resulting \code{epi_archive}

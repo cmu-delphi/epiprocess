@@ -89,13 +89,13 @@ paste_lines <- function(lines) {
   paste(paste0(lines, "\n"), collapse = "")
 }
 
-#' Format a class vector as a string via deparsing it
+#' Format a character vector as a string via deparsing it
 #'
-#' @param class_vec `chr`; output of `class(object)` for some `object`
+#' @param x `chr`; e.g., output of `class(object)` for some `object`
 #' @return string
 #' @keywords internal
-format_class_vec <- function(class_vec) {
-  paste(collapse = "", deparse(class_vec))
+format_chr_deparse <- function(x) {
+  paste(collapse = "", deparse(x))
 }
 
 #' Format a character vector as a string via deparsing/quoting each
@@ -547,7 +547,7 @@ as_slide_computation <- function(.f, ...,
   }
 
   cli_abort(
-    "Can't convert an object of class {format_class_vec(class(.f))}
+    "Can't convert an object of class {format_chr_deparse(class(.f))}
       to a slide computation",
     class = "epiprocess__as_slide_computation__cant_convert_catchall",
     epiprocess__f = .f,
