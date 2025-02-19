@@ -29,7 +29,6 @@
 #' @importFrom rlang is_bare_integerish
 #' @importFrom tools toTitleCase
 #' @importFrom vctrs vec_cast
-#' @importFrom vctrs vec_cbind
 #' @importFrom vctrs vec_data
 #' @importFrom vctrs vec_equal
 #' @importFrom vctrs vec_in

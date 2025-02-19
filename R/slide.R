@@ -342,18 +342,18 @@ epi_slide_one_group <- function(
   all_dates <- .date_seq_list$all_dates
   missing_times <- all_dates[!vec_in(all_dates, .data_group$time_value)]
   .data_group <- reclass(vec_rbind(
-    .data_group, # (epi_df; epi_slide uses .keep = TRUE)
-    vec_cbind( # (tibble -> vec_rbind produces tibble)
-      .group_key,
-      new_tibble(vec_recycle_common(
-        time_value = c(
-          missing_times,
-          .date_seq_list$pad_early_dates,
-          .date_seq_list$pad_late_dates
-        ),
-        .real = FALSE
-      ))
-    )
+    .data_group,
+    # (^ epi_df; epi_slide uses .keep = TRUE)
+    # (v tibble -> vec_rbind outputs tibble)
+    new_tibble(vec_recycle_common(
+      !!!.group_key,
+      time_value = c(
+        missing_times,
+        .date_seq_list$pad_early_dates,
+        .date_seq_list$pad_late_dates
+      ),
+      .real = FALSE
+    ))
     # we should be adding time values of the same time_type (and shouldn't be
     # introducing duplicate epikeytime values); we can reclass without checks:
   ), attr(.data_group, "metadata")) %>%
