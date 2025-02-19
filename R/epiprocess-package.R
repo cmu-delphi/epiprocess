@@ -24,6 +24,7 @@
 #' @importFrom dplyr is_grouped_df
 #' @importFrom dplyr select
 #' @importFrom lifecycle deprecated
+#' @importFrom purrr list_rbind
 #' @importFrom rlang %||%
 #' @importFrom rlang is_bare_integerish
 #' @importFrom tools toTitleCase

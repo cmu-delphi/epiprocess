@@ -309,9 +309,7 @@ epi_slide <- function(
     ...,
     .keep = TRUE
   ) %>%
-    {
-      vec_rbind(!!!.)
-    } %>%
+    list_rbind() %>%
     `[`(.$.real, names(.) != ".real") %>%
     arrange_col_canonical() %>%
     group_by(!!!.x_orig_groups)
