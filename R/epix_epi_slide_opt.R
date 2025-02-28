@@ -56,7 +56,7 @@ epix_epi_slide_opt_one_epikey <- function(updates, in_colnames, f, f_from_packag
         # Only include time_values that appeared in the input snapshot:
         !is.na(slide_inp_backrefs),
     ]
-    out_diff <- tbl_diff2(prev_out_snapshot, out_update, "time_value", "update")
+    out_diff <- tbl_diff2(prev_out_snapshot, out_update, "time_value", "update") # TODO avoid redundant diff2 work? though depends on compactify parms...
     out_snapshot <- tbl_patch(prev_out_snapshot, out_diff)
     prev_inp_snapshot <<- inp_snapshot
     prev_out_snapshot <<- out_snapshot # TODO avoid need to patch twice?
@@ -139,5 +139,7 @@ epix_epi_slide_opt.epi_archive <-
         .x$clobberable_versions_start, .x$versions_end
       )
     if (use_progress) cli::cli_progress_done(id = progress_bar_id)
+    # Keep ordering of old columns, place new columns at end:
+    setcolorder(result$DT, names(.x$DT))
     result
   }
