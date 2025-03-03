@@ -36,16 +36,25 @@ epix_epi_slide_opt_one_epikey <- function(updates, in_colnames, f_dots_baked, f_
     slide <- inp_snapshot[slide_inp_backrefs, ] # TODO vs. DT key index vs ....
     slide$time_value <- slide_time_values
     if (f_from_package == "data.table") {
-      if (before == Inf) {
-        n_arg <- seq_len(slide_nrow)
-        adaptive_arg <- TRUE
-      } else {
-        n_arg <- before + after + 1L
-        adaptive_arg <- FALSE
-      }
+      # if (before == Inf) {
+      #   n_arg <- seq_len(slide_nrow)
+      #   adaptive_arg <- TRUE
+      # } else {
+      #   n_arg <- before + after + 1L
+      #   adaptive_arg <- FALSE
+      # }
       for (col_i in seq_along(in_colnames)) {
-        # FIXME wrong with .align = "left"
-        slide[[out_colnames[[col_i]]]] <- f_dots_baked(slide[[in_colnames[[col_i]]]], n_arg, adaptive = adaptive_arg)
+        if (before == Inf) {
+          slide[[out_colnames[[col_i]]]] <- f_dots_baked(slide[[in_colnames[[col_i]]]], seq_len(slide_nrow), adaptive = TRUE)
+        } else {
+          out_col <- f_dots_baked(slide[[in_colnames[[col_i]]]], before + after + 1L)
+          if (after != 0L) {
+            # data.table always puts NAs at tails, even with na.rm = TRUE; chop
+            # off extra NAs from beginning and place missing NAs at end:
+            out_col <- c(out_col[seq(after + 1L, slide_nrow)], rep(NA, after))
+          }
+          slide[[out_colnames[[col_i]]]] <- out_col
+        }
       }
     } else if (f_from_package == "slider") {
       for (col_i in seq_along(in_colnames)) {
