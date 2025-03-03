@@ -30,10 +30,11 @@ epix_epi_slide_opt_one_epikey <- function(updates, in_colnames, f_dots_baked, f_
     slide_nrow <- time_delta_to_n_steps(slide_max_t - slide_min_t, time_type) + 1L
     slide_time_values <- slide_min_t + 0L:(slide_nrow - 1L) * unit_step
     slide_inp_backrefs <- vec_match(slide_time_values, inp_snapshot$time_value)
+    # Get additional values needed from inp_snapshot + perform any NA
+    # tail-padding needed to make slider results a fixed window size rather than
+    # adaptive at tails + perform any NA gap-filling needed:
     slide <- inp_snapshot[slide_inp_backrefs, ] # TODO vs. DT key index vs ....
     slide$time_value <- slide_time_values
-    # TODO ensure before & after as integers?
-    # TODO parameterize naming, slide function, options, ...
     if (f_from_package == "data.table") {
       if (before == Inf) {
         n_arg <- seq_len(slide_nrow)
@@ -43,20 +44,12 @@ epix_epi_slide_opt_one_epikey <- function(updates, in_colnames, f_dots_baked, f_
         adaptive_arg <- FALSE
       }
       for (col_i in seq_along(in_colnames)) {
+        # FIXME wrong with .align = "left"
         slide[[out_colnames[[col_i]]]] <- f_dots_baked(slide[[in_colnames[[col_i]]]], n_arg, adaptive = adaptive_arg)
       }
     } else if (f_from_package == "slider") {
       for (col_i in seq_along(in_colnames)) {
-        # with adaptive tails that incorporate fewer inputs:
-        # FIXME other arg forwarding
-        out_col <- f_dots_baked(slide[[in_colnames[[col_i]]]], before = before, after = after)
-        # XXX is this actually required or being done at the right time? we are
-        # already chopping off a good amount that might include this?
-        #
-        # FIXME can this generate an error on very short series?
-        vec_slice(out_col, seq_len(before)) <- NA
-        vec_slice(out_col, slide_nrow - after + seq_len(after)) <- NA
-        slide[[out_colnames[[col_i]]]] <- out_col
+        slide[[out_colnames[[col_i]]]] <- f_dots_baked(slide[[in_colnames[[col_i]]]], before = before, after = after)
       }
     } else {
       cli_abort("epiprocess internal error: `f_from_package` was {format_chr_deparse(f_from_package)}")
