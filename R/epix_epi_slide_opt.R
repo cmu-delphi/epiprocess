@@ -5,9 +5,7 @@ epix_epi_slide_opt_one_epikey <- function(updates, in_colnames, f_dots_baked, f_
   prev_out_snapshot <- NULL
   result <- map(seq_len(nrow(updates)), function(update_i) {
     version <- updates$version[[update_i]]
-    inp_update <- updates$subtbl[[update_i]] # TODO decide whether DT
-    ## setDF(inp_update)
-    ## inp_update <- new_tibble(inp_update, nrow = nrow(inp_update))
+    inp_update <- updates$subtbl[[update_i]]
     inp_snapshot <- tbl_patch(prev_inp_snapshot, inp_update, "time_value")
     if (before == Inf) {
       if (after != 0) {
@@ -15,34 +13,27 @@ epix_epi_slide_opt_one_epikey <- function(updates, in_colnames, f_dots_baked, f_
       }
       # We need to use the entire input snapshot range, filling in time gaps. We
       # shouldn't pad the ends.
-      slide_min_t <- min(inp_snapshot$time_value) # TODO check efficiency
-      slide_max_t <- max(inp_snapshot$time_value)
+      slide_t_min <- min(inp_snapshot$time_value)
+      slide_t_max <- max(inp_snapshot$time_value)
     } else {
       # If the input had updates in the range t1..t2, this could produce changes
       # in slide outputs in the range t1-after..t2+before, and to compute those
       # slide values, we need to look at the input snapshot from
       # t1-after-before..t2+before+after.
-      inp_update_min_t <- min(inp_update$time_value) # TODO check efficiency
-      inp_update_max_t <- max(inp_update$time_value)
-      slide_min_t <- inp_update_min_t - (before + after) * unit_step
-      slide_max_t <- inp_update_max_t + (before + after) * unit_step
+      inp_update_t_min <- min(inp_update$time_value)
+      inp_update_t_max <- max(inp_update$time_value)
+      slide_t_min <- inp_update_t_min - (before + after) * unit_step
+      slide_t_max <- inp_update_t_max + (before + after) * unit_step
     }
-    slide_nrow <- time_delta_to_n_steps(slide_max_t - slide_min_t, time_type) + 1L
-    slide_time_values <- slide_min_t + 0L:(slide_nrow - 1L) * unit_step
+    slide_nrow <- time_delta_to_n_steps(slide_t_max - slide_t_min, time_type) + 1L
+    slide_time_values <- slide_t_min + 0L:(slide_nrow - 1L) * unit_step
     slide_inp_backrefs <- vec_match(slide_time_values, inp_snapshot$time_value)
     # Get additional values needed from inp_snapshot + perform any NA
     # tail-padding needed to make slider results a fixed window size rather than
     # adaptive at tails + perform any NA gap-filling needed:
-    slide <- inp_snapshot[slide_inp_backrefs, ] # TODO vs. DT key index vs ....
+    slide <- inp_snapshot[slide_inp_backrefs, ]
     slide$time_value <- slide_time_values
     if (f_from_package == "data.table") {
-      # if (before == Inf) {
-      #   n_arg <- seq_len(slide_nrow)
-      #   adaptive_arg <- TRUE
-      # } else {
-      #   n_arg <- before + after + 1L
-      #   adaptive_arg <- FALSE
-      # }
       for (col_i in seq_along(in_colnames)) {
         if (before == Inf) {
           slide[[out_colnames[[col_i]]]] <- f_dots_baked(slide[[in_colnames[[col_i]]]], seq_len(slide_nrow), adaptive = TRUE)
