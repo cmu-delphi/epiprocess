@@ -6,6 +6,7 @@
 #' @importFrom checkmate anyInfinite anyMissing assert assert_character
 #' @importFrom checkmate assert_class assert_data_frame assert_int assert_list
 #' @importFrom checkmate assert_false
+#' @importFrom checkmate assert_function
 #' @importFrom checkmate assert_logical assert_numeric assert_scalar checkInt
 #' @importFrom checkmate assert_string
 #' @importFrom checkmate assert_subset

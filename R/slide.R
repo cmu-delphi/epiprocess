@@ -581,6 +581,8 @@ upstream_slide_f_possibilities <- tibble::tribble(
 #'
 #' @keywords internal
 upstream_slide_f_info <- function(.f) {
+  assert_function(.f)
+
   # Check that slide function `.f` is one of those short-listed from
   # `data.table` and `slider` (or a function that has the exact same definition,
   # e.g. if the function has been reexported or defined locally). Extract some
@@ -776,7 +778,6 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer, .windo
 #' @importFrom purrr map map_lgl
 #' @importFrom data.table frollmean frollsum frollapply
 #' @importFrom lubridate as.period
-#' @importFrom checkmate assert_function
 #' @importFrom slider slide_sum slide_prod slide_mean slide_min slide_max slide_all slide_any
 #' @export
 #' @seealso [`epi_slide`] for the more general slide function
@@ -1164,7 +1165,6 @@ epi_slide_sum <- function(
 #' `before` and `after` args are assumed to have been validated by the calling
 #' function (using `validate_slide_window_arg`).
 #'
-#' @importFrom checkmate assert_function
 #' @keywords internal
 full_date_seq <- function(x, before, after, time_type) {
   if (!time_type %in% c("day", "week", "yearmonth", "integer")) {
