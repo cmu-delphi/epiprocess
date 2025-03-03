@@ -1,5 +1,5 @@
 # TODO just make this an epi_slide_opt impl?
-epix_epi_slide_opt_one_epikey <- function(updates, in_colnames, f, f_from_package, before, after, time_type, out_colnames) {
+epix_epi_slide_opt_one_epikey <- function(updates, in_colnames, f_dots_baked, f_from_package, before, after, time_type, out_colnames) {
   unit_step <- epiprocess:::unit_time_delta(time_type)
   prev_inp_snapshot <- NULL
   prev_out_snapshot <- NULL
@@ -43,13 +43,13 @@ epix_epi_slide_opt_one_epikey <- function(updates, in_colnames, f, f_from_packag
         adaptive_arg <- FALSE
       }
       for (col_i in seq_along(in_colnames)) {
-        slide[[out_colnames[[col_i]]]] <- f(slide[[in_colnames[[col_i]]]], n_arg, adaptive = adaptive_arg)
+        slide[[out_colnames[[col_i]]]] <- f_dots_baked(slide[[in_colnames[[col_i]]]], n_arg, adaptive = adaptive_arg)
       }
     } else if (f_from_package == "slider") {
       for (col_i in seq_along(in_colnames)) {
         # with adaptive tails that incorporate fewer inputs:
         # FIXME other arg forwarding
-        out_col <- f(slide[[in_colnames[[col_i]]]], before = before, after = after)
+        out_col <- f_dots_baked(slide[[in_colnames[[col_i]]]], before = before, after = after)
         # XXX is this actually required or being done at the right time? we are
         # already chopping off a good amount that might include this?
         #
@@ -109,7 +109,6 @@ epix_epi_slide_opt.grouped_epi_archive <- function(.x, ...) {
     epix_epi_slide_opt(...) %>%
     group_by(pick(all_of(orig_group_vars)), .drop = orig_drop)
 }
-
 #' @method epix_epi_slide_opt epi_archive
 #' @export
 epix_epi_slide_opt.epi_archive <-
@@ -123,9 +122,17 @@ epix_epi_slide_opt.epi_archive <-
     epikey_names <- key_colnames(.x, exclude = c("time_value", "version"))
     # Validation & pre-processing:
     .align <- arg_match(.align)
-    f_info <- upstream_slide_f_info(.f)
+    .f_info <- upstream_slide_f_info(.f)
+    .f_dots_baked <-
+      if (rlang::dots_n(...) == 0L) {
+        # Leaving `.f` unchanged slightly improves computation speed and trims
+        # debug stack traces:
+        .f
+      } else {
+        purrr::partial(.f, ...)
+      }
     col_names_quo <- enquo(.col_names)
-    names_info <- across_ish_names_info(.x$DT, time_type, col_names_quo, f_info$namer, .window_size, .align, .prefix, .suffix, .new_col_names)
+    names_info <- across_ish_names_info(.x$DT, time_type, col_names_quo, .f_info$namer, .window_size, .align, .prefix, .suffix, .new_col_names)
     window_args <- get_before_after_from_window(.window_size, .align, time_type)
     assert(
       checkmate::check_logical(.progress, any.missing = FALSE, len = 1L, names = "unnamed"),
@@ -147,7 +154,7 @@ epix_epi_slide_opt.epi_archive <-
         group_updates <- group_values %>%
           nest(.by = version, .key = "subtbl") %>%
           arrange(version)
-        res <- epix_epi_slide_opt_one_epikey(group_updates, names_info$input_col_names, .f, f_info$from_package, window_args$before, window_args$after, time_type, names_info$output_col_names) %>%
+        res <- epix_epi_slide_opt_one_epikey(group_updates, names_info$input_col_names, .f_dots_baked, .f_info$from_package, window_args$before, window_args$after, time_type, names_info$output_col_names) %>%
           list_rbind()
         if (use_progress) cli::cli_progress_update(id = progress_bar_id)
         res
