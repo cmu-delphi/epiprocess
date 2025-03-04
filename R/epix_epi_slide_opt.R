@@ -1,4 +1,3 @@
-# TODO just make this an epi_slide_opt impl?
 epix_epi_slide_opt_one_epikey <- function(updates, in_colnames, f_dots_baked, f_from_package, before, after, time_type, out_colnames) {
   unit_step <- epiprocess:::unit_time_delta(time_type)
   prev_inp_snapshot <- NULL
@@ -68,15 +67,17 @@ epix_epi_slide_opt_one_epikey <- function(updates, in_colnames, f_dots_baked, f_
           !is.na(slide_inp_backrefs)
       }
     out_update <- slide[rows_should_keep, ]
-    out_diff <- tbl_diff2(prev_out_snapshot, out_update, "time_value", "update") # TODO avoid redundant diff2 work? though depends on compactify parms...
+    out_diff <- tbl_diff2(prev_out_snapshot, out_update, "time_value", "update")
     out_snapshot <- tbl_patch(prev_out_snapshot, out_diff, "time_value")
     prev_inp_snapshot <<- inp_snapshot
-    prev_out_snapshot <<- out_snapshot # TODO avoid need to patch twice?
+    prev_out_snapshot <<- out_snapshot
     out_diff$version <- version
     out_diff
   })
   result
 }
+
+# TODO just make this an epi_slide_opt impl?
 
 #' @export
 epix_epi_slide_opt <-
