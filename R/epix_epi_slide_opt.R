@@ -69,7 +69,7 @@ epix_epi_slide_opt_one_epikey <- function(updates, in_colnames, f_dots_baked, f_
       }
     out_update <- slide[rows_should_keep, ]
     out_diff <- tbl_diff2(prev_out_snapshot, out_update, "time_value", "update") # TODO avoid redundant diff2 work? though depends on compactify parms...
-    out_snapshot <- tbl_patch(prev_out_snapshot, out_diff)
+    out_snapshot <- tbl_patch(prev_out_snapshot, out_diff, "time_value")
     prev_inp_snapshot <<- inp_snapshot
     prev_out_snapshot <<- out_snapshot # TODO avoid need to patch twice?
     out_diff$version <- version
