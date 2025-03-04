@@ -86,6 +86,9 @@ tbl_diff2 <- function(earlier_snapshot, later_tbl,
   if (!is_tibble(earlier_snapshot)) {
     cli_abort("`earlier_snapshot` must be a tibble or `NULL`")
   }
+  if (!is.character(ukey_names) || !all(ukey_names %in% names(earlier_snapshot))) {
+    cli_abort("`ukey_names` must be a subset of column names")
+  }
   later_format <- arg_match0(later_format, c("snapshot", "update"))
   if (!(is.vector(compactify_abs_tol, mode = "numeric") && length(compactify_abs_tol) == 1L && compactify_abs_tol >= 0)) {
     # Give a specific message:
@@ -217,6 +220,9 @@ tbl_patch <- function(snapshot, update, ukey_names) {
   }
   if (!is_tibble(snapshot)) {
     cli_abort("`snapshot` must be a tibble")
+  }
+  if (!is.character(ukey_names) || !all(ukey_names %in% names(snapshot))) {
+    cli_abort("`ukey_names` must be a subset of column names")
   }
 
   result_tbl <- vec_rbind(update, snapshot)
