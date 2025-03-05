@@ -37,10 +37,8 @@ approx_equal0 <- function(vec1, vec2, abs_tol, na_equal, inds1 = NULL, inds2 = N
   if (is_bare_numeric(vec1) && abs_tol != 0) {
     # perf: since we're working with bare numerics and logicals: we can use `[`
     # and `fifelse`. Matching vec_equal, we ignore names and other attributes.
-
-    # FIXME matrices can make their way in here though...
-    if (!is.null(inds1)) vec1 <- vec1[inds1]
-    if (!is.null(inds2)) vec2 <- vec2[inds2]
+    if (!is.null(inds1)) vec1 <- vec_slice(vec1, inds1)
+    if (!is.null(inds2)) vec2 <- vec_slice(vec2, inds2)
     res <- fifelse(
       !is.na(vec1) & !is.na(vec2),
       abs(vec1 - vec2) <= abs_tol,
@@ -48,6 +46,10 @@ approx_equal0 <- function(vec1, vec2, abs_tol, na_equal, inds1 = NULL, inds2 = N
       # XXX ^ inconsistent with vec_equal treatment: NA vs. NaN comparison
       # behavior with na_equal = TRUE is different
     )
+    if (!is.null(dim(vec1))) {
+      dim(res) <- dim(vec1)
+      res <- rowSums(res) == ncol(res)
+    }
     # `fifelse` inherits any unrecognized attributes; drop them instead:
     attributes(res) <- NULL
     return(res)
