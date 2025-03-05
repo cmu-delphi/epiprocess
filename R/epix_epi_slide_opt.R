@@ -1,4 +1,51 @@
+#' Core operation of `epix_epi_slide_opt` for a single epikey's history
+#'
+#' @param updates tibble with two columns: `version` and `subtbl`; `subtbl` is a
+#'   list of tibbles, each with a `time_value` column and measurement columns.
+#'   The epikey should not appear.
+#' @param in_colnames chr; names of columns to which to apply `f_dots_baked`
+#' @param f_dots_baked supported sliding function from `{data.table}` or
+#'   `{slider}`, potentially with some arguments baked in with
+#'   [`purrr::partial`]
+#' @param f_from_package string; name of package from which `f_dots_baked`
+#'   (pre-`partial`) originates
+#' @param before integerish >=0 or Inf; number of time steps before each
+#'   ref_time_value to include in the sliding window computation; Inf to include
+#'   all times beginning with the min `time_value`
+#' @param after integerish >=0; number of time steps after each ref_time_value
+#'   to include in the sliding window computation
+#' @param time_type as in `new_epi_archive`
+#' @param out_colnames chr, same length as `in_colnames`; column names to use
+#'   for results
+#' @return list of tibbles with same names as `subtbl`s plus: `c(out_colnames,
+#'   "version")`; (compactified) diff data to put into an `epi_archive`
+#'
+#' @examples
+#'
+#' library(dplyr)
+#' updates <- bind_rows(
+#'   tibble(
+#'     version = 40, time_value = 1:10, value = 1:10
+#'   ),
+#'   tibble(
+#'     version = 12, time_value = 2:3, value = 3:2
+#'   ),
+#'   tibble(
+#'     version = 13, time_value = 6, value = 7,
+#'   ),
+#'   tibble(
+#'     version = 13, time_value = 7, value = NA,
+#'   )
+#' ) %>%
+#'   mutate(across(c(version, time_value), ~ as.Date("2020-01-01") - 1 + .x)) %>%
+#'   tidyr::nest(.by = version, .key = "subtbl")
+#'
+#' updates %>%
+#'   epix_epi_slide_opt_one_epikey("value", data.table::frollmean, "data.table", 1L, 0L, "day", "slide_value")
+#'
+#' @keywords internal
 epix_epi_slide_opt_one_epikey <- function(updates, in_colnames, f_dots_baked, f_from_package, before, after, time_type, out_colnames) {
+  # TODO check for col name clobbering
   unit_step <- epiprocess:::unit_time_delta(time_type)
   prev_inp_snapshot <- NULL
   prev_out_snapshot <- NULL
@@ -148,6 +195,7 @@ epix_epi_slide_opt.epi_archive <-
         group_updates <- group_values %>%
           nest(.by = version, .key = "subtbl") %>%
           arrange(version)
+        # TODO move nesting inside the helper?
         res <- epix_epi_slide_opt_one_epikey(group_updates, names_info$input_col_names, .f_dots_baked, .f_info$from_package, window_args$before, window_args$after, time_type, names_info$output_col_names) %>%
           list_rbind()
         if (use_progress) cli::cli_progress_update(id = progress_bar_id)
