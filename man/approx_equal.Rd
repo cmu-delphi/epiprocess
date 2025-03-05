@@ -32,7 +32,8 @@ give faster computation if \code{vec1} and \code{vec2} are data frames.}
 }
 \value{
 logical vector; no nonmissing entries if \code{na_equal = TRUE}. Behavior
-may differ from \code{vec_equal} with non-\code{NA} \code{NaN}s involved.
+may differ from \code{vec_equal} with non-\code{NA} \code{NaN}s involved, or for bare
+lists that contain named vectors.
 }
 \description{
 Test two vctrs vectors for equality with some tolerance in some cases
