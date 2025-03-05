@@ -44,10 +44,9 @@ approx_equal0 <- function(vec1, vec2, abs_tol, na_equal, inds1 = NULL, inds2 = N
     res <- fifelse(
       !is.na(vec1) & !is.na(vec2),
       abs(vec1 - vec2) <= abs_tol,
-      if (na_equal) is.na(vec1) & is.na(vec2) else FALSE
+      if (na_equal) is.na(vec1) & is.na(vec2) else NA
       # XXX ^ inconsistent with vec_equal treatment: NA vs. NaN comparison
-      # behavior with na_equal = TRUE is different; plus output with na_equal =
-      # FALSE on two NAs is different
+      # behavior with na_equal = TRUE is different
     )
     # `fifelse` inherits any unrecognized attributes; drop them instead:
     attributes(res) <- NULL
