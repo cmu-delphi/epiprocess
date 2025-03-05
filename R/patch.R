@@ -1,30 +1,38 @@
 # TODO use these in apply_compactify
-approx_equal <- function(vec1, vec2, abs_tol, na_equal, .ptype = NULL, recurse = approx_equal, inds1 = NULL, inds2 = NULL) {
-  vecs <- list(vec1, vec2)
-  if (!is.null(inds1)) {
-    # XXX could have logical or integerish inds; just leave it to later checks
-    # to hopefully abort for now
+approx_equal <- function(vec1, vec2, abs_tol, na_equal, .ptype = NULL, inds1 = NULL, inds2 = NULL) {
+  # Recycle inds if provided; vecs if not:
+  common_size <- vec_size_common(
+    if (is.null(inds1)) vec1 else inds1,
+    if (is.null(inds2)) vec2 else inds2
+  )
+  if (is.null(inds1)) {
+    vec1 <- vec_recycle(vec1, common_size)
   } else {
-    vecs <- vec_recycle_common(!!!vecs)
+    inds1 <- vec_recycle(inds1, common_size)
   }
-  vecs <- vec_cast_common(!!!vecs, .to = .ptype)
-  approx_equal0(vecs[[1]], vecs[[2]], abs_tol, na_equal, rec = approx_equal, inds1, inds2)
+  if (is.null(inds2)) {
+    vec2 <- vec_recycle(vec2, common_size)
+  } else {
+    inds2 <- vec_recycle(inds2, common_size)
+  }
+  vecs <- vec_cast_common(vec1, vec2, .to = .ptype)
+  approx_equal0(vecs[[1]], vecs[[2]], abs_tol, na_equal, inds1, inds2)
 }
 
-approx_equal0 <- function(vec1, vec2, abs_tol, na_equal, recurse = approx_equal0, inds1 = NULL, inds2 = NULL) {
+approx_equal0 <- function(vec1, vec2, abs_tol, na_equal, inds1 = NULL, inds2 = NULL) {
   if (is_bare_numeric(vec1) && abs_tol != 0) {
-    if (!is.null(inds1)) {
-      vec1 <- vec1[inds1]
-      vec2 <- vec2[inds2]
-    }
-    # perf: since we're working with bare numerics and logicals: we can use
-    # fifelse, and stop it from propagating attributes when there's no special
-    # class to guide the meaning
+    # perf: since we're working with bare numerics and logicals: we can use `[`
+    # and `fifelse`. Matching vec_equal, we ignore names and other attributes.
+
+    # FIXME matrices can make their way in here though...
+    if (!is.null(inds1)) vec1 <- vec1[inds1]
+    if (!is.null(inds2)) vec2 <- vec2[inds2]
     res <- fifelse(
       !is.na(vec1) & !is.na(vec2),
       abs(vec1 - vec2) <= abs_tol,
       if (na_equal) is.na(vec1) & is.na(vec2) else FALSE
     )
+    # `fifelse` inherits any unrecognized attributes; drop them instead:
     attributes(res) <- NULL
     return(res)
   } else if (is.data.frame(vec1) && abs_tol != 0) {
@@ -34,7 +42,7 @@ approx_equal0 <- function(vec1, vec2, abs_tol, na_equal, recurse = approx_equal0
       rep(TRUE, nrow(vec1))
     } else {
       Reduce(`&`, lapply(seq_len(ncol(vec1)), function(col_i) {
-        recurse(vec1[[col_i]], vec2[[col_i]], abs_tol, na_equal, recurse, inds1, inds2)
+        approx_equal0(vec1[[col_i]], vec2[[col_i]], abs_tol, na_equal, inds1, inds2)
       }))
     }
   } else {
