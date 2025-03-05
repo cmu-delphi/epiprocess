@@ -31,6 +31,7 @@
 #' @importFrom rlang %||%
 #' @importFrom rlang arg_match0
 #' @importFrom rlang is_bare_integerish
+#' @importFrom rlang is_bare_numeric
 #' @importFrom tibble is_tibble
 #' @importFrom tidyr nest
 #' @importFrom tools toTitleCase
