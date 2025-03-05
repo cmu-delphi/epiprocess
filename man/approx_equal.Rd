@@ -31,9 +31,11 @@ be consistent with \code{vec_slice}-ing to these indices beforehand, but can
 give faster computation if \code{vec1} and \code{vec2} are data frames.}
 }
 \value{
-logical vector; no nonmissing entries if \code{na_equal = TRUE}. Behavior
-may differ from \code{vec_equal} with non-\code{NA} \code{NaN}s involved, or for bare
-lists that contain named vectors.
+logical vector, with length matching the result of recycling \code{vec1}
+(at \code{inds1} if provided) and \code{vec2} (at \code{inds2} if provided); entries
+should all be \code{TRUE} or \code{FALSE} if \code{na_equal = TRUE}. Behavior may differ
+from \code{vec_equal} with non-\code{NA} \code{NaN}s involved, or for bare lists that
+contain named vectors.
 }
 \description{
 Test two vctrs vectors for equality with some tolerance in some cases

@@ -11,9 +11,11 @@
 #'   be consistent with `vec_slice`-ing to these indices beforehand, but can
 #'   give faster computation if `vec1` and `vec2` are data frames.
 #'
-#' @return logical vector; no nonmissing entries if `na_equal = TRUE`. Behavior
-#'   may differ from `vec_equal` with non-`NA` `NaN`s involved, or for bare
-#'   lists that contain named vectors.
+#' @return logical vector, with length matching the result of recycling `vec1`
+#'   (at `inds1` if provided) and `vec2` (at `inds2` if provided); entries
+#'   should all be `TRUE` or `FALSE` if `na_equal = TRUE`. Behavior may differ
+#'   from `vec_equal` with non-`NA` `NaN`s involved, or for bare lists that
+#'   contain named vectors.
 approx_equal <- function(vec1, vec2, abs_tol, na_equal, .ptype = NULL, inds1 = NULL, inds2 = NULL) {
   # Recycle inds if provided; vecs if not:
   common_size <- vec_size_common(
@@ -34,6 +36,9 @@ approx_equal <- function(vec1, vec2, abs_tol, na_equal, .ptype = NULL, inds1 = N
   approx_equal0(vecs[[1]], vecs[[2]], abs_tol, na_equal, inds1, inds2)
 }
 
+#' Helper for [`approx_equal`] for vecs guaranteed to have the same ptype and size
+#'
+#' @keywords internal
 approx_equal0 <- function(vec1, vec2, abs_tol, na_equal, inds1 = NULL, inds2 = NULL) {
   if (is_bare_numeric(vec1) && abs_tol != 0) {
     # perf: since we're working with bare numerics and logicals: we can use `[`
