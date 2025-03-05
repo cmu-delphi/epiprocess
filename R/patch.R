@@ -12,7 +12,8 @@
 #'   give faster computation if `vec1` and `vec2` are data frames.
 #'
 #' @return logical vector; no nonmissing entries if `na_equal = TRUE`. Behavior
-#'   may differ from `vec_equal` with non-`NA` `NaN`s involved.
+#'   may differ from `vec_equal` with non-`NA` `NaN`s involved, or for bare
+#'   lists that contain named vectors.
 approx_equal <- function(vec1, vec2, abs_tol, na_equal, .ptype = NULL, inds1 = NULL, inds2 = NULL) {
   # Recycle inds if provided; vecs if not:
   common_size <- vec_size_common(
@@ -63,10 +64,25 @@ approx_equal0 <- function(vec1, vec2, abs_tol, na_equal, inds1 = NULL, inds2 = N
         approx_equal0(vec1[[col_i]], vec2[[col_i]], abs_tol, na_equal, inds1, inds2)
       }))
     }
+  } else if (is_bare_list(vec1)) {
+    vapply(seq_along(vec1), function(i) {
+      entry1 <- vec1[[i]]
+      entry2 <- vec2[[i]]
+      vec_size(entry1) == vec_size(entry2) &&
+        # This is inconsistent with vec_equal on named vectors; to be
+        # consistently inconsistent, we avoid dispatching to vec_equal for bare
+        # lists even with abs_tol = 0:
+        identical(vec_ptype(entry1), vec_ptype(entry2)) &&
+        all(approx_equal0(entry1, entry2, abs_tol, na_equal))
+    }, logical(1L))
   } else {
     # XXX No special handling for any other types/situations. Makes sense for
-    # unclassed atomic things; bare lists and certain vctrs classes might want
-    # recursion / specialization, though.
+    # unclassed atomic things; custom classes (e.g., distributions) might want
+    # recursion / specialization, though. approx_equal0 should probably be an S3
+    # method. Also, abs_tol == 0 --> vec_equal logic should maybe be either be
+    # hoisted to approx_equal or we should manually recurse on data frames even
+    # with abs_tol = 0 when that's faster (might depend on presence of inds*),
+    # after some inconsistencies are ironed out.
     if (!is.null(inds1)) {
       vec1 <- vec_slice(vec1, inds1)
       vec2 <- vec_slice(vec2, inds2)
