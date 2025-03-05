@@ -1,4 +1,3 @@
-# TODO use these in apply_compactify
 approx_equal <- function(vec1, vec2, abs_tol, na_equal, .ptype = NULL, inds1 = NULL, inds2 = NULL) {
   # Recycle inds if provided; vecs if not:
   common_size <- vec_size_common(
