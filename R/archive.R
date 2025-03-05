@@ -424,10 +424,23 @@ apply_compactify <- function(updates_df, ukey_names, abs_tol = 0) {
   }
   assert_numeric(abs_tol, len = 1, lower = 0)
 
-  if (!is.data.table(updates_df) || !identical(key(updates_df), ukey_names)) {
+  if (is.data.table(updates_df)) {
+    if (!identical(key(updates_df), ukey_names)) {
+      cli_abort(c("`ukey_names` should match `key(updates_df)`",
+        "i" = "`ukey_names` was {format_chr_deparse(ukey_names)}",
+        "i" = "`key(updates_df)` was {format_chr_deparse(key(updates_df))}"
+      ))
+    }
+  } else {
     updates_df <- updates_df %>% arrange(pick(all_of(ukey_names)))
   }
-  updates_df[!update_is_locf(updates_df, ukey_names, abs_tol), ]
+
+  # In case updates_df is a data.table, store keep flags in a local: "When the
+  # first argument inside DT[...] is a single symbol (e.g. DT[var]), data.table
+  # looks for var in calling scope". In case it's not a data.table, make sure to
+  # use df[i,] not just df[i].
+  to_keep <- !update_is_locf(updates_df, ukey_names, abs_tol)
+  updates_df[to_keep, ]
 }
 
 #' get the entries that `compactify` would remove
