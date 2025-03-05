@@ -477,50 +477,30 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol) {
   ekt_names <- ukey_names[ukey_names != "version"]
   val_names <- all_names[!all_names %in% ukey_names]
 
-  Reduce(`&`, lapply(updates_col_refs[ekt_names], is_locf, abs_tol, TRUE)) &
-    Reduce(`&`, lapply(updates_col_refs[val_names], is_locf, abs_tol, FALSE))
-}
-
-#' Checks to see if a value in a vector is LOCF
-#' @description LOCF meaning last observation carried forward (to later
-#'   versions). Lags the vector by 1, then compares with itself. If `is_key` is
-#'   `TRUE`, only values that are exactly the same between the lagged and
-#'   original are considered LOCF. If `is_key` is `FALSE` and `vec` is a vector
-#'   of numbers ([`base::is.numeric`]), then approximate equality will be used,
-#'   checking whether the absolute difference between each pair of entries is
-#'   `<= abs_tol`; if `vec` is something else, then exact equality is used
-#'   instead.
-#'
-#' @details
-#'
-#' We include epikey-time columns in LOCF comparisons as part of an optimization
-#' to avoid slower grouped operations while still ensuring that the first
-#' observation for each time series will not be marked as LOCF. We test these
-#' key columns for exact equality to prevent chopping off consecutive
-#' time_values during flat periods when `abs_tol` is high.
-#'
-#' We use exact equality for non-`is.numeric` double/integer columns such as
-#' dates, datetimes, difftimes, `tsibble::yearmonth`s, etc., as these may be
-#' used as part of re-indexing or grouping procedures, and we don't want to
-#' change the number of groups for those operations when we remove LOCF data
-#' during compactification.
-#'
-#' @importFrom dplyr lag if_else
-#' @importFrom rlang is_bare_numeric
-#' @importFrom vctrs vec_equal
-#' @keywords internal
-is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
-  lag_vec <- lag(vec)
-  if (is.vector(vec, mode = "numeric") && !is_key) {
-    # (integer or double vector, no class (& no dims); maybe names, which we'll
-    # ignore like `vec_equal`); not a key column
-    unname(if_else(
-      !is.na(vec) & !is.na(lag_vec),
-      abs(vec - lag_vec) <= abs_tol,
-      is.na(vec) & is.na(lag_vec)
-    ))
+  n_updates <- nrow(arranged_updates_df)
+  if (n_updates == 0L) {
+    logical(0L)
+  } else if (n_updates == 1L) {
+    FALSE # sole observation is not LOCF
   } else {
-    vec_equal(vec, lag_vec, na_equal = TRUE)
+    ekts_tbl <- new_tibble(updates_col_refs[ekt_names])
+    vals_tbl <- new_tibble(updates_col_refs[val_names])
+    # n_updates >= 2L so we can use `:` naturally (this is the reason for
+    # separating out n_updates == 1L from this case):
+    inds1 <- 2L:n_updates
+    inds2 <- 1L:(n_updates - 1L)
+    c(
+      FALSE, # first observation is not LOCF
+      approx_equal0(ekts_tbl,
+        inds1 = inds1, ekts_tbl, inds2 = inds2,
+        # check ekt cols without tolerance:
+        abs_tol = 0, na_equal = TRUE
+      ) &
+        approx_equal0(vals_tbl,
+          inds1 = inds1, vals_tbl, inds2 = inds2,
+          abs_tol = abs_tol, na_equal = TRUE
+        )
+    )
   }
 }
 
