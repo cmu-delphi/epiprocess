@@ -1,3 +1,18 @@
+#' Test two vctrs vectors for equality with some tolerance in some cases
+#'
+#' @param vec1,vec2 vctrs vectors (includes data frames)
+#' @param abs_tol tolerance; will be used for bare numeric `vec1`, `vec2`, or
+#'   any such columns within `vec1`, `vec2` if they are data frames
+#' @param na_equal should `NA`s be considered equal to each other? (In
+#'   epiprocess, we usually want this to be `TRUE`, but that doesn't match the
+#'   [`vctrs::vec_equal()`] default, so this is mandatory.)
+#' @param .ptype as in [`vctrs::vec_equal()`]
+#' @param inds1,inds2 optional (row) indices into vec1 and vec2; output should
+#'   be consistent with `vec_slice`-ing to these indices beforehand, but can
+#'   give faster computation if `vec1` and `vec2` are data frames.
+#'
+#' @return logical vector; no nonmissing entries if `na_equal = TRUE`. Behavior
+#'   may differ from `vec_equal` with non-`NA` `NaN`s involved.
 approx_equal <- function(vec1, vec2, abs_tol, na_equal, .ptype = NULL, inds1 = NULL, inds2 = NULL) {
   # Recycle inds if provided; vecs if not:
   common_size <- vec_size_common(
@@ -30,6 +45,9 @@ approx_equal0 <- function(vec1, vec2, abs_tol, na_equal, inds1 = NULL, inds2 = N
       !is.na(vec1) & !is.na(vec2),
       abs(vec1 - vec2) <= abs_tol,
       if (na_equal) is.na(vec1) & is.na(vec2) else FALSE
+      # XXX ^ inconsistent with vec_equal treatment: NA vs. NaN comparison
+      # behavior with na_equal = TRUE is different; plus output with na_equal =
+      # FALSE on two NAs is different
     )
     # `fifelse` inherits any unrecognized attributes; drop them instead:
     attributes(res) <- NULL
@@ -45,7 +63,7 @@ approx_equal0 <- function(vec1, vec2, abs_tol, na_equal, inds1 = NULL, inds2 = N
       }))
     }
   } else {
-    # No special handling for any other types/situations. Makes sense for
+    # XXX No special handling for any other types/situations. Makes sense for
     # unclassed atomic things; bare lists and certain vctrs classes might want
     # recursion / specialization, though.
     if (!is.null(inds1)) {
