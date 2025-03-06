@@ -120,8 +120,8 @@ epi_cor <- function(x, var1, var2, dt1 = 0, dt2 = 0, shift_by = geo_value, # nol
 # Function to perform time shifts, lag or lead
 shift <- function(var, n) {
   if (n < 0) {
-    return(dplyr::lag(var, -n))
+    dplyr::lag(var, -n)
   } else {
-    return(dplyr::lead(var, n))
+    dplyr::lead(var, n)
   }
 }

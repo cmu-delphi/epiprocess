@@ -604,10 +604,10 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
     out_archive <- .data
     out_archive$DT <- out_dt
     request_names <- names(col_modify_cols)
-    return(list(
+    list(
       archive = out_archive,
       request_names = request_names
-    ))
+    )
     # (We might also consider special-casing when `mutate` hands back something
     # equivalent (in some sense) to the input (probably only encountered when
     # we're dealing with `group_by`), and using just `$DT`, not a shallow copy,
@@ -879,8 +879,7 @@ epix_slide.epi_archive <- function(
 #' @noRd
 epix_slide_versions_default <- function(ea) {
   versions_with_updates <- c(ea$DT$version, ea$versions_end)
-  ref_time_values <- tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
-  return(ref_time_values)
+  tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
 }
 
 
@@ -920,7 +919,7 @@ epix_truncate_versions_after.epi_archive <- function(x, max_version) {
     x$clobberable_versions_start <- NA
   }
   x$versions_end <- max_version
-  return(x)
+  x
 }
 
 

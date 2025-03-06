@@ -497,15 +497,13 @@ is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
   if (is.vector(vec, mode = "numeric") && !is_key) {
     # (integer or double vector, no class (& no dims); maybe names, which we'll
     # ignore like `vec_equal`); not a key column
-    res <- unname(if_else(
+    unname(if_else(
       !is.na(vec) & !is.na(lag_vec),
       abs(vec - lag_vec) <= abs_tol,
       is.na(vec) & is.na(lag_vec)
     ))
-    return(res)
   } else {
-    res <- vec_equal(vec, lag_vec, na_equal = TRUE)
-    return(res)
+    vec_equal(vec, lag_vec, na_equal = TRUE)
   }
 }
 
@@ -808,5 +806,5 @@ clone <- function(x) {
 #' @export
 clone.epi_archive <- function(x) {
   x$DT <- data.table::copy(x$DT)
-  return(x)
+  x
 }

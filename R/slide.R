@@ -281,7 +281,7 @@ epi_slide <- function(
       i <<- i + 1L
       .slide_comp(.x, .group_key, .ref_time_value, ...)
     }
-    return(slide_comp_wrapper)
+    slide_comp_wrapper
   }
 
   # - If .x is not grouped, then the trivial group is applied:
@@ -398,11 +398,11 @@ epi_slide_one_group <- function(
   # back.
   return_types <- purrr::map_chr(slide_values_list, function(x) {
     if (is.data.frame(x)) {
-      return("data.frame")
+      "data.frame"
     } else if (vctrs::obj_is_vector(x) && is.null(vctrs::vec_names(x))) {
-      return("vector")
+      "vector"
     } else {
-      return("other")
+      "other"
     }
   }) %>% unique()
   # Returned values must be data.frame or vector.
@@ -512,7 +512,7 @@ epi_slide_one_group <- function(
     res[[.new_col_name]] <- slide_values
   }
 
-  return(res)
+  res
 }
 
 get_before_after_from_window <- function(window_size, align, time_type) {
@@ -544,7 +544,7 @@ get_before_after_from_window <- function(window_size, align, time_type) {
       after <- window_size - 1
     }
   }
-  return(list(before = before, after = after))
+  list(before = before, after = after)
 }
 
 #' Optimized slide functions for common cases
@@ -952,7 +952,7 @@ epi_slide_opt <- function(
       }
     }
 
-    return(.data_group)
+    .data_group
   }
 
   result <- mutate(.x, .real = TRUE) %>%
@@ -1147,9 +1147,9 @@ full_date_seq <- function(x, before, after, time_type) {
     }
   }
 
-  return(list(
+  list(
     all_dates = all_dates,
     pad_early_dates = pad_early_dates,
     pad_late_dates = pad_late_dates
-  ))
+  )
 }

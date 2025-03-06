@@ -192,9 +192,9 @@ growth_rate <- function(
         a <- mean(yy[left])
         hh <- mean(xx[right]) - mean(xx[left])
         if (log_scale) {
-          return((b - a) / hh)
+          (b - a) / hh
         } else {
-          return((b / a - 1) / hh)
+          (b / a - 1) / hh
         }
       } else {
         # Linear regression
@@ -203,9 +203,9 @@ growth_rate <- function(
         b <- sum(xm * ym) / sum(xm^2)
         a <- mean(yy - b * xx)
         if (log_scale) {
-          return(b)
+          b
         } else {
-          return(b / (a + b * x_ref))
+          b / (a + b * x_ref)
         }
       }
     })
@@ -381,5 +381,5 @@ parse_trendfilter_params <- function(params) {
   # If we got here, we fit TF. There are two possibilities:
   # 1. df is NULL and lambda is a scalar
   # 2. df is numeric and lambda is either NULL or a vector (vec_lambda = TRUE)
-  return(params)
+  params
 }

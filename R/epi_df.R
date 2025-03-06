@@ -218,7 +218,7 @@ as_epi_df <- function(x, ...) {
 #' @export
 as_epi_df.epi_df <- function(x, ...) {
   x <- ungroup(x)
-  return(x)
+  x
 }
 
 #' @rdname epi_df

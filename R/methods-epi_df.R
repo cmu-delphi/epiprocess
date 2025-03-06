@@ -17,7 +17,7 @@ as_tibble.epi_df <- function(x, ...) {
   # first instead.
   destructured <- tibble::as_tibble(vctrs::vec_data(x), ...)
   if (attr(x, "decay_to_tibble") %||% TRUE) {
-    return(destructured)
+    destructured
   } else {
     # We specially requested via attr not to decay epi_df-ness but to drop any
     # grouping.
@@ -39,12 +39,10 @@ as_tibble.epi_df <- function(x, ...) {
 #' @export
 as_tsibble.epi_df <- function(x, key, ...) {
   if (missing(key)) key <- c("geo_value", attributes(x)$metadata$other_keys)
-  return(
-    as_tsibble(
-      tibble::as_tibble(x),
-      key = tidyselect::all_of(key), index = "time_value",
-      ...
-    )
+  as_tsibble(
+    tibble::as_tibble(x),
+    key = tidyselect::all_of(key), index = "time_value",
+    ...
   )
 }
 
@@ -351,8 +349,8 @@ unnest.epi_df <- function(data, ...) {
 # Simple reclass function
 reclass <- function(x, metadata) {
   class(x) <- unique(c("epi_df", class(x)))
-  attributes(x)$metadata <- metadata
-  return(x)
+  attr(x, "metadata") <- metadata
+  x
 }
 
 #' Arrange an epi_df into a standard order
@@ -376,7 +374,7 @@ arrange_canonical.default <- function(x, ...) {
   cli::cli_abort(c(
     "`arrange_canonical()` is only meaningful for an {.cls epi_df}."
   ))
-  return(x)
+  x
 }
 
 #' @export
@@ -397,7 +395,7 @@ arrange_row_canonical.default <- function(x, ...) {
   cli::cli_abort(c(
     "`arrange_row_canonical()` is only meaningful for an {.cls epi_df}."
   ))
-  return(x)
+  x
 }
 
 #' @export
@@ -417,7 +415,7 @@ arrange_col_canonical.default <- function(x, ...) {
   cli::cli_abort(c(
     "`arrange_col_canonical()` is only meaningful for an {.cls epi_df}."
   ))
-  return(x)
+  x
 }
 
 #' @export
