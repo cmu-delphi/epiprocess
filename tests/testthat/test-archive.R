@@ -220,5 +220,5 @@ test_that("`epi_archive` rejects dataframes where time_value and version columns
 test_that("is_locf replacement works as expected", {
   vec <- c(1, 1, 1e-10, 1.1e-10, NA, NA, NaN, NaN)
   is_repeated <- c(0, 1, 0, 1, 0, 1, 1, 1)
-  expect_equal(c(FALSE, approx_equal(head(vec, -1L), tail(vec, -1L), .Machine$double.eps^0.5, na_equal = TRUE)), as.logical(is_repeated))
+  expect_equal(c(FALSE, approx_equal(head(vec, -1L), tail(vec, -1L), na_equal = TRUE, abs_tol = .Machine$double.eps^0.5)), as.logical(is_repeated))
 })

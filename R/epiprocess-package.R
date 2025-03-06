@@ -12,7 +12,11 @@
 #' @importFrom checkmate assert_subset
 #' @importFrom checkmate assert_tibble
 #' @importFrom checkmate check_atomic check_data_frame expect_class test_int
+#' @importFrom checkmate check_character
+#' @importFrom checkmate check_logical
 #' @importFrom checkmate check_names
+#' @importFrom checkmate check_null
+#' @importFrom checkmate check_numeric
 #' @importFrom checkmate test_subset test_set_equal vname
 #' @importFrom cli cli_abort cli_warn
 #' @importFrom cli pluralize
@@ -36,6 +40,7 @@
 #' @importFrom tibble is_tibble
 #' @importFrom tidyr nest
 #' @importFrom tools toTitleCase
+#' @importFrom vctrs obj_is_vector
 #' @importFrom vctrs vec_cast
 #' @importFrom vctrs vec_cast_common
 #' @importFrom vctrs vec_data

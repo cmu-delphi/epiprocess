@@ -7,36 +7,79 @@
 approx_equal(
   vec1,
   vec2,
-  abs_tol,
   na_equal,
   .ptype = NULL,
+  ...,
+  abs_tol,
   inds1 = NULL,
   inds2 = NULL
 )
 }
 \arguments{
-\item{vec1, vec2}{vctrs vectors (includes data frames)}
-
-\item{abs_tol}{tolerance; will be used for bare numeric \code{vec1}, \code{vec2}, or
-any such columns within \code{vec1}, \code{vec2} if they are data frames}
+\item{vec1, vec2}{vctrs vectors (includes data frames). Take care when using
+on named vectors or "keyed" data frames; \code{\link[=vec_names]{vec_names()}} are largely
+ignored, and key columns are treated as normal value columns (when they
+should probably generate an error if they are not lined up correctly, or be
+tested for exact rather than approximate equality).}
 
 \item{na_equal}{should \code{NA}s be considered equal to each other? (In
 epiprocess, we usually want this to be \code{TRUE}, but that doesn't match the
 \code{\link[vctrs:vec_equal]{vctrs::vec_equal()}} default, so this is mandatory.)}
 
-\item{.ptype}{as in \code{\link[vctrs:vec_equal]{vctrs::vec_equal()}}}
+\item{.ptype}{as in \code{\link[vctrs:vec_equal]{vctrs::vec_equal()}}.}
 
-\item{inds1, inds2}{optional (row) indices into vec1 and vec2; output should
-be consistent with \code{vec_slice}-ing to these indices beforehand, but can
-give faster computation if \code{vec1} and \code{vec2} are data frames.}
+\item{abs_tol}{absolute tolerance; will be used for bare numeric \code{vec1},
+\code{vec2}, or any such columns within \code{vec1}, \code{vec2} if they are data frames.}
+
+\item{inds1, inds2}{optional (row) indices into vec1 and vec2 compatible with
+\code{\link[vctrs:vec_slice]{vctrs::vec_slice()}}; output should be consistent with \code{vec_slice}-ing to
+these indices beforehand, but can give faster computation if \code{vec1} and
+\code{vec2} are data frames.}
 }
 \value{
 logical vector, with length matching the result of recycling \code{vec1}
 (at \code{inds1} if provided) and \code{vec2} (at \code{inds2} if provided); entries
-should all be \code{TRUE} or \code{FALSE} if \code{na_equal = TRUE}. Behavior may differ
-from \code{vec_equal} with non-\code{NA} \code{NaN}s involved, or for bare lists that
-contain named vectors.
+should all be \code{TRUE} or \code{FALSE} if \code{na_equal = TRUE}.
 }
 \description{
-Test two vctrs vectors for equality with some tolerance in some cases
+Similar to \code{\link[vctrs:vec_equal]{vctrs::vec_equal}}. Behavior may differ from \code{vec_equal} with
+non-\code{NA} \code{NaN}s involved, or for bare lists that contain named vectors, and
+the precise behavior in these cases may change and should not be relied upon.
+}
+\examples{
+
+# On numeric vectors:
+approx_equal(
+  c(1, 2, 3, NA),
+  c(1, 2 + 1e-10, NA, NA),
+  na_equal = TRUE,
+  abs_tol = 1e-8
+)
+
+# On tibbles:
+tbl1 <- tibble(
+  a = 1:5,
+  b = list(1:5, 1:4, 1:3, 1:2, 1:1) \%>\% lapply(as.numeric),
+  c = tibble(
+    c1 = 1:5
+  ),
+  d = matrix(1:10, 5, 2)
+)
+tbl2 <- tbl1
+tbl2$a[[2]] <- tbl1$a[[2]] + 1e-10
+tbl2$b[[3]][[1]] <- tbl1$b[[3]][[1]] + 1e-10
+tbl2$c$c1[[4]] <- tbl1$c$c1[[4]] + 1e-10
+tbl2$d[[5, 2]] <- tbl1$d[[5, 2]] + 1e-10
+vctrs::vec_equal(tbl1, tbl2, na_equal = TRUE)
+approx_equal(tbl1, tbl2, na_equal = TRUE, abs_tol = 1e-12)
+approx_equal(tbl1, tbl2, na_equal = TRUE, abs_tol = 1e-8)
+
+
+
+
+
+# Type comparison within lists is stricter, matching vctrs:
+vctrs::vec_equal(list(1:2), list(as.numeric(1:2)))
+approx_equal(list(1:2), list(as.numeric(1:2)), FALSE, abs_tol = 0)
+
 }
