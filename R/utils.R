@@ -617,7 +617,7 @@ guess_geo_type <- function(geo_value) {
     }
   }
 
-  return("custom")
+  "custom"
 }
 
 
@@ -679,7 +679,7 @@ time_column_names <- function() {
   )
   substitutions <- upcase_snake_case(substitutions)
   names(substitutions) <- rep("time_value", length(substitutions))
-  return(substitutions)
+  substitutions
 }
 #
 #' potential geo_value columns
@@ -696,7 +696,7 @@ geo_column_names <- function() {
   )
   substitutions <- upcase_snake_case(substitutions)
   names(substitutions) <- rep("geo_value", length(substitutions))
-  return(substitutions)
+  substitutions
 }
 
 #' potential version columns
@@ -711,7 +711,7 @@ version_column_names <- function() {
   )
   substitutions <- upcase_snake_case(substitutions)
   names(substitutions) <- rep("version", length(substitutions))
-  return(substitutions)
+  substitutions
 }
 
 #' rename potential time_value columns
@@ -753,7 +753,7 @@ guess_column_name <- function(x, column_name, substitutions) {
       }
     )
   }
-  return(x)
+  x
 }
 
 ##########

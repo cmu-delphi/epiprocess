@@ -280,9 +280,9 @@ get_last_run <- function(bool_vec, values_from) {
 f_no_na <- function(f, x) {
   x <- x[!is.na(x)]
   if (length(x) == 0) {
-    return(Inf)
+    Inf
   } else {
-    return(f(x))
+    f(x)
   }
 }
 
@@ -313,8 +313,8 @@ time_delta_summary <- function(time_delta, time_type) {
       check.names = FALSE
     ) %>%
       mutate(across(c(min, median, mean, max), ~ .x * unit_time_delta(time_type)))
-    return(res)
+    res
   } else {
-    return(data.frame())
+    data.frame()
   }
 }

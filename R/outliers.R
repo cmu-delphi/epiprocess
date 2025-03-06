@@ -122,7 +122,7 @@ detect_outlr <- function(x = seq_along(y), y,
 
     # Update column names with model abbreviation
     colnames(results) <- paste(abbr, colnames(results), sep = "_")
-    return(results)
+    results
   })
 
   # Combine information about detected outliers
