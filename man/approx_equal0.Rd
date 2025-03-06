@@ -4,7 +4,7 @@
 \alias{approx_equal0}
 \title{Helper for \code{\link{approx_equal}} for vecs guaranteed to have the same ptype and size}
 \usage{
-approx_equal0(vec1, vec2, abs_tol, na_equal, inds1 = NULL, inds2 = NULL)
+approx_equal0(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2 = NULL)
 }
 \description{
 Helper for \code{\link{approx_equal}} for vecs guaranteed to have the same ptype and size
