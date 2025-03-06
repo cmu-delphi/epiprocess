@@ -493,12 +493,12 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol) {
       FALSE, # first observation is not LOCF
       approx_equal0(ekts_tbl,
         inds1 = inds1, ekts_tbl, inds2 = inds2,
-        # check ekt cols without tolerance:
-        abs_tol = 0, na_equal = TRUE
+        # check ekt (key) cols with 0 tolerance:
+        na_equal = TRUE, abs_tol = 0
       ) &
         approx_equal0(vals_tbl,
           inds1 = inds1, vals_tbl, inds2 = inds2,
-          abs_tol = abs_tol, na_equal = TRUE
+          na_equal = TRUE, abs_tol = abs_tol
         )
     )
   }
