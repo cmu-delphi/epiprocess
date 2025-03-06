@@ -24,24 +24,20 @@
 #'
 #' library(dplyr)
 #' updates <- bind_rows(
-#'   tibble(
-#'     version = 40, time_value = 1:10, value = 1:10
-#'   ),
-#'   tibble(
-#'     version = 12, time_value = 2:3, value = 3:2
-#'   ),
-#'   tibble(
-#'     version = 13, time_value = 6, value = 7,
-#'   ),
-#'   tibble(
-#'     version = 13, time_value = 7, value = NA,
-#'   )
+#'   tibble(version = 10, time_value = 1:20, value = 1:20),
+#'   tibble(version = 12, time_value = 4:5, value = 5:4),
+#'   tibble(version = 13, time_value = 8, value = 9),
+#'   tibble(version = 14, time_value = 11, value = NA),
+#'   tibble(version = 15, time_value = -10, value = -10),
+#'   tibble(version = 16, time_value = 50, value = 50)
 #' ) %>%
 #'   mutate(across(c(version, time_value), ~ as.Date("2020-01-01") - 1 + .x)) %>%
 #'   tidyr::nest(.by = version, .key = "subtbl")
 #'
+#' f <- purrr::partial(data.table::frollmean, algo = "exact")
+#'
 #' updates %>%
-#'   epi_slide_opt_one_epikey("value", data.table::frollmean, "data.table", 1L, 0L, "day", "slide_value")
+#'   epi_slide_opt_archive_one_epikey("value", f, "data.table", 2L, 0L, "day", "slide_value")
 #'
 #' @keywords internal
 epi_slide_opt_archive_one_epikey <- function(updates, in_colnames, f_dots_baked, f_from_package, before, after, time_type, out_colnames) {
