@@ -42,3 +42,4 @@ a tibble in compact "update" (diff) format
 \description{
 Calculate compact patch to move from one snapshot/update to another
 }
+\keyword{internal}
