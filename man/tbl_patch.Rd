@@ -24,3 +24,4 @@ tibble; snapshot of the data set with the update applied.
 \description{
 Apply an update (e.g., from \code{tbl_diff2}) to a snapshot
 }
+\keyword{internal}

@@ -118,6 +118,8 @@ approx_equal0 <- function(vec1, vec2, abs_tol, na_equal, inds1 = NULL, inds2 = N
 #'   `compactify_abs_tol`.
 #' @param compactify_abs_tol compactification tolerance; see `apply_compactify`
 #' @return a tibble in compact "update" (diff) format
+#'
+#' @keywords internal
 tbl_diff2 <- function(earlier_snapshot, later_tbl,
                       ukey_names,
                       later_format = c("snapshot", "update"),
@@ -152,7 +154,6 @@ tbl_diff2 <- function(earlier_snapshot, later_tbl,
 
   # More input validation:
   if (!identical(tbl_names, names(later_tbl))) {
-    # XXX is this check actually necessary?
     cli_abort(c("`earlier_snapshot` and `later_tbl` should have identical column
                  names and ordering.",
       "*" = "`earlier_snapshot` colnames: {format_chr_deparse(tbl_names)}",
@@ -200,7 +201,6 @@ tbl_diff2 <- function(earlier_snapshot, later_tbl,
   combined_compactify_away[combined_ukey_is_repeat] <-
     approx_equal0(combined_vals,
       combined_vals,
-      # TODO move inds closer to vals to not be as confusing?
       abs_tol = compactify_abs_tol,
       na_equal = TRUE,
       inds1 = combined_ukey_is_repeat,
@@ -230,17 +230,6 @@ tbl_diff2 <- function(earlier_snapshot, later_tbl,
   combined_tbl
 }
 
-epi_diff2 <- function(earlier_snapshot, later_edf,
-                      later_format = c("snapshot", "update"),
-                      compactify_abs_tol = 0) {
-  ukey_names <- key_colnames(later_edf)
-  dplyr_reconstruct(tbl_diff2(as_tibble(earlier_snapshot), as_tibble(later_edf), ukey_names, later_format, compactify_abs_tol), later_edf)
-}
-
-# XXX vs. tbl_patch_apply?
-
-
-
 #' Apply an update (e.g., from `tbl_diff2`) to a snapshot
 #'
 #' @param snapshot tibble or `NULL`; entire data set as of some version, or
@@ -252,14 +241,12 @@ epi_diff2 <- function(earlier_snapshot, later_edf,
 #'   for `snapshot` and for `update`. Uniqueness is unchecked; if you don't have
 #'   this guaranteed, see [`check_ukey_unique()`].
 #' @return tibble; snapshot of the data set with the update applied.
+#'
+#' @keywords internal
 tbl_patch <- function(snapshot, update, ukey_names) {
   # Most input validation. This is a small function so use faster validation
   # variants:
   if (!is_tibble(update)) {
-    # XXX debating about whether to have a specialized class for updates/diffs.
-    # Seems nice for type-based reasoning and might remove some args from
-    # interfaces, but would require constructor/converter functions for that
-    # type.
     cli_abort("`update` must be a tibble")
   }
   if (is.null(snapshot)) {
@@ -271,6 +258,13 @@ tbl_patch <- function(snapshot, update, ukey_names) {
   if (!is.character(ukey_names) || !all(ukey_names %in% names(snapshot))) {
     cli_abort("`ukey_names` must be a subset of column names")
   }
+  if (!identical(names(snapshot), names(update))) {
+    cli_abort(c("`snapshot` and `update` should have identical column
+                 names and ordering.",
+      "*" = "`snapshot` colnames: {format_chr_deparse(tbl_names)}",
+      "*" = "`update` colnames: {format_chr_deparse(names(update))}"
+    ))
+  }
 
   result_tbl <- vec_rbind(update, snapshot)
 
@@ -278,12 +272,5 @@ tbl_patch <- function(snapshot, update, ukey_names) {
   not_overwritten <- dup_ids == vec_seq_along(result_tbl)
   result_tbl <- result_tbl[not_overwritten, ]
 
-  ## result_tbl <- arrange_canonical(result_tbl)
-
   result_tbl
-}
-
-epi_patch <- function(snapshot, update) {
-  ukey_names <- key_colnames(update)
-  dplyr_reconstruct(tbl_patch(as_tibble(snapshot), as_tibble(update), ukey_names), update)
 }
