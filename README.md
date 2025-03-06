@@ -120,7 +120,7 @@ edf
 #> 
 #> # A tibble: 2,808 × 4
 #>   geo_value time_value cases_cumulative cases_daily
-#> * <chr>     <date>                <dbl>       <dbl>
+#>   <chr>     <date>                <dbl>       <dbl>
 #> 1 ca        2020-03-01               19          19
 #> 2 ca        2020-03-02               23           4
 #> 3 ca        2020-03-03               29           6
@@ -144,7 +144,7 @@ edf
 #> 
 #> # A tibble: 2,808 × 5
 #>   geo_value time_value cases_cumulative cases_daily smoothed_cases_daily
-#> * <chr>     <date>                <dbl>       <dbl>                <dbl>
+#>   <chr>     <date>                <dbl>       <dbl>                <dbl>
 #> 1 ca        2020-03-01               19          19                19   
 #> 2 ca        2020-03-02               23           4                11.5 
 #> 3 ca        2020-03-03               29           6                 9.67
