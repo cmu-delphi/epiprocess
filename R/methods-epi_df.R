@@ -234,21 +234,21 @@ reconstruct_light_edf <- function(data, template) {
 }
 
 #' @export
-`[<-.epi_df` <- function(x, ...) {
+`[<-.epi_df` <- function(x, i, j, ..., value) {
   res <- NextMethod()
 
   reconstruct_light_edf(res, x)
 }
 
 #' @export
-`[[<-.epi_df` <- function(x, ...) {
+`[[<-.epi_df` <- function(x, i, j, ..., value) {
   res <- NextMethod()
 
   reconstruct_light_edf(res, x)
 }
 
 #' @export
-`$<-.epi_df` <- function(x, ...) {
+`$<-.epi_df` <- function(x, name, value) {
   res <- NextMethod()
 
   reconstruct_light_edf(res, x)
