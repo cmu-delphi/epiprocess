@@ -98,6 +98,7 @@ Collate:
     'correlation.R'
     'epi_df.R'
     'epi_df_forbidden_methods.R'
+    'epi_slide_opt_edf.R'
     'epiprocess-package.R'
     'epix_epi_slide_opt.R'
     'group_by_epi_df_methods.R'

@@ -64,7 +64,7 @@ updates <- bind_rows(
     version = 13, time_value = 7, value = NA,
   )
 ) \%>\%
-  mutate(across(c(version, time_value), ~as.Date("2020-01-01") - 1 + .x)) \%>\%
+  mutate(across(c(version, time_value), ~ as.Date("2020-01-01") - 1 + .x)) \%>\%
   tidyr::nest(.by = version, .key = "subtbl")
 
 updates \%>\%
