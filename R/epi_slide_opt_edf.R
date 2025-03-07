@@ -159,10 +159,23 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer, .windo
 
 #' Optimized slide functions for common cases
 #'
-#' @description `epi_slide_opt` allows sliding an n-timestep [data.table::froll]
-#' or [slider::summary-slide] function over variables in an `epi_df` object.
-#' These functions tend to be much faster than `epi_slide()`. See
-#' `vignette("epi_df")` for more examples.
+#' @description
+#'
+#' `epi_slide_opt` calculates n-time-step rolling means&sums,
+#' cumulative/"running" means&sums, or other operations supported by
+#' [`data.table::froll`] or [`slider::summary-slide`] functions.
+#'
+#' * On `epi_df`s, it will take care of looping over `geo_value`s, temporarily
+#'   filling in time gaps with `NA`s and other work needed to ensure there are
+#'   exactly n consecutive time steps per computation, and has some other
+#'   convenience features. See `vignette("epi_df")` for more examples.
+#'
+#' * On `epi_archive`s, it will calculate the version history for these slide
+#'   computations and combine it with the version history for the rest of the
+#'   columns.
+#'
+#' This function tends to be much faster than using `epi_slide()` and
+#' `epix_slide()` directly.
 #'
 #' @template basic-slide-params
 #' @param .col_names <[`tidy-select`][dplyr_tidy_select]> An unquoted column
@@ -279,13 +292,26 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer, .windo
 #'     .suffix = "_{.n}{.time_unit_abbr}_median"
 #'   ) %>%
 #'   print(n = 40)
+#'
+#' # You can calculate entire version histories for the derived signals by
+#' # calling `epi_slide_opt()` on an `epi_archive`:
+#' case_death_rate_archive %>%
+#'   epi_slide_mean(case_rate, .window_size = 14)
+#'
+#' @export
 epi_slide_opt <- function(
     .x, .col_names, .f, ...,
     .window_size = NULL, .align = c("right", "center", "left"),
     .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
     .ref_time_values = NULL, .all_rows = FALSE) {
-  assert_class(.x, "epi_df")
+  UseMethod("epi_slide_opt")
+}
 
+#' @export
+epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
+                                 .window_size = NULL, .align = c("right", "center", "left"),
+                                 .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
+                                 .ref_time_values = NULL, .all_rows = FALSE) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
   if (any(purrr::map_lgl(provided_args, ~ .x %in% c("x", "col_names", "f", "ref_time_values", "all_rows")))) {

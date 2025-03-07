@@ -1,4 +1,4 @@
-#' Core operation of `epix_epi_slide_opt` for a single epikey's history
+#' Core operation of `epi_slide_opt.epi_archive` for a single epikey's history
 #'
 #' @param updates tibble with two columns: `version` and `subtbl`; `subtbl` is a
 #'   list of tibbles, each with a `time_value` column and measurement columns.
@@ -41,10 +41,10 @@
 #'   tidyr::nest(.by = version, .key = "subtbl")
 #'
 #' updates %>%
-#'   epix_epi_slide_opt_one_epikey("value", data.table::frollmean, "data.table", 1L, 0L, "day", "slide_value")
+#'   epi_slide_opt_one_epikey("value", data.table::frollmean, "data.table", 1L, 0L, "day", "slide_value")
 #'
 #' @keywords internal
-epix_epi_slide_opt_one_epikey <- function(updates, in_colnames, f_dots_baked, f_from_package, before, after, time_type, out_colnames) {
+epi_slide_opt_archive_one_epikey <- function(updates, in_colnames, f_dots_baked, f_from_package, before, after, time_type, out_colnames) {
   # TODO check for col name clobbering
   unit_step <- epiprocess:::unit_time_delta(time_type)
   prev_inp_snapshot <- NULL
@@ -124,21 +124,9 @@ epix_epi_slide_opt_one_epikey <- function(updates, in_colnames, f_dots_baked, f_
   result
 }
 
-# TODO just make this an epi_slide_opt impl?
-
+#' @method epi_slide_opt grouped_epi_archive
 #' @export
-epix_epi_slide_opt <-
-  function(.x, .col_names, .f, ...,
-           .window_size = NULL, .align = c("right", "center", "left"),
-           .prefix = NULL, .suffix = NULL, .new_col_names = NULL # ,
-           ## .ref_time_values = NULL, .all_rows = FALSE
-  ) {
-    UseMethod("epix_epi_slide_opt")
-  }
-
-#' @method epix_epi_slide_opt grouped_epi_archive
-#' @export
-epix_epi_slide_opt.grouped_epi_archive <- function(.x, ...) {
+epi_slide_opt.grouped_epi_archive <- function(.x, ...) {
   assert_set_equal(
     group_vars(.x),
     key_colnames(.x, exclude = c("time_value", "version"))
@@ -147,16 +135,17 @@ epix_epi_slide_opt.grouped_epi_archive <- function(.x, ...) {
   orig_drop <- .x$private$drop
   .x %>%
     ungroup() %>%
-    epix_epi_slide_opt(...) %>%
+    epi_slide_opt(...) %>%
     group_by(pick(all_of(orig_group_vars)), .drop = orig_drop)
 }
-#' @method epix_epi_slide_opt epi_archive
+
+#' @method epi_slide_opt epi_archive
 #' @export
-epix_epi_slide_opt.epi_archive <-
+epi_slide_opt.epi_archive <-
   function(.x, .col_names, .f, ...,
            .window_size = NULL, .align = c("right", "center", "left"),
            .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
-           ## , .ref_time_values = NULL, .all_rows = FALSE
+           .ref_time_values = NULL, .all_rows = FALSE,
            .progress = FALSE) {
     # Extract metadata:
     time_type <- .x$time_type
@@ -175,6 +164,12 @@ epix_epi_slide_opt.epi_archive <-
     col_names_quo <- enquo(.col_names)
     names_info <- across_ish_names_info(.x$DT, time_type, col_names_quo, .f_info$namer, .window_size, .align, .prefix, .suffix, .new_col_names)
     window_args <- get_before_after_from_window(.window_size, .align, time_type)
+    if (!is.null(.ref_time_values)) {
+      cli_abort("epi_slide.epi_archive does not support the `.ref_time_values` argument")
+    }
+    if (!identical(.all_rows, FALSE)) {
+      cli_abort("epi_slide.epi_archive does not support the `.all_rows` argument")
+    }
     assert(
       checkmate::check_logical(.progress, any.missing = FALSE, len = 1L, names = "unnamed"),
       checkmate::check_string(.progress)
@@ -196,7 +191,7 @@ epix_epi_slide_opt.epi_archive <-
           nest(.by = version, .key = "subtbl") %>%
           arrange(version)
         # TODO move nesting inside the helper?
-        res <- epix_epi_slide_opt_one_epikey(group_updates, names_info$input_col_names, .f_dots_baked, .f_info$from_package, window_args$before, window_args$after, time_type, names_info$output_col_names) %>%
+        res <- epi_slide_opt_archive_one_epikey(group_updates, names_info$input_col_names, .f_dots_baked, .f_info$from_package, window_args$before, window_args$after, time_type, names_info$output_col_names) %>%
           list_rbind()
         if (use_progress) cli::cli_progress_update(id = progress_bar_id)
         res
