@@ -35,7 +35,7 @@ test_that("epi_slide_opt_archive_one_epikey works as expected", {
     ),
     tibble(
       version = 13, time_value = 8:10, value = c(9, 9, 10),
-      slide_value = frollmean(c(6, 7, 9, 9, 10),  3,  algo = "exact")[-(1:2)]
+      slide_value = frollmean(c(6, 7, 9, 9, 10), 3, algo = "exact")[-(1:2)]
     ),
     tibble(
       version = 14, time_value = 11:13, value = c(NA, 12, 13), slide_value = rep(NA_real_, 3L)
@@ -89,7 +89,6 @@ test_that("epi_slide_opt.epi_archive is not confused by unique(DT$version) unsor
 })
 
 test_that("epi_slide_opt.epi_archive is not confused by unique(DT$time_value) unsorted", {
-
   start_date <- as.Date("2020-01-01")
   tibble(
     geo_value = c(1, 1, 2, 2),
@@ -109,26 +108,25 @@ test_that("epi_slide_opt.epi_archive is not confused by unique(DT$time_value) un
       ) %>%
         as_epi_archive()
     )
-
 })
 
 test_that("epi_slide_opt.epi_archive is equivalent to epix_slide reconversion on example data", {
-
   case_death_rate_archive %>%
-    epi_slide_opt(case_rate, frollmean, .window_size = 7
-                  # , algo = "exact"
-                  ) %>%
+    epi_slide_opt(case_rate, frollmean,
+      .window_size = 7
+      # , algo = "exact"
+    ) %>%
     .$DT %>%
     as.data.frame() %>%
     as_tibble() %>%
     filter(!approx_equal(case_rate_7dav, case_rate_7d_av, 1e-6, TRUE)) %>%
     dplyr::transmute(version, geo_value, time_value, case_rate_7dav, case_rate_7d_av,
-                     abs_diff = abs(case_rate_7dav - case_rate_7d_av)) %>%
+      abs_diff = abs(case_rate_7dav - case_rate_7d_av)
+    ) %>%
     {}
 
-    # TODO finish tests on example data sets
-
-  })
+  # TODO finish tests on example data sets
+})
 
 
 # TODO grouped behavior checks
