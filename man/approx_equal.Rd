@@ -50,7 +50,7 @@ the precise behavior in these cases may change and should not be relied upon.
 
 # On numeric vectors:
 approx_equal(
-  c(1, 2        ,  3, NA),
+  c(1, 2, 3, NA),
   c(1, 2 + 1e-10, NA, NA),
   na_equal = TRUE,
   abs_tol = 1e-8
@@ -58,13 +58,13 @@ approx_equal(
 
 # On tibbles:
 tbl1 <- tibble(
-    a = 1:5,
-    b = list(1:5, 1:4, 1:3, 1:2, 1:1) \%>\% lapply(as.numeric),
-    c = tibble(
-          c1 = 1:5
-        ),
-    d = matrix(1:10, 5, 2)
-  )
+  a = 1:5,
+  b = list(1:5, 1:4, 1:3, 1:2, 1:1) \%>\% lapply(as.numeric),
+  c = tibble(
+    c1 = 1:5
+  ),
+  d = matrix(1:10, 5, 2)
+)
 tbl2 <- tbl1
 tbl2$a[[2]] <- tbl1$a[[2]] + 1e-10
 tbl2$b[[3]][[1]] <- tbl1$b[[3]][[1]] + 1e-10
