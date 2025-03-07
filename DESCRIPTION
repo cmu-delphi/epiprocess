@@ -49,6 +49,7 @@ Imports:
     lifecycle (>= 1.0.1),
     lubridate,
     magrittr,
+    pkgconfig,
     purrr,
     rlang,
     slider,
