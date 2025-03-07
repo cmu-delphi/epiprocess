@@ -70,6 +70,7 @@
 <ul><li>
 <code><a href="../reference/revision_summary.html">revision_summary()</a></code> now supports all <code>time_type</code>s.</li>
 <li>The compactification tolerance setting now works with integer-type columns.</li>
+<li>Various functions are now faster, using faster variants of core operations and avoiding reconstructing grouped <code>epi_df</code>s when unnecessary.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-0-11">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-11"></a></h3>
@@ -77,6 +78,8 @@
 <li>Fixed <code><a href="../reference/key_colnames.html">key_colnames()</a></code> omitting some key columns on <code>epi_archive</code>s (<a href="https://github.com/cmu-delphi/epiprocess/issues565" class="external-link">#565</a>).</li>
 <li>Fixed <code>epi_archive</code> compactification raising an error on certain value column classes such as <code>"distribution"</code> (<a href="https://github.com/cmu-delphi/epiprocess/issues541" class="external-link">#541</a>); it’s now easier to form an archive of forecasts in that format.</li>
 <li>Fixed large compactification tolerances potentially removing all versions of some observations in certain cases when activity was flat.</li>
+<li>
+<code>[&lt;-</code>, <code>[[&lt;-</code>, and <code>$&lt;-</code> now properly retain <code>epi_df</code>-ness when used on grouped <code>epi_df</code>s.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="cleanup-0-11">Cleanup<a class="anchor" aria-label="anchor" href="#cleanup-0-11"></a></h3>
