@@ -19,7 +19,7 @@ as_tibble.epi_df <- function(x, ...) {
   # and redispatch instead.
   destructured <- vec_data(x) # -> data.frame, dropping extra attrs
   tbl <- if (dots_n(...) == 0 &&
-    is.null(pkgconfig::get_config("tibble::rownames"))) {
+    is.null(pkgconfig::get_config("tibble::rownames"))) { # nolint: indentation_linter
     # perf: new_tibble instead of as_tibble.data.frame which performs
     # extra checks whose defaults should be redundant here:
     new_tibble(destructured)
