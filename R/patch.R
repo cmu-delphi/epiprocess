@@ -340,3 +340,5 @@ tbl_patch <- function(snapshot, update, ukey_names) {
 
   result_tbl
 }
+
+# TODO rename approx_equal to vec_approx_equal
