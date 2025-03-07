@@ -46,6 +46,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 ## Improvements
 - `revision_summary()` now supports all `time_type`s.
 - The compactification tolerance setting now works with integer-type columns.
+- Various functions are now faster, using faster variants of core operations and
+  avoiding reconstructing grouped `epi_df`s when unnecessary.
 
 ## Bug fixes
 
@@ -56,6 +58,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   forecasts in that format.
 - Fixed large compactification tolerances potentially removing all versions of
   some observations in certain cases when activity was flat.
+- `[<-`, `[[<-`, and `$<-` now properly retain `epi_df`-ness when used on
+  grouped `epi_df`s.
 
 ## Cleanup
 
