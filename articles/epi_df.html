@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -100,8 +100,9 @@ package, and then convert this to <code>epi_df</code> format.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></code></pre></div>
-<p>The data is included in this package (via the <a href="https://cmu-delphi.github.io/epidatasets/" class="external-link"><code>epidatasets</code>
-package</a>) and can be loaded with:</p>
+<p>The data is included in the <a href="https://cmu-delphi.github.io/epidatasets/" class="external-link"><code>epidatasets</code>
+package</a>, which is loaded along with <code>epiprocess</code>, and can
+be accessed with:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edf</span> <span class="op">&lt;-</span> <span class="va">cases_deaths_subset</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">cases</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -180,16 +181,16 @@ computation would be the following, which is easy to get wrong:</p>
 <span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/complete.html" class="external-link">complete</a></span><span class="op">(</span><span class="va">geo_value</span>, time_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.Date.html" class="external-link">seq.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">time_value</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">time_value</span><span class="op">)</span>, by <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/arrange_canonical.html">arrange_canonical</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cases_7sd <span class="op">=</span> <span class="fu">slider</span><span class="fu">::</span><span class="fu"><a href="https://slider.r-lib.org/reference/slide.html" class="external-link">slide_dbl</a></span><span class="op">(</span><span class="va">cases</span>, .f <span class="op">=</span> <span class="va">sd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span>, .before <span class="op">=</span> <span class="fl">7</span>, .after <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cases_7sd <span class="op">=</span> <span class="fu">slider</span><span class="fu">::</span><span class="fu"><a href="https://slider.r-lib.org/reference/slide.html" class="external-link">slide_dbl</a></span><span class="op">(</span><span class="va">cases</span>, .f <span class="op">=</span> <span class="va">sd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span>, .before <span class="op">=</span> <span class="fl">7</span>, .after <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; An `epi_df` object, 4,026 x 4 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 4</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># Groups:   geo_value [6]</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">cases_7sd</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> ca        2020-03-01     6     <span style="color: #BB0000;">NA</span>   </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> ca        2020-03-02     4      1.41</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> ca        2020-03-03     6      1.15</span></span>
@@ -220,7 +221,8 @@ grouping variables for the associated group, for instance
 <li>
 <code>t</code> is the ref_time_value for the current window</li>
 <li>
-<code>...</code> are additional arguments</li>
+<code>...</code> (optional) are any additional arguments you’d like
+to be able to forward to your function</li>
 </ul>
 <p>The same computation as above can be done with a function:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
@@ -233,7 +235,7 @@ grouping variables for the associated group, for instance
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 4</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">slide_value</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> ca        2020-03-01     6       <span style="color: #BB0000;">NA</span>   </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> ca        2020-03-02     4        1.41</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> ca        2020-03-03     6        1.15</span></span>
@@ -259,7 +261,7 @@ references to the columns must be made with the prefix
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 4</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">slide_value</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> ca        2020-03-01     6       <span style="color: #BB0000;">NA</span>   </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> ca        2020-03-02     4        1.41</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> ca        2020-03-03     6        1.15</span></span>
@@ -274,8 +276,8 @@ in the unnamed formula or function case. This can be adjusted with
 <div class="section level3">
 <h3 id="rolling-computations-with-multiple-column-outputs">Rolling computations with multiple column outputs<a class="anchor" aria-label="anchor" href="#rolling-computations-with-multiple-column-outputs"></a>
 </h3>
-<p>If your formula (or function) returns a data.frame, then the columns
-of the data.frame will be unpacked into the resulting
+<p>If your formula (or function) returns a tibble (or other kind of data
+frame), then its columns will be unpacked into the resulting
 <code>epi_df</code> (in the sense of <code><a href="https://tidyr.tidyverse.org/reference/pack.html" class="external-link">tidyr::unpack()</a></code>). For
 example, the following computes the 7-day trailing average of daily
 cases as well as the the 7-day trailing standard deviation of daily
@@ -283,7 +285,10 @@ cases:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_slide.html">epi_slide</a></span><span class="op">(</span></span>
-<span>    <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>cases_mean <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">.x</span><span class="op">$</span><span class="va">cases</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, cases_sd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">.x</span><span class="op">$</span><span class="va">cases</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    <span class="op">~</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
+<span>      cases_mean <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">.x</span><span class="op">$</span><span class="va">cases</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>      cases_sd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">.x</span><span class="op">$</span><span class="va">cases</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>    <span class="op">)</span>,</span>
 <span>    .window_size <span class="op">=</span> <span class="fl">7</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="co">#&gt; An `epi_df` object, 4,026 x 5 with metadata:</span></span>
@@ -293,7 +298,7 @@ cases:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 5</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">cases_mean</span> <span style="font-weight: bold;">cases_sd</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> ca        2020-03-01     6       6       <span style="color: #BB0000;">NA</span>   </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> ca        2020-03-02     4       5        1.41</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> ca        2020-03-03     6       5.33     1.15</span></span>
@@ -310,10 +315,11 @@ versions: <code><a href="../reference/epi_slide_opt.html">epi_slide_mean()</a></
 <code><a href="../reference/epi_slide_opt.html">epi_slide_sum()</a></code>. These are much faster than
 <code><a href="../reference/epi_slide.html">epi_slide()</a></code>, so we recommend using them when you are only
 interested in the mean or sum of a column. The following computes the
-7-day trailing mean of daily cases:</p>
+7-day trailing mean of daily cases, allowing means and sums to be taken
+over fewer than 7 observations if there is missingness
+(<code>na.rm = TRUE</code>):</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_slide_opt.html">epi_slide_mean</a></span><span class="op">(</span><span class="st">"cases"</span>, .window_size <span class="op">=</span> <span class="fl">7</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; An `epi_df` object, 4,026 x 4 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
@@ -321,9 +327,8 @@ interested in the mean or sum of a column. The following computes the
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 4</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># Groups:   geo_value [6]</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">cases_7dav</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> ca        2020-03-01     6       6   </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> ca        2020-03-02     4       5   </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> ca        2020-03-03     6       5.33</span></span>
@@ -332,7 +337,6 @@ interested in the mean or sum of a column. The following computes the
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> ca        2020-03-06    18       9.17</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4,020 more rows</span></span></span>
 <span><span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_slide_opt.html">epi_slide_sum</a></span><span class="op">(</span><span class="st">"cases"</span>, .window_size <span class="op">=</span> <span class="fl">7</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; An `epi_df` object, 4,026 x 4 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
@@ -340,9 +344,8 @@ interested in the mean or sum of a column. The following computes the
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 4</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># Groups:   geo_value [6]</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">cases_7dsum</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> ca        2020-03-01     6           6</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> ca        2020-03-02     4          10</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> ca        2020-03-03     6          16</span></span>
@@ -373,75 +376,183 @@ column. We can then aggregate the data by these key columns using
 <code><a href="../reference/sum_groups_epi_df.html">sum_groups_epi_df()</a></code>. Let’s use influenza hospitalization
 rate data from the CDC system FluSurv as an example. We can get it from
 the <a href="https://cmu-delphi.github.io/delphi-epidata/api/flusurv.html" class="external-link">Delphi
-Epidata API</a></p>
+Epidata API</a>.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epidatr/" class="external-link">epidatr</a></span><span class="op">)</span></span>
-<span><span class="va">flu_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/pub_flusurv.html" class="external-link">pub_flusurv</a></span><span class="op">(</span></span>
+<span><span class="va">flu_data_api</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/pub_flusurv.html" class="external-link">pub_flusurv</a></span><span class="op">(</span></span>
 <span>  locations <span class="op">=</span> <span class="st">"ca"</span>,</span>
-<span>  epiweeks <span class="op">=</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">201801</span>, <span class="fl">202001</span><span class="op">)</span>,</span>
-<span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">location</span>, <span class="va">epiweek</span>, <span class="va">issue</span>, <span class="va">rate_age_0</span>, <span class="va">rate_age_1</span>, <span class="va">rate_age_2</span>, <span class="va">rate_age_3</span>, <span class="va">rate_age_4</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span>cols <span class="op">=</span> <span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="st">"rate_age_"</span><span class="op">)</span>, names_to <span class="op">=</span> <span class="st">"age_group"</span>, values_to <span class="op">=</span> <span class="st">"rate"</span><span class="op">)</span></span>
+<span>  epiweeks <span class="op">=</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">201801</span>, <span class="fl">202001</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>We’re interested in the age-specific rates:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">flu_data</span> <span class="op">&lt;-</span> <span class="va">flu_data_api</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">location</span>, <span class="va">epiweek</span>, <span class="va">rate_age_0</span>, <span class="va">rate_age_1</span>, <span class="va">rate_age_2</span>, <span class="va">rate_age_3</span>, <span class="va">rate_age_4</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="co"># Turn `rate_age_0`..`rate_age_4` columns into an `age_group` and `rate`</span></span>
+<span>  <span class="co"># column (with 5x as many rows):</span></span>
+<span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span></span>
+<span>    cols <span class="op">=</span> <span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="st">"rate_age_"</span><span class="op">)</span>, names_to <span class="op">=</span> <span class="st">"age_group"</span>, values_to <span class="op">=</span> <span class="st">"rate"</span>,</span>
+<span>    <span class="co"># When converting column names to entries in `age_group`, remove this prefix:</span></span>
+<span>    names_prefix <span class="op">=</span> <span class="st">"rate_age_"</span>,</span>
+<span>    <span class="co"># And add a better prefix:</span></span>
+<span>    names_transform <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">age_group</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"age_group_"</span>, <span class="va">age_group</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="co"># Improve `age_group` labels a bit more:</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    age_group <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_match.html" class="external-link">case_match</a></span><span class="op">(</span></span>
+<span>      <span class="va">age_group</span>,</span>
+<span>      <span class="st">"age_group_0"</span> <span class="op">~</span> <span class="st">"0--4 yr"</span>,</span>
+<span>      <span class="st">"age_group_1"</span> <span class="op">~</span> <span class="st">"5--17 yr"</span>,</span>
+<span>      <span class="st">"age_group_2"</span> <span class="op">~</span> <span class="st">"18--49 yr"</span>,</span>
+<span>      <span class="st">"age_group_3"</span> <span class="op">~</span> <span class="st">"50--64 yr"</span>,</span>
+<span>      <span class="st">"age_group_4"</span> <span class="op">~</span> <span class="st">"&gt;= 65 yr"</span>,</span>
+<span>      <span class="co"># Make this a factor with appropriate level ordering:</span></span>
+<span>      .ptype <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span>levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>        <span class="st">"0--4 yr"</span>, <span class="st">"5--17 yr"</span>, <span class="st">"18--49 yr"</span>,</span>
+<span>        <span class="st">"50--64 yr"</span>, <span class="st">"&gt;= 65 yr"</span></span>
+<span>      <span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="co"># The API currently outputs `epiweek` in Date format (the constituent Sunday);</span></span>
+<span>  <span class="co"># rename it to remind us that it's not in YYYYww format:</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>time_value <span class="op">=</span> <span class="va">epiweek</span><span class="op">)</span></span>
 <span><span class="va">flu_data</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 305 × 5</span></span></span>
-<span><span class="co">#&gt;   <span style="font-weight: bold;">location</span> <span style="font-weight: bold;">epiweek</span>    <span style="font-weight: bold;">issue</span>      <span style="font-weight: bold;">age_group</span>   <span style="font-weight: bold;">rate</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> CA       2017-12-31 2018-12-30 rate_age_0   4.4</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> CA       2017-12-31 2018-12-30 rate_age_1   1.7</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> CA       2017-12-31 2018-12-30 rate_age_2   2.7</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> CA       2017-12-31 2018-12-30 rate_age_3  18.7</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> CA       2017-12-31 2018-12-30 rate_age_4  99.7</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> CA       2018-01-07 2019-01-06 rate_age_0   4.4</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 305 × 4</span></span></span>
+<span><span class="co">#&gt;   <span style="font-weight: bold;">location</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">age_group</span>  <span style="font-weight: bold;">rate</span></span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> CA       2017-12-31 0--4 yr     4.4</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> CA       2017-12-31 5--17 yr    1.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> CA       2017-12-31 18--49 yr   2.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> CA       2017-12-31 50--64 yr  18.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> CA       2017-12-31 &gt;= 65 yr   99.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> CA       2018-01-07 0--4 yr     4.4</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 299 more rows</span></span></span></code></pre></div>
 <p>We can now convert this data to an <code>epi_df</code> object and set
 the <code>age_group</code> column as an additional group key:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">flu_data</span> <span class="op">&lt;-</span> <span class="va">flu_data</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/epi_df.html">as_epi_df</a></span><span class="op">(</span>other_keys <span class="op">=</span> <span class="st">"age_group"</span>, as_of <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-03-20"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; inferring time_value column.</span></span>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">flu_data</span> <span class="op">&lt;-</span> <span class="va">flu_data</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/epi_df.html">as_epi_df</a></span><span class="op">(</span>other_keys <span class="op">=</span> <span class="st">"age_group"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; inferring geo_value column.</span></span>
 <span><span class="va">flu_data</span></span>
-<span><span class="co">#&gt; An `epi_df` object, 305 x 5 with metadata:</span></span>
+<span><span class="co">#&gt; An `epi_df` object, 305 x 4 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = week</span></span>
 <span><span class="co">#&gt; * other_keys = age_group</span></span>
-<span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
+<span><span class="co">#&gt; * as_of     = 2025-03-07 02:59:27.147052</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 305 × 5</span></span></span>
-<span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">age_group</span>  <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">issue</span>       <span style="font-weight: bold;">rate</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> CA        rate_age_0 2017-12-31 2018-12-30   4.4</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> CA        rate_age_1 2017-12-31 2018-12-30   1.7</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> CA        rate_age_2 2017-12-31 2018-12-30   2.7</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> CA        rate_age_3 2017-12-31 2018-12-30  18.7</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> CA        rate_age_4 2017-12-31 2018-12-30  99.7</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> CA        rate_age_0 2018-01-07 2019-01-06   4.4</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 305 × 4</span></span></span>
+<span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">age_group</span> <span style="font-weight: bold;">time_value</span>  <span style="font-weight: bold;">rate</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> CA        0--4 yr   2017-12-31   4.4</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> CA        5--17 yr  2017-12-31   1.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> CA        18--49 yr 2017-12-31   2.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> CA        50--64 yr 2017-12-31  18.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> CA        &gt;= 65 yr  2017-12-31  99.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> CA        0--4 yr   2018-01-07   4.4</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 299 more rows</span></span></span></code></pre></div>
 <p>Note that the <code>epi_df</code> object now has an additional key
 column <code>age_group</code>. This means that there should only be one
 row for each combination of <code>geo_value</code>,
-<code>time_value</code>, and <code>age_group</code> in the dataset (this
+<code>age_group</code>, and <code>time_value</code> in the dataset (this
 is enforced at construction time).</p>
 <p>Now we can aggregate the data by <code>age_group</code>, if we want
-to compute the total:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">group_cols</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/key_colnames.html">key_colnames</a></span><span class="op">(</span>exclude <span class="op">=</span> <span class="st">"age_group"</span><span class="op">)</span></span>
-<span><span class="va">flu_data</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/sum_groups_epi_df.html">sum_groups_epi_df</a></span><span class="op">(</span><span class="st">"rate"</span>, group_cols <span class="op">=</span> <span class="va">group_cols</span><span class="op">)</span></span>
+to compute the total. For count data, this would be just a single call
+to <code><a href="../reference/sum_groups_epi_df.html">sum_groups_epi_df()</a></code>. Since we are working with rates, we
+need to attach some population data in order to do this aggregation.
+It’s somewhat ambiguous whether FluSurv-NET reporting uses either <a href="https://www.cdc.gov/nchs/nvss/bridged_race.htm" class="external-link">NCHS</a> or <a href="https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-county-detail.html" class="external-link">Census</a>
+populations for <code>time_value</code>s before 2020 included in reports
+published in 2020 onward, but at least for this example, these two
+sources agree exactly. FluSurv-NET also directly reports an overall
+rate, so we can check our work.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Population estimates for FluSurv-NET-covered part of CA on 2017-07-01 and</span></span>
+<span><span class="co"># 2018-07-01, extracted and aggregated from "vintage 2020" estimates (actually</span></span>
+<span><span class="co"># released by Census in June 2021 and by NCHS in September 2021), which is the</span></span>
+<span><span class="co"># last available reporting found with population estimates for 2017 and 2018:</span></span>
+<span><span class="va">pop</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/tribble.html" class="external-link">tribble</a></span><span class="op">(</span></span>
+<span>  <span class="op">~</span><span class="va">geo_value</span>, <span class="op">~</span><span class="va">age_group</span>,  <span class="op">~</span><span class="va">time_value</span>,           <span class="op">~</span><span class="va">pop</span>,</span>
+<span>  <span class="st">"CA"</span>,       <span class="st">"0--4 yr"</span>,   <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2017-07-01"</span><span class="op">)</span>, <span class="fl">203813</span>,</span>
+<span>  <span class="st">"CA"</span>,       <span class="st">"5--17 yr"</span>,  <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2017-07-01"</span><span class="op">)</span>, <span class="fl">521827</span>,</span>
+<span>  <span class="st">"CA"</span>,       <span class="st">"18--49 yr"</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2017-07-01"</span><span class="op">)</span>, <span class="fl">1722399</span>,</span>
+<span>  <span class="st">"CA"</span>,       <span class="st">"50--64 yr"</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2017-07-01"</span><span class="op">)</span>, <span class="fl">700090</span>,</span>
+<span>  <span class="st">"CA"</span>,       <span class="st">"&gt;= 65 yr"</span>,  <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2017-07-01"</span><span class="op">)</span>, <span class="fl">534789</span>,</span>
+<span>  <span class="st">"CA"</span>,       <span class="st">"0--4 yr"</span>,   <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2018-07-01"</span><span class="op">)</span>, <span class="fl">201265</span>,</span>
+<span>  <span class="st">"CA"</span>,       <span class="st">"5--17 yr"</span>,  <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2018-07-01"</span><span class="op">)</span>, <span class="fl">520077</span>,</span>
+<span>  <span class="st">"CA"</span>,       <span class="st">"18--49 yr"</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2018-07-01"</span><span class="op">)</span>, <span class="fl">1725382</span>,</span>
+<span>  <span class="st">"CA"</span>,       <span class="st">"50--64 yr"</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2018-07-01"</span><span class="op">)</span>, <span class="fl">699145</span>,</span>
+<span>  <span class="st">"CA"</span>,       <span class="st">"&gt;= 65 yr"</span>,  <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2018-07-01"</span><span class="op">)</span>, <span class="fl">551243</span>,</span>
+<span><span class="op">)</span></span>
+<span><span class="co"># Calculate fraction of total population in each age group.</span></span>
+<span><span class="va">pop</span> <span class="op">&lt;-</span> <span class="va">pop</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>frac_pop <span class="op">=</span> <span class="va">pop</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">pop</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>After joining population onto the rate data, we can calculate the
+population-weighted rate for each age group, that is, the portion of
+each <code>age_group</code>’s rate that it contributes to the overall
+rate.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fractional_rate_by_age_group</span> <span class="op">&lt;-</span></span>
+<span>  <span class="va">flu_data</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">inner_join</a></span><span class="op">(</span></span>
+<span>    <span class="va">pop</span>,</span>
+<span>    <span class="co"># Simple population interpolation/extrapolation scheme: last observation</span></span>
+<span>    <span class="co"># carried forward. Use the estimated population on 2017-07-01 for</span></span>
+<span>    <span class="co"># time_values 2017-07-01 through 2018-06-30, and the estimated population on</span></span>
+<span>    <span class="co"># 2018-07-01 for all subsequent time_values:</span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/join_by.html" class="external-link">join_by</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">age_group</span>, <span class="fu">closest</span><span class="op">(</span><span class="va">y</span><span class="op">$</span><span class="va">time_value</span> <span class="op">&lt;=</span> <span class="va">x</span><span class="op">$</span><span class="va">time_value</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    <span class="co"># Generate errors if the two data sets don't line up as expected:</span></span>
+<span>    relationship <span class="op">=</span> <span class="st">"many-to-one"</span>, unmatched <span class="op">=</span> <span class="st">"error"</span>,</span>
+<span>    <span class="co"># We'll get a second time column indicating which population estimate</span></span>
+<span>    <span class="co"># was carried forward; name it time_value_for_pop:</span></span>
+<span>    suffix <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">""</span>, <span class="st">"_for_pop"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>rate_contrib <span class="op">=</span> <span class="va">rate</span> <span class="op">*</span> <span class="va">frac_pop</span><span class="op">)</span></span></code></pre></div>
+<p>We can then use <code>sum_groups_epi_df</code> to sum
+population-weighted rate across all age groups to get the overall
+rate.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rate_overall_recalc_edf</span> <span class="op">&lt;-</span></span>
+<span>  <span class="va">fractional_rate_by_age_group</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="../reference/sum_groups_epi_df.html">sum_groups_epi_df</a></span><span class="op">(</span><span class="st">"rate_contrib"</span>, group_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"geo_value"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>rate_overall_recalc <span class="op">=</span> <span class="va">rate_contrib</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="co"># match rounding of original data:</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>rate_overall_recalc <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">rate_overall_recalc</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">rate_overall_recalc_edf</span></span>
 <span><span class="co">#&gt; An `epi_df` object, 61 x 3 with metadata:</span></span>
-<span><span class="co">#&gt; * geo_type  = custom</span></span>
+<span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = week</span></span>
-<span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
+<span><span class="co">#&gt; * as_of     = 2025-03-07 02:59:27.147052</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 61 × 3</span></span></span>
-<span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span>  <span style="font-weight: bold;">rate</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> total     2017-12-31 127. </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> total     2018-01-07  76.7</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> total     2018-01-14  57.8</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> total     2018-01-21  37.9</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> total     2018-01-28  30  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> total     2018-02-04  22.8</span></span>
+<span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">rate_overall_recalc</span></span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> CA        2017-12-31                19.8</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> CA        2018-01-07                12  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> CA        2018-01-14                 9  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> CA        2018-01-21                 6.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> CA        2018-01-28                 4.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> CA        2018-02-04                 3.4</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 55 more rows</span></span></span></code></pre></div>
+<p>Let’s compare our calculated rate to the overall rate reported by
+FluSurv-NET.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rate_overall_recalc_edf</span> <span class="op">&lt;-</span></span>
+<span>  <span class="va">rate_overall_recalc_edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="co"># compare to published overall rates:</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">inner_join</a></span><span class="op">(</span></span>
+<span>    <span class="va">flu_data_api</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span>geo_value <span class="op">=</span> <span class="va">location</span>, time_value <span class="op">=</span> <span class="va">epiweek</span>, <span class="va">rate_overall</span><span class="op">)</span>,</span>
+<span>    by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"geo_value"</span>, <span class="st">"time_value"</span><span class="op">)</span>,</span>
+<span>    <span class="co"># validate that we have exactly the same set of geo_value x time_value combinations:</span></span>
+<span>    relationship <span class="op">=</span> <span class="st">"one-to-one"</span>, unmatched <span class="op">=</span> <span class="st">"error"</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="co"># What's our maximum error vs. the official overall estimates?</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">rate_overall_recalc_edf</span><span class="op">$</span><span class="va">rate_overall</span> <span class="op">-</span> <span class="va">rate_overall_recalc_edf</span><span class="op">$</span><span class="va">rate_overall_recalc</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.1</span></span></code></pre></div>
+<p>This small amount of difference is expected, since all the
+age-specific rates were rounded to the first decimal place, and
+population data might have been interpolated and extrapolated a bit
+differently in the official source, limiting our ability to precisely
+recreate its estimates from an age group breakdown.</p>
 </div>
 <div class="section level2">
 <h2 id="detecting-and-filling-time-gaps-with-complete-epi_df">Detecting and filling time gaps with
@@ -454,11 +565,12 @@ to fill in the missing data with explicit zeros. This can be done with
 the <code><a href="../reference/complete.epi_df.html">complete.epi_df()</a></code> function.</p>
 <p>First, let’s create a data set with some missing data. We will reuse
 the dataset <code>edf</code> from above, but modify it slightly.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edf_missing</span> <span class="op">&lt;-</span> <span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">geo_value</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ca"</span>, <span class="st">"tx"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">5</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">5</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">edf_missing</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
@@ -468,9 +580,8 @@ the dataset <code>edf</code> from above, but modify it slightly.</p>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 3</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># Groups:   geo_value [2]</span></span></span>
 <span><span class="co">#&gt;    <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span></span></span>
-<span><span class="co">#&gt;  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02     4</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03     6</span></span>
@@ -482,12 +593,16 @@ the dataset <code>edf</code> from above, but modify it slightly.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> tx        2020-03-05     3</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> tx        2020-03-06     1</span></span></code></pre></div>
 <p>Now let’s fill in the missing data with explicit zeros:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">edf_missing</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">edf_missing</span> <span class="op">&lt;-</span> <span class="va">edf_missing</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/complete.html" class="external-link">complete</a></span><span class="op">(</span></span>
 <span>    time_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.Date.html" class="external-link">seq.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">time_value</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">time_value</span><span class="op">)</span>, by <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span>,</span>
 <span>    fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>cases <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">edf_missing</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
 <span><span class="co">#&gt; An `epi_df` object, 12 x 3 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
@@ -495,9 +610,8 @@ the dataset <code>edf</code> from above, but modify it slightly.</p>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 12 × 3</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># Groups:   geo_value [2]</span></span></span>
 <span><span class="co">#&gt;    <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span></span></span>
-<span><span class="co">#&gt;  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01     6</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02     4</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03     6</span></span>
@@ -510,15 +624,21 @@ the dataset <code>edf</code> from above, but modify it slightly.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> tx        2020-03-04     0</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> tx        2020-03-05     3</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> tx        2020-03-06     1</span></span></code></pre></div>
+<p>We see that rows have been added for the missing
+<code>time_value</code> 2020-03-04 for both of the states, with
+<code>cases</code> set to <code>0</code>. If there were explicit
+<code>NA</code>s in the <code>cases</code> column, those would have been
+replaced by <code>0</code> as well.</p>
 <div class="section level3">
 <h3 id="detecting-and-filling-time-gaps-with-tsibble">Detecting and filling time gaps with <code>tsibble</code><a class="anchor" aria-label="anchor" href="#detecting-and-filling-time-gaps-with-tsibble"></a>
 </h3>
 <p>We can also use the <code>tsibble</code> package to detect and fill
 time gaps. We’ll work with county-level reported COVID-19 cases in MA
 and VT.</p>
-<p>The data is included in this package (via the <a href="https://cmu-delphi.github.io/epidatasets/" class="external-link"><code>epidatasets</code>
-package</a>) and can be loaded with:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<p>The data is included in the <a href="https://cmu-delphi.github.io/epidatasets/" class="external-link"><code>epidatasets</code>
+package</a>, which is loaded along with <code>epiprocess</code>, and can
+be accessed with:</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://readr.tidyverse.org" class="external-link">readr</a></span><span class="op">)</span></span>
@@ -526,7 +646,7 @@ package</a>) and can be loaded with:</p>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">covid_incidence_county_subset</span></span></code></pre></div>
 <p>The data can also be fetched from the Delphi Epidata API with the
 following query:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epidatr/" class="external-link">epidatr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-03-20"</span><span class="op">)</span></span>
@@ -577,7 +697,7 @@ could serve as a second key variable). The <code>epiprocess</code>
 package thus provides an implementation of <code><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble()</a></code> for
 <code>epi_df</code> objects, which sets these variables according to
 these defaults.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tsibble.tidyverts.org" class="external-link">tsibble</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">xt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
@@ -605,14 +725,14 @@ these defaults.</p>
 uniquely identify each time point (that is, the key and index together
 do not not uniquely identify each row), then <code><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble()</a></code>
 throws an error:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span><span class="va">x</span>, key <span class="op">=</span> <span class="st">"county_name"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;"> in `validate_tsibble()`:</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> A valid tsibble must have distinct rows identified by key and index.</span></span>
 <span><span class="co">#&gt; <span style="color: #0000BB;">ℹ</span> Please use `duplicates()` to check the duplicated rows.</span></span></code></pre></div>
 <p>As we can see, there are duplicate county names between Massachusetts
 and Vermont, which caused the error.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/duplicates.html" class="external-link">duplicates</a></span><span class="op">(</span><span class="va">x</span>, key <span class="op">=</span> <span class="st">"county_name"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 5</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">county_name</span>     <span style="font-weight: bold;">state_name</span>   </span></span>
@@ -624,7 +744,7 @@ and Vermont, which caused the error.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 25009     2020-06-02    90 Essex County    Massachusetts</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 25011     2020-06-02     0 Franklin County Massachusetts</span></span></code></pre></div>
 <p>Keying by both county name and state name, however, does work:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/as-tsibble.html" class="external-link">as_tsibble</a></span><span class="op">(</span><span class="va">x</span>, key <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"county_name"</span>, <span class="st">"state_name"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tsibble: 6 x 5 [1D]</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Key:       county_name, state_name [1]</span></span></span>
@@ -646,7 +766,7 @@ generally help avoid bugs in further downstream data processing
 tasks.</p>
 <p>Let’s first remove certain dates from our data set to create
 gaps:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">state_naming</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://readr.tidyverse.org/reference/read_delim.html" class="external-link">read_csv</a></span><span class="op">(</span><span class="st">"https://github.com/cmu-delphi/covidcast/raw/c89e4d295550ba1540d64d2cc991badf63ad04e5/Python-packages/covidcast-py/covidcast/geo_mappings/state_census.csv"</span>, <span class="co"># nolint: line_length_linter</span></span>
 <span>  col_types <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>NAME <span class="op">=</span> <span class="fu"><a href="https://readr.tidyverse.org/reference/parse_atomic.html" class="external-link">col_character</a></span><span class="op">(</span><span class="op">)</span>, ABBR <span class="op">=</span> <span class="fu"><a href="https://readr.tidyverse.org/reference/parse_atomic.html" class="external-link">col_character</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -663,7 +783,7 @@ gaps:</p>
 <p>The functions <code><a href="https://tsibble.tidyverts.org/reference/has_gaps.html" class="external-link">has_gaps()</a></code>, <code><a href="https://tsibble.tidyverts.org/reference/scan_gaps.html" class="external-link">scan_gaps()</a></code>,
 <code><a href="https://tsibble.tidyverts.org/reference/count_gaps.html" class="external-link">count_gaps()</a></code> in the <code>tsibble</code> package each
 provide useful summaries, in slightly different formats.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/has_gaps.html" class="external-link">has_gaps</a></span><span class="op">(</span><span class="va">xt</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 2</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span>                 <span style="font-weight: bold;">.gaps</span></span></span>
@@ -696,7 +816,7 @@ provide useful summaries, in slightly different formats.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Addison, Vermont 2020-11-14 2020-11-18     5</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Addison, Vermont 2020-11-20 2020-11-20     1</span></span></code></pre></div>
 <p>We can also visualize the patterns of missingness:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span></span>
@@ -712,7 +832,7 @@ provide useful summaries, in slightly different formats.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_flip.html" class="external-link">coord_flip</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"County"</span>, y <span class="op">=</span> <span class="st">"Date"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="epi_df_files/figure-html/unnamed-chunk-25-1.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="epi_df_files/figure-html/unnamed-chunk-29-1.png" width="90%" style="display: block; margin: auto;"></p>
 <p>Using the <code><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html" class="external-link">fill_gaps()</a></code> function from
 <code>tsibble</code>, we can replace all gaps by an explicit value. The
 default is <code>NA</code>, but in the current case, where missingness
@@ -723,7 +843,7 @@ zero, which is what we do here. (Other approaches, such as LOCF: last
 observation carried forward in time, could be accomplished by first
 filling with <code>NA</code> values and then following up with a second
 call to <code><a href="https://tidyr.tidyverse.org/reference/fill.html" class="external-link">tidyr::fill()</a></code>.)</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html" class="external-link">fill_gaps</a></span><span class="op">(</span><span class="va">xt</span>, cases <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tsibble: 6 x 3 [1D]</span></span></span>
@@ -741,7 +861,7 @@ call to <code><a href="https://tidyr.tidyverse.org/reference/fill.html" class="e
 from a period that went back to June 6, 2020. By setting
 <code>.full = TRUE</code>, we can at zero-fill over the entire span of
 the observed (censored) data.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">xt_filled</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html" class="external-link">fill_gaps</a></span><span class="op">(</span><span class="va">xt</span>, cases <span class="op">=</span> <span class="fl">0</span>, .full <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">xt_filled</span><span class="op">)</span></span>
@@ -767,7 +887,7 @@ be misleading and is unintentionally biased upwards. Meanwhile, running
 <code><a href="../reference/epi_slide.html">epi_slide()</a></code> on the zero-filled data brings these trailing
 averages (appropriately) downwards, as we can see inspecting Plymouth,
 MA around July 1, 2021.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">xt</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_df.html">as_epi_df</a></span><span class="op">(</span>as_of <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-03-20"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>

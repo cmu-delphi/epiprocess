@@ -13,7 +13,7 @@ changed, and so is kept."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,11 +59,33 @@ changed, and so is kept.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">apply_compactify</span><span class="op">(</span><span class="va">df</span>, <span class="va">keys</span>, tolerance <span class="op">=</span> <span class="va">.Machine</span><span class="op">$</span><span class="va">double.eps</span><span class="op">^</span><span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">apply_compactify</span><span class="op">(</span><span class="va">updates_df</span>, <span class="va">ukey_names</span>, abs_tol <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
     </div>
 
+    <div class="section level2">
+    <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
-  </main></div>
+
+<dl><dt id="arg-updates-df">updates_df<a class="anchor" aria-label="anchor" href="#arg-updates-df"></a></dt>
+<dd><p>DT of an <code>epi_archive</code> or something analogous (though
+potentially unsorted) of another class</p></dd>
+
+
+<dt id="arg-ukey-names">ukey_names<a class="anchor" aria-label="anchor" href="#arg-ukey-names"></a></dt>
+<dd><p>chr; the column names forming a unique key for the
+<code>updates_df</code>; "version" must come last. For an <code>epi_archive</code>'s <code>DT</code>, this
+would be <code>key(DT)</code>.</p></dd>
+
+
+<dt id="arg-abs-tol">abs_tol<a class="anchor" aria-label="anchor" href="#arg-abs-tol"></a></dt>
+<dd><p>numeric, &gt;=0; absolute tolerance to use on numeric measurement
+columns when determining whether something can be compactified away; see
+<code><a href="is_locf.html">is_locf</a></code></p></dd>
+
+</dl></div>
+
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

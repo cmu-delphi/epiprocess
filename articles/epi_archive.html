@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -100,8 +100,9 @@ available through the <a href="https://cmu-delphi.github.io/delphi-epidata/api/c
 API</a>. This signal is subject to very heavy and regular revision; you
 can read more about it on its <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html" class="external-link">API
 documentation page</a>.</p>
-<p>The data is included in this package (via the <a href="https://cmu-delphi.github.io/epidatasets/" class="external-link"><code>epidatasets</code>
-package</a>) and can be loaded with:</p>
+<p>The data is included in the <a href="https://cmu-delphi.github.io/epidatasets/" class="external-link"><code>epidatasets</code>
+package</a>, which is loaded along with <code>epiprocess</code>, and can
+be accessed with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span>
@@ -153,7 +154,7 @@ format.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dv_archive</span> <span class="op">&lt;-</span> <span class="va">dv</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">version</span>, <span class="va">percent_cli</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span>compactify <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">dv_archive</span></span>
 <span><span class="co">#&gt; → An `epi_archive` object, with metadata:</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-06-01 / 2021-11-30</span></span>
@@ -283,7 +284,7 @@ summary. Here is an a sample of the output:</p>
 <span><span class="co">#&gt; Spread of more than 2.22056495 in actual value (when revised):</span></span>
 <span><span class="co">#&gt; • 671 out of 1,956 (34.3%)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; days until within 20% of the latest value:</span></span>
+<span><span class="co">#&gt; Days until within 20% of the latest value:</span></span>
 <span><span class="co">#&gt;      min median     mean     max</span></span>
 <span><span class="co">#&gt;   3 days 5 days 9.1 days 67 days</span></span></code></pre></div>
 <p>We can see from the output that, as mentioned above, this data set
@@ -301,14 +302,14 @@ tibble. Here we collect a number of statistics for each state:</p>
 <span>    max_lag <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">max_lag</span><span class="op">)</span>,</span>
 <span>    spread <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">spread</span><span class="op">)</span>,</span>
 <span>    rel_spread <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">rel_spread</span><span class="op">)</span>,</span>
-<span>    time_near_latest <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">time_near_latest</span><span class="op">)</span></span>
+<span>    lag_near_latest <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">lag_near_latest</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 7</span></span></span>
-<span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">n_rev</span> <span style="font-weight: bold;">min_lag</span> <span style="font-weight: bold;">max_lag</span> <span style="font-weight: bold;">spread</span> <span style="font-weight: bold;">rel_spread</span> <span style="font-weight: bold;">time_near_latest</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>          </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> ca         56.4 3 days  74 days   2.53      0.304 11.278119 days  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> fl         56.4 3 days  74 days   2.29      0.280 10.830266 days  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> ny         56.4 3 days  74 days   1.98      0.206  6.977505 days  </span></span>
+<span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">n_rev</span> <span style="font-weight: bold;">min_lag</span> <span style="font-weight: bold;">max_lag</span> <span style="font-weight: bold;">spread</span> <span style="font-weight: bold;">rel_spread</span> <span style="font-weight: bold;">lag_near_latest</span></span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> ca         56.4 3 days  74 days   2.53      0.304 11.278119 days </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> fl         56.4 3 days  74 days   2.29      0.280 10.830266 days </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> ny         56.4 3 days  74 days   1.98      0.206  6.977505 days </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> tx         56.4 3 days  74 days   1.63      0.218  7.398773 days</span></span></code></pre></div>
 <p>Most of the states have similar stats on most of these features,
 except for the <code>time_near_latest</code> stat, which is the amount
@@ -342,9 +343,9 @@ population).</p>
 <span>  issues <span class="op">=</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">20200601</span>, <span class="fl">20211201</span><span class="op">)</span></span>
 <span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, version <span class="op">=</span> <span class="va">issue</span>, case_rate_7d_av <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span>compactify <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">dv_cases_archive</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_merge.html">epix_merge</a></span><span class="op">(</span><span class="va">dv_archive</span>, <span class="va">y</span>, sync <span class="op">=</span> <span class="st">"locf"</span>, compactify <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">dv_cases_archive</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_merge.html">epix_merge</a></span><span class="op">(</span><span class="va">dv_archive</span>, <span class="va">y</span>, sync <span class="op">=</span> <span class="st">"locf"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">dv_cases_archive</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">#&gt; → An `epi_archive` object, with metadata:</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-06-01 / 2021-11-30</span></span>

@@ -11,7 +11,7 @@ examples."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -174,8 +174,7 @@ argument instead.</p></dd>
 <span class="r-in"><span>  <span class="co"># (a.k.a. "hotfixed", "clobbered", etc.):</span></span></span>
 <span class="r-in"><span>  clobberable_versions_start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  <span class="co"># Suppose today is the following day, and there are no updates out yet:</span></span></span>
-<span class="r-in"><span>  versions_end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1L</span>,</span></span>
-<span class="r-in"><span>  compactify <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>  versions_end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1L</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">epix_as_of</span><span class="op">(</span><span class="va">archive_cases_dv_subset2</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span><span class="op">$</span><span class="va">version</span><span class="op">)</span><span class="op">)</span></span></span>

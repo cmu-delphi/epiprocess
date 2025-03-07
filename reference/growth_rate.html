@@ -11,7 +11,7 @@ for examples."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,15 +57,14 @@ for examples.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">growth_rate</span><span class="op">(</span></span>
-<span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>,</span>
 <span>  <span class="va">y</span>,</span>
+<span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>,</span>
 <span>  x0 <span class="op">=</span> <span class="va">x</span>,</span>
 <span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rel_change"</span>, <span class="st">"linear_reg"</span>, <span class="st">"smooth_spline"</span>, <span class="st">"trend_filter"</span><span class="op">)</span>,</span>
 <span>  h <span class="op">=</span> <span class="fl">7</span>,</span>
 <span>  log_scale <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  dup_rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  na_rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  <span class="va">...</span></span>
+<span>  params <span class="op">=</span> <span class="fu"><a href="growth_rate_params.html">growth_rate_params</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -73,19 +72,19 @@ for examples.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dl><dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
+<dd><p>Signal values.</p></dd>
+
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>Design points corresponding to the signal values <code>y</code>. Default is
 <code>seq_along(y)</code> (that is, equally-spaced points from 1 to the length of
 <code>y</code>).</p></dd>
 
 
-<dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
-<dd><p>Signal values.</p></dd>
-
-
 <dt id="arg-x-">x0<a class="anchor" aria-label="anchor" href="#arg-x-"></a></dt>
 <dd><p>Points at which we should estimate the growth rate. Must be a
-subset of <code>x</code> (no extrapolation allowed). Default is <code>x</code>.</p></dd>
+contained in the range of <code>x</code> (no extrapolation allowed). Default is <code>x</code>.</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
@@ -107,21 +106,14 @@ the entire sequence. See details for more explanation.</p></dd>
 on the log scale? See details for an explanation. Default is <code>FALSE</code>.</p></dd>
 
 
-<dt id="arg-dup-rm">dup_rm<a class="anchor" aria-label="anchor" href="#arg-dup-rm"></a></dt>
-<dd><p>Should we check and remove duplicates in <code>x</code> (and corresponding
-elements of <code>y</code>) before the computation? Some methods might handle
-duplicate <code>x</code> values gracefully, whereas others might fail (either quietly
-or loudly). Default is <code>FALSE</code>.</p></dd>
-
-
 <dt id="arg-na-rm">na_rm<a class="anchor" aria-label="anchor" href="#arg-na-rm"></a></dt>
 <dd><p>Should missing values be removed before the computation? Default
 is <code>FALSE</code>.</p></dd>
 
 
-<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dt id="arg-params">params<a class="anchor" aria-label="anchor" href="#arg-params"></a></dt>
 <dd><p>Additional arguments to pass to the method used to estimate the
-derivative.</p></dd>
+derivative. This should be created with <code><a href="growth_rate_params.html">growth_rate_params()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -149,8 +141,10 @@ spline fit to <code>x</code> and <code>y</code>, via <code><a href="https://rdrr
 fitted value of the spline at <code>x0</code>.</p></li>
 <li><p>"trend_filter": uses the estimated derivative at <code>x0</code> from polynomial trend
 filtering (a discrete spline) fit to <code>x</code> and <code>y</code>, via
-<code><a href="https://rdrr.io/pkg/genlasso/man/trendfilter.html" class="external-link">genlasso::trendfilter()</a></code>, divided by the fitted value of the discrete
-spline at <code>x0</code>.</p></li>
+<code><a href="https://rdrr.io/pkg/trendfilter/man/trendfilter.html" class="external-link">trendfilter::trendfilter()</a></code>, divided by the fitted value of the discrete
+spline at <code>x0</code>. This method requires the
+<a href="https://github.com/glmgen/trendfilter" class="external-link"><code>{trendfilter}</code> package</a>
+to be installed.</p></li>
 </ul><div class="section">
 <h3 id="log-scale">Log Scale<a class="anchor" aria-label="anchor" href="#log-scale"></a></h3>
 
@@ -183,24 +177,28 @@ behavior of <code><a href="epi_slide.html">epi_slide()</a></code> with <code>bef
 
 
 <p>For the global methods, "smooth_spline" and "trend_filter", additional
-arguments can be specified via <code>...</code> for the underlying estimation
-function. For the smoothing spline case, these additional arguments are
-passed directly to <code><a href="https://rdrr.io/r/stats/smooth.spline.html" class="external-link">stats::smooth.spline()</a></code> (and the defaults are exactly
-as in this function). The trend filtering case works a bit differently:
-here, a custom set of arguments is allowed (which are distributed
-internally to <code><a href="https://rdrr.io/pkg/genlasso/man/trendfilter.html" class="external-link">genlasso::trendfilter()</a></code> and <code><a href="https://rdrr.io/pkg/genlasso/man/cv.trendfilter.html" class="external-link">genlasso::cv.trendfilter()</a></code>):</p><ul><li><p><code>ord</code>: order of piecewise polynomial for the trend filtering fit. Default
-is 3.</p></li>
-<li><p><code>maxsteps</code>: maximum number of steps to take in the solution path before
-terminating. Default is 1000.</p></li>
-<li><p><code>cv</code>: should cross-validation be used to choose an effective degrees of
-freedom for the fit? Default is <code>TRUE</code>.</p></li>
-<li><p><code>k</code>: number of folds if cross-validation is to be used. Default is 3.</p></li>
-<li><p><code>df</code>: desired effective degrees of freedom for the trend filtering fit. If
-<code>cv = FALSE</code>, then <code>df</code> must be a positive integer; if <code>cv = TRUE</code>, then
-<code>df</code> must be one of "min" or "1se" indicating the selection rule to use
+arguments can be specified via <code>params</code> for the underlying estimation
+function. These additional arguments are
+passed to <code><a href="https://rdrr.io/r/stats/smooth.spline.html" class="external-link">stats::smooth.spline()</a></code>, <code><a href="https://rdrr.io/pkg/trendfilter/man/trendfilter.html" class="external-link">trendfilter::trendfilter()</a></code>, or
+<code><a href="https://rdrr.io/pkg/trendfilter/man/cv_trendfilter.html" class="external-link">trendfilter::cv_trendfilter()</a></code>. The defaults are exactly
+as specified in those functions, except when those defaults conflict
+among these functions. These cases are as follows:</p><ul><li><p><code>df</code>: desired effective degrees of freedom. For "smooth_spline", this must be numeric (or <code>NULL</code>) and will
+be passed along to the underlying function. For "trend_filter", if
+<code>cv = FALSE</code>, then <code>df</code> must be a positive number (integer is most sensible);
+if <code>cv = TRUE</code>, then <code>df</code> must be one of "min" or "1se" indicating the
+selection rule to use
 based on the cross-validation error curve: minimum or 1-standard-error
-rule, respectively. Default is "min" (going along with the default <code>cv = TRUE</code>). Note that if <code>cv = FALSE</code>, then we require <code>df</code> to be set by the
-user.</p></li>
+rule, respectively. The default is "min" (going along with the default
+<code>cv = TRUE</code>).</p></li>
+<li><p><code>lambda</code>: For "smooth_spline", this should be a scalar value or <code>NULL</code>.
+For "trend_filter", this is allowed to also be a vector, as long as either
+<code>cv = TRUE</code> or <code>df</code> is specified.</p></li>
+<li><p><code>cv</code>: should cross-validation be used to choose an effective degrees of
+freedom for the fit? The default is <code>FALSE</code> to match <code><a href="https://rdrr.io/r/stats/smooth.spline.html" class="external-link">stats::smooth.spline()</a></code>.
+In that case, as in that function, GCV is used instead.
+For "trend_filter", this will be coerced to <code>TRUE</code> if neither
+<code>df</code> nor <code>lambda</code> are specified (the default).
+Note that passing both <code>df</code> and a scalar <code>lambda</code> will always be an error.</p></li>
 </ul></div>
 
     </div>
@@ -219,7 +217,7 @@ user.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># Groups:   geo_value [6]</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value case_rate_7d_av death_rate_7d_av cases cases_7d_av</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01         0.003<span style="text-decoration: underline;">27</span>         0            6        1.29</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02         0.004<span style="text-decoration: underline;">35</span>         0            4        1.71</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03         0.006<span style="text-decoration: underline;">17</span>         0            6        2.43</span>
@@ -233,17 +231,14 @@ user.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4,016 more rows</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: cases_gr &lt;dbl&gt;</span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Log scale, degree 4 polynomial and 6-fold cross validation</span></span></span>
+<span class="r-in"><span><span class="co"># Degree 3 polynomial and 5-fold cross validation on the log scale</span></span></span>
+<span class="r-in"><span><span class="co"># some locations report 0 cases, so we replace these with 1</span></span></span>
 <span class="r-in"><span><span class="va">cases_deaths_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>gr_poly <span class="op">=</span> <span class="fu">growth_rate</span><span class="op">(</span>x <span class="op">=</span> <span class="va">time_value</span>, y <span class="op">=</span> <span class="va">cases</span>, log_scale <span class="op">=</span> <span class="cn">TRUE</span>, ord <span class="op">=</span> <span class="fl">4</span>, k <span class="op">=</span> <span class="fl">6</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>There were 3 warnings in `mutate()`.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> The first warning was:</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> In argument: `gr_poly = growth_rate(...)`.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> In group 1: `geo_value = "ca"`.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> Caused by warning in `log()`:</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> NaNs produced</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Run `dplyr::last_dplyr_warnings()` to see the 2 remaining warnings.</span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>gr_poly <span class="op">=</span> <span class="fu">growth_rate</span><span class="op">(</span></span></span>
+<span class="r-in"><span>    x <span class="op">=</span> <span class="va">time_value</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="va">cases</span>, <span class="fl">1</span><span class="op">)</span>, method <span class="op">=</span> <span class="st">"trend_filter"</span>,</span></span>
+<span class="r-in"><span>    log_scale <span class="op">=</span> <span class="cn">TRUE</span>, na_rm <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 7 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
@@ -252,7 +247,7 @@ user.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4,026 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># Groups:   geo_value [6]</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value case_rate_7d_av death_rate_7d_av cases cases_7d_av</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> ca        2020-03-01         0.003<span style="text-decoration: underline;">27</span>         0            6        1.29</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> ca        2020-03-02         0.004<span style="text-decoration: underline;">35</span>         0            4        1.71</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> ca        2020-03-03         0.006<span style="text-decoration: underline;">17</span>         0            6        2.43</span>

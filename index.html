@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,7 +74,7 @@
 <code>epi_df</code> is for working with a snapshot of data at a single point in time</li>
 <li>
 <code>epi_archive</code> is for working with histories of data that changes over time</li>
-<li>one of the most common uses of <code>epi_archive</code> is for accurate backtesting of forecasting models, see <code>vignette("backtesting",     package="epipredict")</code>
+<li>one of the most common uses of <code>epi_archive</code> is for accurate backtesting of forecasting models, see <code>vignette("backtesting", package="epipredict")</code>
 </li>
 </ul>
 </li>
@@ -146,13 +146,14 @@
 <span><span class="co">#&gt; 5 ca        2020-03-02               23</span></span>
 <span><span class="co">#&gt; 6 fl        2020-03-02                1</span></span>
 <span><span class="co">#&gt; # ℹ 2,802 more rows</span></span></code></pre></div>
-<p>Convert the data to an epi_df object and sort by geo_value and time_value. You can work with an <code>epi_df</code> like you can with a <a href="https://tibble.tidyverse.org/" class="external-link">tibble</a> by using <a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a> verbs</p>
+<p>Convert the data to an <code>epi_df</code> object and sort by <code>geo_value</code> and <code>time_value</code>. You can work with an <code>epi_df</code> like you can with a <a href="https://tibble.tidyverse.org/" class="external-link">tibble</a> by using <a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a> verbs.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edf</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="reference/epi_df.html">as_epi_df</a></span><span class="op">(</span>as_of <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-01-01"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="reference/arrange_canonical.html">arrange_canonical</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cases_daily <span class="op">=</span> <span class="va">cases_cumulative</span> <span class="op">-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/lead-lag.html" class="external-link">lag</a></span><span class="op">(</span><span class="va">cases_cumulative</span>, default <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cases_daily <span class="op">=</span> <span class="va">cases_cumulative</span> <span class="op">-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/lead-lag.html" class="external-link">lag</a></span><span class="op">(</span><span class="va">cases_cumulative</span>, default <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">edf</span></span>
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 4 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
@@ -160,9 +161,8 @@
 <span><span class="co">#&gt; * as_of     = 2024-01-01</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; # A tibble: 2,808 × 4</span></span>
-<span><span class="co">#&gt; # Groups:   geo_value [4]</span></span>
 <span><span class="co">#&gt;   geo_value time_value cases_cumulative cases_daily</span></span>
-<span><span class="co">#&gt; * &lt;chr&gt;     &lt;date&gt;                &lt;dbl&gt;       &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;     &lt;date&gt;                &lt;dbl&gt;       &lt;dbl&gt;</span></span>
 <span><span class="co">#&gt; 1 ca        2020-03-01               19          19</span></span>
 <span><span class="co">#&gt; 2 ca        2020-03-02               23           4</span></span>
 <span><span class="co">#&gt; 3 ca        2020-03-03               29           6</span></span>
@@ -170,10 +170,9 @@
 <span><span class="co">#&gt; 5 ca        2020-03-05               50          10</span></span>
 <span><span class="co">#&gt; 6 ca        2020-03-06               68          18</span></span>
 <span><span class="co">#&gt; # ℹ 2,802 more rows</span></span></code></pre></div>
-<p>Compute the 7 day moving average of the confirmed daily cases for each geo_value</p>
+<p>Compute the 7 day moving average of the confirmed daily cases for each <code>geo_value</code></p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edf</span> <span class="op">&lt;-</span> <span class="va">edf</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="reference/epi_slide_opt.html">epi_slide_mean</a></span><span class="op">(</span><span class="va">cases_daily</span>, .window_size <span class="op">=</span> <span class="fl">7</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span>, .prefix <span class="op">=</span> <span class="st">"smoothed_"</span><span class="op">)</span></span>
 <span><span class="va">edf</span></span>
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 5 with metadata:</span></span>
@@ -182,9 +181,8 @@
 <span><span class="co">#&gt; * as_of     = 2024-01-01</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; # A tibble: 2,808 × 5</span></span>
-<span><span class="co">#&gt; # Groups:   geo_value [4]</span></span>
 <span><span class="co">#&gt;   geo_value time_value cases_cumulative cases_daily smoothed_cases_daily</span></span>
-<span><span class="co">#&gt; * &lt;chr&gt;     &lt;date&gt;                &lt;dbl&gt;       &lt;dbl&gt;                &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;     &lt;date&gt;                &lt;dbl&gt;       &lt;dbl&gt;                &lt;dbl&gt;</span></span>
 <span><span class="co">#&gt; 1 ca        2020-03-01               19          19                19   </span></span>
 <span><span class="co">#&gt; 2 ca        2020-03-02               23           4                11.5 </span></span>
 <span><span class="co">#&gt; 3 ca        2020-03-03               29           6                 9.67</span></span>
@@ -192,11 +190,11 @@
 <span><span class="co">#&gt; 5 ca        2020-03-05               50          10                10   </span></span>
 <span><span class="co">#&gt; 6 ca        2020-03-06               68          18                11.3 </span></span>
 <span><span class="co">#&gt; # ℹ 2,802 more rows</span></span></code></pre></div>
-<p>Autoplot the confirmed daily cases for each geo_value</p>
+<p>Autoplot the confirmed daily cases for each <code>geo_value</code></p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edf</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">smoothed_cases_daily</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-7-1.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="reference/figures/README-unnamed-chunk-7-1.svg" width="90%" style="display: block; margin: auto;"></p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

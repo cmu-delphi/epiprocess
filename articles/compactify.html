@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,14 +88,16 @@ expects these rows to remain.</p>
 <p>There are three different values that can be assigned to
 <code>compactify</code>:</p>
 <ul>
-<li>No argument: if there are LOCF-redundant rows, removes them and
-issues a warning with some information about what rows were removed</li>
 <li>
-<code>TRUE</code>: removes any LOCF-redundant rows without any
-warning or other feedback</li>
+<code>TRUE</code> (default): removes any LOCF-redundant rows without
+any message or other feedback</li>
 <li>
 <code>FALSE</code>: keeps any LOCF-redundant rows without any
-warning or other feedback</li>
+message or other feedback</li>
+<li>
+<code>"message"</code>: if there are LOCF-redundant rows, removes
+them and produces a message with some information about what rows were
+removed</li>
 </ul>
 <p>For this example, we have one chart using LOCF values, while another
 doesn’t use them to illustrate LOCF. Notice how the head of the first
@@ -107,18 +109,6 @@ dataset differs from the second from the third value included.</p>
 <span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="va">archive_cases_dv_subset</span><span class="op">$</span><span class="va">DT</span></span>
 <span></span>
 <span><span class="va">locf_omitted</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="va">dt</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: Found rows that appear redundant based on last (version of each) observation carried forward; these rows have been removed to 'compactify' and save space:</span></span>
-<span><span class="co">#&gt; Key: &lt;geo_value, time_value, version&gt;</span></span>
-<span><span class="co">#&gt;       geo_value time_value    version percent_cli case_rate_7d_av</span></span>
-<span><span class="co">#&gt;          &lt;char&gt;     &lt;Date&gt;     &lt;Date&gt;       &lt;num&gt;           &lt;num&gt;</span></span>
-<span><span class="co">#&gt;    1:        ca 2020-06-01 2020-06-07    2.140116        6.628329</span></span>
-<span><span class="co">#&gt;    2:        ca 2020-06-01 2020-06-23    2.498918        6.628329</span></span>
-<span><span class="co">#&gt;    3:        ca 2020-06-01 2020-07-23    2.698157        6.603020</span></span>
-<span><span class="co">#&gt;   ---                                                            </span></span>
-<span><span class="co">#&gt; 4949:        tx 2021-10-18 2021-10-22          NA       23.819450</span></span>
-<span><span class="co">#&gt; 4950:        tx 2021-10-19 2021-10-22          NA       24.705959</span></span>
-<span><span class="co">#&gt; 4951:        tx 2021-10-20 2021-10-22          NA       16.464639</span></span>
-<span><span class="co">#&gt; Built-in `epi_archive` functionality should be unaffected, but results may change if you work directly with its fields (such as `DT`). See `?as_epi_archive` for details. To silence this warning but keep compactification, you can pass `compactify=TRUE` when constructing the archive.</span></span>
 <span><span class="va">locf_included</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="va">dt</span>, compactify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">locf_omitted</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span>
@@ -158,7 +148,7 @@ between data sets, so we won’t always be this lucky.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">locf_included_2</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 129638</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">locf_omitted_2</span><span class="op">$</span><span class="va">DT</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 9055</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 9382</span></span></code></pre></div>
 <p>As we would expect, performing 1000 iterations of
 <code><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">dplyr::filter</a></code> is faster when the LOCF values are
 omitted.</p>

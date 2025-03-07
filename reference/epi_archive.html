@@ -7,8 +7,11 @@ possibly other key columns) along with measurement values. In brief, an
 epi_archive is a history of the time series data, where the version
 column tracks the time at which the data was available. This allows for
 version-aware forecasting.
-new_epi_archive is the constructor for epi_archive objects that assumes
-all arguments have been validated. Most users should use as_epi_archive."><meta property="og:description" content="The second main data structure for storing time series in
+new_epi_archive is the low-level constructor for epi_archive objects that
+only performs some fast, basic checks on the inputs. validate_epi_archive
+can perform more costly validation checks on its output. But most users
+should use as_epi_archive, which performs all necessary checks and has some
+additional features."><meta property="og:description" content="The second main data structure for storing time series in
 epiprocess. It is similar to epi_df in that it fundamentally a table with
 a few required columns that stores epidemiological time series data. An
 epi_archive requires a geo_value, time_value, and version column (and
@@ -16,8 +19,11 @@ possibly other key columns) along with measurement values. In brief, an
 epi_archive is a history of the time series data, where the version
 column tracks the time at which the data was available. This allows for
 version-aware forecasting.
-new_epi_archive is the constructor for epi_archive objects that assumes
-all arguments have been validated. Most users should use as_epi_archive."></head><body>
+new_epi_archive is the low-level constructor for epi_archive objects that
+only performs some fast, basic checks on the inputs. validate_epi_archive
+can perform more costly validation checks on its output. But most users
+should use as_epi_archive, which performs all necessary checks and has some
+additional features."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -25,7 +31,7 @@ all arguments have been validated. Most users should use as_epi_archive."></head
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,8 +77,11 @@ possibly other key columns) along with measurement values. In brief, an
 <code>epi_archive</code> is a history of the time series data, where the <code>version</code>
 column tracks the time at which the data was available. This allows for
 version-aware forecasting.</p>
-<p><code>new_epi_archive</code> is the constructor for <code>epi_archive</code> objects that assumes
-all arguments have been validated. Most users should use <code>as_epi_archive</code>.</p>
+<p><code>new_epi_archive</code> is the low-level constructor for <code>epi_archive</code> objects that
+only performs some fast, basic checks on the inputs. <code>validate_epi_archive</code>
+can perform more costly validation checks on its output. But most users
+should use <code>as_epi_archive</code>, which performs all necessary checks and has some
+additional features.</p>
     </div>
 
     <div class="section level2">
@@ -82,26 +91,19 @@ all arguments have been validated. Most users should use <code>as_epi_archive</c
 <span>  <span class="va">geo_type</span>,</span>
 <span>  <span class="va">time_type</span>,</span>
 <span>  <span class="va">other_keys</span>,</span>
-<span>  <span class="va">compactify</span>,</span>
-<span>  <span class="va">clobberable_versions_start</span>,</span>
-<span>  <span class="va">versions_end</span>,</span>
-<span>  compactify_tol <span class="op">=</span> <span class="va">.Machine</span><span class="op">$</span><span class="va">double.eps</span><span class="op">^</span><span class="fl">0.5</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">validate_epi_archive</span><span class="op">(</span></span>
-<span>  <span class="va">x</span>,</span>
-<span>  <span class="va">other_keys</span>,</span>
-<span>  <span class="va">compactify</span>,</span>
 <span>  <span class="va">clobberable_versions_start</span>,</span>
 <span>  <span class="va">versions_end</span></span>
 <span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">validate_epi_archive</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">as_epi_archive</span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
 <span>  geo_type <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  time_type <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  other_keys <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  compactify <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  compactify <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  compactify_abs_tol <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  clobberable_versions_start <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  .versions_end <span class="op">=</span> <span class="fu"><a href="max_version_with_row_in.html">max_version_with_row_in</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span>,</span>
@@ -136,12 +138,6 @@ apart from "geo_value", "time_value", and "version". Typical examples
 are "age" or more granular geographies.</p></dd>
 
 
-<dt id="arg-compactify">compactify<a class="anchor" aria-label="anchor" href="#arg-compactify"></a></dt>
-<dd><p>Optional; Boolean. <code>TRUE</code> will remove some
-redundant rows, <code>FALSE</code> will not, and missing or <code>NULL</code> will remove
-redundant rows, but issue a warning. See more information at <code>compactify</code>.</p></dd>
-
-
 <dt id="arg-clobberable-versions-start">clobberable_versions_start<a class="anchor" aria-label="anchor" href="#arg-clobberable-versions-start"></a></dt>
 <dd><p>Optional; <code>length</code>-1; either a value of the
 same <code>class</code> and <code>typeof</code> as <code>x$version</code>, or an <code>NA</code> of any <code>class</code> and
@@ -172,9 +168,19 @@ updates, and assumes that any version <code>&gt;= max(x$version)</code> could be
 clobbered.) If <code>nrow(x) == 0</code>, then this argument is mandatory.</p></dd>
 
 
-<dt id="arg-compactify-tol">compactify_tol<a class="anchor" aria-label="anchor" href="#arg-compactify-tol"></a></dt>
-<dd><p>double. the tolerance used to detect approximate
-equality for compactification</p></dd>
+<dt id="arg-compactify">compactify<a class="anchor" aria-label="anchor" href="#arg-compactify"></a></dt>
+<dd><p>Optional; <code>TRUE</code>, <code>FALSE</code>, or <code>"message"</code>. <code>TRUE</code> will
+remove some redundant rows, <code>FALSE</code> will not. <code>"message"</code> is like <code>TRUE</code>
+but will emit a message if anything was changed. Default is <code>TRUE</code>. See
+more information below under "Compactification:".</p></dd>
+
+
+<dt id="arg-compactify-abs-tol">compactify_abs_tol<a class="anchor" aria-label="anchor" href="#arg-compactify-abs-tol"></a></dt>
+<dd><p>Optional; double. A tolerance level used to detect
+approximate equality for compactification. The default is 0, which
+corresponds to exact equality. Consider using this if your value columns
+undergo tiny nonmeaningful revisions and the archive object with the
+default setting is too large.</p></dd>
 
 
 <dt id="arg--versions-end">.versions_end<a class="anchor" aria-label="anchor" href="#arg--versions-end"></a></dt>
