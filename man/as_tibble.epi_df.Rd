@@ -9,11 +9,11 @@
 \arguments{
 \item{x}{an \code{epi_df}}
 
-\item{...}{Unused, for extensibility.}
+\item{...}{if present, forwarded to \code{\link[tibble:as_tibble]{tibble::as_tibble}}}
 }
 \description{
-Converts an \code{epi_df} object into a tibble, dropping metadata and any
-grouping.
+Converts an \code{epi_df} object into a tibble, dropping metadata, any
+grouping, and any unrelated classes and attributes.
 }
 \details{
 Advanced: if you are working with a third-party package that uses

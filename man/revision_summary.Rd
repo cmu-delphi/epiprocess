@@ -9,40 +9,44 @@ revision_summary(
   ...,
   drop_nas = TRUE,
   print_inform = TRUE,
-  min_waiting_period = as.difftime(60, units = "days"),
+  min_waiting_period = as.difftime(60, units = "days") \%>\%
+    difftime_approx_ceiling_time_delta(epi_arch$time_type),
   within_latest = 0.2,
-  quick_revision = as.difftime(3, units = "days"),
+  quick_revision = as.difftime(3, units = "days") \%>\%
+    difftime_approx_ceiling_time_delta(epi_arch$time_type),
   few_revisions = 3,
   abs_spread_threshold = NULL,
   rel_spread_threshold = 0.1,
-  compactify_tol = .Machine$double.eps^0.5,
-  should_compactify = TRUE
+  compactify = TRUE,
+  compactify_abs_tol = 0
 )
 }
 \arguments{
 \item{epi_arch}{an epi_archive to be analyzed}
 
 \item{...}{<\code{\link[=dplyr_tidy_select]{tidyselect}}>, used to choose the column to
-summarize. If empty, it chooses the first. Currently only implemented for
-one column at a time.}
+summarize. If empty and there is only one value/measurement column (i.e.,
+not in \code{\link{key_colnames}}) in the archive, it will automatically select it.
+If supplied, \code{...} must select exactly one column.}
 
 \item{drop_nas}{bool, drop any \code{NA} values from the archive? After dropping
-\code{NA}'s compactify is run again to make sure there are no duplicate values
-from occasions when the signal is revised to \code{NA}, and then back to its
-immediately-preceding value.}
+\code{NA}'s compactify is run again if \code{compactify} is \code{TRUE} to make
+sure there are no duplicate values from occasions when the signal is
+revised to \code{NA}, and then back to its immediately-preceding value.}
 
 \item{print_inform}{bool, determines whether to print summary information, or
 only return the full summary tibble}
 
 \item{min_waiting_period}{\code{difftime}, integer or \code{NULL}. Sets a cutoff: any
-time_values not earlier than \code{min_waiting_period} before \code{versions_end} are
-removed. \code{min_waiting_period} should characterize the typical time during
-which revisions occur.  The default of 60 days corresponds to a typical
-final value for case counts as reported in the context of insurance. To
-avoid this filtering, either set to \code{NULL} or 0.}
+time_values that have not had at least \code{min_waiting_period} to stabilize as
+of the \code{versions_end} are removed. \code{min_waiting_period} should characterize
+the typical time during which most significant revisions occur. The default
+of 60 days corresponds to a typical near-final value for case counts as
+reported in the context of insurance. To avoid this filtering, either set
+to \code{NULL} or 0.}
 
 \item{within_latest}{double between 0 and 1. Determines the threshold
-used for the \code{time_to}}
+used for the \code{lag_to}}
 
 \item{quick_revision}{difftime or integer (integer is treated as days), for
 the printed summary, the amount of time between the final revision and the
@@ -52,20 +56,25 @@ days}
 \item{few_revisions}{integer, for the printed summary, the upper bound on the
 number of revisions to consider "few". Default is 3.}
 
-\item{abs_spread_threshold}{numeric, for the printed summary, the maximum
-spread used to characterize revisions which don't actually change very
-much. Default is 5\% of the maximum value in the dataset, but this is the
-most unit dependent of values, and likely needs to be chosen appropriate
-for the scale of the dataset.}
+\item{abs_spread_threshold}{length-1 numeric, for the printed summary, the
+maximum spread used to characterize revisions which don't actually change
+very much. Default is 5\% of the maximum value in the dataset, but this is
+the most unit dependent of values, and likely needs to be chosen
+appropriate for the scale of the dataset.}
 
-\item{rel_spread_threshold}{float between 0 and 1, for the printed summary,
-the relative spread fraction used to characterize revisions which don't
-actually change very much. Default is .1, or 10\% of the final value}
+\item{rel_spread_threshold}{length-1 double between 0 and 1, for the printed
+summary, the relative spread fraction used to characterize revisions which
+don't actually change very much. Default is .1, or 10\% of the final value}
 
-\item{compactify_tol}{float, used if \code{drop_nas=TRUE}, it determines the
-threshold for when two floats are considered identical.}
+\item{compactify}{bool. If \code{TRUE}, we will compactify after the signal
+requested in \code{...} has been selected on its own and the \code{drop_nas} step.
+This helps, for example, to give similar results when called on
+\link[=epix_merge]{merged} and single-signal archives, since merged archives
+record an update when any of the other signals change, not just the
+requested signal. The default is \code{TRUE}.}
 
-\item{should_compactify}{bool. Compactify if \code{TRUE}.}
+\item{compactify_abs_tol}{length-1 double, used if \code{compactify} is \code{TRUE}, it
+determines the threshold for when two doubles are considered identical.}
 }
 \description{
 \code{revision_summary} removes all missing values (if requested), and then
@@ -87,12 +96,21 @@ always excludes \code{NA} values)
 \item \code{rel_spread}: \code{spread} divided by the largest value (so it will
 always be less than 1). Note that this need not be the final value. It will
 be \code{NA} whenever \code{spread} is 0.
-\item \code{time_near_latest}: the time taken for the revisions to settle to within
+\item \code{lag_near_latest}: the time taken for the revisions to settle to within
 \code{within_latest} (default 20\%) of the final value and stay there. For
 example, consider the series (0, 20, 99, 150, 102, 100); then
-\code{time_near_latest} is 5, since even though 99 is within 20\%, it is outside
+\code{lag_near_latest} is 5, since even though 99 is within 20\%, it is outside
 the window afterwards at 150.
 }
+}
+\details{
+Applies to \code{epi_archive}s with \code{time_type}s of \code{"day"}, \code{"week"},
+and \code{"yearmonth"}. It can also work with a \code{time_type} of \code{"integer"} if
+the possible \code{time_values} are all consecutive integers; you will need to
+manually specify the \code{min_waiting_period} and \code{quick_revision}, though.
+Using a \code{time_type} of \code{"integer"} with week numbers like 202501 will
+produce incorrect results for some calculations, since week numbering
+contains jumps at year boundaries.
 }
 \examples{
 revision_example <- revision_summary(archive_cases_dv_subset, percent_cli)

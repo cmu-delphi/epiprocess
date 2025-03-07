@@ -95,31 +95,31 @@ df <- pub_covidcast(
 df
 ```
 
-Convert the data to an epi_df object and sort by geo_value and time_value. You
+Convert the data to an `epi_df` object and sort by `geo_value` and `time_value`. You
 can work with an `epi_df` like you can with a `{tibble}` by using `{dplyr}`
-verbs
+verbs.
 
 ```{r}
 edf <- df %>%
   as_epi_df(as_of = as.Date("2024-01-01")) %>%
   arrange_canonical() %>%
   group_by(geo_value) %>%
-  mutate(cases_daily = cases_cumulative - lag(cases_cumulative, default = 0))
+  mutate(cases_daily = cases_cumulative - lag(cases_cumulative, default = 0)) %>%
+  ungroup()
 edf
 ```
 
-Compute the 7 day moving average of the confirmed daily cases for each geo_value
+Compute the 7 day moving average of the confirmed daily cases for each `geo_value`
 
 ```{r}
 edf <- edf %>%
-  group_by(geo_value) %>%
   epi_slide_mean(cases_daily, .window_size = 7, na.rm = TRUE, .prefix = "smoothed_")
 edf
 ```
 
-Autoplot the confirmed daily cases for each geo_value
+Autoplot the confirmed daily cases for each `geo_value`
 
-```{r}
+```{r, dev='svg'}
 edf %>%
   autoplot(smoothed_cases_daily)
 ```

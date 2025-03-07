@@ -54,13 +54,13 @@ dumb_ex <- data.frame(
   value = c(1, 1),
   version = as.Date(c("2020-01-01", "2020-01-02"))
 )
-test_that("new_epi_archive correctly detects and warns about compactification", {
-  expect_snapshot(res <- dumb_ex %>% as_epi_archive(), cnd_class = TRUE)
+test_that("as_epi_archive default compactification (no longer messages/warns)", {
+  expect_snapshot(res <- dumb_ex %>% as_epi_archive())
 })
 
 test_that("other_keys can only contain names of the data.frame columns", {
   expect_error(as_epi_archive(archive_data, other_keys = "xyz", compactify = FALSE),
-    regexp = "`other_keys` must be contained in the column names of `x`."
+    regexp = "missing the following expected columns: xyz"
   )
   expect_error(as_epi_archive(archive_data, other_keys = "percent_cli", compactify = FALSE), NA)
 })
@@ -220,5 +220,5 @@ test_that("`epi_archive` rejects dataframes where time_value and version columns
 test_that("is_locf works as expected", {
   vec <- c(1, 1, 1e-10, 1.1e-10, NA, NA, NaN, NaN)
   is_repeated <- c(0, 1, 0, 1, 0, 1, 1, 1)
-  expect_equal(is_locf(vec, .Machine$double.eps^0.5), as.logical(is_repeated))
+  expect_equal(is_locf(vec, .Machine$double.eps^0.5, FALSE), as.logical(is_repeated))
 })

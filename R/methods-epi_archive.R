@@ -52,8 +52,7 @@
 #'   # (a.k.a. "hotfixed", "clobbered", etc.):
 #'   clobberable_versions_start = max(archive_cases_dv_subset$DT$version),
 #'   # Suppose today is the following day, and there are no updates out yet:
-#'   versions_end = max(archive_cases_dv_subset$DT$version) + 1L,
-#'   compactify = TRUE
+#'   versions_end = max(archive_cases_dv_subset$DT$version) + 1L
 #' )
 #'
 #' epix_as_of(archive_cases_dv_subset2, max(archive_cases_dv_subset$DT$version))
@@ -263,8 +262,9 @@ epix_fill_through_version <- function(x, fill_versions_end, how = c("na", "locf"
 #'   and use `min(x$versions_end, y$versions_end)` as the result's
 #'   `versions_end`.
 #'
-#' @param compactify Optional; `TRUE` (default), `FALSE`, or `NULL`; should the
+#' @param compactify Optional; `TRUE` (default), `FALSE`, or `"message"`; should the
 #'   result be compactified? See `as_epi_archive()` for details.
+#' @param compactify_abs_tol As in [`as_epi_archive()`].
 #' @details
 #' When merging archives, unless the archives have identical data release
 #' patterns, we often have to handle the situation when one signal has a more
@@ -344,7 +344,7 @@ epix_fill_through_version <- function(x, fill_versions_end, how = c("na", "locf"
 #' @export
 epix_merge <- function(x, y,
                        sync = c("forbid", "na", "locf", "truncate"),
-                       compactify = TRUE) {
+                       compactify = TRUE, compactify_abs_tol = 0) {
   assert_class(x, "epi_archive")
   assert_class(y, "epi_archive")
   sync <- rlang::arg_match(sync)
@@ -527,7 +527,7 @@ epix_merge <- function(x, y,
     # inputs are already compactified, but at time of writing we don't have
     # compactify in its own method or field, and it seems like it should be
     # pretty fast anyway.
-    compactify = compactify,
+    compactify = compactify, compactify_abs_tol = compactify_abs_tol,
     clobberable_versions_start = result_clobberable_versions_start,
     versions_end = new_versions_end
   ))
@@ -604,10 +604,10 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
     out_archive <- .data
     out_archive$DT <- out_dt
     request_names <- names(col_modify_cols)
-    return(list(
+    list(
       archive = out_archive,
       request_names = request_names
-    ))
+    )
     # (We might also consider special-casing when `mutate` hands back something
     # equivalent (in some sense) to the input (probably only encountered when
     # we're dealing with `group_by`), and using just `$DT`, not a shallow copy,
@@ -879,8 +879,7 @@ epix_slide.epi_archive <- function(
 #' @noRd
 epix_slide_versions_default <- function(ea) {
   versions_with_updates <- c(ea$DT$version, ea$versions_end)
-  ref_time_values <- tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
-  return(ref_time_values)
+  tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
 }
 
 
@@ -920,7 +919,7 @@ epix_truncate_versions_after.epi_archive <- function(x, max_version) {
     x$clobberable_versions_start <- NA
   }
   x$versions_end <- max_version
-  return(x)
+  x
 }
 
 

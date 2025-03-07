@@ -5,26 +5,25 @@
 \title{Estimate growth rate}
 \usage{
 growth_rate(
-  x = seq_along(y),
   y,
+  x = seq_along(y),
   x0 = x,
   method = c("rel_change", "linear_reg", "smooth_spline", "trend_filter"),
   h = 7,
   log_scale = FALSE,
-  dup_rm = FALSE,
   na_rm = FALSE,
-  ...
+  params = growth_rate_params()
 )
 }
 \arguments{
+\item{y}{Signal values.}
+
 \item{x}{Design points corresponding to the signal values \code{y}. Default is
 \code{seq_along(y)} (that is, equally-spaced points from 1 to the length of
 \code{y}).}
 
-\item{y}{Signal values.}
-
 \item{x0}{Points at which we should estimate the growth rate. Must be a
-subset of \code{x} (no extrapolation allowed). Default is \code{x}.}
+contained in the range of \code{x} (no extrapolation allowed). Default is \code{x}.}
 
 \item{method}{Either "rel_change", "linear_reg", "smooth_spline", or
 "trend_filter", indicating the method to use for the growth rate
@@ -39,16 +38,11 @@ the entire sequence. See details for more explanation.}
 \item{log_scale}{Should growth rates be estimated using the parametrization
 on the log scale? See details for an explanation. Default is \code{FALSE}.}
 
-\item{dup_rm}{Should we check and remove duplicates in \code{x} (and corresponding
-elements of \code{y}) before the computation? Some methods might handle
-duplicate \code{x} values gracefully, whereas others might fail (either quietly
-or loudly). Default is \code{FALSE}.}
-
 \item{na_rm}{Should missing values be removed before the computation? Default
 is \code{FALSE}.}
 
-\item{...}{Additional arguments to pass to the method used to estimate the
-derivative.}
+\item{params}{Additional arguments to pass to the method used to estimate the
+derivative. This should be created with \code{growth_rate_params()}.}
 }
 \value{
 Vector of growth rate estimates at the specified points \code{x0}.
@@ -77,12 +71,14 @@ using a first-difference approximation to the derivative.
 sliding window centered at the reference point \code{x0}, divided by the fitted
 value from this linear regression at \code{x0}.
 \item "smooth_spline": uses the estimated derivative at \code{x0} from a smoothing
-spline fit to \code{x} and \code{y}, via \code{stats::smooth.spline()}, divided by the
+spline fit to \code{x} and \code{y}, via \code{\link[stats:smooth.spline]{stats::smooth.spline()}}, divided by the
 fitted value of the spline at \code{x0}.
 \item "trend_filter": uses the estimated derivative at \code{x0} from polynomial trend
 filtering (a discrete spline) fit to \code{x} and \code{y}, via
-\code{genlasso::trendfilter()}, divided by the fitted value of the discrete
-spline at \code{x0}.
+\code{\link[trendfilter:trendfilter]{trendfilter::trendfilter()}}, divided by the fitted value of the discrete
+spline at \code{x0}. This method requires the
+\href{https://github.com/glmgen/trendfilter}{\code{{trendfilter}} package}
+to be installed.
 }
 \subsection{Log Scale}{
 
@@ -110,26 +106,30 @@ behavior of \code{epi_slide()} with \code{before = h - 1} and \code{after = h}).
 \subsection{Additional Arguments}{
 
 For the global methods, "smooth_spline" and "trend_filter", additional
-arguments can be specified via \code{...} for the underlying estimation
-function. For the smoothing spline case, these additional arguments are
-passed directly to \code{stats::smooth.spline()} (and the defaults are exactly
-as in this function). The trend filtering case works a bit differently:
-here, a custom set of arguments is allowed (which are distributed
-internally to \code{genlasso::trendfilter()} and \code{genlasso::cv.trendfilter()}):
+arguments can be specified via \code{params} for the underlying estimation
+function. These additional arguments are
+passed to \code{\link[stats:smooth.spline]{stats::smooth.spline()}}, \code{\link[trendfilter:trendfilter]{trendfilter::trendfilter()}}, or
+\code{\link[trendfilter:cv_trendfilter]{trendfilter::cv_trendfilter()}}. The defaults are exactly
+as specified in those functions, except when those defaults conflict
+among these functions. These cases are as follows:
 \itemize{
-\item \code{ord}: order of piecewise polynomial for the trend filtering fit. Default
-is 3.
-\item \code{maxsteps}: maximum number of steps to take in the solution path before
-terminating. Default is 1000.
-\item \code{cv}: should cross-validation be used to choose an effective degrees of
-freedom for the fit? Default is \code{TRUE}.
-\item \code{k}: number of folds if cross-validation is to be used. Default is 3.
-\item \code{df}: desired effective degrees of freedom for the trend filtering fit. If
-\code{cv = FALSE}, then \code{df} must be a positive integer; if \code{cv = TRUE}, then
-\code{df} must be one of "min" or "1se" indicating the selection rule to use
+\item \code{df}: desired effective degrees of freedom. For "smooth_spline", this must be numeric (or \code{NULL}) and will
+be passed along to the underlying function. For "trend_filter", if
+\code{cv = FALSE}, then \code{df} must be a positive number (integer is most sensible);
+if \code{cv = TRUE}, then \code{df} must be one of "min" or "1se" indicating the
+selection rule to use
 based on the cross-validation error curve: minimum or 1-standard-error
-rule, respectively. Default is "min" (going along with the default \code{cv = TRUE}). Note that if \code{cv = FALSE}, then we require \code{df} to be set by the
-user.
+rule, respectively. The default is "min" (going along with the default
+\code{cv = TRUE}).
+\item \code{lambda}: For "smooth_spline", this should be a scalar value or \code{NULL}.
+For "trend_filter", this is allowed to also be a vector, as long as either
+\code{cv = TRUE} or \code{df} is specified.
+\item \code{cv}: should cross-validation be used to choose an effective degrees of
+freedom for the fit? The default is \code{FALSE} to match \code{\link[stats:smooth.spline]{stats::smooth.spline()}}.
+In that case, as in that function, GCV is used instead.
+For "trend_filter", this will be coerced to \code{TRUE} if neither
+\code{df} nor \code{lambda} are specified (the default).
+Note that passing both \code{df} and a scalar \code{lambda} will always be an error.
 }
 }
 }
@@ -139,8 +139,12 @@ cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
   mutate(cases_gr = growth_rate(x = time_value, y = cases))
 
-# Log scale, degree 4 polynomial and 6-fold cross validation
+# Degree 3 polynomial and 5-fold cross validation on the log scale
+# some locations report 0 cases, so we replace these with 1
 cases_deaths_subset \%>\%
   group_by(geo_value) \%>\%
-  mutate(gr_poly = growth_rate(x = time_value, y = cases, log_scale = TRUE, ord = 4, k = 6))
+  mutate(gr_poly = growth_rate(
+    x = time_value, y = pmax(cases, 1), method = "trend_filter",
+    log_scale = TRUE, na_rm = TRUE
+  ))
 }

@@ -37,8 +37,8 @@ signal is subject to very heavy and regular revision; you can read more about it
 on its [API documentation
 page](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
 
-The data is included in this package (via the [`epidatasets`
-package](https://cmu-delphi.github.io/epidatasets/)) and can be loaded with:
+The data is included in the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/),
+which is loaded along with `epiprocess`, and can be accessed with:
 
 ```{r, message = FALSE, warning = FALSE}
 library(epiprocess)
@@ -87,7 +87,7 @@ format, with `issue` playing the role of `version`. We can now use
 ```{r}
 dv_archive <- dv %>%
   select(geo_value, time_value, version, percent_cli) %>%
-  as_epi_archive(compactify = TRUE)
+  as_epi_archive()
 dv_archive
 ```
 
@@ -182,7 +182,7 @@ revision_details %>%
     max_lag = max(max_lag),
     spread = mean(spread),
     rel_spread = mean(rel_spread),
-    time_near_latest = mean(time_near_latest)
+    lag_near_latest = mean(lag_near_latest)
   )
 ```
 
@@ -216,9 +216,9 @@ y <- pub_covidcast(
   issues = epirange(20200601, 20211201)
 ) %>%
   select(geo_value, time_value, version = issue, case_rate_7d_av = value) %>%
-  as_epi_archive(compactify = TRUE)
+  as_epi_archive()
 
-dv_cases_archive <- epix_merge(dv_archive, y, sync = "locf", compactify = TRUE)
+dv_cases_archive <- epix_merge(dv_archive, y, sync = "locf")
 print(dv_cases_archive)
 ```
 

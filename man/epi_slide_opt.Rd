@@ -139,9 +139,9 @@ or \link[slider:summary-slide]{slider::summary-slide} function over variables in
 These functions tend to be much faster than \code{epi_slide()}. See
 \code{vignette("epi_df")} for more examples.
 
-\code{epi_slide_mean} is a wrapper around \code{epi_slide_opt} with \code{.f = datatable::frollmean}.
+\code{epi_slide_mean} is a wrapper around \code{epi_slide_opt} with \code{.f = data.table::frollmean}.
 
-\code{epi_slide_sum} is a wrapper around \code{epi_slide_opt} with \code{.f = datatable::frollsum}.
+\code{epi_slide_sum} is a wrapper around \code{epi_slide_opt} with \code{.f = data.table::frollsum}.
 }
 \section{Prefix and suffix shorthand}{
 

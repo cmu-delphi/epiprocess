@@ -2,6 +2,73 @@
 
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicate PR's.
 
+# epiprocess 0.11
+
+## Breaking changes
+
+- `growth_rate()` argument order and names have changed. You will need to
+  rewrite `growth_rate(x, y)` as `growth_rate(y, x)`. The interface for passing
+  arguments to the `"smooth_spline"` and `"trend_filter"` methods has also
+  changed. Finally, `growth_rate()` with `method = "trendfilter"` now uses the
+  `{trendfilter}` package rather than `{genlasso}`; results for this method will
+  be different than before. In order to make `{epiprocess}` installation easier
+  for users without a compiler, we have placed `{trendfilter}` in Suggests:; if
+  you want to use `method = "trendfilter"` you will need to manually install
+  this dependency (e.g., with `remotes::install_github("glmgen/trendfilter")`).
+- In `revision_summary()`:
+  - The `should_compactify` argument is now called `compactify`. To migrate,
+    change any calls with `should_compactfiy =` to `compactify =`.
+  - Output now uses the name `lag_near_latest` instead of `time_near_latest`. To
+    migrate, update references to `time_near_latest` to `lag_near_latest`.
+  - `revision_summary(epi_arch)` without specifying the measurement column to
+    analyze in `...` will no longer attempt to guess which one you intended if
+    there are multiple possibilities to choose from (#571). If you attempt a
+    complicated tidyselection that selects zero columns, this is also now an
+    error. If you encounter such errors, manually specify the measurement column
+    in `...`.
+  - `min_waiting_period` now defines a nonstrict inequality instead of a strict
+    one. To obtain the old bounds, bump the `min_waiting_period` up to the next
+    possible value for your `time_type`.
+- In `key_colnames()`:
+  - On regular (non-`epi_df`) data frames, now requires manual specification of
+    `geo_keys`, `other_keys`, and `time_keys`.
+  - The `extra_keys` argument has been deprecated and replaced with
+    `other_keys`.
+- The compactification tolerance argument has been renamed to
+  `compactify_abs_tol` or `abs_tol`, depending on the function; now defines a
+  nonstrict tolerances; and defaults to 0 (requiring exact matches in order to
+  compactify). This argument has been added to `as_epi_archive()` and
+  `epix_merge()` and removed (along with all compactification options) from
+  `new_epi_archive()`.
+- `validate_epi_archive()` now follows the validator convention of operating on
+  an "unvalidated" `epi_archive` (from `new_epi_archive`) rather than arguments.
+
+## Improvements
+- `revision_summary()` now supports all `time_type`s.
+- The compactification tolerance setting now works with integer-type columns.
+- Various functions are now faster, using faster variants of core operations and
+  avoiding reconstructing grouped `epi_df`s when unnecessary.
+
+## Bug fixes
+
+- Fixed aggregation of age-group-specific rates to overall rates in `epi_df` vignette (#587).
+- Fixed `key_colnames()` omitting some key columns on `epi_archive`s (#565).
+- Fixed `epi_archive` compactification raising an error on certain value column
+  classes such as `"distribution"` (#541); it's now easier to form an archive of
+  forecasts in that format.
+- Fixed large compactification tolerances potentially removing all versions of
+  some observations in certain cases when activity was flat.
+- `[<-`, `[[<-`, and `$<-` now properly retain `epi_df`-ness when used on
+  grouped `epi_df`s.
+
+## Cleanup
+
+- Moved example datasets from being reexported in the package to being fetched
+  from `epidatasets`. The `epidatasets` package is now auto-loaded as a
+  dependency of `epiprocess`. The datasets can still be accessed, after loading
+  the package, with `data()` or the name of the dataset alone, or with
+  `epidatasets::` (#577).
+
 # epiprocess 0.10
 
 ## Breaking changes

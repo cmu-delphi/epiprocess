@@ -20,6 +20,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Nat DeFries
   \item Daniel McDonald
   \item Evan Ray
   \item Dmitry Shemetov
@@ -30,7 +31,6 @@ Other contributors:
 \itemize{
   \item Jacob Bien [contributor]
   \item Rafael Catoia [contributor]
-  \item Nat DeFries [contributor]
   \item Rachel Lobay [contributor]
   \item Ken Mawer [contributor]
   \item Chloe You [contributor]

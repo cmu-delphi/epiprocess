@@ -329,12 +329,12 @@ ea <- tibble::tribble(
 
 test_that("epix_slide with .all_versions option has access to all older versions", {
   slide_fn <- function(x, gk, rtv) {
-    return(tibble(
+    tibble(
       n_versions = length(unique(x$DT$version)),
       n_row = nrow(x$DT),
       dt_class1 = class(x$DT)[[1L]],
       dt_key = list(key(x$DT))
-    ))
+    )
   }
 
   ea_orig_mirror <- ea %>% clone()
@@ -481,7 +481,7 @@ test_that("epix_as_of and epix_slide with long enough window are compatible", {
 test_that("epix_slide `f` is passed an ungrouped `epi_archive` when `.all_versions=TRUE`", {
   slide_fn <- function(x, gk, rtv) {
     expect_class(x, "epi_archive")
-    return(NA)
+    NA
   }
 
   ea %>%

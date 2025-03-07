@@ -76,12 +76,12 @@ new_grouped_epi_archive <- function(x, vars, drop) {
   private$vars <- vars
   private$drop <- drop
 
-  return(structure(
+  structure(
     list(
       private = private
     ),
     class = "grouped_epi_archive"
-  ))
+  )
 }
 
 
@@ -332,7 +332,7 @@ epix_slide.grouped_epi_archive <- function(
     comp_value <- .slide_comp(.data_group, .group_key, .version, ...)
 
     # If this wasn't a tidyeval computation, we still need to check the output
-    # types. We'll let `group_modify` and `vec_rbind` deal with checking for
+    # types. We'll let `vec_rbind` and `bind_rows` deal with checking for
     # type compatibility between the outputs.
     if (!used_data_masking && !(
       # vctrs considers data.frames to be vectors, but we still check
@@ -431,7 +431,7 @@ epix_slide.grouped_epi_archive <- function(
     }
 
     # Fast conversion:
-    return(validate_tibble(new_tibble(res)))
+    validate_tibble(new_tibble(res))
   }
 
   out <- lapply(.versions, function(.version) {
@@ -493,16 +493,14 @@ epix_slide.grouped_epi_archive <- function(
       }
     }
 
-    return(
-      dplyr::bind_rows(dplyr::group_map( # note: output will be ungrouped
-        dplyr::group_by(as_of_df, !!!syms(.x$private$vars), .drop = .x$private$drop),
-        group_map_fn,
-        .slide_comp = .slide_comp, ...,
-        .version = .version,
-        .new_col_name = .new_col_name,
-        .keep = TRUE
-      ))
-    )
+    dplyr::bind_rows(dplyr::group_map( # note: output will be ungrouped
+      dplyr::group_by(as_of_df, !!!syms(.x$private$vars), .drop = .x$private$drop),
+      group_map_fn,
+      .slide_comp = .slide_comp, ...,
+      .version = .version,
+      .new_col_name = .new_col_name,
+      .keep = TRUE
+    ))
   })
   # Combine output into a single tibble (allowing for packed columns)
   out <- vctrs::vec_rbind(!!!out)

@@ -24,7 +24,8 @@ library(epiprocess)
 library(dplyr)
 ```
 
-The data is included in this package (via the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/)) and can be loaded with:
+The data is included in the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/),
+which is loaded along with `epiprocess`, and can be accessed with:
 ```{r}
 x <- covid_case_death_rates_extended %>%
   arrange(geo_value, time_value)
@@ -35,7 +36,7 @@ The data can also be fetched from the Delphi Epidata API with the following quer
 ```{r, eval = FALSE}
 library(epidatr)
 
-d <- as.Date("2024-03-20")
+d <- as.Date("2023-03-10")
 
 x <- pub_covidcast(
   source = "jhu-csse",

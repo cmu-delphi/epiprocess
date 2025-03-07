@@ -23,10 +23,10 @@ rows to remain.
 
 There are three different values that can be assigned to `compactify`:
 
-* No argument: if there are LOCF-redundant rows, removes them and issues a
-  warning with some information about what rows were removed
-* `TRUE`: removes any LOCF-redundant rows without any warning or other feedback
-* `FALSE`: keeps any LOCF-redundant rows without any warning or other feedback
+* `TRUE` (default): removes any LOCF-redundant rows without any message or other feedback
+* `FALSE`: keeps any LOCF-redundant rows without any message or other feedback
+* `"message"`: if there are LOCF-redundant rows, removes them and produces a
+  message with some information about what rows were removed
 
 For this example, we have one chart using LOCF values, while another doesn't
 use them to illustrate LOCF. Notice how the head of the first dataset differs
