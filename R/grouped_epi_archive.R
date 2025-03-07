@@ -332,7 +332,7 @@ epix_slide.grouped_epi_archive <- function(
     comp_value <- .slide_comp(.data_group, .group_key, .version, ...)
 
     # If this wasn't a tidyeval computation, we still need to check the output
-    # types. We'll let `group_modify` and `vec_rbind` deal with checking for
+    # types. We'll let `vec_rbind` and `bind_rows` deal with checking for
     # type compatibility between the outputs.
     if (!used_data_masking && !(
       # vctrs considers data.frames to be vectors, but we still check

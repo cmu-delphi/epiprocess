@@ -189,7 +189,10 @@ new_epi_df <- function(x = tibble::tibble(geo_value = character(), time_value = 
 
   # Reorder columns (geo_value, time_value, ...)
   if (nrow(x) > 0) {
-    x <- x %>% relocate(all_of(c("geo_value", other_keys, "time_value")), .before = 1)
+    all_names <- names(x)
+    ukey_names <- c("geo_value", other_keys, "time_value")
+    value_names <- all_names[!all_names %in% ukey_names]
+    x <- x[c(ukey_names, value_names)]
   }
 
   # Apply epi_df class, attach metadata, and return

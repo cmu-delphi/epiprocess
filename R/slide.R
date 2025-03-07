@@ -65,7 +65,7 @@
 #'     determined the time window for the current computation.
 #'
 #' @importFrom lubridate days weeks
-#' @importFrom dplyr bind_rows group_map group_vars filter select
+#' @importFrom dplyr group_map group_vars filter select
 #' @importFrom rlang .data .env !! enquos sym env missing_arg
 #' @export
 #' @seealso [`epi_slide_opt`] for optimized slide functions
@@ -309,15 +309,14 @@ epi_slide <- function(
     ...,
     .keep = TRUE
   ) %>%
-    bind_rows() %>%
-    filter(.real) %>%
-    select(-.real) %>%
+    list_rbind() %>%
+    `[`(.$.real, names(.) != ".real") %>%
     arrange_col_canonical() %>%
     group_by(!!!.x_orig_groups)
 
   # If every group in epi_slide_one_group takes the
   # length(available_ref_time_values) == 0 branch then we end up here.
-  if (ncol(result) == ncol(.x %>% select(-.real))) {
+  if (ncol(result) == ncol(.x[names(.x) != ".real"])) {
     cli_abort(
       "epi_slide: no new columns were created. This can happen if every group has no available ref_time_values.
       This is likely a mistake in your data, in the slide computation, or in the ref_time_values argument.",
@@ -341,30 +340,33 @@ epi_slide_one_group <- function(
   # Unpack the date_seq_list argument and complete the data group with missing
   # time values, padding on the left and right as needed.
   all_dates <- .date_seq_list$all_dates
-  missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
-  .data_group <- bind_rows(
+  missing_times <- all_dates[!vec_in(all_dates, .data_group$time_value)]
+  .data_group <- reclass(vec_rbind(
     .data_group,
-    dplyr::bind_cols(
-      .group_key,
-      tibble(
-        time_value = c(
-          missing_times,
-          .date_seq_list$pad_early_dates,
-          .date_seq_list$pad_late_dates
-        ), .real = FALSE
-      )
-    )
-  ) %>%
-    arrange(.data$time_value)
+    # (^ epi_df; epi_slide uses .keep = TRUE)
+    # (v tibble -> vec_rbind outputs tibble)
+    new_tibble(vec_recycle_common(
+      !!!.group_key,
+      time_value = c(
+        missing_times,
+        .date_seq_list$pad_early_dates,
+        .date_seq_list$pad_late_dates
+      ),
+      .real = FALSE
+    ))
+    # we should be adding time values of the same time_type (and shouldn't be
+    # introducing duplicate epikeytime values); we can reclass without checks:
+  ), attr(.data_group, "metadata")) %>%
+    `[`(vec_order(.$time_value), )
 
   # If the data group does not contain any of the reference time values, return
-  # the original .data_group without slide columns and let bind_rows at the end
+  # the original .data_group without slide columns and let vec_rbind at the end
   # of group_modify handle filling the empty data frame with NA values.
   if (length(available_ref_time_values) == 0L) {
     if (.all_rows) {
       return(.data_group)
     }
-    return(.data_group %>% filter(FALSE))
+    return(.data_group[0, ])
   }
 
   # Get stateful function that tracks ref_time_value per group and sends it to
@@ -436,10 +438,10 @@ epi_slide_one_group <- function(
   # If all rows, then pad slide values with NAs, else filter down data group
   if (.all_rows) {
     orig_values <- slide_values
-    slide_values <- vctrs::vec_rep(vctrs::vec_cast(NA, orig_values), nrow(.data_group))
-    vctrs::vec_slice(slide_values, .data_group$time_value %in% available_ref_time_values) <- orig_values
+    slide_values <- vec_rep(vec_cast(NA, orig_values), nrow(.data_group))
+    vec_slice(slide_values, vec_in(.data_group$time_value, available_ref_time_values)) <- orig_values
   } else {
-    .data_group <- .data_group %>% filter(time_value %in% available_ref_time_values)
+    .data_group <- .data_group[vec_in(.data_group$time_value, available_ref_time_values), ]
   }
 
   # To label the result, we will parallel some code from `epix_slide`, though
@@ -609,7 +611,7 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #' - `{.f_abbr}` will be a character vector containing a short abbreviation
 #'    for `.f` factoring in the input column type(s) for `.col_names`
 #'
-#' @importFrom dplyr bind_rows mutate %>% arrange tibble select all_of
+#' @importFrom dplyr mutate %>% arrange tibble select all_of
 #' @importFrom rlang enquo expr_label caller_arg quo_get_env
 #' @importFrom tidyselect eval_select
 #' @importFrom glue glue
@@ -895,15 +897,18 @@ epi_slide_opt <- function(
   pad_late_dates <- date_seq_list$pad_late_dates
 
   slide_one_grp <- function(.data_group, .group_key, ...) {
-    missing_times <- all_dates[!(all_dates %in% .data_group$time_value)]
+    missing_times <- all_dates[!vec_in(all_dates, .data_group$time_value)]
     # `frollmean` requires a full window to compute a result. Add NA values
     # to beginning and end of the group so that we get results for the
     # first `before` and last `after` elements.
-    .data_group <- bind_rows(
-      .data_group,
-      tibble(time_value = c(missing_times, pad_early_dates, pad_late_dates), .real = FALSE)
+    .data_group <- vec_rbind(
+      .data_group, # (tibble; epi_slide_opt uses .keep = FALSE)
+      new_tibble(vec_recycle_common(
+        time_value = c(missing_times, pad_early_dates, pad_late_dates),
+        .real = FALSE
+      ))
     ) %>%
-      arrange(.data$time_value)
+      `[`(vec_order(.$time_value), )
 
     if (f_from_package == "data.table") {
       # Grouping should ensure that we don't have duplicate time values.
@@ -955,17 +960,17 @@ epi_slide_opt <- function(
     .data_group
   }
 
-  result <- mutate(.x, .real = TRUE) %>%
+  result <- .x %>%
+    `[[<-`(".real", value = TRUE) %>%
     group_modify(slide_one_grp, ..., .keep = FALSE) %>%
-    filter(.data$.real) %>%
-    select(-.real) %>%
+    `[`(.$.real, names(.) != ".real") %>%
     arrange_col_canonical() %>%
     group_by(!!!.x_orig_groups)
 
   if (.all_rows) {
-    result[!(result$time_value %in% ref_time_values), result_col_names] <- NA
+    result[!vec_in(result$time_value, ref_time_values), result_col_names] <- NA
   } else if (user_provided_rtvs) {
-    result <- result[result$time_value %in% ref_time_values, ]
+    result <- result[vec_in(result$time_value, ref_time_values), ]
   }
 
   if (!is_epi_df(result)) {
