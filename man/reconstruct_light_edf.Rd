@@ -9,7 +9,7 @@ reconstruct_light_edf(data, template)
 \description{
 In the move to our current not-quite-proper/effective "implementation" of
 \code{\link[dplyr:dplyr_extending]{dplyr::dplyr_extending}} for \code{epi_df}s, we moved a lot of checks in
-\code{dplyr_reconstruct} and used it instead of \code{\link[=reclass]{reclass()}} in various
+\code{dplyr_reconstruct} and used it instead of \code{reclass()} in various
 operations to prevent operations from outputting invalid metadata/classes,
 instead of more careful tailored and relevant checks. However, this actually
 introduced extra overhead due to \code{dplyr_reconstruct.epi_df()} passing off to

@@ -169,7 +169,7 @@ dplyr_reconstruct.epi_df <- function(data, template) {
 #'
 #' In the move to our current not-quite-proper/effective "implementation" of
 #' [`dplyr::dplyr_extending`] for `epi_df`s, we moved a lot of checks in
-#' `dplyr_reconstruct` and used it instead of [`reclass()`] in various
+#' `dplyr_reconstruct` and used it instead of `reclass()` in various
 #' operations to prevent operations from outputting invalid metadata/classes,
 #' instead of more careful tailored and relevant checks. However, this actually
 #' introduced extra overhead due to `dplyr_reconstruct.epi_df()` passing off to
