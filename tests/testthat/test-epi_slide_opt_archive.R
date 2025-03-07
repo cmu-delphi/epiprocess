@@ -55,20 +55,80 @@ test_that("epi_slide_opt_archive_one_epikey works as expected", {
   f <- purrr::partial(data.table::frollmean, algo = "exact")
 
   result <- updates %>%
-    epi_slide_opt_archive_one_epikey("value", f, "data.table", 2L, 0L, "day", "slide_value")
-
-  expect_equal(
-    result %>% lapply(function(x) {
+    epi_slide_opt_archive_one_epikey("value", f, "data.table", 2L, 0L, "day", "slide_value") %>%
+    lapply(function(x) {
       x %>%
         arrange(time_value) %>%
         select(version, time_value, everything())
     })
-   ,
-    expected
-  )
 
-  # TODO check about version nesting ordering
+  expect_equal(result, expected)
+})
+
+
+test_that("epi_slide_opt.epi_archive is not confused by unique(DT$version) unsorted", {
+  start_date <- as.Date("2020-01-01")
+  tibble(
+    geo_value = 1,
+    time_value = start_date - 1 + 1:4,
+    version = start_date - 1 + c(5, 5, 4, 4),
+    value = c(1, 2, 3, 4)
+  ) %>%
+    as_epi_archive() %>%
+    epi_slide_opt(value, frollmean, .window_size = 2L) %>%
+    expect_equal(
+      tibble(
+        geo_value = 1,
+        time_value = start_date - 1 + c(1, 2, 3, 3, 4),
+        version = start_date - 1 + c(5, 5, 4, 5, 4),
+        value = c(1, 2, 3, 3, 4),
+        value_2dav = c(NA, 1.5, NA, 2.5, 3.5)
+      ) %>%
+        as_epi_archive()
+    )
+})
+
+test_that("epi_slide_opt.epi_archive is not confused by unique(DT$time_value) unsorted", {
+
+  start_date <- as.Date("2020-01-01")
+  tibble(
+    geo_value = c(1, 1, 2, 2),
+    time_value = start_date - 1 + c(2, 3, 1, 2),
+    version = start_date - 1 + c(1, 2, 2, 2),
+    value = c(1, 2, 3, 4)
+  ) %>%
+    as_epi_archive() %>%
+    epi_slide_opt(value, frollmean, .window_size = 2L) %>%
+    expect_equal(
+      tibble(
+        geo_value = c(1, 1, 2, 2),
+        time_value = start_date - 1 + c(2, 3, 1, 2),
+        version = start_date - 1 + c(1, 2, 2, 2),
+        value = c(1, 2, 3, 4),
+        value_2dav = c(NA, 1.5, NA, 3.5)
+      ) %>%
+        as_epi_archive()
+    )
 
 })
 
-# TODO tests on example data sets
+test_that("epi_slide_opt.epi_archive is equivalent to epix_slide reconversion on example data", {
+
+  case_death_rate_archive %>%
+    epi_slide_opt(case_rate, frollmean, .window_size = 7
+                  # , algo = "exact"
+                  ) %>%
+    .$DT %>%
+    as.data.frame() %>%
+    as_tibble() %>%
+    filter(!approx_equal(case_rate_7dav, case_rate_7d_av, 1e-6, TRUE)) %>%
+    dplyr::transmute(version, geo_value, time_value, case_rate_7dav, case_rate_7d_av,
+                     abs_diff = abs(case_rate_7dav - case_rate_7d_av)) %>%
+    {}
+
+    # TODO finish tests on example data sets
+
+  })
+
+
+# TODO grouped behavior checks
