@@ -11,6 +11,7 @@
 #' @importFrom checkmate assert_string
 #' @importFrom checkmate assert_subset
 #' @importFrom checkmate assert_tibble
+#' @importFrom checkmate assert_true
 #' @importFrom checkmate check_atomic check_data_frame expect_class test_int
 #' @importFrom checkmate check_character
 #' @importFrom checkmate check_logical
@@ -25,6 +26,7 @@
 #' @importFrom data.table fifelse
 #' @importFrom data.table key
 #' @importFrom data.table setcolorder
+#' @importFrom data.table setDT
 #' @importFrom data.table setkeyv
 #' @importFrom dplyr arrange
 #' @importFrom dplyr grouped_df

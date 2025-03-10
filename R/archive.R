@@ -278,41 +278,22 @@ next_after.Date <- function(x) x + 1L
 #' @order 3
 #' @export
 new_epi_archive <- function(
-    x,
+    data_table,
     geo_type,
     time_type,
     other_keys,
     clobberable_versions_start,
     versions_end) {
-  assert_data_frame(x)
+  assert_class(data_table, "data.table")
   assert_string(geo_type)
   assert_string(time_type)
   assert_character(other_keys, any.missing = FALSE)
   if (any(c("geo_value", "time_value", "version") %in% other_keys)) {
     cli_abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
   }
-  validate_version_bound(clobberable_versions_start, x, na_ok = TRUE)
-  validate_version_bound(versions_end, x, na_ok = FALSE)
-
-  key_vars <- c("geo_value", "time_value", other_keys, "version")
-  if (!all(key_vars %in% names(x))) {
-    # Give a more tailored error message than as.data.table would:
-    cli_abort(c(
-      "`x` is missing the following expected columns:
-       {format_varnames(setdiff(key_vars, names(x)))}.",
-      ">" = "You might need to `dplyr::rename()` beforehand
-                       or use `as_epi_archive()`'s renaming feature.",
-      ">" = if (!all(other_keys %in% names(x))) {
-        "Check also for typos in `other_keys`."
-      }
-    ))
-  }
-
-  # Create the data table; if x was an un-keyed data.table itself,
-  # then the call to as.data.table() will fail to set keys, so we
-  # need to check this, then do it manually if needed
-  data_table <- as.data.table(x, key = key_vars)
-  if (!identical(key_vars, key(data_table))) setkeyv(data_table, cols = key_vars)
+  assert_true(identical(key(data_table), c("geo_value", "time_value", other_keys, "version")))
+  validate_version_bound(clobberable_versions_start, data_table, na_ok = TRUE)
+  validate_version_bound(versions_end, data_table, na_ok = FALSE)
 
   structure(
     list(
@@ -529,10 +510,31 @@ as_epi_archive <- function(
     .versions_end = max_version_with_row_in(x), ...,
     versions_end = .versions_end) {
   assert_data_frame(x)
+  # Convert first to data.frame to guard against data.table#6859 and potentially
+  # other things epiprocess#618:
+  x_already_copied <- identical(class(x), c("data.table", "data.frame"))
+  x <- as.data.frame(x)
   x <- rename(x, ...)
-  x <- guess_column_name(x, "time_value", time_column_names())
   x <- guess_column_name(x, "geo_value", geo_column_names())
+  if (!all(other_keys %in% names(x))) {
+    # Give a more tailored error message than as.data.table would:
+    cli_abort(c(
+      "`x` is missing the following expected columns:
+       {format_varnames(setdiff(other_keys, names(x)))}.",
+      ">" = "You might need to `dplyr::rename()` beforehand
+             or using `as_epi_archive()`'s renaming feature."
+    ))
+  }
+  x <- guess_column_name(x, "time_value", time_column_names())
   x <- guess_column_name(x, "version", version_column_names())
+
+  # Convert to data.table:
+  key_vars <- c("geo_value", "time_value", other_keys, "version")
+  if (x_already_copied) {
+    setDT(x, key = key_vars)
+  } else {
+    x <- as.data.table(x, key = key_vars)
+  }
 
   if (lifecycle::is_present(geo_type)) {
     cli_warn("epi_archive constructor argument `geo_type` is now ignored. Consider removing.")
@@ -554,11 +556,10 @@ as_epi_archive <- function(
     cli_abort('`compactify` must be `TRUE`, `FALSE`, or `"message"`')
   }
 
-  data_table <- result$DT
-  key_vars <- key(data_table)
+  data_table <- result$DT # probably just `x`, but take no chances
 
   nrow_before_compactify <- nrow(data_table)
-  # Runs compactify on data frame
+  # Runs compactify on data_table
   if (identical(compactify, TRUE) || identical(compactify, "message")) {
     compactified <- apply_compactify(data_table, key_vars, compactify_abs_tol)
   } else {
