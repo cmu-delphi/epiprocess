@@ -186,8 +186,8 @@ next_after.Date <- function(x) x + 1L
 #'  archive. Unexpected behavior may result from modifying the metadata
 #'  directly.
 #'
-#' @param x A data.frame, data.table, or tibble, with columns `geo_value`,
-#'   `time_value`, `version`, and then any additional number of columns.
+#' @param data_table a data.table with [`data.table::key()`] equal to
+#'   `c("geo_value", other_keys, "time_value", "version")`.
 #' @param geo_type DEPRECATED Has no effect. Geo value type is inferred from the
 #' location column and set to "custom" if not recognized.
 #' @param time_type DEPRECATED Has no effect. Time value type inferred from the time
@@ -488,6 +488,8 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol) {
 #' `as_epi_archive` converts a data frame, data table, or tibble into an
 #' `epi_archive` object.
 #'
+#' @param x A data.frame, data.table, or tibble, with columns `geo_value`,
+#'   `time_value`, `version`, and then any additional number of columns.
 #' @param ... used for specifying column names, as in [`dplyr::rename`]. For
 #'   example `version = release_date`
 #' @param .versions_end location based versions_end, used to avoid prefix
