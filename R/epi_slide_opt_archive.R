@@ -125,7 +125,7 @@ epi_slide_opt_archive_one_epikey <- function(updates, in_colnames, f_dots_baked,
 epi_slide_opt.grouped_epi_archive <- function(.x, ...) {
   assert_set_equal(
     group_vars(.x),
-    key_colnames(.x, exclude = c("time_value", "version"))
+    key_colnames(.x$private$ungrouped, exclude = c("time_value", "version"))
   )
   orig_group_vars <- group_vars(.x)
   orig_drop <- .x$private$drop

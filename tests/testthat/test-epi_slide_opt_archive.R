@@ -110,7 +110,7 @@ test_that("epi_slide_opt.epi_archive is not confused by unique(DT$time_value) un
     )
 })
 
-test_that("epi_slide_opt.epi_archive gives expected results on example data", {
+test_that("epi_slide_opt.epi_archive gives expected results on example data; also grouped behavior", {
   # vs. built-in case_rate_7d_av column.
   #
   # If we were to compare the keyset vs.
@@ -166,6 +166,38 @@ test_that("epi_slide_opt.epi_archive gives expected results on example data", {
 
   expect_equal(mini_case_death_rate_archive_result, mini_case_death_rate_archive_expected)
 
+  mini_case_death_rate_archive_result2 <- mini_case_death_rate_archive %>%
+    group_by(geo_value) %>%
+    epi_slide_opt(case_rate, frollmean, .window_size = 7)
+
+  expect_equal(
+    mini_case_death_rate_archive_result2,
+    mini_case_death_rate_archive_result %>%
+      group_by(geo_value)
+  )
+
+  mini_case_death_rate_archive_b <- mini_case_death_rate_archive %>%
+    {
+      as_tibble(as.data.frame(.$DT))
+    } %>%
+    mutate(age_group = "overall") %>%
+    as_epi_archive(other_keys = "age_group")
+
+  expect_equal(
+    mini_case_death_rate_archive_b %>%
+      group_by(geo_value, age_group) %>%
+      epi_slide_opt(case_rate, frollmean, .window_size = 7),
+    mini_case_death_rate_archive_b %>%
+      epi_slide_opt(case_rate, frollmean, .window_size = 7) %>%
+      group_by(geo_value, age_group)
+  )
+
+  expect_error(
+    mini_case_death_rate_archive_b %>%
+      group_by(age_group) %>%
+      epi_slide_opt(case_rate, frollmean, .window_size = 7)
+  )
+
   archive_cases_dv_subset_time_opt <- system.time(
     archive_cases_dv_subset_result <- archive_cases_dv_subset %>%
       epi_slide_opt(percent_cli, frollmean, .window_size = 7)
@@ -180,5 +212,3 @@ test_that("epi_slide_opt.epi_archive gives expected results on example data", {
 
   expect_equal(archive_cases_dv_subset_result, archive_cases_dv_subset_expected)
 })
-
-# TODO grouped behavior checks
