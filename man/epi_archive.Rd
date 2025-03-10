@@ -8,7 +8,7 @@
 \title{\code{epi_archive} object}
 \usage{
 new_epi_archive(
-  x,
+  data_table,
   geo_type,
   time_type,
   other_keys,
@@ -32,8 +32,8 @@ as_epi_archive(
 )
 }
 \arguments{
-\item{x}{A data.frame, data.table, or tibble, with columns \code{geo_value},
-\code{time_value}, \code{version}, and then any additional number of columns.}
+\item{data_table}{a data.table with \code{\link[data.table:setkey]{data.table::key()}} equal to
+\code{c("geo_value", other_keys, "time_value", "version")}.}
 
 \item{geo_type}{DEPRECATED Has no effect. Geo value type is inferred from the
 location column and set to "custom" if not recognized.}
@@ -72,6 +72,9 @@ beyond \code{max(x$version)}, but they all contained empty updates. (The default
 value of \code{clobberable_versions_start} does not fully trust these empty
 updates, and assumes that any version \verb{>= max(x$version)} could be
 clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
+
+\item{x}{A data.frame, data.table, or tibble, with columns \code{geo_value},
+\code{time_value}, \code{version}, and then any additional number of columns.}
 
 \item{compactify}{Optional; \code{TRUE}, \code{FALSE}, or \code{"message"}. \code{TRUE} will
 remove some redundant rows, \code{FALSE} will not. \code{"message"} is like \code{TRUE}
