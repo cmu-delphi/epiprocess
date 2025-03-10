@@ -27,7 +27,7 @@
 #' @examples
 #'
 #' # On numeric vectors:
-#' approx_equal(
+#' vec_approx_equal(
 #'   c(1, 2, 3, NA),
 #'   c(1, 2 + 1e-10, NA, NA),
 #'   na_equal = TRUE,
@@ -49,8 +49,8 @@
 #' tbl2$c$c1[[4]] <- tbl1$c$c1[[4]] + 1e-10
 #' tbl2$d[[5, 2]] <- tbl1$d[[5, 2]] + 1e-10
 #' vctrs::vec_equal(tbl1, tbl2, na_equal = TRUE)
-#' approx_equal(tbl1, tbl2, na_equal = TRUE, abs_tol = 1e-12)
-#' approx_equal(tbl1, tbl2, na_equal = TRUE, abs_tol = 1e-8)
+#' vec_approx_equal(tbl1, tbl2, na_equal = TRUE, abs_tol = 1e-12)
+#' vec_approx_equal(tbl1, tbl2, na_equal = TRUE, abs_tol = 1e-8)
 #'
 #'
 #'
@@ -58,10 +58,10 @@
 #'
 #' # Type comparison within lists is stricter, matching vctrs:
 #' vctrs::vec_equal(list(1:2), list(as.numeric(1:2)))
-#' approx_equal(list(1:2), list(as.numeric(1:2)), FALSE, abs_tol = 0)
+#' vec_approx_equal(list(1:2), list(as.numeric(1:2)), FALSE, abs_tol = 0)
 #'
 #' @export
-approx_equal <- function(vec1, vec2, na_equal, .ptype = NULL, ..., abs_tol, inds1 = NULL, inds2 = NULL) {
+vec_approx_equal <- function(vec1, vec2, na_equal, .ptype = NULL, ..., abs_tol, inds1 = NULL, inds2 = NULL) {
   if (!obj_is_vector(vec1)) cli_abort("`vec1` must be recognized by vctrs as a vector")
   if (!obj_is_vector(vec2)) cli_abort("`vec2` must be recognized by vctrs as a vector")
   # Leave vec size checking to vctrs recycling ops.
@@ -99,13 +99,13 @@ approx_equal <- function(vec1, vec2, na_equal, .ptype = NULL, ..., abs_tol, inds
     inds2 <- vec_recycle(inds2, common_size)
   }
   vecs <- vec_cast_common(vec1, vec2, .to = .ptype)
-  approx_equal0(vecs[[1]], vecs[[2]], na_equal, abs_tol, inds1, inds2)
+  vec_approx_equal0(vecs[[1]], vecs[[2]], na_equal, abs_tol, inds1, inds2)
 }
 
-#' Helper for [`approx_equal`] for vecs guaranteed to have the same ptype and size
+#' Helper for [`vec_approx_equal`] for vecs guaranteed to have the same ptype and size
 #'
 #' @keywords internal
-approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2 = NULL) {
+vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2 = NULL) {
   if (is_bare_numeric(vec1) && abs_tol != 0) {
     # perf: since we're working with bare numerics and logicals: we can use `[`
     # and `fifelse`. Matching vec_equal, we ignore names and other attributes.
@@ -132,7 +132,7 @@ approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2 = N
       rep(TRUE, nrow(vec1))
     } else {
       Reduce(`&`, lapply(seq_len(ncol(vec1)), function(col_i) {
-        approx_equal0(vec1[[col_i]], vec2[[col_i]], na_equal, abs_tol, inds1, inds2)
+        vec_approx_equal0(vec1[[col_i]], vec2[[col_i]], na_equal, abs_tol, inds1, inds2)
       }))
     }
   } else if (is_bare_list(vec1)) {
@@ -144,14 +144,14 @@ approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2 = N
         # consistently inconsistent, we avoid dispatching to vec_equal for bare
         # lists even with abs_tol = 0:
         identical(vec_ptype(entry1), vec_ptype(entry2)) &&
-        all(approx_equal0(entry1, entry2, na_equal, abs_tol))
+        all(vec_approx_equal0(entry1, entry2, na_equal, abs_tol))
     }, logical(1L))
   } else {
     # XXX No special handling for any other types/situations. Makes sense for
     # unclassed atomic things; custom classes (e.g., distributions) might want
-    # recursion / specialization, though. approx_equal0 should probably be an S3
+    # recursion / specialization, though. vec_approx_equal0 should probably be an S3
     # method. Also, abs_tol == 0 --> vec_equal logic should maybe be either be
-    # hoisted to approx_equal or we should manually recurse on data frames even
+    # hoisted to vec_approx_equal or we should manually recurse on data frames even
     # with abs_tol = 0 when that's faster (might depend on presence of inds*),
     # after some inconsistencies are ironed out.
     if (!is.null(inds1)) {
@@ -265,7 +265,7 @@ tbl_diff2 <- function(earlier_snapshot, later_tbl,
   # Which rows from combined are in case 3.?
   combined_compactify_away <- rep(FALSE, combined_n)
   combined_compactify_away[combined_ukey_is_repeat] <-
-    approx_equal0(combined_vals,
+    vec_approx_equal0(combined_vals,
       combined_vals,
       na_equal = TRUE,
       abs_tol = compactify_abs_tol,
@@ -340,5 +340,3 @@ tbl_patch <- function(snapshot, update, ukey_names) {
 
   result_tbl
 }
-
-# TODO rename approx_equal to vec_approx_equal
