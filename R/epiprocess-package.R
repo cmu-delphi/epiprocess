@@ -8,6 +8,7 @@
 #' @importFrom checkmate assert_false
 #' @importFrom checkmate assert_function
 #' @importFrom checkmate assert_logical assert_numeric assert_scalar checkInt
+#' @importFrom checkmate assert_set_equal
 #' @importFrom checkmate assert_string
 #' @importFrom checkmate assert_subset
 #' @importFrom checkmate assert_tibble
