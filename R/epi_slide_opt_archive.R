@@ -193,6 +193,8 @@ epi_slide_opt.epi_archive <-
         res
       }) %>%
       ungroup() %>%
+      as.data.frame() %>% # data.table#6859
+      as.data.table(key = key(.x$DT)) %>%
       new_epi_archive(
         .x$geo_type, .x$time_type, .x$other_keys,
         .x$clobberable_versions_start, .x$versions_end
