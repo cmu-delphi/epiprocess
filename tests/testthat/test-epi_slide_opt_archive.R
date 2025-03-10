@@ -55,7 +55,7 @@ test_that("epi_slide_opt_archive_one_epikey works as expected", {
   f <- purrr::partial(data.table::frollmean, algo = "exact")
 
   result <- updates %>%
-    epi_slide_opt_archive_one_epikey("value", f, "data.table", 2L, 0L, "day", "slide_value") %>%
+    epiprocess:::epi_slide_opt_archive_one_epikey("value", f, "data.table", 2L, 0L, "day", "slide_value") %>%
     lapply(function(x) {
       x %>%
         arrange(time_value) %>%
