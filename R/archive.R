@@ -291,7 +291,7 @@ new_epi_archive <- function(
   if (any(c("geo_value", "time_value", "version") %in% other_keys)) {
     cli_abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
   }
-  assert_true(identical(key(data_table), c("geo_value", "time_value", other_keys, "version")))
+  assert_true(identical(key(data_table), c("geo_value", other_keys, "time_value", "version")))
   validate_version_bound(clobberable_versions_start, data_table, na_ok = TRUE)
   validate_version_bound(versions_end, data_table, na_ok = FALSE)
 
@@ -319,7 +319,7 @@ new_epi_archive <- function(
 validate_epi_archive <- function(x) {
   assert_class(x, "epi_archive")
 
-  ukey_vars1 <- c("geo_value", "time_value", x$other_keys, "version")
+  ukey_vars1 <- c("geo_value", x$other_keys, "time_value", "version")
   ukey_vars2 <- key(x$DT)
   if (!identical(ukey_vars1, ukey_vars2)) {
     cli_abort(c("`data.table::key(x$DT)` not as expected",
@@ -529,7 +529,7 @@ as_epi_archive <- function(
   x <- guess_column_name(x, "version", version_column_names())
 
   # Convert to data.table:
-  key_vars <- c("geo_value", "time_value", other_keys, "version")
+  key_vars <- c("geo_value", other_keys, "time_value", "version")
   if (x_already_copied) {
     setDT(x, key = key_vars)
   } else {

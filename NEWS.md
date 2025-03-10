@@ -11,6 +11,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 - `new_epi_archive()`'s `x` argument has been replaced with a `data_table`
   argument, which must be a `data.table` with the key already set appropriately.
+  The `key()` of its `DT` will also now place `other_keys` before rather than after
+  `"time_value"`.
 
 ## Bug fixes
 
