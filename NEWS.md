@@ -2,6 +2,18 @@
 
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicate PR's.
 
+# epiprocess 0.12
+
+## Breaking changes
+
+- `new_epi_archive()`'s `x` argument has been replaced with a `data_table`
+  argument, which must be a `data.table` with the key already set appropriately.
+
+## Bug fixes
+
+- `as_epi_archive()` no longer has issues setting its `DT`'s `key` on some
+  versions of `{data.table}` when `x` is a tibble.
+
 # epiprocess 0.11
 
 ## Breaking changes
