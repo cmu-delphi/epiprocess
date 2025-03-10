@@ -42,7 +42,7 @@
 #' @keywords internal
 epi_slide_opt_archive_one_epikey <- function(updates, in_colnames, f_dots_baked, f_from_package, before, after, time_type, out_colnames) {
   # TODO check for col name clobbering
-  unit_step <- epiprocess:::unit_time_delta(time_type)
+  unit_step <- unit_time_delta(time_type)
   prev_inp_snapshot <- NULL
   prev_out_snapshot <- NULL
   result <- map(seq_len(nrow(updates)), function(update_i) {
