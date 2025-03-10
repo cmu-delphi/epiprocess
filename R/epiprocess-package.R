@@ -32,6 +32,7 @@
 #' @importFrom dplyr arrange
 #' @importFrom dplyr grouped_df
 #' @importFrom dplyr is_grouped_df
+#' @importFrom dplyr n_groups
 #' @importFrom dplyr select
 #' @importFrom lifecycle deprecated
 #' @importFrom purrr list_rbind
