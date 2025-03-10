@@ -12,9 +12,11 @@
 #' @param na_equal should `NA`s be considered equal to each other? (In
 #'   epiprocess, we usually want this to be `TRUE`, but that doesn't match the
 #'   [`vctrs::vec_equal()`] default, so this is mandatory.)
+#' @param .ptype as in [`vctrs::vec_equal()`].
+#' @param ... should be empty (it's here to force later arguments to be passed
+#'   by name)
 #' @param abs_tol absolute tolerance; will be used for bare numeric `vec1`,
 #'   `vec2`, or any such columns within `vec1`, `vec2` if they are data frames.
-#' @param .ptype as in [`vctrs::vec_equal()`].
 #' @param inds1,inds2 optional (row) indices into vec1 and vec2 compatible with
 #'   [`vctrs::vec_slice()`]; output should be consistent with `vec_slice`-ing to
 #'   these indices beforehand, but can give faster computation if `vec1` and
@@ -205,7 +207,9 @@ tbl_diff2 <- function(earlier_snapshot, later_tbl,
     cli_abort("`ukey_names` must be a subset of column names")
   }
   later_format <- arg_match0(later_format, c("snapshot", "update"))
-  if (!(is.vector(compactify_abs_tol, mode = "numeric") && length(compactify_abs_tol) == 1L && compactify_abs_tol >= 0)) {
+  if (!(is.vector(compactify_abs_tol, mode = "numeric") &&
+    length(compactify_abs_tol) == 1L && # nolint:indentation_linter
+    compactify_abs_tol >= 0)) {
     # Give a specific message:
     assert_numeric(compactify_abs_tol, lower = 0, any.missing = FALSE, len = 1L)
     # Fallback e.g. for invalid classes not caught by assert_numeric:
@@ -279,7 +283,7 @@ tbl_diff2 <- function(earlier_snapshot, later_tbl,
   if (later_format == "update") {
     # Cases 4. and 5.:
     combined_tbl <- combined_tbl[combined_from_later & !combined_compactify_away, ]
-  } else { # later_format == "snapshot"
+  } else { # later_format is "snapshot"
     # Which rows from combined are in case 1.?
     combined_is_deletion <- vec_rep_each(c(TRUE, FALSE), c(earlier_n, later_n))
     combined_is_deletion[ukey_repeat_first_i] <- FALSE

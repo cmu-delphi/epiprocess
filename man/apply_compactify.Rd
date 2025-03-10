@@ -16,7 +16,7 @@ would be \code{key(DT)}.}
 
 \item{abs_tol}{numeric, >=0; absolute tolerance to use on numeric measurement
 columns when determining whether something can be compactified away; see
-\code{\link{is_locf}}}
+\code{\link{vec_approx_equal}}}
 }
 \description{
 Works by shifting all rows except the version, then comparing values to see

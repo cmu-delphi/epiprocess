@@ -159,7 +159,9 @@ test_that("epi_slide_opt.epi_archive gives expected results on example data; als
 
   mini_case_death_rate_archive_time_gen <- system.time(
     mini_case_death_rate_archive_expected <- mini_case_death_rate_archive %>%
-      epix_slide(~ .x %>% epi_slide_opt(case_rate, frollmean, .window_size = 7)) %>%
+      epix_slide(
+        ~ .x %>% epi_slide_opt(case_rate, frollmean, .window_size = 7)
+      ) %>%
       select(names(mini_case_death_rate_archive$DT), everything()) %>%
       as_epi_archive()
   )
@@ -205,7 +207,9 @@ test_that("epi_slide_opt.epi_archive gives expected results on example data; als
 
   archive_cases_dv_subset_time_gen <- system.time(
     archive_cases_dv_subset_expected <- archive_cases_dv_subset %>%
-      epix_slide(~ .x %>% epi_slide_opt(percent_cli, frollmean, .window_size = 7)) %>%
+      epix_slide(
+        ~ .x %>% epi_slide_opt(percent_cli, frollmean, .window_size = 7)
+      ) %>%
       select(geo_value, time_value, version, everything()) %>%
       as_epi_archive()
   )

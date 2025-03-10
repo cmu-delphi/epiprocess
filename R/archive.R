@@ -386,7 +386,7 @@ validate_epi_archive <- function(x) {
 #'   would be `key(DT)`.
 #' @param abs_tol numeric, >=0; absolute tolerance to use on numeric measurement
 #'   columns when determining whether something can be compactified away; see
-#'   [`is_locf`]
+#'   [`vec_approx_equal`]
 #'
 #' @importFrom data.table is.data.table key
 #' @importFrom dplyr arrange filter

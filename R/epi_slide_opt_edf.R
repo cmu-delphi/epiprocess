@@ -81,7 +81,8 @@ upstream_slide_f_info <- function(.f) {
 #'   `names(.x)`; and `output_colnames`, chr, same length as `input_col_names`
 #'
 #' @keywords internal
-across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer, .window_size, .align, .prefix, .suffix, .new_col_names) {
+across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer,
+                                  .window_size, .align, .prefix, .suffix, .new_col_names) {
   # The position of a given column can be differ between input `.x` and
   # `.data_group` since the grouping step by default drops grouping columns.
   # To avoid rerunning `eval_select` for every `.data_group`, convert
@@ -151,10 +152,10 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer, .windo
   }
   output_col_names <- .new_col_names
 
-  return(list(
+  list(
     input_col_names = input_col_names,
     output_col_names = output_col_names
-  ))
+  )
 }
 
 #' Optimized slide functions for common cases
@@ -417,7 +418,10 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
   window_args <- get_before_after_from_window(.window_size, .align, time_type)
 
   # Handle output naming:
-  names_info <- across_ish_names_info(.x, time_type, col_names_quo, f_info$namer, .window_size, .align, .prefix, .suffix, .new_col_names)
+  names_info <- across_ish_names_info(
+    .x, time_type, col_names_quo, f_info$namer,
+    .window_size, .align, .prefix, .suffix, .new_col_names
+  )
   input_col_names <- names_info$input_col_names
   output_col_names <- names_info$output_col_names
 
