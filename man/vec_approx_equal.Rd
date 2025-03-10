@@ -28,6 +28,9 @@ epiprocess, we usually want this to be \code{TRUE}, but that doesn't match the
 
 \item{.ptype}{as in \code{\link[vctrs:vec_equal]{vctrs::vec_equal()}}.}
 
+\item{...}{should be empty (it's here to force later arguments to be passed
+by name)}
+
 \item{abs_tol}{absolute tolerance; will be used for bare numeric \code{vec1},
 \code{vec2}, or any such columns within \code{vec1}, \code{vec2} if they are data frames.}
 

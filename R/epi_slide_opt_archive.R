@@ -40,7 +40,11 @@
 #'   epi_slide_opt_archive_one_epikey("value", f, "data.table", 2L, 0L, "day", "slide_value")
 #'
 #' @keywords internal
-epi_slide_opt_archive_one_epikey <- function(updates, in_colnames, f_dots_baked, f_from_package, before, after, time_type, out_colnames) {
+epi_slide_opt_archive_one_epikey <- function(
+    updates,
+    in_colnames,
+    f_dots_baked, f_from_package, before, after, time_type,
+    out_colnames) {
   # TODO check for col name clobbering
   unit_step <- unit_time_delta(time_type)
   prev_inp_snapshot <- NULL
@@ -61,7 +65,7 @@ epi_slide_opt_archive_one_epikey <- function(updates, in_colnames, f_dots_baked,
       # If the input had updates in the range t1..t2, this could produce changes
       # in slide outputs in the range t1-after..t2+before, and to compute those
       # slide values, we need to look at the input snapshot from
-      # t1-after-before..t2+before+after.
+      # t1-after-before..t2+before+after. nolint: commented_code_linter
       inp_update_t_min <- min(inp_update$time_value)
       inp_update_t_max <- max(inp_update$time_value)
       slide_t_min <- inp_update_t_min - (before + after) * unit_step
@@ -78,7 +82,8 @@ epi_slide_opt_archive_one_epikey <- function(updates, in_colnames, f_dots_baked,
     if (f_from_package == "data.table") {
       for (col_i in seq_along(in_colnames)) {
         if (before == Inf) {
-          slide[[out_colnames[[col_i]]]] <- f_dots_baked(slide[[in_colnames[[col_i]]]], seq_len(slide_nrow), adaptive = TRUE)
+          slide[[out_colnames[[col_i]]]] <-
+            f_dots_baked(slide[[in_colnames[[col_i]]]], seq_len(slide_nrow), adaptive = TRUE)
         } else {
           out_col <- f_dots_baked(slide[[in_colnames[[col_i]]]], before + after + 1L)
           if (after != 0L) {
@@ -158,7 +163,10 @@ epi_slide_opt.epi_archive <-
         purrr::partial(.f, ...)
       }
     col_names_quo <- enquo(.col_names)
-    names_info <- across_ish_names_info(.x$DT, time_type, col_names_quo, .f_info$namer, .window_size, .align, .prefix, .suffix, .new_col_names)
+    names_info <- across_ish_names_info(
+      .x$DT, time_type, col_names_quo, .f_info$namer,
+      .window_size, .align, .prefix, .suffix, .new_col_names
+    )
     window_args <- get_before_after_from_window(.window_size, .align, time_type)
     if (!is.null(.ref_time_values)) {
       cli_abort("epi_slide.epi_archive does not support the `.ref_time_values` argument")
@@ -187,7 +195,12 @@ epi_slide_opt.epi_archive <-
           nest(.by = version, .key = "subtbl") %>%
           arrange(version)
         # TODO move nesting inside the helper?
-        res <- epi_slide_opt_archive_one_epikey(group_updates, names_info$input_col_names, .f_dots_baked, .f_info$from_package, window_args$before, window_args$after, time_type, names_info$output_col_names) %>%
+        res <- epi_slide_opt_archive_one_epikey(
+          group_updates,
+          names_info$input_col_names,
+          .f_dots_baked, .f_info$from_package, window_args$before, window_args$after, time_type,
+          names_info$output_col_names
+        ) %>%
           list_rbind()
         if (use_progress) cli::cli_progress_update(id = progress_bar_id)
         res
