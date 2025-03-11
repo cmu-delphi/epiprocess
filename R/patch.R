@@ -28,6 +28,8 @@
 #'
 #' @examples
 #'
+#' library(dplyr)
+#'
 #' # On numeric vectors:
 #' vec_approx_equal(
 #'   c(1, 2, 3, NA),
