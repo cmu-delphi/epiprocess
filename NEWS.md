@@ -9,15 +9,15 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - `is_epi_archive` function has been reintroduced.
 ## Breaking changes
 
-- `new_epi_archive()`'s `x` argument has been replaced with a `data_table`
-  argument, which must be a `data.table` with the key already set appropriately.
-  The `key()` of its `DT` will also now place `other_keys` before rather than after
-  `"time_value"`.
+- The low-level `new_epi_archive()` function's `x` argument has been replaced
+  with a `data_table` argument, which now has extra requirements; see
+  `?new_epi_archive`. Users should still be using `as_epi_archive()` unless they
+  have a need for something lower-level.
 
-## Bug fixes
+## New features
 
-- `as_epi_archive()` no longer has issues setting its `DT`'s `key` on some
-  versions of `{data.table}` when `x` is a tibble.
+- `epi_slide_{mean,sum,opt}` now work on `epi_archive`s, preparing version
+  histories for 7-day-averages of signals, etc.
 
 # epiprocess 0.11
 

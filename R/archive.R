@@ -186,17 +186,21 @@ next_after.Date <- function(x) x + 1L
 #'  archive. Unexpected behavior may result from modifying the metadata
 #'  directly.
 #'
-#' @param data_table a data.table with [`data.table::key()`] equal to
-#'   `c("geo_value", other_keys, "time_value", "version")`.
+#' @param data_table a `data.table` with [`data.table::key()`] equal to
+#'   `c("geo_value", other_keys, "time_value", "version")`. For `data.table`
+#'   users: this sets up an alias of `data_table`; if you plan to keep on
+#'   working with `data_table` or working directly with the archive's `$DT`
+#'   using mutating operations, you should `copy()` if appropriate. We will not
+#'   mutate the `DT` with any exported {epiprocess} functions, though.
 #' @param geo_type DEPRECATED Has no effect. Geo value type is inferred from the
-#' location column and set to "custom" if not recognized.
-#' @param time_type DEPRECATED Has no effect. Time value type inferred from the time
-#' column and set to "custom" if not recognized. Unpredictable behavior may result
-#' if the time type is not recognized.
+#'   location column and set to "custom" if not recognized.
+#' @param time_type DEPRECATED Has no effect. Time value type inferred from the
+#'   time column and set to "custom" if not recognized. Unpredictable behavior
+#'   may result if the time type is not recognized.
 #' @param other_keys Character vector specifying the names of variables in `x`
 #'   that should be considered key variables (in the language of `data.table`)
-#'   apart from "geo_value", "time_value", and "version". Typical examples
-#'   are "age" or more granular geographies.
+#'   apart from "geo_value", "time_value", and "version". Typical examples are
+#'   "age" or more granular geographies.
 #' @param compactify Optional; `TRUE`, `FALSE`, or `"message"`. `TRUE` will
 #'   remove some redundant rows, `FALSE` will not. `"message"` is like `TRUE`
 #'   but will emit a message if anything was changed. Default is `TRUE`. See
