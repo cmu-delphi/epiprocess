@@ -19,9 +19,11 @@
 #' @template basic-slide-params
 #' @param .f Function, formula, or missing; together with `...` specifies the
 #'   computation to slide. The return of the computation should either be a
-#'   scalar or a 1-row data frame. Data frame returns will be
-#'    `tidyr::unpack()`-ed, if named, and will be [`tidyr::pack`]-ed columns, if
-#'    not named. See examples.
+#'   scalar or a 1-row data frame; these outputs will be collected and form a
+#'   new column or columns in the `epi_slide()` result. Data frame returns will
+#'   be unpacked into multiple columns in the result by default, or
+#'   [`tidyr::pack`]ed into a single data-frame-type column if you provide a
+#'   name for such a column. See examples.
 #'
 #'   - If `.f` is missing, then `...` will specify the computation via
 #'     tidy-evaluation. This is usually the most convenient way to use

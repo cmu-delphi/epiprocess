@@ -22,9 +22,11 @@ and any columns in \code{other_keys}. If grouped, we make sure the grouping is b
 
 \item{.f}{Function, formula, or missing; together with \code{...} specifies the
 computation to slide. The return of the computation should either be a
-scalar or a 1-row data frame. Data frame returns will be
-\code{tidyr::unpack()}-ed, if named, and will be \code{\link[tidyr:pack]{tidyr::pack}}-ed columns, if
-not named. See examples.
+scalar or a 1-row data frame; these outputs will be collected and form a
+new column or columns in the \code{epi_slide()} result. Data frame returns will
+be unpacked into multiple columns in the result by default, or
+\code{\link[tidyr:pack]{tidyr::pack}}ed into a single data-frame-type column if you provide a
+name for such a column. See examples.
 \itemize{
 \item If \code{.f} is missing, then \code{...} will specify the computation via
 tidy-evaluation. This is usually the most convenient way to use
