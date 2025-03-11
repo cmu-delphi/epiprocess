@@ -32,20 +32,24 @@ as_epi_archive(
 )
 }
 \arguments{
-\item{data_table}{a data.table with \code{\link[data.table:setkey]{data.table::key()}} equal to
-\code{c("geo_value", other_keys, "time_value", "version")}.}
+\item{data_table}{a \code{data.table} with \code{\link[data.table:setkey]{data.table::key()}} equal to
+\code{c("geo_value", other_keys, "time_value", "version")}. For \code{data.table}
+users: this sets up an alias of \code{data_table}; if you plan to keep on
+working with \code{data_table} or working directly with the archive's \verb{$DT}
+using mutating operations, you should \code{copy()} if appropriate. We will not
+mutate the \code{DT} with any exported {epiprocess} functions, though.}
 
 \item{geo_type}{DEPRECATED Has no effect. Geo value type is inferred from the
 location column and set to "custom" if not recognized.}
 
-\item{time_type}{DEPRECATED Has no effect. Time value type inferred from the time
-column and set to "custom" if not recognized. Unpredictable behavior may result
-if the time type is not recognized.}
+\item{time_type}{DEPRECATED Has no effect. Time value type inferred from the
+time column and set to "custom" if not recognized. Unpredictable behavior
+may result if the time type is not recognized.}
 
 \item{other_keys}{Character vector specifying the names of variables in \code{x}
 that should be considered key variables (in the language of \code{data.table})
-apart from "geo_value", "time_value", and "version". Typical examples
-are "age" or more granular geographies.}
+apart from "geo_value", "time_value", and "version". Typical examples are
+"age" or more granular geographies.}
 
 \item{clobberable_versions_start}{Optional; \code{length}-1; either a value of the
 same \code{class} and \code{typeof} as \code{x$version}, or an \code{NA} of any \code{class} and
