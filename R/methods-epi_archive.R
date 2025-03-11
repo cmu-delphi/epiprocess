@@ -629,7 +629,8 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #' version-aware: the sliding computation at any given reference time t is
 #' performed on **data that would have been available as of t**. This function
 #' is intended for use in accurate backtesting of models; see
-#' `vignette("backtesting", package="epipredict")` for a walkthrough.
+#' \href{https://cmu-delphi.github.io/epipredict/articles/backtesting.html}{`vignette("backtesting",
+#' package="epipredict")`} for a walkthrough.
 #'
 #' @param .x An [`epi_archive`] or [`grouped_epi_archive`] object. If ungrouped,
 #'   all data in `x` will be treated as part of a single data group.
