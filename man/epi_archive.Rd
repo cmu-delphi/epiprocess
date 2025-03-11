@@ -52,7 +52,7 @@ validate_epi_archive(x)
 users: this sets up an alias of \code{data_table}; if you plan to keep on
 working with \code{data_table} or working directly with the archive's \verb{$DT}
 using mutating operations, you should \code{copy()} if appropriate. We will not
-mutate the \code{DT} with any exported {epiprocess} functions, though.}
+mutate the \code{DT} with any exported \code{{epiprocess}} functions, though.}
 
 \item{geo_type}{DEPRECATED Has no effect. Geo value type is inferred from the
 location column and set to "custom" if not recognized.}
