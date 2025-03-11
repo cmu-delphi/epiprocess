@@ -37,7 +37,9 @@
 #' f <- purrr::partial(data.table::frollmean, algo = "exact")
 #'
 #' updates %>%
-#'   epiprocess:::epi_slide_opt_archive_one_epikey("value", f, "data.table", 2L, 0L, "day", "slide_value")
+#'   epiprocess:::epi_slide_opt_archive_one_epikey(
+#'     "value", f, "data.table", 2L, 0L, "day", "slide_value"
+#'   )
 #'
 #' @keywords internal
 epi_slide_opt_archive_one_epikey <- function(
