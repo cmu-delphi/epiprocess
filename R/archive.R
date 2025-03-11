@@ -191,7 +191,7 @@ next_after.Date <- function(x) x + 1L
 #'   users: this sets up an alias of `data_table`; if you plan to keep on
 #'   working with `data_table` or working directly with the archive's `$DT`
 #'   using mutating operations, you should `copy()` if appropriate. We will not
-#'   mutate the `DT` with any exported {epiprocess} functions, though.
+#'   mutate the `DT` with any exported `{epiprocess}` functions, though.
 #' @param geo_type DEPRECATED Has no effect. Geo value type is inferred from the
 #'   location column and set to "custom" if not recognized.
 #' @param time_type DEPRECATED Has no effect. Time value type inferred from the
