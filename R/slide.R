@@ -1,9 +1,10 @@
-#' Slide a function over variables in an `epi_df` object
+#' More general form of [`epi_slide_opt`] for rolling/running computations
 #'
-#' @description Slides a given function over variables in an `epi_df` object.
-#' This is useful for computations like rolling averages. The function supports
-#' many ways to specify the computation, but by far the most common use case is
-#' as follows:
+#' Check first whether you can use [`epi_slide_mean`], [`epi_slide_sum`], or the
+#' medium-generality [`epi_slide_opt`] instead, as they are faster and more
+#' convenient to use. You typically only need to use `epi_slide()` if you have a
+#' computation that depends on multiple columns simultaneously, outputs multiple
+#' columns simultaneously, or produces non-numeric output.
 #'
 #' ```
 #' # Create new column `cases_7dmed` that contains a 7-day trailing median of cases

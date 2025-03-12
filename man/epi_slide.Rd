@@ -2,7 +2,7 @@
 % Please edit documentation in R/slide.R
 \name{epi_slide}
 \alias{epi_slide}
-\title{Slide a function over variables in an \code{epi_df} object}
+\title{More general form of \code{\link{epi_slide_opt}} for rolling/running computations}
 \usage{
 epi_slide(
   .x,
@@ -110,11 +110,13 @@ added. It will be ungrouped if \code{.x} was ungrouped, and have the same groups
 as \code{.x} if \code{.x} was grouped.
 }
 \description{
-Slides a given function over variables in an \code{epi_df} object.
-This is useful for computations like rolling averages. The function supports
-many ways to specify the computation, but by far the most common use case is
-as follows:
-
+Check first whether you can use \code{\link{epi_slide_mean}}, \code{\link{epi_slide_sum}}, or the
+medium-generality \code{\link{epi_slide_opt}} instead, as they are faster and more
+convenient to use. You typically only need to use \code{epi_slide()} if you have a
+computation that depends on multiple columns simultaneously, outputs multiple
+columns simultaneously, or produces non-numeric output.
+}
+\details{
 \if{html}{\out{<div class="sourceCode">}}\preformatted{# Create new column `cases_7dmed` that contains a 7-day trailing median of cases
 epi_slide(edf, cases_7dmed = median(cases), .window_size = 7)
 }\if{html}{\out{</div>}}
@@ -124,8 +126,6 @@ faster than \code{epi_slide}: \code{epi_slide_mean()} and \code{epi_slide_sum()}
 recommend using these functions when possible.
 
 See \code{vignette("epi_df")} for more examples.
-}
-\details{
 \subsection{Advanced uses of \code{.f} via tidy evaluation}{
 
 If specifying \code{.f} via tidy evaluation, in addition to the standard \code{\link{.data}}
