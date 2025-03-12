@@ -20,30 +20,43 @@ epi_slide(
 and any columns in \code{other_keys}. If grouped, we make sure the grouping is by
 \code{geo_value} and \code{other_keys}.}
 
-\item{.f}{Function, formula, or missing; together with \code{...} specifies the
-computation to slide. The return of the computation should either be a
-scalar or a 1-row data frame; these outputs will be collected and form a
-new column or columns in the \code{epi_slide()} result. Data frame returns will
-be unpacked into multiple columns in the result by default, or
+\item{.f, ...}{The computation to slide. The input will be a time window of
+the data for a single \code{geo_value} --- or a single combination of
+\code{geo_value} and any \code{\link[=as_epi_df]{other_keys}} you used to specify
+demographical breakdowns. The input will always have the same size,
+determined by \code{.window_size}, and will fill in any missing \code{time_values},
+using \code{NA} values for missing measurements. The output should be a scalar
+value or a 1-row data frame; these outputs will be collected and form a new
+column or columns in the \code{epi_slide()} result. Data frame outputs will be
+unpacked into multiple columns in the result by default, or
 \code{\link[tidyr:pack]{tidyr::pack}}ed into a single data-frame-type column if you provide a
-name for such a column. See examples.
+name for such a column (e.g., via \code{.new_col_name}).
+
+You can specify the computation in one of the following ways:
 \itemize{
-\item If \code{.f} is missing, then \code{...} will specify the computation via
-tidy-evaluation. This is usually the most convenient way to use
-\code{epi_slide}. See examples.
-\item If \code{.f} is a formula, then the formula should use \code{.x} (not the same as
-the input \code{epi_df}) to operate on the columns of the input \code{epi_df}, e.g.
-\code{~mean(.x$var)} to compute a mean of \code{var}.
-\item If a function, \code{.f} must have the form \verb{function(x, g, t, ...)}, where:
+\item Don't provide \code{.f}, and instead use use one or more
+\code{\link[dplyr:summarise]{dplyr::summarize}}-esque \link[rlang:args_data_masking]{"data-masking"}
+expressions in \code{...}, e.g., \code{cases_7dmed = median(cases)}. This is usually
+the most convenient way to use \code{epi_slide}. See examples.
+\item Provide a formula in \code{.f}, e.g., \code{~ median(.x$cases)}. In this formula,
+\code{.x} is an \code{epi_df} containing data for a single time window as described
+above, taken from the original \code{.x} fed into \code{epi_slide()}.
+\item Provide a function in \code{.f}. The function should be of the form \verb{function(x, g, t)} or \verb{function(x, g, t, <additional configuration arguments>)}, where:
 \itemize{
 \item \code{x} is a data frame with the same column names as the original object,
 minus any grouping variables, with only the windowed data for one
 group-\code{.ref_time_value} combination
-\item \code{g} is a one-row tibble containing the values of the grouping variables
-for the associated group
+\item \code{g} is a one-row tibble specifying the \code{geo_value} and value of any
+\code{other_keys} for this computation
 \item \code{t} is the \code{.ref_time_value} for the current window
-\item \code{...} are additional arguments
+\item If you have a complex \code{.f} containing \verb{<additional configuration   arguments>}, you can provide values for those arguments in the \code{...}
+argument to \code{epi_slide()}.
 }
+
+The values of \code{g} and \code{t} are also available to data-masking expression and
+formula-based computations as \code{.group_key} and \code{.ref_time_value},
+respectively. Formula computations also let you use \code{.y} or \code{.z},
+respectively.
 }}
 
 \item{...}{Additional arguments to pass to the function or formula specified

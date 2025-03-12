@@ -17,28 +17,49 @@
 #' See `vignette("epi_df")` for more examples.
 #'
 #' @template basic-slide-params
-#' @param .f Function, formula, or missing; together with `...` specifies the
-#'   computation to slide. The return of the computation should either be a
-#'   scalar or a 1-row data frame; these outputs will be collected and form a
-#'   new column or columns in the `epi_slide()` result. Data frame returns will
-#'   be unpacked into multiple columns in the result by default, or
+#' @param .f,... The computation to slide. The input will be a time window of
+#'   the data for a single `geo_value` --- or a single combination of
+#'   `geo_value` and any [`other_keys`][as_epi_df] you used to specify
+#'   demographical breakdowns. The input will always have the same size,
+#'   determined by `.window_size`, and will fill in any missing `time_values`,
+#'   using `NA` values for missing measurements. The output should be a scalar
+#'   value or a 1-row data frame; these outputs will be collected and form a new
+#'   column or columns in the `epi_slide()` result. Data frame outputs will be
+#'   unpacked into multiple columns in the result by default, or
 #'   [`tidyr::pack`]ed into a single data-frame-type column if you provide a
-#'   name for such a column. See examples.
+#'   name for such a column (e.g., via `.new_col_name`).
 #'
-#'   - If `.f` is missing, then `...` will specify the computation via
-#'     tidy-evaluation. This is usually the most convenient way to use
-#'     `epi_slide`. See examples.
-#'   - If `.f` is a formula, then the formula should use `.x` (not the same as
-#'     the input `epi_df`) to operate on the columns of the input `epi_df`, e.g.
-#'     `~mean(.x$var)` to compute a mean of `var`.
-#'   - If a function, `.f` must have the form `function(x, g, t, ...)`, where:
+#' You can specify the computation in one of the following ways:
+#'
+#' - Don't provide `.f`, and instead use use one or more
+#'   [`dplyr::summarize`]-esque ["data-masking"][rlang::args_data_masking]
+#'   expressions in `...`, e.g., `cases_7dmed = median(cases)`. This is usually
+#'   the most convenient way to use `epi_slide`. See examples.
+#'
+#' - Provide a formula in `.f`, e.g., `~ median(.x$cases)`. In this formula,
+#'   `.x` is an `epi_df` containing data for a single time window as described
+#'   above, taken from the original `.x` fed into `epi_slide()`.
+#'
+#' - Provide a function in `.f`. The function should be of the form `function(x,
+#'   g, t)` or `function(x, g, t, <additional configuration arguments>)`, where:
+#'
 #'     - `x` is a data frame with the same column names as the original object,
-#'     minus any grouping variables, with only the windowed data for one
-#'     group-`.ref_time_value` combination
-#'     - `g` is a one-row tibble containing the values of the grouping variables
-#'     for the associated group
+#'       minus any grouping variables, with only the windowed data for one
+#'       group-`.ref_time_value` combination
+#'
+#'     - `g` is a one-row tibble specifying the `geo_value` and value of any
+#'       `other_keys` for this computation
+#'
 #'     - `t` is the `.ref_time_value` for the current window
-#'     - `...` are additional arguments
+#'
+#'     - If you have a complex `.f` containing `<additional configuration
+#'     arguments>`, you can provide values for those arguments in the `...`
+#'     argument to `epi_slide()`.
+#'
+#'   The values of `g` and `t` are also available to data-masking expression and
+#'   formula-based computations as `.group_key` and `.ref_time_value`,
+#'   respectively. Formula computations also let you use `.y` or `.z`,
+#'   respectively.
 #'
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `.f`. Alternatively, if `.f` is missing, then the `...` is interpreted
