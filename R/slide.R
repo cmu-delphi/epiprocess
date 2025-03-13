@@ -19,16 +19,16 @@
 #'
 #' @template basic-slide-params
 #' @param .f,... The computation to slide. The input will be a time window of
-#'   the data for a single `geo_value` --- or a single combination of
-#'   `geo_value` and any [`other_keys`][as_epi_df] you used to specify
-#'   demographical breakdowns. The input will always have the same size,
-#'   determined by `.window_size`, and will fill in any missing `time_values`,
-#'   using `NA` values for missing measurements. The output should be a scalar
-#'   value or a 1-row data frame; these outputs will be collected and form a new
-#'   column or columns in the `epi_slide()` result. Data frame outputs will be
-#'   unpacked into multiple columns in the result by default, or
-#'   [`tidyr::pack`]ed into a single data-frame-type column if you provide a
-#'   name for such a column (e.g., via `.new_col_name`).
+#'   the data for a single subpopulation (i.e., a single `geo_value` and single
+#'   value for any [`other_keys`][as_epi_df] you set up for age groups, etc.).
+#'   The input will always have the same size, determined by `.window_size`, and
+#'   will fill in any missing `time_values`, using `NA` values for missing
+#'   measurements. The output should be a scalar value or a 1-row data frame;
+#'   these outputs will be collected and form a new column or columns in the
+#'   `epi_slide()` result. Data frame outputs will be unpacked into multiple
+#'   columns in the result by default, or [`tidyr::pack`]ed into a single
+#'   data-frame-type column if you provide a name for such a column (e.g., via
+#'   `.new_col_name`).
 #'
 #' You can specify the computation in one of the following ways:
 #'
