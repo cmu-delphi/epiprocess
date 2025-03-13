@@ -573,12 +573,22 @@ get_before_after_from_window <- function(window_size, align, time_type) {
   list(before = before, after = after)
 }
 
-#' Optimized slide functions for common cases
+#' Calculate rolling or running means, sums, etc., or custom calculations
 #'
-#' @description `epi_slide_opt` allows sliding an n-timestep [data.table::froll]
-#' or [slider::summary-slide] function over variables in an `epi_df` object.
-#' These functions tend to be much faster than `epi_slide()`. See
-#' `vignette("epi_df")` for more examples.
+#' @description These methods take each subpopulation (i.e., a single
+#'   `geo_value` and combination of any `other_keys` you set up for age groups,
+#'   etc.) and perform a `.window_size`-width time window rolling/sliding
+#'   computation, or alternatively, a running/cumulative computation (with
+#'   `.window_size = Inf`) on the requested columns. Explicit `NA` measurements
+#'   are temporarily added to fill in any time gaps, and, for rolling
+#'   computations, to pad the time series to ensure that the first & last
+#'   computations are over exactly `.window_size` values.
+#'
+#' `epi_slide_opt` allows you to use any [data.table::froll] or
+#' [slider::summary-slide] function. If none of the specialized functions here
+#' work, you can use `data.table::frollapply` with your own function. See
+#' [`epi_slide`] if you need to work with multiple columns at once or output a
+#' custom type.
 #'
 #' @template basic-slide-params
 #' @param .col_names <[`tidy-select`][dplyr_tidy_select]> An unquoted column
