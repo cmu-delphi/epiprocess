@@ -4,7 +4,7 @@
 \alias{epix_slide}
 \alias{epix_slide.epi_archive}
 \alias{epix_slide.grouped_epi_archive}
-\title{Slide a function over variables in an \code{epi_archive} or \code{grouped_epi_archive}}
+\title{Take each requested (group and) version in an archive, run a computation (e.g., forecast)}
 \usage{
 epix_slide(
   .x,
@@ -41,25 +41,31 @@ epix_slide(
 all data in \code{x} will be treated as part of a single data group.}
 
 \item{.f}{Function, formula, or missing; together with \code{...} specifies the
-computation to slide. To "slide" means to apply a computation over a
-sliding (a.k.a. "rolling") time window for each data group. The window is
-determined by the \code{.before} parameter (see details for more). If a
-function, \code{.f} must have the form \verb{function(x, g, t, ...)}, where
+computation. The computation will be run on each requested group-version
+combination, with a time window filter applied if \code{.before} is supplied.
 \itemize{
-\item "x" is an epi_df with the same column names as the archive's \code{DT}, minus
-the \code{version} column
-\item "g" is a one-row tibble containing the values of the grouping variables
-for the associated group
-\item "t" is the ref_time_value for the current window
-\item "..." are additional arguments
+\item If \code{.f} is a function must have the form \verb{function(x, g, v)} or
+\verb{function(x, g, v, <additional configuration args>)}, where
+\itemize{
+\item \code{x} is an \code{epi_df} with the same column names as the archive's \code{DT},
+minus the \code{version} column. (Or, if \code{.all_versions = TRUE}, an
+\code{epi_archive} with the requested partial version history.)
+\item \code{g} is a one-row tibble containing the values of the grouping variables
+for the associated group.
+\item \code{v} (length-1) is the associated \code{version} (one of the requested
+\code{.versions})
+\item \verb{<additional configuration args>} are optional; you can add such
+arguments to your function and set them by passing them through the
+\code{...} argument to \code{epix_slide()}.
+}
 }
 
 If a formula, \code{.f} can operate directly on columns accessed via \code{.x$var} or
 \code{.$var}, as in \code{~ mean (.x$var)} to compute a mean of a column \code{var} for
 each group-\code{ref_time_value} combination. The group key can be accessed via
-\code{.y} or \code{.group_key}, and the reference time value can be accessed via \code{.z}
-or \code{.ref_time_value}. If \code{.f} is missing, then \code{...} will specify the
-computation.}
+\code{.y} or \code{.group_key}, and the reference time value can be accessed via
+\code{.z}, \code{.version}, or \code{.ref_time_value}. If \code{.f} is missing, then \code{...} will
+specify the computation.}
 
 \item{...}{Additional arguments to pass to the function or formula specified
 via \code{f}. Alternatively, if \code{.f} is missing, then the \code{...} is interpreted
@@ -67,33 +73,39 @@ as a \link[rlang:args_data_masking]{"data-masking"} expression or expressions
 for tidy evaluation; in addition to referring columns directly by name, the
 expressions have access to \code{.data} and \code{.env} pronouns as in \code{dplyr} verbs,
 and can also refer to \code{.x} (not the same as the input epi_archive),
-\code{.group_key}, and \code{.ref_time_value}. See details for more.}
+\code{.group_key} and \code{.version}/\code{.ref_time_value}. See details for more.}
 
-\item{.before}{How many time values before the \code{.ref_time_value}
-should each snapshot handed to the function \code{.f} contain? If provided, it
-should be a single value that is compatible with the time_type of the
-time_value column (more below), but most commonly an integer. This window
-endpoint is inclusive. For example, if \code{.before = 7}, \code{time_type}
-in the archive is "day", and the \code{.ref_time_value} is January 8, then the
-smallest time_value in the snapshot will be January 1. If missing, then the
-default is no limit on the time values, so the full snapshot is given.}
+\item{.before}{Optional; applies a \code{time_value} filter before running each
+computation. The default is not to apply a \code{time_value} filter. If
+provided, it should be a single integer or difftime that is compatible with
+the time_type of the time_value column. If an integer, then the minimum
+possible \code{time_value} included will be that many time steps (according to
+the \code{time_type}) before each requested \code{.version}. This window endpoint is
+inclusive. For example, if \code{.before = 14}, the \code{time_type} in the archive
+is "day", and the requested \code{.version} is January 15, then the smallest
+possible \code{time_value} possible in the snapshot will be January 1. Note that
+this does not mean that there will be 14 or 15 distinct \code{time_value}s
+actually appearing in the data; for most reporting streams, reporting as of
+January 15 won't include \code{time_value}s all the way through January 14, due
+to reporting latency. Unlike \code{epi_slide()}, \code{epix_slide()} won't fill in
+any missing \code{time_values} in this window.}
 
-\item{.versions}{Reference time values / versions for sliding
-computations; each element of this vector serves both as the anchor point
-for the \code{time_value} window for the computation and the \code{max_version}
-\code{epix_as_of} which we fetch data in this window. If missing, then this will
-set to a regularly-spaced sequence of values set to cover the range of
-\code{version}s in the \code{DT} plus the \code{versions_end}; the spacing of values will
-be guessed (using the GCD of the skips between values).}
+\item{.versions}{Requested versions on which to run the computation. Each
+requested \code{.version} also serves as the anchor point around which for which
+the \code{time_value} window specified by \code{.before} is drawn. If \code{.versions} is
+missing, it will be set to a regularly-spaced sequence of values set to
+cover the range of \code{version}s in the \code{DT} plus the \code{versions_end}; the
+spacing of values will be guessed (using the GCD of the skips between
+values).}
 
 \item{.new_col_name}{Either \code{NULL} or a string indicating the name of the new
 column that will contain the derived values. The default, \code{NULL}, will use
 the name "slide_value" unless your slide computations output data frames,
-in which case they will be unpacked into the constituent columns and those
-names used. If the resulting column name(s) overlap with the column names
-used for labeling the computations, which are \code{group_vars(x)} and
-\code{"version"}, then the values for these columns must be identical to the
-labels we assign.}
+in which case they will be unpacked into the constituent columns and the
+data frame's column names will be used instead. If the resulting column
+name(s) overlap with the column names used for labeling the computations,
+which are \code{group_vars(x)} and \code{"version"}, then the values for these
+columns must be identical to the labels we assign.}
 
 \item{.all_versions}{(Not the same as \code{.all_rows} parameter of \code{epi_slide}.)
 If \code{.all_versions = TRUE}, then the slide computation will be passed the
@@ -110,28 +122,32 @@ computation, and a column named according to the \code{.new_col_name} argument,
 containing the slide values. It will be grouped by the grouping variables.
 }
 \description{
-Slides a given function over variables in an \code{epi_archive} object. This
-behaves similarly to \code{epi_slide()}, with the key exception that it is
-version-aware: the sliding computation at any given reference time t is
-performed on \strong{data that would have been available as of t}. This function
-is intended for use in accurate backtesting of models; see
+... and collect the results. This is useful for more accurately simulating
+how a forecaster, nowcaster, or other algorithm would have behaved in real
+time, factoring in reporting latency and data revisions; see
 \href{https://cmu-delphi.github.io/epipredict/articles/backtesting.html}{\code{vignette("backtesting", package="epipredict")}} for a walkthrough.
 }
 \details{
+This is similar to looping over versions and calling \code{\link{epix_as_of}}, but has
+some conveniences such as working naturally with \code{\link{grouped_epi_archive}}s,
+optional time windowing, and syntactic sugar to make things shorter to write.
+
 A few key distinctions between the current function and \code{epi_slide()}:
 \enumerate{
 \item In \code{.f} functions for \code{epix_slide}, one should not assume that the input
 data to contain any rows with \code{time_value} matching the computation's
-\code{.ref_time_value} (accessible via \verb{attributes(<data>)$metadata$as_of}); for
-typical epidemiological surveillance data, observations pertaining to a
-particular time period (\code{time_value}) are first reported \code{as_of} some
-instant after that time period has ended.
+\code{.version}, due to reporting latency; for typical epidemiological
+surveillance data, observations pertaining to a particular time period
+(\code{time_value}) are first reported \code{as_of} some instant after that time
+period has ended. No time window completion is performed as in
+\code{epi_slide()}.
 \item The input class and columns are similar but different: \code{epix_slide}
 (with the default \code{.all_versions=FALSE}) keeps all columns and the
 \code{epi_df}-ness of the first argument to each computation; \code{epi_slide} only
 provides the grouping variables in the second input, and will convert the
 first input into a regular tibble if the grouping variables include the
-essential \code{geo_value} column. (With .all_versions=TRUE\verb{, }epix_slide\verb{will   will provide an}epi_archive\verb{rather than an}epi-df` to each
+essential \code{geo_value} column. (With \code{.all_versions=TRUE}, \code{epix_slide} will
+will provide an \code{epi_archive} rather than an \code{epi-df} to each
 computation.)
 \item The output class and columns are similar but different: \code{epix_slide()}
 returns a tibble containing only the grouping variables, \code{time_value}, and
@@ -153,73 +169,53 @@ for excluded group-\code{.ref_time_value} pairs.
 \item The \code{.versions} default for \code{epix_slide} is based on making an
 evenly-spaced sequence out of the \code{version}s in the \code{DT} plus the
 \code{versions_end}, rather than the \code{time_value}s.
+\item \code{epix_slide()} computations can refer to the current element of
+\code{.versions} as either \code{.version} or \code{.ref_time_value}, while \code{epi_slide()}
+computations refer to the current element of \code{.ref_time_values} with
+\code{.ref_time_value}.
 }
 
 Apart from the above distinctions, the interfaces between \code{epix_slide()} and
 \code{epi_slide()} are the same.
-
-Furthermore, the current function can be considerably slower than
-\code{epi_slide()}, for two reasons: (1) it must repeatedly fetch
-properly-versioned snapshots from the data archive (via \code{epix_as_of()}),
-and (2) it performs a "manual" sliding of sorts, and does not benefit from
-the highly efficient \code{slider} package. For this reason, it should never be
-used in place of \code{epi_slide()}, and only used when version-aware sliding is
-necessary (as it its purpose).
 }
 \examples{
 library(dplyr)
 
-# Reference time points for which we want to compute slide values:
-versions <- seq(as.Date("2020-06-02"),
-  as.Date("2020-06-15"),
-  by = "1 day"
-)
+# Request only a small set of versions, for example's sake:
+requested_versions <-
+  seq(as.Date("2020-09-02"), as.Date("2020-09-15"), by = "1 day")
 
-# A simple (but not very useful) example (see the archive vignette for a more
-# realistic one):
+# Investigate reporting lag of `percent_cli` signal (though normally we'd
+# probably work off of the dedicated `revision_summary()` function instead):
+archive_cases_dv_subset \%>\%
+  epix_slide(
+    geowide_percent_cli_max_time = max(time_value[!is.na(percent_cli)]),
+    geowide_percent_cli_rpt_lag = .version - geowide_percent_cli_max_time,
+    .versions = requested_versions
+  )
 archive_cases_dv_subset \%>\%
   group_by(geo_value) \%>\%
   epix_slide(
-    .f = ~ mean(.x$case_rate_7d_av),
-    .before = 2,
-    .versions = versions,
-    .new_col_name = "case_rate_7d_av_recent_av"
-  ) \%>\%
-  ungroup()
-# We requested time windows that started 2 days before the corresponding time
-# values. The actual number of `time_value`s in each computation depends on
-# the reporting latency of the signal and `time_value` range covered by the
-# archive (2020-06-01 -- 2021-11-30 in this example).  In this case, we have
-# * 0 `time_value`s, for ref time 2020-06-01 --> the result is automatically
-#                                                discarded
-# * 1 `time_value`, for ref time 2020-06-02
-# * 2 `time_value`s, for the rest of the results
-# * never the 3 `time_value`s we would get from `epi_slide`, since, because
-#   of data latency, we'll never have an observation
-#   `time_value == .ref_time_value` as of `.ref_time_value`.
-# The example below shows this type of behavior in more detail.
+    percent_cli_max_time = max(time_value[!is.na(percent_cli)]),
+    percent_cli_rpt_lag = .version - percent_cli_max_time,
+    .versions = requested_versions
+  )
 
-# Examining characteristics of the data passed to each computation with
-# `all_versions=FALSE`.
-archive_cases_dv_subset \%>\%
-  group_by(geo_value) \%>\%
+# Backtest a forecaster "pseudoprospectively" (i.e., faithfully with respect
+# to the data version history):
+case_death_rate_archive \%>\%
   epix_slide(
-    function(x, gk, rtv) {
-      tibble(
-        time_range = if (nrow(x) == 0L) {
-          "0 `time_value`s"
-        } else {
-          sprintf("\%s -- \%s", min(x$time_value), max(x$time_value))
-        },
-        n = nrow(x),
-        class1 = class(x)[[1L]]
-      )
-    },
-    .before = 5, .all_versions = FALSE,
-    .versions = versions
-  ) \%>\%
-  ungroup() \%>\%
-  arrange(geo_value, version)
+    .versions = as.Date(c("2021-10-01", "2021-10-08")),
+    function(x, g, v) {
+      epipredict::arx_forecaster(
+        x,
+        outcome = "death_rate",
+        predictors = c("death_rate_7d_av", "case_rate_7d_av")
+      )$predictions
+    }
+  )
+# See `vignette("backtesting", package="epipredict")` for a full walkthrough
+# on backtesting forecasters, including plots, etc.
 
 # --- Advanced: ---
 
