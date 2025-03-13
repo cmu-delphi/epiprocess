@@ -234,7 +234,8 @@ observation carried forward (LOCF). For more information, see `epix_merge()`.
 ## Backtesting forecasting models
 
 One of the most common use cases of `epiprocess::epi_archive()` object is for
-accurate model backtesting. See `vignette("backtesting", package="epipredict")`
+accurate model backtesting. See [`vignette("backtesting",
+package="epipredict")`](https://cmu-delphi.github.io/epipredict/articles/backtesting.html)
 for an in-depth demo, using a pre-built forecaster in that package.
 
 ## Attribution

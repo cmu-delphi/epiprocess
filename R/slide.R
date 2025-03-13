@@ -1,9 +1,10 @@
-#' Slide a function over variables in an `epi_df` object
+#' More general form of [`epi_slide_opt`] for rolling/running computations
 #'
-#' @description Slides a given function over variables in an `epi_df` object.
-#' This is useful for computations like rolling averages. The function supports
-#' many ways to specify the computation, but by far the most common use case is
-#' as follows:
+#' Check first whether you can use [`epi_slide_mean`], [`epi_slide_sum`], or the
+#' medium-generality [`epi_slide_opt`] instead, as they are faster and more
+#' convenient to use. You typically only need to use `epi_slide()` if you have a
+#' computation that depends on multiple columns simultaneously, outputs multiple
+#' columns simultaneously, or produces non-numeric output.
 #'
 #' ```
 #' # Create new column `cases_7dmed` that contains a 7-day trailing median of cases
@@ -17,26 +18,49 @@
 #' See `vignette("epi_df")` for more examples.
 #'
 #' @template basic-slide-params
-#' @param .f Function, formula, or missing; together with `...` specifies the
-#'   computation to slide. The return of the computation should either be a
-#'   scalar or a 1-row data frame. Data frame returns will be
-#'    `tidyr::unpack()`-ed, if named, and will be [`tidyr::pack`]-ed columns, if
-#'    not named. See examples.
+#' @param .f,... The computation to slide. The input will be a time window of
+#'   the data for a single subpopulation (i.e., a single `geo_value` and single
+#'   value for any [`other_keys`][as_epi_df] you set up for age groups, etc.).
+#'   The input will always have the same size, determined by `.window_size`, and
+#'   will fill in any missing `time_values`, using `NA` values for missing
+#'   measurements. The output should be a scalar value or a 1-row data frame;
+#'   these outputs will be collected and form a new column or columns in the
+#'   `epi_slide()` result. Data frame outputs will be unpacked into multiple
+#'   columns in the result by default, or [`tidyr::pack`]ed into a single
+#'   data-frame-type column if you provide a name for such a column (e.g., via
+#'   `.new_col_name`).
 #'
-#'   - If `.f` is missing, then `...` will specify the computation via
-#'     tidy-evaluation. This is usually the most convenient way to use
-#'     `epi_slide`. See examples.
-#'   - If `.f` is a formula, then the formula should use `.x` (not the same as
-#'     the input `epi_df`) to operate on the columns of the input `epi_df`, e.g.
-#'     `~mean(.x$var)` to compute a mean of `var`.
-#'   - If a function, `.f` must have the form `function(x, g, t, ...)`, where:
+#' You can specify the computation in one of the following ways:
+#'
+#' - Don't provide `.f`, and instead use use one or more
+#'   [`dplyr::summarize`]-esque ["data-masking"][rlang::args_data_masking]
+#'   expressions in `...`, e.g., `cases_7dmed = median(cases)`. This is usually
+#'   the most convenient way to use `epi_slide`. See examples.
+#'
+#' - Provide a formula in `.f`, e.g., `~ median(.x$cases)`. In this formula,
+#'   `.x` is an `epi_df` containing data for a single time window as described
+#'   above, taken from the original `.x` fed into `epi_slide()`.
+#'
+#' - Provide a function in `.f`. The function should be of the form `function(x,
+#'   g, t)` or `function(x, g, t, <additional configuration arguments>)`, where:
+#'
 #'     - `x` is a data frame with the same column names as the original object,
-#'     minus any grouping variables, with only the windowed data for one
-#'     group-`.ref_time_value` combination
-#'     - `g` is a one-row tibble containing the values of the grouping variables
-#'     for the associated group
+#'       minus any grouping variables, with only the windowed data for one
+#'       group-`.ref_time_value` combination
+#'
+#'     - `g` is a one-row tibble specifying the `geo_value` and value of any
+#'       `other_keys` for this computation
+#'
 #'     - `t` is the `.ref_time_value` for the current window
-#'     - `...` are additional arguments
+#'
+#'     - If you have a complex `.f` containing `<additional configuration
+#'     arguments>`, you can provide values for those arguments in the `...`
+#'     argument to `epi_slide()`.
+#'
+#'   The values of `g` and `t` are also available to data-masking expression and
+#'   formula-based computations as `.group_key` and `.ref_time_value`,
+#'   respectively. Formula computations also let you use `.y` or `.z`,
+#'   respectively.
 #'
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `.f`. Alternatively, if `.f` is missing, then the `...` is interpreted
@@ -549,12 +573,22 @@ get_before_after_from_window <- function(window_size, align, time_type) {
   list(before = before, after = after)
 }
 
-#' Optimized slide functions for common cases
+#' Calculate rolling or running means, sums, etc., or custom calculations
 #'
-#' @description `epi_slide_opt` allows sliding an n-timestep [data.table::froll]
-#' or [slider::summary-slide] function over variables in an `epi_df` object.
-#' These functions tend to be much faster than `epi_slide()`. See
-#' `vignette("epi_df")` for more examples.
+#' @description These methods take each subpopulation (i.e., a single
+#'   `geo_value` and combination of any `other_keys` you set up for age groups,
+#'   etc.) and perform a `.window_size`-width time window rolling/sliding
+#'   computation, or alternatively, a running/cumulative computation (with
+#'   `.window_size = Inf`) on the requested columns. Explicit `NA` measurements
+#'   are temporarily added to fill in any time gaps, and, for rolling
+#'   computations, to pad the time series to ensure that the first & last
+#'   computations are over exactly `.window_size` values.
+#'
+#' `epi_slide_opt` allows you to use any [data.table::froll] or
+#' [slider::summary-slide] function. If none of the specialized functions here
+#' work, you can use `data.table::frollapply` with your own function. See
+#' [`epi_slide`] if you need to work with multiple columns at once or output a
+#' custom type.
 #'
 #' @template basic-slide-params
 #' @param .col_names <[`tidy-select`][dplyr_tidy_select]> An unquoted column
