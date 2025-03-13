@@ -723,7 +723,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   `epi_df`-ness of the first argument to each computation; `epi_slide` only
 #'   provides the grouping variables in the second input, and will convert the
 #'   first input into a regular tibble if the grouping variables include the
-#'   essential `geo_value` column. (With `.all_versions=TRUE`, `epix_slide` will
+#'   essential `geo_value` column. (With `.all_versions=TRUE`, `epix_slide`
 #'   will provide an `epi_archive` rather than an `epi-df` to each
 #'   computation.)
 #'   3. The output class and columns are similar but different: `epix_slide()`

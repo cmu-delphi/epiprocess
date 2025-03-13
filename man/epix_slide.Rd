@@ -145,7 +145,7 @@ period has ended. No time window completion is performed as in
 \code{epi_df}-ness of the first argument to each computation; \code{epi_slide} only
 provides the grouping variables in the second input, and will convert the
 first input into a regular tibble if the grouping variables include the
-essential \code{geo_value} column. (With \code{.all_versions=TRUE}, \code{epix_slide} will
+essential \code{geo_value} column. (With \code{.all_versions=TRUE}, \code{epix_slide}
 will provide an \code{epi_archive} rather than an \code{epi-df} to each
 computation.)
 \item The output class and columns are similar but different: \code{epix_slide()}
