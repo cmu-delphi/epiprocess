@@ -109,11 +109,10 @@ columns must be identical to the labels we assign.}
 
 \item{.all_versions}{(Not the same as \code{.all_rows} parameter of \code{epi_slide}.)
 If \code{.all_versions = TRUE}, then the slide computation will be passed the
-version history (all \code{version <= .version} where \code{.version} is one of the
-requested \code{.versions}) for rows having a \code{time_value} of at least `.version
-\itemize{
-\item before\verb{. Otherwise, the slide computation will be passed only the most   recent }version\verb{for every unique}time_value\verb{. Default is }FALSE`.
-}}
+version history (all versions \verb{<= .version} where \code{.version} is one of the
+requested \code{.version}s), in \code{epi_archive} format. Otherwise, the slide
+computation will be passed only the most recent \code{version} for every unique
+\code{time_value}, in \code{epi_df} format. Default is \code{FALSE}.}
 }
 \value{
 A tibble whose columns are: the grouping variables (if any),

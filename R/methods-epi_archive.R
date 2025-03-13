@@ -701,10 +701,10 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   columns must be identical to the labels we assign.
 #' @param .all_versions (Not the same as `.all_rows` parameter of `epi_slide`.)
 #'   If `.all_versions = TRUE`, then the slide computation will be passed the
-#'   version history (all `version <= .version` where `.version` is one of the
-#'   requested `.versions`) for rows having a `time_value` of at least `.version
-#'   - before`. Otherwise, the slide computation will be passed only the most
-#'   recent `version` for every unique `time_value`. Default is `FALSE`.
+#'   version history (all versions `<= .version` where `.version` is one of the
+#'   requested `.version`s), in `epi_archive` format. Otherwise, the slide
+#'   computation will be passed only the most recent `version` for every unique
+#'   `time_value`, in `epi_df` format. Default is `FALSE`.
 #' @return A tibble whose columns are: the grouping variables (if any),
 #'   `time_value`, containing the reference time values for the slide
 #'   computation, and a column named according to the `.new_col_name` argument,
