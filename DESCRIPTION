@@ -66,12 +66,13 @@ Suggests:
     distributional,
     epidatr,
     epipredict,
+    hardhat,
     here,
     knitr,
     outbreaks,
     readr,
     rmarkdown,
-    testthat (>= 3.1.5),
+    testthat,
     trendfilter,
     withr
 VignetteBuilder:
