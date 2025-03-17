@@ -159,8 +159,7 @@ results as they are not supported by tibbles.)
 \item There are no size stability checks or element/row recycling to maintain
 size stability in \code{epix_slide}, unlike in \code{epi_slide}. (\code{epix_slide} is
 roughly analogous to \code{\link[dplyr:group_map]{dplyr::group_modify}}, while \code{epi_slide} is roughly
-analogous to \code{dplyr::mutate} followed by \code{dplyr::arrange}) This is detailed
-in the "advanced" vignette.
+analogous to \code{\link[dplyr:mutate]{dplyr::mutate}}.)
 \item \code{.all_rows} is not supported in \code{epix_slide}; since the slide
 computations are allowed more flexibility in their outputs than in
 \code{epi_slide}, we can't guess a good representation for missing computations

@@ -737,8 +737,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   4. There are no size stability checks or element/row recycling to maintain
 #'   size stability in `epix_slide`, unlike in `epi_slide`. (`epix_slide` is
 #'   roughly analogous to [`dplyr::group_modify`], while `epi_slide` is roughly
-#'   analogous to `dplyr::mutate` followed by `dplyr::arrange`) This is detailed
-#'   in the "advanced" vignette.
+#'   analogous to [`dplyr::mutate`].)
 #'   5. `.all_rows` is not supported in `epix_slide`; since the slide
 #'   computations are allowed more flexibility in their outputs than in
 #'   `epi_slide`, we can't guess a good representation for missing computations
