@@ -2,7 +2,21 @@
 
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicate PR's.
 
+# epiprocess 0.12
+
+## Improvements
+
+- Various documentation has been updated, simplified, and improved with better
+  examples.
+
 # epiprocess 0.11
+
+## Highlights
+
+`{epiprocess}` should once again not require Rtools or a compiler to be able to
+install! We've also updated some function interfaces to be more consistent
+throughout the package & with tidyverse, and improved the generality of and
+fixed bugs in various functions and documentation.
 
 ## Breaking changes
 
