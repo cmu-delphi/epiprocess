@@ -329,6 +329,9 @@ new_epi_archive <- function(
 
 #' Perform second (costly) round of validation that `x` is a proper `epi_archive`
 #'
+#' Does not validate `geo_type` or `time_type` against `geo_value` and
+#' `time_value` columns. These are assumed to have been set to compatibly.
+#'
 #' @rdname epi_archive
 #' @export
 validate_epi_archive <- function(x) {
