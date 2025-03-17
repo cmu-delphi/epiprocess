@@ -34,7 +34,7 @@ data-frame-type column if you provide a name for such a column (e.g., via
 
 You can specify the computation in one of the following ways:
 \itemize{
-\item Don't provide \code{.f}, and instead use use one or more
+\item Don't provide \code{.f}, and instead use one or more
 \code{\link[dplyr:summarise]{dplyr::summarize}}-esque \link[rlang:args_data_masking]{"data-masking"}
 expressions in \code{...}, e.g., \code{cfr_estimate_v0 = death_rate_7d_av[[22]]/case_rate_7d_av[[1]]}. This way is sometimes more
 convenient, but also has the most computational overhead.

@@ -40,7 +40,7 @@
 #'
 #' You can specify the computation in one of the following ways:
 #'
-#' - Don't provide `.f`, and instead use use one or more
+#' - Don't provide `.f`, and instead use one or more
 #'   [`dplyr::summarize`]-esque ["data-masking"][rlang::args_data_masking]
 #'   expressions in `...`, e.g., `cfr_estimate_v0 =
 #'   death_rate_7d_av[[22]]/case_rate_7d_av[[1]]`. This way is sometimes more
