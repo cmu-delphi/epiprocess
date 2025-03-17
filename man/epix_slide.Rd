@@ -166,7 +166,7 @@ computations are allowed more flexibility in their outputs than in
 for excluded group-\code{.ref_time_value} pairs.
 \item The \code{.versions} default for \code{epix_slide} is based on making an
 evenly-spaced sequence out of the \code{version}s in the \code{DT} plus the
-\code{versions_end}, rather than the \code{time_value}s.
+\code{versions_end}, rather than all unique \code{time_value}s.
 \item \code{epix_slide()} computations can refer to the current element of
 \code{.versions} as either \code{.version} or \code{.ref_time_value}, while \code{epi_slide()}
 computations refer to the current element of \code{.ref_time_values} with

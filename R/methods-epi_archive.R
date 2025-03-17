@@ -744,7 +744,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   for excluded group-`.ref_time_value` pairs.
 #'   6. The `.versions` default for `epix_slide` is based on making an
 #'   evenly-spaced sequence out of the `version`s in the `DT` plus the
-#'   `versions_end`, rather than the `time_value`s.
+#'   `versions_end`, rather than all unique `time_value`s.
 #'   7. `epix_slide()` computations can refer to the current element of
 #'   `.versions` as either `.version` or `.ref_time_value`, while `epi_slide()`
 #'   computations refer to the current element of `.ref_time_values` with
