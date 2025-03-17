@@ -109,6 +109,9 @@ only performs some fast, basic checks on the inputs. \code{validate_epi_archive}
 can perform more costly validation checks on its output. But most users
 should use \code{as_epi_archive}, which performs all necessary checks and has some
 additional features.
+
+Does not validate \code{geo_type} or \code{time_type} against \code{geo_value} and
+\code{time_value} columns. These are assumed to have been set to compatibly.
 }
 \details{
 An \code{epi_archive} contains a \code{data.table} object \code{DT} (from the
