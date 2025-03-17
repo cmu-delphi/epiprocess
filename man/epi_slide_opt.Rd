@@ -145,9 +145,9 @@ computations are over exactly \code{.window_size} values.
 
 \code{epi_slide_opt} allows you to use any \link[data.table:froll]{data.table::froll} or
 \link[slider:summary-slide]{slider::summary-slide} function. If none of the specialized functions here
-work, you can use \code{data.table::frollapply} with your own function. See
-\code{\link{epi_slide}} if you need to work with multiple columns at once or output a
-custom type.
+work, you can use \code{data.table::frollapply} together with a non-rolling
+function (e.g., \code{median}). See \code{\link{epi_slide}} if you need to work with
+multiple columns at once or output a custom type.
 
 \code{epi_slide_mean} is a wrapper around \code{epi_slide_opt} with \code{.f = data.table::frollmean}.
 

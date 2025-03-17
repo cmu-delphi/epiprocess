@@ -1,19 +1,27 @@
 #' More general form of [`epi_slide_opt`] for rolling/running computations
 #'
-#' Check first whether you can use [`epi_slide_mean`], [`epi_slide_sum`], or the
-#' medium-generality [`epi_slide_opt`] instead, as they are faster and more
-#' convenient to use. You typically only need to use `epi_slide()` if you have a
-#' computation that depends on multiple columns simultaneously, outputs multiple
-#' columns simultaneously, or produces non-numeric output.
+#' Most rolling/running computations can be handled by [`epi_slide_mean`],
+#' [`epi_slide_sum`], or the medium-generality [`epi_slide_opt`] functions
+#' instead, which are much faster. You typically only need to consider
+#' `epi_slide()` if you have a computation that depends on multiple columns
+#' simultaneously, outputs multiple columns simultaneously, or produces
+#' non-numeric output.  For example, this computation depends on multiple
+#' columns:
 #'
 #' ```
-#' # Create new column `cases_7dmed` that contains a 7-day trailing median of cases
-#' epi_slide(edf, cases_7dmed = median(cases), .window_size = 7)
+#' cases_deaths_subset %>%
+#'   epi_slide(
+#'     cfr_estimate_v0 = death_rate_7d_av[[22]]/case_rate_7d_av[[1]],
+#'     .window_size = 22
+#'   ) %>%
+#'   print(n = 30)
 #' ```
 #'
-#' For two very common use cases, we provide optimized functions that are much
-#' faster than `epi_slide`: `epi_slide_mean()` and `epi_slide_sum()`. We
-#' recommend using these functions when possible.
+#' (Here, the value 22 was selected using `epi_cor()` and averaging across
+#' `geo_value`s. See
+#' \href{https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1}{this
+#' manuscript}{this manuscript} for some warnings & information using similar
+#' types of CFR estimators.)
 #'
 #' See `vignette("epi_df")` for more examples.
 #'
@@ -34,15 +42,19 @@
 #'
 #' - Don't provide `.f`, and instead use use one or more
 #'   [`dplyr::summarize`]-esque ["data-masking"][rlang::args_data_masking]
-#'   expressions in `...`, e.g., `cases_7dmed = median(cases)`. This is usually
-#'   the most convenient way to use `epi_slide`. See examples.
+#'   expressions in `...`, e.g., `cfr_estimate_v0 =
+#'   death_rate_7d_av[[22]]/case_rate_7d_av[[1]]`. This way is sometimes more
+#'   convenient, but also has the most computational overhead.
 #'
-#' - Provide a formula in `.f`, e.g., `~ median(.x$cases)`. In this formula,
-#'   `.x` is an `epi_df` containing data for a single time window as described
-#'   above, taken from the original `.x` fed into `epi_slide()`.
+#' - Provide a formula in `.f`, e.g., `~
+#'   .x$death_rate_7d_av[[22]]/.x$case_rate_7d_av[[1]]`. In this formula, `.x`
+#'   is an `epi_df` containing data for a single time window as described above,
+#'   taken from the original `.x` fed into `epi_slide()`.
 #'
-#' - Provide a function in `.f`. The function should be of the form `function(x,
-#'   g, t)` or `function(x, g, t, <additional configuration arguments>)`, where:
+#' - Provide a function in `.f`, e.g., `function(x, g, t)
+#'   x$death_rate_7d_av[[22]]/x$case_rate_7d_av[[1]]`. The function should be of
+#'   the form `function(x, g, t)` or `function(x, g, t, <additional
+#'   configuration arguments>)`, where:
 #'
 #'     - `x` is a data frame with the same column names as the original object,
 #'       minus any grouping variables, with only the windowed data for one
@@ -60,7 +72,8 @@
 #'   The values of `g` and `t` are also available to data-masking expression and
 #'   formula-based computations as `.group_key` and `.ref_time_value`,
 #'   respectively. Formula computations also let you use `.y` or `.z`,
-#'   respectively.
+#'   respectively, as additional names for these same quantities (similar to
+#'   [`dplyr::group_modify`]).
 #'
 #' @param ... Additional arguments to pass to the function or formula specified
 #'   via `.f`. Alternatively, if `.f` is missing, then the `...` is interpreted
@@ -73,6 +86,26 @@
 #'   be given names that clash with the existing columns of `.x`.
 #'
 #' @details
+#'
+#' ## Motivation and lower-level alternatives
+#'
+#' `epi_slide()` is focused on preventing errors and providing a convenient
+#' interface. If you need computational speed, many computations can be optimized
+#' by one of the following:
+#'
+#' * Performing core sliding operations with `epi_slide_opt()` with
+#'   `frollapply`, and using potentially-grouped `mutate()`s to transform or
+#'   combine the results.
+#'
+#' * Grouping by `geo_value` and any `other_keys`; [`complete()`]ing with
+#'   `full_seq()` to fill in time gaps; `arrange()`ing by `time_value`s within
+#'   each group; using `mutate()` with vectorized operations and shift operators
+#'   like `dplyr::lead()` and `dplyr::lag()` to perform the core operations,
+#'   being careful to give the desired results for the least and most recent
+#'   `time_value`s (often `NA`s for the least recent); ungrouping; and
+#'   `filter()`ing back down to only rows that existed before the `complete()`
+#'   stage if necessary.
+#'
 #' ## Advanced uses of `.f` via tidy evaluation
 #'
 #' If specifying `.f` via tidy evaluation, in addition to the standard [`.data`]
@@ -96,34 +129,43 @@
 #' @examples
 #' library(dplyr)
 #'
-#' # Get the 7-day trailing standard deviation of cases and the 7-day trailing mean of cases
-#' cases_deaths_subset %>%
+#' # Generate some simple time-varying CFR estimates:
+#' with_cfr_estimates <- cases_deaths_subset %>%
 #'   epi_slide(
-#'     cases_7sd = sd(cases, na.rm = TRUE),
-#'     cases_7dav = mean(cases, na.rm = TRUE),
-#'     .window_size = 7
-#'   ) %>%
-#'   select(geo_value, time_value, cases, cases_7sd, cases_7dav)
-#' # Note that epi_slide_mean could be used to more quickly calculate cases_7dav.
+#'     cfr_estimate_v0 = death_rate_7d_av[[22]] / case_rate_7d_av[[1]],
+#'     .window_size = 22
+#'   )
+#' with_cfr_estimates %>%
+#'   print(n = 30)
+#' # (Here, the value 22 was selected using `epi_cor()` and averaging across
+#' # `geo_value`s. See
+#' # https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1 for some
+#' # warnings & information using CFR estimators along these lines.)
 #'
-#' # In addition to the [`dplyr::mutate`]-like syntax, you can feed in a function or
-#' # formula in a way similar to [`dplyr::group_modify`]:
-#' my_summarizer <- function(window_data) {
-#'   window_data %>%
-#'     summarize(
-#'       cases_7sd = sd(cases, na.rm = TRUE),
-#'       cases_7dav = mean(cases, na.rm = TRUE)
-#'     )
+#' # In addition to the [`dplyr::mutate`]-like syntax, you can feed in a
+#' # function or formula in a way similar to [`dplyr::group_modify`]; these
+#' # often run much more quickly:
+#' my_computation <- function(window_data) {
+#'   tibble(
+#'     cfr_estimate_v0 = window_data$death_rate_7d_av[[nrow(window_data)]] /
+#'       window_data$case_rate_7d_av[[1]]
+#'   )
 #' }
-#' cases_deaths_subset %>%
+#' with_cfr_estimates2 <- cases_deaths_subset %>%
 #'   epi_slide(
-#'     ~ my_summarizer(.x),
-#'     .window_size = 7
-#'   ) %>%
-#'   select(geo_value, time_value, cases, cases_7sd, cases_7dav)
-#'
-#'
-#'
+#'     ~ my_computation(.x),
+#'     .window_size = 22
+#'   )
+#' with_cfr_estimates3 <- cases_deaths_subset %>%
+#'   epi_slide(
+#'     function(window_data, g, t) {
+#'       tibble(
+#'         cfr_estimate_v0 = window_data$death_rate_7d_av[[nrow(window_data)]] /
+#'           window_data$case_rate_7d_av[[1]]
+#'       )
+#'     },
+#'     .window_size = 22
+#'   )
 #'
 #'
 #' #### Advanced: ####
@@ -586,9 +628,9 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #'
 #' `epi_slide_opt` allows you to use any [data.table::froll] or
 #' [slider::summary-slide] function. If none of the specialized functions here
-#' work, you can use `data.table::frollapply` with your own function. See
-#' [`epi_slide`] if you need to work with multiple columns at once or output a
-#' custom type.
+#' work, you can use `data.table::frollapply` together with a non-rolling
+#' function (e.g., `median`). See [`epi_slide`] if you need to work with
+#' multiple columns at once or output a custom type.
 #'
 #' @template basic-slide-params
 #' @param .col_names <[`tidy-select`][dplyr_tidy_select]> An unquoted column
