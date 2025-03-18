@@ -153,11 +153,13 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
   } else {
     # XXX No special handling for any other types/situations. Makes sense for
     # unclassed atomic things; custom classes (e.g., distributions) might want
-    # recursion / specialization, though. vec_approx_equal0 should probably be an S3
-    # method. Also, abs_tol == 0 --> vec_equal logic should maybe be either be
-    # hoisted to vec_approx_equal or we should manually recurse on data frames even
-    # with abs_tol = 0 when that's faster (might depend on presence of inds*),
-    # after some inconsistencies are ironed out.
+    # recursion / specialization, though. vec_approx_equal0 should probably be
+    # an S3 method; see also `vctrs::vec_proxy_equal` though it's probably not
+    # sufficient (e.g., for keyed data frames such as `epi_df`s that should have
+    # strict & nonstrict columns). Also, abs_tol == 0 --> vec_equal logic should
+    # maybe be either be hoisted to vec_approx_equal or we should manually
+    # recurse on data frames even with abs_tol = 0 when that's faster (might
+    # depend on presence of inds*), after some inconsistencies are ironed out.
     if (!is.null(inds1)) {
       vec1 <- vec_slice(vec1, inds1)
       vec2 <- vec_slice(vec2, inds2)
