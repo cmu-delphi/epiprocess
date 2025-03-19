@@ -120,36 +120,53 @@ test_that("compactify does not alter the default clobberable and observed versio
   expect_identical(ea_true$versions_end, ea_false$versions_end)
 })
 
+quantile_pred_once <- function(estimates_vec, levels_vec) {
+  hardhat::quantile_pred(t(as.matrix(estimates_vec)), levels_vec)
+}
 test_that("compactify works on distributions", {
+  skip("Until #611 is merged or hardhat/epipredict is patched")
   forecasts <- tibble(
     ahead = 2L,
     geo_value = "ak",
     target_end_date = as.Date("2020-01-19"),
-    forecast_date = as.Date("2020-01-17") + 1:8,
+    forecast_date = as.Date("2020-01-17") + 1:6,
     actual = 25,
     .pred_distn = c(
-      epipredict::dist_quantiles(c(1, 5, 9), c(0.1, 0.5, 0.9)),
-      epipredict::dist_quantiles(c(1, NA, 9), c(0.1, 0.5, 0.9)), # single NA in quantiles
-      epipredict::dist_quantiles(c(NA, NA, NA), c(0.1, 0.5, 0.9)), # all NAs in quantiles
-      distributional::dist_missing(1), # the actual `NA` for distributions
-      epipredict::dist_quantiles(c(1, 5, 9), c(0.1, 0.5, 0.9)), # and back
-      epipredict::dist_quantiles(c(3, 5, 9), c(0.1, 0.5, 0.9)), # change quantile
-      epipredict::dist_quantiles(c(3, 5, 9), c(0.2, 0.5, 0.8)), # change level
-      epipredict::dist_quantiles(c(3, 5, 9), c(0.2, 0.5, 0.8)) # LOCF
+      quantile_pred_once(c(1, 5, 9), c(0.1, 0.5, 0.9)),
+      quantile_pred_once(c(1, NA, 9), c(0.1, 0.5, 0.9)), # single NA in quantiles
+      quantile_pred_once(c(NA, NA, NA), c(0.1, 0.5, 0.9)), # all NAs in quantiles (hardhat+vctrs+epipredict treats as missing)
+      quantile_pred_once(c(1, 5, 9), c(0.1, 0.5, 0.9)), # and back
+      quantile_pred_once(c(3, 5, 9), c(0.1, 0.5, 0.9)), # change quantile
+      quantile_pred_once(c(3, 5, 9), c(0.1, 0.5, 0.9)) # LOCF
     )
   )
   expect_equal(
     forecasts %>%
-      as_epi_archive(
-        other_keys = "ahead", time_value = target_end_date, version = forecast_date,
-        compactify = TRUE
-      ) %>%
+      as_epi_archive(other_keys = "ahead", time_value = target_end_date, version = forecast_date) %>%
       .$DT %>%
       as.data.frame() %>%
       as_tibble(),
-    forecasts[-8, ] %>%
+    forecasts[-6, ] %>%
       rename(time_value = target_end_date, version = forecast_date)
   )
+})
+test_that("epix_merge works with distributions", {
+  skip("Until hardhat/epipredict is patched")
+  forecasts1ea <- tibble(
+    ahead = 2L,
+    geo_value = "ak",
+    target_end_date = as.Date("2020-01-19"),
+    forecast_date = as.Date("2020-01-17") + 1,
+    .pred_distn1 = quantile_pred_once(c(1, 5, 9), c(0.1, 0.5, 0.9))
+  ) %>% as_epi_archive(other_keys = "ahead", time_value = target_end_date, version = forecast_date)
+  forecasts2ea <- tibble(
+    ahead = 2L,
+    geo_value = "ak",
+    target_end_date = as.Date("2020-01-19"),
+    forecast_date = as.Date("2020-01-17") + 2,
+    .pred_distn2 = quantile_pred_once(c(2, 4, 8), c(0.1, 0.5, 0.9))
+  ) %>% as_epi_archive(other_keys = "ahead", time_value = target_end_date, version = forecast_date)
+  forecasts12ea <- epix_merge(forecasts1ea, forecasts2ea, sync = "locf")
 })
 
 test_that("Large compactify_abs_tol does not drop edf keys", {

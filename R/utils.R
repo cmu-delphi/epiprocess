@@ -111,9 +111,9 @@ format_chr_deparse <- function(x) {
 #' @examples
 #' cli::cli_inform('{format_chr_with_quotes("x")}')
 #' cli::cli_inform('{format_chr_with_quotes(c("x","y"))}')
-#' nms <- c("x","\"Total Cases\"")
-#' cli::cli_inform('{format_chr_with_quotes(nms)}')
-#' cli::cli_inform('{format_chr_with_quotes(character())}')
+#' nms <- c("x", "\"Total Cases\"")
+#' cli::cli_inform("{format_chr_with_quotes(nms)}")
+#' cli::cli_inform("{format_chr_with_quotes(character())}")
 #'
 #' @keywords internal
 format_chr_with_quotes <- function(x, empty = "*none*") {
