@@ -2,19 +2,29 @@
 % Please edit documentation in R/utils.R
 \name{format_chr_with_quotes}
 \alias{format_chr_with_quotes}
-\title{Format a character vector as a string via deparsing/quoting each}
+\title{Format each entry in a character vector via quoting; special replacement for length 0}
 \usage{
 format_chr_with_quotes(x, empty = "*none*")
 }
 \arguments{
-\item{x}{\code{chr}; e.g., \code{colnames} of some data frame}
+\item{x}{chr; e.g., \code{colnames} of some data frame}
 
-\item{empty}{string; what should be output if \code{x} is of length 0?}
+\item{empty}{chr, likely string; what should be output if \code{x} is of length 0?}
 }
 \value{
-string
+chr; same \code{length} as \code{x} if \code{x} had nonzero length; value of \code{empty} otherwise
 }
 \description{
-Format a character vector as a string via deparsing/quoting each
+Performs no escaping within the strings; if you want something that reader
+could copy-paste to debug, look into \code{format_deparse} (note that this
+collapses into a single string).
+}
+\examples{
+cli::cli_inform('{format_chr_with_quotes("x")}')
+cli::cli_inform('{format_chr_with_quotes(c("x","y"))}')
+nms <- c("x","\"Total Cases\"")
+cli::cli_inform('{format_chr_with_quotes(nms)}')
+cli::cli_inform('{format_chr_with_quotes(character())}')
+
 }
 \keyword{internal}
