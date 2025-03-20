@@ -134,7 +134,7 @@ test_that("compactify works on distributions", {
     .pred_distn = c(
       quantile_pred_once(c(1, 5, 9), c(0.1, 0.5, 0.9)),
       quantile_pred_once(c(1, NA, 9), c(0.1, 0.5, 0.9)), # single NA in quantiles
-      quantile_pred_once(c(NA, NA, NA), c(0.1, 0.5, 0.9)), # all NAs in quantiles (hardhat+vctrs+epipredict treats as missing)
+      quantile_pred_once(c(NA, NA, NA), c(0.1, 0.5, 0.9)), # all NAs in quantiles
       quantile_pred_once(c(1, 5, 9), c(0.1, 0.5, 0.9)), # and back
       quantile_pred_once(c(3, 5, 9), c(0.1, 0.5, 0.9)), # change quantile
       quantile_pred_once(c(3, 5, 9), c(0.1, 0.5, 0.9)) # LOCF

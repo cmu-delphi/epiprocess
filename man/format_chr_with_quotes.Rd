@@ -20,11 +20,11 @@ could copy-paste to debug, look into \code{format_deparse} (note that this
 collapses into a single string).
 }
 \examples{
-cli::cli_inform('{format_chr_with_quotes("x")}')
-cli::cli_inform('{format_chr_with_quotes(c("x","y"))}')
+cli::cli_inform('{epiprocess:::format_chr_with_quotes("x")}')
+cli::cli_inform('{epiprocess:::format_chr_with_quotes(c("x","y"))}')
 nms <- c("x", "\"Total Cases\"")
-cli::cli_inform("{format_chr_with_quotes(nms)}")
-cli::cli_inform("{format_chr_with_quotes(character())}")
+cli::cli_inform("{epiprocess:::format_chr_with_quotes(nms)}")
+cli::cli_inform("{epiprocess:::format_chr_with_quotes(character())}")
 
 }
 \keyword{internal}
