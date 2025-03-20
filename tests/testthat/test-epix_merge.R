@@ -175,7 +175,7 @@ test_that("epix_merge forbids and warns on metadata and naming issues", {
       as_epi_archive(tibble::tibble(geo_value = "ak", time_value = test_date, version = test_date + 1L, value = 1L)),
       as_epi_archive(tibble::tibble(geo_value = "ak", time_value = test_date, version = test_date + 1L, value = 2L))
     ),
-    regexp = "overlapping.*names"
+    regexp = 'both have measurement columns named "value"'
   )
 })
 

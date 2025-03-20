@@ -450,7 +450,8 @@ epix_merge <- function(x, y,
   y_nonby_colnames <- setdiff(names(y_dt), by)
   if (length(intersect(x_nonby_colnames, y_nonby_colnames)) != 0L) {
     cli_abort("
-            `x` and `y` DTs have overlapping non-by column names;
+            `x` and `y` DTs both have measurement columns named
+            {format_chr_with_quotes(intersect(x_nonby_colnames, y_nonby_colnames))};
             this is currently not supported; please manually fix up first:
             any overlapping columns that can are key-like should be
             incorporated into the key, and other columns should be renamed.

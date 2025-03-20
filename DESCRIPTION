@@ -1,7 +1,7 @@
 Type: Package
 Package: epiprocess
 Title: Tools for basic signal processing in epidemiology
-Version: 0.11.0
+Version: 0.11.1
 Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", , "lcbrooks+github@andrew.cmu.edu", role = c("aut", "cre")),
@@ -66,12 +66,13 @@ Suggests:
     distributional,
     epidatr,
     epipredict,
+    hardhat,
     here,
     knitr,
     outbreaks,
     readr,
     rmarkdown,
-    testthat (>= 3.1.5),
+    testthat,
     trendfilter,
     withr
 VignetteBuilder:

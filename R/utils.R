@@ -98,26 +98,29 @@ format_chr_deparse <- function(x) {
   paste(collapse = "", deparse(x))
 }
 
-#' Format a character vector as a string via deparsing/quoting each
+#' Format each entry in a character vector via quoting; special replacement for length 0
 #'
-#' @param x `chr`; e.g., `colnames` of some data frame
-#' @param empty string; what should be output if `x` is of length 0?
-#' @return string
+#' Performs no escaping within the strings; if you want something that reader
+#' could copy-paste to debug, look into `format_deparse` (note that this
+#' collapses into a single string).
+#'
+#' @param x chr; e.g., `colnames` of some data frame
+#' @param empty chr, likely string; what should be output if `x` is of length 0?
+#' @return chr; same `length` as `x` if `x` had nonzero length; value of `empty` otherwise
+#'
+#' @examples
+#' cli::cli_inform('{epiprocess:::format_chr_with_quotes("x")}')
+#' cli::cli_inform('{epiprocess:::format_chr_with_quotes(c("x","y"))}')
+#' nms <- c("x", "\"Total Cases\"")
+#' cli::cli_inform("{epiprocess:::format_chr_with_quotes(nms)}")
+#' cli::cli_inform("{epiprocess:::format_chr_with_quotes(character())}")
+#'
 #' @keywords internal
 format_chr_with_quotes <- function(x, empty = "*none*") {
   if (length(x) == 0L) {
     empty
   } else {
-    # Deparse to get quoted + escape-sequenced versions of varnames; collapse to
-    # single line (assuming no newlines in `x`). Though if we hand this to cli
-    # it may insert them (even in middle of quotes) while wrapping lines.
-    deparsed_collapsed <- paste(collapse = "", deparse(x))
-    if (length(x) == 1L) {
-      deparsed_collapsed
-    } else {
-      # remove surrounding `c()`:
-      substr(deparsed_collapsed, 3L, nchar(deparsed_collapsed) - 1L)
-    }
+    paste0('"', x, '"')
   }
 }
 
