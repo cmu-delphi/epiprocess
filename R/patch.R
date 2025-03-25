@@ -170,6 +170,8 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
     # inconsistencies are ironed out.
     if (!is.null(inds1)) {
       vec1 <- vec_slice(vec1, inds1)
+    }
+    if (!is.null(inds2)) {
       vec2 <- vec_slice(vec2, inds2)
     }
     res <- vec_equal(vec1, vec2, na_equal = na_equal)
