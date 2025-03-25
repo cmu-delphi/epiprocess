@@ -60,6 +60,7 @@
 #' @importFrom vctrs vec_rep
 #' @importFrom vctrs vec_rep_each
 #' @importFrom vctrs vec_seq_along
+#' @importFrom vctrs vec_set_names
 #' @importFrom vctrs vec_size_common
 #' @importFrom vctrs vec_slice
 #' @importFrom vctrs vec_slice<-

@@ -115,12 +115,18 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
     # and `fifelse`. Matching vec_equal, we ignore names and other attributes.
     if (!is.null(inds1)) vec1 <- vec_slice(vec1, inds1)
     if (!is.null(inds2)) vec2 <- vec_slice(vec2, inds2)
+    na_or_nan1 <- is.na(vec1)
+    na_or_nan2 <- is.na(vec2)
     res <- fifelse(
-      !is.na(vec1) & !is.na(vec2),
+      !na_or_nan1 & !na_or_nan2,
       abs(vec1 - vec2) <= abs_tol,
-      if (na_equal) is.na(vec1) & is.na(vec2) else NA
-      # XXX ^ inconsistent with vec_equal treatment: NA vs. NaN comparison
-      # behavior with na_equal = TRUE is different
+      if (na_equal) {
+        na_or_nan1 & na_or_nan2 & (is.nan(vec1) == is.nan(vec2))
+      } else {
+        # Like `==` and `vec_equal`, we consider NaN == {NA, NaN, anything else}
+        # to be NA.
+        NA
+      }
     )
     if (!is.null(dim(vec1))) {
       dim(res) <- dim(vec1)
@@ -139,27 +145,29 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
         vec_approx_equal0(vec1[[col_i]], vec2[[col_i]], na_equal, abs_tol, inds1, inds2)
       }))
     }
-  } else if (is_bare_list(vec1)) {
+  } else if (is_bare_list(vec1) && abs_tol != 0) {
     vapply(seq_along(vec1), function(i) {
       entry1 <- vec1[[i]]
       entry2 <- vec2[[i]]
       vec_size(entry1) == vec_size(entry2) &&
-        # This is inconsistent with vec_equal on named vectors; to be
-        # consistently inconsistent, we avoid dispatching to vec_equal for bare
-        # lists even with abs_tol = 0:
-        identical(vec_ptype(entry1), vec_ptype(entry2)) &&
+        # Trying to follow vec_equal: strict on ptypes aside from vec_namedness:
+        identical(
+          vec_set_names(vec_ptype(entry1), NULL),
+          vec_set_names(vec_ptype(entry2), NULL)
+        ) &&
         all(vec_approx_equal0(entry1, entry2, na_equal, abs_tol))
     }, logical(1L))
   } else {
     # XXX No special handling for any other types/situations. Makes sense for
     # unclassed atomic things; custom classes (e.g., distributions) might want
     # recursion / specialization, though. vec_approx_equal0 should probably be
-    # an S3 method; see also `vctrs::vec_proxy_equal` though it's probably not
-    # sufficient (e.g., for keyed data frames such as `epi_df`s that should have
-    # strict & nonstrict columns). Also, abs_tol == 0 --> vec_equal logic should
-    # maybe be either be hoisted to vec_approx_equal or we should manually
-    # recurse on data frames even with abs_tol = 0 when that's faster (might
-    # depend on presence of inds*), after some inconsistencies are ironed out.
+    # an S3 method; see also `vctrs::vec_proxy_{equal,compare}` though they
+    # might not be sufficient (e.g., for keyed data frames such as `epi_df`s
+    # that should have strict & nonstrict columns). Also, abs_tol == 0 -->
+    # vec_equal logic should maybe be either be hoisted to vec_approx_equal or
+    # we should manually recurse on data frames even with abs_tol = 0 when
+    # that's faster (might depend on presence of inds*), after some
+    # inconsistencies are ironed out.
     if (!is.null(inds1)) {
       vec1 <- vec_slice(vec1, inds1)
       vec2 <- vec_slice(vec2, inds2)
