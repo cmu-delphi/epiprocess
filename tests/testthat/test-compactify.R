@@ -124,7 +124,7 @@ quantile_pred_once <- function(estimates_vec, levels_vec) {
   hardhat::quantile_pred(t(as.matrix(estimates_vec)), levels_vec)
 }
 test_that("compactify works on distributions", {
-  skip("Until #611 is merged or hardhat/epipredict is patched")
+  skip("See #631.")
   forecasts <- tibble(
     ahead = 2L,
     geo_value = "ak",
