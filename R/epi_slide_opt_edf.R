@@ -168,7 +168,7 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer,
 #'
 #' * On `epi_df`s, it will take care of looping over `geo_value`s, temporarily
 #'   filling in time gaps with `NA`s and other work needed to ensure there are
-#'   exactly n consecutive time steps per computation, and has some other
+#'   exactly `n` consecutive time steps per computation, and has some other
 #'   convenience features. See `vignette("epi_df")` for more examples.
 #'
 #' * On `epi_archive`s, it will calculate the version history for these slide
