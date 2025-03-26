@@ -163,7 +163,7 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer,
 #' @description
 #'
 #' `epi_slide_opt` calculates n-time-step rolling means&sums,
-#' cumulative/"running" means&sums, or other operations supported by
+#' cumulative/"running" means&sums, and other operations supported by
 #' [`data.table::froll`] or [`slider::summary-slide`] functions.
 #'
 #' * On `epi_df`s, it will take care of looping over `geo_value`s, temporarily
