@@ -96,8 +96,8 @@ epi_slide_opt_archive_one_epikey <- function(
         if (after != 0L) {
           # data.table always puts NAs at tails, even with na.rm = TRUE; chop
           # off extra NAs from beginning and place missing NAs at end:
-          out_cols <- purrr::map(out_cols, function(.x) {
-            c(.x[seq(after + 1L, slide_nrow)], rep(NA, after))
+          out_cols <- lapply(out_cols, function(out_col) {
+            c(out_col[seq(after + 1L, slide_nrow)], rep(NA, after))
           })
         }
         slide[, out_colnames] <- out_cols
