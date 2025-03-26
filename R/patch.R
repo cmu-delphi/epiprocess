@@ -20,7 +20,8 @@
 #' @param inds1,inds2 optional (row) indices into vec1 and vec2 compatible with
 #'   [`vctrs::vec_slice()`]; output should be consistent with `vec_slice`-ing to
 #'   these indices beforehand, but can give faster computation if `vec1` and
-#'   `vec2` are data frames.
+#'   `vec2` are data frames. Currently, any speedup is only by making sure that
+#'   `vec_slice` is used rather than `[` for data frames.
 #'
 #' @return logical vector, with length matching the result of recycling `vec1`
 #'   (at `inds1` if provided) and `vec2` (at `inds2` if provided); entries
@@ -116,12 +117,12 @@ vec_approx_equal <- function(vec1, vec2, na_equal, .ptype = NULL, ..., abs_tol, 
 #' @keywords internal
 vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2 = NULL) {
   if (is_bare_numeric(vec1) && abs_tol != 0) {
-    # perf: since we're working with bare numerics and logicals: we can use `[`
-    # and `fifelse`. Matching vec_equal, we ignore names and other attributes.
+    # Matching vec_equal, we ignore names and other attributes.
     if (!is.null(inds1)) vec1 <- vec_slice(vec1, inds1)
     if (!is.null(inds2)) vec2 <- vec_slice(vec2, inds2)
     na_or_nan1 <- is.na(vec1)
     na_or_nan2 <- is.na(vec2)
+    # Since above are bare logical vectors, we can use `fifelse`
     res <- fifelse(
       !na_or_nan1 & !na_or_nan2,
       abs(vec1 - vec2) <= abs_tol,

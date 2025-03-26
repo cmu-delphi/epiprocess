@@ -37,7 +37,8 @@ by name)}
 \item{inds1, inds2}{optional (row) indices into vec1 and vec2 compatible with
 \code{\link[vctrs:vec_slice]{vctrs::vec_slice()}}; output should be consistent with \code{vec_slice}-ing to
 these indices beforehand, but can give faster computation if \code{vec1} and
-\code{vec2} are data frames.}
+\code{vec2} are data frames. Currently, any speedup is only by making sure that
+\code{vec_slice} is used rather than \code{[} for data frames.}
 }
 \value{
 logical vector, with length matching the result of recycling \code{vec1}
