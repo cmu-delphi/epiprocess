@@ -135,7 +135,7 @@ as \code{.x} if \code{.x} was grouped.
 }
 \description{
 \code{epi_slide_opt} calculates n-time-step rolling means&sums,
-cumulative/"running" means&sums, or other operations supported by
+cumulative/"running" means&sums, and other operations supported by
 \code{\link[data.table:froll]{data.table::froll}} or \code{\link[slider:summary-slide]{slider::summary-slide}} functions.
 \itemize{
 \item On \code{epi_df}s, it will take care of looping over \code{geo_value}s, temporarily
