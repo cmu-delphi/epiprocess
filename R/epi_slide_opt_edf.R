@@ -83,7 +83,7 @@ upstream_slide_f_info <- function(.f) {
 #' @keywords internal
 across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer,
                                   .window_size, .align, .prefix, .suffix, .new_col_names) {
-  # The position of a given column can be differ between input `.x` and
+  # The position of a given column can differ between input `.x` and
   # `.data_group` since the grouping step by default drops grouping columns.
   # To avoid rerunning `eval_select` for every `.data_group`, convert
   # positions of user-provided `col_names` into string column names. We avoid
