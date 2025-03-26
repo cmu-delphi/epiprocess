@@ -1,6 +1,6 @@
 test_that("is_locf replacement works as expected", {
   vec <- c(1, 1, 1e-10, 1.1e-10, NA, NA, NaN, NaN)
-  is_repeated <- c(0, 1, 0, 1, 0, 1, 1, 1)
+  is_repeated <- c(0, 1, 0, 1, 0, 1, 0, 1)
   expect_equal(
     c(
       FALSE,
