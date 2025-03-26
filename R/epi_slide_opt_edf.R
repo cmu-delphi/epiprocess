@@ -42,8 +42,8 @@ upstream_slide_f_info <- function(.f) {
     # `f` is from somewhere else and not supported
     cli_abort(
       c(
-        "problem with {rlang::expr_label(rlang::caller_arg(f))}",
-        "i" = "`f` must be one of `data.table`'s rolling functions (`frollmean`,
+        "problem with {rlang::expr_label(rlang::caller_arg(.f))}",
+        "i" = "`.f` must be one of `data.table`'s rolling functions (`frollmean`,
               `frollsum`, `frollapply`. See `?data.table::roll`) or one of
               `slider`'s specialized sliding functions (`slide_mean`, `slide_sum`,
               etc. See `?slider::\`summary-slide\`` for more options)."
