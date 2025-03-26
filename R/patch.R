@@ -1,8 +1,6 @@
 #' Test two vctrs vectors for equality with some tolerance in some cases
 #'
-#' Similar to [`vctrs::vec_equal`]. Behavior may differ from `vec_equal` with
-#' non-`NA` `NaN`s involved, or for bare lists that contain named vectors, and
-#' the precise behavior in these cases may change and should not be relied upon.
+#' Generalizes [`vctrs::vec_equal`].
 #'
 #' @param vec1,vec2 vctrs vectors (includes data frames). Take care when using
 #'   on named vectors or "keyed" data frames; [`vec_names()`] are largely

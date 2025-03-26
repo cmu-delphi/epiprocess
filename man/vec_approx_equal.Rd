@@ -46,9 +46,7 @@ logical vector, with length matching the result of recycling \code{vec1}
 should all be \code{TRUE} or \code{FALSE} if \code{na_equal = TRUE}.
 }
 \description{
-Similar to \code{\link[vctrs:vec_equal]{vctrs::vec_equal}}. Behavior may differ from \code{vec_equal} with
-non-\code{NA} \code{NaN}s involved, or for bare lists that contain named vectors, and
-the precise behavior in these cases may change and should not be relied upon.
+Generalizes \code{\link[vctrs:vec_equal]{vctrs::vec_equal}}.
 }
 \examples{
 
