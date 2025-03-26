@@ -5,7 +5,7 @@
 \title{Core operation of \code{epi_slide_opt.epi_archive} for a single epikey's history}
 \usage{
 epi_slide_opt_archive_one_epikey(
-  updates,
+  grp_updates,
   in_colnames,
   f_dots_baked,
   f_from_package,
@@ -16,9 +16,10 @@ epi_slide_opt_archive_one_epikey(
 )
 }
 \arguments{
-\item{updates}{tibble with two columns: \code{version} and \code{subtbl}; \code{subtbl} is a
-list of tibbles, each with a \code{time_value} column and measurement columns.
-The epikey should not appear.}
+\item{grp_updates}{tibble with a \code{version} column and measurement columns for
+a single epikey, without the epikey labeling columns (e.g., from
+\code{group_modify}). Interpretation is analogous to an \code{epi_archive} \code{DT}, but
+a specific row order is not required.}
 
 \item{in_colnames}{chr; names of columns to which to apply \code{f_dots_baked}}
 
@@ -42,7 +43,10 @@ to include in the sliding window computation}
 for results}
 }
 \value{
-list of tibbles with same names as \code{subtbl}s plus: \code{c(out_colnames, "version")}; (compactified) diff data to put into an \code{epi_archive}
+tibble with a \code{version} column, pre-existing measurement columns, and
+new measurement columns; (compactified) diff data to put into an
+\code{epi_archive}. May not match column ordering; may not ensure any row
+ordering.
 }
 \description{
 Core operation of \code{epi_slide_opt.epi_archive} for a single epikey's history
@@ -50,7 +54,7 @@ Core operation of \code{epi_slide_opt.epi_archive} for a single epikey's history
 \examples{
 
 library(dplyr)
-updates <- bind_rows(
+grp_updates <- bind_rows(
   tibble(version = 10, time_value = 1:20, value = 1:20),
   tibble(version = 12, time_value = 4:5, value = 5:4),
   tibble(version = 13, time_value = 8, value = 9),
@@ -58,12 +62,11 @@ updates <- bind_rows(
   tibble(version = 15, time_value = -10, value = -10),
   tibble(version = 16, time_value = 50, value = 50)
 ) \%>\%
-  mutate(across(c(version, time_value), ~ as.Date("2020-01-01") - 1 + .x)) \%>\%
-  tidyr::nest(.by = version, .key = "subtbl")
+  mutate(across(c(version, time_value), ~ as.Date("2020-01-01") - 1 + .x))
 
 f <- purrr::partial(data.table::frollmean, algo = "exact")
 
-updates \%>\%
+grp_updates \%>\%
   epiprocess:::epi_slide_opt_archive_one_epikey(
     "value", f, "data.table", 2L, 0L, "day", "slide_value"
   )

@@ -1,8 +1,9 @@
 #' Core operation of `epi_slide_opt.epi_archive` for a single epikey's history
 #'
-#' @param updates tibble with two columns: `version` and `subtbl`; `subtbl` is a
-#'   list of tibbles, each with a `time_value` column and measurement columns.
-#'   The epikey should not appear.
+#' @param grp_updates tibble with a `version` column and measurement columns for
+#'   a single epikey, without the epikey labeling columns (e.g., from
+#'   `group_modify`). Interpretation is analogous to an `epi_archive` `DT`, but
+#'   a specific row order is not required.
 #' @param in_colnames chr; names of columns to which to apply `f_dots_baked`
 #' @param f_dots_baked supported sliding function from `{data.table}` or
 #'   `{slider}`, potentially with some arguments baked in with
@@ -17,13 +18,15 @@
 #' @param time_type as in `new_epi_archive`
 #' @param out_colnames chr, same length as `in_colnames`; column names to use
 #'   for results
-#' @return list of tibbles with same names as `subtbl`s plus: `c(out_colnames,
-#'   "version")`; (compactified) diff data to put into an `epi_archive`
+#' @return tibble with a `version` column, pre-existing measurement columns, and
+#'   new measurement columns; (compactified) diff data to put into an
+#'   `epi_archive`. May not match column ordering; may not ensure any row
+#'   ordering.
 #'
 #' @examples
 #'
 #' library(dplyr)
-#' updates <- bind_rows(
+#' grp_updates <- bind_rows(
 #'   tibble(version = 10, time_value = 1:20, value = 1:20),
 #'   tibble(version = 12, time_value = 4:5, value = 5:4),
 #'   tibble(version = 13, time_value = 8, value = 9),
@@ -31,29 +34,30 @@
 #'   tibble(version = 15, time_value = -10, value = -10),
 #'   tibble(version = 16, time_value = 50, value = 50)
 #' ) %>%
-#'   mutate(across(c(version, time_value), ~ as.Date("2020-01-01") - 1 + .x)) %>%
-#'   tidyr::nest(.by = version, .key = "subtbl")
+#'   mutate(across(c(version, time_value), ~ as.Date("2020-01-01") - 1 + .x))
 #'
 #' f <- purrr::partial(data.table::frollmean, algo = "exact")
 #'
-#' updates %>%
+#' grp_updates %>%
 #'   epiprocess:::epi_slide_opt_archive_one_epikey(
 #'     "value", f, "data.table", 2L, 0L, "day", "slide_value"
 #'   )
 #'
 #' @keywords internal
 epi_slide_opt_archive_one_epikey <- function(
-    updates,
+    grp_updates,
     in_colnames,
     f_dots_baked, f_from_package, before, after, time_type,
     out_colnames) {
-  # TODO check for col name clobbering
+  grp_updates_by_version <- grp_updates %>%
+    nest(.by = version, .key = "subtbl") %>%
+    arrange(version)
   unit_step <- unit_time_delta(time_type)
   prev_inp_snapshot <- NULL
   prev_out_snapshot <- NULL
-  result <- map(seq_len(nrow(updates)), function(update_i) {
-    version <- updates$version[[update_i]]
-    inp_update <- updates$subtbl[[update_i]]
+  result <- map(seq_len(nrow(grp_updates_by_version)), function(version_i) {
+    version <- grp_updates_by_version$version[[version_i]]
+    inp_update <- grp_updates_by_version$subtbl[[version_i]]
     inp_snapshot <- tbl_patch(prev_inp_snapshot, inp_update, "time_value")
     if (before == Inf) {
       if (after != 0) {
@@ -124,6 +128,7 @@ epi_slide_opt_archive_one_epikey <- function(
     out_diff$version <- version
     out_diff
   })
+  result <- list_rbind(result)
   result
 }
 
@@ -188,26 +193,21 @@ epi_slide_opt.epi_archive <-
     updates_grouped <- .x$DT %>%
       as.data.frame() %>%
       as_tibble(.name_repair = "minimal") %>%
-      # 0 rows input -> 0 rows output, so we can just say drop = TRUE:
-      grouped_df(epikey_names, TRUE)
+      # 0 rows input -> 0 rows output for any drop = FALSE groups with 0 rows, so
+      # we can just say drop = TRUE:
+      grouped_df(epikey_names, drop = TRUE)
     if (use_progress) progress_bar_id <- cli::cli_progress_bar(.progress, total = n_groups(updates_grouped))
     result <- updates_grouped %>%
       group_modify(function(group_values, group_key) {
-        group_updates <- group_values %>%
-          nest(.by = version, .key = "subtbl") %>%
-          arrange(version)
-        # TODO move nesting inside the helper?
         res <- epi_slide_opt_archive_one_epikey(
-          group_updates,
+          group_values,
           names_info$input_col_names,
           .f_dots_baked, .f_info$from_package, window_args$before, window_args$after, time_type,
           names_info$output_col_names
-        ) %>%
-          list_rbind()
+        )
         if (use_progress) cli::cli_progress_update(id = progress_bar_id)
         res
       }) %>%
-      ungroup() %>%
       as.data.frame() %>% # data.table#6859
       as.data.table(key = key(.x$DT)) %>%
       new_epi_archive(

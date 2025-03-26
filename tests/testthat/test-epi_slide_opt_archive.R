@@ -3,7 +3,7 @@ library(dplyr)
 test_that("epi_slide_opt_archive_one_epikey works as expected", {
   start_date <- as.Date("2020-01-01")
 
-  updates <- bind_rows(
+  grp_updates <- bind_rows(
     tibble(version = 10, time_value = 0:20, value = 0:20),
     tibble(version = 12, time_value = 4:5, value = 5:4),
     tibble(version = 13, time_value = 8, value = 9),
@@ -11,16 +11,13 @@ test_that("epi_slide_opt_archive_one_epikey works as expected", {
     tibble(version = 15, time_value = -10, value = -10),
     tibble(version = 16, time_value = 50, value = 50)
   ) %>%
-    mutate(across(c(version, time_value), ~ start_date - 1 + .x)) %>%
-    tidyr::nest(.by = version, .key = "subtbl")
+    mutate(across(c(version, time_value), ~ start_date - 1 + .x))
 
   expected <- list(
-    vctrs::vec_cbind(
-      tibble(version = 10),
-      updates$subtbl[[1L]] %>%
-        mutate(time_value = as.numeric(time_value - start_date) + 1) %>%
-        mutate(slide_value = frollmean(value, 3, algo = "exact"))
-    ),
+    grp_updates %>%
+      slice_min(version) %>%
+      mutate(across(c(version, time_value), ~ as.numeric(.x - start_date) + 1)) %>%
+      mutate(slide_value = frollmean(value, 3, algo = "exact")),
     tibble(
       version = 12,
       time_value = c(4, 5, 7), # time 6 unchanged, compactified away
@@ -50,17 +47,15 @@ test_that("epi_slide_opt_archive_one_epikey works as expected", {
     lapply(function(x) {
       x %>%
         mutate(across(c(version, time_value), ~ start_date - 1 + .x))
-    })
+    }) %>%
+    list_rbind()
 
   f <- purrr::partial(data.table::frollmean, algo = "exact")
 
-  result <- updates %>%
+  result <- grp_updates %>%
     epiprocess:::epi_slide_opt_archive_one_epikey("value", f, "data.table", 2L, 0L, "day", "slide_value") %>%
-    lapply(function(x) {
-      x %>%
-        arrange(time_value) %>%
-        select(version, time_value, everything())
-    })
+    arrange(version, time_value) %>%
+    select(version, time_value, everything())
 
   expect_equal(result, expected)
 })
