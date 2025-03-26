@@ -474,8 +474,10 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
         roll_output <- .f(x = .data_group[, input_col_names], n = window_size, adaptive = TRUE, ...)
       }
       if (window_args$after >= 1) {
-        .data_group[, output_col_names] <- purrr::map(roll_output, function(.x) {
-          c(.x[(window_args$after + 1L):length(.x)], rep(NA, window_args$after))
+        .data_group[, output_col_names] <- lapply(roll_output, function(out_col) {
+          # data.table always puts `fill` arg (default NA) at the tails, even
+          # with na.rm = TRUE; chop off extra from beginning and place at end:
+          c(out_col[(window_args$after + 1L):length(out_col)], out_col[seq_len(window_args$after)])
         })
       } else {
         .data_group[, output_col_names] <- roll_output
