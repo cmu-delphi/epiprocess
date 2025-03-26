@@ -62,7 +62,8 @@ epi_slide_opt_archive_one_epikey <- function(
     if (before == Inf) {
       if (after != 0) {
         cli_abort('.window_size = Inf is only supported with .align = "right"',
-                  class = "epiprocess__epi_slide_opt_archive__inf_window_invalid_align")
+          class = "epiprocess__epi_slide_opt_archive__inf_window_invalid_align"
+        )
       }
       # We need to use the entire input snapshot range, filling in time gaps. We
       # shouldn't pad the ends.
@@ -107,7 +108,8 @@ epi_slide_opt_archive_one_epikey <- function(
       }
     } else {
       cli_abort("epiprocess internal error: `f_from_package` was {format_chr_deparse(f_from_package)}",
-                class = "epiprocess__epi_slide_opt_archive__f_from_package_invalid")
+        class = "epiprocess__epi_slide_opt_archive__f_from_package_invalid"
+      )
     }
     rows_should_keep <-
       if (before == Inf) {
@@ -179,11 +181,13 @@ epi_slide_opt.epi_archive <-
     window_args <- get_before_after_from_window(.window_size, .align, time_type)
     if (!is.null(.ref_time_values)) {
       cli_abort("epi_slide.epi_archive does not support the `.ref_time_values` argument",
-                class = "epiprocess__epi_slide_opt_archive__ref_time_values_unsupported")
+        class = "epiprocess__epi_slide_opt_archive__ref_time_values_unsupported"
+      )
     }
     if (!identical(.all_rows, FALSE)) {
       cli_abort("epi_slide.epi_archive does not support the `.all_rows` argument",
-                class = "epiprocess__epi_slide_opt_archive__all_rows_unsupported")
+        class = "epiprocess__epi_slide_opt_archive__all_rows_unsupported"
+      )
     }
     assert(
       checkmate::check_logical(.progress, any.missing = FALSE, len = 1L, names = "unnamed"),

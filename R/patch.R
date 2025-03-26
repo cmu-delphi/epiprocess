@@ -209,18 +209,21 @@ tbl_diff2 <- function(earlier_snapshot, later_tbl,
   # use faster validation variants:
   if (!is_tibble(later_tbl)) {
     cli_abort("`later_tbl` must be a tibble",
-              class = "epiprocess__tbl_diff2__later_tbl_invalid")
+      class = "epiprocess__tbl_diff2__later_tbl_invalid"
+    )
   }
   if (is.null(earlier_snapshot)) {
     return(later_tbl)
   }
   if (!is_tibble(earlier_snapshot)) {
     cli_abort("`earlier_snapshot` must be a tibble or `NULL`",
-              class = "epiprocess__tbl_diff2__earlier_tbl_class_invalid")
+      class = "epiprocess__tbl_diff2__earlier_tbl_class_invalid"
+    )
   }
   if (!is.character(ukey_names) || !all(ukey_names %in% names(earlier_snapshot))) {
     cli_abort("`ukey_names` must be a subset of column names",
-              class = "epiprocess__tbl_diff2__ukey_names_class_invalid")
+      class = "epiprocess__tbl_diff2__ukey_names_class_invalid"
+    )
   }
   later_format <- arg_match0(later_format, c("snapshot", "update"))
   if (!(is.vector(compactify_abs_tol, mode = "numeric") &&
@@ -230,7 +233,8 @@ tbl_diff2 <- function(earlier_snapshot, later_tbl,
     assert_numeric(compactify_abs_tol, lower = 0, any.missing = FALSE, len = 1L)
     # Fallback e.g. for invalid classes not caught by assert_numeric:
     cli_abort("`compactify_abs_tol` must be a length-1 double/integer >= 0",
-              class = "epiprocess__tbl_diff2__compactify_abs_tol_invalid")
+      class = "epiprocess__tbl_diff2__compactify_abs_tol_invalid"
+    )
   }
 
   # Extract metadata:
@@ -335,25 +339,28 @@ tbl_patch <- function(snapshot, update, ukey_names) {
   # variants:
   if (!is_tibble(update)) {
     cli_abort("`update` must be a tibble",
-              class = "epiprocess__tbl_patch__update_class_invalid")
+      class = "epiprocess__tbl_patch__update_class_invalid"
+    )
   }
   if (is.null(snapshot)) {
     return(update)
   }
   if (!is_tibble(snapshot)) {
     cli_abort("`snapshot` must be a tibble",
-              class = "epiprocess__tbl_patch__snapshot_class_invalid")
+      class = "epiprocess__tbl_patch__snapshot_class_invalid"
+    )
   }
   if (!is.character(ukey_names) || !all(ukey_names %in% names(snapshot))) {
     cli_abort("`ukey_names` must be a subset of column names",
-              class = "epiprocess__tbl_patch__ukey_names_invalid")
+      class = "epiprocess__tbl_patch__ukey_names_invalid"
+    )
   }
   if (!identical(names(snapshot), names(update))) {
     cli_abort(c("`snapshot` and `update` should have identical column
                  names and ordering.",
       "*" = "`snapshot` colnames: {format_chr_deparse(tbl_names)}",
       "*" = "`update` colnames: {format_chr_deparse(names(update))}"
-      ), class = "epiprocess__tbl_patch__tbl_names_invalid")
+    ), class = "epiprocess__tbl_patch__tbl_names_invalid")
   }
 
   result_tbl <- vec_rbind(update, snapshot)
