@@ -102,7 +102,12 @@ vec_approx_equal <- function(vec1, vec2, na_equal, .ptype = NULL, ..., abs_tol, 
   } else {
     inds2 <- vec_recycle(inds2, common_size)
   }
-  vecs <- vec_cast_common(vec1, vec2, .to = .ptype)
+  if (!identical(vec_ptype(vec1), vec_ptype(vec2)) || !is.null(.ptype)) {
+    # perf: this is slow, so try to avoid it if it's not needed
+    vecs <- vec_cast_common(vec1, vec2, .to = .ptype)
+  } else {
+    vecs <- list(vec1, vec2)
+  }
   vec_approx_equal0(vecs[[1]], vecs[[2]], na_equal, abs_tol, inds1, inds2)
 }
 
@@ -174,7 +179,9 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
     if (!is.null(inds2)) {
       vec2 <- vec_slice(vec2, inds2)
     }
-    res <- vec_equal(vec1, vec2, na_equal = na_equal)
+    # perf: vec1 and vec2 have already been cast to a common ptype; we can't
+    # disable casts, but can say to cast (again...) to that ptype
+    res <- vec_equal(vec1, vec2, na_equal = na_equal, vec_ptype(vec1))
     return(res)
   }
 }
