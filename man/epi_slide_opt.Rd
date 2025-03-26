@@ -140,7 +140,7 @@ cumulative/"running" means&sums, or other operations supported by
 \itemize{
 \item On \code{epi_df}s, it will take care of looping over \code{geo_value}s, temporarily
 filling in time gaps with \code{NA}s and other work needed to ensure there are
-exactly n consecutive time steps per computation, and has some other
+exactly \code{n} consecutive time steps per computation, and has some other
 convenience features. See \code{vignette("epi_df")} for more examples.
 \item On \code{epi_archive}s, it will calculate the version history for these slide
 computations and combine it with the version history for the rest of the
