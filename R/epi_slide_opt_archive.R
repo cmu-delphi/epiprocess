@@ -88,19 +88,19 @@ epi_slide_opt_archive_one_epikey <- function(
     slide <- inp_snapshot[slide_inp_backrefs, ]
     slide$time_value <- slide_time_values
     if (f_from_package == "data.table") {
-      for (col_i in seq_along(in_colnames)) {
-        if (before == Inf) {
-          slide[[out_colnames[[col_i]]]] <-
-            f_dots_baked(slide[[in_colnames[[col_i]]]], seq_len(slide_nrow), adaptive = TRUE)
-        } else {
-          out_col <- f_dots_baked(slide[[in_colnames[[col_i]]]], before + after + 1L)
-          if (after != 0L) {
-            # data.table always puts NAs at tails, even with na.rm = TRUE; chop
-            # off extra NAs from beginning and place missing NAs at end:
-            out_col <- c(out_col[seq(after + 1L, slide_nrow)], rep(NA, after))
-          }
-          slide[[out_colnames[[col_i]]]] <- out_col
+      if (before == Inf) {
+        slide[, out_colnames] <-
+          f_dots_baked(slide[, in_colnames], seq_len(slide_nrow), adaptive = TRUE)
+      } else {
+        out_cols <- f_dots_baked(slide[, in_colnames], before + after + 1L)
+        if (after != 0L) {
+          # data.table always puts NAs at tails, even with na.rm = TRUE; chop
+          # off extra NAs from beginning and place missing NAs at end:
+          out_cols <- purrr::map(out_cols, function(.x) {
+            c(.x[seq(after + 1L, slide_nrow)], rep(NA, after))
+          })
         }
+        slide[, out_colnames] <- out_cols
       }
     } else if (f_from_package == "slider") {
       for (col_i in seq_along(in_colnames)) {
