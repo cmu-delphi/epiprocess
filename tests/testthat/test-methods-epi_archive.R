@@ -128,3 +128,40 @@ test_that("group_vars works as expected", {
     "geo_value"
   )
 })
+
+test_that("epix_as_of_now works as expected", {
+  expect_equal(
+    attr(ea2_data %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
+    as.Date("2020-06-04")
+  )
+  time_value <- as.Date("2020-06-01")
+  df <- dplyr::tribble(
+    ~geo_value, ~time_value, ~version, ~cases,
+    "ca", time_value, time_value, 1,
+    "ca", time_value + 7, time_value + 7, 2,
+  )
+  expect_equal(
+    attr(df %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
+    as.Date("2020-06-08")
+  )
+  time_value <- tsibble::yearmonth(as.Date("2020-06-01") - lubridate::month(1))
+  df <- dplyr::tribble(
+    ~geo_value, ~time_value, ~version, ~cases,
+    "ca", time_value, time_value, 1,
+    "ca", time_value + lubridate::month(1), time_value + lubridate::month(1), 2,
+  )
+  expect_equal(
+    attr(df %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
+    tsibble::yearmonth("2020-06")
+  )
+  time_value <- 2020
+  df <- dplyr::tribble(
+    ~geo_value, ~time_value, ~version, ~cases,
+    "ca", time_value, time_value, 1,
+    "ca", time_value + 7, time_value + 7, 2,
+  )
+  expect_equal(
+    attr(df %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
+    2027
+  )
+})

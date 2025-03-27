@@ -1108,7 +1108,7 @@ epi_slide_sum <- function(
 #' `before` and `after` args are assumed to have been validated by the calling
 #' function (using `validate_slide_window_arg`).
 #'
-#' @importFrom checkmate assert_function
+#' @importFrom checkmate assert_function anyInfinite
 #' @keywords internal
 full_date_seq <- function(x, before, after, time_type) {
   if (!time_type %in% c("day", "week", "yearmonth", "integer")) {
@@ -1126,7 +1126,7 @@ full_date_seq <- function(x, before, after, time_type) {
   if (time_type %in% c("yearmonth", "integer")) {
     all_dates <- seq(min(x$time_value), max(x$time_value), by = 1L)
 
-    if (before != 0 && before != Inf) {
+    if (before != 0 && !anyInfinite(before)) {
       pad_early_dates <- all_dates[1L] - before:1
     }
     if (after != 0) {
@@ -1139,7 +1139,7 @@ full_date_seq <- function(x, before, after, time_type) {
     )
 
     all_dates <- seq(min(x$time_value), max(x$time_value), by = by)
-    if (before != 0 && before != Inf) {
+    if (before != 0 && !anyInfinite(before)) {
       # The behavior is analogous to the branch with tsibble types above. For
       # more detail, note that the function `seq.Date(from, ..., length.out =
       # n)` returns `from + 0:n`. Since we want `from + 1:n`, we drop the first
