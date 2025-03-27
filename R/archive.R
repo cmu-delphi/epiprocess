@@ -808,3 +808,16 @@ clone.epi_archive <- function(x) {
   x$DT <- data.table::copy(x$DT)
   x
 }
+
+#' Test for `epi_archive` format
+#'
+#' @param x An object.
+#' @return * Of `is_epi_archive`: `TRUE` if the object inherits from `epi_archive`,
+#'           otherwise `FALSE`.
+#'
+#' @rdname epi_archive
+#' @order 1
+#' @export
+is_epi_archive <- function(x) {
+  inherits(x, "epi_archive")
+}
