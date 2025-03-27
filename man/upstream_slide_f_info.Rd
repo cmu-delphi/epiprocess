@@ -4,11 +4,14 @@
 \alias{upstream_slide_f_info}
 \title{Validate & get information about an upstream slide function}
 \usage{
-upstream_slide_f_info(.f)
+upstream_slide_f_info(.f, ...)
 }
 \arguments{
 \item{.f}{function such as \code{data.table::frollmean} or \code{slider::slide_mean};
 must appear in \code{\link{upstream_slide_f_possibilities}}}
+
+\item{...}{additional configuration args to \code{.f} (besides the data and window
+size&alignment); used to validate \code{.f} is used in a supported way}
 }
 \value{
 named list with two elements: \code{from_package}, a string containing the
