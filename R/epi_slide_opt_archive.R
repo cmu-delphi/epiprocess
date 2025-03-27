@@ -94,10 +94,11 @@ epi_slide_opt_archive_one_epikey <- function(
       } else {
         out_cols <- f_dots_baked(slide[, in_colnames], before + after + 1L)
         if (after != 0L) {
-          # data.table always puts `fill` arg (default NA) at the tails, even
-          # with na.rm = TRUE; chop off extra from beginning and place at end:
+          # Shift an appropriate amount of NA padding from the start to the end.
+          # (This padding will later be cut off when we filter down to the
+          # original time_values.)
           out_cols <- lapply(out_cols, function(out_col) {
-            c(out_col[(after + 1L):length(out_col)], out_col[seq_len(after)])
+            c(out_col[(after + 1L):length(out_col)], rep(NA, after))
           })
         }
         slide[, out_colnames] <- out_cols

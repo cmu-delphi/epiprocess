@@ -483,9 +483,10 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
       }
       if (window_args$after >= 1) {
         .data_group[, output_col_names] <- lapply(roll_output, function(out_col) {
-          # data.table always puts `fill` arg (default NA) at the tails, even
-          # with na.rm = TRUE; chop off extra from beginning and place at end:
-          c(out_col[(window_args$after + 1L):length(out_col)], out_col[seq_len(window_args$after)])
+          # Shift an appropriate amount of NA padding from the start to the end.
+          # (This padding will later be cut off when we filter down to the
+          # original time_values.)
+          c(out_col[(window_args$after + 1L):length(out_col)], rep(NA, window_args$after))
         })
       } else {
         .data_group[, output_col_names] <- roll_output
