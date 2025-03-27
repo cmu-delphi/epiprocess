@@ -938,7 +938,7 @@ test_that("epi_slide* output grouping matches input grouping", {
   )
 })
 
-test_that('`epi_slide_opt .align != "right"` respects `fill` arg', {
+test_that('`epi_slide_opt .align != "right"` errors on `fill` arg', {
   test_date <- as.Date("2020-01-01")
   toy_edf <- tibble(
     geo_value = 1,
@@ -947,16 +947,9 @@ test_that('`epi_slide_opt .align != "right"` respects `fill` arg', {
   ) %>%
     as_epi_df(as_of = test_date + 10)
 
-  result <- toy_edf %>%
-    epi_slide_opt(value, frollmean, .window_size = 3, .align = "left", fill = -1000)
-
-  expected <- tibble(
-    geo_value = 1,
-    time_value = as.Date("2020-01-01") - 1 + 1:5,
-    value = c(1:3, NA, 5),
-    value_3dlav = c(2, NA, NA, -1000, -1000)
-  ) %>%
-    as_epi_df(as_of = test_date + 10)
-
-  expect_equal(result, expected)
+  expect_error(
+    toy_edf %>%
+      epi_slide_opt(value, frollmean, .window_size = 3, .align = "left", fill = -1000),
+    class = "epiprocess__epi_slide_opt__fill_unsupported"
+  )
 })

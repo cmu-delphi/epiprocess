@@ -21,6 +21,8 @@ upstream_slide_f_possibilities <- tibble::tribble(
 #'
 #' @param .f function such as `data.table::frollmean` or `slider::slide_mean`;
 #'   must appear in [`upstream_slide_f_possibilities`]
+#' @param ... additional configuration args to `.f` (besides the data and window
+#'   size&alignment); used to validate `.f` is used in a supported way
 #' @return named list with two elements: `from_package`, a string containing the
 #'   upstream package name ("data.table" or "slider"), and `namer`, a function
 #'   that takes a column to call `.f` on and outputs a basic name or
@@ -28,7 +30,7 @@ upstream_slide_f_possibilities <- tibble::tribble(
 #'   (e.g., "sum", "av", "count").
 #'
 #' @keywords internal
-upstream_slide_f_info <- function(.f) {
+upstream_slide_f_info <- function(.f, ...) {
   assert_function(.f)
 
   # Check that slide function `.f` is one of those short-listed from
@@ -59,6 +61,12 @@ upstream_slide_f_info <- function(.f) {
                reprex::reprex to provide a minimal reproducible example.')
   }
   f_from_package <- f_info_row$package
+  if (f_from_package == "data.table" && "fill" %in% names(rlang::call_match(dots_expand = FALSE)[["..."]])) {
+    cli_abort("`epi_slide_opt` does not support `data.table::froll*()` with a
+               custom `fill =` arg",
+      class = "epiprocess__epi_slide_opt__fill_unsupported"
+    )
+  }
   list(
     from_package = f_from_package,
     namer = unwrap(f_info_row$namer)
@@ -384,7 +392,7 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
 
   # Validate/process .col_names, .f:
   col_names_quo <- enquo(.col_names)
-  f_info <- upstream_slide_f_info(.f)
+  f_info <- upstream_slide_f_info(.f, ...)
   f_from_package <- f_info$from_package
 
   # Validate/process .ref_time_values:

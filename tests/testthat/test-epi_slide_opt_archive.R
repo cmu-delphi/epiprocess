@@ -211,19 +211,9 @@ test_that("epi_slide_opt.epi_archive gives expected results on example data; als
 
   expect_equal(archive_cases_dv_subset_result, archive_cases_dv_subset_expected)
 
-  archive_cases_dv_subset_time_opt2 <- system.time(
-    archive_cases_dv_subset_result2 <- archive_cases_dv_subset %>%
-      epi_slide_opt(percent_cli, frollmean, .window_size = 7, .align = "left", fill = -1000)
+  expect_error(
+    archive_cases_dv_subset %>%
+      epi_slide_opt(percent_cli, frollmean, .window_size = 7, .align = "left", fill = -1000),
+    class = "epiprocess__epi_slide_opt__fill_unsupported"
   )
-
-  archive_cases_dv_subset_time_gen2 <- system.time(
-    archive_cases_dv_subset_expected2 <- archive_cases_dv_subset %>%
-      epix_slide(
-        ~ .x %>% epi_slide_opt(percent_cli, frollmean, .window_size = 7, .align = "left", fill = -1000)
-      ) %>%
-      select(geo_value, time_value, version, everything()) %>%
-      as_epi_archive()
-  )
-
-  expect_equal(archive_cases_dv_subset_result2, archive_cases_dv_subset_expected2)
 })

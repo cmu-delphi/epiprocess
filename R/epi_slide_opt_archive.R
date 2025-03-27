@@ -164,7 +164,7 @@ epi_slide_opt.epi_archive <-
     epikey_names <- key_colnames(.x, exclude = c("time_value", "version"))
     # Validation & pre-processing:
     .align <- arg_match(.align)
-    .f_info <- upstream_slide_f_info(.f)
+    .f_info <- upstream_slide_f_info(.f, ...)
     .f_dots_baked <-
       if (rlang::dots_n(...) == 0L) {
         # Leaving `.f` unchanged slightly improves computation speed and trims
