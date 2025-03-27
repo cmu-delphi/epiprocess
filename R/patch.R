@@ -245,8 +245,9 @@ tbl_diff2 <- function(earlier_snapshot, later_tbl,
 
   # More input validation:
   if (!identical(tbl_names, names(later_tbl))) {
-    cli_abort(c("`earlier_snapshot` and `later_tbl` should have identical column
-                 names and ordering.",
+    cli_abort(c(
+      "`earlier_snapshot` and `later_tbl` should have identical column
+       names and ordering.",
       "*" = "`earlier_snapshot` colnames: {format_chr_deparse(tbl_names)}",
       "*" = "`later_tbl` colnames: {format_chr_deparse(names(later_tbl))}"
     ), class = "epiprocess__tbl_diff2__tbl_names_differ")
@@ -356,8 +357,9 @@ tbl_patch <- function(snapshot, update, ukey_names) {
     )
   }
   if (!identical(names(snapshot), names(update))) {
-    cli_abort(c("`snapshot` and `update` should have identical column
-                 names and ordering.",
+    cli_abort(c(
+      "`snapshot` and `update` should have identical column
+       names and ordering.",
       "*" = "`snapshot` colnames: {format_chr_deparse(tbl_names)}",
       "*" = "`update` colnames: {format_chr_deparse(names(update))}"
     ), class = "epiprocess__tbl_patch__tbl_names_invalid")
