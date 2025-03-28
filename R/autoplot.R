@@ -64,7 +64,8 @@ autoplot.epi_df <- function(
     .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
     .base_color = "#3A448F",
     .facet_filter = NULL,
-    .max_facets = deprecated()) {
+    .max_facets = deprecated()
+) {
   .color_by <- rlang::arg_match(.color_by)
   .facet_by <- rlang::arg_match(.facet_by)
   .facet_filter <- rlang::enquo(.facet_filter)
