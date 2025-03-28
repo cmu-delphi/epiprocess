@@ -16,9 +16,9 @@
 #'   * `none` - no coloring aesthetic is applied
 #' @param .facet_by Similar to `.color_by` except that the default is to display
 #'   each numeric variable on a separate facet
-#' @param .base_color Lines will be shown with this color. For example, with a
-#'   single numeric variable and faceting by `geo_value`, all locations would
-#'   share the same color line.
+#' @param .base_color Lines will be shown with this color if `.color_by == "none"`.
+#'  For example, with a single numeric variable and faceting by `geo_value`, all 
+#'  locations would share the same color line.
 #' @param .max_facets `r lifecycle::badge("deprecated")`
 #' @param .facet_filter Select which facets will be displayed. Especially
 #'   useful for when there are many `geo_value`'s or keys. This is a 
@@ -68,7 +68,7 @@ autoplot.epi_df <- function(
 ) {
   .color_by <- rlang::arg_match(.color_by)
   .facet_by <- rlang::arg_match(.facet_by)
-  .facet_filter <- rlang::enquo(.facet_filter)
+  if (!rlang::is_quosure(.facet_filter)) .facet_filter <- rlang::enquo(.facet_filter)
 
   if (lifecycle::is_present(.max_facets)) {
     lifecycle::deprecate_warn(
@@ -84,44 +84,14 @@ autoplot.epi_df <- function(
   geo_and_other_keys <- key_colnames(object, exclude = "time_value")
 
   # --- check for numeric variables
-  allowed <- purrr::map_lgl(object[non_key_cols], is.numeric)
-  allowed <- allowed[allowed]
-  if (length(allowed) == 0 && rlang::dots_n(...) == 0L) {
-    cli::cli_abort("No numeric variables were available to plot automatically.",
-      class = "epiprocess__no_numeric_vars_available"
-    )
-  }
-  vars <- tidyselect::eval_select(rlang::expr(c(...)), object)
-  if (rlang::is_empty(vars)) { # find them automatically if unspecified
-    vars <- tidyselect::eval_select(names(allowed)[1], object)
-    cli::cli_warn(
-      "Plot variable was unspecified. Automatically selecting {.var {names(allowed)[1]}}.",
-      class = "epiprocess__unspecified_plot_var"
-    )
-  } else { # if variables were specified, ensure that they are numeric
-    ok <- names(vars) %in% names(allowed)
-    if (!any(ok)) {
-      cli::cli_abort(
-        "None of the requested variables {.var {names(vars)}} are numeric.",
-        class = "epiprocess__all_requested_vars_not_numeric"
-      )
-    } else if (!all(ok)) {
-      cli::cli_warn(
-        c(
-          "Only the requested variables {.var {names(vars)[ok]}} are numeric.",
-          i = "`autoplot()` cannot display {.var {names(vars)[!ok]}}."
-        ),
-        class = "epiprocess__some_requested_vars_not_numeric"
-      )
-      vars <- vars[ok]
-    }
-  }
+  vars <- autoplot_check_viable_response_vars(object, ..., non_key_cols = non_key_cols)
+  nvars <- length(vars)
 
   # --- create a viable df to plot
   pos <- tidyselect::eval_select(
     rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), names(vars))), object
   )
-  if (length(vars) > 1) {
+  if (nvars > 1) {
     object <- tidyr::pivot_longer(
       object[pos], tidyselect::all_of(names(vars)),
       values_to = ".response",
@@ -132,22 +102,25 @@ autoplot.epi_df <- function(
   }
   all_keys <- rlang::syms(as.list(geo_and_other_keys))
   other_keys <- rlang::syms(as.list(setdiff(geo_and_other_keys, "geo_value")))
-  all_avail <- rlang::syms(as.list(c(geo_and_other_keys, ".response_name")))
+  all_avail <- rlang::syms(as.list(c(
+    geo_and_other_keys, 
+    if (nvars > 1) ".response_name" else NULL
+  )))
 
   object <- object %>%
     dplyr::mutate(
       .colours = switch(.color_by,
-        all_keys = interaction(!!!all_keys, sep = "/"),
+        all_keys = interaction(!!!all_keys, sep = " / "),
         geo_value = .data$geo_value,
-        other_keys = interaction(!!!other_keys, sep = "/"),
-        all = interaction(!!!all_avail, sep = "/"),
+        other_keys = interaction(!!!other_keys, sep = " / "),
+        all = interaction(!!!all_avail, sep = " / "),
         NULL
       ),
       .facets = switch(.facet_by,
-        all_keys = interaction(!!!all_keys, sep = "/"),
+        all_keys = interaction(!!!all_keys, sep = " / "),
         geo_value = as.factor(.data$geo_value),
-        other_keys = interaction(!!!other_keys, sep = "/"),
-        all = interaction(!!!all_avail, sep = "/"),
+        other_keys = interaction(!!!other_keys, sep = " / "),
+        all = interaction(!!!all_avail, sep = " / "),
         NULL
       )
     )
@@ -191,4 +164,129 @@ autoplot.epi_df <- function(
     p <- p + ggplot2::ylab(names(vars))
   }
   p
+}
+
+autoplot_check_viable_response_vars <- function(
+    object, ..., non_key_cols, call = caller_env()
+) {
+  allowed <- purrr::map_lgl(object[non_key_cols], is.numeric)
+  allowed <- allowed[allowed]
+  if (length(allowed) == 0 && rlang::dots_n(...) == 0L) {
+    cli::cli_abort("No numeric variables were available to plot automatically.",
+                   class = "epiprocess__no_numeric_vars_available",
+                   call = call
+    )
+  }
+  vars <- tidyselect::eval_select(rlang::expr(c(...)), object)
+  if (rlang::is_empty(vars)) { # find them automatically if unspecified
+    vars <- tidyselect::eval_select(names(allowed)[1], object)
+    cli::cli_warn(
+      "Plot variable was unspecified. Automatically selecting {.var {names(allowed)[1]}}.",
+      class = "epiprocess__unspecified_plot_var",
+      call = call
+    )
+  } else { # if variables were specified, ensure that they are numeric
+    ok <- names(vars) %in% names(allowed)
+    if (!any(ok)) {
+      cli::cli_abort(
+        "None of the requested variables {.var {names(vars)}} are numeric.",
+        class = "epiprocess__all_requested_vars_not_numeric",
+        call = call
+      )
+    } else if (!all(ok)) {
+      cli::cli_warn(
+        c(
+          "Only the requested variables {.var {names(vars)[ok]}} are numeric.",
+          i = "`autoplot()` cannot display {.var {names(vars)[!ok]}}."
+        ),
+        class = "epiprocess__some_requested_vars_not_numeric",
+        call = call
+      )
+      vars <- vars[ok]
+    }
+  }
+  vars
+}
+
+
+
+autoplot.epi_archive <- function(object, ..., 
+                                 .base_color = "black",
+                                 .versions = NULL,
+                                 .facet_filter = NULL) {
+  .facet_filter <- rlang::enquo(.facet_filter)
+  time_type <- object$time_type
+  if (time_type == "custom") {
+    cli_abort(
+      "This `epi_archive` has custom `time_type`. This is currently unsupported.",
+      class = "epiprocess__autoplot_archive_custom_time_type"
+    )
+  }
+  
+  max_version <- max(object$DT$version)
+  min_version <- min(object$DT$version)
+  
+  tt_lookup <- c("day" = "day", "week" = "week", "yearmonth" = "month")
+  .versions <- .versions %||% ifelse(time_type == "integer", 1L, unname(tt_lookup[time_type]))
+  if (is.character(.versions) || .versions == 1L) {
+    .versions <- seq(min_version, max_version - 1, by = .versions)
+  } else if (is(.versions, "Date") || is.numeric(.versions)) {
+    .versions <- .versions[.versions >= min_version & .versions <= max_version]
+  } else {
+    cli_abort(
+      "Requested `.versions` don't appear to match the available `time_type`.",
+      class = "epiprocess__autoplot_archive_bad_versions"
+    )
+  }
+  
+  
+  finalized <- epix_as_of(object, max_version)
+  key_cols <- key_colnames(finalized)
+  non_key_cols <- setdiff(names(finalized), key_cols)
+  vars <- autoplot_check_viable_response_vars(finalized, ..., non_key_cols = non_key_cols)
+  nvars <- length(vars)
+  
+  bp <- autoplot(
+    finalized, ..., .base_color = .base_color, .facet_by = "all", 
+    .facet_filter = .facet_filter, .color_by = "none"
+  )
+  geo_and_other_keys <- key_colnames(object, exclude = c("time_value", "version"))
+  all_avail <- rlang::syms(as.list(c(
+    geo_and_other_keys, 
+    if (nvars > 1) ".response_name" else NULL
+  )))
+  
+  snapshots <- purrr::map(
+    .versions,
+    function(v) {dplyr::mutate(epix_as_of(object, v), version = v)}
+  ) %>%
+    purrr::list_rbind() %>%
+    dplyr::mutate(.facets = interaction(!!!all_avail, sep = " / "))
+  
+  if (nvars > 1) {
+    snapshots <- tidyr::pivot_longer(
+      snapshots, tidyselect::all_of(names(vars)),
+      values_to = ".response",
+      names_to = ".response_name"
+    )
+  } else {
+    snapshots <- dplyr::rename(snapshots, .response := !!names(vars)) # nolint: object_usage_linter
+  }
+  snapshots <- dplyr::filter(snapshots, !is.na(.response))
+  
+  bp <- bp + 
+    ggplot2::geom_line(
+      data = snapshots, 
+      mapping = ggplot2::aes(y = .response, color = version, group = factor(version))
+    )
+  
+  if (is(.versions, "Date")) {
+    bp <- bp + ggplot2::scale_color_viridis_c(name = "Version", trans = "date")
+  } else {
+    bp <- bp + ggplot2::scale_color_viridis_c(name = "Version")
+  }
+  
+  # make the finalized layer last
+  bp$layers <- rev(bp$layers)
+  bp
 }
