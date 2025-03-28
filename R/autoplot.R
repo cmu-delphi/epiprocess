@@ -19,8 +19,17 @@
 #' @param .base_color Lines will be shown with this color. For example, with a
 #'   single numeric variable and faceting by `geo_value`, all locations would
 #'   share the same color line.
-#' @param .max_facets Cut down of the number of facets displayed. Especially
-#'   useful for testing when there are many `geo_value`'s or keys.
+#' @param .max_facets `r lifecycle::badge("deprecated")`
+#' @param .facet_filter Select which facets will be displayed. Especially
+#'   useful for when there are many `geo_value`'s or keys. This is a 
+#'   <[`rlang`][args_data_masking]> expression along the lines of `[dplyr::filter()]`.
+#'   However, it must be a single expression combined with the `&` operator. This
+#'   contrasts to the typical use case which allows multiple comma-separated expressions
+#'   which are implicitly combined with `&`. When multiple variables are selected
+#'   with `...`, their names can be filtered in combination with other factors
+#'   by using `.response_name`. See the examples below.
+#'   
+#'   
 #'
 #' @return A ggplot object
 #' @export
@@ -41,16 +50,33 @@
 #' autoplot(cases_deaths_subset, case_rate_7d_av,
 #'   .base_color = "red", .facet_by = "geo_value"
 #' )
+#' 
+#' # filter to only some facets, must be explicitly combined
+#' autoplot(cases_deaths_subset, cases, death_rate_7d_av,
+#'   .facet_by = "all", 
+#'   .facet_filter = (.response_name == "cases" & geo_value %in% c("tx", "pa")) |
+#'     (.response_name == "death_rate_7d_av" & 
+#'       geo_value %in% c("ca", "fl", "ga", "ny"))
+#' )
 autoplot.epi_df <- function(
     object, ...,
     .color_by = c("all_keys", "geo_value", "other_keys", ".response", "all", "none"),
     .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
     .base_color = "#3A448F",
-    .max_facets = Inf) {
+    .facet_filter = NULL,
+    .max_facets = deprecated()
+) {
   .color_by <- rlang::arg_match(.color_by)
   .facet_by <- rlang::arg_match(.facet_by)
+  .facet_filter <- rlang::enquo(.facet_filter)
 
-  assert(anyInfinite(.max_facets), checkInt(.max_facets), combine = "or")
+  if (lifecycle::is_present(.max_facets)) {
+    lifecycle::deprecate_warn(
+      "0.11.1", 
+      "autoplot.epi_df(.max_facets = )", 
+      "autoplot.epi_df(.facet_filter = )"
+    )
+  }
   assert_character(.base_color, len = 1)
 
   key_cols <- key_colnames(object)
@@ -126,15 +152,11 @@ autoplot.epi_df <- function(
       )
     )
 
-  if (.max_facets < Inf && ".facets" %in% names(object)) {
-    n_facets <- nlevels(object$.facets)
-    if (n_facets > .max_facets) {
-      top_n <- levels(as.factor(object$.facets))[seq_len(.max_facets)]
-      object <- dplyr::filter(object, .data$.facets %in% top_n) %>%
-        dplyr::mutate(.facets = droplevels(.data$.facets))
-      if (".colours" %in% names(object)) {
-        object <- dplyr::mutate(object, .colours = droplevels(.data$.colours))
-      }
+  if (!rlang::quo_is_null(.facet_filter) && ".facets" %in% names(object)) {
+    object <- dplyr::filter(object, !!.facet_filter) %>%
+      dplyr::mutate(.facets = droplevels(.data$.facets))
+    if (".colours" %in% names(object)) {
+      object <- dplyr::mutate(object, .colours = droplevels(.data$.colours))
     }
   }
 
