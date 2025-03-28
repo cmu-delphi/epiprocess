@@ -22,7 +22,7 @@
 #' @param .max_facets `r lifecycle::badge("deprecated")`
 #' @param .facet_filter Select which facets will be displayed. Especially
 #'   useful for when there are many `geo_value`'s or keys. This is a
-#'   <[`rlang`][args_data_masking]> expression along the lines of [dplyr::filter()].
+#'   <[`rlang`][args_data_masking]> expression along the lines of `[dplyr::filter()]`.
 #'   However, it must be a single expression combined with the `&` operator. This
 #'   contrasts to the typical use case which allows multiple comma-separated expressions
 #'   which are implicitly combined with `&`. When multiple variables are selected
@@ -64,7 +64,8 @@ autoplot.epi_df <- function(
     .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
     .base_color = "#3A448F",
     .facet_filter = NULL,
-    .max_facets = deprecated()) {
+    .max_facets = deprecated()
+) {
   .color_by <- rlang::arg_match(.color_by)
   .facet_by <- rlang::arg_match(.facet_by)
   .facet_filter <- rlang::enquo(.facet_filter)
