@@ -46,7 +46,7 @@ Imports:
     dplyr (>= 1.1.0),
     ggplot2,
     glue,
-    lifecycle (>= 1.0.1),
+    lifecycle,
     lubridate,
     magrittr,
     pkgconfig,
