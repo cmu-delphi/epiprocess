@@ -10,7 +10,8 @@
   .color_by = c("all_keys", "geo_value", "other_keys", ".response", "all", "none"),
   .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
   .base_color = "#3A448F",
-  .max_facets = Inf
+  .facet_filter = NULL,
+  .max_facets = deprecated()
 )
 }
 \arguments{
@@ -40,8 +41,16 @@ each numeric variable on a separate facet}
 single numeric variable and faceting by \code{geo_value}, all locations would
 share the same color line.}
 
-\item{.max_facets}{Cut down of the number of facets displayed. Especially
-useful for testing when there are many \code{geo_value}'s or keys.}
+\item{.facet_filter}{Select which facets will be displayed. Especially
+useful for when there are many \code{geo_value}'s or keys. This is a
+<\code{\link[=args_data_masking]{rlang}}> expression along the lines of \verb{[dplyr::filter()]}.
+However, it must be a single expression combined with the \code{&} operator. This
+contrasts to the typical use case which allows multiple comma-separated expressions
+which are implicitly combined with \code{&}. When multiple variables are selected
+with \code{...}, their names can be filtered in combination with other factors
+by using \code{.response_name}. See the examples below.}
+
+\item{.max_facets}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}}
 }
 \value{
 A ggplot object
@@ -64,5 +73,13 @@ autoplot(cases_deaths_subset, case_rate_7d_av,
 # .base_color specification won't have any effect due .color_by default
 autoplot(cases_deaths_subset, case_rate_7d_av,
   .base_color = "red", .facet_by = "geo_value"
+)
+
+# filter to only some facets, must be explicitly combined
+autoplot(cases_deaths_subset, cases, death_rate_7d_av,
+  .facet_by = "all", 
+  .facet_filter = (.response_name == "cases" & geo_value \%in\% c("tx", "pa")) |
+    (.response_name == "death_rate_7d_av" & 
+      geo_value \%in\% c("ca", "fl", "ga", "ny"))
 )
 }
