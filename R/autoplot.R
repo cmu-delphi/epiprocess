@@ -68,7 +68,7 @@ autoplot.epi_df <- function(
 ) {
   .color_by <- rlang::arg_match(.color_by)
   .facet_by <- rlang::arg_match(.facet_by)
-  .facet_filter <- rlang::enquo(.facet_filter)
+  if (!rlang::is_quosure(.facet_filter)) .facet_filter <- rlang::enquo(.facet_filter)
 
   if (lifecycle::is_present(.max_facets)) {
     lifecycle::deprecate_warn(
@@ -167,7 +167,8 @@ autoplot.epi_df <- function(
 }
 
 autoplot_check_viable_response_vars <- function(
-    object, ..., non_key_cols, call = caller_env()) {
+    object, ..., non_key_cols, call = caller_env()
+) {
   allowed <- purrr::map_lgl(object[non_key_cols], is.numeric)
   allowed <- allowed[allowed]
   if (length(allowed) == 0 && rlang::dots_n(...) == 0L) {
@@ -251,6 +252,7 @@ autoplot.epi_archive <- function(object, ...,
                                  .versions = NULL,
                                  .mark_versions = FALSE,
                                  .facet_filter = NULL) {
+  .facet_filter <- rlang::enquo(.facet_filter)
   time_type <- object$time_type
   checkmate::assert_logical(.mark_versions, len = 1L)
   if (time_type == "custom") {
