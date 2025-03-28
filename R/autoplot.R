@@ -21,15 +21,15 @@
 #'   share the same color line.
 #' @param .max_facets `r lifecycle::badge("deprecated")`
 #' @param .facet_filter Select which facets will be displayed. Especially
-#'   useful for when there are many `geo_value`'s or keys. This is a 
+#'   useful for when there are many `geo_value`'s or keys. This is a
 #'   <[`rlang`][args_data_masking]> expression along the lines of `[dplyr::filter()]`.
 #'   However, it must be a single expression combined with the `&` operator. This
 #'   contrasts to the typical use case which allows multiple comma-separated expressions
 #'   which are implicitly combined with `&`. When multiple variables are selected
 #'   with `...`, their names can be filtered in combination with other factors
 #'   by using `.response_name`. See the examples below.
-#'   
-#'   
+#'
+#'
 #'
 #' @return A ggplot object
 #' @export
@@ -50,12 +50,12 @@
 #' autoplot(cases_deaths_subset, case_rate_7d_av,
 #'   .base_color = "red", .facet_by = "geo_value"
 #' )
-#' 
+#'
 #' # filter to only some facets, must be explicitly combined
 #' autoplot(cases_deaths_subset, cases, death_rate_7d_av,
-#'   .facet_by = "all", 
+#'   .facet_by = "all",
 #'   .facet_filter = (.response_name == "cases" & geo_value %in% c("tx", "pa")) |
-#'     (.response_name == "death_rate_7d_av" & 
+#'     (.response_name == "death_rate_7d_av" &
 #'       geo_value %in% c("ca", "fl", "ga", "ny"))
 #' )
 autoplot.epi_df <- function(
@@ -64,16 +64,15 @@ autoplot.epi_df <- function(
     .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
     .base_color = "#3A448F",
     .facet_filter = NULL,
-    .max_facets = deprecated()
-) {
+    .max_facets = deprecated()) {
   .color_by <- rlang::arg_match(.color_by)
   .facet_by <- rlang::arg_match(.facet_by)
   .facet_filter <- rlang::enquo(.facet_filter)
 
   if (lifecycle::is_present(.max_facets)) {
     lifecycle::deprecate_warn(
-      "0.11.1", 
-      "autoplot.epi_df(.max_facets = )", 
+      "0.11.1",
+      "autoplot.epi_df(.max_facets = )",
       "autoplot.epi_df(.facet_filter = )"
     )
   }
