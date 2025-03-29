@@ -77,9 +77,9 @@ autoplot(cases_deaths_subset, case_rate_7d_av,
 
 # filter to only some facets, must be explicitly combined
 autoplot(cases_deaths_subset, cases, death_rate_7d_av,
-  .facet_by = "all", 
+  .facet_by = "all",
   .facet_filter = (.response_name == "cases" & geo_value \%in\% c("tx", "pa")) |
-    (.response_name == "death_rate_7d_av" & 
+    (.response_name == "death_rate_7d_av" &
       geo_value \%in\% c("ca", "fl", "ga", "ny"))
 )
 }
