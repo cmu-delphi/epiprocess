@@ -308,7 +308,7 @@ autoplot.epi_archive <- function(object, ...,
       mapping = ggplot2::aes(y = .response, color = version, group = factor(version))
     )
   
-  if (is(.versions, "Date")) {
+  if (methods::is(.versions, "Date")) {
     bp <- bp + ggplot2::scale_color_viridis_c(name = "Version", trans = "date")
   } else {
     bp <- bp + ggplot2::scale_color_viridis_c(name = "Version")
