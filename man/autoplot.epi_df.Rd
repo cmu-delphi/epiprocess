@@ -37,9 +37,9 @@ including the \code{geo_value}
 \item{.facet_by}{Similar to \code{.color_by} except that the default is to display
 each numeric variable on a separate facet}
 
-\item{.base_color}{Lines will be shown with this color. For example, with a
-single numeric variable and faceting by \code{geo_value}, all locations would
-share the same color line.}
+\item{.base_color}{Lines will be shown with this color if \code{.color_by == "none"}.
+For example, with a single numeric variable and faceting by \code{geo_value}, all
+locations would share the same color line.}
 
 \item{.facet_filter}{Select which facets will be displayed. Especially
 useful for when there are many \code{geo_value}'s or keys. This is a
@@ -53,7 +53,7 @@ by using \code{.response_name}. See the examples below.}
 \item{.max_facets}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}}
 }
 \value{
-A ggplot object
+A \link[ggplot2:ggplot]{ggplot2::ggplot} object
 }
 \description{
 Automatically plot an epi_df
