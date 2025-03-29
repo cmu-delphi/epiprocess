@@ -166,8 +166,7 @@ autoplot.epi_df <- function(
 }
 
 autoplot_check_viable_response_vars <- function(
-    object, ..., non_key_cols, call = caller_env()
-) {
+    object, ..., non_key_cols, call = caller_env()) {
   allowed <- purrr::map_lgl(object[non_key_cols], is.numeric)
   allowed <- allowed[allowed]
   if (length(allowed) == 0 && rlang::dots_n(...) == 0L) {
@@ -215,10 +214,10 @@ autoplot_check_viable_response_vars <- function(
 #' @inheritParams autoplot.epi_df
 #' @param .versions Select which versions will be displayed. By default, every
 #'   a separate line will be shown with the data as it would have appeared on
-#'   every day in the archive. This can sometimes become overwhelming. For 
+#'   every day in the archive. This can sometimes become overwhelming. For
 #'   example, daily data would display a line for what the data would have looked
-#'   like on every single day. To override this, you can select specific dates, 
-#'   by passing a vector of values here. Alternatively, a sequence can be 
+#'   like on every single day. To override this, you can select specific dates,
+#'   by passing a vector of values here. Alternatively, a sequence can be
 #'   automatically created by passing a string like `"2 weeks"` or `"month"`.
 #'   For time types where the `time_value` is a date object, any string that
 #'   is interpretable by `[base::seq.Date()]` is allowed.
