@@ -54,10 +54,12 @@ Automatically plot an epi_archive
 }
 \examples{
 autoplot(archive_cases_dv_subset, percent_cli, .versions = "week")
-autoplot(archive_cases_dv_subset_all_states, percent_cli, 
-  .versions = "week", 
+autoplot(archive_cases_dv_subset_all_states, percent_cli,
+  .versions = "week",
   .facet_filter = geo_value \%in\% c("or", "az", "vt", "ms")
 )
-autoplot(archive_cases_dv_subset, percent_cli, .versions = "month", 
-  .facet_filter = geo_value == "ca")
+autoplot(archive_cases_dv_subset, percent_cli,
+  .versions = "month",
+  .facet_filter = geo_value == "ca"
+)
 }
