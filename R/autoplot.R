@@ -68,7 +68,7 @@ autoplot.epi_df <- function(
 ) {
   .color_by <- rlang::arg_match(.color_by)
   .facet_by <- rlang::arg_match(.facet_by)
-  if (!rlang::is_quosure(.facet_filter)) .facet_filter <- rlang::enquo(.facet_filter)
+  .facet_filter <- rlang::enquo(.facet_filter)
 
   if (lifecycle::is_present(.max_facets)) {
     lifecycle::deprecate_warn(
@@ -216,10 +216,10 @@ autoplot_check_viable_response_vars <- function(
 #' @inheritParams autoplot.epi_df
 #' @param .versions Select which versions will be displayed. By default, every
 #'   a separate line will be shown with the data as it would have appeared on
-#'   every day in the archive. This can sometimes become overwhelming. For
+#'   every day in the archive. This can sometimes become overwhelming. For 
 #'   example, daily data would display a line for what the data would have looked
-#'   like on every single day. To override this, you can select specific dates,
-#'   by passing a vector of values here. Alternatively, a sequence can be
+#'   like on every single day. To override this, you can select specific dates, 
+#'   by passing a vector of values here. Alternatively, a sequence can be 
 #'   automatically created by passing a string like `"2 weeks"` or `"month"`.
 #'   For time types where the `time_value` is a date object, any string that
 #'   is interpretable by `[base::seq.Date()]` is allowed.
@@ -252,7 +252,6 @@ autoplot.epi_archive <- function(object, ...,
                                  .versions = NULL,
                                  .mark_versions = FALSE,
                                  .facet_filter = NULL) {
-  .facet_filter <- rlang::enquo(.facet_filter)
   time_type <- object$time_type
   checkmate::assert_logical(.mark_versions, len = 1L)
   if (time_type == "custom") {
