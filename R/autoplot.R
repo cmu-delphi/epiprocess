@@ -166,8 +166,7 @@ autoplot.epi_df <- function(
 }
 
 autoplot_check_viable_response_vars <- function(
-    object, ..., non_key_cols, call = caller_env()
-) {
+    object, ..., non_key_cols, call = caller_env()) {
   allowed <- purrr::map_lgl(object[non_key_cols], is.numeric)
   allowed <- allowed[allowed]
   if (length(allowed) == 0 && rlang::dots_n(...) == 0L) {
