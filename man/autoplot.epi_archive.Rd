@@ -32,14 +32,14 @@ like on every single day. To override this, you can select specific dates,
 by passing a vector of values here. Alternatively, a sequence can be
 automatically created by passing a string like \code{"2 weeks"} or \code{"month"}.
 For time types where the \code{time_value} is a date object, any string that
-is interpretable by \verb{[base::seq.Date()]} is allowed.
+is interpretable by \code{\link[=seq.Date]{seq.Date()}} is allowed.
 
 For \code{time_type = "integer"}, an integer larger than 1 will give a subset
 of versions.}
 
 \item{.facet_filter}{Select which facets will be displayed. Especially
 useful for when there are many \code{geo_value}'s or keys. This is a
-<\code{\link[=args_data_masking]{rlang}}> expression along the lines of \verb{[dplyr::filter()]}.
+<\code{\link[=args_data_masking]{rlang}}> expression along the lines of \code{\link[dplyr:filter]{dplyr::filter()}}.
 However, it must be a single expression combined with the \code{&} operator. This
 contrasts to the typical use case which allows multiple comma-separated expressions
 which are implicitly combined with \code{&}. When multiple variables are selected
@@ -58,4 +58,6 @@ autoplot(archive_cases_dv_subset_all_states, percent_cli,
   .versions = "week", 
   .facet_filter = geo_value \%in\% c("or", "az", "vt", "ms")
 )
+autoplot(archive_cases_dv_subset, percent_cli, .versions = "month", 
+  .facet_filter = geo_value == "ca")
 }

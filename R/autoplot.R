@@ -22,7 +22,7 @@
 #' @param .max_facets `r lifecycle::badge("deprecated")`
 #' @param .facet_filter Select which facets will be displayed. Especially
 #'   useful for when there are many `geo_value`'s or keys. This is a 
-#'   <[`rlang`][args_data_masking]> expression along the lines of `[dplyr::filter()]`.
+#'   <[`rlang`][args_data_masking]> expression along the lines of [dplyr::filter()].
 #'   However, it must be a single expression combined with the `&` operator. This
 #'   contrasts to the typical use case which allows multiple comma-separated expressions
 #'   which are implicitly combined with `&`. When multiple variables are selected
@@ -222,7 +222,7 @@ autoplot_check_viable_response_vars <- function(
 #'   by passing a vector of values here. Alternatively, a sequence can be 
 #'   automatically created by passing a string like `"2 weeks"` or `"month"`.
 #'   For time types where the `time_value` is a date object, any string that
-#'   is interpretable by `[base::seq.Date()]` is allowed.
+#'   is interpretable by [seq.Date()] is allowed.
 #'   
 #'   For `time_type = "integer"`, an integer larger than 1 will give a subset
 #'   of versions.
@@ -236,7 +236,8 @@ autoplot_check_viable_response_vars <- function(
 #'   .versions = "week", 
 #'   .facet_filter = geo_value %in% c("or", "az", "vt", "ms")
 #' )
-#' autoplot(archive_cases_dv_subset, percent_cli, .versions = "month", .facet_filter = geo_value == "ca")
+#' autoplot(archive_cases_dv_subset, percent_cli, .versions = "month", 
+#'   .facet_filter = geo_value == "ca")
 autoplot.epi_archive <- function(object, ..., 
                                  .base_color = "black",
                                  .versions = NULL,
