@@ -258,7 +258,7 @@ autoplot.epi_archive <- function(object, ...,
   if (is.character(.versions) || length(.versions) == 1L) {
     if (is.numeric(.versions)) .versions <- round(abs(.versions))
     .versions <- seq(min_version, max_version - 1, by = .versions)
-  } else if (is(.versions, "Date") || is.numeric(.versions)) {
+  } else if (methods::is(.versions, "Date") || is.numeric(.versions)) {
     .versions <- .versions[.versions >= min_version & .versions <= max_version]
   } else {
     cli_abort(

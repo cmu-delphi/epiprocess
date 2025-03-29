@@ -49,6 +49,7 @@ Imports:
     lifecycle,
     lubridate,
     magrittr,
+    methods,
     pkgconfig,
     purrr,
     rlang,
