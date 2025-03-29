@@ -74,6 +74,7 @@ reference:
       - print.epi_archive
       - clone
       - group_by.epi_archive
+      - autoplot.epi_archive
 
   - title: "`epi_archive` manipulation"
     desc: Functions operating on `epi_archive` objects.
