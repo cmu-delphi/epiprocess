@@ -32,7 +32,7 @@ like on every single day. To override this, you can select specific dates,
 by passing a vector of values here. Alternatively, a sequence can be
 automatically created by passing a string like \code{"2 weeks"} or \code{"month"}.
 For time types where the \code{time_value} is a date object, any string that
-is interpretable by \code{\link[=seq.Date]{seq.Date()}} is allowed.
+is interpretable by \verb{[base::seq.Date()]} is allowed.
 
 For \code{time_type = "integer"}, an integer larger than 1 will give a subset
 of versions.}

@@ -68,7 +68,7 @@ autoplot.epi_df <- function(
 ) {
   .color_by <- rlang::arg_match(.color_by)
   .facet_by <- rlang::arg_match(.facet_by)
-  if (!rlang::is_quosure(.facet_filter)) .facet_filter <- rlang::enquo(.facet_filter)
+  .facet_filter <- rlang::enquo(.facet_filter)
 
   if (lifecycle::is_present(.max_facets)) {
     lifecycle::deprecate_warn(
@@ -222,7 +222,7 @@ autoplot_check_viable_response_vars <- function(
 #'   by passing a vector of values here. Alternatively, a sequence can be
 #'   automatically created by passing a string like `"2 weeks"` or `"month"`.
 #'   For time types where the `time_value` is a date object, any string that
-#'   is interpretable by [seq.Date()] is allowed.
+#'   is interpretable by `[base::seq.Date()]` is allowed.
 #'
 #'   For `time_type = "integer"`, an integer larger than 1 will give a subset
 #'   of versions.
@@ -244,7 +244,6 @@ autoplot.epi_archive <- function(object, ...,
                                  .base_color = "black",
                                  .versions = NULL,
                                  .facet_filter = NULL) {
-  .facet_filter <- rlang::enquo(.facet_filter)
   time_type <- object$time_type
   if (time_type == "custom") {
     cli_abort(
