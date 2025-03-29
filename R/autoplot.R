@@ -31,7 +31,7 @@
 #'   
 #'   
 #'
-#' @return A ggplot object
+#' @return A [ggplot2::ggplot] object
 #' @export
 #'
 #' @examples
@@ -68,7 +68,7 @@ autoplot.epi_df <- function(
 ) {
   .color_by <- rlang::arg_match(.color_by)
   .facet_by <- rlang::arg_match(.facet_by)
-  if (!rlang::is_quosure(.facet_filter)) .facet_filter <- rlang::enquo(.facet_filter)
+  .facet_filter <- rlang::enquo(.facet_filter)
 
   if (lifecycle::is_present(.max_facets)) {
     lifecycle::deprecate_warn(
@@ -210,11 +210,37 @@ autoplot_check_viable_response_vars <- function(
 
 
 
+#' Automatically plot an epi_archive
+#'
+#' @param object An `epi_archive`
+#' @inheritParams autoplot.epi_df
+#' @param .versions Select which versions will be displayed. By default, every
+#'   a separate line will be shown with the data as it would have appeared on
+#'   every day in the archive. This can sometimes become overwhelming. For 
+#'   example, daily data would display a line for what the data would have looked
+#'   like on every single day. To override this, you can select specific dates, 
+#'   by passing a vector of values here. Alternatively, a sequence can be 
+#'   automatically created by passing a string like `"2 weeks"` or `"month"`.
+#'   For time types where the `time_value` is a date object, any string that
+#'   is interpretable by `[base::seq.Date()]` is allowed.
+#'   
+#'   For `time_type = "integer"`, an integer larger than 1 will give a subset
+#'   of versions.
+#'
+#' @return A [ggplot2::ggplot] object
+#' @export
+#'
+#' @examples
+#' autoplot(archive_cases_dv_subset, percent_cli, .versions = "week")
+#' autoplot(archive_cases_dv_subset_all_states, percent_cli, 
+#'   .versions = "week", 
+#'   .facet_filter = geo_value %in% c("or", "az", "vt", "ms")
+#' )
+#' autoplot(archive_cases_dv_subset, percent_cli, .versions = "month", .facet_filter = geo_value == "ca")
 autoplot.epi_archive <- function(object, ..., 
                                  .base_color = "black",
                                  .versions = NULL,
                                  .facet_filter = NULL) {
-  .facet_filter <- rlang::enquo(.facet_filter)
   time_type <- object$time_type
   if (time_type == "custom") {
     cli_abort(
@@ -228,7 +254,8 @@ autoplot.epi_archive <- function(object, ...,
   
   tt_lookup <- c("day" = "day", "week" = "week", "yearmonth" = "month")
   .versions <- .versions %||% ifelse(time_type == "integer", 1L, unname(tt_lookup[time_type]))
-  if (is.character(.versions) || .versions == 1L) {
+  if (is.character(.versions) || length(.versions) == 1L) {
+    if (is.numeric(.versions)) .versions <- round(abs(.versions))
     .versions <- seq(min_version, max_version - 1, by = .versions)
   } else if (is(.versions, "Date") || is.numeric(.versions)) {
     .versions <- .versions[.versions >= min_version & .versions <= max_version]
@@ -246,9 +273,9 @@ autoplot.epi_archive <- function(object, ...,
   vars <- autoplot_check_viable_response_vars(finalized, ..., non_key_cols = non_key_cols)
   nvars <- length(vars)
   
-  bp <- autoplot(
+  bp <- autoplot.epi_df(
     finalized, ..., .base_color = .base_color, .facet_by = "all", 
-    .facet_filter = .facet_filter, .color_by = "none"
+    .facet_filter = {{ .facet_filter }}, .color_by = "none"
   )
   geo_and_other_keys <- key_colnames(object, exclude = c("time_value", "version"))
   all_avail <- rlang::syms(as.list(c(
@@ -272,7 +299,8 @@ autoplot.epi_archive <- function(object, ...,
   } else {
     snapshots <- dplyr::rename(snapshots, .response := !!names(vars)) # nolint: object_usage_linter
   }
-  snapshots <- dplyr::filter(snapshots, !is.na(.response))
+  snapshots <- snapshots %>%
+    dplyr::filter(!is.na(.response), .data$.facets %in% unique(bp$data$.facets))
   
   bp <- bp + 
     ggplot2::geom_line(
