@@ -66,6 +66,51 @@ or \code{df}.}
 
 \item{penalty}{the coefficient of the penalty for degrees of freedom
    in the GCV criterion.}
+
+\item{k}{Integer. Degree of the piecewise polynomial curve to be
+estimated. For example, \code{k = 0} corresponds to a piecewise constant
+curve.}
+
+\item{family}{Character or function. Specifies the loss function
+to use. Valid options are:
+\itemize{
+\item \code{"gaussian"} - least squares loss (the default),
+\item \code{"binomial"} - logistic loss (classification),
+\item \code{"poisson"}  - Poisson loss for count data
+}
+
+For any other type, a valid \code{\link[stats:family]{stats::family()}} object may be passed. Note
+that these will generally be much slower to estimate than the built-in
+options passed as strings. So for example, \code{family = "gaussian"} and
+\code{family = gaussian()} will produce the same results, but the first
+will be much faster.character.}
+
+\item{nlambda}{Integer. Number of lambda values to use in the sequence.}
+
+\item{lambda_max}{Optional value for the largest \code{lambda} to use.}
+
+\item{lambda_min}{Optional value for the smallest \code{lambda} to use (> 0).}
+
+\item{lambda_min_ratio}{If neither \code{lambda} nor \code{lambda_min} is specified,
+\code{lambda_min = lambda_max * lambda_min_ratio}.
+A very small value will lead to the solution \code{theta = y} (for the Gaussian
+loss). This argument has no effect if there is a user-defined \code{lambda}
+sequence.}
+
+\item{error_measure}{Metric used to calculate cross validation scores. May
+be \code{mse}, \code{mae}, or \code{deviance}.}
+
+\item{nfolds}{Integer. The number of folds to use. For leave-vth-out cross
+validation, every vth \code{y} value and its corresponding position (and weight)
+are placed into the same fold. The first and last observations are not
+assigned to any folds. This value must be at least 2. As an example, with
+15 data points and \code{nfolds = 4}, the points are assigned to folds in the
+following way:
+\deqn{
+  0 \; 1 \; 2 \; 3 \; 4 \; 1 \; 2 \; 3 \;  4 \; 1 \; 2 \; 3 \; 4 \; 1 \; 0
+  }{0 1 2 3 4 1 2 3 4 1 2 3 4 1 0} where 0 indicates no assignment.
+Therefore, the folds are not random and running \code{cv_trendfilter()} twice
+will give the same result.}
 }
 \value{
 A list of parameter configurations.
