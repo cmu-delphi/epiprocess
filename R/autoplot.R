@@ -224,6 +224,8 @@ autoplot_check_viable_response_vars <- function(
 #'
 #'   For `time_type = "integer"`, an integer larger than 1 will give a subset
 #'   of versions.
+#' @param .mark_versions Logical. Indicate whether to mark each version with
+#'   a vertical line. Note that displaying many versions can become busy.
 #'
 #' @return A [ggplot2::ggplot] object
 #' @export
@@ -238,11 +240,18 @@ autoplot_check_viable_response_vars <- function(
 #'   .versions = "month",
 #'   .facet_filter = geo_value == "ca"
 #' )
+#' autoplot(archive_cases_dv_subset_all_states, percent_cli,
+#'   .versions = "1 month",
+#'   .facet_filter = geo_value %in% c("or", "az", "vt", "ms"),
+#'   .mark_versions = TRUE
+#' )
 autoplot.epi_archive <- function(object, ...,
                                  .base_color = "black",
                                  .versions = NULL,
+                                 .mark_versions = FALSE,
                                  .facet_filter = NULL) {
   time_type <- object$time_type
+  checkmate::assert_logical(.mark_versions, len = 1L)
   if (time_type == "custom") {
     cli_abort(
       "This `epi_archive` has custom `time_type`. This is currently unsupported.",
@@ -278,7 +287,7 @@ autoplot.epi_archive <- function(object, ...,
     finalized, ...,
     .base_color = .base_color, .facet_by = "all",
     .facet_filter = {{ .facet_filter }}, .color_by = "none"
-  )
+  ) + ggplot2::xlab("Date")
   geo_and_other_keys <- key_colnames(object, exclude = c("time_value", "version"))
   all_avail <- rlang::syms(as.list(c(
     geo_and_other_keys,
@@ -318,6 +327,16 @@ autoplot.epi_archive <- function(object, ...,
     bp <- bp + ggplot2::scale_color_viridis_c(name = "Version")
   }
 
+  if (.mark_versions) {
+    bp <- bp +
+      ggplot2::geom_vline(
+        data = snapshots,
+        ggplot2::aes(color = version, xintercept = version),
+        linewidth = .5,
+        linetype = 3,
+        show.legend = FALSE
+      )
+  }
   # make the finalized layer last
   bp$layers <- rev(bp$layers)
   bp

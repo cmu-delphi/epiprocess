@@ -9,6 +9,7 @@
   ...,
   .base_color = "black",
   .versions = NULL,
+  .mark_versions = FALSE,
   .facet_filter = NULL
 )
 }
@@ -37,6 +38,9 @@ is interpretable by \verb{[base::seq.Date()]} is allowed.
 For \code{time_type = "integer"}, an integer larger than 1 will give a subset
 of versions.}
 
+\item{.mark_versions}{Logical. Indicate whether to mark each version with
+a vertical line. Note that displaying many versions can become busy.}
+
 \item{.facet_filter}{Select which facets will be displayed. Especially
 useful for when there are many \code{geo_value}'s or keys. This is a
 <\code{\link[=args_data_masking]{rlang}}> expression along the lines of \verb{[dplyr::filter()]}.
@@ -61,5 +65,10 @@ autoplot(archive_cases_dv_subset_all_states, percent_cli,
 autoplot(archive_cases_dv_subset, percent_cli,
   .versions = "month",
   .facet_filter = geo_value == "ca"
+)
+autoplot(archive_cases_dv_subset_all_states, percent_cli,
+  .versions = "1 month",
+  .facet_filter = geo_value \%in\% c("or", "az", "vt", "ms"),
+  .mark_versions = TRUE
 )
 }
