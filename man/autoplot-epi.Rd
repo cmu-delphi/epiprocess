@@ -69,7 +69,7 @@ by using \code{.response_name}. See the examples below.}
 
 \item{.max_facets}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}}
 
-\item{.versions}{Select which versions will be displayed. By default, every
+\item{.versions}{Select which versions will be displayed. By default,
 a separate line will be shown with the data as it would have appeared on
 every day in the archive. This can sometimes become overwhelming. For
 example, daily data would display a line for what the data would have looked
@@ -77,7 +77,7 @@ like on every single day. To override this, you can select specific dates,
 by passing a vector of values here. Alternatively, a sequence can be
 automatically created by passing a string like \code{"2 weeks"} or \code{"month"}.
 For time types where the \code{time_value} is a date object, any string that
-is interpretable by \code{\link[=seq.Date]{seq.Date()}} is allowed.
+is interpretable by \code{\link[base:seq.Date]{base::seq.Date()}} is allowed.
 
 For \code{time_type = "integer"}, an integer larger than 1 will give a subset
 of versions.}

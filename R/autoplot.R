@@ -217,7 +217,7 @@ autoplot_check_viable_response_vars <- function(
 
 
 
-#' @param .versions Select which versions will be displayed. By default, every
+#' @param .versions Select which versions will be displayed. By default,
 #'   a separate line will be shown with the data as it would have appeared on
 #'   every day in the archive. This can sometimes become overwhelming. For
 #'   example, daily data would display a line for what the data would have looked
@@ -225,7 +225,7 @@ autoplot_check_viable_response_vars <- function(
 #'   by passing a vector of values here. Alternatively, a sequence can be
 #'   automatically created by passing a string like `"2 weeks"` or `"month"`.
 #'   For time types where the `time_value` is a date object, any string that
-#'   is interpretable by [seq.Date()] is allowed.
+#'   is interpretable by [base::seq.Date()] is allowed.
 #'
 #'   For `time_type = "integer"`, an integer larger than 1 will give a subset
 #'   of versions.
@@ -282,7 +282,7 @@ autoplot.epi_archive <- function(object, ...,
     if (is.numeric(.versions)) .versions <- round(abs(.versions))
     .versions <- seq(min_version, max_version - 1, by = .versions)
   } else if (methods::is(.versions, "Date") || is.numeric(.versions)) {
-    .versions <- .versions[.versions >= min_version & .versions <= max_version]
+    .versions <- .versions[min_version <= .versions & .versions <= max_version]
   } else {
     cli_abort(
       "Requested `.versions` don't appear to match the available `time_type`.",
