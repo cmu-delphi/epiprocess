@@ -358,8 +358,12 @@ autoplot.epi_archive <- function(object, ...,
 
 #' @export
 #' @rdname autoplot-epi
-plot.epi_df <- function(x, ...) { autoplot(x, ...) }
+plot.epi_df <- function(x, ...) {
+  autoplot(x, ...)
+}
 
 #' @export
 #' @rdname autoplot-epi
-plot.epi_archive <- function(x, ...) { autoplot(x, ...) }
+plot.epi_archive <- function(x, ...) {
+  autoplot(x, ...)
+}
