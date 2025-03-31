@@ -25,7 +25,7 @@ be used to select a range of variables.}
 For example, with a single numeric variable and faceting by \code{geo_value}, all
 locations would share the same color line.}
 
-\item{.versions}{Select which versions will be displayed. By default, every
+\item{.versions}{Select which versions will be displayed. By default
 a separate line will be shown with the data as it would have appeared on
 every day in the archive. This can sometimes become overwhelming. For
 example, daily data would display a line for what the data would have looked
