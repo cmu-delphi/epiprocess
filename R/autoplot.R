@@ -1,6 +1,6 @@
-#' Automatically plot an epi_df
+#' Automatically plot an epi_df or epi_archive
 #'
-#' @param object An `epi_df`
+#' @param object,x An `epi_df` or `epi_archive`
 #' @param ... <[`tidy-select`][dplyr_tidy_select]> One or more unquoted
 #'   expressions separated by commas. Variable names can be used as if they
 #'   were positions in the data frame, so expressions like `x:y` can
@@ -33,8 +33,10 @@
 #'
 #' @return A [ggplot2::ggplot] object
 #' @export
+#' @name autoplot-epi
 #'
 #' @examples
+#' # -- Use it on an `epi_df`
 #' autoplot(cases_deaths_subset, cases, death_rate_7d_av)
 #' autoplot(cases_deaths_subset, case_rate_7d_av, .facet_by = "geo_value")
 #' autoplot(cases_deaths_subset, case_rate_7d_av,
@@ -53,6 +55,13 @@
 #'
 #' # filter to only some facets, must be explicitly combined
 #' autoplot(cases_deaths_subset, cases, death_rate_7d_av,
+#'   .facet_by = "all",
+#'   .facet_filter = (.response_name == "cases" & geo_value %in% c("tx", "pa")) |
+#'     (.response_name == "death_rate_7d_av" &
+#'       geo_value %in% c("ca", "fl", "ga", "ny"))
+#' )
+#' # Just an alias for convenience
+#' plot(cases_deaths_subset, cases, death_rate_7d_av,
 #'   .facet_by = "all",
 #'   .facet_filter = (.response_name == "cases" & geo_value %in% c("tx", "pa")) |
 #'     (.response_name == "death_rate_7d_av" &
@@ -208,10 +217,6 @@ autoplot_check_viable_response_vars <- function(
 
 
 
-#' Automatically plot an epi_archive
-#'
-#' @param object An `epi_archive`
-#' @inheritParams autoplot.epi_df
 #' @param .versions Select which versions will be displayed. By default, every
 #'   a separate line will be shown with the data as it would have appeared on
 #'   every day in the archive. This can sometimes become overwhelming. For
@@ -227,10 +232,13 @@ autoplot_check_viable_response_vars <- function(
 #' @param .mark_versions Logical. Indicate whether to mark each version with
 #'   a vertical line. Note that displaying many versions can become busy.
 #'
-#' @return A [ggplot2::ggplot] object
 #' @export
+#' @rdname autoplot-epi
 #'
 #' @examples
+#'
+#' # -- Use it on an archive
+#'
 #' autoplot(archive_cases_dv_subset, percent_cli, .versions = "week")
 #' autoplot(archive_cases_dv_subset_all_states, percent_cli,
 #'   .versions = "week",
@@ -241,6 +249,12 @@ autoplot_check_viable_response_vars <- function(
 #'   .facet_filter = geo_value == "ca"
 #' )
 #' autoplot(archive_cases_dv_subset_all_states, percent_cli,
+#'   .versions = "1 month",
+#'   .facet_filter = geo_value %in% c("or", "az", "vt", "ms"),
+#'   .mark_versions = TRUE
+#' )
+#' # Just an alias for convenience
+#' plot(archive_cases_dv_subset_all_states, percent_cli,
 #'   .versions = "1 month",
 #'   .facet_filter = geo_value %in% c("or", "az", "vt", "ms"),
 #'   .mark_versions = TRUE
@@ -341,3 +355,11 @@ autoplot.epi_archive <- function(object, ...,
   bp$layers <- rev(bp$layers)
   bp
 }
+
+#' @export
+#' @rdname autoplot-epi
+plot.epi_df <- function(x, ...) { autoplot(x, ...) }
+
+#' @export
+#' @rdname autoplot-epi
+plot.epi_archive <- function(x, ...) { autoplot(x, ...) }
