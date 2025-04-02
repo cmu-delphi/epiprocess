@@ -2,6 +2,12 @@
 
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicate PR's.
 
+# epiprocess 0.12
+
+## New features
+
+- Added `dplyr::filter` implementation for `epi_archive`s.
+
 # epiprocess 0.11
 
 ## Breaking changes

@@ -984,3 +984,119 @@ dplyr_col_modify.col_modify_recorder_df <- function(data, cols) {
   attr(data, "epiprocess::col_modify_recorder_df::cols") <- cols
   data
 }
+
+
+
+#' [`dplyr::filter`] for `epi_archive`s
+#'
+#' @param .data an `epi_archive`
+#' @param ... as in [`dplyr::filter`]; using the `version` column is not allowed
+#'   unless you use `.format_aware = TRUE`; see details.
+#' @param .by as in [`dplyr::filter`]
+#' @param .format_aware optional, `TRUE` or `FALSE`; default `FALSE`. See
+#'   details.
+#'
+#' @details
+#'
+#' By default, using the `version` column is disabled as it's easy to
+#' get unexpected results. See if either [`epix_as_of`] or [`epix_slide`]
+#' works as an alternative. If they don't cover your use case, then you can
+#' set `.format_aware = TRUE` to enable usage of the `version` column, but be
+#' careful to:
+#' * Factor in that `.data$DT` may be using a "compact" format based on diffing
+#'   consecutive versions; see details of [`as_epi_archive`]
+#' * Set `clobberable_versions_start` and `versions_end` of the result
+#'   appropriately after the `filter` call. They will be initialized with the
+#'   same values as in `.data`.
+#'
+#' `dplyr::filter` also has an optional argument `.preserve`, which should not
+#' have an impact on (ungrouped) `epi_archive`s, and `grouped_epi_archive`s do
+#' not currently support `dplyr::filter`.
+#'
+#' @examples
+#'
+#' # Filter to one location and a particular time range:
+#' archive_cases_dv_subset %>%
+#'   filter(geo_value == "fl", time_value >= as.Date("2020-10-01"))
+#'
+#' # Convert to weekly by taking the Saturday data for each week, so that
+#' # `case_rate_7d_av` represents a Sun--Sat average:
+#' archive_cases_dv_subset %>%
+#'   filter(as.POSIXlt(time_value)$wday == 6L)
+#'
+#' # Filtering involving versions requires extra care. See epix_as_of and
+#' # epix_slide instead for some common operations. One semi-common operation
+#' # that ends up being fairly simple is treating observations as finalized
+#' # after some amount of time, and ignoring any revisions that were made after
+#' # that point:
+#' archive_cases_dv_subset %>%
+#'   filter(version <= time_value + as.difftime(60, units = "days"),
+#'     .format_aware = TRUE
+#'   )
+#'
+#' @export
+filter.epi_archive <- function(.data, ..., .by = NULL, .format_aware = FALSE) {
+  in_tbl <- tibble::as_tibble(as.list(.data$DT), .name_repair = "minimal")
+  if (.format_aware) {
+    out_tbl <- in_tbl %>%
+      filter(..., .by = .by)
+  } else {
+    out_tbl <- in_tbl %>%
+      filter(
+        # Add our own fake filter arg to the user's ..., to update the data mask
+        # to prevent `version` column usage.
+        {
+          # We should be evaluating inside the data mask. To disable both
+          # `version` and `.data$version`, we need to go to the data mask's
+          # ------
+          e <- environment()
+          while (!identical(e, globalenv()) && !identical(e, emptyenv())) {
+            if ("version" %in% names(e)) {
+              # "version" is expected to be an active binding, and directly
+              # assigning over it has issues; explicitly `rm` first.
+              rm(list = "version", envir = e)
+              delayedAssign("version", cli::cli_abort(c(
+                "Using `version` in `filter` may produce unexpected results.",
+                ">" = "See if `epix_as_of` or `epix_slide` would work instead.",
+                ">" = "If not, see `?filter.epi_archive` details for how to proceed."
+              )), assign.env = e)
+              break
+            }
+            e <- parent.env(e)
+          }
+          TRUE
+        },
+        ...,
+        .by = .by
+      )
+  }
+  out_geo_type <-
+    if (.data$geo_type == "custom") {
+      # We might be going from a multi-resolution to single-resolution archive;
+      # e.g. national+state -> state; try to re-infer:
+      guess_geo_type(out_tbl$geo_value)
+    } else {
+      # We risk less-understandable inference failures such as inferring "hhs"
+      # from selecting hrr 10 data; just use the old geo_type:
+      .data$geo_type
+    }
+  # We might be going from daily to weekly; re-infer:
+  out_time_type <- guess_time_type(out_tbl$time_value)
+  # Even if they narrow down to just a single value of an other_keys column,
+  # it's probably still better (& simpler) to treat it as an other_keys column
+  # since it still exists in the result:
+  out_other_keys <- .data$other_keys
+  # `filter` makes no guarantees about not aliasing columns in its result when
+  # the filter condition is all TRUE, so don't setDT.
+  out_dtbl <- as.data.table(out_tbl, key = out_other_keys)
+  result <- new_epi_archive(
+    out_dtbl,
+    out_geo_type, out_time_type, out_other_keys,
+    # Assume version-related metadata unchanged; part of why we want to push
+    # back on filter expressions like `.data$version <= .env$as_of`:
+    .data$clobberable_versions_start, .data$versions_end
+  )
+  # Filtering down rows while keeping all (ukey) columns should preserve ukey
+  # uniqueness.
+  result
+}
