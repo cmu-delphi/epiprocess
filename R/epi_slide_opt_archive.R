@@ -27,12 +27,12 @@
 #'
 #' library(dplyr)
 #' grp_updates <- bind_rows(
-#'   tibble(version = 10, time_value = 1:20, value = 1:20),
-#'   tibble(version = 12, time_value = 4:5, value = 5:4),
-#'   tibble(version = 13, time_value = 8, value = 9),
-#'   tibble(version = 14, time_value = 11, value = NA),
-#'   tibble(version = 15, time_value = -10, value = -10),
-#'   tibble(version = 16, time_value = 50, value = 50)
+#'   tibble(version = 20, time_value = 1:20, value = 1:20),
+#'   tibble(version = 22, time_value = 4:5, value = 5:4),
+#'   tibble(version = 23, time_value = 8, value = 9),
+#'   tibble(version = 24, time_value = 11, value = NA),
+#'   tibble(version = 25, time_value = -10, value = -10),
+#'   tibble(version = 26, time_value = 50, value = 50)
 #' ) %>%
 #'   mutate(across(c(version, time_value), ~ as.Date("2020-01-01") - 1 + .x))
 #'
@@ -108,7 +108,7 @@ epi_slide_opt_archive_one_epikey <- function(
         slide[[out_colnames[[col_i]]]] <- f_dots_baked(slide[[in_colnames[[col_i]]]], before = before, after = after)
       }
     } else {
-      cli_abort("epiprocess internal error: `f_from_package` was {format_chr_deparse(f_from_package)}",
+      cli_abort("epiprocess internal error: `f_from_package` was {format_chr_deparse(f_from_package)}, which is unsupported",
         class = "epiprocess__epi_slide_opt_archive__f_from_package_invalid"
       )
     }

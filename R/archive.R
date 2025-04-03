@@ -438,7 +438,8 @@ removed_by_compactify <- function(updates_df, ukey_names, abs_tol) {
   updates_df[update_is_locf(updates_df, ukey_names, abs_tol), ]
 }
 
-#' Internal helper; lgl; which updates are LOCF
+#' Internal helper; lgl; which updates are LOCF and should thus be dropped when
+#' compactifying
 #'
 #' (Not validated:) Must be called inside certain dplyr data masking verbs (e.g.,
 #' `filter` or `mutate`) being run on an `epi_archive`'s `DT` or a data frame
@@ -470,12 +471,18 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol) {
   } else {
     ekts_tbl <- new_tibble(updates_col_refs[ekt_names])
     vals_tbl <- new_tibble(updates_col_refs[val_names])
+    # grab the data and a shifted version of the data, and compute the
+    # entry-wise difference to see if the value has changed
     # n_updates >= 2L so we can use `:` naturally (this is the reason for
     # separating out n_updates == 1L from this case):
     inds1 <- 2L:n_updates
     inds2 <- 1L:(n_updates - 1L)
     c(
       FALSE, # first observation is not LOCF
+      # for the rest, check that both the keys are exactly the same, and the
+      # values are within abs_tol
+      # the key comparison effectively implements a group_by, so that when the
+      # key changes we're guaranteed the value is correct
       vec_approx_equal0(ekts_tbl,
         inds1 = inds1, ekts_tbl, inds2 = inds2,
         # check ekt (key) cols with 0 tolerance:
@@ -493,7 +500,8 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol) {
 #' `epi_archive` object.
 #'
 #' @param x A data.frame, data.table, or tibble, with columns `geo_value`,
-#'   `time_value`, `version`, and then any additional number of columns.
+#'   `time_value`, `version`, and then any additional number of columns, either
+#'   keys or values.
 #' @param ... used for specifying column names, as in [`dplyr::rename`]. For
 #'   example `version = release_date`
 #' @param .versions_end location based versions_end, used to avoid prefix

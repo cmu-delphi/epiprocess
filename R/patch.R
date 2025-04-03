@@ -121,17 +121,22 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
     na_or_nan1 <- is.na(vec1)
     na_or_nan2 <- is.na(vec2)
     # Since above are bare logical vectors, we can use `fifelse`
-    res <- fifelse(
-      !na_or_nan1 & !na_or_nan2,
-      abs(vec1 - vec2) <= abs_tol,
-      if (na_equal) {
+    if (na_equal) {
+      res <- fifelse(
+        !na_or_nan1 & !na_or_nan2,
+        abs(vec1 - vec2) <= abs_tol,
         na_or_nan1 & na_or_nan2 & (is.nan(vec1) == is.nan(vec2))
-      } else {
-        # Like `==` and `vec_equal`, we consider NaN == {NA, NaN, anything else}
-        # to be NA.
+      )
+    } else {
+      # Like `==` and `vec_equal`, we consider NaN == {NA, NaN, anything else}
+      # to be NA.
+      res <- fifelse(
+        !na_or_nan1 & !na_or_nan2,
+        abs(vec1 - vec2) <= abs_tol,
         NA
-      }
-    )
+      )
+    }
+
     if (!is.null(dim(vec1))) {
       dim(res) <- dim(vec1)
       res <- rowSums(res) == ncol(res)
@@ -278,9 +283,9 @@ tbl_diff2 <- function(earlier_snapshot, later_tbl,
   # ukey+val duplicates (cases 2. and 3.).)
 
   # Row indices of first occurrence of each ukey; will be the same as
-  # seq_len(combined_n) except for when that ukey has been re-reported in
-  # `later_tbl`, in which case (3. or 4.) it will point back to the row index of
-  # the same ukey in `earlier_snapshot`:
+  # seq_len(combined_n) (cases 1., 2., or 5.) except for when that ukey has been
+  # re-reported in `later_tbl`, in which case (3. or 4.) it will point back to
+  # the row index of the same ukey in `earlier_snapshot`:
   combined_ukey_firsts <- vec_duplicate_id(combined_ukeys)
 
   # Which rows from combined are cases 3. or 4.?
@@ -368,6 +373,7 @@ tbl_patch <- function(snapshot, update, ukey_names) {
   result_tbl <- vec_rbind(update, snapshot)
 
   dup_ids <- vec_duplicate_id(result_tbl[ukey_names])
+  # check that the index hasn't be reset to something lower that it duplicates
   not_overwritten <- dup_ids == vec_seq_along(result_tbl)
   result_tbl <- result_tbl[not_overwritten, ]
 
