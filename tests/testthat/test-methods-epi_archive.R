@@ -130,7 +130,6 @@ test_that("group_vars works as expected", {
 })
 
 test_that("filter.epi_archive works as expected", {
-
   ea2 <- ea2_data %>%
     as_epi_archive()
 
@@ -148,8 +147,10 @@ test_that("filter.epi_archive works as expected", {
   expect_equal(
     ea2 %>% filter(geo_value == "ca", time_value == as.Date("2020-06-02")),
     new_epi_archive(
-      data.table::data.table(geo_value = "ca", time_value = as.Date("2020-06-02"),
-                             version = as.Date("2020-06-02") + 0:2, cases = 0:2),
+      data.table::data.table(
+        geo_value = "ca", time_value = as.Date("2020-06-02"),
+        version = as.Date("2020-06-02") + 0:2, cases = 0:2
+      ),
       ea2$geo_type, ea2$time_type, ea2$other_keys,
       ea2$clobberable_versions_start, ea2$versions_end
     )
@@ -222,9 +223,9 @@ test_that("filter.epi_archive works as expected", {
   expect_equal(
     ea2 %>%
       filter(version <= time_value + as.difftime(1, units = "days"),
-             .format_aware = TRUE) %>%
+        .format_aware = TRUE
+      ) %>%
       .$DT,
     ea2$DT[version <= time_value + as.difftime(1, units = "days"), ]
   )
-
 })

@@ -1042,7 +1042,7 @@ filter.epi_archive <- function(.data, ..., .by = NULL, .format_aware = FALSE) {
   in_tbl <- tibble::as_tibble(as.list(.data$DT), .name_repair = "minimal")
   if (.format_aware) {
     out_tbl <- in_tbl %>%
-      filter(..., .by = {{.by}})
+      filter(..., .by = {{ .by }})
   } else {
     measurement_colnames <- setdiff(names(.data$DT), key_colnames(.data))
     forbidden_colnames <- c("version", measurement_colnames)
@@ -1082,7 +1082,7 @@ filter.epi_archive <- function(.data, ..., .by = NULL, .format_aware = FALSE) {
           TRUE
         },
         ...,
-        .by = {{.by}}
+        .by = {{ .by }}
       )
   }
   # We could try to re-infer the geo_type, e.g., when filtering from
