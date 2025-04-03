@@ -21,14 +21,16 @@ details.}
 \code{\link[dplyr:filter]{dplyr::filter}} for \code{epi_archive}s
 }
 \details{
-By default, using the \code{version} column is disabled as it's easy to
-get unexpected results. See if either \code{\link{epix_as_of}} or \code{\link{epix_slide}}
-works as an alternative. If they don't cover your use case, then you can
-set \code{.format_aware = TRUE} to enable usage of the \code{version} column, but be
-careful to:
+By default, using the \code{version} column or measurement columns is disabled as
+it's easy to get unexpected results. See if either \code{\link{epix_as_of}} or
+\code{\link{epix_slide}} works as an alternative. If they don't cover your use case,
+then you can set \code{.format_aware = TRUE} to enable usage of these columns, but
+be careful to:
 \itemize{
-\item Factor in that \code{.data$DT} may be using a "compact" format based on diffing
-consecutive versions; see details of \code{\link{as_epi_archive}}
+\item Factor in that \code{.data$DT} may have been converted into a compact format
+based on diffing consecutive versions, and the last version of each
+observation in \code{.data$DT} will always be carried forward to future
+\code{version}s\verb{; see details of [}as_epi_archive`].
 \item Set \code{clobberable_versions_start} and \code{versions_end} of the result
 appropriately after the \code{filter} call. They will be initialized with the
 same values as in \code{.data}.
@@ -49,13 +51,15 @@ archive_cases_dv_subset \%>\%
 archive_cases_dv_subset \%>\%
   filter(as.POSIXlt(time_value)$wday == 6L)
 
-# Filtering involving versions requires extra care. See epix_as_of and
-# epix_slide instead for some common operations. One semi-common operation
-# that ends up being fairly simple is treating observations as finalized
-# after some amount of time, and ignoring any revisions that were made after
-# that point:
+# Filtering involving the `version` column or measurement columns requires
+# extra care. See epix_as_of and epix_slide instead for some common
+# operations. One semi-common operation that ends up being fairly simple is
+# treating observations as finalized after some amount of time, and ignoring
+# any revisions that were made after that point:
 archive_cases_dv_subset \%>\%
-  filter(version <= time_value + as.difftime(60, units = "days"),
-         .format_aware = TRUE)
+  filter(
+    version <= time_value + as.difftime(60, units = "days"),
+    .format_aware = TRUE
+  )
 
 }

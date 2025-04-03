@@ -998,13 +998,15 @@ dplyr_col_modify.col_modify_recorder_df <- function(data, cols) {
 #'
 #' @details
 #'
-#' By default, using the `version` column is disabled as it's easy to
-#' get unexpected results. See if either [`epix_as_of`] or [`epix_slide`]
-#' works as an alternative. If they don't cover your use case, then you can
-#' set `.format_aware = TRUE` to enable usage of the `version` column, but be
-#' careful to:
-#' * Factor in that `.data$DT` may be using a "compact" format based on diffing
-#'   consecutive versions; see details of [`as_epi_archive`]
+#' By default, using the `version` column or measurement columns is disabled as
+#' it's easy to get unexpected results. See if either [`epix_as_of`] or
+#' [`epix_slide`] works as an alternative. If they don't cover your use case,
+#' then you can set `.format_aware = TRUE` to enable usage of these columns, but
+#' be careful to:
+#' * Factor in that `.data$DT` may have been converted into a compact format
+#'   based on diffing consecutive versions, and the last version of each
+#'   observation in `.data$DT` will always be carried forward to future
+#'   `version`s`; see details of [`as_epi_archive`].
 #' * Set `clobberable_versions_start` and `versions_end` of the result
 #'   appropriately after the `filter` call. They will be initialized with the
 #'   same values as in `.data`.
@@ -1024,13 +1026,14 @@ dplyr_col_modify.col_modify_recorder_df <- function(data, cols) {
 #' archive_cases_dv_subset %>%
 #'   filter(as.POSIXlt(time_value)$wday == 6L)
 #'
-#' # Filtering involving versions requires extra care. See epix_as_of and
-#' # epix_slide instead for some common operations. One semi-common operation
-#' # that ends up being fairly simple is treating observations as finalized
-#' # after some amount of time, and ignoring any revisions that were made after
-#' # that point:
+#' # Filtering involving the `version` column or measurement columns requires
+#' # extra care. See epix_as_of and epix_slide instead for some common
+#' # operations. One semi-common operation that ends up being fairly simple is
+#' # treating observations as finalized after some amount of time, and ignoring
+#' # any revisions that were made after that point:
 #' archive_cases_dv_subset %>%
-#'   filter(version <= time_value + as.difftime(60, units = "days"),
+#'   filter(
+#'     version <= time_value + as.difftime(60, units = "days"),
 #'     .format_aware = TRUE
 #'   )
 #'
@@ -1041,25 +1044,37 @@ filter.epi_archive <- function(.data, ..., .by = NULL, .format_aware = FALSE) {
     out_tbl <- in_tbl %>%
       filter(..., .by = .by)
   } else {
+    measurement_colnames <- setdiff(names(.data$DT), key_colnames(.data))
+    forbidden_colnames <- c("version", measurement_colnames)
     out_tbl <- in_tbl %>%
       filter(
         # Add our own fake filter arg to the user's ..., to update the data mask
         # to prevent `version` column usage.
         {
           # We should be evaluating inside the data mask. To disable both
-          # `version` and `.data$version`, we need to go to the data mask's
-          # ------
+          # `version` and `.data$version` etc., we need to go to the ancestor
+          # environment containing the data mask's column bindings. This is
+          # likely just the parent env, but search to make sure, in a way akin
+          # to `<<-`:
           e <- environment()
           while (!identical(e, globalenv()) && !identical(e, emptyenv())) {
             if ("version" %in% names(e)) {
-              # "version" is expected to be an active binding, and directly
-              # assigning over it has issues; explicitly `rm` first.
-              rm(list = "version", envir = e)
+              # This is where the column bindings are. Replace the forbidden ones.
+              # They are expected to be active bindings, so directly
+              # assigning has issues; `rm` first.
+              rm(list = forbidden_colnames, envir = e)
               delayedAssign("version", cli::cli_abort(c(
-                "Using `version` in `filter` may produce unexpected results.",
+                "Using `version` in `filter.epi_archive` may produce unexpected results.",
                 ">" = "See if `epix_as_of` or `epix_slide` would work instead.",
                 ">" = "If not, see `?filter.epi_archive` details for how to proceed."
               )), assign.env = e)
+              for (measurement_colname in measurement_colnames) {
+                delayedAssign(measurement_colname, cli::cli_abort(c(
+                  "Using `{format_varname(measurement_colname)}`
+                 in `filter.epi_archive` may produce unexpected results.",
+                  ">" = "See `?filter.epi_archive` details for how to proceed."
+                )), assign.env = e)
+              }
               break
             }
             e <- parent.env(e)
