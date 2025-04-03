@@ -14,7 +14,7 @@ Please:
       (backwards-incompatible changes to the documented interface) are noted.
       Collect the changes under the next release number (e.g. if you are on
       1.7.2, then write your changes under the 1.8 heading).
-- [ ] Styling, linting, and documentation checks. Make a PR comment with:
+- [ ] Styling and documentation checks. Make a PR comment with:
   - `/document` to check the package documentation and fix any issues.
   - `/style` to check the style and fix any issues.
   - `/preview-docs` to preview the docs.
