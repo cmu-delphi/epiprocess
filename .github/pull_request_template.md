@@ -17,7 +17,6 @@ Please:
 - [ ] Styling, linting, and documentation checks. Make a PR comment with:
   - `/document` to check the package documentation and fix any issues.
   - `/style` to check the style and fix any issues.
-  - `/lint` to check the linting.
   - `/preview-docs` to preview the docs.
   - See Actions GitHub tab to track progress of these commands.
 - See [DEVELOPMENT.md](DEVELOPMENT.md) for more information on the development
