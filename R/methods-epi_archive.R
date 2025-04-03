@@ -1070,16 +1070,11 @@ filter.epi_archive <- function(.data, ..., .by = NULL, .format_aware = FALSE) {
         .by = .by
       )
   }
-  out_geo_type <-
-    if (.data$geo_type == "custom") {
-      # We might be going from a multi-resolution to single-resolution archive;
-      # e.g. national+state -> state; try to re-infer:
-      guess_geo_type(out_tbl$geo_value)
-    } else {
-      # We risk less-understandable inference failures such as inferring "hhs"
-      # from selecting hrr 10 data; just use the old geo_type:
-      .data$geo_type
-    }
+  # We could try to re-infer the geo_type, e.g., when filtering from
+  # national+state to just state. However, we risk inference failures such as
+  # "hrr" -> "hhs" from filtering to hrr 10, or "custom" -> USA-related when
+  # working with non-USA data:
+  out_geo_type <- .data$geo_type
   # We might be going from daily to weekly; re-infer:
   out_time_type <- guess_time_type(out_tbl$time_value)
   # Even if they narrow down to just a single value of an other_keys column,
