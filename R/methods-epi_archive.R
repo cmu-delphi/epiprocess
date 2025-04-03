@@ -91,7 +91,7 @@ epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
   }
   assert_scalar(min_time_value, na.ok = FALSE)
   min_time_value_inf <- is.infinite(min_time_value) && min_time_value < 0
-  min_time_value_same_type <- typeof(min_time_value) == typeof(x$DT$time_value) &&
+  min_time_value_same_type <- typeof(min_time_value) == typeof(x$DT$time_value) &
     class(min_time_value) == class(x$DT$time_value)
   if (!min_time_value_inf && !min_time_value_same_type) {
     cli_abort("`min_time_value` must be either -Inf or a time_value of the same type and
