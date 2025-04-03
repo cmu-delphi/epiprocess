@@ -1042,7 +1042,7 @@ filter.epi_archive <- function(.data, ..., .by = NULL, .format_aware = FALSE) {
   in_tbl <- tibble::as_tibble(as.list(.data$DT), .name_repair = "minimal")
   if (.format_aware) {
     out_tbl <- in_tbl %>%
-      filter(..., .by = .by)
+      filter(..., .by = {{.by}})
   } else {
     measurement_colnames <- setdiff(names(.data$DT), key_colnames(.data))
     forbidden_colnames <- c("version", measurement_colnames)
@@ -1067,13 +1067,13 @@ filter.epi_archive <- function(.data, ..., .by = NULL, .format_aware = FALSE) {
                 "Using `version` in `filter.epi_archive` may produce unexpected results.",
                 ">" = "See if `epix_as_of` or `epix_slide` would work instead.",
                 ">" = "If not, see `?filter.epi_archive` details for how to proceed."
-              )), assign.env = e)
+              ), class = "epiprocess__filter_archive__used_version"), assign.env = e)
               for (measurement_colname in measurement_colnames) {
                 delayedAssign(measurement_colname, cli::cli_abort(c(
                   "Using `{format_varname(measurement_colname)}`
                  in `filter.epi_archive` may produce unexpected results.",
                   ">" = "See `?filter.epi_archive` details for how to proceed."
-                )), assign.env = e)
+                ), class = "epiprocess__filter_archive__used_measurement"), assign.env = e)
               }
               break
             }
@@ -1082,7 +1082,7 @@ filter.epi_archive <- function(.data, ..., .by = NULL, .format_aware = FALSE) {
           TRUE
         },
         ...,
-        .by = .by
+        .by = {{.by}}
       )
   }
   # We could try to re-infer the geo_type, e.g., when filtering from
@@ -1090,8 +1090,15 @@ filter.epi_archive <- function(.data, ..., .by = NULL, .format_aware = FALSE) {
   # "hrr" -> "hhs" from filtering to hrr 10, or "custom" -> USA-related when
   # working with non-USA data:
   out_geo_type <- .data$geo_type
-  # We might be going from daily to weekly; re-infer:
-  out_time_type <- guess_time_type(out_tbl$time_value)
+  if (.data$time_type == "day") {
+    # We might be going from daily to weekly; re-infer:
+    out_time_type <- guess_time_type(out_tbl$time_value)
+  } else {
+    # We might be filtering weekly to a single time_value; avoid re-inferring to
+    # stay "week". Or in other cases, just skip inferring, as re-inferring is
+    # expected to match the input time_type:
+    out_time_type <- .data$time_type
+  }
   # Even if they narrow down to just a single value of an other_keys column,
   # it's probably still better (& simpler) to treat it as an other_keys column
   # since it still exists in the result:
