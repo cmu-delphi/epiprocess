@@ -76,11 +76,13 @@ reference:
     desc: Functions operating on `epi_archive` objects.
   - contents:
       - epix_as_of
+      - epix_as_of_current
       - epix_slide
       - epix_merge
       - revision_summary
       - epix_fill_through_version
       - epix_truncate_versions_after
+      - set_versions_end
   
   - title: Basic analysis and visualization
   - contents:
