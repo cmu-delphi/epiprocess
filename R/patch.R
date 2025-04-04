@@ -373,7 +373,11 @@ tbl_patch <- function(snapshot, update, ukey_names) {
   result_tbl <- vec_rbind(update, snapshot)
 
   dup_ids <- vec_duplicate_id(result_tbl[ukey_names])
-  # check that the index hasn't be reset to something lower that it duplicates
+  # Find the "first" appearance of each ukey; since `update` is ordered before `snapshot`,
+  # this means favoring the rows from `update` over those in `snapshot`.
+  # This is like `!duplicated()` but faster, and like `vec_unique_loc()` but guaranteeing
+  # that we get the first appearance since `vec_duplicate_id()` guarantees that
+  # it points to the first appearance.
   not_overwritten <- dup_ids == vec_seq_along(result_tbl)
   result_tbl <- result_tbl[not_overwritten, ]
 
