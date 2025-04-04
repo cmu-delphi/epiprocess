@@ -96,6 +96,10 @@ reference:
       - epidatasets::covid_incidence_outliers
       - epidatasets::covid_case_death_rates_extended
 
+  - title: Other utilities
+  - contents:
+      - vec_approx_equal
+
   - title: internal
   - contents:
       - starts_with("internal")

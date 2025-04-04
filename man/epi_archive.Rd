@@ -25,7 +25,7 @@ as_epi_archive(
 is_epi_archive(x)
 
 new_epi_archive(
-  x,
+  data_table,
   geo_type,
   time_type,
   other_keys,
@@ -36,20 +36,19 @@ new_epi_archive(
 validate_epi_archive(x)
 }
 \arguments{
-\item{x}{A data.frame, data.table, or tibble, with columns \code{geo_value},
-\code{time_value}, \code{version}, and then any additional number of columns.}
+\item{x}{An object.}
 
 \item{geo_type}{DEPRECATED Has no effect. Geo value type is inferred from the
 location column and set to "custom" if not recognized.}
 
-\item{time_type}{DEPRECATED Has no effect. Time value type inferred from the time
-column and set to "custom" if not recognized. Unpredictable behavior may result
-if the time type is not recognized.}
+\item{time_type}{DEPRECATED Has no effect. Time value type inferred from the
+time column and set to "custom" if not recognized. Unpredictable behavior
+may result if the time type is not recognized.}
 
 \item{other_keys}{Character vector specifying the names of variables in \code{x}
 that should be considered key variables (in the language of \code{data.table})
-apart from "geo_value", "time_value", and "version". Typical examples
-are "age" or more granular geographies.}
+apart from "geo_value", "time_value", and "version". Typical examples are
+"age" or more granular geographies.}
 
 \item{compactify}{Optional; \code{TRUE}, \code{FALSE}, or \code{"message"}. \code{TRUE} will
 remove some redundant rows, \code{FALSE} will not. \code{"message"} is like \code{TRUE}
@@ -94,6 +93,13 @@ beyond \code{max(x$version)}, but they all contained empty updates. (The default
 value of \code{clobberable_versions_start} does not fully trust these empty
 updates, and assumes that any version \verb{>= max(x$version)} could be
 clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
+
+\item{data_table}{a \code{data.table} with \code{\link[data.table:setkey]{data.table::key()}} equal to
+\code{c("geo_value", other_keys, "time_value", "version")}. For \code{data.table}
+users: this sets up an alias of \code{data_table}; if you plan to keep on
+working with \code{data_table} or working directly with the archive's \verb{$DT}
+using mutating operations, you should \code{copy()} if appropriate. We will not
+mutate the \code{DT} with any exported \code{{epiprocess}} functions, though.}
 }
 \value{
 \itemize{

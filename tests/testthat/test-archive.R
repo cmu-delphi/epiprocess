@@ -92,7 +92,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(key(ea1$DT), c("geo_value", "time_value", "version"))
 
   ea2 <- as_epi_archive(df, other_keys = "value", compactify = FALSE)
-  expect_equal(key(ea2$DT), c("geo_value", "time_value", "value", "version"))
+  expect_equal(key(ea2$DT), c("geo_value", "value", "time_value", "version"))
 
   # Tibble
   tib <- tibble::tibble(df, code = "x")
@@ -101,7 +101,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(key(ea3$DT), c("geo_value", "time_value", "version"))
 
   ea4 <- as_epi_archive(tib, other_keys = "code", compactify = FALSE)
-  expect_equal(key(ea4$DT), c("geo_value", "time_value", "code", "version"))
+  expect_equal(key(ea4$DT), c("geo_value", "code", "time_value", "version"))
 
   # Keyed data.table
   kdt <- data.table::data.table(
@@ -119,7 +119,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
 
   ea6 <- as_epi_archive(kdt, other_keys = "value", compactify = FALSE)
   # Mismatched keys, but the one from as_epi_archive overrides
-  expect_equal(key(ea6$DT), c("geo_value", "time_value", "value", "version"))
+  expect_equal(key(ea6$DT), c("geo_value", "value", "time_value", "version"))
 
   # Unkeyed data.table
   udt <- data.table::data.table(
@@ -134,7 +134,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(key(ea7$DT), c("geo_value", "time_value", "version"))
 
   ea8 <- as_epi_archive(udt, other_keys = "code", compactify = FALSE)
-  expect_equal(key(ea8$DT), c("geo_value", "time_value", "code", "version"))
+  expect_equal(key(ea8$DT), c("geo_value", "code", "time_value", "version"))
 
   # epi_df
   edf1 <- cases_deaths_subset %>%
@@ -145,7 +145,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(key(ea9$DT), c("geo_value", "time_value", "version"))
 
   ea10 <- as_epi_archive(edf1, other_keys = "code", compactify = FALSE)
-  expect_equal(key(ea10$DT), c("geo_value", "time_value", "code", "version"))
+  expect_equal(key(ea10$DT), c("geo_value", "code", "time_value", "version"))
 
   # Keyed epi_df
   edf2 <- data.frame(
@@ -164,7 +164,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(key(ea11$DT), c("geo_value", "time_value", "version"))
 
   ea12 <- as_epi_archive(edf2, other_keys = "misc", compactify = FALSE)
-  expect_equal(key(ea12$DT), c("geo_value", "time_value", "misc", "version"))
+  expect_equal(key(ea12$DT), c("geo_value", "misc", "time_value", "version"))
 })
 
 test_that("`epi_archive` rejects nonunique keys", {
@@ -215,10 +215,4 @@ test_that("`epi_archive` rejects dataframes where time_value and version columns
       age_group = ordered(age_group, c("pediatric", "adult")),
     )
   expect_error(as_epi_archive(tbl3), class = "epiprocess__time_value_version_mismatch")
-})
-
-test_that("is_locf works as expected", {
-  vec <- c(1, 1, 1e-10, 1.1e-10, NA, NA, NaN, NaN)
-  is_repeated <- c(0, 1, 0, 1, 0, 1, 1, 1)
-  expect_equal(is_locf(vec, .Machine$double.eps^0.5, FALSE), as.logical(is_repeated))
 })

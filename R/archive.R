@@ -186,17 +186,21 @@ next_after.Date <- function(x) x + 1L
 #'  archive. Unexpected behavior may result from modifying the metadata
 #'  directly.
 #'
-#' @param x A data.frame, data.table, or tibble, with columns `geo_value`,
-#'   `time_value`, `version`, and then any additional number of columns.
+#' @param data_table a `data.table` with [`data.table::key()`] equal to
+#'   `c("geo_value", other_keys, "time_value", "version")`. For `data.table`
+#'   users: this sets up an alias of `data_table`; if you plan to keep on
+#'   working with `data_table` or working directly with the archive's `$DT`
+#'   using mutating operations, you should `copy()` if appropriate. We will not
+#'   mutate the `DT` with any exported `{epiprocess}` functions, though.
 #' @param geo_type DEPRECATED Has no effect. Geo value type is inferred from the
-#' location column and set to "custom" if not recognized.
-#' @param time_type DEPRECATED Has no effect. Time value type inferred from the time
-#' column and set to "custom" if not recognized. Unpredictable behavior may result
-#' if the time type is not recognized.
+#'   location column and set to "custom" if not recognized.
+#' @param time_type DEPRECATED Has no effect. Time value type inferred from the
+#'   time column and set to "custom" if not recognized. Unpredictable behavior
+#'   may result if the time type is not recognized.
 #' @param other_keys Character vector specifying the names of variables in `x`
 #'   that should be considered key variables (in the language of `data.table`)
-#'   apart from "geo_value", "time_value", and "version". Typical examples
-#'   are "age" or more granular geographies.
+#'   apart from "geo_value", "time_value", and "version". Typical examples are
+#'   "age" or more granular geographies.
 #' @param compactify Optional; `TRUE`, `FALSE`, or `"message"`. `TRUE` will
 #'   remove some redundant rows, `FALSE` will not. `"message"` is like `TRUE`
 #'   but will emit a message if anything was changed. Default is `TRUE`. See
@@ -278,41 +282,22 @@ next_after.Date <- function(x) x + 1L
 #' @order 3
 #' @export
 new_epi_archive <- function(
-    x,
+    data_table,
     geo_type,
     time_type,
     other_keys,
     clobberable_versions_start,
     versions_end) {
-  assert_data_frame(x)
+  assert_class(data_table, "data.table")
   assert_string(geo_type)
   assert_string(time_type)
   assert_character(other_keys, any.missing = FALSE)
   if (any(c("geo_value", "time_value", "version") %in% other_keys)) {
     cli_abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
   }
-  validate_version_bound(clobberable_versions_start, x, na_ok = TRUE)
-  validate_version_bound(versions_end, x, na_ok = FALSE)
-
-  key_vars <- c("geo_value", "time_value", other_keys, "version")
-  if (!all(key_vars %in% names(x))) {
-    # Give a more tailored error message than as.data.table would:
-    cli_abort(c(
-      "`x` is missing the following expected columns:
-       {format_varnames(setdiff(key_vars, names(x)))}.",
-      ">" = "You might need to `dplyr::rename()` beforehand
-                       or use `as_epi_archive()`'s renaming feature.",
-      ">" = if (!all(other_keys %in% names(x))) {
-        "Check also for typos in `other_keys`."
-      }
-    ))
-  }
-
-  # Create the data table; if x was an un-keyed data.table itself,
-  # then the call to as.data.table() will fail to set keys, so we
-  # need to check this, then do it manually if needed
-  data_table <- as.data.table(x, key = key_vars)
-  if (!identical(key_vars, key(data_table))) setkeyv(data_table, cols = key_vars)
+  assert_true(identical(key(data_table), c("geo_value", other_keys, "time_value", "version")))
+  validate_version_bound(clobberable_versions_start, data_table, na_ok = TRUE)
+  validate_version_bound(versions_end, data_table, na_ok = FALSE)
 
   structure(
     list(
@@ -338,7 +323,7 @@ new_epi_archive <- function(
 validate_epi_archive <- function(x) {
   assert_class(x, "epi_archive")
 
-  ukey_vars1 <- c("geo_value", "time_value", x$other_keys, "version")
+  ukey_vars1 <- c("geo_value", x$other_keys, "time_value", "version")
   ukey_vars2 <- key(x$DT)
   if (!identical(ukey_vars1, ukey_vars2)) {
     cli_abort(c("`data.table::key(x$DT)` not as expected",
@@ -405,7 +390,7 @@ validate_epi_archive <- function(x) {
 #'   would be `key(DT)`.
 #' @param abs_tol numeric, >=0; absolute tolerance to use on numeric measurement
 #'   columns when determining whether something can be compactified away; see
-#'   [`is_locf`]
+#'   [`vec_approx_equal`]
 #'
 #' @importFrom data.table is.data.table key
 #' @importFrom dplyr arrange filter
@@ -424,10 +409,23 @@ apply_compactify <- function(updates_df, ukey_names, abs_tol = 0) {
   }
   assert_numeric(abs_tol, len = 1, lower = 0)
 
-  if (!is.data.table(updates_df) || !identical(key(updates_df), ukey_names)) {
+  if (is.data.table(updates_df)) {
+    if (!identical(key(updates_df), ukey_names)) {
+      cli_abort(c("`ukey_names` should match `key(updates_df)`",
+        "i" = "`ukey_names` was {format_chr_deparse(ukey_names)}",
+        "i" = "`key(updates_df)` was {format_chr_deparse(key(updates_df))}"
+      ))
+    }
+  } else {
     updates_df <- updates_df %>% arrange(pick(all_of(ukey_names)))
   }
-  updates_df[!update_is_locf(updates_df, ukey_names, abs_tol), ]
+
+  # In case updates_df is a data.table, store keep flags in a local: "When the
+  # first argument inside DT[...] is a single symbol (e.g. DT[var]), data.table
+  # looks for var in calling scope". In case it's not a data.table, make sure to
+  # use df[i,] not just df[i].
+  to_keep <- !update_is_locf(updates_df, ukey_names, abs_tol)
+  updates_df[to_keep, ]
 }
 
 #' get the entries that `compactify` would remove
@@ -464,56 +462,38 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol) {
   ekt_names <- ukey_names[ukey_names != "version"]
   val_names <- all_names[!all_names %in% ukey_names]
 
-  Reduce(`&`, lapply(updates_col_refs[ekt_names], is_locf, abs_tol, TRUE)) &
-    Reduce(`&`, lapply(updates_col_refs[val_names], is_locf, abs_tol, FALSE))
-}
-
-#' Checks to see if a value in a vector is LOCF
-#' @description LOCF meaning last observation carried forward (to later
-#'   versions). Lags the vector by 1, then compares with itself. If `is_key` is
-#'   `TRUE`, only values that are exactly the same between the lagged and
-#'   original are considered LOCF. If `is_key` is `FALSE` and `vec` is a vector
-#'   of numbers ([`base::is.numeric`]), then approximate equality will be used,
-#'   checking whether the absolute difference between each pair of entries is
-#'   `<= abs_tol`; if `vec` is something else, then exact equality is used
-#'   instead.
-#'
-#' @details
-#'
-#' We include epikey-time columns in LOCF comparisons as part of an optimization
-#' to avoid slower grouped operations while still ensuring that the first
-#' observation for each time series will not be marked as LOCF. We test these
-#' key columns for exact equality to prevent chopping off consecutive
-#' time_values during flat periods when `abs_tol` is high.
-#'
-#' We use exact equality for non-`is.numeric` double/integer columns such as
-#' dates, datetimes, difftimes, `tsibble::yearmonth`s, etc., as these may be
-#' used as part of re-indexing or grouping procedures, and we don't want to
-#' change the number of groups for those operations when we remove LOCF data
-#' during compactification.
-#'
-#' @importFrom dplyr lag if_else
-#' @importFrom rlang is_bare_numeric
-#' @importFrom vctrs vec_equal
-#' @keywords internal
-is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
-  lag_vec <- lag(vec)
-  if (is.vector(vec, mode = "numeric") && !is_key) {
-    # (integer or double vector, no class (& no dims); maybe names, which we'll
-    # ignore like `vec_equal`); not a key column
-    unname(if_else(
-      !is.na(vec) & !is.na(lag_vec),
-      abs(vec - lag_vec) <= abs_tol,
-      is.na(vec) & is.na(lag_vec)
-    ))
+  n_updates <- nrow(arranged_updates_df)
+  if (n_updates == 0L) {
+    logical(0L)
+  } else if (n_updates == 1L) {
+    FALSE # sole observation is not LOCF
   } else {
-    vec_equal(vec, lag_vec, na_equal = TRUE)
+    ekts_tbl <- new_tibble(updates_col_refs[ekt_names])
+    vals_tbl <- new_tibble(updates_col_refs[val_names])
+    # n_updates >= 2L so we can use `:` naturally (this is the reason for
+    # separating out n_updates == 1L from this case):
+    inds1 <- 2L:n_updates
+    inds2 <- 1L:(n_updates - 1L)
+    c(
+      FALSE, # first observation is not LOCF
+      vec_approx_equal0(ekts_tbl,
+        inds1 = inds1, ekts_tbl, inds2 = inds2,
+        # check ekt (key) cols with 0 tolerance:
+        na_equal = TRUE, abs_tol = 0
+      ) &
+        vec_approx_equal0(vals_tbl,
+          inds1 = inds1, vals_tbl, inds2 = inds2,
+          na_equal = TRUE, abs_tol = abs_tol
+        )
+    )
   }
 }
 
 #' `as_epi_archive` converts a data frame, data table, or tibble into an
 #' `epi_archive` object.
 #'
+#' @param x A data.frame, data.table, or tibble, with columns `geo_value`,
+#'   `time_value`, `version`, and then any additional number of columns.
 #' @param ... used for specifying column names, as in [`dplyr::rename`]. For
 #'   example `version = release_date`
 #' @param .versions_end location based versions_end, used to avoid prefix
@@ -536,10 +516,31 @@ as_epi_archive <- function(
     .versions_end = max_version_with_row_in(x), ...,
     versions_end = .versions_end) {
   assert_data_frame(x)
+  # Convert first to data.frame to guard against data.table#6859 and potentially
+  # other things epiprocess#618:
+  x_already_copied <- identical(class(x), c("data.table", "data.frame"))
+  x <- as.data.frame(x)
   x <- rename(x, ...)
-  x <- guess_column_name(x, "time_value", time_column_names())
   x <- guess_column_name(x, "geo_value", geo_column_names())
+  if (!all(other_keys %in% names(x))) {
+    # Give a more tailored error message than as.data.table would:
+    cli_abort(c(
+      "`x` is missing the following expected columns:
+       {format_varnames(setdiff(other_keys, names(x)))}.",
+      ">" = "You might need to `dplyr::rename()` beforehand
+             or using `as_epi_archive()`'s renaming feature."
+    ))
+  }
+  x <- guess_column_name(x, "time_value", time_column_names())
   x <- guess_column_name(x, "version", version_column_names())
+
+  # Convert to data.table:
+  key_vars <- c("geo_value", other_keys, "time_value", "version")
+  if (x_already_copied) {
+    setDT(x, key = key_vars)
+  } else {
+    x <- as.data.table(x, key = key_vars)
+  }
 
   if (lifecycle::is_present(geo_type)) {
     cli_warn("epi_archive constructor argument `geo_type` is now ignored. Consider removing.")
@@ -561,11 +562,10 @@ as_epi_archive <- function(
     cli_abort('`compactify` must be `TRUE`, `FALSE`, or `"message"`')
   }
 
-  data_table <- result$DT
-  key_vars <- key(data_table)
+  data_table <- result$DT # probably just `x`, but take no chances
 
   nrow_before_compactify <- nrow(data_table)
-  # Runs compactify on data frame
+  # Runs compactify on data_table
   if (identical(compactify, TRUE) || identical(compactify, "message")) {
     compactified <- apply_compactify(data_table, key_vars, compactify_abs_tol)
   } else {

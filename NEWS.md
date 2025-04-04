@@ -7,6 +7,17 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 ## New features
 
 - `is_epi_archive` function has been reintroduced.
+## Breaking changes
+
+- The low-level `new_epi_archive()` function's `x` argument has been replaced
+  with a `data_table` argument, which now has extra requirements; see
+  `?new_epi_archive`. Users should still be using `as_epi_archive()` unless they
+  have a need for something lower-level.
+
+## New features
+
+- `epi_slide_{mean,sum,opt}` now work on `epi_archive`s, preparing version
+  histories for 7-day-averages of signals, etc.
 
 # epiprocess 0.11
 
