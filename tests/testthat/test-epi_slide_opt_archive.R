@@ -173,10 +173,10 @@ test_that("epi_slide_opt.epi_archive gives expected results on example data; als
       group_by(geo_value)
   )
 
-  mini_case_death_rate_archive_b <- mini_case_death_rate_archive %>%
-    {
-      as_tibble(as.data.frame(.$DT))
-    } %>%
+  mini_case_death_rate_archive_b <-
+    mini_case_death_rate_archive$DT %>%
+    as.data.frame() %>%
+    as_tibble() %>%
     mutate(age_group = "overall") %>%
     as_epi_archive(other_keys = "age_group")
 
