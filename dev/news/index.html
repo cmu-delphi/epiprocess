@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.11.1</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.11.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,6 +72,8 @@
 <li>The compactification tolerance argument has been renamed to <code>compactify_abs_tol</code> or <code>abs_tol</code>, depending on the function; now defines a nonstrict tolerances; and defaults to 0 (requiring exact matches in order to compactify). This argument has been added to <code><a href="../reference/epi_archive.html">as_epi_archive()</a></code> and <code><a href="../reference/epix_merge.html">epix_merge()</a></code> and removed (along with all compactification options) from <code><a href="../reference/epi_archive.html">new_epi_archive()</a></code>.</li>
 <li>
 <code><a href="../reference/epi_archive.html">validate_epi_archive()</a></code> now follows the validator convention of operating on an “unvalidated” <code>epi_archive</code> (from <code>new_epi_archive</code>) rather than arguments.</li>
+<li>
+<code><a href="../reference/autoplot-epi.html">autoplot.epi_df()</a></code> argument <code>.max_facets</code> has been deprecated in favor of <code>.facet_filter</code> which allows explicit selection of facets to show.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="improvements-0-11">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-11"></a></h3>
@@ -79,6 +81,7 @@
 <code><a href="../reference/revision_summary.html">revision_summary()</a></code> now supports all <code>time_type</code>s.</li>
 <li>The compactification tolerance setting now works with integer-type columns.</li>
 <li>Various functions are now faster, using faster variants of core operations and avoiding reconstructing grouped <code>epi_df</code>s when unnecessary.</li>
+<li>Add <code><a href="../reference/autoplot-epi.html">autoplot.epi_archive()</a></code> to display revision patterns.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-0-11">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-11"></a></h3>
