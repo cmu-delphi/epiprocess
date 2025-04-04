@@ -48,9 +48,7 @@ reference:
     desc: Constructors and information for `epi_df` objects.
   - contents:
       - epi_df
-      - print.epi_df
       - group_epi_df
-      - autoplot.epi_df
 
   - title: "`epi_df` manipulation"
     desc: Functions operating on `epi_df` objects.
@@ -71,7 +69,6 @@ reference:
     desc: Constructors and information for `epi_archive` objects.
   - contents:
       - epi_archive
-      - print.epi_archive
       - clone
       - group_by.epi_archive
 
@@ -84,6 +81,12 @@ reference:
       - revision_summary
       - epix_fill_through_version
       - epix_truncate_versions_after
+  
+  - title: Basic analysis and visualization
+  - contents:
+      - starts_with("autoplot")
+      - starts_with("print")
+      - revision_summary
 
   - title: Example data
   - contents:
