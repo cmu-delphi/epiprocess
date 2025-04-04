@@ -48,12 +48,15 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   `new_epi_archive()`.
 - `validate_epi_archive()` now follows the validator convention of operating on
   an "unvalidated" `epi_archive` (from `new_epi_archive`) rather than arguments.
+- `autoplot.epi_df()` argument `.max_facets` has been deprecated in favor of
+  `.facet_filter` which allows explicit selection of facets to show.
 
 ## Improvements
 - `revision_summary()` now supports all `time_type`s.
 - The compactification tolerance setting now works with integer-type columns.
 - Various functions are now faster, using faster variants of core operations and
   avoiding reconstructing grouped `epi_df`s when unnecessary.
+- Add `autoplot.epi_archive()` to display revision patterns.
 
 ## Bug fixes
 
