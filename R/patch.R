@@ -283,8 +283,8 @@ tbl_diff2 <- function(earlier_snapshot, later_tbl,
   # ukey+val duplicates (cases 2. and 3.).)
 
   # Row indices of first occurrence of each ukey; will be the same as
-  # seq_len(combined_n) (cases 1., 2., or 5.) except for when that ukey has been
-  # re-reported in `later_tbl`, in which case (3. or 4.) it will point back to
+  # seq_len(combined_n) for each ukey's first appearance (cases 1., 2., or 5.);
+  # for re-reported ukeys in `later_tbl` (cases 3. or 4.), it will point back to
   # the row index of the same ukey in `earlier_snapshot`:
   combined_ukey_firsts <- vec_duplicate_id(combined_ukeys)
 
