@@ -2,7 +2,8 @@
 % Please edit documentation in R/archive.R
 \name{update_is_locf}
 \alias{update_is_locf}
-\title{Internal helper; lgl; which updates are LOCF}
+\title{Internal helper; lgl; which updates are LOCF and should thus be dropped when
+compactifying}
 \usage{
 update_is_locf(arranged_updates_df, ukey_names, abs_tol)
 }

@@ -73,7 +73,8 @@ upstream_slide_f_info <- function(.f, ...) {
   )
 }
 
-#' Calculate input and output column names for an `{epiprocess}` [`dplyr::across`]-like operations
+#' Calculate input and output column names for an `{epiprocess}`
+#' [`dplyr::across`]-like operations
 #'
 #' @param .x data.frame to perform input column tidyselection on
 #' @param time_type as in [`new_epi_df`]

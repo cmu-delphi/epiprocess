@@ -2,7 +2,8 @@
 % Please edit documentation in R/epi_slide_opt_edf.R
 \name{across_ish_names_info}
 \alias{across_ish_names_info}
-\title{Calculate input and output column names for an \code{{epiprocess}} \code{\link[dplyr:across]{dplyr::across}}-like operations}
+\title{Calculate input and output column names for an \code{{epiprocess}}
+\code{\link[dplyr:across]{dplyr::across}}-like operations}
 \usage{
 across_ish_names_info(
   .x,
@@ -41,6 +42,7 @@ named list with two elements: \code{input_col_names}, chr, subset of
 \code{names(.x)}; and \code{output_colnames}, chr, same length as \code{input_col_names}
 }
 \description{
-Calculate input and output column names for an \code{{epiprocess}} \code{\link[dplyr:across]{dplyr::across}}-like operations
+Calculate input and output column names for an \code{{epiprocess}}
+\code{\link[dplyr:across]{dplyr::across}}-like operations
 }
 \keyword{internal}

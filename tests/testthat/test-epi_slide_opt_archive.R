@@ -180,6 +180,7 @@ test_that("epi_slide_opt.epi_archive gives expected results on example data; als
     mutate(age_group = "overall") %>%
     as_epi_archive(other_keys = "age_group")
 
+  # grouping shouldn't change the outcome
   expect_equal(
     mini_case_death_rate_archive_b %>%
       group_by(geo_value, age_group) %>%
