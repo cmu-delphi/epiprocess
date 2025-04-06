@@ -183,6 +183,37 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
   }
 }
 
+#' Variation on [`dplyr::anti_join`] for speed + tolerance setting
+#'
+#' @param x tibble; `x[ukey_names]` must not have any duplicate rows
+#' @param y tibble; `y[ukey_names]` must not have any duplicate rows
+#' @param ukey_names chr; names of columns that form a unique key, for `x` and
+#'   for `y`
+#' @param val_names chr; names of columns which should be treated as
+#'   value/measurement columns, and compared with a tolerance
+#' @param abs_tol scalar non-negative numeric; absolute tolerance with which to
+#'   compare value columns; see [`vec_approx_equal`]
+#' @return rows from `x` that either (a) don't have a (0-tolerance) matching
+#'   ukey in `y`, or (b) have a matching ukey in `y`, but don't have
+#'   approximately equal value column values
+tbl_fast_anti_join <- function(x, y, ukey_names, val_names, abs_tol = 0) {
+  x <- x[c(ukey_names, val_names)]
+  y <- y[c(ukey_names, val_names)]
+  xy <- vec_rbind(x, y)
+  if (abs_tol == 0) {
+    x_exclude <- vec_duplicate_detect(xy)
+    x_exclude <- vec_slice(x_exclude, seq_len(nrow(x)))
+  } else {
+    xy_dup_ids <- vec_duplicate_id(xy[ukey_names])
+    xy_dup_inds2 <- which(xy_dup_ids != seq_along(xy_dup_ids))
+    xy_dup_inds1 <- xy_dup_ids[xy_dup_inds2]
+    x_exclude <- rep(FALSE, nrow(x))
+    xy_vals <- xy[val_names]
+    x_exclude[xy_dup_inds1] <- vec_approx_equal(xy_vals, inds1 = xy_dup_inds2, xy_vals, inds2 = xy_dup_inds1, na_equal = TRUE, abs_tol = abs_tol)
+  }
+  vec_slice(x, !x_exclude)
+}
+
 #' Calculate compact patch to move from one snapshot/update to another
 #'
 #' @param earlier_snapshot tibble or `NULL`; `NULL` represents that there was no
@@ -214,117 +245,41 @@ tbl_diff2 <- function(earlier_snapshot, later_tbl,
   # use faster validation variants:
   if (!is_tibble(later_tbl)) {
     cli_abort("`later_tbl` must be a tibble",
-      class = "epiprocess__tbl_diff2__later_tbl_invalid"
-    )
+              class = "epiprocess__tbl_diff2__later_tbl_invalid"
+              )
   }
   if (is.null(earlier_snapshot)) {
     return(later_tbl)
   }
   if (!is_tibble(earlier_snapshot)) {
     cli_abort("`earlier_snapshot` must be a tibble or `NULL`",
-      class = "epiprocess__tbl_diff2__earlier_tbl_class_invalid"
-    )
+              class = "epiprocess__tbl_diff2__earlier_tbl_class_invalid"
+              )
   }
   if (!is.character(ukey_names) || !all(ukey_names %in% names(earlier_snapshot))) {
     cli_abort("`ukey_names` must be a subset of column names",
-      class = "epiprocess__tbl_diff2__ukey_names_class_invalid"
-    )
+              class = "epiprocess__tbl_diff2__ukey_names_class_invalid"
+              )
   }
   later_format <- arg_match0(later_format, c("snapshot", "update"))
   if (!(is.vector(compactify_abs_tol, mode = "numeric") &&
-    length(compactify_abs_tol) == 1L && # nolint:indentation_linter
-    compactify_abs_tol >= 0)) {
+          length(compactify_abs_tol) == 1L && # nolint:indentation_linter
+          compactify_abs_tol >= 0)) {
     # Give a specific message:
     assert_numeric(compactify_abs_tol, lower = 0, any.missing = FALSE, len = 1L)
     # Fallback e.g. for invalid classes not caught by assert_numeric:
     cli_abort("`compactify_abs_tol` must be a length-1 double/integer >= 0",
-      class = "epiprocess__tbl_diff2__compactify_abs_tol_invalid"
-    )
+              class = "epiprocess__tbl_diff2__compactify_abs_tol_invalid")
   }
 
-  # Extract metadata:
-  earlier_n <- nrow(earlier_snapshot)
-  later_n <- nrow(later_tbl)
-  tbl_names <- names(earlier_snapshot)
-  val_names <- tbl_names[!tbl_names %in% ukey_names]
-
-  # More input validation:
-  if (!identical(tbl_names, names(later_tbl))) {
-    cli_abort(c(
-      "`earlier_snapshot` and `later_tbl` should have identical column
-       names and ordering.",
-      "*" = "`earlier_snapshot` colnames: {format_chr_deparse(tbl_names)}",
-      "*" = "`later_tbl` colnames: {format_chr_deparse(names(later_tbl))}"
-    ), class = "epiprocess__tbl_diff2__tbl_names_differ")
+  all_names <- names(later_tbl)
+  val_names <- all_names[! (all_names %in% ukey_names)]
+  updates <- tbl_fast_anti_join(later_tbl, earlier_snapshot, ukey_names, val_names, compactify_abs_tol)
+  if (later_format == "snapshot") {
+    deletions <- tbl_fast_anti_join(earlier_snapshot[ukey_names], later_tbl[ukey_names], ukey_names, character(), 0)
+    updates <- vec_rbind(updates, deletions) # fills vals with NAs
   }
-
-  combined_tbl <- vec_rbind(earlier_snapshot, later_tbl)
-  combined_n <- nrow(combined_tbl)
-
-  # We'll also need epikeytimes and value columns separately:
-  combined_ukeys <- combined_tbl[ukey_names]
-  combined_vals <- combined_tbl[val_names]
-
-  # We have five types of rows in combined_tbl:
-  # 1. From earlier_snapshot, no matching ukey in later_tbl (deletion; turn vals to
-  #    NAs to match epi_archive format)
-  # 2. From earlier_snapshot, with matching ukey in later_tbl (context; exclude from
-  #    result)
-  # 3. From later_tbl, with matching ukey in earlier_snapshot, with value "close" (change
-  #    that we'll compactify away)
-  # 4. From later_tbl, with matching ukey in earlier_snapshot, value not "close" (change
-  #    that we'll record)
-  # 5. From later_tbl, with no matching ukey in later_tbl (addition)
-
-  # For "snapshot" later_format, we need to filter to 1., 4., and 5., and alter
-  # values for 1.  For "update" later_format, we need to filter to 4. and 5.
-
-  # (For compactify_abs_tol = 0, we could potentially streamline things by dropping
-  # ukey+val duplicates (cases 2. and 3.).)
-
-  # Row indices of first occurrence of each ukey; will be the same as
-  # seq_len(combined_n) for each ukey's first appearance (cases 1., 2., or 5.);
-  # for re-reported ukeys in `later_tbl` (cases 3. or 4.), it will point back to
-  # the row index of the same ukey in `earlier_snapshot`:
-  combined_ukey_firsts <- vec_duplicate_id(combined_ukeys)
-
-  # Which rows from combined are cases 3. or 4.?
-  combined_ukey_is_repeat <- combined_ukey_firsts != seq_len(combined_n)
-  # For each row in 3. or 4., row numbers of the ukey appearance in earlier:
-  ukey_repeat_first_i <- combined_ukey_firsts[combined_ukey_is_repeat]
-
-  # Which rows from combined are in case 3.?
-  combined_compactify_away <- rep(FALSE, combined_n)
-  combined_compactify_away[combined_ukey_is_repeat] <-
-    vec_approx_equal0(combined_vals,
-      combined_vals,
-      na_equal = TRUE,
-      abs_tol = compactify_abs_tol,
-      inds1 = combined_ukey_is_repeat,
-      inds2 = ukey_repeat_first_i
-    )
-
-  # Which rows from combined are in cases 3., 4., or 5.?
-  combined_from_later <- vec_rep_each(c(FALSE, TRUE), c(earlier_n, later_n))
-
-  if (later_format == "update") {
-    # Cases 4. and 5.:
-    combined_tbl <- combined_tbl[combined_from_later & !combined_compactify_away, ]
-  } else { # later_format is "snapshot"
-    # Which rows from combined are in case 1.?
-    combined_is_deletion <- vec_rep_each(c(TRUE, FALSE), c(earlier_n, later_n))
-    combined_is_deletion[ukey_repeat_first_i] <- FALSE
-    # Which rows from combined are in cases 1., 4., or 5.?
-    combined_include <- combined_is_deletion | combined_from_later & !combined_compactify_away
-    combined_tbl <- combined_tbl[combined_include, ]
-    # Represent deletion in 1. with NA-ing of all value columns. (In some
-    # previous approaches to epi_diff2, this seemed to be faster than using
-    # vec_rbind(case_1_ukeys, cases_45_tbl) or bind_rows to fill with NAs, and more
-    # general than data.table's rbind(case_1_ukeys, cases_45_tbl, fill = TRUE).)
-    combined_tbl[combined_is_deletion[combined_include], val_names] <- NA
-  }
-
-  combined_tbl
+  updates
 }
 
 #' Apply an update (e.g., from `tbl_diff2`) to a snapshot
