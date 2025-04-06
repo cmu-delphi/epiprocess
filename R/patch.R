@@ -199,20 +199,39 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
 #'
 #' @keywords internal
 tbl_fast_anti_join <- function(x, y, ukey_names, val_names, abs_tol = 0) {
-  x_orig <- x
-  x <- x[c(ukey_names, val_names)]
-  y <- y[c(ukey_names, val_names)]
-  xy <- vec_rbind(x, y)
+  x_keyvals <- x[c(ukey_names, val_names)]
+  y_keyvals <- y[c(ukey_names, val_names)]
+  xy_keyvals <- vec_rbind(x, y)
   if (abs_tol == 0) {
-    x_exclude <- vec_duplicate_detect(xy)
+    # perf: 0 tolerance is just like a normal `anti_join` by both ukey_names and
+    # val_names together. We can do that more quickly than `anti_join` with
+    # `vctrs` by checking for keyvals of `x` that are not duplicated in `y`.
+    # (`vec_duplicate_detect` will mark those, unlike `duplicated`.)
+    x_exclude <- vec_duplicate_detect(xy_keyvals)
     x_exclude <- vec_slice(x_exclude, seq_len(nrow(x)))
   } else {
-    xy_dup_ids <- vec_duplicate_id(xy[ukey_names])
-    xy_dup_inds2 <- which(xy_dup_ids != seq_along(xy_dup_ids))
-    xy_dup_inds1 <- xy_dup_ids[xy_dup_inds2]
+    xy_ukeys <- xy_keyvals[ukey_names]
+    # Locate ukeys in `y` that match ukeys in `x` and where in `x` they map back
+    # to. It's faster to do this with `vec_duplicate_id` on `xy_ukeys` than to
+    # perform a `inner_join`.
+    xy_ukey_dup_ids <- vec_duplicate_id(xy_ukeys)
+    xy_ukey_dup_inds2 <- which(xy_ukey_dup_ids != seq_along(xy_ukey_dup_ids))
+    # ^ these should point to rows from y that had a ukey match in x
+    xy_ukey_dup_inds1 <- xy_ukey_dup_ids[xy_ukey_dup_inds2]
+    # ^ these should point to the respectively corresponding rows from x
+
+    # Anything in `x` without a ukey match in `y` should be kept; start off with
+    # `FALSE` for everything and just fill in `TRUE`/`FALSE` results for the
+    # ukeys with matches in `y`:
     x_exclude <- rep(FALSE, nrow(x))
     xy_vals <- xy[val_names]
-    x_exclude[xy_dup_inds1] <- vec_approx_equal(xy_vals, inds1 = xy_dup_inds2, xy_vals, inds2 = xy_dup_inds1, na_equal = TRUE, abs_tol = abs_tol)
+    x_exclude[xy_ukey_dup_inds1] <- vec_approx_equal(
+      xy_vals,
+      inds1 = xy_ukey_dup_inds2,
+      xy_vals,
+      inds2 = xy_ukey_dup_inds1,
+      na_equal = TRUE, abs_tol = abs_tol
+    )
   }
   vec_slice(x_orig, !x_exclude)
 }
@@ -269,7 +288,7 @@ tbl_diff2 <- function(earlier_snapshot, later_tbl,
   }
   later_format <- arg_match0(later_format, c("snapshot", "update"))
   if (!(is.vector(compactify_abs_tol, mode = "numeric") &&
-    length(compactify_abs_tol) == 1L && # nolint:indentation_linter
+    length(compactify_abs_tol) == 1L && # nolint: indentation_linter
     compactify_abs_tol >= 0)) {
     # Give a specific message:
     assert_numeric(compactify_abs_tol, lower = 0, any.missing = FALSE, len = 1L)

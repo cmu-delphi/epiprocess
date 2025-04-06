@@ -108,7 +108,8 @@ epi_slide_opt_archive_one_epikey <- function(
         slide[[out_colnames[[col_i]]]] <- f_dots_baked(slide[[in_colnames[[col_i]]]], before = before, after = after)
       }
     } else {
-      cli_abort("epiprocess internal error: `f_from_package` was {format_chr_deparse(f_from_package)}, which is unsupported",
+      cli_abort(
+        "epiprocess internal error: `f_from_package` was {format_chr_deparse(f_from_package)}, which is unsupported",
         class = "epiprocess__epi_slide_opt_archive__f_from_package_invalid"
       )
     }
