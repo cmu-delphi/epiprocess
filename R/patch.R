@@ -196,7 +196,10 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
 #' @return rows from `x` that either (a) don't have a (0-tolerance) matching
 #'   ukey in `y`, or (b) have a matching ukey in `y`, but don't have
 #'   approximately equal value column values
+#'
+#' @keywords internal
 tbl_fast_anti_join <- function(x, y, ukey_names, val_names, abs_tol = 0) {
+  x_orig <- x
   x <- x[c(ukey_names, val_names)]
   y <- y[c(ukey_names, val_names)]
   xy <- vec_rbind(x, y)
@@ -211,7 +214,7 @@ tbl_fast_anti_join <- function(x, y, ukey_names, val_names, abs_tol = 0) {
     xy_vals <- xy[val_names]
     x_exclude[xy_dup_inds1] <- vec_approx_equal(xy_vals, inds1 = xy_dup_inds2, xy_vals, inds2 = xy_dup_inds1, na_equal = TRUE, abs_tol = abs_tol)
   }
-  vec_slice(x, !x_exclude)
+  vec_slice(x_orig, !x_exclude)
 }
 
 #' Calculate compact patch to move from one snapshot/update to another
@@ -244,41 +247,53 @@ tbl_diff2 <- function(earlier_snapshot, later_tbl,
   # Most input validation + handle NULL earlier_snapshot. This is a small function so
   # use faster validation variants:
   if (!is_tibble(later_tbl)) {
-    cli_abort("`later_tbl` must be a tibble",
-              class = "epiprocess__tbl_diff2__later_tbl_invalid"
-              )
+    cli_abort(
+      "`later_tbl` must be a tibble",
+      class = "epiprocess__tbl_diff2__later_tbl_invalid"
+    )
   }
   if (is.null(earlier_snapshot)) {
     return(later_tbl)
   }
   if (!is_tibble(earlier_snapshot)) {
-    cli_abort("`earlier_snapshot` must be a tibble or `NULL`",
-              class = "epiprocess__tbl_diff2__earlier_tbl_class_invalid"
-              )
+    cli_abort(
+      "`earlier_snapshot` must be a tibble or `NULL`",
+      class = "epiprocess__tbl_diff2__earlier_tbl_class_invalid"
+    )
   }
   if (!is.character(ukey_names) || !all(ukey_names %in% names(earlier_snapshot))) {
-    cli_abort("`ukey_names` must be a subset of column names",
-              class = "epiprocess__tbl_diff2__ukey_names_class_invalid"
-              )
+    cli_abort(
+      "`ukey_names` must be a subset of column names",
+      class = "epiprocess__tbl_diff2__ukey_names_class_invalid"
+    )
   }
   later_format <- arg_match0(later_format, c("snapshot", "update"))
   if (!(is.vector(compactify_abs_tol, mode = "numeric") &&
-          length(compactify_abs_tol) == 1L && # nolint:indentation_linter
-          compactify_abs_tol >= 0)) {
+    length(compactify_abs_tol) == 1L && # nolint:indentation_linter
+    compactify_abs_tol >= 0)) {
     # Give a specific message:
     assert_numeric(compactify_abs_tol, lower = 0, any.missing = FALSE, len = 1L)
     # Fallback e.g. for invalid classes not caught by assert_numeric:
-    cli_abort("`compactify_abs_tol` must be a length-1 double/integer >= 0",
-              class = "epiprocess__tbl_diff2__compactify_abs_tol_invalid")
+    cli_abort(
+      "`compactify_abs_tol` must be a length-1 double/integer >= 0",
+      class = "epiprocess__tbl_diff2__compactify_abs_tol_invalid"
+    )
   }
 
   all_names <- names(later_tbl)
-  val_names <- all_names[! (all_names %in% ukey_names)]
+  val_names <- all_names[!(all_names %in% ukey_names)]
   updates <- tbl_fast_anti_join(later_tbl, earlier_snapshot, ukey_names, val_names, compactify_abs_tol)
   if (later_format == "snapshot") {
+    # Interpret `later_tbl` as a full snapshot, rather than a diff / sparse
+    # update. That means that any ukeys in `earlier_snapshot` that don't appear
+    # in `later_tbl` were deleted in the later snapshot.
     deletions <- tbl_fast_anti_join(earlier_snapshot[ukey_names], later_tbl[ukey_names], ukey_names, character(), 0)
-    updates <- vec_rbind(updates, deletions) # fills vals with NAs
+    updates <- vec_rbind(updates, deletions) # fills val cols with NAs
   }
+  # If `later_format == "update"`, we don't need to do anything special about
+  # the above ukeys. The full snapshot for the later version would include the
+  # corresponding rows unchanged, and the diff for these unchanged rows would be
+  # empty.
   updates
 }
 
@@ -299,7 +314,8 @@ tbl_patch <- function(snapshot, update, ukey_names) {
   # Most input validation. This is a small function so use faster validation
   # variants:
   if (!is_tibble(update)) {
-    cli_abort("`update` must be a tibble",
+    cli_abort(
+      "`update` must be a tibble",
       class = "epiprocess__tbl_patch__update_class_invalid"
     )
   }
@@ -307,12 +323,14 @@ tbl_patch <- function(snapshot, update, ukey_names) {
     return(update)
   }
   if (!is_tibble(snapshot)) {
-    cli_abort("`snapshot` must be a tibble",
+    cli_abort(
+      "`snapshot` must be a tibble",
       class = "epiprocess__tbl_patch__snapshot_class_invalid"
     )
   }
   if (!is.character(ukey_names) || !all(ukey_names %in% names(snapshot))) {
-    cli_abort("`ukey_names` must be a subset of column names",
+    cli_abort(
+      "`ukey_names` must be a subset of column names",
       class = "epiprocess__tbl_patch__ukey_names_invalid"
     )
   }
@@ -333,8 +351,8 @@ tbl_patch <- function(snapshot, update, ukey_names) {
   # This is like `!duplicated()` but faster, and like `vec_unique_loc()` but guaranteeing
   # that we get the first appearance since `vec_duplicate_id()` guarantees that
   # it points to the first appearance.
-  not_overwritten <- dup_ids == vec_seq_along(result_tbl)
-  result_tbl <- result_tbl[not_overwritten, ]
+  is_only_or_favored_appearance <- dup_ids == vec_seq_along(result_tbl)
+  result_tbl <- result_tbl[is_only_or_favored_appearance, ]
 
   result_tbl
 }
