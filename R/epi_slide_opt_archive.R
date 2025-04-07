@@ -127,7 +127,7 @@ epi_slide_opt_archive_one_epikey <- function(
           !is.na(slide_inp_backrefs)
       }
     out_update <- slide[rows_should_keep, ]
-    out_diff <- tbl_diff2_alt2(prev_out_snapshot, out_update, "time_value", "update")
+    out_diff <- tbl_diff2(prev_out_snapshot, out_update, "time_value", "update")
     prev_inp_snapshot <<- inp_snapshot
     prev_out_snapshot <<- tbl_patch(prev_out_snapshot, out_diff, "time_value")
     out_diff$version <- version

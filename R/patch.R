@@ -233,7 +233,7 @@ tbl_fast_anti_join <- function(x, y, ukey_names, val_names, abs_tol = 0) {
       na_equal = TRUE, abs_tol = abs_tol
     )
   }
-  vec_slice(x_orig, !x_exclude)
+  vec_slice(x, !x_exclude)
 }
 
 #' Calculate compact patch to move from one snapshot/update to another
