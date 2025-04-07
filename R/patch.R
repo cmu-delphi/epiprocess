@@ -211,9 +211,9 @@ tbl_fast_anti_join <- function(x, y, ukey_names, val_names, abs_tol = 0) {
     x_exclude <- vec_slice(x_exclude, seq_len(nrow(x)))
   } else {
     xy_ukeys <- xy_keyvals[ukey_names]
-    # Locate ukeys in `y` that match ukeys in `x` and where in `x` they map back
-    # to. It's faster to do this with `vec_duplicate_id` on `xy_ukeys` than to
-    # perform a `inner_join`.
+    # Locate ukeys in `y` that match ukeys in `x`, and where in `x` they map
+    # back to. It's faster to do this with `vec_duplicate_id` on `xy_ukeys` than
+    # to perform an `inner_join`.
     xy_ukey_dup_ids <- vec_duplicate_id(xy_ukeys)
     xy_ukey_dup_inds2 <- which(xy_ukey_dup_ids != seq_along(xy_ukey_dup_ids))
     # ^ these should point to rows from y that had a ukey match in x
