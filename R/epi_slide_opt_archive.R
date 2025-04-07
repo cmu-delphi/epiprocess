@@ -85,7 +85,7 @@ epi_slide_opt_archive_one_epikey <- function(
     # Get additional values needed from inp_snapshot + perform any NA
     # tail-padding needed to make slider results a fixed window size rather than
     # adaptive at tails + perform any NA gap-filling needed:
-    slide <- inp_snapshot[slide_inp_backrefs, ]
+    slide <- vec_slice(inp_snapshot, slide_inp_backrefs)
     slide$time_value <- slide_time_values
     if (f_from_package == "data.table") {
       if (before == Inf) {
@@ -126,7 +126,7 @@ epi_slide_opt_archive_one_epikey <- function(
           # Only include time_values that appeared in the input snapshot:
           !is.na(slide_inp_backrefs)
       }
-    out_update <- slide[rows_should_keep, ]
+    out_update <- vec_slice(slide, rows_should_keep)
     out_diff <- tbl_diff2(prev_out_snapshot, out_update, "time_value", "update")
     prev_inp_snapshot <<- inp_snapshot
     prev_out_snapshot <<- tbl_patch(prev_out_snapshot, out_diff, "time_value")

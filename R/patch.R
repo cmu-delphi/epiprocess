@@ -217,7 +217,7 @@ tbl_fast_anti_join <- function(x, y, ukey_names, val_names, abs_tol = 0) {
     xy_ukey_dup_ids <- vec_duplicate_id(xy_ukeys)
     xy_ukey_dup_inds2 <- which(xy_ukey_dup_ids != seq_along(xy_ukey_dup_ids))
     # ^ these should point to rows from y that had a ukey match in x
-    xy_ukey_dup_inds1 <- xy_ukey_dup_ids[xy_ukey_dup_inds2]
+    xy_ukey_dup_inds1 <- vec_slice(xy_ukey_dup_ids, xy_ukey_dup_inds2)
     # ^ these should point to the respectively corresponding rows from x
 
     # Anything in `x` without a ukey match in `y` should be kept; start off with
@@ -371,7 +371,7 @@ tbl_patch <- function(snapshot, update, ukey_names) {
   # that we get the first appearance since `vec_duplicate_id()` guarantees that
   # it points to the first appearance.
   is_only_or_favored_appearance <- dup_ids == vec_seq_along(result_tbl)
-  result_tbl <- result_tbl[is_only_or_favored_appearance, ]
+  result_tbl <- vec_slice(result_tbl, is_only_or_favored_appearance)
 
   result_tbl
 }
