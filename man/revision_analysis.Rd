@@ -91,6 +91,13 @@ requested signal. The default is \code{TRUE}.}
 \item{compactify_abs_tol}{length-1 double, used if \code{compactify} is \code{TRUE}, it
 determines the threshold for when two doubles are considered identical.}
 }
+\value{
+An S3 object with class \code{revision_behavior}. This function is typically
+called for the purposes of inspecting the printed output. The
+results of the computations are available in
+\code{revision_analysis(...)$revision_behavior}. If you only want to access
+the internal computations, use \code{return_only_tibble = TRUE}.
+}
 \description{
 \code{revision_summary} removes all missing values (if requested), and then
 computes some basic statistics about the revision behavior of an archive,

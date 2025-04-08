@@ -73,6 +73,12 @@
 #'   Using a `time_type` of `"integer"` with week numbers like 202501 will
 #'   produce incorrect results for some calculations, since week numbering
 #'   contains jumps at year boundaries.
+#' 
+#' @return An S3 object with class `revision_behavior`. This function is typically
+#'   called for the purposes of inspecting the printed output. The
+#'   results of the computations are available in 
+#'   `revision_analysis(...)$revision_behavior`. If you only want to access
+#'   the internal computations, use `return_only_tibble = TRUE`.
 #'
 #' @examples
 #' revision_example <- revision_analysis(archive_cases_dv_subset, percent_cli)
