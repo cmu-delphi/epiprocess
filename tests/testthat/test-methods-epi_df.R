@@ -329,4 +329,7 @@ test_that("sum_groups_epi_df works", {
     as_epi_df(as_of = attr(toy_epi_df, "metadata")$as_of, other_keys = "indic_var1") %>%
     arrange_canonical()
   expect_equal(out, expected_out)
+  out <- toy_epi_df %>%
+    sum_groups_epi_df(x:y, group_cols = c("time_value", "geo_value", "indic_var1"))
+  expect_equal(out, expected_out)
 })
