@@ -1,29 +1,41 @@
 # revision_summary works for dummy datasets
 
     Code
-      dummy_ex %>% revision_summary() %>% print(n = 10, width = 300)
+      rs1
     Message
-      Min lag (time to first version):
+      
+      -- An epi_archive spanning 2020-01-01 to 2020-01-01. --
+      
+      -- Min lag (time to first version): 
     Output
            min median     mean    max
         0 days 1 days 1.6 days 4 days
     Message
-      Fraction of epi_key+time_values with
+      
+      -- Fraction of epi_key + time_values with 
       No revisions:
-      * 3 out of 7 (42.86%)
+      * 0 out of 7 (0%)
       Quick revisions (last revision within 3 days of the `time_value`):
       * 4 out of 7 (57.14%)
       Few revisions (At most 3 revisions for that `time_value`):
-      * 6 out of 7 (85.71%)
-      Fraction of revised epi_key+time_values which have:
+      * 0 out of 7 (0%)
+      
+      -- Fraction of revised epi_key + time_values which have: 
       Less than 0.1 spread in relative value:
       * 1 out of 4 (25%)
       Spread of more than 5.1 in actual value (when revised):
       * 3 out of 4 (75%)
-      Days until within 20% of the latest value:
+      
+      -- Days until within 20% of the latest value: 
     Output
            min median     mean     max
         0 days 3 days 6.9 days 19 days
+
+---
+
+    Code
+      rs1$revision_behavior %>% print(n = 10, width = 300)
+    Output
       # A tibble: 7 x 11
         time_value geo_value n_revisions min_lag max_lag lag_near_latest spread
         <date>     <chr>           <dbl> <drtn>  <drtn>  <drtn>           <dbl>
@@ -47,31 +59,43 @@
 ---
 
     Code
-      dummy_ex %>% revision_summary(drop_nas = FALSE) %>% print(n = 10, width = 300)
+      rs2
     Message
-      Min lag (time to first version):
+      
+      -- An epi_archive spanning 2020-01-01 to 2020-01-01. --
+      
+      -- Min lag (time to first version): 
     Output
            min median     mean    max
         0 days 1 days 1.4 days 4 days
     Message
       Fraction of all versions that are `NA`:
       * 2 out of 19 (10.53%)
-      Fraction of epi_key+time_values with
+      
+      -- Fraction of epi_key + time_values with 
       No revisions:
-      * 2 out of 7 (28.57%)
+      * 0 out of 7 (0%)
       Quick revisions (last revision within 3 days of the `time_value`):
       * 4 out of 7 (57.14%)
       Few revisions (At most 3 revisions for that `time_value`):
-      * 6 out of 7 (85.71%)
-      Fraction of revised epi_key+time_values which have:
+      * 0 out of 7 (0%)
+      
+      -- Fraction of revised epi_key + time_values which have: 
       Less than 0.1 spread in relative value:
       * 2 out of 5 (40%)
       Spread of more than 5.1 in actual value (when revised):
       * 3 out of 5 (60%)
-      Days until within 20% of the latest value:
+      
+      -- Days until within 20% of the latest value: 
     Output
            min median     mean     max
         0 days 3 days 6.9 days 19 days
+
+---
+
+    Code
+      rs2$revision_behavior %>% print(n = 10, width = 300)
+    Output
       # A tibble: 7 x 11
         time_value geo_value n_revisions min_lag max_lag lag_near_latest spread
         <date>     <chr>           <dbl> <drtn>  <drtn>  <drtn>           <dbl>
@@ -95,31 +119,43 @@
 ---
 
     Code
-      dummy_ex_weekly %>% revision_summary(drop_nas = FALSE) %>% print(n = 10, width = 300)
+      rs3
     Message
-      Min lag (time to first version):
+      
+      -- An epi_archive spanning 2020-01-01 to 2020-01-01. --
+      
+      -- Min lag (time to first version): 
     Output
             min  median      mean     max
         0 weeks 1 weeks 1.4 weeks 4 weeks
     Message
       Fraction of all versions that are `NA`:
       * 2 out of 19 (10.53%)
-      Fraction of epi_key+time_values with
+      
+      -- Fraction of epi_key + time_values with 
       No revisions:
-      * 2 out of 7 (28.57%)
+      * 0 out of 7 (0%)
       Quick revisions (last revision within 1 week of the `time_value`):
       * 2 out of 7 (28.57%)
       Few revisions (At most 3 revisions for that `time_value`):
-      * 6 out of 7 (85.71%)
-      Fraction of revised epi_key+time_values which have:
+      * 0 out of 7 (0%)
+      
+      -- Fraction of revised epi_key + time_values which have: 
       Less than 0.1 spread in relative value:
       * 2 out of 5 (40%)
       Spread of more than 5.1 in actual value (when revised):
       * 3 out of 5 (60%)
-      Weeks until within 20% of the latest value:
+      
+      -- Weeks until within 20% of the latest value: 
     Output
             min  median      mean      max
         0 weeks 3 weeks 6.9 weeks 19 weeks
+
+---
+
+    Code
+      rs3$revision_behavior %>% print(n = 10, width = 300)
+    Output
       # A tibble: 7 x 11
         time_value geo_value n_revisions min_lag max_lag  lag_near_latest spread
         <date>     <chr>           <dbl> <drtn>  <drtn>   <drtn>           <dbl>
@@ -143,32 +179,43 @@
 ---
 
     Code
-      dummy_ex_yearmonthly %>% revision_summary(drop_nas = FALSE) %>% print(n = 10,
-        width = 300)
+      rs4
     Message
-      Min lag (time to first version):
+      
+      -- An epi_archive spanning 2020 Jan to 2020 Jan. --
+      
+      -- Min lag (time to first version): 
     Output
         min median mean max
           0      1  1.4   4
     Message
       Fraction of all versions that are `NA`:
       * 2 out of 19 (10.53%)
-      Fraction of epi_key+time_values with
+      
+      -- Fraction of epi_key + time_values with 
       No revisions:
-      * 2 out of 7 (28.57%)
+      * 0 out of 7 (0%)
       Quick revisions (last revision within 1 month of the `time_value`):
       * 2 out of 7 (28.57%)
       Few revisions (At most 3 revisions for that `time_value`):
-      * 6 out of 7 (85.71%)
-      Fraction of revised epi_key+time_values which have:
+      * 0 out of 7 (0%)
+      
+      -- Fraction of revised epi_key + time_values which have: 
       Less than 0.1 spread in relative value:
       * 2 out of 5 (40%)
       Spread of more than 5.1 in actual value (when revised):
       * 3 out of 5 (60%)
-      Months until within 20% of the latest value:
+      
+      -- Months until within 20% of the latest value: 
     Output
         min median mean max
           0      3  6.9  19
+
+---
+
+    Code
+      rs4$revision_behavior %>% print(n = 10, width = 300)
+    Output
       # A tibble: 7 x 11
         time_value geo_value n_revisions min_lag max_lag lag_near_latest spread
              <mth> <chr>           <dbl>   <dbl>   <dbl>           <dbl>  <dbl>
@@ -192,32 +239,43 @@
 ---
 
     Code
-      dummy_ex_integerly %>% revision_summary(min_waiting_period = 60,
-        quick_revision = 3, drop_nas = FALSE) %>% print(n = 10, width = 300)
+      rs5
     Message
-      Min lag (time to first version):
+      
+      -- An epi_archive spanning 1 to 1. --
+      
+      -- Min lag (time to first version): 
     Output
         min median mean max
           0      1  1.4   4
     Message
       Fraction of all versions that are `NA`:
       * 2 out of 19 (10.53%)
-      Fraction of epi_key+time_values with
+      
+      -- Fraction of epi_key + time_values with 
       No revisions:
-      * 2 out of 7 (28.57%)
+      * 0 out of 7 (0%)
       Quick revisions (last revision within 3 time steps of the `time_value`):
       * 4 out of 7 (57.14%)
       Few revisions (At most 3 revisions for that `time_value`):
-      * 6 out of 7 (85.71%)
-      Fraction of revised epi_key+time_values which have:
+      * 0 out of 7 (0%)
+      
+      -- Fraction of revised epi_key + time_values which have: 
       Less than 0.1 spread in relative value:
       * 2 out of 5 (40%)
       Spread of more than 5.1 in actual value (when revised):
       * 3 out of 5 (60%)
-      Time Steps until within 20% of the latest value:
+      
+      -- Time Steps until within 20% of the latest value: 
     Output
         min median mean max
           0      3  6.9  19
+
+---
+
+    Code
+      rs5$revision_behavior %>% print(n = 10, width = 300)
+    Output
       # A tibble: 7 x 11
         time_value geo_value n_revisions min_lag max_lag lag_near_latest spread
              <dbl> <chr>           <dbl>   <dbl>   <dbl>           <dbl>  <dbl>
