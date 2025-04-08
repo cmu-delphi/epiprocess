@@ -34,8 +34,6 @@
 #'   `NA`'s compactify is run again if `compactify` is `TRUE` to make
 #'   sure there are no duplicate values from occasions when the signal is
 #'   revised to `NA`, and then back to its immediately-preceding value.
-#' @param print_inform bool, determines whether to print summary information, or
-#'   only return the full summary tibble
 #' @param min_waiting_period `difftime`, integer or `NULL`. Sets a cutoff: any
 #'   time_values that have not had at least `min_waiting_period` to stabilize as
 #'   of the `versions_end` are removed. `min_waiting_period` should characterize
@@ -77,7 +75,7 @@
 #'   contains jumps at year boundaries.
 #'
 #' @examples
-#' revision_example <- revision_summary(archive_cases_dv_subset, percent_cli)
+#' revision_example <- revision_analysis(archive_cases_dv_subset, percent_cli)
 #' revision_example %>% arrange(desc(spread))
 #'
 #' @export
@@ -86,20 +84,20 @@
 #' @importFrom vctrs vec_cast
 #' @importFrom dplyr mutate group_by arrange filter if_any all_of across pull pick c_across
 #'   everything ungroup summarize if_else %>%
-revision_summary <- function(epi_arch,
-                             ...,
-                             drop_nas = TRUE,
-                             print_inform = TRUE,
-                             min_waiting_period = as.difftime(60, units = "days") %>%
-                               difftime_approx_ceiling_time_delta(epi_arch$time_type),
-                             within_latest = 0.2,
-                             quick_revision = as.difftime(3, units = "days") %>%
-                               difftime_approx_ceiling_time_delta(epi_arch$time_type),
-                             few_revisions = 3,
-                             abs_spread_threshold = NULL,
-                             rel_spread_threshold = 0.1,
-                             compactify = TRUE,
-                             compactify_abs_tol = 0) {
+revision_analysis <- function(epi_arch,
+                              ...,
+                              drop_nas = TRUE,
+                              min_waiting_period = as.difftime(60, units = "days") %>%
+                                difftime_approx_ceiling_time_delta(epi_arch$time_type),
+                              within_latest = 0.2,
+                              quick_revision = as.difftime(3, units = "days") %>%
+                                difftime_approx_ceiling_time_delta(epi_arch$time_type),
+                              few_revisions = 3,
+                              abs_spread_threshold = NULL,
+                              rel_spread_threshold = 0.1,
+                              compactify = TRUE,
+                              compactify_abs_tol = 0,
+                              return_only_tibble = FALSE) {
   assert_class(epi_arch, "epi_archive")
   # if the column to summarize isn't specified, use the only one if there is only one
   if (dots_n(...) == 0) {
@@ -193,62 +191,84 @@ revision_summary <- function(epi_arch,
       time_value, geo_value, all_of(epikey_names), n_revisions, min_lag, max_lag, # nolint: object_usage_linter
       lag_near_latest, spread, rel_spread, min_value, max_value, median_value # nolint: object_usage_linter
     )
-  if (print_inform) {
-    cli_inform("Min lag (time to first version):")
-    time_delta_summary(revision_behavior$min_lag, time_type) %>% print()
-    if (!drop_nas) {
-      total_na <- epi_arch$DT %>%
-        filter(is.na(c_across(!!arg))) %>% # nolint: object_usage_linter
-        nrow()
-      cli_inform("Fraction of all versions that are `NA`:")
-      cli_li(num_percent(total_na, nrow(epi_arch$DT), ""))
-      cli_inform("")
-    }
-    cli_inform("Fraction of epi_key+time_values with")
-    total_num <- nrow(revision_behavior) # nolint: object_usage_linter
-    total_num_unrevised <- sum(revision_behavior$n_revisions == 0) # nolint: object_usage_linter
-    cli_inform("No revisions:")
-    cli_li(num_percent(total_num_unrevised, total_num, ""))
-    total_quickly_revised <- sum( # nolint: object_usage_linter
-      time_delta_to_n_steps(revision_behavior$max_lag, time_type) <=
-        time_delta_to_n_steps(quick_revision, time_type)
-    )
-    cli_inform("Quick revisions (last revision within {format_time_delta(quick_revision, time_type)}
-                of the `time_value`):")
-    cli_li(num_percent(total_quickly_revised, total_num, ""))
-    total_barely_revised <- sum( # nolint: object_usage_linter
-      revision_behavior$n_revisions <=
-        few_revisions
-    )
-    cli_inform("Few revisions (At most {few_revisions} revisions for that `time_value`):")
-    cli_li(num_percent(total_barely_revised, total_num, ""))
-    cli_inform("")
-    cli_inform("Fraction of revised epi_key+time_values which have:")
-
-    real_revisions <- revision_behavior %>% filter(n_revisions > 0) # nolint: object_usage_linter
-    n_real_revised <- nrow(real_revisions) # nolint: object_usage_linter
-    rel_spread <- sum( # nolint: object_usage_linter
-      real_revisions$rel_spread <
-        rel_spread_threshold,
-      na.rm = TRUE
-    ) + sum(is.na(real_revisions$rel_spread))
-    cli_inform("Less than {rel_spread_threshold} spread in relative value:")
-    cli_li(num_percent(rel_spread, n_real_revised, ""))
-    abs_spread <- sum( # nolint: object_usage_linter
-      real_revisions$spread >
-        abs_spread_threshold
-    ) # nolint: object_usage_linter
-    cli_inform("Spread of more than {abs_spread_threshold} in actual value (when revised):")
-    cli_li(num_percent(abs_spread, n_real_revised, ""))
-
-    # time_type_unit_pluralizer[[time_type]] is a format string controlled by us
-    # and/or downstream devs, so we can paste it onto our format string safely:
-    units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[time_type]])) # nolint: object_usage_linter
-    cli_inform("{toTitleCase(units_plural)} until within {within_latest*100}% of the latest value:")
-    time_delta_summary(revision_behavior[["lag_near_latest"]], time_type) %>% print()
+  total_na <- epi_arch$DT %>%
+    filter(is.na(c_across(!!arg))) %>% # nolint: object_usage_linter
+    nrow()
+  if (!return_only_tibble) {
+    revision_behavior <- structure(list(
+      revision_behavior = revision_behavior,
+      range_time_values = range(epi_arch$DT$time_value), 
+      signal_variable = arg,
+      drop_nas = drop_nas,
+      time_type = time_type,
+      total_na = total_na,
+      n_obs = nrow(epi_arch$DT),
+      quick_revision = quick_revision,
+      few_revisions = few_revisions,
+      rel_spread_threshold = rel_spread_threshold,
+      abs_spread_threshold = abs_spread_threshold,
+      within_latest = within_latest
+    ), class = "revision_behavior")
   }
   return(revision_behavior)
 }
+
+#' @export
+print.revision_behavior <- function(x, ...) {
+  cli::cli_h2("An epi_archive spanning {.val {x$range_time_values[1]}} to {.val {x$range_time_values[1]}}.")
+  cli::cli_h3("Min lag (time to first version):")
+  time_delta_summary(x$revision_behavior$min_lag, x$time_type) %>% print()
+  if (!x$drop_nas) {
+    cli_inform("Fraction of all versions that are `NA`:")
+    cli_li(num_percent(x$total_na, x$n_obs, ""))
+    cli_inform("")
+  }
+  cli::cli_h3("Fraction of epi_key + time_values with")
+  total_num <- nrow(x$revision_behavior) # nolint: object_usage_linter
+  total_num_unrevised <- sum(x$n_revisions == 0) # nolint: object_usage_linter
+  cli_inform("No revisions:")
+  cli_li(num_percent(total_num_unrevised, total_num, ""))
+  total_quickly_revised <- sum( # nolint: object_usage_linter
+    time_delta_to_n_steps(x$revision_behavior$max_lag, x$time_type) <=
+      time_delta_to_n_steps(x$quick_revision, x$time_type)
+  )
+  cli_inform("Quick revisions (last revision within {format_time_delta(x$quick_revision, x$time_type)}
+                of the `time_value`):")
+  cli_li(num_percent(total_quickly_revised, total_num, ""))
+  total_barely_revised <- sum( # nolint: object_usage_linter
+    x$n_revisions <= x$few_revisions
+  )
+  cli_inform("Few revisions (At most {x$few_revisions} revisions for that `time_value`):")
+  cli_li(num_percent(total_barely_revised, total_num, ""))
+  
+  cli::cli_h3("Fraction of revised epi_key + time_values which have:")
+  
+  real_revisions <- x$revision_behavior %>% filter(n_revisions > 0) # nolint: object_usage_linter
+  n_real_revised <- nrow(real_revisions) # nolint: object_usage_linter
+  rel_spread <- sum( # nolint: object_usage_linter
+    real_revisions$rel_spread <
+      x$rel_spread_threshold,
+    na.rm = TRUE
+  ) + sum(is.na(real_revisions$rel_spread))
+  cli_inform("Less than {x$rel_spread_threshold} spread in relative value:")
+  cli_li(num_percent(rel_spread, n_real_revised, ""))
+  abs_spread <- sum( # nolint: object_usage_linter
+    real_revisions$spread >
+      x$abs_spread_threshold
+  ) # nolint: object_usage_linter
+  cli_inform("Spread of more than {x$abs_spread_threshold} in actual value (when revised):")
+  cli_li(num_percent(abs_spread, n_real_revised, ""))
+  
+  # time_type_unit_pluralizer[[time_type]] is a format string controlled by us
+  # and/or downstream devs, so we can paste it onto our format string safely:
+  units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[x$time_type]])) # nolint: object_usage_linter
+  cli::cli_h3("{toTitleCase(units_plural)} until within {x$within_latest*100}% of the latest value:")
+  time_delta_summary(x$revision_behavior[["lag_near_latest"]], x$time_type) %>% print()
+}
+
+#' @export
+#' @rdname revision_analysis
+revision_summary <- revision_analysis
 
 #' pull the value from lags when values starts indefinitely being within prop of its latest value.
 #' @param lags vector of lags; should be sorted
