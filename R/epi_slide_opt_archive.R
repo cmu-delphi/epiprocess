@@ -52,81 +52,14 @@ epi_slide_opt_archive_one_epikey <- function(
   grp_updates_by_version <- grp_updates %>%
     nest(.by = version, .key = "subtbl") %>%
     arrange(version)
-  unit_step <- unit_time_delta(time_type)
+  unit_step <- unit_time_delta(time_type, format = "fast")
   prev_inp_snapshot <- NULL
   prev_out_snapshot <- NULL
   result <- map(seq_len(nrow(grp_updates_by_version)), function(version_i) {
     version <- grp_updates_by_version$version[[version_i]]
     inp_update <- grp_updates_by_version$subtbl[[version_i]]
     inp_snapshot <- tbl_patch(prev_inp_snapshot, inp_update, "time_value")
-    if (before == Inf) {
-      if (after != 0) {
-        cli_abort('.window_size = Inf is only supported with .align = "right"',
-          class = "epiprocess__epi_slide_opt_archive__inf_window_invalid_align"
-        )
-      }
-      # We need to use the entire input snapshot range, filling in time gaps. We
-      # shouldn't pad the ends.
-      slide_t_min <- min(inp_snapshot$time_value)
-      slide_t_max <- max(inp_snapshot$time_value)
-    } else {
-      # If the input had updates in the range t1..t2, this could produce changes
-      # in slide outputs in the range t1-after..t2+before, and to compute those
-      # slide values, we need to look at the input snapshot from
-      # t1-after-before..t2+before+after. nolint: commented_code_linter
-      inp_update_t_min <- min(inp_update$time_value)
-      inp_update_t_max <- max(inp_update$time_value)
-      slide_t_min <- inp_update_t_min - (before + after) * unit_step
-      slide_t_max <- inp_update_t_max + (before + after) * unit_step
-    }
-    slide_nrow <- time_delta_to_n_steps(slide_t_max - slide_t_min, time_type) + 1L
-    slide_time_values <- slide_t_min + 0L:(slide_nrow - 1L) * unit_step
-    slide_inp_backrefs <- vec_match(slide_time_values, inp_snapshot$time_value)
-    # Get additional values needed from inp_snapshot + perform any NA
-    # tail-padding needed to make slider results a fixed window size rather than
-    # adaptive at tails + perform any NA gap-filling needed:
-    slide <- vec_slice(inp_snapshot, slide_inp_backrefs)
-    slide$time_value <- slide_time_values
-    if (f_from_package == "data.table") {
-      if (before == Inf) {
-        slide[, out_colnames] <-
-          f_dots_baked(slide[, in_colnames], seq_len(slide_nrow), adaptive = TRUE)
-      } else {
-        out_cols <- f_dots_baked(slide[, in_colnames], before + after + 1L)
-        if (after != 0L) {
-          # Shift an appropriate amount of NA padding from the start to the end.
-          # (This padding will later be cut off when we filter down to the
-          # original time_values.)
-          out_cols <- lapply(out_cols, function(out_col) {
-            c(out_col[(after + 1L):length(out_col)], rep(NA, after))
-          })
-        }
-        slide[, out_colnames] <- out_cols
-      }
-    } else if (f_from_package == "slider") {
-      for (col_i in seq_along(in_colnames)) {
-        slide[[out_colnames[[col_i]]]] <- f_dots_baked(slide[[in_colnames[[col_i]]]], before = before, after = after)
-      }
-    } else {
-      cli_abort(
-        "epiprocess internal error: `f_from_package` was {format_chr_deparse(f_from_package)}, which is unsupported",
-        class = "epiprocess__epi_slide_opt_archive__f_from_package_invalid"
-      )
-    }
-    rows_should_keep <-
-      if (before == Inf) {
-        # Re-introduce time gaps:
-        !is.na(slide_inp_backrefs)
-      } else {
-        # Get back to t1-after..t2+before; times outside this range were included
-        # only so those inside would have enough context for their slide
-        # computations, but these "context" rows may contain invalid slide
-        # computation outputs:
-        vec_rep_each(c(FALSE, TRUE, FALSE), c(before, slide_nrow - before - after, after)) &
-          # Only include time_values that appeared in the input snapshot:
-          !is.na(slide_inp_backrefs)
-      }
-    out_update <- vec_slice(slide, rows_should_keep)
+    out_update <- epi_slide_opt_one_epikey(inp_snapshot, f_dots_baked, f_from_package, before, after, unit_step, time_type, inp_update$time_value, in_colnames, out_colnames)
     out_diff <- tbl_diff2(prev_out_snapshot, out_update, "time_value", "update")
     prev_inp_snapshot <<- inp_snapshot
     prev_out_snapshot <<- tbl_patch(prev_out_snapshot, out_diff, "time_value")

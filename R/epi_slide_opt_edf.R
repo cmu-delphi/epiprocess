@@ -167,6 +167,67 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer,
   )
 }
 
+epi_slide_opt_one_epikey <- function(inp_snapshot, f_dots_baked, f_from_package, before, after, unit_step, time_type, ref_time_values, in_colnames, out_colnames) {
+  # TODO try converting time values to reals, do work on reals, convert back at very end?
+  if (before == Inf) {
+    if (after != 0L) {
+      cli_abort('.window_size = Inf is only supported with .align = "right"',
+        class = "epiprocess__epi_slide_opt_archive__inf_window_invalid_align"
+      )
+    }
+    # We need to use the entire input snapshot range, filling in time gaps. We
+    # shouldn't pad the ends.
+    slide_t_min <- min(inp_snapshot$time_value)
+    slide_t_max <- max(inp_snapshot$time_value)
+  } else {
+    # If the input had updates in the range t1..t2, this could produce changes
+    # in slide outputs in the range t1-after..t2+before, and to compute those
+    # slide values, we need to look at the input snapshot from
+    # t1-after-before..t2+before+after. nolint: commented_code_linter
+    inp_update_t_min <- min(ref_time_values)
+    inp_update_t_max <- max(ref_time_values)
+    slide_t_min <- inp_update_t_min - (before + after) * unit_step
+    slide_t_max <- inp_update_t_max + (before + after) * unit_step
+  }
+  slide_nrow <- time_delta_to_n_steps(slide_t_max - slide_t_min, time_type) + 1L
+  slide_time_values <- slide_t_min + 0L:(slide_nrow - 1L) * unit_step
+  slide_inp_backrefs <- vec_match(slide_time_values, inp_snapshot$time_value)
+  # Get additional values needed from inp_snapshot + perform any NA
+  # tail-padding needed to make slider results a fixed window size rather than
+  # adaptive at tails + perform any NA gap-filling needed:
+  slide <- vec_slice(inp_snapshot, slide_inp_backrefs)
+  slide$time_value <- slide_time_values
+  if (f_from_package == "data.table") {
+    if (before == Inf) {
+      slide[, out_colnames] <-
+        f_dots_baked(slide[, in_colnames], seq_len(slide_nrow), adaptive = TRUE)
+    } else {
+      out_cols <- f_dots_baked(slide[, in_colnames], before + after + 1L)
+      if (after != 0L) {
+        # Shift an appropriate amount of NA padding from the start to the end.
+        # (This padding will later be cut off when we filter down to the
+        # original time_values.)
+        out_cols <- lapply(out_cols, function(out_col) {
+          c(out_col[(after + 1L):length(out_col)], rep(NA, after))
+        })
+      }
+      slide[, out_colnames] <- out_cols
+    }
+  } else if (f_from_package == "slider") {
+    for (col_i in seq_along(in_colnames)) {
+      slide[[out_colnames[[col_i]]]] <- f_dots_baked(slide[[in_colnames[[col_i]]]], before = before, after = after)
+    }
+  } else {
+    cli_abort(
+      "epiprocess internal error: `f_from_package` was {format_chr_deparse(f_from_package)}, which is unsupported",
+      class = "epiprocess__epi_slide_opt_archive__f_from_package_invalid"
+    )
+  }
+  rows_should_keep <- vec_match(ref_time_values, slide_time_values)
+  out_update <- vec_slice(slide, rows_should_keep)
+  out_update
+}
+
 #' Optimized slide functions for common cases
 #'
 #' @description
@@ -425,6 +486,9 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
   }
   validate_slide_window_arg(.window_size, time_type)
   window_args <- get_before_after_from_window(.window_size, .align, time_type)
+  before <- time_delta_to_n_steps(window_args$before, time_type)
+  after <- time_delta_to_n_steps(window_args$after, time_type)
+  unit_step <- unit_time_delta(time_type, format = "fast")
 
   # Handle output naming:
   names_info <- across_ish_names_info(
@@ -434,97 +498,27 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
   input_col_names <- names_info$input_col_names
   output_col_names <- names_info$output_col_names
 
-  # Make a complete date sequence between min(.x$time_value) and max(.x$time_value).
-  date_seq_list <- full_date_seq(.x, window_args$before, window_args$after, time_type)
-  all_dates <- date_seq_list$all_dates
-  pad_early_dates <- date_seq_list$pad_early_dates
-  pad_late_dates <- date_seq_list$pad_late_dates
-
-  slide_one_grp <- function(.data_group, .group_key, ...) {
-    missing_times <- all_dates[!vec_in(all_dates, .data_group$time_value)]
-    # `frollmean` requires a full window to compute a result. Add NA values
-    # to beginning and end of the group so that we get results for the
-    # first `before` and last `after` elements.
-    .data_group <- vec_rbind(
-      .data_group, # (tibble; epi_slide_opt uses .keep = FALSE)
-      new_tibble(vec_recycle_common(
-        time_value = c(missing_times, pad_early_dates, pad_late_dates),
-        .real = FALSE
-      ))
-    ) %>%
-      `[`(vec_order(.$time_value), )
-
-    if (f_from_package == "data.table") {
-      # Grouping should ensure that we don't have duplicate time values.
-      # Completion above should ensure we have at least .window_size rows. Check
-      # that we don't have more than .window_size rows (or fewer somehow):
-      if (nrow(.data_group) != length(c(all_dates, pad_early_dates, pad_late_dates))) {
-        cli_abort(
-          c(
-            "group contains an unexpected number of rows",
-            "i" = c("Input data may contain `time_values` closer together than the
-              expected `time_step` size")
-          ),
-          class = "epiprocess__epi_slide_opt__unexpected_row_number",
-          epiprocess__data_group = .data_group,
-          epiprocess__group_key = .group_key
-        )
-      }
-
-      # `frollmean` is 1-indexed, so create a new window width based on our
-      # `before` and `after` params. Right-aligned `frollmean` results'
-      # `ref_time_value`s will be `after` timesteps ahead of where they should
-      # be; shift results to the left by `after` timesteps.
-      if (window_args$before != Inf) {
-        window_size <- window_args$before + window_args$after + 1L
-        roll_output <- .f(x = .data_group[, input_col_names], n = window_size, ...)
-      } else {
-        window_size <- list(seq_along(.data_group$time_value))
-        roll_output <- .f(x = .data_group[, input_col_names], n = window_size, adaptive = TRUE, ...)
-      }
-      if (window_args$after >= 1) {
-        .data_group[, output_col_names] <- lapply(roll_output, function(out_col) {
-          # Shift an appropriate amount of NA padding from the start to the end.
-          # (This padding will later be cut off when we filter down to the
-          # original time_values.)
-          c(out_col[(window_args$after + 1L):length(out_col)], rep(NA, window_args$after))
-        })
-      } else {
-        .data_group[, output_col_names] <- roll_output
-      }
+  f_dots_baked <-
+    if (rlang::dots_n(...) == 0L) {
+      # Leaving `.f` unchanged slightly improves computation speed and trims
+      # debug stack traces:
+      .f
+    } else {
+      purrr::partial(.f, ...)
     }
-    if (f_from_package == "slider") {
-      for (i in seq_along(input_col_names)) {
-        .data_group[, output_col_names[i]] <- .f(
-          x = .data_group[[input_col_names[i]]],
-          before = as.numeric(window_args$before),
-          after = as.numeric(window_args$after),
-          ...
-        )
-      }
-    }
-
-    .data_group
-  }
 
   result <- .x %>%
-    `[[<-`(".real", value = TRUE) %>%
-    group_modify(slide_one_grp, ..., .keep = FALSE) %>%
-    `[`(.$.real, names(.) != ".real") %>%
-    arrange_col_canonical() %>%
-    group_by(!!!.x_orig_groups)
+    group_modify(function(grp_data, grp_key) {
+      epi_slide_opt_one_epikey(grp_data, f_dots_baked, f_from_package, before, after, unit_step, time_type, vctrs::vec_set_intersect(ref_time_values, grp_data$time_value), names_info$input_col_names, names_info$output_col_names)
+    }) %>%
+    arrange_col_canonical()
 
   if (.all_rows) {
-    result[!vec_in(result$time_value, ref_time_values), output_col_names] <- NA
-  } else if (user_provided_rtvs) {
-    result <- result[vec_in(result$time_value, ref_time_values), ]
+    ekt_names <- key_colnames(.x)
+    result <- left_join(ungroup(.x), result[c(ekt_names, output_col_names)], by = ekt_names)
   }
 
-  if (!is_epi_df(result)) {
-    # `.all_rows` handling strips epi_df format and metadata.
-    # Restore them.
-    result <- reclass(result, attributes(.x)$metadata)
-  }
+  result <- group_by(result, !!!.x_orig_groups)
 
   return(result)
 }
