@@ -35,7 +35,8 @@ Description: This package introduces common data structures for working
     package is designed to be used in conjunction with `epipredict` for
     building and evaluating epidemiological models.
 License: MIT + file LICENSE
-URL: https://cmu-delphi.github.io/epiprocess/
+URL: https://github.com/cmu-delphi/epiprocess,
+    https://cmu-delphi.github.io/epiprocess/
 Depends:
     epidatasets,
     R (>= 3.6)
