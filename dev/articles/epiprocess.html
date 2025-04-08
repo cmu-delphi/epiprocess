@@ -69,7 +69,7 @@
       <h1>Get started with epiprocess</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/vignettes/epiprocess.Rmd" class="external-link"><code>vignettes/epiprocess.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/dev/vignettes/epiprocess.Rmd" class="external-link"><code>vignettes/epiprocess.Rmd</code></a></small>
       <div class="d-none name"><code>epiprocess.Rmd</code></div>
     </div>
 
@@ -79,7 +79,7 @@
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
 <p>This vignette provides a brief introduction to the
-<a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a> package. We will do the following:</p>
+<a href="https://github.com/cmu-delphi/epiprocess" class="external-link">epiprocess</a> package. We will do the following:</p>
 <ul>
 <li>Get data into <code><a href="../reference/epi_df.html">epi_df()</a></code> format and plot the data</li>
 <li>Perform basic signal processing tasks (lagged differences, rolling
@@ -103,7 +103,7 @@ we prepared by downloading the data using
 <code><a href="https://cmu-delphi.github.io/epidatr/reference/pub_covidcast.html" class="external-link">epidatr::pub_covidcast()</a></code>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epidatr/" class="external-link">epidatr</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cmu-delphi/epiprocess" class="external-link">epiprocess</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://withr.r-lib.org" class="external-link">withr</a></span><span class="op">)</span></span>
@@ -136,7 +136,7 @@ follows:</p>
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 4 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2025-04-04 22:42:59.632872</span></span>
+<span><span class="co">#&gt; * as_of     = 2025-04-08 20:56:50.249601</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2,808 × 4</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Groups:   geo_value [4]</span></span></span>
@@ -169,7 +169,7 @@ sliding, see <code><a href="../articles/epi_df.html">vignette("epi_df")</a></cod
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 5 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2025-04-04 22:42:59.632872</span></span>
+<span><span class="co">#&gt; * as_of     = 2025-04-08 20:56:50.249601</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2,808 × 5</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Groups:   geo_value [4]</span></span></span>
@@ -192,7 +192,7 @@ see <code><a href="../articles/growth_rate.html">vignette("growth_rate")</a></co
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 5 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2025-04-04 22:42:59.632872</span></span>
+<span><span class="co">#&gt; * as_of     = 2025-04-08 20:56:50.249601</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2,808 × 5</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Groups:   geo_value [4]</span></span></span>
@@ -216,7 +216,7 @@ see <code><a href="../articles/outliers.html">vignette("outliers")</a></code>.</
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 5 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2025-04-04 22:42:59.632872</span></span>
+<span><span class="co">#&gt; * as_of     = 2025-04-08 20:56:50.249601</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2,808 × 5</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases_cumulative</span> <span style="font-weight: bold;">cases_daily</span> <span style="font-weight: bold;">outlier_info$rm_lower</span></span></span>
@@ -283,7 +283,7 @@ snapshots. We can perform similar signal processing tasks on
 objects, though the interface is a bit different.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epidatr/" class="external-link">epidatr</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cmu-delphi/epiprocess" class="external-link">epiprocess</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://purrr.tidyverse.org/" class="external-link">purrr</a></span><span class="op">)</span></span>
