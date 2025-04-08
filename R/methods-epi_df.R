@@ -503,7 +503,7 @@ group_epi_df <- function(x, exclude = character()) {
 #'   expression. Variable names can be used as if they like `c(x, y)`
 #'   were positions in the data frame, and expressions like `x:y` can
 #'   be used to select a range of variables.
-#' @param .group_cols character vector of column names to group by. "time_value" is
+#' @param group_cols character vector of column names to group by. "time_value" is
 #'   included by default.
 #' @return an `epi_df` object
 #'
@@ -514,7 +514,6 @@ group_epi_df <- function(x, exclude = character()) {
 #' grad_employ_subset
 #' 
 #' grad_employ_subset %>%
-#'   select(geo_value:num_graduates) %>%
 #'   sum_groups_epi_df(num_graduates, group_cols = "geo_value")
 sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
   assert_class(.x, "epi_df")

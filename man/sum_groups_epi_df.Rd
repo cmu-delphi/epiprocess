@@ -14,7 +14,7 @@ expression. Variable names can be used as if they like \code{c(x, y)}
 were positions in the data frame, and expressions like \code{x:y} can
 be used to select a range of variables.}
 
-\item{.group_cols}{character vector of column names to group by. "time_value" is
+\item{group_cols}{character vector of column names to group by. "time_value" is
 included by default.}
 }
 \value{
@@ -31,6 +31,5 @@ the resulting \code{epi_df} will have \code{geo_value} set to \code{"total"}.
 grad_employ_subset
 
 grad_employ_subset \%>\%
-  select(geo_value:num_graduates) \%>\%
   sum_groups_epi_df(num_graduates, group_cols = "geo_value")
 }
