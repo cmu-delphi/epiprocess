@@ -37,12 +37,6 @@ articles:
     contents:
       - compactify
 
-repo:
-  url:
-    home: https://github.com/cmu-delphi/epiprocess/
-    source: https://github.com/cmu-delphi/epiprocess/
-    issue: https://github.com/cmu-delphi/epiprocess/issues
-
 reference:
   - title: "`epi_df` basics"
     desc: Constructors and information for `epi_df` objects.
@@ -83,7 +77,7 @@ reference:
       - epix_fill_through_version
       - epix_truncate_versions_after
       - set_versions_end
-  
+
   - title: Basic analysis and visualization
   - contents:
       - starts_with("autoplot")
