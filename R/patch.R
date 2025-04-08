@@ -118,10 +118,10 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
     # Matching vec_equal, we ignore names and other attributes.
     if (!is.null(inds1)) vec1 <- vec_slice(vec1, inds1)
     if (!is.null(inds2)) vec2 <- vec_slice(vec2, inds2)
-    na_or_nan1 <- is.na(vec1)
-    na_or_nan2 <- is.na(vec2)
-    # Since above are bare logical vectors, we can use `fifelse`
     if (na_equal) {
+      na_or_nan1 <- is.na(vec1)
+      na_or_nan2 <- is.na(vec2)
+      # Since above are bare logical vectors, we can use `fifelse`
       res <- fifelse(
         !na_or_nan1 & !na_or_nan2,
         abs(vec1 - vec2) <= abs_tol,
@@ -129,12 +129,8 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
       )
     } else {
       # Like `==` and `vec_equal`, we consider NaN == {NA, NaN, anything else}
-      # to be NA.
-      res <- fifelse(
-        !na_or_nan1 & !na_or_nan2,
-        abs(vec1 - vec2) <= abs_tol,
-        NA
-      )
+      # to be NA.  That logic is actually baked into the basic formula:
+      res <- abs(vec1 - vec2) <= abs_tol
     }
 
     if (!is.null(dim(vec1))) {
