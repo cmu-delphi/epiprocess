@@ -213,7 +213,7 @@ revision_analysis <- function(epi_arch,
 #'   appropriate for the scale of the dataset.
 #' @param rel_spread_threshold Scalar between 0 and 1. The relative spread fraction used to characterize revisions which
 #'   don't actually change very much. Default is .1, or 10% of the final value
-#' 
+#'
 #' @rdname revision_analysis
 #' @export
 print.revision_analysis <- function(x,
