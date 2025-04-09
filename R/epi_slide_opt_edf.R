@@ -167,7 +167,10 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer,
   )
 }
 
-epi_slide_opt_one_epikey <- function(inp_snapshot, f_dots_baked, f_from_package, before, after, unit_step, time_type, ref_time_values, in_colnames, out_colnames) {
+epi_slide_opt_one_epikey <- function(inp_tbl,
+                                     f_dots_baked, f_from_package, before, after, unit_step, time_type,
+                                     out_time_values,
+                                     in_colnames, out_colnames) {
   # TODO try converting time values to reals, do work on reals, convert back at very end?
   if (before == Inf) {
     if (after != 0L) {
@@ -175,27 +178,23 @@ epi_slide_opt_one_epikey <- function(inp_snapshot, f_dots_baked, f_from_package,
         class = "epiprocess__epi_slide_opt_archive__inf_window_invalid_align"
       )
     }
-    # We need to use the entire input snapshot range, filling in time gaps. We
-    # shouldn't pad the ends.
-    slide_t_min <- min(inp_snapshot$time_value)
-    slide_t_max <- max(inp_snapshot$time_value)
+    # We need to use the entire input range, filling in time gaps. We shouldn't
+    # pad the ends.
+    slide_t_min <- min(inp_tbl$time_value) # FIXME match existing behavior or complete change
+    slide_t_max <- max(inp_tbl$time_value)
   } else {
-    # If the input had updates in the range t1..t2, this could produce changes
-    # in slide outputs in the range t1-after..t2+before, and to compute those
-    # slide values, we need to look at the input snapshot from
-    # t1-after-before..t2+before+after. nolint: commented_code_linter
-    inp_update_t_min <- min(ref_time_values)
-    inp_update_t_max <- max(ref_time_values)
-    slide_t_min <- inp_update_t_min - (before + after) * unit_step
-    slide_t_max <- inp_update_t_max + (before + after) * unit_step
+    slide_t_min <- min(out_time_values) - before
+    slide_t_max <- max(out_time_values) + after
   }
   slide_nrow <- time_delta_to_n_steps(slide_t_max - slide_t_min, time_type) + 1L
   slide_time_values <- slide_t_min + 0L:(slide_nrow - 1L) * unit_step
-  slide_inp_backrefs <- vec_match(slide_time_values, inp_snapshot$time_value)
-  # Get additional values needed from inp_snapshot + perform any NA
+  slide_inp_backrefs <- vec_match(slide_time_values, inp_tbl$time_value)
+  # Get additional values needed from inp_tbl + perform any NA
   # tail-padding needed to make slider results a fixed window size rather than
   # adaptive at tails + perform any NA gap-filling needed:
-  slide <- vec_slice(inp_snapshot, slide_inp_backrefs)
+  slide <- vec_slice(inp_tbl, slide_inp_backrefs)
+  # TODO refactor to use a join if not using backrefs later anymore? or perf:
+  # try removing time_value column before slice?
   slide$time_value <- slide_time_values
   if (f_from_package == "data.table") {
     if (before == Inf) {
@@ -223,9 +222,10 @@ epi_slide_opt_one_epikey <- function(inp_snapshot, f_dots_baked, f_from_package,
       class = "epiprocess__epi_slide_opt_archive__f_from_package_invalid"
     )
   }
-  rows_should_keep <- vec_match(ref_time_values, slide_time_values)
-  out_update <- vec_slice(slide, rows_should_keep)
-  out_update
+  # TODO remove NAs from the match result to make `out_time_values` easier to use?  Or rename to `out_time_values`?
+  rows_should_keep <- vec_match(out_time_values, slide_time_values)
+  out_tbl <- vec_slice(slide, rows_should_keep)
+  out_tbl
 }
 
 #' Optimized slide functions for common cases
