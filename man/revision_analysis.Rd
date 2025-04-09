@@ -2,6 +2,7 @@
 % Please edit documentation in R/revision_analysis.R
 \name{revision_analysis}
 \alias{revision_analysis}
+\alias{print.revision_analysis}
 \alias{revision_summary}
 \title{A function to describe revision behavior for an archive.}
 \usage{
@@ -12,14 +13,19 @@ revision_analysis(
   min_waiting_period = as.difftime(60, units = "days") \%>\%
     difftime_approx_ceiling_time_delta(epi_arch$time_type),
   within_latest = 0.2,
-  quick_revision = as.difftime(3, units = "days") \%>\%
-    difftime_approx_ceiling_time_delta(epi_arch$time_type),
-  few_revisions = 3,
-  abs_spread_threshold = NULL,
-  rel_spread_threshold = 0.1,
   compactify = TRUE,
   compactify_abs_tol = 0,
   return_only_tibble = FALSE
+)
+
+\method{print}{revision_analysis}(
+  x,
+  quick_revision = as.difftime(3, units = "days") \%>\%
+    difftime_approx_ceiling_time_delta(x$time_type),
+  few_revisions = 3,
+  abs_spread_threshold = NULL,
+  rel_spread_threshold = 0.1,
+  ...
 )
 
 revision_summary(
@@ -29,11 +35,6 @@ revision_summary(
   min_waiting_period = as.difftime(60, units = "days") \%>\%
     difftime_approx_ceiling_time_delta(epi_arch$time_type),
   within_latest = 0.2,
-  quick_revision = as.difftime(3, units = "days") \%>\%
-    difftime_approx_ceiling_time_delta(epi_arch$time_type),
-  few_revisions = 3,
-  abs_spread_threshold = NULL,
-  rel_spread_threshold = 0.1,
   compactify = TRUE,
   compactify_abs_tol = 0,
   return_only_tibble = FALSE
@@ -63,24 +64,6 @@ to \code{NULL} or 0.}
 \item{within_latest}{double between 0 and 1. Determines the threshold
 used for the \code{lag_to}}
 
-\item{quick_revision}{difftime or integer (integer is treated as days), for
-the printed summary, the amount of time between the final revision and the
-actual time_value to consider the revision quickly resolved. Default of 3
-days}
-
-\item{few_revisions}{integer, for the printed summary, the upper bound on the
-number of revisions to consider "few". Default is 3.}
-
-\item{abs_spread_threshold}{length-1 numeric, for the printed summary, the
-maximum spread used to characterize revisions which don't actually change
-very much. Default is 5\% of the maximum value in the dataset, but this is
-the most unit dependent of values, and likely needs to be chosen
-appropriate for the scale of the dataset.}
-
-\item{rel_spread_threshold}{length-1 double between 0 and 1, for the printed
-summary, the relative spread fraction used to characterize revisions which
-don't actually change very much. Default is .1, or 10\% of the final value}
-
 \item{compactify}{bool. If \code{TRUE}, we will compactify after the signal
 requested in \code{...} has been selected on its own and the \code{drop_nas} step.
 This helps, for example, to give similar results when called on
@@ -93,6 +76,25 @@ determines the threshold for when two doubles are considered identical.}
 
 \item{return_only_tibble}{boolean to return only the simple \code{tibble} of
 computational results rather than the complete S3 object.}
+
+\item{x}{a \code{revision_analysis} object}
+
+\item{quick_revision}{Difftime or integer (integer is treated as days).
+The amount of time between the final revision and the
+actual time_value to consider the revision quickly resolved. Default of 3
+days}
+
+\item{few_revisions}{Integer. The upper bound on the
+number of revisions to consider "few". Default is 3.}
+
+\item{abs_spread_threshold}{Scalar numeric. The
+maximum spread used to characterize revisions which don't actually change
+very much. Default is 5\% of the maximum value in the dataset, but this is
+the most unit dependent of values, and likely needs to be chosen
+appropriate for the scale of the dataset.}
+
+\item{rel_spread_threshold}{Scalar between 0 and 1. The relative spread fraction used to characterize revisions which
+don't actually change very much. Default is .1, or 10\% of the final value}
 }
 \value{
 An S3 object with class \code{revision_behavior}. This function is typically

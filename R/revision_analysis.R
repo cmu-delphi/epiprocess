@@ -61,10 +61,10 @@
 #'   Using a `time_type` of `"integer"` with week numbers like 202501 will
 #'   produce incorrect results for some calculations, since week numbering
 #'   contains jumps at year boundaries.
-#' 
+#'
 #' @return An S3 object with class `revision_behavior`. This function is typically
 #'   called for the purposes of inspecting the printed output. The
-#'   results of the computations are available in 
+#'   results of the computations are available in
 #'   `revision_analysis(...)$revision_behavior`. If you only want to access
 #'   the internal computations, use `return_only_tibble = TRUE`.
 #'
@@ -186,7 +186,7 @@ revision_analysis <- function(epi_arch,
   if (!return_only_tibble) {
     revision_behavior <- structure(list(
       revision_behavior = revision_behavior,
-      range_time_values = range(epi_arch$DT$time_value), 
+      range_time_values = range(epi_arch$DT$time_value),
       signal_variable = arg,
       drop_nas = drop_nas,
       time_type = time_type,
@@ -227,35 +227,34 @@ print.revision_analysis <- function(x,
                                     abs_spread_threshold = NULL,
                                     rel_spread_threshold = 0.1,
                                     ...) {
-  cli::cli_h2("An epi_archive spanning {.val {x$range_time_values[1]}} to {.val {x$range_time_values[1]}}.")
+  rev_beh <- x$revision_behavior
+  cli::cli_h2("An epi_archive spanning {.val {rev_beh$range_time_values[1]}} to {.val {rev_beh$range_time_values[1]}}.")
   cli::cli_h3("Min lag (time to first version):")
-  time_delta_summary(x$revision_behavior$min_lag, x$time_type) %>% print()
+  time_delta_summary(rev_beh$min_lag, x$time_type) %>% print()
   if (!x$drop_nas) {
     cli_inform("Fraction of all versions that are `NA`:")
     cli_li(num_percent(x$total_na, x$n_obs, ""))
     cli_inform("")
   }
   cli::cli_h3("Fraction of epi_key + time_values with")
-  total_num <- nrow(x$revision_behavior) # nolint: object_usage_linter
-  total_num_unrevised <- sum(x$n_revisions == 0) # nolint: object_usage_linter
+  total_num <- nrow(rev_beh) # nolint: object_usage_linter
+  total_num_unrevised <- sum(rev_beh$n_revisions == 0) # nolint: object_usage_linter
   cli_inform("No revisions:")
   cli_li(num_percent(total_num_unrevised, total_num, ""))
   total_quickly_revised <- sum( # nolint: object_usage_linter
-    time_delta_to_n_steps(x$revision_behavior$max_lag, x$time_type) <=
+    time_delta_to_n_steps(rev_beh$max_lag, x$time_type) <=
       time_delta_to_n_steps(quick_revision, x$time_type)
   )
   cli_inform("Quick revisions (last revision within {format_time_delta(quick_revision, x$time_type)}
                 of the `time_value`):")
   cli_li(num_percent(total_quickly_revised, total_num, ""))
-  total_barely_revised <- sum( # nolint: object_usage_linter
-    x$n_revisions <= few_revisions
-  )
+  total_barely_revised <- sum(x$n_revisions <= few_revisions)
   cli_inform("Few revisions (At most {few_revisions} revisions for that `time_value`):")
   cli_li(num_percent(total_barely_revised, total_num, ""))
-  
+
   cli::cli_h3("Fraction of revised epi_key + time_values which have:")
-  
-  real_revisions <- x$revision_behavior %>% filter(n_revisions > 0) # nolint: object_usage_linter
+
+  real_revisions <- rev_beh %>% filter(n_revisions > 0) # nolint: object_usage_linter
   n_real_revised <- nrow(real_revisions) # nolint: object_usage_linter
   rel_spread <- sum( # nolint: object_usage_linter
     real_revisions$rel_spread < rel_spread_threshold,
@@ -268,12 +267,12 @@ print.revision_analysis <- function(x,
   ) # nolint: object_usage_linter
   cli_inform("Spread of more than {abs_spread_threshold} in actual value (when revised):")
   cli_li(num_percent(abs_spread, n_real_revised, ""))
-  
+
   # time_type_unit_pluralizer[[time_type]] is a format string controlled by us
   # and/or downstream devs, so we can paste it onto our format string safely:
   units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[x$time_type]])) # nolint: object_usage_linter
   cli::cli_h3("{toTitleCase(units_plural)} until within {x$within_latest*100}% of the latest value:")
-  time_delta_summary(x$revision_behavior[["lag_near_latest"]], x$time_type) %>% print()
+  time_delta_summary(rev_beh[["lag_near_latest"]], x$time_type) %>% print()
 }
 
 #' @export
