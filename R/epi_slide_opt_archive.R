@@ -64,9 +64,11 @@ epi_slide_opt_archive_one_epikey <- function(
     # Time inp_update_max_t + before should have an output update, since it
     # depends on inp_update_max_t + before - before = inp_update_max_t, which
     # has an input update. Similarly, we could have updates beginning with
-    # inp_update_min_t - after, or anything in between these two bounds.
-    out_update_min_t <- time_minus_n_steps(inp_update_min_t, after, time_type)
-    out_update_max_t <- time_plus_n_steps(inp_update_max_t, before, time_type)
+    # inp_update_min_t - after, or anything in between these two bounds. If
+    # before == Inf, we need to update outputs all the way to the end of the
+    # input *snapshot*.
+    out_update_min_t <- time_minus_slide_window_arg(inp_update_min_t, after, time_type)
+    out_update_max_t <- time_plus_slide_window_arg(inp_update_max_t, before, time_type, max(inp_snapshot$time_value))
     out_update_ts <- vec_slice(inp_snapshot$time_value, between(inp_snapshot$time_value, out_update_min_t, out_update_max_t))
     out_update <- epi_slide_opt_one_epikey(inp_snapshot, f_dots_baked, f_from_package, before, after, unit_step, time_type, out_update_ts, in_colnames, out_colnames)
     out_diff <- tbl_diff2(prev_out_snapshot, out_update, "time_value", "update")

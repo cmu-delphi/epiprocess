@@ -339,7 +339,7 @@ difftime_approx_ceiling_time_delta <- function(difftime, time_type) {
   )
 }
 
-#' Difference between two time value vectors in terms of number of time "steps"
+#' Difference between two finite `time_value` vectors in terms of number of time "steps"
 #'
 #' @param x a time_value (vector) of time type `time_type`
 #' @param y a time_value (vector) of time type `time_type`
@@ -352,15 +352,18 @@ time_minus_time_in_n_steps <- function(x, y, time_type) {
   time_delta_to_n_steps(x - y, time_type)
 }
 
-#' Advance/retreat time_values by specified number of time "steps"
+#' Advance/retreat time_value(s) by bare-integerish number(s) of time "steps"
 #'
 #' Here, a "step" is based on the `time_type`, not just the class of `x`.
 #'
 #' @param x a time_value (vector) of time type `time_type`
-#' @param y integerish (vector)
+#' @param y bare integerish (vector)
 #' @param time_type as in [`validate_slide_window_arg()`]
 #' @return a time_value (vector) of time type `time_type`
 #'
+#' @seealso [`time_plus_slide_window_arg`] if you're working with a `y` that is
+#'   a slide window arg, which is scalar but otherwise more general (class-wise,
+#'   Inf-wise) than an integerish vector.
 #' @keywords internal
 time_plus_n_steps <- function(x, y, time_type) {
   x + y * unit_time_delta(time_type, "fast")
@@ -369,4 +372,33 @@ time_plus_n_steps <- function(x, y, time_type) {
 #' @rdname time_plus_n_steps
 time_minus_n_steps <- function(x, y, time_type) {
   x - y * unit_time_delta(time_type, "fast")
+}
+
+#' Advance/retreat time_value(s) by specified amount (slide window arg)
+#'
+#' @param x a time_value (vector) of time type `time_type`
+#' @param y a (scalar) slide window arg; should pass [`validate_slide_window_arg()`]
+#' @param time_type as in [`validate_slide_window_arg()`]
+#' @param max_time_value when `y == Inf`, what should be the result of adding `y`?
+#' @param min_time_value when `y == Inf`, what should be the result of subtracting `y`?
+#' @return a time_value (vector) of time type `time_type`
+#'
+#' @keywords internal
+#' @seealso [`time_plus_n_steps`], if you're working with an integerish vector
+#'   number of time steps `y` (output from other `*n_steps` functions) instead.
+time_plus_slide_window_arg <- function(x, y, time_type, max_time_value) {
+  if (y == Inf) {
+    rep(max_time_value, vec_size(x))
+  } else {
+    time_plus_n_steps(x, y, time_type)
+  }
+}
+
+#' @rdname time_plus_slide_window_arg
+time_minus_slide_window_arg <- function(x, y, time_type, min_time_value) {
+  if (y == Inf) {
+    rep(min_time_value, vec_size(x))
+  } else {
+    time_minus_n_steps(x, y, time_type)
+  }
 }

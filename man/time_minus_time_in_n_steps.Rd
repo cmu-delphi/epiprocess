@@ -2,7 +2,7 @@
 % Please edit documentation in R/time-utils.R
 \name{time_minus_time_in_n_steps}
 \alias{time_minus_time_in_n_steps}
-\title{Difference between two time value vectors in terms of number of time "steps"}
+\title{Difference between two finite \code{time_value} vectors in terms of number of time "steps"}
 \usage{
 time_minus_time_in_n_steps(x, y, time_type)
 }
@@ -18,6 +18,6 @@ integerish vector such that \code{x + n_steps_to_time_delta_fast(result)}
 should equal \code{y}.
 }
 \description{
-Difference between two time value vectors in terms of number of time "steps"
+Difference between two finite \code{time_value} vectors in terms of number of time "steps"
 }
 \keyword{internal}

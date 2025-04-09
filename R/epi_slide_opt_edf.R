@@ -172,20 +172,10 @@ epi_slide_opt_one_epikey <- function(inp_tbl,
                                      out_time_values,
                                      in_colnames, out_colnames) {
   # TODO try converting time values to reals, do work on reals, convert back at very end?
-  if (before == Inf) {
-    if (after != 0L) {
-      cli_abort('.window_size = Inf is only supported with .align = "right"',
-        class = "epiprocess__epi_slide_opt_archive__inf_window_invalid_align"
-      )
-    }
-    # We need to use the entire input range, filling in time gaps. We shouldn't
-    # pad the ends.
-    slide_t_min <- min(inp_tbl$time_value) # FIXME match existing behavior, or complete changeover
-    slide_t_max <- max(out_time_values)
-  } else {
-    slide_t_min <- min(out_time_values) - before
-    slide_t_max <- max(out_time_values) + after
-  }
+  #
+  # FIXME min time_value for this epikey vs. entire edf; match existing behavior, or complete changeover
+  slide_t_min <- time_minus_slide_window_arg(min(out_time_values), before, time_type, min(inp_tbl$time_value))
+  slide_t_max <- time_plus_slide_window_arg(max(out_time_values), after, time_type)
   slide_nrow <- time_delta_to_n_steps(slide_t_max - slide_t_min, time_type) + 1L
   slide_time_values <- slide_t_min + 0L:(slide_nrow - 1L) * unit_step
   slide_inp_backrefs <- vec_match(slide_time_values, inp_tbl$time_value)
