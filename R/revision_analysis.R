@@ -40,7 +40,7 @@
 #'   the typical time during which most significant revisions occur. The default
 #'   of 60 days corresponds to a typical near-final value for case counts as
 #'   reported in the context of insurance. To avoid this filtering, either set
-#'   to `NULL` or 0. This will be rounded up to the appropriate `time_type` if
+#'   to `NULL` or 0. A `difftime` will be rounded up to the appropriate `time_type` if
 #'   necessary (that is 5 days will be rounded to 1 week if the data is weekly).
 #' @param within_latest double between 0 and 1. Determines the threshold
 #'   used for the `lag_to`
@@ -88,8 +88,10 @@ revision_analysis <- function(epi_arch,
                               compactify_abs_tol = 0,
                               return_only_tibble = FALSE) {
   assert_class(epi_arch, "epi_archive")
-  min_waiting_period <- min_waiting_period %>%
-    difftime_approx_ceiling_time_delta(epi_arch$time_type)
+  if (methods::is(min_waiting_period, "difftime")) {
+    min_waiting_period <- min_waiting_period %>%
+      difftime_approx_ceiling_time_delta(epi_arch$time_type)
+  }
   # if the column to summarize isn't specified, use the only one if there is only one
   if (dots_n(...) == 0) {
     # Choose the first column that's not a key:
@@ -225,8 +227,10 @@ print.revision_analysis <- function(x,
                                     abs_spread_threshold = NULL,
                                     rel_spread_threshold = 0.1,
                                     ...) {
-  quick_revision <- quick_revision %>%
-    difftime_approx_ceiling_time_delta(x$time_type)
+  if (methods::is(quick_revision, "difftime")) {
+    quick_revision <- quick_revision %>%
+      difftime_approx_ceiling_time_delta(x$time_type)
+  }
   if (is.null(abs_spread_threshold)) abs_spread_threshold <- .05 * x$max_val
   rev_beh <- x$revision_behavior
   cli::cli_h2("An epi_archive spanning {.val {x$range_time_values[1]}} to {.val {x$range_time_values[1]}}.")
