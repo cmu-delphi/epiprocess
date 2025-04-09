@@ -113,11 +113,6 @@ revision_analysis <- function(epi_arch,
       cli_abort("Not currently implementing more than one column at a time. Run each separately.")
     }
   }
-  if (is.null(abs_spread_threshold)) {
-    abs_spread_threshold <- .05 * epi_arch$DT %>%
-      pull(!!arg) %>%
-      max(na.rm = TRUE)
-  }
   # for each time_value, get
   #   the number of revisions
   #   the maximum spread in value (both absolute and relative)
@@ -191,6 +186,7 @@ revision_analysis <- function(epi_arch,
       drop_nas = drop_nas,
       time_type = time_type,
       total_na = total_na,
+      max_val = max(epi_arch$DT[[arg]], na.rm = TRUE),
       n_obs = nrow(epi_arch$DT),
       within_latest = within_latest
     ), class = "revision_analysis")
@@ -227,8 +223,9 @@ print.revision_analysis <- function(x,
                                     abs_spread_threshold = NULL,
                                     rel_spread_threshold = 0.1,
                                     ...) {
+  if (is.null(abs_spread_threshold)) abs_spread_threshold <- .05 * x$max_val
   rev_beh <- x$revision_behavior
-  cli::cli_h2("An epi_archive spanning {.val {rev_beh$range_time_values[1]}} to {.val {rev_beh$range_time_values[1]}}.")
+  cli::cli_h2("An epi_archive spanning {.val {x$range_time_values[1]}} to {.val {x$range_time_values[1]}}.")
   cli::cli_h3("Min lag (time to first version):")
   time_delta_summary(rev_beh$min_lag, x$time_type) %>% print()
   if (!x$drop_nas) {
@@ -248,8 +245,8 @@ print.revision_analysis <- function(x,
   cli_inform("Quick revisions (last revision within {format_time_delta(quick_revision, x$time_type)}
                 of the `time_value`):")
   cli_li(num_percent(total_quickly_revised, total_num, ""))
-  total_barely_revised <- sum(x$n_revisions <= few_revisions)
-  cli_inform("Few revisions (At most {few_revisions} revisions for that `time_value`):")
+  total_barely_revised <- sum(rev_beh$n_revisions <= few_revisions)
+  cli_inform("Few revisions (At most {.val {few_revisions}} revisions for that `time_value`):")
   cli_li(num_percent(total_barely_revised, total_num, ""))
 
   cli::cli_h3("Fraction of revised epi_key + time_values which have:")
@@ -260,18 +257,20 @@ print.revision_analysis <- function(x,
     real_revisions$rel_spread < rel_spread_threshold,
     na.rm = TRUE
   ) + sum(is.na(real_revisions$rel_spread))
-  cli_inform("Less than {rel_spread_threshold} spread in relative value:")
+  cli_inform("Less than {.val {rel_spread_threshold}} spread in relative value:")
   cli_li(num_percent(rel_spread, n_real_revised, ""))
   abs_spread <- sum( # nolint: object_usage_linter
     real_revisions$spread > abs_spread_threshold
   ) # nolint: object_usage_linter
-  cli_inform("Spread of more than {abs_spread_threshold} in actual value (when revised):")
+  divid <- cli::cli_div(theme = list(.val = list(digits = 3)))
+  cli_inform("Spread of more than {.val {abs_spread_threshold}} in actual value (when revised):")
+  cli::cli_end(divid)
   cli_li(num_percent(abs_spread, n_real_revised, ""))
 
   # time_type_unit_pluralizer[[time_type]] is a format string controlled by us
   # and/or downstream devs, so we can paste it onto our format string safely:
   units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[x$time_type]])) # nolint: object_usage_linter
-  cli::cli_h3("{toTitleCase(units_plural)} until within {x$within_latest*100}% of the latest value:")
+  cli::cli_h3("{toTitleCase(units_plural)} until within {.val {x$within_latest*100}}% of the latest value:")
   time_delta_summary(rev_beh[["lag_near_latest"]], x$time_type) %>% print()
 }
 

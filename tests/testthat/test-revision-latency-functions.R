@@ -89,10 +89,10 @@ test_that("revision_summary works for dummy datasets", {
   # something nonsensical, but we tried.
   rs5 <- dummy_ex_integerly %>%
     revision_summary(
-      min_waiting_period = 60, quick_revision = 3,
+      min_waiting_period = 60,
       drop_nas = FALSE
     )
-  expect_snapshot(rs5)
+  expect_snapshot(print(rs5, quick_revision = 3))
   expect_snapshot(rs5$revision_behavior %>% print(n = 10, width = 300))
 })
 

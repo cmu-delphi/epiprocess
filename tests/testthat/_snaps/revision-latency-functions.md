@@ -239,7 +239,7 @@
 ---
 
     Code
-      rs5
+      print(rs5, quick_revision = 3)
     Message
       
       -- An epi_archive spanning 1 to 1. --
