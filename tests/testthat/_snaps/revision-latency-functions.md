@@ -14,11 +14,11 @@
       
       -- Fraction of epi_key + time_values with 
       No revisions:
-      * 0 out of 7 (0%)
+      * 3 out of 7 (42.86%)
       Quick revisions (last revision within 3 days of the `time_value`):
       * 4 out of 7 (57.14%)
       Few revisions (At most 3 revisions for that `time_value`):
-      * 0 out of 7 (0%)
+      * 6 out of 7 (85.71%)
       
       -- Fraction of revised epi_key + time_values which have: 
       Less than 0.1 spread in relative value:
@@ -74,11 +74,11 @@
       
       -- Fraction of epi_key + time_values with 
       No revisions:
-      * 0 out of 7 (0%)
+      * 2 out of 7 (28.57%)
       Quick revisions (last revision within 3 days of the `time_value`):
       * 4 out of 7 (57.14%)
       Few revisions (At most 3 revisions for that `time_value`):
-      * 0 out of 7 (0%)
+      * 6 out of 7 (85.71%)
       
       -- Fraction of revised epi_key + time_values which have: 
       Less than 0.1 spread in relative value:
@@ -134,11 +134,11 @@
       
       -- Fraction of epi_key + time_values with 
       No revisions:
-      * 0 out of 7 (0%)
+      * 2 out of 7 (28.57%)
       Quick revisions (last revision within 1 week of the `time_value`):
       * 2 out of 7 (28.57%)
       Few revisions (At most 3 revisions for that `time_value`):
-      * 0 out of 7 (0%)
+      * 6 out of 7 (85.71%)
       
       -- Fraction of revised epi_key + time_values which have: 
       Less than 0.1 spread in relative value:
@@ -194,11 +194,11 @@
       
       -- Fraction of epi_key + time_values with 
       No revisions:
-      * 0 out of 7 (0%)
+      * 2 out of 7 (28.57%)
       Quick revisions (last revision within 1 month of the `time_value`):
       * 2 out of 7 (28.57%)
       Few revisions (At most 3 revisions for that `time_value`):
-      * 0 out of 7 (0%)
+      * 6 out of 7 (85.71%)
       
       -- Fraction of revised epi_key + time_values which have: 
       Less than 0.1 spread in relative value:
@@ -254,11 +254,11 @@
       
       -- Fraction of epi_key + time_values with 
       No revisions:
-      * 0 out of 7 (0%)
+      * 2 out of 7 (28.57%)
       Quick revisions (last revision within 3 time steps of the `time_value`):
       * 4 out of 7 (57.14%)
       Few revisions (At most 3 revisions for that `time_value`):
-      * 0 out of 7 (0%)
+      * 6 out of 7 (85.71%)
       
       -- Fraction of revised epi_key + time_values which have: 
       Less than 0.1 spread in relative value:

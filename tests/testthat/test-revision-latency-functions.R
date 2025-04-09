@@ -78,7 +78,7 @@ test_that("revision_summary works for dummy datasets", {
   # Yearmonthly has the same story. It would have been close to encountering
   # min_waiting_period-based filtering but we actually set its versions_end to
   # sometime in 2080 rather than 2022:
-  rs4 <- dummy_ex_yearmonthly %>% revision_summary(drop_nas = FALSE) 
+  rs4 <- dummy_ex_yearmonthly %>% revision_summary(drop_nas = FALSE)
   expect_snapshot(rs4)
   expect_snapshot(rs4$revision_behavior %>% print(n = 10, width = 300))
   # Integer is very much like daily. We have to provide some of the
@@ -91,7 +91,7 @@ test_that("revision_summary works for dummy datasets", {
     revision_summary(
       min_waiting_period = 60, quick_revision = 3,
       drop_nas = FALSE
-    ) 
+    )
   expect_snapshot(rs5)
   expect_snapshot(rs5$revision_behavior %>% print(n = 10, width = 300))
 })

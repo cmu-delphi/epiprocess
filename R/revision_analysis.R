@@ -222,56 +222,57 @@ revision_analysis <- function(epi_arch,
 }
 
 #' @export
-print.revision_behavior <- function(x, ...) {
-  cli::cli_h2("An epi_archive spanning {.val {x$range_time_values[1]}} to {.val {x$range_time_values[1]}}.")
+print.revision_behavior <- function(rev_beh, ...) {
+  revision_behavior <- rev_beh$revision_behavior
+  cli::cli_h2("An epi_archive spanning {.val {rev_beh$range_time_values[1]}} to {.val {rev_beh$range_time_values[1]}}.")
   cli::cli_h3("Min lag (time to first version):")
-  time_delta_summary(x$revision_behavior$min_lag, x$time_type) %>% print()
-  if (!x$drop_nas) {
+  time_delta_summary(revision_behavior$min_lag, rev_beh$time_type) %>% print()
+  if (!rev_beh$drop_nas) {
     cli_inform("Fraction of all versions that are `NA`:")
-    cli_li(num_percent(x$total_na, x$n_obs, ""))
+    cli_li(num_percent(rev_beh$total_na, rev_beh$n_obs, ""))
     cli_inform("")
   }
   cli::cli_h3("Fraction of epi_key + time_values with")
-  total_num <- nrow(x$revision_behavior) # nolint: object_usage_linter
-  total_num_unrevised <- sum(x$n_revisions == 0) # nolint: object_usage_linter
+  total_num <- nrow(revision_behavior) # nolint: object_usage_linter
+  total_num_unrevised <- sum(revision_behavior$n_revisions == 0) # nolint: object_usage_linter
   cli_inform("No revisions:")
   cli_li(num_percent(total_num_unrevised, total_num, ""))
   total_quickly_revised <- sum( # nolint: object_usage_linter
-    time_delta_to_n_steps(x$revision_behavior$max_lag, x$time_type) <=
-      time_delta_to_n_steps(x$quick_revision, x$time_type)
+    time_delta_to_n_steps(revision_behavior$max_lag, rev_beh$time_type) <=
+      time_delta_to_n_steps(rev_beh$quick_revision, rev_beh$time_type)
   )
-  cli_inform("Quick revisions (last revision within {format_time_delta(x$quick_revision, x$time_type)}
+  cli_inform("Quick revisions (last revision within {format_time_delta(rev_beh$quick_revision, rev_beh$time_type)}
                 of the `time_value`):")
   cli_li(num_percent(total_quickly_revised, total_num, ""))
   total_barely_revised <- sum( # nolint: object_usage_linter
-    x$n_revisions <= x$few_revisions
+    revision_behavior$n_revisions <= rev_beh$few_revisions
   )
-  cli_inform("Few revisions (At most {x$few_revisions} revisions for that `time_value`):")
+  cli_inform("Few revisions (At most {rev_beh$few_revisions} revisions for that `time_value`):")
   cli_li(num_percent(total_barely_revised, total_num, ""))
 
   cli::cli_h3("Fraction of revised epi_key + time_values which have:")
 
-  real_revisions <- x$revision_behavior %>% filter(n_revisions > 0) # nolint: object_usage_linter
+  real_revisions <- revision_behavior %>% filter(n_revisions > 0) # nolint: object_usage_linter
   n_real_revised <- nrow(real_revisions) # nolint: object_usage_linter
   rel_spread <- sum( # nolint: object_usage_linter
     real_revisions$rel_spread <
-      x$rel_spread_threshold,
+      rev_beh$rel_spread_threshold,
     na.rm = TRUE
   ) + sum(is.na(real_revisions$rel_spread))
-  cli_inform("Less than {x$rel_spread_threshold} spread in relative value:")
+  cli_inform("Less than {rev_beh$rel_spread_threshold} spread in relative value:")
   cli_li(num_percent(rel_spread, n_real_revised, ""))
   abs_spread <- sum( # nolint: object_usage_linter
     real_revisions$spread >
-      x$abs_spread_threshold
+      rev_beh$abs_spread_threshold
   ) # nolint: object_usage_linter
-  cli_inform("Spread of more than {x$abs_spread_threshold} in actual value (when revised):")
+  cli_inform("Spread of more than {rev_beh$abs_spread_threshold} in actual value (when revised):")
   cli_li(num_percent(abs_spread, n_real_revised, ""))
 
   # time_type_unit_pluralizer[[time_type]] is a format string controlled by us
   # and/or downstream devs, so we can paste it onto our format string safely:
-  units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[x$time_type]])) # nolint: object_usage_linter
-  cli::cli_h3("{toTitleCase(units_plural)} until within {x$within_latest*100}% of the latest value:")
-  time_delta_summary(x$revision_behavior[["lag_near_latest"]], x$time_type) %>% print()
+  units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[rev_beh$time_type]])) # nolint: object_usage_linter
+  cli::cli_h3("{toTitleCase(units_plural)} until within {rev_beh$within_latest*100}% of the latest value:")
+  time_delta_summary(revision_behavior[["lag_near_latest"]], rev_beh$time_type) %>% print()
 }
 
 #' @export
