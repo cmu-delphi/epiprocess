@@ -225,7 +225,7 @@ print.revision_analysis <- function(x,
                                     abs_spread_threshold = NULL,
                                     rel_spread_threshold = 0.1,
                                     ...) {
-  quick_revision <- quick_revision %>% 
+  quick_revision <- quick_revision %>%
     difftime_approx_ceiling_time_delta(x$time_type)
   if (is.null(abs_spread_threshold)) abs_spread_threshold <- .05 * x$max_val
   rev_beh <- x$revision_behavior
