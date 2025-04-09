@@ -43,20 +43,6 @@
 #'   to `NULL` or 0.
 #' @param within_latest double between 0 and 1. Determines the threshold
 #'   used for the `lag_to`
-#' @param quick_revision difftime or integer (integer is treated as days), for
-#'   the printed summary, the amount of time between the final revision and the
-#'   actual time_value to consider the revision quickly resolved. Default of 3
-#'   days
-#' @param few_revisions integer, for the printed summary, the upper bound on the
-#'   number of revisions to consider "few". Default is 3.
-#' @param abs_spread_threshold length-1 numeric, for the printed summary, the
-#'   maximum spread used to characterize revisions which don't actually change
-#'   very much. Default is 5% of the maximum value in the dataset, but this is
-#'   the most unit dependent of values, and likely needs to be chosen
-#'   appropriate for the scale of the dataset.
-#' @param rel_spread_threshold length-1 double between 0 and 1, for the printed
-#'   summary, the relative spread fraction used to characterize revisions which
-#'   don't actually change very much. Default is .1, or 10% of the final value
 #' @param compactify bool. If `TRUE`, we will compactify after the signal
 #'   requested in `...` has been selected on its own and the `drop_nas` step.
 #'   This helps, for example, to give similar results when called on
@@ -98,11 +84,6 @@ revision_analysis <- function(epi_arch,
                               min_waiting_period = as.difftime(60, units = "days") %>%
                                 difftime_approx_ceiling_time_delta(epi_arch$time_type),
                               within_latest = 0.2,
-                              quick_revision = as.difftime(3, units = "days") %>%
-                                difftime_approx_ceiling_time_delta(epi_arch$time_type),
-                              few_revisions = 3,
-                              abs_spread_threshold = NULL,
-                              rel_spread_threshold = 0.1,
                               compactify = TRUE,
                               compactify_abs_tol = 0,
                               return_only_tibble = FALSE) {
@@ -211,18 +192,41 @@ revision_analysis <- function(epi_arch,
       time_type = time_type,
       total_na = total_na,
       n_obs = nrow(epi_arch$DT),
-      quick_revision = quick_revision,
-      few_revisions = few_revisions,
-      rel_spread_threshold = rel_spread_threshold,
-      abs_spread_threshold = abs_spread_threshold,
       within_latest = within_latest
-    ), class = "revision_behavior")
+    ), class = "revision_analysis")
   }
   return(revision_behavior)
 }
 
+
+
+
+#' Print a `revision_analysis` object
+#'
+#' @param x a `revision_analysis` object
+#' @param quick_revision Difftime or integer (integer is treated as days).
+#'   The amount of time between the final revision and the
+#'   actual time_value to consider the revision quickly resolved. Default of 3
+#'   days
+#' @param few_revisions Integer. The upper bound on the
+#'   number of revisions to consider "few". Default is 3.
+#' @param abs_spread_threshold Scalar numeric. The
+#'   maximum spread used to characterize revisions which don't actually change
+#'   very much. Default is 5% of the maximum value in the dataset, but this is
+#'   the most unit dependent of values, and likely needs to be chosen
+#'   appropriate for the scale of the dataset.
+#' @param rel_spread_threshold Scalar between 0 and 1. The relative spread fraction used to characterize revisions which
+#'   don't actually change very much. Default is .1, or 10% of the final value
+#' 
+#' @rdname revision_analysis
 #' @export
-print.revision_behavior <- function(x, ...) {
+print.revision_analysis <- function(x,
+                                    quick_revision = as.difftime(3, units = "days") %>%
+                                      difftime_approx_ceiling_time_delta(x$time_type),
+                                    few_revisions = 3,
+                                    abs_spread_threshold = NULL,
+                                    rel_spread_threshold = 0.1,
+                                    ...) {
   cli::cli_h2("An epi_archive spanning {.val {x$range_time_values[1]}} to {.val {x$range_time_values[1]}}.")
   cli::cli_h3("Min lag (time to first version):")
   time_delta_summary(x$revision_behavior$min_lag, x$time_type) %>% print()
@@ -238,15 +242,15 @@ print.revision_behavior <- function(x, ...) {
   cli_li(num_percent(total_num_unrevised, total_num, ""))
   total_quickly_revised <- sum( # nolint: object_usage_linter
     time_delta_to_n_steps(x$revision_behavior$max_lag, x$time_type) <=
-      time_delta_to_n_steps(x$quick_revision, x$time_type)
+      time_delta_to_n_steps(quick_revision, x$time_type)
   )
-  cli_inform("Quick revisions (last revision within {format_time_delta(x$quick_revision, x$time_type)}
+  cli_inform("Quick revisions (last revision within {format_time_delta(quick_revision, x$time_type)}
                 of the `time_value`):")
   cli_li(num_percent(total_quickly_revised, total_num, ""))
   total_barely_revised <- sum( # nolint: object_usage_linter
-    x$n_revisions <= x$few_revisions
+    x$n_revisions <= few_revisions
   )
-  cli_inform("Few revisions (At most {x$few_revisions} revisions for that `time_value`):")
+  cli_inform("Few revisions (At most {few_revisions} revisions for that `time_value`):")
   cli_li(num_percent(total_barely_revised, total_num, ""))
   
   cli::cli_h3("Fraction of revised epi_key + time_values which have:")
@@ -254,17 +258,15 @@ print.revision_behavior <- function(x, ...) {
   real_revisions <- x$revision_behavior %>% filter(n_revisions > 0) # nolint: object_usage_linter
   n_real_revised <- nrow(real_revisions) # nolint: object_usage_linter
   rel_spread <- sum( # nolint: object_usage_linter
-    real_revisions$rel_spread <
-      x$rel_spread_threshold,
+    real_revisions$rel_spread < rel_spread_threshold,
     na.rm = TRUE
   ) + sum(is.na(real_revisions$rel_spread))
-  cli_inform("Less than {x$rel_spread_threshold} spread in relative value:")
+  cli_inform("Less than {rel_spread_threshold} spread in relative value:")
   cli_li(num_percent(rel_spread, n_real_revised, ""))
   abs_spread <- sum( # nolint: object_usage_linter
-    real_revisions$spread >
-      x$abs_spread_threshold
+    real_revisions$spread > abs_spread_threshold
   ) # nolint: object_usage_linter
-  cli_inform("Spread of more than {x$abs_spread_threshold} in actual value (when revised):")
+  cli_inform("Spread of more than {abs_spread_threshold} in actual value (when revised):")
   cli_li(num_percent(abs_spread, n_real_revised, ""))
   
   # time_type_unit_pluralizer[[time_type]] is a format string controlled by us
