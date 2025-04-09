@@ -9,10 +9,12 @@ sum_groups_epi_df(.x, sum_cols, group_cols = "time_value")
 \arguments{
 \item{.x}{an \code{epi_df}}
 
-\item{sum_cols}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> One unquoted
-expression. Variable names can be used as if they like \code{c(x, y)}
-were positions in the data frame, and expressions like \code{x:y} can
-be used to select a range of variables.}
+\item{sum_cols}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
+name (e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}),
+\link[tidyselect:language]{other tidy-select expression}, or a vector of
+characters (e.g. \code{c("cases", "deaths")}). Variable names can be used as if
+they were positions in the data frame, so expressions like \code{x:y} can be
+used to select a range of variables.}
 
 \item{group_cols}{character vector of column names to group by. "time_value" is
 included by default.}
@@ -26,10 +28,11 @@ Aggregates an \code{epi_df} object by the specified group columns, summing the
 the resulting \code{epi_df} will have \code{geo_value} set to \code{"total"}.
 }
 \examples{
-# This data has other_keys age_group and edu_qual.
-# We can aggregate num_graduates within geo_value
+# This data has other_keys age_group and edu_qual:
 grad_employ_subset
 
+# Aggregate num_graduates within each geo_value (and time_value):
 grad_employ_subset \%>\%
   sum_groups_epi_df(num_graduates, group_cols = "geo_value")
+
 }

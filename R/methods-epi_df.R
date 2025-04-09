@@ -499,22 +499,20 @@ group_epi_df <- function(x, exclude = character()) {
 #' the resulting `epi_df` will have `geo_value` set to `"total"`.
 #'
 #' @param .x an `epi_df`
-#' @param sum_cols <[`tidy-select`][dplyr::dplyr_tidy_select]> One unquoted
-#'   expression. Variable names can be used as if they like `c(x, y)`
-#'   were positions in the data frame, and expressions like `x:y` can
-#'   be used to select a range of variables.
+#' @param sum_cols `r tidyselect_arg_roxygen`
 #' @param group_cols character vector of column names to group by. "time_value" is
 #'   included by default.
 #' @return an `epi_df` object
 #'
-#' @export
 #' @examples
-#' # This data has other_keys age_group and edu_qual.
-#' # We can aggregate num_graduates within geo_value
+#' # This data has other_keys age_group and edu_qual:
 #' grad_employ_subset
-#' 
+#'
+#' # Aggregate num_graduates within each geo_value (and time_value):
 #' grad_employ_subset %>%
 #'   sum_groups_epi_df(num_graduates, group_cols = "geo_value")
+#'
+#' @export
 sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
   assert_class(.x, "epi_df")
   assert_character(group_cols)
@@ -522,8 +520,10 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
   if (!"time_value" %in% group_cols) {
     group_cols <- c("time_value", group_cols)
   }
+  # Attempt tidyselection ourselves to get "Error in `sum_groups_epi_df()`"
+  # rather than "in `dplyr::summarize()`", before forwarding:
   sum_cols <- rlang::enquo(sum_cols)
-  pos <- tidyselect::eval_select(sum_cols, .x) # trigger this to ensure cols exist
+  pos <- tidyselect::eval_select(sum_cols, .x)
   out <- group_by(.x, across(all_of(group_cols))) %>%
     dplyr::summarize(across(!!sum_cols, sum), .groups = "drop")
 

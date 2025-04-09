@@ -557,12 +557,7 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #' `vignette("epi_df")` for more examples.
 #'
 #' @template basic-slide-params
-#' @param .col_names <[`tidy-select`][dplyr_tidy_select]> An unquoted column
-#'   name (e.g., `cases`), multiple column names (e.g., `c(cases, deaths)`),
-#'   [other tidy-select expression][tidyselect::language], or a vector of
-#'   characters (e.g. `c("cases", "deaths")`). Variable names can be used as if
-#'   they were positions in the data frame, so expressions like `x:y` can be
-#'   used to select a range of variables.
+#' @param .col_names `r tidyselect_arg_roxygen`
 #'
 #'   The tidy-selection renaming interface is not supported, and cannot be used
 #'   to provide output column names; if you want to customize the output column
