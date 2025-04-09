@@ -139,6 +139,6 @@ contains jumps at year boundaries.
 }
 \examples{
 revision_example <- revision_analysis(archive_cases_dv_subset, percent_cli)
-revision_example \%>\% arrange(desc(spread))
+revision_example$revision_behavior \%>\% arrange(desc(spread))
 
 }
