@@ -10,8 +10,7 @@ revision_analysis(
   epi_arch,
   ...,
   drop_nas = TRUE,
-  min_waiting_period = as.difftime(60, units = "days") \%>\%
-    difftime_approx_ceiling_time_delta(epi_arch$time_type),
+  min_waiting_period = as.difftime(60, units = "days"),
   within_latest = 0.2,
   compactify = TRUE,
   compactify_abs_tol = 0,
@@ -20,8 +19,7 @@ revision_analysis(
 
 \method{print}{revision_analysis}(
   x,
-  quick_revision = as.difftime(3, units = "days") \%>\%
-    difftime_approx_ceiling_time_delta(x$time_type),
+  quick_revision = as.difftime(3, units = "days"),
   few_revisions = 3,
   abs_spread_threshold = NULL,
   rel_spread_threshold = 0.1,
@@ -32,8 +30,7 @@ revision_summary(
   epi_arch,
   ...,
   drop_nas = TRUE,
-  min_waiting_period = as.difftime(60, units = "days") \%>\%
-    difftime_approx_ceiling_time_delta(epi_arch$time_type),
+  min_waiting_period = as.difftime(60, units = "days"),
   within_latest = 0.2,
   compactify = TRUE,
   compactify_abs_tol = 0,
@@ -59,7 +56,8 @@ of the \code{versions_end} are removed. \code{min_waiting_period} should charact
 the typical time during which most significant revisions occur. The default
 of 60 days corresponds to a typical near-final value for case counts as
 reported in the context of insurance. To avoid this filtering, either set
-to \code{NULL} or 0.}
+to \code{NULL} or 0. This will be rounded up to the appropriate \code{time_type} if
+necessary (that is 5 days will be rounded to 1 week if the data is weekly).}
 
 \item{within_latest}{double between 0 and 1. Determines the threshold
 used for the \code{lag_to}}
@@ -82,7 +80,8 @@ computational results rather than the complete S3 object.}
 \item{quick_revision}{Difftime or integer (integer is treated as days).
 The amount of time between the final revision and the
 actual time_value to consider the revision quickly resolved. Default of 3
-days}
+days. This will be rounded up to the appropriate \code{time_type} if
+necessary (that is 5 days will be rounded to 1 week if the data is weekly).}
 
 \item{few_revisions}{Integer. The upper bound on the
 number of revisions to consider "few". Default is 3.}

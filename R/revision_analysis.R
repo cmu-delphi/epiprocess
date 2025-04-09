@@ -40,7 +40,8 @@
 #'   the typical time during which most significant revisions occur. The default
 #'   of 60 days corresponds to a typical near-final value for case counts as
 #'   reported in the context of insurance. To avoid this filtering, either set
-#'   to `NULL` or 0.
+#'   to `NULL` or 0. This will be rounded up to the appropriate `time_type` if
+#'   necessary (that is 5 days will be rounded to 1 week if the data is weekly).
 #' @param within_latest double between 0 and 1. Determines the threshold
 #'   used for the `lag_to`
 #' @param compactify bool. If `TRUE`, we will compactify after the signal
@@ -81,13 +82,14 @@
 revision_analysis <- function(epi_arch,
                               ...,
                               drop_nas = TRUE,
-                              min_waiting_period = as.difftime(60, units = "days") %>%
-                                difftime_approx_ceiling_time_delta(epi_arch$time_type),
+                              min_waiting_period = as.difftime(60, units = "days"),
                               within_latest = 0.2,
                               compactify = TRUE,
                               compactify_abs_tol = 0,
                               return_only_tibble = FALSE) {
   assert_class(epi_arch, "epi_archive")
+  min_waiting_period <- min_waiting_period %>%
+    difftime_approx_ceiling_time_delta(epi_arch$time_type)
   # if the column to summarize isn't specified, use the only one if there is only one
   if (dots_n(...) == 0) {
     # Choose the first column that's not a key:
@@ -203,7 +205,8 @@ revision_analysis <- function(epi_arch,
 #' @param quick_revision Difftime or integer (integer is treated as days).
 #'   The amount of time between the final revision and the
 #'   actual time_value to consider the revision quickly resolved. Default of 3
-#'   days
+#'   days. This will be rounded up to the appropriate `time_type` if
+#'   necessary (that is 5 days will be rounded to 1 week if the data is weekly).
 #' @param few_revisions Integer. The upper bound on the
 #'   number of revisions to consider "few". Default is 3.
 #' @param abs_spread_threshold Scalar numeric. The
@@ -217,12 +220,13 @@ revision_analysis <- function(epi_arch,
 #' @rdname revision_analysis
 #' @export
 print.revision_analysis <- function(x,
-                                    quick_revision = as.difftime(3, units = "days") %>%
-                                      difftime_approx_ceiling_time_delta(x$time_type),
+                                    quick_revision = as.difftime(3, units = "days"),
                                     few_revisions = 3,
                                     abs_spread_threshold = NULL,
                                     rel_spread_threshold = 0.1,
                                     ...) {
+  quick_revision <- quick_revision %>% 
+    difftime_approx_ceiling_time_delta(x$time_type)
   if (is.null(abs_spread_threshold)) abs_spread_threshold <- .05 * x$max_val
   rev_beh <- x$revision_behavior
   cli::cli_h2("An epi_archive spanning {.val {x$range_time_values[1]}} to {.val {x$range_time_values[1]}}.")
