@@ -110,6 +110,8 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
   }
 }
 
+time_delta_formats <- c("friendly", "fast")
+
 #' Object that, added to time_values of time_type, advances by one time step/interval
 #'
 #' @param time_type string; `epi_df`'s or `epi_archive`'s `time_type`
@@ -129,7 +131,7 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
 #'
 #' @keywords internal
 unit_time_delta <- function(time_type, format = c("friendly", "fast")) {
-  format <- rlang::arg_match(format)
+  format <- rlang::arg_match0(format, time_delta_formats)
   switch(format,
     friendly = switch(time_type,
       day = as.difftime(1, units = "days"),
