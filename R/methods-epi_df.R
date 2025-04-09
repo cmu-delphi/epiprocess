@@ -523,7 +523,7 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
   # Attempt tidyselection ourselves to get "Error in `sum_groups_epi_df()`"
   # rather than "in `dplyr::summarize()`", before forwarding:
   sum_cols <- rlang::enquo(sum_cols)
-  pos <- tidyselect::eval_select(sum_cols, .x)
+  tidyselect::eval_select(sum_cols, .x)
   out <- group_by(.x, across(all_of(group_cols))) %>%
     dplyr::summarize(across(!!sum_cols, sum), .groups = "drop")
 
