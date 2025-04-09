@@ -90,6 +90,9 @@ requested signal. The default is \code{TRUE}.}
 
 \item{compactify_abs_tol}{length-1 double, used if \code{compactify} is \code{TRUE}, it
 determines the threshold for when two doubles are considered identical.}
+
+\item{return_only_tibble}{boolean to return only the simple \code{tibble} of
+computational results rather than the complete S3 object.}
 }
 \value{
 An S3 object with class \code{revision_behavior}. This function is typically

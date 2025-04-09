@@ -65,6 +65,8 @@
 #'   requested signal. The default is `TRUE`.
 #' @param compactify_abs_tol length-1 double, used if `compactify` is `TRUE`, it
 #'   determines the threshold for when two doubles are considered identical.
+#' @param return_only_tibble boolean to return only the simple `tibble` of
+#'   computational results rather than the complete S3 object.
 #'
 #' @details Applies to `epi_archive`s with `time_type`s of `"day"`, `"week"`,
 #'   and `"yearmonth"`. It can also work with a `time_type` of `"integer"` if
