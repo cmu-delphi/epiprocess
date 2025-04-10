@@ -230,9 +230,7 @@ epi_slide_opt_one_epikey <- function(inp_tbl,
     out_filter_time_style,
     range = vec_rep_each(
       c(FALSE, TRUE, FALSE),
-      c(time_minus_time_in_n_steps(out_t_min, slide_t_min, time_type),
-        time_minus_time_in_n_steps(out_t_max, out_t_min, time_type) + 1L,
-        time_minus_time_in_n_steps(slide_t_max, out_t_max, time_type))
+      c(before, slide_nrow - before - after, after),
     ),
     set = vec_in(slide_time_values, out_time_values)
   )
