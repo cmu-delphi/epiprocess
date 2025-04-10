@@ -63,6 +63,7 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 - Various functions are now faster, using faster variants of core operations and
   avoiding reconstructing grouped `epi_df`s when unnecessary.
 - Add `autoplot.epi_archive()` to display revision patterns.
+- `sum_groups_epi_df()` now supports tidyselect syntax in it's second argument (#655).
 
 ## Bug fixes
 

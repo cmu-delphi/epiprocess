@@ -105,6 +105,7 @@ Collate:
     'methods-epi_archive.R'
     'grouped_epi_archive.R'
     'growth_rate.R'
+    'inline-roxygen.R'
     'key_colnames.R'
     'methods-epi_df.R'
     'outliers.R'
