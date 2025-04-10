@@ -141,11 +141,11 @@ computation, or alternatively, a running/cumulative computation (with
 \code{.window_size = Inf}) on the requested columns. Explicit \code{NA} measurements
 are temporarily added to fill in any time gaps, and, for rolling
 computations, to pad the time series to ensure that the first & last
-computations are over exactly \code{.window_size} values.
+computations use exactly \code{.window_size} values.
 
 \code{epi_slide_opt} allows you to use any \link[data.table:froll]{data.table::froll} or
-\link[slider:summary-slide]{slider::summary-slide} function. If none of the specialized functions here
-work, you can use \code{data.table::frollapply} together with a non-rolling
+\link[slider:summary-slide]{slider::summary-slide} function. If none of those specialized functions fit
+your usecase, you can use \code{data.table::frollapply} together with a non-rolling
 function (e.g., \code{median}). See \code{\link{epi_slide}} if you need to work with
 multiple columns at once or output a custom type.
 

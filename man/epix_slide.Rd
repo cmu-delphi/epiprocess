@@ -43,22 +43,24 @@ all data in \code{x} will be treated as part of a single data group.}
 \item{.f}{Function, formula, or missing; together with \code{...} specifies the
 computation. The computation will be run on each requested group-version
 combination, with a time window filter applied if \code{.before} is supplied.
-\itemize{
-\item If \code{.f} is a function must have the form \verb{function(x, g, v)} or
+
+If \code{.f} is a function must have the form \verb{function(x, g, v)} or
 \verb{function(x, g, v, <additional configuration args>)}, where
-\itemize{
-\item \code{x} is an \code{epi_df} with the same column names as the archive's \code{DT},
-minus the \code{version} column. (Or, if \code{.all_versions = TRUE}, an
-\code{epi_archive} with the requested partial version history.)
-\item \code{g} is a one-row tibble containing the values of the grouping variables
-for the associated group.
-\item \code{v} (length-1) is the associated \code{version} (one of the requested
-\code{.versions})
-\item \verb{<additional configuration args>} are optional; you can add such
-arguments to your function and set them by passing them through the
-\code{...} argument to \code{epix_slide()}.
-}
-}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{- `x` is an `epi_df` with the same column names as the archive's `DT`,
+  minus the `version` column. (Or, if `.all_versions = TRUE`, an
+  `epi_archive` with the requested partial version history.)
+
+- `g` is a one-row tibble containing the values of the grouping variables
+  for the associated group.
+
+- `v` (length-1) is the associated `version` (one of the requested
+  `.versions`)
+
+- `<additional configuration args>` are optional; you can add such
+  arguments to your function and set them by passing them through the
+  `...` argument to `epix_slide()`.
+}\if{html}{\out{</div>}}
 
 If a formula, \code{.f} can operate directly on columns accessed via \code{.x$var} or
 \code{.$var}, as in \code{~ mean (.x$var)} to compute a mean of a column \code{var} for
@@ -91,7 +93,7 @@ to reporting latency. Unlike \code{epi_slide()}, \code{epix_slide()} won't fill 
 any missing \code{time_values} in this window.}
 
 \item{.versions}{Requested versions on which to run the computation. Each
-requested \code{.version} also serves as the anchor point around which for which
+requested \code{.version} also serves as the anchor point from which
 the \code{time_value} window specified by \code{.before} is drawn. If \code{.versions} is
 missing, it will be set to a regularly-spaced sequence of values set to
 cover the range of \code{version}s in the \code{DT} plus the \code{versions_end}; the

@@ -640,7 +640,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   computation. The computation will be run on each requested group-version
 #'   combination, with a time window filter applied if `.before` is supplied.
 #'
-#'   - If `.f` is a function must have the form `function(x, g, v)` or
+#'   If `.f` is a function must have the form `function(x, g, v)` or
 #'     `function(x, g, v, <additional configuration args>)`, where
 #'
 #'     - `x` is an `epi_df` with the same column names as the archive's `DT`,
@@ -685,7 +685,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   to reporting latency. Unlike `epi_slide()`, `epix_slide()` won't fill in
 #'   any missing `time_values` in this window.
 #' @param .versions Requested versions on which to run the computation. Each
-#'   requested `.version` also serves as the anchor point around which for which
+#'   requested `.version` also serves as the anchor point from which
 #'   the `time_value` window specified by `.before` is drawn. If `.versions` is
 #'   missing, it will be set to a regularly-spaced sequence of values set to
 #'   cover the range of `version`s in the `DT` plus the `versions_end`; the

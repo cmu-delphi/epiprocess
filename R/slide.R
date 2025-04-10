@@ -28,11 +28,11 @@
 #' @template basic-slide-params
 #' @param .f,... The computation to slide. The input will be a time window of
 #'   the data for a single subpopulation (i.e., a single `geo_value` and single
-#'   value for any [`other_keys`][as_epi_df] you set up for age groups, etc.).
+#'   value for any [`other_keys`][as_epi_df] you set up, such as age groups, race, etc.).
 #'   The input will always have the same size, determined by `.window_size`, and
 #'   will fill in any missing `time_values`, using `NA` values for missing
 #'   measurements. The output should be a scalar value or a 1-row data frame;
-#'   these outputs will be collected and form a new column or columns in the
+#'   these outputs will be collected into a new column or columns in the
 #'   `epi_slide()` result. Data frame outputs will be unpacked into multiple
 #'   columns in the result by default, or [`tidyr::pack`]ed into a single
 #'   data-frame-type column if you provide a name for such a column (e.g., via
@@ -624,11 +624,11 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #'   `.window_size = Inf`) on the requested columns. Explicit `NA` measurements
 #'   are temporarily added to fill in any time gaps, and, for rolling
 #'   computations, to pad the time series to ensure that the first & last
-#'   computations are over exactly `.window_size` values.
+#'   computations use exactly `.window_size` values.
 #'
 #' `epi_slide_opt` allows you to use any [data.table::froll] or
-#' [slider::summary-slide] function. If none of the specialized functions here
-#' work, you can use `data.table::frollapply` together with a non-rolling
+#' [slider::summary-slide] function. If none of those specialized functions fit
+#' your usecase, you can use `data.table::frollapply` together with a non-rolling
 #' function (e.g., `median`). See [`epi_slide`] if you need to work with
 #' multiple columns at once or output a custom type.
 #'
