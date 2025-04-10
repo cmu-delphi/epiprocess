@@ -169,13 +169,26 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer,
 
 epi_slide_opt_one_epikey <- function(inp_tbl,
                                      f_dots_baked, f_from_package, before, after, unit_step, time_type,
-                                     out_time_values,
+                                     out_filter_time_range, out_filter_time_set,
                                      in_colnames, out_colnames) {
   # TODO try converting time values to reals, do work on reals, convert back at very end?
   #
-  # FIXME min time_value for this epikey vs. entire edf; match existing behavior, or complete changeover
-  slide_t_min <- time_minus_slide_window_arg(min(out_time_values), before, time_type, min(inp_tbl$time_value))
-  slide_t_max <- time_plus_slide_window_arg(max(out_time_values), after, time_type)
+  # TODO loosen restrictions here.  each filter optional?
+  if (!is.null(out_filter_time_range) && is.null(out_filter_time_set)) {
+    out_filter_time_style <- "range"
+    out_t_min <- out_filter_time_range[[1L]]
+    out_t_max <- out_filter_time_range[[2L]]
+  } else if (is.null(out_filter_time_range) && !is.null(out_filter_time_set)) {
+    # FIXME min time_value for this epikey vs. entire edf; match existing behavior, or complete changeover
+    out_filter_time_style <- "set"
+    out_time_values <- vec_set_intersect(inp_tbl$time_value, out_filter_time_set)
+    out_t_min <- min(out_time_values)
+    out_t_max <- max(out_time_values)
+  } else {
+    cli_abort("Exactly one of `out_filter_time_range` and `out_filter_time_set` must be non-`NULL`.")
+  }
+  slide_t_min <- time_minus_slide_window_arg(out_t_min, before, time_type, min(inp_tbl$time_value))
+  slide_t_max <- time_plus_slide_window_arg(out_t_max, after, time_type)
   slide_nrow <- time_delta_to_n_steps(slide_t_max - slide_t_min, time_type) + 1L
   slide_time_values <- slide_t_min + 0L:(slide_nrow - 1L) * unit_step
   slide_inp_backrefs <- vec_match(slide_time_values, inp_tbl$time_value)
@@ -212,7 +225,20 @@ epi_slide_opt_one_epikey <- function(inp_tbl,
       class = "epiprocess__epi_slide_opt_archive__f_from_package_invalid"
     )
   }
-  rows_should_keep <- vec_match(out_time_values, slide_time_values)
+  rows_should_keep1 <- !is.na(slide_inp_backrefs)
+  rows_should_keep2 <- switch(
+    out_filter_time_style,
+    range = vec_rep_each(
+      c(FALSE, TRUE, FALSE),
+      time_minus_time_in_n_steps(
+        vctrs::vec_c(out_t_min,   out_t_max, slide_t_max),
+        vctrs::vec_c(slide_t_min, out_t_min, out_t_max),
+        time_type
+      ) + c(0L, 1L, 0L)
+    ),
+    set = vec_in(slide_time_values, out_time_values)
+  )
+  rows_should_keep <- rows_should_keep1 & rows_should_keep2
   out_tbl <- vec_slice(slide, rows_should_keep)
   out_tbl
 }
@@ -498,7 +524,7 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
 
   result <- .x %>%
     group_modify(function(grp_data, grp_key) {
-      epi_slide_opt_one_epikey(grp_data, f_dots_baked, f_from_package, before, after, unit_step, time_type, vctrs::vec_set_intersect(ref_time_values, grp_data$time_value), names_info$input_col_names, names_info$output_col_names)
+      epi_slide_opt_one_epikey(grp_data, f_dots_baked, f_from_package, before, after, unit_step, time_type, NULL, ref_time_values, names_info$input_col_names, names_info$output_col_names)
     }) %>%
     arrange_col_canonical()
 
