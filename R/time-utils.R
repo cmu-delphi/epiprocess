@@ -373,32 +373,3 @@ time_plus_n_steps <- function(x, y, time_type) {
 time_minus_n_steps <- function(x, y, time_type) {
   x - y * unit_time_delta(time_type, "fast")
 }
-
-#' Advance/retreat time_value(s) by specified amount (slide window arg)
-#'
-#' @param x a time_value (vector) of time type `time_type`
-#' @param y a (scalar) slide window arg; should pass [`validate_slide_window_arg()`]
-#' @param time_type as in [`validate_slide_window_arg()`]
-#' @param max_time_value when `y == Inf`, what should be the result of adding `y`?
-#' @param min_time_value when `y == Inf`, what should be the result of subtracting `y`?
-#' @return a time_value (vector) of time type `time_type`
-#'
-#' @keywords internal
-#' @seealso [`time_plus_n_steps`], if you're working with an integerish vector
-#'   number of time steps `y` (output from other `*n_steps` functions) instead.
-time_plus_slide_window_arg <- function(x, y, time_type, max_time_value) {
-  if (y == Inf) {
-    rep(max_time_value, vec_size(x))
-  } else {
-    x + y
-  }
-}
-
-#' @rdname time_plus_slide_window_arg
-time_minus_slide_window_arg <- function(x, y, time_type, min_time_value) {
-  if (y == Inf) {
-    rep(min_time_value, vec_size(x))
-  } else {
-    x - y
-  }
-}

@@ -168,9 +168,12 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer,
 }
 
 epi_slide_opt_one_epikey <- function(inp_tbl,
-                                     f_dots_baked, f_from_package, before, after, unit_step, time_type,
+                                     f_dots_baked, f_from_package,
+                                     before_steps, after_steps, unit_step, time_type,
                                      out_filter_time_range, out_filter_time_set,
                                      in_colnames, out_colnames) {
+  # TODO rename function, reorder args, roxygen2
+  #
   # TODO try converting time values to reals, do work on reals, convert back at very end?
   #
   # TODO loosen restrictions here.  each filter optional?
@@ -187,8 +190,14 @@ epi_slide_opt_one_epikey <- function(inp_tbl,
   } else {
     cli_abort("Exactly one of `out_filter_time_range` and `out_filter_time_set` must be non-`NULL`.")
   }
-  slide_t_min <- time_minus_slide_window_arg(out_t_min, before, time_type, min(inp_tbl$time_value))
-  slide_t_max <- time_plus_slide_window_arg(out_t_max, after, time_type)
+  if (before_steps == Inf) {
+    slide_t_min <- min(inp_tbl$time_value)
+    slide_start_padding_n <- time_minus_time_in_n_steps(out_t_min, slide_t_min, time_type)
+  } else {
+    slide_t_min <- out_t_min - before_steps * unit_step
+    slide_start_padding_n <- before_steps # perf: avoid time_minus_time_in_n_steps
+  }
+  slide_t_max <- out_t_max + after_steps * unit_step
   slide_nrow <- time_delta_to_n_steps(slide_t_max - slide_t_min, time_type) + 1L
   slide_time_values <- slide_t_min + 0L:(slide_nrow - 1L) * unit_step
   slide_inp_backrefs <- vec_match(slide_time_values, inp_tbl$time_value)
@@ -200,24 +209,24 @@ epi_slide_opt_one_epikey <- function(inp_tbl,
   # try removing time_value column before slice?
   slide$time_value <- slide_time_values
   if (f_from_package == "data.table") {
-    if (before == Inf) {
+    if (before_steps == Inf) {
       slide[, out_colnames] <-
         f_dots_baked(slide[, in_colnames], seq_len(slide_nrow), adaptive = TRUE)
     } else {
-      out_cols <- f_dots_baked(slide[, in_colnames], before + after + 1L)
-      if (after != 0L) {
+      out_cols <- f_dots_baked(slide[, in_colnames], before_steps + after_steps + 1L)
+      if (after_steps != 0L) {
         # Shift an appropriate amount of NA padding from the start to the end.
         # (This padding will later be cut off when we filter down to the
         # original time_values.)
         out_cols <- lapply(out_cols, function(out_col) {
-          c(out_col[(after + 1L):length(out_col)], rep(NA, after))
+          c(out_col[(after_steps + 1L):length(out_col)], rep(NA, after_steps))
         })
       }
       slide[, out_colnames] <- out_cols
     }
   } else if (f_from_package == "slider") {
     for (col_i in seq_along(in_colnames)) {
-      slide[[out_colnames[[col_i]]]] <- f_dots_baked(slide[[in_colnames[[col_i]]]], before = before, after = after)
+      slide[[out_colnames[[col_i]]]] <- f_dots_baked(slide[[in_colnames[[col_i]]]], before = before_steps, after = after_steps)
     }
   } else {
     cli_abort(
@@ -225,12 +234,16 @@ epi_slide_opt_one_epikey <- function(inp_tbl,
       class = "epiprocess__epi_slide_opt_archive__f_from_package_invalid"
     )
   }
+  # We should filter down the slide time values to ones in the input time values
+  # when preparing the output:
   rows_should_keep1 <- !is.na(slide_inp_backrefs)
-  rows_should_keep2 <- switch(
-    out_filter_time_style,
+  # We also need to apply the out_filter.
+  #
+  # TODO comments + test vs. just using inequality
+  rows_should_keep2 <- switch(out_filter_time_style,
     range = vec_rep_each(
       c(FALSE, TRUE, FALSE),
-      c(before, slide_nrow - before - after, after),
+      c(slide_start_padding_n, slide_nrow - slide_start_padding_n - after_steps, after_steps),
     ),
     set = vec_in(slide_time_values, out_time_values)
   )
@@ -493,12 +506,15 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
   .align <- rlang::arg_match(.align)
   time_type <- attr(.x, "metadata")$time_type
   if (is.null(.window_size)) {
-    cli_abort("epi_slide_opt: `.window_size` must be specified.")
+    cli_abort(
+      "epi_slide_opt: `.window_size` must be specified.",
+      class = "epiprocess__epi_slide_opt__window_size_missing"
+    )
   }
   validate_slide_window_arg(.window_size, time_type)
   window_args <- get_before_after_from_window(.window_size, .align, time_type)
-  before <- time_delta_to_n_steps(window_args$before, time_type)
-  after <- time_delta_to_n_steps(window_args$after, time_type)
+  before_steps <- time_delta_to_n_steps(window_args$before, time_type)
+  after_steps <- time_delta_to_n_steps(window_args$after, time_type)
   unit_step <- unit_time_delta(time_type, format = "fast")
 
   # Handle output naming:
@@ -520,7 +536,7 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
 
   result <- .x %>%
     group_modify(function(grp_data, grp_key) {
-      epi_slide_opt_one_epikey(grp_data, f_dots_baked, f_from_package, before, after, unit_step, time_type, NULL, ref_time_values, names_info$input_col_names, names_info$output_col_names)
+      epi_slide_opt_one_epikey(grp_data, f_dots_baked, f_from_package, before_steps, after_steps, unit_step, time_type, NULL, ref_time_values, names_info$input_col_names, names_info$output_col_names)
     }) %>%
     arrange_col_canonical()
 

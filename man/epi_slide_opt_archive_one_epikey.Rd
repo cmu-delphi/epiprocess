@@ -9,8 +9,8 @@ epi_slide_opt_archive_one_epikey(
   in_colnames,
   f_dots_baked,
   f_from_package,
-  before,
-  after,
+  before_steps,
+  after_steps,
   time_type,
   out_colnames
 )
@@ -30,17 +30,17 @@ a specific row order is not required.}
 \item{f_from_package}{string; name of package from which \code{f_dots_baked}
 (pre-\code{partial}) originates}
 
+\item{time_type}{as in \code{new_epi_archive}}
+
+\item{out_colnames}{chr, same length as \code{in_colnames}; column names to use
+for results}
+
 \item{before}{integerish >=0 or Inf; number of time steps before each
 ref_time_value to include in the sliding window computation; Inf to include
 all times beginning with the min \code{time_value}}
 
 \item{after}{integerish >=0; number of time steps after each ref_time_value
 to include in the sliding window computation}
-
-\item{time_type}{as in \code{new_epi_archive}}
-
-\item{out_colnames}{chr, same length as \code{in_colnames}; column names to use
-for results}
 }
 \value{
 tibble with a \code{version} column, pre-existing measurement columns, and
