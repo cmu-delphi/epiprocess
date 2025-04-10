@@ -231,8 +231,8 @@ epi_slide_opt_one_epikey <- function(inp_tbl,
     range = vec_rep_each(
       c(FALSE, TRUE, FALSE),
       time_minus_time_in_n_steps(
-        vctrs::vec_c(out_t_min,   out_t_max, slide_t_max),
-        vctrs::vec_c(slide_t_min, out_t_min, out_t_max),
+        c(out_t_min,   out_t_max, slide_t_max),
+        c(slide_t_min, out_t_min, out_t_max),
         time_type
       ) + c(0L, 1L, 0L)
     ),
