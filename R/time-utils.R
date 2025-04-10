@@ -390,7 +390,7 @@ time_plus_slide_window_arg <- function(x, y, time_type, max_time_value) {
   if (y == Inf) {
     rep(max_time_value, vec_size(x))
   } else {
-    time_plus_n_steps(x, y, time_type)
+    x + y
   }
 }
 
@@ -399,6 +399,6 @@ time_minus_slide_window_arg <- function(x, y, time_type, min_time_value) {
   if (y == Inf) {
     rep(min_time_value, vec_size(x))
   } else {
-    time_minus_n_steps(x, y, time_type)
+    x - y
   }
 }
