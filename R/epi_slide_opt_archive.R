@@ -1,23 +1,10 @@
 #' Core operation of `epi_slide_opt.epi_archive` for a single epikey's history
 #'
-#' @param grp_updates tibble with a `version` column and measurement columns for
+#' @param inp_updates tibble with a `version` column and measurement columns for
 #'   a single epikey, without the epikey labeling columns (e.g., from
 #'   `group_modify`). Interpretation is analogous to an `epi_archive` `DT`, but
 #'   a specific row order is not required.
-#' @param in_colnames chr; names of columns to which to apply `f_dots_baked`
-#' @param f_dots_baked supported sliding function from `{data.table}` or
-#'   `{slider}`, potentially with some arguments baked in with
-#'   [`purrr::partial`]
-#' @param f_from_package string; name of package from which `f_dots_baked`
-#'   (pre-`partial`) originates
-#' @param before integerish >=0 or Inf; number of time steps before each
-#'   ref_time_value to include in the sliding window computation; Inf to include
-#'   all times beginning with the min `time_value`
-#' @param after integerish >=0; number of time steps after each ref_time_value
-#'   to include in the sliding window computation
-#' @param time_type as in `new_epi_archive`
-#' @param out_colnames chr, same length as `in_colnames`; column names to use
-#'   for results
+#' @inheritParams epi_slide_opt_edf_one_epikey
 #' @return tibble with a `version` column, pre-existing measurement columns, and
 #'   new measurement columns; (compactified) diff data to put into an
 #'   `epi_archive`. May not match column ordering; may not ensure any row
@@ -26,7 +13,7 @@
 #' @examples
 #'
 #' library(dplyr)
-#' grp_updates <- bind_rows(
+#' inp_updates <- bind_rows(
 #'   tibble(version = 30, time_value = 1:20, value = 1:20),
 #'   tibble(version = 32, time_value = 4:5, value = 5:4),
 #'   tibble(version = 33, time_value = 8, value = 9),
@@ -38,27 +25,27 @@
 #'
 #' f <- purrr::partial(data.table::frollmean, algo = "exact")
 #'
-#' grp_updates %>%
+#' inp_updates %>%
 #'   epiprocess:::epi_slide_opt_archive_one_epikey(
 #'     "value", f, "data.table", 2L, 0L, "day", "slide_value"
 #'   )
 #'
 #' @keywords internal
 epi_slide_opt_archive_one_epikey <- function(
-    grp_updates,
+    inp_updates,
     in_colnames,
     f_dots_baked, f_from_package,
     before_n_steps, after_n_steps, time_type,
     out_colnames) {
-  grp_updates_by_version <- grp_updates %>%
+  inp_updates_by_version <- inp_updates %>%
     nest(.by = version, .key = "subtbl") %>%
     arrange(version)
   unit_step <- unit_time_delta(time_type, format = "fast")
   prev_inp_snapshot <- NULL
   prev_out_snapshot <- NULL
-  result <- lapply(seq_len(nrow(grp_updates_by_version)), function(version_i) {
-    version <- grp_updates_by_version$version[[version_i]]
-    inp_update <- grp_updates_by_version$subtbl[[version_i]]
+  result <- lapply(seq_len(nrow(inp_updates_by_version)), function(version_i) {
+    version <- inp_updates_by_version$version[[version_i]]
+    inp_update <- inp_updates_by_version$subtbl[[version_i]]
     inp_snapshot <- tbl_patch(prev_inp_snapshot, inp_update, "time_value")
     inp_update_min_t <- min(inp_update$time_value)
     inp_update_max_t <- max(inp_update$time_value)

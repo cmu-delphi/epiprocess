@@ -167,6 +167,71 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer,
   )
 }
 
+#' Run a specialized slide computation on a single `epi_df` epikey, with temporary completion
+#'
+#' @param inp_tbl tibble; should have a `time_value` column and columns named in
+#'   `in_colnames`; should not contain any columns named in `out_colnames`
+#' @param in_colnames chr; names of columns to which to apply `f_dots_baked`
+#' @param f_dots_baked supported sliding function from `{data.table}` or
+#'   `{slider}`, potentially with some arguments baked in with
+#'   [`purrr::partial`]
+#' @param f_from_package string; name of package from which `f_dots_baked`
+#'   (pre-`partial`) originates
+#' @param before_n_steps integerish `>=0` or `Inf`; number of time steps before
+#'   each `ref_time_value` to include in the sliding window computation; `Inf`
+#'   to include all times beginning with the min `time_value`
+#' @param after_n_steps integerish `>=0`; number of time steps after each
+#'   `ref_time_value` to include in the sliding window computation
+#' @param time_type as in `new_epi_archive`
+#' @param out_colnames chr, same length as `in_colnames`; column names to use
+#'   for results
+#' @param out_filter_time_range,out_filter_time_set `time_value` filter;
+#'   `time_values` in the output should match the result of applying this filter
+#'   to `inp_tbl$time_value`. Exactly one of the two must be provided
+#'   (non-`NULL`) and the other must be `NULL`. `out_filter_time_range`, if
+#'   provided, should be a length-2 vector/list containing the minimum and
+#'   maximum `time_value` to allow in the output. `out_filter_time_set`, if
+#'   provided, should be a vector of `time_values` to intersect with the input
+#'   `time_value`s.
+#' @return tibble; like `inp_tbl` with addition of `out_colnames` holding the
+#'   slide computation results, with times filtered down as specified
+#'
+#' @examples
+#'
+#' library(dplyr)
+#' tbl <- tibble(
+#'   time_value = c(11:12, 15:18) + 0,
+#'   value = c(c(1, 2), c(4, 8, 16, 32))
+#' )
+#'
+#' tbl %>%
+#'   epi_slide_opt_edf_one_epikey(
+#'     "value",
+#'     frollmean, "data.table",
+#'     1L, 0L, 1L, "integer",
+#'     "slide_value",
+#'     c(11L, 16L), NULL
+#'   )
+#'
+#' tbl %>%
+#'   epi_slide_opt_edf_one_epikey(
+#'     "value",
+#'     frollmean, "data.table",
+#'     0L, 1L, 1L, "integer",
+#'     "slide_value",
+#'     NULL, c(11, 15, 16, 17, 18)
+#'   )
+#'
+#' tbl %>%
+#'   epi_slide_opt_edf_one_epikey(
+#'     "value",
+#'     frollmean, "data.table",
+#'     Inf, 0L, 1L, "integer",
+#'     "slide_value",
+#'     NULL, c(12, 17)
+#'   )
+#'
+#' @keywords internal
 epi_slide_opt_edf_one_epikey <- function(inp_tbl,
                                          in_colnames,
                                          f_dots_baked, f_from_package,

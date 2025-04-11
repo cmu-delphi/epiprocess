@@ -5,7 +5,7 @@
 \title{Core operation of \code{epi_slide_opt.epi_archive} for a single epikey's history}
 \usage{
 epi_slide_opt_archive_one_epikey(
-  grp_updates,
+  inp_updates,
   in_colnames,
   f_dots_baked,
   f_from_package,
@@ -16,7 +16,7 @@ epi_slide_opt_archive_one_epikey(
 )
 }
 \arguments{
-\item{grp_updates}{tibble with a \code{version} column and measurement columns for
+\item{inp_updates}{tibble with a \code{version} column and measurement columns for
 a single epikey, without the epikey labeling columns (e.g., from
 \code{group_modify}). Interpretation is analogous to an \code{epi_archive} \code{DT}, but
 a specific row order is not required.}
@@ -30,17 +30,17 @@ a specific row order is not required.}
 \item{f_from_package}{string; name of package from which \code{f_dots_baked}
 (pre-\code{partial}) originates}
 
+\item{before_n_steps}{integerish \verb{>=0} or \code{Inf}; number of time steps before
+each \code{ref_time_value} to include in the sliding window computation; \code{Inf}
+to include all times beginning with the min \code{time_value}}
+
+\item{after_n_steps}{integerish \verb{>=0}; number of time steps after each
+\code{ref_time_value} to include in the sliding window computation}
+
 \item{time_type}{as in \code{new_epi_archive}}
 
 \item{out_colnames}{chr, same length as \code{in_colnames}; column names to use
 for results}
-
-\item{before}{integerish >=0 or Inf; number of time steps before each
-ref_time_value to include in the sliding window computation; Inf to include
-all times beginning with the min \code{time_value}}
-
-\item{after}{integerish >=0; number of time steps after each ref_time_value
-to include in the sliding window computation}
 }
 \value{
 tibble with a \code{version} column, pre-existing measurement columns, and
@@ -54,7 +54,7 @@ Core operation of \code{epi_slide_opt.epi_archive} for a single epikey's history
 \examples{
 
 library(dplyr)
-grp_updates <- bind_rows(
+inp_updates <- bind_rows(
   tibble(version = 30, time_value = 1:20, value = 1:20),
   tibble(version = 32, time_value = 4:5, value = 5:4),
   tibble(version = 33, time_value = 8, value = 9),
@@ -66,7 +66,7 @@ grp_updates <- bind_rows(
 
 f <- purrr::partial(data.table::frollmean, algo = "exact")
 
-grp_updates \%>\%
+inp_updates \%>\%
   epiprocess:::epi_slide_opt_archive_one_epikey(
     "value", f, "data.table", 2L, 0L, "day", "slide_value"
   )
