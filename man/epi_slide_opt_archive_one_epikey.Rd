@@ -9,8 +9,8 @@ epi_slide_opt_archive_one_epikey(
   in_colnames,
   f_dots_baked,
   f_from_package,
-  before_steps,
-  after_steps,
+  before_n_steps,
+  after_n_steps,
   time_type,
   out_colnames
 )

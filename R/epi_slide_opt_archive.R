@@ -48,7 +48,7 @@ epi_slide_opt_archive_one_epikey <- function(
     grp_updates,
     in_colnames,
     f_dots_baked, f_from_package,
-    before_steps, after_steps, time_type,
+    before_n_steps, after_n_steps, time_type,
     out_colnames) {
   grp_updates_by_version <- grp_updates %>%
     nest(.by = version, .key = "subtbl") %>%
@@ -68,13 +68,13 @@ epi_slide_opt_archive_one_epikey <- function(
     # inp_update_min_t - after, or anything in between these two bounds. If
     # before == Inf, we need to update outputs all the way to the end of the
     # input *snapshot*.
-    out_update_min_t <- inp_update_min_t - after_steps * unit_step
-    if (before_steps == Inf) {
+    out_update_min_t <- inp_update_min_t - after_n_steps * unit_step
+    if (before_n_steps == Inf) {
       out_update_max_t <- max(inp_snapshot$time_value)
     } else {
-      out_update_max_t <- inp_update_max_t + before_steps * unit_step
+      out_update_max_t <- inp_update_max_t + before_n_steps * unit_step
     }
-    out_update <- epi_slide_opt_one_epikey(inp_snapshot, f_dots_baked, f_from_package, before_steps, after_steps, unit_step, time_type, c(out_update_min_t, out_update_max_t), NULL, in_colnames, out_colnames)
+    out_update <- epi_slide_opt_edf_one_epikey(inp_snapshot, in_colnames, f_dots_baked, f_from_package, before_n_steps, after_n_steps, unit_step, time_type, out_colnames, c(out_update_min_t, out_update_max_t), NULL)
     out_diff <- tbl_diff2(prev_out_snapshot, out_update, "time_value", "update")
     prev_inp_snapshot <<- inp_snapshot
     prev_out_snapshot <<- tbl_patch(prev_out_snapshot, out_diff, "time_value")
@@ -134,8 +134,8 @@ epi_slide_opt.epi_archive <-
       .window_size, .align, .prefix, .suffix, .new_col_names
     )
     window_args <- get_before_after_from_window(.window_size, .align, time_type)
-    before_steps <- time_delta_to_n_steps(window_args$before, time_type)
-    after_steps <- time_delta_to_n_steps(window_args$after, time_type)
+    before_n_steps <- time_delta_to_n_steps(window_args$before, time_type)
+    after_n_steps <- time_delta_to_n_steps(window_args$after, time_type)
     if (!is.null(.ref_time_values)) {
       cli_abort("epi_slide.epi_archive does not support the `.ref_time_values` argument",
         class = "epiprocess__epi_slide_opt_archive__ref_time_values_unsupported"
@@ -167,7 +167,7 @@ epi_slide_opt.epi_archive <-
         res <- epi_slide_opt_archive_one_epikey(
           group_values,
           names_info$input_col_names,
-          .f_dots_baked, .f_info$from_package, before_steps, after_steps, time_type,
+          .f_dots_baked, .f_info$from_package, before_n_steps, after_n_steps, time_type,
           names_info$output_col_names
         )
         if (use_progress) cli::cli_progress_update(id = progress_bar_id)
