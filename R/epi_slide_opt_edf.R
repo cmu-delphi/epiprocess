@@ -249,8 +249,13 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
     # FIXME min time_value for this epikey vs. entire edf; match existing behavior, or complete changeover
     out_filter_time_style <- "set"
     out_time_values <- vec_set_intersect(inp_tbl$time_value, out_filter_time_set)
-    out_t_min <- min(out_time_values)
-    out_t_max <- max(out_time_values)
+    if (vec_size(out_time_values) == 0L) {
+      out_t_min <- inp_tbl$time_value[[1L]]
+      out_t_max <- inp_tbl$time_value[[1L]] - 1L * unit_step
+    } else {
+      out_t_min <- min(out_time_values)
+      out_t_max <- max(out_time_values)
+    }
   } else {
     cli_abort("Exactly one of `out_filter_time_range` and `out_filter_time_set` must be non-`NULL`.")
   }
