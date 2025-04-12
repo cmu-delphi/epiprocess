@@ -410,7 +410,7 @@ epi_slide_one_group <- function(
   # Returned values must be data.frame or vector.
   if ("other" %in% return_types) {
     cli_abort(
-      "epi_slide: slide computations must always return either data frames without rownames
+      "epi_slide: slide computations must always return either data frames
       or unnamed vectors (as determined by the vctrs package).",
       class = "epiprocess__invalid_slide_comp_value"
     )
