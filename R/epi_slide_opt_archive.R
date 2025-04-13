@@ -107,7 +107,7 @@ epi_slide_opt.epi_archive <-
         # debug stack traces:
         .f
       } else {
-        purrr::partial(.f, ...)
+        purrr::partial(.f, ... = , ...) # `... =` stands in for future args
       }
     col_names_quo <- enquo(.col_names)
     if (is.null(.window_size)) {

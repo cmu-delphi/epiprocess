@@ -62,6 +62,7 @@ upstream_slide_f_info <- function(.f, ...) {
   }
   f_from_package <- f_info_row$package
   if (f_from_package == "data.table" && "fill" %in% names(rlang::call_match(dots_expand = FALSE)[["..."]])) {
+    # XXX this doesn't detect with `fill` is passed positionally through dots...
     cli_abort("`epi_slide_opt` does not support `data.table::froll*()` with a
                custom `fill =` arg",
       class = "epiprocess__epi_slide_opt__fill_unsupported"
@@ -600,7 +601,7 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
       # debug stack traces:
       .f
     } else {
-      purrr::partial(.f, ...)
+      purrr::partial(.f, ... = , ...) # `... =` stands in for future args
     }
 
   result <- .x %>%
