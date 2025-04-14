@@ -14,10 +14,9 @@ time_slide_to_simple_hopper <- function(.slide_comp, ..., .before_n_steps, .afte
     available_ref_time_values <- vec_slice(grp_data$time_value, ref_inds)
     i <<- 0L
     wrapped_slide_comp <- function(.x, .group_key, ...) {
+      # XXX could just use enclosing dots rather than forwarding through hop()
       i <<- i + 1L
       # XXX could also use .after_n_steps to figure out...
-
-      # FIXME wrong dots here?
       .slide_comp(.x, .group_key, available_ref_time_values[[i]], ...)
     }
     if (.before_n_steps == Inf) {
@@ -124,13 +123,14 @@ upstream_slide_to_simple_hopper <- function(.f, ..., .in_colnames, .out_colnames
         grp_data
       }
     },
-    slider = function(grp_data, grp_key, ref_inds) {
-      for (col_i in seq_along(in_colnames)) {
-        grp_data[[out_colnames[[col_i]]]] <- f_dots_baked(grp_data[[in_colnames[[col_i]]]], before = .before_n_steps, after = .after_n_steps)
-      }
-      grp_data
-    },
-    # TODO Inf checks?
+    slider =
+      # TODO Inf checks?
+      function(grp_data, grp_key, ref_inds) {
+        for (col_i in seq_along(in_colnames)) {
+          grp_data[[out_colnames[[col_i]]]] <- f_dots_baked(grp_data[[in_colnames[[col_i]]]], before = .before_n_steps, after = .after_n_steps)
+        }
+        grp_data
+      },
     stop("unsupported package")
   )
 }
@@ -140,3 +140,7 @@ upstream_slide_to_simple_hopper <- function(.f, ..., .in_colnames, .out_colnames
 # TODO decide whether/where to put time range stuff
 
 # TODO grp_ -> ek_ ?
+
+# TODO "hopper" -> "hop"
+
+# TODO tacking on output columns -> outputting output columns
