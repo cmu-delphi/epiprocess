@@ -107,25 +107,17 @@ upstream_slide_to_simple_hop <- function(.f, ..., .in_colnames, .out_colnames, .
   in_colnames <- .in_colnames
   out_colnames <- .out_colnames
   f_from_package <- f_info$from_package
-  f_dots_baked <-
-    if (rlang::dots_n(...) == 0L) {
-      # Leaving `.f` unchanged slightly improves computation speed and trims
-      # debug stack traces:
-      .f
-    } else {
-      purrr::partial(.f, ... = , ...) # `... =` stands in for future args
-    }
   switch(f_from_package,
     data.table = if (.before_n_steps == Inf) {
       if (.after_n_steps != 0L) {
         stop(".before_n_steps only supported with .after_n_steps = 0")
       }
       function(grp_data, grp_key, ref_inds) {
-        f_dots_baked(grp_data[, in_colnames], seq_len(nrow(grp_data)), adaptive = TRUE)
+        .f(x = grp_data[, in_colnames], n = seq_len(nrow(grp_data)), adaptive = TRUE, ...)
       }
     } else {
       function(grp_data, grp_key, ref_inds) {
-        out_cols <- .f(grp_data[, in_colnames], .before_n_steps + .after_n_steps + 1L, ...)
+        out_cols <- .f(x = grp_data[, in_colnames], n = .before_n_steps + .after_n_steps + 1L, ...)
         if (.after_n_steps != 0L) {
           # Shift an appropriate amount of NA padding from the start to the end.
           # (This padding will later be cut off when we filter down to the
@@ -142,7 +134,7 @@ upstream_slide_to_simple_hop <- function(.f, ..., .in_colnames, .out_colnames, .
       function(grp_data, grp_key, ref_inds) {
         names(in_colnames) <- in_colnames
         lapply(in_colnames, function(in_colname) {
-          f_dots_baked(grp_data[[in_colname]], before = .before_n_steps, after = .after_n_steps)
+          .f(x = grp_data[[in_colname]], before = .before_n_steps, after = .after_n_steps, ...)
         })
       },
     # TODO improve message
