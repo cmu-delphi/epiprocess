@@ -111,6 +111,7 @@ Collate:
     'patch.R'
     'reexports.R'
     'revision_analysis.R'
+    'slide-refactor.R'
     'slide.R'
     'time-utils.R'
     'utils.R'

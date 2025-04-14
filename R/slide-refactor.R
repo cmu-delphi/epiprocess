@@ -1,7 +1,7 @@
-
+#' Convert time slide function to a simple hop function
 #'
 #' @examples
-#' time_slide_to_simple_hopper(as_time_slide_computation(~ .x[1L,]),
+#' time_slide_to_simple_hop(as_time_slide_computation(~ .x[1L, ]),
 #'   .before_n_steps = 2L, .after_n_steps = 0L
 #' )(
 #'   tibble(time_value = 1:5, value = 1:5),
@@ -9,8 +9,8 @@
 #'   3:4
 #' )
 #'
-time_slide_to_simple_hopper <- function(.slide_comp, ..., .before_n_steps, .after_n_steps) {
-  function(grp_data, grp_key,ref_inds) {
+time_slide_to_simple_hop <- function(.slide_comp, ..., .before_n_steps, .after_n_steps) {
+  function(grp_data, grp_key, ref_inds) {
     available_ref_time_values <- vec_slice(grp_data$time_value, ref_inds)
     i <<- 0L
     wrapped_slide_comp <- function(.x, .group_key, ...) {
@@ -54,7 +54,7 @@ time_slide_to_simple_hopper <- function(.slide_comp, ..., .before_n_steps, .afte
       cli_abort(
         "epi_slide: slide computations must always return either data frames
       or unnamed vectors (as determined by the vctrs package).",
-      class = "epiprocess__invalid_slide_comp_value"
+        class = "epiprocess__invalid_slide_comp_value"
       )
     }
     # Returned values must all be the same type.
@@ -62,7 +62,7 @@ time_slide_to_simple_hopper <- function(.slide_comp, ..., .before_n_steps, .afte
       cli_abort(
         "epi_slide: slide computations must always return either a data.frame or a vector (as determined by the
       vctrs package), but not a mix of the two.",
-      class = "epiprocess__invalid_slide_comp_value"
+        class = "epiprocess__invalid_slide_comp_value"
       )
     }
     # Returned values must always be a scalar vector or a data frame with one row.
@@ -70,7 +70,7 @@ time_slide_to_simple_hopper <- function(.slide_comp, ..., .before_n_steps, .afte
       cli_abort(
         "epi_slide: slide computations must return a single element (e.g. a scalar value, a single data.frame row,
       or a list).",
-      class = "epiprocess__invalid_slide_comp_value"
+        class = "epiprocess__invalid_slide_comp_value"
       )
     }
     # Flatten the output list. This will also error if the user's slide function
@@ -81,23 +81,20 @@ time_slide_to_simple_hopper <- function(.slide_comp, ..., .before_n_steps, .afte
   }
 }
 
-# TODO hopper -> skipper?
-
 # TODO simplify to just trailing and put shift elsewhere?
 #'
-#' upstream_slide_to_simple_hopper(frollmean, .in_colnames = "value", .out_colnames = "slide_value", .before_n_steps = 1L, .after_n_steps = 0L)(
+#' upstream_slide_to_simple_hop(frollmean, .in_colnames = "value", .out_colnames = "slide_value", .before_n_steps = 1L, .after_n_steps = 0L)(
 #'   tibble(time_value = 1:5, value = 1:5),
 #'   tibble(geo_value = 1),
 #'   3:4
 #' )
-upstream_slide_to_simple_hopper <- function(.f, ..., .in_colnames, .out_colnames, .before_n_steps, .after_n_steps) {
+upstream_slide_to_simple_hop <- function(.f, ..., .in_colnames, .out_colnames, .before_n_steps, .after_n_steps) {
   f_info <- upstream_slide_f_info(.f, ...)
   in_colnames <- .in_colnames
   out_colnames <- .out_colnames
   f_from_package <- f_info$from_package
   # TODO move .before_n_steps, .after_n_steps to args of this function?
-  switch(
-    f_from_package,
+  switch(f_from_package,
     data.table = if (.before_n_steps == Inf) {
       if (.after_n_steps != 0L) {
         stop(".before_n_steps only supported with .after_n_steps = 0")
@@ -124,7 +121,7 @@ upstream_slide_to_simple_hopper <- function(.f, ..., .in_colnames, .out_colnames
       }
     },
     slider =
-      # TODO Inf checks?
+    # TODO Inf checks?
       function(grp_data, grp_key, ref_inds) {
         for (col_i in seq_along(in_colnames)) {
           grp_data[[out_colnames[[col_i]]]] <- f_dots_baked(grp_data[[in_colnames[[col_i]]]], before = .before_n_steps, after = .after_n_steps)
@@ -141,6 +138,6 @@ upstream_slide_to_simple_hopper <- function(.f, ..., .in_colnames, .out_colnames
 
 # TODO grp_ -> ek_ ?
 
-# TODO "hopper" -> "hop"
+# TODO "simple_hop" -> "skip"/"jump"?
 
 # TODO tacking on output columns -> outputting output columns
