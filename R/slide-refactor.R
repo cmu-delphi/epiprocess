@@ -9,6 +9,7 @@
 #'   3:4
 #' )
 #'
+#' @keywords internal
 time_slide_to_simple_hop <- function(.slide_comp, ..., .before_n_steps, .after_n_steps) {
   function(grp_data, grp_key, ref_inds) {
     available_ref_time_values <- vec_slice(grp_data$time_value, ref_inds)
@@ -81,29 +82,46 @@ time_slide_to_simple_hop <- function(.slide_comp, ..., .before_n_steps, .after_n
   }
 }
 
-# TODO simplify to just trailing and put shift elsewhere?
+#' Convert upstream specialized slide function to a simple hop function
 #'
 #' upstream_slide_to_simple_hop(frollmean, .in_colnames = "value", .out_colnames = "slide_value", .before_n_steps = 1L, .after_n_steps = 0L)(
 #'   tibble(time_value = 1:5, value = 1:5),
 #'   tibble(geo_value = 1),
 #'   3:4
 #' )
+#' upstream_slide_to_simple_hop(slide_mean, .in_colnames = "value", .out_colnames = "slide_value", .before_n_steps = 1L, .after_n_steps = 0L)(
+#'   tibble(time_value = 1:5, value = 1:5),
+#'   tibble(geo_value = 1),
+#'   3:4
+#' )
+#'
+#' upstream_slide_to_simple_hop(frollmean, .in_colnames = "value", .out_colnames = "slide_value", .before_n_steps = Inf, .after_n_steps = 0L)(
+#'   tibble(time_value = 1:5, value = 1:5),
+#'   tibble(geo_value = 1),
+#'   3:4
+#' )
+#'
+#' @keywords internal
 upstream_slide_to_simple_hop <- function(.f, ..., .in_colnames, .out_colnames, .before_n_steps, .after_n_steps) {
   f_info <- upstream_slide_f_info(.f, ...)
   in_colnames <- .in_colnames
   out_colnames <- .out_colnames
   f_from_package <- f_info$from_package
-  # TODO move .before_n_steps, .after_n_steps to args of this function?
+  f_dots_baked <-
+    if (rlang::dots_n(...) == 0L) {
+      # Leaving `.f` unchanged slightly improves computation speed and trims
+      # debug stack traces:
+      .f
+    } else {
+      purrr::partial(.f, ... = , ...) # `... =` stands in for future args
+    }
   switch(f_from_package,
     data.table = if (.before_n_steps == Inf) {
       if (.after_n_steps != 0L) {
         stop(".before_n_steps only supported with .after_n_steps = 0")
       }
       function(grp_data, grp_key, ref_inds) {
-        grp_data[, out_colnames] <-
-          f_dots_baked(grp_data[, in_colnames], seq_len(nrow(grp_data)), adaptive = TRUE)
-        grp_data[, out_colnames] <- out_cols
-        grp_data
+        f_dots_baked(grp_data[, in_colnames], seq_len(nrow(grp_data)), adaptive = TRUE)
       }
     } else {
       function(grp_data, grp_key, ref_inds) {
@@ -116,24 +134,24 @@ upstream_slide_to_simple_hop <- function(.f, ..., .in_colnames, .out_colnames, .
             c(out_col[(.after_n_steps + 1L):length(out_col)], rep(NA, .after_n_steps))
           })
         }
-        grp_data[, out_colnames] <- out_cols
-        grp_data
+        out_cols
       }
     },
     slider =
     # TODO Inf checks?
       function(grp_data, grp_key, ref_inds) {
-        for (col_i in seq_along(in_colnames)) {
-          grp_data[[out_colnames[[col_i]]]] <- f_dots_baked(grp_data[[in_colnames[[col_i]]]], before = .before_n_steps, after = .after_n_steps)
-        }
-        grp_data
+        names(in_colnames) <- in_colnames
+        lapply(in_colnames, function(in_colname) {
+          f_dots_baked(grp_data[[in_colname]], before = .before_n_steps, after = .after_n_steps)
+        })
       },
+    # TODO improve message
     stop("unsupported package")
   )
 }
 
-# TODO maybe make ref_inds optional or have special handling if it's the whole sequence?
-#
+# TODO maybe make ref_inds optional or have special handling if it's the whole sequence?  But can it ever be the full sequence in the common fixed-width window case?  Should be some truncation of it.
+
 # TODO decide whether/where to put time range stuff
 
 # TODO grp_ -> ek_ ?
