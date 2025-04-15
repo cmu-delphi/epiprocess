@@ -189,6 +189,10 @@ test_that("filter.epi_archive works as expected", {
   expect_equal(intcustom_week_ea$geo_type, "custom")
   expect_equal(intcustom_week_ea$time_type, "week")
 
+  # Environment variables should be fine:
+  version <- as.Date("2020-06-02") + 1
+  expect_no_error(ea2 %>% filter(geo_value == "ca", .env$version <= time_value))
+
   # Error-raising:
   expect_error(
     ea2 %>% filter(version == as.Date("2020-06-02")),
