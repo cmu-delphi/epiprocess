@@ -104,7 +104,7 @@ time_slide_to_simple_hop <- function(.slide_comp, ..., .before_n_steps, .after_n
 #' @keywords internal
 upstream_slide_to_simple_hop <- function(.f, ..., .in_colnames, .out_colnames, .before_n_steps, .after_n_steps) {
   f_info <- upstream_slide_f_info(.f, ...)
-  in_colnames <- .in_colnames
+  in_colnames <- .in_colnames # TODO refactor away
   out_colnames <- .out_colnames
   f_from_package <- f_info$from_package
   switch(f_from_package,
@@ -113,7 +113,9 @@ upstream_slide_to_simple_hop <- function(.f, ..., .in_colnames, .out_colnames, .
         stop(".before_n_steps only supported with .after_n_steps = 0")
       }
       function(grp_data, grp_key, ref_inds) {
-        .f(x = grp_data[, in_colnames], n = seq_len(nrow(grp_data)), adaptive = TRUE, ...)
+        out_cols <- .f(x = grp_data[, in_colnames], n = seq_len(nrow(grp_data)), adaptive = TRUE, ...)
+        names(out_cols) <- out_colnames
+        vec_slice(new_tibble(out_cols, nrow = nrow(grp_data)), ref_inds)
       }
     } else {
       function(grp_data, grp_key, ref_inds) {
@@ -126,16 +128,18 @@ upstream_slide_to_simple_hop <- function(.f, ..., .in_colnames, .out_colnames, .
             c(out_col[(.after_n_steps + 1L):length(out_col)], rep(NA, .after_n_steps))
           })
         }
-        out_cols
+        names(out_cols) <- out_colnames
+        vec_slice(new_tibble(out_cols, nrow = nrow(grp_data)), ref_inds)
       }
     },
     slider =
     # TODO Inf checks?
       function(grp_data, grp_key, ref_inds) {
-        names(in_colnames) <- in_colnames
-        lapply(in_colnames, function(in_colname) {
+        out_cols <- lapply(in_colnames, function(in_colname) {
           .f(x = grp_data[[in_colname]], before = .before_n_steps, after = .after_n_steps, ...)
         })
+        names(out_cols) <- out_colnames
+        vec_slice(new_tibble(out_cols, nrow = nrow(grp_data)), ref_inds)
       },
     # TODO improve message
     stop("unsupported package")
@@ -149,5 +153,3 @@ upstream_slide_to_simple_hop <- function(.f, ..., .in_colnames, .out_colnames, .
 # TODO grp_ -> ek_ ?
 
 # TODO "simple_hop" -> "skip"/"jump"?
-
-# TODO tacking on output columns -> outputting output columns
