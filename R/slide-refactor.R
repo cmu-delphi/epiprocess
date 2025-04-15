@@ -146,6 +146,73 @@ upstream_slide_to_simple_hop <- function(.f, ..., .in_colnames, .out_colnames, .
   )
 }
 
+# ref_time_values_to_inp_ref_inds <- function(inp_tbl, ref_time_values) {
+#   matches <- vec_match(ref_time_values, inp_tbl$time_value)
+#   inp_ref_inds <- matches[!is.na(matches)]
+#   inp_ref_inds
+# }
+
+# complete_for_time_slide <- function(inp_tbl, inp_ref_inds, before_n_steps, after_n_steps) {
+#   if (before_n_steps == Inf) {
+#     # We need to get back to inp_tbl[1L,] from inp_tbl[min(inp_ref_inds),]
+#     start_padding <- min(inp_ref_inds) - 1L
+#   } else {
+#     start_padding <- before_n_steps
+#   }
+#   end_padding <- after_n_steps
+#   #
+
+#   slide_t_max <- out_t_max + after_n_steps * unit_step
+#   slide_nrow <- time_delta_to_n_steps(slide_t_max - slide_t_min, time_type) + 1L
+#   slide_time_values <- slide_t_min + 0L:(slide_nrow - 1L) * unit_step
+#   slide_inp_backrefs <- vec_match(slide_time_values, inp_tbl$time_value)
+# }
+
+ref_time_values_to_out_time_values <- function(inp_tbl, ref_time_values) {
+  vec_set_intersect(inp_tbl$time_value, ref_time_values)
+}
+
+slide_window <- function(inp_tbl, epikey, simple_hop, before_n_steps, after_n_steps, unit_step, time_type, out_time_values) {
+  # TODO test whether origin time value stuff actually is helpful
+  origin_time_value <- inp_tbl$time_value[[1L]]
+  inp_ts <- time_minus_time_in_n_steps(inp_tbl$time_value, origin_time_value, time_type)
+  out_ts <- time_minus_time_in_n_steps(out_time_values, origin_time_value, time_type)
+  if (vec_size(out_ts) == 0L) {
+    stop("FIXME TODO")
+  } else {
+    slide_ts <- seq(min(out_ts) - before_n_steps, max(out_ts) + after_n_steps) # TODO compare min/max vs. `[[`
+  }
+  slide_inp_backrefs <- vec_match(slide_ts, inp_ts)
+  # TODO refactor to use a join if not using backrefs later anymore?
+  #
+  # TODO perf: try removing time_value column before slice?
+  slide_tbl <- vec_slice(inp_tbl, slide_inp_backrefs)
+  slide_tbl$time_value <- origin_time_value + slide_ts * unit_step
+
+  ref_inds <- vec_match(out_ts, slide_ts)
+  out_tbl <- simple_hop(slide_tbl, epikey, ref_inds)
+  out_tbl
+}
+
+
+
+# # We should filter down the slide time values to ones in the input time values
+#   # when preparing the output:
+#   rows_should_keep1 <- !is.na(slide_inp_backrefs)
+#   # We also need to apply the out_filter.
+#   #
+#   # TODO comments + test vs. just using inequality
+#   rows_should_keep2 <- switch(out_filter_time_style,
+#     range = vec_rep_each(
+#       c(FALSE, TRUE, FALSE),
+#       c(slide_start_padding_n, slide_nrow - slide_start_padding_n - after_n_steps, after_n_steps),
+#     ),
+#     set = vec_in(slide_time_values, out_time_values)
+#   )
+#   rows_should_keep <- rows_should_keep1 & rows_should_keep2
+#   out_tbl <- vec_slice(slide, rows_should_keep)
+#   out_tbl
+
 # TODO maybe make ref_inds optional or have special handling if it's the whole sequence?  But can it ever be the full sequence in the common fixed-width window case?  Should be some truncation of it.
 
 # TODO decide whether/where to put time range stuff

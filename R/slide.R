@@ -261,58 +261,130 @@ epi_slide <- function(
   # Check for duplicated time values within groups
   assert(check_ukey_unique(ungroup(.x), c(group_vars(.x), "time_value")))
 
-  # Begin handling completion. This will create a complete time index between
-  # the smallest and largest time values in the data. This is used to ensure
-  # that the slide function is called with a complete window of data. Each slide
-  # group will filter this down to between its min and max time values. We also
-  # mark which dates were in the data and which were added by our completion.
-  date_seq_list <- full_date_seq(.x, window_args$before, window_args$after, time_type)
-  .x$.real <- TRUE
+  # # Begin handling completion. This will create a complete time index between
+  # # the smallest and largest time values in the data. This is used to ensure
+  # # that the slide function is called with a complete window of data. Each slide
+  # # group will filter this down to between its min and max time values. We also
+  # # mark which dates were in the data and which were added by our completion.
+  # date_seq_list <- full_date_seq(.x, window_args$before, window_args$after, time_type)
+  # .x$.real <- TRUE
 
-  # Create a wrapper that calculates and passes `.ref_time_value` to the
-  # computation. `i` is contained in the `slide_comp_wrapper_factory`
-  # environment such that when called within `slide_one_grp` `i` advances
-  # through the list of reference time values within a group and then resets
-  # back to 1 when switching groups.
-  slide_comp_wrapper_factory <- function(kept_ref_time_values) {
-    i <- 1L
-    slide_comp_wrapper <- function(.x, .group_key, ...) {
-      .ref_time_value <- kept_ref_time_values[[i]]
-      i <<- i + 1L
-      .slide_comp(.x, .group_key, .ref_time_value, ...)
+  # # Create a wrapper that calculates and passes `.ref_time_value` to the
+  # # computation. `i` is contained in the `slide_comp_wrapper_factory`
+  # # environment such that when called within `slide_one_grp` `i` advances
+  # # through the list of reference time values within a group and then resets
+  # # back to 1 when switching groups.
+  # slide_comp_wrapper_factory <- function(kept_ref_time_values) {
+  #   i <- 1L
+  #   slide_comp_wrapper <- function(.x, .group_key, ...) {
+  #     .ref_time_value <- kept_ref_time_values[[i]]
+  #     i <<- i + 1L
+  #     .slide_comp(.x, .group_key, .ref_time_value, ...)
+  #   }
+  #   slide_comp_wrapper
+  # }
+
+  # # - If .x is not grouped, then the trivial group is applied:
+  # #   https://dplyr.tidyverse.org/reference/group_map.html
+  # # - We create a lambda that forwards the necessary slide arguments to
+  # #   `epi_slide_one_group`.
+  # # - `...` from top of `epi_slide` are forwarded to `.f` here through
+  # #   group_modify and through the lambda.
+  # result <- group_map(
+  #   .x,
+  #   .f = function(.data_group, .group_key, ...) {
+  #     epi_slide_one_group(
+  #       .data_group, .group_key, ...,
+  #       .slide_comp_factory = slide_comp_wrapper_factory,
+  #       .before = window_args$before,
+  #       .after = window_args$after,
+  #       .ref_time_values = .ref_time_values,
+  #       .all_rows = .all_rows,
+  #       .new_col_name = .new_col_name,
+  #       .used_data_masking = used_data_masking,
+  #       .time_type = time_type,
+  #       .date_seq_list = date_seq_list
+  #     )
+  #   },
+  #   ...,
+  #   .keep = TRUE
+  # ) %>%
+  #   list_rbind() %>%
+  #   `[`(.$.real, names(.) != ".real") %>%
+  #   arrange_col_canonical() %>%
+  #   group_by(!!!.x_orig_groups)
+  before_n_steps <- time_delta_to_n_steps(window_args$before, time_type)
+  after_n_steps <- time_delta_to_n_steps(window_args$after, time_type)
+  unit_step <- unit_time_delta(time_type, format = "fast")
+  simple_hop <- time_slide_to_simple_hop(.slide_comp = .slide_comp, ..., .before_n_steps = before_n_steps, .after_n_steps = after_n_steps)
+  result <- .x %>%
+    group_modify(function(grp_data, grp_key) {
+      out_time_values <- ref_time_values_to_out_time_values(grp_data, .ref_time_values)
+      res <- grp_data
+      slide_values <- slide_window(grp_data, grp_key, simple_hop, before_n_steps, after_n_steps, unit_step, time_type, out_time_values)
+      # FIXME check, de-dupe, simplify, refactor, ...
+      if (.all_rows) {
+        new_slide_values <- vec_cast(rep(NA, nrow(res)), slide_values)
+        vec_slice(new_slide_values, vec_match(out_time_values, res$time_value)) <- slide_values
+        slide_values <- new_slide_values
+      } else {
+        res <- vec_slice(res, vec_match(out_time_values, res$time_value))
+      }
+
+  if (is.null(.new_col_name)) {
+    if (inherits(slide_values, "data.frame")) {
+      # Sometimes slide_values can parrot back columns already in `res`; allow
+      # this, but balk if a column has the same name as one in `res` but a
+      # different value:
+      comp_nms <- names(slide_values)
+      overlaps_existing_names <- comp_nms %in% names(res)
+      for (comp_i in which(overlaps_existing_names)) {
+        if (!identical(slide_values[[comp_i]], res[[comp_nms[[comp_i]]]])) {
+          lines <- c(
+            cli::format_error(c(
+              "New column and old column clash",
+              "x" = "slide computation output included a
+                     {format_varname(comp_nms[[comp_i]])} column, but `.x` already had a
+                     {format_varname(comp_nms[[comp_i]])} column with differing values",
+              "Here are examples of differing values, where the grouping variables were
+               {format_tibble_row(.group_key)}:"
+            )),
+            capture.output(print(waldo::compare(
+              res[[comp_nms[[comp_i]]]], slide_values[[comp_i]],
+              x_arg = rlang::expr_deparse(dplyr::expr(`$`(!!"existing", !!sym(comp_nms[[comp_i]])))), # nolint: object_usage_linter
+              y_arg = rlang::expr_deparse(dplyr::expr(`$`(!!"comp_value", !!sym(comp_nms[[comp_i]])))) # nolint: object_usage_linter
+            ))),
+            cli::format_message(c(
+              ">" = "You likely want to rename or remove this column from your slide
+                     computation's output, or debug why it has a different value."
+            ))
+          )
+          rlang::abort(paste(collapse = "\n", lines),
+            class = "epiprocess__epi_slide_output_vs_existing_column_conflict"
+          )
+        }
+      }
+      # Unpack into separate columns (without name prefix). If there are
+      # columns duplicating existing columns, de-dupe and order them as if they
+      # didn't exist in slide_values.
+      res <- dplyr::bind_cols(res, slide_values[!overlaps_existing_names])
+    } else {
+      # Apply default name (to vector or packed data.frame-type column):
+      if ("slide_value" %in% names(res)) {
+        cli_abort(c("Cannot guess a good column name for your output",
+          "x" = "`slide_value` already exists in `.x`",
+          ">" = "Please provide a `.new_col_name`."
+        ))
+      }
+      res[["slide_value"]] <- slide_values
     }
-    slide_comp_wrapper
+  } else {
+    # Vector or packed data.frame-type column (note: overlaps with existing
+    # column names should already be forbidden by earlier validation):
+    res[[.new_col_name]] <- slide_values
   }
-
-  # - If .x is not grouped, then the trivial group is applied:
-  #   https://dplyr.tidyverse.org/reference/group_map.html
-  # - We create a lambda that forwards the necessary slide arguments to
-  #   `epi_slide_one_group`.
-  # - `...` from top of `epi_slide` are forwarded to `.f` here through
-  #   group_modify and through the lambda.
-  result <- group_map(
-    .x,
-    .f = function(.data_group, .group_key, ...) {
-      epi_slide_one_group(
-        .data_group, .group_key, ...,
-        .slide_comp_factory = slide_comp_wrapper_factory,
-        .before = window_args$before,
-        .after = window_args$after,
-        .ref_time_values = .ref_time_values,
-        .all_rows = .all_rows,
-        .new_col_name = .new_col_name,
-        .used_data_masking = used_data_masking,
-        .time_type = time_type,
-        .date_seq_list = date_seq_list
-      )
-    },
-    ...,
-    .keep = TRUE
-  ) %>%
-    list_rbind() %>%
-    `[`(.$.real, names(.) != ".real") %>%
-    arrange_col_canonical() %>%
-    group_by(!!!.x_orig_groups)
+      res
+    })
 
   # If every group in epi_slide_one_group takes the
   # length(available_ref_time_values) == 0 branch then we end up here.
