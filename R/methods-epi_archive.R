@@ -1069,16 +1069,24 @@ filter.epi_archive <- function(.data, ..., .by = NULL, .format_aware = FALSE) {
                 ">" = "If not, see `?filter.epi_archive` details for how to proceed."
               ), class = "epiprocess__filter_archive__used_version"), assign.env = e)
               for (measurement_colname in measurement_colnames) {
-                delayedAssign(measurement_colname, cli::cli_abort(c(
-                  "Using `{format_varname(measurement_colname)}`
-                 in `filter.epi_archive` may produce unexpected results.",
-                  ">" = "See `?filter.epi_archive` details for how to proceed."
-                ), class = "epiprocess__filter_archive__used_measurement"), assign.env = e)
+                # Record current `measurement_colname` and set up delayed
+                # binding for error in a child environment, so that `for` loop
+                # updating its value and `rm` cleanup don't mess things up:
+                local({
+                  local_measurement_colname <- measurement_colname
+                  delayedAssign(measurement_colname, cli::cli_abort(c(
+                    "Using `{format_varname(local_measurement_colname)}`
+                     in `filter.epi_archive` may produce unexpected results.",
+                    ">" = "See `?filter.epi_archive` details for how to proceed."
+                  ), class = "epiprocess__filter_archive__used_measurement"), assign.env = e)
+                })
               }
               break
             }
             e <- parent.env(e)
           }
+          # Don't mask similarly-named user objects:
+          rm(list = c("e", "measurement_colname"))
           TRUE
         },
         ...,

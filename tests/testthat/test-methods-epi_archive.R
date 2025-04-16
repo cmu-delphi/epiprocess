@@ -191,7 +191,11 @@ test_that("filter.epi_archive works as expected", {
 
   # Environment variables should be fine:
   version <- as.Date("2020-06-02") + 1
-  expect_no_error(ea2 %>% filter(geo_value == "ca", .env$version <= time_value))
+  e <- version
+  expected <- ea2 %>% filter(geo_value == "ca", as.Date("2020-06-02") + 1 <= time_value)
+  expect_equal(ea2 %>% filter(geo_value == "ca", .env$version <= time_value), expected)
+  expect_equal(ea2 %>% filter(geo_value == "ca", e <= time_value), expected)
+  expect_equal(ea2 %>% filter(geo_value == "ca", .env$e <= time_value), expected)
 
   # Error-raising:
   expect_error(
@@ -218,9 +222,17 @@ test_that("filter.epi_archive works as expected", {
     ea2 %>% filter(time_value >= as.Date("2020-06-02"), cases >= 2L),
     class = "epiprocess__filter_archive__used_measurement"
   )
+  ea2p <- ea2_data %>%
+    # to check for `for` + `delayedAssign` mishap in expect_snapshot
+    mutate(deaths = 0) %>%
+    as_epi_archive()
   expect_error(
-    ea2 %>% filter(cases >= median(cases), .by = geo_value),
+    ea2p %>% filter(cases >= median(cases), .by = geo_value),
     class = "epiprocess__filter_archive__used_measurement"
+  )
+  expect_snapshot(
+    ea2p %>% filter(cases >= median(cases), .by = geo_value),
+    error = TRUE, cnd_class = TRUE
   )
 
   # Escape hatch:
