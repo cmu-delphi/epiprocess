@@ -52,13 +52,6 @@ validate_version_bound <- function(version_bound, x, na_ok = FALSE,
         class = "epiprocess__version_bound_mismatched_class"
       )
     }
-    if (!identical(typeof(version_bound), typeof(x[["version"]]))) {
-      cli_abort(
-        "{version_bound_arg} must have the same `typeof` as x$version,
-        which has a `typeof` of {typeof(x$version)}",
-        class = "epiprocess__version_bound_mismatched_typeof"
-      )
-    }
   }
 
   return(invisible(NULL))
@@ -207,23 +200,23 @@ next_after.Date <- function(x) x + 1L
 #'   undergo tiny nonmeaningful revisions and the archive object with the
 #'   default setting is too large.
 #' @param clobberable_versions_start Optional; `length`-1; either a value of the
-#'   same `class` and `typeof` as `x$version`, or an `NA` of any `class` and
-#'   `typeof`: specifically, either (a) the earliest version that could be
-#'   subject to "clobbering" (being overwritten with different update data, but
-#'   using the *same* version tag as the old update data), or (b) `NA`, to
-#'   indicate that no versions are clobberable. There are a variety of reasons
-#'   why versions could be clobberable under routine circumstances, such as (a)
-#'   today's version of one/all of the columns being published after initially
-#'   being filled with `NA` or LOCF, (b) a buggy version of today's data being
-#'   published but then fixed and republished later in the day, or (c) data
-#'   pipeline delays (e.g., publisher uploading, periodic scraping, database
-#'   syncing, periodic fetching, etc.) that make events (a) or (b) reflected
-#'   later in the day (or even on a different day) than expected; potential
-#'   causes vary between different data pipelines. The default value is `NA`,
-#'   which doesn't consider any versions to be clobberable. Another setting that
-#'   may be appropriate for some pipelines is `max_version_with_row_in(x)`.
-#' @param versions_end Optional; length-1, same `class` and `typeof` as
-#'   `x$version`: what is the last version we have observed? The default is
+#'   same `class` as `x$version`, or an `NA` of any `class`: specifically,
+#'   either (a) the earliest version that could be subject to "clobbering"
+#'   (being overwritten with different update data, but using the *same* version
+#'   tag as the old update data), or (b) `NA`, to indicate that no versions are
+#'   clobberable. There are a variety of reasons why versions could be
+#'   clobberable under routine circumstances, such as (a) today's version of
+#'   one/all of the columns being published after initially being filled with
+#'   `NA` or LOCF, (b) a buggy version of today's data being published but then
+#'   fixed and republished later in the day, or (c) data pipeline delays (e.g.,
+#'   publisher uploading, periodic scraping, database syncing, periodic
+#'   fetching, etc.) that make events (a) or (b) reflected later in the day (or
+#'   even on a different day) than expected; potential causes vary between
+#'   different data pipelines. The default value is `NA`, which doesn't consider
+#'   any versions to be clobberable. Another setting that may be appropriate for
+#'   some pipelines is `max_version_with_row_in(x)`.
+#' @param versions_end Optional; length-1, same `class` as `x$version`: what is
+#'   the last version we have observed? The default is
 #'   `max_version_with_row_in(x)`, but values greater than this could also be
 #'   valid, and would indicate that we observed additional versions of the data
 #'   beyond `max(x$version)`, but they all contained empty updates. (The default
