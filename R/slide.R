@@ -332,63 +332,63 @@ epi_slide <- function(
       }
 
       # TODO refactor this out and use it in epix_slide as well if possible
-  if (is.null(.new_col_name)) {
-    if (inherits(slide_values, "data.frame")) {
-      # Sometimes slide_values can parrot back columns already in `res`; allow
-      # this, but balk if a column has the same name as one in `res` but a
-      # different value:
-      comp_nms <- names(slide_values)
-      overlaps_existing_names <- comp_nms %in% names(res)
-      for (comp_i in which(overlaps_existing_names)) {
-        if (!identical(slide_values[[comp_i]], res[[comp_nms[[comp_i]]]])) {
-          lines <- c(
-            cli::format_error(c(
-              "New column and old column clash",
-              "x" = "slide computation output included a
+      if (is.null(.new_col_name)) {
+        if (inherits(slide_values, "data.frame")) {
+          # Sometimes slide_values can parrot back columns already in `res`; allow
+          # this, but balk if a column has the same name as one in `res` but a
+          # different value:
+          comp_nms <- names(slide_values)
+          overlaps_existing_names <- comp_nms %in% names(res)
+          for (comp_i in which(overlaps_existing_names)) {
+            if (!identical(slide_values[[comp_i]], res[[comp_nms[[comp_i]]]])) {
+              lines <- c(
+                cli::format_error(c(
+                  "New column and old column clash",
+                  "x" = "slide computation output included a
                      {format_varname(comp_nms[[comp_i]])} column, but `.x` already had a
                      {format_varname(comp_nms[[comp_i]])} column with differing values",
-              "Here are examples of differing values, where the grouping variables were
+                  "Here are examples of differing values, where the grouping variables were
                {format_tibble_row(.group_key)}:"
-            )),
-            capture.output(print(waldo::compare(
-              res[[comp_nms[[comp_i]]]], slide_values[[comp_i]],
-              x_arg = rlang::expr_deparse(dplyr::expr(`$`(!!"existing", !!sym(comp_nms[[comp_i]])))), # nolint: object_usage_linter
-              y_arg = rlang::expr_deparse(dplyr::expr(`$`(!!"comp_value", !!sym(comp_nms[[comp_i]])))) # nolint: object_usage_linter
-            ))),
-            cli::format_message(c(
-              ">" = "You likely want to rename or remove this column from your slide
+                )),
+                capture.output(print(waldo::compare(
+                  res[[comp_nms[[comp_i]]]], slide_values[[comp_i]],
+                  x_arg = rlang::expr_deparse(dplyr::expr(`$`(!!"existing", !!sym(comp_nms[[comp_i]])))), # nolint: object_usage_linter
+                  y_arg = rlang::expr_deparse(dplyr::expr(`$`(!!"comp_value", !!sym(comp_nms[[comp_i]])))) # nolint: object_usage_linter
+                ))),
+                cli::format_message(c(
+                  ">" = "You likely want to rename or remove this column from your slide
                      computation's output, or debug why it has a different value."
+                ))
+              )
+              rlang::abort(paste(collapse = "\n", lines),
+                class = "epiprocess__epi_slide_output_vs_existing_column_conflict"
+              )
+            }
+          }
+          # Unpack into separate columns (without name prefix). If there are
+          # columns duplicating existing columns, de-dupe and order them as if they
+          # didn't exist in slide_values.
+          res <- dplyr::bind_cols(res, slide_values[!overlaps_existing_names])
+        } else {
+          # Apply default name (to vector or packed data.frame-type column):
+          if ("slide_value" %in% names(res)) {
+            cli_abort(c("Cannot guess a good column name for your output",
+              "x" = "`slide_value` already exists in `.x`",
+              ">" = "Please provide a `.new_col_name`."
             ))
-          )
-          rlang::abort(paste(collapse = "\n", lines),
-            class = "epiprocess__epi_slide_output_vs_existing_column_conflict"
-          )
+          }
+          res[["slide_value"]] <- slide_values
         }
+      } else {
+        # Vector or packed data.frame-type column (note: overlaps with existing
+        # column names should already be forbidden by earlier validation):
+        res[[.new_col_name]] <- slide_values
       }
-      # Unpack into separate columns (without name prefix). If there are
-      # columns duplicating existing columns, de-dupe and order them as if they
-      # didn't exist in slide_values.
-      res <- dplyr::bind_cols(res, slide_values[!overlaps_existing_names])
-    } else {
-      # Apply default name (to vector or packed data.frame-type column):
-      if ("slide_value" %in% names(res)) {
-        cli_abort(c("Cannot guess a good column name for your output",
-          "x" = "`slide_value` already exists in `.x`",
-          ">" = "Please provide a `.new_col_name`."
-        ))
-      }
-      res[["slide_value"]] <- slide_values
-    }
-  } else {
-    # Vector or packed data.frame-type column (note: overlaps with existing
-    # column names should already be forbidden by earlier validation):
-    res[[.new_col_name]] <- slide_values
-  }
       res
     }) %>%
-  list_rbind() %>%
-  arrange_col_canonical() %>% # XXX is this desired?
-  group_by(!!!.x_orig_groups)
+    list_rbind() %>%
+    arrange_col_canonical() %>% # XXX is this desired?
+    group_by(!!!.x_orig_groups)
 
   # If every group in epi_slide_one_group takes the
   # length(available_ref_time_values) == 0 branch then we end up here.
