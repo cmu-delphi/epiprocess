@@ -318,7 +318,7 @@ epi_slide <- function(
   unit_step <- unit_time_delta(time_type, format = "fast")
   simple_hop <- time_slide_to_simple_hop(.slide_comp = .slide_comp, ..., .before_n_steps = before_n_steps, .after_n_steps = after_n_steps)
   result <- .x %>%
-    group_modify(function(grp_data, grp_key) {
+    group_map(.keep = TRUE, function(grp_data, grp_key) {
       out_time_values <- ref_time_values_to_out_time_values(grp_data, .ref_time_values)
       res <- grp_data
       slide_values <- slide_window(grp_data, grp_key, simple_hop, before_n_steps, after_n_steps, unit_step, time_type, out_time_values)
@@ -331,6 +331,7 @@ epi_slide <- function(
         res <- vec_slice(res, vec_match(out_time_values, res$time_value))
       }
 
+      # TODO refactor this out and use it in epix_slide as well if possible
   if (is.null(.new_col_name)) {
     if (inherits(slide_values, "data.frame")) {
       # Sometimes slide_values can parrot back columns already in `res`; allow
@@ -384,7 +385,10 @@ epi_slide <- function(
     res[[.new_col_name]] <- slide_values
   }
       res
-    })
+    }) %>%
+  list_rbind() %>%
+  arrange_col_canonical() %>% # XXX is this desired?
+  group_by(!!!.x_orig_groups)
 
   # If every group in epi_slide_one_group takes the
   # length(available_ref_time_values) == 0 branch then we end up here.

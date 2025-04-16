@@ -31,7 +31,6 @@ time_slide_to_simple_hop <- function(.slide_comp, ..., .before_n_steps, .after_n
     # f(.slide_group_1, .group_key, .ref_time_value_2), ...)
     slide_values_list <- slider::hop(
       .x = grp_data,
-      .i = grp_data$time_value,
       .starts = starts,
       .stops = stops,
       .f = wrapped_slide_comp,
