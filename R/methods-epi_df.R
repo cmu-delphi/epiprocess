@@ -532,7 +532,7 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
   if (!"geo_value" %in% group_cols) {
     out <- out %>%
       mutate(geo_value = "total") %>%
-      relocate(.data$geo_value, .before = 1)
+      relocate("geo_value", .before = 1)
   }
 
   # The `geo_type` will be correctly inherited here by the following logic:

@@ -8,6 +8,7 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 - `is_epi_archive` function has been reintroduced.
 - `epix_as_of_current()` introduced as an alias for `epix_as_of(.$versions_end)`.
+- Added `dplyr::filter` implementation for `epi_archive`s.
 
 # epiprocess 0.11
 

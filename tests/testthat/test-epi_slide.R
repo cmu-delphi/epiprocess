@@ -610,7 +610,7 @@ test_that("epi_slide_opt helper `full_date_seq` returns expected date values", {
   before <- 2L
   after <- 1L
 
-  expect_identical(
+  expect_equal(
     full_date_seq(
       epi_data_missing %>%
         mutate(time_value = days) %>%
@@ -627,7 +627,7 @@ test_that("epi_slide_opt helper `full_date_seq` returns expected date values", {
       pad_late_dates = as.Date(c("2022-01-08"))
     )
   )
-  expect_identical(
+  expect_equal(
     full_date_seq(
       epi_data_missing %>%
         mutate(time_value = weeks) %>%
@@ -677,7 +677,7 @@ test_that("epi_slide_opt helper `full_date_seq` returns expected date values", {
   before <- 5L
   after <- 0L
 
-  expect_identical(
+  expect_equal(
     full_date_seq(
       epi_data_missing %>%
         mutate(time_value = days) %>%
@@ -701,7 +701,7 @@ test_that("epi_slide_opt helper `full_date_seq` returns expected date values", {
   before <- 0L
   after <- 3L
 
-  expect_identical(
+  expect_equal(
     full_date_seq(
       epi_data_missing %>%
         mutate(time_value = days) %>%

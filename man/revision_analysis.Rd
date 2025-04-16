@@ -56,7 +56,7 @@ of the \code{versions_end} are removed. \code{min_waiting_period} should charact
 the typical time during which most significant revisions occur. The default
 of 60 days corresponds to a typical near-final value for case counts as
 reported in the context of insurance. To avoid this filtering, either set
-to \code{NULL} or 0. This will be rounded up to the appropriate \code{time_type} if
+to \code{NULL} or 0. A \code{difftime} will be rounded up to the appropriate \code{time_type} if
 necessary (that is 5 days will be rounded to 1 week if the data is weekly).}
 
 \item{within_latest}{double between 0 and 1. Determines the threshold

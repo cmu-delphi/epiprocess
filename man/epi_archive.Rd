@@ -63,21 +63,21 @@ undergo tiny nonmeaningful revisions and the archive object with the
 default setting is too large.}
 
 \item{clobberable_versions_start}{Optional; \code{length}-1; either a value of the
-same \code{class} and \code{typeof} as \code{x$version}, or an \code{NA} of any \code{class} and
-\code{typeof}: specifically, either (a) the earliest version that could be
-subject to "clobbering" (being overwritten with different update data, but
-using the \emph{same} version tag as the old update data), or (b) \code{NA}, to
-indicate that no versions are clobberable. There are a variety of reasons
-why versions could be clobberable under routine circumstances, such as (a)
-today's version of one/all of the columns being published after initially
-being filled with \code{NA} or LOCF, (b) a buggy version of today's data being
-published but then fixed and republished later in the day, or (c) data
-pipeline delays (e.g., publisher uploading, periodic scraping, database
-syncing, periodic fetching, etc.) that make events (a) or (b) reflected
-later in the day (or even on a different day) than expected; potential
-causes vary between different data pipelines. The default value is \code{NA},
-which doesn't consider any versions to be clobberable. Another setting that
-may be appropriate for some pipelines is \code{max_version_with_row_in(x)}.}
+same \code{class} as \code{x$version}, or an \code{NA} of any \code{class}: specifically,
+either (a) the earliest version that could be subject to "clobbering"
+(being overwritten with different update data, but using the \emph{same} version
+tag as the old update data), or (b) \code{NA}, to indicate that no versions are
+clobberable. There are a variety of reasons why versions could be
+clobberable under routine circumstances, such as (a) today's version of
+one/all of the columns being published after initially being filled with
+\code{NA} or LOCF, (b) a buggy version of today's data being published but then
+fixed and republished later in the day, or (c) data pipeline delays (e.g.,
+publisher uploading, periodic scraping, database syncing, periodic
+fetching, etc.) that make events (a) or (b) reflected later in the day (or
+even on a different day) than expected; potential causes vary between
+different data pipelines. The default value is \code{NA}, which doesn't consider
+any versions to be clobberable. Another setting that may be appropriate for
+some pipelines is \code{max_version_with_row_in(x)}.}
 
 \item{.versions_end}{location based versions_end, used to avoid prefix
 \code{version = issue} from being assigned to \code{versions_end} instead of being
@@ -86,8 +86,8 @@ used to rename columns.}
 \item{...}{used for specifying column names, as in \code{\link[dplyr:rename]{dplyr::rename}}. For
 example \code{version = release_date}}
 
-\item{versions_end}{Optional; length-1, same \code{class} and \code{typeof} as
-\code{x$version}: what is the last version we have observed? The default is
+\item{versions_end}{Optional; length-1, same \code{class} as \code{x$version}: what is
+the last version we have observed? The default is
 \code{max_version_with_row_in(x)}, but values greater than this could also be
 valid, and would indicate that we observed additional versions of the data
 beyond \code{max(x$version)}, but they all contained empty updates. (The default
