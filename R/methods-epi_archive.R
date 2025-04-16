@@ -1036,9 +1036,12 @@ dplyr_col_modify.col_modify_recorder_df <- function(data, cols) {
 #'
 #' By default, using the `version` column or measurement columns is disabled as
 #' it's easy to get unexpected results. See if either [`epix_as_of`] or
-#' [`epix_slide`] works as an alternative. If they don't cover your use case,
-#' then you can set `.format_aware = TRUE` to enable usage of these columns, but
-#' be careful to:
+#' [`epix_slide`] works for any version selection you have in mind: for version
+#' selection, see the `version` or `.versions` args, respectively; for
+#' measurement column-based filtering, try `filter`ing after `epix_as_of` or
+#' inside the `.f` in `epix_slide()`. If they don't cover your use case, then
+#' you can set `.format_aware = TRUE` to enable usage of these columns, but be
+#' careful to:
 #' * Factor in that `.data$DT` may have been converted into a compact format
 #'   based on diffing consecutive versions, and the last version of each
 #'   observation in `.data$DT` will always be carried forward to future

@@ -23,9 +23,12 @@ details.}
 \details{
 By default, using the \code{version} column or measurement columns is disabled as
 it's easy to get unexpected results. See if either \code{\link{epix_as_of}} or
-\code{\link{epix_slide}} works as an alternative. If they don't cover your use case,
-then you can set \code{.format_aware = TRUE} to enable usage of these columns, but
-be careful to:
+\code{\link{epix_slide}} works for any version selection you have in mind: for version
+selection, see the \code{version} or \code{.versions} args, respectively; for
+measurement column-based filtering, try \code{filter}ing after \code{epix_as_of} or
+inside the \code{.f} in \code{epix_slide()}. If they don't cover your use case, then
+you can set \code{.format_aware = TRUE} to enable usage of these columns, but be
+careful to:
 \itemize{
 \item Factor in that \code{.data$DT} may have been converted into a compact format
 based on diffing consecutive versions, and the last version of each
