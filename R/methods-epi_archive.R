@@ -1063,30 +1063,46 @@ filter.epi_archive <- function(.data, ..., .by = NULL, .format_aware = FALSE) {
               # They are expected to be active bindings, so directly
               # assigning has issues; `rm` first.
               rm(list = forbidden_colnames, envir = e)
-              delayedAssign("version", cli::cli_abort(c(
-                "Using `version` in `filter.epi_archive` may produce unexpected results.",
-                ">" = "See if `epix_as_of` or `epix_slide` would work instead.",
-                ">" = "If not, see `?filter.epi_archive` details for how to proceed."
-              ), class = "epiprocess__filter_archive__used_version"), assign.env = e)
+              eval_env <- new.env(parent = asNamespace("epiprocess")) # see (2) below
+              delayedAssign(
+                "version",
+                cli_abort(c(
+                  "Using `version` in `filter.epi_archive` may produce unexpected results.",
+                  ">" = "See if `epix_as_of` or `epix_slide` would work instead.",
+                  ">" = "If not, see `?filter.epi_archive` details for how to proceed."
+                ), class = "epiprocess__filter_archive__used_version"),
+                eval.env = eval_env,
+                assign.env = e
+              )
               for (measurement_colname in measurement_colnames) {
-                # Record current `measurement_colname` and set up delayed
-                # binding for error in a child environment, so that `for` loop
-                # updating its value and `rm` cleanup don't mess things up:
-                local({
-                  local_measurement_colname <- measurement_colname
-                  delayedAssign(measurement_colname, cli::cli_abort(c(
+                # Record current `measurement_colname` and set up execution for
+                # the promise for the error in its own dedicated environment, so
+                # that (1) `for` loop updating its value and `rm` cleanup don't
+                # mess things up. We can also (2) prevent changes to data mask
+                # ancestry (to involve user's quosure env rather than our
+                # quosure env) or contents (from edge case of user binding
+                # functions inside the mask) from potentially interfering by
+                # setting the promise's execution environment to skip over the
+                # data mask.
+                eval_env <- new.env(parent = asNamespace("epiprocess"))
+                eval_env[["local_measurement_colname"]] <- measurement_colname
+                delayedAssign(
+                  measurement_colname,
+                  cli_abort(c(
                     "Using `{format_varname(local_measurement_colname)}`
                      in `filter.epi_archive` may produce unexpected results.",
                     ">" = "See `?filter.epi_archive` details for how to proceed."
-                  ), class = "epiprocess__filter_archive__used_measurement"), assign.env = e)
-                })
+                  ), class = "epiprocess__filter_archive__used_measurement"),
+                  eval.env = eval_env,
+                  assign.env = e
+                )
               }
               break
             }
             e <- parent.env(e)
           }
-          # Don't mask similarly-named user objects:
-          rm(list = c("e", "measurement_colname"))
+          # Don't mask similarly-named user objects in ancestor envs:
+          rm(list = c("e", "measurement_colname", "eval_env"))
           TRUE
         },
         ...,

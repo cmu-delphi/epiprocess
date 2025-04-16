@@ -222,8 +222,10 @@ test_that("filter.epi_archive works as expected", {
     ea2 %>% filter(time_value >= as.Date("2020-06-02"), cases >= 2L),
     class = "epiprocess__filter_archive__used_measurement"
   )
+  # Check for `for` + `delayedAssign` mishap in `expect_snapshot` (we should say
+  # something about `cases` (the relevant colname), not `deaths` (the last
+  # measurement colname)):
   ea2p <- ea2_data %>%
-    # to check for `for` + `delayedAssign` mishap in expect_snapshot
     mutate(deaths = 0) %>%
     as_epi_archive()
   expect_error(
@@ -234,6 +236,21 @@ test_that("filter.epi_archive works as expected", {
     ea2p %>% filter(cases >= median(cases), .by = geo_value),
     error = TRUE, cnd_class = TRUE
   )
+  # Check that we are insulated from other lazy eval traps:
+  expected <- rlang::catch_cnd(ea2p %>% filter(cases >= median(cases), .by = geo_value))
+  expect_class(expected$parent, "epiprocess__filter_archive__used_measurement")
+  with(list(cli_abort = function(...) stop("now, pretend user didn't have cli attached")), {
+    expect_equal(rlang::catch_cnd(ea2p %>% filter(cases >= median(cases), .by = geo_value))$parent$message,
+                 expected$parent$message)
+  })
+  expect_equal(
+    rlang::catch_cnd(ea2p %>% filter({
+      c <- function(...) stop("and that they overwrote `c` to try to debug their own code")
+      cases >= median(cases)
+    }, .by = geo_value))$parent$message,
+    expected$parent$message
+  )
+
 
   # Escape hatch:
   expect_equal(
