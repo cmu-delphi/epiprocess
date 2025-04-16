@@ -499,34 +499,40 @@ group_epi_df <- function(x, exclude = character()) {
 #' the resulting `epi_df` will have `geo_value` set to `"total"`.
 #'
 #' @param .x an `epi_df`
-#' @param sum_cols character vector of the columns to aggregate
+#' @param sum_cols `r tidyselect_arg_roxygen`
 #' @param group_cols character vector of column names to group by. "time_value" is
-#' included by default.
+#'   included by default.
 #' @return an `epi_df` object
 #'
+#' @examples
+#' # This data has other_keys age_group and edu_qual:
+#' grad_employ_subset
+#'
+#' # Aggregate num_graduates within each geo_value (and time_value):
+#' grad_employ_subset %>%
+#'   sum_groups_epi_df(num_graduates, group_cols = "geo_value")
+#'
 #' @export
-sum_groups_epi_df <- function(.x, sum_cols = "value", group_cols = character()) {
+sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
   assert_class(.x, "epi_df")
-  assert_character(sum_cols)
   assert_character(group_cols)
-  checkmate::assert_subset(sum_cols, setdiff(names(.x), key_colnames(.x)))
   checkmate::assert_subset(group_cols, key_colnames(.x))
   if (!"time_value" %in% group_cols) {
     group_cols <- c("time_value", group_cols)
   }
-
-  out <- .x %>%
-    group_by(across(all_of(group_cols))) %>%
-    dplyr::summarize(across(all_of(sum_cols), sum), .groups = "drop")
+  # Attempt tidyselection ourselves to get "Error in `sum_groups_epi_df()`"
+  # rather than "in `dplyr::summarize()`", before forwarding:
+  sum_cols <- rlang::enquo(sum_cols)
+  tidyselect::eval_select(sum_cols, .x)
+  out <- group_by(.x, across(all_of(group_cols))) %>%
+    dplyr::summarize(across(!!sum_cols, sum), .groups = "drop")
 
   # To preserve epi_df-ness, we need to ensure that the `geo_value` column is
   # present.
-  out <- if (!"geo_value" %in% group_cols) {
-    out %>%
+  if (!"geo_value" %in% group_cols) {
+    out <- out %>%
       mutate(geo_value = "total") %>%
-      relocate(geo_value, .before = 1)
-  } else {
-    out
+      relocate(.data$geo_value, .before = 1)
   }
 
   # The `geo_type` will be correctly inherited here by the following logic:
@@ -535,10 +541,10 @@ sum_groups_epi_df <- function(.x, sum_cols = "value", group_cols = character()) 
   # - if `geo_value` is not in `group_cols`, then the constructor will see
   #   the unrecognizeable "total" value and will correctly infer the "custom"
   #   geo_type.
-  out %>%
-    as_epi_df(
-      as_of = attr(.x, "metadata")$as_of,
-      other_keys = intersect(attr(.x, "metadata")$other_keys, group_cols)
-    ) %>%
+  as_epi_df(
+    out,
+    as_of = attr(.x, "metadata")$as_of,
+    other_keys = intersect(attr(.x, "metadata")$other_keys, group_cols)
+  ) %>%
     arrange_canonical()
 }

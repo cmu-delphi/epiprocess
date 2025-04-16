@@ -11,6 +11,7 @@ This package introduces common data structures for working with epidemiological 
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://github.com/cmu-delphi/epiprocess}
   \item \url{https://cmu-delphi.github.io/epiprocess/}
 }
 

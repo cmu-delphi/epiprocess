@@ -58,6 +58,7 @@
 #' epix_as_of(archive_cases_dv_subset2, max(archive_cases_dv_subset$DT$version))
 #'
 #' @importFrom data.table between key
+#' @importFrom checkmate assert_scalar assert_logical assert_class
 #' @export
 epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
                        max_version = deprecated()) {
@@ -88,6 +89,14 @@ epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
   if (version > x$versions_end) {
     cli_abort("`version` must be at most `epi_archive$versions_end`.")
   }
+  assert_scalar(min_time_value, na.ok = FALSE)
+  min_time_value_inf <- is.infinite(min_time_value) && min_time_value < 0
+  min_time_value_same_type <- typeof(min_time_value) == typeof(x$DT$time_value) &
+    class(min_time_value) == class(x$DT$time_value)
+  if (!min_time_value_inf && !min_time_value_same_type) {
+    cli_abort("`min_time_value` must be either -Inf or a time_value of the same type and
+      class as `epi_archive$time_value`.")
+  }
   assert_logical(all_versions, len = 1)
   if (!is.na(x$clobberable_versions_start) && version >= x$clobberable_versions_start) {
     cli_warn(
@@ -100,39 +109,63 @@ epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
     )
   }
 
-  # We can't disable nonstandard evaluation nor use the `..` feature in the `i`
-  # argument of `[.data.table` below; try to avoid problematic names and abort
-  # if we fail to do so:
-  .min_time_value <- min_time_value
-  .version <- version
-  if (any(c(".min_time_value", ".version") %in% names(x$DT))) {
-    cli_abort("epi_archives can't contain a `.min_time_value` or `.version` column")
-  }
-
   # Filter by version and return
   if (all_versions) {
     # epi_archive is copied into result, so we can modify result directly
     result <- epix_truncate_versions_after(x, version)
-    result$DT <- result$DT[time_value >= .min_time_value, ] # nolint: object_usage_linter
+    if (!min_time_value_inf) {
+      # See below for why we need this branch.
+      filter_mask <- result$DT$time_value >= min_time_value
+      result$DT <- result$DT[filter_mask, ] # nolint: object_usage_linter
+    }
     return(result)
   }
 
   # Make sure to use data.table ways of filtering and selecting
-  as_of_epi_df <- x$DT[time_value >= .min_time_value & version <= .version, ] %>% # nolint: object_usage_linter
-    unique(
-      by = c("geo_value", "time_value", other_keys),
-      fromLast = TRUE
-    ) %>%
+  if (min_time_value_inf) {
+    # This branch is needed for `epix_as_of` to work with `yearmonth` time type
+    # to avoid time_value > .min_time_value, which is NA for `yearmonth`.
+    filter_mask <- x$DT$version <= version
+  } else {
+    filter_mask <- x$DT$time_value >= min_time_value & x$DT$version <= version
+  }
+  as_of_epi_df <- x$DT[filter_mask, ] %>%
+    unique(by = c("geo_value", "time_value", other_keys), fromLast = TRUE) %>%
+    as.data.frame() %>%
     tibble::as_tibble() %>%
     dplyr::select(-"version") %>%
-    as_epi_df(
-      as_of = version,
-      other_keys = other_keys
-    )
+    as_epi_df(as_of = version, other_keys = other_keys)
 
   return(as_of_epi_df)
 }
 
+#' Get the latest snapshot from an `epi_archive` object.
+#'
+#' The latest snapshot is the snapshot of the last known version.
+#'
+#' @param x An `epi_archive` object
+#' @return The latest snapshot from an `epi_archive` object
+#' @export
+epix_as_of_current <- function(x) {
+  assert_class(x, "epi_archive")
+  x %>% epix_as_of(.$versions_end)
+}
+
+#' Set the `versions_end` attribute of an `epi_archive` object
+#'
+#' An escape hatch for epix_as_of, which does not allow version >
+#' `$versions_end`.
+#'
+#' @param x An `epi_archive` object
+#' @param versions_end The new `versions_end` value
+#' @return An `epi_archive` object with the updated `versions_end` attribute
+#' @export
+set_versions_end <- function(x, versions_end) {
+  assert_class(x, "epi_archive")
+  validate_version_bound(versions_end, x$DT, na_ok = FALSE)
+  x$versions_end <- versions_end
+  x
+}
 
 #' Fill `epi_archive` unobserved history
 #'
@@ -880,9 +913,12 @@ epix_slide.epi_archive <- function(
 #' @noRd
 epix_slide_versions_default <- function(ea) {
   versions_with_updates <- c(ea$DT$version, ea$versions_end)
-  tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
+  if (ea$time_type == "yearmonth") {
+    min(versions_with_updates) + seq(0, max(versions_with_updates) - min(versions_with_updates), by = 1)
+  } else {
+    tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
+  }
 }
-
 
 #' Filter an `epi_archive` object to keep only older versions
 #'

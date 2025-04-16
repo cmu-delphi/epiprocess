@@ -230,14 +230,11 @@ next_after.Date <- function(x) x + 1L
 #'   value of `clobberable_versions_start` does not fully trust these empty
 #'   updates, and assumes that any version `>= max(x$version)` could be
 #'   clobbered.) If `nrow(x) == 0`, then this argument is mandatory.
-#' @return An `epi_archive` object.
+#' @return * Of `new_epi_archive`: an (unvalidated) `epi_archive`
 #'
 #' @seealso [`epix_as_of`] [`epix_merge`] [`epix_slide`]
 #' @importFrom dplyr if_any if_all everything
 #' @importFrom utils capture.output
-#'
-#' @name epi_archive
-#' @export
 #'
 #' @examples
 #' # Simple ex. with necessary keys
@@ -277,6 +274,9 @@ next_after.Date <- function(x) x + 1L
 #'
 #' x <- df %>% as_epi_archive(other_keys = "county")
 #'
+#' @name epi_archive
+#' @order 3
+#' @export
 new_epi_archive <- function(
     x,
     geo_type,
@@ -329,7 +329,11 @@ new_epi_archive <- function(
 
 #' Perform second (costly) round of validation that `x` is a proper `epi_archive`
 #'
+#' @return * Of `validate_epi_archive`: an `epi_archive`,
+#'   [invisibly][base::invisible] (or raises an error if `x` was invalid)
+#'
 #' @rdname epi_archive
+#' @order 4
 #' @export
 validate_epi_archive <- function(x) {
   assert_class(x, "epi_archive")
@@ -515,8 +519,10 @@ is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
 #' @param .versions_end location based versions_end, used to avoid prefix
 #'   `version = issue` from being assigned to `versions_end` instead of being
 #'   used to rename columns.
+#' @return * Of `as_epi_archive`: an `epi_archive` object
 #'
 #' @rdname epi_archive
+#' @order 1
 #'
 #' @export
 as_epi_archive <- function(
@@ -807,4 +813,17 @@ clone <- function(x) {
 clone.epi_archive <- function(x) {
   x$DT <- data.table::copy(x$DT)
   x
+}
+
+#' Test for `epi_archive` format
+#'
+#' @param x An object.
+#' @return * Of `is_epi_archive`: `TRUE` if the object inherits from `epi_archive`,
+#'           otherwise `FALSE`.
+#'
+#' @rdname epi_archive
+#' @order 2
+#' @export
+is_epi_archive <- function(x) {
+  inherits(x, "epi_archive")
 }

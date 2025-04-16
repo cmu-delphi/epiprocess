@@ -6,6 +6,8 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
 
 ## New features
 
+- `is_epi_archive` function has been reintroduced.
+- `epix_as_of_current()` introduced as an alias for `epix_as_of(.$versions_end)`.
 - Added `dplyr::filter` implementation for `epi_archive`s.
 
 # epiprocess 0.11
@@ -21,7 +23,7 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   for users without a compiler, we have placed `{trendfilter}` in Suggests:; if
   you want to use `method = "trendfilter"` you will need to manually install
   this dependency (e.g., with `remotes::install_github("glmgen/trendfilter")`).
-- In `revision_summary()`:
+- In `revision_summary()` (aliased to `revision_analysis()`):
   - The `should_compactify` argument is now called `compactify`. To migrate,
     change any calls with `should_compactfiy =` to `compactify =`.
   - Output now uses the name `lag_near_latest` instead of `time_near_latest`. To
@@ -35,6 +37,11 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   - `min_waiting_period` now defines a nonstrict inequality instead of a strict
     one. To obtain the old bounds, bump the `min_waiting_period` up to the next
     possible value for your `time_type`.
+  - Added a `print()` method to take the place of `print_inform`.
+  - Removed the the argument `print_inform`. This is now always false. Replaced
+    with an option, `return_only_tibble` to return only the tibble of results 
+    rather than the full S3 object.
+    
 - In `key_colnames()`:
   - On regular (non-`epi_df`) data frames, now requires manual specification of
     `geo_keys`, `other_keys`, and `time_keys`.
@@ -48,12 +55,16 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   `new_epi_archive()`.
 - `validate_epi_archive()` now follows the validator convention of operating on
   an "unvalidated" `epi_archive` (from `new_epi_archive`) rather than arguments.
+- `autoplot.epi_df()` argument `.max_facets` has been deprecated in favor of
+  `.facet_filter` which allows explicit selection of facets to show.
 
 ## Improvements
-- `revision_summary()` now supports all `time_type`s.
+- `revision_summary()` now supports all `time_type`s. Printed summary is more attractive.
 - The compactification tolerance setting now works with integer-type columns.
 - Various functions are now faster, using faster variants of core operations and
   avoiding reconstructing grouped `epi_df`s when unnecessary.
+- Add `autoplot.epi_archive()` to display revision patterns.
+- `sum_groups_epi_df()` now supports tidyselect syntax in it's second argument (#655).
 
 ## Bug fixes
 

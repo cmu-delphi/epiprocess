@@ -37,20 +37,12 @@ articles:
     contents:
       - compactify
 
-repo:
-  url:
-    home: https://github.com/cmu-delphi/epiprocess/
-    source: https://github.com/cmu-delphi/epiprocess/
-    issue: https://github.com/cmu-delphi/epiprocess/issues
-
 reference:
   - title: "`epi_df` basics"
     desc: Constructors and information for `epi_df` objects.
   - contents:
       - epi_df
-      - print.epi_df
       - group_epi_df
-      - autoplot.epi_df
 
   - title: "`epi_df` manipulation"
     desc: Functions operating on `epi_df` objects.
@@ -71,7 +63,6 @@ reference:
     desc: Constructors and information for `epi_archive` objects.
   - contents:
       - epi_archive
-      - print.epi_archive
       - clone
       - group_by.epi_archive
 
@@ -79,11 +70,19 @@ reference:
     desc: Functions operating on `epi_archive` objects.
   - contents:
       - epix_as_of
+      - epix_as_of_current
       - epix_slide
       - epix_merge
       - revision_summary
       - epix_fill_through_version
       - epix_truncate_versions_after
+      - set_versions_end
+
+  - title: Basic analysis and visualization
+  - contents:
+      - starts_with("autoplot")
+      - starts_with("print")
+      - revision_summary
 
   - title: Example data
   - contents:
