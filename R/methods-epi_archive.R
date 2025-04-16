@@ -1093,7 +1093,7 @@ filter.epi_archive <- function(.data, ..., .by = NULL, .format_aware = FALSE) {
           # likely just the parent env, but search to make sure, in a way akin
           # to `<<-`:
           e <- environment()
-          while (!identical(e, globalenv()) && !identical(e, emptyenv())) {
+          while (!identical(e, globalenv()) && !identical(e, emptyenv())) { # nolint:vector_logic_linter
             if ("version" %in% names(e)) {
               # This is where the column bindings are. Replace the forbidden ones.
               # They are expected to be active bindings, so directly
