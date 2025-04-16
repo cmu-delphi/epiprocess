@@ -240,14 +240,19 @@ test_that("filter.epi_archive works as expected", {
   expected <- rlang::catch_cnd(ea2p %>% filter(cases >= median(cases), .by = geo_value))
   expect_class(expected$parent, "epiprocess__filter_archive__used_measurement")
   with(list(cli_abort = function(...) stop("now, pretend user didn't have cli attached")), {
-    expect_equal(rlang::catch_cnd(ea2p %>% filter(cases >= median(cases), .by = geo_value))$parent$message,
-                 expected$parent$message)
+    expect_equal(
+      rlang::catch_cnd(ea2p %>% filter(cases >= median(cases), .by = geo_value))$parent$message,
+      expected$parent$message
+    )
   })
   expect_equal(
-    rlang::catch_cnd(ea2p %>% filter({
-      c <- function(...) stop("and that they overwrote `c` to try to debug their own code")
-      cases >= median(cases)
-    }, .by = geo_value))$parent$message,
+    rlang::catch_cnd(ea2p %>% filter(
+      {
+        c <- function(...) stop("and that they overwrote `c` to try to debug their own code")
+        cases >= median(cases)
+      },
+      .by = geo_value
+    ))$parent$message,
     expected$parent$message
   )
 
