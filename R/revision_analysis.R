@@ -233,7 +233,7 @@ print.revision_analysis <- function(x,
   }
   if (is.null(abs_spread_threshold)) abs_spread_threshold <- .05 * x$max_val
   rev_beh <- x$revision_behavior
-  cli::cli_h2("An epi_archive spanning {.val {x$range_time_values[1]}} to {.val {x$range_time_values[1]}}.")
+  cli::cli_h2("An epi_archive spanning {.val {x$range_time_values[1]}} to {.val {x$range_time_values[2]}}.")
   cli::cli_h3("Min lag (time to first version):")
   time_delta_summary(rev_beh$min_lag, x$time_type) %>% print()
   if (!x$drop_nas) {
