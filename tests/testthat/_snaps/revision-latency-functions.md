@@ -4,7 +4,7 @@
       rs1
     Message
       
-      -- An epi_archive spanning 2020-01-01 to 2020-01-01. --
+      -- An epi_archive spanning 2020-01-01 to 2020-01-04. --
       
       -- Min lag (time to first version): 
     Output
@@ -62,7 +62,7 @@
       rs2
     Message
       
-      -- An epi_archive spanning 2020-01-01 to 2020-01-01. --
+      -- An epi_archive spanning 2020-01-01 to 2020-01-04. --
       
       -- Min lag (time to first version): 
     Output
@@ -122,7 +122,7 @@
       rs3
     Message
       
-      -- An epi_archive spanning 2020-01-01 to 2020-01-01. --
+      -- An epi_archive spanning 2020-01-01 to 2020-01-22. --
       
       -- Min lag (time to first version): 
     Output
@@ -182,7 +182,7 @@
       rs4
     Message
       
-      -- An epi_archive spanning 2020 Jan to 2020 Jan. --
+      -- An epi_archive spanning 2020 Jan to 2020 Apr. --
       
       -- Min lag (time to first version): 
     Output
@@ -242,7 +242,7 @@
       print(rs5, quick_revision = 3)
     Message
       
-      -- An epi_archive spanning 1 to 1. --
+      -- An epi_archive spanning 1 to 4. --
       
       -- Min lag (time to first version): 
     Output
