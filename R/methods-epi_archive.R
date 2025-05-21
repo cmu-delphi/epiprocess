@@ -842,7 +842,6 @@ epix_slide <- function(
 }
 
 
-#' @rdname epix_slide
 #' @export
 epix_slide.epi_archive <- function(
     .x,
