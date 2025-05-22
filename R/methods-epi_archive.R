@@ -58,6 +58,7 @@
 #' epix_as_of(archive_cases_dv_subset2, max(archive_cases_dv_subset$DT$version))
 #'
 #' @importFrom data.table between key
+#' @importFrom checkmate assert_scalar assert_logical assert_class
 #' @export
 epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
                        max_version = deprecated()) {
@@ -79,14 +80,16 @@ epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
       "`version` must have the same `class` vector as `epi_archive$DT$version`."
     )
   }
-  if (!identical(typeof(version), typeof(x$DT$version))) {
-    cli_abort(
-      "`version` must have the same `typeof` as `epi_archive$DT$version`."
-    )
-  }
   assert_scalar(version, na.ok = FALSE)
   if (version > x$versions_end) {
     cli_abort("`version` must be at most `epi_archive$versions_end`.")
+  }
+  assert_scalar(min_time_value, na.ok = FALSE)
+  min_time_value_inf <- is.infinite(min_time_value) && min_time_value < 0
+  min_time_value_same_type <- identical(class(min_time_value), class(x$DT$time_value))
+  if (!min_time_value_inf && !min_time_value_same_type) {
+    cli_abort("`min_time_value` must be either -Inf or a time_value of the same type and
+      class as `epi_archive$time_value`.")
   }
   assert_logical(all_versions, len = 1)
   if (!is.na(x$clobberable_versions_start) && version >= x$clobberable_versions_start) {
@@ -100,39 +103,63 @@ epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
     )
   }
 
-  # We can't disable nonstandard evaluation nor use the `..` feature in the `i`
-  # argument of `[.data.table` below; try to avoid problematic names and abort
-  # if we fail to do so:
-  .min_time_value <- min_time_value
-  .version <- version
-  if (any(c(".min_time_value", ".version") %in% names(x$DT))) {
-    cli_abort("epi_archives can't contain a `.min_time_value` or `.version` column")
-  }
-
   # Filter by version and return
   if (all_versions) {
     # epi_archive is copied into result, so we can modify result directly
     result <- epix_truncate_versions_after(x, version)
-    result$DT <- result$DT[time_value >= .min_time_value, ] # nolint: object_usage_linter
+    if (!min_time_value_inf) {
+      # See below for why we need this branch.
+      filter_mask <- result$DT$time_value >= min_time_value
+      result$DT <- result$DT[filter_mask, ] # nolint: object_usage_linter
+    }
     return(result)
   }
 
   # Make sure to use data.table ways of filtering and selecting
-  as_of_epi_df <- x$DT[time_value >= .min_time_value & version <= .version, ] %>% # nolint: object_usage_linter
-    unique(
-      by = c("geo_value", "time_value", other_keys),
-      fromLast = TRUE
-    ) %>%
+  if (min_time_value_inf) {
+    # This branch is needed for `epix_as_of` to work with `yearmonth` time type
+    # to avoid time_value > .min_time_value, which is NA for `yearmonth`.
+    filter_mask <- x$DT$version <= version
+  } else {
+    filter_mask <- x$DT$time_value >= min_time_value & x$DT$version <= version
+  }
+  as_of_epi_df <- x$DT[filter_mask, ] %>%
+    unique(by = c("geo_value", "time_value", other_keys), fromLast = TRUE) %>%
+    as.data.frame() %>%
     tibble::as_tibble() %>%
     dplyr::select(-"version") %>%
-    as_epi_df(
-      as_of = version,
-      other_keys = other_keys
-    )
+    as_epi_df(as_of = version, other_keys = other_keys)
 
   return(as_of_epi_df)
 }
 
+#' Get the latest snapshot from an `epi_archive` object.
+#'
+#' The latest snapshot is the snapshot of the last known version.
+#'
+#' @param x An `epi_archive` object
+#' @return The latest snapshot from an `epi_archive` object
+#' @export
+epix_as_of_current <- function(x) {
+  assert_class(x, "epi_archive")
+  x %>% epix_as_of(.$versions_end)
+}
+
+#' Set the `versions_end` attribute of an `epi_archive` object
+#'
+#' An escape hatch for epix_as_of, which does not allow version >
+#' `$versions_end`.
+#'
+#' @param x An `epi_archive` object
+#' @param versions_end The new `versions_end` value
+#' @return An `epi_archive` object with the updated `versions_end` attribute
+#' @export
+set_versions_end <- function(x, versions_end) {
+  assert_class(x, "epi_archive")
+  validate_version_bound(versions_end, x$DT, na_ok = FALSE)
+  x$versions_end <- versions_end
+  x
+}
 
 #' Fill `epi_archive` unobserved history
 #'
@@ -450,7 +477,8 @@ epix_merge <- function(x, y,
   y_nonby_colnames <- setdiff(names(y_dt), by)
   if (length(intersect(x_nonby_colnames, y_nonby_colnames)) != 0L) {
     cli_abort("
-            `x` and `y` DTs have overlapping non-by column names;
+            `x` and `y` DTs both have measurement columns named
+            {format_chr_with_quotes(intersect(x_nonby_colnames, y_nonby_colnames))};
             this is currently not supported; please manually fix up first:
             any overlapping columns that can are key-like should be
             incorporated into the key, and other columns should be renamed.
@@ -875,9 +903,12 @@ epix_slide.epi_archive <- function(
 #' @noRd
 epix_slide_versions_default <- function(ea) {
   versions_with_updates <- c(ea$DT$version, ea$versions_end)
-  tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
+  if (ea$time_type == "yearmonth") {
+    min(versions_with_updates) + seq(0, max(versions_with_updates) - min(versions_with_updates), by = 1)
+  } else {
+    tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
+  }
 }
-
 
 #' Filter an `epi_archive` object to keep only older versions
 #'
@@ -899,9 +930,6 @@ epix_truncate_versions_after <- function(x, max_version) {
 epix_truncate_versions_after.epi_archive <- function(x, max_version) {
   if (!identical(class(max_version), class(x$DT$version))) {
     cli_abort("`max_version` must have the same `class` as `epi_archive$DT$version`.")
-  }
-  if (!identical(typeof(max_version), typeof(x$DT$version))) {
-    cli_abort("`max_version` must have the same `typeof` as `epi_archive$DT$version`.")
   }
   assert_scalar(max_version, na.ok = FALSE)
   if (max_version > x$versions_end) {
@@ -978,4 +1006,164 @@ dplyr_col_modify.col_modify_recorder_df <- function(data, cols) {
   }
   attr(data, "epiprocess::col_modify_recorder_df::cols") <- cols
   data
+}
+
+
+
+#' [`dplyr::filter`] for `epi_archive`s
+#'
+#' @param .data an `epi_archive`
+#' @param ... as in [`dplyr::filter`]; using the `version` column is not allowed
+#'   unless you use `.format_aware = TRUE`; see details.
+#' @param .by as in [`dplyr::filter`]
+#' @param .format_aware optional, `TRUE` or `FALSE`; default `FALSE`. See
+#'   details.
+#'
+#' @details
+#'
+#' By default, using the `version` column or measurement columns is disabled as
+#' it's easy to get unexpected results. See if either [`epix_as_of`] or
+#' [`epix_slide`] works for any version selection you have in mind: for version
+#' selection, see the `version` or `.versions` args, respectively; for
+#' measurement column-based filtering, try `filter`ing after `epix_as_of` or
+#' inside the `.f` in `epix_slide()`. If they don't cover your use case, then
+#' you can set `.format_aware = TRUE` to enable usage of these columns, but be
+#' careful to:
+#' * Factor in that `.data$DT` may have been converted into a compact format
+#'   based on diffing consecutive versions, and the last version of each
+#'   observation in `.data$DT` will always be carried forward to future
+#'   `version`s`; see details of [`as_epi_archive`].
+#' * Set `clobberable_versions_start` and `versions_end` of the result
+#'   appropriately after the `filter` call. They will be initialized with the
+#'   same values as in `.data`.
+#'
+#' `dplyr::filter` also has an optional argument `.preserve`, which should not
+#' have an impact on (ungrouped) `epi_archive`s, and `grouped_epi_archive`s do
+#' not currently support `dplyr::filter`.
+#'
+#' @examples
+#'
+#' # Filter to one location and a particular time range:
+#' archive_cases_dv_subset %>%
+#'   filter(geo_value == "fl", time_value >= as.Date("2020-10-01"))
+#'
+#' # Convert to weekly by taking the Saturday data for each week, so that
+#' # `case_rate_7d_av` represents a Sun--Sat average:
+#' archive_cases_dv_subset %>%
+#'   filter(as.POSIXlt(time_value)$wday == 6L)
+#'
+#' # Filtering involving the `version` column or measurement columns requires
+#' # extra care. See epix_as_of and epix_slide instead for some common
+#' # operations. One semi-common operation that ends up being fairly simple is
+#' # treating observations as finalized after some amount of time, and ignoring
+#' # any revisions that were made after that point:
+#' archive_cases_dv_subset %>%
+#'   filter(
+#'     version <= time_value + as.difftime(60, units = "days"),
+#'     .format_aware = TRUE
+#'   )
+#'
+#' @export
+filter.epi_archive <- function(.data, ..., .by = NULL, .format_aware = FALSE) {
+  in_tbl <- tibble::as_tibble(as.list(.data$DT), .name_repair = "minimal")
+  if (.format_aware) {
+    out_tbl <- in_tbl %>%
+      filter(..., .by = {{ .by }})
+  } else {
+    measurement_colnames <- setdiff(names(.data$DT), key_colnames(.data))
+    forbidden_colnames <- c("version", measurement_colnames)
+    out_tbl <- in_tbl %>%
+      filter(
+        # Add our own fake filter arg to the user's ..., to update the data mask
+        # to prevent `version` column usage.
+        {
+          # We should be evaluating inside the data mask. To disable both
+          # `version` and `.data$version` etc., we need to go to the ancestor
+          # environment containing the data mask's column bindings. This is
+          # likely just the parent env, but search to make sure, in a way akin
+          # to `<<-`:
+          e <- environment()
+          while (!identical(e, globalenv()) && !identical(e, emptyenv())) { # nolint:vector_logic_linter
+            if ("version" %in% names(e)) {
+              # This is where the column bindings are. Replace the forbidden ones.
+              # They are expected to be active bindings, so directly
+              # assigning has issues; `rm` first.
+              rm(list = forbidden_colnames, envir = e)
+              eval_env <- new.env(parent = asNamespace("epiprocess")) # see (2) below
+              delayedAssign(
+                "version",
+                cli_abort(c(
+                  "Using `version` in `filter.epi_archive` may produce unexpected results.",
+                  ">" = "See if `epix_as_of` or `epix_slide` would work instead.",
+                  ">" = "If not, see `?filter.epi_archive` details for how to proceed."
+                ), class = "epiprocess__filter_archive__used_version"),
+                eval.env = eval_env,
+                assign.env = e
+              )
+              for (measurement_colname in measurement_colnames) {
+                # Record current `measurement_colname` and set up execution for
+                # the promise for the error in its own dedicated environment, so
+                # that (1) `for` loop updating its value and `rm` cleanup don't
+                # mess things up. We can also (2) prevent changes to data mask
+                # ancestry (to involve user's quosure env rather than our
+                # quosure env) or contents (from edge case of user binding
+                # functions inside the mask) from potentially interfering by
+                # setting the promise's execution environment to skip over the
+                # data mask.
+                eval_env <- new.env(parent = asNamespace("epiprocess"))
+                eval_env[["local_measurement_colname"]] <- measurement_colname
+                delayedAssign(
+                  measurement_colname,
+                  cli_abort(c(
+                    "Using `{format_varname(local_measurement_colname)}`
+                     in `filter.epi_archive` may produce unexpected results.",
+                    ">" = "See `?filter.epi_archive` details for how to proceed."
+                  ), class = "epiprocess__filter_archive__used_measurement"),
+                  eval.env = eval_env,
+                  assign.env = e
+                )
+              }
+              break
+            }
+            e <- parent.env(e)
+          }
+          # Don't mask similarly-named user objects in ancestor envs:
+          rm(list = c("e", "measurement_colname", "eval_env"))
+          TRUE
+        },
+        ...,
+        .by = {{ .by }}
+      )
+  }
+  # We could try to re-infer the geo_type, e.g., when filtering from
+  # national+state to just state. However, we risk inference failures such as
+  # "hrr" -> "hhs" from filtering to hrr 10, or "custom" -> USA-related when
+  # working with non-USA data:
+  out_geo_type <- .data$geo_type
+  if (.data$time_type == "day") {
+    # We might be going from daily to weekly; re-infer:
+    out_time_type <- guess_time_type(out_tbl$time_value)
+  } else {
+    # We might be filtering weekly to a single time_value; avoid re-inferring to
+    # stay "week". Or in other cases, just skip inferring, as re-inferring is
+    # expected to match the input time_type:
+    out_time_type <- .data$time_type
+  }
+  # Even if they narrow down to just a single value of an other_keys column,
+  # it's probably still better (& simpler) to treat it as an other_keys column
+  # since it still exists in the result:
+  out_other_keys <- .data$other_keys
+  # `filter` makes no guarantees about not aliasing columns in its result when
+  # the filter condition is all TRUE, so don't setDT.
+  out_dtbl <- as.data.table(out_tbl, key = out_other_keys)
+  result <- new_epi_archive(
+    out_dtbl,
+    out_geo_type, out_time_type, out_other_keys,
+    # Assume version-related metadata unchanged; part of why we want to push
+    # back on filter expressions like `.data$version <= .env$as_of`:
+    .data$clobberable_versions_start, .data$versions_end
+  )
+  # Filtering down rows while keeping all (ukey) columns should preserve ukey
+  # uniqueness.
+  result
 }

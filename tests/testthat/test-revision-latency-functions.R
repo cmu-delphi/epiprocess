@@ -64,27 +64,36 @@ dummy_ex_integerly <- dummy_ex$DT %>%
 stopifnot(dummy_ex_integerly$time_type == "integer")
 
 test_that("revision_summary works for dummy datasets", {
-  expect_snapshot(dummy_ex %>% revision_summary() %>% print(n = 10, width = 300))
-  expect_snapshot(dummy_ex %>% revision_summary(drop_nas = FALSE) %>% print(n = 10, width = 300))
+  rs1 <- dummy_ex %>% revision_summary()
+  rs2 <- dummy_ex %>% revision_summary(drop_nas = FALSE)
+  expect_snapshot(rs1)
+  expect_snapshot(rs1$revision_behavior %>% print(n = 10, width = 300))
+  expect_snapshot(rs2)
+  expect_snapshot(rs2$revision_behavior %>% print(n = 10, width = 300))
 
   # Weekly dummy is mostly just "day" -> "week", but quick-revision summary changes:
-  expect_snapshot(dummy_ex_weekly %>% revision_summary(drop_nas = FALSE) %>% print(n = 10, width = 300))
+  rs3 <- dummy_ex_weekly %>% revision_summary(drop_nas = FALSE)
+  expect_snapshot(rs3)
+  expect_snapshot(rs3$revision_behavior %>% print(n = 10, width = 300))
   # Yearmonthly has the same story. It would have been close to encountering
   # min_waiting_period-based filtering but we actually set its versions_end to
   # sometime in 2080 rather than 2022:
-  expect_snapshot(dummy_ex_yearmonthly %>% revision_summary(drop_nas = FALSE) %>% print(n = 10, width = 300))
+  rs4 <- dummy_ex_yearmonthly %>% revision_summary(drop_nas = FALSE)
+  expect_snapshot(rs4)
+  expect_snapshot(rs4$revision_behavior %>% print(n = 10, width = 300))
   # Integer is very much like daily. We have to provide some of the
   # configuration arguments since we have no idea about what the integers
   # represent. If the possible integers being used have large jumps like
   # YYYYww-as-integer epiweek labels (e.g., 200053 jumps to 200101) or are
   # regularly spaced apart but by more than 1, we'll still be producing
   # something nonsensical, but we tried.
-  expect_snapshot(dummy_ex_integerly %>%
+  rs5 <- dummy_ex_integerly %>%
     revision_summary(
-      min_waiting_period = 60, quick_revision = 3,
+      min_waiting_period = 60,
       drop_nas = FALSE
-    ) %>%
-    print(n = 10, width = 300))
+    )
+  expect_snapshot(print(rs5, quick_revision = 3))
+  expect_snapshot(rs5$revision_behavior %>% print(n = 10, width = 300))
 })
 
 test_that("tidyselect is functional", {
@@ -133,7 +142,7 @@ test_that("revision_summary default min_waiting_period works as expected", {
       value = 1:2
     ) %>%
       as_epi_archive(versions_end = as.Date("2020-01-01") + 1 + 59) %>%
-      revision_summary(print_inform = FALSE) %>%
+      revision_summary(return_only_tibble = TRUE) %>%
       pull(time_value),
     as.Date("2020-01-01")
   )
@@ -146,7 +155,7 @@ test_that("revision_summary default min_waiting_period works as expected", {
       value = 1:2
     ) %>%
       as_epi_archive(versions_end = as.Date("2020-01-01") + 7 + 56) %>%
-      revision_summary(print_inform = FALSE) %>%
+      revision_summary(return_only_tibble = TRUE) %>%
       pull(time_value),
     as.Date("2020-01-01")
   )
@@ -159,7 +168,7 @@ test_that("revision_summary default min_waiting_period works as expected", {
       value = 1:2
     ) %>%
       as_epi_archive(versions_end = tsibble::make_yearmonth(2000, 3)) %>%
-      revision_summary(print_inform = FALSE) %>%
+      revision_summary(return_only_tibble = TRUE) %>%
       pull(time_value),
     tsibble::make_yearmonth(2000, 1)
   )
@@ -172,7 +181,7 @@ test_that("revision_summary default min_waiting_period works as expected", {
       value = 1:2
     ) %>%
       as_epi_archive(versions_end = 1 + 1 + 59) %>%
-      revision_summary(print_inform = FALSE),
+      revision_summary(return_only_tibble = TRUE),
     regexp = "Unsupported time_type"
   )
 })

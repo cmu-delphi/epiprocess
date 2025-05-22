@@ -436,9 +436,13 @@ epix_slide.grouped_epi_archive <- function(
   out <- lapply(.versions, function(.version) {
     # Ungrouped as-of data; `epi_df` if `all_versions` is `FALSE`,
     # `epi_archive` if `all_versions` is `TRUE`:
+    min_time_value <- .version - .before
+    if (is.na(min_time_value)) {
+      min_time_value <- -Inf
+    }
     as_of_raw <- .x$private$ungrouped %>% epix_as_of(
       .version,
-      min_time_value = .version - .before,
+      min_time_value = min_time_value,
       all_versions = .all_versions
     )
 

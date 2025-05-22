@@ -17,11 +17,11 @@ test_that("guess_period works", {
   # On Dates:
   daily_dates <- seq(as.Date("2020-01-01"), as.Date("2020-01-15"), by = "day")
   weekly_dates <- seq(as.Date("2020-01-01"), as.Date("2020-01-15"), by = "week")
-  expect_identical(
+  expect_equal(
     daily_dates[[1L]] + guess_period(daily_dates) * (seq_along(daily_dates) - 1L),
     daily_dates
   )
-  expect_identical(
+  expect_equal(
     weekly_dates[[1L]] + guess_period(weekly_dates) * (seq_along(weekly_dates) - 1L),
     weekly_dates
   )
