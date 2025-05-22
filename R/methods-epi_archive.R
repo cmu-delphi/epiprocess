@@ -1159,7 +1159,7 @@ filter.epi_archive <- function(.data, ..., .by = NULL, .format_aware = FALSE) {
   out_other_keys <- .data$other_keys
   # `filter` makes no guarantees about not aliasing columns in its result when
   # the filter condition is all TRUE, so don't setDT.
-  out_dtbl <- as.data.table(out_tbl, key = out_other_keys)
+  out_dtbl <- as.data.table(out_tbl, key = c("geo_value", "time_value", out_other_keys, "version"))
   result <- new_epi_archive(
     out_dtbl,
     out_geo_type, out_time_type, out_other_keys,
