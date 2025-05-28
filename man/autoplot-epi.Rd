@@ -34,7 +34,7 @@
 \arguments{
 \item{object, x}{An \code{epi_df} or \code{epi_archive}}
 
-\item{...}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> One or more unquoted
+\item{...}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> One or more unquoted
 expressions separated by commas. Variable names can be used as if they
 were positions in the data frame, so expressions like \code{x:y} can
 be used to select a range of variables.}
@@ -60,7 +60,7 @@ locations would share the same color line.}
 
 \item{.facet_filter}{Select which facets will be displayed. Especially
 useful for when there are many \code{geo_value}'s or keys. This is a
-<\code{\link[=args_data_masking]{rlang}}> expression along the lines of \code{\link[dplyr:filter]{dplyr::filter()}}.
+<\code{\link[rlang:args_data_masking]{rlang}}> expression along the lines of \code{\link[dplyr:filter]{dplyr::filter()}}.
 However, it must be a single expression combined with the \code{&} operator. This
 contrasts to the typical use case which allows multiple comma-separated expressions
 which are implicitly combined with \code{&}. When multiple variables are selected

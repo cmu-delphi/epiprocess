@@ -7,7 +7,7 @@
 #'
 #' @keywords internal
 tidyselect_arg_roxygen <- '
-  <[`tidy-select`][dplyr_tidy_select]> An unquoted column
+  <[`tidy-select`][dplyr::dplyr_tidy_select]> An unquoted column
   name (e.g., `cases`), multiple column names (e.g., `c(cases, deaths)`),
   [other tidy-select expression][tidyselect::language], or a vector of
   characters (e.g. `c("cases", "deaths")`). Variable names can be used as if

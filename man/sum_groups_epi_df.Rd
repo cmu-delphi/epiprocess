@@ -9,7 +9,7 @@ sum_groups_epi_df(.x, sum_cols, group_cols = "time_value")
 \arguments{
 \item{.x}{an \code{epi_df}}
 
-\item{sum_cols}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
+\item{sum_cols}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> An unquoted column
 name (e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}),
 \link[tidyselect:language]{other tidy-select expression}, or a vector of
 characters (e.g. \code{c("cases", "deaths")}). Variable names can be used as if

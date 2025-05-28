@@ -40,7 +40,7 @@ revision_summary(
 \arguments{
 \item{epi_arch}{an epi_archive to be analyzed}
 
-\item{...}{<\code{\link[=dplyr_tidy_select]{tidyselect}}>, used to choose the column to
+\item{...}{<\code{\link[dplyr:dplyr_tidy_select]{tidyselect}}>, used to choose the column to
 summarize. If empty and there is only one value/measurement column (i.e.,
 not in \code{\link{key_colnames}}) in the archive, it will automatically select it.
 If supplied, \code{...} must select exactly one column.}

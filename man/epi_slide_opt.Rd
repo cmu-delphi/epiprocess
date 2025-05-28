@@ -4,7 +4,7 @@
 \alias{epi_slide_opt}
 \alias{epi_slide_mean}
 \alias{epi_slide_sum}
-\title{Optimized slide functions for common cases}
+\title{Calculate rolling or running means, sums, etc., or custom calculations}
 \usage{
 epi_slide_opt(
   .x,
@@ -51,7 +51,7 @@ epi_slide_sum(
 and any columns in \code{other_keys}. If grouped, we make sure the grouping is by
 \code{geo_value} and \code{other_keys}.}
 
-\item{.col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
+\item{.col_names}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> An unquoted column
 name (e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}),
 \link[tidyselect:language]{other tidy-select expression}, or a vector of
 characters (e.g. \code{c("cases", "deaths")}). Variable names can be used as if
@@ -134,10 +134,20 @@ added. It will be ungrouped if \code{.x} was ungrouped, and have the same groups
 as \code{.x} if \code{.x} was grouped.
 }
 \description{
-\code{epi_slide_opt} allows sliding an n-timestep \link[data.table:froll]{data.table::froll}
-or \link[slider:summary-slide]{slider::summary-slide} function over variables in an \code{epi_df} object.
-These functions tend to be much faster than \code{epi_slide()}. See
-\code{vignette("epi_df")} for more examples.
+These methods take each subpopulation (i.e., a single
+\code{geo_value} and combination of any \code{other_keys} you set up for age groups,
+etc.) and perform a \code{.window_size}-width time window rolling/sliding
+computation, or alternatively, a running/cumulative computation (with
+\code{.window_size = Inf}) on the requested columns. Explicit \code{NA} measurements
+are temporarily added to fill in any time gaps, and, for rolling
+computations, to pad the time series to ensure that the first & last
+computations use exactly \code{.window_size} values.
+
+\code{epi_slide_opt} allows you to use any \link[data.table:froll]{data.table::froll} or
+\link[slider:summary-slide]{slider::summary-slide} function. If none of those specialized functions fit
+your usecase, you can use \code{data.table::frollapply} together with a non-rolling
+function (e.g., \code{median}). See \code{\link{epi_slide}} if you need to work with
+multiple columns at once or output a custom type.
 
 \code{epi_slide_mean} is a wrapper around \code{epi_slide_opt} with \code{.f = data.table::frollmean}.
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/slide.R
 \name{epi_slide}
 \alias{epi_slide}
-\title{Slide a function over variables in an \code{epi_df} object}
+\title{More general form of \code{\link{epi_slide_opt}} for rolling/running computations}
 \usage{
 epi_slide(
   .x,
@@ -20,34 +20,46 @@ epi_slide(
 and any columns in \code{other_keys}. If grouped, we make sure the grouping is by
 \code{geo_value} and \code{other_keys}.}
 
-\item{.f}{Function, formula, or missing; together with \code{...} specifies the
-computation to slide. The return of the computation should either be a
-scalar or a 1-row data frame. Data frame returns will be
-\code{tidyr::unpack()}-ed, if named, and will be \code{\link[tidyr:pack]{tidyr::pack}}-ed columns, if
-not named. See examples.
+\item{.f, ...}{The computation to slide. The input will be a time window of
+the data for a single subpopulation (i.e., a single \code{geo_value} and single
+value for any \code{\link[=as_epi_df]{other_keys}} you set up, such as age groups, race, etc.).
+The input will always have the same size, determined by \code{.window_size}, and
+will fill in any missing \code{time_values}, using \code{NA} values for missing
+measurements. The output should be a scalar value or a 1-row data frame;
+these outputs will be collected into a new column or columns in the
+\code{epi_slide()} result. Data frame outputs will be unpacked into multiple
+columns in the result by default, or \code{\link[tidyr:pack]{tidyr::pack}}ed into a single
+data-frame-type column if you provide a name for such a column (e.g., via
+\code{.new_col_name}).
+
+You can specify the computation in one of the following ways:
 \itemize{
-\item If \code{.f} is missing, then \code{...} will specify the computation via
-tidy-evaluation. This is usually the most convenient way to use
-\code{epi_slide}. See examples.
-\item If \code{.f} is a formula, then the formula should use \code{.x} (not the same as
-the input \code{epi_df}) to operate on the columns of the input \code{epi_df}, e.g.
-\code{~mean(.x$var)} to compute a mean of \code{var}.
-\item If a function, \code{.f} must have the form \verb{function(x, g, t, ...)}, where:
+\item Don't provide \code{.f}, and instead use one or more
+\code{\link[dplyr:summarise]{dplyr::summarize}}-esque \link[rlang:args_data_masking]{"data-masking"}
+expressions in \code{...}, e.g., \code{cfr_estimate_v0 = death_rate_7d_av[[22]]/case_rate_7d_av[[1]]}. This way is sometimes more
+convenient, but also has the most computational overhead.
+\item Provide a formula in \code{.f}, e.g., \code{~ .x$death_rate_7d_av[[22]]/.x$case_rate_7d_av[[1]]}. In this formula, \code{.x}
+is an \code{epi_df} containing data for a single time window as described above,
+taken from the original \code{.x} fed into \code{epi_slide()}.
+\item Provide a function in \code{.f}, e.g., \code{function(x, g, t) x$death_rate_7d_av[[22]]/x$case_rate_7d_av[[1]]}. The function should be of
+the form \verb{function(x, g, t)} or \verb{function(x, g, t, <additional configuration arguments>)}, where:
 \itemize{
 \item \code{x} is a data frame with the same column names as the original object,
 minus any grouping variables, with only the windowed data for one
 group-\code{.ref_time_value} combination
-\item \code{g} is a one-row tibble containing the values of the grouping variables
-for the associated group
+\item \code{g} is a one-row tibble specifying the \code{geo_value} and value of any
+\code{other_keys} for this computation
 \item \code{t} is the \code{.ref_time_value} for the current window
-\item \code{...} are additional arguments
+\item If you have a complex \code{.f} containing \verb{<additional configuration   arguments>}, you can provide values for those arguments in the \code{...}
+argument to \code{epi_slide()}.
 }
-}}
 
-\item{...}{Additional arguments to pass to the function or formula specified
-via \code{.f}. Alternatively, if \code{.f} is missing, then the \code{...} is interpreted
-as a \link[rlang:args_data_masking]{"data-masking"} expression or expressions
-for tidy evaluation.}
+The values of \code{g} and \code{t} are also available to data-masking expression and
+formula-based computations as \code{.group_key} and \code{.ref_time_value},
+respectively. Formula computations also let you use \code{.y} or \code{.z},
+respectively, as additional names for these same quantities (similar to
+\code{\link[dplyr:group_map]{dplyr::group_modify}}).
+}}
 
 \item{.window_size}{The size of the sliding window. The accepted values
 depend on the type of the \code{time_value} column in \code{.x}:
@@ -95,30 +107,60 @@ added. It will be ungrouped if \code{.x} was ungrouped, and have the same groups
 as \code{.x} if \code{.x} was grouped.
 }
 \description{
-Slides a given function over variables in an \code{epi_df} object.
-This is useful for computations like rolling averages. The function supports
-many ways to specify the computation, but by far the most common use case is
-as follows:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{# Create new column `cases_7dmed` that contains a 7-day trailing median of cases
-epi_slide(edf, cases_7dmed = median(cases), .window_size = 7)
-}\if{html}{\out{</div>}}
-
-For two very common use cases, we provide optimized functions that are much
-faster than \code{epi_slide}: \code{epi_slide_mean()} and \code{epi_slide_sum()}. We
-recommend using these functions when possible.
-
-See \code{vignette("epi_df")} for more examples.
+Most rolling/running computations can be handled by \code{\link{epi_slide_mean}},
+\code{\link{epi_slide_sum}}, or the medium-generality \code{\link{epi_slide_opt}} functions,
+which have been specialized to run more quickly. \code{epi_slide()} is a slower
+but even more general function for rolling/running computations, and uses a
+different interface to specify the computations; you typically only need to
+consider using \code{epi_slide()} if you have a computation that depends on
+multiple columns simultaneously, outputs multiple columns simultaneously, or
+produces non-numeric output. For example, this computation depends on
+multiple columns:
 }
 \details{
+\if{html}{\out{<div class="sourceCode">}}\preformatted{cases_deaths_subset \%>\%
+  epi_slide(
+    cfr_estimate_v0 = death_rate_7d_av[[22]]/case_rate_7d_av[[1]],
+    .window_size = 22
+  ) \%>\%
+  print(n = 30)
+}\if{html}{\out{</div>}}
+
+(Here, the value 22 was selected using \code{epi_cor()} and averaging across
+\code{geo_value}s. See
+\href{https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1}{this
+manuscript} for some warnings & information using similar types of CFR
+estimators.)
+
+See \code{vignette("epi_df")} for more examples.
+\subsection{Motivation and lower-level alternatives}{
+
+\code{epi_slide()} is focused on preventing errors and providing a convenient
+interface. If you need computational speed, many computations can be optimized
+by one of the following:
+\itemize{
+\item Performing core sliding operations with \code{epi_slide_opt()} with
+\code{frollapply}, and using potentially-grouped \code{mutate()}s to transform or
+combine the results.
+\item Grouping by \code{geo_value} and any \code{other_keys}; \code{\link[=complete]{complete()}}ing with
+\code{full_seq()} to fill in time gaps; \code{arrange()}ing by \code{time_value}s within
+each group; using \code{mutate()} with vectorized operations and shift operators
+like \code{dplyr::lead()} and \code{dplyr::lag()} to perform the core operations,
+being careful to give the desired results for the least and most recent
+\code{time_value}s (often \code{NA}s for the least recent); ungrouping; and
+\code{filter()}ing back down to only rows that existed before the \code{complete()}
+stage if necessary.
+}
+}
+
 \subsection{Advanced uses of \code{.f} via tidy evaluation}{
 
-If specifying \code{.f} via tidy evaluation, in addition to the standard \code{\link{.data}}
-and \code{\link{.env}}, we make some additional "pronoun"-like bindings available:
+If specifying \code{.f} via tidy evaluation, in addition to the standard \code{\link[rlang:dot-data]{.data}}
+and \code{\link[rlang:dot-data]{.env}}, we make some additional "pronoun"-like bindings available:
 \itemize{
 \item .x, which is like \code{.x} in \code{\link[dplyr:group_map]{dplyr::group_modify}}; an ordinary object
 like an \code{epi_df} rather than an rlang \link[rlang:as_data_mask]{pronoun}
-like \code{\link{.data}}; this allows you to use additional \code{dplyr}, \code{tidyr}, and
+like \code{.data}; this allows you to use additional \code{dplyr}, \code{tidyr}, and
 \code{epiprocess} operations. If you have multiple expressions in \code{...}, this
 won't let you refer to the output of the earlier expressions, but \code{.data}
 will.
@@ -131,34 +173,43 @@ determined the time window for the current computation.
 \examples{
 library(dplyr)
 
-# Get the 7-day trailing standard deviation of cases and the 7-day trailing mean of cases
-cases_deaths_subset \%>\%
+# Generate some simple time-varying CFR estimates:
+with_cfr_estimates <- cases_deaths_subset \%>\%
   epi_slide(
-    cases_7sd = sd(cases, na.rm = TRUE),
-    cases_7dav = mean(cases, na.rm = TRUE),
-    .window_size = 7
-  ) \%>\%
-  select(geo_value, time_value, cases, cases_7sd, cases_7dav)
-# Note that epi_slide_mean could be used to more quickly calculate cases_7dav.
+    cfr_estimate_v0 = death_rate_7d_av[[22]] / case_rate_7d_av[[1]],
+    .window_size = 22
+  )
+with_cfr_estimates \%>\%
+  print(n = 30)
+# (Here, the value 22 was selected using `epi_cor()` and averaging across
+# `geo_value`s. See
+# https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1 for some
+# warnings & information using CFR estimators along these lines.)
 
-# In addition to the [`dplyr::mutate`]-like syntax, you can feed in a function or
-# formula in a way similar to [`dplyr::group_modify`]:
-my_summarizer <- function(window_data) {
-  window_data \%>\%
-    summarize(
-      cases_7sd = sd(cases, na.rm = TRUE),
-      cases_7dav = mean(cases, na.rm = TRUE)
-    )
+# In addition to the [`dplyr::mutate`]-like syntax, you can feed in a
+# function or formula in a way similar to [`dplyr::group_modify`]; these
+# often run much more quickly:
+my_computation <- function(window_data) {
+  tibble(
+    cfr_estimate_v0 = window_data$death_rate_7d_av[[nrow(window_data)]] /
+      window_data$case_rate_7d_av[[1]]
+  )
 }
-cases_deaths_subset \%>\%
+with_cfr_estimates2 <- cases_deaths_subset \%>\%
   epi_slide(
-    ~ my_summarizer(.x),
-    .window_size = 7
-  ) \%>\%
-  select(geo_value, time_value, cases, cases_7sd, cases_7dav)
-
-
-
+    ~ my_computation(.x),
+    .window_size = 22
+  )
+with_cfr_estimates3 <- cases_deaths_subset \%>\%
+  epi_slide(
+    function(window_data, g, t) {
+      tibble(
+        cfr_estimate_v0 = window_data$death_rate_7d_av[[nrow(window_data)]] /
+          window_data$case_rate_7d_av[[1]]
+      )
+    },
+    .window_size = 22
+  )
 
 
 #### Advanced: ####
