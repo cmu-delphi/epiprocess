@@ -51,7 +51,7 @@ epi_slide_sum(
 and any columns in \code{other_keys}. If grouped, we make sure the grouping is by
 \code{geo_value} and \code{other_keys}.}
 
-\item{.col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
+\item{.col_names}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> An unquoted column
 name (e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}),
 \link[tidyselect:language]{other tidy-select expression}, or a vector of
 characters (e.g. \code{c("cases", "deaths")}). Variable names can be used as if

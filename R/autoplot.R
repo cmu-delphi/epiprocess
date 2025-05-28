@@ -1,7 +1,7 @@
 #' Automatically plot an epi_df or epi_archive
 #'
 #' @param object,x An `epi_df` or `epi_archive`
-#' @param ... <[`tidy-select`][dplyr_tidy_select]> One or more unquoted
+#' @param ... <[`tidy-select`][dplyr::dplyr_tidy_select]> One or more unquoted
 #'   expressions separated by commas. Variable names can be used as if they
 #'   were positions in the data frame, so expressions like `x:y` can
 #'   be used to select a range of variables.
@@ -22,7 +22,7 @@
 #' @param .max_facets `r lifecycle::badge("deprecated")`
 #' @param .facet_filter Select which facets will be displayed. Especially
 #'   useful for when there are many `geo_value`'s or keys. This is a
-#'   <[`rlang`][args_data_masking]> expression along the lines of [dplyr::filter()].
+#'   <[`rlang`][rlang::args_data_masking]> expression along the lines of [dplyr::filter()].
 #'   However, it must be a single expression combined with the `&` operator. This
 #'   contrasts to the typical use case which allows multiple comma-separated expressions
 #'   which are implicitly combined with `&`. When multiple variables are selected

@@ -108,12 +108,12 @@
 #'
 #' ## Advanced uses of `.f` via tidy evaluation
 #'
-#' If specifying `.f` via tidy evaluation, in addition to the standard [`.data`]
-#' and [`.env`], we make some additional "pronoun"-like bindings available:
+#' If specifying `.f` via tidy evaluation, in addition to the standard [`.data`][rlang::.data]
+#' and [`.env`][rlang::.env], we make some additional "pronoun"-like bindings available:
 #'
 #'   - .x, which is like `.x` in [`dplyr::group_modify`]; an ordinary object
 #'     like an `epi_df` rather than an rlang [pronoun][rlang::as_data_pronoun]
-#'     like [`.data`]; this allows you to use additional `dplyr`, `tidyr`, and
+#'     like `.data`; this allows you to use additional `dplyr`, `tidyr`, and
 #'     `epiprocess` operations. If you have multiple expressions in `...`, this
 #'     won't let you refer to the output of the earlier expressions, but `.data`
 #'     will.

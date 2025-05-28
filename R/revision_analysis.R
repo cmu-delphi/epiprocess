@@ -26,7 +26,7 @@
 #'   the window afterwards at 150.
 #'
 #' @param epi_arch an epi_archive to be analyzed
-#' @param ... <[`tidyselect`][dplyr_tidy_select]>, used to choose the column to
+#' @param ... <[`tidyselect`][dplyr::dplyr_tidy_select]>, used to choose the column to
 #'   summarize. If empty and there is only one value/measurement column (i.e.,
 #'   not in [`key_colnames`]) in the archive, it will automatically select it.
 #'   If supplied, `...` must select exactly one column.

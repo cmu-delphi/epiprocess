@@ -158,12 +158,12 @@ stage if necessary.
 
 \subsection{Advanced uses of \code{.f} via tidy evaluation}{
 
-If specifying \code{.f} via tidy evaluation, in addition to the standard \code{\link{.data}}
-and \code{\link{.env}}, we make some additional "pronoun"-like bindings available:
+If specifying \code{.f} via tidy evaluation, in addition to the standard \code{\link[rlang:dot-data]{.data}}
+and \code{\link[rlang:dot-data]{.env}}, we make some additional "pronoun"-like bindings available:
 \itemize{
 \item .x, which is like \code{.x} in \code{\link[dplyr:group_map]{dplyr::group_modify}}; an ordinary object
 like an \code{epi_df} rather than an rlang \link[rlang:as_data_mask]{pronoun}
-like \code{\link{.data}}; this allows you to use additional \code{dplyr}, \code{tidyr}, and
+like \code{.data}; this allows you to use additional \code{dplyr}, \code{tidyr}, and
 \code{epiprocess} operations. If you have multiple expressions in \code{...}, this
 won't let you refer to the output of the earlier expressions, but \code{.data}
 will.
