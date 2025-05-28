@@ -132,8 +132,8 @@ columns:
 (Here, the value 22 was selected using \code{epi_cor()} and averaging across
 \code{geo_value}s. See
 \href{https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1}{this
-manuscript}{this manuscript} for some warnings & information using similar
-types of CFR estimators.)
+manuscript} for some warnings & information using similar types of CFR
+estimators.)
 
 See \code{vignette("epi_df")} for more examples.
 \subsection{Motivation and lower-level alternatives}{
