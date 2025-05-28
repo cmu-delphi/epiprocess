@@ -61,11 +61,6 @@ respectively, as additional names for these same quantities (similar to
 \code{\link[dplyr:group_map]{dplyr::group_modify}}).
 }}
 
-\item{...}{Additional arguments to pass to the function or formula specified
-via \code{.f}. Alternatively, if \code{.f} is missing, then the \code{...} is interpreted
-as a \link[rlang:args_data_masking]{"data-masking"} expression or expressions
-for tidy evaluation.}
-
 \item{.window_size}{The size of the sliding window. The accepted values
 depend on the type of the \code{time_value} column in \code{.x}:
 \itemize{

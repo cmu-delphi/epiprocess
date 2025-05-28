@@ -75,10 +75,6 @@
 #'   respectively, as additional names for these same quantities (similar to
 #'   [`dplyr::group_modify`]).
 #'
-#' @param ... Additional arguments to pass to the function or formula specified
-#'   via `.f`. Alternatively, if `.f` is missing, then the `...` is interpreted
-#'   as a ["data-masking"][rlang::args_data_masking] expression or expressions
-#'   for tidy evaluation.
 #' @param .new_col_name Name for the new column that will contain the computed
 #'   values. The default is "slide_value" unless your slide computations output
 #'   data frames, in which case they will be unpacked (as in `tidyr::unpack()`)
