@@ -20,8 +20,8 @@
 #' (Here, the value 22 was selected using `epi_cor()` and averaging across
 #' `geo_value`s. See
 #' \href{https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1}{this
-#' manuscript}{this manuscript} for some warnings & information using similar
-#' types of CFR estimators.)
+#' manuscript} for some warnings & information using similar types of CFR
+#' estimators.)
 #'
 #' See `vignette("epi_df")` for more examples.
 #'
