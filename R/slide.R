@@ -1,12 +1,14 @@
 #' More general form of [`epi_slide_opt`] for rolling/running computations
 #'
 #' Most rolling/running computations can be handled by [`epi_slide_mean`],
-#' [`epi_slide_sum`], or the medium-generality [`epi_slide_opt`] functions
-#' instead, which are much faster. You typically only need to consider
-#' `epi_slide()` if you have a computation that depends on multiple columns
-#' simultaneously, outputs multiple columns simultaneously, or produces
-#' non-numeric output.  For example, this computation depends on multiple
-#' columns:
+#' [`epi_slide_sum`], or the medium-generality [`epi_slide_opt`] functions,
+#' which have been specialized to run more quickly. `epi_slide()` is a slower
+#' but even more general function for rolling/running computations, and uses a
+#' different interface to specify the computations; you typically only need to
+#' consider using `epi_slide()` if you have a computation that depends on
+#' multiple columns simultaneously, outputs multiple columns simultaneously, or
+#' produces non-numeric output. For example, this computation depends on
+#' multiple columns:
 #'
 #' ```
 #' cases_deaths_subset %>%

@@ -108,12 +108,14 @@ as \code{.x} if \code{.x} was grouped.
 }
 \description{
 Most rolling/running computations can be handled by \code{\link{epi_slide_mean}},
-\code{\link{epi_slide_sum}}, or the medium-generality \code{\link{epi_slide_opt}} functions
-instead, which are much faster. You typically only need to consider
-\code{epi_slide()} if you have a computation that depends on multiple columns
-simultaneously, outputs multiple columns simultaneously, or produces
-non-numeric output.  For example, this computation depends on multiple
-columns:
+\code{\link{epi_slide_sum}}, or the medium-generality \code{\link{epi_slide_opt}} functions,
+which have been specialized to run more quickly. \code{epi_slide()} is a slower
+but even more general function for rolling/running computations, and uses a
+different interface to specify the computations; you typically only need to
+consider using \code{epi_slide()} if you have a computation that depends on
+multiple columns simultaneously, outputs multiple columns simultaneously, or
+produces non-numeric output. For example, this computation depends on
+multiple columns:
 }
 \details{
 \if{html}{\out{<div class="sourceCode">}}\preformatted{cases_deaths_subset \%>\%
