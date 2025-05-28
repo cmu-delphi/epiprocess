@@ -15,7 +15,7 @@ represents a snapshot of an epidemiological data set at a point in time."><meta 
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.11.6</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.11.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -148,13 +148,15 @@ otherwise <code>FALSE</code>.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>An <code>epi_df</code> is a tibble with (at least) the following columns:</p><ul><li><p><code>geo_value</code>: A character vector representing the geographical unit of
+    <p>An <code>epi_df</code> is a kind of tibble with (at least) the following
+columns:</p><ul><li><p><code>geo_value</code>: A character vector representing the geographical unit of
 observation. This could be a country code, a state name, a county code,
 etc.</p></li>
 <li><p><code>time_value</code>: A date or integer vector representing the time of observation.</p></li>
 </ul><p>Other columns can be considered as measured variables, which we also refer to
-as signal variables. An <code>epi_df</code> object also has metadata with (at least)
-the following fields:</p><ul><li><p><code>geo_type</code>: the type for the geo values.</p></li>
+as indicators or signals. An <code>epi_df</code> object also has metadata with (at
+least) the following fields:</p><ul><li><p><code>geo_type</code>: the type for the geo values.</p></li>
+<li><p><code>time_type</code>: the type for the time values.</p></li>
 <li><p><code>as_of</code>: the time value at which the given data were available.</p></li>
 </ul><p>Most users should use <code>as_epi_df</code>. The input tibble <code>x</code> to the constructor
 must contain the columns <code>geo_value</code> and <code>time_value</code>. All other columns
@@ -319,7 +321,7 @@ arbitrary (as to whether a week starts on a Monday, Tuesday); coded as a
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "day"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $as_of</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "2025-05-28 18:17:20 UTC"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "2025-05-28 19:12:25 UTC"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $other_keys</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "state" "pol"  </span>

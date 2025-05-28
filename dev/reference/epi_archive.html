@@ -11,7 +11,9 @@ new_epi_archive is the low-level constructor for epi_archive objects that
 only performs some fast, basic checks on the inputs. validate_epi_archive
 can perform more costly validation checks on its output. But most users
 should use as_epi_archive, which performs all necessary checks and has some
-additional features."><meta property="og:description" content="The second main data structure for storing time series in
+additional features.
+Does not validate geo_type or time_type against geo_value and
+time_value columns. These are assumed to have been set to compatibly."><meta property="og:description" content="The second main data structure for storing time series in
 epiprocess. It is similar to epi_df in that it fundamentally a table with
 a few required columns that stores epidemiological time series data. An
 epi_archive requires a geo_value, time_value, and version column (and
@@ -23,7 +25,9 @@ new_epi_archive is the low-level constructor for epi_archive objects that
 only performs some fast, basic checks on the inputs. validate_epi_archive
 can perform more costly validation checks on its output. But most users
 should use as_epi_archive, which performs all necessary checks and has some
-additional features."><meta name="robots" content="noindex"></head><body>
+additional features.
+Does not validate geo_type or time_type against geo_value and
+time_value columns. These are assumed to have been set to compatibly."><meta name="robots" content="noindex"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -31,7 +35,7 @@ additional features."><meta name="robots" content="noindex"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.11.6</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.11.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,6 +86,8 @@ only performs some fast, basic checks on the inputs. <code>validate_epi_archive<
 can perform more costly validation checks on its output. But most users
 should use <code>as_epi_archive</code>, which performs all necessary checks and has some
 additional features.</p>
+<p>Does not validate <code>geo_type</code> or <code>time_type</code> against <code>geo_value</code> and
+<code>time_value</code> columns. These are assumed to have been set to compatibly.</p>
     </div>
 
     <div class="section level2">
