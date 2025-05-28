@@ -225,7 +225,7 @@ archive_cases_dv_subset \%>\%
       )
     },
     .before = 5, .all_versions = TRUE,
-    .versions = versions
+    .versions = requested_versions
   ) \%>\%
   ungroup() \%>\%
   # Focus on one geo_value so we can better see the columns above:
