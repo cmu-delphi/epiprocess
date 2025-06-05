@@ -162,7 +162,8 @@ addition to the per key summary, it also returns an overall summary. Here is an
 a sample of the output:
 
 ```{r}
-revision_details <- revision_summary(dv_archive, print_inform = TRUE)
+revision_details <- revision_summary(dv_archive)
+revision_details
 ```
 
 We can see from the output that, as mentioned above, this data set has a lot of
@@ -174,9 +175,9 @@ inspect the returned `revision_details` tibble. Here we collect a number of
 statistics for each state:
 
 ```{r}
-revision_details %>%
+revision_details$revision_behavior %>%
   group_by(geo_value) %>%
-  summarise(
+  summarize(
     n_rev = mean(n_revisions),
     min_lag = min(min_lag),
     max_lag = max(max_lag),
@@ -234,7 +235,8 @@ observation carried forward (LOCF). For more information, see `epix_merge()`.
 ## Backtesting forecasting models
 
 One of the most common use cases of `epiprocess::epi_archive()` object is for
-accurate model backtesting. See `vignette("backtesting", package="epipredict")`
+accurate model backtesting. See [`vignette("backtesting",
+package="epipredict")`](https://cmu-delphi.github.io/epipredict/articles/backtesting.html)
 for an in-depth demo, using a pre-built forecaster in that package.
 
 ## Attribution

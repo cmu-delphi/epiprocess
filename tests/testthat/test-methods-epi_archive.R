@@ -128,3 +128,179 @@ test_that("group_vars works as expected", {
     "geo_value"
   )
 })
+
+test_that("epix_as_of_now works as expected", {
+  expect_equal(
+    attr(ea2_data %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
+    as.Date("2020-06-04")
+  )
+  time_value <- as.Date("2020-06-01")
+  df <- dplyr::tribble(
+    ~geo_value, ~time_value, ~version, ~cases,
+    "ca", time_value, time_value, 1,
+    "ca", time_value + 7, time_value + 7, 2,
+  )
+  expect_equal(
+    attr(df %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
+    as.Date("2020-06-08")
+  )
+  time_value <- tsibble::yearmonth(as.Date("2020-06-01") - lubridate::month(1))
+  df <- dplyr::tribble(
+    ~geo_value, ~time_value, ~version, ~cases,
+    "ca", time_value, time_value, 1,
+    "ca", time_value + lubridate::month(1), time_value + lubridate::month(1), 2,
+  )
+  expect_equal(
+    attr(df %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
+    tsibble::yearmonth("2020-06")
+  )
+  time_value <- 2020
+  df <- dplyr::tribble(
+    ~geo_value, ~time_value, ~version, ~cases,
+    "ca", time_value, time_value, 1,
+    "ca", time_value + 7, time_value + 7, 2,
+  )
+  expect_equal(
+    attr(df %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
+    2027
+  )
+})
+
+test_that("filter.epi_archive works as expected", {
+  ea2 <- ea2_data %>%
+    as_epi_archive()
+
+  # Some basic output value checks:
+
+  expect_equal(
+    ea2 %>% filter(geo_value == "tn"),
+    new_epi_archive(
+      ea2$DT[FALSE],
+      ea2$geo_type, ea2$time_type, ea2$other_keys,
+      ea2$clobberable_versions_start, ea2$versions_end
+    )
+  )
+
+  expect_equal(
+    ea2 %>% filter(geo_value == "ca", time_value == as.Date("2020-06-02")),
+    new_epi_archive(
+      data.table::data.table(
+        geo_value = "ca", time_value = as.Date("2020-06-02"),
+        version = as.Date("2020-06-02") + 0:2, cases = 0:2
+      ),
+      ea2$geo_type, ea2$time_type, ea2$other_keys,
+      ea2$clobberable_versions_start, ea2$versions_end
+    )
+  )
+
+  # Output geo_type and time_type behavior:
+
+  hrr_day_ea <- tibble(
+    geo_value = c(rep(1, 14), 100),
+    time_value = as.Date("2020-01-01") - 1 + c(1:14, 14),
+    version = time_value + 3,
+    value = 1:15
+  ) %>%
+    as_epi_archive()
+
+  expect_equal(hrr_day_ea$geo_type, "hrr")
+  expect_equal(hrr_day_ea$time_type, "day")
+
+  hrr_week_ea <- hrr_day_ea %>%
+    filter(geo_value == 1, as.POSIXlt(time_value)$wday == 6L)
+
+  expect_equal(hrr_week_ea$geo_type, "hrr")
+  expect_equal(hrr_week_ea$time_type, "week")
+
+  hrr_one_week_ea <- hrr_week_ea %>%
+    filter(time_value == time_value[[1]])
+
+  expect_equal(hrr_one_week_ea$time_type, "week")
+
+  intcustom_day_ea <- hrr_day_ea
+  intcustom_day_ea$geo_type <- "custom"
+
+  intcustom_week_ea <- intcustom_day_ea %>%
+    filter(geo_value == 1, as.POSIXlt(time_value)$wday == 6L)
+
+  expect_equal(intcustom_week_ea$geo_type, "custom")
+  expect_equal(intcustom_week_ea$time_type, "week")
+
+  # Environment variables should be fine:
+  version <- as.Date("2020-06-02") + 1
+  e <- version
+  expected <- ea2 %>% filter(geo_value == "ca", as.Date("2020-06-02") + 1 <= time_value)
+  expect_equal(ea2 %>% filter(geo_value == "ca", .env$version <= time_value), expected)
+  expect_equal(ea2 %>% filter(geo_value == "ca", e <= time_value), expected)
+  expect_equal(ea2 %>% filter(geo_value == "ca", .env$e <= time_value), expected)
+
+  # Error-raising:
+  expect_error(
+    ea2 %>% filter(version == as.Date("2020-06-02")),
+    class = "epiprocess__filter_archive__used_version"
+  )
+  expect_error(
+    ea2 %>% filter(version <= as.Date("2020-06-02")),
+    class = "epiprocess__filter_archive__used_version"
+  )
+  expect_snapshot(
+    ea2 %>% filter(version <= as.Date("2020-06-02")),
+    error = TRUE, cnd_class = TRUE
+  )
+  expect_error(
+    ea2 %>% filter(time_value >= as.Date("2020-06-02"), cases >= 2L),
+    class = "epiprocess__filter_archive__used_measurement"
+  )
+  expect_snapshot(
+    ea2 %>% filter(time_value >= as.Date("2020-06-02"), cases >= 2L),
+    error = TRUE, cnd_class = TRUE
+  )
+  expect_error(
+    ea2 %>% filter(time_value >= as.Date("2020-06-02"), cases >= 2L),
+    class = "epiprocess__filter_archive__used_measurement"
+  )
+  # Check for `for` + `delayedAssign` mishap in `expect_snapshot` (we should say
+  # something about `cases` (the relevant colname), not `deaths` (the last
+  # measurement colname)):
+  ea2p <- ea2_data %>%
+    mutate(deaths = 0) %>%
+    as_epi_archive()
+  expect_error(
+    ea2p %>% filter(cases >= median(cases), .by = geo_value),
+    class = "epiprocess__filter_archive__used_measurement"
+  )
+  expect_snapshot(
+    ea2p %>% filter(cases >= median(cases), .by = geo_value),
+    error = TRUE, cnd_class = TRUE
+  )
+  # Check that we are insulated from other lazy eval traps:
+  expected <- rlang::catch_cnd(ea2p %>% filter(cases >= median(cases), .by = geo_value))
+  expect_class(expected$parent, "epiprocess__filter_archive__used_measurement")
+  with(list(cli_abort = function(...) stop("now, pretend user didn't have cli attached")), {
+    expect_equal(
+      rlang::catch_cnd(ea2p %>% filter(cases >= median(cases), .by = geo_value))$parent$message,
+      expected$parent$message
+    )
+  })
+  expect_equal(
+    rlang::catch_cnd(ea2p %>% filter(
+      {
+        c <- function(...) stop("and that they overwrote `c` to try to debug their own code")
+        cases >= median(cases)
+      },
+      .by = geo_value
+    ))$parent$message,
+    expected$parent$message
+  )
+
+
+  # Escape hatch:
+  expect_equal(
+    ea2 %>%
+      filter(version <= time_value + as.difftime(1, units = "days"),
+        .format_aware = TRUE
+      ) %>%
+      .$DT,
+    ea2$DT[version <= time_value + as.difftime(1, units = "days"), ]
+  )
+})

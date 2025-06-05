@@ -1,7 +1,7 @@
-#' Automatically plot an epi_df
+#' Automatically plot an epi_df or epi_archive
 #'
-#' @param object An `epi_df`
-#' @param ... <[`tidy-select`][dplyr_tidy_select]> One or more unquoted
+#' @param object,x An `epi_df` or `epi_archive`
+#' @param ... <[`tidy-select`][dplyr::dplyr_tidy_select]> One or more unquoted
 #'   expressions separated by commas. Variable names can be used as if they
 #'   were positions in the data frame, so expressions like `x:y` can
 #'   be used to select a range of variables.
@@ -16,16 +16,27 @@
 #'   * `none` - no coloring aesthetic is applied
 #' @param .facet_by Similar to `.color_by` except that the default is to display
 #'   each numeric variable on a separate facet
-#' @param .base_color Lines will be shown with this color. For example, with a
-#'   single numeric variable and faceting by `geo_value`, all locations would
-#'   share the same color line.
-#' @param .max_facets Cut down of the number of facets displayed. Especially
-#'   useful for testing when there are many `geo_value`'s or keys.
+#' @param .base_color Lines will be shown with this color if `.color_by == "none"`.
+#'  For example, with a single numeric variable and faceting by `geo_value`, all
+#'  locations would share the same color line.
+#' @param .max_facets `r lifecycle::badge("deprecated")`
+#' @param .facet_filter Select which facets will be displayed. Especially
+#'   useful for when there are many `geo_value`'s or keys. This is a
+#'   <[`rlang`][rlang::args_data_masking]> expression along the lines of [dplyr::filter()].
+#'   However, it must be a single expression combined with the `&` operator. This
+#'   contrasts to the typical use case which allows multiple comma-separated expressions
+#'   which are implicitly combined with `&`. When multiple variables are selected
+#'   with `...`, their names can be filtered in combination with other factors
+#'   by using `.response_name`. See the examples below.
 #'
-#' @return A ggplot object
+#'
+#'
+#' @return A [ggplot2::ggplot] object
 #' @export
+#' @name autoplot-epi
 #'
 #' @examples
+#' # -- Use it on an `epi_df`
 #' autoplot(cases_deaths_subset, cases, death_rate_7d_av)
 #' autoplot(cases_deaths_subset, case_rate_7d_av, .facet_by = "geo_value")
 #' autoplot(cases_deaths_subset, case_rate_7d_av,
@@ -41,16 +52,39 @@
 #' autoplot(cases_deaths_subset, case_rate_7d_av,
 #'   .base_color = "red", .facet_by = "geo_value"
 #' )
+#'
+#' # filter to only some facets, must be explicitly combined
+#' autoplot(cases_deaths_subset, cases, death_rate_7d_av,
+#'   .facet_by = "all",
+#'   .facet_filter = (.response_name == "cases" & geo_value %in% c("tx", "pa")) |
+#'     (.response_name == "death_rate_7d_av" &
+#'       geo_value %in% c("ca", "fl", "ga", "ny"))
+#' )
+#' # Just an alias for convenience
+#' plot(cases_deaths_subset, cases, death_rate_7d_av,
+#'   .facet_by = "all",
+#'   .facet_filter = (.response_name == "cases" & geo_value %in% c("tx", "pa")) |
+#'     (.response_name == "death_rate_7d_av" &
+#'       geo_value %in% c("ca", "fl", "ga", "ny"))
+#' )
 autoplot.epi_df <- function(
     object, ...,
     .color_by = c("all_keys", "geo_value", "other_keys", ".response", "all", "none"),
     .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
     .base_color = "#3A448F",
-    .max_facets = Inf) {
+    .facet_filter = NULL,
+    .max_facets = deprecated()) {
   .color_by <- rlang::arg_match(.color_by)
   .facet_by <- rlang::arg_match(.facet_by)
+  .facet_filter <- rlang::enquo(.facet_filter)
 
-  assert(anyInfinite(.max_facets), checkInt(.max_facets), combine = "or")
+  if (lifecycle::is_present(.max_facets)) {
+    lifecycle::deprecate_warn(
+      "0.11.1",
+      "autoplot.epi_df(.max_facets = )",
+      "autoplot.epi_df(.facet_filter = )"
+    )
+  }
   assert_character(.base_color, len = 1)
 
   key_cols <- key_colnames(object)
@@ -58,44 +92,14 @@ autoplot.epi_df <- function(
   geo_and_other_keys <- key_colnames(object, exclude = "time_value")
 
   # --- check for numeric variables
-  allowed <- purrr::map_lgl(object[non_key_cols], is.numeric)
-  allowed <- allowed[allowed]
-  if (length(allowed) == 0 && rlang::dots_n(...) == 0L) {
-    cli::cli_abort("No numeric variables were available to plot automatically.",
-      class = "epiprocess__no_numeric_vars_available"
-    )
-  }
-  vars <- tidyselect::eval_select(rlang::expr(c(...)), object)
-  if (rlang::is_empty(vars)) { # find them automatically if unspecified
-    vars <- tidyselect::eval_select(names(allowed)[1], object)
-    cli::cli_warn(
-      "Plot variable was unspecified. Automatically selecting {.var {names(allowed)[1]}}.",
-      class = "epiprocess__unspecified_plot_var"
-    )
-  } else { # if variables were specified, ensure that they are numeric
-    ok <- names(vars) %in% names(allowed)
-    if (!any(ok)) {
-      cli::cli_abort(
-        "None of the requested variables {.var {names(vars)}} are numeric.",
-        class = "epiprocess__all_requested_vars_not_numeric"
-      )
-    } else if (!all(ok)) {
-      cli::cli_warn(
-        c(
-          "Only the requested variables {.var {names(vars)[ok]}} are numeric.",
-          i = "`autoplot()` cannot display {.var {names(vars)[!ok]}}."
-        ),
-        class = "epiprocess__some_requested_vars_not_numeric"
-      )
-      vars <- vars[ok]
-    }
-  }
+  vars <- autoplot_check_viable_response_vars(object, ..., non_key_cols = non_key_cols)
+  nvars <- length(vars)
 
   # --- create a viable df to plot
   pos <- tidyselect::eval_select(
     rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), names(vars))), object
   )
-  if (length(vars) > 1) {
+  if (nvars > 1) {
     object <- tidyr::pivot_longer(
       object[pos], tidyselect::all_of(names(vars)),
       values_to = ".response",
@@ -106,35 +110,34 @@ autoplot.epi_df <- function(
   }
   all_keys <- rlang::syms(as.list(geo_and_other_keys))
   other_keys <- rlang::syms(as.list(setdiff(geo_and_other_keys, "geo_value")))
-  all_avail <- rlang::syms(as.list(c(geo_and_other_keys, ".response_name")))
+  all_avail <- rlang::syms(as.list(c(
+    geo_and_other_keys,
+    if (nvars > 1) ".response_name" else NULL
+  )))
 
   object <- object %>%
     dplyr::mutate(
       .colours = switch(.color_by,
-        all_keys = interaction(!!!all_keys, sep = "/"),
+        all_keys = interaction(!!!all_keys, sep = " / "),
         geo_value = .data$geo_value,
-        other_keys = interaction(!!!other_keys, sep = "/"),
-        all = interaction(!!!all_avail, sep = "/"),
+        other_keys = interaction(!!!other_keys, sep = " / "),
+        all = interaction(!!!all_avail, sep = " / "),
         NULL
       ),
       .facets = switch(.facet_by,
-        all_keys = interaction(!!!all_keys, sep = "/"),
+        all_keys = interaction(!!!all_keys, sep = " / "),
         geo_value = as.factor(.data$geo_value),
-        other_keys = interaction(!!!other_keys, sep = "/"),
-        all = interaction(!!!all_avail, sep = "/"),
+        other_keys = interaction(!!!other_keys, sep = " / "),
+        all = interaction(!!!all_avail, sep = " / "),
         NULL
       )
     )
 
-  if (.max_facets < Inf && ".facets" %in% names(object)) {
-    n_facets <- nlevels(object$.facets)
-    if (n_facets > .max_facets) {
-      top_n <- levels(as.factor(object$.facets))[seq_len(.max_facets)]
-      object <- dplyr::filter(object, .data$.facets %in% top_n) %>%
-        dplyr::mutate(.facets = droplevels(.data$.facets))
-      if (".colours" %in% names(object)) {
-        object <- dplyr::mutate(object, .colours = droplevels(.data$.colours))
-      }
+  if (!rlang::quo_is_null(.facet_filter) && ".facets" %in% names(object)) {
+    object <- dplyr::filter(object, !!.facet_filter) %>%
+      dplyr::mutate(.facets = droplevels(.data$.facets))
+    if (".colours" %in% names(object)) {
+      object <- dplyr::mutate(object, .colours = droplevels(.data$.colours))
     }
   }
 
@@ -169,4 +172,198 @@ autoplot.epi_df <- function(
     p <- p + ggplot2::ylab(names(vars))
   }
   p
+}
+
+autoplot_check_viable_response_vars <- function(
+    object, ..., non_key_cols, call = caller_env()) {
+  allowed <- purrr::map_lgl(object[non_key_cols], is.numeric)
+  allowed <- allowed[allowed]
+  if (length(allowed) == 0 && rlang::dots_n(...) == 0L) {
+    cli::cli_abort("No numeric variables were available to plot automatically.",
+      class = "epiprocess__no_numeric_vars_available",
+      call = call
+    )
+  }
+  vars <- tidyselect::eval_select(rlang::expr(c(...)), object)
+  if (rlang::is_empty(vars)) { # find them automatically if unspecified
+    vars <- tidyselect::eval_select(names(allowed)[1], object)
+    cli::cli_warn(
+      "Plot variable was unspecified. Automatically selecting {.var {names(allowed)[1]}}.",
+      class = "epiprocess__unspecified_plot_var",
+      call = call
+    )
+  } else { # if variables were specified, ensure that they are numeric
+    ok <- names(vars) %in% names(allowed)
+    if (!any(ok)) {
+      cli::cli_abort(
+        "None of the requested variables {.var {names(vars)}} are numeric.",
+        class = "epiprocess__all_requested_vars_not_numeric",
+        call = call
+      )
+    } else if (!all(ok)) {
+      cli::cli_warn(
+        c(
+          "Only the requested variables {.var {names(vars)[ok]}} are numeric.",
+          i = "`autoplot()` cannot display {.var {names(vars)[!ok]}}."
+        ),
+        class = "epiprocess__some_requested_vars_not_numeric",
+        call = call
+      )
+      vars <- vars[ok]
+    }
+  }
+  vars
+}
+
+
+
+#' @param .versions Select which versions will be displayed. By default,
+#'   a separate line will be shown with the data as it would have appeared on
+#'   every day in the archive. This can sometimes become overwhelming. For
+#'   example, daily data would display a line for what the data would have looked
+#'   like on every single day. To override this, you can select specific dates,
+#'   by passing a vector of values here. Alternatively, a sequence can be
+#'   automatically created by passing a string like `"2 weeks"` or `"month"`.
+#'   For time types where the `time_value` is a date object, any string that
+#'   is interpretable by [base::seq.Date()] is allowed.
+#'
+#'   For `time_type = "integer"`, an integer larger than 1 will give a subset
+#'   of versions.
+#' @param .mark_versions Logical. Indicate whether to mark each version with
+#'   a vertical line. Note that displaying many versions can become busy.
+#'
+#' @export
+#' @rdname autoplot-epi
+#'
+#' @examples
+#'
+#' # -- Use it on an archive
+#'
+#' autoplot(archive_cases_dv_subset, percent_cli, .versions = "week")
+#' autoplot(archive_cases_dv_subset_all_states, percent_cli,
+#'   .versions = "week",
+#'   .facet_filter = geo_value %in% c("or", "az", "vt", "ms")
+#' )
+#' autoplot(archive_cases_dv_subset, percent_cli,
+#'   .versions = "month",
+#'   .facet_filter = geo_value == "ca"
+#' )
+#' autoplot(archive_cases_dv_subset_all_states, percent_cli,
+#'   .versions = "1 month",
+#'   .facet_filter = geo_value %in% c("or", "az", "vt", "ms"),
+#'   .mark_versions = TRUE
+#' )
+#' # Just an alias for convenience
+#' plot(archive_cases_dv_subset_all_states, percent_cli,
+#'   .versions = "1 month",
+#'   .facet_filter = geo_value %in% c("or", "az", "vt", "ms"),
+#'   .mark_versions = TRUE
+#' )
+autoplot.epi_archive <- function(object, ...,
+                                 .base_color = "black",
+                                 .versions = NULL,
+                                 .mark_versions = FALSE,
+                                 .facet_filter = NULL) {
+  time_type <- object$time_type
+  checkmate::assert_logical(.mark_versions, len = 1L)
+  if (time_type == "custom") {
+    cli_abort(
+      "This `epi_archive` has custom `time_type`. This is currently unsupported.",
+      class = "epiprocess__autoplot_archive_custom_time_type"
+    )
+  }
+
+  max_version <- max(object$DT$version)
+  min_version <- min(object$DT$version)
+
+  tt_lookup <- c("day" = "day", "week" = "week", "yearmonth" = "month")
+  .versions <- .versions %||% ifelse(time_type == "integer", 1L, unname(tt_lookup[time_type]))
+  if (is.character(.versions) || length(.versions) == 1L) {
+    if (is.numeric(.versions)) .versions <- round(abs(.versions))
+    .versions <- seq(min_version, max_version - 1, by = .versions)
+  } else if (methods::is(.versions, "Date") || is.numeric(.versions)) {
+    .versions <- .versions[min_version <= .versions & .versions <= max_version]
+  } else {
+    cli_abort(
+      "Requested `.versions` don't appear to match the available `time_type`.",
+      class = "epiprocess__autoplot_archive_bad_versions"
+    )
+  }
+
+
+  finalized <- epix_as_of(object, max_version)
+  key_cols <- key_colnames(finalized)
+  non_key_cols <- setdiff(names(finalized), key_cols)
+  vars <- autoplot_check_viable_response_vars(finalized, ..., non_key_cols = non_key_cols)
+  nvars <- length(vars)
+
+  bp <- autoplot.epi_df(
+    finalized, ...,
+    .base_color = .base_color, .facet_by = "all",
+    .facet_filter = {{ .facet_filter }}, .color_by = "none"
+  ) + ggplot2::xlab("Date")
+  geo_and_other_keys <- key_colnames(object, exclude = c("time_value", "version"))
+  all_avail <- rlang::syms(as.list(c(
+    geo_and_other_keys,
+    if (nvars > 1) ".response_name" else NULL
+  )))
+
+  snapshots <- purrr::map(
+    .versions,
+    function(v) {
+      dplyr::mutate(epix_as_of(object, v), version = v)
+    }
+  ) %>%
+    purrr::list_rbind() %>%
+    dplyr::mutate(.facets = interaction(!!!all_avail, sep = " / "))
+
+  if (nvars > 1) {
+    snapshots <- tidyr::pivot_longer(
+      snapshots, tidyselect::all_of(names(vars)),
+      values_to = ".response",
+      names_to = ".response_name"
+    )
+  } else {
+    snapshots <- dplyr::rename(snapshots, .response := !!names(vars)) # nolint: object_usage_linter
+  }
+  snapshots <- snapshots %>%
+    dplyr::filter(!is.na(.response), .data$.facets %in% unique(bp$data$.facets))
+
+  bp <- bp +
+    ggplot2::geom_line(
+      data = snapshots,
+      mapping = ggplot2::aes(y = .response, color = version, group = factor(version))
+    )
+
+  if (methods::is(.versions, "Date")) {
+    bp <- bp + ggplot2::scale_color_viridis_c(name = "Version", trans = "date")
+  } else {
+    bp <- bp + ggplot2::scale_color_viridis_c(name = "Version")
+  }
+
+  if (.mark_versions) {
+    bp <- bp +
+      ggplot2::geom_vline(
+        data = snapshots,
+        ggplot2::aes(color = version, xintercept = version),
+        linewidth = .5,
+        linetype = 3,
+        show.legend = FALSE
+      )
+  }
+  # make the finalized layer last
+  bp$layers <- rev(bp$layers)
+  bp
+}
+
+#' @export
+#' @rdname autoplot-epi
+plot.epi_df <- function(x, ...) {
+  autoplot(x, ...)
+}
+
+#' @export
+#' @rdname autoplot-epi
+plot.epi_archive <- function(x, ...) {
+  autoplot(x, ...)
 }

@@ -1,47 +1,82 @@
-#' Slide a function over variables in an `epi_df` object
+#' More general form of [`epi_slide_opt`] for rolling/running computations
 #'
-#' @description Slides a given function over variables in an `epi_df` object.
-#' This is useful for computations like rolling averages. The function supports
-#' many ways to specify the computation, but by far the most common use case is
-#' as follows:
+#' Most rolling/running computations can be handled by [`epi_slide_mean`],
+#' [`epi_slide_sum`], or the medium-generality [`epi_slide_opt`] functions,
+#' which have been specialized to run more quickly. `epi_slide()` is a slower
+#' but even more general function for rolling/running computations, and uses a
+#' different interface to specify the computations; you typically only need to
+#' consider using `epi_slide()` if you have a computation that depends on
+#' multiple columns simultaneously, outputs multiple columns simultaneously, or
+#' produces non-numeric output. For example, this computation depends on
+#' multiple columns:
 #'
 #' ```
-#' # Create new column `cases_7dmed` that contains a 7-day trailing median of cases
-#' epi_slide(edf, cases_7dmed = median(cases), .window_size = 7)
+#' cases_deaths_subset %>%
+#'   epi_slide(
+#'     cfr_estimate_v0 = death_rate_7d_av[[22]]/case_rate_7d_av[[1]],
+#'     .window_size = 22
+#'   ) %>%
+#'   print(n = 30)
 #' ```
 #'
-#' For two very common use cases, we provide optimized functions that are much
-#' faster than `epi_slide`: `epi_slide_mean()` and `epi_slide_sum()`. We
-#' recommend using these functions when possible.
+#' (Here, the value 22 was selected using `epi_cor()` and averaging across
+#' `geo_value`s. See
+#' \href{https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1}{this
+#' manuscript} for some warnings & information using similar types of CFR
+#' estimators.)
 #'
 #' See `vignette("epi_df")` for more examples.
 #'
 #' @template basic-slide-params
-#' @param .f Function, formula, or missing; together with `...` specifies the
-#'   computation to slide. The return of the computation should either be a
-#'   scalar or a 1-row data frame. Data frame returns will be
-#'    `tidyr::unpack()`-ed, if named, and will be [`tidyr::pack`]-ed columns, if
-#'    not named. See examples.
+#' @param .f,... The computation to slide. The input will be a time window of
+#'   the data for a single subpopulation (i.e., a single `geo_value` and single
+#'   value for any [`other_keys`][as_epi_df] you set up, such as age groups, race, etc.).
+#'   The input will always have the same size, determined by `.window_size`, and
+#'   will fill in any missing `time_values`, using `NA` values for missing
+#'   measurements. The output should be a scalar value or a 1-row data frame;
+#'   these outputs will be collected into a new column or columns in the
+#'   `epi_slide()` result. Data frame outputs will be unpacked into multiple
+#'   columns in the result by default, or [`tidyr::pack`]ed into a single
+#'   data-frame-type column if you provide a name for such a column (e.g., via
+#'   `.new_col_name`).
 #'
-#'   - If `.f` is missing, then `...` will specify the computation via
-#'     tidy-evaluation. This is usually the most convenient way to use
-#'     `epi_slide`. See examples.
-#'   - If `.f` is a formula, then the formula should use `.x` (not the same as
-#'     the input `epi_df`) to operate on the columns of the input `epi_df`, e.g.
-#'     `~mean(.x$var)` to compute a mean of `var`.
-#'   - If a function, `.f` must have the form `function(x, g, t, ...)`, where:
+#' You can specify the computation in one of the following ways:
+#'
+#' - Don't provide `.f`, and instead use one or more
+#'   [`dplyr::summarize`]-esque ["data-masking"][rlang::args_data_masking]
+#'   expressions in `...`, e.g., `cfr_estimate_v0 =
+#'   death_rate_7d_av[[22]]/case_rate_7d_av[[1]]`. This way is sometimes more
+#'   convenient, but also has the most computational overhead.
+#'
+#' - Provide a formula in `.f`, e.g., `~
+#'   .x$death_rate_7d_av[[22]]/.x$case_rate_7d_av[[1]]`. In this formula, `.x`
+#'   is an `epi_df` containing data for a single time window as described above,
+#'   taken from the original `.x` fed into `epi_slide()`.
+#'
+#' - Provide a function in `.f`, e.g., `function(x, g, t)
+#'   x$death_rate_7d_av[[22]]/x$case_rate_7d_av[[1]]`. The function should be of
+#'   the form `function(x, g, t)` or `function(x, g, t, <additional
+#'   configuration arguments>)`, where:
+#'
 #'     - `x` is a data frame with the same column names as the original object,
-#'     minus any grouping variables, with only the windowed data for one
-#'     group-`.ref_time_value` combination
-#'     - `g` is a one-row tibble containing the values of the grouping variables
-#'     for the associated group
-#'     - `t` is the `.ref_time_value` for the current window
-#'     - `...` are additional arguments
+#'       minus any grouping variables, with only the windowed data for one
+#'       group-`.ref_time_value` combination
 #'
-#' @param ... Additional arguments to pass to the function or formula specified
-#'   via `.f`. Alternatively, if `.f` is missing, then the `...` is interpreted
-#'   as a ["data-masking"][rlang::args_data_masking] expression or expressions
-#'   for tidy evaluation.
+#'     - `g` is a one-row tibble specifying the `geo_value` and value of any
+#'       `other_keys` for this computation
+#'
+#'     - `t` is the `.ref_time_value` for the current window
+#'
+#'     - If you have a complex `.f` containing `<additional configuration
+#'     arguments>`, you can provide values for those arguments in the `...`
+#'     argument to `epi_slide()`.
+#'
+#'   The values of `g` and `t` are also available to data-masking expression and
+#'   formula-based computations as `.group_key` and `.ref_time_value`,
+#'   respectively. Formula computations also let you use `.y` or `.z`,
+#'   respectively, as additional names for these same quantities (similar to
+#'   [`dplyr::group_modify`]).
+#'
 #' @param .new_col_name Name for the new column that will contain the computed
 #'   values. The default is "slide_value" unless your slide computations output
 #'   data frames, in which case they will be unpacked (as in `tidyr::unpack()`)
@@ -49,14 +84,34 @@
 #'   be given names that clash with the existing columns of `.x`.
 #'
 #' @details
+#'
+#' ## Motivation and lower-level alternatives
+#'
+#' `epi_slide()` is focused on preventing errors and providing a convenient
+#' interface. If you need computational speed, many computations can be optimized
+#' by one of the following:
+#'
+#' * Performing core sliding operations with `epi_slide_opt()` with
+#'   `frollapply`, and using potentially-grouped `mutate()`s to transform or
+#'   combine the results.
+#'
+#' * Grouping by `geo_value` and any `other_keys`; [`complete()`]ing with
+#'   `full_seq()` to fill in time gaps; `arrange()`ing by `time_value`s within
+#'   each group; using `mutate()` with vectorized operations and shift operators
+#'   like `dplyr::lead()` and `dplyr::lag()` to perform the core operations,
+#'   being careful to give the desired results for the least and most recent
+#'   `time_value`s (often `NA`s for the least recent); ungrouping; and
+#'   `filter()`ing back down to only rows that existed before the `complete()`
+#'   stage if necessary.
+#'
 #' ## Advanced uses of `.f` via tidy evaluation
 #'
-#' If specifying `.f` via tidy evaluation, in addition to the standard [`.data`]
-#' and [`.env`], we make some additional "pronoun"-like bindings available:
+#' If specifying `.f` via tidy evaluation, in addition to the standard [`.data`][rlang::.data]
+#' and [`.env`][rlang::.env], we make some additional "pronoun"-like bindings available:
 #'
 #'   - .x, which is like `.x` in [`dplyr::group_modify`]; an ordinary object
 #'     like an `epi_df` rather than an rlang [pronoun][rlang::as_data_pronoun]
-#'     like [`.data`]; this allows you to use additional `dplyr`, `tidyr`, and
+#'     like `.data`; this allows you to use additional `dplyr`, `tidyr`, and
 #'     `epiprocess` operations. If you have multiple expressions in `...`, this
 #'     won't let you refer to the output of the earlier expressions, but `.data`
 #'     will.
@@ -72,34 +127,43 @@
 #' @examples
 #' library(dplyr)
 #'
-#' # Get the 7-day trailing standard deviation of cases and the 7-day trailing mean of cases
-#' cases_deaths_subset %>%
+#' # Generate some simple time-varying CFR estimates:
+#' with_cfr_estimates <- cases_deaths_subset %>%
 #'   epi_slide(
-#'     cases_7sd = sd(cases, na.rm = TRUE),
-#'     cases_7dav = mean(cases, na.rm = TRUE),
-#'     .window_size = 7
-#'   ) %>%
-#'   select(geo_value, time_value, cases, cases_7sd, cases_7dav)
-#' # Note that epi_slide_mean could be used to more quickly calculate cases_7dav.
+#'     cfr_estimate_v0 = death_rate_7d_av[[22]] / case_rate_7d_av[[1]],
+#'     .window_size = 22
+#'   )
+#' with_cfr_estimates %>%
+#'   print(n = 30)
+#' # (Here, the value 22 was selected using `epi_cor()` and averaging across
+#' # `geo_value`s. See
+#' # https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1 for some
+#' # warnings & information using CFR estimators along these lines.)
 #'
-#' # In addition to the [`dplyr::mutate`]-like syntax, you can feed in a function or
-#' # formula in a way similar to [`dplyr::group_modify`]:
-#' my_summarizer <- function(window_data) {
-#'   window_data %>%
-#'     summarize(
-#'       cases_7sd = sd(cases, na.rm = TRUE),
-#'       cases_7dav = mean(cases, na.rm = TRUE)
-#'     )
+#' # In addition to the [`dplyr::mutate`]-like syntax, you can feed in a
+#' # function or formula in a way similar to [`dplyr::group_modify`]; these
+#' # often run much more quickly:
+#' my_computation <- function(window_data) {
+#'   tibble(
+#'     cfr_estimate_v0 = window_data$death_rate_7d_av[[nrow(window_data)]] /
+#'       window_data$case_rate_7d_av[[1]]
+#'   )
 #' }
-#' cases_deaths_subset %>%
+#' with_cfr_estimates2 <- cases_deaths_subset %>%
 #'   epi_slide(
-#'     ~ my_summarizer(.x),
-#'     .window_size = 7
-#'   ) %>%
-#'   select(geo_value, time_value, cases, cases_7sd, cases_7dav)
-#'
-#'
-#'
+#'     ~ my_computation(.x),
+#'     .window_size = 22
+#'   )
+#' with_cfr_estimates3 <- cases_deaths_subset %>%
+#'   epi_slide(
+#'     function(window_data, g, t) {
+#'       tibble(
+#'         cfr_estimate_v0 = window_data$death_rate_7d_av[[nrow(window_data)]] /
+#'           window_data$case_rate_7d_av[[1]]
+#'       )
+#'     },
+#'     .window_size = 22
+#'   )
 #'
 #'
 #' #### Advanced: ####
@@ -549,20 +613,25 @@ get_before_after_from_window <- function(window_size, align, time_type) {
   list(before = before, after = after)
 }
 
-#' Optimized slide functions for common cases
+#' Calculate rolling or running means, sums, etc., or custom calculations
 #'
-#' @description `epi_slide_opt` allows sliding an n-timestep [data.table::froll]
-#' or [slider::summary-slide] function over variables in an `epi_df` object.
-#' These functions tend to be much faster than `epi_slide()`. See
-#' `vignette("epi_df")` for more examples.
+#' @description These methods take each subpopulation (i.e., a single
+#'   `geo_value` and combination of any `other_keys` you set up for age groups,
+#'   etc.) and perform a `.window_size`-width time window rolling/sliding
+#'   computation, or alternatively, a running/cumulative computation (with
+#'   `.window_size = Inf`) on the requested columns. Explicit `NA` measurements
+#'   are temporarily added to fill in any time gaps, and, for rolling
+#'   computations, to pad the time series to ensure that the first & last
+#'   computations use exactly `.window_size` values.
+#'
+#' `epi_slide_opt` allows you to use any [data.table::froll] or
+#' [slider::summary-slide] function. If none of those specialized functions fit
+#' your usecase, you can use `data.table::frollapply` together with a non-rolling
+#' function (e.g., `median`). See [`epi_slide`] if you need to work with
+#' multiple columns at once or output a custom type.
 #'
 #' @template basic-slide-params
-#' @param .col_names <[`tidy-select`][dplyr_tidy_select]> An unquoted column
-#'   name (e.g., `cases`), multiple column names (e.g., `c(cases, deaths)`),
-#'   [other tidy-select expression][tidyselect::language], or a vector of
-#'   characters (e.g. `c("cases", "deaths")`). Variable names can be used as if
-#'   they were positions in the data frame, so expressions like `x:y` can be
-#'   used to select a range of variables.
+#' @param .col_names `r tidyselect_arg_roxygen`
 #'
 #'   The tidy-selection renaming interface is not supported, and cannot be used
 #'   to provide output column names; if you want to customize the output column
@@ -1108,7 +1177,7 @@ epi_slide_sum <- function(
 #' `before` and `after` args are assumed to have been validated by the calling
 #' function (using `validate_slide_window_arg`).
 #'
-#' @importFrom checkmate assert_function
+#' @importFrom checkmate assert_function anyInfinite
 #' @keywords internal
 full_date_seq <- function(x, before, after, time_type) {
   if (!time_type %in% c("day", "week", "yearmonth", "integer")) {
@@ -1126,7 +1195,7 @@ full_date_seq <- function(x, before, after, time_type) {
   if (time_type %in% c("yearmonth", "integer")) {
     all_dates <- seq(min(x$time_value), max(x$time_value), by = 1L)
 
-    if (before != 0 && before != Inf) {
+    if (before != 0 && !anyInfinite(before)) {
       pad_early_dates <- all_dates[1L] - before:1
     }
     if (after != 0) {
@@ -1139,7 +1208,7 @@ full_date_seq <- function(x, before, after, time_type) {
     )
 
     all_dates <- seq(min(x$time_value), max(x$time_value), by = by)
-    if (before != 0 && before != Inf) {
+    if (before != 0 && !anyInfinite(before)) {
       # The behavior is analogous to the branch with tsibble types above. For
       # more detail, note that the function `seq.Date(from, ..., length.out =
       # n)` returns `from + 0:n`. Since we want `from + 1:n`, we drop the first

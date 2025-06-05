@@ -1,7 +1,7 @@
 Type: Package
 Package: epiprocess
 Title: Tools for basic signal processing in epidemiology
-Version: 0.11.0
+Version: 0.12.0
 Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", , "lcbrooks+github@andrew.cmu.edu", role = c("aut", "cre")),
@@ -35,7 +35,8 @@ Description: This package introduces common data structures for working
     package is designed to be used in conjunction with `epipredict` for
     building and evaluating epidemiological models.
 License: MIT + file LICENSE
-URL: https://cmu-delphi.github.io/epiprocess/
+URL: https://github.com/cmu-delphi/epiprocess,
+    https://cmu-delphi.github.io/epiprocess/
 Depends:
     epidatasets,
     R (>= 3.6)
@@ -46,9 +47,10 @@ Imports:
     dplyr (>= 1.1.0),
     ggplot2,
     glue,
-    lifecycle (>= 1.0.1),
+    lifecycle,
     lubridate,
     magrittr,
+    methods,
     pkgconfig,
     purrr,
     rlang,
@@ -66,12 +68,13 @@ Suggests:
     distributional,
     epidatr,
     epipredict,
+    hardhat,
     here,
     knitr,
     outbreaks,
     readr,
     rmarkdown,
-    testthat (>= 3.1.5),
+    testthat,
     trendfilter,
     withr
 VignetteBuilder:
@@ -102,6 +105,7 @@ Collate:
     'methods-epi_archive.R'
     'grouped_epi_archive.R'
     'growth_rate.R'
+    'inline-roxygen.R'
     'key_colnames.R'
     'methods-epi_df.R'
     'outliers.R'

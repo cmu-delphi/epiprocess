@@ -52,13 +52,6 @@ validate_version_bound <- function(version_bound, x, na_ok = FALSE,
         class = "epiprocess__version_bound_mismatched_class"
       )
     }
-    if (!identical(typeof(version_bound), typeof(x[["version"]]))) {
-      cli_abort(
-        "{version_bound_arg} must have the same `typeof` as x$version,
-        which has a `typeof` of {typeof(x$version)}",
-        class = "epiprocess__version_bound_mismatched_typeof"
-      )
-    }
   }
 
   return(invisible(NULL))
@@ -207,37 +200,34 @@ next_after.Date <- function(x) x + 1L
 #'   undergo tiny nonmeaningful revisions and the archive object with the
 #'   default setting is too large.
 #' @param clobberable_versions_start Optional; `length`-1; either a value of the
-#'   same `class` and `typeof` as `x$version`, or an `NA` of any `class` and
-#'   `typeof`: specifically, either (a) the earliest version that could be
-#'   subject to "clobbering" (being overwritten with different update data, but
-#'   using the *same* version tag as the old update data), or (b) `NA`, to
-#'   indicate that no versions are clobberable. There are a variety of reasons
-#'   why versions could be clobberable under routine circumstances, such as (a)
-#'   today's version of one/all of the columns being published after initially
-#'   being filled with `NA` or LOCF, (b) a buggy version of today's data being
-#'   published but then fixed and republished later in the day, or (c) data
-#'   pipeline delays (e.g., publisher uploading, periodic scraping, database
-#'   syncing, periodic fetching, etc.) that make events (a) or (b) reflected
-#'   later in the day (or even on a different day) than expected; potential
-#'   causes vary between different data pipelines. The default value is `NA`,
-#'   which doesn't consider any versions to be clobberable. Another setting that
-#'   may be appropriate for some pipelines is `max_version_with_row_in(x)`.
-#' @param versions_end Optional; length-1, same `class` and `typeof` as
-#'   `x$version`: what is the last version we have observed? The default is
+#'   same `class` as `x$version`, or an `NA` of any `class`: specifically,
+#'   either (a) the earliest version that could be subject to "clobbering"
+#'   (being overwritten with different update data, but using the *same* version
+#'   tag as the old update data), or (b) `NA`, to indicate that no versions are
+#'   clobberable. There are a variety of reasons why versions could be
+#'   clobberable under routine circumstances, such as (a) today's version of
+#'   one/all of the columns being published after initially being filled with
+#'   `NA` or LOCF, (b) a buggy version of today's data being published but then
+#'   fixed and republished later in the day, or (c) data pipeline delays (e.g.,
+#'   publisher uploading, periodic scraping, database syncing, periodic
+#'   fetching, etc.) that make events (a) or (b) reflected later in the day (or
+#'   even on a different day) than expected; potential causes vary between
+#'   different data pipelines. The default value is `NA`, which doesn't consider
+#'   any versions to be clobberable. Another setting that may be appropriate for
+#'   some pipelines is `max_version_with_row_in(x)`.
+#' @param versions_end Optional; length-1, same `class` as `x$version`: what is
+#'   the last version we have observed? The default is
 #'   `max_version_with_row_in(x)`, but values greater than this could also be
 #'   valid, and would indicate that we observed additional versions of the data
 #'   beyond `max(x$version)`, but they all contained empty updates. (The default
 #'   value of `clobberable_versions_start` does not fully trust these empty
 #'   updates, and assumes that any version `>= max(x$version)` could be
 #'   clobbered.) If `nrow(x) == 0`, then this argument is mandatory.
-#' @return An `epi_archive` object.
+#' @return * Of `new_epi_archive`: an (unvalidated) `epi_archive`
 #'
 #' @seealso [`epix_as_of`] [`epix_merge`] [`epix_slide`]
 #' @importFrom dplyr if_any if_all everything
 #' @importFrom utils capture.output
-#'
-#' @name epi_archive
-#' @export
 #'
 #' @examples
 #' # Simple ex. with necessary keys
@@ -277,6 +267,9 @@ next_after.Date <- function(x) x + 1L
 #'
 #' x <- df %>% as_epi_archive(other_keys = "county")
 #'
+#' @name epi_archive
+#' @order 3
+#' @export
 new_epi_archive <- function(
     x,
     geo_type,
@@ -329,7 +322,14 @@ new_epi_archive <- function(
 
 #' Perform second (costly) round of validation that `x` is a proper `epi_archive`
 #'
+#' Does not validate `geo_type` or `time_type` against `geo_value` and
+#' `time_value` columns. These are assumed to have been set to compatibly.
+#'
+#' @return * Of `validate_epi_archive`: an `epi_archive`,
+#'   [invisibly][base::invisible] (or raises an error if `x` was invalid)
+#'
 #' @rdname epi_archive
+#' @order 4
 #' @export
 validate_epi_archive <- function(x) {
   assert_class(x, "epi_archive")
@@ -515,8 +515,10 @@ is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
 #' @param .versions_end location based versions_end, used to avoid prefix
 #'   `version = issue` from being assigned to `versions_end` instead of being
 #'   used to rename columns.
+#' @return * Of `as_epi_archive`: an `epi_archive` object
 #'
 #' @rdname epi_archive
+#' @order 1
 #'
 #' @export
 as_epi_archive <- function(
@@ -807,4 +809,17 @@ clone <- function(x) {
 clone.epi_archive <- function(x) {
   x$DT <- data.table::copy(x$DT)
   x
+}
+
+#' Test for `epi_archive` format
+#'
+#' @param x An object.
+#' @return * Of `is_epi_archive`: `TRUE` if the object inherits from `epi_archive`,
+#'           otherwise `FALSE`.
+#'
+#' @rdname epi_archive
+#' @order 2
+#' @export
+is_epi_archive <- function(x) {
+  inherits(x, "epi_archive")
 }

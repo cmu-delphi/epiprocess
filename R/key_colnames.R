@@ -91,8 +91,8 @@ key_colnames.epi_df <- function(x, ...,
   if (!identical(other_keys, expected_other_keys)) {
     cli_abort(c(
       "The provided `other_keys` argument didn't match the `other_keys` of `x`",
-      "*" = "`other_keys` was {format_chr_with_quotes(other_keys)}",
-      "*" = "`expected_other_keys` was {format_chr_with_quotes(expected_other_keys)}",
+      "*" = "`other_keys` was {format_chr_deparse(other_keys)}",
+      "*" = "`expected_other_keys` was {format_chr_deparse(expected_other_keys)}",
       "i" = "If you know that `x` will always be an `epi_df` and
              resolve this discrepancy by adjusting the metadata of `x`, you
              shouldn't have to pass `other_keys =` here anymore,
