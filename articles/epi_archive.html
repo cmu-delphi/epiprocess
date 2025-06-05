@@ -8,8 +8,8 @@
 <title>Working with epi_archive objects and data revisions • epiprocess</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Open_Sans-0.4.9/font.css" rel="stylesheet">
-<link href="../deps/Source_Serif_Pro-0.4.9/font.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Open_Sans-0.4.10/font.css" rel="stylesheet">
+<link href="../deps/Source_Serif_Pro-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Working with epi_archive objects and data revisions">
@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.12.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,7 +68,7 @@
       <h1>Working with epi_archive objects and data revisions</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/vignettes/epi_archive.Rmd" class="external-link"><code>vignettes/epi_archive.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/main/vignettes/epi_archive.Rmd" class="external-link"><code>vignettes/epi_archive.Rmd</code></a></small>
       <div class="d-none name"><code>epi_archive.Rmd</code></div>
     </div>
 
@@ -104,7 +104,7 @@ documentation page</a>.</p>
 package</a>, which is loaded along with <code>epiprocess</code>, and can
 be accessed with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cmu-delphi.github.io/epiprocess/">epiprocess</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cmu-delphi/epiprocess" class="external-link">epiprocess</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://purrr.tidyverse.org/" class="external-link">purrr</a></span><span class="op">)</span></span>
@@ -257,34 +257,43 @@ modeling</em>, is an important statistical problem in it of itself.</p>
 </h2>
 <p>There are many ways to examine how signals change across revisions.
 We provide the convenient analysis wrapper
-<code><a href="../reference/revision_summary.html">revision_summary()</a></code>, which computes simple summary
+<code><a href="../reference/revision_analysis.html">revision_summary()</a></code>, which computes simple summary
 statistics for each key (by default, <code>(geo_value,time_value)</code>
 pairs). In addition to the per key summary, it also returns an overall
 summary. Here is an a sample of the output:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">revision_details</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/revision_summary.html">revision_summary</a></span><span class="op">(</span><span class="va">dv_archive</span>, print_inform <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Min lag (time to first version):</span></span>
+<code class="sourceCode R"><span><span class="va">revision_details</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/revision_analysis.html">revision_summary</a></span><span class="op">(</span><span class="va">dv_archive</span><span class="op">)</span></span>
+<span><span class="va">revision_details</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">An epi_archive spanning </span><span style="color: #0000BB; font-weight: bold;">2020-06-01</span><span style="font-weight: bold;"> to </span><span style="color: #0000BB; font-weight: bold;">2021-11-30</span><span style="font-weight: bold;">.</span> ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── Min lag (time to first version):</span></span>
 <span><span class="co">#&gt;      min median     mean     max</span></span>
 <span><span class="co">#&gt;   3 days 3 days 3.5 days 12 days</span></span>
-<span><span class="co">#&gt; Fraction of epi_key+time_values with</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── Fraction of epi_key + time_values with</span></span>
 <span><span class="co">#&gt; No revisions:</span></span>
 <span><span class="co">#&gt; • 0 out of 1,956 (0%)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Quick revisions (last revision within 3 days of the `time_value`):</span></span>
 <span><span class="co">#&gt; • 0 out of 1,956 (0%)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Few revisions (At most 3 revisions for that `time_value`):</span></span>
+<span><span class="co">#&gt; Few revisions (At most <span style="color: #0000BB;">3</span> revisions for that `time_value`):</span></span>
 <span><span class="co">#&gt; • 0 out of 1,956 (0%)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Fraction of revised epi_key+time_values which have:</span></span>
-<span><span class="co">#&gt; Less than 0.1 spread in relative value:</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── Fraction of revised epi_key + time_values which have: </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Less than <span style="color: #0000BB;">0.1</span> spread in relative value:</span></span>
 <span><span class="co">#&gt; • 91 out of 1,956 (4.65%)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Spread of more than 2.22056495 in actual value (when revised):</span></span>
+<span><span class="co">#&gt; Spread of more than <span style="color: #0000BB;">2.221</span> in actual value (when revised):</span></span>
 <span><span class="co">#&gt; • 671 out of 1,956 (34.3%)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Days until within 20% of the latest value:</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── Days until within <span style="color: #0000BB;">20</span>% of the latest value:</span></span>
 <span><span class="co">#&gt;      min median     mean     max</span></span>
 <span><span class="co">#&gt;   3 days 5 days 9.1 days 67 days</span></span></code></pre></div>
 <p>We can see from the output that, as mentioned above, this data set
@@ -294,9 +303,9 @@ and 34% of the keys change by 10% or more when revised.</p>
 printing, we can inspect the returned <code>revision_details</code>
 tibble. Here we collect a number of statistics for each state:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">revision_details</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<code class="sourceCode R"><span><span class="va">revision_details</span><span class="op">$</span><span class="va">revision_behavior</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
 <span>    n_rev <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">n_revisions</span><span class="op">)</span>,</span>
 <span>    min_lag <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">min_lag</span><span class="op">)</span>,</span>
 <span>    max_lag <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">max_lag</span><span class="op">)</span>,</span>
@@ -376,9 +385,8 @@ information, see <code><a href="../reference/epix_merge.html">epix_merge()</a></
 </h2>
 <p>One of the most common use cases of
 <code><a href="../reference/epi_archive.html">epiprocess::epi_archive()</a></code> object is for accurate model
-backtesting. See
-<code>vignette("backtesting", package="epipredict")</code> for an
-in-depth demo, using a pre-built forecaster in that package.</p>
+backtesting. See <a href="https://cmu-delphi.github.io/epipredict/articles/backtesting.html" class="external-link"><code>vignette("backtesting", package="epipredict")</code></a>
+for an in-depth demo, using a pre-built forecaster in that package.</p>
 </div>
 <div class="section level2">
 <h2 id="attribution">Attribution<a class="anchor" aria-label="anchor" href="#attribution"></a>

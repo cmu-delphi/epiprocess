@@ -20,7 +20,7 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/as_tibble.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/as_tsibble.epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/assert_sufficient_f_args.html</loc></url>
-<url><loc>https://cmu-delphi.github.io/epiprocess/reference/autoplot.epi_df.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/autoplot-epi.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/check_ukey_unique.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/clone.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/complete.epi_df.html</loc></url>
@@ -36,11 +36,13 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/epi_slide_opt.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/epiprocess-package.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/epix_as_of.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/epix_as_of_current.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/epix_fill_through_version.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/epix_merge.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/epix_slide.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/epix_truncate_versions_after.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/f_no_na.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/filter.epi_archive.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/format_chr_deparse.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/format_chr_with_quotes.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/format_tibble_row.html</loc></url>
@@ -71,9 +73,11 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/reconstruct_light_edf.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/reexports.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/removed_by_compactify.html</loc></url>
-<url><loc>https://cmu-delphi.github.io/epiprocess/reference/revision_summary.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/revision_analysis.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/set_versions_end.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/sum_groups_epi_df.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/test_sensible_int.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/reference/tidyselect_arg_roxygen.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/time_column_names.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/time_delta_standardize.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/reference/time_delta_summary.html</loc></url>
