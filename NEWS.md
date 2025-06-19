@@ -1,6 +1,13 @@
 # epiprocess
 
-Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicate PR's.
+Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.0.9999 will
+indicate development versions beyond 0.x.
+
+# epiprocess 0.12.0.9999
+
+## Bug fixes
+- `autoplot.epi_archive` now works properly on archives that contain a column
+  named `v` (#674, thanks to @pcollender for the report).
 
 # epiprocess 0.12
 
