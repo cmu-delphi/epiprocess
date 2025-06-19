@@ -311,7 +311,7 @@ autoplot.epi_archive <- function(object, ...,
   snapshots <- purrr::map(
     .versions,
     function(v) {
-      dplyr::mutate(epix_as_of(object, v), version = v)
+      dplyr::mutate(epix_as_of(object, v), version = .env$v)
     }
   ) %>%
     purrr::list_rbind() %>%
