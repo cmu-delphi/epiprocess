@@ -94,12 +94,16 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-Collate:
+Collate: 
     'archive.R'
     'autoplot.R'
     'correlation.R'
     'epi_df.R'
     'epi_df_forbidden_methods.R'
+    'epi_slide_opt_archive_bu.R'
+    'epi_slide_opt_archive_bu2.R'
+    'epi_slide_opt_edf_bu.R'
+    'epi_slide_opt_edf_bu2.R'
     'epiprocess-package.R'
     'group_by_epi_df_methods.R'
     'methods-epi_archive.R'
@@ -111,7 +115,12 @@ Collate:
     'outliers.R'
     'reexports.R'
     'revision_analysis.R'
+    'slide-refactor-bu.R'
     'slide.R'
     'time-utils.R'
+    'ukey-col-listbacked.R'
+    'ukey-col-misc.R'
+    'ukey-col-prefix.R'
+    'ukey-col-sandwich.R'
     'utils.R'
     'utils_pipe.R'
