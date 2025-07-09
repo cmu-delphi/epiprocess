@@ -24,8 +24,7 @@ is_ukey_col_prefix <- function(x) {
 # TODO proxy & restore?
 
 ukey_col_prefix_get_data <- function(x) {
-  # FIXME don't remove all vctrs_vctr if base was vctrs_vctr
-  class(x) <- setdiff(class(x), c("hardhat_ukey_col_prefix", "vctrs_vctr"))
+  class(x) <- setdiff(class(x), "hardhat_ukey_col_prefix")
   x
 }
 
