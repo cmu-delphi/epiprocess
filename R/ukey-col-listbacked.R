@@ -9,16 +9,48 @@ new_ukey_col_listbacked <- function(data) {
   vctrs::new_rcrd(list(data = data), class = "hardhat_ukey_col_listbacked")
 }
 
+# XXX is.numeric(ukey_col_listbacked(1:3)) is FALSE
+
 #' @export
 ukey_col_listbacked <- function(col) {
   vctrs::obj_check_vector(col)
   new_ukey_col_listbacked(col)
 }
 
+# TODO consider whether this should just be as_ukey_col_listbacked
+
+# XXX list-backed can't compose with other marker classes without mutual
+# awareness. S3-ification of these conversion/validation functions should help
+# make this possible in downstream packages, but will still require awareness
+# and work,
+
 #' @export
 is_ukey_col_listbacked <- function(x) {
+  UseMethod("is_ukey_col_listbacked")
+}
+
+#' @export
+is_ukey_col_listbacked.default <- function(x) {
   inherits(x, "hardhat_ukey_col_listbacked")
 }
+
+#' @export
+as_ukey_col_listbacked <- function(x, ...) {
+  UseMethod("as_ukey_col_listbacked")
+}
+
+#' @export
+as_ukey_col_listbacked.default <- function(x, ...) {
+  rlang::check_dots_empty0(...)
+  if (is_ukey_col_listbacked(x)) {
+    x
+  } else {
+    ukey_col_listbacked(x)
+  }
+}
+
+# FIXME this should be use in the vec_cast impls
+
 
 #' @export
 format.hardhat_ukey_col_listbacked <- function(x, ...) {
