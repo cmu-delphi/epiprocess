@@ -137,6 +137,10 @@ vec_ptype2.hardhat_ukey_col_listbacked.double <- vec_ptype2_hardhat_ukey_col_lis
 #' @export
 vec_ptype2.hardhat_ukey_col_listbacked.character <- vec_ptype2_hardhat_ukey_col_listbacked_other
 #' @export
+vec_ptype2.hardhat_ukey_col_listbacked.Date <- vec_ptype2_hardhat_ukey_col_listbacked_other
+#' @export
+vec_ptype2.hardhat_ukey_col_listbacked.POSIXt <- vec_ptype2_hardhat_ukey_col_listbacked_other
+#' @export
 vec_ptype2.hardhat_ukey_col_listbacked.list <- vec_ptype2_hardhat_ukey_col_listbacked_other
 #' @export
 vec_ptype2.hardhat_ukey_col_listbacked.data.frame <- vec_ptype2_hardhat_ukey_col_listbacked_other
@@ -179,6 +183,10 @@ vec_cast.hardhat_ukey_col_listbacked.double <- vec_cast_hardhat_ukey_col_listbac
 #' @export
 vec_cast.hardhat_ukey_col_listbacked.character <- vec_cast_hardhat_ukey_col_listbacked_other
 #' @export
+vec_cast.hardhat_ukey_col_listbacked.Date <- vec_cast_hardhat_ukey_col_listbacked_other
+#' @export
+vec_cast.hardhat_ukey_col_listbacked.POSIXt <- vec_cast_hardhat_ukey_col_listbacked_other
+#' @export
 vec_cast.hardhat_ukey_col_listbacked.list <- vec_cast_hardhat_ukey_col_listbacked_other
 #' @export
 vec_cast.hardhat_ukey_col_listbacked.data.frame <- vec_cast_hardhat_ukey_col_listbacked_other
@@ -209,6 +217,10 @@ vec_cast.integer.hardhat_ukey_col_listbacked <- vec_cast_other_hardhat_ukey_col_
 vec_cast.double.hardhat_ukey_col_listbacked <- vec_cast_other_hardhat_ukey_col_listbacked
 #' @export
 vec_cast.character.hardhat_ukey_col_listbacked <- vec_cast_other_hardhat_ukey_col_listbacked
+#' @export
+vec_cast.Date.hardhat_ukey_col_listbacked <- vec_cast_other_hardhat_ukey_col_listbacked
+#' @export
+vec_cast.POSIXt.hardhat_ukey_col_listbacked <- vec_cast_other_hardhat_ukey_col_listbacked
 #' @export
 vec_cast.list.hardhat_ukey_col_listbacked <- vec_cast_other_hardhat_ukey_col_listbacked
 #' @export
