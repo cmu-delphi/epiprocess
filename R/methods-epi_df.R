@@ -228,13 +228,16 @@ reconstruct_light_edf <- function(data, template) {
   metadata <- template_metadata
   metadata$other_keys <- other_keys
 
-  key_cols <- c("geo_value", other_keys, "time_value")
-  class(data) <- class(data)[class(data) != "epi_df"]
-  data[key_cols] <- lapply(data[key_cols], as_ukey_col_listbacked)
-  # We also want to ensure that no non-key cols are marked with the ukey class.
-  # But with the choice above to add all (non-geo, non-time) ukey-marked cols to
-  # the (other) keys metadata, this should already be guaranteed (there should
-  # be no ukey-marked cols considered non-key).
+  if (attr(data, "epiprocess:::maintain_ukeys") %||% TRUE) {
+    key_cols <- c("geo_value", other_keys, "time_value")
+    class(data) <- class(data)[class(data) != "epi_df"] # avoid `[<-` inf loop
+    data[key_cols] <- lapply(data[key_cols], as_ukey_col_listbacked)
+    # We also want to ensure that no non-key cols are marked with the ukey class.
+    # But with the choice above to add all (non-geo, non-time) ukey-marked cols to
+    # the (other) keys metadata, this should already be guaranteed (there should
+    # be no ukey-marked cols considered non-key).
+  }
+
   data <- reclass(data, metadata)
 
   # XXX we may want verify the `geo_type` and `time_type` here. If it's
@@ -249,11 +252,22 @@ reconstruct_light_edf <- function(data, template) {
   res <- NextMethod()
 
   if (!is.data.frame(res)) {
-    return(res)
+    return(as_non_ukey_col_listbacked(res))
   }
 
   reconstruct_light_edf(res, x)
 }
+
+#' @export
+`[[.epi_df` <- function(x, i, j, ...) {
+  as_non_ukey_col_listbacked(NextMethod())
+}
+
+#' @export
+`$.epi_df` <- function(x, name) {
+  as_non_ukey_col_listbacked(NextMethod())
+}
+
 
 #' @export
 `[<-.epi_df` <- function(x, i, j, ..., value) {
@@ -571,6 +585,38 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
     arrange_canonical()
 }
 
-# TODO make column getters&setters set&unset ukey colness
+#' @export
+mutate.epi_df <- function(.data, ...) {
+  old_class <- class(.data)
+  class(.data) <- vctrs::vec_set_difference(class(.data), "epi_df")
+  .data[seq_along(.data)] <- lapply(.data, as_non_ukey_col_listbacked)
+  class(.data) <- old_class
+  attr(.data, "epiprocess:::maintain_ukeys") <- FALSE
+  result <- NextMethod()
+  attr(result, "epiprocess:::maintain_ukeys") <- NULL
+  result
+}
 
-# TODO wrap dplyr verbs with ukey col unset&set
+#' @export
+summarize.epi_df <- function(.data, ...) {
+  old_class <- class(.data)
+  class(.data) <- vctrs::vec_set_difference(class(.data), "epi_df")
+  .data[seq_along(.data)] <- lapply(.data, as_non_ukey_col_listbacked)
+  class(.data) <- old_class
+  attr(.data, "epiprocess:::maintain_ukeys") <- FALSE
+  result <- NextMethod()
+  attr(result, "epiprocess:::maintain_ukeys") <- NULL
+  result
+}
+
+#' @importFrom dplyr reframe
+#' @export
+reframe.epi_df <- function(.data, ...) {
+  # Somehow ukey col markings can still leak through here (e.g., with
+  # `reframe(time_value = time_value)`) when using the same approach as `mutate`
+  # and `summarize`. Since `reframe` outputs bare tibbles / data.frames, just
+  # strip the ukey markers from the result.
+  result <- NextMethod()
+  result[seq_along(result)] <- lapply(result, as_non_ukey_col_listbacked)
+  result
+}
