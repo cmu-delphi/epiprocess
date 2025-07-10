@@ -624,3 +624,26 @@ reframe.epi_df <- function(.data, ...) {
 #' @importFrom dplyr select
 #' @export
 select.epi_df <- dplyr_edf_verb_default
+
+#' @export
+rbind.epi_df <- function(..., deparse.level = 1) {
+  dots <- list(...)
+  need_to_hide <- any(vapply(dots, function(dot) {
+    attr(dot, "epiprocess:::maintain_ukeys") %||% TRUE
+  }, logical(1L)))
+  if (need_to_hide) {
+    dots <- lapply(dots, function(dot) {
+      old_class <- class(dot)
+      class(dot) <- vctrs::vec_set_difference(class(dot), "epi_df")
+      dot[seq_along(dot)] <- lapply(dot, as_non_ukey_col_listbacked)
+      class(dot) <- old_class
+      attr(dot, "epiprocess:::maintain_ukeys") <- FALSE
+      dot
+    })
+    result <- rlang::inject(rbind(!!!dots))
+    attr(result, "epiprocess:::maintain_ukeys") <- NULL
+    result
+  } else {
+    NextMethod("rbind", ..1)
+  }
+}

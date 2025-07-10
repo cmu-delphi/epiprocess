@@ -118,30 +118,30 @@ vec_ptype2.hardhat_ukey_col_listbacked.hardhat_ukey_col_listbacked <- function(x
 # several common classes.
 
 # Potential auto-conversions from common data types to ukey_col wrappers, e.g.,
-# to enable `vec_c`.
+# to enable some conveniences with `vec_c`, `bind_rows`, etc.
 
-# vec_ptype2_hardhat_ukey_col_listbacked_other <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
-#   new_ukey_col_listbacked(vec_ptype2(
-#     vctrs::field(x, "data"),
-#     y,
-#     ...,
-#     x_arg = glue::glue('vctrs::field({x_arg}, "data")'),
-#     y_arg = glue::glue('{y_arg}'),
-#     call = call
-#   ))
-# }
-# #' @export
-# vec_ptype2.hardhat_ukey_col_listbacked.integer <- vec_ptype2_hardhat_ukey_col_listbacked_other
-# #' @export
-# vec_ptype2.hardhat_ukey_col_listbacked.double <- vec_ptype2_hardhat_ukey_col_listbacked_other
-# #' @export
-# vec_ptype2.hardhat_ukey_col_listbacked.character <- vec_ptype2_hardhat_ukey_col_listbacked_other
-# #' @export
-# vec_ptype2.hardhat_ukey_col_listbacked.list <- vec_ptype2_hardhat_ukey_col_listbacked_other
-# #' @export
-# vec_ptype2.hardhat_ukey_col_listbacked.data.frame <- vec_ptype2_hardhat_ukey_col_listbacked_other
-# #' @export
-# vec_ptype2.hardhat_ukey_col_listbacked.vctrs_vctr <- vec_ptype2_hardhat_ukey_col_listbacked_other
+vec_ptype2_hardhat_ukey_col_listbacked_other <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
+  new_ukey_col_listbacked(vec_ptype2(
+    vctrs::field(x, "data"),
+    y,
+    ...,
+    x_arg = glue::glue('vctrs::field({x_arg}, "data")'),
+    y_arg = glue::glue('{y_arg}'),
+    call = call
+  ))
+}
+#' @export
+vec_ptype2.hardhat_ukey_col_listbacked.integer <- vec_ptype2_hardhat_ukey_col_listbacked_other
+#' @export
+vec_ptype2.hardhat_ukey_col_listbacked.double <- vec_ptype2_hardhat_ukey_col_listbacked_other
+#' @export
+vec_ptype2.hardhat_ukey_col_listbacked.character <- vec_ptype2_hardhat_ukey_col_listbacked_other
+#' @export
+vec_ptype2.hardhat_ukey_col_listbacked.list <- vec_ptype2_hardhat_ukey_col_listbacked_other
+#' @export
+vec_ptype2.hardhat_ukey_col_listbacked.data.frame <- vec_ptype2_hardhat_ukey_col_listbacked_other
+#' @export
+vec_ptype2.hardhat_ukey_col_listbacked.vctrs_vctr <- vec_ptype2_hardhat_ukey_col_listbacked_other
 
 
 # Converting between ukey_cols:
