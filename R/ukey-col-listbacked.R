@@ -140,7 +140,7 @@ vec_ptype2.hardhat_ukey_col_listbacked.character <- function(x, y, ..., x_arg = 
   # behaves more like didn't have marker; not doing for POSIXts due to
   # complexity and potential base/vctrs disagreement.
   x_data <- vctrs::field(x, "data")
-  if (inherits(x_data, "Date")) {
+  if (identical(class(x_data), "Date")) {
     vctrs::vec_ptype(x)
   } else {
     vec_ptype2_hardhat_ukey_col_listbacked_other(x, y, ..., x_arg = x_arg, y_arg = y_arg, call = call)
@@ -163,14 +163,23 @@ vec_ptype2.hardhat_ukey_col_listbacked.vctrs_vctr <- vec_ptype2_hardhat_ukey_col
 #' @importFrom vctrs vec_cast
 #' @export
 vec_cast.hardhat_ukey_col_listbacked.hardhat_ukey_col_listbacked <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
-  new_ukey_col_listbacked(vec_cast(
-    vctrs::field(x, "data"),
-    vctrs::field(to, "data"),
-    ...,
-    x_arg = glue::glue('vctrs::field({x_arg}, "data")'),
-    to_arg = glue::glue('vctrs::field({to_arg}, "data")'),
-    call = call
-  ))
+  x_data <- vctrs::field(x, "data")
+  to_data <- vctrs::field(to, "data")
+  if (identical(class(x_data), "Date") && identical(class(to_data), "character")) {
+    result_data <- as.character(x_data)
+  } else if (identical(class(x_data), "character") && identical(class(to_data), "Date")) {
+    result_data <- as.Date(x_data)
+  } else {
+    result_data <- vec_cast(
+      x_data,
+      to_data,
+      ...,
+      x_arg = glue::glue('vctrs::field({x_arg}, "data")'),
+      to_arg = glue::glue('vctrs::field({to_arg}, "data")'),
+      call = call
+    )
+  }
+  new_ukey_col_listbacked(result_data)
 }
 
 # Converting other things to ukey_cols:
@@ -196,14 +205,21 @@ vec_cast.hardhat_ukey_col_listbacked.character <- function (x, to, ..., x_arg = 
   # behaves more like didn't have marker; not doing for POSIXts due to
   # complexity and potential base/vctrs disagreement.
   to_data <- vctrs::field(to, "data")
-  if (inherits(to_data, "Date")) {
+  if (identical(class(to_data), "Date")) {
     new_ukey_col_listbacked(as.Date(x))
   } else {
     vec_cast_hardhat_ukey_col_listbacked_other(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
   }
 }
 #' @export
-vec_cast.hardhat_ukey_col_listbacked.Date <- vec_cast_hardhat_ukey_col_listbacked_other
+vec_cast.hardhat_ukey_col_listbacked.Date <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+  to_data <- vctrs::field(to, "data")
+  if (identical(class(to_data), "character")) {
+    new_ukey_col_listbacked(as.character(x))
+  } else {
+    vec_cast_hardhat_ukey_col_listbacked_other(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
+  }
+}
 #' @export
 vec_cast.hardhat_ukey_col_listbacked.POSIXt <- vec_cast_hardhat_ukey_col_listbacked_other
 #' @export
@@ -236,9 +252,23 @@ vec_cast.integer.hardhat_ukey_col_listbacked <- vec_cast_other_hardhat_ukey_col_
 #' @export
 vec_cast.double.hardhat_ukey_col_listbacked <- vec_cast_other_hardhat_ukey_col_listbacked
 #' @export
-vec_cast.character.hardhat_ukey_col_listbacked <- vec_cast_other_hardhat_ukey_col_listbacked
+vec_cast.character.hardhat_ukey_col_listbacked <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+  x_data <- vctrs::field(x, "data")
+  if (identical(class(x_data), "Date")) {
+    as.character(x_data)
+  } else {
+    vec_cast_other_hardhat_ukey_col_listbacked(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
+  }
+}
 #' @export
-vec_cast.Date.hardhat_ukey_col_listbacked <- vec_cast_other_hardhat_ukey_col_listbacked
+vec_cast.Date.hardhat_ukey_col_listbacked <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+  x_data <- vctrs::field(x, "data")
+  if (identical(class(x_data), "character")) {
+    as.Date(x_data)
+  } else {
+    vec_cast_other_hardhat_ukey_col_listbacked(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
+  }
+}
 #' @export
 vec_cast.POSIXt.hardhat_ukey_col_listbacked <- vec_cast_other_hardhat_ukey_col_listbacked
 #' @export
