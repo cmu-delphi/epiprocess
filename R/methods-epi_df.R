@@ -216,8 +216,12 @@ reconstruct_light_edf <- function(data, template) {
 
   if (inherits(data, "epi_df")) {
     # (This case might be nonstandard for `dplyr_extending`, but a
-    # broader-purpose reconstruction function might be helpful.)
-    data_other_keys <- attr(data, "metadata")$other_keys
+    # broader-purpose reconstruction function might be helpful, and it seems
+    # possible to encounter it with `[.epi_df` at least.)
+    #
+    # Key columns might have been dropped from `data` and we need to update the
+    # metadata to reflect that:
+    data_other_keys <- vctrs::vec_set_intersect(attr(data, "metadata")$other_keys, col_names)
     other_keys <- vctrs::vec_set_union(other_keys, data_other_keys)
   }
 
