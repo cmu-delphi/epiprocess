@@ -335,7 +335,20 @@ dplyr_edf_verb_default <- function(.data, ...) {
 #' @param .data an `epi_df`
 #' @rdname print.epi_df
 #' @export
-group_by.epi_df <- dplyr_edf_verb_default
+group_by.epi_df <- function(.data, ...) {
+  # This is almost identical to the default verb treatment, but we need to
+  # ensure we output an `epi_df`.
+  metadata <- attr(.data, "metadata")
+  old_class <- class(.data)
+  class(.data) <- vctrs::vec_set_difference(class(.data), "epi_df")
+  .data[seq_along(.data)] <- lapply(.data, as_non_ukey_col_listbacked)
+  class(.data) <- old_class
+  attr(.data, "epiprocess:::maintain_ukeys") <- FALSE
+  result <- NextMethod()
+  result <- reclass(result, metadata)
+  attr(result, "epiprocess:::maintain_ukeys") <- NULL
+  result
+}
 
 #' @method ungroup epi_df
 #' @rdname print.epi_df
