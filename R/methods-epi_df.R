@@ -232,23 +232,20 @@ reconstruct_light_edf <- function(data, template) {
   metadata <- template_metadata
   metadata$other_keys <- other_keys
 
-  if (attr(data, "epiprocess:::maintain_ukeys") %||% TRUE) {
-    key_cols <- c("geo_value", other_keys, "time_value")
-    class(data) <- class(data)[class(data) != "epi_df"] # avoid `[<-` inf loop
-    data[key_cols] <- lapply(data[key_cols], as_ukey_col_listbacked)
+  result <- reclass(data, metadata)
+  attr(result, "decay_to_tibble") <- attr(template, "decay_to_tibble")
+  attr(result, "epiprocess:::restore_ukeys") <- attr(template, "epiprocess:::restore_ukeys")
+  result <- maybe_restore_ukey_cols(result)
     # We also want to ensure that no non-key cols are marked with the ukey class.
     # But with the choice above to add all (non-geo, non-time) ukey-marked cols to
     # the (other) keys metadata, this should already be guaranteed (there should
     # be no ukey-marked cols considered non-key).
-  }
-
-  data <- reclass(data, metadata)
 
   # XXX we may want verify the `geo_type` and `time_type` here. If it's
   # significant overhead, we may also want to keep this less strict version
   # around and implement some extra S3 methods that use it, when appropriate.
 
-  data
+  result
 }
 
 #' @export
@@ -320,14 +317,36 @@ dplyr_row_slice.epi_df <- function(data, i, ...) {
   reconstruct_light_edf(result, result)
 }
 
+unwrap_ukey_cols <- function(df) {
+  old_class <- class(df)
+  class(df) <- vctrs::vec_set_difference(old_class, "epi_df")
+  df[seq_along(df)] <- lapply(df, as_non_ukey_col_listbacked)
+  class(df) <- old_class
+  df
+}
+
+maybe_restore_ukey_cols <- function(df) {
+  if (inherits(df, "epi_df") && (attr(df, "epiprocess:::restore_ukeys") %||% TRUE)) {
+    key_cols <- c("geo_value", attr(df, "metadata")[["other_keys"]], "time_value")
+    old_class <- class(df)
+    class(df) <- vctrs::vec_set_difference(old_class, "epi_df") # avoid `[<-` inf loop
+    df[key_cols] <- lapply(df[key_cols], as_ukey_col_listbacked)
+    class(df) <- old_class
+    # We also want to ensure that no non-key cols are marked with the ukey
+    # class. But with the choice in downstream methods to add all (non-geo,
+    # non-time) ukey-marked cols to the (other) keys metadata, this should
+    # already be guaranteed (there should be no ukey-marked cols considered
+    # non-key).
+  }
+  df
+}
+
 dplyr_edf_verb_default <- function(.data, ...) {
-  old_class <- class(.data)
-  class(.data) <- vctrs::vec_set_difference(class(.data), "epi_df")
-  .data[seq_along(.data)] <- lapply(.data, as_non_ukey_col_listbacked)
-  class(.data) <- old_class
-  attr(.data, "epiprocess:::maintain_ukeys") <- FALSE
+  .data <- unwrap_ukey_cols(.data)
+  attr(.data, "epiprocess:::restore_ukeys") <- FALSE
   result <- NextMethod()
-  attr(result, "epiprocess:::maintain_ukeys") <- NULL
+  attr(result, "epiprocess:::restore_ukeys") <- NULL
+  result <- maybe_restore_ukey_cols(result)
   result
 }
 
@@ -343,10 +362,11 @@ group_by.epi_df <- function(.data, ...) {
   class(.data) <- vctrs::vec_set_difference(class(.data), "epi_df")
   .data[seq_along(.data)] <- lapply(.data, as_non_ukey_col_listbacked)
   class(.data) <- old_class
-  attr(.data, "epiprocess:::maintain_ukeys") <- FALSE
+  attr(.data, "epiprocess:::restore_ukeys") <- FALSE
   result <- NextMethod()
   result <- reclass(result, metadata)
-  attr(result, "epiprocess:::maintain_ukeys") <- NULL
+  attr(result, "epiprocess:::restore_ukeys") <- NULL
+  result <- maybe_restore_ukey_cols(result)
   result
 }
 
@@ -446,14 +466,11 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 #'   )
 #' @export
 complete.epi_df <- function(data, ..., fill = list(), explicit = TRUE) {
-  old_class <- class(data)
-  class(data) <- vctrs::vec_set_difference(class(data), "epi_df")
-  data[seq_along(data)] <- lapply(data, as_non_ukey_col_listbacked)
-  class(data) <- old_class
-  attr(data, "epiprocess:::maintain_ukeys") <- FALSE
+  data <- unwrap_ukey_cols(data)
+  attr(data, "epiprocess:::restore_ukeys") <- FALSE
   result <- NextMethod()
+  attr(data, "epiprocess:::restore_ukeys") <- NULL
   result <- reconstruct_light_edf(result, data)
-  attr(result, "epiprocess:::maintain_ukeys") <- NULL
   if ("time_value" %in% names(rlang::call_match(dots_expand = FALSE)[["..."]])) {
     attr(result, "metadata")$time_type <- guess_time_type(result$time_value)
   }
@@ -629,10 +646,8 @@ reframe.epi_df <- function(.data, ...) {
   # Somehow ukey col markings can still leak through here (e.g., with
   # `reframe(time_value = time_value)`) when using the same approach as `mutate`
   # and `summarize`. Since `reframe` outputs bare tibbles / data.frames, just
-  # strip the ukey markers from the result.
-  result <- NextMethod()
-  result[seq_along(result)] <- lapply(result, as_non_ukey_col_listbacked)
-  result
+  # destructure it earlier.
+  reframe(decay_epi_df(.data), ...)
 }
 
 #' @export
@@ -648,19 +663,16 @@ arrange.epi_df <- dplyr_edf_verb_default
 rbind.epi_df <- function(..., deparse.level = 1) {
   dots <- list(...)
   need_to_hide <- any(vapply(dots, function(dot) {
-    attr(dot, "epiprocess:::maintain_ukeys") %||% TRUE
+    attr(dot, "epiprocess:::restore_ukeys") %||% TRUE
   }, logical(1L)))
   if (need_to_hide) {
     dots <- lapply(dots, function(dot) {
-      old_class <- class(dot)
-      class(dot) <- vctrs::vec_set_difference(class(dot), "epi_df")
-      dot[seq_along(dot)] <- lapply(dot, as_non_ukey_col_listbacked)
-      class(dot) <- old_class
-      attr(dot, "epiprocess:::maintain_ukeys") <- FALSE
+      dot <- unwrap_ukey_cols(dot)
+      attr(dot, "epiprocess:::restore_ukeys") <- FALSE
       dot
     })
     result <- rlang::inject(rbind(!!!dots))
-    attr(result, "epiprocess:::maintain_ukeys") <- NULL
+    attr(result, "epiprocess:::restore_ukeys") <- NULL
     result
   } else {
     NextMethod("rbind", ..1)
