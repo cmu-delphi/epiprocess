@@ -611,7 +611,7 @@ dplyr_edf_verb_default <- function(.data, ...) {
 mutate.epi_df <- dplyr_edf_verb_default
 
 #' @export
-summarize.epi_df <- dplyr_edf_verb_default
+summarise.epi_df <- dplyr_edf_verb_default
 
 #' @importFrom dplyr reframe
 #' @export
@@ -628,6 +628,14 @@ reframe.epi_df <- function(.data, ...) {
 #' @importFrom dplyr select
 #' @export
 select.epi_df <- dplyr_edf_verb_default
+
+#' @importFrom dplyr select
+#' @export
+filter.epi_df <- dplyr_edf_verb_default
+
+#' @importFrom dplyr select
+#' @export
+arrange.epi_df <- dplyr_edf_verb_default
 
 #' @export
 rbind.epi_df <- function(..., deparse.level = 1) {
