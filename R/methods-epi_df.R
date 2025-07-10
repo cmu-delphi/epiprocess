@@ -619,6 +619,7 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
 #' @export
 mutate.epi_df <- dplyr_edf_verb_default
 
+#' @importFrom dplyr summarise
 #' @export
 summarise.epi_df <- dplyr_edf_verb_default
 
