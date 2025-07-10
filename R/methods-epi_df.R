@@ -422,7 +422,14 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 #'   )
 #' @export
 complete.epi_df <- function(data, ..., fill = list(), explicit = TRUE) {
-  result <- reconstruct_light_edf(NextMethod(), data)
+  old_class <- class(data)
+  class(data) <- vctrs::vec_set_difference(class(data), "epi_df")
+  data[seq_along(data)] <- lapply(data, as_non_ukey_col_listbacked)
+  class(data) <- old_class
+  attr(data, "epiprocess:::maintain_ukeys") <- FALSE
+  result <- NextMethod()
+  result <- reconstruct_light_edf(result, data)
+  attr(result, "epiprocess:::maintain_ukeys") <- NULL
   if ("time_value" %in% names(rlang::call_match(dots_expand = FALSE)[["..."]])) {
     attr(result, "metadata")$time_type <- guess_time_type(result$time_value)
   }
