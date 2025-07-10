@@ -592,8 +592,7 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
     arrange_canonical()
 }
 
-#' @export
-mutate.epi_df <- function(.data, ...) {
+dplyr_edf_verb_default <- function(.data, ...) {
   old_class <- class(.data)
   class(.data) <- vctrs::vec_set_difference(class(.data), "epi_df")
   .data[seq_along(.data)] <- lapply(.data, as_non_ukey_col_listbacked)
@@ -605,16 +604,10 @@ mutate.epi_df <- function(.data, ...) {
 }
 
 #' @export
-summarize.epi_df <- function(.data, ...) {
-  old_class <- class(.data)
-  class(.data) <- vctrs::vec_set_difference(class(.data), "epi_df")
-  .data[seq_along(.data)] <- lapply(.data, as_non_ukey_col_listbacked)
-  class(.data) <- old_class
-  attr(.data, "epiprocess:::maintain_ukeys") <- FALSE
-  result <- NextMethod()
-  attr(result, "epiprocess:::maintain_ukeys") <- NULL
-  result
-}
+mutate.epi_df <- dplyr_edf_verb_default
+
+#' @export
+summarize.epi_df <- dplyr_edf_verb_default
 
 #' @importFrom dplyr reframe
 #' @export
@@ -627,3 +620,7 @@ reframe.epi_df <- function(.data, ...) {
   result[seq_along(result)] <- lapply(result, as_non_ukey_col_listbacked)
   result
 }
+
+#' @importFrom dplyr select
+#' @export
+select.epi_df <- dplyr_edf_verb_default

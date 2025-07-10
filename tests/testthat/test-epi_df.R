@@ -1,8 +1,8 @@
 test_that("new_epi_df works as intended", {
   # Empty call fails
   expect_error(new_epi_df(), "argument \"geo_type\" is missing")
-  # Empty tibble works, but requires metadata
-  a <- new_epi_df(tibble(), geo_type = "custom", time_type = "custom", as_of = as.POSIXct("2020-01-01"))
+  # Default empty 0x2 tibble works, but requires metadata
+  a <- new_epi_df(geo_type = "custom", time_type = "custom", as_of = as.POSIXct("2020-01-01"))
   expect_true(is_epi_df(a))
   expect_identical(attributes(a)$metadata$geo_type, "custom")
   expect_identical(attributes(a)$metadata$time_type, "custom")

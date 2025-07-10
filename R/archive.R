@@ -532,6 +532,7 @@ as_epi_archive <- function(
     .versions_end = max_version_with_row_in(x), ...,
     versions_end = .versions_end) {
   assert_data_frame(x)
+  x <- as_tibble(x) # strip ukey markers from edfs, ...
   x <- rename(x, ...)
   x <- guess_column_name(x, "time_value", time_column_names())
   x <- guess_column_name(x, "geo_value", geo_column_names())
