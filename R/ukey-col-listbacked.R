@@ -34,10 +34,13 @@ is_ukey_col_listbacked.default <- function(x) {
   inherits(x, "hardhat_ukey_col_listbacked")
 }
 
+#' Make `x` satisfy `is_ukey_col_listbacked`, if it isn't already
+#'
 #' @export
 as_ukey_col_listbacked <- function(x, ...) {
   UseMethod("as_ukey_col_listbacked")
 }
+# FIXME for coherence, this should probably be used in the vec_cast impls
 
 #' @export
 as_ukey_col_listbacked.default <- function(x, ...) {
@@ -49,7 +52,27 @@ as_ukey_col_listbacked.default <- function(x, ...) {
   }
 }
 
-# FIXME this should be use in the vec_cast impls
+#' Turn an object from being `is_ukey_col_listbacked` to not
+#' @export
+decay_ukey_col_listbacked <- function(x) {
+  UseMethod("decay_ukey_col_listbacked")
+}
+
+#' @export
+decay_ukey_col_listbacked.hardhat_ukey_col_listbacked <- function(x) {
+  vctrs::field(x, "data")
+}
+
+#' If `x` `is_ukey_col_listbacked`, make it not be
+#'
+#' @export
+as_non_ukey_col_listbacked <- function(x) {
+  if (is_ukey_col_listbacked(x)) {
+    decay_ukey_col_listbacked(x)
+  } else {
+    x
+  }
+}
 
 
 #' @export

@@ -21,7 +21,7 @@ as_epi_df(x, ...)
   geo_type = deprecated(),
   time_type = deprecated(),
   as_of,
-  other_keys = character(),
+  other_keys = NULL,
   ...
 )
 
@@ -34,11 +34,12 @@ as_epi_df(x, ...)
 is_epi_df(x)
 
 new_epi_df(
-  x = tibble::tibble(geo_value = character(), time_value = as.Date(integer())),
+  x = tibble::tibble(geo_value = new_ukey_col_listbacked(character()), time_value =
+    new_ukey_col_listbacked(as.Date(integer()))),
   geo_type,
   time_type,
   as_of,
-  other_keys = character(),
+  other_keys = NULL,
   ...
 )
 }
@@ -64,8 +65,11 @@ object that is created would represent the most up-to-date version of the
 data available as of January 31, 2022. If the \code{as_of} argument is missing,
 then the current day-time will be used.}
 
-\item{other_keys}{If your tibble has additional keys, be sure to specify them
-as a character vector here (typical examples are "age" or sub-geographies).}
+\item{other_keys}{If your tibble has additional "key" columns used to specify
+what subpopulation and time period each measurement refers to, be sure to
+specify them as a character vector here (typical examples are "age" or
+sub-geographies), or, alternatively, call \code{\link{ukey_col_listbacked}} on each
+such column.}
 }
 \value{
 \itemize{

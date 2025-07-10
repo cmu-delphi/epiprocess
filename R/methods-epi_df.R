@@ -17,7 +17,7 @@ as_tibble.epi_df <- function(x, ...) {
   # Note that some versions of `tsibble` overwrite `as_tibble.grouped_df`, which
   # also impacts grouped `epi_df`s, so don't rely on `NextMethod()`. Destructure
   # and redispatch instead.
-  destructured <- vec_data(x) # -> data.frame, dropping extra attrs
+  destructured <- vec_data(decay_epi_df(x)) # -> data.frame, dropping extra attrs & ukey markers
   tbl <- if (dots_n(...) == 0 &&
     is.null(pkgconfig::get_config("tibble::rownames"))) { # nolint: indentation_linter
     # perf: new_tibble instead of as_tibble.data.frame which performs
@@ -134,6 +134,7 @@ summary.epi_df <- function(object, ...) {
 decay_epi_df <- function(x) {
   attributes(x)$metadata <- NULL
   class(x) <- class(x)[class(x) != "epi_df"]
+  x[seq_along(x)] <- lapply(x, as_non_ukey_col_listbacked)
   x
 }
 
@@ -209,15 +210,36 @@ reconstruct_light_edf <- function(data, template) {
     return(decay_epi_df(data))
   }
 
-  data <- reclass(data, attr(template, "metadata"))
+  template_metadata <- attr(template, "metadata")
+  template_other_keys <- template_metadata$other_keys
+  other_keys <- vctrs::vec_set_intersect(template_other_keys, col_names)
+
+  if (inherits(data, "epi_df")) {
+    # (This case might be nonstandard for `dplyr_extending`, but a
+    # broader-purpose reconstruction function might be helpful.)
+    data_other_keys <- attr(data, "metadata")$other_keys
+    other_keys <- vctrs::vec_set_union(other_keys, data_other_keys)
+  }
+
+  data_ukeys <- col_names[vapply(data, is_ukey_col_listbacked, logical(1L))]
+  ukey_other_keys <- vctrs::vec_set_difference(data_ukeys, c("geo_value", "time_value"))
+  other_keys <- vctrs::vec_set_union(other_keys, ukey_other_keys)
+
+  metadata <- template_metadata
+  metadata$other_keys <- other_keys
+
+  key_cols <- c("geo_value", other_keys, "time_value")
+  class(data) <- class(data)[class(data) != "epi_df"]
+  data[key_cols] <- lapply(data[key_cols], as_ukey_col_listbacked)
+  # We also want to ensure that no non-key cols are marked with the ukey class.
+  # But with the choice above to add all (non-geo, non-time) ukey-marked cols to
+  # the (other) keys metadata, this should already be guaranteed (there should
+  # be no ukey-marked cols considered non-key).
+  data <- reclass(data, metadata)
 
   # XXX we may want verify the `geo_type` and `time_type` here. If it's
   # significant overhead, we may also want to keep this less strict version
   # around and implement some extra S3 methods that use it, when appropriate.
-
-  # Amend additional metadata if some other_keys cols are dropped in the subset
-  old_other_keys <- attr(template, "metadata")$other_keys
-  attr(data, "metadata")$other_keys <- old_other_keys[old_other_keys %in% col_names]
 
   data
 }
@@ -548,3 +570,7 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
   ) %>%
     arrange_canonical()
 }
+
+# TODO make column getters&setters set&unset ukey colness
+
+# TODO wrap dplyr verbs with ukey col unset&set
