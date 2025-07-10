@@ -625,15 +625,12 @@ reframe.epi_df <- function(.data, ...) {
   result
 }
 
-#' @importFrom dplyr select
 #' @export
 select.epi_df <- dplyr_edf_verb_default
 
-#' @importFrom dplyr select
 #' @export
 filter.epi_df <- dplyr_edf_verb_default
 
-#' @importFrom dplyr select
 #' @export
 arrange.epi_df <- dplyr_edf_verb_default
 
