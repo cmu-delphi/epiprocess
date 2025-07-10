@@ -320,15 +320,22 @@ dplyr_row_slice.epi_df <- function(data, i, ...) {
   reconstruct_light_edf(result, result)
 }
 
+dplyr_edf_verb_default <- function(.data, ...) {
+  old_class <- class(.data)
+  class(.data) <- vctrs::vec_set_difference(class(.data), "epi_df")
+  .data[seq_along(.data)] <- lapply(.data, as_non_ukey_col_listbacked)
+  class(.data) <- old_class
+  attr(.data, "epiprocess:::maintain_ukeys") <- FALSE
+  result <- NextMethod()
+  attr(result, "epiprocess:::maintain_ukeys") <- NULL
+  result
+}
+
 #' @method group_by epi_df
 #' @param .data an `epi_df`
 #' @rdname print.epi_df
 #' @export
-group_by.epi_df <- function(.data, ...) {
-  metadata <- attributes(.data)$metadata
-  .data <- NextMethod()
-  reclass(.data, metadata)
-}
+group_by.epi_df <- dplyr_edf_verb_default
 
 #' @method ungroup epi_df
 #' @rdname print.epi_df
@@ -594,17 +601,6 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
     other_keys = intersect(attr(.x, "metadata")$other_keys, group_cols)
   ) %>%
     arrange_canonical()
-}
-
-dplyr_edf_verb_default <- function(.data, ...) {
-  old_class <- class(.data)
-  class(.data) <- vctrs::vec_set_difference(class(.data), "epi_df")
-  .data[seq_along(.data)] <- lapply(.data, as_non_ukey_col_listbacked)
-  class(.data) <- old_class
-  attr(.data, "epiprocess:::maintain_ukeys") <- FALSE
-  result <- NextMethod()
-  attr(result, "epiprocess:::maintain_ukeys") <- NULL
-  result
 }
 
 #' @export
