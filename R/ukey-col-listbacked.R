@@ -359,3 +359,12 @@ vec_arith.hardhat_ukey_col_listbacked.hardhat_ukey_col_listbacked <- function(op
 vec_arith.hardhat_ukey_col_listbacked.default <- function(op, x, y, ...) {
   new_ukey_col_listbacked(vec_arith(op, vctrs::field(x, "data"), y, ...))
 }
+
+# TODO full_seq forwarder
+
+# TODO anything here that could help out with model.frame?
+
+# FIXME if dropping ukeyness during grouping, then how to actually do stratified
+# forecasting that depends on ukeys?
+
+# TODO yearmonth, etc. conversions
