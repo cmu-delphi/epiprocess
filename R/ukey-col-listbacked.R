@@ -368,3 +368,8 @@ vec_arith.hardhat_ukey_col_listbacked.default <- function(op, x, y, ...) {
 # forecasting that depends on ukeys?
 
 # TODO yearmonth, etc. conversions
+
+# TODO for grouped epi_dfs, consider what stratified modeling would look like.
+# Will ukeys be missing? check keep = TRUE, cur_df, pick(everything()), etc.
+# Should ukey col maintenance, instead of being turned off during grouped
+# operations, just make sure not to ukey-ify group vars?
