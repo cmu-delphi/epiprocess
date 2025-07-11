@@ -315,6 +315,8 @@ dplyr_row_slice.epi_df <- function(data, i, ...) {
   }
   result <- NextMethod()
   template <- reclass(result, new_metadata)
+  attr(template, "decay_to_tibble") <- attr(x, "decay_to_tibble")
+  attr(template, "epiprocess:::restore_ukeys") <- attr(x, "epiprocess:::restore_ukeys")
   reconstruct_light_edf(result, template)
 }
 
