@@ -133,6 +133,8 @@ summary.epi_df <- function(object, ...) {
 #' @keywords internal
 decay_epi_df <- function(x) {
   attributes(x)$metadata <- NULL
+  attr(x, "decay_to_tibble") <- NULL
+  attr(x, "epiprocess:::restore_ukeys") <- NULL
   class(x) <- class(x)[class(x) != "epi_df"]
   x[seq_along(x)] <- lapply(x, as_non_ukey_col_listbacked)
   x
@@ -349,7 +351,11 @@ dplyr_edf_verb_default <- function(.data, ...) {
   old_restore_ukeys <- attr(.data, "epiprocess:::restore_ukeys")
   attr(.data, "epiprocess:::restore_ukeys") <- FALSE
   result <- NextMethod()
-  attr(result, "epiprocess:::restore_ukeys") <- old_restore_ukeys
+  if (is_grouped_df(.data) && !is_grouped_df(result)) {
+    attr(result, "epiprocess:::restore_ukeys") <- NULL
+  } else {
+    attr(result, "epiprocess:::restore_ukeys") <- old_restore_ukeys
+  }
   result <- maybe_restore_ukey_cols(result)
   result
 }
