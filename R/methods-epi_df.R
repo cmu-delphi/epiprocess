@@ -343,9 +343,10 @@ maybe_restore_ukey_cols <- function(df) {
 
 dplyr_edf_verb_default <- function(.data, ...) {
   .data <- unwrap_ukey_cols(.data)
+  old_restore_ukeys <- attr(.data, "epiprocess:::restore_ukeys")
   attr(.data, "epiprocess:::restore_ukeys") <- FALSE
   result <- NextMethod()
-  attr(result, "epiprocess:::restore_ukeys") <- NULL
+  attr(result, "epiprocess:::restore_ukeys") <- old_restore_ukeys
   result <- maybe_restore_ukey_cols(result)
   result
 }
@@ -356,17 +357,15 @@ dplyr_edf_verb_default <- function(.data, ...) {
 #' @export
 group_by.epi_df <- function(.data, ...) {
   # This is almost identical to the default verb treatment, but we need to
-  # ensure we output an `epi_df`.
+  # ensure we output an `epi_df`. To avoid group recomputation with ukey-col
+  # marker classes and to avoid having those classes introduced into some
+  # grouped operations, suspend ukey restoration while grouped.
   metadata <- attr(.data, "metadata")
-  old_class <- class(.data)
-  class(.data) <- vctrs::vec_set_difference(class(.data), "epi_df")
-  .data[seq_along(.data)] <- lapply(.data, as_non_ukey_col_listbacked)
-  class(.data) <- old_class
+  .data <- unwrap_ukey_cols(.data)
   attr(.data, "epiprocess:::restore_ukeys") <- FALSE
   result <- NextMethod()
   result <- reclass(result, metadata)
-  attr(result, "epiprocess:::restore_ukeys") <- NULL
-  result <- maybe_restore_ukey_cols(result)
+  attr(result, "epiprocess:::restore_ukeys") <- FALSE # hedge against grouped_df updates
   result
 }
 
@@ -375,8 +374,11 @@ group_by.epi_df <- function(.data, ...) {
 #' @export
 ungroup.epi_df <- function(x, ...) {
   metadata <- attributes(x)$metadata
-  x <- NextMethod()
-  reclass(x, metadata)
+  result <- NextMethod()
+  result <- reclass(result, metadata)
+  attr(result, "epiprocess:::restore_ukeys") <- NULL
+  result <- maybe_restore_ukey_cols(result)
+  result
 }
 
 #' @method group_modify epi_df
@@ -467,9 +469,10 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 #' @export
 complete.epi_df <- function(data, ..., fill = list(), explicit = TRUE) {
   data <- unwrap_ukey_cols(data)
+  old_restore_ukeys <- attr(.data, "epiprocess:::restore_ukeys")
   attr(data, "epiprocess:::restore_ukeys") <- FALSE
   result <- NextMethod()
-  attr(data, "epiprocess:::restore_ukeys") <- NULL
+  attr(data, "epiprocess:::restore_ukeys") <- old_restore_ukeys
   result <- reconstruct_light_edf(result, data)
   if ("time_value" %in% names(rlang::call_match(dots_expand = FALSE)[["..."]])) {
     attr(result, "metadata")$time_type <- guess_time_type(result$time_value)
@@ -573,7 +576,7 @@ arrange_col_canonical.epi_df <- function(x, ...) {
 #' @export
 group_epi_df <- function(x, exclude = character()) {
   cols <- key_colnames(x, exclude = exclude)
-  reclass(grouped_df(x, cols), attr(x, "metadata"))
+  group_by(x, pick(all_of(cols)))
 }
 
 #' Aggregate an `epi_df` object
@@ -672,7 +675,10 @@ rbind.epi_df <- function(..., deparse.level = 1) {
       dot
     })
     result <- rlang::inject(rbind(!!!dots))
-    attr(result, "epiprocess:::restore_ukeys") <- NULL
+    if (!dplyr::is_grouped_df(result)) {
+      attr(result, "epiprocess:::restore_ukeys") <- NULL
+    }
+    result <- maybe_restore_ukey_cols(result)
     result
   } else {
     NextMethod("rbind", ..1)
