@@ -236,10 +236,10 @@ reconstruct_light_edf <- function(data, template) {
   attr(result, "decay_to_tibble") <- attr(template, "decay_to_tibble")
   attr(result, "epiprocess:::restore_ukeys") <- attr(template, "epiprocess:::restore_ukeys")
   result <- maybe_restore_ukey_cols(result)
-    # We also want to ensure that no non-key cols are marked with the ukey class.
-    # But with the choice above to add all (non-geo, non-time) ukey-marked cols to
-    # the (other) keys metadata, this should already be guaranteed (there should
-    # be no ukey-marked cols considered non-key).
+  # We also want to ensure that no non-key cols are marked with the ukey class.
+  # But with the choice above to add all (non-geo, non-time) ukey-marked cols to
+  # the (other) keys metadata, this should already be guaranteed (there should
+  # be no ukey-marked cols considered non-key).
 
   # XXX we may want verify the `geo_type` and `time_type` here. If it's
   # significant overhead, we may also want to keep this less strict version
@@ -313,8 +313,9 @@ dplyr_row_slice.epi_df <- function(data, i, ...) {
     new_other_keys <- value[match(old_other_keys, old_names)]
     new_metadata[["other_keys"]] <- new_other_keys
   }
-  result <- reclass(NextMethod(), new_metadata)
-  reconstruct_light_edf(result, result)
+  result <- NextMethod()
+  template <- reclass(result, new_metadata)
+  reconstruct_light_edf(result, template)
 }
 
 unwrap_ukey_cols <- function(df) {
@@ -359,13 +360,17 @@ group_by.epi_df <- function(.data, ...) {
   # This is almost identical to the default verb treatment, but we need to
   # ensure we output an `epi_df`. To avoid group recomputation with ukey-col
   # marker classes and to avoid having those classes introduced into some
-  # grouped operations, suspend ukey restoration while grouped.
+  # grouped operations, suspend ukey restoration while grouped. XXX this
+  # reintroduction may have been due to a buggy complete operation rather than
+  # anything mysterious/complex, and we may be able to immediately restore to
+  # the old value... though group recomputation point may still hold. Check
+  # whether the group vars being stored with ukey markers is an issue.
   metadata <- attr(.data, "metadata")
   .data <- unwrap_ukey_cols(.data)
   attr(.data, "epiprocess:::restore_ukeys") <- FALSE
   result <- NextMethod()
   result <- reclass(result, metadata)
-  attr(result, "epiprocess:::restore_ukeys") <- FALSE # hedge against grouped_df updates
+  attr(result, "epiprocess:::restore_ukeys") <- FALSE # in case not copied over
   result
 }
 
@@ -469,10 +474,10 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 #' @export
 complete.epi_df <- function(data, ..., fill = list(), explicit = TRUE) {
   data <- unwrap_ukey_cols(data)
-  old_restore_ukeys <- attr(.data, "epiprocess:::restore_ukeys")
+  old_restore_ukeys <- attr(data, "epiprocess:::restore_ukeys")
   attr(data, "epiprocess:::restore_ukeys") <- FALSE
   result <- NextMethod()
-  attr(data, "epiprocess:::restore_ukeys") <- old_restore_ukeys
+  attr(data, "epiprocess:::restore_ukeys") <- old_restore_ukeys # on data to be passed on in template
   result <- reconstruct_light_edf(result, data)
   if ("time_value" %in% names(rlang::call_match(dots_expand = FALSE)[["..."]])) {
     attr(result, "metadata")$time_type <- guess_time_type(result$time_value)
