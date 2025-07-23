@@ -591,6 +591,7 @@ arrange_col_canonical.epi_df <- function(x, ...) {
 #' @export
 group_epi_df <- function(x, exclude = character()) {
   cols <- key_colnames(x, exclude = exclude)
+  # FIXME `pick` appears to be keeping ukey col markers
   group_by(x, pick(all_of(cols)))
 }
 
