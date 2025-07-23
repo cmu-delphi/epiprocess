@@ -331,13 +331,18 @@ if_edf_restore_nongroup_ukey_cols <- function(df) {
   if (inherits(df, "epi_df")) {
     key_col_nms <- c("geo_value", attr(df, "metadata")[["other_keys"]], "time_value")
     # It'd be nice if we could just the ukey_col class back to all key
-    # cols, but if df is grouped, then it's going to (i) recompute
-    # groups (needless computation) and (ii) save the ukey-col-classed
-    # group cols into an atttribute that will then be passed to some
-    # verb users (including verbs derived from other verbs) despite
-    # our verb wrapping, leading to complaints if that user code uses
-    # some method not compatible with the ukey class.  So let's just
-    # not ukey-col-class group vars.
+    # cols, but if df is grouped, it seems to trigger another
+    # dplyr_reconstruct or something similar to it, and then it's
+    # going to (i) recompute groups (needless computation) and (ii)
+    # save the ukey-col-classed group cols into an atttribute that
+    # will then be passed to some verb users (including verbs derived
+    # from other verbs) despite our verb wrapping, leading to
+    # complaints if that user code uses some method not compatible
+    # with the ukey class.  So let's just not ukey-col-class group
+    # vars.
+    #
+    # FIXME this isn't actually saving it... somehow wrapped grouped
+    # ops are still receiving ukey-col-wrapped cols.
     #
     # XXX so tidymodels should balk at being given a grouped_df if it
     # wants to rely on ukey col class.  Or we should restore all ukey
