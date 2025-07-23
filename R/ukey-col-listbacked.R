@@ -24,6 +24,13 @@ ukey_col_listbacked <- function(col) {
 # make this possible in downstream packages, but will still require awareness
 # and work,
 
+# XXX {lubridate} adds `==.Date` impl(!?!) which triggers
+#
+# Warning message:
+# Incompatible methods ("==.vctrs_vctr", "==.Date") for "=="
+#
+# We can't avoid this while vctrs_vctr-backed.
+
 #' @export
 is_ukey_col_listbacked <- function(x) {
   UseMethod("is_ukey_col_listbacked")
