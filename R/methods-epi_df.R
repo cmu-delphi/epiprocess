@@ -226,6 +226,7 @@ reconstruct_light_edf <- function(data, template) {
     other_keys <- vctrs::vec_set_union(other_keys, data_other_keys)
   }
 
+  class(data) <- vctrs::vec_set_difference(class(data), "epi_df")
   data_ukeys <- col_names[vapply(data, is_ukey_col_listbacked, logical(1L))]
   ukey_other_keys <- vctrs::vec_set_difference(data_ukeys, c("geo_value", "time_value"))
   other_keys <- vctrs::vec_set_union(other_keys, ukey_other_keys)
@@ -233,13 +234,16 @@ reconstruct_light_edf <- function(data, template) {
   metadata <- template_metadata
   metadata$other_keys <- other_keys
 
+  data_group_vars <- group_vars(data)
+  data_group_vars_to_ukey_decay <-
+    data_group_vars[vapply(data[data_group_vars], is_ukey_col_listbacked, logical(1L))]
+  if (length(data_group_vars_to_ukey_decay) != 0L) { # avoid recomputing groups unnecessarily
+    data[data_group_vars_to_ukey_decay] <-
+      lapply(data[data_group_vars_to_ukey_decay], decay_ukey_col_listbacked)
+  }
   result <- reclass(data, metadata)
   attr(result, "decay_to_tibble") <- attr(template, "decay_to_tibble")
-  result <- if_edf_restore_nongroup_ukey_cols(result)
-  # We also want to ensure that no non-key cols are marked with the ukey class.
-  # But with the choice above to add all (non-geo, non-time) ukey-marked cols to
-  # the (other) keys metadata, this should already be guaranteed (there should
-  # be no ukey-marked cols considered non-key).
+  result <- maybe_restore_nongroup_ukey_cols(result)
 
   # XXX we may want verify the `geo_type` and `time_type` here. If it's
   # significant overhead, we may also want to keep this less strict version
@@ -327,22 +331,23 @@ unwrap_ukey_cols <- function(df) {
   df
 }
 
-if_edf_restore_nongroup_ukey_cols <- function(df) {
-  if (inherits(df, "epi_df")) {
+maybe_restore_nongroup_ukey_cols <- function(df) {
+  if (inherits(df, "epi_df") && !(attr(df, "epiprocess:::restore_ukey_cols") %||% TRUE)) {
     key_col_nms <- c("geo_value", attr(df, "metadata")[["other_keys"]], "time_value")
     # It'd be nice if we could just the ukey_col class back to all key
     # cols, but if df is grouped, it seems to trigger another
     # dplyr_reconstruct or something similar to it, and then it's
     # going to (i) recompute groups (needless computation) and (ii)
-    # save the ukey-col-classed group cols into an atttribute that
-    # will then be passed to some verb users (including verbs derived
-    # from other verbs) despite our verb wrapping, leading to
-    # complaints if that user code uses some method not compatible
-    # with the ukey class.  So let's just not ukey-col-class group
-    # vars.
-    #
-    # FIXME this isn't actually saving it... somehow wrapped grouped
-    # ops are still receiving ukey-col-wrapped cols.
+    # save the ukey-col-classed group cols into an attribute that will
+    # then be passed to some verb users (including verbs derived from
+    # other verbs) despite our verb wrapping, leading to complaints if
+    # that user code uses some method not compatible with the ukey
+    # class.  So let's just not ukey-col-class group vars.  Sometimes,
+    # `group_by` will ungroup&mutate to prepare the grouping columns,
+    # which may give them ukey classes (e.g., with `pick(geo_value)`;
+    # to prevent group recomputation from `reconstruct_light_edf`
+    # un-ukeying these, prevent ukey-ification of group variables
+    # during the ungrouping via a transient attribute.
     #
     # XXX so tidymodels should balk at being given a grouped_df if it
     # wants to rely on ukey col class.  Or we should restore all ukey
@@ -365,7 +370,7 @@ if_edf_restore_nongroup_ukey_cols <- function(df) {
 dplyr_edf_verb_default <- function(.data, ...) {
   .data <- unwrap_ukey_cols(.data)
   result <- NextMethod()
-  result <- if_edf_restore_nongroup_ukey_cols(result)
+  result <- maybe_restore_nongroup_ukey_cols(result)
   result
 }
 
@@ -374,16 +379,21 @@ dplyr_edf_verb_default <- function(.data, ...) {
 #' @rdname print.epi_df
 #' @export
 group_by.epi_df <- function(.data, ...) {
-  # This is almost identical to the default verb treatment, but we
-  # need to ensure that we output an `epi_df`.
   metadata <- attr(.data, "metadata")
   .data <- unwrap_ukey_cols(.data)
+  # group_by_prepare will sometimes ungroup&mutate; we need to prevent
+  # this from re-introducing ukey col markers.  Use a transient attr
+  # that should only be set within this group_by call.  Hopefully we
+  # won't need much upkeep on this attr in other methods as it
+  # shouldn't live long.
+  attr(.data, "epiprocess:::restore_ukey_cols") <- FALSE
   result <- NextMethod()
+  attr(result, "epiprocess:::restore_ukey_cols") <- NULL
   # XXX this isn't quite right.  `group_by` can contain mutate
   # expressions that may change the metadata and even edf-eligibility.
   # Perhaps this should be `reconstruct_light_edf`?
   result <- reclass(result, metadata)
-  result <- if_edf_restore_nongroup_ukey_cols(result)
+  result <- maybe_restore_nongroup_ukey_cols(result)
   result
 }
 
@@ -395,7 +405,7 @@ ungroup.epi_df <- function(x, ...) {
   x <- unwrap_ukey_cols(x)
   result <- NextMethod()
   result <- reclass(result, metadata)
-  result <- if_edf_restore_nongroup_ukey_cols(result)
+  result <- maybe_restore_nongroup_ukey_cols(result)
   result
 }
 
