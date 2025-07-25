@@ -118,6 +118,7 @@ Collate:
     'slide-refactor-bu.R'
     'slide.R'
     'time-utils.R'
+    'ukey-col-heavy-prefix.R'
     'ukey-col-listbacked.R'
     'ukey-col-misc.R'
     'ukey-col-prefix.R'

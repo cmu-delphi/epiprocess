@@ -97,6 +97,10 @@ vec_ptype_full.hardhat_ukey_col_sandwich <- function(x, ...) {
   glue::glue('ukey_col<{vec_ptype_full(ukey_col_sandwich_get_data(x))}>')
 }
 
+
+
+
+
 #' @importFrom vctrs vec_ptype2
 #' @export
 vec_ptype2.hardhat_ukey_col_sandwich.hardhat_ukey_col_sandwich <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
@@ -104,32 +108,112 @@ vec_ptype2.hardhat_ukey_col_sandwich.hardhat_ukey_col_sandwich <- function(x, y,
     ukey_col_sandwich_get_data(x),
     ukey_col_sandwich_get_data(y),
     ...,
-    x_arg = glue::glue('vctrs::field({x_arg}, "data")'),
-    y_arg = glue::glue('vctrs::field({y_arg}, "data")'),
+    x_arg = glue::glue('ukey_col_sandwich_get_data({x_arg})'),
+    y_arg = glue::glue('ukey_col_sandwich_get_data({y_arg})'),
     call = call
   ))
 }
 
-# vec_ptype2_hardhat_ukey_col_sandwich_other <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
-#   new_ukey_col_sandwich(vec_ptype2(
-#     ukey_col_sandwich_get_data(x),
-#     y,
-#     ...,
-#     x_arg = glue::glue('vctrs::field({x_arg}, "data")'),
-#     y_arg = glue::glue('{y_arg}'),
-#     call = call
-#   ))
-# }
-# #' @export
-# vec_ptype2.hardhat_ukey_col_sandwich.integer <- vec_ptype2_hardhat_ukey_col_sandwich_other
-# #' @export
-# vec_ptype2.hardhat_ukey_col_sandwich.double <- vec_ptype2_hardhat_ukey_col_sandwich_other
-# #' @export
-# vec_ptype2.hardhat_ukey_col_sandwich.character <- vec_ptype2_hardhat_ukey_col_sandwich_other
-# #' @export
-# vec_ptype2.hardhat_ukey_col_sandwich.list <- vec_ptype2_hardhat_ukey_col_sandwich_other
-# #' @export
-# vec_ptype2.hardhat_ukey_col_sandwich.data.frame <- vec_ptype2_hardhat_ukey_col_sandwich_other
+# NOTE We can provide blanket implementations for the RHS of `vec_arith`, but
+# not for the LHS, and not for other double-dispatch methods like `vec_ptype2`
+# and `vec_cast` that are dispatched in vctrs internals rather than using S3. To
+# approximate a blanket implementation, we'll provide implementations for
+# several common classes.
+
+# Potential auto-conversions from common data types to ukey_col wrappers, e.g.,
+# to enable some conveniences with `vec_c`, `bind_rows`, etc.
+
+vec_ptype2_hardhat_ukey_col_sandwich_other <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
+  new_ukey_col_sandwich(vec_ptype2(
+    ukey_col_sandwich_get_data(x),
+    y,
+    ...,
+    x_arg = glue::glue('ukey_col_sandwich_get_data({x_arg})'),
+    y_arg = glue::glue('{y_arg}'),
+    call = call
+  ))
+}
+#' @export
+vec_ptype2.hardhat_ukey_col_sandwich.integer <- vec_ptype2_hardhat_ukey_col_sandwich_other
+#' @export
+vec_ptype2.hardhat_ukey_col_sandwich.double <- vec_ptype2_hardhat_ukey_col_sandwich_other
+#' @export
+vec_ptype2.hardhat_ukey_col_sandwich.character <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
+  # Partial workaround for https://github.com/r-lib/vctrs/issues/967 so `c`
+  # behaves more like didn't have marker; not doing for POSIXts due to
+  # complexity and potential base/vctrs disagreement.
+  x_data <- ukey_col_sandwich_get_data(x)
+  if (identical(class(x_data), "Date")) {
+    vctrs::vec_ptype(x) # ukey_col<Date>
+  } else {
+    vec_ptype2_hardhat_ukey_col_sandwich_other(x, y, ..., x_arg = x_arg, y_arg = y_arg, call = call)
+  }
+}
+#' @export
+vec_ptype2.hardhat_ukey_col_sandwich.Date <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
+  # Partial workaround for https://github.com/r-lib/vctrs/issues/967 so `c`
+  # behaves more like didn't have marker; not doing for POSIXts due to
+  # complexity and potential base/vctrs disagreement.
+  x_data <- ukey_col_sandwich_get_data(x)
+  if (identical(class(x_data), "character")) {
+    new_ukey_col_sandwich(vctrs::vec_ptype(y)) # ukey_col<Date>
+  } else {
+    vec_ptype2_hardhat_ukey_col_sandwich_other(x, y, ..., x_arg = x_arg, y_arg = y_arg, call = call)
+  }
+}
+#' @export
+vec_ptype2.hardhat_ukey_col_sandwich.POSIXt <- vec_ptype2_hardhat_ukey_col_sandwich_other
+#' @export
+vec_ptype2.hardhat_ukey_col_sandwich.list <- vec_ptype2_hardhat_ukey_col_sandwich_other
+#' @export
+vec_ptype2.hardhat_ukey_col_sandwich.data.frame <- vec_ptype2_hardhat_ukey_col_sandwich_other
+#' @export
+vec_ptype2.hardhat_ukey_col_sandwich.vctrs_vctr <- vec_ptype2_hardhat_ukey_col_sandwich_other
+
+
+vec_ptype2_other_hardhat_ukey_col_sandwich <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
+  new_ukey_col_sandwich(vec_ptype2(
+    x,
+    ukey_col_sandwich_get_data(y),
+    ...,
+    x_arg = glue::glue('{x_arg}'),
+    y_arg = glue::glue('ukey_col_sandwich_get_data({y_arg})'),
+    call = call
+  ))
+}
+#' @export
+vec_ptype2.integer.hardhat_ukey_col_sandwich <- vec_ptype2_other_hardhat_ukey_col_sandwich
+#' @export
+vec_ptype2.double.hardhat_ukey_col_sandwich <- vec_ptype2_other_hardhat_ukey_col_sandwich
+#' @export
+vec_ptype2.character.hardhat_ukey_col_sandwich <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
+  y_data <- ukey_col_sandwich_get_data(y)
+  if (identical(class(y_data), "Date")) {
+    vctrs::vec_ptype(y) # ukey_col<Date>
+  } else {
+    vec_ptype2_other_hardhat_ukey_col_sandwich(x, y, ..., x_arg = x_arg, y_arg = y_arg, call = call)
+  }
+}
+#' @export
+vec_ptype2.Date.hardhat_ukey_col_sandwich <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
+  y_data <- ukey_col_sandwich_get_data(y)
+  if (identical(class(y_data), "character")) {
+    new_ukey_col_sandwich(vctrs::vec_ptype(x)) # ukey_col<Date>
+  } else {
+    vec_ptype2_other_hardhat_ukey_col_sandwich(x, y, ..., x_arg = x_arg, y_arg = y_arg, call = call)
+  }
+}
+#' @export
+vec_ptype2.POSIXt.hardhat_ukey_col_sandwich <- vec_ptype2_other_hardhat_ukey_col_sandwich
+#' @export
+vec_ptype2.list.hardhat_ukey_col_sandwich <- vec_ptype2_other_hardhat_ukey_col_sandwich
+#' @export
+vec_ptype2.data.frame.hardhat_ukey_col_sandwich <- vec_ptype2_other_hardhat_ukey_col_sandwich
+#' @export
+vec_ptype2.vctrs_vctr.hardhat_ukey_col_sandwich <- vec_ptype2_other_hardhat_ukey_col_sandwich
+
+# FIXME these vctrs_vctr impls aren't actually inherited with vctrs
+# internal double dispatch; they seem pointless
 
 
 # Converting between ukey_cols:
@@ -137,65 +221,123 @@ vec_ptype2.hardhat_ukey_col_sandwich.hardhat_ukey_col_sandwich <- function(x, y,
 #' @importFrom vctrs vec_cast
 #' @export
 vec_cast.hardhat_ukey_col_sandwich.hardhat_ukey_col_sandwich <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+  x_data <- ukey_col_sandwich_get_data(x)
+  to_data <- ukey_col_sandwich_get_data(to)
+  if (identical(class(x_data), "Date") && identical(class(to_data), "character")) {
+    result_data <- as.character(x_data)
+  } else if (identical(class(x_data), "character") && identical(class(to_data), "Date")) {
+    result_data <- as.Date(x_data)
+  } else {
+    result_data <- vec_cast(
+      x_data,
+      to_data,
+      ...,
+      x_arg = glue::glue('ukey_col_sandwich_get_data({x_arg})'),
+      to_arg = glue::glue('ukey_col_sandwich_get_data({to_arg})'),
+      call = call
+    )
+  }
+  new_ukey_col_sandwich(result_data)
+}
+
+# Converting other things to ukey_cols:
+
+vec_cast_hardhat_ukey_col_sandwich_other <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
   new_ukey_col_sandwich(vec_cast(
-    ukey_col_sandwich_get_data(x),
+    x,
     ukey_col_sandwich_get_data(to),
     ...,
-    x_arg = glue::glue('vctrs::field({x_arg}, "data")'),
-    to_arg = glue::glue('vctrs::field({to_arg}, "data")'),
+    x_arg = glue::glue('{x_arg}'),
+    to_arg = glue::glue('ukey_col_sandwich_get_data({to_arg})'),
     call = call
   ))
 }
 
-# NOTE some default casts provided by vctrs_vctr
+#' @export
+vec_cast.hardhat_ukey_col_sandwich.integer <- vec_cast_hardhat_ukey_col_sandwich_other
+#' @export
+vec_cast.hardhat_ukey_col_sandwich.double <- vec_cast_hardhat_ukey_col_sandwich_other
+#' @export
+vec_cast.hardhat_ukey_col_sandwich.character <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+  # Partial workaround for https://github.com/r-lib/vctrs/issues/967 so `c`
+  # behaves more like didn't have marker; not doing for POSIXts due to
+  # complexity and potential base/vctrs disagreement.
+  to_data <- ukey_col_sandwich_get_data(to)
+  if (identical(class(to_data), "Date")) {
+    new_ukey_col_sandwich(as.Date(x))
+  } else {
+    vec_cast_hardhat_ukey_col_sandwich_other(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
+  }
+}
+#' @export
+vec_cast.hardhat_ukey_col_sandwich.Date <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+  to_data <- ukey_col_sandwich_get_data(to)
+  if (identical(class(to_data), "character")) {
+    new_ukey_col_sandwich(as.character(x))
+  } else {
+    vec_cast_hardhat_ukey_col_sandwich_other(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
+  }
+}
+#' @export
+vec_cast.hardhat_ukey_col_sandwich.POSIXt <- vec_cast_hardhat_ukey_col_sandwich_other
+#' @export
+vec_cast.hardhat_ukey_col_sandwich.list <- vec_cast_hardhat_ukey_col_sandwich_other
+#' @export
+vec_cast.hardhat_ukey_col_sandwich.data.frame <- vec_cast_hardhat_ukey_col_sandwich_other
+#' @export
+vec_cast.hardhat_ukey_col_sandwich.vctrs_vctr <- vec_cast_hardhat_ukey_col_sandwich_other
 
-# Converting other things to ukey_cols:
+# Converting ukey_cols to other things:
 
-# vec_cast_hardhat_ukey_col_sandwich_other <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
-#   new_ukey_col_sandwich(vec_cast(
-#     x,
-#     ukey_col_sandwich_get_data(to),
-#     ...,
-#     x_arg = glue::glue('{x_arg}'),
-#     to_arg = glue::glue('vctrs::field({to_arg}, "data")'),
-#     call = call
-#   ))
-# }
+# NOTE This also makes `as.character` work to drop this wrapper class, which
+# makes methods like `toupper` "work", but they will drop the ukey_col wrapper.
+# We could override this behavior, but it might make some users unclear on how
+# to remove the ukey_col class if they encounter it.
 
-# #' @export
-# vec_cast.hardhat_ukey_col_sandwich.integer <- vec_cast_hardhat_ukey_col_sandwich_other
-# #' @export
-# vec_cast.hardhat_ukey_col_sandwich.double <- vec_cast_hardhat_ukey_col_sandwich_other
-# #' @export
-# vec_cast.hardhat_ukey_col_sandwich.character <- vec_cast_hardhat_ukey_col_sandwich_other
-# #' @export
-# vec_cast.hardhat_ukey_col_sandwich.list <- vec_cast_hardhat_ukey_col_sandwich_other
-# #' @export
-# vec_cast.hardhat_ukey_col_sandwich.data.frame <- vec_cast_hardhat_ukey_col_sandwich_other
+vec_cast_other_hardhat_ukey_col_sandwich <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+  vec_cast(
+    ukey_col_sandwich_get_data(x),
+    to,
+    ...,
+    x_arg = glue::glue('ukey_col_sandwich_get_data({x_arg})'),
+    to_arg = glue::glue('{to_arg}'),
+    call = call
+  )
+}
 
-# # Converting ukey_cols to other things:
+#' @export
+vec_cast.integer.hardhat_ukey_col_sandwich <- vec_cast_other_hardhat_ukey_col_sandwich
+#' @export
+vec_cast.double.hardhat_ukey_col_sandwich <- vec_cast_other_hardhat_ukey_col_sandwich
+#' @export
+vec_cast.character.hardhat_ukey_col_sandwich <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+  x_data <- ukey_col_sandwich_get_data(x)
+  if (identical(class(x_data), "Date")) {
+    as.character(x_data)
+  } else {
+    vec_cast_other_hardhat_ukey_col_sandwich(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
+  }
+}
+#' @export
+vec_cast.Date.hardhat_ukey_col_sandwich <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+  x_data <- ukey_col_sandwich_get_data(x)
+  if (identical(class(x_data), "character")) {
+    as.Date(x_data)
+  } else {
+    vec_cast_other_hardhat_ukey_col_sandwich(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
+  }
+}
+#' @export
+vec_cast.POSIXt.hardhat_ukey_col_sandwich <- vec_cast_other_hardhat_ukey_col_sandwich
+#' @export
+vec_cast.list.hardhat_ukey_col_sandwich <- vec_cast_other_hardhat_ukey_col_sandwich
+#' @export
+vec_cast.data.frame.hardhat_ukey_col_sandwich <- vec_cast_other_hardhat_ukey_col_sandwich
+#' @export
+vec_cast.vctrs_vctr.hardhat_ukey_col_sandwich <- vec_cast_other_hardhat_ukey_col_sandwich
 
-# vec_cast_other_hardhat_ukey_col_sandwich <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
-#   vec_cast(
-#     ukey_col_sandwich_get_data(x),
-#     to,
-#     ...,
-#     x_arg = glue::glue('vctrs::field({x_arg}, "data")'),
-#     to_arg = glue::glue('{to_arg}'),
-#     call = call
-#   )
-# }
 
-# #' @export
-# vec_cast.integer.hardhat_ukey_col_sandwich <- vec_cast_other_hardhat_ukey_col_sandwich
-# #' @export
-# vec_cast.double.hardhat_ukey_col_sandwich <- vec_cast_other_hardhat_ukey_col_sandwich
-# #' @export
-# vec_cast.character.hardhat_ukey_col_sandwich <- vec_cast_other_hardhat_ukey_col_sandwich
-# #' @export
-# vec_cast.list.hardhat_ukey_col_sandwich <- vec_cast_other_hardhat_ukey_col_sandwich
-# #' @export
-# vec_cast.data.frame.hardhat_ukey_col_sandwich <- vec_cast_other_hardhat_ukey_col_sandwich
+
 
 
 #' @importFrom vctrs vec_arith
