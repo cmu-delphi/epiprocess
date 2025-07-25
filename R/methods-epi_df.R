@@ -242,7 +242,12 @@ reconstruct_light_edf <- function(data, template) {
       lapply(data[data_group_vars_to_ukey_decay], decay_ukey_col_listbacked)
   }
   result <- reclass(data, metadata)
-  attr(result, "decay_to_tibble") <- attr(template, "decay_to_tibble")
+  attr(result, "decay_to_tibble") <-
+    attr(result, "decay_to_tibble") %||%
+    attr(template, "decay_to_tibble")
+  attr(result, "epiprocess:::restore_ukey_cols") <-
+    attr(result, "epiprocess:::restore_ukey_cols") %||%
+    attr(template, "epiprocess:::restore_ukey_cols")
   result <- maybe_restore_nongroup_ukey_cols(result)
 
   # XXX we may want verify the `geo_type` and `time_type` here. If it's
@@ -369,7 +374,14 @@ maybe_restore_nongroup_ukey_cols <- function(df) {
 
 dplyr_edf_verb_default <- function(.data, ...) {
   .data <- unwrap_ukey_cols(.data)
+  if (identical(attr(.data, "epiprocess:::restore_ukey_cols"), FALSE)) {
+    cli_warn(c("epiprocess internal warning: restore_ukey_cols attr was already set to FALSE before sandwiching operation",
+               ">" = "Please report this to {epiprocess} developers."))
+  }
+  attr(.data, "epiprocess:::restore_ukey_cols") <- FALSE
+
   result <- NextMethod()
+  attr(result, "epiprocess:::restore_ukey_cols") <- NULL
   result <- maybe_restore_nongroup_ukey_cols(result)
   result
 }
@@ -416,6 +428,7 @@ ungroup.epi_df <- function(x, ...) {
 #' @param .keep Boolean; see [`dplyr::group_modify`]
 #' @export
 group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
+  .data <- unwrap_ukey_cols(.data)
   reconstruct_light_edf(NextMethod(), .data)
 }
 
@@ -663,7 +676,23 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
 }
 
 #' @export
-mutate.epi_df <- dplyr_edf_verb_default
+# mutate.epi_df <- dplyr_edf_verb_default
+mutate.epi_df <- function(.data, ...) {
+  if (identical(attr(.data, "epiprocess:::restore_ukey_cols"), FALSE)) {
+    result <- NextMethod()
+    attr(result, "epiprocess:::restore_ukey_cols") <- NULL
+    result <- maybe_restore_nongroup_ukey_cols(result)
+  } else {
+    print(.data)
+    .data <- unwrap_ukey_cols(.data)
+    attr(.data, "epiprocess:::restore_ukey_cols") <- FALSE
+    result <- NextMethod()
+  }
+  # XXX this approach probably isn't needed and doesn't help; the
+  # problem is dplyr native dplyr_lazy_vec_chop_grouped probably
+  # calling vctrs::vec_chop and triggering restoration.
+  result
+}
 
 #' @importFrom dplyr summarise
 #' @export
