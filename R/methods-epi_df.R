@@ -332,7 +332,7 @@ unwrap_ukey_cols <- function(df) {
 }
 
 maybe_restore_nongroup_ukey_cols <- function(df) {
-  if (inherits(df, "epi_df") && !(attr(df, "epiprocess:::restore_ukey_cols") %||% TRUE)) {
+  if (inherits(df, "epi_df") && (attr(df, "epiprocess:::restore_ukey_cols") %||% TRUE)) {
     key_col_nms <- c("geo_value", attr(df, "metadata")[["other_keys"]], "time_value")
     # It'd be nice if we could just the ukey_col class back to all key
     # cols, but if df is grouped, it seems to trigger another
