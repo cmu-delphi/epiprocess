@@ -312,7 +312,9 @@ vec_cast.vctrs_vctr.hardhat_ukey_col_prefix <- vec_cast_other_hardhat_ukey_col_p
 # then `+` will not re-wrap as a ukey_col.  We also conflict with
 # vctrs_vec ops for yearmonths, etc.  Perhaps it's better to do the
 # vctrs_vctr sandwich approach and just sacrifice df col
-# compatibility, or do something to hide dfs.
+# compatibility, or do something to hide dfs.  Or heavyprefix
+# approach.  Or make conflict resolution happy by directly pointing to
+# vctrs impls & implementing vec_arith, but without heavyprefix.
 
 #' @export
 Ops.hardhat_ukey_col_prefix <- function(e1, e2) {
