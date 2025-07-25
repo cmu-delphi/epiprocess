@@ -90,7 +90,7 @@ format.hardhat_ukey_col_listbacked <- function(x, ...) {
 #' @importFrom vctrs obj_print_data
 #' @export
 obj_print_data.hardhat_ukey_col_listbacked <- function(x, ...) {
-  print(vctrs::field(x, "data"))
+  obj_print_data(vctrs::field(x, "data"))
 }
 
 #' @importFrom vctrs vec_ptype_abbr

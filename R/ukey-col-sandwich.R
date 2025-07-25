@@ -4,15 +4,33 @@ new_ukey_col_sandwich <- function(data) {
   # TODO NOTE
 
   # TODO remove existing vctrs_vctr?
-  vctrs::new_vctr(data, class = c("hardhat_ukey_col_sandwich", class(data)))
+
+  # disguised_data_class <- vctrs::vec_set_difference(
+  #   class(data),
+  #   "data.frame"
+  # )
+  # disguised_data <- data
+  # class(disguised_data) <- disguised_data_class
+  vctrs::new_vctr(
+    # disguised_data,
+    data,
+    # XXX feeding length>1 to class arg doesn't seem supported
+    # according to docs, but effect seems similar to what new_rcrd
+    # does
+    class = c("hardhat_ukey_col_sandwich", class(data)),
+    "hardhat:::data_class" = class(data)
+  )
 }
 
-# FIXME .data can't be a data frame
+# FIXME data can't be a data frame... doesn't seem like there's an
+# easy way around this.
 
 #' @export
-ukey_col_sandwich <- function(col) {
-  vctrs::obj_check_vector(col)
-  new_ukey_col_sandwich(col)
+ukey_col_sandwich_get_data <- function(x) {
+  # FIXME don't remove all vctrs_vctr if base was vctrs_vctr
+  class(x) <- attr(x, "hardhat:::data_class")
+  attr(x, "hardhat:::data_class") <- NULL
+  x
 }
 
 #' @export
@@ -20,12 +38,40 @@ is_ukey_col_sandwich <- function(x) {
   inherits(x, "hardhat_ukey_col_sandwich")
 }
 
+#' @export
+as_ukey_col_sandwich <- function(col) {
+  vctrs::obj_check_vector(col)
+  if (is_ukey_col_sandwich(col)) {
+    col
+  } else {
+    new_ukey_col_sandwich(col)
+  }
+}
+
+
 # TODO proxy & restore?
 
-ukey_col_sandwich_get_data <- function(x) {
-  # FIXME don't remove all vctrs_vctr if base was vctrs_vctr
-  class(x) <- setdiff(class(x), c("hardhat_ukey_col_sandwich", "vctrs_vctr"))
-  x
+#' @importFrom vctrs vec_proxy
+#' @export
+vec_proxy.ukey_col_sandwich <- function(x, ...) {
+  vec_proxy(ukey_col_sandwich_get_data(x), ...)
+}
+
+#' @importFrom vctrs vec_restore
+#' @export
+vec_restore.ukey_col_sandwich <- function(x, to, ...) {
+  to_data <- ukey_col_sandwich_get_data(to)
+  if (is.data.frame(to_data)) {
+    new_ukey_col_sandwich(x)
+  } else {
+    new_ukey_col_sandwich(vec_restore(x, to_data, ...))
+  }
+}
+
+#' @export
+print.hardhat_ukey_col_sandwich <- function(x, ...) {
+  vctrs::obj_print(x, ...)
+  invisible(x)
 }
 
 #' @export
@@ -36,7 +82,7 @@ format.hardhat_ukey_col_sandwich <- function(x, ...) {
 #' @importFrom vctrs obj_print_data
 #' @export
 obj_print_data.hardhat_ukey_col_sandwich <- function(x, ...) {
-  print(ukey_col_sandwich_get_data(x))
+  obj_print_data(ukey_col_sandwich_get_data(x), ...)
 }
 
 #' @importFrom vctrs vec_ptype_abbr
@@ -291,3 +337,5 @@ vec_arith.hardhat_ukey_col_sandwich.default <- function(op, x, y, ...) {
 # str.hardhat_ukey_col_sandwich.default <- function(object, object2, ...) {
 #   print("EEE")
 # }
+
+# FIXME issues with Date arith precedence stripping class
