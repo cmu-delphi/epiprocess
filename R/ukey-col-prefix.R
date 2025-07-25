@@ -173,3 +173,9 @@ vec_arith.hardhat_ukey_col_prefix.hardhat_ukey_col_prefix <- function(op, x, y, 
 vec_arith.hardhat_ukey_col_prefix.default <- function(op, x, y, ...) {
   new_ukey_col_prefix(vec_arith(op, ukey_col_prefix_get_data(x), y, ...))
 }
+
+# FIXME we can't just forward to vctrs methods in prefix approach
+# because are likely not prefixing a vctrs_vctr and vctrs generics for
+# non-vctrs_vctrs don't actually work in some cases.  Need to delegate
+# to parent class method... perhaps can just NextMethod() for both Ops
+# and vec_arith?
