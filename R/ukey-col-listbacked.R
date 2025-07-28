@@ -70,6 +70,11 @@ decay_ukey_col_listbacked.hardhat_ukey_col_listbacked <- function(x) {
   vctrs::field(x, "data")
 }
 
+# TODO decide on naming vs "decay" etc., whether exported
+ukey_col_listbacked_get_data <- function(x) {
+  vctrs::field(x, "data")
+}
+
 #' If `x` `is_ukey_col_listbacked`, make it not be
 #'
 #' @export
