@@ -76,14 +76,22 @@ vec_ptype_full.hardhat_ukey_col_prefix <- function(x, ...) {
 #' @importFrom vctrs vec_ptype2
 #' @export
 vec_ptype2.hardhat_ukey_col_prefix.hardhat_ukey_col_prefix <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
-  new_ukey_col_prefix(vec_ptype2(
-    ukey_col_prefix_get_data(x),
-    ukey_col_prefix_get_data(y),
-    ...,
-    x_arg = glue::glue('ukey_col_prefix_get_data({x_arg})'),
-    y_arg = glue::glue('ukey_col_prefix_get_data({y_arg})'),
-    call = call
-  ))
+  x_data <- ukey_col_prefix_get_data(x)
+  y_data <- ukey_col_prefix_get_data(y)
+  if (identical(class(x_data), "Date") && identical(class(y_data), "character")) {
+    vctrs::vec_ptype(x) # ukey_col<Date>
+  } else if (identical(class(x_data), "character") && identical(class(y_data), "Date")) {
+    vctrs::vec_ptype(y) # ukey_col<Date>
+  } else {
+    new_ukey_col_prefix(vec_ptype2(
+      x_data,
+      y_data,
+      ...,
+      x_arg = glue::glue('ukey_col_prefix_get_data({x_arg})'),
+      y_arg = glue::glue('ukey_col_prefix_get_data({y_arg})'),
+      call = call
+    ))
+  }
 }
 
 # NOTE We can provide blanket implementations for the RHS of `vec_arith`, but
