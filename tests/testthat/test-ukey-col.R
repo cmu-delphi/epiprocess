@@ -43,12 +43,10 @@ test_that(glue::glue("Can perform ukey(<Date>) + <difftime>"), {
 })
 
 for (col in c(sample_geos, sample_times)) {
-  if (!inherits(try(col, silent = TRUE), "try-error")) { # exclude, e.g., clock ymd
-    test_that(glue::glue("Can perform c(ukey(<{class(col)[[1L]]}>), ukey(<{class(col)[[1L]]}>))"), {
-      expect_identical(c(as_ukey_col_heavyprefix(col), as_ukey_col_heavyprefix(col)),
-                       as_ukey_col_heavyprefix(c(col, col)))
-    })
-  }
+  test_that(glue::glue("Can perform c(ukey(<{class(col)[[1L]]}>), ukey(<{class(col)[[1L]]}>))"), {
+    expect_identical(c(as_ukey_col_heavyprefix(col), as_ukey_col_heavyprefix(col)),
+                     as_ukey_col_heavyprefix(c(col, col)))
+  })
 }
 
 test_that(glue::glue("Can perform c(ukey(<Date>), ukey(<chr>))"), {
@@ -66,21 +64,26 @@ test_that(glue::glue("Can perform c(ukey(<chr>), ukey(<Date>))"), {
 })
 
 for (col in c(sample_geos, sample_times)) {
-  if (!inherits(try(col, silent = TRUE), "try-error")) { # exclude, e.g., clock ymd
-    test_that(glue::glue("Can perform c(ukey(<{class(col)[[1L]]}>), <{class(col)[[1L]]}>)"), {
-      expect_identical(c(as_ukey_col_heavyprefix(col), col),
-                       as_ukey_col_heavyprefix(c(col, col)))
-    })
-  }
+  test_that(glue::glue("Can perform c(ukey(<{class(col)[[1L]]}>), <{class(col)[[1L]]}>)"), {
+    expect_identical(c(as_ukey_col_heavyprefix(col), col),
+                     as_ukey_col_heavyprefix(c(col, col)))
+  })
 }
 
 for (col in c(sample_geos, sample_times)) {
-  if (!inherits(try(col, silent = TRUE), "try-error")) { # exclude, e.g., clock ymd
-    test_that(glue::glue("Can perform c(<{class(col)[[1L]]}>, ukey(<{class(col)[[1L]]}>))"), {
-      expect_identical(c(col, as_ukey_col_heavyprefix(col)),
-                       as_ukey_col_heavyprefix(c(col, col)))
-    })
-  }
+  test_that(glue::glue("Can perform c(<{class(col)[[1L]]}>, ukey(<{class(col)[[1L]]}>))"), {
+    expect_identical(c(col, as_ukey_col_heavyprefix(col)),
+                     as_ukey_col_heavyprefix(c(col, col)))
+  })
+}
+
+for (col in c(sample_geos, sample_times)) {
+  # For some downstream tidyverse functions, we may be fine if
+  # `vec_c(other, ukey)` works even if `c(other, ukey)` is bugged.
+  test_that(glue::glue("Can perform vec_c(<{class(col)[[1L]]}>, ukey(<{class(col)[[1L]]}>))"), {
+    expect_identical(vctrs::vec_c(col, as_ukey_col_heavyprefix(col)),
+                     as_ukey_col_heavyprefix(c(col, col)))
+  })
 }
 
 for (do_ukey_date in c(TRUE, FALSE)) {
