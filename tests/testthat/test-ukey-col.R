@@ -1,5 +1,6 @@
 sample_geos <- list(
-  chr = letters#,
+  chr = letters,
+  fct = factor(letters[c(1,1,2)], letters)#,
   # df = data.frame(
   #   state = "Rhode Island",
   #   county = c("Bristol County", "Kent County")
@@ -71,6 +72,16 @@ for (col in c(sample_geos, sample_times)) {
 }
 
 for (col in c(sample_geos, sample_times)) {
+  # Wrong results may be unavoidable here.  We can trigger S4 dispatch
+  # from non-first arguments by setting the S4 bit, but it doesn't
+  # help, as its S4 generic's args are `x, ...`, and it does not seem
+  # to be possible to define methods that dispatch on elements of
+  # `...`, contrary to what ?setMethod claims.  We can't even use rude
+  # approaches like defining `c.default` or `c.integer`, as S3
+  # dispatch is not attempted if the first argument does not have the
+  # object bit set; nor can we define S4 analogues, S4 c "ANY" is
+  # already defined and sealed, and S4 c "integer" is also sealed
+  # somehow; nor can we redefine the S4 generic, which is sealed.
   test_that(glue::glue("Can perform c(<{class(col)[[1L]]}>, ukey(<{class(col)[[1L]]}>))"), {
     expect_identical(c(col, as_ukey_col_heavyprefix(col)),
                      as_ukey_col_heavyprefix(c(col, col)))
@@ -87,21 +98,22 @@ for (col in c(sample_geos, sample_times)) {
 }
 
 for (do_ukey_date in c(TRUE, FALSE)) {
-  date_col <- if (do_ukey_date) {
-    as_ukey_col_heavyprefix(sample_times$date)
-  } else {
-    sample_times$date
-  }
   for (do_ukey_chr in c(TRUE, FALSE)) {
     if (!do_ukey_date && !do_ukey_chr) {
       next
     }
-    chr_col <- if (do_ukey_chr) {
-      as_ukey_col_heavyprefix(as.character(sample_times$date))
-    } else {
-      as.character(sample_times$date)
-    }
     for (transpose in c(TRUE, FALSE)) {
+
+      date_col <- if (do_ukey_date) {
+        as_ukey_col_heavyprefix(sample_times$date)
+      } else {
+        sample_times$date
+      }
+      chr_col <- if (do_ukey_chr) {
+        as_ukey_col_heavyprefix(as.character(sample_times$date))
+      } else {
+        as.character(sample_times$date)
+      }
       if (transpose) {
         col <- chr_col
         col2 <- date_col
@@ -109,10 +121,13 @@ for (do_ukey_date in c(TRUE, FALSE)) {
         col <- date_col
         col2 <- chr_col
       }
+      # c(chr, ukcol<date>) is likely impossible for the same reasons
+      # as c(chr, ukcol<chr>), c(int, ukcol<int>), etc.
       test_that(glue::glue("Can perform c({vctrs::vec_ptype_abbr(col)}, {vctrs::vec_ptype_abbr(col2)})"), {
         expect_identical(c(col, col2),
                          as_ukey_col_heavyprefix(c(date_col, date_col)))
       })
+      # TODO vec_c tests
     }
   }
 }
