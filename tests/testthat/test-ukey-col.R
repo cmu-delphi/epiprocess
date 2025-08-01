@@ -1,21 +1,21 @@
 sample_geos <- list(
   chr = letters,
-  fct = factor(letters[c(1,1,2)], letters)#,
-  # df = data.frame(
-  #   state = "Rhode Island",
-  #   county = c("Bristol County", "Kent County")
-  # ),
-  # tbl = tibble::tibble(
-  #   state = "Rhode Island",
-  #   county = c("Bristol County", "Kent County")
-  # )
+  fct = factor(letters[c(1,1,2)], letters),
+  df = data.frame(
+    state = "Rhode Island",
+    county = c("Bristol County", "Kent County")
+  ),
+  tbl = tibble::tibble(
+    state = "Rhode Island",
+    county = c("Bristol County", "Kent County")
+  )
 )
 sample_times <- list(
   date = as.Date("2020-01-01") + 1:5 - 1,
   ts_yearmonth = tsibble::yearmonth(1:5),
-  # cl_ymd = clock::year_month_day(2000, 1, 1:5),
-  #
-  # TODO POSIXlt, POSIXct
+  cl_ymd = clock::year_month_day(2000, 1, 1:5),
+  as.POSIXlt(as.Date("2020-01-01") + 1:5 - 1),
+  as.POSIXct(as.Date("2020-01-01") + 1:5 - 1),
   int = 1:5
 )
 
@@ -44,6 +44,8 @@ test_that(glue::glue("Can perform ukey(<Date>) + <difftime>"), {
     col + as.difftime(1, units = "days")
   )
 })
+
+# TODO more vec_c tests
 
 for (col in c(sample_geos, sample_times)) {
   test_that(glue::glue("Can perform c(ukey(<{class(col)[[1L]]}>), ukey(<{class(col)[[1L]]}>))"), {

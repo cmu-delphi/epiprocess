@@ -1,20 +1,46 @@
+# `vctrs::new_vctr` either refuses to wrap or breaks when wrapping
+# some classes that we would like to support; we'll avoid
+# `vctrs_vctr`-ifying them and fall through to default behavior.
+# `{vctrs}` generics should still handle these, as they contain
+# special cases for them, unlike `new_vctr`.  We might need to help
+# some non-`{vctrs}` generics along, though, since we will not be
+# dispatching to `vctrs_vctr` methods.
+ukey_light_prefix_classes <- c("data.frame", "vctrs_rcrd", "factor", "POSIXct", "POSIXlt")
+
 #' @export
 new_ukey_col_heavyprefix <- function(data) {
   # TODO NOTE
 
-  `class<-`(vctrs::new_vctr(data), c("hardhat_ukey_col_heavyprefix", "vctrs_vctr", class(data)))
+  # TODO rename to "varprefix"?
+
+  # TODO S4 compat or check
+
+  # TODO factor treatment
+
+  if (inherits(data, ukey_light_prefix_classes)) { # (any of them)
+    if (inherits(data, "grouped_df")) {
+      cli::cli_abort("`data` cannot be a `grouped_df`")
+    } else {
+      `class<-`(data, c("hardhat_ukey_col_heavyprefix", class(data)))
+    }
+  } else {
+    vctrs::obj_check_vector(data) # (checked only in FALSE branch as TRUE condition should guarantee)
+    `class<-`(vctrs::new_vctr(data), c("hardhat_ukey_col_heavyprefix", "vctrs_vctr", class(data)))
+  }
 }
 
 ukey_col_heavyprefix_get_data <- function(x) {
   heavyprefixed_class <- class(x)
-  class(x) <- heavyprefixed_class[-match(c("hardhat_ukey_col_heavyprefix", "vctrs_vctr"), heavyprefixed_class)]
+  if (inherits(x, ukey_light_prefix_classes)) { # (any of them)
+    class(x) <- heavyprefixed_class[-match(c("hardhat_ukey_col_heavyprefix"), heavyprefixed_class)]
+  } else {
+    class(x) <- heavyprefixed_class[-match(c("hardhat_ukey_col_heavyprefix", "vctrs_vctr"), heavyprefixed_class)]
+    # ^ removes only the first instance of each of these class
+    # entries, so that if we're built on top of another vctrs_vctr,
+    # we'll recover a vctrs_vctr here.
+  }
   x
 }
-
-
-# FIXME marker dropping
-
-# vctrs::vec_c(ukey_col_heavyprefix(tibble(g = 1:3) %>% group_by(g)), ukey_col_heavyprefix(tibble(g = 1:3) %>% group_by(g)))
 
 #' @export
 is_ukey_col_heavyprefix <- function(x) {
@@ -26,7 +52,6 @@ as_ukey_col_heavyprefix <- function(col) {
   if (is_ukey_col_heavyprefix(col)) {
     col
   } else {
-    vctrs::obj_check_vector(col)
     new_ukey_col_heavyprefix(col)
   }
 }
@@ -45,7 +70,11 @@ as_non_ukey_col_heavyprefix <- function(x) {
 
 #' @export
 print.hardhat_ukey_col_heavyprefix <- function(x, ...) {
-  vctrs::obj_print(x, ...)
+  if (inherits(x, "tbl_df")) {
+    NextMethod()
+  } else {
+    vctrs::obj_print(x, ...)
+  }
   invisible(x)
 }
 
@@ -54,10 +83,31 @@ format.hardhat_ukey_col_heavyprefix <- function(x, ...) {
   format(ukey_col_heavyprefix_get_data(x))
 }
 
+#' @importFrom pillar tbl_sum
+#' @export
+tbl_sum.hardhat_ukey_col_heavyprefix <- function(x, setup, ...) {
+  if (inherits(x, "data.frame")) {
+    `names<-`(pillar::dim_desc(x), paste0("ukey_col<", names(NextMethod()), ">"))
+  } else {
+    NextMethod()
+  }
+}
+
 #' @importFrom vctrs obj_print_data
 #' @export
 obj_print_data.hardhat_ukey_col_heavyprefix <- function(x, ...) {
   obj_print_data(ukey_col_heavyprefix_get_data(x), ...)
+}
+
+#' @export
+c.hardhat_ukey_col_heavyprefix <- function(x, ...) {
+  if (is.factor(x)) {
+    as_ukey_col_heavyprefix(NextMethod())
+  } else if (inherits(x, ukey_light_prefix_classes)) {
+    cli::cli_abort(c("`c` not supported for this kind of ukey col", ">" = "Consider `vec_c` instead."))
+  } else {
+    NextMethod()
+  }
 }
 
 #' @importFrom vctrs vec_ptype_abbr
@@ -102,6 +152,9 @@ vec_ptype2.hardhat_ukey_col_heavyprefix.hardhat_ukey_col_heavyprefix <- function
 # Potential auto-conversions from common data types to ukey_col wrappers, e.g.,
 # to enable some conveniences with `vec_c`, `bind_rows`, etc.
 
+# TODO doc
+
+#' @export
 vec_ptype2_hardhat_ukey_col_heavyprefix_other <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
   new_ukey_col_heavyprefix(vec_ptype2(
     ukey_col_heavyprefix_get_data(x),
@@ -119,7 +172,7 @@ vec_ptype2.hardhat_ukey_col_heavyprefix.double <- vec_ptype2_hardhat_ukey_col_he
 #' @export
 vec_ptype2.hardhat_ukey_col_heavyprefix.character <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
   # Partial workaround for https://github.com/r-lib/vctrs/issues/967 so `c`
-  # behaves more like didn't have marker; not doing for POSIXts due to
+  # behaves more like didn't have marker; not doing for POSIX{c,l}ts due to
   # complexity and potential base/vctrs disagreement.
   x_data <- ukey_col_heavyprefix_get_data(x)
   if (identical(class(x_data), "Date")) {
@@ -131,7 +184,7 @@ vec_ptype2.hardhat_ukey_col_heavyprefix.character <- function(x, y, ..., x_arg =
 #' @export
 vec_ptype2.hardhat_ukey_col_heavyprefix.Date <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
   # Partial workaround for https://github.com/r-lib/vctrs/issues/967 so `c`
-  # behaves more like didn't have marker; not doing for POSIXts due to
+  # behaves more like didn't have marker; not doing for POSIX{c,l}ts due to
   # complexity and potential base/vctrs disagreement.
   x_data <- ukey_col_heavyprefix_get_data(x)
   if (identical(class(x_data), "character")) {
@@ -142,8 +195,44 @@ vec_ptype2.hardhat_ukey_col_heavyprefix.Date <- function(x, y, ..., x_arg = "", 
 }
 #' @export
 vec_ptype2.hardhat_ukey_col_heavyprefix.list <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.data.frame <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.tbl_df <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.data.table <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.POSIXct <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.POSIXlt <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.yearweek <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.yearmonth <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.yearquarter <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.clock_iso_year_week_day <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.clock_naive_time <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.clock_sys_time <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.clock_year_day <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.clock_year_month_day <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.clock_year_month_weekday <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.clock_year_quarter_day <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.clock_year_week_day <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.clock_zoned_time <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
 
 
+
+#' @export
 vec_ptype2_other_hardhat_ukey_col_heavyprefix <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
   new_ukey_col_heavyprefix(vec_ptype2(
     x,
@@ -178,6 +267,41 @@ vec_ptype2.Date.hardhat_ukey_col_heavyprefix <- function(x, y, ..., x_arg = "", 
 }
 #' @export
 vec_ptype2.list.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.data.frame.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.tbl_df.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.data.table.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.POSIXct.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.POSIXlt.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.yearweek.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.yearmonth.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.yearquarter.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.clock_iso_year_week_day.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.clock_naive_time.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.clock_sys_time.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.clock_year_day.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.clock_year_month_day.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.clock_year_month_weekday.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.clock_year_quarter_day.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.clock_year_week_day.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.clock_zoned_time.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+
 
 
 # Converting between ukey_cols:
@@ -206,6 +330,7 @@ vec_cast.hardhat_ukey_col_heavyprefix.hardhat_ukey_col_heavyprefix <- function (
 
 # Converting other things to ukey_cols:
 
+#' @export
 vec_cast_hardhat_ukey_col_heavyprefix_other <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
   new_ukey_col_heavyprefix(vec_cast(
     x,
@@ -224,7 +349,7 @@ vec_cast.hardhat_ukey_col_heavyprefix.double <- vec_cast_hardhat_ukey_col_heavyp
 #' @export
 vec_cast.hardhat_ukey_col_heavyprefix.character <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
   # Partial workaround for https://github.com/r-lib/vctrs/issues/967 so `c`
-  # behaves more like didn't have marker; not doing for POSIXts due to
+  # behaves more like didn't have marker; not doing for POSIX{c,l}ts due to
   # complexity and potential base/vctrs disagreement.
   to_data <- ukey_col_heavyprefix_get_data(to)
   if (identical(class(to_data), "Date")) {
@@ -244,6 +369,40 @@ vec_cast.hardhat_ukey_col_heavyprefix.Date <- function (x, to, ..., x_arg = call
 }
 #' @export
 vec_cast.hardhat_ukey_col_heavyprefix.list <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.data.frame <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.tbl_df <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.data.table <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.POSIXct <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.POSIXlt <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.yearweek <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.yearmonth <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.yearquarter <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.clock_iso_year_week_day <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.clock_naive_time <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.clock_sys_time <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.clock_year_day <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.clock_year_month_day <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.clock_year_month_weekday <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.clock_year_quarter_day <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.clock_year_week_day <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
+vec_cast.hardhat_ukey_col_heavyprefix.clock_zoned_time <- vec_cast_hardhat_ukey_col_heavyprefix_other
 
 # Converting ukey_cols to other things:
 
@@ -319,4 +478,11 @@ vec_arith.hardhat_ukey_col_heavyprefix.hardhat_ukey_col_heavyprefix <- function(
 #' @export
 vec_arith.hardhat_ukey_col_heavyprefix.default <- function(op, x, y, ...) {
   new_ukey_col_heavyprefix(vec_arith(op, ukey_col_heavyprefix_get_data(x), y, ...))
+}
+
+#' @importFrom dplyr group_by
+#' @export
+group_by.hardhat_ukey_col_heavyprefix <- function(...) {
+  cli::cli_abort(c("ukey_cols do not support `group_by`",
+                   ">" = "Consider grouping the data frame containing this ukey col instead."))
 }
