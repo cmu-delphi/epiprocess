@@ -141,8 +141,6 @@ vec_ptype2.hardhat_ukey_col_heavyprefix.Date <- function(x, y, ..., x_arg = "", 
   }
 }
 #' @export
-vec_ptype2.hardhat_ukey_col_heavyprefix.POSIXt <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
-#' @export
 vec_ptype2.hardhat_ukey_col_heavyprefix.list <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
 
 
@@ -178,8 +176,6 @@ vec_ptype2.Date.hardhat_ukey_col_heavyprefix <- function(x, y, ..., x_arg = "", 
     vec_ptype2_other_hardhat_ukey_col_heavyprefix(x, y, ..., x_arg = x_arg, y_arg = y_arg, call = call)
   }
 }
-#' @export
-vec_ptype2.POSIXt.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
 #' @export
 vec_ptype2.list.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
 
@@ -247,8 +243,6 @@ vec_cast.hardhat_ukey_col_heavyprefix.Date <- function (x, to, ..., x_arg = call
   }
 }
 #' @export
-vec_cast.hardhat_ukey_col_heavyprefix.POSIXt <- vec_cast_hardhat_ukey_col_heavyprefix_other
-#' @export
 vec_cast.hardhat_ukey_col_heavyprefix.list <- vec_cast_hardhat_ukey_col_heavyprefix_other
 
 # Converting ukey_cols to other things:
@@ -291,8 +285,6 @@ vec_cast.Date.hardhat_ukey_col_heavyprefix <- function (x, to, ..., x_arg = call
     vec_cast_other_hardhat_ukey_col_heavyprefix(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
   }
 }
-#' @export
-vec_cast.POSIXt.hardhat_ukey_col_heavyprefix <- vec_cast_other_hardhat_ukey_col_heavyprefix
 #' @export
 vec_cast.list.hardhat_ukey_col_heavyprefix <- vec_cast_other_hardhat_ukey_col_heavyprefix
 

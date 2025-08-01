@@ -14,6 +14,8 @@ sample_times <- list(
   date = as.Date("2020-01-01") + 1:5 - 1,
   ts_yearmonth = tsibble::yearmonth(1:5),
   # cl_ymd = clock::year_month_day(2000, 1, 1:5),
+  #
+  # TODO POSIXlt, POSIXct
   int = 1:5
 )
 
