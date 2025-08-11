@@ -154,8 +154,14 @@ vec_ptype.hardhat_ukey_col_heavyprefix <- function (x, ..., x_arg = "", call = c
   subresult <- vec_ptype(data)
   as_ukey_col_heavyprefix(subresult)
 }
-# FIXME still have troubles with vctrs::vec_c(as_ukey_col_heavyprefix(col), as_ukey_col_heavyprefix(col))
-# maybe from inherited vec_restore.
+
+#' @importFrom vctrs vec_restore
+#' @export
+vec_restore.hardhat_ukey_col_heavyprefix <- function(x, to, ...) {
+  # Similar deal here; we need to deal with S3 inheritance of
+  # clock_calendar methods.
+  as_ukey_col_heavyprefix(NextMethod())
+}
 
 #' @importFrom vctrs vec_ptype_abbr
 #' @export
