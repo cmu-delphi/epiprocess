@@ -95,9 +95,34 @@ tbl_sum.hardhat_ukey_col_heavyprefix <- function(x, setup, ...) {
 
 #' @importFrom vctrs obj_print_data
 #' @export
-obj_print_data.hardhat_ukey_col_heavyprefix <- function(x, ...) {
-  obj_print_data(ukey_col_heavyprefix_get_data(x), ...)
+obj_print_data.hardhat_ukey_col_heavyprefix <- function(x, ..., max) {
+  if (missing(max)) {
+    if (inherits(x, "clock_calendar")) {
+      obj_print_data(ukey_col_heavyprefix_get_data(x), ...,
+                     max = getOption("max.print", default = 1000L))
+    } else {
+      obj_print_data(ukey_col_heavyprefix_get_data(x), ...)
+    }
+  } else {
+      obj_print_data(ukey_col_heavyprefix_get_data(x), ..., max = max)
+  }
 }
+
+#' @importFrom vctrs obj_print_footer
+#' @export
+obj_print_footer.hardhat_ukey_col_heavyprefix <- function(x, ..., max) {
+  if (missing(max)) {
+    if (inherits(x, "clock_calendar")) {
+      obj_print_footer(ukey_col_heavyprefix_get_data(x), ...,
+                     max = getOption("max.print", default = 1000L))
+    } else {
+      obj_print_footer(ukey_col_heavyprefix_get_data(x), ...)
+    }
+  } else {
+      obj_print_footer(ukey_col_heavyprefix_get_data(x), ..., max = max)
+  }
+}
+
 
 #' @export
 c.hardhat_ukey_col_heavyprefix <- function(x, ...) {
