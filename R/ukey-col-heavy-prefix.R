@@ -29,6 +29,7 @@ new_ukey_col_heavyprefix <- function(data) {
   }
 }
 
+# FIXME TODO better name than `data`
 ukey_col_heavyprefix_get_data <- function(x) {
   heavyprefixed_class <- class(x)
   if (inherits(x, ukey_light_prefix_classes)) { # (any of them)
@@ -123,7 +124,6 @@ obj_print_footer.hardhat_ukey_col_heavyprefix <- function(x, ..., max) {
   }
 }
 
-
 #' @export
 c.hardhat_ukey_col_heavyprefix <- function(x, ...) {
   if (is.data.frame(x)) {
@@ -143,6 +143,18 @@ c.hardhat_ukey_col_heavyprefix <- function(x, ...) {
     NextMethod()
   }
 }
+
+#' @importFrom vctrs vec_ptype
+#' @export
+vec_ptype.hardhat_ukey_col_heavyprefix <- function (x, ..., x_arg = "", call = caller_env()) {
+  # Default vec_ptype works except for clock_calendar objects, which
+  # impl a vec_ptype method which needs to be re-wrapped.  We can't
+  # use NextMethod due to how vctrs native dispatch works.
+  data <- ukey_col_heavyprefix_get_data(x)
+  subresult <- vec_ptype(data)
+  as_ukey_col_heavyprefix(subresult)
+}
+# FIXME still have troubles with vctrs::vec_c(as_ukey_col_heavyprefix(col), as_ukey_col_heavyprefix(col))
 
 #' @importFrom vctrs vec_ptype_abbr
 #' @export
