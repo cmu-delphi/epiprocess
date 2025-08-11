@@ -155,6 +155,7 @@ vec_ptype.hardhat_ukey_col_heavyprefix <- function (x, ..., x_arg = "", call = c
   as_ukey_col_heavyprefix(subresult)
 }
 # FIXME still have troubles with vctrs::vec_c(as_ukey_col_heavyprefix(col), as_ukey_col_heavyprefix(col))
+# maybe from inherited vec_restore.
 
 #' @importFrom vctrs vec_ptype_abbr
 #' @export
