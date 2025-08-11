@@ -101,11 +101,20 @@ obj_print_data.hardhat_ukey_col_heavyprefix <- function(x, ...) {
 
 #' @export
 c.hardhat_ukey_col_heavyprefix <- function(x, ...) {
-  if (is.factor(x)) {
+  if (is.data.frame(x)) {
+    # `data.frame`, `tibble`, and `data.table` behavior all have the
+    # combine-and-strip-non-name-attributes `c` behavior.  Let's
+    # mirror that with NextMethod (we're light-prefixed, so no
+    # vctrs_vctr impl in the way.)
+    NextMethod()
+  } else if (inherits(x, ukey_light_prefix_classes)) { # (other than data frames)
     as_ukey_col_heavyprefix(NextMethod())
-  } else if (inherits(x, ukey_light_prefix_classes)) {
-    cli::cli_abort(c("`c` not supported for this kind of ukey col", ">" = "Consider `vec_c` instead."))
+    # Note: except for `vctrs_rcrd`'s, we can't make `c(non-ukey,
+    # ukey)` also yield a ukey without rude invasive `c` impls.
+    # Perhaps we should take the `c(ukey, non-ukey)` opportunity to
+    # nudge users to use `vec_c` for these cases instead.
   } else {
+    # heavy-prefixed; forward to `vctrs_vctr` impl
     NextMethod()
   }
 }
