@@ -36,22 +36,38 @@ for (col in sample_times) {
   }
 }
 
-test_that(glue::glue("Can perform ukey(<Date>) + <difftime>"), {
-  # Eliminating abort/warning/mistake may require some tricks to maintain an S4 bit.
+test_that(glue::glue("Can perform ukey(<Date>) + <difftime>, possibly with incompatible methods warning"), {
   col <- sample_times$date
+  lhs <- ukey_col_heavyprefix_get_data(as_ukey_col_heavyprefix(col))
+  rhs <- as.difftime(1, units = "days")
   expect_identical(
-    ukey_col_heavyprefix_get_data(as_ukey_col_heavyprefix(col) + as.difftime(1, units = "days")),
+    withCallingHandlers(
+      lhs + rhs,
+      warning = function(w) {
+        if (any(grepl("^Incompatible methods.*for.*\\+.*", conditionMessage(w)))) {
+          invokeRestart("muffleWarning")
+        }
+      }
+    ),
     col + as.difftime(1, units = "days")
   )
+})
+
+test_that(glue::glue("ukey(<Date>) + <difftime> doesn't generate a warning"), {
+  skip("Avoiding warnings here is likely possible, but would require some tricks to maintain an S4 bit")
+  col <- sample_times$date
+  expect_no_warning(ukey_col_heavyprefix_get_data(as_ukey_col_heavyprefix(col) + as.difftime(1, units = "days")))
 })
 
 # TODO more vec_c tests
 
 for (col in c(sample_geos, sample_times)) {
-  test_that(glue::glue("Can perform c(ukey(<{class(col)[[1L]]}>), ukey(<{class(col)[[1L]]}>))"), {
-    expect_identical(c(as_ukey_col_heavyprefix(col), as_ukey_col_heavyprefix(col)),
-                     as_ukey_col_heavyprefix(c(col, col)))
-  })
+  if (!is.data.frame(col)) { # don't test if `c` isn't `vec_c`-like for underlying `col`
+    test_that(glue::glue("Can perform c(ukey(<{class(col)[[1L]]}>), ukey(<{class(col)[[1L]]}>))"), {
+      expect_identical(c(as_ukey_col_heavyprefix(col), as_ukey_col_heavyprefix(col)),
+                       as_ukey_col_heavyprefix(c(col, col)))
+    })
+  }
 }
 
 test_that(glue::glue("Can perform c(ukey(<Date>), ukey(<chr>))"), {
@@ -91,7 +107,7 @@ for (col in c(sample_geos, sample_times)) {
   if (!is.data.frame(col)) { # don't test if `c` isn't `vec_c`-like for underlying `col`
     test_that(glue::glue("Can perform c(<{class(col)[[1L]]}>, ukey(<{class(col)[[1L]]}>))"), {
       if (!inherits(col, "vctrs_vctr")) {
-        testthat::skip("failure here is likely unavoidable")
+        skip("failure here is likely unavoidable")
       }
       expect_identical(c(col, as_ukey_col_heavyprefix(col)),
                        as_ukey_col_heavyprefix(c(col, col)))
@@ -104,7 +120,7 @@ for (col in c(sample_geos, sample_times)) {
   # `vec_c(other, ukey)` works even if `c(other, ukey)` is bugged.
   test_that(glue::glue("Can perform vec_c(<{class(col)[[1L]]}>, ukey(<{class(col)[[1L]]}>))"), {
     expect_identical(vctrs::vec_c(col, as_ukey_col_heavyprefix(col)),
-                     as_ukey_col_heavyprefix(c(col, col)))
+                     as_ukey_col_heavyprefix(vctrs::vec_c(col, col)))
   })
 }
 
@@ -113,7 +129,7 @@ for (do_ukey_date in c(TRUE, FALSE)) {
     if (!do_ukey_date && !do_ukey_chr) {
       next
     }
-    for (transpose in c(TRUE, FALSE)) {
+    for (date_first in c(TRUE, FALSE)) {
 
       date_col <- if (do_ukey_date) {
         as_ukey_col_heavyprefix(sample_times$date)
@@ -125,20 +141,30 @@ for (do_ukey_date in c(TRUE, FALSE)) {
       } else {
         as.character(sample_times$date)
       }
-      if (transpose) {
-        col <- chr_col
-        col2 <- date_col
-      } else {
+      if (date_first) {
         col <- date_col
         col2 <- chr_col
+      } else {
+        col <- chr_col
+        col2 <- date_col
       }
       # c(chr, ukcol<date>) is likely impossible for the same reasons
       # as c(chr, ukcol<chr>), c(int, ukcol<int>), etc.
       test_that(glue::glue("Can perform c({vctrs::vec_ptype_abbr(col)}, {vctrs::vec_ptype_abbr(col2)})"), {
+        if (date_first && !do_ukey_date && do_ukey_chr) {
+          skip("c(date, ukcol<chr>) likely doomed to fail")
+        }
+        if (!date_first && !do_ukey_chr && do_ukey_date) {
+          skip("c(chr, ukcol<date>) likely doomed to fail")
+        }
         expect_identical(c(col, col2),
                          as_ukey_col_heavyprefix(c(date_col, date_col)))
       })
-      # TODO vec_c tests
+      test_that(glue::glue("Can perform vec_c({vctrs::vec_ptype_abbr(col)}, {vctrs::vec_ptype_abbr(col2)})"), {
+        expect_identical(vec_c(col, col2),
+                         as_ukey_col_heavyprefix(c(date_col, date_col)))
+      })
+
     }
   }
 }

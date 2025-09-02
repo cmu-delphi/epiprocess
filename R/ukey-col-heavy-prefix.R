@@ -56,7 +56,6 @@ as_ukey_col_heavyprefix <- function(col) {
     new_ukey_col_heavyprefix(col)
   }
 }
-# TODO as_ukey_col_heavyprefix, and maybe get rid of ukey_col_heavyprefix
 
 #' @export
 as_non_ukey_col_heavyprefix <- function(x) {
@@ -223,6 +222,8 @@ vec_ptype2.hardhat_ukey_col_heavyprefix.integer <- vec_ptype2_hardhat_ukey_col_h
 #' @export
 vec_ptype2.hardhat_ukey_col_heavyprefix.double <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
 #' @export
+vec_ptype2.hardhat_ukey_col_heavyprefix.factor <- vec_ptype2_hardhat_ukey_col_heavyprefix_other
+#' @export
 vec_ptype2.hardhat_ukey_col_heavyprefix.character <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
   # Partial workaround for https://github.com/r-lib/vctrs/issues/967 so `c`
   # behaves more like didn't have marker; not doing for POSIX{c,l}ts due to
@@ -300,6 +301,8 @@ vec_ptype2_other_hardhat_ukey_col_heavyprefix <- function(x, y, ..., x_arg = "",
 vec_ptype2.integer.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
 #' @export
 vec_ptype2.double.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
+#' @export
+vec_ptype2.factor.hardhat_ukey_col_heavyprefix <- vec_ptype2_other_hardhat_ukey_col_heavyprefix
 #' @export
 vec_ptype2.character.hardhat_ukey_col_heavyprefix <- function(x, y, ..., x_arg = "", y_arg = "", call = caller_env()) {
   y_data <- ukey_col_heavyprefix_get_data(y)
@@ -400,6 +403,8 @@ vec_cast.hardhat_ukey_col_heavyprefix.integer <- vec_cast_hardhat_ukey_col_heavy
 #' @export
 vec_cast.hardhat_ukey_col_heavyprefix.double <- vec_cast_hardhat_ukey_col_heavyprefix_other
 #' @export
+vec_cast.hardhat_ukey_col_heavyprefix.factor <- vec_cast_hardhat_ukey_col_heavyprefix_other
+#' @export
 vec_cast.hardhat_ukey_col_heavyprefix.character <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
   # Partial workaround for https://github.com/r-lib/vctrs/issues/967 so `c`
   # behaves more like didn't have marker; not doing for POSIX{c,l}ts due to
@@ -480,6 +485,8 @@ vec_cast.integer.hardhat_ukey_col_heavyprefix <- vec_cast_other_hardhat_ukey_col
 #' @export
 vec_cast.double.hardhat_ukey_col_heavyprefix <- vec_cast_other_hardhat_ukey_col_heavyprefix
 #' @export
+vec_cast.factor.hardhat_ukey_col_heavyprefix <- vec_cast_other_hardhat_ukey_col_heavyprefix
+#' @export
 vec_cast.character.hardhat_ukey_col_heavyprefix <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
   x_data <- ukey_col_heavyprefix_get_data(x)
   if (identical(class(x_data), "Date")) {
@@ -531,6 +538,32 @@ vec_arith.hardhat_ukey_col_heavyprefix.hardhat_ukey_col_heavyprefix <- function(
 #' @export
 vec_arith.hardhat_ukey_col_heavyprefix.default <- function(op, x, y, ...) {
   new_ukey_col_heavyprefix(vec_arith(op, ukey_col_heavyprefix_get_data(x), y, ...))
+}
+
+# Light-prefixed classes seem to already have okay default
+# alternatives to vec_math that strip the ukey class on sensible
+# operations, which is actually what we want; e.g., `is.nan` on
+# ukey<POSIXct>.  Heavy-prefixed get a sensible `vec_math` default,
+# but vec_math.Date makes some somewhat-sensible operations fail,
+# including `is.nan` used by some testthat tests.  Fix up a few select
+# operations:
+
+#' @method is.nan hardhat_ukey_col_heavyprefix
+#' @export
+is.nan.hardhat_ukey_col_heavyprefix <- function(x) {
+  is.nan(ukey_col_heavyprefix_get_data(x))
+}
+
+#' @method is.finite hardhat_ukey_col_heavyprefix
+#' @export
+is.finite.hardhat_ukey_col_heavyprefix <- function(x) {
+  is.finite(ukey_col_heavyprefix_get_data(x))
+}
+
+#' @method is.infinite hardhat_ukey_col_heavyprefix
+#' @export
+is.infinite.hardhat_ukey_col_heavyprefix <- function(x) {
+  is.infinite(ukey_col_heavyprefix_get_data(x))
 }
 
 #' @importFrom dplyr group_by
