@@ -176,19 +176,19 @@ NULL
 #' @param other_keys If your tibble has additional "key" columns used to specify
 #'   what subpopulation and time period each measurement refers to, be sure to
 #'   specify them as a character vector here (typical examples are "age" or
-#'   sub-geographies), or, alternatively, call [`ukey_col_listbacked`] on each
+#'   sub-geographies), or, alternatively, call [`ukey_col_heavyprefix`] on each
 #'   such column.
 #' @param ... Additional arguments passed to methods.
 #' @return * Of `new_epi_df()`: an `epi_df`
 #'
 #' @export
-new_epi_df <- function(x = tibble::tibble(geo_value = new_ukey_col_listbacked(character()),
-                                          time_value = new_ukey_col_listbacked(as.Date(integer()))),
+new_epi_df <- function(x = tibble::tibble(geo_value = new_ukey_col_heavyprefix(character()),
+                                          time_value = new_ukey_col_heavyprefix(as.Date(integer()))),
                        geo_type, time_type, as_of,
                        other_keys = NULL, ...) {
   # Ensure core ukey columns are marked as such:
-  x$geo_value <- as_ukey_col_listbacked(x$geo_value)
-  x$time_value <- as_ukey_col_listbacked(x$time_value)
+  x$geo_value <- as_ukey_col_heavyprefix(x$geo_value)
+  x$time_value <- as_ukey_col_heavyprefix(x$time_value)
 
   # Define metadata fields
   metadata <- list()
@@ -197,18 +197,18 @@ new_epi_df <- function(x = tibble::tibble(geo_value = new_ukey_col_listbacked(ch
   metadata$as_of <- as_of
   if (is.null(other_keys)) {
     # Derive `other_keys` from ukey marker classes:
-    all_keys <- names(x)[vapply(x, is_ukey_col_listbacked, logical(1L))]
+    all_keys <- names(x)[vapply(x, is_ukey_col_heavyprefix, logical(1L))]
     other_keys <- all_keys[! all_keys %in% c("geo_value", "time_value")]
   } else {
     # Set ukey marker classes for `other_keys`:
-    x[, other_keys] <- lapply(x[, other_keys], as_ukey_col_listbacked)
+    x[, other_keys] <- lapply(x[, other_keys], as_ukey_col_heavyprefix)
     nonkey_colnames <- names(x)[!names(x) %in% c("geo_value", "time_value", other_keys)]
     # Error if we'd need to unset ukey marker classes to match `other_keys`:
-    nonkey_was_classed_as_key <- vapply(x[, nonkey_colnames], is_ukey_col_listbacked, logical(1L))
+    nonkey_was_classed_as_key <- vapply(x[, nonkey_colnames], is_ukey_col_heavyprefix, logical(1L))
     if (any(nonkey_was_classed_as_key)) {
       cli_abort(c(
-        "Some columns were unexpectedly marked as `ukey_col_listbacked`",
-        "x" = '{format_varnames(nonkey_colnames[nonkey_was_classed_as_key])} satisfy `is_ukey_col_listbacked`, but are not in {}'
+        "Some columns were unexpectedly marked as `ukey_col_heavyprefix`",
+        "x" = '{format_varnames(nonkey_colnames[nonkey_was_classed_as_key])} satisfy `is_ukey_col_heavyprefix`, but are not in {}'
       ))
     }
   }

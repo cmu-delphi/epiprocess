@@ -135,7 +135,7 @@ decay_epi_df <- function(x) {
   attributes(x)$metadata <- NULL
   attr(x, "decay_to_tibble") <- NULL
   class(x) <- class(x)[class(x) != "epi_df"]
-  x[seq_along(x)] <- lapply(x, as_non_ukey_col_listbacked)
+  x[seq_along(x)] <- lapply(x, as_non_ukey_col_heavyprefix)
   x
 }
 
@@ -227,7 +227,7 @@ reconstruct_light_edf <- function(data, template) {
   }
 
   class(data) <- vctrs::vec_set_difference(class(data), "epi_df")
-  data_ukeys <- col_names[vapply(data, is_ukey_col_listbacked, logical(1L))]
+  data_ukeys <- col_names[vapply(data, is_ukey_col_heavyprefix, logical(1L))]
   ukey_other_keys <- vctrs::vec_set_difference(data_ukeys, c("geo_value", "time_value"))
   other_keys <- vctrs::vec_set_union(other_keys, ukey_other_keys)
 
@@ -236,10 +236,10 @@ reconstruct_light_edf <- function(data, template) {
 
   data_group_vars <- group_vars(data)
   data_group_vars_to_ukey_decay <-
-    data_group_vars[vapply(data[data_group_vars], is_ukey_col_listbacked, logical(1L))]
+    data_group_vars[vapply(data[data_group_vars], is_ukey_col_heavyprefix, logical(1L))]
   if (length(data_group_vars_to_ukey_decay) != 0L) { # avoid recomputing groups unnecessarily
     data[data_group_vars_to_ukey_decay] <-
-      lapply(data[data_group_vars_to_ukey_decay], decay_ukey_col_listbacked)
+      lapply(data[data_group_vars_to_ukey_decay], ukey_col_heavyprefix_get_data)
   }
   result <- reclass(data, metadata)
   attr(result, "decay_to_tibble") <-
@@ -259,7 +259,7 @@ reconstruct_light_edf <- function(data, template) {
   res <- NextMethod()
 
   if (!is.data.frame(res)) {
-    return(as_non_ukey_col_listbacked(res))
+    return(as_non_ukey_col_heavyprefix(res))
   }
 
   reconstruct_light_edf(res, x)
@@ -267,12 +267,12 @@ reconstruct_light_edf <- function(data, template) {
 
 #' @export
 `[[.epi_df` <- function(x, i, j, ...) {
-  as_non_ukey_col_listbacked(NextMethod())
+  as_non_ukey_col_heavyprefix(NextMethod())
 }
 
 #' @export
 `$.epi_df` <- function(x, name) {
-  as_non_ukey_col_listbacked(NextMethod())
+  as_non_ukey_col_heavyprefix(NextMethod())
 }
 
 
@@ -328,7 +328,7 @@ dplyr_row_slice.epi_df <- function(data, i, ...) {
 unwrap_ukey_cols <- function(df) {
   old_class <- class(df)
   class(df) <- vctrs::vec_set_difference(old_class, "epi_df")
-  df[seq_along(df)] <- lapply(df, as_non_ukey_col_listbacked)
+  df[seq_along(df)] <- lapply(df, as_non_ukey_col_heavyprefix)
   class(df) <- old_class
   df
 }
@@ -358,7 +358,7 @@ maybe_restore_nongroup_ukey_cols <- function(df) {
     nongroup_key_col_nms <- vctrs::vec_set_difference(key_col_nms, group_col_nms)
     old_class <- class(df)
     class(df) <- vctrs::vec_set_difference(old_class, "epi_df") # avoid `[<-` inf loop
-    df[nongroup_key_col_nms] <- lapply(df[nongroup_key_col_nms], as_ukey_col_listbacked)
+    df[nongroup_key_col_nms] <- lapply(df[nongroup_key_col_nms], as_ukey_col_heavyprefix)
     class(df) <- old_class
     # We also want to ensure that no non-key cols are marked with the ukey
     # class. But with the choice in downstream methods to add all (non-geo,
