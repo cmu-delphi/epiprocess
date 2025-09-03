@@ -252,6 +252,7 @@ reconstruct_light_edf <- function(data, template) {
                     metadata,
                     attr(orig_data, "decay_to_tibble") %||% attr(template, "decay_to_tibble"),
                     attr(orig_data, "epiprocess:::restore_ukey_cols") %||% attr(template, "epiprocess:::restore_ukey_cols"))
+  result <- maybe_restore_nongroup_ukey_cols(result)
 
   # XXX we may want verify the `geo_type` and `time_type` here. If it's
   # significant overhead, we may also want to keep this less strict version
@@ -317,8 +318,6 @@ reconstruct_light_edf <- function(data, template) {
 #' @export
 dplyr_col_modify.epi_df <- function(data, cols) {
   cli_inform("dplyr_col_modify.epi_df")
-  print(data)
-  print(cols)
   reconstruct_light_edf(NextMethod(), data)
 }
 
@@ -353,6 +352,17 @@ unwrap_ukey_cols <- function(df) {
   class(df) <- vctrs::vec_set_difference(old_class, "epi_df")
   df[seq_along(df)] <- lapply(df, as_non_ukey_col_heavyprefix)
   class(df) <- old_class
+  if (identical(attr(df, "epiprocess:::restore_ukey_cols"), FALSE)) {
+    cli_warn(c("epiprocess internal warning: restore_ukey_cols attr was already set to FALSE before ukey unwrapping operation",
+               ">" = "Please report this to {epiprocess} developers."))
+  }
+  attr(df, "epiprocess:::restore_ukey_cols") <- FALSE
+  df
+}
+
+rewrap_ukey_cols <- function(df) {
+  attr(df, "epiprocess:::restore_ukey_cols") <- NULL
+  df <- maybe_restore_nongroup_ukey_cols(df)
   df
 }
 
@@ -396,16 +406,10 @@ maybe_restore_nongroup_ukey_cols <- function(df) {
 dplyr_edf_verb_default <- function(.data, ...) {
   cli_inform("verb unwrapping")
   .data <- unwrap_ukey_cols(.data)
-  if (identical(attr(.data, "epiprocess:::restore_ukey_cols"), FALSE)) {
-    cli_warn(c("epiprocess internal warning: restore_ukey_cols attr was already set to FALSE before sandwiching operation",
-               ">" = "Please report this to {epiprocess} developers."))
-  }
-  attr(.data, "epiprocess:::restore_ukey_cols") <- FALSE
 
   result <- NextMethod()
   cli_inform("verb re-wrapping")
-  attr(result, "epiprocess:::restore_ukey_cols") <- NULL
-  result <- maybe_restore_nongroup_ukey_cols(result)
+  result <- rewrap_ukey_cols(result)
   result
 }
 
@@ -416,12 +420,6 @@ dplyr_edf_verb_default <- function(.data, ...) {
 group_by.epi_df <- function(.data, ...) {
   orig_data <- .data
   .data <- unwrap_ukey_cols(.data)
-  # group_by_prepare will sometimes ungroup&mutate; we need to prevent
-  # this from re-introducing ukey col markers.  Use a transient attr
-  # that should only be set within this group_by call.  Hopefully we
-  # won't need much upkeep on this attr in other methods as it
-  # shouldn't live long.
-  attr(.data, "epiprocess:::restore_ukey_cols") <- FALSE
   result <- NextMethod()
   attr(result, "epiprocess:::restore_ukey_cols") <- NULL
   # XXX this isn't quite right.  `group_by` can contain mutate
@@ -458,8 +456,9 @@ ungroup.epi_df <- function(x, ...) {
 #' @param .keep Boolean; see [`dplyr::group_modify`]
 #' @export
 group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
+  orig_data <- .data
   .data <- unwrap_ukey_cols(.data)
-  reconstruct_light_edf(NextMethod(), .data)
+  reconstruct_light_edf(NextMethod(), orig_data)
 }
 
 #' "Complete" an `epi_df`, adding missing rows and/or replacing `NA`s
@@ -539,9 +538,11 @@ group_modify.epi_df <- function(.data, .f, ..., .keep = FALSE) {
 #'   )
 #' @export
 complete.epi_df <- function(data, ..., fill = list(), explicit = TRUE) {
+  orig_data <- data
   data <- unwrap_ukey_cols(data)
   result <- NextMethod()
-  result <- reconstruct_light_edf(result, data)
+  attr(result, "epiprocess:::restore_ukey_cols") <- NULL
+  result <- reconstruct_light_edf(result, orig_data)
   if ("time_value" %in% names(rlang::call_match(dots_expand = FALSE)[["..."]])) {
     attr(result, "metadata")$time_type <- guess_time_type(result$time_value)
   }
@@ -729,16 +730,10 @@ mutate.epi_df <- dplyr_edf_verb_default
 mutate.epi_df <- function(.data, ...) {
   cli_inform("mutate unwrapping")
   .data <- unwrap_ukey_cols(.data)
-  if (identical(attr(.data, "epiprocess:::restore_ukey_cols"), FALSE)) {
-    cli_warn(c("epiprocess internal warning: restore_ukey_cols attr was already set to FALSE before sandwiching operation",
-               ">" = "Please report this to {{epiprocess}} developers."))
-  }
-  attr(.data, "epiprocess:::restore_ukey_cols") <- FALSE
 
   result <- NextMethod()
   cli_inform("mutate rewrapping")
-  attr(result, "epiprocess:::restore_ukey_cols") <- NULL
-  result <- maybe_restore_nongroup_ukey_cols(result)
+  result <- rewrap_ukey_cols(result)
   result
 }
 
