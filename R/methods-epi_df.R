@@ -245,9 +245,6 @@ reconstruct_light_edf <- function(data, template) {
   attr(result, "decay_to_tibble") <-
     attr(result, "decay_to_tibble") %||%
     attr(template, "decay_to_tibble")
-  attr(result, "epiprocess:::restore_ukey_cols") <-
-    attr(result, "epiprocess:::restore_ukey_cols") %||%
-    attr(template, "epiprocess:::restore_ukey_cols")
   result <- maybe_restore_nongroup_ukey_cols(result)
 
   # XXX we may want verify the `geo_type` and `time_type` here. If it's
@@ -337,7 +334,7 @@ unwrap_ukey_cols <- function(df) {
 }
 
 maybe_restore_nongroup_ukey_cols <- function(df) {
-  if (inherits(df, "epi_df") && (attr(df, "epiprocess:::restore_ukey_cols") %||% TRUE)) {
+  if (inherits(df, "epi_df")) {
     key_col_nms <- c("geo_value", attr(df, "metadata")[["other_keys"]], "time_value")
     # It'd be nice if we could just the ukey_col class back to all key
     # cols, but if df is grouped, it seems to trigger another
@@ -374,14 +371,8 @@ maybe_restore_nongroup_ukey_cols <- function(df) {
 
 dplyr_edf_verb_default <- function(.data, ...) {
   .data <- unwrap_ukey_cols(.data)
-  if (identical(attr(.data, "epiprocess:::restore_ukey_cols"), FALSE)) {
-    cli_warn(c("epiprocess internal warning: restore_ukey_cols attr was already set to FALSE before sandwiching operation",
-               ">" = "Please report this to {epiprocess} developers."))
-  }
-  attr(.data, "epiprocess:::restore_ukey_cols") <- FALSE
 
   result <- NextMethod()
-  attr(result, "epiprocess:::restore_ukey_cols") <- NULL
   result <- maybe_restore_nongroup_ukey_cols(result)
   result
 }
@@ -393,14 +384,7 @@ dplyr_edf_verb_default <- function(.data, ...) {
 group_by.epi_df <- function(.data, ...) {
   metadata <- attr(.data, "metadata")
   .data <- unwrap_ukey_cols(.data)
-  # group_by_prepare will sometimes ungroup&mutate; we need to prevent
-  # this from re-introducing ukey col markers.  Use a transient attr
-  # that should only be set within this group_by call.  Hopefully we
-  # won't need much upkeep on this attr in other methods as it
-  # shouldn't live long.
-  attr(.data, "epiprocess:::restore_ukey_cols") <- FALSE
   result <- NextMethod()
-  attr(result, "epiprocess:::restore_ukey_cols") <- NULL
   # XXX this isn't quite right.  `group_by` can contain mutate
   # expressions that may change the metadata and even edf-eligibility.
   # Perhaps this should be `reconstruct_light_edf`?
@@ -678,17 +662,9 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
 #' @export
 # mutate.epi_df <- dplyr_edf_verb_default
 mutate.epi_df <- function(.data, ...) {
-  if (identical(attr(.data, "epiprocess:::restore_ukey_cols"), FALSE)) {
-    result <- NextMethod()
-    attr(result, "epiprocess:::restore_ukey_cols") <- NULL
-    result <- maybe_restore_nongroup_ukey_cols(result)
-  } else {
-    print(.data)
-    .data <- unwrap_ukey_cols(.data)
-    attr(.data, "epiprocess:::restore_ukey_cols") <- FALSE
-    result <- NextMethod()
-  }
-  # XXX this approach probably isn't needed and doesn't help; the
+  .data <- unwrap_ukey_cols(.data)
+  result <- NextMethod()
+  # XXX handle grouped mutate issues;
   # problem is dplyr native dplyr_lazy_vec_chop_grouped probably
   # calling vctrs::vec_chop and triggering restoration.
   result

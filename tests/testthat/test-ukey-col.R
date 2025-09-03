@@ -161,7 +161,7 @@ for (do_ukey_date in c(TRUE, FALSE)) {
                          as_ukey_col_heavyprefix(c(date_col, date_col)))
       })
       test_that(glue::glue("Can perform vec_c({vctrs::vec_ptype_abbr(col)}, {vctrs::vec_ptype_abbr(col2)})"), {
-        expect_identical(vec_c(col, col2),
+        expect_identical(vctrs::vec_c(col, col2),
                          as_ukey_col_heavyprefix(c(date_col, date_col)))
       })
 
@@ -170,3 +170,5 @@ for (do_ukey_date in c(TRUE, FALSE)) {
 }
 
 # TODO is.numeric, inherits, etc.
+
+# TODO == tests...
