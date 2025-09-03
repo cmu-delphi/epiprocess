@@ -32,7 +32,10 @@ as_tibble.epi_df <- function(x, ...) {
   } else {
     # We specially requested via attr not to decay epi_df-ness but to drop any
     # grouping. (Miscellaneous attrs are also dropped.)
-    reclass(tbl, attr(x, "metadata"))
+    reclass(tbl,
+            attr(x, "metadata"),
+            NULL, # XXX might be more natural to keep, but check epipredict first
+            attr(x, "epiprocess:::restore_ukey_cols"))
   }
 }
 
@@ -79,6 +82,7 @@ print.epi_df <- function(x, ...) {
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(x)$metadata$as_of))
   # Conditional output (silent if attribute is NULL):
   cat(sprintf("* %-9s = %s\n", "decay_to_tibble", attr(x, "decay_to_tibble")))
+  cat(sprintf("* %-9s = %s\n", "epiprocess:::restore_ukey_cols", attr(x, "epiprocess:::restore_ukey_cols")))
   cat("\n")
   NextMethod()
 }
@@ -182,11 +186,13 @@ dplyr_reconstruct.epi_df <- function(data, template) {
 #' groupings.
 #'
 #' This function serves the original purpose of performing `epi_df`-centric
-#' checks rather than just throwing on potentially-incorrect metadata like
+#' checks rather than just tacking on potentially-incorrect metadata like
 #' `reclass()`, but without unnecessary `dplyr_reconstruct()` delegation.
 #'
 #' @keywords internal
 reconstruct_light_edf <- function(data, template) {
+  cli_inform('r_l_edf(c1 = {class(data)[[1]]}, t = {class(unclass(data)$time_value)[[1]]} & lrest = {list(attr(data, "epiprocess:::restore_ukey_cols"))}; c1 = {class(template)[[1]]}, t = {class(unclass(template)$time_value)[[1]]} & lrest = {list(attr(template, "epiprocess:::restore_ukey_cols"))})')
+
   col_names <- names(data)
 
   # Duplicate columns, cli_abort
@@ -226,6 +232,7 @@ reconstruct_light_edf <- function(data, template) {
     other_keys <- vctrs::vec_set_union(other_keys, data_other_keys)
   }
 
+  orig_data <- data
   class(data) <- vctrs::vec_set_difference(class(data), "epi_df")
   data_ukeys <- col_names[vapply(data, is_ukey_col_heavyprefix, logical(1L))]
   ukey_other_keys <- vctrs::vec_set_difference(data_ukeys, c("geo_value", "time_value"))
@@ -241,11 +248,10 @@ reconstruct_light_edf <- function(data, template) {
     data[data_group_vars_to_ukey_decay] <-
       lapply(data[data_group_vars_to_ukey_decay], ukey_col_heavyprefix_get_data)
   }
-  result <- reclass(data, metadata)
-  attr(result, "decay_to_tibble") <-
-    attr(result, "decay_to_tibble") %||%
-    attr(template, "decay_to_tibble")
-  result <- maybe_restore_nongroup_ukey_cols(result)
+  result <- reclass(data,
+                    metadata,
+                    attr(orig_data, "decay_to_tibble") %||% attr(template, "decay_to_tibble"),
+                    attr(orig_data, "epiprocess:::restore_ukey_cols") %||% attr(template, "epiprocess:::restore_ukey_cols"))
 
   # XXX we may want verify the `geo_type` and `time_type` here. If it's
   # significant overhead, we may also want to keep this less strict version
@@ -256,28 +262,36 @@ reconstruct_light_edf <- function(data, template) {
 
 #' @export
 `[.epi_df` <- function(x, i, j, drop = FALSE) {
+  cli_inform("[.epi_df")
   res <- NextMethod()
 
   if (!is.data.frame(res)) {
     return(as_non_ukey_col_heavyprefix(res))
   }
 
-  reconstruct_light_edf(res, x)
+  cli_inform('`[` with i = {i}, wrapped restore attr = {list(attr(x, "epiprocess:::restore_ukey_cols"))}, time class 1 = {class(unclass(x)$time_value)[[1]]}')
+
+  result <- reconstruct_light_edf(res, x)
+  # print(result)
+  result
 }
 
 #' @export
 `[[.epi_df` <- function(x, i, j, ...) {
+  cli_inform("[[.epi_df")
   as_non_ukey_col_heavyprefix(NextMethod())
 }
 
 #' @export
 `$.epi_df` <- function(x, name) {
+  cli_inform("$.epi_df")
   as_non_ukey_col_heavyprefix(NextMethod())
 }
 
 
 #' @export
 `[<-.epi_df` <- function(x, i, j, ..., value) {
+  cli_inform("[<-.epi_df")
   res <- NextMethod()
 
   reconstruct_light_edf(res, x)
@@ -285,6 +299,7 @@ reconstruct_light_edf <- function(data, template) {
 
 #' @export
 `[[<-.epi_df` <- function(x, i, j, ..., value) {
+  cli_inform("[[<-.epi_df")
   res <- NextMethod()
 
   reconstruct_light_edf(res, x)
@@ -292,6 +307,7 @@ reconstruct_light_edf <- function(data, template) {
 
 #' @export
 `$<-.epi_df` <- function(x, name, value) {
+  cli_inform("$<-.epi_df")
   res <- NextMethod()
 
   reconstruct_light_edf(res, x)
@@ -300,17 +316,22 @@ reconstruct_light_edf <- function(data, template) {
 #' @importFrom dplyr dplyr_col_modify
 #' @export
 dplyr_col_modify.epi_df <- function(data, cols) {
+  cli_inform("dplyr_col_modify.epi_df")
+  print(data)
+  print(cols)
   reconstruct_light_edf(NextMethod(), data)
 }
 
 #' @importFrom dplyr dplyr_row_slice
 #' @export
 dplyr_row_slice.epi_df <- function(data, i, ...) {
+  cli_inform("dplyr_row_slice.epi_df")
   reconstruct_light_edf(NextMethod(), data)
 }
 
 #' @export
 `names<-.epi_df` <- function(x, value) {
+  cli_inform("names<-.epi_df")
   old_names <- names(x)
   old_metadata <- attr(x, "metadata")
   new_metadata <- old_metadata
@@ -320,8 +341,10 @@ dplyr_row_slice.epi_df <- function(data, i, ...) {
     new_metadata[["other_keys"]] <- new_other_keys
   }
   result <- NextMethod()
-  template <- reclass(result, new_metadata)
-  attr(template, "decay_to_tibble") <- attr(x, "decay_to_tibble")
+  template <- reclass(result,
+                      new_metadata,
+                      attr(x, "decay_to_tibble"),
+                      attr(x, "epiprocess:::restore_ukey_cols"))
   reconstruct_light_edf(result, template)
 }
 
@@ -334,7 +357,8 @@ unwrap_ukey_cols <- function(df) {
 }
 
 maybe_restore_nongroup_ukey_cols <- function(df) {
-  if (inherits(df, "epi_df")) {
+  cli_inform('maybe restore; c1 = {class(df)[[1]]}, t = {class(unclass(df)$time_value)[[1]]}, lrest = {list(attr(df, "epiprocess:::restore_ukey_cols"))}')
+  if (inherits(df, "epi_df") && (attr(df, "epiprocess:::restore_ukey_cols") %||% TRUE)) {
     key_col_nms <- c("geo_value", attr(df, "metadata")[["other_keys"]], "time_value")
     # It'd be nice if we could just the ukey_col class back to all key
     # cols, but if df is grouped, it seems to trigger another
@@ -370,9 +394,17 @@ maybe_restore_nongroup_ukey_cols <- function(df) {
 }
 
 dplyr_edf_verb_default <- function(.data, ...) {
+  cli_inform("verb unwrapping")
   .data <- unwrap_ukey_cols(.data)
+  if (identical(attr(.data, "epiprocess:::restore_ukey_cols"), FALSE)) {
+    cli_warn(c("epiprocess internal warning: restore_ukey_cols attr was already set to FALSE before sandwiching operation",
+               ">" = "Please report this to {epiprocess} developers."))
+  }
+  attr(.data, "epiprocess:::restore_ukey_cols") <- FALSE
 
   result <- NextMethod()
+  cli_inform("verb re-wrapping")
+  attr(result, "epiprocess:::restore_ukey_cols") <- NULL
   result <- maybe_restore_nongroup_ukey_cols(result)
   result
 }
@@ -382,13 +414,23 @@ dplyr_edf_verb_default <- function(.data, ...) {
 #' @rdname print.epi_df
 #' @export
 group_by.epi_df <- function(.data, ...) {
-  metadata <- attr(.data, "metadata")
+  orig_data <- .data
   .data <- unwrap_ukey_cols(.data)
+  # group_by_prepare will sometimes ungroup&mutate; we need to prevent
+  # this from re-introducing ukey col markers.  Use a transient attr
+  # that should only be set within this group_by call.  Hopefully we
+  # won't need much upkeep on this attr in other methods as it
+  # shouldn't live long.
+  attr(.data, "epiprocess:::restore_ukey_cols") <- FALSE
   result <- NextMethod()
+  attr(result, "epiprocess:::restore_ukey_cols") <- NULL
   # XXX this isn't quite right.  `group_by` can contain mutate
   # expressions that may change the metadata and even edf-eligibility.
   # Perhaps this should be `reconstruct_light_edf`?
-  result <- reclass(result, metadata)
+  result <- reclass(result,
+                    attr(orig_data, "metadata"),
+                    attr(orig_data, "decay_to_tibble"),
+                    attr(orig_data, "epiprocess:::restore_ukey_cols"))
   result <- maybe_restore_nongroup_ukey_cols(result)
   result
 }
@@ -397,10 +439,14 @@ group_by.epi_df <- function(.data, ...) {
 #' @rdname print.epi_df
 #' @export
 ungroup.epi_df <- function(x, ...) {
-  metadata <- attributes(x)$metadata
+  cli_inform("ungroup")
+  orig_x <- x
   x <- unwrap_ukey_cols(x)
   result <- NextMethod()
-  result <- reclass(result, metadata)
+  result <- reclass(result,
+                    attr(orig_x, "metadata"),
+                    attr(orig_x, "decay_to_tibble"),
+                    attr(orig_x, "epiprocess:::restore_ukey_cols"))
   result <- maybe_restore_nongroup_ukey_cols(result)
   result
 }
@@ -511,9 +557,11 @@ unnest.epi_df <- function(data, ...) {
 }
 
 # Simple reclass function
-reclass <- function(x, metadata) {
+reclass <- function(x, metadata, decay_to_tibble, restore_ukey_cols) {
   class(x) <- unique(c("epi_df", class(x)))
   attr(x, "metadata") <- metadata
+  attr(x, "decay_to_tibble") <- decay_to_tibble
+  attr(x, "epiprocess:::restore_ukey_cols") <- restore_ukey_cols
   x
 }
 
@@ -660,13 +708,37 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
 }
 
 #' @export
-# mutate.epi_df <- dplyr_edf_verb_default
+mutate.epi_df <- dplyr_edf_verb_default
+# mutate.epi_df <- function(.data, ...) {
+#   if (identical(attr(.data, "epiprocess:::restore_ukey_cols"), FALSE)) {
+#     result <- NextMethod()
+#     attr(result, "epiprocess:::restore_ukey_cols") <- NULL
+#     result <- maybe_restore_nongroup_ukey_cols(result)
+#   } else {
+#     print(.data)
+#     .data <- unwrap_ukey_cols(.data)
+#     attr(.data, "epiprocess:::restore_ukey_cols") <- FALSE
+#     result <- NextMethod()
+#     # FIXME might not be restoring attr when needs to
+#   }
+#   # XXX this approach probably isn't needed and doesn't help; the
+#   # problem is dplyr native dplyr_lazy_vec_chop_grouped probably
+#   # calling vctrs::vec_chop and triggering restoration.
+#   result
+# }
 mutate.epi_df <- function(.data, ...) {
+  cli_inform("mutate unwrapping")
   .data <- unwrap_ukey_cols(.data)
+  if (identical(attr(.data, "epiprocess:::restore_ukey_cols"), FALSE)) {
+    cli_warn(c("epiprocess internal warning: restore_ukey_cols attr was already set to FALSE before sandwiching operation",
+               ">" = "Please report this to {{epiprocess}} developers."))
+  }
+  attr(.data, "epiprocess:::restore_ukey_cols") <- FALSE
+
   result <- NextMethod()
-  # XXX handle grouped mutate issues;
-  # problem is dplyr native dplyr_lazy_vec_chop_grouped probably
-  # calling vctrs::vec_chop and triggering restoration.
+  cli_inform("mutate rewrapping")
+  attr(result, "epiprocess:::restore_ukey_cols") <- NULL
+  result <- maybe_restore_nongroup_ukey_cols(result)
   result
 }
 
