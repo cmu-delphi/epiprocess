@@ -191,8 +191,6 @@ dplyr_reconstruct.epi_df <- function(data, template) {
 #'
 #' @keywords internal
 reconstruct_light_edf <- function(data, template) {
-  cli_inform('r_l_edf(c1 = {class(data)[[1]]}, t = {class(unclass(data)$time_value)[[1]]} & lrest = {list(attr(data, "epiprocess:::restore_ukey_cols"))}; c1 = {class(template)[[1]]}, t = {class(unclass(template)$time_value)[[1]]} & lrest = {list(attr(template, "epiprocess:::restore_ukey_cols"))})')
-
   col_names <- names(data)
 
   # Duplicate columns, cli_abort
@@ -263,36 +261,29 @@ reconstruct_light_edf <- function(data, template) {
 
 #' @export
 `[.epi_df` <- function(x, i, j, drop = FALSE) {
-  cli_inform("[.epi_df")
   res <- NextMethod()
 
   if (!is.data.frame(res)) {
     return(as_non_ukey_col_heavyprefix(res))
   }
 
-  cli_inform('`[` with i = {i}, wrapped restore attr = {list(attr(x, "epiprocess:::restore_ukey_cols"))}, time class 1 = {class(unclass(x)$time_value)[[1]]}')
-
   result <- reconstruct_light_edf(res, x)
-  # print(result)
   result
 }
 
 #' @export
 `[[.epi_df` <- function(x, i, j, ...) {
-  cli_inform("[[.epi_df")
   as_non_ukey_col_heavyprefix(NextMethod())
 }
 
 #' @export
 `$.epi_df` <- function(x, name) {
-  cli_inform("$.epi_df")
   as_non_ukey_col_heavyprefix(NextMethod())
 }
 
 
 #' @export
 `[<-.epi_df` <- function(x, i, j, ..., value) {
-  cli_inform("[<-.epi_df")
   res <- NextMethod()
 
   reconstruct_light_edf(res, x)
@@ -300,7 +291,6 @@ reconstruct_light_edf <- function(data, template) {
 
 #' @export
 `[[<-.epi_df` <- function(x, i, j, ..., value) {
-  cli_inform("[[<-.epi_df")
   res <- NextMethod()
 
   reconstruct_light_edf(res, x)
@@ -308,7 +298,6 @@ reconstruct_light_edf <- function(data, template) {
 
 #' @export
 `$<-.epi_df` <- function(x, name, value) {
-  cli_inform("$<-.epi_df")
   res <- NextMethod()
 
   reconstruct_light_edf(res, x)
@@ -317,20 +306,17 @@ reconstruct_light_edf <- function(data, template) {
 #' @importFrom dplyr dplyr_col_modify
 #' @export
 dplyr_col_modify.epi_df <- function(data, cols) {
-  cli_inform("dplyr_col_modify.epi_df")
   reconstruct_light_edf(NextMethod(), data)
 }
 
 #' @importFrom dplyr dplyr_row_slice
 #' @export
 dplyr_row_slice.epi_df <- function(data, i, ...) {
-  cli_inform("dplyr_row_slice.epi_df")
   reconstruct_light_edf(NextMethod(), data)
 }
 
 #' @export
 `names<-.epi_df` <- function(x, value) {
-  cli_inform("names<-.epi_df")
   old_names <- names(x)
   old_metadata <- attr(x, "metadata")
   new_metadata <- old_metadata
@@ -354,7 +340,7 @@ unwrap_ukey_cols <- function(df) {
   class(df) <- old_class
   if (identical(attr(df, "epiprocess:::restore_ukey_cols"), FALSE)) {
     cli_warn(c("epiprocess internal warning: restore_ukey_cols attr was already set to FALSE before ukey unwrapping operation",
-               ">" = "Please report this to {epiprocess} developers."))
+               ">" = "Please report this to {{epiprocess}} developers."))
   }
   attr(df, "epiprocess:::restore_ukey_cols") <- FALSE
   df
@@ -367,7 +353,6 @@ rewrap_ukey_cols <- function(df) {
 }
 
 maybe_restore_nongroup_ukey_cols <- function(df) {
-  cli_inform('maybe restore; c1 = {class(df)[[1]]}, t = {class(unclass(df)$time_value)[[1]]}, lrest = {list(attr(df, "epiprocess:::restore_ukey_cols"))}')
   if (inherits(df, "epi_df") && (attr(df, "epiprocess:::restore_ukey_cols") %||% TRUE)) {
     key_col_nms <- c("geo_value", attr(df, "metadata")[["other_keys"]], "time_value")
     # It'd be nice if we could just the ukey_col class back to all key
@@ -404,11 +389,9 @@ maybe_restore_nongroup_ukey_cols <- function(df) {
 }
 
 dplyr_edf_verb_default <- function(.data, ...) {
-  cli_inform("verb unwrapping")
   .data <- unwrap_ukey_cols(.data)
 
   result <- NextMethod()
-  cli_inform("verb re-wrapping")
   result <- rewrap_ukey_cols(result)
   result
 }
@@ -425,10 +408,24 @@ group_by.epi_df <- function(.data, ...) {
   # XXX this isn't quite right.  `group_by` can contain mutate
   # expressions that may change the metadata and even edf-eligibility.
   # Perhaps this should be `reconstruct_light_edf`?
-  result <- reclass(result,
-                    attr(orig_data, "metadata"),
-                    attr(orig_data, "decay_to_tibble"),
-                    attr(orig_data, "epiprocess:::restore_ukey_cols"))
+  result <- reclass_from_template(result, orig_data)
+  result <- maybe_restore_nongroup_ukey_cols(result)
+  result
+}
+
+#' @method rowwise epi_df
+#' @param .data an `epi_df`
+#' @rdname print.epi_df
+#' @export
+rowwise.epi_df <- function(.data, ...) {
+  orig_data <- .data
+  .data <- unwrap_ukey_cols(.data)
+  result <- NextMethod()
+  attr(result, "epiprocess:::restore_ukey_cols") <- NULL
+  # XXX this isn't quite right.  `rowwise` can contain mutate
+  # expressions that may change the metadata and even edf-eligibility.
+  # Perhaps this should be `reconstruct_light_edf`?
+  result <- reclass_from_template(result, orig_data)
   result <- maybe_restore_nongroup_ukey_cols(result)
   result
 }
@@ -437,14 +434,10 @@ group_by.epi_df <- function(.data, ...) {
 #' @rdname print.epi_df
 #' @export
 ungroup.epi_df <- function(x, ...) {
-  cli_inform("ungroup")
   orig_x <- x
   x <- unwrap_ukey_cols(x)
   result <- NextMethod()
-  result <- reclass(result,
-                    attr(orig_x, "metadata"),
-                    attr(orig_x, "decay_to_tibble"),
-                    attr(orig_x, "epiprocess:::restore_ukey_cols"))
+  result <- reclass_from_template(result, orig_x)
   result <- maybe_restore_nongroup_ukey_cols(result)
   result
 }
@@ -565,6 +558,16 @@ reclass <- function(x, metadata, decay_to_tibble, restore_ukey_cols) {
   attr(x, "epiprocess:::restore_ukey_cols") <- restore_ukey_cols
   x
 }
+
+# Simple reclass function, but with dplyr_reconstruct template arg interface
+reclass_from_template <- function(x, template) {
+  class(x) <- unique(c("epi_df", class(x)))
+  attr(x, "metadata") <- attr(template, "metadata")
+  attr(x, "decay_to_tibble") <- attr(template, "decay_to_tibble")
+  attr(x, "epiprocess:::restore_ukey_cols") <- attr(template, "epiprocess:::restore_ukey_cols")
+  x
+}
+
 
 #' Arrange an epi_df into a standard order
 #'
@@ -728,11 +731,9 @@ mutate.epi_df <- dplyr_edf_verb_default
 #   result
 # }
 mutate.epi_df <- function(.data, ...) {
-  cli_inform("mutate unwrapping")
   .data <- unwrap_ukey_cols(.data)
 
   result <- NextMethod()
-  cli_inform("mutate rewrapping")
   result <- rewrap_ukey_cols(result)
   result
 }

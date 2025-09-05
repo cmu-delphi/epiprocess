@@ -4,6 +4,7 @@
 \alias{print.epi_df}
 \alias{summary.epi_df}
 \alias{group_by.epi_df}
+\alias{rowwise.epi_df}
 \alias{ungroup.epi_df}
 \alias{group_modify.epi_df}
 \alias{unnest.epi_df}
@@ -14,6 +15,8 @@
 \method{summary}{epi_df}(object, ...)
 
 \method{group_by}{epi_df}(.data, ...)
+
+\method{rowwise}{epi_df}(.data, ...)
 
 \method{ungroup}{epi_df}(x, ...)
 

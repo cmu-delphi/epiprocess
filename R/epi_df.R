@@ -337,6 +337,14 @@ as_epi_df.grouped_df <- function(x, ...) {
 
 #' @rdname epi_df
 #' @order 1
+#' @method as_epi_df rowwise_df
+#' @export
+as_epi_df.rowwise_df <- function(x, ...) {
+  as_epi_df(ungroup(x), ...)
+}
+
+#' @rdname epi_df
+#' @order 1
 #' @method as_epi_df data.frame
 #' @export
 as_epi_df.data.frame <- function(x, as_of, other_keys = character(), ...) {

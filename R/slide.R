@@ -405,7 +405,7 @@ epi_slide_one_group <- function(
   # time values, padding on the left and right as needed.
   all_dates <- .date_seq_list$all_dates
   missing_times <- all_dates[!vec_in(all_dates, .data_group$time_value)]
-  .data_group <- reclass(vec_rbind(
+  .data_group <- reclass_from_template(vec_rbind(
     .data_group,
     # (^ epi_df; epi_slide uses .keep = TRUE)
     # (v tibble -> vec_rbind outputs tibble)
@@ -420,7 +420,7 @@ epi_slide_one_group <- function(
     ))
     # we should be adding time values of the same time_type (and shouldn't be
     # introducing duplicate epikeytime values); we can reclass without checks:
-  ), attr(.data_group, "metadata")) %>%
+  ), .data_group) %>%
     `[`(vec_order(.$time_value), )
 
   # If the data group does not contain any of the reference time values, return
@@ -1045,7 +1045,7 @@ epi_slide_opt <- function(
   if (!is_epi_df(result)) {
     # `.all_rows` handling strips epi_df format and metadata.
     # Restore them.
-    result <- reclass(result, attributes(.x)$metadata)
+    result <- reclass_from_template(result, .x)
   }
 
   return(result)

@@ -21,7 +21,7 @@ groupings.
 }
 \details{
 This function serves the original purpose of performing \code{epi_df}-centric
-checks rather than just throwing on potentially-incorrect metadata like
+checks rather than just tacking on potentially-incorrect metadata like
 \code{reclass()}, but without unnecessary \code{dplyr_reconstruct()} delegation.
 }
 \keyword{internal}

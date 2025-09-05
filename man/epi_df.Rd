@@ -5,6 +5,7 @@
 \alias{as_epi_df.epi_df}
 \alias{as_epi_df.tbl_df}
 \alias{as_epi_df.grouped_df}
+\alias{as_epi_df.rowwise_df}
 \alias{as_epi_df.data.frame}
 \alias{as_epi_df.tbl_ts}
 \alias{is_epi_df}
@@ -27,6 +28,8 @@ as_epi_df(x, ...)
 
 \method{as_epi_df}{grouped_df}(x, ...)
 
+\method{as_epi_df}{rowwise_df}(x, ...)
+
 \method{as_epi_df}{data.frame}(x, as_of, other_keys = character(), ...)
 
 \method{as_epi_df}{tbl_ts}(x, as_of, other_keys = character(), ...)
@@ -34,8 +37,8 @@ as_epi_df(x, ...)
 is_epi_df(x)
 
 new_epi_df(
-  x = tibble::tibble(geo_value = new_ukey_col_listbacked(character()), time_value =
-    new_ukey_col_listbacked(as.Date(integer()))),
+  x = tibble::tibble(geo_value = new_ukey_col_heavyprefix(character()), time_value =
+    new_ukey_col_heavyprefix(as.Date(integer()))),
   geo_type,
   time_type,
   as_of,
@@ -68,7 +71,7 @@ then the current day-time will be used.}
 \item{other_keys}{If your tibble has additional "key" columns used to specify
 what subpopulation and time period each measurement refers to, be sure to
 specify them as a character vector here (typical examples are "age" or
-sub-geographies), or, alternatively, call \code{\link{ukey_col_listbacked}} on each
+sub-geographies), or, alternatively, call \code{\link{ukey_col_heavyprefix}} on each
 such column.}
 }
 \value{
