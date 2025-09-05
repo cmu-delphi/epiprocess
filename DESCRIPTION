@@ -111,6 +111,7 @@ Collate:
     'outliers.R'
     'reexports.R'
     'revision_analysis.R'
+    'slide-overhaul.R'
     'slide.R'
     'time-utils.R'
     'utils.R'

@@ -129,9 +129,14 @@ epi_slide2 <- function(
           # out_tbl <- new_tibble(vctrs::vec_recycle_common(epikey = ek, time_value = out_timesteps, slide_result = out_vec))
           # out_vecs <- simple_hop(slide_tbl, ek, ref_inds)
           # out_tbl <- new_tibble(vctrs::vec_recycle_common(epikey = ek, time_value = out_timesteps, !!!out_vecs))
-          out_tbl <- simple_hop(slide_tbl, ek, ref_inds)
-          # TODO time_value matching...
-          result_tbl <- bind_unpacked_comp(ek, ek_data, out_tbl)
+          out_subtbl <- simple_hop(slide_tbl, ek, ref_inds)
+          maybe_result_row_inds_for_out_subtbl <-
+            if (identical(inp_timesteps, out_timesteps)) {
+              NULL
+            } else {
+              vec_match(out_timesteps, inp_timesteps)
+            }
+          result_tbl <- cbind_unpacked_comp(ek, ek_data, maybe_result_row_inds_for_out_subtbl, out_subtbl)
           result_tbl
         })
     }) %>%
@@ -182,7 +187,7 @@ as_time_window_comp <- function(f, dots_quos, f_arg = caller_arg(f), call = call
   # stop("TODO determine output form... is this a fn of 1/2/3 args or some union?")
   if (missing(f)) {
     named_quos <- quos_auto_name(dots_quos) # resolves := among other things
-    manually_named <- names2(dots_quos) != "" | vapply(.f, function(quosure) {
+    manually_named <- names2(dots_quos) != "" | vapply(dots_quos, function(quosure) {
       expression <- quo_get_expr(quosure)
       is.call(expression) && expression[[1L]] == sym(":=")
     }, FUN.VALUE = logical(1L))
@@ -209,47 +214,47 @@ as_time_window_comp <- function(f, dots_quos, f_arg = caller_arg(f), call = call
   }
 }
 
-#'
-#'
-#' @examples
-#' bind_unpacked_comps(
-#'   tibble(k = 1, v1 = 1), "k",
-#'   tibble(slide_value = 5), FALSE
-#' )
-#' bind_unpacked_comps(
-#'   tibble(k = 1, v1 = 1), "k",
-#'   tibble(v2 = 5, v3 = 7), c(TRUE, TRUE)
-#' )
-#' bind_unpacked_comps(
-#'   tibble(k = 1, v1 = 1), "k",
-#'   tibble(slide_value = tibble(k = 1, v2 = 5, v3 = 7)), FALSE
-#' )
-#' bind_unpacked_comps(
-#'   tibble(k = 1, v1 = 1), "k",
-#'   tibble(result_tbl = tibble(v2 = 5, v3 = 7)), TRUE
-#' )
-#' bind_unpacked_comps(
-#'   tibble(k = 1, v1 = 1), "k",
-#'   tibble(autonamed = tibble(v2 = 5, v3 = 7), v4 = 9), c(FALSE, TRUE)
-#' )
-#'
-#' \dontrun{
-#' bind_unpacked_comps(
-#'   tibble(k = 1, v1 = 1), "k",
-#'   tibble(autonamed = tibble(v2 = 1:4)), FALSE
-#' )
-#' bind_unpacked_comps(
-#'   tibble(k = 1, v1 = 1), "k",
-#'   tibble(autonamed = tibble(v1 = 1)), FALSE
-#' )
-#' bind_unpacked_comps(
-#'   tibble(k = 1, v1 = 1), "k",
-#'   tibble(slide_value = tibble(k = 2, v2 = 5, v3 = 7)), FALSE
-#' )
-#' }
-#'
-#' # TODO value tests
-# bind_unpacked_comps <- function(existing_tbl, existing_ukey_colnames, comps_tbl, comp_manually_named) {
+# #'
+# #'
+# #' @examples
+# #' cbind_unpacked_comps(
+# #'   tibble(k = 1, v1 = 1), "k",
+# #'   tibble(slide_value = 5), FALSE
+# #' )
+# #' cbind_unpacked_comps(
+# #'   tibble(k = 1, v1 = 1), "k",
+# #'   tibble(v2 = 5, v3 = 7), c(TRUE, TRUE)
+# #' )
+# #' cbind_unpacked_comps(
+# #'   tibble(k = 1, v1 = 1), "k",
+# #'   tibble(slide_value = tibble(k = 1, v2 = 5, v3 = 7)), FALSE
+# #' )
+# #' cbind_unpacked_comps(
+# #'   tibble(k = 1, v1 = 1), "k",
+# #'   tibble(result_tbl = tibble(v2 = 5, v3 = 7)), TRUE
+# #' )
+# #' cbind_unpacked_comps(
+# #'   tibble(k = 1, v1 = 1), "k",
+# #'   tibble(autonamed = tibble(v2 = 5, v3 = 7), v4 = 9), c(FALSE, TRUE)
+# #' )
+# #'
+# #' \dontrun{
+# #' cbind_unpacked_comps(
+# #'   tibble(k = 1, v1 = 1), "k",
+# #'   tibble(autonamed = tibble(v2 = 1:4)), FALSE
+# #' )
+# #' cbind_unpacked_comps(
+# #'   tibble(k = 1, v1 = 1), "k",
+# #'   tibble(autonamed = tibble(v1 = 1)), FALSE
+# #' )
+# #' cbind_unpacked_comps(
+# #'   tibble(k = 1, v1 = 1), "k",
+# #'   tibble(slide_value = tibble(k = 2, v2 = 5, v3 = 7)), FALSE
+# #' )
+# #' }
+# #'
+# #' # TODO value tests
+# cbind_unpacked_comps <- function(existing_tbl, existing_ukey_colnames, comps_tbl, comp_manually_named) {
 #   # TODO should size checks be separated out into another function/stage?  are size checks redundant?
 
 #   # XXX vs. comps_list.... if autoname overlaps, then will need to ensure
@@ -292,23 +297,54 @@ comp_unpack <- function(results, assigned_names, manually_named) {
   unpack(results, all_of(assigned_names[to_unpack]))
 }
 
-bind_unpacked_comp <- function(key_row, existing_val_tbl, comp_tbl) {
-  if (nrow(comp_tbl) != nrow(existing_val_tbl)) {
-    cli_abort("Computation must output a result of size {nrow(existing_val_tbl)}, not {nrow(comp_tbl)}")
+cbind_unpacked_comp <- function(key_row, existing_val_tbl, maybe_subassign_row_inds, comp_subtbl) {
+  expected_comp_subtbl_size <-
+    if(is.null(maybe_subassign_row_inds)) {
+      nrow(existing_val_tbl)
+    } else {
+      length(maybe_subassign_row_inds)
+    }
+  if (nrow(comp_subtbl) != expected_comp_subtbl_size) {
+    cli_abort("Computation must output a result of size {expected_comp_subtbl_size}, not {nrow(comp_subtbl)}")
   }
 
-  is_part_of_ukey <- names(comp_tbl) %in% names(key_row)
-  key_overlap_names <- names(comp_tbl)[is_part_of_ukey]
-  if (!identical(vec_unique(comp_tbl[is_part_of_ukey]), key_row[key_overlap_names])) {
+  is_part_of_ukey <- names(comp_subtbl) %in% names(key_row)
+  key_overlap_names <- names(comp_subtbl)[is_part_of_ukey]
+  if (!identical(vec_unique(comp_subtbl[is_part_of_ukey]), key_row[key_overlap_names])) {
     cli_abort("Computation must not output key columns with modified values")
     # TODO waldo compare etc.
   }
-  if (any(names(comp_tbl) %in% names(existing_val_tbl))) {
+  if (any(names(comp_subtbl) %in% names(existing_val_tbl))) {
     cli_abort(c("Computation must not output pre-existing measurement column names",
-                "x" = "Overlapping names: {format_chr_with_quotes(intersect(names(comp_tbl), names(existing_val_tbl)))}"))
+                "x" = "Overlapping names: {format_chr_with_quotes(intersect(names(comp_subtbl), names(existing_val_tbl)))}"))
   }
 
-  bind_cols(key_row, existing_val_tbl, comp_tbl[!is_part_of_ukey], .name_repair = "minimal")
+  # result <- vec_cbind(key_row, existing_val_tbl, comp_subtbl[!is_part_of_ukey], .name_repair = "minimal")
+  # result
+  # result <- bind_cols(key_row, existing_val_tbl, comp_subtbl[!is_part_of_ukey], .name_repair = "minimal")
+  # result
+  # result <- vec_rep(key_row, vec_size(existing_val_tbl))
+  # result[names(existing_val_tbl)] <- existing_val_tbl
+  # result <- vec_cbind(key_row, existing_val_tbl)
+  # comp_val_tbl <- comp_subtbl[!is_part_of_ukey]
+  # result[names(comp_val_tbl)] <- comp_val_tbl
+  # result
+
+  result <- vec_cbind(key_row, existing_val_tbl)
+  comp_val_tbl <- comp_subtbl[!is_part_of_ukey]
+  if (is.null(NULL)) {
+    result[names(comp_val_tbl)] <- comp_val_tbl
+  } else {
+    result[maybe_subassign_row_inds, names(comp_val_tbl)] <- comp_val_tbl
+  }
+  result
+
+  # comp_val_tbl <- comp_subtbl[!is_part_of_ukey]
+  # comp_val_tbl_complete <- vec_rep(vec_cast(NA, comp_val_tbl), vec_size(existing_val_tbl))
+  # # comp_val_tbl_complete <- vctrs::vec_init(comp_val_tbl, vec_size(existing_val_tbl))
+  # vec_slice(comp_val_tbl_complete, maybe_subassign_row_inds) <- comp_val_tbl
+  # result <- vec_cbind(key_row, existing_val_tbl, comp_val_tbl_complete)
+  # result
 }
 
 time_window_comp_to_simple_hop <- function(time_window_comp, before_n_steps, after_n_steps) {
@@ -331,7 +367,7 @@ time_window_comp_to_simple_hop <- function(time_window_comp, before_n_steps, aft
         # ref_time_value <- vec_slice(x$time_value, nrow(x) - after_n_steps)
         # # FIXME actual name
         # comp_result <- new_tibble(list(slide_value = time_window_comp(x, ek, ref_time_value)))
-        # bind_unpacked_comps( # TODO probably too deeply nested, slow
+        # cbind_unpacked_comps( # TODO probably too deeply nested, slow
         #   bind_cols( # XXX also, this seems like extra work...
         #     ek,
         #     vec_slice(x, nrow(x) - after_n_steps),
