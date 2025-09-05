@@ -413,6 +413,7 @@ group_by.epi_df <- function(.data, ...) {
   result
 }
 
+#' @importFrom dplyr rowwise
 #' @method rowwise epi_df
 #' @param .data an `epi_df`
 #' @rdname print.epi_df
