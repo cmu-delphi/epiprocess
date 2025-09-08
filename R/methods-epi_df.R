@@ -338,15 +338,17 @@ unwrap_ukey_cols <- function(df) {
   class(df) <- vctrs::vec_set_difference(old_class, "epi_df")
   df[seq_along(df)] <- lapply(df, as_non_ukey_col_heavyprefix)
   class(df) <- old_class
-  if (identical(attr(df, "epiprocess:::restore_ukey_cols"), FALSE)) {
-    cli_warn(c("epiprocess internal warning: restore_ukey_cols attr was already set to FALSE before ukey unwrapping operation",
-               ">" = "Please report this to {{epiprocess}} developers."))
-  }
+  # if (identical(attr(df, "epiprocess:::restore_ukey_cols"), FALSE)) {
+  #   cli_warn(c("epiprocess internal warning: restore_ukey_cols attr was already set to FALSE before ukey unwrapping operation",
+  #              ">" = "Please report this to {{epiprocess}} developers."))
+  # }
   attr(df, "epiprocess:::restore_ukey_cols") <- FALSE
   df
 }
 
 rewrap_ukey_cols <- function(df) {
+  # FIXME this should probably take an `original` argument and restore
+  # the attr value to the original's.
   attr(df, "epiprocess:::restore_ukey_cols") <- NULL
   df <- maybe_restore_nongroup_ukey_cols(df)
   df
