@@ -481,9 +481,43 @@ vec_cast_other_hardhat_ukey_col_heavyprefix <- function (x, to, ..., x_arg = cal
 }
 
 #' @export
-vec_cast.integer.hardhat_ukey_col_heavyprefix <- vec_cast_other_hardhat_ukey_col_heavyprefix
+vec_cast.integer.hardhat_ukey_col_heavyprefix <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+  x_data <- ukey_col_heavyprefix_get_data(x)
+  if (class(x_data)[[1L]] == "Date") { # not `inherits`; match `vec_cast` dispatch
+    # Here, vec_cast native integer dispatch on x_data would check for
+    # vec_cast.integer.Date and say x_data can't be cast to integer.
+    # Manually do it.
+    as.integer(x_data)
+  } else {
+    vec_cast(
+      x_data,
+      to,
+      ...,
+      x_arg = glue::glue('ukey_col_heavyprefix_get_data({x_arg})'),
+      to_arg = glue::glue('{to_arg}'),
+      call = call
+    )
+  }
+}
 #' @export
-vec_cast.double.hardhat_ukey_col_heavyprefix <- vec_cast_other_hardhat_ukey_col_heavyprefix
+vec_cast.double.hardhat_ukey_col_heavyprefix <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+  x_data <- ukey_col_heavyprefix_get_data(x)
+  if (class(x_data)[[1L]] == "Date") { # not `inherits`; match `vec_cast` dispatch
+    # Here, vec_cast native double dispatch on x_data would check for
+    # vec_cast.double.Date and say x_data can't be cast to double.
+    # Manually do it.
+    as.double(x_data)
+  } else {
+    vec_cast(
+      x_data,
+      to,
+      ...,
+      x_arg = glue::glue('ukey_col_heavyprefix_get_data({x_arg})'),
+      to_arg = glue::glue('{to_arg}'),
+      call = call
+    )
+  }
+}
 #' @export
 vec_cast.factor.hardhat_ukey_col_heavyprefix <- vec_cast_other_hardhat_ukey_col_heavyprefix
 #' @export

@@ -191,7 +191,7 @@ test_that("Date arithmetic and comparison works", {
 
 test_that("full_seq works", {
   partial_dates <- as.Date("2020-01-01") + c(1,2,4,5) - 1
-  partial_ukdates <- as_ukey_col_heavyprefix(dates)
+  partial_ukdates <- as_ukey_col_heavyprefix(partial_dates)
   expect_identical(
     full_seq(partial_ukdates, period = 1),
     as_ukey_col_heavyprefix(full_seq(partial_dates, period = 1))
