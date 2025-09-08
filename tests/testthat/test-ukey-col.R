@@ -169,6 +169,22 @@ for (do_ukey_date in c(TRUE, FALSE)) {
   }
 }
 
-# TODO is.numeric, inherits, etc.
+# TODO test that is.numeric, inherits, etc. are compatible with
+# original; class() and class()[[1]] being the same impossible with
+# class-based approach
 
-# TODO == tests...
+test_that("Date arithmetic and comparison works", {
+  dates <- as.Date("2020-01-01") + 1:5 - 1
+  ukdates <- as_ukey_col_heavyprefix(dates)
+  weeks <- as.difftime(3, units = "weeks")
+  expect_identical(
+    ukdates == dates[[3]],
+    1:5 == 3
+  )
+  expect_identical(
+    ukdates + weeks, # !!! wrong result.  We need to use S4 bit management / trickery.
+    as_ukey_col_heavyprefix(dates + weeks)
+  )
+})
+
+# TODO round out above +, ==, etc. tests; e.g., <=, ...

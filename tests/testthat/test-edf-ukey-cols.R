@@ -82,3 +82,21 @@ test_that("grouped mutate ukey<Date> replacement works", {
       group_by(geo_value)
   )
 })
+
+
+# ukdate_tbl <- tibble(geo_value = 1, time_value = as_ukey_col_heavyprefix(as.Date("2020-01-01")) - 1 + 1:5, value = 1:5)
+
+# ukdate_tbl %>% filter(time_value == as.Date("2020-01-03"))
+
+# ukdate_tbl %>% mutate(time_value = time_value + as.difftime(3, units = "weeks"))
+
+# class(ukdate_tbl$time_value)[[1]]
+
+local({
+  on.exit(if (exists("con")) DBI::dbDisconnect(con))
+  con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+  mtcars_with_id <- mtcars %>% mutate(id = as_ukey_col_heavyprefix(seq_len(nrow(.))))
+  copy_to(con, mtcars_with_id)
+  mtcars_with_id_dbtbl <- tbl(con, "mtcars_with_id")
+  mtcars_with_id_dbtbl %>% pull(id) %>% class()
+})
