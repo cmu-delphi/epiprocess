@@ -197,3 +197,7 @@ test_that("full_seq works", {
     as_ukey_col_heavyprefix(full_seq(partial_dates, period = 1))
   )
 })
+# ^ Like tsibble index column processing, this complains about not
+# being able to convert to a double.  We need an `as.double` and/or
+# `vec_cast` impl (with special-casing for Date, which doesn't
+# vec_cast to double but has as.double).

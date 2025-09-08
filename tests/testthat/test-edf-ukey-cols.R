@@ -83,20 +83,18 @@ test_that("grouped mutate ukey<Date> replacement works", {
   )
 })
 
+# TODO turn these into tests in another file
 
-# ukdate_tbl <- tibble(geo_value = 1, time_value = as_ukey_col_heavyprefix(as.Date("2020-01-01")) - 1 + 1:5, value = 1:5)
+# local({
+#   on.exit(if (exists("con")) DBI::dbDisconnect(con))
+#   con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+#   mtcars_with_id <- mtcars %>% mutate(id = as_ukey_col_heavyprefix(seq_len(nrow(.))))
+#   copy_to(con, mtcars_with_id)
+#   mtcars_with_id_dbtbl <- tbl(con, "mtcars_with_id")
+#   mtcars_with_id_dbtbl %>% pull(id) %>% class()
+# })
 
-# ukdate_tbl %>% filter(time_value == as.Date("2020-01-03"))
+# data.table allows ukey cols as keys and keeps their classes, though
+# it wouldn't perform further management
 
-# ukdate_tbl %>% mutate(time_value = time_value + as.difftime(3, units = "weeks"))
-
-# class(ukdate_tbl$time_value)[[1]]
-
-local({
-  on.exit(if (exists("con")) DBI::dbDisconnect(con))
-  con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-  mtcars_with_id <- mtcars %>% mutate(id = as_ukey_col_heavyprefix(seq_len(nrow(.))))
-  copy_to(con, mtcars_with_id)
-  mtcars_with_id_dbtbl <- tbl(con, "mtcars_with_id")
-  mtcars_with_id_dbtbl %>% pull(id) %>% class()
-})
+# tsibble(t = as_ukey_col_heavyprefix(as.Date("2020-01-01") + 1:5 - 1), index = t)
