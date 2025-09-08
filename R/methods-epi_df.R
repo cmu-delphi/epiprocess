@@ -404,6 +404,12 @@ dplyr_edf_verb_default <- function(.data, ...) {
 #' @export
 group_by.epi_df <- function(.data, ...) {
   orig_data <- .data
+  # TODO should we instead try to keep ukey-colness of grouping
+  # columns, having unwrap avoid them, rewrap avoid them if
+  # unnecessary (avoiding group recomputation)?
+  #
+  # FIXME if not, hardhat/tidymodels would need to reject grouped
+  # inputs.
   .data <- unwrap_ukey_cols(.data)
   result <- NextMethod()
   attr(result, "epiprocess:::restore_ukey_cols") <- NULL

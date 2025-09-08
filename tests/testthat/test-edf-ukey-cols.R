@@ -83,7 +83,7 @@ test_that("grouped mutate ukey<Date> replacement works", {
   )
 })
 
-# TODO turn these into tests in another file
+# FIXME TODO turn these into tests in another file
 
 # local({
 #   on.exit(if (exists("con")) DBI::dbDisconnect(con))
@@ -98,3 +98,7 @@ test_that("grouped mutate ukey<Date> replacement works", {
 # it wouldn't perform further management
 
 # tsibble(t = as_ukey_col_heavyprefix(as.Date("2020-01-01") + 1:5 - 1), index = t)
+
+# This one might also be solved by the cast but might require extra handling
+#
+# tibble(geo_value = as_ukey_col_heavyprefix("ak"), time_value = as_ukey_col_heavyprefix(as.Date("2020-01-01") + 1:5), value = 1:5) %>% as_epi_df()
