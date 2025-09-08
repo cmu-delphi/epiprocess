@@ -201,3 +201,5 @@ test_that("full_seq works", {
 # being able to convert to a double.  We need an `as.double` and/or
 # `vec_cast` impl (with special-casing for Date, which doesn't
 # vec_cast to double but has as.double).
+
+# TODO tolower, toupper, on ukey<chr>
