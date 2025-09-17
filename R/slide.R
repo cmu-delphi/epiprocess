@@ -376,7 +376,8 @@ epi_slide <- function(
     list_rbind() %>%
     `[`(.$.real, names(.) != ".real") %>%
     arrange_col_canonical() %>%
-    group_by(!!!.x_orig_groups)
+    group_by(!!!.x_orig_groups) %>%
+    {}
 
   # If every group in epi_slide_one_group takes the
   # length(available_ref_time_values) == 0 branch then we end up here.
