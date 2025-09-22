@@ -1,11 +1,10 @@
-new_monoresult_common_monosizer <- function(results_env, common_monosize) {
-  function(result_raw) {
+new_result_common_monosizer <- function(results_env, common_monosize) {
+  function(result_raw, result_monosize) {
     if (!is.null(common_monosize)) {
       # XXX could improve error messages here
       result_recycled <- vctrs::vec_recycle(result_raw, common_monosize)
     } else {
       result_recycled <- result_raw
-      result_monosize <- vctrs::vec_size(result_raw)
       if (result_monosize != 1L) {
         common_monosize <- result_monosize
         for (previous_result_nm in names(results_env)) {
@@ -17,29 +16,59 @@ new_monoresult_common_monosizer <- function(results_env, common_monosize) {
   }
 }
 
-new_polyresult_common_sizer <- function(results_env, common_polysize) {
-  function(result_raw, result_polysize) { # TODO refactor to pass the size
-    # # Suppose all are unchopped. size 1,3,1 * size 5,1,1.
-    # # cumsum 1,4,5 * 5,6,7
-    # # result sizes 5,3,1
-    # # reps 5,1,1,1,1 * 1,1,1,1,1,3,1
-    # # ---
-    # # 1 --> 5, 1 times
-    # # 3 --> 1, 3 times
-    # # 1 --> 1, 1 time
-    # # fifelse(131 == 1, 531, 1)
-    # # fifelse(131 == 1, 1, 131)
-    # # vec_rep_each(fifelse(a == 1, res, 1), fifelse(a == 1, 1, a))
-    # # inds 1,1,1,1,1,2:4,5 * 1:5,6,6,6,7
-    stop("TODO finish")
+new_result_common_polysizer <- function(results_env, common_polysize) {
+  function(result_raw, result_polysize) {
+    # If all N subresults are of size K, we might represent the
+    # polysize as just K instead of rep(K, N).  If we're dealing with
+    # a mix of this abbreviated representation and a length-N
+    # polysize, we need to make sure to recycle.
+    polysizes <- vctrs::vec_recycle_common(result_polysize, common_polysize)
+    result_polysize <- polysizes[[1L]]
+    common_polysize <- polysizes[[2L]]
+    # Now, deal with the subresult sizes within the polysizes:
+    sizes_incompatible <- result_polysize != 1L & common_polysize != 1L & result_polysize != common_polysize
+    if (any(sizes_incompatible)) {
+      first_incompatible_ind <- vctrs::vec_match(TRUE, sizes_incompatible)
+      cli_abort(c(
+        "{sum(sizes_incompatible)} of {length(result_polysize)} subresults from a computation were incompatible with subresults from previous computations",
+        "i" = "The first incompatible size was for subresult {first_incompatible_ind},
+               which was size {result_polysize[[first_incompatible_ind]]} in the current computation,
+               incompatible with the size {common_polysize[[first_incompatible_ind]]}"
+      ))
+    }
+    new_common_polysize <- common_polysize
+    new_common_polysize[result_polysize != 1L] <- result_polysize[result_polysize != 1L]
+    if (!identical(result_size, new_common_polysize)) {
+      # Recycle using `vec_rep_each`.  When the ith result_polysize
+      # entry is 1, we're repeating one subresult entry N times, so we
+      # should generate one `times` entry, given by the ith
+      # `new_common_polysize` entry.  When the ith result_polysize entry
+      # is != 1, we're "repeating" N subresult entries 1 time each, so
+      # we should generate N ones in the `times` vector.
+      result_recycled <- vctrs::vec_rep_each(result_raw, vctrs::vec_rep_each(
+        data.table::fifelse(result_polysize == 1L, new_common_polysize,              1L),
+        data.table::fifelse(result_polysize == 1L,                  1L, result_polysize)
+      ))
+    }
+    if (!identical(common_polysize, new_common_polysize)) {
+      previous_result_recycle_times <- vctrs::vec_rep_each(
+        data.table::fifelse(common_polysize == 1L, new_common_polysize,              1L),
+        data.table::fifelse(common_polysize == 1L,                  1L, common_polysize)
+      )
+      for (previous_result_nm in names(results_env)) {
+        results_env[[previous_result_nm]] <- vctrs::vec_rep_each(results_env[[previous_result_nm]], previous_result_recycle_times)
+      }
+    }
+    common_size <- new_common_size
+    stop("TODO finish; return value + refactor usage to set up and pass the second arg; maybe consider some common subexpression elimination")
   }
 }
 
-new_monoresult_required_sizer <- function(results_env, required_monosize) {
+new_result_required_monosizer <- function(results_env, required_monosize) {
   stop("TODO finish")
 }
 
-new_polyresult_required_sizer <- function(results_env, required_polysize) {
+new_result_required_polysizer <- function(results_env, required_polysize) {
   stop("TODO finish")
 }
 
@@ -67,7 +96,7 @@ apply_comp_quosures <- function(data_mask, results_env, results_names_sequence, 
     ) {
       # Check new result size and/or recycle new result (via return
       # value) and previous results (via mutation) to common size:
-      quosure_result_recycled <- result_sizer(quosure_result_raw)
+      quosure_result_recycled <- result_sizer(quosure_result_raw, vctrs::vec_size(quosure_result_raw))
       # Unpack to multiple columns if appropriate:
       if (inherits(quosure_result_recycled, "data.frame") && !manually_named[[quosure_i]]) {
         new_results_names_sequence <- names(quosure_result_recycled)
