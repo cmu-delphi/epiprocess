@@ -91,6 +91,9 @@ new_monoresult_common_recycler <- function(results_env, common_monosize) {
 #' @keywords internal
 new_polyresult_common_recycler <- function(results_env, common_polysize) {
   unconstrained_polysize <- rep(1L, length(common_polysize))
+  # TODO consider bringing back the length-1 option, but only as a
+  # computationally fast stand-in for rep(1L, N), not reps of other
+  # values.  Also might have done common recycling a bit early before.
   function(polyresult_raw) {
     result_unchopped <- polyresult_raw[[1L]]
     result_polysize <- polyresult_raw[[2L]]
