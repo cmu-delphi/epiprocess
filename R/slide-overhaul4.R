@@ -24,12 +24,12 @@
 #'
 #' @examples
 #'
-#' results_env <- new.env(parent = emptyenv())
+#' results_env <- new.env(hash = FALSE, parent = emptyenv())
 #' monoresult_common_recycler <- new_monoresult_common_recycler(results_env, 1L)
 #' results_env[["a"]] <- monoresult_common_recycler(1)
 #' results_env[["b"]] <- monoresult_common_recycler(1:5)
 #' results_env[["c"]] <- monoresult_common_recycler(2)
-#' rlang::env_get_list(results_env, letters[1:3])
+#' rev(as.list(results_env))
 #' purrr::safely(monoresult_common_recycler)(1:3)
 #'
 #' @keywords internal
@@ -149,6 +149,10 @@ new_polyresult_common_recycler <- function(results_env, common_polysize) {
 new_monoresult_required_recycler <- function(results_env, required_monosize) {
   function(monoresult_raw) {
     # TODO x_arg, call, or custom messaging
+    #
+    # TODO for required_monosize of 1, should this be something more
+    # specialized?  Might also just want a more specialized recycler
+    # for more custom messaging anyway...
     vctrs::vec_recycle(monoresult_raw, required_monosize)
   }
 }
@@ -161,22 +165,15 @@ new_polyresult_trivial_recycler <- function(results_env) {
   stop("TODO finish")
 }
 
-apply_comp_quosures <- function(data_mask, results_env, results_names_sequence,
+apply_comp_quosures <- function(data_mask, results_nonhashing_env,
                                 result_recycler,
                                 comp_quos, manually_named) {
-  # The results_env is an environment; it doesn't track the binding order.
-  # We'll track that separately. For efficiency, we'll use `c` to add to
-  # this order, and deal with binding redefinitions at the end. We'll
-  # reflect deletions immediately (current implementation of `new_tibble`
-  # seems like it would exclude `NULL` bindings for us but `?new_tibble`
-  # doesn't reflect this behavior).
   nms <- names(comp_quos)
   for (quosure_i in seq_along(comp_quos)) {
     quosure_result_raw <- rlang::eval_tidy(comp_quos[[quosure_i]], data_mask)
     if (is.null(quosure_result_raw)) {
       nm <- nms[[quosure_i]]
-      results_names_sequence <- vctrs::vec_set_difference(results_names_sequence, nm)
-      rlang::env_unbind(results_env, nm)
+      rlang::env_unbind(results_nonhashing_env, nm)
     } else if (
       # vctrs considers data.frames to be vectors, but we still check
       # separately for them because certain base operations output data frames
@@ -190,14 +187,12 @@ apply_comp_quosures <- function(data_mask, results_env, results_names_sequence,
       # Unpack to multiple columns if appropriate:
       if (inherits(quosure_result_recycled, "data.frame") && !manually_named[[quosure_i]]) {
         new_results_names_sequence <- names(quosure_result_recycled)
-        results_names_sequence <- c(results_names_sequence, new_results_names_sequence)
         for (new_result_i in seq_along(quosure_result_recycled)) {
-          results_env[[new_results_names_sequence[[new_result_i]]]] <- quosure_result_recycled[[new_result_i]]
+          results_nonhashing_env[[new_results_names_sequence[[new_result_i]]]] <- quosure_result_recycled[[new_result_i]]
         }
       } else {
         nm <- nms[[quosure_i]]
-        results_names_sequence <- c(results_names_sequence, nm)
-        results_env[[nm]] <- quosure_result_recycled
+        results_nonhashing_env[[nm]] <- quosure_result_recycled
       }
     } else {
       cli_abort("
@@ -208,7 +203,6 @@ apply_comp_quosures <- function(data_mask, results_env, results_names_sequence,
           ", class = "epiprocess__invalid_slide_comp_tidyeval_output")
     }
   }
-  return(results_names_sequence)
 }
 
 as_time_window_comp4 <- function(f, dots_quos, f_arg = caller_arg(f), call = caller_env()) {
@@ -246,23 +240,15 @@ as_time_window_comp4 <- function(f, dots_quos, f_arg = caller_arg(f), call = cal
       for (ref_time_value_long_varname in .ref_time_value_long_varnames) {
         data_mask[[ref_time_value_long_varname]] <- .ref_time_value
       }
-      results_env <- new.env(parent = emptyenv())
-      result_recycler <- new_monoresult_required_recycler(results_env, 1L)
-      results_names_sequence <- character()
-      results_names_sequence <- apply_comp_quosures(
-        data_mask, results_env, results_names_sequence, result_recycler,
+      results_nonhashing_env <- new.env(FALSE, emptyenv())
+      result_recycler <- new_monoresult_required_recycler(results_nonhashing_env, 1L)
+      apply_comp_quosures(
+        data_mask, results_nonhashing_env, result_recycler,
         named_quos, manually_named
       )
-      stop("TODO is there an efficient way to make the names sequence nice immediately?  Or just move to unhashed env & rev?")
-      # If a binding was defined and redefined, we may have
-      # duplications within `results_multiorder`. Because
-      # `unique(results_multiorder)` is actually quite slow, we'll
-      # keep the duplicates (--> duplicate result columns) and leave
-      # it to various `mutate` in epi[x]_slide to resolve this to the
-      # appropriate placement:
-      validate_tibble(new_tibble(as.list(results_env, all.names = TRUE)[results_multiorder]))
+      validate_tibble(new_tibble(rev(as.list(results_nonhashing_env, all.names = TRUE))))
     }
-    stop("TODO finish")
+    stop ("TODO finish")
   } else if (is_function(f)) {
     # stop("TODO validate / fix n args")
     if (length(dots_quos) == 0L) {
