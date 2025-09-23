@@ -1,5 +1,7 @@
 #' Recycler function factory to get single-window computations to a common size
 #'
+#' This would be for `reframe`-like computations like `epix_slide`.
+#'
 #' @param results_env environment holding previous computations'
 #'   results (which should be vectors); its entries may be mutated if
 #'   the previous results need to be recycled to match a new common
@@ -49,6 +51,9 @@ new_monoresult_common_recycler <- function(results_env, common_monosize) {
     return(result_recycled)
   }
 }
+
+# XXX we may not actually use a nontrivial polyresult recycler if we
+# don't add across support.
 
 #' Recycler function factory to get polywindow computations to a common polysize
 #'
@@ -142,7 +147,10 @@ new_polyresult_common_recycler <- function(results_env, common_polysize) {
 }
 
 new_monoresult_required_recycler <- function(results_env, required_monosize) {
-  stop("TODO finish")
+  function(monoresult_raw) {
+    # TODO x_arg, call, or custom messaging
+    vctrs::vec_recycle(monoresult_raw, required_monosize)
+  }
 }
 
 new_polyresult_required_recycler <- function(results_env, required_polysize) {
@@ -203,9 +211,75 @@ apply_comp_quosures <- function(data_mask, results_env, results_names_sequence,
   return(results_names_sequence)
 }
 
-# data_mask <- as_data_mask(tibble(a = 1:7 + 0))
-# comp_quosures <- rlang::quos(s = sum(a))
-# results_env <- new.env(parent = emptyenv())
-# results_names_sequence <- character()
-# result_recycler <- new_result_common_recycler(results_env, NULL)
-# rlang::env_get_list(results_env, apply_comp_quosures(data_mask, results_env, results_names_sequence, result_recycler, comp_quosures, FALSE))
+as_time_window_comp4 <- function(f, dots_quos, f_arg = caller_arg(f), call = caller_env()) {
+  if (".col_names" %in% names(dots_quos)) {
+    cli_abort(
+      c("{.code epi_slide} and {.code epix_slide} do not support `.col_names`;
+         consider:",
+        "*" = "using {.code epi_slide_mean}, {.code epi_slide_sum}, or
+               {.code epi_slide_opt}, if applicable",
+        "*" = "using {.code .f = ~ .x %>%
+               dplyr::reframe(across(your_col_names, list(your_func_name = your_func)))}"
+      ),
+      call = call,
+      class = "epiprocess__as_slide_computation__given_.col_names"
+    )
+  }
+  # stop("TODO determine output form... is this a fn of 1/2/3 args or some union?")
+  if (missing(f)) {
+    named_quos <- quos_auto_name(dots_quos) # resolves := among other things
+    manually_named <- names2(dots_quos) != "" | vapply(dots_quos, function(quosure) {
+      expression <- quo_get_expr(quosure)
+      is.call(expression) && expression[[1L]] == sym(":=")
+    }, FUN.VALUE = logical(1L))
+    ref_time_value_long_varnames <- ".ref_time_value"
+    slide_comp_fn <- function(.x, .group_key, .ref_time_value) {
+      x_as_env <- rlang::as_environment(.x)
+      data_mask <- rlang::new_data_mask(bottom = results_env, top = x_as_env)
+      data_mask$.data <- rlang::as_data_pronoun(data_mask)
+      # We'll also install `.x` directly, not as an `rlang_data_pronoun`, so
+      # that we can, e.g., use more dplyr and epiprocess operations. It won't be
+      # (and doesn't make sense nrow-wise to be) updated with results as we loop
+      # through the quosures.
+      data_mask$.x <- .x
+      data_mask$.group_key <- .group_key
+      for (ref_time_value_long_varname in .ref_time_value_long_varnames) {
+        data_mask[[ref_time_value_long_varname]] <- .ref_time_value
+      }
+      results_env <- new.env(parent = emptyenv())
+      result_recycler <- new_monoresult_required_recycler(results_env, 1L)
+      results_names_sequence <- character()
+      results_names_sequence <- apply_comp_quosures(
+        data_mask, results_env, results_names_sequence, result_recycler,
+        named_quos, manually_named
+      )
+      stop("TODO is there an efficient way to make the names sequence nice immediately?  Or just move to unhashed env & rev?")
+      # If a binding was defined and redefined, we may have
+      # duplications within `results_multiorder`. Because
+      # `unique(results_multiorder)` is actually quite slow, we'll
+      # keep the duplicates (--> duplicate result columns) and leave
+      # it to various `mutate` in epi[x]_slide to resolve this to the
+      # appropriate placement:
+      validate_tibble(new_tibble(as.list(results_env, all.names = TRUE)[results_multiorder]))
+    }
+    stop("TODO finish")
+  } else if (is_function(f)) {
+    # stop("TODO validate / fix n args")
+    if (length(dots_quos) == 0L) {
+      # Leaving `.f` unchanged slightly improves computation speed and trims
+      # debug stack traces:
+      slide_comp_fn <- f
+    } else {
+      slide_comp_fn <- partial(f, ...=, !!!dots_quos)
+    }
+    list(
+      fn = slide_comp_fn,
+      out_names = "slide_value", # FIXME
+      out_manually_named = FALSE # FIXME
+    )
+  } else if (is_formula(f)) {
+    stop("TODO finish")
+  } else {
+    stop("TODO balk")
+  }
+}
