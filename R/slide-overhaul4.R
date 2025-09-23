@@ -63,10 +63,9 @@ new_monoresult_common_recycler <- function(results_env, common_monosize) {
 #' Polywindow computation results are represented as an unnamed list
 #' of two elements: (i) the result you would get from
 #' `list_unchop`ping a list of the single-window results together, and
-#' (ii) the "polysize" of the computation.  The polysize may be (a)
+#' (ii) the "polysize" of the computation.  The polysize should be
 #' the result you'd get from `list_sizes` on a list of single-window
-#' results or (b) just a single integer, if all the single-window
-#' results are of that size.
+#' results.
 #'
 #' @param results_env like in [`new_monoresult_common_recycler`], but
 #'   instead of holding monoresults it will be holding unchopped
@@ -81,41 +80,33 @@ new_monoresult_common_recycler <- function(results_env, common_monosize) {
 #' @examples
 #'
 #' results_env <- new.env(parent = emptyenv())
-#' polyresult_common_recycler <- new_polyresult_common_recycler(results_env, 1L)
-#' results_env[["a"]] <- polyresult_common_recycler(list(c(0, 7, 8), 1L))
+#' polyresult_common_recycler <- new_polyresult_common_recycler(results_env, rep(1L, 3L))
+#' results_env[["a"]] <- polyresult_common_recycler(list(c(0, 7, 8), rep(1L, 3L)))
 #' results_env[["b"]] <- polyresult_common_recycler(list(c(1, 2:4, 1), c(1L, 3L, 1L)))
 #' results_env[["c"]] <- polyresult_common_recycler(list(c(2:5, 3, 1), c(4L, 1L, 1L)))
-#' results_env[["d"]] <- polyresult_common_recycler(list(c(0, 7, 8), 1L))
-#' rlang::env_get_list(results_env, letters[1:3])
+#' results_env[["d"]] <- polyresult_common_recycler(list(c(0, 7, 8), rep(1L, 3L)))
+#' rlang::env_get_list(results_env, letters[1:4])
 #' purrr::safely(polyresult_common_recycler)(list(c(1:5, 1, 1), c(5L, 1L, 1L)))
 #'
 #' @keywords internal
 new_polyresult_common_recycler <- function(results_env, common_polysize) {
+  unconstrained_polysize <- rep(1L, length(common_polysize))
   function(polyresult_raw) {
     result_unchopped <- polyresult_raw[[1L]]
     result_polysize <- polyresult_raw[[2L]]
-    # If all N subresults are of size K, we might represent the
-    # polysize as just K instead of rep(K, N).  If we're dealing with
-    # a mix of this abbreviated representation and a length-N
-    # polysize, we need to make sure to recycle.
-    polysizes <- vctrs::vec_recycle_common(result_polysize, common_polysize)
-    result_polysize <- polysizes[[1L]]
-    common_polysize <- polysizes[[2L]]
-    # Now, deal with the subresult sizes within the polysizes:
     sizes_incompatible <- result_polysize != 1L & common_polysize != 1L & result_polysize != common_polysize
     if (any(sizes_incompatible)) {
-      stop("FIXME TODO check the length-1 polysize case here and in normal operation")
       first_incompatible_ind <- vctrs::vec_match(TRUE, sizes_incompatible)
       cli_abort(c(
-        "{sum(sizes_incompatible)} of {length(result_polysize)} subresults from a computation were incompatible with subresults from previous computations",
-        "i" = "The first incompatible size was for subresult {first_incompatible_ind},
+        "{sum(sizes_incompatible)} of the {length(result_polysize)} subresults from a computation were incompatible with subresults from previous computations",
+        "i" = "The first incompatible size was for subresult {first_incompatible_ind} of {length(result_polysize)},
                which was size {result_polysize[[first_incompatible_ind]]} in the current computation,
-               incompatible with the size {common_polysize[[first_incompatible_ind]]}"
+               incompatible with the size {common_polysize[[first_incompatible_ind]]} from previous computations."
       ))
     }
-    if (!identical(common_polysize, 1L)) {
+    if (!identical(common_polysize, unconstrained_polysize)) {
       new_common_polysize <- common_polysize
-      new_common_polysize[result_polysize != 1L] <- result_polysize[result_polysize != 1L]
+      new_common_polysize[common_polysize == 1L] <- result_polysize[common_polysize == 1L]
     } else {
       new_common_polysize <- result_polysize
     }
