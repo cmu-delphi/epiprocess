@@ -124,10 +124,14 @@ new_polyresult_common_recycler <- function(results_env, common_polysize) {
       # Recycle using `vec_rep_each`.  When the ith result_polysize
       # entry is 1, we're repeating one subresult entry N times, so we
       # should generate one `times` entry, given by the ith
-      # `new_common_polysize` entry.  When the ith result_polysize entry
-      # is != 1, we're "repeating" N subresult entries 1 time each, so
-      # we should generate N ones in the `times` vector.
+      # `new_common_polysize` entry.  When the ith result_polysize
+      # entry is != 1, we're "repeating" N subresult entries 1 time
+      # each, so we should generate N ones in the `times` vector.  We
+      # also prepare this `times` vector using `vec_rep_each`.
       polyresult_unchopped_recycled <- vctrs::vec_rep_each(result_unchopped, vctrs::vec_rep_each(
+        #                   Do we need to        | v-this many copies | Just one copy
+        #                   recycle 1 elt or     | v of the next (1L) | each of the next
+        #                   keep multiple elts?  | v element          | respolysize elts
         data.table::fifelse(result_polysize == 1L, new_common_polysize,              1L),
         data.table::fifelse(result_polysize == 1L,                  1L, result_polysize)
       ))
