@@ -229,10 +229,11 @@ as_time_window_comp4 <- function(f, dots_quos, f_arg = caller_arg(f), call = cal
       expression <- quo_get_expr(quosure)
       is.call(expression) && expression[[1L]] == sym(":=")
     }, FUN.VALUE = logical(1L))
-    ref_time_value_long_varnames <- ".ref_time_value"
+    .ref_time_value_long_varnames <- ".ref_time_value"
     slide_comp_fn <- function(.x, .group_key, .ref_time_value) {
       x_as_env <- rlang::as_environment(.x)
-      data_mask <- rlang::new_data_mask(bottom = results_env, top = x_as_env)
+      results_nonhashing_env <- new.env(FALSE, x_as_env)
+      data_mask <- rlang::new_data_mask(bottom = results_nonhashing_env, top = x_as_env)
       data_mask$.data <- rlang::as_data_pronoun(data_mask)
       # We'll also install `.x` directly, not as an `rlang_data_pronoun`, so
       # that we can, e.g., use more dplyr and epiprocess operations. It won't be
@@ -243,7 +244,6 @@ as_time_window_comp4 <- function(f, dots_quos, f_arg = caller_arg(f), call = cal
       for (ref_time_value_long_varname in .ref_time_value_long_varnames) {
         data_mask[[ref_time_value_long_varname]] <- .ref_time_value
       }
-      results_nonhashing_env <- new.env(FALSE, emptyenv())
       result_recycler <- new_monoresult_required_recycler(results_nonhashing_env, 1L)
       apply_comp_quosures(
         data_mask, results_nonhashing_env, result_recycler,
@@ -289,4 +289,158 @@ as_time_window_comp4 <- function(f, dots_quos, f_arg = caller_arg(f), call = cal
   } else {
     stop("TODO balk")
   }
+}
+
+epi_slide4 <- function(
+    .x, .f, ...,
+    .window_size = NULL, .align = c("right", "center", "left"), .ref_time_values = NULL,
+    .new_col_name = NULL, .all_rows = FALSE) {
+  # Validate arguments
+  assert_no_hard_deprecated_epi_slide_args(rlang::call_match())
+  assert_class(.x, "epi_df")
+  # XXX TODO we will use groups of .x to determine completions to perform. also
+  # will change the geo x ref_time_values to output?? except want size stability??
+  #
+  # TODO instead of reversing completion, do we just warn on completion adding
+  # rows? or just do it? or make it an option (maybe rename .all_rows & provide
+  # 3 choices)?
+  #
+  if (nrow(.x) == 0L) {
+    return(.x)
+  }
+  time_window_comp <- as_time_window_comp4(.f, enquos(...))
+  # stop("FIXME properly use args...")
+  before_n_steps <- .window_size - 1L
+  after_n_steps <- 0L
+  simple_hop <- time_window_comp_to_simple_hop(time_window_comp, before_n_steps, after_n_steps)
+  if(is.null(.ref_time_values)) {
+    .ref_time_values <- sort(unique(.x$time_value))
+  } else {
+    .ref_time_values <- vec_cast(.ref_time_values, .x$time_value)
+    if (!test_subset(.ref_time_values, unique(.x$time_value))) {
+      cli_abort(
+        "epi_slide: `ref_time_values` must be a unique subset of the time values in `x`.",
+        class = "epiprocess__epi_slide_invalid_ref_time_values"
+      )
+    }
+  }
+
+  # TODO additional validation?
+
+
+  # TODO this should be shared with epi_slide_opt
+  # .x %>%
+  #   group_modify(function(grp_data, grp_key) {
+  #     grp_ref_time_values <- vec_set_intersect(.ref_time_values, grp_data$time_value)
+  #     if (vec_size(grp_ref_time_values) == 0L) {
+  #       if (.all_rows) {
+  #         return (grp_data)
+  #       } else {
+  #         return (vec_slice(grp_data, integer()))
+  #       }
+  #     }
+
+  #     # grp_data %>%
+  #     #   with_temp_completion(
+  #     #     quos(epikeys__, time_value = _____),
+  #     #     function(completed) {
+  #     #       completed %>%
+  #     #         group_by(epikeys____) %>%
+  #     #         group_modify(function(ek_data, ek) {
+  #     #           simple_hop(ek_data, ek, ref_inds!!)
+  #     #           stop("don't have ref_inds to pass...")
+  #     #         }) %>%
+  #     #         ungroup()
+  #     #     }
+  #     #   )
+
+  #     # grp_data %>%
+  #     #   group_by(pick(all_of(key_colnames(.x)))) %>%
+  #     #   group_modify(function(ek_data, ek) {
+  #     #     ek_data %>%
+  #     #       with_temp_completion(
+  #     #         quos(time_value = ...),
+  #     #         function(ek_data_completed, ref_inds) {
+  #     #           ek_data_completed %>%
+  #     #             simple_hop(ek_data_completed, ek, ref_inds)
+  #     #         }
+  #     #       )
+  #     #   }) %>%
+  #     #   ungroup()
+
+  #     stop("TODO complete")
+  #     stop("TODO hop")
+  #     stop("TODO decomplete")
+  #   })
+
+  time_type <- attr(.x, "metadata")$time_type
+  unit_step <- unit_time_delta(time_type, "fast")
+
+  comps <- .x %>%
+    group_map(.keep = TRUE, function(grp_data, grp_key) {
+      # TODO reconsider this grouping behavior...
+
+      # grp_ref_time_values <- vec_set_intersect(.ref_time_values, grp_data$time_value)
+      # if (vec_size(grp_ref_time_values) == 0L) {
+      #   return(new_tibble(list(), nrow = 0L))
+      # }
+      grp_min_time_value <- min(grp_data$time_value)
+      grp_max_time_value <- max(grp_data$time_value)
+      origin_time_value <- grp_min_time_value
+
+      grp_data %>%
+        group_by(pick(all_of(c("geo_value", attr(.x, "metadata")$other_keys)))) %>%
+        group_map(function(ek_data, ek) {
+          # TODO ensure arranged if needed
+          ek_ref_time_values <- vec_set_intersect(.ref_time_values, ek_data$time_value)
+          # TODO test whether origin time value stuff actually is helpful;
+          # consider if can refactor to a with-ish function
+          inp_timesteps <- time_minus_time_in_n_steps(ek_data$time_value, origin_time_value, time_type)
+          out_timesteps <- time_minus_time_in_n_steps(ek_ref_time_values, origin_time_value, time_type)
+          if (vec_size(out_timesteps) == 0L) {
+            stop("TODO")
+          }
+          slide_start_timestep <-
+            if (before_n_steps == Inf) {
+              grp_min_time_value - origin_time_value
+            } else {
+              min(out_timesteps) - before_n_steps
+            }
+          slide_end_timestep <- max(out_timesteps) + after_n_steps
+          slide_timesteps <- seq(slide_start_timestep, slide_end_timestep)
+          slide_inp_backrefs <- vec_match(slide_timesteps, inp_timesteps)
+          # TODO refactor to use a join if not using backrefs later anymore?
+          #
+          # TODO perf: try removing time_value column before slice?
+          slide_tbl <- vec_slice(ek_data, slide_inp_backrefs)
+          slide_tbl$time_value <- origin_time_value + slide_timesteps * unit_step
+
+          ref_inds <- vec_match(out_timesteps, slide_timesteps)
+          # out_vec <- simple_hop(slide_tbl, epikey, ref_inds)
+          # TODO optimize
+          # out_tbl <- tibble(epikey = ek, time_value = out_timesteps, slide_result = out_vec)
+          # out_tbl <- new_tibble(vctrs::vec_recycle_common(epikey = ek, time_value = out_timesteps, slide_result = out_vec))
+          # out_vecs <- simple_hop(slide_tbl, ek, ref_inds)
+          # out_tbl <- new_tibble(vctrs::vec_recycle_common(epikey = ek, time_value = out_timesteps, !!!out_vecs))
+          out_subtbl <- simple_hop(slide_tbl, ek, ref_inds)
+          maybe_result_row_inds_for_out_subtbl <-
+            if (identical(inp_timesteps, out_timesteps)) {
+              NULL
+            } else {
+              vec_match(out_timesteps, inp_timesteps)
+            }
+          result_tbl <- cbind_unpacked_comp(ek, ek_data, maybe_result_row_inds_for_out_subtbl, out_subtbl)
+          result_tbl
+        })
+    }) %>%
+  list_flatten() %>%
+  list_rbind() %>%
+  dplyr_reconstruct(.x)
+
+  # TODO unpack epikey
+  # TODO unpack/name result
+
+  # TODO combine with input...
+
+  comps
 }
