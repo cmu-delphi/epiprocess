@@ -29,7 +29,7 @@
 #' results_env[["a"]] <- monoresult_common_recycler(1)
 #' results_env[["b"]] <- monoresult_common_recycler(1:5)
 #' results_env[["c"]] <- monoresult_common_recycler(2)
-#' rev(as.list(results_env))
+#' rev(as.list(results_env, all.names = TRUE))
 #' purrr::safely(monoresult_common_recycler)(1:3)
 #'
 #' @keywords internal
@@ -186,13 +186,12 @@ apply_comp_quosures <- function(data_mask, results_nonhashing_env,
       quosure_result_recycled <- result_recycler(quosure_result_raw)
       # Unpack to multiple columns if appropriate:
       if (inherits(quosure_result_recycled, "data.frame") && !manually_named[[quosure_i]]) {
-        new_results_names_sequence <- names(quosure_result_recycled)
+        new_results_names <- names(quosure_result_recycled)
         for (new_result_i in seq_along(quosure_result_recycled)) {
-          results_nonhashing_env[[new_results_names_sequence[[new_result_i]]]] <- quosure_result_recycled[[new_result_i]]
+          results_nonhashing_env[[new_results_names[[new_result_i]]]] <- quosure_result_recycled[[new_result_i]]
         }
       } else {
-        nm <- nms[[quosure_i]]
-        results_nonhashing_env[[nm]] <- quosure_result_recycled
+        results_nonhashing_env[[nms[[quosure_i]]]] <- quosure_result_recycled
       }
     } else {
       cli_abort("
@@ -247,8 +246,26 @@ as_time_window_comp4 <- function(f, dots_quos, f_arg = caller_arg(f), call = cal
         named_quos, manually_named
       )
       validate_tibble(new_tibble(rev(as.list(results_nonhashing_env, all.names = TRUE))))
+      # ^ TODO consider providing nrow
+      #
+      # ^^ TODO consider removing/hoisting validation
+      #
+      # ^^^ TODO consider not actually constructing a tibble at this
+      # point, or doing our own even-less-validated construction.  Or
+      # accepting named lists and processing them as column lists.  Or
+      # use our own builder / df subclass. Or use `new_data_frame`
+      # which doesn't perform validation (consider including `n = `).
     }
-    stop ("TODO finish")
+    list(
+      fn = slide_comp_fn,
+      out_names = "slide_value", # FIXME this isn't considering the
+                                 # manual-naming args in epi_slide();
+                                 # seems like same for the below
+                                 # cases; perhaps we need to take in
+                                 # these args, or perhaps this isn't
+                                 # the point at which to assign this
+      out_manually_named = FALSE # FIXME
+    )
   } else if (is_function(f)) {
     # stop("TODO validate / fix n args")
     if (length(dots_quos) == 0L) {
