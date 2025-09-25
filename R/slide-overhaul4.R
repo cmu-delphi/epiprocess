@@ -192,10 +192,7 @@ apply_comp_quosures <- function(data_mask, results_nonhashing_env,
       quosure_result_recycled <- result_recycler(quosure_result_raw)
       # Unpack to multiple columns if appropriate:
       if (inherits(quosure_result_recycled, "data.frame") && !manually_named[[quosure_i]]) {
-        new_results_names <- names(quosure_result_recycled)
-        for (new_result_i in seq_along(quosure_result_recycled)) {
-          results_nonhashing_env[[new_results_names[[new_result_i]]]] <- quosure_result_recycled[[new_result_i]]
-        }
+        list2env(quosure_result_recycled, results_nonhashing_env)
       } else {
         results_nonhashing_env[[nms[[quosure_i]]]] <- quosure_result_recycled
       }
