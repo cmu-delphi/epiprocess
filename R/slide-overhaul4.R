@@ -330,113 +330,63 @@ epi_slide4 <- function(
 
   # TODO additional validation?
 
-
-  # TODO this should be shared with epi_slide_opt
-  # .x %>%
-  #   group_modify(function(grp_data, grp_key) {
-  #     grp_ref_time_values <- vec_set_intersect(.ref_time_values, grp_data$time_value)
-  #     if (vec_size(grp_ref_time_values) == 0L) {
-  #       if (.all_rows) {
-  #         return (grp_data)
-  #       } else {
-  #         return (vec_slice(grp_data, integer()))
-  #       }
-  #     }
-
-  #     # grp_data %>%
-  #     #   with_temp_completion(
-  #     #     quos(epikeys__, time_value = _____),
-  #     #     function(completed) {
-  #     #       completed %>%
-  #     #         group_by(epikeys____) %>%
-  #     #         group_modify(function(ek_data, ek) {
-  #     #           simple_hop(ek_data, ek, ref_inds!!)
-  #     #           stop("don't have ref_inds to pass...")
-  #     #         }) %>%
-  #     #         ungroup()
-  #     #     }
-  #     #   )
-
-  #     # grp_data %>%
-  #     #   group_by(pick(all_of(key_colnames(.x)))) %>%
-  #     #   group_modify(function(ek_data, ek) {
-  #     #     ek_data %>%
-  #     #       with_temp_completion(
-  #     #         quos(time_value = ...),
-  #     #         function(ek_data_completed, ref_inds) {
-  #     #           ek_data_completed %>%
-  #     #             simple_hop(ek_data_completed, ek, ref_inds)
-  #     #         }
-  #     #       )
-  #     #   }) %>%
-  #     #   ungroup()
-
-  #     stop("TODO complete")
-  #     stop("TODO hop")
-  #     stop("TODO decomplete")
-  #   })
-
   time_type <- attr(.x, "metadata")$time_type
   unit_step <- unit_time_delta(time_type, "fast")
 
+  # TODO consider determining the min_time_value by group so that this
+  # is compatible with group_split, map(epi_slide), list_rbind.
+  min_time_value <- min(.x$time_value)
+  origin_time_value <- min_time_value # or any other time_value
+  ref_timesteps <- time_minus_time_in_n_steps(.ref_time_values, origin_time_value, time_type)
+
   comps <- .x %>%
-    group_map(.keep = TRUE, function(grp_data, grp_key) {
-      # TODO reconsider this grouping behavior...
+    group_by(pick(all_of(c("geo_value", attr(.x, "metadata")$other_keys)))) %>%
+    group_map(function(ek_data, ek) {
+      # TODO ensure arranged if needed
+      #
+      # TODO test whether origin time value stuff actually is helpful;
+      # consider if can refactor to a with-ish function
+      #
+      # TODO consider with_temp_completion helper
+      inp_timesteps <- time_minus_time_in_n_steps(ek_data$time_value, origin_time_value, time_type)
+      out_timesteps <- vec_set_intersect(ref_timesteps, inp_timesteps)
+      if (vec_size(out_timesteps) == 0L) {
+        stop("TODO")
+      }
+      slide_start_timestep <-
+        if (before_n_steps == Inf) {
+          min_time_value - origin_time_value
+        } else {
+          min(out_timesteps) - before_n_steps
+        }
+      slide_end_timestep <- max(out_timesteps) + after_n_steps
+      slide_timesteps <- seq(slide_start_timestep, slide_end_timestep)
+      slide_inp_backrefs <- vec_match(slide_timesteps, inp_timesteps)
+      # TODO refactor to use a join if not using backrefs later anymore?
+      #
+      # TODO perf: try removing time_value column before slice?
+      slide_tbl <- vec_slice(ek_data, slide_inp_backrefs)
+      slide_tbl$time_value <- origin_time_value + slide_timesteps * unit_step
 
-      # grp_ref_time_values <- vec_set_intersect(.ref_time_values, grp_data$time_value)
-      # if (vec_size(grp_ref_time_values) == 0L) {
-      #   return(new_tibble(list(), nrow = 0L))
-      # }
-      grp_min_time_value <- min(grp_data$time_value)
-      grp_max_time_value <- max(grp_data$time_value)
-      origin_time_value <- grp_min_time_value
+      ref_inds <- vec_match(out_timesteps, slide_timesteps)
+      out_subtbl <- simple_hop(slide_tbl, ek, ref_inds)
 
-      grp_data %>%
-        group_by(pick(all_of(c("geo_value", attr(.x, "metadata")$other_keys)))) %>%
-        group_map(function(ek_data, ek) {
-          # TODO ensure arranged if needed
-          ek_ref_time_values <- vec_set_intersect(.ref_time_values, ek_data$time_value)
-          # TODO test whether origin time value stuff actually is helpful;
-          # consider if can refactor to a with-ish function
-          inp_timesteps <- time_minus_time_in_n_steps(ek_data$time_value, origin_time_value, time_type)
-          out_timesteps <- time_minus_time_in_n_steps(ek_ref_time_values, origin_time_value, time_type)
-          if (vec_size(out_timesteps) == 0L) {
-            stop("TODO")
-          }
-          slide_start_timestep <-
-            if (before_n_steps == Inf) {
-              grp_min_time_value - origin_time_value
-            } else {
-              min(out_timesteps) - before_n_steps
-            }
-          slide_end_timestep <- max(out_timesteps) + after_n_steps
-          slide_timesteps <- seq(slide_start_timestep, slide_end_timestep)
-          slide_inp_backrefs <- vec_match(slide_timesteps, inp_timesteps)
-          # TODO refactor to use a join if not using backrefs later anymore?
-          #
-          # TODO perf: try removing time_value column before slice?
-          slide_tbl <- vec_slice(ek_data, slide_inp_backrefs)
-          slide_tbl$time_value <- origin_time_value + slide_timesteps * unit_step
-
-          ref_inds <- vec_match(out_timesteps, slide_timesteps)
-          # out_vec <- simple_hop(slide_tbl, epikey, ref_inds)
-          # TODO optimize
-          # out_tbl <- tibble(epikey = ek, time_value = out_timesteps, slide_result = out_vec)
-          # out_tbl <- new_tibble(vctrs::vec_recycle_common(epikey = ek, time_value = out_timesteps, slide_result = out_vec))
-          # out_vecs <- simple_hop(slide_tbl, ek, ref_inds)
-          # out_tbl <- new_tibble(vctrs::vec_recycle_common(epikey = ek, time_value = out_timesteps, !!!out_vecs))
-          out_subtbl <- simple_hop(slide_tbl, ek, ref_inds)
-          maybe_result_row_inds_for_out_subtbl <-
-            if (identical(inp_timesteps, out_timesteps)) {
-              NULL
-            } else {
-              vec_match(out_timesteps, inp_timesteps)
-            }
-          result_tbl <- cbind_unpacked_comp(ek, ek_data, maybe_result_row_inds_for_out_subtbl, out_subtbl)
-          result_tbl
-        })
+      if (.all_rows) {
+        res_timesteps <- inp_timesteps
+        ek_data_subtbl <- ek_data
+      } else {
+        res_timesteps <- out_timesteps
+        ek_data_subtbl <- vec_slice(ek_data, vec_match(res_timesteps, inp_timesteps))
+      }
+      if (identical(out_timesteps, res_timesteps)) {
+        # TODO check whether this optimization needed
+        maybe_result_row_inds_for_out_subtbl <- NULL
+      } else {
+        maybe_result_row_inds_for_out_subtbl <- vec_match(out_timesteps, res_timesteps)
+      }
+      result_tbl <- cbind_unpacked_comp(ek, ek_data_subtbl, maybe_result_row_inds_for_out_subtbl, out_subtbl)
+      result_tbl
     }) %>%
-  list_flatten() %>%
   list_rbind() %>%
   dplyr_reconstruct(.x)
 
