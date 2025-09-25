@@ -233,10 +233,10 @@ as_time_window_comp4 <- function(f, dots_quos, f_arg = caller_arg(f), call = cal
     }, FUN.VALUE = logical(1L))
     .ref_time_value_long_varnames <- ".ref_time_value"
     slide_comp_fn <- function(.x, .group_key, .ref_time_value) {
-      x_as_env <- rlang::as_environment(.x)
+      x_as_env <- list2env(.x, parent = emptyenv())
       results_nonhashing_env <- new.env(FALSE, x_as_env)
-      data_mask <- rlang::new_data_mask(bottom = results_nonhashing_env, top = x_as_env)
-      data_mask$.data <- rlang::as_data_pronoun(data_mask)
+      data_mask <- new_data_mask(bottom = results_nonhashing_env, top = x_as_env)
+      data_mask$.data <- as_data_pronoun(data_mask)
       # We'll also install `.x` directly, not as an `rlang_data_pronoun`, so
       # that we can, e.g., use more dplyr and epiprocess operations. It won't be
       # (and doesn't make sense nrow-wise to be) updated with results as we loop
