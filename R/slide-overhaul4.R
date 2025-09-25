@@ -249,7 +249,10 @@ as_time_window_comp4 <- function(f, dots_quos, f_arg = caller_arg(f), call = cal
         data_mask, results_nonhashing_env, result_recycler,
         named_quos, manually_named
       )
-      validate_tibble(new_tibble(rev(as.list(results_nonhashing_env, all.names = TRUE))))
+      # validate_tibble(new_tibble(rev(as.list(results_nonhashing_env, all.names = TRUE))))
+      new_data_frame(rev(as.list(results_nonhashing_env, all.names = TRUE)),
+                     # TODO S3 extractor fn
+                     n = environment(result_recycler)[["common_monosize"]])
       # ^ TODO consider providing nrow
       #
       # ^^ TODO consider removing/hoisting validation

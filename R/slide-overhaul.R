@@ -458,7 +458,7 @@ time_window_comp_to_simple_hop <- function(time_window_comp, before_n_steps, aft
         #   rep(FALSE, length())
         # )
         #
-        ref_time_value <- vec_slice(x$time_value, nrow(x) - after_n_steps)
+        ref_time_value <- vec_slice(x$time_value, vec_size(x) - after_n_steps)
         comp_result <- slide_comp_fn(x, ek, ref_time_value)
         comp_result
       }
