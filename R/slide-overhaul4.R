@@ -169,6 +169,8 @@ new_polyresult_trivial_recycler <- function(results_env) {
   stop("TODO finish")
 }
 
+# TODO recycler -> size_policy? or back to sizer?
+
 apply_comp_quosures <- function(data_mask, results_nonhashing_env,
                                 result_recycler,
                                 comp_quos, manually_named) {
@@ -263,16 +265,17 @@ as_time_window_comp4 <- function(f, dots_quos, f_arg = caller_arg(f), call = cal
       # use our own builder / df subclass. Or use `new_data_frame`
       # which doesn't perform validation (consider including `n = `).
     }
-    list(
-      fn = slide_comp_fn,
-      out_names = "slide_value", # FIXME this isn't considering the
-                                 # manual-naming args in epi_slide();
-                                 # seems like same for the below
-                                 # cases; perhaps we need to take in
-                                 # these args, or perhaps this isn't
-                                 # the point at which to assign this
-      out_manually_named = FALSE # FIXME
-    )
+    # list(
+    #   fn = slide_comp_fn,
+    #   out_names = "slide_value", # FIXME this isn't considering the
+    #                              # manual-naming args in epi_slide();
+    #                              # seems like same for the below
+    #                              # cases; perhaps we need to take in
+    #                              # these args, or perhaps this isn't
+    #                              # the point at which to assign this
+    #   out_manually_named = FALSE # FIXME
+    # )
+    slide_comp_fn
   } else if (is_function(f)) {
     # stop("TODO validate / fix n args")
     if (length(dots_quos) == 0L) {
@@ -282,15 +285,48 @@ as_time_window_comp4 <- function(f, dots_quos, f_arg = caller_arg(f), call = cal
     } else {
       slide_comp_fn <- partial(f, ...=, !!!dots_quos)
     }
-    list(
-      fn = slide_comp_fn,
-      out_names = "slide_value", # FIXME
-      out_manually_named = FALSE # FIXME
-    )
+    # list(
+    #   fn = slide_comp_fn,
+    #   out_names = "slide_value", # FIXME
+    #   out_manually_named = FALSE # FIXME
+    # )
+    slide_comp_fn
   } else if (is_formula(f)) {
     stop("TODO finish")
   } else {
     stop("TODO balk")
+  }
+}
+
+time_window_comp_to_simple_hop4 <- function(time_window_comp, before_n_steps, after_n_steps) {
+  force(time_window_comp)
+  force(before_n_steps)
+  force(after_n_steps)
+  if (before_n_steps == Inf) {
+    stop("TODO, probably in separate function?")
+  }
+  #
+  function(ek_data, ek, ref_inds) {
+    ukey_colnames <- c(names(ek), "time_value")
+    results <- slider::hop(
+      ek_data,
+      ref_inds - before_n_steps,
+      ref_inds + after_n_steps,
+      function(x) {
+        ref_time_value <- vec_slice(x$time_value, vec_size(x) - after_n_steps)
+        comp_result <- time_window_comp(x, ek, ref_time_value)
+        comp_result
+      }
+    )
+
+    if (!all(list_sizes(results) == 1L)) {
+      cli_abort("Slide computations must all output results of size 1.")
+      # TODO better message
+      #
+      # TODO only check if not tidyeval, which already should have checked?
+    }
+
+    return(vec_c(!!!results))
   }
 }
 
@@ -301,9 +337,6 @@ epi_slide4 <- function(
   # Validate arguments
   assert_no_hard_deprecated_epi_slide_args(rlang::call_match())
   assert_class(.x, "epi_df")
-  # XXX TODO we will use groups of .x to determine completions to perform. also
-  # will change the geo x ref_time_values to output?? except want size stability??
-  #
   # TODO instead of reversing completion, do we just warn on completion adding
   # rows? or just do it? or make it an option (maybe rename .all_rows & provide
   # 3 choices)?
@@ -324,7 +357,7 @@ epi_slide4 <- function(
   # stop("FIXME properly use args...")
   before_n_steps <- .window_size - 1L
   after_n_steps <- 0L
-  simple_hop <- time_window_comp_to_simple_hop(time_window_comp, before_n_steps, after_n_steps)
+  simple_hop <- time_window_comp_to_simple_hop4(time_window_comp, before_n_steps, after_n_steps)
   if (is.null(.ref_time_values)) {
     .ref_time_values <- sort(vec_unique(.x$time_value))
   } else {
@@ -382,7 +415,29 @@ epi_slide4 <- function(
       slide_tbl$time_value <- origin_time_value + slide_timesteps * unit_step
 
       ref_inds <- vec_match(out_timesteps, slide_timesteps)
-      out_subtbl <- simple_hop(slide_tbl, ek, ref_inds)
+      out_comp_result <- simple_hop(slide_tbl, ek, ref_inds)
+
+      # Re-use some tidyeval stuff to perform unpacking and naming for
+      # us.  It's a bit awkward, so TODO see if we can refactor away
+      # the bits we need without impacting tidyeval performance and
+      # without duplicating code.
+      data_mask <- rlang::new_data_mask(new.env())
+      unhashed_results_env <- new.env(FALSE, emptyenv())
+      result_recycler <- identity # XXX or use a monoresult size checker in place of current size check
+      if (is.null(.new_col_name)) {
+        out_name <- "slide_value"
+        out_manually_named <- FALSE
+      } else {
+        out_name <- .new_col_name
+        out_manually_named <- TRUE
+      }
+      manually_named <- !is.null(.new_col_name)
+      apply_comp_quosures(data_mask, unhashed_results_env, result_recycler,
+                          rlang::quos(
+                            !!out_name := out_comp_result
+                          ),
+                          out_manually_named)
+      out_subtbl <- new_tibble(rev(as.list(unhashed_results_env)))
 
       if (.all_rows) {
         res_timesteps <- inp_timesteps
@@ -402,11 +457,6 @@ epi_slide4 <- function(
     }) %>%
   list_rbind() %>%
   dplyr_reconstruct(.x)
-
-  # TODO unpack epikey
-  # TODO unpack/name result
-
-  # TODO combine with input...
 
   comps
 }
