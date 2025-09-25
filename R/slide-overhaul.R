@@ -411,7 +411,7 @@ cbind_unpacked_comp <- function(key_row, existing_val_tbl, maybe_subassign_row_i
 
   result <- vec_cbind(key_row, existing_val_tbl)
   comp_val_tbl <- comp_subtbl[!is_part_of_ukey]
-  if (is.null(NULL)) {
+  if (is.null(NULL)) { # FIXME
     result[names(comp_val_tbl)] <- comp_val_tbl
   } else {
     result[maybe_subassign_row_inds, names(comp_val_tbl)] <- comp_val_tbl
@@ -468,6 +468,8 @@ time_window_comp_to_simple_hop <- function(time_window_comp, before_n_steps, aft
     if (!all(list_sizes(results) == 1L)) {
       cli_abort("Slide computations must all output results of size 1.")
       # TODO better message
+      #
+      # TODO only check if not tidyeval, which already should have checked?
     }
 
     result <- list(vec_c(!!!results))

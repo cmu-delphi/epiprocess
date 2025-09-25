@@ -308,7 +308,16 @@ epi_slide4 <- function(
   # rows? or just do it? or make it an option (maybe rename .all_rows & provide
   # 3 choices)?
   #
-  if (nrow(.x) == 0L) {
+  if (vec_size(.x) == 0) {
+    # We'll have 0 computation outputs to provide (we intersect
+    # requested `.ref_time_values` with available `$time_value`s).  In
+    # this situation, `dplyr` would run a computation on a 0-row input
+    # with NA group key to produce output columns (differently for
+    # summarize and group_modify).  That can lead to confusing error
+    # messages, so let's deviate and just give up on adding output
+    # columns.
+    #
+    # TODO consider hard error
     return(.x)
   }
   time_window_comp <- as_time_window_comp4(.f, enquos(...))
@@ -316,11 +325,11 @@ epi_slide4 <- function(
   before_n_steps <- .window_size - 1L
   after_n_steps <- 0L
   simple_hop <- time_window_comp_to_simple_hop(time_window_comp, before_n_steps, after_n_steps)
-  if(is.null(.ref_time_values)) {
-    .ref_time_values <- sort(unique(.x$time_value))
+  if (is.null(.ref_time_values)) {
+    .ref_time_values <- sort(vec_unique(.x$time_value))
   } else {
     .ref_time_values <- vec_cast(.ref_time_values, .x$time_value)
-    if (!test_subset(.ref_time_values, unique(.x$time_value))) {
+    if (!test_subset(.ref_time_values, vec_unique(.x$time_value))) {
       cli_abort(
         "epi_slide: `ref_time_values` must be a unique subset of the time values in `x`.",
         class = "epiprocess__epi_slide_invalid_ref_time_values"
@@ -351,7 +360,11 @@ epi_slide4 <- function(
       inp_timesteps <- time_minus_time_in_n_steps(ek_data$time_value, origin_time_value, time_type)
       out_timesteps <- vec_set_intersect(ref_timesteps, inp_timesteps)
       if (vec_size(out_timesteps) == 0L) {
-        stop("TODO")
+        if (.all_rows) {
+          return(vec_cbind(ek, ek_data))
+        } else {
+          return(vec_cbind(ek, ek_data)[0, ])
+        }
       }
       slide_start_timestep <-
         if (before_n_steps == Inf) {
@@ -384,7 +397,7 @@ epi_slide4 <- function(
       } else {
         maybe_result_row_inds_for_out_subtbl <- vec_match(out_timesteps, res_timesteps)
       }
-      result_tbl <- cbind_unpacked_comp(ek, ek_data_subtbl, maybe_result_row_inds_for_out_subtbl, out_subtbl)
+      result_tbl <- cbind_unpacked_comp4(ek, ek_data_subtbl, maybe_result_row_inds_for_out_subtbl, out_subtbl)
       result_tbl
     }) %>%
   list_rbind() %>%
@@ -396,4 +409,26 @@ epi_slide4 <- function(
   # TODO combine with input...
 
   comps
+}
+
+cbind_unpacked_comp4 <- function(key_row, existing_val_tbl, maybe_subassign_row_inds, comp_subtbl) {
+  is_part_of_ukey <- names(comp_subtbl) %in% names(key_row)
+  key_overlap_names <- names(comp_subtbl)[is_part_of_ukey]
+  if (!identical(vec_unique(comp_subtbl[is_part_of_ukey]), key_row[key_overlap_names])) {
+    cli_abort("Computation must not output key columns with modified values")
+    # TODO waldo compare etc.
+  }
+  if (any(names(comp_subtbl) %in% names(existing_val_tbl))) {
+    cli_abort(c("Computation must not output pre-existing measurement column names",
+                "x" = "Overlapping names: {format_chr_with_quotes(intersect(names(comp_subtbl), names(existing_val_tbl)))}"))
+  }
+
+  result <- vec_cbind(key_row, existing_val_tbl)
+  comp_val_tbl <- comp_subtbl[!is_part_of_ukey]
+  if (is.null(maybe_subassign_row_inds)) {
+    result[names(comp_val_tbl)] <- comp_val_tbl
+  } else {
+    result[maybe_subassign_row_inds, names(comp_val_tbl)] <- comp_val_tbl
+  }
+  result
 }
