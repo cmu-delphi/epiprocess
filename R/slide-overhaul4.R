@@ -179,12 +179,12 @@ comp_result_unpack_assign <- function(comp_result, results_nonhashing_env, comp_
   }
 }
 
-apply_comp_quosures <- function(data_mask, results_nonhashing_env,
-                                result_recycler,
-                                comp_quos, manually_named) {
+apply_comp_quosures <- function(results_nonhashing_env, result_recycler,
+                                comp_quos, manually_named,
+                                quo_eval, ...) {
   nms <- names(comp_quos)
   for (quosure_i in seq_along(comp_quos)) {
-    quosure_result_raw <- rlang::eval_tidy(comp_quos[[quosure_i]], data_mask)
+    quosure_result_raw <- quo_eval(comp_quos[[quosure_i]], ...)
     if (obj_is_vector(quosure_result_raw) && is.null(vec_names(quosure_result_raw)) ||
           # vctrs considers data.frames to be vectors, but we still check
           # separately for them because certain base operations output data frames
@@ -199,6 +199,10 @@ apply_comp_quosures <- function(data_mask, results_nonhashing_env,
       nm <- nms[[quosure_i]]
       rlang::env_unbind(results_nonhashing_env, nm)
     } else {
+      # FIXME TODO refactor this error handler alonside quo_eval.
+      #
+      # or... hoist loop outside of function, handle eval externally,
+      # and feed in a cli_abort promise all ready for the error case?
       cli_abort("
             Problem with output of {.code
             {rlang::expr_deparse(rlang::quo_get_expr(comp_quos[[quosure_i]]))}}; it
@@ -247,8 +251,8 @@ as_time_window_comp4 <- function(f, dots_quos, f_arg = caller_arg(f), call = cal
       }
       result_recycler <- new_monoresult_required_recycler(results_nonhashing_env, 1L)
       apply_comp_quosures(
-        data_mask, results_nonhashing_env, result_recycler,
-        named_quos, manually_named
+        results_nonhashing_env, result_recycler,
+        named_quos, manually_named, rlang::eval_tidy, data_mask
       )
       # validate_tibble(new_tibble(rev(as.list(results_nonhashing_env, all.names = TRUE))))
       new_data_frame(rev(as.list(results_nonhashing_env, all.names = TRUE)),
@@ -431,11 +435,11 @@ epi_slide4 <- function(
         out_manually_named <- TRUE
       }
       manually_named <- !is.null(.new_col_name)
-      apply_comp_quosures(data_mask, unhashed_results_env, result_recycler,
+      apply_comp_quosures(unhashed_results_env, result_recycler,
                           rlang::quos(
                             !!out_name := out_comp_result
                           ),
-                          out_manually_named)
+                          out_manually_named, rlang::eval_tidy, data_mask)
       out_subtbl <- new_tibble(rev(as.list(unhashed_results_env)))
 
       if (.all_rows) {
