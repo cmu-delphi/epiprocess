@@ -171,14 +171,6 @@ new_polyresult_trivial_recycler <- function(results_env) {
 
 # TODO recycler -> size_policy? or back to sizer?
 
-comp_result_unpack_assign <- function(comp_result, results_nonhashing_env, comp_name, comp_manually_named) {
-  if (inherits(comp_result, "data.frame") && !comp_manually_named) {
-    list2env(comp_result, results_nonhashing_env)
-  } else {
-    results_nonhashing_env[[comp_name]] <- comp_result
-  }
-}
-
 apply_comp_quosures <- function(results_nonhashing_env, result_recycler,
                                 comp_quos, manually_named,
                                 quo_eval, ...) {
@@ -194,7 +186,11 @@ apply_comp_quosures <- function(results_nonhashing_env, result_recycler,
       # value) and previous results (via mutation) to common size:
       quosure_result_recycled <- result_recycler(quosure_result_raw)
       # Unpack to multiple columns if appropriate:
-      comp_result_unpack_assign(quosure_result_recycled, results_nonhashing_env, nms[[quosure_i]], manually_named[[quosure_i]])
+      if (inherits(quosure_result_recycled, "data.frame") && !manually_named[[quosure_i]]) {
+        list2env(quosure_result_recycled, results_nonhashing_env)
+      } else {
+        results_nonhashing_env[[nms[[quosure_i]]]] <- quosure_result_recycled
+      }
     } else if (is.null(quosure_result_raw)) {
       nm <- nms[[quosure_i]]
       rlang::env_unbind(results_nonhashing_env, nm)
