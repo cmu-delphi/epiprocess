@@ -171,31 +171,33 @@ new_polyresult_trivial_recycler <- function(results_env) {
 
 # TODO recycler -> size_policy? or back to sizer?
 
+comp_result_unpack_assign <- function(comp_result, results_nonhashing_env, comp_name, comp_manually_named) {
+  if (inherits(comp_result, "data.frame") && !comp_manually_named) {
+    list2env(comp_result, results_nonhashing_env)
+  } else {
+    results_nonhashing_env[[comp_name]] <- comp_result
+  }
+}
+
 apply_comp_quosures <- function(data_mask, results_nonhashing_env,
                                 result_recycler,
                                 comp_quos, manually_named) {
   nms <- names(comp_quos)
   for (quosure_i in seq_along(comp_quos)) {
     quosure_result_raw <- rlang::eval_tidy(comp_quos[[quosure_i]], data_mask)
-    if (is.null(quosure_result_raw)) {
-      nm <- nms[[quosure_i]]
-      rlang::env_unbind(results_nonhashing_env, nm)
-    } else if (
-      # vctrs considers data.frames to be vectors, but we still check
-      # separately for them because certain base operations output data frames
-      # with rownames, which we will allow (but might drop)
-      is.data.frame(quosure_result_raw) ||
-        vctrs::obj_is_vector(quosure_result_raw) && is.null(vctrs::vec_names(quosure_result_raw))
-    ) {
+    if (obj_is_vector(quosure_result_raw) && is.null(vec_names(quosure_result_raw)) ||
+          # vctrs considers data.frames to be vectors, but we still check
+          # separately for them because certain base operations output data frames
+          # with rownames, which we will allow (but might drop)
+          is.data.frame(quosure_result_raw)) {
       # Check new result size and/or recycle new result (via return
       # value) and previous results (via mutation) to common size:
       quosure_result_recycled <- result_recycler(quosure_result_raw)
       # Unpack to multiple columns if appropriate:
-      if (inherits(quosure_result_recycled, "data.frame") && !manually_named[[quosure_i]]) {
-        list2env(quosure_result_recycled, results_nonhashing_env)
-      } else {
-        results_nonhashing_env[[nms[[quosure_i]]]] <- quosure_result_recycled
-      }
+      comp_result_unpack_assign(quosure_result_recycled, results_nonhashing_env, nms[[quosure_i]], manually_named[[quosure_i]])
+    } else if (is.null(quosure_result_raw)) {
+      nm <- nms[[quosure_i]]
+      rlang::env_unbind(results_nonhashing_env, nm)
     } else {
       cli_abort("
             Problem with output of {.code
