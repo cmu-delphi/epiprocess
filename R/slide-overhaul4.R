@@ -52,6 +52,8 @@ new_monoresult_common_recycler <- function(results_env, common_monosize) {
   }
 }
 
+# TODO update recyclers with extra nrow required
+
 # XXX we may not actually use a nontrivial polyresult recycler if we
 # don't add across support.
 
@@ -150,18 +152,31 @@ new_polyresult_common_recycler <- function(results_env, common_polysize) {
   }
 }
 
-new_monoresult_required_recycler <- function(results_env, required_monosize) {
+new_monoresult_fixed_recycler <- function(results_env, required_monosize) {
+  attr(results_env, "nrow") <- required_monosize # mutates
   function(monoresult_raw) {
     # TODO x_arg, call, or custom messaging
     #
     # TODO for required_monosize of 1, should this be something more
     # specialized?  Might also just want a more specialized recycler
     # for more custom messaging anyway...
-    vctrs::vec_recycle(monoresult_raw, required_monosize)
+    vec_recycle(monoresult_raw, required_monosize)
   }
 }
 
-new_polyresult_required_recycler <- function(results_env, required_polysize) {
+# TODO consider managing all sizer state through the results_env attrs.
+
+new_monoresult_size_validator <- function(results_env, required_monosize) {
+  attr(results_env, "nrow") <- required_monosize # mutates
+  function(monoresult_raw) {
+    if (vec_size(monoresult_raw) != required_monosize) {
+      cli_abort("Computation must output a result of size {required_monosize}, not size {vec_size(monoresult_raw)}.")
+    }
+    monoresult_raw
+  }
+}
+
+new_polyresult_fixed_recycler <- function(results_env, required_polysize) {
   stop("TODO finish")
 }
 
@@ -171,42 +186,32 @@ new_polyresult_trivial_recycler <- function(results_env) {
 
 # TODO recycler -> size_policy? or back to sizer?
 
-apply_comp_quosures <- function(results_nonhashing_env, result_recycler,
-                                comp_quos, manually_named,
-                                quo_eval, ...) {
-  nms <- names(comp_quos)
-  for (quosure_i in seq_along(comp_quos)) {
-    quosure_result_raw <- quo_eval(comp_quos[[quosure_i]], ...)
-    if (obj_is_vector(quosure_result_raw) && is.null(vec_names(quosure_result_raw)) ||
-          # vctrs considers data.frames to be vectors, but we still check
-          # separately for them because certain base operations output data frames
-          # with rownames, which we will allow (but might drop)
-          is.data.frame(quosure_result_raw)) {
-      # Check new result size and/or recycle new result (via return
-      # value) and previous results (via mutation) to common size:
-      quosure_result_recycled <- result_recycler(quosure_result_raw)
-      # Unpack to multiple columns if appropriate:
-      if (inherits(quosure_result_recycled, "data.frame") && !manually_named[[quosure_i]]) {
-        list2env(quosure_result_recycled, results_nonhashing_env)
-      } else {
-        results_nonhashing_env[[nms[[quosure_i]]]] <- quosure_result_recycled
-      }
-    } else if (is.null(quosure_result_raw)) {
-      nm <- nms[[quosure_i]]
-      rlang::env_unbind(results_nonhashing_env, nm)
+bind_comp_raw_result <- function(results_nonhashing_env, result_size_policy,
+                                 comp_raw_result, comp_name, comp_manually_named) {
+  if (obj_is_vector(comp_raw_result) && is.null(vec_names(comp_raw_result)) ||
+        # vctrs considers data.frames to be vectors, but we still check
+        # separately for them because certain base operations output data frames
+        # with rownames, which we will allow (but might drop)
+        is.data.frame(comp_raw_result)) {
+    # Check new result size and/or recycle new result (via return
+    # value) and previous results (via mutation) to common size:
+    comp_recycled_result <- result_size_policy(comp_raw_result)
+    # Unpack to multiple columns if appropriate:
+    if (inherits(comp_recycled_result, "data.frame") && !comp_manually_named) {
+      list2env(comp_recycled_result, results_nonhashing_env)
     } else {
-      # FIXME TODO refactor this error handler alonside quo_eval.
-      #
-      # or... hoist loop outside of function, handle eval externally,
-      # and feed in a cli_abort promise all ready for the error case?
-      cli_abort("
-            Problem with output of {.code
-            {rlang::expr_deparse(rlang::quo_get_expr(comp_quos[[quosure_i]]))}}; it
-            produced a result that was neither NULL, a data.frame, nor a vector
-            without unnamed entries (as determined by the vctrs package).
-          ", class = "epiprocess__invalid_slide_comp_tidyeval_output")
+      results_nonhashing_env[[comp_name]] <- comp_recycled_result
     }
-  }
+  } else if (is.null(comp_raw_result)) {
+    rlang::env_unbind(results_nonhashing_env, nm)
+  } else {
+    cli_abort("
+      Problem with output for {.code {comp_name}}; it produced a
+      result that was neither NULL, a data.frame, nor a vector
+      without unnamed entries (as determined by the vctrs
+      package).
+    ", class = "epiprocess__invalid_slide_comp_tidyeval_output")
+    }
 }
 
 as_time_window_comp4 <- function(f, dots_quos, f_arg = caller_arg(f), call = caller_env()) {
@@ -245,15 +250,17 @@ as_time_window_comp4 <- function(f, dots_quos, f_arg = caller_arg(f), call = cal
       for (ref_time_value_long_varname in .ref_time_value_long_varnames) {
         data_mask[[ref_time_value_long_varname]] <- .ref_time_value
       }
-      result_recycler <- new_monoresult_required_recycler(results_nonhashing_env, 1L)
-      apply_comp_quosures(
-        results_nonhashing_env, result_recycler,
-        named_quos, manually_named, rlang::eval_tidy, data_mask
-      )
+      result_size_policy <- new_monoresult_size_validator(results_nonhashing_env, 1L)
+      nms <- names(named_quos)
+      for (quosure_i in seq_along(named_quos)) {
+        quosure_result_raw <- eval_tidy(named_quos[[quosure_i]], data_mask)
+        bind_comp_raw_result(results_nonhashing_env, result_size_policy,
+                             quosure_result_raw, nms[[quosure_i]], manually_named[[quosure_i]])
+      }
       # validate_tibble(new_tibble(rev(as.list(results_nonhashing_env, all.names = TRUE))))
       new_data_frame(rev(as.list(results_nonhashing_env, all.names = TRUE)),
                      # TODO S3 extractor fn
-                     n = environment(result_recycler)[["common_monosize"]])
+                     n = attr(results_nonhashing_env, "nrow"))
       # ^ TODO consider providing nrow
       #
       # ^^ TODO consider removing/hoisting validation
@@ -301,31 +308,30 @@ time_window_comp_to_simple_hop4 <- function(time_window_comp, before_n_steps, af
   force(time_window_comp)
   force(before_n_steps)
   force(after_n_steps)
-  if (before_n_steps == Inf) {
-    stop("TODO, probably in separate function?")
-  }
   #
   function(ek_data, ek, ref_inds) {
-    ukey_colnames <- c(names(ek), "time_value")
-    results <- slider::hop(
-      ek_data,
-      ref_inds - before_n_steps,
-      ref_inds + after_n_steps,
+    if (before_n_steps == Inf) {
+      befores <- 1L
+    } else {
+      befores <- ref_inds - before_n_steps
+    }
+    afters <- ref_inds + after_n_steps
+    # `hop_vec` takes care of checking that each result is of size 1
+    # immediately after every result.  We need that for fn and formula
+    # cases.  It's redundant but in tidyeval case, which checks after
+    # each quosure evaluation, but there's not a clear faster
+    # alternative.
+    results <- slider::hop_vec(
+      ek_data, befores, afters,
       function(x) {
-        ref_time_value <- vec_slice(x$time_value, vec_size(x) - after_n_steps)
-        comp_result <- time_window_comp(x, ek, ref_time_value)
-        comp_result
+        # perf: pass ref_time_value calculation in lazily, so that if
+        # `time_window_comp` doesn't use it, we don't pay for it. (2x
+        # speedup for simple calculations.)
+        time_window_comp(x, ek, vec_slice(x$time_value, vec_size(x) - after_n_steps))
       }
     )
 
-    if (!all(list_sizes(results) == 1L)) {
-      cli_abort("Slide computations must all output results of size 1.")
-      # TODO better message
-      #
-      # TODO only check if not tidyeval, which already should have checked?
-    }
-
-    return(vec_c(!!!results))
+    return(results)
   }
 }
 
@@ -420,9 +426,8 @@ epi_slide4 <- function(
       # us.  It's a bit awkward, so TODO see if we can refactor away
       # the bits we need without impacting tidyeval performance and
       # without duplicating code.
-      data_mask <- rlang::new_data_mask(new.env())
       unhashed_results_env <- new.env(FALSE, emptyenv())
-      result_recycler <- identity # XXX or use a monoresult size checker in place of current size check
+      result_size_policy <- identity # XXX or use a monoresult size checker in place of current size check
       if (is.null(.new_col_name)) {
         out_name <- "slide_value"
         out_manually_named <- FALSE
@@ -430,12 +435,8 @@ epi_slide4 <- function(
         out_name <- .new_col_name
         out_manually_named <- TRUE
       }
-      manually_named <- !is.null(.new_col_name)
-      apply_comp_quosures(unhashed_results_env, result_recycler,
-                          rlang::quos(
-                            !!out_name := out_comp_result
-                          ),
-                          out_manually_named, rlang::eval_tidy, data_mask)
+      bind_comp_raw_result(unhashed_results_env, result_size_policy,
+                           out_comp_result, out_name, out_manually_named)
       out_subtbl <- new_tibble(rev(as.list(unhashed_results_env)))
 
       if (.all_rows) {
