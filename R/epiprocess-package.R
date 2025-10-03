@@ -33,6 +33,7 @@
 #' @importFrom vctrs vec_equal
 #' @importFrom vctrs vec_in
 #' @importFrom vctrs vec_order
+#' @importFrom vctrs vec_ptype
 #' @importFrom vctrs vec_rbind
 #' @importFrom vctrs vec_recycle_common
 #' @importFrom vctrs vec_rep

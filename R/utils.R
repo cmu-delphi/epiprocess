@@ -1060,3 +1060,35 @@ check_ukey_unique <- function(x, ukey_names, end_cli_message = character()) {
     }
   }
 }
+
+vec_cast_patched <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+  x_ptype <- vec_ptype(x)
+  to_ptype <- vec_ptype(to)
+  date_ptype <- vec_ptype(vctrs::new_date())
+  if (identical(x_ptype, character()) && identical(to_ptype, date_ptype)) {
+    result <-
+      withCallingHandlers(
+        as.Date(x),
+        error = function(e) {
+          cli_abort(
+            c("Can't convert {x_arg} to character class",
+              "i" = "{x_arg} was {x}"),
+            parent = e,
+            class = "epiprocess__vec_cast_patched__chr_to_date_failed"
+          )
+        }
+      )
+    if (!identical(is.na(x), is.na(result))) {
+      cli_abort(
+        c("Can't convert some entries of {x_arg} to character class",
+          "i" = "Problematic entries: {x[!is.na(x) & is.na(result)]}"),
+        class = "epiprocess__vec_cast_patched__chr_to_date_failed"
+      )
+    }
+    result
+  } else if (identical(x_ptype, date_ptype) && identical(to_ptype, character())) {
+    as.character(x)
+  } else {
+    vec_cast(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
+  }
+}
