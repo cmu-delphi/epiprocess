@@ -35,6 +35,11 @@
 #' @param predictor_name Optional string containing no curly braces,
 #'   or a [`glue::glue_data`] pattern string; what/how should we name
 #'   the lagged version of the predictor in the output?
+#' @param nomatch `NA` or `NULL`; what do we do when there is no
+#'   measurement available due to reporting latency or being at edges
+#'   or gaps of the time series?  `NA` means to include a row with an
+#'   `NA` as the lagged predictor value; `NULL` means to not output a
+#'   row in these cases.  (Forwarded to [`[.data.table`].)
 #' @param drop_time_value Optional Boolean; should we drop the
 #'   `time_value` column from the result?  The default, `TRUE`, is
 #'   makes merging results for multiple `time_lag`s cleaner (the join
@@ -51,6 +56,7 @@
 epix_realtime_predictor_lag <- function(archive, varname, time_lag,
                                         versions = epix_slide_versions_default(archive),
                                         predictor_name = "{.col}_{.dir}_{.amt}_realtime",
+                                        nomatch = NA,
                                         drop_time_value = TRUE) {
   assert_class(archive, "epi_archive")
   time_type <- archive$time_type
@@ -77,7 +83,7 @@ epix_realtime_predictor_lag <- function(archive, varname, time_lag,
     c(key(archive$DT), varname),
     with = FALSE,
     on = key(archive$DT),
-    roll = TRUE, nomatch = NA,
+    roll = TRUE, nomatch = nomatch,
     allow.cartesian = TRUE # skip unnecessary & misleading check
   ]
   nms <- names(result)
@@ -93,4 +99,3 @@ epix_realtime_predictor_lag <- function(archive, varname, time_lag,
 # TODO tidyselect?
 # TODO indexing based on a reference_date / reference_time? as in Hub?
 # TODO allow for version lag?
-# TODO parameterize nomatch?

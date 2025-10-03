@@ -10,6 +10,7 @@ epix_realtime_predictor_lag(
   time_lag,
   versions = epix_slide_versions_default(archive),
   predictor_name = "{.col}_{.dir}_{.amt}_realtime",
+  nomatch = NA,
   drop_time_value = TRUE
 )
 }
@@ -32,6 +33,12 @@ didn't change any values.}
 \item{predictor_name}{Optional string containing no curly braces,
 or a \code{\link[glue:glue]{glue::glue_data}} pattern string; what/how should we name
 the lagged version of the predictor in the output?}
+
+\item{nomatch}{\code{NA} or \code{NULL}; what do we do when there is no
+measurement available due to reporting latency or being at edges
+or gaps of the time series?  \code{NA} means to include a row with an
+\code{NA} as the lagged predictor value; \code{NULL} means to not output a
+row in these cases.  (Forwarded to [\verb{[.data.table}].)}
 
 \item{drop_time_value}{Optional Boolean; should we drop the
 \code{time_value} column from the result?  The default, \code{TRUE}, is
