@@ -69,7 +69,7 @@ epix_realtime_predictor_lag <- function(archive, varname, time_lag,
   predictor_name <- glue::glue_data(list(
     .col = varname,
     .dir = if (time_delta_to_n_steps(time_lag, time_type) >= 0) "lag" else "lead",
-    .amt = paste0(time_delta_to_n_steps(time_lag, time_type), time_type_unit_abbr(time_type))
+    .amt = paste0(abs(time_delta_to_n_steps(time_lag, time_type)), time_type_unit_abbr(time_type))
   ), predictor_name)
   assert_logical(drop_time_value, any.missing = FALSE, len = 1L)
   #
