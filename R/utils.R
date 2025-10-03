@@ -897,7 +897,7 @@ deprecated_quo_is_present <- function(quo) {
 #'   double unless `b` is the GCD and an integer, in which case it is expected
 #'   be an integer.
 #'
-#' @noRd
+#' @keywords internal
 gcd2num <- function(a, b, rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
   assert_numeric(a, len = 1L)
   assert_numeric(b, len = 1L)
@@ -941,7 +941,7 @@ gcd2num <- function(a, b, rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
 #' @return Same [`vctrs::vec_ptype`] as `dividends`, `length` 1: the gcd. (Or an
 #'   error.)
 #'
-#' @noRd
+#' @keywords internal
 gcd_num <- function(dividends, ..., rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
   if (!is.numeric(dividends) || length(dividends) == 0L) {
     cli_abort("`dividends` must satisfy `is.numeric`, and have `length` > 0")
@@ -1061,7 +1061,10 @@ check_ukey_unique <- function(x, ukey_names, end_cli_message = character()) {
   }
 }
 
-vec_cast_patched <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+#' Version of [`vctrs::vec_cast`] that allows chr <-> date
+#'
+#' @inheritParams vctrs::vec_cast
+vec_cast_patched <- function(x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
   x_ptype <- vec_ptype(x)
   to_ptype <- vec_ptype(to)
   date_ptype <- vec_ptype(vctrs::new_date())
@@ -1072,7 +1075,8 @@ vec_cast_patched <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", ca
         error = function(e) {
           cli_abort(
             c("Can't convert {x_arg} to character class",
-              "i" = "{x_arg} was {x}"),
+              "i" = "{x_arg} was {x}"
+            ),
             parent = e,
             class = "epiprocess__vec_cast_patched__chr_to_date_failed"
           )
@@ -1081,7 +1085,8 @@ vec_cast_patched <- function (x, to, ..., x_arg = caller_arg(x), to_arg = "", ca
     if (!identical(is.na(x), is.na(result))) {
       cli_abort(
         c("Can't convert some entries of {x_arg} to character class",
-          "i" = "Problematic entries: {x[!is.na(x) & is.na(result)]}"),
+          "i" = "Problematic entries: {x[!is.na(x) & is.na(result)]}"
+        ),
         class = "epiprocess__vec_cast_patched__chr_to_date_failed"
       )
     }

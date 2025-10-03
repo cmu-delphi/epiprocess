@@ -108,6 +108,7 @@ Collate:
     'inline-roxygen.R'
     'key_colnames.R'
     'methods-epi_df.R'
+    'nowcasting-helpers.R'
     'outliers.R'
     'reexports.R'
     'revision_analysis.R'

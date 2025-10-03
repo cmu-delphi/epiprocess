@@ -140,9 +140,18 @@ epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
 #' @param x An `epi_archive` object
 #' @return The latest snapshot from an `epi_archive` object
 #' @export
-epix_as_of_current <- function(x) {
+epix_as_of_latest <- function(x) {
   assert_class(x, "epi_archive")
   x %>% epix_as_of(.$versions_end)
+}
+
+#' @export
+epix_as_of_current <- function(x) {
+  lifecycle::deprecate_warn(
+    "0.13.0", "epix_as_of_current()", "epix_as_of_latest()",
+    details = 'Future versions of `epix_as_of_current` may remove this deprecation, but change its implementation to require "current" to be sometime recent, i.e., require there to be a nontrivial recent update to the data.'
+  )
+  epix_as_of_latest(x)
 }
 
 #' Set the `versions_end` attribute of an `epi_archive` object
