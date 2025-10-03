@@ -62,10 +62,10 @@ epix_realtime_predictor_lag <- function(archive, varname, time_lag,
   assert_string(predictor_name)
   predictor_name <- glue::glue_data(list(
     .col = varname,
-    .dir = if (time_lag >= 0) "lag" else "lead",
+    .dir = if (time_delta_to_n_steps(time_lag, time_type) >= 0) "lag" else "lead",
     .amt = paste0(time_delta_to_n_steps(time_lag, time_type), time_type_unit_abbr(time_type))
   ), predictor_name)
-  assert_logical(keep_time_value, any.missing = FALSE, len = 1L)
+  assert_logical(drop_time_value, any.missing = FALSE, len = 1L)
   #
   epikey_names <- key_colnames(archive, exclude = c("time_value", "version"))
   epikeys <- unique(archive$DT, by = epikey_names, cols = character())
@@ -93,3 +93,4 @@ epix_realtime_predictor_lag <- function(archive, varname, time_lag,
 # TODO tidyselect?
 # TODO indexing based on a reference_date / reference_time? as in Hub?
 # TODO allow for version lag?
+# TODO parameterize nomatch?
