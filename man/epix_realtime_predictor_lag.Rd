@@ -22,7 +22,9 @@ lag}
 
 \item{time_lag}{Length-1 "time delta"; either an integer number of
 time steps (with size determined by \code{archive$time_type}), or a
-\code{difftime} object.}
+\code{difftime} object.  Can be negative in rare circumstances when
+you want to lead instead of lag (e.g., when "metamodeling" on top
+of existing forecasts).}
 
 \item{versions}{Optional vector of versions (a.k.a. forecast
 dates/times) for which you'd like the predictor lags; defaults to
@@ -30,9 +32,14 @@ all versions with updates in \code{archive$DT} plus any versions that
 look like they would be part of the normal reporting schedule but
 didn't change any values.}
 
-\item{predictor_name}{Optional string containing no curly braces,
-or a \code{\link[glue:glue]{glue::glue_data}} pattern string; what/how should we name
-the lagged version of the predictor in the output?}
+\item{predictor_name}{Optional \code{\link[glue:glue]{glue::glue_data}} pattern string;
+what/how should we name the lagged version of the predictor in
+the output?  It can just be the output column name desired,
+provided it contains no curly braces. Or you can use \code{glue}
+features and the following shorthand: "\{.col\}" for \code{varname},
+"\{.dir\}" for "lag" or "lead", and "\{.amt\}" for a formatted
+version of \code{time_lag}.  Default is
+"\{.col\}\emph{\{.dir\}}\{.amt\}_realtime".}
 
 \item{nomatch}{\code{NA} or \code{NULL}; what do we do when there is no
 measurement available due to reporting latency or being at edges
@@ -75,4 +82,10 @@ value of \code{varname} where \code{time_value == version - processed_time_lag} 
 etc. if you have \code{other_keys}), \emph{as it was reported in version
 \code{version}}.  Here, \code{processed_time_lag} factors in the time step
 size based on the archive's time type; see \code{time_lag} below.
+}
+\examples{
+archive_cases_dv_subset \%>\%
+  epix_realtime_predictor_lag("percent_cli", 7L)
+
+
 }
