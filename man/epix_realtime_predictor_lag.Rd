@@ -7,9 +7,9 @@
 epix_realtime_predictor_lag(
   archive,
   varname,
-  time_lag,
-  versions = epix_slide_versions_default(archive),
-  predictor_name = "{.col}_{.dir}_{.amt}_realtime",
+  relative_time,
+  anchor_versions = epix_slide_versions_default(archive),
+  out_name = "{.col}_{.dir}_{.amt}_realtime",
   nomatch = NA,
   drop_time_value = TRUE
 )
@@ -20,25 +20,27 @@ epix_realtime_predictor_lag(
 \item{varname}{String; name of the predictor column you'd like to
 lag}
 
-\item{time_lag}{Length-1 "time delta"; either an integer number of
-time steps (with size determined by \code{archive$time_type}), or a
-\code{difftime} object.  Can be negative in rare circumstances when
-you want to lead instead of lag (e.g., when "metamodeling" on top
-of existing forecasts).}
+\item{relative_time}{Length-1 "time delta"; either an integer
+number of time periods (with size determined by
+\code{archive$time_type}), or a \code{difftime} object.  How do we move
+from each "anchor version" (i.e., hypothetical forecast
+date/etc.) to the desired \code{time_value}.  Typically this will be
+negative; e.g., in daily data, to examine each report's
+measurements for the previous day, it'd be -1.}
 
-\item{versions}{Optional vector of versions (a.k.a. forecast
+\item{anchor_versions}{Optional vector of versions (a.k.a. forecast
 dates/times) for which you'd like the predictor lags; defaults to
 all versions with updates in \code{archive$DT} plus any versions that
 look like they would be part of the normal reporting schedule but
 didn't change any values.}
 
-\item{predictor_name}{Optional \code{\link[glue:glue]{glue::glue_data}} pattern string;
-what/how should we name the lagged version of the predictor in
-the output?  It can just be the output column name desired,
-provided it contains no curly braces. Or you can use \code{glue}
-features and the following shorthand: "\{.col\}" for \code{varname},
-"\{.dir\}" for "lag" or "lead", and "\{.amt\}" for a formatted
-version of \code{time_lag}.  Default is
+\item{out_name}{Optional \code{\link[glue:glue]{glue::glue_data}} pattern string;
+what/how should we name the lagged predictor in the output?  It
+can just be the output column name desired, provided it contains
+no curly braces. Or you can use \code{glue} features and the following
+shorthand: "\{.col\}" for \code{varname}, "\{.dir\}" for "lag" or
+"lead", and "\{.amt\}" for a formatted absolute value of
+\code{relative_time}.  Default is
 "\{.col\}\emph{\{.dir\}}\{.amt\}_realtime".}
 
 \item{nomatch}{\code{NA} or \code{NULL}; what do we do when there is no
@@ -49,17 +51,17 @@ row in these cases.  (Forwarded to [\verb{[.data.table}].)}
 
 \item{drop_time_value}{Optional Boolean; should we drop the
 \code{time_value} column from the result?  The default, \code{TRUE}, is
-makes merging results for multiple \code{time_lag}s cleaner (the join
-key columns should be based on the geo, other keys, and version
-(forecast date/time), not the time value).  You can use \code{FALSE}
-to keep the \code{time_value} column instead, to check that your
-\code{time_lag} is interpreted properly, or to make certain types of
-plots easier.}
+makes merging results for multiple \code{relative_time}s cleaner (the
+join key columns should be based on the geo, other keys, and
+version (forecast date/time), not the time value).  You can use
+\code{FALSE} to keep the \code{time_value} column instead, to check that
+your \code{relative_time} is interpreted properly, or to make certain
+types of plots easier.}
 }
 \value{
 tibble with columns \code{"geo_value"}, any
 \code{archive$other_keys}, \code{"time_value"} if requested,\code{"version"},
-and \code{processed_predictor_name}.
+and \code{processed_out_name}.
 }
 \description{
 Background: in many data sources, measurements for the most recent
@@ -78,14 +80,70 @@ predictor training data shouldn't be the latest version, but
 rather, versions that exhibit the same sorts of behavior.
 
 For each \code{version} (a.k.a. forecast date/time), this extracts the
-value of \code{varname} where \code{time_value == version - processed_time_lag} for each \code{geo_value} (or geo-age combinations,
+value of \code{varname} where \code{time_value == version - processed_relative_time} for each \code{geo_value} (or geo-age combinations,
 etc. if you have \code{other_keys}), \emph{as it was reported in version
-\code{version}}.  Here, \code{processed_time_lag} factors in the time step
-size based on the archive's time type; see \code{time_lag} below.
+\code{version}}.  Here, \code{processed_relative_time} factors in the time step
+size based on the archive's time type; see \code{relative_time} below.
 }
 \examples{
+# Basic usage: for each report, what did it say about the day 3
+# days prior?:
 archive_cases_dv_subset \%>\%
-  epix_realtime_predictor_lag("percent_cli", 7L)
+  epix_realtime_predictor_lag("percent_cli", -3)
 
+# Compare against our best idea of what the truth was for those
+# days by combining with `epix_evaluation_target_data`:
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+inner_join(
+  archive_cases_dv_subset \%>\%
+    epix_realtime_predictor_lag("percent_cli", -3),
+  archive_cases_dv_subset \%>\%
+    epix_evaluation_target_data("percent_cli", -3, time_until_semistable = 60),
+  by = c("geo_value", "anchor_version")
+) \%>\%
+  pivot_longer(!c(geo_value, anchor_version)) \%>\%
+  ggplot(aes(anchor_version, value, colour = name)) +
+  geom_line() +
+  facet_wrap(~ geo_value)
+# From this plot, we see that (i) we don't always have a
+# `percent_cli` measurement available for "3 days ago", and (ii)
+# when we do, it's somewhat close to the finalized values, but
+# since it's not negligible compared to the day-to-day variations
+# in the target, we should consider revision-aware forecasting
+# methods when using it.
+
+full_join(
+  archive_cases_dv_subset \%>\%
+    epix_realtime_predictor_lag("percent_cli", -7, drop_time_value = FALSE),
+  archive_cases_dv_subset \%>\%
+    epix_as_of_latest(),
+  by = c("geo_value", "time_value")
+) \%>\%
+  ggplot(aes(time_value, percent_cli)) +
+  geom_line(na.rm = TRUE) +
+  geom_line(aes(y = percent_cli_lag_7d_realtime), colour = "blue", na.rm = TRUE) +
+  facet_wrap(~ geo_value)
+
+library(purrr)
+map(-7*(1:8), function(relative_time) {
+  archive_cases_dv_subset \%>\%
+    epix_realtime_predictor_lag("percent_cli", relative_time, out_name = "value") \%>\%
+    mutate(relative_time = .env$relative_time)
+}) \%>\%
+  bind_rows() \%>\%
+  inner_join(
+    archive_cases_dv_subset \%>\%
+      epix_as_of_latest() \%>\%
+      mutate(anchor_version = time_value - 4, .keep = "unused"),
+    by = c("geo_value", "anchor_version")
+  ) \%>\%
+  # TODO via binding instead? suggesting a long format option?
+  drop_na(value, percent_cli) \%>\%
+  filter(.by = c(geo_value, anchor_version), n() == 8) \%>\%
+  summarize(.by = relative_time, MAE = mean(abs(value - percent_cli))) \%>\%
+  ggplot(aes(relative_time, MAE)) +
+  geom_line()
 
 }
