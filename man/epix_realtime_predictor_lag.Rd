@@ -64,14 +64,19 @@ tibble with columns \code{"geo_value"}, any
 and \code{processed_out_name}.
 }
 \description{
+Pairs with \code{\link{epix_target_evaluation_data}} to facilitate
+version-aware modeling (including backcasting, nowcasting, and
+forecasting), or custom revision analysis (see also
+\code{\link{revision_summary}}).
+}
+\details{
 Background: in many data sources, measurements for the most recent
 time values are systematically noisy or even biased.  Bias is
 particularly common when working with counts or population rates,
 as the first versions of a measurement are often partial counts
 that will be revised upward as data for more reporters or
 individuals is received.
-}
-\details{
+
 Motivation: simply using \code{\link{epix_as_of_latest}} and fitting a model
 in these cases may produce erratic or biased forecasts.  We'd like
 for the model to rely less on systematically noisy bleeding-edge
@@ -92,7 +97,7 @@ archive_cases_dv_subset \%>\%
   epix_realtime_predictor_lag("percent_cli", -3)
 
 # Compare against our best idea of what the truth was for those
-# days by combining with `epix_evaluation_target_data`:
+# days by combining with `epix_target_evaluation_data`:
 library(dplyr)
 library(tidyr)
 library(ggplot2)
@@ -100,7 +105,7 @@ inner_join(
   archive_cases_dv_subset \%>\%
     epix_realtime_predictor_lag("percent_cli", -3),
   archive_cases_dv_subset \%>\%
-    epix_evaluation_target_data("percent_cli", -3, time_until_semistable = 60),
+    epix_target_evaluation_data("percent_cli", -3, time_until_semistable = 60),
   by = c("geo_value", "anchor_version")
 ) \%>\%
   pivot_longer(!c(geo_value, anchor_version)) \%>\%

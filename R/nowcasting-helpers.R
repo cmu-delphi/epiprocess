@@ -1,5 +1,10 @@
 #' Get predictor lag train&test data, factoring in data maturity (revisioning)
 #'
+#' Pairs with [`epix_target_evaluation_data`] to facilitate
+#' version-aware modeling (including backcasting, nowcasting, and
+#' forecasting), or custom revision analysis (see also
+#' [`revision_summary`]).
+#'
 #' Background: in many data sources, measurements for the most recent
 #'  time values are systematically noisy or even biased.  Bias is
 #'  particularly common when working with counts or population rates,
@@ -68,7 +73,7 @@
 #'   epix_realtime_predictor_lag("percent_cli", -3)
 #'
 #' # Compare against our best idea of what the truth was for those
-#' # days by combining with `epix_evaluation_target_data`:
+#' # days by combining with `epix_target_evaluation_data`:
 #' library(dplyr)
 #' library(tidyr)
 #' library(ggplot2)
@@ -76,7 +81,7 @@
 #'   archive_cases_dv_subset %>%
 #'     epix_realtime_predictor_lag("percent_cli", -3),
 #'   archive_cases_dv_subset %>%
-#'     epix_evaluation_target_data("percent_cli", -3, time_until_semistable = 60),
+#'     epix_target_evaluation_data("percent_cli", -3, time_until_semistable = 60),
 #'   by = c("geo_value", "anchor_version")
 #' ) %>%
 #'   pivot_longer(!c(geo_value, anchor_version)) %>%
@@ -174,7 +179,48 @@ epix_realtime_predictor_lag <- function(archive, varname, relative_time,
 # TODO vs. long and wide formats?
 # TODO standardize to a relative_time arg to make target fetching and predictor fetching match?
 
-epix_evaluation_target_data <- function(archive, varname, relative_time,
+#' Get target evaluation/fitting data, factoring in data maturity (revisioning)
+#'
+#' Pairs with [`epix_realtime_predictor_lag`]; see its documentation
+#' for more details.
+#'
+#' Assumes that our goal is to predict the value of the target in its
+#' final revision.  Takes a very simplistic approach to handling the
+#' fact that we may not have that yet:
+#'
+#' 1. For most `time_value`s, accept the latest available
+#'    reporting as "close enough" and use as-is.
+#'
+#' 2. For recent `time_value`s, deem them too unreliable to use in
+#'    fitting a model and replace the target values with `NA`s.
+#'    (Otherwise our model may learn to output overly wide prediction
+#'    intervals and/or biased predictions.)  The definition of
+#'    "recent" is controlled by `time_until_semistable`.
+#'
+#' Other basic alternatives that could be paired with
+#' `epix_realtime_predictor_lag` include assigning weights to each
+#' measurement based on its degree of reliability.  More complex
+#' approaches would model each revision in the revision process as a
+#' separate target.
+#'
+#' @inheritParams epix_realtime_predictor_lag
+#' @param varname String; name of target variable/column
+#' @param time_until_semistable Length-1 time delta; replace the
+#'   target value with `NA` if it hasn't been at least
+#'   `time_until_semistable` since its `time_value` that its latest
+#'   available version (`archive$versions_end`) was recorded.
+#' @param anchor_versions Optional vector of versions (a.k.a. forecast
+#'   dates/times) for which you'd like the target evaluation data;
+#'   defaults to all versions with updates in `archive$DT` plus any
+#'   versions that look like they would be part of the normal
+#'   reporting schedule but didn't change any values. Note that this
+#'   is to help line up with the appropriate predictor data from
+#'   [`epix_realtime_predictor_lag`]; we'll still be using the latest
+#'   available version of each target values, regardless of
+#'   `anchor_versions`.
+#'
+#' @export
+epix_target_evaluation_data <- function(archive, varname, relative_time,
                                         time_until_semistable,
                                         anchor_versions = epix_slide_versions_default(archive),
                                         out_name = "{.col}_{.dir}_{.amt}_evaluation",
@@ -221,11 +267,13 @@ epix_evaluation_target_data <- function(archive, varname, relative_time,
     select(-time_value)
 }
 
-# TODO nomatch -> better name & options
+# TODO nomatch -> better name & options? though dplyr's "equivalent"
+# `unmatched` doesn't cover the NULL case; that's controlled by the
+# join function selection, and maybe `nomatch` is better than
+# homespun?
 
-# anchor_version -> forecast_date?  can't come up with generic sub-in for "date"...
-
-# FIXME make sure relative_time standard with epipredict
+# anchor_version -> forecast_date?  but can't come up with generic
+# sub-in for "date" that isn't confusingly saying "time"...
 
 # TODO fn to get all lags / all lags up to some point / a set of lags? long vs. wide format
 
