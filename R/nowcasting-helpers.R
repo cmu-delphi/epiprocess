@@ -48,7 +48,7 @@
 #'   shorthand: "\{.col\}" for `varname`, "\{.dir\}" for "lag" or
 #'   "lead", and "\{.amt\}" for a formatted absolute value of
 #'   `relative_time`.  Default is
-#'   "`r gsub("([{}])", "\\\\\\1", rlang::fn_fmls(epix_realtime_predictor_lag)$out_name)`".
+#'   "`r gsub("([{}])", "\\\\\\1", rlang::fn_fmls(epix_realtime_predictor_data)$out_name)`".
 #' @param nomatch `NA` or `NULL`; what do we do when there is no
 #'   measurement available due to reporting latency or being at edges
 #'   or gaps of the time series?  `NA` means to include a row with an
@@ -70,7 +70,7 @@
 #' # Basic usage: for each report, what did it say about the day 3
 #' # days prior?:
 #' archive_cases_dv_subset %>%
-#'   epix_realtime_predictor_lag("percent_cli", -3)
+#'   epix_realtime_predictor_data("percent_cli", -3)
 #'
 #' # Compare against our best idea of what the truth was for those
 #' # days by combining with `epix_target_evaluation_data`:
@@ -79,7 +79,7 @@
 #' library(ggplot2)
 #' inner_join(
 #'   archive_cases_dv_subset %>%
-#'     epix_realtime_predictor_lag("percent_cli", -3),
+#'     epix_realtime_predictor_data("percent_cli", -3),
 #'   archive_cases_dv_subset %>%
 #'     epix_target_evaluation_data("percent_cli", -3, time_until_semistable = 60),
 #'   by = c("geo_value", "anchor_version")
@@ -97,7 +97,7 @@
 #'
 #' full_join(
 #'   archive_cases_dv_subset %>%
-#'     epix_realtime_predictor_lag("percent_cli", -7, drop_time_value = FALSE),
+#'     epix_realtime_predictor_data("percent_cli", -7, drop_time_value = FALSE),
 #'   archive_cases_dv_subset %>%
 #'     epix_as_of_latest(),
 #'   by = c("geo_value", "time_value")
@@ -110,7 +110,7 @@
 #' library(purrr)
 #' map(-7*(1:8), function(relative_time) {
 #'   archive_cases_dv_subset %>%
-#'     epix_realtime_predictor_lag("percent_cli", relative_time, out_name = "value") %>%
+#'     epix_realtime_predictor_data("percent_cli", relative_time, out_name = "value") %>%
 #'     mutate(relative_time = .env$relative_time)
 #' }) %>%
 #'   bind_rows() %>%
@@ -128,7 +128,7 @@
 #'   geom_line()
 #'
 #' @export
-epix_realtime_predictor_lag <- function(archive, varname, relative_time,
+epix_realtime_predictor_data <- function(archive, varname, relative_time,
                                         anchor_versions = epix_slide_versions_default(archive),
                                         out_name = "{.col}_{.dir}_{.amt}_realtime",
                                         nomatch = NA,
@@ -172,16 +172,10 @@ epix_realtime_predictor_lag <- function(archive, varname, relative_time,
   result <- rename(result, anchor_version = version)
   result
 }
-# TODO tidyselect?
-# TODO indexing based on a reference_date / reference_time? as in Hub?
-# TODO allow for version lag?
-# TODO vs. label_cols subset of time, ver, lag
-# TODO vs. long and wide formats?
-# TODO standardize to a relative_time arg to make target fetching and predictor fetching match?
 
 #' Get target evaluation/fitting data, factoring in data maturity (revisioning)
 #'
-#' Pairs with [`epix_realtime_predictor_lag`]; see its documentation
+#' Pairs with [`epix_realtime_predictor_data`]; see its documentation
 #' for more details.
 #'
 #' Assumes that our goal is to predict the value of the target in its
@@ -198,12 +192,12 @@ epix_realtime_predictor_lag <- function(archive, varname, relative_time,
 #'    "recent" is controlled by `time_until_semistable`.
 #'
 #' Other basic alternatives that could be paired with
-#' `epix_realtime_predictor_lag` include assigning weights to each
+#' `epix_realtime_predictor_data` include assigning weights to each
 #' measurement based on its degree of reliability.  More complex
 #' approaches would model each revision in the revision process as a
 #' separate target.
 #'
-#' @inheritParams epix_realtime_predictor_lag
+#' @inheritParams epix_realtime_predictor_data
 #' @param varname String; name of target variable/column
 #' @param time_until_semistable Length-1 time delta; replace the
 #'   target value with `NA` if it hasn't been at least
@@ -215,7 +209,7 @@ epix_realtime_predictor_lag <- function(archive, varname, relative_time,
 #'   versions that look like they would be part of the normal
 #'   reporting schedule but didn't change any values. Note that this
 #'   is to help line up with the appropriate predictor data from
-#'   [`epix_realtime_predictor_lag`]; we'll still be using the latest
+#'   [`epix_realtime_predictor_data`]; we'll still be using the latest
 #'   available version of each target values, regardless of
 #'   `anchor_versions`.
 #'
@@ -267,12 +261,285 @@ epix_target_evaluation_data <- function(archive, varname, relative_time,
     select(-time_value)
 }
 
+# We can apply this separately for each nowcast_date to ensure that we consider
+# the latest possible value for every signal, though whether that is advisable
+# or not may depend on revision characteristics of the signals.
+#
+# TODO reconsider using this in the nowcaster and replacing with a
+# filter_to_same_wday or version-weighting scheme.  This might be a
+# useful utility, but think more about multiple signals, and the
+# motivating case of running this separately day to day based on which
+# lags are available in real time latest.
+thin_daily_to_weekly_archive <- function(archive) {
+  key_nms <- key(archive$DT)
+  val_nms <- setdiff(names(archive$DT), key_nms)
+  update_tbl <- as_tibble(archive$DT)
+  val_nms |>
+    lapply(function(val_nm) {
+      update_tbl[c(key_nms, val_nm)] |>
+        # thin out to weekly, making sure that we keep the max time_value with non-NA value:
+        filter(as.POSIXlt(time_value)$wday == as.POSIXlt(max(time_value[!is.na(.data[[val_nm]])]))$wday) |>
+        # re-align:
+        mutate(
+          time_value = time_value - as.POSIXlt(time_value)$wday, # Sunday of same epiweek
+          old_version = version,
+          version = version - as.POSIXlt(version)$wday # Sunday of same epiweek
+        ) |>
+        slice_max(old_version, by = all_of(key_nms)) |>
+        select(-old_version) |>
+        as_epi_archive(other_keys = setdiff(key_nms, c("geo_value", "time_value", "version")),
+                       compactify = TRUE)
+    }) |>
+    reduce(epix_merge, sync = "locf")
+}
+
+chr_mapping_standardize <- function(mapping, chr_keys, mapping_arg = rlang::caller_arg(mapping), call = rlang::caller_env()) {
+  if (is.null(names(mapping))) {
+    `names<-`(vctrs::vec_recycle(mapping, vec_size(chr_keys)), chr_keys)
+  } else {
+    checkmate::assert_names(names(mapping), permutation.of = chr_keys, .var.name = mapping_arg)
+    mapping[chr_keys]
+  }
+}
+
+regression_nowcaster2 <- function(archive,
+                                  target, predictors = target,
+                                  # TODO better defaults
+target_relative_time = 0L,
+search_predictor_shifts_within = as.difftime(60, units = "days"),
+predictor_search_offset = 0L,
+# TODO predictor shift spacing?
+min_n_predictor_shifts = dplyr::case_match(predictors, target ~ 1L, .default = 0L),
+max_n_predictor_shifts = 3L,
+min_n_training_each_predictor = 30L,
+max_n_training_intersection = Inf,
+time_until_target_semistable = as.difftime(60, units = "days"),
+trainer = linear_reg(),
+args_list = arx_args_list() # FIXME lag 0 etc.
+) {
+  if (!is_epi_archive(archive) && !is_grouped_epi_archive(archive)) {
+    cli_abort("`archive` must be an `epi_archive` or `grouped_epi_archive` object,
+               not an object of class {format_chr_deparse(class(archive))}")
+  }
+  if (is_epi_archive(archive)) {
+    time_type <- archive$time_type
+  } else {
+    time_type <- archive$ungrouped$time_type
+  }
+  assert_string(target)
+  assert_character(predictors, any.missing = FALSE)
+  assert_scalar(target_relative_time)
+  target_relative_time <- time_delta_standardize(target_relative_time, time_type, "fast")
+  search_predictor_shifts_within <- chr_mapping_standardize(search_predictor_shifts_within, predictors)
+  search_predictor_shifts_within <- time_delta_standardize(search_predictor_shifts_within, time_type, "fast")
+  # Standardize chr mapping first if other standardization operations
+  # might accidentally unname.  Otherwise, standardize the mapping
+  # after other validation/standardization.
+  predictor_search_offset <- chr_mapping_standardize(predictor_search_offset, predictors)
+  predictor_search_offset <- time_delta_standardize(predictor_search_offset, time_type, "fast")
+  checkmate::assert_true(is_bare_integerish(min_n_predictor_shifts))
+  min_n_predictor_shifts <- chr_mapping_standardize(min_n_predictor_shifts, predictors)
+  checkmate::assert_true(is_bare_integerish(max_n_predictor_shifts))
+  max_n_predictor_shifts <- chr_mapping_standardize(max_n_predictor_shifts, predictors)
+  checkmate::assert_true(is_bare_integerish(min_n_training_each_predictor))
+  checkmate::assert_true(is_bare_integerish(max_n_training_intersection))
+  checkmate::assert_scalar(time_until_target_semistable)
+  time_until_target_semistable <- time_delta_standardize(time_until_target_semistable, time_type, "fast")
+  # TODO finish validation
+
+  if (is_grouped_epi_archive(archive) || length(unique(archive$DT$geo_value)) != 1L) {
+    stop("FIXME TODO grouping and multikey")
+  }
+
+  nowcast_date <- archive$versions_end
+  target_time_value <- nowcast_date + target_relative_time
+  latest_edf <- archive %>% epix_as_of(nowcast_date)
+
+  predictor_search_info <- tibble(
+    predictor = predictors,
+    search_predictor_shifts_within,
+    predictor_search_offset,
+    min_n_training_each_predictor,
+    max_n_predictor_shifts
+  )
+
+  checkmate::assert_false("relative_time" %in% names(latest_edf))
+
+  predictor_descriptions <-
+    latest_edf %>%
+    mutate(relative_time = time_delta_standardize(time_value - .env$nowcast_date, .env$time_type, "fast")) %>%
+    select(!all_of(key_colnames(latest_edf))) %>%
+    pivot_longer(!relative_time, names_to = "predictor", values_to = "value") %>%
+      tidyr::drop_na(value) %>%
+      mutate(offset_relative_time = relative_time - predictor_search_offset) %>%
+      arrange(
+        predictor,
+        abs(time_delta_to_n_steps(offset_relative_time, .env$time_type)),
+        # prioritize later time_values on ties
+        -time_delta_to_n_steps(offset_relative_time, .env$time_type)
+      ) %>%
+      dplyr::inner_join(predictor_search_info, by = "predictor", unmatched = c("drop", "error")) %>%
+      group_by(predictor) %>%
+      # TODO predictor shift spacing
+      #
+      filter({
+      # TODO nest_join or something else to try to make more natural?
+        if (dplyr::n() < min_n_predictor_shifts[[1L]]) {
+          # TODO more info in message?
+          cli_abort("Not enough shifts with non-NA data available for predictor {format_varname(predictor[[1L]])}; must have at least {min_n_predictor_shifts[[1L]]}, but only had {dplyr::n()}.")
+        }
+        seq_len(dplyr::n()) <= max_n_predictor_shifts[[1L]]
+      }) %>%
+      ungroup() %>%
+      select(predictor, relative_time)
+
+  predictor_edfs <- predictor_descriptions %>%
+    purrr::pmap(function(predictor, relative_time) {
+      epix_realtime_predictor_data(archive, predictor, relative_time) %>%
+        rename(time_value = anchor_version) %>%
+        as_epi_df()
+    }) %>%
+    lapply(na.omit) %>%
+    purrr::keep(~ nrow(.x) >= min_n_training_each_predictor)
+
+  # FIXME TODO move the min # shifts checks here.
+  if (length(predictor_edfs) == 0) {
+    stop("Couldn't find acceptable predictors in the latest data.")
+  }
+
+  predictors_edf <- predictor_edfs %>%
+    purrr::reduce(dplyr::full_join, by = key_colnames(latest_edf))
+
+  target_edf <- epix_target_evaluation_data(archive, target, target_relative_time, time_until_target_semistable) %>%
+    rename(time_value = anchor_version) %>%
+    as_epi_df()
+  # TODO naming... maybe need to reverse back to time_value + orig target col name
+
+  training_test <- dplyr::full_join(predictors_edf, target_edf, by = key_colnames(latest_edf))
+
+  # training <- training_test %>%
+  #   tidyr::drop_na() %>%
+  #   dplyr::slice_max(time_value, n = max_n_training_intersection)
+
+  # test <- training_test %>%
+  #   filter(time_value == .env$nowcast_date)
+
+  epipredict::arx_forecaster(training_test,
+                             # FIXME not sure this is going to work or if we'll have to fake epipredict out with some fake ahead
+                             vctrs::vec_set_difference(names(target_edf), key_colnames(target_edf)),
+                             # FIXME TODO use arg
+                             trainer = epipredict::quantile_reg(quantile_levels = 0.5),
+                             # FIXME TODO use arg
+                             args_list = arx_args_list(
+                               lags = 0L, ahead = 0L, n_training = max_n_training_intersection,
+                               forecast_date = nowcast_date, target_date = nowcast_date
+                             )
+                             )
+}
+
+regression_nowcaster <- function(archive, settings, return_info = FALSE) {
+  if (!inherits(archive, "epi_archive")) {
+    stop("`archive` isn't an `epi_archive`")
+  }
+  if (length(unique(archive$DT$geo_value)) != 1L) {
+    # FIXME
+    stop("Expected exactly one unique `geo_value`")
+  }
+  if (archive$time_type == "day") {
+    # TODO replace with ...
+    archive <- thin_daily_to_weekly_archive(archive)
+  }
+
+  nowcast_date <- archive$versions_end
+  target_time_value <- nowcast_date
+  latest_edf <- archive %>% epix_as_of(nowcast_date)
+
+  predictor_descriptions <-
+    latest_edf %>%
+    mutate(lag_days = as.integer(nowcast_date - time_value)) %>%
+    select(-c(geo_value, time_value)) %>%
+    pivot_longer(-lag_days, names_to = "varname", values_to = "value") %>%
+    drop_na(value) %>%
+    inner_join(settings$predictors, by = "varname", unmatched = "error") %>%
+    filter(abs(lag_days) <= max_abs_shift_days) %>%
+    arrange(varname, abs(lag_days)) %>%
+    group_by(varname) %>%
+    filter(seq_len(n()) <= max_n_shifts[[1]]) %>%
+    ungroup() %>%
+    mutate(predictor_name = paste0(varname, "_lag", lag_days, "_realtime")) %>%
+    select(varname, lag_days, predictor_name)
+
+  predictor_edfs <- predictor_descriptions %>%
+    pmap(function(varname, lag_days, predictor_name) {
+      get_predictor_training_data(archive, varname, lag_days, predictor_name)
+    }) %>%
+    lapply(na.omit) %>%
+    keep(~ nrow(.x) >= settings$min_n_training_per_predictor)
+
+  if (length(predictor_edfs) == 0) {
+    stop("Couldn't find acceptable predictors in the latest data.")
+  }
+
+  predictors <- predictor_edfs %>%
+    reduce(full_join, by = c("geo_value", "time_value"))
+
+  target <- latest_edf %>%
+    filter(time_value <= max(time_value) - settings$days_until_target_semistable) %>%
+    select(geo_value, time_value, mortality_semistable = mortality)
+
+  training_test <- full_join(predictors, target, by = c("geo_value", "time_value"))
+
+  training <- training_test %>%
+    drop_na() %>%
+    slice_max(time_value, n = settings$max_n_training_intersection)
+
+  test <- training_test %>%
+    filter(time_value == nowcast_date)
+
+  if (isTRUE(settings$median)) {
+    fit <- training %>%
+      select(any_of(predictor_descriptions$predictor_name), mortality_semistable) %>%
+      quantreg::rq(formula = mortality_semistable ~ ., tau = 0.5)
+  } else {
+    fit <- training %>%
+      select(any_of(predictor_descriptions$predictor_name), mortality_semistable) %>%
+      lm(formula = mortality_semistable ~ .)
+  }
+
+  pred <- tibble(
+    geo_value = "ca",
+    nowcast_date = nowcast_date,
+    target_date = target_time_value,
+    prediction = unname(predict(fit, test))
+  )
+
+  if (return_info) {
+    return(tibble(
+      coefficients = list(coef(fit)),
+      predictions = list(pred)
+    ))
+  } else {
+    return(pred)
+  }
+}
+
+
+
+
+# === TODOs for variable extractors: ===
+
+# TODO tidyselect?
+# TODO indexing based on a reference_date / reference_time? as in Hub?
+# TODO allow for version lag?
+# TODO vs. label_cols subset of time, ver, lag
+# TODO vs. long and wide formats?
+
 # TODO nomatch -> better name & options? though dplyr's "equivalent"
 # `unmatched` doesn't cover the NULL case; that's controlled by the
 # join function selection, and maybe `nomatch` is better than
 # homespun?
 
-# anchor_version -> forecast_date?  but can't come up with generic
+# TODO anchor_version -> forecast_date?  but can't come up with generic
 # sub-in for "date" that isn't confusingly saying "time"...
 
 # TODO fn to get all lags / all lags up to some point / a set of lags? long vs. wide format
