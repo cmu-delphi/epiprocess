@@ -302,21 +302,22 @@ chr_mapping_standardize <- function(mapping, chr_keys, mapping_arg = rlang::call
   }
 }
 
+# TODO refactor out the target&predictor search stuff into a function?
 regression_nowcaster2 <- function(archive,
                                   target, predictors = target,
                                   # TODO better defaults
-target_relative_time = 0L,
-search_predictor_shifts_within = as.difftime(60, units = "days"),
-predictor_search_offset = 0L,
-# TODO predictor shift spacing?
-min_n_predictor_shifts = dplyr::case_match(predictors, target ~ 1L, .default = 0L),
-max_n_predictor_shifts = 3L,
-min_n_training_each_predictor = 30L,
-max_n_training_intersection = Inf,
-time_until_target_semistable = as.difftime(60, units = "days"),
-trainer = linear_reg(),
-args_list = arx_args_list() # FIXME lag 0 etc.
-) {
+                                  target_relative_time = 0L,
+                                  search_predictor_shifts_within = as.difftime(60, units = "days"),
+                                  predictor_search_offset = 0L,
+                                  # TODO predictor shift spacing?
+                                  min_n_predictor_shifts = dplyr::case_match(predictors, target ~ 1L, .default = 0L),
+                                  max_n_predictor_shifts = 3L,
+                                  min_n_training_each_predictor = 30L,
+                                  max_n_training_intersection = Inf,
+                                  time_until_target_semistable = as.difftime(60, units = "days"),
+                                  trainer = linear_reg(),
+                                  args_list = arx_args_list() # FIXME lag 0 etc.
+                                  ) {
   if (!is_epi_archive(archive) && !is_grouped_epi_archive(archive)) {
     cli_abort("`archive` must be an `epi_archive` or `grouped_epi_archive` object,
                not an object of class {format_chr_deparse(class(archive))}")
@@ -355,59 +356,89 @@ args_list = arx_args_list() # FIXME lag 0 etc.
   target_time_value <- nowcast_date + target_relative_time
   latest_edf <- archive %>% epix_as_of(nowcast_date)
 
-  predictor_search_info <- tibble(
+  predictor_shift_selection_config <- tibble(
     predictor = predictors,
-    search_predictor_shifts_within,
-    predictor_search_offset,
+    # search_predictor_shifts_within,
+    # predictor_search_offset,
     min_n_training_each_predictor,
+    min_n_predictor_shifts,
     max_n_predictor_shifts
   )
 
   checkmate::assert_false("relative_time" %in% names(latest_edf))
 
-  predictor_descriptions <-
+  predictor_shifts_available <-
     latest_edf %>%
     mutate(relative_time = time_delta_standardize(time_value - .env$nowcast_date, .env$time_type, "fast")) %>%
     select(!all_of(key_colnames(latest_edf))) %>%
     pivot_longer(!relative_time, names_to = "predictor", values_to = "value") %>%
-      tidyr::drop_na(value) %>%
-      mutate(offset_relative_time = relative_time - predictor_search_offset[predictor]) %>%
-      arrange(
-        predictor,
-        abs(time_delta_to_n_steps(offset_relative_time, .env$time_type)),
-        # prioritize later time_values on ties
-        -time_delta_to_n_steps(offset_relative_time, .env$time_type)
-      ) %>%
-      dplyr::inner_join(predictor_search_info, by = "predictor", unmatched = c("drop", "error")) %>%
-      group_by(predictor) %>%
-      # TODO predictor shift spacing
-      #
-      filter({
-      # TODO nest_join or something else to try to make more natural?
-        if (dplyr::n() < min_n_predictor_shifts[[1L]]) {
-          # TODO more info in message?
-          cli_abort("Not enough shifts with non-NA data available for predictor {format_varname(predictor[[1L]])}; must have at least {min_n_predictor_shifts[[1L]]}, but only had {dplyr::n()}.")
+    tidyr::drop_na(value) %>%
+    mutate(offset_relative_time = relative_time - predictor_search_offset[predictor]) %>%
+    filter(abs(time_delta_to_n_steps(offset_relative_time, time_type)) <=
+             time_delta_to_n_steps(search_predictor_shifts_within, time_type)) %>%
+    arrange(
+      predictor,
+      abs(time_delta_to_n_steps(offset_relative_time, .env$time_type)),
+      # prioritize later time_values on ties
+      -time_delta_to_n_steps(offset_relative_time, .env$time_type)
+    )
+
+  # TODO non-negativity checks on some args
+  predictor_search_results <-
+    dplyr::nest_join(predictor_shift_selection_config, predictor_shifts_available, by = "predictor") %>%
+    dplyr::rowwise() %>%
+    mutate(selections = {
+      selections <- list()
+      debug_info <- list()
+      for (i in seq_len(nrow(.data$predictor_shifts_available))) {
+        if (length(selections) == .data$max_n_predictor_shifts) {
+          break
         }
-        seq_len(dplyr::n()) <= max_n_predictor_shifts[[1L]]
-      }) %>%
-      ungroup() %>%
-      select(predictor, relative_time)
-
-  predictor_edfs <- predictor_descriptions %>%
-    purrr::pmap(function(predictor, relative_time) {
-      epix_realtime_predictor_data(archive, predictor, relative_time) %>%
-        rename(time_value = anchor_version) %>%
-        as_epi_df()
+        candidate_selection <- epix_realtime_predictor_data(archive, .data$predictor, .data$predictor_shifts_available$relative_time[[i]]) %>%
+          na.omit() %>%
+          rename(time_value = anchor_version) %>%
+          as_epi_df()
+        # FIXME `training` -> `rows`?
+        debug_info_record <- list(
+          relative_time = .data$predictor_shifts_available$relative_time[[i]],
+          n_nonmissing_analogues = nrow(candidate_selection)
+        )
+        if (nrow(candidate_selection) >= .env$min_n_training_each_predictor) {
+          selections <- c(selections, list(candidate_selection))
+          debug_info_record$selected <- TRUE
+        } else {
+          debug_info_record$selected <- FALSE
+        }
+        # TODO selection cadence?
+        debug_info <- c(debug_info, list(debug_info_record))
+      }
+      if (length(selections) < .data$min_n_predictor_shifts) {
+        # TODO which test-time things were explicit NAs?
+        # ... except we don't know that in multisignal archive
+        # format
+        debug_info_tbl <- debug_info %>%
+          map(as_tibble) %>%
+          dplyr::bind_rows()
+        cli_abort(c("Not enough shifts with non-NA data available for predictor {format_varname(predictor)}; must have at least {min_n_predictor_shifts}, but only had {length(selections)}.",
+                    if (nrow(debug_info_tbl) == 0L) {
+                      c("i" = "There were no non-NA values for this predictor found in the search window for this forecast date.")
+                    } else {
+                      c("i" = 'Relative times with non-NA values on the forecast date were:
+                           { "<none>" else debug_info_tbl$relative_time}',
+                        "i" = "Number of analogous non-NA values in the history data were:
+                           {debug_info_tbl$n_nonmissing_analogues}, respectively",
+                        "i" = 'Were these predictor shifts selected?:
+                           {data.table::fifelse(debug_info_tbl$selected, "yes", "no")}')
+                    }))
+      } else {
+        list(selections)
+      }
     }) %>%
-    lapply(na.omit) %>%
-    purrr::keep(~ nrow(.x) >= min_n_training_each_predictor)
+    ungroup() %>%
+    .$selections %>%
+    vctrs::list_unchop()
 
-  # FIXME TODO move the min # shifts checks here.
-  if (length(predictor_edfs) == 0) {
-    stop("Couldn't find acceptable predictors in the latest data.")
-  }
-
-  predictors_edf <- predictor_edfs %>%
+  predictors_edf <- predictor_search_results %>%
     purrr::reduce(dplyr::full_join, by = key_colnames(latest_edf))
 
   target_edf <- epix_target_evaluation_data(archive, target, target_relative_time, time_until_target_semistable) %>%
@@ -431,6 +462,7 @@ args_list = arx_args_list() # FIXME lag 0 etc.
                              trainer = epipredict::quantile_reg(quantile_levels = 0.5),
                              # FIXME TODO use arg
                              args_list = arx_args_list(
+                               # FIXME max_n_training_intersection naming when have pooling
                                lags = 0L, ahead = 0L, n_training = max_n_training_intersection,
                                forecast_date = nowcast_date, target_date = nowcast_date
                              )
