@@ -371,7 +371,7 @@ args_list = arx_args_list() # FIXME lag 0 etc.
     select(!all_of(key_colnames(latest_edf))) %>%
     pivot_longer(!relative_time, names_to = "predictor", values_to = "value") %>%
       tidyr::drop_na(value) %>%
-      mutate(offset_relative_time = relative_time - predictor_search_offset) %>%
+      mutate(offset_relative_time = relative_time - predictor_search_offset[predictor]) %>%
       arrange(
         predictor,
         abs(time_delta_to_n_steps(offset_relative_time, .env$time_type)),
