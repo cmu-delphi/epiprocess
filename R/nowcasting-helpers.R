@@ -424,7 +424,7 @@ regression_nowcaster2 <- function(archive,
                       c("i" = "There were no non-NA values for this predictor found in the search window for this forecast date.")
                     } else {
                       c("i" = 'Relative times with non-NA values on the forecast date were:
-                           { "<none>" else debug_info_tbl$relative_time}',
+                           {debug_info_tbl$relative_time}',
                         "i" = "Number of analogous non-NA values in the history data were:
                            {debug_info_tbl$n_nonmissing_analogues}, respectively",
                         "i" = 'Were these predictor shifts selected?:
