@@ -391,11 +391,13 @@ regression_nowcaster2 <- function(archive,
       selections <- list()
       debug_info <- list()
       for (i in seq_len(nrow(.data$predictor_shifts_available))) {
+        # TODO in validation code: inequality check on max vs. min n predictor shifts
         if (length(selections) == .data$max_n_predictor_shifts) {
           break
         }
         candidate_selection <- epix_realtime_predictor_data(archive, .data$predictor, .data$predictor_shifts_available$relative_time[[i]]) %>%
           na.omit() %>%
+          # TODO rename later?  so when this is its own utility, we can potentially avoid confusion
           rename(time_value = anchor_version) %>%
           as_epi_df()
         # FIXME `training` -> `rows`?
@@ -419,17 +421,34 @@ regression_nowcaster2 <- function(archive,
         debug_info_tbl <- debug_info %>%
           map(as_tibble) %>%
           dplyr::bind_rows()
-        cli_abort(c("Not enough shifts with non-NA data available for predictor {format_varname(predictor)}; must have at least {min_n_predictor_shifts}, but only had {length(selections)}.",
-                    if (nrow(debug_info_tbl) == 0L) {
-                      c("i" = "There were no non-NA values for this predictor found in the search window for this forecast date.")
-                    } else {
-                      c("i" = 'Relative times with non-NA values on the forecast date were:
-                           {debug_info_tbl$relative_time}',
-                        "i" = "Number of analogous non-NA values in the history data were:
-                           {debug_info_tbl$n_nonmissing_analogues}, respectively",
-                        "i" = 'Were these predictor shifts selected?:
-                           {data.table::fifelse(debug_info_tbl$selected, "yes", "no")}')
-                    }))
+        if (nrow(debug_info_tbl) == 0L) {
+          cli_abort(c("Predictor {format_varname(predictor)} didn't have any non-NA values available within the search window, but the nowcaster `min_n_predictor_shifts` setting required us to find at least {min_n_predictor_shifts[[predictor]]}.",
+                      ">" = "Consider expanding or shifting the search window with `search_predictor_shifts_within`, `predictor_search_offset`.",
+                      ">" = "If {format_varname(predictor)} isn't essential to the nowcast, consider setting `min_n_predictor_shifts` to 0 so you can use it when it's available and skip it if it's not.",
+                      " " = "Additionally, if you're backtesting:",
+                      ">" = "Check that you're not backtesting on a version of the data before the first report recorded from this data source.  If this is the problem, you'll need to start backtesting not only after this first report, but long enough after so that there will be at least `min_n_training_each_predictor` training versions available.)"))
+        } else {
+          # cli_abort("TODO error message")
+          # cli_abort(c("Predictor {format_varname(predictor)} didn't have enough usable time shifts in the search window.  We were required to find {min_n_predictor_shifts[[predictor]]} usable time shifts, but only found {length(selections)}.  This could be due to one or more of the following:"
+          #             ">" = "Look at `epix_as_of_latest(archive)` and consider expanding or shifting the search window with `search_predictor_shifts_within`, `predictor_search_offset`.",
+          #             "*" = "Maybe the ",
+          #              (a) didn't have enough non-NA values available within the search range, or
+          #              (b) must have at least {min_n_predictor_shifts}, but only had {length(selections)}.",
+          #             c("i" = 'Relative times with non-NA values on the forecast date were:
+          #                  {debug_info_tbl$relative_time}',
+          #               "i" = "Number of analogous non-NA values in the history data were:
+          #                  {debug_info_tbl$n_nonmissing_analogues}, respectively",
+          #               "i" = 'Were these predictor shifts selected?:
+          #                  {data.table::fifelse(debug_info_tbl$selected, "yes", "no")}')
+          #             ))
+          cli_abort(c("Predictor {format_varname(predictor)} didn't have enough usable time shifts in the search window.  We were required to find {min_n_predictor_shifts[[predictor]]} usable time shifts, but only found {length(selections)}.",
+                      if (nrow(debug_info_tbl) < min_n_predictor_shifts[[predictor]]) {
+                        c("x" = "There were only {nrow(debug_info_tbl)} non-NA predictor values found within the search window.")
+                      } else {
+                        stop("Continue working on error messaging.")
+                      }
+                      ))
+        }
       } else {
         list(selections)
       }
@@ -579,3 +598,19 @@ regression_nowcaster <- function(archive, settings, return_info = FALSE) {
 # TODO for purely additive revisions, function to get the additions / incremental reports by lag?
 
 # FIXME time type != version type issues
+
+
+# Consider
+#
+# v - 0  miss
+# v - 1  miss
+# v - 2  NA
+# v - 3  val,  not enough training data
+# v - 4  val,  enough training data,            use
+# v - 5  val,  not far enough from used above
+# v - 6  val,  not far enough from used above
+# v - 7  val,  not enough training data
+# v - 8  miss
+# v - 9  val,  not enough training data
+# v - 10 val,  not enough training data
+# v - 11 val,  enough training data,            use
