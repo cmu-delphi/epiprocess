@@ -403,6 +403,23 @@ regression_nowcaster2 <- function(archive,
         # FIXME `training` -> `rows`?
         debug_info_record <- list(
           relative_time = .data$predictor_shifts_available$relative_time[[i]],
+          # XXX messy naming this, since doesn't have to be
+          # training... consider moving a sequential intersection
+          # approach, initialized with target training data, and
+          # sequentially adding to get to the min n for each, then
+          # fill out later.  Interface still potentially the same,
+          # though gives some opportunity to avoid some min n
+          # intersection failures by skipping problematic lags, and
+          # perhaps there's not actually much use for the min n per
+          # predictor, so it could be removed.  Could also maybe check
+          # for colinearity...  Maybe borrow from the Drop missingness
+          # handler.  Shift priority list seems less convenient and
+          # flexible than the search ranges; perhaps can have some
+          # internals that take the test-time available shifts and
+          # rank their priority; here would have one that makes sure
+          # we satisfy the min n shifts first, with arbitrary ordering
+          # getting there and afterward.  But this requires extra
+          # work to find the nearest already-added shift for a predictor.
           n_nonmissing_analogues = nrow(candidate_selection)
         )
         if (nrow(candidate_selection) >= .env$min_n_training_each_predictor) {
@@ -606,11 +623,11 @@ regression_nowcaster <- function(archive, settings, return_info = FALSE) {
 # v - 1  miss
 # v - 2  NA
 # v - 3  val,  not enough training data
-# v - 4  val,  enough training data,            use
+# v - 4  val,  far enough from used above,    enough training data,            use
 # v - 5  val,  not far enough from used above
 # v - 6  val,  not far enough from used above
 # v - 7  val,  not enough training data
 # v - 8  miss
 # v - 9  val,  not enough training data
 # v - 10 val,  not enough training data
-# v - 11 val,  enough training data,            use
+# v - 11 val,  far enough from used above,    enough training data,            use
