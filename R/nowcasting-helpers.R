@@ -302,6 +302,103 @@ chr_mapping_standardize <- function(mapping, chr_keys, mapping_arg = rlang::call
   }
 }
 
+#' Assess whether an available predictor looks suitable for training
+#'
+#' @examples
+#'
+#' archive <- as_epi_archive(dplyr::bind_rows(
+#'   tibble(
+#'     geo_value = 1,
+#'     time_value = 1:5,
+#'     version = 2:6,
+#'     a = 111:115,
+#'     b = 211:215
+#'   ),
+#'   tibble(
+#'     geo_value = 1,
+#'     time_value = 1:5,
+#'     version = 3:7,
+#'     a = 121:125,
+#'     b = 221:225
+#'   )
+#' ))
+#' feature_descriptions <- tibble::tribble(
+#'   ~predictor, ~relative_time,
+#'   "a", -1,
+#'   "a", -2,
+#'   "b", -2,
+#' )
+#' training_tbl <- epix_target_evaluation_data(archive, "a", -1, 0)
+#' assess_available_predictor_shift(
+#'   feature_descriptions[1L,],
+#'   archive,
+#'   training_tbl,
+#'   feature_descriptions[0L,],
+#'   list(),
+#'   2L,
+#'   2L,
+#'   0L
+#' )
+#'
+#' @keywords internal
+assess_available_predictor_shift <-
+  function(candidate_shift_description,
+           archive, training_tbl,
+           included_shift_descriptions,
+           predictor_search_records,
+           min_predictor_shift_spacing,
+           min_n_training_versions,
+           # TODO standardize predictor_shift = feature?
+           min_n_training_rows_per_feature) {
+    # TODO tibble or rcrd or ...
+    predictor_search_record <- list()
+    shifts_too_close <- candidate_shift_description[c("predictor", "relative_time")] %>%
+      mutate(min_relative_time = relative_time - min_predictor_shift_spacing,
+             max_relative_time = relative_time + min_predictor_shift_spacing) %>%
+      dplyr::inner_join(included_shift_descriptions[c("predictor", "relative_time")],
+                        dplyr::join_by(predictor, between(y$relative_time, x$min_relative_time, x$max_relative_time)))
+    predictor_search_record$enough_spacing <- nrow(shifts_too_close) == 0L
+    if (!predictor_search_record$enough_spacing) {
+      predictor_search_record$include <- FALSE
+      return(list(
+        training_tbl,
+        included_shift_descriptions,
+        c(predictor_search_records, list(predictor_search_record))
+      ))
+    }
+    predictor <- candidate_shift_description$predictor
+    relative_time <- candidate_shift_description$relative_time
+    predictor_training_data <- epix_realtime_predictor_data(archive, predictor, relative_time) %>%
+      tidyr::drop_na(!all_of(c(key_colnames(archive, exclude = c("time_value", "version")), "anchor_version")))
+    maybe_new_training_tbl <- dplyr::inner_join(
+      # (ignoring unlikely val col name overlaps)
+      training_tbl, predictor_training_data,
+      by = c(key_colnames(archive, exclude = c("time_value", "version")), "anchor_version")
+    )
+    predictor_search_record$n_versions <- vctrs::vec_size(vctrs::vec_unique(maybe_new_training_tbl$anchor_version))
+    predictor_search_record$enough_versions <- predictor_search_record$n_versions >= min_n_training_versions
+    predictor_search_record$rows_per_feature <- nrow(maybe_new_training_tbl) / (ncol(maybe_new_training_tbl) - length(c(key_colnames(archive, exclude = c("time_value", "version")), "anchor_version")))
+    predictor_search_record$enough_rows_per_feature <- predictor_search_record$rows_per_feature >= min_n_training_rows_per_feature
+
+    if (!predictor_search_record$enough_versions || !predictor_search_record$enough_rows_per_feature) {
+      predictor_search_record$include <- FALSE
+      return(list(
+        training_tbl,
+        included_shift_descriptions,
+        c(predictor_search_records, list(predictor_search_record))
+      ))
+    }
+
+    predictor_search_record$include <- TRUE
+    return(list(
+      maybe_new_training_tbl,
+      dplyr::bind_rows(included_shift_descriptions, candidate_shift_description),
+      # XXX just bind_rows for the search record as well?
+      c(predictor_search_records, list(predictor_search_record))
+    ))
+}
+# XXX consider bundling this into a class of its own.  Reconsider mutating interface.
+
 # TODO refactor out the target&predictor search stuff into a function?
 regression_nowcaster2 <- function(archive,
                                   target, predictors = target,
@@ -348,9 +445,11 @@ regression_nowcaster2 <- function(archive,
   time_until_target_semistable <- time_delta_standardize(time_until_target_semistable, time_type, "fast")
   # TODO finish validation
 
-  if (is_grouped_epi_archive(archive) || length(unique(archive$DT$geo_value)) != 1L) {
-    stop("FIXME TODO grouping and multikey")
-  }
+  # TODO min nrow per predictor col ratio for joint table?
+
+  # if (is_grouped_epi_archive(archive) || length(unique(archive$DT$geo_value)) != 1L) {
+  #   stop("FIXME TODO grouping and multikey")
+  # }
 
   nowcast_date <- archive$versions_end
   target_time_value <- nowcast_date + target_relative_time
@@ -365,9 +464,13 @@ regression_nowcaster2 <- function(archive,
     max_n_predictor_shifts
   )
 
-  checkmate::assert_false("relative_time" %in% names(latest_edf))
+  checkmate::assert_false("relative_time" %in% names(archive$DT))
+  checkmate::assert_false("anchor_version" %in% names(archive$DT))
 
-  predictor_shifts_available <-
+  train_target_tbl <- epix_target_evaluation_data(archive, target, target_relative_time, time_until_target_semistable) %>%
+    tidyr::drop_na(!all_of(c(key_colnames(archive, exclude = c("time_value", "version")), "anchor_version")))
+
+  test_predictor_shifts_available <-
     latest_edf %>%
     mutate(relative_time = time_delta_standardize(time_value - .env$nowcast_date, .env$time_type, "fast")) %>%
     select(!all_of(key_colnames(latest_edf))) %>%
@@ -376,6 +479,8 @@ regression_nowcaster2 <- function(archive,
     mutate(offset_relative_time = relative_time - predictor_search_offset[predictor]) %>%
     filter(abs(time_delta_to_n_steps(offset_relative_time, time_type)) <=
              time_delta_to_n_steps(search_predictor_shifts_within, time_type)) %>%
+    # TODO arrange mandatory before optional.... except don't know how
+    # many "mandatory" will fail and optional will become backup mandatory
     arrange(
       predictor,
       abs(time_delta_to_n_steps(offset_relative_time, .env$time_type)),
@@ -383,126 +488,124 @@ regression_nowcaster2 <- function(archive,
       -time_delta_to_n_steps(offset_relative_time, .env$time_type)
     )
 
+  test_predictor_shifts_available
+
   # TODO non-negativity checks on some args
-  predictor_search_results <-
-    dplyr::nest_join(predictor_shift_selection_config, predictor_shifts_available, by = "predictor") %>%
-    dplyr::rowwise() %>%
-    mutate(selections = {
-      selections <- list()
-      debug_info <- list()
-      for (i in seq_len(nrow(.data$predictor_shifts_available))) {
-        # TODO in validation code: inequality check on max vs. min n predictor shifts
-        if (length(selections) == .data$max_n_predictor_shifts) {
-          break
-        }
-        candidate_selection <- epix_realtime_predictor_data(archive, .data$predictor, .data$predictor_shifts_available$relative_time[[i]]) %>%
-          na.omit() %>%
-          # TODO rename later?  so when this is its own utility, we can potentially avoid confusion
-          rename(time_value = anchor_version) %>%
-          as_epi_df()
-        # FIXME `training` -> `rows`?
-        debug_info_record <- list(
-          relative_time = .data$predictor_shifts_available$relative_time[[i]],
-          # XXX messy naming this, since doesn't have to be
-          # training... consider moving a sequential intersection
-          # approach, initialized with target training data, and
-          # sequentially adding to get to the min n for each, then
-          # fill out later.  Interface still potentially the same,
-          # though gives some opportunity to avoid some min n
-          # intersection failures by skipping problematic lags, and
-          # perhaps there's not actually much use for the min n per
-          # predictor, so it could be removed.  Could also maybe check
-          # for colinearity...  Maybe borrow from the Drop missingness
-          # handler.  Shift priority list seems less convenient and
-          # flexible than the search ranges; perhaps can have some
-          # internals that take the test-time available shifts and
-          # rank their priority; here would have one that makes sure
-          # we satisfy the min n shifts first, with arbitrary ordering
-          # getting there and afterward.  But this requires extra
-          # work to find the nearest already-added shift for a predictor.
-          n_nonmissing_analogues = nrow(candidate_selection)
-        )
-        if (nrow(candidate_selection) >= .env$min_n_training_each_predictor) {
-          selections <- c(selections, list(candidate_selection))
-          debug_info_record$selected <- TRUE
-        } else {
-          debug_info_record$selected <- FALSE
-        }
-        # TODO selection cadence?
-        debug_info <- c(debug_info, list(debug_info_record))
-      }
-      if (length(selections) < .data$min_n_predictor_shifts) {
-        # TODO which test-time things were explicit NAs?
-        # ... except we don't know that in multisignal archive
-        # format
-        debug_info_tbl <- debug_info %>%
-          map(as_tibble) %>%
-          dplyr::bind_rows()
-        if (nrow(debug_info_tbl) == 0L) {
-          cli_abort(c("Predictor {format_varname(predictor)} didn't have any non-NA values available within the search window, but the nowcaster `min_n_predictor_shifts` setting required us to find at least {min_n_predictor_shifts[[predictor]]}.",
-                      ">" = "Consider expanding or shifting the search window with `search_predictor_shifts_within`, `predictor_search_offset`.",
-                      ">" = "If {format_varname(predictor)} isn't essential to the nowcast, consider setting `min_n_predictor_shifts` to 0 so you can use it when it's available and skip it if it's not.",
-                      " " = "Additionally, if you're backtesting:",
-                      ">" = "Check that you're not backtesting on a version of the data before the first report recorded from this data source.  If this is the problem, you'll need to start backtesting not only after this first report, but long enough after so that there will be at least `min_n_training_each_predictor` training versions available.)"))
-        } else {
-          # cli_abort("TODO error message")
-          # cli_abort(c("Predictor {format_varname(predictor)} didn't have enough usable time shifts in the search window.  We were required to find {min_n_predictor_shifts[[predictor]]} usable time shifts, but only found {length(selections)}.  This could be due to one or more of the following:"
-          #             ">" = "Look at `epix_as_of_latest(archive)` and consider expanding or shifting the search window with `search_predictor_shifts_within`, `predictor_search_offset`.",
-          #             "*" = "Maybe the ",
-          #              (a) didn't have enough non-NA values available within the search range, or
-          #              (b) must have at least {min_n_predictor_shifts}, but only had {length(selections)}.",
-          #             c("i" = 'Relative times with non-NA values on the forecast date were:
-          #                  {debug_info_tbl$relative_time}',
-          #               "i" = "Number of analogous non-NA values in the history data were:
-          #                  {debug_info_tbl$n_nonmissing_analogues}, respectively",
-          #               "i" = 'Were these predictor shifts selected?:
-          #                  {data.table::fifelse(debug_info_tbl$selected, "yes", "no")}')
-          #             ))
-          cli_abort(c("Predictor {format_varname(predictor)} didn't have enough usable time shifts in the search window.  We were required to find {min_n_predictor_shifts[[predictor]]} usable time shifts, but only found {length(selections)}.",
-                      if (nrow(debug_info_tbl) < min_n_predictor_shifts[[predictor]]) {
-                        c("x" = "There were only {nrow(debug_info_tbl)} non-NA predictor values found within the search window.")
-                      } else {
-                        stop("Continue working on error messaging.")
-                      }
-                      ))
-        }
-      } else {
-        list(selections)
-      }
-    }) %>%
-    ungroup() %>%
-    .$selections %>%
-    vctrs::list_unchop()
+  # predictor_search_results <-
+  #   dplyr::nest_join(predictor_shift_selection_config, predictor_shifts_available, by = "predictor") %>%
+  #   dplyr::rowwise() %>%
+  #   mutate(selections = {
+  #     selections <- list()
+  #     debug_info <- list()
+  #     for (i in seq_len(nrow(.data$predictor_shifts_available))) {
+  #       # TODO in validation code: inequality check on max vs. min n predictor shifts
+  #       if (length(selections) == .data$max_n_predictor_shifts) {
+  #         break
+  #       }
+  #       candidate_selection <- epix_realtime_predictor_data(archive, .data$predictor, .data$predictor_shifts_available$relative_time[[i]]) %>%
+  #         na.omit() %>%
+  #         # TODO rename later?  so when this is its own utility, we can potentially avoid confusion
+  #         rename(time_value = anchor_version) %>%
+  #         as_epi_df()
+  #       # FIXME `training` -> `rows`?
+  #       debug_info_record <- list(
+  #         relative_time = .data$predictor_shifts_available$relative_time[[i]],
+  #         # XXX messy naming this, since doesn't have to be
+  #         # training... consider moving a sequential intersection
+  #         # approach, initialized with target training data, and
+  #         # sequentially adding to get to the min n for each, then
+  #         # fill out later.  Interface still potentially the same,
+  #         # though gives some opportunity to avoid some min n
+  #         # intersection failures by skipping problematic lags, and
+  #         # perhaps there's not actually much use for the min n per
+  #         # predictor, so it could be removed.  Could also maybe check
+  #         # for colinearity...  Maybe borrow from the Drop missingness
+  #         # handler.  Shift priority list seems less convenient and
+  #         # flexible than the search ranges; perhaps can have some
+  #         # internals that take the test-time available shifts and
+  #         # rank their priority; here would have one that makes sure
+  #         # we satisfy the min n shifts first, with arbitrary ordering
+  #         # getting there and afterward.  But this requires extra
+  #         # work to find the nearest already-added shift for a predictor.
+  #         n_nonmissing_analogues = nrow(candidate_selection)
+  #       )
+  #       if (nrow(candidate_selection) >= .env$min_n_training_each_predictor) {
+  #         selections <- c(selections, list(candidate_selection))
+  #         debug_info_record$selected <- TRUE
+  #       } else {
+  #         debug_info_record$selected <- FALSE
+  #       }
+  #       # TODO selection cadence?
+  #       debug_info <- c(debug_info, list(debug_info_record))
+  #     }
+  #     if (length(selections) < .data$min_n_predictor_shifts) {
+  #       # TODO which test-time things were explicit NAs?
+  #       # ... except we don't know that in multisignal archive
+  #       # format
+  #       debug_info_tbl <- debug_info %>%
+  #         map(as_tibble) %>%
+  #         dplyr::bind_rows()
+  #       if (nrow(debug_info_tbl) == 0L) {
+  #         cli_abort(c("Predictor {format_varname(predictor)} didn't have any non-NA values available within the search window, but the nowcaster `min_n_predictor_shifts` setting required us to find at least {min_n_predictor_shifts[[predictor]]}.",
+  #                     ">" = "Consider expanding or shifting the search window with `search_predictor_shifts_within`, `predictor_search_offset`.",
+  #                     ">" = "If {format_varname(predictor)} isn't essential to the nowcast, consider setting `min_n_predictor_shifts` to 0 so you can use it when it's available and skip it if it's not.",
+  #                     " " = "Additionally, if you're backtesting:",
+  #                     ">" = "Check that you're not backtesting on a version of the data before the first report recorded from this data source.  If this is the problem, you'll need to start backtesting not only after this first report, but long enough after so that there will be at least `min_n_training_each_predictor` training versions available.)"))
+  #       } else {
+  #         # cli_abort("TODO error message")
+  #         # cli_abort(c("Predictor {format_varname(predictor)} didn't have enough usable time shifts in the search window.  We were required to find {min_n_predictor_shifts[[predictor]]} usable time shifts, but only found {length(selections)}.  This could be due to one or more of the following:"
+  #         #             ">" = "Look at `epix_as_of_latest(archive)` and consider expanding or shifting the search window with `search_predictor_shifts_within`, `predictor_search_offset`.",
+  #         #             "*" = "Maybe the ",
+  #         #              (a) didn't have enough non-NA values available within the search range, or
+  #         #              (b) must have at least {min_n_predictor_shifts}, but only had {length(selections)}.",
+  #         #             c("i" = 'Relative times with non-NA values on the forecast date were:
+  #         #                  {debug_info_tbl$relative_time}',
+  #         #               "i" = "Number of analogous non-NA values in the history data were:
+  #         #                  {debug_info_tbl$n_nonmissing_analogues}, respectively",
+  #         #               "i" = 'Were these predictor shifts selected?:
+  #         #                  {data.table::fifelse(debug_info_tbl$selected, "yes", "no")}')
+  #         #             ))
+  #         cli_abort(c("Predictor {format_varname(predictor)} didn't have enough usable time shifts in the search window.  We were required to find {min_n_predictor_shifts[[predictor]]} usable time shifts, but only found {length(selections)}.",
+  #                     if (nrow(debug_info_tbl) < min_n_predictor_shifts[[predictor]]) {
+  #                       c("x" = "There were only {nrow(debug_info_tbl)} non-NA predictor values found within the search window.")
+  #                     } else {
+  #                       stop("Continue working on error messaging.")
+  #                     }
+  #                     ))
+  #       }
+  #     } else {
+  #       list(selections)
+  #     }
+  #   }) %>%
+  #   ungroup() %>%
+  #   .$selections %>%
+  #   vctrs::list_unchop()
 
-  predictors_edf <- predictor_search_results %>%
-    purrr::reduce(dplyr::full_join, by = key_colnames(latest_edf))
+  # predictors_edf <- predictor_search_results %>%
+  #   purrr::reduce(dplyr::full_join, by = key_colnames(latest_edf))
 
-  target_edf <- epix_target_evaluation_data(archive, target, target_relative_time, time_until_target_semistable) %>%
-    rename(time_value = anchor_version) %>%
-    as_epi_df()
-  # TODO naming... maybe need to reverse back to time_value + orig target col name
 
-  training_test <- dplyr::full_join(predictors_edf, target_edf, by = key_colnames(latest_edf))
+  # training_test <- dplyr::full_join(predictors_edf, target_edf, by = key_colnames(latest_edf))
 
-  # training <- training_test %>%
-  #   tidyr::drop_na() %>%
-  #   dplyr::slice_max(time_value, n = max_n_training_intersection)
+  # # training <- training_test %>%
+  # #   tidyr::drop_na() %>%
+  # #   dplyr::slice_max(time_value, n = max_n_training_intersection)
 
-  # test <- training_test %>%
-  #   filter(time_value == .env$nowcast_date)
+  # # test <- training_test %>%
+  # #   filter(time_value == .env$nowcast_date)
 
-  epipredict::arx_forecaster(training_test,
-                             # FIXME not sure this is going to work or if we'll have to fake epipredict out with some fake ahead
-                             vctrs::vec_set_difference(names(target_edf), key_colnames(target_edf)),
-                             # FIXME TODO use arg
-                             trainer = epipredict::quantile_reg(quantile_levels = 0.5),
-                             # FIXME TODO use arg
-                             args_list = arx_args_list(
-                               # FIXME max_n_training_intersection naming when have pooling
-                               lags = 0L, ahead = 0L, n_training = max_n_training_intersection,
-                               forecast_date = nowcast_date, target_date = nowcast_date
-                             )
-                             )
+  # epipredict::arx_forecaster(training_test,
+  #                            # FIXME not sure this is going to work or if we'll have to fake epipredict out with some fake ahead
+  #                            vctrs::vec_set_difference(names(target_edf), key_colnames(target_edf)),
+  #                            # FIXME TODO use arg
+  #                            trainer = epipredict::quantile_reg(quantile_levels = 0.5),
+  #                            # FIXME TODO use arg
+  #                            args_list = arx_args_list(
+  #                              # FIXME max_n_training_intersection naming when have pooling
+  #                              lags = 0L, ahead = 0L, n_training = max_n_training_intersection,
+  #                              forecast_date = nowcast_date, target_date = nowcast_date
+  #                            )
+  #                            )
 }
 
 regression_nowcaster <- function(archive, settings, return_info = FALSE) {
