@@ -224,7 +224,8 @@ time_delta_standardize <- function(time_delta, time_type, format = c("friendly",
 time_type_unit_abbrs <- c(
   day = "d",
   week = "w",
-  yearmonth = "m"
+  yearmonth = "m",
+  integer = "step"
 )
 # ^ Using these unit abbreviations happens to make our automatic slide output
 # naming look like taking ISO-8601 duration designations, removing the P, and
