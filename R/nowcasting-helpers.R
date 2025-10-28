@@ -306,6 +306,8 @@ chr_mapping_standardize <- function(mapping, chr_keys, mapping_arg = rlang::call
 #'
 #' @examples
 #'
+#' library(zeallot)
+#'
 #' archive <- as_epi_archive(dplyr::bind_rows(
 #'   tibble(
 #'     geo_value = 1,
@@ -326,19 +328,29 @@ chr_mapping_standardize <- function(mapping, chr_keys, mapping_arg = rlang::call
 #'   ~predictor, ~relative_time,
 #'   "a", -1,
 #'   "a", -2,
+#'   "a", -3,
 #'   "b", -2,
+#'   "a", -5,
 #' )
 #' training_tbl <- epix_target_evaluation_data(archive, "a", -1, 0)
-#' assess_available_predictor_shift(
-#'   feature_descriptions[1L,],
-#'   archive,
-#'   training_tbl,
-#'   feature_descriptions[0L,],
-#'   list(),
-#'   2L,
-#'   2L,
-#'   0L
-#' )
+#' included_shift_descriptions <- feature_descriptions[0,]
+#' predictor_search_records <- tibble()
+#' for (i in seq_len(nrow(feature_descriptions))) {
+#'   c(training_tbl, included_shift_descriptions, predictor_search_records) %<-%
+#'     assess_available_predictor_shift(
+#'       feature_descriptions[i,],
+#'       archive,
+#'       training_tbl,
+#'       included_shift_descriptions,
+#'       predictor_search_records,
+#'       min_predictor_shift_spacing = 2L,
+#'       min_n_training_versions = 2L,
+#'       min_n_training_rows_per_feature = 0.5 # absurd value, so that example data can be small
+#'     )
+#' }
+#' print(training_tbl)
+#' print(included_shift_descriptions)
+#' print(predictor_search_records, width = 200)
 #'
 #' @keywords internal
 assess_available_predictor_shift <-
@@ -363,10 +375,10 @@ assess_available_predictor_shift <-
       mutate(spacing = time_delta_standardize(relative_time.y - relative_time.x, archive$time_type))
     predictor_search_record$space_before <- closest_shift_before$spacing
     predictor_search_record$space_after <- closest_shift_after$spacing
-    predictor_search_record$enough_spacing <-
+    predictor_search_record$enough_space <-
       (is.na(predictor_search_record$space_before) || predictor_search_record$space_before >= min_predictor_shift_spacing) &&
       (is.na(predictor_search_record$space_after) || predictor_search_record$space_after >= min_predictor_shift_spacing)
-    if (!predictor_search_record$enough_spacing) {
+    if (!predictor_search_record$enough_space) {
       predictor_search_record$include <- FALSE
       return(list(
         training_tbl = training_tbl,
