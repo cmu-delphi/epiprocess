@@ -353,12 +353,19 @@ assess_available_predictor_shift <-
     # TODO ensure has all final columns even if early exit?  rather
     # than rely on bind_rows.  plus to order in a particular way
     predictor_search_record <- candidate_shift_description[c("predictor", "relative_time")]
-    shifts_too_close <- candidate_shift_description[c("predictor", "relative_time")] %>%
-      mutate(min_relative_time = relative_time - min_predictor_shift_spacing,
-             max_relative_time = relative_time + min_predictor_shift_spacing) %>%
-      dplyr::inner_join(included_shift_descriptions[c("predictor", "relative_time")],
-                        dplyr::join_by(predictor, between(y$relative_time, x$min_relative_time, x$max_relative_time)))
-    predictor_search_record$enough_spacing <- nrow(shifts_too_close) == 0L
+    closest_shift_before <- candidate_shift_description[c("predictor", "relative_time")] %>%
+      dplyr::left_join(included_shift_descriptions[c("predictor", "relative_time")],
+                       dplyr::join_by(predictor, closest(y$relative_time <= x$relative_time))) %>%
+      mutate(spacing = time_delta_standardize(relative_time.x - relative_time.y, archive$time_type))
+    closest_shift_after <- candidate_shift_description[c("predictor", "relative_time")] %>%
+      dplyr::left_join(included_shift_descriptions[c("predictor", "relative_time")],
+                       dplyr::join_by(predictor, closest(y$relative_time >= x$relative_time))) %>%
+      mutate(spacing = time_delta_standardize(relative_time.y - relative_time.x, archive$time_type))
+    predictor_search_record$space_before <- closest_shift_before$spacing
+    predictor_search_record$space_after <- closest_shift_after$spacing
+    predictor_search_record$enough_spacing <-
+      (is.na(predictor_search_record$space_before) || predictor_search_record$space_before >= min_predictor_shift_spacing) &&
+      (is.na(predictor_search_record$space_after) || predictor_search_record$space_after >= min_predictor_shift_spacing)
     if (!predictor_search_record$enough_spacing) {
       predictor_search_record$include <- FALSE
       return(list(
