@@ -350,8 +350,9 @@ assess_available_predictor_shift <-
            min_n_training_versions,
            # TODO standardize predictor_shift = feature?
            min_n_training_rows_per_feature) {
-    # TODO tibble or rcrd or ...
-    predictor_search_record <- list()
+    # TODO ensure has all final columns even if early exit?  rather
+    # than rely on bind_rows.  plus to order in a particular way
+    predictor_search_record <- candidate_shift_description[c("predictor", "relative_time")]
     shifts_too_close <- candidate_shift_description[c("predictor", "relative_time")] %>%
       mutate(min_relative_time = relative_time - min_predictor_shift_spacing,
              max_relative_time = relative_time + min_predictor_shift_spacing) %>%
@@ -361,9 +362,9 @@ assess_available_predictor_shift <-
     if (!predictor_search_record$enough_spacing) {
       predictor_search_record$include <- FALSE
       return(list(
-        training_tbl,
-        included_shift_descriptions,
-        c(predictor_search_records, list(predictor_search_record))
+        training_tbl = training_tbl,
+        included_shift_descriptions = included_shift_descriptions,
+        predictor_search_records = dplyr::bind_rows(predictor_search_records, predictor_search_record)
       ))
     }
     predictor <- candidate_shift_description$predictor
@@ -383,18 +384,17 @@ assess_available_predictor_shift <-
     if (!predictor_search_record$enough_versions || !predictor_search_record$enough_rows_per_feature) {
       predictor_search_record$include <- FALSE
       return(list(
-        training_tbl,
-        included_shift_descriptions,
-        c(predictor_search_records, list(predictor_search_record))
+        training_tbl = training_tbl,
+        included_shift_descriptions = included_shift_descriptions,
+        predictor_search_records = dplyr::bind_rows(predictor_search_records, predictor_search_record)
       ))
     }
 
     predictor_search_record$include <- TRUE
     return(list(
-      maybe_new_training_tbl,
-      dplyr::bind_rows(included_shift_descriptions, candidate_shift_description),
-      # XXX just bind_rows for the search record as well?
-      c(predictor_search_records, list(predictor_search_record))
+      training_tbl = maybe_new_training_tbl,
+      included_shift_descriptions = dplyr::bind_rows(included_shift_descriptions, candidate_shift_description),
+      predictor_search_records = dplyr::bind_rows(predictor_search_records, predictor_search_record)
     ))
 }
 # XXX consider bundling this into a class of its own.  Reconsider mutating interface.
@@ -405,6 +405,7 @@ regression_nowcaster2 <- function(archive,
                                   # TODO better defaults
                                   target_relative_time = 0L,
                                   search_predictor_shifts_within = as.difftime(60, units = "days"),
+                                  # TODO rename search offset to something about "average_lead" or something like that?
                                   predictor_search_offset = 0L,
                                   # TODO predictor shift spacing?
                                   min_n_predictor_shifts = dplyr::case_match(predictors, target ~ 1L, .default = 0L),
@@ -445,11 +446,9 @@ regression_nowcaster2 <- function(archive,
   time_until_target_semistable <- time_delta_standardize(time_until_target_semistable, time_type, "fast")
   # TODO finish validation
 
-  # TODO min nrow per predictor col ratio for joint table?
-
-  # if (is_grouped_epi_archive(archive) || length(unique(archive$DT$geo_value)) != 1L) {
-  #   stop("FIXME TODO grouping and multikey")
-  # }
+  if (is_grouped_epi_archive(archive) || length(unique(archive$DT$geo_value)) != 1L) {
+    stop("FIXME TODO grouping and multikey")
+  }
 
   nowcast_date <- archive$versions_end
   target_time_value <- nowcast_date + target_relative_time
