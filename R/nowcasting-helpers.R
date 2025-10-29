@@ -390,6 +390,9 @@ assess_available_predictor_shift <-
     relative_time <- candidate_shift_description$relative_time
     predictor_training_data <- epix_realtime_predictor_data(archive, predictor, relative_time) %>%
       tidyr::drop_na(!all_of(c(key_colnames(archive, exclude = c("time_value", "version")), "anchor_version")))
+    # XXX vs. left join, maybe store in tibble column alongside a
+    # logical column about acceptability, so can line up with same row
+    # numbers as the original target input
     maybe_new_training_tbl <- dplyr::inner_join(
       # (ignoring unlikely val col name overlaps)
       training_tbl, predictor_training_data,
