@@ -104,7 +104,7 @@
 #' ) %>%
 #'   ggplot(aes(time_value, percent_cli)) +
 #'   geom_line(na.rm = TRUE) +
-#'   geom_line(aes(y = percent_cli_lag_7d_realtime), colour = "blue", na.rm = TRUE) +
+#'   geom_line(aes(y = percent_cli_7dlag_realtime), colour = "blue", na.rm = TRUE) +
 #'   facet_wrap(~ geo_value)
 #'
 #' library(purrr)
@@ -130,7 +130,7 @@
 #' @export
 epix_realtime_predictor_data <- function(archive, varname, relative_time,
                                         anchor_versions = epix_slide_versions_default(archive),
-                                        out_name = "{.col}_{.dir}_{.amt}_realtime",
+                                        out_name = "{.col}_{.amt}{.dir}_realtime",
                                         nomatch = NA,
                                         drop_time_value = TRUE) {
   assert_class(archive, "epi_archive")
@@ -199,6 +199,14 @@ epix_realtime_predictor_data <- function(archive, varname, relative_time,
 #'
 #' @inheritParams epix_realtime_predictor_data
 #' @param varname String; name of target variable/column
+#' @param out_name Optional [`glue::glue_data`] pattern string;
+#'   what/how should we name the target in the output?  It can just be
+#'   the output column name desired, provided it contains no curly
+#'   braces. Or you can use `glue` features and the following
+#'   shorthand: "\{.col\}" for `varname`, "\{.dir\}" for "lag" or
+#'   "lead", and "\{.amt\}" for a formatted absolute value of
+#'   `relative_time`.  Default is
+#'   "`r gsub("([{}])", "\\\\\\1", rlang::fn_fmls(epix_target_evaluation_data)$out_name)`".
 #' @param time_until_semistable Length-1 time delta; replace the
 #'   target value with `NA` if it hasn't been at least
 #'   `time_until_semistable` since its `time_value` that its latest
@@ -217,7 +225,7 @@ epix_realtime_predictor_data <- function(archive, varname, relative_time,
 epix_target_evaluation_data <- function(archive, varname, relative_time,
                                         time_until_semistable,
                                         anchor_versions = epix_slide_versions_default(archive),
-                                        out_name = "{.col}_{.dir}_{.amt}_evaluation",
+                                        out_name = "{.col}_{.amt}{.dir}_evaluation",
                                         nomatch = NA) {
   assert_class(archive, "epi_archive")
   time_type <- archive$time_type

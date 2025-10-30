@@ -5,7 +5,7 @@
 \alias{time_type_unit_abbrs}
 \title{Helper data for \code{\link{time_type_unit_abbr}}}
 \format{
-An object of class \code{character} of length 3.
+An object of class \code{character} of length 4.
 }
 \usage{
 time_type_unit_abbrs

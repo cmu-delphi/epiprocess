@@ -9,7 +9,7 @@ epix_realtime_predictor_data(
   varname,
   relative_time,
   anchor_versions = epix_slide_versions_default(archive),
-  out_name = "{.col}_{.dir}_{.amt}_realtime",
+  out_name = "{.col}_{.amt}{.dir}_realtime",
   nomatch = NA,
   drop_time_value = TRUE
 )
@@ -41,7 +41,7 @@ no curly braces. Or you can use \code{glue} features and the following
 shorthand: "\{.col\}" for \code{varname}, "\{.dir\}" for "lag" or
 "lead", and "\{.amt\}" for a formatted absolute value of
 \code{relative_time}.  Default is
-"\{.col\}\emph{\{.dir\}}\{.amt\}_realtime".}
+"\{.col\}_\{.amt\}\{.dir\}_realtime".}
 
 \item{nomatch}{\code{NA} or \code{NULL}; what do we do when there is no
 measurement available due to reporting latency or being at edges
@@ -128,7 +128,7 @@ full_join(
 ) \%>\%
   ggplot(aes(time_value, percent_cli)) +
   geom_line(na.rm = TRUE) +
-  geom_line(aes(y = percent_cli_lag_7d_realtime), colour = "blue", na.rm = TRUE) +
+  geom_line(aes(y = percent_cli_7dlag_realtime), colour = "blue", na.rm = TRUE) +
   facet_wrap(~ geo_value)
 
 library(purrr)

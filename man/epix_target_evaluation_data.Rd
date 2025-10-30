@@ -10,7 +10,7 @@ epix_target_evaluation_data(
   relative_time,
   time_until_semistable,
   anchor_versions = epix_slide_versions_default(archive),
-  out_name = "{.col}_{.dir}_{.amt}_evaluation",
+  out_name = "{.col}_{.amt}{.dir}_evaluation",
   nomatch = NA
 )
 }
@@ -43,13 +43,13 @@ available version of each target values, regardless of
 \code{anchor_versions}.}
 
 \item{out_name}{Optional \code{\link[glue:glue]{glue::glue_data}} pattern string;
-what/how should we name the lagged predictor in the output?  It
-can just be the output column name desired, provided it contains
-no curly braces. Or you can use \code{glue} features and the following
+what/how should we name the target in the output?  It can just be
+the output column name desired, provided it contains no curly
+braces. Or you can use \code{glue} features and the following
 shorthand: "\{.col\}" for \code{varname}, "\{.dir\}" for "lag" or
 "lead", and "\{.amt\}" for a formatted absolute value of
 \code{relative_time}.  Default is
-"\{.col\}\emph{\{.dir\}}\{.amt\}_realtime".}
+"\{.col\}_\{.amt\}\{.dir\}_evaluation".}
 
 \item{nomatch}{\code{NA} or \code{NULL}; what do we do when there is no
 measurement available due to reporting latency or being at edges
