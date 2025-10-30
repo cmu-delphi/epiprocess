@@ -41,6 +41,7 @@
 #' @importFrom vctrs vec_slice
 #' @importFrom vctrs vec_slice<-
 #' @importFrom vctrs vec_sort
+#' @importFrom zeallot %<-%
 ## usethis namespace: end
 NULL
 

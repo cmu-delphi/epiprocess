@@ -302,6 +302,53 @@ chr_mapping_standardize <- function(mapping, chr_keys, mapping_arg = rlang::call
   }
 }
 
+new_predictor_shift_search <- function(training_tbl,
+                                       archive,
+                                       included_shifts = NULL,
+                                       search_records = NULL) {
+  assert_class(training_tbl, "tbl")
+  # TODO validate columns
+  #
+  # TODO enforce/validate no NAs in training_tbl (thinking of explicit
+  # NAs and NAs replacing unstable target data), or reconsider join strategy
+  assert_class(archive, "epi_archive")
+  if (is.null(included_shift_descriptions)) {
+    included_shift_descriptions <-
+      tibble(predictor = character(),
+             relative_time = integer() * unit_time_delta(archive$time_type))
+  }
+  if (is.null(search_records)) {
+    search_records <-
+      tibble(predictor = character(),
+             relative_time = integer() * unit_time_delta(archive$time_type))
+  }
+
+  structure(
+    list(
+      training_tbl = training_tbl,
+      archive = archive,
+      included_shifts = included_shifts,
+      search_records = search_records
+    ),
+    class = "predictor_shift_search"
+  )
+}
+
+#' @export
+print.predictor_shift_search <- function(x) {
+  c(training_tbl, archive, included_shifts, search_records) %<-% x
+  cli_cat("<predictor_shift_search>\n")
+  cli_cat("Training table dimensions: {pillar::size_sum(training_tbl)}\n")
+  cli_cat("Non-NA training instances: {nrow(na.omit(training_tbl))}\n")
+  cli_cat("Training table names: {format_varnames(names(training_tbl))}")
+  cli_cat("Archive measurement columns: {format_varnames(vctrs::vec_set_difference(names(archive$DT), key_colnames(archive)))}")
+  cli_cat("Included predictor shifts:")
+  print(included_shifts)
+  cli_cat("Predictor shift search records:")
+  print(search_records, n = 100L, width = 200L)
+  invisible(x)
+}
+
 #' Assess whether an available predictor looks suitable for training
 #'
 #' @examples

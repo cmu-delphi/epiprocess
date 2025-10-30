@@ -1097,3 +1097,14 @@ vec_cast_patched <- function(x, to, ..., x_arg = caller_arg(x), to_arg = "", cal
     vec_cast(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
   }
 }
+
+#' Like [`cli::cli_inform`], but nicely mixable with `print` and `cat` in Rmd & qmd
+#'
+#' See https://github.com/cmu-delphi/epipredict/issues/277 for an
+#' example of what can happen otherwise.
+#'
+#' @keywords internal
+cli_cat <- function(message, .envir = parent.frame()) {
+  cat(cli::format_message(message, .envir = .envir))
+  cat("\n")
+}
