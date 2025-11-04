@@ -8,7 +8,8 @@ epix_target_evaluation_data(
   archive,
   varname,
   relative_time,
-  time_until_semistable,
+  time_until_semistable = difftime_approx_ceiling_time_delta(as.difftime(60, units =
+    "days"), archive$time_type),
   anchor_versions = epix_slide_versions_default(archive),
   out_name = "{.col}_{.amt}{.dir}_evaluation",
   nomatch = NA

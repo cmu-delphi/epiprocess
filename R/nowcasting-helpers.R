@@ -223,7 +223,8 @@ epix_realtime_predictor_data <- function(archive, varname, relative_time,
 #'
 #' @export
 epix_target_evaluation_data <- function(archive, varname, relative_time,
-                                        time_until_semistable,
+                                        # TODO allow time_until_semistable to be difftime OR time_delta & automatically do this conversion?
+                                        time_until_semistable = difftime_approx_ceiling_time_delta(as.difftime(60, units = "days"), archive$time_type),
                                         anchor_versions = epix_slide_versions_default(archive),
                                         out_name = "{.col}_{.amt}{.dir}_evaluation",
                                         nomatch = NA) {
@@ -310,52 +311,52 @@ chr_mapping_standardize <- function(mapping, chr_keys, mapping_arg = rlang::call
   }
 }
 
-new_predictor_shift_search <- function(training_tbl,
-                                       archive,
-                                       included_shifts = NULL,
-                                       search_records = NULL) {
-  assert_class(training_tbl, "tbl")
-  # TODO validate columns
-  #
-  # TODO enforce/validate no NAs in training_tbl (thinking of explicit
-  # NAs and NAs replacing unstable target data), or reconsider join strategy
-  assert_class(archive, "epi_archive")
-  if (is.null(included_shift_descriptions)) {
-    included_shift_descriptions <-
-      tibble(predictor = character(),
-             relative_time = integer() * unit_time_delta(archive$time_type))
-  }
-  if (is.null(search_records)) {
-    search_records <-
-      tibble(predictor = character(),
-             relative_time = integer() * unit_time_delta(archive$time_type))
-  }
+# new_predictor_shift_search <- function(training_tbl,
+#                                        archive,
+#                                        included_shifts = NULL,
+#                                        search_records = NULL) {
+#   assert_class(training_tbl, "tbl")
+#   # TODO validate columns
+#   #
+#   # TODO enforce/validate no NAs in training_tbl (thinking of explicit
+#   # NAs and NAs replacing unstable target data), or reconsider join strategy
+#   assert_class(archive, "epi_archive")
+#   if (is.null(included_shift_descriptions)) {
+#     included_shift_descriptions <-
+#       tibble(predictor = character(),
+#              relative_time = integer() * unit_time_delta(archive$time_type))
+#   }
+#   if (is.null(search_records)) {
+#     search_records <-
+#       tibble(predictor = character(),
+#              relative_time = integer() * unit_time_delta(archive$time_type))
+#   }
 
-  structure(
-    list(
-      training_tbl = training_tbl,
-      archive = archive,
-      included_shifts = included_shifts,
-      search_records = search_records
-    ),
-    class = "predictor_shift_search"
-  )
-}
+#   structure(
+#     list(
+#       training_tbl = training_tbl,
+#       archive = archive,
+#       included_shifts = included_shifts,
+#       search_records = search_records
+#     ),
+#     class = "predictor_shift_search"
+#   )
+# }
 
-#' @export
-print.predictor_shift_search <- function(x) {
-  c(training_tbl, archive, included_shifts, search_records) %<-% x
-  cli_cat("<predictor_shift_search>\n")
-  cli_cat("Training table dimensions: {pillar::size_sum(training_tbl)}\n")
-  cli_cat("Non-NA training instances: {nrow(na.omit(training_tbl))}\n")
-  cli_cat("Training table names: {format_varnames(names(training_tbl))}")
-  cli_cat("Archive measurement columns: {format_varnames(vctrs::vec_set_difference(names(archive$DT), key_colnames(archive)))}")
-  cli_cat("Included predictor shifts:")
-  print(included_shifts)
-  cli_cat("Predictor shift search records:")
-  print(search_records, n = 100L, width = 200L)
-  invisible(x)
-}
+# #' @export
+# print.predictor_shift_search <- function(x) {
+#   c(training_tbl, archive, included_shifts, search_records) %<-% x
+#   cli_cat("<predictor_shift_search>\n")
+#   cli_cat("Training table dimensions: {pillar::size_sum(training_tbl)}\n")
+#   cli_cat("Non-NA training instances: {nrow(na.omit(training_tbl))}\n")
+#   cli_cat("Training table names: {format_varnames(names(training_tbl))}")
+#   cli_cat("Archive measurement columns: {format_varnames(vctrs::vec_set_difference(names(archive$DT), key_colnames(archive)))}")
+#   cli_cat("Included predictor shifts:")
+#   print(included_shifts)
+#   cli_cat("Predictor shift search records:")
+#   print(search_records, n = 100L, width = 200L)
+#   invisible(x)
+# }
 
 #' Assess whether an available predictor looks suitable for training
 #'
@@ -366,10 +367,10 @@ print.predictor_shift_search <- function(x) {
 #' archive <- as_epi_archive(dplyr::bind_rows(
 #'   tibble(
 #'     geo_value = 1,
-#'     time_value = 1:5,
-#'     version = 2:6,
-#'     a = 111:115,
-#'     b = 211:215
+#'     time_value = 1:6,
+#'     version = 2:7,
+#'     a = 111:116,
+#'     b = 211:216
 #'   ),
 #'   tibble(
 #'     geo_value = 1,
@@ -379,7 +380,7 @@ print.predictor_shift_search <- function(x) {
 #'     b = 221:225
 #'   )
 #' ))
-#' feature_descriptions <- tibble::tribble(
+#' shift_descriptions <- tibble::tribble(
 #'   ~predictor, ~relative_time,
 #'   "a", -1,
 #'   "a", -2,
@@ -388,35 +389,39 @@ print.predictor_shift_search <- function(x) {
 #'   "a", -5,
 #' )
 #' training_tbl <- epix_target_evaluation_data(archive, "a", -1, 0)
-#' included_shift_descriptions <- feature_descriptions[0,]
+#' testing_tbl <- tibble(geo_value = 1, anchor_version = archive$versions_end)
+#' included_shift_descriptions <- shift_descriptions[0,]
 #' predictor_search_records <- tibble()
-#' for (i in seq_len(nrow(feature_descriptions))) {
-#'   c(training_tbl, included_shift_descriptions, predictor_search_records) %<-%
+#' for (i in seq_len(nrow(shift_descriptions))) {
+#'   c(training_tbl, testing_tbl, included_shift_descriptions, predictor_search_records, last_predictor_search_record) %<-%
 #'     assess_available_predictor_shift(
-#'       feature_descriptions[i,],
+#'       shift_descriptions[i,],
 #'       archive,
 #'       training_tbl,
+#'       testing_tbl,
 #'       included_shift_descriptions,
 #'       predictor_search_records,
 #'       min_predictor_shift_spacing = 2L,
 #'       min_n_training_versions = 2L,
-#'       min_n_training_rows_per_feature = 0.5 # absurd value, so that example data can be small
+#'       min_n_training_rows_to_n_predictor_shifts_ratio = 0.5 # absurd value, so that example data can be small
 #'     )
+#'   print(last_predictor_search_record$included)
 #' }
 #' print(training_tbl)
+#' print(testing_tbl)
 #' print(included_shift_descriptions)
 #' print(predictor_search_records, width = 200)
 #'
 #' @keywords internal
 assess_available_predictor_shift <-
   function(candidate_shift_description,
-           archive, training_tbl,
+           archive, training_tbl, testing_tbl,
            included_shift_descriptions,
            predictor_search_records,
            min_predictor_shift_spacing,
            min_n_training_versions,
            # TODO standardize predictor_shift = feature?
-           min_n_training_rows_per_feature) {
+           min_n_training_rows_to_n_predictor_shifts_ratio) {
     # TODO ensure has all final columns even if early exit?  rather
     # than rely on bind_rows.  plus to order in a particular way
     predictor_search_record <- candidate_shift_description[c("predictor", "relative_time")]
@@ -434,47 +439,246 @@ assess_available_predictor_shift <-
       (is.na(predictor_search_record$space_before) || predictor_search_record$space_before >= min_predictor_shift_spacing) &&
       (is.na(predictor_search_record$space_after) || predictor_search_record$space_after >= min_predictor_shift_spacing)
     if (!predictor_search_record$enough_space) {
-      predictor_search_record$include <- FALSE
+      predictor_search_record$included <- FALSE
       return(list(
         training_tbl = training_tbl,
+        testing_tbl = testing_tbl,
         included_shift_descriptions = included_shift_descriptions,
-        predictor_search_records = dplyr::bind_rows(predictor_search_records, predictor_search_record)
+        predictor_search_records = dplyr::bind_rows(predictor_search_records, predictor_search_record),
+        last_predictor_search_record = predictor_search_record
       ))
     }
     predictor <- candidate_shift_description$predictor
     relative_time <- candidate_shift_description$relative_time
-    predictor_training_data <- epix_realtime_predictor_data(archive, predictor, relative_time) %>%
+    shift_data <- epix_realtime_predictor_data(archive, predictor, relative_time) %>%
       tidyr::drop_na(!all_of(c(key_colnames(archive, exclude = c("time_value", "version")), "anchor_version")))
     # XXX vs. left join, maybe store in tibble column alongside a
     # logical column about acceptability, so can line up with same row
     # numbers as the original target input
     maybe_new_training_tbl <- dplyr::inner_join(
       # (ignoring unlikely val col name overlaps)
-      training_tbl, predictor_training_data,
+      training_tbl, shift_data,
       by = c(key_colnames(archive, exclude = c("time_value", "version")), "anchor_version")
     )
     predictor_search_record$n_versions <- vctrs::vec_size(vctrs::vec_unique(maybe_new_training_tbl$anchor_version))
     predictor_search_record$enough_versions <- predictor_search_record$n_versions >= min_n_training_versions
     predictor_search_record$rows_per_feature <- nrow(maybe_new_training_tbl) / (ncol(maybe_new_training_tbl) - length(c(key_colnames(archive, exclude = c("time_value", "version")), "anchor_version")))
-    predictor_search_record$enough_rows_per_feature <- predictor_search_record$rows_per_feature >= min_n_training_rows_per_feature
+    predictor_search_record$enough_rows_per_feature <- predictor_search_record$rows_per_feature >= min_n_training_rows_to_n_predictor_shifts_ratio
 
     if (!predictor_search_record$enough_versions || !predictor_search_record$enough_rows_per_feature) {
-      predictor_search_record$include <- FALSE
+      predictor_search_record$included <- FALSE
       return(list(
         training_tbl = training_tbl,
+        testing_tbl = testing_tbl,
         included_shift_descriptions = included_shift_descriptions,
-        predictor_search_records = dplyr::bind_rows(predictor_search_records, predictor_search_record)
+        predictor_search_records = dplyr::bind_rows(predictor_search_records, predictor_search_record),
+        last_predictor_search_record = predictor_search_record
       ))
     }
 
-    predictor_search_record$include <- TRUE
+    predictor_search_record$included <- TRUE
+    new_testing_tbl <- dplyr::inner_join(
+      testing_tbl, shift_data,
+      by = c(key_colnames(archive, exclude = c("time_value", "version")), "anchor_version"),
+      relationship = "one-to-one", unmatched = c("error", "drop")
+    )
     return(list(
       training_tbl = maybe_new_training_tbl,
+      testing_tbl = new_testing_tbl,
       included_shift_descriptions = dplyr::bind_rows(included_shift_descriptions, candidate_shift_description),
-      predictor_search_records = dplyr::bind_rows(predictor_search_records, predictor_search_record)
+      predictor_search_records = dplyr::bind_rows(predictor_search_records, predictor_search_record),
+      last_predictor_search_record = predictor_search_record
     ))
 }
 # XXX consider bundling this into a class of its own.  Reconsider mutating interface.
+#
+# TODO summary column on predictor search record; included or excluded why.
+
+#' Version-aware {fore,now,back}casting: select predictor time shifts to use, prepare training&test data
+#'
+#' @examples
+#'
+#' archive <- archive_cases_dv_subset
+#' training_tbl <- archive %>%
+#'   epix_target_evaluation_data("case_rate_7d_av", 0L) %>%
+#'   na.omit()
+#' # TODO single epikey?
+#' epix_select_predictor_shifts(training_tbl, archive, c("case_rate_7d_av", "percent_cli"))
+#'
+#' @export
+epix_select_predictor_shifts <- function(training_tbl,
+                                         archive,
+                                         predictors,
+                                         search_predictor_shifts_within = as.difftime(60, units = "days"),
+                                         # TODO rename search offset to something about "average_lead" or something like that?
+                                         predictor_search_offset = 0L,
+                                         # TODO predictor shift spacing?
+                                         # min_n_predictor_shifts = dplyr::case_match(predictors, target ~ 1L, .default = 0L),
+                                         # ^ TODO we may want this behavior, so perhaps don't separate out target & predictor prep after all, or just make this required, rather than have mismatched defaults?
+                                         min_n_predictor_shifts = 0L,
+                                         max_n_predictor_shifts = 3L,
+                                         min_predictor_shift_spacing = difftime_approx_ceiling_time_delta(as.difftime(7, units = "days"), archive$time_type),
+                                         min_n_training_versions = 12L,
+                                         # TODO max_n_training_versions in another function
+                                         #
+                                         # TODO min_n_training_rows?
+                                         min_n_training_rows_to_n_predictor_shifts_ratio = 30) {
+  assert_class(training_tbl, "tbl")
+  # TODO validate columns
+  #
+  # TODO enforce/validate no NAs in training_tbl (thinking of explicit
+  # NAs and NAs replacing unstable target data), or reconsider join strategy
+  assert_class(archive, "epi_archive")
+  time_type <- archive$time_type
+  assert_character(predictors, any.missing = FALSE)
+  assert_subset(predictors, vctrs::vec_set_difference(names(archive$DT), "version"))
+  # Standardize chr mapping first if other standardization operations
+  # might accidentally unname.  Otherwise, standardize the mapping
+  # after other validation/standardization.
+  search_predictor_shifts_within <- chr_mapping_standardize(search_predictor_shifts_within, predictors)
+  search_predictor_shifts_within <- time_delta_standardize(search_predictor_shifts_within, time_type, "fast")
+  predictor_search_offset <- chr_mapping_standardize(predictor_search_offset, predictors)
+  predictor_search_offset <- time_delta_standardize(predictor_search_offset, time_type, "fast")
+  # TODO check sign, maybe shift n = 1L into a checkmate assertion
+  checkmate::assert_true(is_bare_integerish(min_n_predictor_shifts, n = 1L))
+  min_n_predictor_shifts <- chr_mapping_standardize(min_n_predictor_shifts, predictors)
+  checkmate::assert_true(is_bare_integerish(max_n_predictor_shifts, n = 1L))
+  max_n_predictor_shifts <- chr_mapping_standardize(max_n_predictor_shifts, predictors)
+  min_predictor_shift_spacing <- chr_mapping_standardize(min_predictor_shift_spacing, predictors)
+  min_predictor_shift_spacing <- time_delta_standardize(min_predictor_shift_spacing, time_type)
+  # XXX we're using name indexing all over the place; best just to insist that processing preserves names?
+  checkmate::assert_true(is_bare_integerish(min_n_training_versions, n = 1L))
+  # checkmate::assert_true(is_bare_integerish(max_n_training_versions, n = 1L))
+  checkmate::assert_number(min_n_training_rows_to_n_predictor_shifts_ratio, lower = 0)
+
+  latest_edf <- archive %>%
+    epix_as_of_latest()
+
+  nowcast_date <- archive$versions_end
+
+  test_predictor_shifts_available <-
+    latest_edf %>%
+    mutate(relative_time = time_delta_standardize(time_value - .env$nowcast_date, .env$time_type)) %>%
+    select(!all_of(key_colnames(latest_edf))) %>%
+    pivot_longer(!relative_time, names_to = "predictor", values_to = "value") %>%
+    tidyr::drop_na(value) %>%
+    mutate(offset_relative_time = relative_time - predictor_search_offset[predictor]) %>%
+    filter(abs(time_delta_to_n_steps(offset_relative_time, time_type)) <=
+             time_delta_to_n_steps(search_predictor_shifts_within, time_type)) %>%
+    arrange(
+      abs(time_delta_to_n_steps(offset_relative_time, .env$time_type)),
+      # prioritize later time_values on ties:
+      -time_delta_to_n_steps(offset_relative_time, .env$time_type)
+    ) %>%
+    split(factor(.$predictor, predictors))
+
+  n_test_predictor_shifts_available <- map_int(test_predictor_shifts_available, nrow)
+  if (any(n_test_predictor_shifts_available < min_n_predictor_shifts)) {
+    problematic_predictors <- predictors[n_test_predictor_shifts_available < min_n_predictor_shifts]
+    cli_abort(c("Could not find enough non-NA values of some predictor(s) to use to form a prediction.",
+                "x" = "Predictors {problematic_predictors} had {n_test_predictor_shifts_available}
+                       non-NA values available in their search windows, respectively, but at least
+                       at least {min_n_predictor_shifts}, respectively, were required.",
+                ">" = "Consider expanding or shifting the search window with `search_predictor_shifts_within`, `predictor_search_offset`.",
+                # TODO allow partial min_n_predictor_shifts settings; check mapping standardization.  Then improve this suggestion:
+                ">" = "If these predictors aren't essential to the nowcast, consider setting their
+                       `min_n_predictor_shifts` entries to 0 so you can use them when they are available
+                       and omit them when they are not.",
+                " " = "Additionally, if you're backtesting:",
+                ">" = "Check that you're not backtesting on a version of the data before the first report recorded from this data source.  If this is the problem, you'll need to start backtesting not only after this first report, but long enough after so that there will be at least `min_n_training_versions` training versions available.)"))
+  }
+
+  testing_tbl <- latest_edf %>%
+    distinct(pick(all_of(key_colnames(latest_edf, exclude = "time_value")))) %>%
+    mutate(anchor_version = .env$archive$versions_end)
+  included_shifts <-
+    tibble(predictor = character(),
+           relative_time = integer() * unit_time_delta(archive$time_type))
+  search_records <-
+    tibble(predictor = character(),
+           relative_time = integer() * unit_time_delta(archive$time_type))
+  n_included_predictor_shifts <- rep(0L, length(predictors))
+  names(n_included_predictor_shifts) <- predictors
+  n_searched_predictor_shifts <- rep(0L, length(predictors))
+  names(n_searched_predictor_shifts) <- predictors
+
+  for (predictor in predictors) {
+    shift_descriptions <- test_predictor_shifts_available[[predictor]]
+    for (i in seq_len(nrow(shift_descriptions))) {
+      if (n_included_predictor_shifts[[predictor]] == min_n_predictor_shifts[[predictor]]) {
+        break
+      }
+      c(training_tbl, testing_tbl, included_shifts, search_records, last_search_record) %<-%
+        assess_available_predictor_shift(
+          shift_descriptions[i,],
+          archive,
+          training_tbl,
+          testing_tbl,
+          included_shifts,
+          search_records,
+          min_predictor_shift_spacing = min_predictor_shift_spacing[[predictor]],
+          min_n_training_versions = min_n_training_versions,
+          min_n_training_rows_to_n_predictor_shifts_ratio = min_n_training_rows_to_n_predictor_shifts_ratio
+        )
+      if (last_search_record$included) {
+        n_included_predictor_shifts[[predictor]] <- n_included_predictor_shifts[[predictor]] + 1L
+      }
+      n_searched_predictor_shifts[[predictor]] <- n_searched_predictor_shifts[[predictor]] + 1L
+    }
+    if (n_included_predictor_shifts[[predictor]] < min_n_predictor_shifts[[predictor]]) {
+      lines <- cli::format_error(c(
+        "Predictor {format_varname(predictor)} didn't have enough usable time shifts in the search window.  We were required to find {min_n_predictor_shifts[[predictor]]} usable time shifts, but only found {length(selections)}.  You may need to do one or more of the following:",
+        # TODO allow partial min_n_predictor_shifts settings; check mapping standardization.  Then improve this suggestion:
+        ">" = "If this predictor isn't essential to the nowcast, consider setting its
+                       `min_n_predictor_shifts` entry to 0 so you can use it when it is available
+                       and has enough usable training data, and omit it otherwise.",
+        ">" = "Reducing other predictors' `min_n_predictor_shifts` settings, so `min_n_training_rows_to_n_predictor_shifts_ratio` isn't as demanding and/or fewer rows are omitted due to missingness of one of the shifts.",
+        ">" = "Reducing `min_n_training_rows_to_n_predictor_shifts_ratio` or `min_n_training_versions`.",
+        ">" = "Expanding or shifting the search window with `search_predictor_shifts_within`, `predictor_search_offset`.",
+        " " = "Additionally, if you're backtesting:",
+        ">" = "Check that you're not backtesting on a version of the data before the first report recorded from this data source, or before it's accumulated enough training data.  If this is the problem, you'll need to start backtesting not only after this first report, but long enough after so that there will be at least `min_n_training_versions` training versions available.)",
+        "i" = "The predictors that were selected up to this point:"
+      ))
+      lines <- c(lines, capture.output(print(included_shifts)))
+      lines <- c(lines, cli::format_message(
+        "i" = "Transcript of predictor search decisions:"
+      ))
+      lines <- c(lines, capture.output(print(search_records, n = Inf, width = 200)))
+    }
+  }
+
+  for (predictor in predictors) {
+    shift_descriptions <- test_predictor_shifts_available[[predictor]]
+    for (i in n_searched_predictor_shifts[[predictor]] + seq_len(nrow(shift_descriptions) - n_searched_predictor_shifts[[predictor]])) {
+      if (n_included_predictor_shifts[[predictor]] == max_n_predictor_shifts[[predictor]]) {
+        break
+      }
+      c(training_tbl, testing_tbl, included_shifts, search_records, last_search_record) %<-%
+        assess_available_predictor_shift(
+          shift_descriptions[i,],
+          archive,
+          training_tbl,
+          testing_tbl,
+          included_shifts,
+          search_records,
+          min_predictor_shift_spacing = min_predictor_shift_spacing[[predictor]],
+          min_n_training_versions = min_n_training_versions,
+          min_n_training_rows_to_n_predictor_shifts_ratio = min_n_training_rows_to_n_predictor_shifts_ratio
+        )
+      if (last_search_record$included) {
+        n_included_predictor_shifts[[predictor]] <- n_included_predictor_shifts[[predictor]] + 1L
+      }
+      n_searched_predictor_shifts[[predictor]] <- n_searched_predictor_shifts[[predictor]] + 1L
+    }
+  }
+
+  list(
+    training_tbl = training_tbl,
+    testing_tbl = testing_tbl,
+    included_shift_descriptions = included_shifts,
+    predictor_search_records = search_records
+  )
+}
 
 # TODO refactor out the target&predictor search stuff into a function?
 regression_nowcaster2 <- function(archive,
