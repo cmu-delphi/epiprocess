@@ -62,7 +62,8 @@ Imports:
     tsibble,
     utils,
     vctrs,
-    waldo
+    waldo,
+    zeallot
 Suggests:
     devtools,
     distributional,
@@ -113,6 +114,7 @@ Collate:
     'reexports.R'
     'revision_analysis.R'
     'slide.R'
+    'struct.R'
     'time-utils.R'
     'utils.R'
     'utils_pipe.R'
