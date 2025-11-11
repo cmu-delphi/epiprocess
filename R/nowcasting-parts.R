@@ -74,3 +74,13 @@
 # back to predictors... what about
 #
 # some_predictor_layer(training_targets, testing_targets, training_target_weights, predictor_spec)??
+#
+# how do better compose?  abstraction for either spec or data for targets, predictors?
+#
+# trying to come up with these concepts vs. something like a
+# mapper/callback-type approach vs. task list vs. task iterator.
+#
+# for debuggability, might prefer the task list or iterator vs. having
+# to peer into nested functions.  though list might bloat memory, and
+# iterator code might look confusing if error occurs within & target
+# search might require high-powered coro generators...
