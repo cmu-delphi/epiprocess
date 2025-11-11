@@ -1,3 +1,5 @@
+# TODO S3 generic function for extracting version-relative shifts
+
 #' Get predictor lag train&test data, factoring in data maturity (revisioning)
 #'
 #' Pairs with [`epix_target_evaluation_data`] to facilitate
@@ -270,6 +272,8 @@ epix_target_evaluation_data <- function(archive, varname, relative_time,
     select(-time_value)
 }
 
+# TODO alternative approaches, like imputation, maybe weighting
+
 # We can apply this separately for each nowcast_date to ensure that we consider
 # the latest possible value for every signal, though whether that is advisable
 # or not may depend on revision characteristics of the signals.
@@ -498,12 +502,21 @@ assess_available_predictor_shift <-
 #'
 #' @examples
 #'
-#' archive <- archive_cases_dv_subset
+#' fcd_horizon <- 0L
+#' archive <- archive_cases_dv_subset %>%
+#'   epix_as_of(.$versions_end - 80, all_versions = TRUE)
 #' training_tbl <- archive %>%
-#'   epix_target_evaluation_data("case_rate_7d_av", 0L) %>%
+#'   epix_target_evaluation_data("case_rate_7d_av", fcd_horizon) %>%
 #'   na.omit()
 #' # TODO single epikey?
-#' epix_select_predictor_shifts(training_tbl, archive, c("case_rate_7d_av", "percent_cli"))
+#' model_data <- epix_select_predictor_shifts(training_tbl, archive, c("case_rate_7d_av", "percent_cli"))
+#' fit <- quantreg::rq(case_rate_7d_av_0dlag_evaluation ~ ., data = model_data$training_tbl)
+#' pred <- predict(fit, 0.5, model_data$testing_tbl)
+#' print(model_data$testing_tbl)
+#' print(pred)
+#' eval_data <- archive_cases_dv_subset %>%
+#'   epix_target_evaluation_data("case_rate_7d_av", fcd_horizon, anchor_versions = .$versions_end - 80)
+#' print(eval_data)
 #'
 #' @export
 epix_select_predictor_shifts <- function(training_tbl,
@@ -560,7 +573,7 @@ epix_select_predictor_shifts <- function(training_tbl,
     latest_edf %>%
     mutate(relative_time = time_delta_standardize(time_value - .env$nowcast_date, .env$time_type)) %>%
     select(!all_of(key_colnames(latest_edf))) %>%
-    pivot_longer(!relative_time, names_to = "predictor", values_to = "value") %>%
+    tidyr::pivot_longer(!relative_time, names_to = "predictor", values_to = "value") %>%
     tidyr::drop_na(value) %>%
     mutate(offset_relative_time = relative_time - predictor_search_offset[predictor]) %>%
     filter(abs(time_delta_to_n_steps(offset_relative_time, time_type)) <=
@@ -572,7 +585,7 @@ epix_select_predictor_shifts <- function(training_tbl,
     ) %>%
     split(factor(.$predictor, predictors))
 
-  n_test_predictor_shifts_available <- map_int(test_predictor_shifts_available, nrow)
+  n_test_predictor_shifts_available <- purrr::map_int(test_predictor_shifts_available, nrow)
   if (any(n_test_predictor_shifts_available < min_n_predictor_shifts)) {
     problematic_predictors <- predictors[n_test_predictor_shifts_available < min_n_predictor_shifts]
     cli_abort(c("Could not find enough non-NA values of some predictor(s) to use to form a prediction.",
@@ -589,7 +602,7 @@ epix_select_predictor_shifts <- function(training_tbl,
   }
 
   testing_tbl <- latest_edf %>%
-    distinct(pick(all_of(key_colnames(latest_edf, exclude = "time_value")))) %>%
+    dplyr::distinct(pick(all_of(key_colnames(latest_edf, exclude = "time_value")))) %>%
     mutate(anchor_version = .env$archive$versions_end)
   included_shifts <-
     tibble(predictor = character(),
@@ -679,6 +692,10 @@ epix_select_predictor_shifts <- function(training_tbl,
     predictor_search_records = search_records
   )
 }
+
+# TODO simpler predictor approach with fixed lags, either all required or auto-dropping when missing.
+
+# TODO training filtering/weighting
 
 # TODO refactor out the target&predictor search stuff into a function?
 regression_nowcaster2 <- function(archive,
