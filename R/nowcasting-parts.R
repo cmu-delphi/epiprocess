@@ -84,3 +84,8 @@
 # to peer into nested functions.  though list might bloat memory, and
 # iterator code might look confusing if error occurs within & target
 # search might require high-powered coro generators...
+#
+# target acquirer: archive, settings -> target sets: iter<(train_tbl, test_tbl, weights)>
+# - want test_tbl to identify epikeys... perhaps also x versions?
+# - if want to pass to multivariate target engine or avoid multiple predictor searches, can output a size 1 result
+# predictor acquirerer: archive, target set, settings -> predictor sets: iter<(train_tbl, test_tbl, weights)>
