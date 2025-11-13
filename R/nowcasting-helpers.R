@@ -769,6 +769,7 @@ regression_nowcaster2 <- function(archive,
 
   test_predictor_shifts_available <-
     latest_edf %>%
+    # FIXME TODO target-relative time, not nowcast-relative
     mutate(relative_time = time_delta_standardize(time_value - .env$nowcast_date, .env$time_type, "fast")) %>%
     select(!all_of(key_colnames(latest_edf))) %>%
     pivot_longer(!relative_time, names_to = "predictor", values_to = "value") %>%

@@ -89,3 +89,5 @@
 # - want test_tbl to identify epikeys... perhaps also x versions?
 # - if want to pass to multivariate target engine or avoid multiple predictor searches, can output a size 1 result
 # predictor acquirerer: archive, target set, settings -> predictor sets: iter<(train_tbl, test_tbl, weights)>
+#
+# issue: for backcasting or iterative forecasting, how does predictor selection know where to center search?
