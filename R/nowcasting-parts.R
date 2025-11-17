@@ -91,3 +91,30 @@
 # predictor acquirerer: archive, target set, settings -> predictor sets: iter<(train_tbl, test_tbl, weights)>
 #
 # issue: for backcasting or iterative forecasting, how does predictor selection know where to center search?
+# * ideas:
+#   - wide format + have target prep provide time center metadata
+#   - wide format + pass along target description
+#   - custom wide data structure to provide metadata that want?
+#   - or just attach attrs to cols?
+#   - long format, time_value-based target ids?
+#   - long format, lag + signal name target ids?
+# * wide format closer to what engine needs, and join to fewer rows, and make obvious how many target archetypes there are
+# * long formats have easier access to extra information, and allows target sets to vary by epikey
+#
+# Target bundler?
+#
+# Predictor parts...
+# - predictor proposer (test nonmissingness/completeness, spacing)
+# - task splitter (test subtask nonmissingness/completeness, maybe some training stuff)
+# - predictor filterer/judger (training stuff), perhaps somehow also used to inform task splitter?
+#
+# geo-pooling vs. splitting stuff?
+#
+# cross-geo stuff
+#
+#
+#
+#
+#
+#
+# TODO rather than filter to every 7d/etc., actually perform averaging?  would that be accommodated by framework?
