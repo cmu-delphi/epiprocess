@@ -1032,3 +1032,5 @@ regression_nowcaster <- function(archive, settings, return_info = FALSE) {
 # v - 9  val,  not enough training data
 # v - 10 val,  not enough training data
 # v - 11 val,  far enough from used above,    enough training data,            use
+
+# FIXME non-missing vs. complete
