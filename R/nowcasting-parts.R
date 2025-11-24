@@ -105,8 +105,60 @@
 #
 # Predictor parts...
 # - predictor proposer (test nonmissingness/completeness, spacing)
+#   - except with differing non-NA max_t actually want to adjust the proposals, so this also might naturally have splits within itself
 # - task splitter (test subtask nonmissingness/completeness, maybe some training stuff)
 # - predictor filterer/judger (training stuff), perhaps somehow also used to inform task splitter?
+#
+# Try to represent these all within same framework?
+# - fn(later_or_inner_pipeline) fn(targets, predictors, training, testing) function factories...
+#   - need to force factory args
+#   - generate black boxes without completely-separate metadata wrapping stuff
+#   - handles target transformations
+#   - keep earlier/outer stuff on stack... good (debug) and bad (RAM)
+# - fn(targets, predictors, training, testing, later_or_inner_pipeline) functions...
+#   - can be put into a list and filtered/combined easily
+#   - handles target transformations, though looks weird in "sequence" with others
+#   - ensembles would still look black-box-y unless handled separately
+#     - though... are ensembles actually possible here?  testing vs. predictions formats...
+# - fn(targets, predictors, training, testing) -> iter<(targets, predictors, training, testing)>
+#   - not sure how easy to write... splitting might actually become more natural, but looping less natural
+#   - doesn't handle transformations
+# - fn(iter<(targets, predictors, training, testing)>) -> iter<(targets, predictors, training, testing)>
+#   - might enable use of more iter tools, feel more natural if comfortable with
+#   - but both this and above are forcing use of iterators...
+# - fn(targets, predictors, training, testing, later_or_inner_pipeline) -> iter<(targets, predictors, training, testing, later_or_inner_pipeline)>
+#   - could sort of handle target transformations, but awkwardly, having to tack something onto the later_or_inner_pipeline
+#     - and can't determine where "inner" part ends...
+#     - except no... if we end with the breakdowns to be fed into an engine, there's not an opportunity to reverse transformation
+#   - ensembles... still black boxes w/o extra management
+#   - iter -> iter format doesn't seem possible?
+# - fn(iter<targets, predictors, training, testing, postprocessing>) -> iter<(targets, predictors, training, testing, postprocessing)>
+#   - now this might handle target transformations
+#   - postprocessing black box
+#   - ensemble black box w/o extra metadata
+# - (fn(iter<targs, feats, train, test>) -> same, fn(iter<targs, feats, train, preds>) -> same)
+#   - still have whole ensemble thing
+# - seems like there is a distinction between "later" and "inner"
+#   - function-passing doesn't distinguish but is general
+#   - task splitting/transformation approaches seem like they are only natural for "later"
+#
+# What would applying pipeline of continuations look like?
+# for (i = imax..1) {
+#   f <- partial(transformers[[i]], ..........., f)..... but does partial force f?
+# }
+# f(......)?
+# 2x stack frames, stack frames not identifying steps
+#
+# vs.:
+#
+# run_step(steps, i)(...):
+#   transformers[[i]](..., run_step(steps, i+1L))
+# 2x stack frames, stack frames not identifying steps
+#
+# iterator-based approaches...
+# - iter -> iter still going to involve large stack trace
+# - elt -> iter might still... if don't want to store full breakdown, then would still be doing later within earlier handling
+#
 #
 # geo-pooling vs. splitting stuff?
 #
@@ -118,3 +170,71 @@
 #
 #
 # TODO rather than filter to every 7d/etc., actually perform averaging?  would that be accommodated by framework?
+
+
+# for (predictor in proposed_predictors) {
+#   if (predictor all acceptable) {
+#     include in predictor list
+#   } else if (predictor all unacceptable) {
+#     continue
+#   } else {
+#     split into two,
+#   }
+# }
+
+# predictor evaluations.... output {keys where acceptable, keys where unacceptable & reason} or something allowing multipartitioning and/or differing reasons (but do not split just based on reason).  or just flag & reason for all
+
+# for (predictor in predictor_proposals) {
+#   for (criterion in criteria) {
+#     attach evaluation
+#   }
+#   split based on inclusion/exclusion...
+# }
+
+# but what about early continuations if rejected everywhere?  criteria dependent on previous ones passing?  (but also want extra debug info...)
+
+full_chr_mapping_standardize <- function(full_mapping, chr_keys, full_mapping_arg = rlang::caller_arg(full_mapping), call = rlang::caller_env()) {
+  if (is.null(names(full_mapping))) {
+    vctrs::vec_set_names(vctrs::vec_recycle(full_mapping, vec_size(chr_keys)), chr_keys)
+  } else {
+    checkmate::assert_names(vctrs::vec_names(full_mapping), permutation.of = chr_keys, .var.name = full_mapping_arg)
+    vctrs::vec_slice(full_mapping, chr_keys)
+  }
+}
+
+#' Standardize a partial names->values mapping
+#'
+#' @examples
+#'
+#' partial_chr_mapping_standardize(c(target = 1), 0, c("target", "aux1", "aux2"))
+#'
+#' partial_chr_mapping_standardize(c(target = 1), c(target = 0, aux1 = 0, aux2 = 0), c("target", "aux1", "aux2"))
+#'
+#' @keywords internal
+partial_chr_mapping_standardize <- function(partial_mapping, default_full_mapping, chr_keys, partial_mapping_arg = rlang::caller_arg(partial_mapping), call = rlang::caller_env()) {
+  if (is.null(names(partial_mapping))) {
+    vctrs::vec_set_names(vctrs::vec_recycle(partial_mapping, vec_size(chr_keys)), chr_keys)
+  } else {
+    checkmate::assert_names(vctrs::vec_names(partial_mapping), subset.of = chr_keys, .var.name = partial_mapping_arg)
+    result <- full_chr_mapping_standardize(default_full_mapping, chr_keys)
+    vctrs::vec_slice(result, names(partial_mapping)) <- partial_mapping
+    result
+  }
+}
+
+# window_predictor_shift_proposer <- function(archive,
+#                                             target_shifts,
+#                                             predictors = unique(target_shifts$var),
+#                                             search_within = as.difftime(60, units = "days"),
+#                                             search_offset = 0L,
+#                                             min_spacing = as.difftime(7, units = "days"),
+#                                             min_n_shifts = 0L,
+#                                             max_n_shifts = 3L) {
+#   .......
+# }
+
+# TODO abstract away shifts, averages, etc.; at core a fn mapping key-versions to val; metadata to describe relative window
+
+# Other TODOs:
+# - [ ] handle hole in versions from this govt outage well... not epix_slide default versions...
+# - [ ] also for small backcast lookbehinds, ensure not missing half a week of later data?  just fix an offset to max in window?
