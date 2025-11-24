@@ -159,6 +159,56 @@
 # - iter -> iter still going to involve large stack trace
 # - elt -> iter might still... if don't want to store full breakdown, then would still be doing later within earlier handling
 #
+# Consider some layer where steps declare inner & outer things, but
+# their main function does not bake them in, and instead expects them
+# to be passed in by the runner?
+# - allows meta collection
+# - may look alien
+# - risk that runner doesn't properly pass
+#
+# None of these is actually providing nice named stack traces...
+#
+# And actually, it's not clear that any of the above can build proper
+# trained ensembles this way.  though some feature selection stuff
+# might be good to happen as part of the component specification, this
+# is still in-sample in a way.  We'd need to have an evolution of
+# fits...  Same deal with calibration.  Could be done separately with
+# epix_slide, though without the conditioning on feature selection
+# etc.  That might be good.  But perhaps this format provides more
+# flexibility on how to train it?  Actually, the problems may only
+# arise when want to talk about training predictions, which are never
+# even formed in this framework.  So of course trained ensembles and
+# calibrators would not be part of it.  Though could potentially think
+# about... if want to condition on current feat selection, then could
+# gen training predictions by a sequence of anchor_version filters &
+# applying the engine (though might incorporate extra info like center
+# of centering transformation that do not want to be included..., plus
+# computationally this probably makes caching possibilities more
+# restricted).
+#
+# Decisions about which things to condition on might be
+# nice... perhaps could be formulated as cv being inner or outer
+# relative to e.g., feat selection or centering/scaling.  CV step
+# would need to span the engine, and have idea of predictions,
+# evaluation, ...  Might also want/need to have concept of fitted
+# parameters, ...  Should param/debug stuff also be output of steps?
+#
+# Might not be that far from current framework... we have training
+# timeless-pseudo-archive/version-series/NOT and testing timeless
+# snapshot... already "conditioned on" earlier parts of pipeline;
+# perhaps could just run a heads_map/version-series-cv w/ each fold
+# applying later part of pipeline, eval/fit, apply to testing.
+# - Problem: training targets... not actually a version series; it's
+#   based on testing version data... but maybe an appropriately-placed
+#   populate_target_training_data-type step will make this work
+#   properly? and other placement provide more flexibility?
+#
+# elt -> iter style might actually provide more flexibility in
+# pipeline loop/iter; could do all the iter_map_iters in one go,
+# provide all debug info in one frame, ...  (Not sure about
+# async-future-friendliness.)
+#
+#
 #
 # geo-pooling vs. splitting stuff?
 #
