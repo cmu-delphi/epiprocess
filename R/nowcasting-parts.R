@@ -334,6 +334,7 @@ assert_env_has <- function(x, nms, inherit = FALSE, .var.name = checkmate::vname
 }
 
 new_pipeline_segment <- function(marker_subclass, segment_fn, settings_names = names(environment(segment_fn))) {
+  # FIXME what happens with `...` args?
   assert_function(
     segment_fn,
     args = c("targets", "features", "training", "testing", "inferences", "archive"), ordered = TRUE,
@@ -344,7 +345,7 @@ new_pipeline_segment <- function(marker_subclass, segment_fn, settings_names = n
   rlang::env_get_list(environment(segment_fn), settings_names, inherit = TRUE)
 
   pipeline_segment <- function(input) {
-    segment_fn(input$targets, input$features, input$training, input$testing, input$inferences)
+    segment_fn(input$targets, input$features, input$training, input$testing, input$inferences, input$archive)
     # TODO validate factory_fn output format?
   }
   class(pipeline_segment) <- c(marker_subclass, "pipeline_segment")
@@ -407,14 +408,62 @@ print.pipeline_segment <- function(x, ...) {
 
 # TODO str etc.... needs to look different with `pipeline` (segment sequences) there...
 
-attach_semistable_target_training_segment <- function(time_until_semistable = as.difftime(60, units = "days")) {
+#' attach_semistable_target_training_segment
+#'
+#' @examples
+#'
+#' attach_semistable_target_training_segment()(list(
+#'   targets = tibble(varname = "percent_cli", version_relative_time = 0:1),
+#'   features = tibble(),
+#'   training = NULL,
+#'   testing = NULL,
+#'   inferences = NULL,
+#'   archive = archive_cases_dv_subset
+#' ))$training
+attach_semistable_target_training_segment <-
+  function(time_until_semistable = as.difftime(60, units = "days"),
+           anchor_versions = NULL,
+           out_name = "{.col}_{.amt}{.dir}_evaluation",
+           nomatch = NA,
+           drop_na = TRUE) {
   new_pipeline_segment(
     "attach_semistable_target_training_data",
     function(targets, features, training, testing, inferences, archive) {
-      stop("TODO")
+    # XXX some awkwardness from not having archive$time_type earlier...
+      if (inherits(time_until_semistable, "difftime")) {
+        time_until_semistable <- difftime_approx_ceiling_time_delta(time_until_semistable, archive$time_type)
+      }
+      if (is.null(anchor_versions)) {
+        anchor_versions <- vctrs::vec_unique(archive$DT$version)
+      }
+      if (!is.null(training)) {
+        anchor_versions <- vctrs::vec_set_intersect(anchor_versions, training$key$anchor_version)
+      }
+      purrr::walk2(targets$varname, targets$version_relative_time,
+                   function(varname, version_relative_time) {
+                     target_training_data <- epix_target_evaluation_data(archive, varname, version_relative_time, time_until_semistable, anchor_versions, out_name, nomatch)
+                     if (drop_na) {
+                       # FIXME not operating properly
+                       target_training_data <- vctrs::vec_slice(target_training_data, vctrs::vec_detect_complete(target_training_data[[length(target_training_data)]]))
+                     }
+                     target_training_data <- target_training_data %>%
+                       tidyr::pack(key = all_of(c(key_colnames(archive, exclude = c("time_value", "version")), "anchor_version"))) %>%
+                       tidyr::pack(values = !key)
+                     # no weights
+                     if (is.null(training)) {
+                       # TODO weights?
+                       training <<- target_training_data
+                     } else {
+                       # FIXME not working properly w/ `values` col
+                       training <<- dplyr::inner_join(training, target_training_data, by = "key")
+                     }
+                   })
+      tibble::lst(targets, features, training, testing, inferences, archive)
     }
   )
 }
+
+# TODO target & feature specs should probably give them names, and map to an abstraction more general than a shift.
 
 transform_target_segment <- function(target, f, finv, inner_pipeline) {
   new_pipeline_segment(
@@ -430,6 +479,30 @@ engine_segment <- function(engine) {
     "engine_segment",
     function(targets, features, training, testing, inferences, archive) {
       stop("TODO")
+    }
+  )
+}
+
+pipeline <- function(...) {
+  segments <- list(...)
+  assert_list(segments, "pipeline_segment")
+  # XXX the pipeline execution could handle the re-expansion of the
+  # output to multiple input args for the next segment; don't need the
+  # segment wrapper function.  Just want to be sure to be rigid about
+  # accepting pipelines not segments.
+  #
+  # XXX or consider just having the base segment functions take `input`
+  # to begin with?  maybe less typing.  pipeline could do validation
+  #
+  # for now, hack it like a segment
+  new_pipeline_segment(
+    "pipeline",
+    function(targets, features, training, testing, inferences, archive) {
+      state <- list(targets, features, training, testing, inferences, archive)
+      for(segment in segments) {
+        state <- segment(state)
+      }
+      state
     }
   )
 }

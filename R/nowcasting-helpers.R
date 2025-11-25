@@ -227,6 +227,7 @@ epix_realtime_predictor_data <- function(archive, varname, relative_time,
 epix_target_evaluation_data <- function(archive, varname, relative_time,
                                         # TODO allow time_until_semistable to be difftime OR time_delta & automatically do this conversion?
                                         time_until_semistable = difftime_approx_ceiling_time_delta(as.difftime(60, units = "days"), archive$time_type),
+                                        # FIXME epix_slide_versions_default currently prob bad for this.
                                         anchor_versions = epix_slide_versions_default(archive),
                                         out_name = "{.col}_{.amt}{.dir}_evaluation",
                                         nomatch = NA) {
