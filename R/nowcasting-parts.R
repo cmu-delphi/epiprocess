@@ -208,7 +208,15 @@
 # provide all debug info in one frame, ...  (Not sure about
 # async-future-friendliness.)
 #
+# Going back to function factories... are these actually going to be
+# clearest?  Can separate into function(non-step hyperparms)
+# function(inside_steps, later_steps) {...} to potentially allow for
+# metadata structure.
 #
+# What about just elt -> elt?  And everything that branches or has
+# post-processing is required to rbind or perform whatever other
+# combination is required at the end.  Still need way to register
+# inner pipelines...
 #
 # geo-pooling vs. splitting stuff?
 #
