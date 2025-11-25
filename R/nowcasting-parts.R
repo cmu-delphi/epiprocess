@@ -296,3 +296,140 @@ partial_chr_mapping_standardize <- function(partial_mapping, default_full_mappin
 # Other TODOs:
 # - [ ] handle hole in versions from this govt outage well... not epix_slide default versions...
 # - [ ] also for small backcast lookbehinds, ensure not missing half a week of later data?  just fix an offset to max in window?
+
+
+
+# new_pipeline_step <- function(hyperparams, inner_pipelines, transform) {
+
+# }
+
+# new_pipeline_step_generator <- function() {
+# }
+
+# transform_target <- function(targets, transform, inverse_transform) {
+#   new_pipeline_step(list(targets, transform, inverse_transform), )
+# }
+
+# new_pipeline_segment_factory <- function(factory_fn, settings_names = rlang::fn_fmls_names(factory_fn)) {
+#   new_pipeline_segment(
+#     function(input) {
+#       # TODO validate factory_fn output format?
+#       factory_fn NOT(input$targets, input$features, input$training, input$testing, input$inferences)
+#     }
+#   )
+# }
+
+check_env_has <- function(x, nms, inherit = FALSE, .var.name = checkmate::vname(x)) {
+  has <- rlang::env_has(x, nms, inherit = inherit)
+  if (all(has)) {
+    TRUE
+  } else {
+    missing_nms <- names(has)[!has]
+    cli::format_inline('{ .var.name} is missing direct{if (inherit) " or inherited" else ""} bindings for {format_varnames(nms)}')
+  }
+}
+
+assert_env_has <- function(x, nms, inherit = FALSE, .var.name = checkmate::vname(x)) {
+  assert(check_env_has(x, nms, inherit = inherit, .var.name = .var.name))
+}
+
+new_pipeline_segment <- function(marker_subclass, segment_fn, settings_names = names(environment(segment_fn))) {
+  assert_function(
+    segment_fn,
+    args = c("targets", "features", "training", "testing", "inferences", "archive"), ordered = TRUE,
+    nargs = 6L
+  )
+  assert_env_has(environment(segment_fn), settings_names, inherit = TRUE)
+  # Enforce forcing of args in case we forgot (but requiring NSE args to be munged):
+  rlang::env_get_list(environment(segment_fn), settings_names, inherit = TRUE)
+
+  pipeline_segment <- function(input) {
+    segment_fn(input$targets, input$features, input$training, input$testing, input$inferences)
+    # TODO validate factory_fn output format?
+  }
+  class(pipeline_segment) <- c(marker_subclass, "pipeline_segment")
+  attr(pipeline_segment, "epiprocess:::settings_env") <- environment(segment_fn)
+  attr(pipeline_segment, "epiprocess:::settings_names") <- settings_names
+  pipeline_segment
+}
+
+remove_str_dotdot <- function(object) {
+  result <- list(object)
+  class(result) <- "remove_str_dotdot"
+  result
+}
+
+#' @export
+str.remove_str_dotdot <- function(object,
+                                  ...,
+                                  nest.lev = 0,
+                                  indent.str = paste(rep.int(" ", max(0, nest.lev + 1)),
+                                                     collapse = "..")) {
+  indent.str <- gsub("\\.\\.$", "", indent.str)
+  str(object[[1L]], ..., nest.lev = nest.lev, indent.str = indent.str, comp.str = "")
+}
+
+#' `str` impl for pipeline segments
+#'
+#' @examples
+#' transform_target_segment("y", log, exp, engine_segment(parsnip::linear_reg())) %>% str()
+#'
+#' @export
+#' @keywords internal
+str.pipeline_segment <- function(object,
+                                 ...,
+                                 nest.lev = 0,
+                                 indent.str = paste(rep.int(" ", max(0, nest.lev + 1)),
+                                                    collapse = "..")) {
+  cat(cli::format_inline('<{class(object)[[1L]]}>:\n'))
+  settings <- rlang::env_get_list(attr(object, "epiprocess:::settings_env"),
+                                  attr(object, "epiprocess:::settings_names"),
+                                  inherit = TRUE)
+  str(
+    lapply(settings, remove_str_dotdot),
+    # settings,
+    nest.lev = nest.lev + 1L,
+    # indent.str = paste0(gsub("\U00251C\U002500", "\U002502 ", indent.str), "\U00251C\U002500 "),
+    # indent.str = indent.str,
+    indent.str = paste0(indent.str, "\U002502 "),
+    no.list = TRUE,
+    comp.str = "\U0008\U0008\U00251C\U002500",
+    collapse = ""
+  )
+}
+
+#' @export
+print.pipeline_segment <- function(x, ...) {
+  str(x)
+}
+
+# TODO $, [, [[ to access settings of pipeline segment
+
+# TODO str etc.... needs to look different with `pipeline` (segment sequences) there...
+
+attach_semistable_target_training_segment <- function(time_until_semistable = as.difftime(60, units = "days")) {
+  new_pipeline_segment(
+    "attach_semistable_target_training_data",
+    function(targets, features, training, testing, inferences, archive) {
+      stop("TODO")
+    }
+  )
+}
+
+transform_target_segment <- function(target, f, finv, inner_pipeline) {
+  new_pipeline_segment(
+    "transform_target_segment",
+    function(targets, features, training, testing, inferences, archive) {
+      stop("TODO")
+    }
+  )
+}
+
+engine_segment <- function(engine) {
+  new_pipeline_segment(
+    "engine_segment",
+    function(targets, features, training, testing, inferences, archive) {
+      stop("TODO")
+    }
+  )
+}

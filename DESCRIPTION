@@ -110,6 +110,7 @@ Collate:
     'key_colnames.R'
     'methods-epi_df.R'
     'nowcasting-helpers.R'
+    'nowcasting-parts.R'
     'outliers.R'
     'reexports.R'
     'revision_analysis.R'
