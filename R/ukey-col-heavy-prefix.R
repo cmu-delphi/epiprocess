@@ -606,3 +606,7 @@ group_by.hardhat_ukey_col_heavyprefix <- function(...) {
   cli::cli_abort(c("ukey_cols do not support `group_by`",
                    ">" = "Consider grouping the data frame containing this ukey col instead."))
 }
+
+
+
+# TODO look at chooseOpsMethod; potential alternative to S4 trickery?
