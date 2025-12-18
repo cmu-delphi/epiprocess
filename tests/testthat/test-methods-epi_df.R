@@ -174,6 +174,75 @@ test_that("Renaming columns while grouped gives appropriate colnames and metadat
   expect_identical(renamed_gedf1, renamed_gedf2)
 })
 
+test_that("rename() maintains other_keys", {
+  edf <- tibble::tibble(
+    geo_value = "ca",
+    time_value = as.Date("2020-01-01"),
+    age = 1,
+    value = 1
+  ) %>%
+    as_epi_df(other_keys = "age")
+
+  # Rename key
+  res <- edf %>% dplyr::rename(age_group = age)
+  expect_s3_class(res, "epi_df")
+  expect_equal(attr(res, "metadata")$other_keys, "age_group")
+  expect_true("age_group" %in% names(res))
+
+  # Rename non-key
+  res2 <- edf %>% dplyr::rename(val2 = value)
+  expect_s3_class(res2, "epi_df")
+  expect_equal(attr(res2, "metadata"),
+               attr(edf, "metadata"))
+  expect_true("val2" %in% names(res2))
+
+  # Rename geo_value (should decay)
+  res3 <- edf %>% dplyr::rename(location = geo_value)
+  expect_false(is_epi_df(res3))
+})
+
+test_that("rename() maintains time_type", {
+  edf <- tibble::tibble(
+    geo_value = "ca",
+    time_value = as.Date("2020-01-01"),
+    value = 1
+  ) %>%
+    as_epi_df()
+
+  # Set specific time_type
+  attr(edf, "metadata")$time_type <- "weird"
+
+  res <- edf %>% dplyr::rename(val = value)
+
+  expect_equal(attr(res, "metadata")$time_type, "weird")
+})
+
+test_that("rename() maintains manual time_type on weekly data (grouped and ungrouped)", {
+  # Scenario: Weekly data labeled as daily
+  dates <- seq(as.Date("2020-01-01"), by = "week", length.out = 5)
+  edf_weekly <- tibble::tibble(
+    geo_value = "ca",
+    time_value = dates,
+    value = 1:5
+  ) %>%
+    as_epi_df()
+
+  # Force manual time_type
+  attr(edf_weekly, "metadata")$time_type <- "day"
+
+  # Ungrouped
+  res_ungrouped <- edf_weekly %>% dplyr::rename(val = value)
+  expect_equal(attr(res_ungrouped, "metadata")$time_type, "day")
+
+  # Grouped
+  res_grouped <- edf_weekly %>%
+    dplyr::group_by(geo_value) %>%
+    dplyr::rename(val = value)
+
+  expect_s3_class(res_grouped, "epi_df")
+  expect_equal(attr(res_grouped, "metadata")$time_type, "day")
+})
+
 test_that("Additional `select` on `epi_df` tests", {
   edf <- tibble::tibble(geo_value = "ak", time_value = as.Date("2020-01-01"), age = 1, value = 1) %>%
     as_epi_df(other_keys = "age")
