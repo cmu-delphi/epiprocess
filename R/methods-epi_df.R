@@ -602,7 +602,8 @@ merge_epi_df_join <- function(res, x, y) {
   if (!all(all_keys %in% names(res))) {
     missing_keys <- all_keys[!all_keys %in% names(res)]
     cli::cli_warn(c(
-      "Key column{?s} {.val {missing_keys}} {?is/are} missing from the join result.",
+      "Key column{?s} {.val {missing_keys}} {?is/are} missing
+       from the join result.",
       "!" = "Decaying to a `tibble`."
     ))
     return(decay_epi_df(res))
