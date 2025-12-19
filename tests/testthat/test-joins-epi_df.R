@@ -265,3 +265,18 @@ test_that("joins with superset/subset keys work as expected", {
   expect_s3_class(res_inner3, "epi_df")
   expect_true(setequal(attr(res_inner3, "metadata")$other_keys, c("k1", "k2", "k3")))
 })
+
+test_that("joins decay with warning if keys are lost (e.g. renamed via conflict)", {
+  x <- tibble(geo_value = 1, time_value = 1, k = 1, val = 1) %>%
+    as_epi_df(other_keys = "k")
+  y <- tibble(geo_value = 1, time_value = 1, k = 2, val2 = 2)
+
+  # Join without including 'k' in keys, causing it to be renamed to k.x and k.y
+  expect_warning(
+    res <- left_join(x, y, by = c("geo_value", "time_value")),
+    "Key column"
+  )
+  
+  expect_s3_class(res, "tbl_df")
+  expect_false(inherits(res, "epi_df"))
+})

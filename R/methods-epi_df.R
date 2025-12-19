@@ -596,11 +596,15 @@ merge_epi_df_join <- function(res, x, y) {
   }
 
   # Check if result is a valid epi_df with the merged keys
-  # We construct the full key set: geo_value + time_value + other_keys
   all_keys <- c("geo_value", "time_value", meta$other_keys)
 
-  # If any key columns are missing, we can't be an epi_df
+  # If any key columns are missing, decay to tibble
   if (!all(all_keys %in% names(res))) {
+    missing_keys <- all_keys[!all_keys %in% names(res)]
+    cli::cli_warn(c(
+      "Key column{?s} {.val {missing_keys}} {?is/are} missing from the join result.",
+      "!" = "Decaying to a `tibble`."
+    ))
     return(decay_epi_df(res))
   }
 
