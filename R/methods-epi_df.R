@@ -548,3 +548,83 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
   ) %>%
     arrange_canonical()
 }
+
+#' @method left_join epi_df
+#' @export
+left_join.epi_df <- function(x, y, by = NULL, copy = FALSE, suffix = c(".x", ".y"),
+                             ..., keep = NULL) {
+  merge_epi_df_join(NextMethod(), x, y)
+}
+
+#' @method right_join epi_df
+#' @export
+right_join.epi_df <- function(x, y, by = NULL, copy = FALSE, suffix = c(".x", ".y"),
+                              ..., keep = NULL) {
+  merge_epi_df_join(NextMethod(), x, y)
+}
+
+#' @method inner_join epi_df
+#' @export
+inner_join.epi_df <- function(x, y, by = NULL, copy = FALSE, suffix = c(".x", ".y"),
+                              ..., keep = NULL) {
+  merge_epi_df_join(NextMethod(), x, y)
+}
+
+#' @method full_join epi_df
+#' @export
+full_join.epi_df <- function(x, y, by = NULL, copy = FALSE, suffix = c(".x", ".y"),
+                             ..., keep = NULL) {
+  merge_epi_df_join(NextMethod(), x, y)
+}
+
+#' @method cross_join epi_df
+#' @export
+cross_join.epi_df <- function(x, y, ..., copy = FALSE, suffix = c(".x", ".y")) {
+  # Cross joins violates epi_df uniqueness. We force decay to tibble.
+  decay_epi_df(NextMethod())
+}
+
+# Helper to merge keys and validate result
+merge_epi_df_join <- function(res, x, y) {
+  # Start with x's metadata
+  meta <- attr(x, "metadata")
+
+  # If y is also an epi_df, merge its keys
+  if (is_epi_df(y)) {
+    y_keys <- attr(y, "metadata")$other_keys
+    meta$other_keys <- union(meta$other_keys, y_keys)
+  }
+
+  # Check if result is a valid epi_df with the merged keys
+  # We construct the full key set: geo_value + time_value + other_keys
+  all_keys <- c("geo_value", "time_value", meta$other_keys)
+
+  # If any key columns are missing, we can't be an epi_df
+  if (!all(all_keys %in% names(res))) {
+    return(decay_epi_df(res))
+  }
+
+  # check for NAs in keys
+  if (anyMissing(res[all_keys])) {
+    cli::cli_warn(c(
+      "NA values found in key columns of the join result.",
+      "i" = "This often happens when joining data with missing keys.",
+      "i" = "Consider using `inner_join` to drop missing rows.",
+      "!" = "Decaying to a `tibble`."
+    ))
+    return(decay_epi_df(res))
+  }
+
+  # Check uniqueness
+  is_unique <- check_ukey_unique(dplyr::ungroup(res), all_keys)
+
+  if (isTRUE(is_unique)) {
+    # Valid epi_df! Attach merged metadata
+    attr(res, "metadata") <- meta
+    class(res) <- unique(c("epi_df", class(res)))
+    return(res)
+  } else {
+    # Not unique -> decay to tibble
+    return(decay_epi_df(res))
+  }
+}
