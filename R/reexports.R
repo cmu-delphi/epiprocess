@@ -75,3 +75,27 @@ tidyr::full_seq
 #' @importFrom ggplot2 autoplot
 #' @export
 ggplot2::autoplot
+
+#' Bind multiple data frames by row and column
+#'
+#' These are S3 generics around `dplyr::bind_rows` and `dplyr::bind_cols`.
+#'
+#' @inheritParams dplyr::bind_rows
+#' @inheritParams dplyr::bind_cols
+#' @seealso [`dplyr::bind_rows()`], [`dplyr::bind_cols()`]
+#' @name bind
+#' @importFrom dplyr bind_rows
+#' @export
+bind_rows <- function(..., .id = NULL) {
+    UseMethod("bind_rows")
+}
+
+#' @rdname bind
+#' @importFrom dplyr bind_cols
+#' @export
+bind_cols <- function(
+  ...,
+  .name_repair = c("unique", "universal", "check_unique", "minimal")
+) {
+    UseMethod("bind_cols")
+}

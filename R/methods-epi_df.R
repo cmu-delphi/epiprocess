@@ -548,3 +548,118 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
   ) %>%
     arrange_canonical()
 }
+
+#' @export
+bind_rows.default <- function(..., .id = NULL) {
+  if (any(vapply(rlang::list2(...), is_epi_df, logical(1)))) {
+    return(bind_rows.epi_df(..., .id = .id))
+  }
+  dplyr::bind_rows(..., .id = .id)
+}
+
+#' @method bind_rows epi_df
+#' @export
+bind_rows.epi_df <- function(..., .id = NULL) {
+  dots <- list(...)
+  other_keys <- character()
+  template <- NULL
+
+  # Collect other_keys from all epi_df inputs and find a template
+  is_edf <- vapply(dots, is_epi_df, logical(1))
+  if (any(is_edf)) {
+    template <- dots[[which(is_edf)[1]]]
+    other_keys <- unique(unlist(lapply(dots[is_edf], function(x) attr(x, "metadata")[["other_keys"]])))
+  }
+
+  res <- dplyr::bind_rows(..., .id = .id)
+
+  if (is.null(template)) {
+    return(decay_epi_df(res))
+  }
+
+  validate_epi_df_bind(res, other_keys, template)
+}
+
+#' @export
+bind_cols.default <- function(
+  ...,
+  .name_repair = c("unique", "universal", "check_unique", "minimal")
+) {
+  if (any(vapply(rlang::list2(...), is_epi_df, logical(1)))) {
+    return(bind_cols.epi_df(..., .name_repair = .name_repair))
+  }
+  dplyr::bind_cols(..., .name_repair = .name_repair)
+}
+
+
+#' @method bind_cols epi_df
+#' @export
+bind_cols.epi_df <- function(
+  ...,
+  .name_repair = c(
+    "unique", "universal",
+    "check_unique", "minimal"
+  )
+) {
+  dots <- list(...)
+  other_keys <- character()
+  template <- NULL
+
+  # Collect other_keys
+  is_edf <- vapply(dots, is_epi_df, logical(1))
+  if (any(is_edf)) {
+    template <- dots[[which(is_edf)[1]]]
+    other_keys <- unique(unlist(lapply(
+      dots[is_edf],
+      function(x) attr(x, "metadata")[["other_keys"]]
+    )))
+  }
+
+  res <- dplyr::bind_cols(..., .name_repair = .name_repair)
+
+  if (is.null(template)) {
+    return(decay_epi_df(res))
+  }
+
+  validate_epi_df_bind(res, other_keys, template)
+}
+
+# Attach metadata
+validate_epi_df_bind <- function(res, other_keys, template) {
+  # Expected key set
+  all_keys <- c("geo_value", "time_value", other_keys)
+
+  # Check if keys exist
+  if (!all(all_keys %in% names(res))) {
+    missing_keys <- all_keys[!all_keys %in% names(res)]
+    cli::cli_warn(c(
+      "Key column{?s} {.val {missing_keys}} {?is/are} missing from the bind result.",
+      "!" = "Decaying to a `tibble`."
+    ))
+    return(decay_epi_df(res))
+  }
+
+  # Check for NAs in keys
+  if (anyMissing(res[all_keys])) {
+    cli::cli_warn(c(
+      "NA values found in key columns of the bind result.",
+      "!" = "Decaying to a `tibble`."
+    ))
+    return(decay_epi_df(res))
+  }
+
+  # Remove grouping for uniqueness check to avoid issues
+  is_unique <- check_ukey_unique(dplyr::ungroup(res), all_keys)
+
+  if (isTRUE(is_unique)) {
+    # Attach metadata with merged keys
+    meta <- attr(template, "metadata")
+    meta[["other_keys"]] <- other_keys
+
+    attr(res, "metadata") <- meta
+    class(res) <- unique(c("epi_df", class(res)))
+    return(res)
+  } else {
+    return(decay_epi_df(res))
+  }
+}

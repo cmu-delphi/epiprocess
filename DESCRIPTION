@@ -39,12 +39,12 @@ URL: https://github.com/cmu-delphi/epiprocess,
     https://cmu-delphi.github.io/epiprocess/
 Depends:
     epidatasets,
-    R (>= 3.6)
+    R (>= 3.6),
+    dplyr (>= 1.1.0)
 Imports:
     checkmate,
     cli,
     data.table,
-    dplyr (>= 1.1.0),
     ggplot2,
     glue,
     lifecycle,
