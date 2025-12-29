@@ -560,7 +560,7 @@ bind_rows.default <- function(..., .id = NULL) {
 #' @method bind_rows epi_df
 #' @export
 bind_rows.epi_df <- function(..., .id = NULL) {
-  dots <- list(...)
+  dots <- rlang::list2(...)
   other_keys <- character()
   template <- NULL
 
@@ -601,7 +601,7 @@ bind_cols.epi_df <- function(
     "check_unique", "minimal"
   )
 ) {
-  dots <- list(...)
+  dots <- rlang::list2(...)
   other_keys <- character()
   template <- NULL
 
@@ -648,7 +648,7 @@ validate_epi_df_bind <- function(res, other_keys, template) {
     return(decay_epi_df(res))
   }
 
-  # Remove grouping for uniqueness check to avoid issues
+  # Remove grouping for uniqueness
   is_unique <- check_ukey_unique(dplyr::ungroup(res), all_keys)
 
   if (isTRUE(is_unique)) {
