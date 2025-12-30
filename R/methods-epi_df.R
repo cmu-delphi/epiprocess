@@ -548,3 +548,48 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
   ) %>%
     arrange_canonical()
 }
+
+#' @method drop_na epi_df
+#' @importFrom tidyr drop_na
+#' @export
+drop_na.epi_df <- function(data, ...) {
+  res <- NextMethod()
+  reconstruct_light_edf(res, data)
+}
+
+#' @method pivot_wider epi_df
+#' @importFrom tidyr pivot_wider
+#' @export
+pivot_wider.epi_df <- function(data, ...) {
+  res <- NextMethod()
+  reconstruct_light_edf(res, data)
+}
+
+#' @method pivot_longer epi_df
+#' @importFrom tidyr pivot_longer
+#' @export
+pivot_longer.epi_df <- function(data, ..., names_to = "name") {
+  res <- NextMethod()
+  res <- reconstruct_light_edf(res, data)
+  if (inherits(res, "epi_df")) {
+    # If we haven't decayed, we check if we need to add the new key column
+    current_keys <- key_colnames(res)
+    # Check if we have duplicates on the existing keys
+    if (!isTRUE(check_ukey_unique(ungroup(res), current_keys))) {
+      new_keys <- setdiff(names_to, ".value")
+      attr(res, "metadata")$other_keys <- unique(
+        c(attr(res, "metadata")$other_keys, new_keys)
+      )
+      # Check if adding the new keys solved the uniqueness problem
+      current_keys <- key_colnames(res)
+      if (!isTRUE(check_ukey_unique(ungroup(res), current_keys))) {
+        cli::cli_warn(c(
+          "Result is not unique on keys.",
+          "!" = "Decaying to a `tibble`."
+        ))
+        res <- decay_epi_df(res)
+      }
+    }
+  }
+  res
+}
