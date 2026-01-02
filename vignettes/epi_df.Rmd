@@ -1,8 +1,8 @@
 ---
-title: Working with epi_df objects and time series data
+title: Examples of miscellaneous processing on `epi_df`s
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Working with epi_df objects and time series data}
+  %\VignetteIndexEntry{Examples of miscellaneous processing on `epi_df`s}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -15,17 +15,21 @@ The `epi_df` data structure provided by `epiprocess` provides convenient ways to
 perform common processing tasks. In this vignette, we will:
 
 - construct an `epi_df` from a data frame
-- perform rolling time-window computations using `epi_slide()`
+- perform rolling time-window computations using `epi_slide_mean()` and 
+`epi_slide_sum()`
 - perform group-level aggregation using `sum_groups_epi_df()`
 - detect and fill time gaps using `complete.epi_df()` and `{tsibble}`
 - perform geographic aggregation (not yet implemented)
+
+For a general introduction to `epiprocess` and the `epi_df` class, please see `vignette("epiprocess")`.
 
 ## Getting data into `epi_df` format
 
 As in `vignette("epiprocess")`, we will fetch daily reported COVID-19 cases from
 CA, FL, NY, and TX (note: here we're using new, not cumulative cases) using the
-[`epidatr`](https://github.com/cmu-delphi/epidatr) package, and then convert
-this to `epi_df` format.
+[`epidatr`](https://github.com/cmu-delphi/epidatr) package or 
+[`epidatasets`](https://github.com/cmu-delphi/epidatasets) package, and then 
+convert this to `epi_df` format.
 
 ```{r, message = FALSE, warning = FALSE}
 library(epiprocess)
@@ -64,33 +68,15 @@ edf <- pub_covidcast(
 
 The data has 2,684 rows and 3 columns.
 
-## Rolling computations using `epi_slide`
+## Rolling means and sums
 
-A very common operation in time series processing is aggregating the values of
-the time series by applying some function on a rolling time window of data
-points. The key tool that allows this is `epi_slide()`. The function always
-first makes sure to group the data by the grouping variables of the `epi_df`
-object, which includes the `geo_value` and possibly `other_keys` columns. It
-then applies the rolling slide computation inside each group.
+A common operation in time series processing is aggregating values over a rolling window. `epiprocess` provides optimized functions for the two most common operations: `epi_slide_mean()` and `epi_slide_sum()`.
 
-The `epi_slide()` function has three ways to specify the computation to be
-performed:
-
-- by using a tidy evaluation approach
-- by passing a formula
-- by passing a function
-
-### Slide the tidy way
-
-Usually, the most convenient way to setup a computation in `epi_slide()` is to
-pass in an expression for tidy evaluation. In this case, we can simply define
-the name of the new column directly as part of the expression, setting it equal
-to a computation in which we can access any columns of `.x` by name, just as we
-would in a call to, say, `dplyr::mutate()`. For example:
+These functions group the data by `geo_value` (and `other_keys` if present) and apply the computation on a trailing window of specified size.
 
 ```{r}
 slide_output <- edf %>%
-  epi_slide(cases_7sd = sd(cases, na.rm = TRUE), .window_size = 7)
+  epi_slide_mean(cases, .window_size = 7, .new_col_names = "slide_mean")
 ```
 
 As a simple sanity check, we visualize the 7-day trailing averages computed on
@@ -101,7 +87,7 @@ library(ggplot2)
 
 ggplot(slide_output, aes(x = time_value)) +
   geom_col(aes(y = cases, fill = geo_value), alpha = 0.5, show.legend = FALSE) +
-  geom_line(aes(y = cases_7sd, col = geo_value), show.legend = FALSE) +
+  geom_line(aes(y = slide_mean, col = geo_value), show.legend = FALSE) +
   facet_wrap(~geo_value, scales = "free_y") +
   scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
   labs(x = "Date", y = "Reported COVID-19 cases")
@@ -123,76 +109,7 @@ edf %>%
   ungroup()
 ```
 
-Furthermore `epi_slide()` allows for selecting `.ref_time_value`, which the
-latter recipe does not support.
-
-### Slide with a function
-
-We can also pass a function to the second argument in `epi_slide()`. In this
-case, the passed function `.f` must have the form `function(x, g, t, ...)`,
-where
-
-- `x` is an epi_df with the same column names as the input epi_df
-- `g` is a one-row tibble containing the values of the grouping variables
-  for the associated group, for instance `g$geo_value`
-- `t` is the ref_time_value for the current window
-- `...` (optional) are any additional arguments you'd like to be able to forward
-  to your function
-
-The same computation as above can be done with a function:
-
-```{r}
-edf %>%
-  epi_slide(.f = function(x, g, t) sd(x$cases, na.rm = TRUE), .window_size = 7)
-```
-
-### `epi_slide()` with a formula
-
-The same computation as above can be done with a formula, where all references
-to the columns must be made with the prefix `.x$...`, for instance:
-
-```{r}
-edf %>%
-  epi_slide(~ sd(.x$cases, na.rm = TRUE), .window_size = 7)
-```
-
-Note that the name of the column defaults to `slide_value` in the unnamed
-formula or function case. This can be adjusted with `.new_col_name`.
-
-### Rolling computations with multiple column outputs
-
-If your formula (or function) returns a tibble (or other kind of data frame),
-then its columns will be unpacked into the resulting `epi_df` (in the sense of
-`tidyr::unpack()`). For example, the following computes the 7-day trailing
-average of daily cases as well as the the 7-day trailing standard deviation of
-daily cases:
-
-```{r}
-edf %>%
-  epi_slide(
-    ~ tibble(
-      cases_mean = mean(.x$cases, na.rm = TRUE),
-      cases_sd = sd(.x$cases, na.rm = TRUE)
-    ),
-    .window_size = 7
-  )
-```
-
-### Optimized rolling mean and sums
-
-For the two most common sliding operations, we offer two optimized versions:
-`epi_slide_mean()` and `epi_slide_sum()`. These are much faster than
-`epi_slide()`, so we recommend using them when you are only interested in the
-mean or sum of a column. The following computes the 7-day trailing mean of daily
-cases, allowing means and sums to be taken over fewer than 7 observations if
-there is missingness (`na.rm = TRUE`):
-
-```{r}
-edf %>%
-  epi_slide_mean("cases", .window_size = 7, na.rm = TRUE)
-edf %>%
-  epi_slide_sum("cases", .window_size = 7, na.rm = TRUE)
-```
+For more general rolling computations (e.g., standard deviation, or complex custom functions), use `epi_slide_opt()` (optimized for many standard functions) or `epi_slide()` (fully flexible).
 
 ### Running a forecaster on a sliding window of data
 
@@ -451,20 +368,7 @@ The data contains 16,212 rows and 5 columns.
 
 ## Converting to `tsibble` format
 
-For manipulating and wrangling time series data, the
-[`tsibble`](https://tsibble.tidyverts.org/index.html) already provides a host of
-useful tools. A tsibble object (formerly, of class `tbl_ts`) is basically a
-tibble (data frame) but with two specially-marked columns: an **index** column
-representing the time variable (defining an order from past to present), and a
-**key** column identifying a unique observational unit for each time point. In
-fact, the key can be made up of any number of columns, not just a single one.
-
-In an `epi_df` object, the index variable is `time_value`, and the key variable
-is typically `geo_value` (though this need not always be the case: for example,
-if we have an age group variable as another column, then this could serve as a
-second key variable). The `epiprocess` package thus provides an implementation
-of `as_tsibble()` for `epi_df` objects, which sets these variables according to
-these defaults.
+The `epiprocess` package provides an implementation of `as_tsibble()` for `epi_df` objects, which sets the index and key variables according to defaults (`time_value` and `geo_value`).
 
 ```{r, message = FALSE}
 library(tsibble)
@@ -580,12 +484,12 @@ head(xt_filled)
 Explicit imputation for missingness (zero-filling in our case) can be important
 for protecting against bugs in all sorts of downstream tasks. For example, even
 something as simple as a 7-day trailing average is complicated by missingness.
-The function `epi_slide()` looks for all rows within a window of 7 days anchored
+The function `epi_slide_mean()` looks for all rows within a window of 7 days anchored
 on the right at the reference time point (when `.window_size = 7`).
 But when some days in a given week are missing because they were censored
 because they had small case counts, taking an average of the observed case
 counts can be misleading and is unintentionally biased upwards. Meanwhile,
-running `epi_slide()` on the zero-filled data brings these trailing averages
+running `epi_slide_mean()` on the zero-filled data brings these trailing averages
 (appropriately) downwards, as we can see inspecting Plymouth, MA around July 1,
 2021.
 
@@ -593,10 +497,10 @@ running `epi_slide()` on the zero-filled data brings these trailing averages
 xt %>%
   as_epi_df(as_of = as.Date("2024-03-20")) %>%
   group_by(geo_value) %>%
-  epi_slide(cases_7dav = mean(cases), .window_size = 7) %>%
+  epi_slide_mean(cases, .window_size = 7, .new_col_names = "cases_7dav") %>%
   ungroup() %>%
   filter(
-    geo_value == "Plymouth, MA",
+    geo_value == "Plymouth, Massachusetts",
     abs(time_value - as.Date("2021-07-01")) <= 3
   ) %>%
   print(n = 7)
@@ -604,10 +508,10 @@ xt %>%
 xt_filled %>%
   as_epi_df(as_of = as.Date("2024-03-20")) %>%
   group_by(geo_value) %>%
-  epi_slide(cases_7dav = mean(cases), .window_size = 7) %>%
+  epi_slide_mean(cases, .window_size = 7, .new_col_names = "cases_7dav") %>%
   ungroup() %>%
   filter(
-    geo_value == "Plymouth, MA",
+    geo_value == "Plymouth, Massachusetts",
     abs(time_value - as.Date("2021-07-01")) <= 3
   ) %>%
   print(n = 7)
