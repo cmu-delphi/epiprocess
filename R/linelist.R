@@ -1,0 +1,299 @@
+#' Convert a line list to an `epi_archive` object
+#'
+#' @description
+#' Converts a line list (a data frame where each row represents a case or event)
+#' into an [`epi_archive`] object. This function requires "recorded" and
+#' "deleted" timestamps, and generates a time series of counts (e.g. daily
+#' hospitalizations) as they would have appeared at different points in time.
+#'
+#' @param x A data frame (line list).
+#' @param ... Arguments passed to [`as_epi_archive`].
+#' @param geo_value,time_value,version_recorded,version_deleted,other_keys
+#'   <[`tidy-select`][dplyr::dplyr_tidy_select]> Columns in `x` representing:
+#'   * `geo_value`: the geographic location of the event.
+#'   * `time_value`: the time of the event.
+#'   * `version_recorded`: the time at which the event became known/recorded.
+#'   * `version_deleted`: (optional) the time at which the event was
+#'     removed/deleted. If `NULL` (default), it is assumed no events are
+#'     deleted.
+#'   * `other_keys`: (optional) additional key columns (e.g. age group).
+#' @param is_deleted (optional) <[`tidy-select`][dplyr::dplyr_tidy_select]>
+#'   Column in `x` (or a logical vector/predicate) indicating if the row is a
+#'   deletion (`TRUE`/1) or an entry (`FALSE`/0). Only used for "chart-style"
+#'   linelists (where `version_recorded` and `version_deleted` are the same
+#'   column).
+#' @param value Either `NULL` (default) or a string specifying the name of the
+#'   output count column. If `NULL` and `other_keys` is empty, defaults to
+#'   "count".
+#' @param id <[`tidy-select`][dplyr::dplyr_tidy_select]> Optional column
+#'   identifying unique events/cases.
+#'
+#' @return An [`epi_archive`] object.
+#'
+#' @examples
+#' library(dplyr)
+#'
+#' linelist <- tibble(
+#'   event_id = 1:3,
+#'   geo_value = c("ca", "ca", "ca"),
+#'   time_value = as.Date(c("2022-01-01", "2022-01-01", "2022-01-02")),
+#'   report_date = as.Date(c("2022-01-02", "2022-01-02", "2022-01-03")),
+#'   delete_date = as.Date(c("2022-01-04", NA, NA))
+#' )
+#'
+#' archive <- linelist_to_archive(
+#'   linelist,
+#'   geo_value = geo_value,
+#'   time_value = time_value,
+#'   version_recorded = report_date,
+#'   version_deleted = delete_date
+#' )
+#'
+#' @importFrom rlang enquo as_label eval_tidy .data
+#' @importFrom dplyr transmute select bind_rows group_by summarise arrange mutate ungroup
+#' @importFrom tidyselect eval_select
+#' @importFrom utils head
+#' @export
+linelist_to_archive <- function(x,
+                                ...,
+                                geo_value = NULL,
+                                time_value = NULL,
+                                version_recorded = NULL,
+                                version_deleted = NULL,
+                                is_deleted = NULL,
+                                other_keys = NULL,
+                                value = NULL,
+                                id = NULL) {
+  # Capture tidy selections
+  geo_quo <- rlang::enquo(geo_value)
+  time_quo <- rlang::enquo(time_value)
+  ver_rec_quo <- rlang::enquo(version_recorded)
+  ver_del_quo <- rlang::enquo(version_deleted)
+  is_del_quo <- rlang::enquo(is_deleted)
+  id_quo <- rlang::enquo(id)
+
+  # Use 0-row slice for resolution to be explicit about not needing data rows
+  x_schema <- head(x, 0)
+
+  geo_col <- resolve_col(geo_quo, x_schema, "geo_value",
+    default_names = geo_column_names()
+  )
+  time_col <- resolve_col(time_quo, x_schema, "time_value",
+    default_names = time_column_names()
+  )
+  ver_rec_col <- resolve_col(ver_rec_quo, x_schema, "version_recorded",
+    default_names = version_column_names()
+  )
+  ver_del_col <- resolve_col(ver_del_quo, x_schema, "version_deleted",
+    required = FALSE
+  )
+  is_del_col <- resolve_col(is_del_quo, x_schema, "is_deleted", required = FALSE)
+  id_col <- resolve_col(id_quo, x_schema, "id", required = FALSE)
+
+  # other_keys
+  quo_other <- rlang::enquo(other_keys)
+  other_cols <- names(dplyr::select(x_schema, !!quo_other))
+
+  # This avoids copy when filtering/processing x
+  needed_cols <- c(
+    geo_col, time_col, ver_rec_col, ver_del_col, is_del_col, id_col, other_cols
+  )
+  x <- x %>% dplyr::select(dplyr::all_of(unique(needed_cols)))
+
+  if (!is.null(value)) {
+    checkmate::assert_string(value)
+  } else {
+    value <- "n" # default
+  }
+
+  # Validation
+  validate_linelist_ids(x, id_col, ver_rec_col, ver_del_col, is_del_col)
+
+  # Extract updates
+  updates <- extract_linelist_updates(
+    x, ver_rec_col, ver_del_col, is_del_col, geo_col, time_col, other_cols
+  )
+
+  # Groups: geo, time, other_keys, version
+  grp_vars <- c("geo_value", "time_value", other_cols, "version")
+
+  # collapse updates at same version
+  collapsed <- updates %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(grp_vars))) %>%
+    dplyr::summarise(change = sum(.data$change), .groups = "drop") %>%
+    dplyr::filter(.data$change != 0)
+
+  # Now cumsum over version for each key vars
+  series_vars <- c("geo_value", "time_value", other_cols)
+
+  final_df <- collapsed %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(series_vars))) %>%
+    dplyr::arrange(version, .by_group = TRUE) %>%
+    dplyr::mutate(!!value := cumsum(.data$change)) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(-"change")
+
+  # Pass ... to as_epi_archive
+  as_epi_archive(final_df, other_keys = other_cols, compactify = FALSE, ...)
+}
+
+# Helper to resolve selection to a single string
+resolve_col <- function(
+  quo, data, arg_name, required = TRUE, default_names = NULL
+) {
+  # If the user didn't supply it, the quo might be the default expression
+  selected_cols <- tryCatch(
+    names(dplyr::select(data, !!quo)),
+    error = function(e) character(0)
+  )
+
+  if (length(selected_cols) == 0) {
+    # If explicit selection failed or was empty, try defaults
+    if (!is.null(default_names)) {
+      for (nm in default_names) {
+        # Check existence in original data names
+        if (nm %in% names(data)) {
+          cli::cli_alert_info("Using col `{.var {nm}}` as `{.var {arg_name}}`.")
+          return(nm)
+        }
+      }
+    }
+
+    if (required) cli::cli_abort("Could not select column for `{arg_name}`.")
+    return(NULL)
+  }
+
+  if (length(selected_cols) > 1) {
+    cli::cli_abort("Selection for `{arg_name}` must match exactly one column.")
+  }
+  selected_cols
+}
+
+# Helper to extract and renamed
+extract_standard <- function(df, v_col, change_val, geo_col,
+                             time_col, other_cols) {
+  if (is.null(v_col)) {
+    return(NULL)
+  }
+
+  # Filter out NAs in version col
+  df <- df[!is.na(df[[v_col]]), ]
+  if (nrow(df) == 0) {
+    return(NULL)
+  }
+
+  # Select cols
+  sel_cols <- c(geo_col, time_col, other_cols, v_col)
+  out <- df[sel_cols]
+
+  # Rename to standard
+  names(out) <- c("geo_value", "time_value", other_cols, "version")
+
+  out$change <- change_val
+  out
+}
+
+# Helper to extract updates
+extract_linelist_updates <- function(x, ver_rec_col, ver_del_col, is_del_col,
+                                     geo_col, time_col, other_cols) {
+  # Here we use an optional variable to classify the event as deleted
+  # or not in cases where it resembles a "chart" where each row is an update to
+  # a patient record.
+  if (!is.null(ver_del_col) && ver_rec_col == ver_del_col) {
+    # Chart-style
+
+    is_del_vals <- as.logical(x[[is_del_col]])
+
+    entries <- extract_standard(
+      x[!is_del_vals, ], ver_rec_col, 1, geo_col, time_col, other_cols
+    )
+    removals <- extract_standard(
+      x[is_del_vals, ], ver_del_col, -1, geo_col, time_col, other_cols
+    )
+  } else {
+    # Interval-style: separate columns (or no deletion column)
+    entries <- extract_standard(x, ver_rec_col, 1, geo_col, time_col, other_cols)
+    removals <- extract_standard(x, ver_del_col, -1, geo_col, time_col, other_cols)
+  }
+
+  updates <- dplyr::bind_rows(entries, removals)
+
+  if (nrow(updates) == 0) {
+    cli::cli_abort("No valid updates found.")
+  }
+
+  updates
+}
+
+# Helper to validate IDs
+validate_linelist_ids <- function(x, id_col, ver_rec_col, ver_del_col, is_del_col = NULL) {
+  is_chart_style <- !is.null(ver_del_col) && ver_rec_col == ver_del_col
+
+  if (is_chart_style) {
+    if (is.null(is_del_col)) {
+      cli::cli_abort("If `version_recorded` and `version_deleted` are the same column, `is_deleted` must be provided.")
+    }
+
+    # is_del must be valid
+    raw_is_del <- x[[is_del_col]]
+    if (anyNA(raw_is_del)) cli::cli_abort("`{is_del_col}` must not contain NAs.")
+    is_del <- as.logical(raw_is_del)
+    if (anyNA(is_del)) cli::cli_abort("`{is_del_col}` must be coercible to logical without generating NAs.")
+
+    # Masks
+    entries_mask <- !is_del
+    removals_mask <- is_del
+
+    msg_dup_ent <- "Each `id` must have at most one entry (where `{is_del_col}` is FALSE)."
+    msg_dup_rem <- "Each `id` must have at most one removal (where `{is_del_col}` is TRUE)."
+  } else {
+    # strict NA check if no ID and no deletions
+    if (is.null(id_col) && is.null(ver_del_col) && anyNA(x[[ver_rec_col]])) {
+      cli::cli_abort("`{ver_rec_col}` must not contain NAs.")
+    }
+
+    # Masks
+    entries_mask <- !is.na(x[[ver_rec_col]])
+    if (!is.null(ver_del_col)) {
+      removals_mask <- !is.na(x[[ver_del_col]])
+    } else {
+      # If no deletion column is provided, no events are removals
+      removals_mask <- logical(nrow(x))
+    }
+
+    msg_dup_ent <- "Each `id` must have at most one `{ver_rec_col}` entry."
+    msg_dup_rem <- "Each `id` must have at most one `{ver_del_col}` entry."
+  }
+
+  if (is.null(id_col)) {
+    return()
+  }
+
+  # Subset
+  entries_df <- x[entries_mask, ]
+  removals_df <- x[removals_mask, ]
+
+  # Uniqueness Checks
+  if (anyDuplicated(entries_df[[id_col]])) {
+    cli::cli_abort(msg_dup_ent)
+  }
+  if (nrow(removals_df) > 0 && anyDuplicated(removals_df[[id_col]])) {
+    cli::cli_abort(msg_dup_rem)
+  }
+
+  # Consistency Check (rem >= ent)
+  if (nrow(removals_df) > 0) {
+    # Subset to minimal columns and normalize names for join
+    ent_sub <- entries_df[c(id_col, ver_rec_col)]
+    rem_sub <- removals_df[c(id_col, ver_del_col)]
+
+    names(ent_sub) <- c("id", "ver_rec")
+    names(rem_sub) <- c("id", "ver_del")
+
+    common <- dplyr::inner_join(ent_sub, rem_sub, by = "id")
+
+    if (any(common$ver_del < common$ver_rec)) {
+      cli::cli_abort("`{ver_del_col}` (removal) must be >= `{ver_rec_col}` (entry).")
+    }
+  }
+}
