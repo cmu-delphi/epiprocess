@@ -114,14 +114,30 @@ linelist_to_archive <- function(x,
     x, ver_rec_col, ver_del_col, is_del_col, geo_col, time_col, other_cols
   )
 
+
+  # Get all unique keys found in updates
+  keys_df <- updates %>%
+    dplyr::distinct(geo_value, dplyr::across(dplyr::all_of(other_cols)))
+
+  # Get the first time a time_value is recorded version for each time value.
+  time_intros <- updates %>%
+    dplyr::filter(change > 0) %>%
+    dplyr::group_by(time_value) %>%
+    dplyr::summarise(version = min(version), .groups = "drop")
+
+  # Create zero-change filler rows
+  zeros <- tidyr::expand_grid(keys_df, time_intros) %>%
+    dplyr::mutate(change = 0)
+
+  updates <- dplyr::bind_rows(updates, zeros)
+
   # Groups: geo, time, other_keys, version
   grp_vars <- c("geo_value", "time_value", other_cols, "version")
 
   # collapse updates at same version
   collapsed <- updates %>%
     dplyr::group_by(dplyr::across(dplyr::all_of(grp_vars))) %>%
-    dplyr::summarise(change = sum(.data$change), .groups = "drop") %>%
-    dplyr::filter(.data$change != 0)
+    dplyr::summarise(change = sum(change), .groups = "drop")
 
   # Now cumsum over version for each key vars
   series_vars <- c("geo_value", "time_value", other_cols)
@@ -129,7 +145,7 @@ linelist_to_archive <- function(x,
   final_df <- collapsed %>%
     dplyr::group_by(dplyr::across(dplyr::all_of(series_vars))) %>%
     dplyr::arrange(version, .by_group = TRUE) %>%
-    dplyr::mutate(!!value := cumsum(.data$change)) %>%
+    dplyr::mutate(!!value := cumsum(change)) %>%
     dplyr::ungroup() %>%
     dplyr::select(-"change")
 
@@ -189,8 +205,12 @@ extract_standard <- function(df, v_col, change_val, geo_col,
   # Rename to standard
   names(out) <- c("geo_value", "time_value", other_cols, "version")
 
-  out$change <- change_val
-  out
+  out %>%
+    dplyr::count(
+      geo_value, time_value, dplyr::across(dplyr::all_of(other_cols)), version,
+      name = "change"
+    ) %>%
+    dplyr::mutate(change = change * change_val)
 }
 
 # Helper to extract updates
