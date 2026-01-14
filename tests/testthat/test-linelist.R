@@ -269,3 +269,100 @@ test_that("linelist_to_archive chart-style validation works", {
         "must not contain NAs"
     )
 })
+
+test_that("linelist_to_archive matches complete() for complex data", {
+    library(dplyr)
+    library(tidyr)
+    library(tibble)
+
+    # simulate individual cases with IDs.
+
+    set.seed(42)
+    n_cases <- 200
+
+    # Scenario: constant flow of cases over 50 days
+    days <- seq(as.Date("2023-01-01"), as.Date("2023-03-01"), by = "1 day")
+
+    # Generate cases
+    cases <- tibble(
+        id = 1:n_cases,
+        geo_value = "CA",
+        # random day in the range
+        time_value = sample(days, n_cases, replace = TRUE),
+        # most reported quickly, some late
+        lag_rec = rgeom(n_cases, 0.2),
+        # cases later deleted
+        is_deleted = runif(n_cases) < 0.02,
+        lag_del = rgeom(n_cases, 0.1)
+    ) %>%
+        mutate(
+            version_recorded = time_value + lag_rec,
+            # Deleted some time after recording
+            version_deleted = if_else(is_deleted, version_recorded + lag_del + 1, as.Date(NA))
+        )
+
+    linelist <- cases %>%
+        select(id, geo_value, time_value, version_recorded, version_deleted) %>%
+        arrange(version_recorded)
+
+    # Run Archive
+    ea <- linelist_to_archive(
+        linelist,
+        geo_value = geo_value,
+        time_value = time_value,
+        version_recorded = version_recorded,
+        version_deleted = version_deleted,
+        id = id,
+        value = "cases"
+    )
+
+    # plot(ea)
+
+    # Compute Reference
+    max_ver <- max(linelist$version_recorded, linelist$version_deleted, na.rm = TRUE)
+
+    active_df <- linelist %>%
+        filter(version_recorded <= max_ver) %>%
+        filter(is.na(version_deleted) | version_deleted > max_ver)
+
+    all_locs <- c("CA")
+    all_times <- days
+
+    reference_df <- active_df %>%
+        group_by(geo_value, time_value) %>%
+        summarise(cases = as.double(dplyr::n()), .groups = "drop") %>%
+        complete(
+            geo_value = all_locs,
+            time_value = all_times,
+            fill = list(cases = 0)
+        ) %>%
+        arrange(geo_value, time_value)
+
+    # The archive for the snapshot at max_ver
+    archive_df <- epix_as_of(ea, max_ver) %>%
+        select(geo_value, time_value, cases) %>%
+        arrange(geo_value, time_value)
+
+    observed_times <- unique(sort(linelist$time_value))
+
+    reference_df_corrected <- active_df %>%
+        group_by(geo_value, time_value) %>%
+        summarise(cases = as.double(dplyr::n()), .groups = "drop") %>%
+        complete(
+            geo_value = all_locs,
+            time_value = observed_times,
+            fill = list(cases = 0)
+        ) %>%
+        arrange(geo_value, time_value)
+
+    archive_df_filtered <- archive_df %>%
+        filter(time_value %in% observed_times)
+
+    expect_equal(nrow(archive_df_filtered), nrow(reference_df_corrected))
+
+    expect_true(all.equal(
+        as.data.frame(archive_df_filtered),
+        as.data.frame(reference_df_corrected),
+        check.attributes = FALSE
+    ))
+})
