@@ -317,3 +317,4 @@ validate_linelist_ids <- function(x, id_col, ver_rec_col, ver_del_col, is_del_co
     }
   }
 }
+utils::globalVariables("change")

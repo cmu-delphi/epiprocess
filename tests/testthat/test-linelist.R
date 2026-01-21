@@ -88,7 +88,7 @@ test_that("linelist_to_archive validates id uniqueness", {
   library(dplyr)
 
   # duplicate creation for id
-  LL_bad <- tibble::tibble(
+  linelist_bad <- tibble::tibble(
     id = c("A", "A"),
     geo_value = "ca",
     time_value = as.Date("2022-01-01"),
@@ -96,7 +96,7 @@ test_that("linelist_to_archive validates id uniqueness", {
   )
 
   expect_error(
-    linelist_to_archive(LL_bad,
+    linelist_to_archive(linelist_bad,
       geo_value = geo_value,
       time_value = time_value,
       version_recorded = recorded, id = id
@@ -107,7 +107,7 @@ test_that("linelist_to_archive validates id uniqueness", {
 
 test_that("linelist_to_archive supports split rows with id", {
   # One row creates, one row deletes
-  LL_split <- tibble::tibble(
+  linelist_split <- tibble::tibble(
     case_id = c("A", "A"),
     geo_value = "ca",
     time_value = as.Date("2022-01-01"),
@@ -116,7 +116,7 @@ test_that("linelist_to_archive supports split rows with id", {
   )
 
   ea <- linelist_to_archive(
-    LL_split,
+    linelist_split,
     geo_value = geo_value,
     time_value = time_value,
     version_recorded = recorded,
@@ -133,7 +133,7 @@ test_that("linelist_to_archive supports split rows with id", {
 })
 
 test_that("linelist_to_archive enforces deleted >= recorded with id", {
-  LL_bad <- tibble::tibble(
+  linelist_bad <- tibble::tibble(
     id = "A",
     geo_value = "ca",
     time_value = as.Date("2022-01-01"),
@@ -142,7 +142,7 @@ test_that("linelist_to_archive enforces deleted >= recorded with id", {
   )
 
   expect_error(
-    linelist_to_archive(LL_bad,
+    linelist_to_archive(linelist_bad,
       geo_value = geo_value, time_value = time_value,
       version_recorded = recorded, version_deleted = deleted, id = id
     ),
@@ -150,7 +150,7 @@ test_that("linelist_to_archive enforces deleted >= recorded with id", {
   )
 })
 test_that("linelist_to_archive handles unordered split rows with id", {
-  LL_unordered <- tibble::tibble(
+  linelist_unordered <- tibble::tibble(
     case_id = c("A", "A"),
     geo_value = "ca",
     time_value = as.Date("2022-01-01"),
@@ -160,7 +160,7 @@ test_that("linelist_to_archive handles unordered split rows with id", {
 
   expect_no_error(
     ea <- linelist_to_archive(
-      LL_unordered,
+      linelist_unordered,
       geo_value = geo_value,
       time_value = time_value,
       version_recorded = recorded,
@@ -175,7 +175,7 @@ test_that("linelist_to_archive uses smart defaults", {
 
   # All defaults
   # geo_value -> state, time_value -> date, version_recorded -> issue
-  LL_default <- tibble::tibble(
+  linelist_default <- tibble::tibble(
     state = "ca",
     date = as.Date("2022-01-01"),
     issue = as.Date("2022-01-02"),
@@ -183,31 +183,31 @@ test_that("linelist_to_archive uses smart defaults", {
   )
 
   # Should work without args
-  ea <- linelist_to_archive(LL_default)
+  ea <- linelist_to_archive(linelist_default)
   expect_s3_class(ea, "epi_archive")
   expect_equal(ea$DT$geo_value, "ca")
 
   # Partial defaults
   # geo_value -> geo_value, time_value -> date, version -> my_ver
-  LL_mixed <- tibble::tibble(
+  linelist_mixed <- tibble::tibble(
     geo_value = "ny",
     date = as.Date("2022-01-01"),
     my_ver = as.Date("2022-01-02")
   )
 
-  ea2 <- linelist_to_archive(LL_mixed, version_recorded = my_ver)
+  ea2 <- linelist_to_archive(linelist_mixed, version_recorded = my_ver)
   expect_s3_class(ea2, "epi_archive")
   expect_equal(ea2$DT$geo_value, "ny")
 })
 
 test_that("linelist_to_archive errors when defaults not found", {
-  LL_bad <- tibble::tibble(
+  linelist_bad <- tibble::tibble(
     loc = "ca", # not in default list
     day = as.Date("2022-01-01"), # not in default list
     ver = as.Date("2022-01-02")
   )
 
-  expect_error(linelist_to_archive(LL_bad), "Could not select column for `geo_value`")
+  expect_error(linelist_to_archive(linelist_bad), "Could not select column for `geo_value`")
 })
 
 
@@ -316,7 +316,6 @@ test_that("linelist_to_archive matches complete() for complex data", {
     value = "cases"
   )
 
-  # plot(ea)
 
   # Compute Reference
   max_ver <- max(linelist$version_recorded, linelist$version_deleted, na.rm = TRUE)
