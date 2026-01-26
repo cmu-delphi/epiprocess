@@ -136,7 +136,14 @@ linelist_to_archive <- function(x,
   zeros <- tidyr::expand_grid(epikeys_df, time_intros) %>%
     dplyr::mutate(change = 0)
 
-  updates <- dplyr::bind_rows(updates, zeros)
+  updates <- dplyr::bind_rows(
+    zeros,
+    if (!is.null(ver_del_col) || !is.null(is_del_col)) {
+      updates %>% dplyr::filter(change != 0L) # compactify if recorded+deleted offset to 0
+    } else {
+      updates
+    }
+  )
 
   # Groups: geo, time, other_keys, version
   grp_vars <- c("geo_value", "time_value", other_cols, "version")
