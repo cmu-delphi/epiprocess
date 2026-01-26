@@ -101,11 +101,11 @@ test_that("linelist_to_archive validates id uniqueness", {
       time_value = time_value,
       version_recorded = recorded, id = id
     ),
-    "must have at most one .* entry"
+    "must have at most one entry"
   )
 })
 
-test_that("linelist_to_archive supports split rows with id", {
+test_that("linelist_to_archive refuses to handle split rows with id", {
   # One row creates, one row deletes
   linelist_split <- tibble::tibble(
     case_id = c("A", "A"),
@@ -115,21 +115,24 @@ test_that("linelist_to_archive supports split rows with id", {
     deleted = as.Date(c(NA, "2022-01-05"))
   )
 
-  ea <- linelist_to_archive(
-    linelist_split,
-    geo_value = geo_value,
-    time_value = time_value,
-    version_recorded = recorded,
-    version_deleted = deleted,
-    id = case_id
+  expect_error(
+    ea <- linelist_to_archive(
+      linelist_split,
+      geo_value = geo_value,
+      time_value = time_value,
+      version_recorded = recorded,
+      version_deleted = deleted,
+      id = case_id
+    ),
+    class = "epiprocess__linelist_to_archive__ver_rec_had_nas"
   )
 
-  expect_s3_class(ea, "epi_archive")
-  df <- epix_as_of(ea, as.Date("2022-01-04"))
-  expect_equal(df$n, 1)
+  # expect_s3_class(ea, "epi_archive")
+  # df <- epix_as_of(ea, as.Date("2022-01-04"))
+  # expect_equal(df$n, 1)
 
-  df2 <- epix_as_of(ea, as.Date("2022-01-05"))
-  expect_equal(df2$n, 0)
+  # df2 <- epix_as_of(ea, as.Date("2022-01-05"))
+  # expect_equal(df2$n, 0)
 })
 
 test_that("linelist_to_archive enforces deleted >= recorded with id", {
@@ -149,7 +152,7 @@ test_that("linelist_to_archive enforces deleted >= recorded with id", {
     "must be >= "
   )
 })
-test_that("linelist_to_archive handles unordered split rows with id", {
+test_that("linelist_to_archive refuses to handle unordered split rows with id", {
   linelist_unordered <- tibble::tibble(
     case_id = c("A", "A"),
     geo_value = "ca",
@@ -158,7 +161,7 @@ test_that("linelist_to_archive handles unordered split rows with id", {
     deleted = as.Date(c("2022-01-05", NA))
   )
 
-  expect_no_error(
+  expect_error(
     ea <- linelist_to_archive(
       linelist_unordered,
       geo_value = geo_value,
@@ -166,7 +169,8 @@ test_that("linelist_to_archive handles unordered split rows with id", {
       version_recorded = recorded,
       version_deleted = deleted,
       id = case_id
-    )
+    ),
+    class = "epiprocess__linelist_to_archive__ver_rec_had_nas"
   )
 })
 test_that("linelist_to_archive uses smart defaults", {

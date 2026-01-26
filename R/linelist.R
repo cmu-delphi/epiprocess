@@ -112,9 +112,10 @@ linelist_to_archive <- function(x,
   # require no NAs, or we are non-chart style, in which case
   # ver_rec_col should have no NAs and ver_del_col could have NAs.
   if (anyNA(x[[ver_rec_col]])) {
-    cli::cli_abort("`{ver_rec_col}` must not contain NAs.")
+    cli::cli_abort("`{ver_rec_col}` must not contain NAs.",
+                   class = "epiprocess__linelist_to_archive__ver_rec_had_nas")
   }
-  validate_linelist_ids(x, id_col, ver_rec_col, ver_del_col, is_del_col)
+  validate_linelist_ids(x, id_col, geo_col, other_cols, time_col, ver_rec_col, ver_del_col, is_del_col, value)
 
   # Extract updates
   updates <- extract_linelist_updates(
@@ -128,7 +129,6 @@ linelist_to_archive <- function(x,
 
   # Get the first time a time_value is recorded version for each time value.
   time_intros <- updates %>%
-    dplyr::filter(change > 0) %>%
     dplyr::group_by(time_value) %>%
     dplyr::summarise(version = min(version), .groups = "drop")
 
@@ -250,7 +250,7 @@ extract_linelist_updates <- function(x, ver_rec_col, ver_del_col, is_del_col,
 }
 
 # Helper to validate IDs
-validate_linelist_ids <- function(x, id_col, ver_rec_col, ver_del_col, is_del_col = NULL) {
+validate_linelist_ids <- function(x, id_col, geo_col, other_cols, time_col, ver_rec_col, ver_del_col, is_del_col = NULL, value) {
   is_chart_style <- !is.null(ver_del_col) && ver_rec_col == ver_del_col
 
   if (is_chart_style) {
@@ -270,54 +270,22 @@ validate_linelist_ids <- function(x, id_col, ver_rec_col, ver_del_col, is_del_co
 
     msg_dup_ent <- "Each `id` must have at most one entry (where `{is_del_col}` is FALSE)."
     msg_dup_rem <- "Each `id` must have at most one removal (where `{is_del_col}` is TRUE)."
+    if (!is.null(id_col)) {
+      contribs_df <- x %>%
+        group_by(pick(all_of(c(id_col, time_col)))) %>%
+        arrange(ver_rec_col) %>%
+        mutate(!!value := !.data[[is_del_col]] - .data[[is_del_col]]) %>%
+        ungroup()
+      if (any(contribs_df[[value]] < 0L)) {
+        cli_abort("An event was deleted before it was recorded, or was deleted and recorded with inconsistent time values.")
+      }
+    } # else do a similar check by geo_value x other_keys x time_value?
   } else {
-    # strict NA check if no ID and no deletions
-    if (is.null(id_col) && is.null(ver_del_col) && anyNA(x[[ver_rec_col]])) {
-      cli::cli_abort("`{ver_rec_col}` must not contain NAs.")
+    if (!is.null(id_col) && vctrs::vec_duplicate_any(x[[id_col]])) {
+      cli_abort("Each `id` must have at most one entry (in non-chart-style linelist).")
     }
-
-    # Masks
-    entries_mask <- !is.na(x[[ver_rec_col]])
-    if (!is.null(ver_del_col)) {
-      removals_mask <- !is.na(x[[ver_del_col]])
-    } else {
-      # If no deletion column is provided, no events are removals
-      removals_mask <- logical(nrow(x))
-    }
-
-    msg_dup_ent <- "Each `id` must have at most one `{ver_rec_col}` entry."
-    msg_dup_rem <- "Each `id` must have at most one `{ver_del_col}` entry."
-  }
-
-  if (is.null(id_col)) {
-    return()
-  }
-
-  # Subset
-  entries_df <- x[entries_mask, ]
-  removals_df <- x[removals_mask, ]
-
-  # Uniqueness Checks
-  if (anyDuplicated(entries_df[[id_col]])) {
-    cli::cli_abort(msg_dup_ent)
-  }
-  if (nrow(removals_df) > 0 && anyDuplicated(removals_df[[id_col]])) {
-    cli::cli_abort(msg_dup_rem)
-  }
-
-  # Consistency Check (rem >= ent)
-  if (nrow(removals_df) > 0) {
-    # Subset to minimal columns and normalize names for join
-    ent_sub <- entries_df[c(id_col, ver_rec_col)]
-    rem_sub <- removals_df[c(id_col, ver_del_col)]
-
-    names(ent_sub) <- c("id", "ver_rec")
-    names(rem_sub) <- c("id", "ver_del")
-
-    common <- dplyr::inner_join(ent_sub, rem_sub, by = "id")
-
-    if (any(common$ver_del < common$ver_rec)) {
-      cli::cli_abort("`{ver_del_col}` (removal) must be >= `{ver_rec_col}` (entry).")
+    if (!is.null(ver_del_col) && any(!is.na(x[[ver_del_col]]) & x[[ver_del_col]] < x[[ver_rec_col]])) {
+      cli_abort("`{ver_del_col}` (removal) must be >= `{ver_rec_col}` (entry).")
     }
   }
 }
