@@ -48,6 +48,23 @@ output count column. If \code{NULL} and \code{other_keys} is empty, defaults to
 \item{id}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> Optional column
 identifying unique events/cases.}
 
+\item{clobberable_versions_start}{Optional; \code{length}-1; either a value of the
+same \code{class} as \code{x$version}, or an \code{NA} of any \code{class}: specifically,
+either (a) the earliest version that could be subject to "clobbering"
+(being overwritten with different update data, but using the \emph{same} version
+tag as the old update data), or (b) \code{NA}, to indicate that no versions are
+clobberable. There are a variety of reasons why versions could be
+clobberable under routine circumstances, such as (a) today's version of
+one/all of the columns being published after initially being filled with
+\code{NA} or LOCF, (b) a buggy version of today's data being published but then
+fixed and republished later in the day, or (c) data pipeline delays (e.g.,
+publisher uploading, periodic scraping, database syncing, periodic
+fetching, etc.) that make events (a) or (b) reflected later in the day (or
+even on a different day) than expected; potential causes vary between
+different data pipelines. The default value is \code{NA}, which doesn't consider
+any versions to be clobberable. Another setting that may be appropriate for
+some pipelines is \code{max_version_with_row_in(x)}.}
+
 \item{versions_end}{optional; as in \code{\link{as_epi_archive}}, or \code{NULL}.
 If the latest version(s) had no new events recorded or deleted,
 you can note this using \code{versions_end}.  \code{NULL}, the default,

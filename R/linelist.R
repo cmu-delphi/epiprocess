@@ -27,7 +27,7 @@
 #'   "count".
 #' @param id <[`tidy-select`][dplyr::dplyr_tidy_select]> Optional column
 #'   identifying unique events/cases.
-#' @inheritParams new_epi_archive
+#' @inheritParams as_epi_archive
 #' @param versions_end optional; as in [`as_epi_archive`], or `NULL`.
 #'   If the latest version(s) had no new events recorded or deleted,
 #'   you can note this using `versions_end`.  `NULL`, the default,
