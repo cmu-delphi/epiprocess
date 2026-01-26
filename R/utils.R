@@ -941,7 +941,7 @@ gcd2num <- function(a, b, rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
 #' @return Same [`vctrs::vec_ptype`] as `dividends`, `length` 1: the gcd. (Or an
 #'   error.)
 #'
-#' @noRd
+#' @keywords internal
 gcd_num <- function(dividends, ..., rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
   if (!is.numeric(dividends) || length(dividends) == 0L) {
     cli_abort("`dividends` must satisfy `is.numeric`, and have `length` > 0")
