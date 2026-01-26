@@ -20,7 +20,7 @@ linelist_to_archive(
 \arguments{
 \item{x}{A data frame (line list).}
 
-\item{...}{Arguments passed to \code{\link{as_epi_archive}}.}
+\item{...}{Arguments passed to \code{\link{new_epi_archive}}.}
 
 \item{geo_value, time_value, version_recorded, version_deleted, other_keys}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> Columns in \code{x} representing:
 \itemize{

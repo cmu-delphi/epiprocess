@@ -7,7 +7,7 @@
 #' hospitalizations) as they would have appeared at different points in time.
 #'
 #' @param x A data frame (line list).
-#' @param ... Arguments passed to [`as_epi_archive`].
+#' @param ... Arguments passed to [`new_epi_archive`].
 #' @param geo_value,time_value,version_recorded,version_deleted,other_keys
 #'   <[`tidy-select`][dplyr::dplyr_tidy_select]> Columns in `x` representing:
 #'   * `geo_value`: the geographic location of the event.
@@ -161,10 +161,15 @@ linelist_to_archive <- function(x,
     dplyr::arrange(version, .by_group = TRUE) %>%
     dplyr::mutate(!!value := cumsum(change)) %>%
     dplyr::ungroup() %>%
-    dplyr::select(-"change")
+    dplyr::select(-"change") %>%
+    as.data.frame()
+  # We've done so much manipulation there should be no chance we alias
+  # pre-existing columns ==> We own `final_df` and its columns ==> We
+  # can mutate `final_df`, and we obey `data.table`'s memory model.
+  setDT(final_df, c("geo_value", other_keys, "time_value", "version"))
 
-  # Pass ... to as_epi_archive
-  as_epi_archive(final_df, other_keys = other_cols, compactify = FALSE, ...)
+  # Pass ... to new_epi_archive
+  new_epi_archive(final_df, other_keys = other_cols, ...)
 }
 
 # Helper to resolve selection to a single string
