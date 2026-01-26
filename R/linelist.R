@@ -107,6 +107,13 @@ linelist_to_archive <- function(x,
   }
 
   # Validation
+
+  # Either we are chart style, and ver_rec_col == ver_del_col and we
+  # require no NAs, or we are non-chart style, in which case
+  # ver_rec_col should have no NAs and ver_del_col could have NAs.
+  if (anyNA(x[[ver_rec_col]])) {
+    cli::cli_abort("`{ver_rec_col}` must not contain NAs.")
+  }
   validate_linelist_ids(x, id_col, ver_rec_col, ver_del_col, is_del_col)
 
   # Extract updates
