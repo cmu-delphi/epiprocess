@@ -207,9 +207,19 @@ test_that("linelist_to_archive errors when defaults not found", {
     ver = as.Date("2022-01-02")
   )
 
-  expect_error(linelist_to_archive(linelist_bad), "Could not select column for `geo_value`")
+  expect_error(linelist_to_archive(linelist_bad), class = "epiprocess__resolve_col__autoselection_failed")
 })
 
+test_that("linelist_to_archive errors when too many defaults not found", {
+  linelist_bad2 <- tibble::tibble(
+    geo_value = "ca", # not in default list
+    date = as.Date("2022-01-01"),
+    time_value = date,
+    ver = as.Date("2022-01-02")
+  )
+
+  expect_error(linelist_to_archive(linelist_bad2), class = "epiprocess__resolve_col__selected_multiple")
+})
 
 test_that("linelist_to_archive supports chart-style linelists", {
   # chart-style linelist

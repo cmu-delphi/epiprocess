@@ -157,32 +157,29 @@ linelist_to_archive <- function(x,
 resolve_col <- function(
   quo, data, arg_name, required = TRUE, default_names = NULL
 ) {
-  # If the user didn't supply it, the quo might be the default expression
-  selected_cols <- tryCatch(
-    names(dplyr::select(data, !!quo)),
-    error = function(e) character(0)
-  )
-
-  if (length(selected_cols) == 0) {
-    # If explicit selection failed or was empty, try defaults
-    if (!is.null(default_names)) {
-      for (nm in default_names) {
-        # Check existence in original data names
-        if (nm %in% names(data)) {
-          cli::cli_alert_info("Using col `{.var {nm}}` as `{.var {arg_name}}`.")
-          return(nm)
-        }
+  # If the user didn't supply it or explicitly set it to `NULL`, the quo might be the default expression
+  if (identical(rlang::quo_get_expr(quo), rlang::expr(NULL))) {
+    selected_colnames <- vctrs::vec_set_intersect(names(data), default_names)
+    if (length(selected_colnames) == 0L) {
+      if (required) {
+        cli::cli_abort("Could not automatically select column for `{arg_name}`; please specify it manually.",
+                       class = "epiprocess__resolve_col__autoselection_failed")
+      } else {
+        return(NULL)
       }
+    } else {
+      cli::cli_alert_info("Defaulting to {qty(length(selected_colnames))} col{?s} {.var {selected_colnames}} as {.var {arg_name}}.")
     }
-
-    if (required) cli::cli_abort("Could not select column for `{arg_name}`.")
-    return(NULL)
+  } else { # user supplied a non-`NULL` argument
+    selected_colnames <- names(eval_select(quo, data, allow_rename = FALSE))
   }
 
-  if (length(selected_cols) > 1) {
-    cli::cli_abort("Selection for `{arg_name}` must match exactly one column.")
+  if (length(selected_colnames) > 1) {
+    cli::cli_abort("Selection for `{arg_name}` must match exactly one column.",
+                   class = "epiprocess__resolve_col__selected_multiple")
   }
-  selected_cols
+
+  selected_colnames
 }
 
 # Helper to extract and renamed
