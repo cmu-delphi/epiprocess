@@ -124,7 +124,7 @@ linelist_to_archive <- function(x,
 
 
   # Get all unique keys found in updates
-  keys_df <- updates %>%
+  epikeys_df <- updates %>%
     dplyr::distinct(geo_value, dplyr::across(dplyr::all_of(other_cols)))
 
   # Get the first time a time_value is recorded version for each time value.
@@ -133,7 +133,7 @@ linelist_to_archive <- function(x,
     dplyr::summarise(version = min(version), .groups = "drop")
 
   # Create zero-change filler rows
-  zeros <- tidyr::expand_grid(keys_df, time_intros) %>%
+  zeros <- tidyr::expand_grid(epikeys_df, time_intros) %>%
     dplyr::mutate(change = 0)
 
   updates <- dplyr::bind_rows(updates, zeros)
