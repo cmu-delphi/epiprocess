@@ -14,13 +14,15 @@ linelist_to_archive(
   is_deleted = NULL,
   other_keys = NULL,
   value = NULL,
-  id = NULL
+  id = NULL,
+  clobberable_versions_start = NA,
+  versions_end = NULL
 )
 }
 \arguments{
 \item{x}{A data frame (line list).}
 
-\item{...}{Arguments passed to \code{\link{new_epi_archive}}.}
+\item{...}{Should be empty.}
 
 \item{geo_value, time_value, version_recorded, version_deleted, other_keys}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> Columns in \code{x} representing:
 \itemize{
@@ -45,6 +47,11 @@ output count column. If \code{NULL} and \code{other_keys} is empty, defaults to
 
 \item{id}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> Optional column
 identifying unique events/cases.}
+
+\item{versions_end}{optional; as in \code{\link{as_epi_archive}}, or \code{NULL}.
+If the latest version(s) had no new events recorded or deleted,
+you can note this using \code{versions_end}.  \code{NULL}, the default,
+will assume there are no such versions.}
 }
 \value{
 An \code{\link{epi_archive}} object.

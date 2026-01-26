@@ -7,7 +7,7 @@
 #' hospitalizations) as they would have appeared at different points in time.
 #'
 #' @param x A data frame (line list).
-#' @param ... Arguments passed to [`new_epi_archive`].
+#' @param ... Should be empty.
 #' @param geo_value,time_value,version_recorded,version_deleted,other_keys
 #'   <[`tidy-select`][dplyr::dplyr_tidy_select]> Columns in `x` representing:
 #'   * `geo_value`: the geographic location of the event.
@@ -27,6 +27,11 @@
 #'   "count".
 #' @param id <[`tidy-select`][dplyr::dplyr_tidy_select]> Optional column
 #'   identifying unique events/cases.
+#' @inheritParams new_epi_archive
+#' @param versions_end optional; as in [`as_epi_archive`], or `NULL`.
+#'   If the latest version(s) had no new events recorded or deleted,
+#'   you can note this using `versions_end`.  `NULL`, the default,
+#'   will assume there are no such versions.
 #'
 #' @return An [`epi_archive`] object.
 #'
@@ -53,6 +58,7 @@
 #' @importFrom dplyr transmute select bind_rows group_by summarise arrange mutate ungroup
 #' @importFrom tidyselect eval_select
 #' @importFrom utils head
+#' @importFrom vctrs vec_c vec_slice vec_detect_missing
 #' @export
 linelist_to_archive <- function(x,
                                 ...,
@@ -63,7 +69,11 @@ linelist_to_archive <- function(x,
                                 is_deleted = NULL,
                                 other_keys = NULL,
                                 value = NULL,
-                                id = NULL) {
+                                id = NULL,
+                                clobberable_versions_start = NA,
+                                versions_end = NULL
+                                ) {
+  rlang::check_dots_empty0(...)
   # Capture tidy selections
   geo_quo <- rlang::enquo(geo_value)
   time_quo <- rlang::enquo(time_value)
@@ -166,10 +176,21 @@ linelist_to_archive <- function(x,
   # We've done so much manipulation there should be no chance we alias
   # pre-existing columns ==> We own `final_df` and its columns ==> We
   # can mutate `final_df`, and we obey `data.table`'s memory model.
-  data.table::setDT(final_df, c("geo_value", other_keys, "time_value", "version"))
+  data.table::setDT(final_df, key = c("geo_value", other_cols, "time_value", "version"))
+  geo_type <- guess_geo_type(final_df$geo_value)
+  time_type <- guess_time_type(final_df$time_value)
 
-  # Pass ... to new_epi_archive
-  new_epi_archive(final_df, other_keys = other_cols, ...)
+  if (is.null(versions_end) && nrow(x) > 0L) {
+    versions_end <- max(x[[ver_rec_col]])
+    if (!is.null(ver_del_col)) {
+      ver_del <- x[[ver_del_col]]
+      if (!all(is.na(ver_del))) {
+        versions_end <- max(vec_c(versions_end, max(vec_slice(ver_del, !vec_detect_missing(ver_del)))))
+      }
+    }
+  }
+
+  new_epi_archive(final_df, geo_type, time_type, other_cols, clobberable_versions_start = clobberable_versions_start, versions_end = versions_end)
 }
 
 # Helper to resolve selection to a single string
