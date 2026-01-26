@@ -897,7 +897,7 @@ deprecated_quo_is_present <- function(quo) {
 #'   double unless `b` is the GCD and an integer, in which case it is expected
 #'   be an integer.
 #'
-#' @noRd
+#' @keywords internal
 gcd2num <- function(a, b, rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
   assert_numeric(a, len = 1L)
   assert_numeric(b, len = 1L)
