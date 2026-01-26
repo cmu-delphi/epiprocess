@@ -126,13 +126,6 @@ test_that("linelist_to_archive refuses to handle split rows with id", {
     ),
     class = "epiprocess__linelist_to_archive__ver_rec_had_nas"
   )
-
-  # expect_s3_class(ea, "epi_archive")
-  # df <- epix_as_of(ea, as.Date("2022-01-04"))
-  # expect_equal(df$n, 1)
-
-  # df2 <- epix_as_of(ea, as.Date("2022-01-05"))
-  # expect_equal(df2$n, 0)
 })
 
 test_that("linelist_to_archive enforces deleted >= recorded with id", {

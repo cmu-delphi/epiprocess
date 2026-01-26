@@ -166,7 +166,7 @@ linelist_to_archive <- function(x,
   # We've done so much manipulation there should be no chance we alias
   # pre-existing columns ==> We own `final_df` and its columns ==> We
   # can mutate `final_df`, and we obey `data.table`'s memory model.
-  setDT(final_df, c("geo_value", other_keys, "time_value", "version"))
+  data.table::setDT(final_df, c("geo_value", other_keys, "time_value", "version"))
 
   # Pass ... to new_epi_archive
   new_epi_archive(final_df, other_keys = other_cols, ...)
