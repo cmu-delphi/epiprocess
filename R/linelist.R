@@ -60,19 +60,20 @@
 #' @importFrom utils head
 #' @importFrom vctrs vec_c vec_slice vec_detect_missing
 #' @export
-linelist_to_archive <- function(x,
-                                ...,
-                                geo_value = NULL,
-                                time_value = NULL,
-                                version_recorded = NULL,
-                                version_deleted = NULL,
-                                is_deleted = NULL,
-                                other_keys = NULL,
-                                value = NULL,
-                                id = NULL,
-                                clobberable_versions_start = NA,
-                                versions_end = NULL
-                                ) {
+linelist_to_archive <- function(
+  x,
+  ...,
+  geo_value = NULL,
+  time_value = NULL,
+  version_recorded = NULL,
+  version_deleted = NULL,
+  is_deleted = NULL,
+  other_keys = NULL,
+  value = NULL,
+  id = NULL,
+  clobberable_versions_start = NA,
+  versions_end = NULL
+) {
   rlang::check_dots_empty0(...)
   # Capture tidy selections
   geo_quo <- rlang::enquo(geo_value)
@@ -123,7 +124,8 @@ linelist_to_archive <- function(x,
   # ver_rec_col should have no NAs and ver_del_col could have NAs.
   if (anyNA(x[[ver_rec_col]])) {
     cli::cli_abort("`{ver_rec_col}` must not contain NAs.",
-                   class = "epiprocess__linelist_to_archive__ver_rec_had_nas")
+      class = "epiprocess__linelist_to_archive__ver_rec_had_nas"
+    )
   }
   validate_linelist_ids(x, id_col, geo_col, other_cols, time_col, ver_rec_col, ver_del_col, is_del_col, value)
 
@@ -190,7 +192,11 @@ linelist_to_archive <- function(x,
     }
   }
 
-  new_epi_archive(final_df, geo_type, time_type, other_cols, clobberable_versions_start = clobberable_versions_start, versions_end = versions_end)
+  new_epi_archive(
+    final_df, geo_type, time_type, other_cols,
+    clobberable_versions_start = clobberable_versions_start,
+    versions_end = versions_end
+  )
 }
 
 # Helper to resolve selection to a single string
@@ -203,12 +209,15 @@ resolve_col <- function(
     if (length(selected_colnames) == 0L) {
       if (required) {
         cli::cli_abort("Could not automatically select column for `{arg_name}`; please specify it manually.",
-                       class = "epiprocess__resolve_col__autoselection_failed")
+          class = "epiprocess__resolve_col__autoselection_failed"
+        )
       } else {
         return(NULL)
       }
     } else {
-      cli::cli_alert_info("Defaulting to {qty(length(selected_colnames))} col{?s} {.var {selected_colnames}} as {.var {arg_name}}.")
+      cli::cli_alert_info(
+        "Defaulting to {qty(length(selected_colnames))} col{?s} {.var {selected_colnames}} as {.var {arg_name}}."
+      )
     }
   } else { # user supplied a non-`NULL` argument
     selected_colnames <- names(eval_select(quo, data, allow_rename = FALSE))
@@ -216,7 +225,8 @@ resolve_col <- function(
 
   if (length(selected_colnames) > 1) {
     cli::cli_abort("Selection for `{arg_name}` must match exactly one column.",
-                   class = "epiprocess__resolve_col__selected_multiple")
+      class = "epiprocess__resolve_col__selected_multiple"
+    )
   }
 
   selected_colnames
@@ -283,7 +293,9 @@ extract_linelist_updates <- function(x, ver_rec_col, ver_del_col, is_del_col,
 }
 
 # Helper to validate IDs
-validate_linelist_ids <- function(x, id_col, geo_col, other_cols, time_col, ver_rec_col, ver_del_col, is_del_col = NULL, value) {
+validate_linelist_ids <- function(x, id_col, geo_col, other_cols, time_col,
+                                  ver_rec_col, ver_del_col, is_del_col = NULL,
+                                  value) {
   is_chart_style <- !is.null(ver_del_col) && ver_rec_col == ver_del_col
 
   if (is_chart_style) {
@@ -297,12 +309,7 @@ validate_linelist_ids <- function(x, id_col, geo_col, other_cols, time_col, ver_
     is_del <- as.logical(raw_is_del)
     if (anyNA(is_del)) cli::cli_abort("`{is_del_col}` must be coercible to logical without generating NAs.")
 
-    # Masks
-    entries_mask <- !is_del
-    removals_mask <- is_del
 
-    msg_dup_ent <- "Each `id` must have at most one entry (where `{is_del_col}` is FALSE)."
-    msg_dup_rem <- "Each `id` must have at most one removal (where `{is_del_col}` is TRUE)."
     if (!is.null(id_col)) {
       contribs_df <- x %>%
         group_by(pick(all_of(c(id_col, time_col)))) %>%
@@ -310,7 +317,9 @@ validate_linelist_ids <- function(x, id_col, geo_col, other_cols, time_col, ver_
         mutate(!!value := !.data[[is_del_col]] - .data[[is_del_col]]) %>%
         ungroup()
       if (any(contribs_df[[value]] < 0L)) {
-        cli_abort("An event was deleted before it was recorded, or was deleted and recorded with inconsistent time values.")
+        cli_abort(
+          "An event was deleted before it was recorded, or was deleted and recorded with inconsistent time values."
+        )
       }
     } # else do a similar check by geo_value x other_keys x time_value?
   } else {
