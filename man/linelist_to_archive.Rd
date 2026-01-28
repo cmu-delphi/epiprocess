@@ -11,7 +11,7 @@ linelist_to_archive(
   time_value = NULL,
   version_recorded = NULL,
   version_deleted = NULL,
-  is_deleted = NULL,
+  is_deletion = NULL,
   other_keys = NULL,
   value = NULL,
   id = NULL,
@@ -31,15 +31,15 @@ linelist_to_archive(
 \item \code{version_recorded}: the time at which the event became known/recorded.
 \item \code{version_deleted}: (optional) the time at which the event was
 removed/deleted. If \code{NULL} (default), it is assumed no events are
-deleted.
+deleted. Mutually exclusive with \code{is_deletion}.
 \item \code{other_keys}: (optional) additional key columns (e.g. age group).
 }}
 
-\item{is_deleted}{(optional) <\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}>
-Column in \code{x} (or a logical vector/predicate) indicating if the row is a
-deletion (\code{TRUE}/1) or an entry (\code{FALSE}/0). Only used for "chart-style"
-linelists (where \code{version_recorded} and \code{version_deleted} are the same
-column).}
+\item{is_deletion}{(optional) <\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}>
+Column in \code{x} indicating if the row is a deletion (\code{TRUE}/1) or an entry
+(\code{FALSE}/0). Used for "chart-style" linelists where each row is an update
+event and \code{version_recorded} represents when the update occurred.
+Mutually exclusive with \code{version_deleted}.}
 
 \item{value}{Either \code{NULL} (default) or a string specifying the name of the
 output count column. If \code{NULL} and \code{other_keys} is empty, defaults to

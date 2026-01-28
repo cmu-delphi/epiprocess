@@ -234,12 +234,13 @@ as_epi_df.epi_df <- function(x, ...) {
 #' @method as_epi_df tbl_df
 #' @export
 as_epi_df.tbl_df <- function(
-    x,
-    geo_type = deprecated(),
-    time_type = deprecated(),
-    as_of,
-    other_keys = character(),
-    ...) {
+  x,
+  geo_type = deprecated(),
+  time_type = deprecated(),
+  as_of,
+  other_keys = character(),
+  ...
+) {
   x <- rename(x, ...)
   x <- guess_column_name(x, "time_value", time_column_names())
   x <- guess_column_name(x, "geo_value", geo_column_names())

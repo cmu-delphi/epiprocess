@@ -859,26 +859,28 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'
 #' @export
 epix_slide <- function(
-    .x,
-    .f,
-    ...,
-    .before = Inf,
-    .versions = NULL,
-    .new_col_name = NULL,
-    .all_versions = FALSE) {
+  .x,
+  .f,
+  ...,
+  .before = Inf,
+  .versions = NULL,
+  .new_col_name = NULL,
+  .all_versions = FALSE
+) {
   UseMethod("epix_slide")
 }
 
 
 #' @export
 epix_slide.epi_archive <- function(
-    .x,
-    .f,
-    ...,
-    .before = Inf,
-    .versions = NULL,
-    .new_col_name = NULL,
-    .all_versions = FALSE) {
+  .x,
+  .f,
+  ...,
+  .before = Inf,
+  .versions = NULL,
+  .new_col_name = NULL,
+  .all_versions = FALSE
+) {
   # For an "ungrouped" slide, treat all rows as belonging to one big
   # group (group by 0 vars), like `dplyr::summarize`, and let the
   # resulting `grouped_epi_archive` handle the slide:
@@ -1007,7 +1009,6 @@ dplyr_col_modify.col_modify_recorder_df <- function(data, cols) {
   attr(data, "epiprocess::col_modify_recorder_df::cols") <- cols
   data
 }
-
 
 
 #' [`dplyr::filter`] for `epi_archive`s
