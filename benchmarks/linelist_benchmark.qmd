@@ -1,13 +1,12 @@
 ---
 title: "linelist_to_archive Benchmarks"
-output: github_document
-number-sections: true
-number-depth: 4
-fig-dpi: 400
+format:
+  gfm:
+    toc: false
 knitr:
   opts_chunk:
     comment: "#>"
-    message: FALSE
+    message: false
     dev: "png"
     fig.width: 8
     fig.height: 4.5
@@ -24,7 +23,7 @@ if (!require("pacman")) install.packages("pacman")
 if (!require("devtools")) install.packages("devtools")
 if (require("mytidyfunctions")) mytidyfunctions::set_mytheme() 
 
-Sys.setlocale("LC_ALL", "en.US.UTF-8")
+Sys.setlocale("LC_ALL", "en_US.UTF-8")
 
 knitr::opts_chunk$set(
   echo = TRUE,

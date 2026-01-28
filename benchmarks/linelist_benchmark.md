@@ -119,9 +119,9 @@ scaling_bench %>%
     #> # A tibble: 3 × 3
     #>   size     median mem_alloc
     #>   <chr>  <bch:tm> <bch:byt>
-    #> 1 small    36.4ms    2.61MB
-    #> 2 medium   73.4ms    6.99MB
-    #> 3 large   159.4ms   19.61MB
+    #> 1 small    44.6ms    2.61MB
+    #> 2 medium   79.1ms    6.99MB
+    #> 3 large   177.9ms   19.61MB
 
 ### Cost of ID Validation
 
@@ -131,14 +131,13 @@ a 50K rows dataset.
 ``` r
 # Helper to convert to chart-style
 convert_to_chart_style <- function(df) {
-  # All original rows become "recording" events
+  # All original rows become "recording"
   recs <- df %>%
     mutate(is_deletion = FALSE) %>%
     rename(.version = version_recorded) %>%
     select(-version_deleted)
   
-  # Rows with version_deleted become additional "deletion" events
-  # These need the same data, but with the deletion version and is_deletion = TRUE
+  # Rows with version_deleted become additional row
   dels <- df %>%
     filter(!is.na(version_deleted)) %>%
     mutate(
@@ -147,7 +146,7 @@ convert_to_chart_style <- function(df) {
     ) %>%
     select(-version_recorded, -version_deleted)
   
-  # Combine and rename back
+  # Combine and rename 
   bind_rows(recs, dels) %>%
     rename(version_recorded = .version) %>%
     arrange(version_recorded, is_deletion)
@@ -192,9 +191,9 @@ validation_bench %>%
     #> # A tibble: 3 × 3
     #>   expression               median mem_alloc
     #>   <bch:expr>             <bch:tm> <bch:byt>
-    #> 1 No Validation             154ms    18.7MB
-    #> 2 Interval Validation       156ms    19.6MB
-    #> 3 Chart-Style Validation    856ms    33.5MB
+    #> 1 No Validation             156ms    18.7MB
+    #> 2 Interval Validation       164ms    19.6MB
+    #> 3 Chart-Style Validation    929ms    33.5MB
 
 ``` r
 # Plot
@@ -220,7 +219,7 @@ sessionInfo()
     #> LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
     #> 
     #> locale:
-    #> [1] es_ES.UTF-8/es_ES.UTF-8/es_ES.UTF-8/C/es_ES.UTF-8/en_US.UTF-8
+    #> [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
     #> 
     #> time zone: America/Vancouver
     #> tzcode source: internal
