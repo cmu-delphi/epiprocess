@@ -308,6 +308,45 @@ test_that("linelist_to_archive requires is_deletion to be logical", {
   )
 })
 
+test_that("linelist_to_archive catches deletion before recording (chart-style)", {
+  # Deletion comes before any recording for the same id
+  x_bad <- tibble::tibble(
+    geo_value = "ma",
+    time_value = as.Date("2020-01-01"),
+    issue_date = as.Date(c("2020-01-02", "2020-01-03")),
+    is_deletion = c(TRUE, FALSE), # Deletion before recording
+    id = c(1, 1)
+  )
+
+  expect_error(
+    linelist_to_archive(
+      x_bad,
+      geo_value = geo_value, time_value = time_value,
+      version_recorded = issue_date,
+      is_deletion = is_deletion, id = id
+    ),
+    class = "epiprocess__linelist_to_archive__deletion_before_recording"
+  )
+
+  # Valid: recording before deletion
+  x_good <- tibble::tibble(
+    geo_value = "ma",
+    time_value = as.Date("2020-01-01"),
+    issue_date = as.Date(c("2020-01-02", "2020-01-03")),
+    is_deletion = c(FALSE, TRUE), # Recording then deletion - valid
+    id = c(1, 1)
+  )
+
+  expect_no_error(
+    linelist_to_archive(
+      x_good,
+      geo_value = geo_value, time_value = time_value,
+      version_recorded = issue_date,
+      is_deletion = is_deletion, id = id
+    )
+  )
+})
+
 test_that("linelist_to_archive matches complete() for complex data", {
   # simulate individual cases with IDs.
 

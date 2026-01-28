@@ -324,24 +324,30 @@ validate_linelist_ids <- function(x, id_col, geo_col, other_cols, time_col,
 
 
     if (!is.null(id_col)) {
+      # Check that no id has a deletion before a recording
       contribs_df <- x %>%
-        group_by(pick(all_of(c(id_col, time_col)))) %>%
-        arrange(ver_rec_col) %>%
-        mutate(!!value := !.data[[is_del_col]] - .data[[is_del_col]]) %>%
-        ungroup()
-      if (any(contribs_df[[value]] < 0L)) {
-        cli_abort(
-          "An event was deleted before it was recorded, or was deleted and recorded with inconsistent time values."
+        dplyr::group_by(dplyr::pick(dplyr::all_of(c(id_col, time_col)))) %>%
+        dplyr::arrange(.data[[ver_rec_col]], .by_group = TRUE) %>%
+        dplyr::mutate(
+          .contrib = as.integer(!.data[[is_del_col]]) -
+            as.integer(.data[[is_del_col]]),
+          .running_count = cumsum(.contrib)
+        ) %>%
+        dplyr::ungroup()
+      if (any(contribs_df$.running_count < 0L)) {
+        cli::cli_abort(
+          "An event was deleted before it was recorded, or deleted multiple times.",
+          class = "epiprocess__linelist_to_archive__deletion_before_recording"
         )
       }
     } # else do a similar check by geo_value x other_keys x time_value?
   } else {
     if (!is.null(id_col) && vctrs::vec_duplicate_any(x[[id_col]])) {
-      cli_abort("Each `id` must have at most one entry (in non-chart-style linelist).")
+      cli::cli_abort("Each `id` must have at most one entry (in non-chart-style linelist).")
     }
     if (!is.null(ver_del_col) && any(!is.na(x[[ver_del_col]]) & x[[ver_del_col]] < x[[ver_rec_col]])) {
-      cli_abort("`{ver_del_col}` (removal) must be >= `{ver_rec_col}` (entry).")
+      cli::cli_abort("`{ver_del_col}` (removal) must be >= `{ver_rec_col}` (entry).")
     }
   }
 }
-utils::globalVariables("change")
+utils::globalVariables(c("change", ".contrib", ".running_count"))
