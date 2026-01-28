@@ -264,7 +264,47 @@ test_that("linelist_to_archive chart-style validation works", {
       version_recorded = issue_date,
       is_deletion = is_deletion, id = id
     ),
-    "must not contain NAs"
+    class = "epiprocess__linelist_to_archive__is_del_has_nas"
+  )
+})
+
+test_that("linelist_to_archive requires is_deletion to be logical", {
+  # Numeric is_deletion (not allowed)
+  x_numeric <- tibble::tibble(
+    geo_value = "ma",
+    time_value = as.Date("2020-01-01"),
+    issue_date = as.Date("2020-01-02"),
+    is_deletion = c(0, 1), # numeric, not logical
+    id = c(1, 2)
+  )
+
+  expect_error(
+    linelist_to_archive(
+      x_numeric,
+      geo_value = geo_value, time_value = time_value,
+      version_recorded = issue_date,
+      is_deletion = is_deletion, id = id
+    ),
+    class = "epiprocess__linelist_to_archive__is_del_not_logical"
+  )
+
+  # Character is_deletion (not allowed)
+  x_char <- tibble::tibble(
+    geo_value = "ma",
+    time_value = as.Date("2020-01-01"),
+    issue_date = as.Date("2020-01-02"),
+    is_deletion = c("no", "yes"),
+    id = c(1, 2)
+  )
+
+  expect_error(
+    linelist_to_archive(
+      x_char,
+      geo_value = geo_value, time_value = time_value,
+      version_recorded = issue_date,
+      is_deletion = is_deletion, id = id
+    ),
+    class = "epiprocess__linelist_to_archive__is_del_not_logical"
   )
 })
 

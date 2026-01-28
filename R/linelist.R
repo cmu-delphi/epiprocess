@@ -309,11 +309,18 @@ validate_linelist_ids <- function(x, id_col, geo_col, other_cols, time_col,
   is_chart_style <- !is.null(is_del_col)
 
   if (is_chart_style) {
-    # is_del must be valid
-    raw_is_del <- x[[is_del_col]]
-    if (anyNA(raw_is_del)) cli::cli_abort("`{is_del_col}` must not contain NAs.")
-    is_del <- as.logical(raw_is_del)
-    if (anyNA(is_del)) cli::cli_abort("`{is_del_col}` must be coercible to logical without generating NAs.")
+    # is_deletion must be logical with no NAs
+    is_del <- x[[is_del_col]]
+    if (!is.logical(is_del)) {
+      cli::cli_abort("`{is_del_col}` must be logical.",
+        class = "epiprocess__linelist_to_archive__is_del_not_logical"
+      )
+    }
+    if (anyNA(is_del)) {
+      cli::cli_abort("`{is_del_col}` must not contain NAs.",
+        class = "epiprocess__linelist_to_archive__is_del_has_nas"
+      )
+    }
 
 
     if (!is.null(id_col)) {
