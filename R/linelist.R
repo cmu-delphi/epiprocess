@@ -8,15 +8,15 @@
 #'
 #' @param x A data frame (line list).
 #' @param ... Should be empty.
-#' @param geo_value,time_value,version_recorded,version_deleted,other_keys
+#' @param geo_value,other_keys,time_value,version_recorded,version_deleted
 #'   <[`tidy-select`][dplyr::dplyr_tidy_select]> Columns in `x` representing:
 #'   * `geo_value`: the geographic location of the event.
+#'   * `other_keys`: (optional) additional key columns (e.g. age group).
 #'   * `time_value`: the time of the event.
 #'   * `version_recorded`: the time at which the event became known/recorded.
 #'   * `version_deleted`: (optional) the time at which the event was
 #'     removed/deleted. If `NULL` (default), it is assumed no events are
 #'     deleted. Mutually exclusive with `is_deletion`.
-#'   * `other_keys`: (optional) additional key columns (e.g. age group).
 #' @param is_deletion (optional) <[`tidy-select`][dplyr::dplyr_tidy_select]>
 #'   Column in `x` indicating if the row is a deletion (`TRUE`/1) or an entry
 #'   (`FALSE`/0). Used for "chart-style" linelists where each row is an update
@@ -64,11 +64,11 @@ linelist_to_archive <- function(
   x,
   ...,
   geo_value = NULL,
+  other_keys = NULL,
   time_value = NULL,
   version_recorded = NULL,
   version_deleted = NULL,
   is_deletion = NULL,
-  other_keys = NULL,
   value = NULL,
   id = NULL,
   clobberable_versions_start = NA,
@@ -143,7 +143,7 @@ linelist_to_archive <- function(
 
   # Extract updates
   updates <- extract_linelist_updates(
-    x, ver_rec_col, ver_del_col, is_del_col, geo_col, other_cols, time_col
+    x, geo_col, other_cols, time_col, ver_rec_col, ver_del_col, is_del_col
   )
 
 
@@ -245,8 +245,8 @@ resolve_col <- function(
 }
 
 # Helper to extract and renamed
-extract_standard <- function(df, v_col, change_val, geo_col,
-                             other_cols, time_col) {
+extract_standard <- function(df, geo_col, other_cols, time_col, v_col,
+                             change_val) {
   if (is.null(v_col)) {
     return(NULL)
   }
@@ -273,8 +273,8 @@ extract_standard <- function(df, v_col, change_val, geo_col,
 }
 
 # Helper to extract updates
-extract_linelist_updates <- function(x, ver_rec_col, ver_del_col, is_del_col,
-                                     geo_col, other_cols, time_col) {
+extract_linelist_updates <- function(x, geo_col, other_cols, time_col,
+                                     ver_rec_col, ver_del_col, is_del_col) {
   # Chart-style: is_deletion provided (mutually exclusive with version_deleted)
   # Interval-style: version_deleted provided (or neither for no deletions)
   if (!is.null(is_del_col)) {
@@ -282,15 +282,19 @@ extract_linelist_updates <- function(x, ver_rec_col, ver_del_col, is_del_col,
     is_del_vals <- as.logical(x[[is_del_col]])
 
     entries <- extract_standard(
-      x[!is_del_vals, ], ver_rec_col, 1, geo_col, other_cols, time_col
+      x[!is_del_vals, ], geo_col, other_cols, time_col, ver_rec_col, 1
     )
     removals <- extract_standard(
-      x[is_del_vals, ], ver_rec_col, -1, geo_col, other_cols, time_col
+      x[is_del_vals, ], geo_col, other_cols, time_col, ver_rec_col, -1
     )
   } else {
     # Interval-style: separate columns (or no deletion column)
-    entries <- extract_standard(x, ver_rec_col, 1, geo_col, other_cols, time_col)
-    removals <- extract_standard(x, ver_del_col, -1, geo_col, other_cols, time_col)
+    entries <- extract_standard(
+      x, geo_col, other_cols, time_col, ver_rec_col, 1
+    )
+    removals <- extract_standard(
+      x, geo_col, other_cols, time_col, ver_del_col, -1
+    )
   }
 
   updates <- dplyr::bind_rows(entries, removals)
