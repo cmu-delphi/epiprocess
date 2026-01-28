@@ -154,14 +154,13 @@ We compare `linelist_to_archive()` with different validation modes using a 50K r
 ```{r bench-validation}
 # Helper to convert to chart-style
 convert_to_chart_style <- function(df) {
-  # All original rows become "recording" events
+  # All original rows become "recording"
   recs <- df %>%
     mutate(is_deletion = FALSE) %>%
     rename(.version = version_recorded) %>%
     select(-version_deleted)
   
-  # Rows with version_deleted become additional "deletion" events
-  # These need the same data, but with the deletion version and is_deletion = TRUE
+  # Rows with version_deleted become additional row
   dels <- df %>%
     filter(!is.na(version_deleted)) %>%
     mutate(
@@ -170,7 +169,7 @@ convert_to_chart_style <- function(df) {
     ) %>%
     select(-version_recorded, -version_deleted)
   
-  # Combine and rename back
+  # Combine and rename 
   bind_rows(recs, dels) %>%
     rename(version_recorded = .version) %>%
     arrange(version_recorded, is_deletion)
