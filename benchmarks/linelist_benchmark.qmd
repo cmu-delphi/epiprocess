@@ -1,0 +1,222 @@
+---
+title: "linelist_to_archive Benchmarks"
+output: github_document
+number-sections: true
+number-depth: 4
+fig-dpi: 400
+knitr:
+  opts_chunk:
+    comment: "#>"
+    message: FALSE
+    dev: "png"
+    fig.width: 8
+    fig.height: 4.5
+    fig.align: center
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+
+#' To install mytidyfunctions, you need 
+#' remotes::install_github("JavierMtzRdz/mytidyfunctions")
+if (!require("pacman")) install.packages("pacman")
+if (!require("devtools")) install.packages("devtools")
+if (require("mytidyfunctions")) mytidyfunctions::set_mytheme() 
+
+Sys.setlocale("LC_ALL", "en.US.UTF-8")
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+
+This benchmark evaluates `linelist_to_archive()` performance.
+
+```{r}
+# Load packages
+devtools::load_all("..")
+
+pacman::p_load(tidyverse, janitor, bench, epidatr)
+```
+
+## Synthetic Linelist Data
+
+Create linelist data of different sizes to benchmark scaling behavior.
+
+```{r generate-data}
+generate_linelist <- function(n_events, n_geos = 5, date_range_days = 365) {
+
+  # Scenario: constant flow of cases over 50 days
+  days <- seq(as.Date("2023-01-01"), by = "day", length.out = date_range_days)
+  geos <- paste0("state_", sprintf("%02d", 1:n_geos))
+
+  # Generate cases
+  cases <- tibble(
+    id = 1:n_events,
+    geo_value = sample(geos, n_events, replace = TRUE),
+    # random day in the range
+    time_value = sample(days, n_events, replace = TRUE),
+    # most reported quickly, some late
+    lag_rec = rgeom(n_events, 0.2),
+    # cases later deleted
+    is_deletion = runif(n_events) < 0.02,
+    lag_del = rgeom(n_events, 0.1)
+  ) %>%
+    mutate(
+      version_recorded = time_value + lag_rec,
+      # Deleted some time after recording
+      version_deleted = if_else(is_deletion, version_recorded + lag_del + 1, as.Date(NA))
+    )
+
+  linelist <- cases %>%
+    select(id, geo_value, time_value, version_recorded, version_deleted) %>%
+    arrange(version_recorded)
+  
+  linelist
+}
+```
+
+```{r}
+# One example
+set.seed(42)
+
+linelist <- generate_linelist(1000, 1, 30)
+
+ea <- linelist_to_archive(
+    linelist,
+    geo_value = geo_value,
+    time_value = time_value,
+    version_recorded = version_recorded,
+    version_deleted = version_deleted,
+    id = id,
+    value = "cases"
+  )
+
+autoplot(ea)
+```
+
+
+## Benchmark Results
+
+### Scaling with Dataset Size
+
+It is tested across 1K, 10K, and 50K datasets.
+
+```{r bench-scaling}
+# Dataset
+linelist_small <- generate_linelist(1000)
+
+linelist_medium <- generate_linelist(10000)
+
+linelist_large <- generate_linelist(50000)
+
+inputs <- list(
+  small = linelist_small,
+  medium = linelist_medium,
+  large = linelist_large
+)
+
+# Run benchmark
+scaling_bench <- bench::press(
+  size = names(inputs),
+  {
+    dat <- inputs[[size]]
+    bench::mark(
+      linelist_to_archive(
+        dat,
+        geo_value = geo_value,
+        time_value = time_value,
+        version_recorded = version_recorded,
+        version_deleted = version_deleted,
+        id = id
+      ),
+      iterations = 5,
+      check = FALSE
+    )
+  }
+)
+
+# Summary
+scaling_bench %>%
+  select(size, median, mem_alloc, n_itr) %>%
+  arrange(median)
+
+```
+
+### Cost of ID Validation
+
+We compare `linelist_to_archive()` with different validation modes using a 50K rows dataset.
+
+```{r bench-validation}
+# Helper to convert to chart-style
+convert_to_chart_style <- function(df) {
+  # All original rows become "recording" events
+  recs <- df %>%
+    mutate(is_deletion = FALSE) %>%
+    rename(.version = version_recorded) %>%
+    select(-version_deleted)
+  
+  # Rows with version_deleted become additional "deletion" events
+  # These need the same data, but with the deletion version and is_deletion = TRUE
+  dels <- df %>%
+    filter(!is.na(version_deleted)) %>%
+    mutate(
+      is_deletion = TRUE,
+      .version = version_deleted
+    ) %>%
+    select(-version_recorded, -version_deleted)
+  
+  # Combine and rename back
+  bind_rows(recs, dels) %>%
+    rename(version_recorded = .version) %>%
+    arrange(version_recorded, is_deletion)
+}
+
+linelist_chart <- convert_to_chart_style(linelist_large)
+
+validation_bench <- bench::mark(
+  "No Validation" = linelist_to_archive(
+    linelist_large,
+    geo_value = geo_value,
+    time_value = time_value,
+    version_recorded = version_recorded,
+    version_deleted = version_deleted,
+    id = NULL
+  ),
+  "Interval Validation" = linelist_to_archive(
+    linelist_large,
+    geo_value = geo_value,
+    time_value = time_value,
+    version_recorded = version_recorded,
+    version_deleted = version_deleted,
+    id = id # validation on
+  ),
+  "Chart-Style Validation" = linelist_to_archive(
+    linelist_chart,
+    geo_value = geo_value,
+    time_value = time_value,
+    version_recorded = version_recorded,
+    is_deletion = is_deletion, # Chart-style
+    id = id # validation on
+  ),
+  iterations = 10,
+  check = FALSE
+)
+
+# Summary
+validation_bench %>%
+  select(expression, median, mem_alloc, n_itr)
+
+# Plot
+plot(validation_bench, type = "boxplot")
+```
+
+## Session Info
+
+```{r}
+sessionInfo()
+```
