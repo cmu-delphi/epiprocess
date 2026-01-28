@@ -143,7 +143,7 @@ linelist_to_archive <- function(
 
   # Extract updates
   updates <- extract_linelist_updates(
-    x, ver_rec_col, ver_del_col, is_del_col, geo_col, time_col, other_cols
+    x, ver_rec_col, ver_del_col, is_del_col, geo_col, other_cols, time_col
   )
 
 
@@ -246,7 +246,7 @@ resolve_col <- function(
 
 # Helper to extract and renamed
 extract_standard <- function(df, v_col, change_val, geo_col,
-                             time_col, other_cols) {
+                             other_cols, time_col) {
   if (is.null(v_col)) {
     return(NULL)
   }
@@ -258,15 +258,15 @@ extract_standard <- function(df, v_col, change_val, geo_col,
   }
 
   # Select cols
-  sel_cols <- c(geo_col, time_col, other_cols, v_col)
+  sel_cols <- c(geo_col, other_cols, time_col, v_col)
   out <- df[sel_cols]
 
   # Rename to standard
-  names(out) <- c("geo_value", "time_value", other_cols, "version")
+  names(out) <- c("geo_value", other_cols, "time_value", "version")
 
   out %>%
     dplyr::count(
-      geo_value, time_value, dplyr::across(dplyr::all_of(other_cols)), version,
+      geo_value, dplyr::across(dplyr::all_of(other_cols)), time_value, version,
       name = "change"
     ) %>%
     dplyr::mutate(change = change * change_val)
@@ -274,7 +274,7 @@ extract_standard <- function(df, v_col, change_val, geo_col,
 
 # Helper to extract updates
 extract_linelist_updates <- function(x, ver_rec_col, ver_del_col, is_del_col,
-                                     geo_col, time_col, other_cols) {
+                                     geo_col, other_cols, time_col) {
   # Chart-style: is_deletion provided (mutually exclusive with version_deleted)
   # Interval-style: version_deleted provided (or neither for no deletions)
   if (!is.null(is_del_col)) {
@@ -282,15 +282,15 @@ extract_linelist_updates <- function(x, ver_rec_col, ver_del_col, is_del_col,
     is_del_vals <- as.logical(x[[is_del_col]])
 
     entries <- extract_standard(
-      x[!is_del_vals, ], ver_rec_col, 1, geo_col, time_col, other_cols
+      x[!is_del_vals, ], ver_rec_col, 1, geo_col, other_cols, time_col
     )
     removals <- extract_standard(
-      x[is_del_vals, ], ver_rec_col, -1, geo_col, time_col, other_cols
+      x[is_del_vals, ], ver_rec_col, -1, geo_col, other_cols, time_col
     )
   } else {
     # Interval-style: separate columns (or no deletion column)
-    entries <- extract_standard(x, ver_rec_col, 1, geo_col, time_col, other_cols)
-    removals <- extract_standard(x, ver_del_col, -1, geo_col, time_col, other_cols)
+    entries <- extract_standard(x, ver_rec_col, 1, geo_col, other_cols, time_col)
+    removals <- extract_standard(x, ver_del_col, -1, geo_col, other_cols, time_col)
   }
 
   updates <- dplyr::bind_rows(entries, removals)
