@@ -4,7 +4,7 @@
 \alias{gcd2num}
 \title{Find the greatest common divisor of two numeric scalars}
 \usage{
-gcd2num(a, b, rrtol = 1e-06, pqlim = 1e+06, irtol = 1e-06)
+gcd2num(a, b, rrtol = 0.000001, pqlim = 1000000, irtol = 0.000001)
 }
 \arguments{
 \item{a}{Length 1, \code{is.numeric}; the first number}

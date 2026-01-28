@@ -8,11 +8,11 @@ linelist_to_archive(
   x,
   ...,
   geo_value = NULL,
+  other_keys = NULL,
   time_value = NULL,
   version_recorded = NULL,
   version_deleted = NULL,
   is_deletion = NULL,
-  other_keys = NULL,
   value = NULL,
   id = NULL,
   clobberable_versions_start = NA,
@@ -24,15 +24,15 @@ linelist_to_archive(
 
 \item{...}{Should be empty.}
 
-\item{geo_value, time_value, version_recorded, version_deleted, other_keys}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> Columns in \code{x} representing:
+\item{geo_value, other_keys, time_value, version_recorded, version_deleted}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> Columns in \code{x} representing:
 \itemize{
 \item \code{geo_value}: the geographic location of the event.
+\item \code{other_keys}: (optional) additional key columns (e.g. age group).
 \item \code{time_value}: the time of the event.
 \item \code{version_recorded}: the time at which the event became known/recorded.
 \item \code{version_deleted}: (optional) the time at which the event was
 removed/deleted. If \code{NULL} (default), it is assumed no events are
 deleted. Mutually exclusive with \code{is_deletion}.
-\item \code{other_keys}: (optional) additional key columns (e.g. age group).
 }}
 
 \item{is_deletion}{(optional) <\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}>
