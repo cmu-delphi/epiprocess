@@ -1,7 +1,4 @@
 test_that("linelist_to_archive works with basic inputs", {
-  library(tibble)
-  library(dplyr)
-
   linelist <- tibble(
     event_id = 1:3,
     geo_value = c("ca", "ca", "ca"),
@@ -84,9 +81,6 @@ test_that("linelist_to_archive errors on missing required cols", {
   expect_error(linelist_to_archive(linelist))
 })
 test_that("linelist_to_archive validates id uniqueness", {
-  library(tibble)
-  library(dplyr)
-
   # duplicate creation for id
   linelist_bad <- tibble::tibble(
     id = c("A", "A"),
@@ -167,9 +161,6 @@ test_that("linelist_to_archive refuses to handle unordered split rows with id", 
   )
 })
 test_that("linelist_to_archive uses smart defaults", {
-  library(tibble)
-  library(dplyr)
-
   # All defaults
   # geo_value -> state, time_value -> date, version_recorded -> issue
   linelist_default <- tibble::tibble(
@@ -224,26 +215,26 @@ test_that("linelist_to_archive supports chart-style linelists", {
     geo_value = "ma",
     time_value = as.Date("2020-01-01"),
     issue_date = as.Date(c("2020-01-02", "2020-01-02", "2020-01-03")),
-    is_deleted = c(FALSE, FALSE, TRUE),
+    is_deletion = c(FALSE, FALSE, TRUE),
     id = c(1, 2, 1)
   )
 
-  # Should fail if both version_deleted and is_deleted provided (mutually exclusive)
+  # Should fail if both version_deleted and is_deletion provided (mutually exclusive)
   expect_error(
     linelist_to_archive(x,
       geo_value = geo_value, time_value = time_value,
       version_recorded = issue_date, version_deleted = issue_date,
-      is_deleted = is_deleted, id = id
+      is_deletion = is_deletion, id = id
     ),
     "mutually exclusive"
   )
 
-  # Should work with is_deleted
+  # Should work with is_deletion
   ea <- linelist_to_archive(
     x,
     geo_value = geo_value, time_value = time_value,
     version_recorded = issue_date,
-    is_deleted = is_deleted, id = id, value = "count"
+    is_deletion = is_deletion, id = id, value = "count"
   )
 
   # Verify history using snapshots
@@ -262,7 +253,7 @@ test_that("linelist_to_archive chart-style validation works", {
     geo_value = "ma",
     time_value = as.Date("2020-01-01"),
     issue_date = as.Date("2020-01-02"),
-    is_deleted = c(NA),
+    is_deletion = c(NA),
     id = 1
   )
 
@@ -271,17 +262,13 @@ test_that("linelist_to_archive chart-style validation works", {
       x,
       geo_value = geo_value, time_value = time_value,
       version_recorded = issue_date,
-      is_deleted = is_deleted, id = id
+      is_deletion = is_deletion, id = id
     ),
     "must not contain NAs"
   )
 })
 
 test_that("linelist_to_archive matches complete() for complex data", {
-  library(dplyr)
-  library(tidyr)
-  library(tibble)
-
   # simulate individual cases with IDs.
 
   set.seed(42)
@@ -299,13 +286,13 @@ test_that("linelist_to_archive matches complete() for complex data", {
     # most reported quickly, some late
     lag_rec = rgeom(n_cases, 0.2),
     # cases later deleted
-    is_deleted = runif(n_cases) < 0.02,
+    is_deletion = runif(n_cases) < 0.02,
     lag_del = rgeom(n_cases, 0.1)
   ) %>%
     mutate(
       version_recorded = time_value + lag_rec,
       # Deleted some time after recording
-      version_deleted = if_else(is_deleted, version_recorded + lag_del + 1, as.Date(NA))
+      version_deleted = if_else(is_deletion, version_recorded + lag_del + 1, as.Date(NA))
     )
 
   linelist <- cases %>%

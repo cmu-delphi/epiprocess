@@ -15,9 +15,9 @@
 #'   * `version_recorded`: the time at which the event became known/recorded.
 #'   * `version_deleted`: (optional) the time at which the event was
 #'     removed/deleted. If `NULL` (default), it is assumed no events are
-#'     deleted. Mutually exclusive with `is_deleted`.
+#'     deleted. Mutually exclusive with `is_deletion`.
 #'   * `other_keys`: (optional) additional key columns (e.g. age group).
-#' @param is_deleted (optional) <[`tidy-select`][dplyr::dplyr_tidy_select]>
+#' @param is_deletion (optional) <[`tidy-select`][dplyr::dplyr_tidy_select]>
 #'   Column in `x` indicating if the row is a deletion (`TRUE`/1) or an entry
 #'   (`FALSE`/0). Used for "chart-style" linelists where each row is an update
 #'   event and `version_recorded` represents when the update occurred.
@@ -67,7 +67,7 @@ linelist_to_archive <- function(
   time_value = NULL,
   version_recorded = NULL,
   version_deleted = NULL,
-  is_deleted = NULL,
+  is_deletion = NULL,
   other_keys = NULL,
   value = NULL,
   id = NULL,
@@ -80,7 +80,7 @@ linelist_to_archive <- function(
   time_quo <- rlang::enquo(time_value)
   ver_rec_quo <- rlang::enquo(version_recorded)
   ver_del_quo <- rlang::enquo(version_deleted)
-  is_del_quo <- rlang::enquo(is_deleted)
+  is_del_quo <- rlang::enquo(is_deletion)
   id_quo <- rlang::enquo(id)
 
   # Use 0-row slice for resolution to be explicit about not needing data rows
@@ -98,7 +98,7 @@ linelist_to_archive <- function(
   ver_del_col <- resolve_col(ver_del_quo, x_schema, "version_deleted",
     required = FALSE
   )
-  is_del_col <- resolve_col(is_del_quo, x_schema, "is_deleted", required = FALSE)
+  is_del_col <- resolve_col(is_del_quo, x_schema, "is_deletion", required = FALSE)
   id_col <- resolve_col(id_quo, x_schema, "id", required = FALSE)
 
   # other_keys
@@ -127,13 +127,13 @@ linelist_to_archive <- function(
       class = "epiprocess__linelist_to_archive__ver_rec_had_nas"
     )
   }
-  # Mutual exclusivity: version_deleted and is_deleted cannot both be provided
+  # Mutual exclusivity: version_deleted and is_deletion cannot both be provided
   if (!is.null(ver_del_col) && !is.null(is_del_col)) {
     cli::cli_abort(
       c(
-        "`version_deleted` and `is_deleted` are mutually exclusive.",
+        "`version_deleted` and `is_deletion` are mutually exclusive.",
         "i" = "Use `version_deleted` for interval-style linelists (separate deletion timestamps).",
-        "i" = "Use `is_deleted` for chart-style linelists (each row is an update event)."
+        "i" = "Use `is_deletion` for chart-style linelists (each row is an update event)."
       ),
       class = "epiprocess__linelist_to_archive__mutually_exclusive"
     )
@@ -275,10 +275,10 @@ extract_standard <- function(df, v_col, change_val, geo_col,
 # Helper to extract updates
 extract_linelist_updates <- function(x, ver_rec_col, ver_del_col, is_del_col,
                                      geo_col, time_col, other_cols) {
-  # Chart-style: is_deleted provided (mutually exclusive with version_deleted)
+  # Chart-style: is_deletion provided (mutually exclusive with version_deleted)
   # Interval-style: version_deleted provided (or neither for no deletions)
   if (!is.null(is_del_col)) {
-    # Chart-style: each row is an update, is_deleted discriminates
+    # Chart-style: each row is an update, is_deletion discriminates
     is_del_vals <- as.logical(x[[is_del_col]])
 
     entries <- extract_standard(
