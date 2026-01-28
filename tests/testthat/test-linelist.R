@@ -228,21 +228,21 @@ test_that("linelist_to_archive supports chart-style linelists", {
     id = c(1, 2, 1)
   )
 
-  # Should fail if is_deleted not provided
+  # Should fail if both version_deleted and is_deleted provided (mutually exclusive)
   expect_error(
     linelist_to_archive(x,
       geo_value = geo_value, time_value = time_value,
       version_recorded = issue_date, version_deleted = issue_date,
-      id = id
+      is_deleted = is_deleted, id = id
     ),
-    "is_deleted.*must be provided"
+    "mutually exclusive"
   )
 
   # Should work with is_deleted
   ea <- linelist_to_archive(
     x,
     geo_value = geo_value, time_value = time_value,
-    version_recorded = issue_date, version_deleted = issue_date,
+    version_recorded = issue_date,
     is_deleted = is_deleted, id = id, value = "count"
   )
 
@@ -270,7 +270,7 @@ test_that("linelist_to_archive chart-style validation works", {
     linelist_to_archive(
       x,
       geo_value = geo_value, time_value = time_value,
-      version_recorded = issue_date, version_deleted = issue_date,
+      version_recorded = issue_date,
       is_deleted = is_deleted, id = id
     ),
     "must not contain NAs"

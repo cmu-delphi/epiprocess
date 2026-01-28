@@ -15,13 +15,13 @@
 #'   * `version_recorded`: the time at which the event became known/recorded.
 #'   * `version_deleted`: (optional) the time at which the event was
 #'     removed/deleted. If `NULL` (default), it is assumed no events are
-#'     deleted.
+#'     deleted. Mutually exclusive with `is_deleted`.
 #'   * `other_keys`: (optional) additional key columns (e.g. age group).
 #' @param is_deleted (optional) <[`tidy-select`][dplyr::dplyr_tidy_select]>
-#'   Column in `x` (or a logical vector/predicate) indicating if the row is a
-#'   deletion (`TRUE`/1) or an entry (`FALSE`/0). Only used for "chart-style"
-#'   linelists (where `version_recorded` and `version_deleted` are the same
-#'   column).
+#'   Column in `x` indicating if the row is a deletion (`TRUE`/1) or an entry
+#'   (`FALSE`/0). Used for "chart-style" linelists where each row is an update
+#'   event and `version_recorded` represents when the update occurred.
+#'   Mutually exclusive with `version_deleted`.
 #' @param value Either `NULL` (default) or a string specifying the name of the
 #'   output count column. If `NULL` and `other_keys` is empty, defaults to
 #'   "count".
@@ -127,6 +127,18 @@ linelist_to_archive <- function(
       class = "epiprocess__linelist_to_archive__ver_rec_had_nas"
     )
   }
+  # Mutual exclusivity: version_deleted and is_deleted cannot both be provided
+  if (!is.null(ver_del_col) && !is.null(is_del_col)) {
+    cli::cli_abort(
+      c(
+        "`version_deleted` and `is_deleted` are mutually exclusive.",
+        "i" = "Use `version_deleted` for interval-style linelists (separate deletion timestamps).",
+        "i" = "Use `is_deleted` for chart-style linelists (each row is an update event)."
+      ),
+      class = "epiprocess__linelist_to_archive__mutually_exclusive"
+    )
+  }
+
   validate_linelist_ids(x, id_col, geo_col, other_cols, time_col, ver_rec_col, ver_del_col, is_del_col, value)
 
   # Extract updates
@@ -263,19 +275,17 @@ extract_standard <- function(df, v_col, change_val, geo_col,
 # Helper to extract updates
 extract_linelist_updates <- function(x, ver_rec_col, ver_del_col, is_del_col,
                                      geo_col, time_col, other_cols) {
-  # Here we use an optional variable to classify the event as deleted
-  # or not in cases where it resembles a "chart" where each row is an update to
-  # a patient record.
-  if (!is.null(ver_del_col) && ver_rec_col == ver_del_col) {
-    # Chart-style
-
+  # Chart-style: is_deleted provided (mutually exclusive with version_deleted)
+  # Interval-style: version_deleted provided (or neither for no deletions)
+  if (!is.null(is_del_col)) {
+    # Chart-style: each row is an update, is_deleted discriminates
     is_del_vals <- as.logical(x[[is_del_col]])
 
     entries <- extract_standard(
       x[!is_del_vals, ], ver_rec_col, 1, geo_col, time_col, other_cols
     )
     removals <- extract_standard(
-      x[is_del_vals, ], ver_del_col, -1, geo_col, time_col, other_cols
+      x[is_del_vals, ], ver_rec_col, -1, geo_col, time_col, other_cols
     )
   } else {
     # Interval-style: separate columns (or no deletion column)
@@ -296,13 +306,9 @@ extract_linelist_updates <- function(x, ver_rec_col, ver_del_col, is_del_col,
 validate_linelist_ids <- function(x, id_col, geo_col, other_cols, time_col,
                                   ver_rec_col, ver_del_col, is_del_col = NULL,
                                   value) {
-  is_chart_style <- !is.null(ver_del_col) && ver_rec_col == ver_del_col
+  is_chart_style <- !is.null(is_del_col)
 
   if (is_chart_style) {
-    if (is.null(is_del_col)) {
-      cli::cli_abort("If `version_recorded` and `version_deleted` are the same column, `is_deleted` must be provided.")
-    }
-
     # is_del must be valid
     raw_is_del <- x[[is_del_col]]
     if (anyNA(raw_is_del)) cli::cli_abort("`{is_del_col}` must not contain NAs.")
