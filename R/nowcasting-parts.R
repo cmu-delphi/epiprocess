@@ -333,6 +333,24 @@ assert_env_has <- function(x, nms, inherit = FALSE, .var.name = checkmate::vname
   assert(check_env_has(x, nms, inherit = inherit, .var.name = .var.name))
 }
 
+# TODO simplify args... just training, testing, meta/info, sources?
+#
+# segment-specific meta (with names/indices determined by pipeline construction call)
+# vs. some global meta (combined predictor and target specs?)
+# vs. both
+#
+# output of each segment just its own specific meta; forbid modifying
+# others'? though global/shared meta needs mutability
+#
+# how to access meta info when splitting by target?
+# * meta specific to the split?
+# * context parent pipeline step meta? (global name pool or ???)
+#
+# workflows info obj in global meta?
+
+# TODO handle hole in versions from this govt outage well... not epix_slide default versions...
+# TODO also for small backcast lookbehinds, ensure not missing half a week of later data?  just fix an offset to max in window? except then not aligned with target... maybe prefer making a partial week target separate from full-week ones
+
 new_pipeline_segment <- function(marker_subclass, segment_fn, settings_names = names(environment(segment_fn))) {
   # FIXME what happens with `...` args?
   assert_function(
