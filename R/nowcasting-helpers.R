@@ -1035,3 +1035,8 @@ regression_nowcaster <- function(archive, settings, return_info = FALSE) {
 # v - 11 val,  far enough from used above,    enough training data,            use
 
 # FIXME non-missing vs. complete
+
+# for partial week afterward, maybe just request for full week and
+# have a backoff to select a shift of it; later could turn into actual
+# partial-week covariate prep to allow better handling of gaps or
+# maybe preferable ways of representing for regularization purposes
