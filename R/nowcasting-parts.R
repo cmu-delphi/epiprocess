@@ -524,3 +524,12 @@ pipeline <- function(...) {
     }
   )
 }
+
+# TODO should archive / data sources actually be part of the pipeline?
+
+# TODO inferences vs. info
+
+# TODO might need col/multicol role and extra info
+# tracking... `targets`, `features`, and packed `key` handles part.
+# But then there is recipes/workflows interop.  And non-`targets`,
+# non-`features`.  Is there a better way?
