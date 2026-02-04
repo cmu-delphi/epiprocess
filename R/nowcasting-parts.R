@@ -533,3 +533,14 @@ pipeline <- function(...) {
 # tracking... `targets`, `features`, and packed `key` handles part.
 # But then there is recipes/workflows interop.  And non-`targets`,
 # non-`features`.  Is there a better way?
+
+
+# Pipeline runners: targets/tar-based, future-based, vanilla, etc.
+
+# Have each step only return its own info, and handle combination with
+# others in a uniform way in runners, assigning names according to
+# segment names.
+
+# pipeline info extractors: allows switching between keeping default
+# info and more info for detailed views (e.g., powering dashboards);
+# default default just keeps all returned info
