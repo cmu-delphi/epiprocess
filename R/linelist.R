@@ -263,7 +263,7 @@ extract_standard <- function(df, geo_col, other_cols, time_col, v_col,
 
   df %>%
     vctrs::vec_count(sort = "none") %>%
-    dplyr::rename(change = count) %>%
+    dplyr::rename("change" = "count") %>%
     tidyr::unpack(key) %>%
     dplyr::mutate(change = change * change_val)
 }
