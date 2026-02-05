@@ -93,7 +93,7 @@ linelist_to_archive <- function(
     default_names = time_column_names()
   )
   ver_rec_col <- resolve_col(ver_rec_quo, x_schema, "version_recorded",
-    default_names = version_column_names()
+    default_names = c(version_column_names(), version = "version_recorded", version = "VersionRecorded", version = "Version Recorded")
   )
   ver_del_col <- resolve_col(ver_del_quo, x_schema, "version_deleted",
     required = FALSE
