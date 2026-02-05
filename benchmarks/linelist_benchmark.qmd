@@ -103,7 +103,7 @@ autoplot(ea)
 
 ### Scaling with Dataset Size
 
-It is tested across 1K, 10K, and 50K datasets.
+It is tested across 1K, 10K, 50K, 1M, and (partially on) 100M datasets.
 
 ```{r bench-scaling}
 # Dataset
@@ -113,10 +113,18 @@ linelist_medium <- generate_linelist(10000)
 
 linelist_large <- generate_linelist(50000)
 
+# CA COVID-19 hosps for a few years
+linelist_1M <- generate_linelist(1e6)
+
+# USA COVID-19 hosps for a few years
+linelist_100M <- generate_linelist(100e6)
+
 inputs <- list(
   small = linelist_small,
   medium = linelist_medium,
-  large = linelist_large
+  large = linelist_large,
+  "1M" = linelist_1M#,
+  # "100M" = linelist_100M # one test machine: individual conversions don't out-of-memory, but benching does
 )
 
 # Run benchmark
@@ -145,6 +153,21 @@ scaling_bench <- bench::press(
 scaling_bench %>%
   select(size, median, mem_alloc, n_itr) %>%
   arrange(median)
+
+# one test machine: manual benchmark doesn't out-of-memory
+N <- 1L
+system.time({
+  for (i in seq_len(N)) {
+    linelist_100M %>%
+      linelist_to_archive(
+        geo_value = geo_value,
+        time_value = time_value,
+        version_recorded = version_recorded,
+        version_deleted = version_deleted,
+        id = id
+      )
+  }
+}) / N
 
 ```
 
