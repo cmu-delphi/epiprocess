@@ -258,18 +258,13 @@ extract_standard <- function(df, geo_col, other_cols, time_col, v_col,
     return(NULL)
   }
 
-  # Select cols
-  sel_cols <- c(geo_col, other_cols, time_col, v_col)
-  out <- df[sel_cols]
-
   # Rename to standard
-  names(out) <- c("geo_value", other_cols, "time_value", "version")
+  names(df) <- c("geo_value", other_cols, "time_value", "version")
 
-  out %>%
-    dplyr::count(
-      geo_value, dplyr::across(dplyr::all_of(other_cols)), time_value, version,
-      name = "change"
-    ) %>%
+  df %>%
+    vctrs::vec_count(sort = "none") %>%
+    dplyr::rename(change = count) %>%
+    tidyr::unpack(key) %>%
     dplyr::mutate(change = change * change_val)
 }
 
