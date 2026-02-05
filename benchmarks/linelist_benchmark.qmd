@@ -133,7 +133,9 @@ scaling_bench <- bench::press(
         version_deleted = version_deleted,
         id = id
       ),
-      iterations = 5,
+      min_time = 10,
+      min_iterations = 5,
+      max_iterations = 1e9,
       check = FALSE
     )
   }
