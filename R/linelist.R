@@ -251,8 +251,9 @@ extract_standard <- function(df, geo_col, other_cols, time_col, v_col,
     return(NULL)
   }
 
-  # Filter out NAs in version col
-  df <- df[!is.na(df[[v_col]]), ]
+  # Select cols & filter out NAs in version col
+  sel_cols <- c(geo_col, other_cols, time_col, v_col)
+  df <- df[!is.na(df[[v_col]]), sel_cols]
   if (nrow(df) == 0) {
     return(NULL)
   }
