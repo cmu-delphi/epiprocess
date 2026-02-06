@@ -544,3 +544,27 @@ pipeline <- function(...) {
 # pipeline info extractors: allows switching between keeping default
 # info and more info for detailed views (e.g., powering dashboards);
 # default default just keeps all returned info
+
+# Optional pipelines segments and wrappers:
+#
+# * Segments: `c` with `NULL` natural, but won't show up in pipeline
+#   as an omitted/skipped step, which might be desirable.
+#
+# * Segments, wrappers: could have wrappers and meta-wrappers to
+#   enable/disable segments and wrappers, though perhaps awkward
+
+# todo consider some sort of checker for training weight ignorance, etc.
+
+# todo is there a way to avoid repeating target configuration for
+# training and evaluation?  seems not a great idea to be forced into,
+# because changing eval would change underlying models, and might want
+# to make different choices and keep models static
+
+# todo should models be functions from configs to pipelines where
+# features are specified in args, or should possible features be
+# communicated through something like roles?  Similar to target
+# configs, seems less arcane to just put in function args, even though
+# we may be repeating some information.  If really don't like
+# repeating, likely have some similar issues when trying to
+# standardize arg lists vs. standardizing role/col-metadata/... stored
+# in pipeline.
