@@ -553,7 +553,8 @@ pipeline <- function(...) {
 # * Segments, wrappers: could have wrappers and meta-wrappers to
 #   enable/disable segments and wrappers, though perhaps awkward
 
-# todo consider some sort of checker for training weight ignorance, etc.
+# todo consider some sort of checker for training weight ignorance in
+# fitters, etc.
 
 # todo is there a way to avoid repeating target configuration for
 # training and evaluation?  seems not a great idea to be forced into,
@@ -568,3 +569,30 @@ pipeline <- function(...) {
 # repeating, likely have some similar issues when trying to
 # standardize arg lists vs. standardizing role/col-metadata/... stored
 # in pipeline.
+#
+# ... but want way to be able to transform variables, and that seems
+# to require the role part in some approaches, at least after getting
+# things out of archives (though some things may want archive col info
+# as well... hope to omit that at first).  Thought transformations and
+# imputations would be required to create new columns and mutate
+# roles, rather than mutate columns, so we won't combine fit/etc. info
+# with cols that have been mutated underneath us.  But if wrappers are
+# well-behaved, e.g., inverting transformations, then would
+# mutate-cols be okay for wrappers at least?  But this would
+# invalidate some col info, e.g., whether something is a count or not.
+#
+# pop normalization transformation... do we need to know count-like
+# vs. rate-like?  but originals should have been on same scale as
+# target to have made sense, so... maybe not? but at least need to
+# avoid scaling training weights
+#
+# parallel between training&test col info and archive col info... can
+# we somehow change to same-ish interface, perhaps switching in some
+# middle/wrapped part of pipeline from archives to tibbles and back?
+# seems like that would mean making training and test
+# archives... doesn't immediately seem ridiculous
+#
+# TODO consider (train_archive, test_archive, col_info, fit_info)
+# pipeline... might fit better into recipes, but still want/need
+# wrappers for archive cv, calibration, ensembles, etc. to feel
+# natural
