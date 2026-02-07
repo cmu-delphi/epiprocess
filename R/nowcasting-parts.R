@@ -603,3 +603,8 @@ pipeline <- function(...) {
 #
 # current training weight scheme idea would be to force into col in
 # test, and the same for all test instances
+
+# xxx rule of either adding NAs to existing columns or adding new
+# columns, not mutating, doesn't quite seem to work if want to allow
+# adding additional fake training data without first putting into
+# archive
