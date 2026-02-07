@@ -596,3 +596,10 @@ pipeline <- function(...) {
 # pipeline... might fit better into recipes, but still want/need
 # wrappers for archive cv, calibration, ensembles, etc. to feel
 # natural
+
+# todo consider also smoothing and Mercer kernel methods... train x
+# test dimensions... perhaps can just provide indices into matrix held
+# in fit_info, but perhaps not..
+#
+# current training weight scheme idea would be to force into col in
+# test, and the same for all test instances
