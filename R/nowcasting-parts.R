@@ -629,3 +629,61 @@ pipeline <- function(...) {
 # prevent seeing what all is planned to be run.  May also need special
 # consideration of static vs. dynamic splits; may impact {targets}
 # usage.)
+
+# XXX do we require a data prototype to build a pipeline like with
+# recipes?  may help control typos, and could use to make certain
+# tidyselect expressions not depend on aux vars included in archive
+# (can force actual archive to match prototype and throw out aux
+# vars).  But also a bit awkward.
+
+# XXX would things be conceptually simpler if we had archives
+# conceptually as just rbound snapshots? then pseudoprospective is
+# tscv on version col, though also need nesting/widening or separate
+# concept of prediction keys, and there are probably still some issues
+# with simultaneously wanting to perform treatments regarding test and
+# training covariates...
+#
+# might be easier if we didn't require time_value in archives... then
+# maybe could start with gtv archives and have a summarize step
+# transforming to gv archives.  Though forming test archive (even with
+# appropriate epix_version_filter/etc. helper function) seems a bit
+# awkward, and we don't actually want to do the typical train/test
+# split when dealing with archives, since the latest version,
+# typically the test version, contains a little bit of additional info
+# that the training archive will want to include.  Plus if want to
+# include covariates like "second-latest" / other vlags, it will have
+# chopped them off in the typical situation of one test version.
+#
+# perhaps having support for non-train-test-split and train-test-split
+# (or maybe even more flexible splits) pipelines would be useful?
+# handling both when we want to do a pancasting train/test split
+# summarizing a single pre-split archive, or for pseudoprospective
+# eval.  But some things, e.g., trained transformations, are not
+# suitable for pre-split.  And none of these seems like it addresses
+# the issue of saving off a fit for use later without JIT training.
+# Perhaps some splits can be made compatible if find way to suspend
+# test set computations, but nonmissing feature selection seems like
+# something that may require more structural changes, though perhaps
+# if allow 3-way splits could word as deferring comp on the actual
+# deployment test set.
+#
+# XXX do we need to split steps into prep/prepbake(train, pseudotest,
+# is_pseudotest) and bake(actual_test)? (or would it be fit and
+# predict?) with some fits refusing to move forward because they must
+# weight against the actual test (forests), and some bakes failing
+# because pseudotest led to selection of variables that were not
+# available in the actual test?
+#
+# XXX if allow multiple test versions not in pseudoprospective
+# validation mapping over, how will feature selection work?
+
+# though, with weighting approaches, separation may create
+# weight-product issues... except should usually only be weighting
+# based on target?  more a conundrum if not splitting by target to
+# allow for separate weighting.  seemed with feature selection changed
+# from wanting to use a median time to determine the selection window
+# to just composing the feature selections for each target if didn't
+# want to split, but for weighting have to have a more "aggregating"
+# type of combination.
+
+# full_join vs. left_join vs. inner_join composition approaches...
