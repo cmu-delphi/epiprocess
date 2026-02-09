@@ -614,3 +614,18 @@ pipeline <- function(...) {
 
 # may also need test target treatments... ensure missing, ignore,
 # ignore if too fresh?
+
+# XXX async breakdown requires either every step to be written in an
+# async-aware way, launching tasks, etc., or to auto-encapsulate and
+# then expect more complex things to have some way to opt in to
+# manually encapsulating, and perhaps having some way to detect things
+# doing non-idiomatic things (e.g., subpipelines may need to be run in
+# a special way... though perhaps some sort of global management could
+# automagically transform.  but if there is a heavy processing step
+# beforehand then would need to separate out into another pipeline
+# segment or launch own task.  Also, for better dashboards displays,
+# may need to write things to first enumerate tasks, then async
+# through them so that blocking on meeting worker limit will not
+# prevent seeing what all is planned to be run.  May also need special
+# consideration of static vs. dynamic splits; may impact {targets}
+# usage.)

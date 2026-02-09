@@ -88,6 +88,7 @@ run_pipeline(basic_pipeline)
 
 c(
   define_horizon_targets(flu_hosp, 1:4),
+  # v or should we be treating these as test versions rather than training versions?
   define_test_version(c()), # set to 0 test versions... or should this
                             # be epikey-versions or
                             # epikey-time-versions?
