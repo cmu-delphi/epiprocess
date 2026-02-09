@@ -607,4 +607,10 @@ pipeline <- function(...) {
 # xxx rule of either adding NAs to existing columns or adding new
 # columns, not mutating, doesn't quite seem to work if want to allow
 # adding additional fake training data without first putting into
-# archive
+# archive.  Though maybe this can be handled via another segment that
+# combines several pipelines for prepping training and test data
+# (could also track other info via some source id column, which might
+# need to have anyway to have a ukey if need one).
+
+# may also need test target treatments... ensure missing, ignore,
+# ignore if too fresh?
