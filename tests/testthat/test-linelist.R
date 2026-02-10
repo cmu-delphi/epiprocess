@@ -231,6 +231,27 @@ test_that("linelist_to_archive uses smart defaults", {
   expect_equal(epix_as_of(ea5, as.Date("2022-01-03"))$n, 0)
 })
 
+test_that("linelist_to_archive works with multi-state data", {
+  linelist <- tibble::tibble(
+    geo_value = c("ca", "ny", "ca"),
+    time_value = as.Date(c("2022-01-01", "2022-01-01", "2022-01-02")),
+    version_recorded = as.Date(c("2022-01-02", "2022-01-02", "2022-01-03"))
+  )
+
+  ea <- linelist_to_archive(linelist)
+  expect_s3_class(ea, "epi_archive")
+
+  # Check full parity
+  expected_df <- tibble(
+    geo_value = c("ca", "ca", "ny", "ny"),
+    time_value = as.Date(c("2022-01-01", "2022-01-02", "2022-01-01", "2022-01-02")),
+    version = as.Date(c("2022-01-02", "2022-01-03", "2022-01-02", "2022-01-03")),
+    n = c(1, 1, 1, 0)
+  )
+  expected_ea <- as_epi_archive(expected_df)
+  expect_equal(ea, expected_ea)
+})
+
 test_that("linelist_to_archive errors when defaults not found", {
   linelist_bad <- tibble::tibble(
     loc = "ca", # not in default list
