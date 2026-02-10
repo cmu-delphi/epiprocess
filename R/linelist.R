@@ -93,7 +93,12 @@ linelist_to_archive <- function(
     default_names = time_column_names()
   )
   ver_rec_col <- resolve_col(ver_rec_quo, x_schema, "version_recorded",
-    default_names = c(version_column_names(), version = "version_recorded", version = "VersionRecorded", version = "Version Recorded")
+    default_names = c(
+      version_column_names(),
+      version = c(
+        "version_recorded", "VersionRecorded", "Version Recorded"
+      )
+    )
   )
   ver_del_col <- resolve_col(ver_del_quo, x_schema, "version_deleted",
     required = FALSE
@@ -199,7 +204,10 @@ linelist_to_archive <- function(
     if (!is.null(ver_del_col)) {
       ver_del <- x[[ver_del_col]]
       if (!all(is.na(ver_del))) {
-        versions_end <- max(vec_c(versions_end, max(vec_slice(ver_del, !vec_detect_missing(ver_del)))))
+        versions_end <- max(vctrs::vec_c(
+          versions_end,
+          max(vctrs::vec_slice(ver_del, !vctrs::vec_detect_missing(ver_del)))
+        ))
       }
     }
   }
