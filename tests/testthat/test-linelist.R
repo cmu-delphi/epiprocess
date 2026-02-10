@@ -186,6 +186,49 @@ test_that("linelist_to_archive uses smart defaults", {
   ea2 <- linelist_to_archive(linelist_mixed, version_recorded = my_ver)
   expect_s3_class(ea2, "epi_archive")
   expect_equal(ea2$DT$geo_value, "ny")
+
+  # version_recorded recognized by name
+  linelist_canonical <- tibble::tibble(
+    geo_value = "ca",
+    time_value = as.Date("2022-01-01"),
+    version_recorded = as.Date("2022-01-02")
+  )
+  ea_canonical <- linelist_to_archive(linelist_canonical)
+  expect_equal(ea_canonical$DT$version, as.Date("2022-01-02"))
+
+  # version_recorded recognized from report_date
+  linelist_report <- tibble::tibble(
+    geo_value = "ca",
+    time_value = as.Date("2022-01-01"),
+    report_date = as.Date("2022-01-02")
+  )
+  ea3 <- linelist_to_archive(linelist_report)
+  expect_equal(ea3$DT$version, as.Date("2022-01-02"))
+
+  # version_deleted recognized from delete_date
+  linelist_del <- tibble::tibble(
+    geo_value = "ma",
+    time_value = as.Date("2022-01-01"),
+    version_recorded = as.Date("2022-01-02"),
+    delete_date = as.Date("2022-01-05")
+  )
+  ea4 <- linelist_to_archive(linelist_del)
+  # Check version 2 and 5
+  expect_equal(epix_as_of(ea4, as.Date("2022-01-02"))$n, 1)
+  expect_equal(nrow(epix_as_of(ea4, as.Date("2022-01-05"))), 1)
+  expect_equal(epix_as_of(ea4, as.Date("2022-01-05"))$n, 0) # zero filling at deletion
+
+  # is_deletion recognized automatically
+  linelist_is_del <- tibble::tibble(
+    geo_value = "ny",
+    time_value = as.Date("2022-01-01"),
+    version_recorded = as.Date(c("2022-01-02", "2022-01-03")),
+    is_deletion = c(FALSE, TRUE),
+    id = 1
+  )
+  ea5 <- linelist_to_archive(linelist_is_del)
+  expect_equal(epix_as_of(ea5, as.Date("2022-01-02"))$n, 1)
+  expect_equal(epix_as_of(ea5, as.Date("2022-01-03"))$n, 0)
 })
 
 test_that("linelist_to_archive errors when defaults not found", {
