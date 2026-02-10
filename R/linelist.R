@@ -93,18 +93,20 @@ linelist_to_archive <- function(
     default_names = time_column_names()
   )
   ver_rec_col <- resolve_col(ver_rec_quo, x_schema, "version_recorded",
-    default_names = c(
-      version_column_names(),
-      version = c(
-        "version_recorded", "VersionRecorded", "Version Recorded"
-      )
-    )
+    default_names = version_column_names()
   )
   ver_del_col <- resolve_col(ver_del_quo, x_schema, "version_deleted",
-    required = FALSE
+    required = FALSE,
+    default_names = deletion_column_names()
   )
-  is_del_col <- resolve_col(is_del_quo, x_schema, "is_deletion", required = FALSE)
-  id_col <- resolve_col(id_quo, x_schema, "id", required = FALSE)
+  is_del_col <- resolve_col(is_del_quo, x_schema, "is_deletion",
+    required = FALSE,
+    default_names = is_deletion_column_names()
+  )
+  id_col <- resolve_col(id_quo, x_schema, "id",
+    required = FALSE,
+    default_names = id_column_names()
+  )
 
   # other_keys
   quo_other <- rlang::enquo(other_keys)
@@ -225,7 +227,10 @@ resolve_col <- function(
 ) {
   # If the user didn't supply it or explicitly set it to `NULL`, the quo might be the default expression
   if (identical(rlang::quo_get_expr(quo), rlang::expr(NULL))) {
-    selected_colnames <- vctrs::vec_set_intersect(names(data), default_names)
+    selected_colnames <- vctrs::vec_set_intersect(
+      names(data),
+      vctrs::vec_set_union(arg_name, default_names)
+    )
     if (length(selected_colnames) == 0L) {
       if (required) {
         cli::cli_abort("Could not automatically select column for `{arg_name}`; please specify it manually.",
@@ -234,9 +239,9 @@ resolve_col <- function(
       } else {
         return(NULL)
       }
-    } else {
+    } else if (length(selected_colnames) == 1L && !identical(selected_colnames, arg_name)) {
       cli::cli_alert_info(
-        "Defaulting to {qty(length(selected_colnames))} col{?s} {.var {selected_colnames}} as {.var {arg_name}}."
+        "Defaulting to col {.var {selected_colnames}} as {.var {arg_name}}."
       )
     }
   } else { # user supplied a non-`NULL` argument

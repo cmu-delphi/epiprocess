@@ -684,7 +684,7 @@ time_column_names <- function() {
   names(substitutions) <- rep("time_value", length(substitutions))
   substitutions
 }
-#
+
 #' potential geo_value columns
 #' @description
 #' the full list of potential substitutions for the `geo_value` column name:
@@ -710,10 +710,59 @@ geo_column_names <- function() {
 #' @keywords internal
 version_column_names <- function() {
   substitutions <- c(
-    "version", "issue", "release"
+    "version", "issue", "release",
+    "version_recorded", "report_date", "recorded_date",
+    "issue_date", "release_date", "as_of", "revision"
   )
   substitutions <- upcase_snake_case(substitutions)
   names(substitutions) <- rep("version", length(substitutions))
+  substitutions
+}
+
+#' potential version_deleted columns
+#' @description
+#' the full list of potential substitutions for the `version_deleted` column name:
+#' `r deletion_column_names()`
+#' @export
+#' @keywords internal
+deletion_column_names <- function() {
+  substitutions <- c(
+    "version_deleted", "delete_date", "removal_date", "deleted_date",
+    "deletion_date", "removed_date", "superseded_date", "invalidated_date"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("version_deleted", length(substitutions))
+  substitutions
+}
+
+#' potential is_deletion columns
+#' @description
+#' the full list of potential substitutions for the `is_deletion` column name:
+#' `r is_deletion_column_names()`
+#' @export
+#' @keywords internal
+is_deletion_column_names <- function() {
+  substitutions <- c(
+    "is_deletion", "is_removal", "is_deleted", "deletion_flag", "is_void", "is_invalid"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("is_deletion", length(substitutions))
+  substitutions
+}
+
+#' potential id columns
+#' @description
+#' the full list of potential substitutions for the `id` column name:
+#' `r id_column_names()`
+#' @export
+#' @keywords internal
+id_column_names <- function() {
+  substitutions <- c(
+    "id", "case_id", "event_id", "uid", "uuid", "row_id", "record_id",
+    "case_no", "record_no", "patient_id", "subject_id"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("id", length(substitutions))
   substitutions
 }
 
